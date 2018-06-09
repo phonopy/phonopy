@@ -2,20 +2,12 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Command options &#8212; Phonopy v.1.13.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '1.13.0',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -33,8 +25,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body>
+  </head><body>
 
   <div id="navbar" class="navbar navbar-default navbar-fixed-top">
     <div class="container">
@@ -100,21 +91,21 @@
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Command options</a><ul>
 <li><a class="reference internal" href="#choice-of-force-calculator">Choice of force calculator</a><ul>
-<li><a class="reference internal" href="#wien2k"><code class="docutils literal"><span class="pre">--wien2k</span></code></a></li>
-<li><a class="reference internal" href="#abinit"><code class="docutils literal"><span class="pre">--abinit</span></code></a></li>
-<li><a class="reference internal" href="#qe"><code class="docutils literal"><span class="pre">--qe</span></code></a></li>
-<li><a class="reference internal" href="#siesta"><code class="docutils literal"><span class="pre">--siesta</span></code></a></li>
-<li><a class="reference internal" href="#elk"><code class="docutils literal"><span class="pre">--elk</span></code></a></li>
-<li><a class="reference internal" href="#crystal"><code class="docutils literal"><span class="pre">--crystal</span></code></a></li>
-<li><a class="reference internal" href="#vasp"><code class="docutils literal"><span class="pre">--vasp</span></code></a></li>
+<li><a class="reference internal" href="#wien2k"><code class="docutils literal notranslate"><span class="pre">--wien2k</span></code></a></li>
+<li><a class="reference internal" href="#abinit"><code class="docutils literal notranslate"><span class="pre">--abinit</span></code></a></li>
+<li><a class="reference internal" href="#qe"><code class="docutils literal notranslate"><span class="pre">--qe</span></code></a></li>
+<li><a class="reference internal" href="#siesta"><code class="docutils literal notranslate"><span class="pre">--siesta</span></code></a></li>
+<li><a class="reference internal" href="#elk"><code class="docutils literal notranslate"><span class="pre">--elk</span></code></a></li>
+<li><a class="reference internal" href="#crystal"><code class="docutils literal notranslate"><span class="pre">--crystal</span></code></a></li>
+<li><a class="reference internal" href="#vasp"><code class="docutils literal notranslate"><span class="pre">--vasp</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#input-cell">Input cell</a><ul>
-<li><a class="reference internal" href="#c-or-cell"><code class="docutils literal"><span class="pre">-c</span></code> or <code class="docutils literal"><span class="pre">--cell</span></code></a></li>
+<li><a class="reference internal" href="#c-or-cell"><code class="docutils literal notranslate"><span class="pre">-c</span></code> or <code class="docutils literal notranslate"><span class="pre">--cell</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#create-force-sets">Create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code></a><ul>
-<li><a class="reference internal" href="#f-or-forces"><code class="docutils literal"><span class="pre">-f</span></code> or <code class="docutils literal"><span class="pre">--forces</span></code></a><ul>
+<li><a class="reference internal" href="#create-force-sets">Create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code></a><ul>
+<li><a class="reference internal" href="#f-or-forces"><code class="docutils literal notranslate"><span class="pre">-f</span></code> or <code class="docutils literal notranslate"><span class="pre">--forces</span></code></a><ul>
 <li><a class="reference internal" href="#vasp-interface">VASP interface</a></li>
 <li><a class="reference internal" href="#abinit-interface">ABINIT interface</a></li>
 <li><a class="reference internal" href="#quantum-espresso-interface">Quantum ESPRESSO interface</a></li>
@@ -123,26 +114,26 @@
 <li><a class="reference internal" href="#crystal-interface">CRYSTAL interface</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#fz"><code class="docutils literal"><span class="pre">--fz</span></code></a></li>
+<li><a class="reference internal" href="#fz"><code class="docutils literal notranslate"><span class="pre">--fz</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#create-force-constants">Create <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></a><ul>
-<li><a class="reference internal" href="#fc-or-force-constants"><code class="docutils literal"><span class="pre">--fc</span></code> or <code class="docutils literal"><span class="pre">--force_constants</span></code></a></li>
+<li><a class="reference internal" href="#create-force-constants">Create <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a><ul>
+<li><a class="reference internal" href="#fc-or-force-constants"><code class="docutils literal notranslate"><span class="pre">--fc</span></code> or <code class="docutils literal notranslate"><span class="pre">--force_constants</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#graph-plotting">Graph plotting</a><ul>
-<li><a class="reference internal" href="#p"><code class="docutils literal"><span class="pre">-p</span></code></a></li>
-<li><a class="reference internal" href="#p-s"><code class="docutils literal"><span class="pre">-p</span> <span class="pre">-s</span></code></a></li>
+<li><a class="reference internal" href="#p"><code class="docutils literal notranslate"><span class="pre">-p</span></code></a></li>
+<li><a class="reference internal" href="#p-s"><code class="docutils literal notranslate"><span class="pre">-p</span> <span class="pre">-s</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#log-level">Log level</a><ul>
-<li><a class="reference internal" href="#v-or-verbose"><code class="docutils literal"><span class="pre">-v</span></code> or <code class="docutils literal"><span class="pre">--verbose</span></code></a></li>
-<li><a class="reference internal" href="#q-or-quiet"><code class="docutils literal"><span class="pre">-q</span></code> or <code class="docutils literal"><span class="pre">--quiet</span></code></a></li>
+<li><a class="reference internal" href="#v-or-verbose"><code class="docutils literal notranslate"><span class="pre">-v</span></code> or <code class="docutils literal notranslate"><span class="pre">--verbose</span></code></a></li>
+<li><a class="reference internal" href="#q-or-quiet"><code class="docutils literal notranslate"><span class="pre">-q</span></code> or <code class="docutils literal notranslate"><span class="pre">--quiet</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#crystal-symmetry">Crystal symmetry</a><ul>
-<li><a class="reference internal" href="#tolerance"><code class="docutils literal"><span class="pre">--tolerance</span></code></a></li>
-<li><a class="reference internal" href="#symmetry"><code class="docutils literal"><span class="pre">--symmetry</span></code></a></li>
+<li><a class="reference internal" href="#tolerance"><code class="docutils literal notranslate"><span class="pre">--tolerance</span></code></a></li>
+<li><a class="reference internal" href="#symmetry"><code class="docutils literal notranslate"><span class="pre">--symmetry</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -193,109 +184,110 @@
 <div class="contents local topic" id="contents">
 <ul class="simple">
 <li><a class="reference internal" href="#choice-of-force-calculator" id="id2">Choice of force calculator</a><ul>
-<li><a class="reference internal" href="#wien2k" id="id3"><code class="docutils literal"><span class="pre">--wien2k</span></code></a></li>
-<li><a class="reference internal" href="#abinit" id="id4"><code class="docutils literal"><span class="pre">--abinit</span></code></a></li>
-<li><a class="reference internal" href="#qe" id="id5"><code class="docutils literal"><span class="pre">--qe</span></code></a></li>
-<li><a class="reference internal" href="#siesta" id="id6"><code class="docutils literal"><span class="pre">--siesta</span></code></a></li>
-<li><a class="reference internal" href="#elk" id="id7"><code class="docutils literal"><span class="pre">--elk</span></code></a></li>
-<li><a class="reference internal" href="#crystal" id="id8"><code class="docutils literal"><span class="pre">--crystal</span></code></a></li>
-<li><a class="reference internal" href="#vasp" id="id9"><code class="docutils literal"><span class="pre">--vasp</span></code></a></li>
+<li><a class="reference internal" href="#wien2k" id="id3"><code class="docutils literal notranslate"><span class="pre">--wien2k</span></code></a></li>
+<li><a class="reference internal" href="#abinit" id="id4"><code class="docutils literal notranslate"><span class="pre">--abinit</span></code></a></li>
+<li><a class="reference internal" href="#qe" id="id5"><code class="docutils literal notranslate"><span class="pre">--qe</span></code></a></li>
+<li><a class="reference internal" href="#siesta" id="id6"><code class="docutils literal notranslate"><span class="pre">--siesta</span></code></a></li>
+<li><a class="reference internal" href="#elk" id="id7"><code class="docutils literal notranslate"><span class="pre">--elk</span></code></a></li>
+<li><a class="reference internal" href="#crystal" id="id8"><code class="docutils literal notranslate"><span class="pre">--crystal</span></code></a></li>
+<li><a class="reference internal" href="#vasp" id="id9"><code class="docutils literal notranslate"><span class="pre">--vasp</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#input-cell" id="id10">Input cell</a><ul>
-<li><a class="reference internal" href="#c-or-cell" id="id11"><code class="docutils literal"><span class="pre">-c</span></code> or <code class="docutils literal"><span class="pre">--cell</span></code></a></li>
+<li><a class="reference internal" href="#c-or-cell" id="id11"><code class="docutils literal notranslate"><span class="pre">-c</span></code> or <code class="docutils literal notranslate"><span class="pre">--cell</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#create-force-sets" id="id12">Create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code></a><ul>
-<li><a class="reference internal" href="#f-or-forces" id="id13"><code class="docutils literal"><span class="pre">-f</span></code> or <code class="docutils literal"><span class="pre">--forces</span></code></a></li>
-<li><a class="reference internal" href="#fz" id="id14"><code class="docutils literal"><span class="pre">--fz</span></code></a></li>
+<li><a class="reference internal" href="#create-force-sets" id="id12">Create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code></a><ul>
+<li><a class="reference internal" href="#f-or-forces" id="id13"><code class="docutils literal notranslate"><span class="pre">-f</span></code> or <code class="docutils literal notranslate"><span class="pre">--forces</span></code></a></li>
+<li><a class="reference internal" href="#fz" id="id14"><code class="docutils literal notranslate"><span class="pre">--fz</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#create-force-constants" id="id15">Create <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></a><ul>
-<li><a class="reference internal" href="#fc-or-force-constants" id="id16"><code class="docutils literal"><span class="pre">--fc</span></code> or <code class="docutils literal"><span class="pre">--force_constants</span></code></a></li>
+<li><a class="reference internal" href="#create-force-constants" id="id15">Create <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a><ul>
+<li><a class="reference internal" href="#fc-or-force-constants" id="id16"><code class="docutils literal notranslate"><span class="pre">--fc</span></code> or <code class="docutils literal notranslate"><span class="pre">--force_constants</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#graph-plotting" id="id17">Graph plotting</a><ul>
-<li><a class="reference internal" href="#p" id="id18"><code class="docutils literal"><span class="pre">-p</span></code></a></li>
-<li><a class="reference internal" href="#p-s" id="id19"><code class="docutils literal"><span class="pre">-p</span> <span class="pre">-s</span></code></a></li>
+<li><a class="reference internal" href="#p" id="id18"><code class="docutils literal notranslate"><span class="pre">-p</span></code></a></li>
+<li><a class="reference internal" href="#p-s" id="id19"><code class="docutils literal notranslate"><span class="pre">-p</span> <span class="pre">-s</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#log-level" id="id20">Log level</a><ul>
-<li><a class="reference internal" href="#v-or-verbose" id="id21"><code class="docutils literal"><span class="pre">-v</span></code> or <code class="docutils literal"><span class="pre">--verbose</span></code></a></li>
-<li><a class="reference internal" href="#q-or-quiet" id="id22"><code class="docutils literal"><span class="pre">-q</span></code> or <code class="docutils literal"><span class="pre">--quiet</span></code></a></li>
+<li><a class="reference internal" href="#v-or-verbose" id="id21"><code class="docutils literal notranslate"><span class="pre">-v</span></code> or <code class="docutils literal notranslate"><span class="pre">--verbose</span></code></a></li>
+<li><a class="reference internal" href="#q-or-quiet" id="id22"><code class="docutils literal notranslate"><span class="pre">-q</span></code> or <code class="docutils literal notranslate"><span class="pre">--quiet</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#crystal-symmetry" id="id23">Crystal symmetry</a><ul>
-<li><a class="reference internal" href="#tolerance" id="id24"><code class="docutils literal"><span class="pre">--tolerance</span></code></a></li>
-<li><a class="reference internal" href="#symmetry" id="id25"><code class="docutils literal"><span class="pre">--symmetry</span></code></a></li>
+<li><a class="reference internal" href="#tolerance" id="id24"><code class="docutils literal notranslate"><span class="pre">--tolerance</span></code></a></li>
+<li><a class="reference internal" href="#symmetry" id="id25"><code class="docutils literal notranslate"><span class="pre">--symmetry</span></code></a></li>
 </ul>
 </li>
 </ul>
 </div>
-<p>From phonopy v1.12.2, the command option names with underscores <code class="docutils literal"><span class="pre">_</span></code>
-are replaced by those with dashes <code class="docutils literal"><span class="pre">-</span></code>. Those tag names are unchanged.</p>
+<p>From phonopy v1.12.2, the command option names with underscores <code class="docutils literal notranslate"><span class="pre">_</span></code>
+are replaced by those with dashes <code class="docutils literal notranslate"><span class="pre">-</span></code>. Those tag names are unchanged.</p>
 <p>Some of command-line options are equivalent to respective setting
 tags:</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">--amplitude</span></code> (<code class="docutils literal"><span class="pre">DISPLACEMENT_DISTANCE</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--anime</span></code> (<code class="docutils literal"><span class="pre">ANIME</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--band</span></code> (<code class="docutils literal"><span class="pre">BAND</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--band-connection</span></code>  (<code class="docutils literal"><span class="pre">BAND_CONNECTION</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--band-format</span></code> (<code class="docutils literal"><span class="pre">BAND_FORMAT</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--band-labels</span></code> (<code class="docutils literal"><span class="pre">BAND_LABELS</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--band-points</span></code>  (<code class="docutils literal"><span class="pre">BAND_POINTS</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--cutoff-freq</span></code> (<code class="docutils literal"><span class="pre">CUTOFF_FREQUENCY</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">-c</span></code>, <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">CELL_FILENAME</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">-d</span></code>  (<code class="docutils literal"><span class="pre">CREATE_DISPLACEMENTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code></li>
-<li><code class="docutils literal"><span class="pre">--dim</span></code> (<code class="docutils literal"><span class="pre">DIM</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--dos</span></code> (<code class="docutils literal"><span class="pre">DOS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--eigvecs</span></code>, <code class="docutils literal"><span class="pre">--eigenvectors</span></code> (<code class="docutils literal"><span class="pre">EIGENVECTORS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--factor</span></code> (<code class="docutils literal"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--fc-symmetry</span></code> (<code class="docutils literal"><span class="pre">FC_SYMMETRY</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--fits-debye-model</span></code> (<code class="docutils literal"><span class="pre">DEBYE_MODEL</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--fmax</span></code> (<code class="docutils literal"><span class="pre">FMAX</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--fmin</span></code> (<code class="docutils literal"><span class="pre">FMIN</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--fpitch</span></code> (<code class="docutils literal"><span class="pre">FPITCH</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--gc</span></code>, <code class="docutils literal"><span class="pre">--gamma_center</span></code> (<code class="docutils literal"><span class="pre">GAMMA_CENTER</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--gv</span></code>, <code class="docutils literal"><span class="pre">--group_velocity</span></code> (<code class="docutils literal"><span class="pre">GROUP_VELOCITY</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--gv-delta-q</span></code> (<code class="docutils literal"><span class="pre">GV_DELTA_Q</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--hdf5</span></code> (<code class="docutils literal"><span class="pre">HDF5</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--irreps</span></code> (<code class="docutils literal"><span class="pre">IRREPS</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--lcg</span></code>, <code class="docutils literal"><span class="pre">--little_cogroup</span></code> (<code class="docutils literal"><span class="pre">LITTLE_COGROUP</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--modulation</span></code> (<code class="docutils literal"><span class="pre">MODULATION</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--moment</span></code> (<code class="docutils literal"><span class="pre">MOMENT</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--moment_order</span></code> (<code class="docutils literal"><span class="pre">MOMENT_ORDER</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--mesh-format</span></code> (<code class="docutils literal"><span class="pre">MESH_FORMAT</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--mp</span></code>, <code class="docutils literal"><span class="pre">--mesh</span></code> (<code class="docutils literal"><span class="pre">MP</span></code> or <code class="docutils literal"><span class="pre">MESH</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--nac</span></code> (<code class="docutils literal"><span class="pre">NAC</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--nac-method</span></code> (<code class="docutils literal"><span class="pre">NAC_METHOD</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--nosym</span></code> (<code class="docutils literal"><span class="pre">SYMMETRY</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--nomeshsym</span></code> (<code class="docutils literal"><span class="pre">MESH_SYMMETRY</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--nowritemesh</span></code> (<code class="docutils literal"><span class="pre">WRITE_MESH</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--pa</span></code>, <code class="docutils literal"><span class="pre">--primitive-axis</span></code> (<code class="docutils literal"><span class="pre">PRIMITIVE_AXIS</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--pd</span></code>, <code class="docutils literal"><span class="pre">--projection-direction</span></code> (<code class="docutils literal"><span class="pre">PROJECTION_DIRECTION</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--pdos</span></code> (<code class="docutils literal"><span class="pre">PDOS</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--pr</span></code>, <code class="docutils literal"><span class="pre">--pretend-real</span></code> (<code class="docutils literal"><span class="pre">PRETEND_REAL</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--q-direction</span></code> (<code class="docutils literal"><span class="pre">Q_DIRECTION</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--qpoints</span></code> (<code class="docutils literal"><span class="pre">QPOINTS</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--qpoints-format</span></code> (<code class="docutils literal"><span class="pre">QPOINTS_FORMAT</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--readfc</span></code> (<code class="docutils literal"><span class="pre">READ_FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--readfc-format</span></code> (<code class="docutils literal"><span class="pre">READFC_FORMAT</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--read-qpoints</span></code> (<code class="docutils literal"><span class="pre">QPOINTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--show-irreps</span></code> (<code class="docutils literal"><span class="pre">SHOW_IRREPS</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--sigma</span></code> (<code class="docutils literal"><span class="pre">SIGMA</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">-t</span></code> (<code class="docutils literal"><span class="pre">TPROP</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--td</span></code> (<code class="docutils literal"><span class="pre">TDISP</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--tdm</span></code> (<code class="docutils literal"><span class="pre">TDISPMAT</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--tdm-cif</span></code> (<code class="docutils literal"><span class="pre">TDISPMAT_CIF</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--thm</span></code>, <code class="docutils literal"><span class="pre">--tetrahedron-method</span></code> (<code class="docutils literal"><span class="pre">TETRAHEDRON</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--tmin</span></code> (<code class="docutils literal"><span class="pre">TMIN</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--tmax</span></code> (<code class="docutils literal"><span class="pre">TMAX</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--tstep</span></code> (<code class="docutils literal"><span class="pre">TSTEP</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--writedm</span></code> (<code class="docutils literal"><span class="pre">WRITEDM</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--writefc</span></code> (<code class="docutils literal"><span class="pre">WRITE_FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--writefc-format</span></code> (<code class="docutils literal"><span class="pre">WRITEFC_FORMAT</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--xyz-projection</span></code> (<code class="docutils literal"><span class="pre">XYZ_PROJECTION</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--amplitude</span></code> (<code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--anime</span></code> (<code class="docutils literal notranslate"><span class="pre">ANIME</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--band</span></code> (<code class="docutils literal notranslate"><span class="pre">BAND</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--band-connection</span></code>  (<code class="docutils literal notranslate"><span class="pre">BAND_CONNECTION</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--band-format</span></code> (<code class="docutils literal notranslate"><span class="pre">BAND_FORMAT</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--band-labels</span></code> (<code class="docutils literal notranslate"><span class="pre">BAND_LABELS</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--band-points</span></code>  (<code class="docutils literal notranslate"><span class="pre">BAND_POINTS</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--cutoff-freq</span></code> (<code class="docutils literal notranslate"><span class="pre">CUTOFF_FREQUENCY</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">-c</span></code>, <code class="docutils literal notranslate"><span class="pre">--cell</span></code> (<code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">-d</span></code>  (<code class="docutils literal notranslate"><span class="pre">CREATE_DISPLACEMENTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">--dim</span></code> (<code class="docutils literal notranslate"><span class="pre">DIM</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--dos</span></code> (<code class="docutils literal notranslate"><span class="pre">DOS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--eigvecs</span></code>, <code class="docutils literal notranslate"><span class="pre">--eigenvectors</span></code> (<code class="docutils literal notranslate"><span class="pre">EIGENVECTORS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--factor</span></code> (<code class="docutils literal notranslate"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--fc-symmetry</span></code> (<code class="docutils literal notranslate"><span class="pre">FC_SYMMETRY</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--fits-debye-model</span></code> (<code class="docutils literal notranslate"><span class="pre">DEBYE_MODEL</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--fmax</span></code> (<code class="docutils literal notranslate"><span class="pre">FMAX</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--fmin</span></code> (<code class="docutils literal notranslate"><span class="pre">FMIN</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--fpitch</span></code> (<code class="docutils literal notranslate"><span class="pre">FPITCH</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--full-fc</span></code> (<code class="docutils literal notranslate"><span class="pre">FULL_FORCE_CONSTANTS</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--gc</span></code>, <code class="docutils literal notranslate"><span class="pre">--gamma_center</span></code> (<code class="docutils literal notranslate"><span class="pre">GAMMA_CENTER</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--gv</span></code>, <code class="docutils literal notranslate"><span class="pre">--group_velocity</span></code> (<code class="docutils literal notranslate"><span class="pre">GROUP_VELOCITY</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--gv-delta-q</span></code> (<code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--hdf5</span></code> (<code class="docutils literal notranslate"><span class="pre">HDF5</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--irreps</span></code> (<code class="docutils literal notranslate"><span class="pre">IRREPS</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--lcg</span></code>, <code class="docutils literal notranslate"><span class="pre">--little_cogroup</span></code> (<code class="docutils literal notranslate"><span class="pre">LITTLE_COGROUP</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--modulation</span></code> (<code class="docutils literal notranslate"><span class="pre">MODULATION</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--moment</span></code> (<code class="docutils literal notranslate"><span class="pre">MOMENT</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--moment_order</span></code> (<code class="docutils literal notranslate"><span class="pre">MOMENT_ORDER</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--mesh-format</span></code> (<code class="docutils literal notranslate"><span class="pre">MESH_FORMAT</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--mp</span></code>, <code class="docutils literal notranslate"><span class="pre">--mesh</span></code> (<code class="docutils literal notranslate"><span class="pre">MP</span></code> or <code class="docutils literal notranslate"><span class="pre">MESH</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--nac</span></code> (<code class="docutils literal notranslate"><span class="pre">NAC</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--nac-method</span></code> (<code class="docutils literal notranslate"><span class="pre">NAC_METHOD</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--nosym</span></code> (<code class="docutils literal notranslate"><span class="pre">SYMMETRY</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--nomeshsym</span></code> (<code class="docutils literal notranslate"><span class="pre">MESH_SYMMETRY</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--nowritemesh</span></code> (<code class="docutils literal notranslate"><span class="pre">WRITE_MESH</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--pa</span></code>, <code class="docutils literal notranslate"><span class="pre">--primitive-axis</span></code> (<code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXIS</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--pd</span></code>, <code class="docutils literal notranslate"><span class="pre">--projection-direction</span></code> (<code class="docutils literal notranslate"><span class="pre">PROJECTION_DIRECTION</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--pdos</span></code> (<code class="docutils literal notranslate"><span class="pre">PDOS</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--pr</span></code>, <code class="docutils literal notranslate"><span class="pre">--pretend-real</span></code> (<code class="docutils literal notranslate"><span class="pre">PRETEND_REAL</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--q-direction</span></code> (<code class="docutils literal notranslate"><span class="pre">Q_DIRECTION</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--qpoints</span></code> (<code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--qpoints-format</span></code> (<code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--readfc</span></code> (<code class="docutils literal notranslate"><span class="pre">READ_FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--readfc-format</span></code> (<code class="docutils literal notranslate"><span class="pre">READFC_FORMAT</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--read-qpoints</span></code> (<code class="docutils literal notranslate"><span class="pre">QPOINTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--show-irreps</span></code> (<code class="docutils literal notranslate"><span class="pre">SHOW_IRREPS</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--sigma</span></code> (<code class="docutils literal notranslate"><span class="pre">SIGMA</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">-t</span></code> (<code class="docutils literal notranslate"><span class="pre">TPROP</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--td</span></code> (<code class="docutils literal notranslate"><span class="pre">TDISP</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--tdm</span></code> (<code class="docutils literal notranslate"><span class="pre">TDISPMAT</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--tdm-cif</span></code> (<code class="docutils literal notranslate"><span class="pre">TDISPMAT_CIF</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--thm</span></code>, <code class="docutils literal notranslate"><span class="pre">--tetrahedron-method</span></code> (<code class="docutils literal notranslate"><span class="pre">TETRAHEDRON</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--tmin</span></code> (<code class="docutils literal notranslate"><span class="pre">TMIN</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--tmax</span></code> (<code class="docutils literal notranslate"><span class="pre">TMAX</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--tstep</span></code> (<code class="docutils literal notranslate"><span class="pre">TSTEP</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--writedm</span></code> (<code class="docutils literal notranslate"><span class="pre">WRITEDM</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--writefc</span></code> (<code class="docutils literal notranslate"><span class="pre">WRITE_FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--writefc-format</span></code> (<code class="docutils literal notranslate"><span class="pre">WRITEFC_FORMAT</span></code>)</li>
+<li><code class="docutils literal notranslate"><span class="pre">--xyz-projection</span></code> (<code class="docutils literal notranslate"><span class="pre">XYZ_PROJECTION</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
 </ul>
 <p>When both of command-line option and setting tag for the same purpose
 are set simultaneously, the command-line options overide the setting
@@ -304,78 +296,78 @@ tags.</p>
 <span id="force-calculators"></span><h2><a class="toc-backref" href="#id2">Choice of force calculator</a><a class="headerlink" href="#choice-of-force-calculator" title="Permalink to this headline">¶</a></h2>
 <p>Currently interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT,
 Elk, SIESTA, and CRYSTAL are prepared. These interfaces are invoked
-with <code class="docutils literal"><span class="pre">--vasp</span></code>, <code class="docutils literal"><span class="pre">--wienk2</span></code>, <code class="docutils literal"><span class="pre">--qe</span></code>, <code class="docutils literal"><span class="pre">--abinit</span></code>, <code class="docutils literal"><span class="pre">--elk</span></code>,
-<code class="docutils literal"><span class="pre">--siesta</span></code>, and <code class="docutils literal"><span class="pre">--crystal</span></code> options, respectively, and nothing is
-specified, <code class="docutils literal"><span class="pre">--vasp</span></code> is selected as the default interface.</p>
+with <code class="docutils literal notranslate"><span class="pre">--vasp</span></code>, <code class="docutils literal notranslate"><span class="pre">--wienk2</span></code>, <code class="docutils literal notranslate"><span class="pre">--qe</span></code>, <code class="docutils literal notranslate"><span class="pre">--abinit</span></code>, <code class="docutils literal notranslate"><span class="pre">--elk</span></code>,
+<code class="docutils literal notranslate"><span class="pre">--siesta</span></code>, and <code class="docutils literal notranslate"><span class="pre">--crystal</span></code> options, respectively, and nothing is
+specified, <code class="docutils literal notranslate"><span class="pre">--vasp</span></code> is selected as the default interface.</p>
 <p>The details about these interfaces are found at <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.</p>
 <div class="section" id="wien2k">
-<span id="wien2k-mode"></span><h3><a class="toc-backref" href="#id3"><code class="docutils literal"><span class="pre">--wien2k</span></code></a><a class="headerlink" href="#wien2k" title="Permalink to this headline">¶</a></h3>
+<span id="wien2k-mode"></span><h3><a class="toc-backref" href="#id3"><code class="docutils literal notranslate"><span class="pre">--wien2k</span></code></a><a class="headerlink" href="#wien2k" title="Permalink to this headline">¶</a></h3>
 <p><strong>Behavior is changed at phonopy 1.9.2.</strong></p>
 <p>This option invokes the WIEN2k mode.In this mode. Usually this option
-is used with <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>) option or <code class="docutils literal"><span class="pre">CELL_FILENAME</span></code> tag to
+is used with <code class="docutils literal notranslate"><span class="pre">--cell</span></code> (<code class="docutils literal notranslate"><span class="pre">-c</span></code>) option or <code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code> tag to
 read WIEN2k crystal structure file.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">wien2k</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="n">struct</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">wien2k</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="n">struct</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
 <p><strong>Only the WIEN2k struct with the P lattice is supported</strong>.  See more
 information <a class="reference internal" href="wien2k.html#wien2k-interface"><span class="std std-ref">Wien2k &amp; phonopy calculation</span></a>.</p>
 <p>For previous versions than 1.9.1.3, this option is used as</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">wien2k</span><span class="o">=</span><span class="n">NaCl</span><span class="o">.</span><span class="n">struct</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>   <span class="p">(</span><span class="n">version</span> <span class="o">&lt;=</span> <span class="mf">1.9</span><span class="o">.</span><span class="mf">1.3</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">wien2k</span><span class="o">=</span><span class="n">NaCl</span><span class="o">.</span><span class="n">struct</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>   <span class="p">(</span><span class="n">version</span> <span class="o">&lt;=</span> <span class="mf">1.9</span><span class="o">.</span><span class="mf">1.3</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="abinit">
-<span id="abinit-mode"></span><h3><a class="toc-backref" href="#id4"><code class="docutils literal"><span class="pre">--abinit</span></code></a><a class="headerlink" href="#abinit" title="Permalink to this headline">¶</a></h3>
+<span id="abinit-mode"></span><h3><a class="toc-backref" href="#id4"><code class="docutils literal notranslate"><span class="pre">--abinit</span></code></a><a class="headerlink" href="#abinit" title="Permalink to this headline">¶</a></h3>
 <p>Abinit mode is invoked with this option. Usually this option is used
-with <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>) option or <code class="docutils literal"><span class="pre">CELL_FILENAME</span></code> tag to read
+with <code class="docutils literal notranslate"><span class="pre">--cell</span></code> (<code class="docutils literal notranslate"><span class="pre">-c</span></code>) option or <code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code> tag to read
 Abinit main input file that contains the unit cell crystal structure,
 e.g.,</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">abinit</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">abinit</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="qe">
-<span id="qe-mode"></span><h3><a class="toc-backref" href="#id5"><code class="docutils literal"><span class="pre">--qe</span></code></a><a class="headerlink" href="#qe" title="Permalink to this headline">¶</a></h3>
+<span id="qe-mode"></span><h3><a class="toc-backref" href="#id5"><code class="docutils literal notranslate"><span class="pre">--qe</span></code></a><a class="headerlink" href="#qe" title="Permalink to this headline">¶</a></h3>
 <p>Quantum ESPRESSO mode is invoked with this option. Usually this option
-is used with <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>) option or <code class="docutils literal"><span class="pre">CELL_FILENAME</span></code> tag to
+is used with <code class="docutils literal notranslate"><span class="pre">--cell</span></code> (<code class="docutils literal notranslate"><span class="pre">-c</span></code>) option or <code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code> tag to
 read QE/PWscf input file that contains the unit cell crystal structure,
 e.g.,</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="siesta">
-<span id="siesta-mode"></span><h3><a class="toc-backref" href="#id6"><code class="docutils literal"><span class="pre">--siesta</span></code></a><a class="headerlink" href="#siesta" title="Permalink to this headline">¶</a></h3>
+<span id="siesta-mode"></span><h3><a class="toc-backref" href="#id6"><code class="docutils literal notranslate"><span class="pre">--siesta</span></code></a><a class="headerlink" href="#siesta" title="Permalink to this headline">¶</a></h3>
 <p>Siesta mode is invoked with this option. Usually this option is used
-with <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>) option or <code class="docutils literal"><span class="pre">CELL_FILENAME</span></code> tag to read a Siesta
+with <code class="docutils literal notranslate"><span class="pre">--cell</span></code> (<code class="docutils literal notranslate"><span class="pre">-c</span></code>) option or <code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code> tag to read a Siesta
 input file that contains the unit cell crystal structure, e.g.,</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">siesta</span> <span class="o">-</span><span class="n">c</span> <span class="n">Si</span><span class="o">.</span><span class="n">fdf</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">siesta</span> <span class="o">-</span><span class="n">c</span> <span class="n">Si</span><span class="o">.</span><span class="n">fdf</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="elk">
-<span id="elk-mode"></span><h3><a class="toc-backref" href="#id7"><code class="docutils literal"><span class="pre">--elk</span></code></a><a class="headerlink" href="#elk" title="Permalink to this headline">¶</a></h3>
+<span id="elk-mode"></span><h3><a class="toc-backref" href="#id7"><code class="docutils literal notranslate"><span class="pre">--elk</span></code></a><a class="headerlink" href="#elk" title="Permalink to this headline">¶</a></h3>
 <p>Elk mode is invoked with this option. Usually this option is used
-with <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>) option or <code class="docutils literal"><span class="pre">CELL_FILENAME</span></code> tag to read Elk
+with <code class="docutils literal notranslate"><span class="pre">--cell</span></code> (<code class="docutils literal notranslate"><span class="pre">-c</span></code>) option or <code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code> tag to read Elk
 input file that contains the unit cell crystal structure, e.g.,</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">elk</span> <span class="o">-</span><span class="n">c</span> <span class="n">elk</span><span class="o">-</span><span class="n">unitcell</span><span class="o">.</span><span class="ow">in</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">elk</span> <span class="o">-</span><span class="n">c</span> <span class="n">elk</span><span class="o">-</span><span class="n">unitcell</span><span class="o">.</span><span class="ow">in</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="crystal">
-<span id="crystal-mode"></span><h3><a class="toc-backref" href="#id8"><code class="docutils literal"><span class="pre">--crystal</span></code></a><a class="headerlink" href="#crystal" title="Permalink to this headline">¶</a></h3>
+<span id="crystal-mode"></span><h3><a class="toc-backref" href="#id8"><code class="docutils literal notranslate"><span class="pre">--crystal</span></code></a><a class="headerlink" href="#crystal" title="Permalink to this headline">¶</a></h3>
 <p>CRYSTAL mode is invoked with this option. Usually this option is used
-with <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>) option or <code class="docutils literal"><span class="pre">CELL_FILENAME</span></code> tag to read a CRYSTAL
+with <code class="docutils literal notranslate"><span class="pre">--cell</span></code> (<code class="docutils literal notranslate"><span class="pre">-c</span></code>) option or <code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code> tag to read a CRYSTAL
 input file that contains the unit cell crystal structure, e.g.,</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">-</span><span class="n">c</span> <span class="n">crystal</span><span class="o">.</span><span class="n">o</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">-</span><span class="n">c</span> <span class="n">crystal</span><span class="o">.</span><span class="n">o</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="vasp">
-<span id="vasp-mode"></span><h3><a class="toc-backref" href="#id9"><code class="docutils literal"><span class="pre">--vasp</span></code></a><a class="headerlink" href="#vasp" title="Permalink to this headline">¶</a></h3>
-<p>This doesn’t change the default behaviour, but <code class="docutils literal"><span class="pre">vasp</span></code> will appear as
-the calculator such as in <code class="docutils literal"><span class="pre">band.yaml</span></code>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">calculator</span><span class="p">:</span> <span class="n">vasp</span>
+<span id="vasp-mode"></span><h3><a class="toc-backref" href="#id9"><code class="docutils literal notranslate"><span class="pre">--vasp</span></code></a><a class="headerlink" href="#vasp" title="Permalink to this headline">¶</a></h3>
+<p>This doesn’t change the default behaviour, but <code class="docutils literal notranslate"><span class="pre">vasp</span></code> will appear as
+the calculator such as in <code class="docutils literal notranslate"><span class="pre">band.yaml</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">calculator</span><span class="p">:</span> <span class="n">vasp</span>
 <span class="n">nqpoint</span><span class="p">:</span> <span class="mi">204</span>
 <span class="o">...</span>
 </pre></div>
@@ -385,14 +377,14 @@ the calculator such as in <code class="docutils literal"><span class="pre">band.
 <div class="section" id="input-cell">
 <span id="cell-filename-option"></span><h2><a class="toc-backref" href="#id10">Input cell</a><a class="headerlink" href="#input-cell" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="c-or-cell">
-<h3><a class="toc-backref" href="#id11"><code class="docutils literal"><span class="pre">-c</span></code> or <code class="docutils literal"><span class="pre">--cell</span></code></a><a class="headerlink" href="#c-or-cell" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id11"><code class="docutils literal notranslate"><span class="pre">-c</span></code> or <code class="docutils literal notranslate"><span class="pre">--cell</span></code></a><a class="headerlink" href="#c-or-cell" title="Permalink to this headline">¶</a></h3>
 <p>Unit cell crystal structure file is specified with this tag.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">cell</span><span class="o">=</span><span class="n">POSCAR</span><span class="o">-</span><span class="n">unitcell</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">cell</span><span class="o">=</span><span class="n">POSCAR</span><span class="o">-</span><span class="n">unitcell</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
 <p>Without specifying this tag, default file name is searched in current
 directory. The default file names for the calculators are as follows:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">VASP</span>    <span class="o">|</span> <span class="n">POSCAR</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VASP</span>    <span class="o">|</span> <span class="n">POSCAR</span>
 <span class="n">WIEN2k</span>  <span class="o">|</span> <span class="n">case</span><span class="o">.</span><span class="n">struct</span>
 <span class="n">ABINIT</span>  <span class="o">|</span> <span class="n">unitcell</span><span class="o">.</span><span class="ow">in</span>
 <span class="n">PWscf</span>   <span class="o">|</span> <span class="n">unitcell</span><span class="o">.</span><span class="ow">in</span>
@@ -403,103 +395,103 @@ directory. The default file names for the calculators are as follows:</p>
 </div>
 </div>
 <div class="section" id="create-force-sets">
-<h2><a class="toc-backref" href="#id12">Create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code></a><a class="headerlink" href="#create-force-sets" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id12">Create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code></a><a class="headerlink" href="#create-force-sets" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="f-or-forces">
-<span id="f-force-sets-option"></span><h3><a class="toc-backref" href="#id13"><code class="docutils literal"><span class="pre">-f</span></code> or <code class="docutils literal"><span class="pre">--forces</span></code></a><a class="headerlink" href="#f-or-forces" title="Permalink to this headline">¶</a></h3>
+<span id="f-force-sets-option"></span><h3><a class="toc-backref" href="#id13"><code class="docutils literal notranslate"><span class="pre">-f</span></code> or <code class="docutils literal notranslate"><span class="pre">--forces</span></code></a><a class="headerlink" href="#f-or-forces" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="vasp-interface">
 <span id="vasp-force-sets-option"></span><h4>VASP interface<a class="headerlink" href="#vasp-interface" title="Permalink to this headline">¶</a></h4>
-<p><code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal"><span class="pre">disp.yaml</span></code>, which is an output
+<p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code>, which is an output
 file when creating supercells with displacements, and
-<code class="docutils literal"><span class="pre">vasprun.xml</span></code>’s, which are the VASP output files. <code class="docutils literal"><span class="pre">disp.yaml</span></code> in
+<code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>’s, which are the VASP output files. <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> in
 the current directory is automatically read. The order of
-displacements written in <code class="docutils literal"><span class="pre">disp.yaml</span></code> file has to correpond to that of
-<code class="docutils literal"><span class="pre">vasprun.xml</span></code> files .</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span> <span class="o">...</span>
+displacements written in <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> file has to correpond to that of
+<code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> files .</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span> <span class="o">...</span>
 </pre></div>
 </div>
 <p>Attention:</p>
 <ul class="simple">
 <li>Site-projected wave function information (the same information as
-<code class="docutils literal"><span class="pre">PROCAR</span></code>) siginificantly increases the size of <code class="docutils literal"><span class="pre">vasprun.xml</span></code>. So
+<code class="docutils literal notranslate"><span class="pre">PROCAR</span></code>) siginificantly increases the size of <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>. So
 parsing xml file uses huge memory space. It is recommended</li>
 <li>to switch off to calculate it.  If there are many displacements, shell
-expansions are useful, e.g., <code class="docutils literal"><span class="pre">disp-*/vasprun.xml</span></code>, or
-<code class="docutils literal"><span class="pre">disp-{001..128}/vasprun.xml</span></code> (for zsh, and recent bash).</li>
+expansions are useful, e.g., <code class="docutils literal notranslate"><span class="pre">disp-*/vasprun.xml</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">disp-{001..128}/vasprun.xml</span></code> (for zsh, and recent bash).</li>
 </ul>
 </div>
 <div class="section" id="abinit-interface">
 <span id="abinit-force-sets-option"></span><h4>ABINIT interface<a class="headerlink" href="#abinit-interface" title="Permalink to this headline">¶</a></h4>
-<p><code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal"><span class="pre">disp.yaml</span></code> and ABINIT output
-files (<code class="docutils literal"><span class="pre">*.out</span></code>). In the reading of forces in ABINIT output files,
+<p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> and ABINIT output
+files (<code class="docutils literal notranslate"><span class="pre">*.out</span></code>). In the reading of forces in ABINIT output files,
 forces in eV/Angstrom are read. The unit conversion factor is
 determined with this unit.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">abinit</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">out</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">out</span>  <span class="o">...</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">abinit</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">out</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">out</span>  <span class="o">...</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="quantum-espresso-interface">
 <span id="qe-force-sets-option"></span><h4>Quantum ESPRESSO interface<a class="headerlink" href="#quantum-espresso-interface" title="Permalink to this headline">¶</a></h4>
-<p><code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal"><span class="pre">disp.yaml</span></code> and PWscf output
+<p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> and PWscf output
 files.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">out</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">out</span>  <span class="o">...</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">out</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">out</span>  <span class="o">...</span>
 </pre></div>
 </div>
-<p>Here <code class="docutils literal"><span class="pre">*.out</span></code> files are the saved texts of standard outputs of PWscf
+<p>Here <code class="docutils literal notranslate"><span class="pre">*.out</span></code> files are the saved texts of standard outputs of PWscf
 calculations.</p>
 </div>
 <div class="section" id="wien2k-interface">
 <span id="wien2k-force-sets-option"></span><h4>WIEN2k interface<a class="headerlink" href="#wien2k-interface" title="Permalink to this headline">¶</a></h4>
-<p>This is experimental support to generage <code class="docutils literal"><span class="pre">FORCE_SETS</span></code>. Insted of
-this, you can use the external tool called <code class="docutils literal"><span class="pre">scf2forces</span></code> to generate
-<code class="docutils literal"><span class="pre">FORCE_SETS</span></code>. <code class="docutils literal"><span class="pre">scf2forces</span></code> is found at
+<p>This is experimental support to generage <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>. Insted of
+this, you can use the external tool called <code class="docutils literal notranslate"><span class="pre">scf2forces</span></code> to generate
+<code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>. <code class="docutils literal notranslate"><span class="pre">scf2forces</span></code> is found at
 <a class="reference external" href="http://www.wien2k.at/reg_user/unsupported/">http://www.wien2k.at/reg_user/unsupported/</a>.</p>
-<p><code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal"><span class="pre">disp.yaml</span></code>, which is an output
+<p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code>, which is an output
 file when creating supercell with displacements, and
-<code class="docutils literal"><span class="pre">case.scf</span></code>’s, which are the WIEN2k output files. The order of
-displacements in <code class="docutils literal"><span class="pre">disp.yaml</span></code> file and the order of <code class="docutils literal"><span class="pre">case.scf</span></code>’s
+<code class="docutils literal notranslate"><span class="pre">case.scf</span></code>’s, which are the WIEN2k output files. The order of
+displacements in <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> file and the order of <code class="docutils literal notranslate"><span class="pre">case.scf</span></code>’s
 have to be same. <strong>For WIEN2k struct file, only negative atom index
 with the P lattice format is supported.</strong></p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">wien2k</span> <span class="o">-</span><span class="n">f</span> <span class="n">case_001</span><span class="o">/</span><span class="n">case_001</span><span class="o">.</span><span class="n">scf</span> <span class="n">case_002</span><span class="o">/</span><span class="n">case_002</span><span class="o">.</span><span class="n">scf</span> <span class="o">...</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">wien2k</span> <span class="o">-</span><span class="n">f</span> <span class="n">case_001</span><span class="o">/</span><span class="n">case_001</span><span class="o">.</span><span class="n">scf</span> <span class="n">case_002</span><span class="o">/</span><span class="n">case_002</span><span class="o">.</span><span class="n">scf</span> <span class="o">...</span>
 </pre></div>
 </div>
 <p>For more information, <a class="reference internal" href="wien2k.html#wien2k-interface"><span class="std std-ref">Wien2k &amp; phonopy calculation</span></a>.</p>
 </div>
 <div class="section" id="elk-interface">
 <span id="elk-force-sets-option"></span><h4>Elk interface<a class="headerlink" href="#elk-interface" title="Permalink to this headline">¶</a></h4>
-<p><code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal"><span class="pre">disp.yaml</span></code> and Elk output
+<p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> and Elk output
 files.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">elk</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">INFO</span><span class="o">.</span><span class="n">OUT</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">INFO</span><span class="o">.</span><span class="n">OUT</span>  <span class="o">...</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">elk</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">INFO</span><span class="o">.</span><span class="n">OUT</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">INFO</span><span class="o">.</span><span class="n">OUT</span>  <span class="o">...</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="crystal-interface">
 <span id="crystal-force-sets-option"></span><h4>CRYSTAL interface<a class="headerlink" href="#crystal-interface" title="Permalink to this headline">¶</a></h4>
-<p><code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal"><span class="pre">disp.yaml</span></code> and CRYSTAL output
+<p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> and CRYSTAL output
 files.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">-</span><span class="n">f</span> <span class="n">supercell</span><span class="o">-</span><span class="mf">001.</span><span class="n">o</span> <span class="n">supercell</span><span class="o">-</span><span class="mf">002.</span><span class="n">o</span>  <span class="o">...</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">-</span><span class="n">f</span> <span class="n">supercell</span><span class="o">-</span><span class="mf">001.</span><span class="n">o</span> <span class="n">supercell</span><span class="o">-</span><span class="mf">002.</span><span class="n">o</span>  <span class="o">...</span>
 </pre></div>
 </div>
 </div>
 </div>
 <div class="section" id="fz">
-<span id="fz-force-sets-option"></span><h3><a class="toc-backref" href="#id14"><code class="docutils literal"><span class="pre">--fz</span></code></a><a class="headerlink" href="#fz" title="Permalink to this headline">¶</a></h3>
-<p><code class="docutils literal"><span class="pre">--fz</span></code> option is used to subtract residual forces frown the forces
+<span id="fz-force-sets-option"></span><h3><a class="toc-backref" href="#id14"><code class="docutils literal notranslate"><span class="pre">--fz</span></code></a><a class="headerlink" href="#fz" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">--fz</span></code> option is used to subtract residual forces frown the forces
 calculated for the supercells with displacements. Here the residual
 forces mean that the forces calculated for the perfect supercell for
 which the number of atoms has to be the same as those for the
 supercells with displacements. If the forces are accurately calculated
 by calculators, the residual forces should be canceled when plus-minus
 displacements are employed (see <a class="reference internal" href="setting-tags.html#pm-displacement-tag"><span class="std std-ref">PM</span></a>), that is
-the default option in phonopy. Therefore <code class="docutils literal"><span class="pre">--fz</span></code> option is expected
-to be useful when <code class="docutils literal"><span class="pre">PM</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code> is set in the phonopy setting file.</p>
-<p>The usage of this option is almost the same as that of <code class="docutils literal"><span class="pre">-f</span></code> option
+the default option in phonopy. Therefore <code class="docutils literal notranslate"><span class="pre">--fz</span></code> option is expected
+to be useful when <code class="docutils literal notranslate"><span class="pre">PM</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code> is set in the phonopy setting file.</p>
+<p>The usage of this option is almost the same as that of <code class="docutils literal notranslate"><span class="pre">-f</span></code> option
 except that one more argument is inserted at the front. Mind that
-<code class="docutils literal"><span class="pre">--fz</span></code> is exclusively used with <code class="docutils literal"><span class="pre">-f</span></code> option. The example
+<code class="docutils literal notranslate"><span class="pre">--fz</span></code> is exclusively used with <code class="docutils literal notranslate"><span class="pre">-f</span></code> option. The example
 for the VASP interface is shown below:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">fz</span> <span class="n">sposcar</span><span class="o">/</span><span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span> <span class="o">...</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">fz</span> <span class="n">sposcar</span><span class="o">/</span><span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span> <span class="o">...</span>
 </pre></div>
 </div>
-<p>where <code class="docutils literal"><span class="pre">sposcar/vasprun.xml</span></code> assumes the output file for the perfect
+<p>where <code class="docutils literal notranslate"><span class="pre">sposcar/vasprun.xml</span></code> assumes the output file for the perfect
 supercell containing residual forces.</p>
 <p>This option perhaps works for the other calculator interfaces than the
 VASP interface, but it is not tested yet. It would be appreciated if
@@ -508,32 +500,32 @@ does/doesn’t work for any other calculator interfaces.</p>
 </div>
 </div>
 <div class="section" id="create-force-constants">
-<h2><a class="toc-backref" href="#id15">Create <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#create-force-constants" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id15">Create <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#create-force-constants" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="fc-or-force-constants">
-<span id="vasp-force-constants"></span><h3><a class="toc-backref" href="#id16"><code class="docutils literal"><span class="pre">--fc</span></code> or <code class="docutils literal"><span class="pre">--force_constants</span></code></a><a class="headerlink" href="#fc-or-force-constants" title="Permalink to this headline">¶</a></h3>
+<span id="vasp-force-constants"></span><h3><a class="toc-backref" href="#id16"><code class="docutils literal notranslate"><span class="pre">--fc</span></code> or <code class="docutils literal notranslate"><span class="pre">--force_constants</span></code></a><a class="headerlink" href="#fc-or-force-constants" title="Permalink to this headline">¶</a></h3>
 <p><strong>Currently this option supports only VASP output.</strong></p>
 <p>VASP output of force constants is imported from
-<code class="docutils literal"><span class="pre">vasprun.xml</span></code> and <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code> is created.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">fc</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span>
+<code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> and <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> is created.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">fc</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span>
 </pre></div>
 </div>
-<p>This <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code> can be used instead of <code class="docutils literal"><span class="pre">FORCE_SETS</span></code>. For
+<p>This <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> can be used instead of <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>. For
 more details, please refer <a class="reference internal" href="vasp-dfpt.html#vasp-dfpt-interface"><span class="std std-ref">VASP-DFPT &amp; phonopy calculation</span></a>.</p>
 </div>
 </div>
 <div class="section" id="graph-plotting">
 <span id="graph-option"></span><h2><a class="toc-backref" href="#id17">Graph plotting</a><a class="headerlink" href="#graph-plotting" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="p">
-<h3><a class="toc-backref" href="#id18"><code class="docutils literal"><span class="pre">-p</span></code></a><a class="headerlink" href="#p" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id18"><code class="docutils literal notranslate"><span class="pre">-p</span></code></a><a class="headerlink" href="#p" title="Permalink to this headline">¶</a></h3>
 <p>Result is plotted.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="p-s">
-<span id="graph-save-option"></span><h3><a class="toc-backref" href="#id19"><code class="docutils literal"><span class="pre">-p</span> <span class="pre">-s</span></code></a><a class="headerlink" href="#p-s" title="Permalink to this headline">¶</a></h3>
+<span id="graph-save-option"></span><h3><a class="toc-backref" href="#id19"><code class="docutils literal notranslate"><span class="pre">-p</span> <span class="pre">-s</span></code></a><a class="headerlink" href="#p-s" title="Permalink to this headline">¶</a></h3>
 <p>Result is plotted (saved) to PDF file.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span> <span class="o">-</span><span class="n">s</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span> <span class="o">-</span><span class="n">s</span>
 </pre></div>
 </div>
 </div>
@@ -541,34 +533,34 @@ more details, please refer <a class="reference internal" href="vasp-dfpt.html#va
 <div class="section" id="log-level">
 <h2><a class="toc-backref" href="#id20">Log level</a><a class="headerlink" href="#log-level" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="v-or-verbose">
-<h3><a class="toc-backref" href="#id21"><code class="docutils literal"><span class="pre">-v</span></code> or <code class="docutils literal"><span class="pre">--verbose</span></code></a><a class="headerlink" href="#v-or-verbose" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id21"><code class="docutils literal notranslate"><span class="pre">-v</span></code> or <code class="docutils literal notranslate"><span class="pre">--verbose</span></code></a><a class="headerlink" href="#v-or-verbose" title="Permalink to this headline">¶</a></h3>
 <p>More detailed log are shown</p>
 </div>
 <div class="section" id="q-or-quiet">
-<h3><a class="toc-backref" href="#id22"><code class="docutils literal"><span class="pre">-q</span></code> or <code class="docutils literal"><span class="pre">--quiet</span></code></a><a class="headerlink" href="#q-or-quiet" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id22"><code class="docutils literal notranslate"><span class="pre">-q</span></code> or <code class="docutils literal notranslate"><span class="pre">--quiet</span></code></a><a class="headerlink" href="#q-or-quiet" title="Permalink to this headline">¶</a></h3>
 <p>No log is shown.</p>
 </div>
 </div>
 <div class="section" id="crystal-symmetry">
 <h2><a class="toc-backref" href="#id23">Crystal symmetry</a><a class="headerlink" href="#crystal-symmetry" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="tolerance">
-<span id="tolerance-option"></span><h3><a class="toc-backref" href="#id24"><code class="docutils literal"><span class="pre">--tolerance</span></code></a><a class="headerlink" href="#tolerance" title="Permalink to this headline">¶</a></h3>
+<span id="tolerance-option"></span><h3><a class="toc-backref" href="#id24"><code class="docutils literal notranslate"><span class="pre">--tolerance</span></code></a><a class="headerlink" href="#tolerance" title="Permalink to this headline">¶</a></h3>
 <p>The specified value is used as allowed tolerance to find symmetry of
 crystal structure. The default value is 1e-5.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">tolerance</span><span class="o">=</span><span class="mf">1e-3</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">tolerance</span><span class="o">=</span><span class="mf">1e-3</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="symmetry">
-<span id="symmetry-option"></span><h3><a class="toc-backref" href="#id25"><code class="docutils literal"><span class="pre">--symmetry</span></code></a><a class="headerlink" href="#symmetry" title="Permalink to this headline">¶</a></h3>
+<span id="symmetry-option"></span><h3><a class="toc-backref" href="#id25"><code class="docutils literal notranslate"><span class="pre">--symmetry</span></code></a><a class="headerlink" href="#symmetry" title="Permalink to this headline">¶</a></h3>
 <p>Using this option, various crystal symmetry information is just
 printed out and phonopy stops without going to phonon analysis.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">symmetry</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">symmetry</span>
 </pre></div>
 </div>
-<p>This tag can be used together with the <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>),
-<code class="docutils literal"><span class="pre">--abinit</span></code>, <code class="docutils literal"><span class="pre">--qe</span></code>, <code class="docutils literal"><span class="pre">--elk</span></code>, <code class="docutils literal"><span class="pre">--wien2k</span></code>, <code class="docutils literal"><span class="pre">--siesta</span></code>,
-<code class="docutils literal"><span class="pre">--crystal</span></code> or <code class="docutils literal"><span class="pre">--primitive_axis</span></code> option.</p>
+<p>This tag can be used together with the <code class="docutils literal notranslate"><span class="pre">--cell</span></code> (<code class="docutils literal notranslate"><span class="pre">-c</span></code>),
+<code class="docutils literal notranslate"><span class="pre">--abinit</span></code>, <code class="docutils literal notranslate"><span class="pre">--qe</span></code>, <code class="docutils literal notranslate"><span class="pre">--elk</span></code>, <code class="docutils literal notranslate"><span class="pre">--wien2k</span></code>, <code class="docutils literal notranslate"><span class="pre">--siesta</span></code>,
+<code class="docutils literal notranslate"><span class="pre">--crystal</span></code> or <code class="docutils literal notranslate"><span class="pre">--primitive_axis</span></code> option.</p>
 </div>
 </div>
 </div>
@@ -593,7 +585,7 @@ printed out and phonopy stops without going to phonon analysis.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.6.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.<br/>
     </p>
   </div>
 </footer>

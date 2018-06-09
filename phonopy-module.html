@@ -2,20 +2,12 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Using phonopy as a python module &#8212; Phonopy v.1.13.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '1.13.0',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -33,8 +25,7 @@
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
 
-  </head>
-  <body>
+  </head><body>
 
   <div id="navbar" class="navbar navbar-default navbar-fixed-top">
     <div class="container">
@@ -121,15 +112,15 @@
 </li>
 </ul>
 </li>
-<li><a class="reference internal" href="#phonopyatoms-class"><code class="docutils literal"><span class="pre">PhonopyAtoms</span></code> class</a><ul>
+<li><a class="reference internal" href="#phonopyatoms-class"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class</a><ul>
 <li><a class="reference internal" href="#initialization">Initialization</a></li>
 <li><a class="reference internal" href="#variables">Variables</a><ul>
-<li><a class="reference internal" href="#lattice-vectors"><code class="docutils literal"><span class="pre">lattice_vectors</span></code></a></li>
-<li><a class="reference internal" href="#scaled-positions"><code class="docutils literal"><span class="pre">scaled_positions</span></code></a></li>
-<li><a class="reference internal" href="#positions"><code class="docutils literal"><span class="pre">positions</span></code></a></li>
-<li><a class="reference internal" href="#symbols"><code class="docutils literal"><span class="pre">symbols</span></code></a></li>
-<li><a class="reference internal" href="#numbers"><code class="docutils literal"><span class="pre">numbers</span></code></a></li>
-<li><a class="reference internal" href="#masses"><code class="docutils literal"><span class="pre">masses</span></code></a></li>
+<li><a class="reference internal" href="#lattice-vectors"><code class="docutils literal notranslate"><span class="pre">lattice_vectors</span></code></a></li>
+<li><a class="reference internal" href="#scaled-positions"><code class="docutils literal notranslate"><span class="pre">scaled_positions</span></code></a></li>
+<li><a class="reference internal" href="#positions"><code class="docutils literal notranslate"><span class="pre">positions</span></code></a></li>
+<li><a class="reference internal" href="#symbols"><code class="docutils literal notranslate"><span class="pre">symbols</span></code></a></li>
+<li><a class="reference internal" href="#numbers"><code class="docutils literal notranslate"><span class="pre">numbers</span></code></a></li>
+<li><a class="reference internal" href="#masses"><code class="docutils literal notranslate"><span class="pre">masses</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#methods">Methods</a></li>
@@ -199,7 +190,7 @@
 <li><a class="reference internal" href="#eigenvectors" id="id8">Eigenvectors</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#phonopyatoms-class" id="id9"><code class="docutils literal"><span class="pre">PhonopyAtoms</span></code> class</a><ul>
+<li><a class="reference internal" href="#phonopyatoms-class" id="id9"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class</a><ul>
 <li><a class="reference internal" href="#initialization" id="id10">Initialization</a></li>
 <li><a class="reference internal" href="#variables" id="id11">Variables</a></li>
 <li><a class="reference internal" href="#methods" id="id12">Methods</a></li>
@@ -219,18 +210,18 @@ suggestions are very welcome.</p>
 <div class="section" id="import-modules">
 <h2><a class="toc-backref" href="#id3">Import modules</a><a class="headerlink" href="#import-modules" title="Permalink to this headline">¶</a></h2>
 <p>After setting the phonopy python path, the phonopy module is imported by:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy</span> <span class="k">import</span> <span class="n">Phonopy</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy</span> <span class="k">import</span> <span class="n">Phonopy</span>
 </pre></div>
 </div>
-<p>Crystal structure is defined by the <code class="docutils literal"><span class="pre">PhonopyAtoms</span></code> class. This
-class is made to be similar to the ASE’s <code class="docutils literal"><span class="pre">Atoms</span></code>
-class. The <code class="docutils literal"><span class="pre">PhonopyAtoms</span></code> module is imported by:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy.structure.atoms</span> <span class="k">import</span> <span class="n">PhonopyAtoms</span>
+<p>Crystal structure is defined by the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class. This
+class is made to be similar to the ASE’s <code class="docutils literal notranslate"><span class="pre">Atoms</span></code>
+class. The <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> module is imported by:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy.structure.atoms</span> <span class="k">import</span> <span class="n">PhonopyAtoms</span>
 </pre></div>
 </div>
-<p>In the older versions of phonopy, the class name was simply <code class="docutils literal"><span class="pre">Atoms</span></code>,
+<p>In the older versions of phonopy, the class name was simply <code class="docutils literal notranslate"><span class="pre">Atoms</span></code>,
 so it should be imported as:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy.structure.atoms</span> <span class="k">import</span> <span class="n">Atoms</span> <span class="k">as</span> <span class="n">PhonopyAtoms</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy.structure.atoms</span> <span class="k">import</span> <span class="n">Atoms</span> <span class="k">as</span> <span class="n">PhonopyAtoms</span>
 </pre></div>
 </div>
 </div>
@@ -239,17 +230,17 @@ so it should be imported as:</p>
 <p>The work flow is schematically shown in <a class="reference internal" href="workflow.html#workflow"><span class="std std-ref">Work flow</span></a>.</p>
 <div class="section" id="pre-process">
 <h3><a class="toc-backref" href="#id5">Pre-process</a><a class="headerlink" href="#pre-process" title="Permalink to this headline">¶</a></h3>
-<p>The first step is to create a <code class="docutils literal"><span class="pre">Phonopy</span></code> object with at least two
-arguments, a unit cell (<code class="docutils literal"><span class="pre">PhonopyAtoms</span></code> object, see
+<p>The first step is to create a <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> object with at least two
+arguments, a unit cell (<code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> object, see
 <a class="reference internal" href="#phonopy-atoms"><span class="std std-ref">PhonopyAtoms class</span></a>) and a supercell matrix (3x3 array, see
 <a class="reference internal" href="#variable-supercell-matrix"><span class="std std-ref">Supercell matrix</span></a>). In the following example, a
-<span class="math">\(2\times 2\times 2\)</span> supercell is created. The displacements to
+<span class="math notranslate">\(2\times 2\times 2\)</span> supercell is created. The displacements to
 be introduced to the supercell are internally generated by the
-<code class="docutils literal"><span class="pre">generate_displacements()</span></code> method with the <code class="docutils literal"><span class="pre">distance</span></code> keyword
+<code class="docutils literal notranslate"><span class="pre">generate_displacements()</span></code> method with the <code class="docutils literal notranslate"><span class="pre">distance</span></code> keyword
 argument. The supercells with displacements are obtained by
-<code class="docutils literal"><span class="pre">get_supercells_with_displacements()</span></code> method as a list of
-<code class="docutils literal"><span class="pre">PhonopyAtoms</span></code> objects.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<code class="docutils literal notranslate"><span class="pre">get_supercells_with_displacements()</span></code> method as a list of
+<code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> objects.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">phonopy</span> <span class="k">import</span> <span class="n">Phonopy</span>
 <span class="kn">from</span> <span class="nn">phonopy.structure.atoms</span> <span class="k">import</span> <span class="n">PhonopyAtoms</span>
 
@@ -276,13 +267,13 @@ argument. The supercells with displacements are obtained by
 <p>In this example, the displacement distance is set to 0.03 (in Angstrom
 if the crystal structure uses the Angstrom unit and the default value
 is 0.01.)</p>
-<p>The frequency unit conversion factor to THz has to be set by using the <code class="docutils literal"><span class="pre">factor</span></code>
-keyword in <code class="docutils literal"><span class="pre">Phonopy</span></code> class. The factors are <code class="docutils literal"><span class="pre">VaspToTHz</span></code> for VASP,
-<code class="docutils literal"><span class="pre">Wien2kToTHz</span></code> for Wien2k, <code class="docutils literal"><span class="pre">AbinitToTHz</span></code> for Abinit,
-<code class="docutils literal"><span class="pre">PwscfToTHz</span></code> for Pwscf, <code class="docutils literal"><span class="pre">ElkToTHz</span></code> for Elk, <code class="docutils literal"><span class="pre">SiestaToTHz</span></code>
-for Siesta, and <code class="docutils literal"><span class="pre">CrystalToTHz</span> <span class="pre">for</span> <span class="pre">CRYSTAL</span></code>. <code class="docutils literal"><span class="pre">VaspToTHz</span></code> is the default value.
+<p>The frequency unit conversion factor to THz has to be set by using the <code class="docutils literal notranslate"><span class="pre">factor</span></code>
+keyword in <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> class. The factors are <code class="docutils literal notranslate"><span class="pre">VaspToTHz</span></code> for VASP,
+<code class="docutils literal notranslate"><span class="pre">Wien2kToTHz</span></code> for Wien2k, <code class="docutils literal notranslate"><span class="pre">AbinitToTHz</span></code> for Abinit,
+<code class="docutils literal notranslate"><span class="pre">PwscfToTHz</span></code> for Pwscf, <code class="docutils literal notranslate"><span class="pre">ElkToTHz</span></code> for Elk, <code class="docutils literal notranslate"><span class="pre">SiestaToTHz</span></code>
+for Siesta, and <code class="docutils literal notranslate"><span class="pre">CrystalToTHz</span> <span class="pre">for</span> <span class="pre">CRYSTAL</span></code>. <code class="docutils literal notranslate"><span class="pre">VaspToTHz</span></code> is the default value.
 For example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy.units</span> <span class="k">import</span> <span class="n">AbinitToTHz</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy.units</span> <span class="k">import</span> <span class="n">AbinitToTHz</span>
 
 <span class="n">phonon</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span><span class="n">unitcell</span><span class="p">,</span>
                  <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]],</span>
@@ -303,24 +294,24 @@ For example:</p>
 calculator (e.g. VASP) with each supercell with a displacement. Then
 the forces in the calculation outputs have to be collected by
 users. However output parsers for selected calculators are found under
-<code class="docutils literal"><span class="pre">phonopy.interface</span></code>, which may be useful. The forces have to be
+<code class="docutils literal notranslate"><span class="pre">phonopy.interface</span></code>, which may be useful. The forces have to be
 stored in a specific structure: a numpy array (or nested list) as follows:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span> <span class="p">[</span> <span class="p">[</span> <span class="n">f_1x</span><span class="p">,</span> <span class="n">f_1y</span><span class="p">,</span> <span class="n">f_1z</span> <span class="p">],</span> <span class="p">[</span> <span class="n">f_2x</span><span class="p">,</span> <span class="n">f_2y</span><span class="p">,</span> <span class="n">f_2z</span> <span class="p">],</span> <span class="o">...</span> <span class="p">],</span> <span class="c1"># first supercell</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span> <span class="p">[</span> <span class="p">[</span> <span class="n">f_1x</span><span class="p">,</span> <span class="n">f_1y</span><span class="p">,</span> <span class="n">f_1z</span> <span class="p">],</span> <span class="p">[</span> <span class="n">f_2x</span><span class="p">,</span> <span class="n">f_2y</span><span class="p">,</span> <span class="n">f_2z</span> <span class="p">],</span> <span class="o">...</span> <span class="p">],</span> <span class="c1"># first supercell</span>
   <span class="p">[</span> <span class="p">[</span> <span class="n">f_1x</span><span class="p">,</span> <span class="n">f_1y</span><span class="p">,</span> <span class="n">f_1z</span> <span class="p">],</span> <span class="p">[</span> <span class="n">f_2x</span><span class="p">,</span> <span class="n">f_2y</span><span class="p">,</span> <span class="n">f_2z</span> <span class="p">],</span> <span class="o">...</span> <span class="p">],</span> <span class="c1"># second supercell</span>
   <span class="o">...</span>                                                   <span class="p">]</span>
 </pre></div>
 </div>
-<p>This array (<code class="docutils literal"><span class="pre">sets_of_forces</span></code>) is set to the <code class="docutils literal"><span class="pre">Phonopy</span></code> object by:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">set_forces</span><span class="p">(</span><span class="n">sets_of_forces</span><span class="p">)</span>
+<p>This array (<code class="docutils literal notranslate"><span class="pre">sets_of_forces</span></code>) is set to the <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> object by:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">set_forces</span><span class="p">(</span><span class="n">sets_of_forces</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This is the case when the set of atomic displacements is generated
 internally. The information of displacements is already stored in the
-<code class="docutils literal"><span class="pre">Phonopy</span></code> object. But if you want to input the forces together with
+<code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> object. But if you want to input the forces together with
 the corresponding custom set of displacements,
-<code class="docutils literal"><span class="pre">displacement_dataset</span></code> has to be prepared as a python dictionary as
+<code class="docutils literal notranslate"><span class="pre">displacement_dataset</span></code> has to be prepared as a python dictionary as
 follows:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">displacement_dataset</span> <span class="o">=</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">displacement_dataset</span> <span class="o">=</span>
    <span class="p">{</span><span class="s1">&#39;natom&#39;</span><span class="p">:</span> <span class="n">number_of_atoms_in_supercell</span><span class="p">,</span>
     <span class="s1">&#39;first_atoms&#39;</span><span class="p">:</span> <span class="p">[</span>
       <span class="p">{</span><span class="s1">&#39;number&#39;</span><span class="p">:</span> <span class="n">atom</span> <span class="n">index</span> <span class="n">of</span> <span class="n">displaced</span> <span class="n">atom</span> <span class="p">(</span><span class="n">starting</span> <span class="k">with</span> <span class="mi">0</span><span class="p">),</span>
@@ -329,38 +320,38 @@ follows:</p>
       <span class="p">{</span><span class="o">...</span><span class="p">},</span> <span class="o">...</span><span class="p">]}</span>
 </pre></div>
 </div>
-<p>This is set to the <code class="docutils literal"><span class="pre">Phonopy</span></code> object by:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonopy</span><span class="o">.</span><span class="n">set_displacement_dataset</span><span class="p">(</span><span class="n">displacement_dataset</span><span class="p">)</span>
+<p>This is set to the <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> object by:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonopy</span><span class="o">.</span><span class="n">set_displacement_dataset</span><span class="p">(</span><span class="n">displacement_dataset</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>From the set of displacements and forces, force constants internally
 with calculated suuprcell sets of forces by</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">produce_force_constants</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">produce_force_constants</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>If you have force constants and don’t need to create force constants
 from forces and displacements, simply set your force constants by</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">set_force_constants</span><span class="p">(</span><span class="n">force_constants</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">set_force_constants</span><span class="p">(</span><span class="n">force_constants</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The force constants matrix is given in 4 dimensional array
-(better to be a numpy array of <code class="docutils literal"><span class="pre">dtype='double',</span> <span class="pre">order='C'</span></code>).
-The shape of force constants matrix is <code class="docutils literal"><span class="pre">(N,</span> <span class="pre">N,</span> <span class="pre">3,</span> <span class="pre">3)</span></code> where <code class="docutils literal"><span class="pre">N</span></code>
+(better to be a numpy array of <code class="docutils literal notranslate"><span class="pre">dtype='double',</span> <span class="pre">order='C'</span></code>).
+The shape of force constants matrix is <code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">N,</span> <span class="pre">3,</span> <span class="pre">3)</span></code> where <code class="docutils literal notranslate"><span class="pre">N</span></code>
 is the number of atoms in the supercell and 3 gives Cartesian axes.</p>
 <div class="section" id="band-structure">
 <h4>Band structure<a class="headerlink" href="#band-structure" title="Permalink to this headline">¶</a></h4>
-<p>Set band paths (<code class="docutils literal"><span class="pre">set_band_structure</span></code>) and get the results
-(<code class="docutils literal"><span class="pre">get_band_structure</span></code>).</p>
+<p>Set band paths (<code class="docutils literal notranslate"><span class="pre">set_band_structure</span></code>) and get the results
+(<code class="docutils literal notranslate"><span class="pre">get_band_structure</span></code>).</p>
 <p>A tuple of (q-points, distances, frequencies, eigenvectors) is
-obtained by <code class="docutils literal"><span class="pre">get_band_structure()</span></code>. Eigenvectors can be obtained
-when <code class="docutils literal"><span class="pre">is_eigenvectors=True</span></code> at <code class="docutils literal"><span class="pre">set_band_structure()</span></code>. Eigenvalues
+obtained by <code class="docutils literal notranslate"><span class="pre">get_band_structure()</span></code>. Eigenvectors can be obtained
+when <code class="docutils literal notranslate"><span class="pre">is_eigenvectors=True</span></code> at <code class="docutils literal notranslate"><span class="pre">set_band_structure()</span></code>. Eigenvalues
 are stored in a numpy array with the shape of (number_of_bands,
 len(distances)).  Phonon frequency is sqrt(eigenvalue). A negative
 eigenvalue has to correspond to the imaginary frequency, but for the
 plotting, it is set as the negative value in the above example. In
 addition, you need to multiply by your unit conversion factor. In the
 case of VASP to transform to THz, the factor is 15.633302.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">bands</span> <span class="o">=</span> <span class="p">[]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bands</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="n">q_start</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
 <span class="n">q_end</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
 <span class="n">band</span> <span class="o">=</span> <span class="p">[]</span>
@@ -383,36 +374,36 @@ case of VASP to transform to THz, the factor is 15.633302.</p>
 </div>
 <p>To obtain eigenvectors, it is necessary to inform to store
 eigenvectors by:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">set_band_structure</span><span class="p">(</span><span class="n">bands</span><span class="p">,</span> <span class="n">is_eigenvectors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">set_band_structure</span><span class="p">(</span><span class="n">bands</span><span class="p">,</span> <span class="n">is_eigenvectors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="mesh-sampling">
 <h4>Mesh sampling<a class="headerlink" href="#mesh-sampling" title="Permalink to this headline">¶</a></h4>
-<p>Set sampling mesh (<code class="docutils literal"><span class="pre">set_mesh</span></code>) in reciprocal space. The irreducible
+<p>Set sampling mesh (<code class="docutils literal notranslate"><span class="pre">set_mesh</span></code>) in reciprocal space. The irreducible
 <em>q</em>-points and corresponding <em>q</em>-point weights, eigenvalues, and
-eigenvectors are obtained by <code class="docutils literal"><span class="pre">get_mesh</span></code>.  <code class="docutils literal"><span class="pre">mesh</span></code> gives the
-sampling mesh with Monkhorst-Pack scheme. The keyword <code class="docutils literal"><span class="pre">shift</span></code> gives
+eigenvectors are obtained by <code class="docutils literal notranslate"><span class="pre">get_mesh</span></code>.  <code class="docutils literal notranslate"><span class="pre">mesh</span></code> gives the
+sampling mesh with Monkhorst-Pack scheme. The keyword <code class="docutils literal notranslate"><span class="pre">shift</span></code> gives
 the fractional mesh shift with respect to the neighboring grid points.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="o">=</span> <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="o">=</span> <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">]</span>
 <span class="n">phonon</span><span class="o">.</span><span class="n">set_mesh</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span>
 <span class="n">qpoints</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">frequencies</span><span class="p">,</span> <span class="n">eigvecs</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">get_mesh</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>To obtain eigenvectors, it is necessary to inform to store
 eigenvectors by:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">set_mesh</span><span class="p">([</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">],</span> <span class="n">is_eigenvectors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">set_mesh</span><span class="p">([</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">],</span> <span class="n">is_eigenvectors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="dos-and-pdos">
 <h4>DOS and PDOS<a class="headerlink" href="#dos-and-pdos" title="Permalink to this headline">¶</a></h4>
 <p>Before starting mesh sampling has to be finished. Then set parameters
-(<code class="docutils literal"><span class="pre">set_total_DOS</span></code> or <code class="docutils literal"><span class="pre">set_partial_DOS</span></code>) and write the results into
-files (<code class="docutils literal"><span class="pre">write_total_DOS</span></code> and <code class="docutils literal"><span class="pre">write_partial_DOS</span></code>). In the case of
+(<code class="docutils literal notranslate"><span class="pre">set_total_DOS</span></code> or <code class="docutils literal notranslate"><span class="pre">set_partial_DOS</span></code>) and write the results into
+files (<code class="docutils literal notranslate"><span class="pre">write_total_DOS</span></code> and <code class="docutils literal notranslate"><span class="pre">write_partial_DOS</span></code>). In the case of
 PDOS, the eigenvectors have to be calculated in the mesh
-sampling. <code class="docutils literal"><span class="pre">get_total_DOS</span></code> and <code class="docutils literal"><span class="pre">get_partial_DOS</span></code> are under preparation.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">set_total_DOS</span><span class="p">()</span>
+sampling. <code class="docutils literal notranslate"><span class="pre">get_total_DOS</span></code> and <code class="docutils literal notranslate"><span class="pre">get_partial_DOS</span></code> are under preparation.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">set_total_DOS</span><span class="p">()</span>
 <span class="n">phonon</span><span class="o">.</span><span class="n">plot_total_DOS</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -422,12 +413,12 @@ sampling. <code class="docutils literal"><span class="pre">get_total_DOS</span><
 <p>Before starting the thermal property calculation, the mesh sampling
 calclation has to be done in the <strong>THz unit</strong>. The unit conversion
 factor for phonon frequency is set in the pre-process of Phonopy with
-the <code class="docutils literal"><span class="pre">factor</span></code> keyword. Calculation range of temperature is set by the
-parameters <code class="docutils literal"><span class="pre">set_thermal_properties</span></code>. Helmholtz free energy, entropy,
+the <code class="docutils literal notranslate"><span class="pre">factor</span></code> keyword. Calculation range of temperature is set by the
+parameters <code class="docutils literal notranslate"><span class="pre">set_thermal_properties</span></code>. Helmholtz free energy, entropy,
 heat capacity at contant volume at temperaturs are obtained by
-<code class="docutils literal"><span class="pre">get_thermal_properties</span></code>, where the results are given as a tuple of
+<code class="docutils literal notranslate"><span class="pre">get_thermal_properties</span></code>, where the results are given as a tuple of
 temperaturs, Helmholtz free energy, entropy, and heat capacity.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">set_thermal_properties</span><span class="p">(</span><span class="n">t_step</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">set_thermal_properties</span><span class="p">(</span><span class="n">t_step</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
                               <span class="n">t_max</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
                               <span class="n">t_min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">free_energy</span><span class="p">,</span> <span class="n">entropy</span><span class="p">,</span> <span class="n">cv</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">phonon</span><span class="o">.</span><span class="n">get_thermal_properties</span><span class="p">())</span><span class="o">.</span><span class="n">T</span><span class="p">:</span>
@@ -443,7 +434,7 @@ temperaturs, Helmholtz free energy, entropy, and heat capacity.</p>
 for all atoms in <strong>primitive</strong> cell, dielectric constant tensor, and
 the unit conversion factor have to be correctly set. The tensors are
 given in Cartesian coordinates.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">born</span> <span class="o">=</span> <span class="p">[[[</span><span class="mf">1.08703</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">born</span> <span class="o">=</span> <span class="p">[[[</span><span class="mf">1.08703</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
          <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.08703</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
          <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.08703</span><span class="p">]],</span>
         <span class="p">[[</span><span class="o">-</span><span class="mf">1.08672</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
@@ -462,17 +453,17 @@ given in Cartesian coordinates.</p>
 <div class="section" id="group-velocity">
 <span id="phonopy-eigenvectors"></span><h4>Group velocity<a class="headerlink" href="#group-velocity" title="Permalink to this headline">¶</a></h4>
 <p>A group velocity at a q-point is obtained by:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">get_group_velocity_at_q</span><span class="p">(</span><span class="n">q_point</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">get_group_velocity_at_q</span><span class="p">(</span><span class="n">q_point</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Group velocities with mesh sampling, band structure, or q-points
 calculations are given as follows.</p>
 <p>First inform phonopy object to calculate group velocity:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">set_group_velocity</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">set_group_velocity</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>Then the respective group velocities are obtained by:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">get_group_velocity</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">get_group_velocity</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>The shape of group velocity array is to follow those array shapes of
@@ -491,7 +482,7 @@ follow the convention of LAPACK, which can be shown at
 <p>Eigenvectors corresponding to phonopy yaml output are obtained as follows.</p>
 <div class="section" id="id1">
 <h4>Band structure<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">eigvecs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">eigvecs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">eigvecs_on_path</span> <span class="ow">in</span> <span class="n">eigvecs</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">eigvecs_at_q</span> <span class="ow">in</span> <span class="n">eigvecs_on_path</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="n">eigvecs_at_q</span><span class="o">.</span><span class="n">T</span><span class="p">:</span>
@@ -501,7 +492,7 @@ follow the convention of LAPACK, which can be shown at
 </div>
 <div class="section" id="id2">
 <h4>Mesh sampling<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">eigvecs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">eigvecs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">eigvecs_at_q</span> <span class="ow">in</span> <span class="n">eigvecs</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="n">eigvecs_at_q</span><span class="o">.</span><span class="n">T</span><span class="p">:</span>
             <span class="nb">print</span> <span class="n">vec</span>
@@ -511,11 +502,11 @@ follow the convention of LAPACK, which can be shown at
 </div>
 </div>
 <div class="section" id="phonopyatoms-class">
-<span id="phonopy-atoms"></span><h2><a class="toc-backref" href="#id9"><code class="docutils literal"><span class="pre">PhonopyAtoms</span></code> class</a><a class="headerlink" href="#phonopyatoms-class" title="Permalink to this headline">¶</a></h2>
+<span id="phonopy-atoms"></span><h2><a class="toc-backref" href="#id9"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class</a><a class="headerlink" href="#phonopyatoms-class" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="initialization">
 <h3><a class="toc-backref" href="#id10">Initialization</a><a class="headerlink" href="#initialization" title="Permalink to this headline">¶</a></h3>
 <p>The usable keywords in the initialization are:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">symbols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">symbols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="n">positions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="n">numbers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="n">masses</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -526,28 +517,28 @@ follow the convention of LAPACK, which can be shown at
 <p>At least three arguments have to be given at the initialization, which
 are</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">cell</span></code></li>
-<li><code class="docutils literal"><span class="pre">positions</span></code> or <code class="docutils literal"><span class="pre">scaled_positions</span></code></li>
-<li><code class="docutils literal"><span class="pre">symbols</span></code> or <code class="docutils literal"><span class="pre">numbers</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">cell</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">positions</span></code> or <code class="docutils literal notranslate"><span class="pre">scaled_positions</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">symbols</span></code> or <code class="docutils literal notranslate"><span class="pre">numbers</span></code></li>
 </ul>
 </div>
 <div class="section" id="variables">
 <span id="phonopy-atoms-variables"></span><h3><a class="toc-backref" href="#id11">Variables</a><a class="headerlink" href="#variables" title="Permalink to this headline">¶</a></h3>
-<p>The following variables are implemented in the <code class="docutils literal"><span class="pre">PhonopyAtoms</span></code> class
-in <code class="docutils literal"><span class="pre">atoms.py</span></code>.</p>
+<p>The following variables are implemented in the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class
+in <code class="docutils literal notranslate"><span class="pre">atoms.py</span></code>.</p>
 <div class="section" id="lattice-vectors">
-<span id="phonopy-atoms-cell"></span><h4><code class="docutils literal"><span class="pre">lattice_vectors</span></code><a class="headerlink" href="#lattice-vectors" title="Permalink to this headline">¶</a></h4>
+<span id="phonopy-atoms-cell"></span><h4><code class="docutils literal notranslate"><span class="pre">lattice_vectors</span></code><a class="headerlink" href="#lattice-vectors" title="Permalink to this headline">¶</a></h4>
 <p>Lattice vectors are given in the matrix form in Cartesian coordinates.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span> <span class="p">[</span> <span class="n">a_x</span><span class="p">,</span> <span class="n">a_y</span><span class="p">,</span> <span class="n">a_z</span> <span class="p">],</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span> <span class="p">[</span> <span class="n">a_x</span><span class="p">,</span> <span class="n">a_y</span><span class="p">,</span> <span class="n">a_z</span> <span class="p">],</span>
   <span class="p">[</span> <span class="n">b_x</span><span class="p">,</span> <span class="n">b_y</span><span class="p">,</span> <span class="n">b_z</span> <span class="p">],</span>
   <span class="p">[</span> <span class="n">c_x</span><span class="p">,</span> <span class="n">c_y</span><span class="p">,</span> <span class="n">c_z</span> <span class="p">]</span> <span class="p">]</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="scaled-positions">
-<h4><code class="docutils literal"><span class="pre">scaled_positions</span></code><a class="headerlink" href="#scaled-positions" title="Permalink to this headline">¶</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">scaled_positions</span></code><a class="headerlink" href="#scaled-positions" title="Permalink to this headline">¶</a></h4>
 <p>Atomic positions in fractional coordinates.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span> <span class="p">[</span> <span class="n">x1_a</span><span class="p">,</span> <span class="n">x1_b</span><span class="p">,</span> <span class="n">x1_c</span> <span class="p">],</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span> <span class="p">[</span> <span class="n">x1_a</span><span class="p">,</span> <span class="n">x1_b</span><span class="p">,</span> <span class="n">x1_c</span> <span class="p">],</span>
   <span class="p">[</span> <span class="n">x2_a</span><span class="p">,</span> <span class="n">x2_b</span><span class="p">,</span> <span class="n">x2_c</span> <span class="p">],</span>
   <span class="p">[</span> <span class="n">x3_a</span><span class="p">,</span> <span class="n">x3_b</span><span class="p">,</span> <span class="n">x3_c</span> <span class="p">],</span>
   <span class="o">...</span>                   <span class="p">]</span>
@@ -555,33 +546,33 @@ in <code class="docutils literal"><span class="pre">atoms.py</span></code>.</p>
 </div>
 </div>
 <div class="section" id="positions">
-<h4><code class="docutils literal"><span class="pre">positions</span></code><a class="headerlink" href="#positions" title="Permalink to this headline">¶</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">positions</span></code><a class="headerlink" href="#positions" title="Permalink to this headline">¶</a></h4>
 <p>Cartesian positions of atoms.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">scaled_positions</span><span class="p">,</span> <span class="n">lattice_vectors</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">scaled_positions</span><span class="p">,</span> <span class="n">lattice_vectors</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>where <code class="docutils literal"><span class="pre">np</span></code> means the numpy module (<code class="docutils literal"><span class="pre">import</span> <span class="pre">numpy</span> <span class="pre">as</span> <span class="pre">np</span></code>).</p>
+<p>where <code class="docutils literal notranslate"><span class="pre">np</span></code> means the numpy module (<code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">numpy</span> <span class="pre">as</span> <span class="pre">np</span></code>).</p>
 </div>
 <div class="section" id="symbols">
-<h4><code class="docutils literal"><span class="pre">symbols</span></code><a class="headerlink" href="#symbols" title="Permalink to this headline">¶</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">symbols</span></code><a class="headerlink" href="#symbols" title="Permalink to this headline">¶</a></h4>
 <p>Chemical symbols, e.g.,</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="s1">&#39;Zn&#39;</span><span class="p">,</span> <span class="s1">&#39;Zn&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="s1">&#39;Zn&#39;</span><span class="p">,</span> <span class="s1">&#39;Zn&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>for the ZnO unit cell.</p>
 </div>
 <div class="section" id="numbers">
-<h4><code class="docutils literal"><span class="pre">numbers</span></code><a class="headerlink" href="#numbers" title="Permalink to this headline">¶</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">numbers</span></code><a class="headerlink" href="#numbers" title="Permalink to this headline">¶</a></h4>
 <p>Atomic numbers, e.g.,</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>for the ZnO unit cell.</p>
 </div>
 <div class="section" id="masses">
-<h4><code class="docutils literal"><span class="pre">masses</span></code><a class="headerlink" href="#masses" title="Permalink to this headline">¶</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">masses</span></code><a class="headerlink" href="#masses" title="Permalink to this headline">¶</a></h4>
 <p>Atomic masses, e.g.,</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mf">65.38</span><span class="p">,</span> <span class="mf">65.38</span><span class="p">,</span> <span class="mf">15.9994</span><span class="p">,</span> <span class="mf">15.9994</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mf">65.38</span><span class="p">,</span> <span class="mf">65.38</span><span class="p">,</span> <span class="mf">15.9994</span><span class="p">,</span> <span class="mf">15.9994</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>for the ZnO unit cell.</p>
@@ -589,7 +580,7 @@ in <code class="docutils literal"><span class="pre">atoms.py</span></code>.</p>
 </div>
 <div class="section" id="methods">
 <h3><a class="toc-backref" href="#id12">Methods</a><a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">set_cell</span><span class="p">(</span><span class="n">lattice_vectors</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">set_cell</span><span class="p">(</span><span class="n">lattice_vectors</span><span class="p">)</span>
 <span class="n">get_cell</span><span class="p">()</span>
 <span class="n">set_positions</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
 <span class="n">get_positions</span><span class="p">()</span>
@@ -604,7 +595,7 @@ in <code class="docutils literal"><span class="pre">atoms.py</span></code>.</p>
 <span class="n">get_volume</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>These methods are designed to be compatible to the ASE’s <code class="docutils literal"><span class="pre">Atoms</span></code>
+<p>These methods are designed to be compatible to the ASE’s <code class="docutils literal notranslate"><span class="pre">Atoms</span></code>
 class. The arguments have to be set in the structures shown in
 <a class="reference internal" href="#phonopy-atoms-variables"><span class="std std-ref">Variables</span></a>.</p>
 </div>
@@ -613,58 +604,58 @@ class. The arguments have to be set in the structures shown in
 <h2><a class="toc-backref" href="#id13">Definitions of variables</a><a class="headerlink" href="#definitions-of-variables" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="primitive-matrix">
 <span id="variable-primitive-matrix"></span><h3><a class="toc-backref" href="#id14">Primitive matrix</a><a class="headerlink" href="#primitive-matrix" title="Permalink to this headline">¶</a></h3>
-<p>Primitive matrix <span class="math">\(M_\mathrm{p}\)</span> is a tranformation matrix from
+<p>Primitive matrix <span class="math notranslate">\(M_\mathrm{p}\)</span> is a tranformation matrix from
 lattice vectors to those of a primitive cell if there exists the
 primitive cell in the lattice vectors. Following a crystallography
 convention, the transformation is given by</p>
-<div class="math">
+<div class="math notranslate">
 \[( \mathbf{a}_\mathrm{p} \; \mathbf{b}_\mathrm{p} \; \mathbf{c}_\mathrm{p} )
 =  ( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \;
 \mathbf{c}_\mathrm{u} ) M_\mathrm{p}\]</div>
-<p>where <span class="math">\(\mathbf{a}_\mathrm{u}\)</span>, <span class="math">\(\mathbf{b}_\mathrm{u}\)</span>,
-and <span class="math">\(\mathbf{c}_\mathrm{u}\)</span> are the column vectors of the
-original lattice vectors, and <span class="math">\(\mathbf{a}_\mathrm{p}\)</span>,
-<span class="math">\(\mathbf{b}_\mathrm{p}\)</span>, and <span class="math">\(\mathbf{c}_\mathrm{p}\)</span> are
+<p>where <span class="math notranslate">\(\mathbf{a}_\mathrm{u}\)</span>, <span class="math notranslate">\(\mathbf{b}_\mathrm{u}\)</span>,
+and <span class="math notranslate">\(\mathbf{c}_\mathrm{u}\)</span> are the column vectors of the
+original lattice vectors, and <span class="math notranslate">\(\mathbf{a}_\mathrm{p}\)</span>,
+<span class="math notranslate">\(\mathbf{b}_\mathrm{p}\)</span>, and <span class="math notranslate">\(\mathbf{c}_\mathrm{p}\)</span> are
 the column vectors of the primitive lattice vectors. Be careful that
-the lattice vectors of the <code class="docutils literal"><span class="pre">PhonopyAtoms</span></code> class are the row vectors
+the lattice vectors of the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class are the row vectors
 (<a class="reference internal" href="#phonopy-atoms-cell"><span class="std std-ref">lattice_vectors</span></a>). Therefore the phonopy code, which relies
-on the <code class="docutils literal"><span class="pre">PhonopyAtoms</span></code> class, is usually written such as</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">primitive_lattice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">original_lattice</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">primitive_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+on the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class, is usually written such as</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">primitive_lattice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">original_lattice</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">primitive_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
 </pre></div>
 </div>
 <p>or equivalently,</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">primitive_lattice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">primitive_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">original_lattice</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">primitive_lattice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">primitive_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">original_lattice</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="supercell-matrix">
 <span id="variable-supercell-matrix"></span><h3><a class="toc-backref" href="#id15">Supercell matrix</a><a class="headerlink" href="#supercell-matrix" title="Permalink to this headline">¶</a></h3>
-<p>Supercell matrix <span class="math">\(M_\mathrm{s}\)</span> is a tranformation matrix from
+<p>Supercell matrix <span class="math notranslate">\(M_\mathrm{s}\)</span> is a tranformation matrix from
 lattice vectors to those of a super cell. Following a crystallography
 convention, the transformation is given by</p>
-<div class="math">
+<div class="math notranslate">
 \[( \mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \; \mathbf{c}_\mathrm{s} )
 =  ( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \;
 \mathbf{c}_\mathrm{u} ) M_\mathrm{s}\]</div>
-<p>where <span class="math">\(\mathbf{a}_\mathrm{u}\)</span>, <span class="math">\(\mathbf{b}_\mathrm{u}\)</span>,
-and <span class="math">\(\mathbf{c}_\mathrm{u}\)</span> are the column vectors of the
-original lattice vectors, and <span class="math">\(\mathbf{a}_\mathrm{s}\)</span>,
-<span class="math">\(\mathbf{b}_\mathrm{s}\)</span>, and <span class="math">\(\mathbf{c}_\mathrm{s}\)</span> are
+<p>where <span class="math notranslate">\(\mathbf{a}_\mathrm{u}\)</span>, <span class="math notranslate">\(\mathbf{b}_\mathrm{u}\)</span>,
+and <span class="math notranslate">\(\mathbf{c}_\mathrm{u}\)</span> are the column vectors of the
+original lattice vectors, and <span class="math notranslate">\(\mathbf{a}_\mathrm{s}\)</span>,
+<span class="math notranslate">\(\mathbf{b}_\mathrm{s}\)</span>, and <span class="math notranslate">\(\mathbf{c}_\mathrm{s}\)</span> are
 the column vectors of the supercell lattice vectors.  Be careful that
-the lattice vectors of the <code class="docutils literal"><span class="pre">PhonopyAtoms</span></code> class are the row vectors
+the lattice vectors of the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class are the row vectors
 (<a class="reference internal" href="#phonopy-atoms-cell"><span class="std std-ref">lattice_vectors</span></a>). Therefore the phonopy code, which relies
-on the <code class="docutils literal"><span class="pre">PhonopyAtoms</span></code> class, is usually written such as</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">supercell_lattice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">original_lattice</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+on the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class, is usually written such as</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">supercell_lattice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">original_lattice</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
 </pre></div>
 </div>
 <p>or equivalently,</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">supercell_lattice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">supercell_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">original_lattice</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">supercell_lattice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">supercell_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">original_lattice</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="symmetry-search-tolerance">
 <h3><a class="toc-backref" href="#id16">Symmetry search tolerance</a><a class="headerlink" href="#symmetry-search-tolerance" title="Permalink to this headline">¶</a></h3>
-<p>Symmetry search tolerance (often the name <code class="docutils literal"><span class="pre">symprec</span></code> is used in
+<p>Symmetry search tolerance (often the name <code class="docutils literal notranslate"><span class="pre">symprec</span></code> is used in
 phonopy) is used to determine symmetry operations of the crystal
 structures. The physical unit follows that of input crystal structure.</p>
 </div>
@@ -675,7 +666,7 @@ structures. The physical unit follows that of input crystal structure.</p>
 follows. This example assumes that the user knows what are the unit
 cell and primitive cell and that the Born effective charge and
 dielectric constant were calculated using VASP code for the unit cell.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">io</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">io</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">phonopy</span> <span class="k">import</span> <span class="n">Phonopy</span>
 <span class="kn">from</span> <span class="nn">phonopy.units</span> <span class="k">import</span> <span class="n">Hartree</span><span class="p">,</span> <span class="n">Bohr</span>
@@ -738,7 +729,7 @@ dielectric constant were calculated using VASP code for the unit cell.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.6.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.<br/>
     </p>
   </div>
 </footer>
