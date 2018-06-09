@@ -1356,7 +1356,7 @@ class PhonopyConfParser(ConfParser):
 
         if 'is_full_fc' in arg_list:
             if self._args.is_full_fc:
-                self._confs['full_fc'] = '.true.'
+                self._confs['full_force_constants'] = '.true.'
 
         if 'fits_debye_model' in arg_list:
             if self._args.fits_debye_model:
@@ -1521,8 +1521,8 @@ class PhonopyConfParser(ConfParser):
                 if confs['write_force_constants'].lower() == '.true.':
                     self.set_parameter('write_force_constants', True)
 
-            if conf_key == 'full_fc':
-                if confs['full_fc'].lower() == '.true.':
+            if conf_key == 'full_force_constants':
+                if confs['full_force_constants'].lower() == '.true.':
                     self.set_parameter('is_full_fc', True)
 
             if conf_key == 'cutoff_radius':

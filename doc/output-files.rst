@@ -146,7 +146,7 @@ the supercell axes.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Phonopy configurations and crystal structures are stored to remember
-what a user executed. 
+what a user executed.
 
 ``.hdf5`` files
 ^^^^^^^^^^^^^^^^^
@@ -189,9 +189,9 @@ eigenvector    Eigenvector at each phonon mode.
                the primitive cell. The real and imaginary values
                correspond to the left and right, respectively.
                A set of eigenvectors comprising all bands at a q-point
-               forms a unitary matrix obtained as the result of 
+               forms a unitary matrix obtained as the result of
                numpy.linalg.eigh, i.e., LAPACK of routine _heevd.
-               Therefore eigenvectors correspond to the column vectors 
+               Therefore eigenvectors correspond to the column vectors
                of the unitary matrix.
 group_velocity Group velocity at each phonon mode in the
                Cartesian coordinates defined in the unit cell.
@@ -206,8 +206,8 @@ mesh           Numbers of mesh sampling points along axes of the
                primitive cell.
 weight         In the mesh sampling mode, only phonons at irreducible
                q-points are calculated in the default behavior. This
-	       value means the multiplicity of a q-point in the
-	       reciprocal space of the primitive cell.
+               value means the multiplicity of a q-point in the
+               reciprocal space of the primitive cell.
 ============== =======================================================
 
 Band structure mode
@@ -217,8 +217,8 @@ Band structure mode
 ============== =======================================================
 distance       In the band structure mode, this value means the
                distance from the origin in the reciprocal space of the
-	       primitive cell. The unit is the reciprocal of length
-	       unit used in the real space.
+               primitive cell. The unit is the reciprocal of length
+               unit used in the real space.
 ============== =======================================================
 
 
@@ -238,4 +238,3 @@ when phonopy ran with proper physical units. See
 direction      A displacement in the reduced coordinates.
 displacement   A displacement in the Cartesian coordinates.
 ============== =======================================================
-
