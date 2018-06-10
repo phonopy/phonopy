@@ -12,21 +12,22 @@ charges and the dielectric tensor
    Complete CRYSTAL inputs can be prepared manually
    or with the help of a template (see TEMPLATE)
 
-2) Run the supercell inputs with CRYSTAL
+2) Create BORN file for non-analytical correction:
+   phonopy-crystal-born > BORN
+
+3) Run the supercell inputs with CRYSTAL
    Here supercell-001.o and supercell-002.o have been pre-calculated.
 
-3) Collect forces:
+4) Collect forces:
    phonopy --crystal -f supercell-*o
 
-4) Calculate phonon dispersion data into band.yaml and save band.pdf:
-   phonopy --crystal --dim="4 4 4" -p -s band.conf
-
-   Take the non-analytical correction into account (see BORN file)
-   phonopy --crystal --dim="4 4 4" -p -s --nac band.conf 
+5) Calculate phonon dispersion data into band.yaml and save band.pdf
+   Take the non-analytical correction into account using --nac (see BORN file):
+   phonopy --crystal --dim="4 4 4" -p -s --nac band.conf
    
    Plot the phonon dispersion in cm^{-1} units:
    (factor = CrystalToTHz * THzToCm = 15.633302 * 33.356410)
    phonopy --crystal --dim="4 4 4" -p -s --nac --factor=521.47083 band.conf
 
    Create a formatted plot (here band.yaml is in cm^{-1) units):
-   bandplot --fmin=0 --line --ylabel="Frequency (cm\$^{-1}\$)" "--band_labels=`grep BAND_LABELS band.conf | cut -d= -f2-`" -o dispersion.pdf
+   phonopy-bandplot --fmin=0 --line --ylabel="Frequency (cm\$^{-1}\$)" --band-labels="`grep BAND_LABELS band.conf | cut -d= -f2-`" -o dispersion.pdf

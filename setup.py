@@ -128,10 +128,12 @@ scripts_phonopy = ['scripts/phonopy',
                    'scripts/phonopy-FHI-aims',
                    'scripts/phonopy-bandplot',
                    'scripts/phonopy-vasp-born',
+                   'scripts/phonopy-crystal-born',
                    'scripts/phonopy-propplot',
                    'scripts/phonopy-tdplot',
                    'scripts/phonopy-dispmanager',
                    'scripts/phonopy-gruneisen',
+                   'scripts/phonopy-gruneisenplot',
                    'scripts/phonopy-pdosplot']
 
 if __name__ == '__main__':
