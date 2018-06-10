@@ -75,7 +75,7 @@ non-analytical term correction.
 
 .. _reference_dp_dp_NAC:
 
-Correction by dipole-dipole interaciton
+Correction by dipole-dipole interaction
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1. \P. Giannozzi, S. Degironcoli, P. Pavone, and S. Baroni,

@@ -329,7 +329,7 @@ def get_parser():
         help="Non-analytical term correction")
     parser.add_argument(
         "--nac-method", dest="nac_method",
-        help="Non-analytical term correction method: Wang (default) or Gonze")
+        help="Non-analytical term correction method: Gonze (default) or Wang")
     parser.add_argument(
         "--nodiag", dest="is_nodiag", action="store_true",
         help="Set displacements parallel to axes")
