@@ -132,7 +132,7 @@ def finalize_phonopy(log_level,
     sys.exit(0)
 
 def print_cells(phonon, unitcell_filename):
-    print("Crsytal structure is read from \'%s\'." % unitcell_filename)
+    print("Crystal structure is read from \'%s\'." % unitcell_filename)
     supercell = phonon.get_supercell()
     unitcell = phonon.get_unitcell()
     primitive = phonon.get_primitive()
