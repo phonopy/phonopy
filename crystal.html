@@ -147,13 +147,15 @@ calculations of lattice thermal conductivity.</p>
 <div class="section" id="supported-features">
 <h2>Supported features<a class="headerlink" href="#supported-features" title="Permalink to this headline">¶</a></h2>
 <p>The CRYSTAL interface reads the unit cell from a CRYSTAL output file
-(lattice vectors, conventional atomic numbers, fractional atomic positions)
+(lattice vectors, conventional atomic numbers, fractional atomic positions).
 For optimization outputs, the final geometry in the file is read.</p>
-<p>If dielectric tensor and effective Born charges are present, the interface
-creates a BORN file for Non-analytical correction (<a class="reference internal" href="setting-tags.html#nac-tag"><span class="std std-ref">Non-analytical term correction</span></a>).
-The recommended strategy is to carry out a Gamma-point frequency calculation
-with INTENS and INTCPHF. This produces all required quantities and also confirms that
-the structure optimization has converged to a true local minimum.</p>
+<p>If dielectric tensor and effective Born charges are available, they can be
+read with <code class="docutils literal notranslate"><span class="pre">phonopy-crystal-born</span></code> script. The script creates a BORN file for
+<a class="reference internal" href="setting-tags.html#nac-tag"><span class="std std-ref">Non-analytical term correction</span></a>.</p>
+<p>The recommended strategy is to carry out a Gamma-point frequency calculation
+with INTENS and INTCPHF and use this as input to Phonopy. This produces all
+required quantities and also confirms that the structure optimization has
+converged to a true local minimum.</p>
 <p>If ATOMSPIN keyword is present, magnetic moments are read from it. There
 is very little experience on using this feature, so be careful.</p>
 </div>
@@ -196,12 +198,12 @@ forces, TOLDEE parameter should be 10 or higher. Phonopy includes this
 parameter and the necessary GRADCAL keyword automatically in the inputs.</p>
 <p>Then, CRYSTAL supercell calculations are executed to obtain forces on
 atoms, e.g., as follows:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">runcry14</span> <span class="n">supercell</span><span class="o">-</span><span class="mf">001.</span><span class="n">d12</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">runcry17</span> <span class="n">supercell</span><span class="o">-</span><span class="mf">001.</span><span class="n">d12</span>
 </pre></div>
 </div>
 </li>
-<li><p class="first">To create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>, that is used by phonopy,
-the following phonopy command is executed:</p>
+<li><p class="first">To create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file required by phonopy,
+the following command is executed:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">-</span><span class="n">f</span> <span class="n">supercell</span><span class="o">-</span><span class="mf">001.</span><span class="n">o</span>
 </pre></div>
 </div>
@@ -222,17 +224,18 @@ automatically read in. Create phonon dispersion plot with:</p>
  <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">||</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
  <span class="o">|</span> <span class="o">.</span><span class="n">__</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">.</span><span class="n">__</span><span class="o">/</span> \<span class="n">__</span><span class="p">,</span> <span class="o">|</span>
  <span class="o">|</span><span class="n">_</span><span class="o">|</span>                            <span class="o">|</span><span class="n">_</span><span class="o">|</span>    <span class="o">|</span><span class="n">___</span><span class="o">/</span>
-                                      <span class="mf">1.11</span><span class="o">.</span><span class="mi">6</span>
+                                      <span class="mf">1.13</span><span class="o">.</span><span class="mi">0</span>
 
 
 <span class="n">Python</span> <span class="n">version</span> <span class="mf">2.7</span><span class="o">.</span><span class="mi">3</span>
-<span class="n">Spglib</span> <span class="n">version</span> <span class="mf">1.9</span><span class="o">.</span><span class="mi">9</span>
+<span class="n">Spglib</span> <span class="n">version</span> <span class="mf">1.10</span><span class="o">.</span><span class="mi">3</span>
 <span class="n">Calculator</span> <span class="n">interface</span><span class="p">:</span> <span class="n">crystal</span>
 <span class="n">Band</span> <span class="n">structure</span> <span class="n">mode</span>
 <span class="n">Settings</span><span class="p">:</span>
   <span class="n">Supercell</span><span class="p">:</span> <span class="p">[</span><span class="mi">4</span> <span class="mi">4</span> <span class="mi">4</span><span class="p">]</span>
 <span class="n">Spacegroup</span><span class="p">:</span> <span class="n">Fd</span><span class="o">-</span><span class="mi">3</span><span class="n">m</span> <span class="p">(</span><span class="mi">227</span><span class="p">)</span>
 <span class="n">Computing</span> <span class="n">force</span> <span class="n">constants</span><span class="o">...</span>
+<span class="nb">max</span> <span class="n">drift</span> <span class="n">of</span> <span class="n">force</span> <span class="n">constants</span><span class="p">:</span> <span class="mf">0.000000</span> <span class="p">(</span><span class="n">xx</span><span class="p">)</span> <span class="mf">0.000000</span> <span class="p">(</span><span class="n">zz</span><span class="p">)</span>
 <span class="n">Reciprocal</span> <span class="n">space</span> <span class="n">paths</span> <span class="ow">in</span> <span class="n">reduced</span> <span class="n">coordinates</span><span class="p">:</span>
 <span class="p">[</span> <span class="mf">0.00</span>  <span class="mf">0.00</span>  <span class="mf">0.00</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.00</span>  <span class="mf">0.50</span><span class="p">]</span>
 <span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.00</span>  <span class="mf">0.50</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.25</span>  <span class="mf">0.75</span><span class="p">]</span>
@@ -259,8 +262,8 @@ for examples, see <a class="reference internal" href="examples.html#examples-lin
 </ol>
 <div class="section" id="non-analytical-term-correction-optional">
 <h3>Non-analytical term correction (Optional)<a class="headerlink" href="#non-analytical-term-correction-optional" title="Permalink to this headline">¶</a></h3>
-<p>The workflow for a CRYSTAL-Phonopy calculation with Non-analytical correction
-is outlined here using the NaCl example found in <code class="docutils literal notranslate"><span class="pre">example/NaCl-CRYSTAL</span></code>.</p>
+<p>The workflow for a CRYSTAL-Phonopy calculation with <a class="reference internal" href="setting-tags.html#nac-tag"><span class="std std-ref">Non-analytical term correction</span></a> is outlined here
+using the NaCl example found in <code class="docutils literal notranslate"><span class="pre">example/NaCl-CRYSTAL</span></code>.</p>
 <p>In this example, the CRYSTAL output file is <code class="docutils literal notranslate"><span class="pre">crystal.o</span></code>.
 This is the default for the CRYSTAL interface, so, the <code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">crystal.o</span></code>
 parameter is not needed.</p>
@@ -290,7 +293,24 @@ but have the necessary data from some other source, you can create
 the <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file manually following the <code class="docutils literal notranslate"><span class="pre">BORN</span></code> format
 (<a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a>).</p>
 </li>
-<li><p class="first">Run the supercell inputs with CRYSTAL</p>
+<li><p class="first">Create <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file with <code class="docutils literal notranslate"><span class="pre">phonopy-crystal-born</span></code> script:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonopy</span><span class="o">-</span><span class="n">crystal</span><span class="o">-</span><span class="n">born</span> <span class="o">&gt;</span> <span class="n">BORN</span>
+</pre></div>
+</div>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">phonopy-crystal-born</span></code> looks for a file called crystal.o.
+File with some other name can be given as an argument to the script.
+The <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file created by the script should look like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">default</span>
+<span class="mf">1.8126</span> <span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="mf">1.8126</span> <span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="mf">1.8126</span>
+<span class="mf">1.0238</span> <span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="mf">1.0238</span> <span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="mf">1.0238</span>
+<span class="o">-</span><span class="mf">1.0238</span> <span class="o">-</span><span class="mf">0.0000</span> <span class="o">-</span><span class="mf">0.0000</span> <span class="o">-</span><span class="mf">0.0000</span> <span class="o">-</span><span class="mf">1.0238</span> <span class="mf">0.0000</span> <span class="o">-</span><span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="o">-</span><span class="mf">1.0238</span>
+</pre></div>
+</div>
+<p>If you don’t want to run a FREQCALC-INTENS-INTCPHF calculation, but have
+the necessary data from some other source, you can create the <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file
+manually following the <code class="docutils literal notranslate"><span class="pre">BORN</span></code> format (<a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a>).</p>
+</li>
+<li><p class="first">Run the supercell inputs with CRYSTAL as in the Si example above.</p>
 </li>
 <li><p class="first">Collect forces:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">-</span><span class="n">f</span> <span class="n">supercell</span><span class="o">-*</span><span class="n">o</span>
@@ -298,7 +318,7 @@ the <code class="docutils literal notranslate"><span class="pre">BORN</span></co
 </div>
 </li>
 <li><p class="first">Calculate phonon dispersion data into band.yaml and save band.pdf,
-using Non-analytical correction –nac:</p>
+using non-analytical correction <code class="docutils literal notranslate"><span class="pre">--nac</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;4 4 4&quot;</span> <span class="o">-</span><span class="n">p</span> <span class="o">-</span><span class="n">s</span> <span class="o">--</span><span class="n">nac</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
