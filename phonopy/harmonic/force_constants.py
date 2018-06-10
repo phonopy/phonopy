@@ -65,7 +65,7 @@ def get_fc2(supercell,
     atomic displacement, d:
       Phi = -F / d
     This is solved by matrix pseudo-inversion.
-    Crsytal symmetry is included when creating F and d matrices.
+    Crystal symmetry is included when creating F and d matrices.
 
     Returns
     -------

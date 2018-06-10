@@ -248,18 +248,13 @@ class CrystalIn:
 
     def _collect(self, lines):
         # Reads a CRYSTAL output file (lattice vectors, conventional atomic numbers,
-        # fractional atomic positions, magnetic moments)
-        # NB. For optimization outputs, the final geometry in the file is read 
-        #
-        # If dielectric tensor and effective Born charges are present, writes a BORN file
-        # (Gamma-point frequency calculation with INTENS - recommended choice!)
-        #
-        # If ATOMSPIN keyword is present, magnetic moments are read from it
+        # fractional atomic positions).
+        # - For optimization outputs, the final geometry in the file is read.
+        # - Dielectric tensor and effective Born charges can be read with script phonopy-crystal-born
+        # - If ATOMSPIN keyword is present, magnetic moments are read from it
         magmoms = []
         atomspins = []
         numspins = 0
-        epsilon = []
-        zeff = []
         l = 0
         while l < len(lines):
             line = lines[l]
@@ -267,7 +262,6 @@ class CrystalIn:
                 aspecies = []
                 coords = []
                 convnum = []
-                is_asym = []
                 l += 4
                 # ATOMS IN THE ASYMMETRIC UNIT    2 - ATOMS IN THE UNIT CELL:    6
                 N_asym_atoms = int(lines[l].split()[5])
@@ -276,7 +270,6 @@ class CrystalIn:
                 # 1 T  22 TI    4.721218104494E-21  3.307446203077E-21  1.413771901417E-21
                 for atom in range(0, N_atoms):
                     atomdata = lines[l].split()
-                    is_asym.append(atomdata[1])
                     aspecies.append(atomdata[3].capitalize())
                     coords.append([float(x) for x in atomdata[4:7]])
                     convnum.append(int(atomdata[2]))
@@ -300,37 +293,6 @@ class CrystalIn:
                 l += 1
                 atomspins = [int(x) for x in lines[l].split()]
                 l += 1
-            elif 'COMPONENT    ALPHA(REAL, IMAGINARY)         EPSILON       CHI(1)' in line:
-                # XX      296.9851        0.0000        7.9433        6.9433
-                # XX, XY, XZ, YY, YZ, ZZ are given (6 rows). YX = XY, ZX = XZ, ZY = YZ 
-                l += 1 
-                epsilon.append(float(lines[l].split()[3])) # XX
-                l += 1
-                epsilon.append(float(lines[l].split()[3])) # XY
-                l += 1
-                epsilon.append(float(lines[l].split()[3])) # XZ
-                epsilon.append(epsilon[1])                 # YX
-                l += 1
-                epsilon.append(float(lines[l].split()[3])) # YY
-                l += 1
-                epsilon.append(float(lines[l].split()[3])) # YZ
-                epsilon.append(epsilon[2])                 # ZX
-                epsilon.append(epsilon[5])                 # ZY
-                l += 1
-                epsilon.append(float(lines[l].split()[3])) # ZZ
-            elif 'ATOMIC BORN CHARGE TENSOR' in line:
-                l += 6
-                for atom in range(0, N_atoms):
-                    if is_asym[atom] == 'T':
-                        zeffatom = []
-                        for i in range(0, 3):
-                            # 1     8.3860E-01  3.4861E-01  3.4861E-01
-                            zeffatom += [float(x) for x in lines[l].split()[1:4]]
-                            l += 1
-                        zeff.append(zeffatom)
-                        l += 4
-                    else:
-                        l += 7
 
             l += 1 # while l < len(lines)
 
@@ -341,22 +303,6 @@ class CrystalIn:
             self._tags['conv_numbers'] = convnum
         else:
             print("CRYSTAL-interface: Error parsing CRYSTAL output file")
-
-        # Create BORN file if epsilon and zeff are available
-        if len(epsilon) == 9 and len(zeff) == N_asym_atoms: 
-            # Conversion factor
-            bornlines = ("default\n")
-            # Dielectric tensor
-            bornlines += ("%6.4f " * 9 + "\n") % tuple(epsilon)
-            # Effective charges
-            for atom in range(0, N_asym_atoms):
-                bornlines += ("%6.4f " * 9 + "\n") % tuple(zeff[atom])
-
-            # Write file
-            bornf = open("BORN", "w")
-            bornf.writelines(bornlines)
-            bornf.close()
-            print("CRYSTAL-interface: Dielectric tensor and effective charges written in BORN file")
 
         # Set magnetic moments
         if numspins > 0:
