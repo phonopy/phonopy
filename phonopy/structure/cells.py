@@ -357,8 +357,8 @@ class Primitive(PhonopyAtoms):
         self._p2p_map = dict([(j, i) for i, j in enumerate(self._p2s_map)])
 
     def _set_smallest_vectors(self, supercell):
-        self._smallest_vectors, self._multiplicity = _get_smallest_vectors(
-            supercell, self, self._symprec)
+        self._smallest_vectors, self._multiplicity = get_smallest_vectors(
+            supercell, self, p2s_map=self._p2s_map, symprec=self._symprec)
 
     def _set_atomic_permutations(self, supercell):
         positions = supercell.get_scaled_positions()
@@ -489,70 +489,7 @@ def get_reduced_bases(lattice,
     else:
         return spg.delaunay_reduce(lattice, eps=tolerance)
 
-#
-# Shortest pairs of atoms in supercell (Wigner-Seitz like)
-#
-# This is currently no longer used in phonopy, but still used by
-# phono3py. In phono3py, this is used to measure the shortest distance
-# between arbitrary pair of atoms in supercell. Therefore this method
-# may be moved to phono3py, but this way of use can also happen in
-# phonopy in the future, so let's keep it for a while.
-#
-def get_equivalent_smallest_vectors(atom_number_supercell,
-                                    atom_number_primitive,
-                                    supercell,
-                                    primitive_lattice,
-                                    symprec):
-    reduced_bases = get_reduced_bases(supercell.get_cell(), symprec)
-    reduced_bases_inv = np.linalg.inv(reduced_bases)
-    cart_positions = supercell.get_positions()
-
-    # Atomic positions are confined into the delaunay-reduced superlattice.
-    # Their positions will lie in the range -0.5 < x < 0.5, so that vectors
-    # drawn between them have components in the range -1 < x < 1.
-    def reduced_frac_pos(i):
-        vec = np.dot(cart_positions[i], reduced_bases_inv)
-        return vec - np.rint(vec)
-    p_pos = reduced_frac_pos(atom_number_primitive)
-    s_pos = reduced_frac_pos(atom_number_supercell)
-
-    # The vector arrow is from the atom in the primitive cell to the
-    # atom in the supercell.
-    differences = _get_equivalent_smallest_vectors_simple(s_pos - p_pos,
-                                                          reduced_bases,
-                                                          symprec)
-
-    # Return fractional coords in the basis of the primitive cell
-    #  rather than the supercell.
-    relative_scale = reduced_bases.dot(np.linalg.inv(primitive_lattice))
-    return differences.dot(relative_scale)
-
-# Given:
-#  - A delaunay-reduced lattice (row vectors)
-#  - A fractional vector (with respect to that lattice)
-#      whose coords lie in the range (-1 < x < 1)
-# Produce:
-#  - All fractional vectors of shortest length that are translationally
-#      equivalent to that vector under the lattice.
-def _get_equivalent_smallest_vectors_simple(frac_vector,
-                                            reduced_bases, # row vectors
-                                            symprec):
-
-    # Try all nearby images of the vector
-    lattice_points = np.array([
-        [i, j, k] for i in (-1, 0, 1)
-                  for j in (-1, 0, 1)
-                  for k in (-1, 0, 1)
-    ])
-    candidates = frac_vector + lattice_points
-
-    # Filter out the best ones by computing cartesian lengths.
-    # (A "clever" optimizer might try to skip the square root calculation here,
-    #  but he would be wrong; we're comparing a *difference* to the tolerance)
-    lengths = np.sqrt(np.sum(np.dot(candidates, reduced_bases)**2, axis=1))
-    return candidates[lengths - lengths.min() < symprec]
-
-def _get_smallest_vectors(supercell, primitive, symprec):
+def get_smallest_vectors(supercell, primitive, p2s_map=None, symprec=1e-5):
     """Find shortest atomic pair vectors
 
     Note
@@ -568,38 +505,49 @@ def _get_smallest_vectors(supercell, primitive, symprec):
 
     Parameters
     ----------
-    supercell: Supercell
+    supercell : PhonopyAtoms
         Supercell
-    primitive: Primitive
+    primitive : PhonopyAtoms
         Primitive cell
-    symprec: float
+    p2s_map : ndarray, optional, default=None
+        if None, 'primitive' is considered to be given in the supercell
+        basis vectors. Othersize p2s_map gives supercell indices of atoms of
+        primitive cell, which is used to collect atomic positions of primitive
+        cell from supercell using these mapping indices.
+        dtype='intc'
+        shape=(size_prim,)
+    symprec : float, optional, default=1e-5
         Tolerance to find equal distances of vectors
 
     Returns
     -------
-    tuple
-        (shortest_vectors, multiplicities)
-        shortest_vectors: ndarray
-            Shortest vectors (see Note). The 27 in shape is the possible
-            maximum number of elements.
-            shape=(size_super, size_prim, 27, 3)
-        multiplicities: ndarray
-            Number of equidistance shortest vectors
-            shape=(size_super, size_prim)
+    shortest_vectors : ndarray
+        Shortest vectors (see Note). The 27 in shape is the possible
+        maximum number of elements.
+        dtype='double'
+        shape=(size_super, size_prim, 27, 3)
+    multiplicities : ndarray
+        Number of equidistance shortest vectors
+        dtype='intc'
+        shape=(size_super, size_prim)
 
     """
 
     # useful data from arguments
-    p2s_map = primitive.get_primitive_to_supercell_map()
-    size_super = supercell.get_number_of_atoms()
-    size_prim = primitive.get_number_of_atoms()
     reduced_bases = get_reduced_bases(supercell.get_cell(), symprec)
 
     # Reduce all positions into the cell formed by the reduced bases.
     supercell_fracs = np.dot(supercell.get_positions(),
                              np.linalg.inv(reduced_bases))
     supercell_fracs -= np.rint(supercell_fracs)
-    primitive_fracs = supercell_fracs[list(p2s_map)]
+    if p2s_map is None:
+        assert ((supercell.get_cell() - primitive.get_cell()) < symprec).all()
+        primitive_fracs = np.dot(primitive.get_positions(),
+                                 np.linalg.inv(reduced_bases))
+        primitive_fracs -= np.rint(primitive_fracs)
+    else:
+        primitive_fracs = supercell_fracs[list(p2s_map)]
+
 
     # For each vector, we will need to consider all nearby images in the reduced bases.
     lattice_points = np.array([
@@ -655,7 +603,7 @@ def _get_smallest_vectors(supercell, primitive, symprec):
     # We will gather the shortest ones from each list of 27 vectors.
     shortest_vectors = np.zeros_like(candidate_vectors,
                                      dtype='double', order='C')
-    multiplicity = np.zeros((size_super, size_prim), dtype='intc', order='C')
+    multiplicity = np.zeros(shortest_vectors.shape[:2], dtype='intc', order='C')
 
     import phonopy._phonopy as phonoc
     phonoc.gsv_copy_smallest_vectors(shortest_vectors,
