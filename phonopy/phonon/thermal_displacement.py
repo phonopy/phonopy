@@ -34,7 +34,6 @@
 
 import numpy as np
 from phonopy.units import AMU, THzToEv, Kb, EV, Hbar, Angstrom
-from phonopy.structure.cells import get_equivalent_smallest_vectors
 from phonopy.interface.cif import write_cif_P1
 
 class ThermalMotion(object):
@@ -377,6 +376,11 @@ class ThermalDistances(ThermalMotion):
         for i, (atom1, atom2) in enumerate(atom_pairs):
             patom1 = p2p[s2p[atom1]]
             patom2 = p2p[s2p[atom2]]
+            ############################################################
+            # get_equivalent_smallest_vectors is no longer in phonopy. #
+            # To use this class, this method has to be reimplemented   #
+            # in some way.                                             #
+            ############################################################
             delta_r = get_equivalent_smallest_vectors(
                 atom2,
                 atom1,

@@ -35,7 +35,6 @@
 import numpy as np
 import sys
 from phonopy.structure.cells import (get_reduced_bases,
-                                     get_equivalent_smallest_vectors,
                                      compute_permutation_for_rotation)
 
 def get_force_constants(set_of_forces,
