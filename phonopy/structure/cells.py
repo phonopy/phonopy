@@ -491,16 +491,15 @@ def get_reduced_bases(lattice,
 
 def _get_smallest_vectors(supercell, primitive, symprec=1e-5):
     p2s_map = primitive.get_primitive_to_supercell_map()
-    s_pos = supercell.get_scaled_positions()
-    p_pos = s_pos[list(p2s_map)]
+    supercell_pos = supercell.get_scaled_positions()
+    primitive_pos = supercell_pos[p2s_map]
     supercell_bases = supercell.get_cell()
     primitive_bases = primitive.get_cell()
     svecs, multi = get_smallest_vectors(
-        supercell_bases, s_pos, p_pos, symprec=symprec)
-    svecs = np.array(np.dot(svecs,
-                            np.dot(supercell_bases,
-                                   np.linalg.inv(primitive_bases))),
-                     dtype='double', order='C')
+        supercell_bases, supercell_pos, primitive_pos, symprec=symprec)
+    svecs = np.array(
+        np.dot(svecs, np.dot(supercell_bases, np.linalg.inv(primitive_bases))),
+        dtype='double', order='C')
     return svecs, multi
 
 def get_smallest_vectors(supercell_bases,
@@ -526,7 +525,7 @@ def get_smallest_vectors(supercell_bases,
     supercell_bases : ndarray
         Supercell basis vectors as row vectors, (a, b, c)^T. Must be order='C'.
         dtype='double'
-        shape=(3,3)
+        shape=(3, 3)
     supercell_pos : array_like
         Atomic positions in fractional coordinates of supercell.
         dtype='double'
@@ -554,13 +553,17 @@ def get_smallest_vectors(supercell_bases,
     """
 
     reduced_bases = get_reduced_bases(supercell_bases, tolerance=symprec)
+    trans_mat_float = np.dot(supercell_bases, np.linalg.inv(reduced_bases))
+    trans_mat = np.rint(trans_mat_float).astype(int)
+    assert (np.abs(trans_mat_float - trans_mat) < 1e-8).all()
+    trans_mat_inv_float = np.linalg.inv(trans_mat)
+    trans_mat_inv = np.rint(trans_mat_inv_float).astype(int)
+    assert (np.abs(trans_mat_inv_float - trans_mat_inv) < 1e-8).all()
 
     # Reduce all positions into the cell formed by the reduced bases.
-    supercell_fracs = np.dot(np.dot(supercell_pos, supercell_bases),
-                             np.linalg.inv(reduced_bases))
+    supercell_fracs = np.dot(supercell_pos, trans_mat)
     supercell_fracs -= np.rint(supercell_fracs)
-    primitive_fracs = np.dot(np.dot(primitive_pos, supercell_bases),
-                             np.linalg.inv(reduced_bases))
+    primitive_fracs = np.dot(primitive_pos, trans_mat)
     primitive_fracs -= np.rint(primitive_fracs)
 
     # For each vector, we will need to consider all nearby images in the reduced bases.
@@ -607,9 +610,7 @@ def get_smallest_vectors(supercell_bases,
     # by the primitive cell.
     #
     # shape: (size_super, size_prim, 27, 3)
-    candidate_vectors = np.array(np.dot(
-        candidate_fracs,
-        reduced_bases.dot(np.linalg.inv(supercell_bases))),
+    candidate_vectors = np.array(np.dot(candidate_fracs, trans_mat_inv),
                                  dtype='double', order='C')
 
     # The last final bits are done in C.
