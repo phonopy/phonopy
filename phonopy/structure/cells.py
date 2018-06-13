@@ -491,14 +491,15 @@ def get_reduced_bases(lattice,
 
 def _get_smallest_vectors(supercell, primitive, symprec=1e-5):
     p2s_map = primitive.get_primitive_to_supercell_map()
-    p_pos = supercell.get_scaled_positions()[p2s_map]
     s_pos = supercell.get_scaled_positions()
+    p_pos = s_pos[p2s_map]
     supercell_bases = supercell.get_cell()
+    primitive_bases = primitive.get_cell()
     svecs, multi = get_smallest_vectors(
         supercell_bases, s_pos, p_pos, symprec=symprec)
     svecs = np.array(np.dot(svecs,
-                            np.dot(supercell.get_cell(),
-                                   np.linalg.inv(primitive.get_cell()))),
+                            np.dot(supercell_bases,
+                                   np.linalg.inv(primitive_bases))),
                      dtype='double', order='C')
     return svecs, multi
 
@@ -552,7 +553,6 @@ def get_smallest_vectors(supercell_bases,
 
     """
 
-    # useful data from arguments
     reduced_bases = get_reduced_bases(supercell_bases, symprec)
 
     # Transformation matrix from supercell coord to reduced cell coord
