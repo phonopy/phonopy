@@ -497,9 +497,10 @@ def _get_smallest_vectors(supercell, primitive, symprec=1e-5):
     primitive_bases = primitive.get_cell()
     svecs, multi = get_smallest_vectors(
         supercell_bases, supercell_pos, primitive_pos, symprec=symprec)
-    svecs = np.array(
-        np.dot(svecs, np.dot(supercell_bases, np.linalg.inv(primitive_bases))),
-        dtype='double', order='C')
+    trans_mat_float = np.dot(supercell_bases, np.linalg.inv(primitive_bases))
+    trans_mat = np.rint(trans_mat_float).astype(int)
+    assert (np.abs(trans_mat_float - trans_mat) < 1e-8).all()
+    svecs = np.array(np.dot(svecs, trans_mat), dtype='double', order='C')
     return svecs, multi
 
 def get_smallest_vectors(supercell_bases,
