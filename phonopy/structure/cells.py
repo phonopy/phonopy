@@ -469,13 +469,13 @@ def get_reduced_bases(lattice,
 
     Parameters
     ----------
-    lattice: ndarray or list of list
+    lattice : ndarray or list of list
         Basis vectors by row vectors, [a, b, c]^T
         shape=(3,3)
-    method: str
+    method : str
         delaunay: Delaunay reduction
         niggli: Niggli reduction
-    tolerance: float
+    tolerance : float
         Tolerance to find shortest basis vecotrs
 
     Returns
@@ -519,7 +519,7 @@ def get_smallest_vectors(supercell_bases,
     shortest vectors are stored.
     In fact, this method is not limited to search shortest vectors between
     sueprcell atoms and primitive cell atoms, but can be used to measure
-    shortest vectors between atoms in supercell lattice frame.
+    shortest vectors between atoms in periodic supercell lattice frame.
 
     Parameters
     ----------
@@ -553,7 +553,9 @@ def get_smallest_vectors(supercell_bases,
 
     """
 
-    reduced_bases = get_reduced_bases(supercell_bases, tolerance=symprec)
+    reduced_bases = get_reduced_bases(supercell_bases,
+                                      method='delaunay',
+                                      tolerance=symprec)
     trans_mat_float = np.dot(supercell_bases, np.linalg.inv(reduced_bases))
     trans_mat = np.rint(trans_mat_float).astype(int)
     assert (np.abs(trans_mat_float - trans_mat) < 1e-8).all()
