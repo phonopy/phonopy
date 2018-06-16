@@ -559,7 +559,7 @@ def show_drift_force_constants(force_constants,
     if values_only:
         text = ""
     else:
-        text = "max drift of %s: " % name
+        text = "Max drift of %s: " % name
     text += "%f (%s%s) %f (%s%s)" % (maxval1, "xyz"[jk1[0]], "xyz"[jk1[1]],
                                      maxval2, "xyz"[jk2[0]], "xyz"[jk2[1]])
     print(text)
