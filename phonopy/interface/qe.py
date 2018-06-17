@@ -337,13 +337,10 @@ class PH_Q2R(object):
     ---------
     #!/usr/bin/env python
 
-    from phonopy.file_IO import write_FORCE_CONSTANTS
-    from phonopy.interface.qe import read_pwscf, PH_Q2R
-
     cell, _ = read_pwscf(primcell_filename)
     q2r = PH_Q2R(q2r_filename)
     q2r.run(cell)
-    write_FORCE_CONSTANTS(q2r.fc)
+    q2r.write_force_constants()
     ---------
 
     To save memory/storage space of force constants, the shape of
@@ -390,6 +387,10 @@ class PH_Q2R(object):
         Born effective charges
         dtype='double'
         shape=(natom_prim, 3, 3)
+    primitive : Primitive
+        Primitive cell
+    supercell : Supercell
+        Supercell
 
     """
 
@@ -398,6 +399,8 @@ class PH_Q2R(object):
         self.dimension = None
         self.epsilon = None
         self.borns = None
+        self.primitive = None
+        self.supercell = None
         self._symprec = symprec
         self._filename = filename
 
@@ -429,8 +432,18 @@ class PH_Q2R(object):
             self.epsilon = fc_dct['dielectric']
             self.borns = fc_dct['born']
             if parse_fc:
-                self.fc = self._arrange_supercell_fc(
-                    cell, fc_dct['fc'], is_full_fc=is_full_fc)
+                (self.fc,
+                 self.primitive,
+                 self.supercell) = self._arrange_supercell_fc(
+                     cell, fc_dct['fc'], is_full_fc=is_full_fc)
+
+    def write_force_constants(self, fc_format='hdf5'):
+        if self.fc is not None:
+            if fc_format == 'hdf5':
+                p2s_map = self.primitive.get_primitive_to_supercell_map()
+                write_force_constants_to_hdf5(self.fc, p2s_map=p2s_map)
+            else:
+                write_FORCE_CONSTANTS(self.fc)
 
     def _parse_q2r(self, f):
         """Parse q2r output file
@@ -528,7 +541,7 @@ class PH_Q2R(object):
             fc = np.zeros((natom, natom_s, 3, 3), dtype='double', order='C')
             fc[:, :] = q2r_fc[:, site_map]
 
-        return fc
+        return fc, pcell, scell
 
     def _get_q2r_positions(self, cell):
         dim = self.dimension
