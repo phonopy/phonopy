@@ -236,8 +236,6 @@ symmetrized by the translational invariance condition using
     #!/usr/bin/env python
 
     import sys
-    from phonopy.file_IO import write_FORCE_CONSTANTS
-    from phonopy.file_IO import write_force_constants_to_hdf5
     from phonopy.interface.qe import read_pwscf, PH_Q2R
 
     primcell_filename = sys.argv[1]
@@ -245,23 +243,7 @@ symmetrized by the translational invariance condition using
     cell, _ = read_pwscf(primcell_filename)
     q2r = PH_Q2R(q2r_filename)
     q2r.run(cell)
-    write_force_constants_to_hdf5(q2r.fc)
-    # write_FORCE_CONSTANTS(q2r.fc)
-
-..
-      import numpy as np
-      from phonopy.structure.symmetry import elaborate_borns_and_epsilon
-      if q2r.epsilon is not None:
-          borns, epsilon, _ = elaborate_borns_and_epsilon(
-              cell,
-              q2r.borns,
-              q2r.epsilon,
-              supercell_matrix=np.diag(q2r.dimension),
-              symmetrize_tensors=True)
-          print("default")
-          print(("%13.8f" * 9) % tuple(q2r.epsilon.ravel()))
-          for z in q2r.borns:
-              print(("%13.8f" * 9) % tuple(z.ravel()))
+    q2r.write_force_constants()
 
 Saving this script as ``make_fc_q2r.py``, this is used as, e.g.,
 
@@ -269,6 +251,12 @@ Saving this script as ``make_fc_q2r.py``, this is used as, e.g.,
 
    % python make_fc_q2r.py NaCl.in NaCl.fc
 
+This gives ``force_constants.hdf5`` file in the compact format (see
+:ref:`file_force_constants`).  From version 1.13.2, full supercell
+force constants can be written by ``q2r.run(cell, is_full_fc=True)``
+instead of ``q2r.run(cell)`` in the above
+script. ``FORCE_CONSTANTS`` file instead of ``force_constants.hdf5``
+can be obtained by ``q2r.write_force_constants(fc_format='text')``.
 
 Non-analytical term correction
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
