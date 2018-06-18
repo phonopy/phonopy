@@ -34,7 +34,7 @@
 
 import numpy as np
 import sys
-from phonopy.structure.cells import (get_reduced_bases,
+from phonopy.structure.cells import (get_smallest_vectors,
                                      compute_permutation_for_rotation)
 
 def get_force_constants(set_of_forces,
@@ -112,22 +112,26 @@ def get_fc2(supercell,
 
 def cutoff_force_constants(force_constants,
                            supercell,
+                           primitive,
                            cutoff_radius,
                            symprec=1e-5):
-    num_atom = supercell.get_number_of_atoms()
-    reduced_bases = get_reduced_bases(supercell.get_cell(), tolerance=symprec)
-    positions = np.dot(supercell.get_positions(),
-                       np.linalg.inv(reduced_bases))
-    for i in range(num_atom):
-        pos_i = positions[i]
-        for j in range(num_atom):
-            pos_j = positions[j]
-            min_distance = _get_shortest_distance_in_PBC(pos_i,
-                                                         pos_j,
-                                                         reduced_bases)
-            if min_distance > cutoff_radius:
-                force_constants[i, j] = 0.0
+    fc_shape = force_constants.shape
+    if fc_shape[0] == fc_shape[1]:
+        svecs, _ = get_smallest_vectors(supercell.get_cell(),
+                                        supercell.get_scaled_positions(),
+                                        supercell.get_scaled_positions(),
+                                        symprec=symprec)
+        min_distances = np.sqrt(np.sum(
+            np.dot(svecs[:, :, 0, :], supercell.get_cell()) ** 2, axis=-1))
+    else:
+        svecs, _ = primitive.get_smallest_vectors()
+        min_distances = np.sqrt(np.sum(
+            np.dot(svecs[:, :, 0, :], primitive.get_cell()) ** 2, axis=-1))
 
+    for i in range(fc_shape[0]):
+        for j in range(fc_shape[1]):
+            if min_distances[j, i] > cutoff_radius:
+                force_constants[i, j] = 0.0
 
 def symmetrize_force_constants(force_constants, level=1):
     """Symmetry force constants by translational and permutation symmetries
