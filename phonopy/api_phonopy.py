@@ -311,6 +311,7 @@ class Phonopy(object):
     def set_force_constants_zero_with_radius(self, cutoff_radius):
         cutoff_force_constants(self._force_constants,
                                self._supercell,
+                               self._primitive,
                                cutoff_radius,
                                symprec=self._symprec)
         self._set_dynamical_matrix()
