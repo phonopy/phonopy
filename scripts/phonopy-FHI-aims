@@ -218,8 +218,8 @@ class Control:
                         self.phonon["modulations"].update(parameters)
 
         except Exception:
-            print line,
-            print "|-> line triggered exception: " + str(Exception)
+            print(line,)
+            print("|-> line triggered exception: " + str(Exception))
             raise
         # supercell is mandatory for all what follows
         if not self.phonon["supercell"]:
@@ -229,37 +229,37 @@ class Control:
     def print_phonon(self, prefix=""):
         s = self.phonon["supercell"]
         if (len(s) == 3):
-            print prefix + ( "phonon supercell  %d %d %d" % tuple(s) )
+            print(prefix + ( "phonon supercell  %d %d %d" % tuple(s) ))
         elif (len(s) == 9):
-            print prefix + ( "phonon supercell   %d %d %d  %d %d %d  %d %d %d" % tuple(s) )
-        print prefix + ( "phonon displacement %f" % self.phonon["displacement"] )
-        print prefix + ( "phonon symmetry_thresh %g" % self.phonon["symmetry_thresh"] )
-        print prefix + ( "phonon frequency unit %s" % self.phonon["frequency_unit"] )
+            print(prefix + ( "phonon supercell   %d %d %d  %d %d %d  %d %d %d" % tuple(s) ))
+        print(prefix + ( "phonon displacement %f" % self.phonon["displacement"] ))
+        print(prefix + ( "phonon symmetry_thresh %g" % self.phonon["symmetry_thresh"] ))
+        print(prefix + ( "phonon frequency unit %s" % self.phonon["frequency_unit"] ))
         nac = self.phonon["nac"]
         if (nac):
-            print prefix + ( "phonon nac %s %s" % (nac["file"], nac["method"]) )
+            print(prefix + ( "phonon nac %s %s" % (nac["file"], nac["method"]) ))
         hess = self.phonon["hessian"]
         if (hess):
-            print prefix + ( "phonon %s" % " ".join(hess) )
+            print(prefix + ( "phonon %s" % " ".join(hess) ))
         for nb in range(len(self.phonon["band"])):
             b = self.phonon["band"][nb]
-            print prefix + ( "phonon band  %f %f %f  %f %f %f  %d  %s  %s" % \
-                             tuple(b["kstart"] + b["kend"] + [b["npoints"]] + [b["startname"]] + [b["endname"]]) )
+            print(prefix + ( "phonon band  %f %f %f  %f %f %f  %d  %s  %s" % \
+                             tuple(b["kstart"] + b["kend"] + [b["npoints"]] + [b["startname"]] + [b["endname"]]) ))
         d = self.phonon["dos"]
         if (d):
-            print prefix + ( "phonon dos %f %f %d %f %s" % \
+            print(prefix + ( "phonon dos %f %f %d %f %s" % \
                              ( d["fstart"], d["fend"], d["fpoints"], d["broad"], \
-                               ' '.join(map(str, d["qdensity"])) ) )
+                               ' '.join(map(str, d["qdensity"])) ) ))
         fe = self.phonon["free_energy"]
         if (fe):
-            print prefix + ( "phonon free_energy %f %f %d %s" % \
+            print(prefix + ( "phonon free_energy %f %f %d %s" % \
                              ( fe["Tstart"], fe["Tend"], fe["Tpoints"], \
-                               ' '.join(map(str, fe["qdensity"])) ) )
+                               ' '.join(map(str, fe["qdensity"])) ) ))
         for na in range(len(self.phonon["animation"])):
             anim = self.phonon["animation"][na]
-            print prefix + ( "phonon animation  %f %f %f  %d %d %d  %f %f %f  %s" % \
+            print(prefix + ( "phonon animation  %f %f %f  %d %d %d  %f %f %f  %s" % \
                              tuple(anim["q"] + [anim["band"], anim["amp"], anim["div"]]  
-                                             + anim["shift"] + [' '.join(anim["files"])]) )
+                                             + anim["shift"] + [' '.join(anim["files"])]) ))
 
 
 from phonopy.structure.cells import Primitive
@@ -576,8 +576,8 @@ def run_aims_modulation(phonopy_obj):
                 # Safety check for imaginary frequencies:
                 neg_value = -numpy.sqrt(-eigvals[band_index])*AimsToCm
                 if neg_value < -0.1:
-                   print "* WARNING:"
-                   print "* Imaginary Eigenfrequencies unphysical in modulation_aims.py"
+                   print("* WARNING:")
+                   print("* Imaginary Eigenfrequencies unphysical in modulation_aims.py")
                 frequencies.append(neg_value)
             else:
                 frequencies.append(numpy.sqrt(eigvals[band_index])*AimsToCm)  
@@ -672,8 +672,8 @@ def write_eigenfrequencies_and_eigenvectors_at_gamma(phonopy_obj):
     #        and eigenvectors might be added later on 
     n_atoms =  phonopy_obj.unitcell.get_number_of_atoms() 
     if  n_atoms !=  phonopy_obj.supercell.get_number_of_atoms():
-	print " * WARNING:"
-	print " * The unitcell and the supercell are not identical."
+        print(" * WARNING:")
+        print(" * The unitcell and the supercell are not identical.")
 
     # Open file and write reference equilibrium geometry
     f = open("phonopy-FHI-aims-eigen-frequencies-and-vectors-at-Gamma.dat", 'w')
@@ -711,15 +711,15 @@ def write_eigenfrequencies_and_eigenvectors_at_gamma(phonopy_obj):
 
     # Write eigenvalues to file
     for eig in eigfreq:
-            if eig < 0:
-    		# Safety check for imaginary frequencies:
-		neg_value = -numpy.sqrt(-eig)*AimsToEv*1000
-		if neg_value < -0.1:
-	           print "* WARNING:"  
-	           print "* Imaginary Eigenfrequencies at the Gamma point are highly unphysical."
-                frequencies.append(neg_value)
-            else:
-                frequencies.append(numpy.sqrt(eig)*AimsToCm)  #AimsToEv*1000)
+        if eig < 0:
+            # Safety check for imaginary frequencies:
+            neg_value = -numpy.sqrt(-eig)*AimsToEv*1000
+            if neg_value < -0.1:
+                print("* WARNING:")
+                print("* Imaginary Eigenfrequencies at the Gamma point are highly unphysical.")
+            frequencies.append(neg_value)
+        else:
+            frequencies.append(numpy.sqrt(eig)*AimsToCm)  #AimsToEv*1000)
     for i, freq in enumerate(frequencies):
         f.write("frequency %20.10f \t %4d \n" %  ( freq,i+1))
 
@@ -727,18 +727,15 @@ def write_eigenfrequencies_and_eigenvectors_at_gamma(phonopy_obj):
     f.write("\n#\n# Eigenvectors at Gamma (orthonormalized) \n")
     for i, freq in enumerate(frequencies):
         eigvec_band_i = eigvec[:,i]
-    	# Safety check for imaginary eigenvector components:
-	if (abs(eigvec_band_i.imag) > 1E-7).any():
-	   print "* WARNING:"
-	   print "* Imaginary Eigenvectors at the Gamma point are highly unphysical."
-			
-    	f.write("#\n# Mode %4d  - Atoms 1 to %4d  - Eigenfrequency  %20.10f\n" % (i+1,n_atoms,frequencies[i]))
-    	for n in range(n_atoms):
-    		f.write("eigenvector %4d %4d  %20.15f %20.15f %20.15f \n" \
-		% (i+1,n+1,eigvec_band_i[3*n],eigvec_band_i[3*n+1],eigvec_band_i[3*n+2]))
+        # Safety check for imaginary eigenvector components:
+        if (abs(eigvec_band_i.imag) > 1E-7).any():
+            print("* WARNING:")
+            print("* Imaginary Eigenvectors at the Gamma point are highly unphysical.")
+        f.write("#\n# Mode %4d  - Atoms 1 to %4d  - Eigenfrequency  %20.10f\n" % (i+1,n_atoms,frequencies[i]))
+        for n in range(n_atoms):
+            f.write("eigenvector %4d %4d  %20.15f %20.15f %20.15f \n" \
+                    % (i+1,n+1,eigvec_band_i[3*n],eigvec_band_i[3*n+1],eigvec_band_i[3*n+2]))
     f.close()
-
-   
 
 if __name__ == "__main__":
 
@@ -760,10 +757,10 @@ if __name__ == "__main__":
     from phonopy.interface.FHIaims import read_aims, write_aims, read_aims_output
     from phonopy.phonon.mesh import Mesh
 
-    print "### phonopy wrapper for FHI-aims ###"
+    print("### phonopy wrapper for FHI-aims ###")
     version = "20111113"
-    print "# version " + version
-    print "#"
+    print( "# version " + version)
+    print( "#")
 
     has_matplotlib = False
     try:
@@ -772,8 +769,8 @@ if __name__ == "__main__":
         import matplotlib.pyplot as plt
         has_matplotlib = True
     except ImportError:
-        print "# matplotlib is not available"
-        print "#"
+        print( "# matplotlib is not available")
+        print( "#")
     
     usage = "usage: %prog [options] [arguments are ignored] \n" + \
             "       run in directory with control.in and geometry.in files"
@@ -800,7 +797,7 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args()
     do_matplotlib = has_matplotlib and not options.data
     
-    print "# reading control.in"
+    print("# reading control.in")
     control = Control()
     control.print_phonon("# |   ")
     if (len(control.phonon["supercell"]) == 3):
@@ -808,56 +805,56 @@ if __name__ == "__main__":
     elif (len(control.phonon["supercell"]) == 9):
         supercell_matrix = numpy.array(control.phonon["supercell"]).reshape(3,3)
     supercell_matrix_inv = numpy.linalg.inv(supercell_matrix)
-    print "# +-> specified supercell has %.1f times the volume of the initial cell" % numpy.linalg.det(supercell_matrix)
-    print "#"
+    print("# +-> specified supercell has %.1f times the volume of the initial cell" % numpy.linalg.det(supercell_matrix))
+    print("#")
 
     frequency_unit = control.phonon["frequency_unit"]
     frequency_unit_factor = AimsFrequencyUnitFactors[frequency_unit]
     frequency_unit_to_THz = AimsFrequencyUnitFactorsToTHz[frequency_unit]
 
-    print "# reading geometry.in"
+    print("# reading geometry.in")
     cell = read_aims("geometry.in")
     if cell.get_magnetic_moments() is not None:
-        print "# | initial_moments found and about to be replicated in supercells"
-        print "# | WARNING: No consideration in symmetry analysis, i.e."
-        print "# |          if initial spin breaks the spatial symmetry,"
-        print "# |          this is currently NOT detected."
-        print "# |          You thus might want to consider the"
-        print "# |          command line option to turn off symmetry."
-    print "# generating supercells with displacements"
+        print( "# | initial_moments found and about to be replicated in supercells")
+        print( "# | WARNING: No consideration in symmetry analysis, i.e.")
+        print( "# |          if initial spin breaks the spatial symmetry,")
+        print( "# |          this is currently NOT detected.")
+        print( "# |          You thus might want to consider the")
+        print( "# |          command line option to turn off symmetry.")
+    print("# generating supercells with displacements")
     phonopy_obj = Phonopy(cell, supercell_matrix, 
                           symprec=control.phonon["symmetry_thresh"],
                           factor=frequency_unit_factor)
     phonopy_obj.generate_displacements(distance=control.phonon["displacement"])
-    print "# | Spacegroup: %s" % phonopy_obj.symmetry.get_international_table()
+    print("# | Spacegroup: %s" % phonopy_obj.symmetry.get_international_table())
     supercells = phonopy_obj.get_supercells_with_displacements()
     digits = int( math.ceil( math.log(len(supercells)+1,10) ) ) + 1
     directories = []
     for i in range(len(supercells)):
         directories.append( ("phonopy-FHI-aims-displacement-%0" + str(digits) + "d") % (i+1))
-    print "#"
+    print("#")
 
     if not any(map(os.path.isdir, directories)):
         for (supercell, directory) in zip(supercells, directories):
             os.mkdir(directory)
             write_aims(os.path.join(directory, "geometry.in"), supercell)
             shutil.copy("control.in", directory)
-        print "!   Please calculate forces with FHI-aims for the (supercell) structures"
-        print "!   which have been generated in the subdirectories"
+        print( "!   Please calculate forces with FHI-aims for the (supercell) structures")
+        print( "!   which have been generated in the subdirectories")
         for directory in directories:
-            print "! \t %s" % directory
-        print "!   redirecting the outputs into"
-        print "!	<directory name>.out"
-        print "!   in each directory." 
+            print("! \t %s" % directory)
+        print("!   redirecting the outputs into")
+        print("!	<directory name>.out")
+        print("!   in each directory.")
         quit()
 
-    print "# reading forces from"
+    print( "# reading forces from")
     set_of_forces = []
     for (directory, supercell) in zip(directories, supercells):
         aims_out = os.path.join(directory, directory + ".out")
-        print "# | %s" % aims_out
+        print("# | %s" % aims_out)
         if not os.path.isfile(aims_out):
-            print "!!! file not found: %s" % aims_out
+            print("!!! file not found: %s" % aims_out)
             sys.exit(1)
         # FHI-aims calculation is supposed to be a single point - 
         # hence only use first structure contained in aims output
@@ -876,29 +873,29 @@ if __name__ == "__main__":
             # but further processing below requires numpy array
             forces = numpy.array(supercell_calculated.get_forces())
             drift_force = forces.sum(axis=0)
-            print "#   | correcting drift : %11.5f %11.5f %11.5f" % tuple(drift_force)
+            print("#   | correcting drift : %11.5f %11.5f %11.5f" % tuple(drift_force))
             for force in forces:
                 force -= drift_force / forces.shape[0]
             set_of_forces.append(forces)
         else:
-            print "!!! calculated varies from expected supercell in FHI-aims output %s" % aims_out
+            print("!!! calculated varies from expected supercell in FHI-aims output %s" % aims_out)
             sys.exit(2)
-    print "#"
+    print("#")
 
     if "phono-perl" in control.phonon["hessian"]:
-        print "# writing Hessian matrix (same format as Perl script)"
+        print( "# writing Hessian matrix (same format as Perl script)")
         write_Hessian(phonopy_obj, supercell_matrix_inv, set_of_forces)
-        print "#"
+        print("#")
     if "TDI" in control.phonon["hessian"]:
-        print "# writing force constants"
+        print("# writing force constants")
         write_force_constants(phonopy_obj, set_of_forces)
-        print "#"
+        print("#")
 
     requested_nac = ( control.phonon["nac"] != {} )
     # Since phonopy-0.9.0, first argument only denotes axes of primitive cell relative to input unit cell 
     # (always unit matrix here), i.e. supercell_matrix inversion (as required for Primitive()) is done 
     # in Phonopy.set_post_process() directly.
-    print "# preparing calculation of dynamical matrix"
+    print("# preparing calculation of dynamical matrix")
     # phonopy_obj.set_post_process(numpy.eye(3), set_of_forces)
     phonopy_obj.set_forces(set_of_forces)
     phonopy_obj.produce_force_constants()
@@ -906,30 +903,30 @@ if __name__ == "__main__":
         from phonopy.hphonopy.file_IO import parse_BORN
         nac_file = control.phonon["nac"]["file"]
         nac_method = control.phonon["nac"]["method"]
-        print "# | reading polarizabilities from %s" % nac_file
+        print("# | reading polarizabilities from %s" % nac_file)
         nac_params = parse_BORN(phonopy_obj.primitive, filename=nac_file)
-        # print "# | setting method for non-analytical terms in dynamical matrix to \'%s\'" % nac_method
+        # print("# | setting method for non-analytical terms in dynamical matrix to \'%s\'" % nac_method)
         phonopy_obj.set_nac_params(nac_params)
-        print "#"
+        print("#")
 
     if requested_nac:
-        print "# phonon frequencies at Gamma + %s:" % str(control.phonon["nac"]["delta"])
+        print("# phonon frequencies at Gamma + %s:" % str(control.phonon["nac"]["delta"]))
         q = numpy.zeros(3) + numpy.array(control.phonon["nac"]["delta"])
     else:
-        print "# phonon frequencies at Gamma:"
+        print("# phonon frequencies at Gamma:")
         q = numpy.zeros(3)
     # Since phonopy-0.9.0, Phonopy.get_frequencies already returns frequencies in units 
     # according to (unit) factor relayed at Phonopy object instantiation.
     for i, freq in enumerate(phonopy_obj.get_frequencies(q)):
-        print "# |  %3d: %10.5f %s" %  (i+1, freq, frequency_unit)
-    print "#"
+        print("# |  %3d: %10.5f %s" %  (i+1, freq, frequency_unit))
+    print("#")
 
     if (control.phonon["band"] != []):
-        print "# post-processing band structure"
+        print("# post-processing band structure")
         post_process_band(phonopy_obj, control.phonon["band"], frequency_unit_factor, 
                           is_eigenvectors=options.eigenvectors, write_yaml=options.yaml, 
                           do_matplotlib=do_matplotlib, lookup_labels=options.greek_labels)
-        print "#"
+        print("#")
     
     if (control.phonon["dos"] != {}) or (control.phonon["free_energy"] != {}):
         meshes = []
@@ -948,8 +945,8 @@ if __name__ == "__main__":
                 mesh_free_energy = [ qdensity_free_energy[0] ] * 3
             meshes.append(mesh_free_energy)
         mesh = sorted(meshes, reverse=True)[0]
-        print "# creating q-points grid " + str(mesh)
-        print "#"
+        print( "# creating q-points grid " + str(mesh))
+        print( "#")
         mesh_shift = [0,0,0]
         mesh_time_reversal = options.symmetry
         mesh_symmetry = options.symmetry
@@ -965,27 +962,27 @@ if __name__ == "__main__":
             mesh_obj.write_yaml()
                         
         if (len(control.phonon["dos"]) > 0):
-            print "# post-processing density of states"
+            print("# post-processing density of states")
             post_process_dos(phonopy_obj, mesh_obj, control.phonon["dos"], do_matplotlib=do_matplotlib)
-            print "#"
+            print("#")
         if (len(control.phonon["free_energy"]) > 0):
-            print "# post-processing free energy"
+            print("# post-processing free energy")
             post_process_free_energy(phonopy_obj, mesh_obj, control.phonon["free_energy"], 
                                      frequency_unit_to_THz, write_yaml=options.yaml, do_matplotlib=do_matplotlib)
-            print "#"
+            print("#")
 
     if (control.phonon["animation"] != []):
-        print "# post-processing animation output"
+        print("# post-processing animation output")
         post_process_animation(phonopy_obj, control.phonon["animation"], frequency_unit_factor)
-        print "#"
+        print("#")
 
     
     if (control.phonon["modulations"] != {}):
-        print "# post-processing modulations output"
+        print("# post-processing modulations output")
         post_process_write_modulations(phonopy_obj,control.phonon["modulations"])
-        print "#"
+        print("#")
 
     if options.EigVecGamma:
         write_eigenfrequencies_and_eigenvectors_at_gamma(phonopy_obj)
-    print "# finished successfully"
+    print("# finished successfully")
     
