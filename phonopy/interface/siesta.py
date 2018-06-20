@@ -73,6 +73,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
 def read_siesta(filename):
     siesta_in = SiestaIn(open(filename).read())
     numbers = siesta_in._tags["atomicnumbers"]
+    alat = siesta_in._tags["latticeconstant"]
     lattice = siesta_in._tags["latticevectors"]
     positions = siesta_in._tags["atomiccoordinates"]
     atypes = siesta_in._tags["chemicalspecieslabel"]
@@ -82,10 +83,7 @@ def read_siesta(filename):
     if coordformat == "fractional" or coordformat == "scaledbylatticevectors":
         cell.set_scaled_positions(positions)
     elif coordformat == "scaledcartesian":
-        if siesta_in._tags['latticeconstant'] == 'ang':
-            cell.set_positions(np.array(positions) / Bohr)
-        else:
-            cell.set_positions(np.array(positions))
+        cell.set_positions(np.array(positions) * alat)
     elif coordformat == "notscaledcartesianang" or coordformat == "ang":
         cell.set_positions(np.array(positions) / Bohr) 
     elif coordformat == "notscaledcartesianbohr" or coordformat == "bohr":
@@ -134,7 +132,7 @@ def get_siesta_structure(cell,atypes):
     return lines
 
 class SiestaIn(object):
-    _num_regex = '([+-]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)'
+    _num_regex = '([+-]?\d+(?:\.\d*)?(?:[eE][-+]?\d+)?)'
     _tags = { "latticeconstant":          1.0,
               "latticeconstantunit":     None,
               "chemicalspecieslabel":    None,
@@ -153,15 +151,18 @@ class SiestaIn(object):
             - atomic_species
         """
         for tag,value,unit in re.findall(
-                '([\.A-Za-z]+)\s+?%s(?:[ ]+)?([A-Za-z]+)?' %
+                '([\.A-Za-z]+)\s+%s\s+([A-Za-z]+)?' %
                 self._num_regex,lines):
             tag = tag.lower()
+            unit = unit.lower()
             if tag == "latticeconstant":
-                self._tags['latticeconstantunit'] = unit.lower()
-                if unit == 'Ang':
+                self._tags['latticeconstantunit'] = unit.capitalize()
+                if unit == 'ang':
                     self._tags[tag] = float(value) / Bohr
-                else:
+                elif unit == 'bohr':
                     self._tags[tag] = float(value)
+                else:
+                    raise ValueError('Unknown LatticeConstant unit: {}'.format(unit))
 
         for tag,value in re.findall('([\.A-Za-z]+)[ \t]+([a-zA-Z]+)',lines):
             tag = tag.replace('_','').lower()

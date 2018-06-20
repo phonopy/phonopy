@@ -357,8 +357,8 @@ class Primitive(PhonopyAtoms):
         self._p2p_map = dict([(j, i) for i, j in enumerate(self._p2s_map)])
 
     def _set_smallest_vectors(self, supercell):
-        self._smallest_vectors, self._multiplicity = get_smallest_vectors(
-            supercell, self, p2s_map=self._p2s_map, symprec=self._symprec)
+        self._smallest_vectors, self._multiplicity = _get_smallest_vectors(
+            supercell, self, symprec=self._symprec)
 
     def _set_atomic_permutations(self, supercell):
         positions = supercell.get_scaled_positions()
@@ -469,13 +469,13 @@ def get_reduced_bases(lattice,
 
     Parameters
     ----------
-    lattice: ndarray or list of list
+    lattice : ndarray or list of list
         Basis vectors by row vectors, [a, b, c]^T
         shape=(3,3)
-    method: str
+    method : str
         delaunay: Delaunay reduction
         niggli: Niggli reduction
-    tolerance: float
+    tolerance : float
         Tolerance to find shortest basis vecotrs
 
     Returns
@@ -489,7 +489,24 @@ def get_reduced_bases(lattice,
     else:
         return spg.delaunay_reduce(lattice, eps=tolerance)
 
-def get_smallest_vectors(supercell, primitive, p2s_map=None, symprec=1e-5):
+def _get_smallest_vectors(supercell, primitive, symprec=1e-5):
+    p2s_map = primitive.get_primitive_to_supercell_map()
+    supercell_pos = supercell.get_scaled_positions()
+    primitive_pos = supercell_pos[p2s_map]
+    supercell_bases = supercell.get_cell()
+    primitive_bases = primitive.get_cell()
+    svecs, multi = get_smallest_vectors(
+        supercell_bases, supercell_pos, primitive_pos, symprec=symprec)
+    trans_mat_float = np.dot(supercell_bases, np.linalg.inv(primitive_bases))
+    trans_mat = np.rint(trans_mat_float).astype(int)
+    assert (np.abs(trans_mat_float - trans_mat) < 1e-8).all()
+    svecs = np.array(np.dot(svecs, trans_mat), dtype='double', order='C')
+    return svecs, multi
+
+def get_smallest_vectors(supercell_bases,
+                         supercell_pos,
+                         primitive_pos,
+                         symprec=1e-5):
     """Find shortest atomic pair vectors
 
     Note
@@ -499,31 +516,34 @@ def get_smallest_vectors(supercell, primitive, p2s_map=None, symprec=1e-5):
     atom in supercell is on the border centered at an atom in
     primitive and there are multiple vectors that have the same
     distance (up to tolerance) and different directions, several
-    shortest vectors are stored. The multiplicity is stored in another
-    array, "multiplicity".  (size_super, size_prim, multiple-vectors,
-    3)
+    shortest vectors are stored.
+    In fact, this method is not limited to search shortest vectors between
+    sueprcell atoms and primitive cell atoms, but can be used to measure
+    shortest vectors between atoms in periodic supercell lattice frame.
 
     Parameters
     ----------
-    supercell : PhonopyAtoms
-        Supercell
-    primitive : PhonopyAtoms
-        Primitive cell
-    p2s_map : ndarray, optional, default=None
-        if None, 'primitive' is considered to be given in the supercell
-        basis vectors. Othersize p2s_map gives supercell indices of atoms of
-        primitive cell, which is used to collect atomic positions of primitive
-        cell from supercell using these mapping indices.
-        dtype='intc'
-        shape=(size_prim,)
+    supercell_bases : ndarray
+        Supercell basis vectors as row vectors, (a, b, c)^T. Must be order='C'.
+        dtype='double'
+        shape=(3, 3)
+    supercell_pos : array_like
+        Atomic positions in fractional coordinates of supercell.
+        dtype='double'
+        shape=(size_super, 3)
+    primitive_pos : array_like
+        Atomic positions in fractional coordinates of supercell. Note that not
+        in fractional coodinates of primitive cell.
+        dtype='double'
+        shape=(size_prim, 3)
     symprec : float, optional, default=1e-5
         Tolerance to find equal distances of vectors
 
     Returns
     -------
     shortest_vectors : ndarray
-        Shortest vectors (see Note). The 27 in shape is the possible
-        maximum number of elements.
+        Shortest vectors in supercell coordinates. The 27 in shape is the
+        possible maximum number of elements.
         dtype='double'
         shape=(size_super, size_prim, 27, 3)
     multiplicities : ndarray
@@ -533,21 +553,21 @@ def get_smallest_vectors(supercell, primitive, p2s_map=None, symprec=1e-5):
 
     """
 
-    # useful data from arguments
-    reduced_bases = get_reduced_bases(supercell.get_cell(), symprec)
+    reduced_bases = get_reduced_bases(supercell_bases,
+                                      method='delaunay',
+                                      tolerance=symprec)
+    trans_mat_float = np.dot(supercell_bases, np.linalg.inv(reduced_bases))
+    trans_mat = np.rint(trans_mat_float).astype(int)
+    assert (np.abs(trans_mat_float - trans_mat) < 1e-8).all()
+    trans_mat_inv_float = np.linalg.inv(trans_mat)
+    trans_mat_inv = np.rint(trans_mat_inv_float).astype(int)
+    assert (np.abs(trans_mat_inv_float - trans_mat_inv) < 1e-8).all()
 
     # Reduce all positions into the cell formed by the reduced bases.
-    supercell_fracs = np.dot(supercell.get_positions(),
-                             np.linalg.inv(reduced_bases))
+    supercell_fracs = np.dot(supercell_pos, trans_mat)
     supercell_fracs -= np.rint(supercell_fracs)
-    if p2s_map is None:
-        assert ((supercell.get_cell() - primitive.get_cell()) < symprec).all()
-        primitive_fracs = np.dot(primitive.get_positions(),
-                                 np.linalg.inv(reduced_bases))
-        primitive_fracs -= np.rint(primitive_fracs)
-    else:
-        primitive_fracs = supercell_fracs[list(p2s_map)]
-
+    primitive_fracs = np.dot(primitive_pos, trans_mat)
+    primitive_fracs -= np.rint(primitive_fracs)
 
     # For each vector, we will need to consider all nearby images in the reduced bases.
     lattice_points = np.array([
@@ -593,9 +613,7 @@ def get_smallest_vectors(supercell, primitive, p2s_map=None, symprec=1e-5):
     # by the primitive cell.
     #
     # shape: (size_super, size_prim, 27, 3)
-    candidate_vectors = np.array(np.dot(
-        candidate_fracs,
-        reduced_bases.dot(np.linalg.inv(primitive.get_cell()))),
+    candidate_vectors = np.array(np.dot(candidate_fracs, trans_mat_inv),
                                  dtype='double', order='C')
 
     # The last final bits are done in C.

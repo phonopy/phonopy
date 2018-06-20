@@ -43,8 +43,9 @@ from phonopy.units import Bohr
 from phonopy.cui.settings import fracval
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.atoms import symbol_map
-from phonopy.structure.cells import get_supercell
-from phonopy.harmonic.force_constants import distribute_force_constants
+from phonopy.structure.cells import get_supercell, get_primitive
+from phonopy.harmonic.dynmat_to_fc import (
+    distribute_force_constants_by_translations)
 
 def parse_set_of_forces(num_atoms,
                         forces_filenames,
@@ -336,13 +337,10 @@ class PH_Q2R(object):
     ---------
     #!/usr/bin/env python
 
-    from phonopy.file_IO import write_FORCE_CONSTANTS
-    from phonopy.interface.qe import read_pwscf, PH_Q2R
-
     cell, _ = read_pwscf(primcell_filename)
     q2r = PH_Q2R(q2r_filename)
     q2r.run(cell)
-    write_FORCE_CONSTANTS(q2r.fc)
+    q2r.write_force_constants()
     ---------
 
     To save memory/storage space of force constants, the shape of
@@ -370,6 +368,30 @@ class PH_Q2R(object):
     effective charges data. So it is possible to replace the Gamma
     point file by this Gamma point only file to run q2r.x for phonopy.
 
+    Attributes
+    ----------
+    fc : ndarray
+        Force constants in either compact or full matrix.
+        dtype='double'
+        shape=(natom_prim, natom_super, 3, 3) for compact fc or
+              (natom_super, natom_super, 3, 3) for full fc
+    dimenstion : ndarray
+        Supercell dimensions (not matrix)
+        dtype='intc'
+        shape=(3,)
+    epsilon : ndarray
+        Dielectric constant tensor
+        dtype='double'
+        shape=(3, 3)
+    born : ndarray
+        Born effective charges
+        dtype='double'
+        shape=(natom_prim, 3, 3)
+    primitive : Primitive
+        Primitive cell
+    supercell : Supercell
+        Supercell
+
     """
 
     def __init__(self, filename, symprec=1e-5):
@@ -377,14 +399,30 @@ class PH_Q2R(object):
         self.dimension = None
         self.epsilon = None
         self.borns = None
+        self.primitive = None
+        self.supercell = None
         self._symprec = symprec
         self._filename = filename
 
-    def run(self, cell, parse_fc=True):
-        """Run making supercell force constants readable for phonopy
+    def run(self, cell, is_full_fc=False, parse_fc=True):
+        """Make supercell force constants readable for phonopy
 
-        Args:
-            cell(Atoms): Primitive cell used for QE/PH calculation
+        Note
+        ----
+        Born effective charges and dielectric constant tensor are read from
+        QE output file if they exist. But this means dipole-dipole contributions
+        are removed from force constants and this force constants matrix is not
+        usable in phonopy.
+
+        Arguments
+        ---------
+        cell : PhonopyAtoms
+            Primitive cell used for QE/PH calculation.
+        is_full_fc : Bool, optional, default=False
+            Whether to create full or compact force constants.
+        parse_fc : Bool, optional, default=True
+            Force constants file of QE is not parsed when this is False.
+            False may be used when expected to parse only epsilon and born.
 
         """
 
@@ -394,7 +432,18 @@ class PH_Q2R(object):
             self.epsilon = fc_dct['dielectric']
             self.borns = fc_dct['born']
             if parse_fc:
-                self.fc = self._arrange_supercell_fc(cell, fc_dct['fc'])
+                (self.fc,
+                 self.primitive,
+                 self.supercell) = self._arrange_supercell_fc(
+                     cell, fc_dct['fc'], is_full_fc=is_full_fc)
+
+    def write_force_constants(self, fc_format='hdf5'):
+        if self.fc is not None:
+            if fc_format == 'hdf5':
+                p2s_map = self.primitive.get_primitive_to_supercell_map()
+                write_force_constants_to_hdf5(self.fc, p2s_map=p2s_map)
+            else:
+                write_FORCE_CONSTANTS(self.fc)
 
     def _parse_q2r(self, f):
         """Parse q2r output file
@@ -429,7 +478,7 @@ class PH_Q2R(object):
             epsilon = None
             borns = None
         line = f.readline()
-        dim = tuple(int(x) for x in line.split())
+        dim = np.array([int(x) for x in line.split()], dtype='intc')
 
         return natom, dim, epsilon, borns
 
@@ -463,29 +512,43 @@ class PH_Q2R(object):
                 fc[j, i * ndim + i_dim, l, k] = float(line.split()[3])
         return fc
 
-    def _arrange_supercell_fc(self, cell, q2r_fc):
+    def _arrange_supercell_fc(self, cell, q2r_fc, is_full_fc=False):
         dim = self.dimension
         q2r_spos = self._get_q2r_positions(cell)
         scell = get_supercell(cell, np.diag(dim))
+        pcell = get_primitive(scell, np.diag(1.0 / dim))
+
+        diff = cell.get_scaled_positions() - pcell.get_scaled_positions()
+        diff -= np.rint(diff)
+        assert (np.abs(diff) < 1e-8).all()
         assert scell.get_number_of_atoms() == len(q2r_spos)
+
         site_map = self._get_site_mapping(scell.get_scaled_positions(),
                                           q2r_spos,
                                           scell.get_cell())
-        natom = cell.get_number_of_atoms()
+        natom = pcell.get_number_of_atoms()
         ndim = np.prod(dim)
         natom_s = natom * ndim
 
-        fc = np.zeros((natom, natom_s, 3, 3), dtype='double', order='C')
-        fc[:, :] = q2r_fc[:, site_map]
+        if is_full_fc:
+            fc = np.zeros((natom_s, natom_s, 3, 3), dtype='double', order='C')
+            p2s = pcell.get_primitive_to_supercell_map()
+            fc[p2s, :] = q2r_fc[:, site_map]
+            distribute_force_constants_by_translations(fc,
+                                                       pcell,
+                                                       scell)
+        else:
+            fc = np.zeros((natom, natom_s, 3, 3), dtype='double', order='C')
+            fc[:, :] = q2r_fc[:, site_map]
 
-        return fc
+        return fc, pcell, scell
 
     def _get_q2r_positions(self, cell):
         dim = self.dimension
         natom = cell.get_number_of_atoms()
         ndim = np.prod(dim)
         spos = np.zeros((natom * np.prod(dim), 3), dtype='double', order='C')
-        trans = [x[::-1] for x in np.ndindex(dim[::-1])]
+        trans = [x[::-1] for x in np.ndindex(tuple(dim[::-1]))]
         for i, p in enumerate(cell.get_scaled_positions()):
             spos[i * ndim:(i + 1) * ndim] = (trans + p) / dim
         return spos

@@ -106,7 +106,7 @@ Short tutorials for force calculators are found in the following pages.
 
    vasp
    wien2k
-   pwscf
+   qe
    abinit
    siesta
    elk
