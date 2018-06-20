@@ -335,9 +335,6 @@ class ConfParser(object):
 
         if filename is not None:
             self.read_file(filename) # store data in self._confs
-        if args is not None:
-            self.read_options() # store data in self._confs
-        self.parse_conf() # self.parameters[key] = val
 
     def get_configures(self):
         return self._confs
@@ -1314,11 +1311,19 @@ class PhonopySettings(Settings):
 
 class PhonopyConfParser(ConfParser):
     def __init__(self, filename=None, args=None):
-        ConfParser.__init__(self, filename, args)
-        self._read_options()
-        self._parse_conf()
         self._settings = PhonopySettings()
-        self._set_settings()
+        if filename is not None:
+            ConfParser.__init__(self, filename=filename)
+            self.parse_conf() # self.parameters[key] = val
+            self._parse_conf()
+            self._set_settings()
+        if args is not None:
+            ConfParser.__init__(self, args=args)
+            self.read_options() # store data in self._confs
+            self._read_options()
+            self.parse_conf() # self.parameters[key] = val
+            self._parse_conf()
+            self._set_settings()
 
     def _read_options(self):
         arg_list = vars(self._args)

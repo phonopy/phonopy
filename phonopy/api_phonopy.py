@@ -301,13 +301,17 @@ class Phonopy(object):
                 self._displacement_dataset['first_atoms'], sets_of_forces):
             disp['forces'] = forces
 
-    def set_force_constants(self, force_constants):
+    def set_force_constants(self, force_constants, show_drift=True):
         self._force_constants = force_constants
+        if show_drift and self._log_level:
+            show_drift_force_constants(self._force_constants,
+                                       primitive=self._primitive)
         self._set_dynamical_matrix()
 
     def set_force_constants_zero_with_radius(self, cutoff_radius):
         cutoff_force_constants(self._force_constants,
                                self._supercell,
+                               self._primitive,
                                cutoff_radius,
                                symprec=self._symprec)
         self._set_dynamical_matrix()
@@ -388,7 +392,7 @@ class Phonopy(object):
                                                self._primitive,
                                                level=level)
         if show_drift and self._log_level:
-            sys.stdout.write("        after symmetrization: ")
+            sys.stdout.write("Max drift after symmetrization: ")
             show_drift_force_constants(self._force_constants,
                                        primitive=self._primitive,
                                        values_only=True)

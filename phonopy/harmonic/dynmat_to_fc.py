@@ -115,7 +115,9 @@ class DynmatToForceConstants(object):
             self._py_inverse_transformation()
 
         if self._fc.shape[0] == self._fc.shape[1]:
-            self._distribute_force_constants()
+            distribute_force_constants_by_translations(self._fc,
+                                                       self._primitive,
+                                                       self._supercell)
 
     def _c_inverse_transformation(self):
         import phonopy._phonopy as phonoc
@@ -169,19 +171,19 @@ class DynmatToForceConstants(object):
                                   (p_j * 3):(p_j * 3 + 3)] * coef
         return sum_q.real
 
-    def _distribute_force_constants(self):
-        s2p = self._primitive.get_supercell_to_primitive_map()
-        p2s = self._primitive.get_primitive_to_supercell_map()
-        positions = self._supercell.get_scaled_positions()
-        lattice = self._supercell.get_cell().T
-        diff = positions - positions[p2s[0]]
-        trans = np.array(diff[np.where(s2p == p2s[0])[0]],
-                         dtype='double', order='C')
-        rotations = np.array([np.eye(3, dtype='intc')] * len(trans),
-                             dtype='intc', order='C')
-        permutations = self._primitive.get_atomic_permutations()
-        distribute_force_constants(self._fc,
-                                   p2s,
-                                   lattice,
-                                   rotations,
-                                   permutations)
+def distribute_force_constants_by_translations(fc, primitive, supercell):
+    s2p = primitive.get_supercell_to_primitive_map()
+    p2s = primitive.get_primitive_to_supercell_map()
+    positions = supercell.get_scaled_positions()
+    lattice = supercell.get_cell().T
+    diff = positions - positions[p2s[0]]
+    trans = np.array(diff[np.where(s2p == p2s[0])[0]],
+                     dtype='double', order='C')
+    rotations = np.array([np.eye(3, dtype='intc')] * len(trans),
+                         dtype='intc', order='C')
+    permutations = primitive.get_atomic_permutations()
+    distribute_force_constants(fc,
+                               p2s,
+                               lattice,
+                               rotations,
+                               permutations)

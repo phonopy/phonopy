@@ -141,10 +141,10 @@ these files are controlled by :ref:`force constants tags
 use ``q2r.x`` to create force constants file by followng the
 instraction shown at :ref:`qe_q2r`
 
-Force constants are stored in an array of the shape either
+Force constants are stored in either array shape of
 
-(1) ``(n_satom, n_satom, 3, 3)``
-(2) ``(n_patom, n_satom, 3, 3)``
+- Compact format: ``(n_patom, n_satom, 3, 3)``
+- Full format: ``(n_satom, n_satom, 3, 3)``
 
 where ``n_satom`` and ``n_patom`` are the numbers of atoms in
 supercell and primitive cell, respectively.
