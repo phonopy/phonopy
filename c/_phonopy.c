@@ -61,7 +61,7 @@ static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2(PyObject *self, PyObject *args);
 static PyObject * py_compute_permutation(PyObject *self, PyObject *args);
 static PyObject * py_gsv_copy_smallest_vectors(PyObject *self, PyObject *args);
-static PyObject * py_gsv_set_candidate_vectors(PyObject *self, PyObject *args);
+static PyObject * py_gsv_set_smallest_vectors(PyObject *self, PyObject *args);
 static PyObject *
 py_thm_neighboring_grid_points(PyObject *self, PyObject *args);
 static PyObject *
@@ -96,12 +96,16 @@ static void gsv_copy_smallest_vectors(double (*shortest_vectors)[27][3],
                                       PHPYCONST double (*length_lists)[27],
                                       const int num_lists,
                                       const double symprec);
-static void gsv_set_candidate_vectors(double (*candidate_vectors)[27][3],
-                                      PHPYCONST double (*pos_to)[3],
-                                      const int num_pos_to,
-                                      PHPYCONST double (*pos_from)[3],
-                                      const int num_pos_from,
-                                      PHPYCONST int lattice_points[27][3]);
+static void gsv_set_smallest_vectors(double (*smallest_vectors)[27][3],
+                                     int *multiplicity,
+                                     PHPYCONST double (*pos_to)[3],
+                                     const int num_pos_to,
+                                     PHPYCONST double (*pos_from)[3],
+                                     const int num_pos_from,
+                                     PHPYCONST int lattice_points[27][3],
+                                     PHPYCONST double reduced_basis[3][3],
+                                     PHPYCONST int trans_mat[3][3],
+                                     const double symprec);
 static double get_free_energy_omega(const double temperature,
                                     const double omega);
 static double get_entropy_omega(const double temperature,
@@ -177,7 +181,7 @@ static PyMethodDef _phonopy_methods[] = {
    "Compute indices of original points in a set of rotated points."},
   {"gsv_copy_smallest_vectors", py_gsv_copy_smallest_vectors, METH_VARARGS,
    "Implementation detail of get_smallest_vectors."},
-  {"gsv_set_candidate_vectors", py_gsv_set_candidate_vectors, METH_VARARGS,
+  {"gsv_set_smallest_vectors", py_gsv_set_smallest_vectors, METH_VARARGS,
    "Set candidate vectors."},
   {"neighboring_grid_points", py_thm_neighboring_grid_points,
    METH_VARARGS, "Neighboring grid points by relative grid addresses"},
@@ -395,40 +399,59 @@ static PyObject * py_gsv_copy_smallest_vectors(PyObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
-static PyObject * py_gsv_set_candidate_vectors(PyObject *self, PyObject *args)
+static PyObject * py_gsv_set_smallest_vectors(PyObject *self, PyObject *args)
 {
-  PyArrayObject* py_candidate_vectors;
+  PyArrayObject* py_smallest_vectors;
+  PyArrayObject* py_multiplicity;
   PyArrayObject* py_pos_to;
   PyArrayObject* py_pos_from;
   PyArrayObject* py_lattice_points;
+  PyArrayObject* py_reduced_basis;
+  PyArrayObject* py_trans_mat;
+  double symprec;
 
-  double (*candidate_vectors)[27][3];
+  double (*smallest_vectors)[27][3];
+  int * multiplicity;
   double (*pos_to)[3];
   double (*pos_from)[3];
   int (*lattice_points)[3];
+  double (*reduced_basis)[3];
+  int (*trans_mat)[3];
   int num_pos_to, num_pos_from;
 
-  if (!PyArg_ParseTuple(args, "OOOO",
-                        &py_candidate_vectors,
+  if (!PyArg_ParseTuple(args, "OOOOOOOd",
+                        &py_smallest_vectors,
+                        &py_multiplicity,
                         &py_pos_to,
                         &py_pos_from,
-                        &py_lattice_points)) {
+                        &py_lattice_points,
+                        &py_reduced_basis,
+                        &py_trans_mat,
+                        &symprec)) {
     return NULL;
   }
 
-  candidate_vectors = (double(*)[27][3])PyArray_DATA(py_candidate_vectors);
+  smallest_vectors = (double(*)[27][3])PyArray_DATA(py_smallest_vectors);
+  multiplicity = (int*)PyArray_DATA(py_multiplicity);
   pos_to = (double(*)[3])PyArray_DATA(py_pos_to);
   pos_from = (double(*)[3])PyArray_DATA(py_pos_from);
   num_pos_to = PyArray_DIMS(py_pos_to)[0];
   num_pos_from = PyArray_DIMS(py_pos_from)[0];
   lattice_points = (int(*)[3])PyArray_DATA(py_lattice_points);
+  reduced_basis = (double(*)[3])PyArray_DATA(py_reduced_basis);
+  trans_mat = (int(*)[3])PyArray_DATA(py_lattice_points);
 
-  gsv_set_candidate_vectors(candidate_vectors,
-                            pos_to,
-                            num_pos_to,
-                            pos_from,
-                            num_pos_from,
-                            lattice_points);
+
+  gsv_set_smallest_vectors(smallest_vectors,
+                           multiplicity,
+                           pos_to,
+                           num_pos_to,
+                           pos_from,
+                           num_pos_from,
+                           lattice_points,
+                           reduced_basis,
+                           trans_mat,
+                           symprec);
 
   Py_RETURN_NONE;
 }
@@ -1607,23 +1630,57 @@ static void gsv_copy_smallest_vectors(double (*shortest_vectors)[27][3],
   }
 }
 
-static void gsv_set_candidate_vectors(double (*candidate_vectors)[27][3],
-                                      PHPYCONST double (*pos_to)[3],
-                                      const int num_pos_to,
-                                      PHPYCONST double (*pos_from)[3],
-                                      const int num_pos_from,
-                                      PHPYCONST int lattice_points[27][3])
+static void gsv_set_smallest_vectors(double (*smallest_vectors)[27][3],
+                                     int *multiplicity,
+                                     PHPYCONST double (*pos_to)[3],
+                                     const int num_pos_to,
+                                     PHPYCONST double (*pos_from)[3],
+                                     const int num_pos_from,
+                                     PHPYCONST int lattice_points[27][3],
+                                     PHPYCONST double reduced_basis[3][3],
+                                     PHPYCONST int trans_mat[3][3],
+                                     const double symprec)
 {
-  int i, j, k, l;
+  int i, j, k, l, count;
+  double length_tmp, minimum;
+  double length[27], pos[27][3];
 
   for (i = 0; i < num_pos_to; i++) {
     for (j = 0; j < num_pos_from; j++) {
       for (k = 0; k < 27; k++) {
+        length[k] = 0;
         for (l = 0; l < 3; l++) {
-          candidate_vectors[i * num_pos_from + j][k][l] =
-            pos_to[i][l] - pos_from[j][l] + lattice_points[k][l];
+          /* smallest_vectors[i * num_pos_from + j][k][l] = */
+          /*   pos_to[i][l] - pos_from[j][l] + lattice_points[k][l]; */
+          pos[k][l] = pos_to[i][l] - pos_from[j][l] + lattice_points[k][l];
+        }
+        /* B_lm pos_m */
+        for (l = 0; l < 3; l++) {
+          length_tmp = (reduced_basis[l][0] * pos[k][0] +
+                        reduced_basis[l][1] * pos[k][1] +
+                        reduced_basis[l][2] * pos[k][2]);
+          length[k] += length_tmp * length_tmp;
+        }
+        length[k] = sqrt(length[k]);
+      }
+
+      minimum = DBL_MAX;
+      for (k = 0; k < 27; k++) {
+        if (length[k] < minimum) {
+          minimum = length[k];
         }
       }
+
+      count = 0;
+      for (k = 0; k < 27; k++) {
+        if (length[k] - minimum < symprec) {
+          for (l = 0; l < 3; l++) {
+            smallest_vectors[i * num_pos_from + j][count][l] = pos[k][l];
+          }
+          count++;
+        }
+      }
+      multiplicity[i * num_pos_from + j] = count;
     }
   }
 }
