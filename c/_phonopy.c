@@ -61,6 +61,7 @@ static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2(PyObject *self, PyObject *args);
 static PyObject * py_compute_permutation(PyObject *self, PyObject *args);
 static PyObject * py_gsv_copy_smallest_vectors(PyObject *self, PyObject *args);
+static PyObject * py_gsv_set_candidate_vectors(PyObject *self, PyObject *args);
 static PyObject *
 py_thm_neighboring_grid_points(PyObject *self, PyObject *args);
 static PyObject *
@@ -95,6 +96,12 @@ static void gsv_copy_smallest_vectors(double (*shortest_vectors)[27][3],
                                       PHPYCONST double (*length_lists)[27],
                                       const int num_lists,
                                       const double symprec);
+static void gsv_set_candidate_vectors(double (*candidate_vectors)[27][3],
+                                      PHPYCONST double (*pos_to)[3],
+                                      const int num_pos_to,
+                                      PHPYCONST double (*pos_from)[3],
+                                      const int num_pos_from,
+                                      PHPYCONST int lattice_points[27][3]);
 static double get_free_energy_omega(const double temperature,
                                     const double omega);
 static double get_entropy_omega(const double temperature,
@@ -170,6 +177,8 @@ static PyMethodDef _phonopy_methods[] = {
    "Compute indices of original points in a set of rotated points."},
   {"gsv_copy_smallest_vectors", py_gsv_copy_smallest_vectors, METH_VARARGS,
    "Implementation detail of get_smallest_vectors."},
+  {"gsv_set_candidate_vectors", py_gsv_set_candidate_vectors, METH_VARARGS,
+   "Set candidate vectors."},
   {"neighboring_grid_points", py_thm_neighboring_grid_points,
    METH_VARARGS, "Neighboring grid points by relative grid addresses"},
   {"tetrahedra_relative_grid_address", py_thm_relative_grid_address,
@@ -382,6 +391,44 @@ static PyObject * py_gsv_copy_smallest_vectors(PyObject *self, PyObject *args)
                             lengths,
                             size_super * size_prim,
                             symprec);
+
+  Py_RETURN_NONE;
+}
+
+static PyObject * py_gsv_set_candidate_vectors(PyObject *self, PyObject *args)
+{
+  PyArrayObject* py_candidate_vectors;
+  PyArrayObject* py_pos_to;
+  PyArrayObject* py_pos_from;
+  PyArrayObject* py_lattice_points;
+
+  double (*candidate_vectors)[27][3];
+  double (*pos_to)[3];
+  double (*pos_from)[3];
+  int (*lattice_points)[3];
+  int num_pos_to, num_pos_from;
+
+  if (!PyArg_ParseTuple(args, "OOOO",
+                        &py_candidate_vectors,
+                        &py_pos_to,
+                        &py_pos_from,
+                        &py_lattice_points)) {
+    return NULL;
+  }
+
+  candidate_vectors = (double(*)[27][3])PyArray_DATA(py_candidate_vectors);
+  pos_to = (double(*)[3])PyArray_DATA(py_pos_to);
+  pos_from = (double(*)[3])PyArray_DATA(py_pos_from);
+  num_pos_to = PyArray_DIMS(py_pos_to)[0];
+  num_pos_from = PyArray_DIMS(py_pos_from)[0];
+  lattice_points = (int(*)[3])PyArray_DATA(py_lattice_points);
+
+  gsv_set_candidate_vectors(candidate_vectors,
+                            pos_to,
+                            num_pos_to,
+                            pos_from,
+                            num_pos_from,
+                            lattice_points);
 
   Py_RETURN_NONE;
 }
@@ -1557,6 +1604,27 @@ static void gsv_copy_smallest_vectors(double (*shortest_vectors)[27][3],
     }
 
     multiplicity[i] = count;
+  }
+}
+
+static void gsv_set_candidate_vectors(double (*candidate_vectors)[27][3],
+                                      PHPYCONST double (*pos_to)[3],
+                                      const int num_pos_to,
+                                      PHPYCONST double (*pos_from)[3],
+                                      const int num_pos_from,
+                                      PHPYCONST int lattice_points[27][3])
+{
+  int i, j, k, l;
+
+  for (i = 0; i < num_pos_to; i++) {
+    for (j = 0; j < num_pos_from; j++) {
+      for (k = 0; k < 27; k++) {
+        for (l = 0; l < 3; l++) {
+          candidate_vectors[i * num_pos_from + j][k][l] =
+            pos_to[i][l] - pos_from[j][l] + lattice_points[k][l];
+        }
+      }
+    }
   }
 }
 
