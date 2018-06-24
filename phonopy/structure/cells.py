@@ -471,7 +471,7 @@ def get_reduced_bases(lattice,
     ----------
     lattice : ndarray or list of list
         Basis vectors by row vectors, [a, b, c]^T
-        shape=(3,3)
+        shape=(3, 3)
     method : str
         delaunay: Delaunay reduction
         niggli: Niggli reduction
@@ -481,6 +481,9 @@ def get_reduced_bases(lattice,
     Returns
     --------
     Reduced basis as row vectors, [a_red, b_red, c_red]^T
+        dtype='double'
+        shape=(3, 3)
+        order='C'
 
     """
 
@@ -566,15 +569,17 @@ def get_smallest_vectors(supercell_bases,
     # Reduce all positions into the cell formed by the reduced bases.
     supercell_fracs = np.dot(supercell_pos, trans_mat)
     supercell_fracs -= np.rint(supercell_fracs)
+    supercell_fracs = np.array(supercell_fracs, dtype='double', order='C')
     primitive_fracs = np.dot(primitive_pos, trans_mat)
     primitive_fracs -= np.rint(primitive_fracs)
+    primitive_fracs = np.array(primitive_fracs, dtype='double', order='C')
 
     # For each vector, we will need to consider all nearby images in the reduced bases.
     lattice_points = np.array([
         [i, j, k] for i in (-1, 0, 1)
                   for j in (-1, 0, 1)
                   for k in (-1, 0, 1)
-    ])
+    ], dtype='intc', order='C')
 
     # Here's where things get interesting.
     # We want to avoid manually iterating over all possible pairings of
@@ -585,50 +590,65 @@ def get_smallest_vectors(supercell_bases,
     # as possible, since numpy can shell out to BLAS to handle the
     # real heavy lifting.
 
-    # For every atom in the supercell and every atom in the primitive cell,
-    # we want 27 images of the vector between them.
-    #
-    # 'None' is used to insert trivial axes to make these arrays broadcast.
-    #
-    # shape: (size_super, size_prim, 27, 3)
-    candidate_fracs = (
-        supercell_fracs[:, None, None, :]    # shape: (size_super, 1, 1, 3)
-        - primitive_fracs[None, :, None, :]  # shape: (1, size_prim, 1, 3)
-        + lattice_points[None, None, :, :]   # shape: (1, 1, 27, 3)
-    )
-
-    # To compute the lengths, we want cartesian positions.
-    #
-    # Conveniently, calling 'numpy.dot' between a 4D array and a 2D array
-    # does vector-matrix multiplication on each row vector in the last axis
-    # of the 4D array.
-    #
-    # shape: (size_super, size_prim, 27, 3)
-    candidate_carts = np.dot(candidate_fracs, reduced_bases)
-    # shape: (size_super, size_prim, 27)
-    lengths = np.array(np.sqrt(np.sum(candidate_carts**2, axis=-1)),
-                       dtype='double', order='C')
-
-    # Create the output, initially consisting of all candidate vectors scaled
-    # by the primitive cell.
-    #
-    # shape: (size_super, size_prim, 27, 3)
-    candidate_vectors = np.array(np.dot(candidate_fracs, trans_mat_inv),
-                                 dtype='double', order='C')
-
-    # The last final bits are done in C.
-    #
-    # We will gather the shortest ones from each list of 27 vectors.
-    shortest_vectors = np.zeros_like(candidate_vectors,
-                                     dtype='double', order='C')
-    multiplicity = np.zeros(shortest_vectors.shape[:2], dtype='intc', order='C')
-
+    shortest_vectors = np.zeros(
+        (len(supercell_fracs), len(primitive_fracs), 27, 3),
+        dtype='double', order='C')
+    multiplicity = np.zeros((len(supercell_fracs), len(primitive_fracs)),
+                            dtype='intc', order='C')
     import phonopy._phonopy as phonoc
-    phonoc.gsv_copy_smallest_vectors(shortest_vectors,
-                                     multiplicity,
-                                     candidate_vectors,
-                                     lengths,
-                                     symprec)
+    phonoc.gsv_set_smallest_vectors(
+        shortest_vectors,
+        multiplicity,
+        supercell_fracs,
+        primitive_fracs,
+        lattice_points,
+        np.array(reduced_bases.T, dtype='double', order='C'),
+        np.array(trans_mat_inv.T, dtype='intc', order='C'),
+        symprec)
+
+    # # For every atom in the supercell and every atom in the primitive cell,
+    # # we want 27 images of the vector between them.
+    # #
+    # # 'None' is used to insert trivial axes to make these arrays broadcast.
+    # #
+    # # shape: (size_super, size_prim, 27, 3)
+    # candidate_fracs = (
+    #     supercell_fracs[:, None, None, :]    # shape: (size_super, 1, 1, 3)
+    #     - primitive_fracs[None, :, None, :]  # shape: (1, size_prim, 1, 3)
+    #     + lattice_points[None, None, :, :]   # shape: (1, 1, 27, 3)
+    # )
+
+    # # To compute the lengths, we want cartesian positions.
+    # #
+    # # Conveniently, calling 'numpy.dot' between a 4D array and a 2D array
+    # # does vector-matrix multiplication on each row vector in the last axis
+    # # of the 4D array.
+    # #
+    # # shape: (size_super, size_prim, 27)
+    # lengths = np.array(np.sqrt(
+    #     np.sum(np.dot(candidate_fracs, reduced_bases)**2, axis=-1)),
+    #                    dtype='double', order='C')
+
+    # # Create the output, initially consisting of all candidate vectors scaled
+    # # by the primitive cell.
+    # #
+    # # shape: (size_super, size_prim, 27, 3)
+    # candidate_vectors = np.array(np.dot(candidate_fracs, trans_mat_inv),
+    #                              dtype='double', order='C')
+
+    # # The last final bits are done in C.
+    # #
+    # # We will gather the shortest ones from each list of 27 vectors.
+    # shortest_vectors = np.zeros_like(candidate_vectors,
+    #                                  dtype='double', order='C')
+    # multiplicity = np.zeros(shortest_vectors.shape[:2], dtype='intc', order='C')
+
+    # import phonopy._phonopy as phonoc
+    # phonoc.gsv_copy_smallest_vectors(shortest_vectors,
+    #                                  multiplicity,
+    #                                  candidate_vectors,
+    #                                  lengths,
+    #                                  symprec)
 
     return shortest_vectors, multiplicity
 
