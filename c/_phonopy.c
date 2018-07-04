@@ -439,7 +439,7 @@ static PyObject * py_gsv_set_smallest_vectors(PyObject *self, PyObject *args)
   num_pos_from = PyArray_DIMS(py_pos_from)[0];
   lattice_points = (int(*)[3])PyArray_DATA(py_lattice_points);
   reduced_basis = (double(*)[3])PyArray_DATA(py_reduced_basis);
-  trans_mat = (int(*)[3])PyArray_DATA(py_lattice_points);
+  trans_mat = (int(*)[3])PyArray_DATA(py_trans_mat);
 
 
   gsv_set_smallest_vectors(smallest_vectors,
@@ -1642,23 +1642,20 @@ static void gsv_set_smallest_vectors(double (*smallest_vectors)[27][3],
                                      const double symprec)
 {
   int i, j, k, l, count;
-  double length_tmp, minimum;
-  double length[27], pos[27][3];
+  double length_tmp, minimum, vec_xyz;
+  double length[27], vec[27][3];
 
   for (i = 0; i < num_pos_to; i++) {
     for (j = 0; j < num_pos_from; j++) {
       for (k = 0; k < 27; k++) {
         length[k] = 0;
         for (l = 0; l < 3; l++) {
-          /* smallest_vectors[i * num_pos_from + j][k][l] = */
-          /*   pos_to[i][l] - pos_from[j][l] + lattice_points[k][l]; */
-          pos[k][l] = pos_to[i][l] - pos_from[j][l] + lattice_points[k][l];
+          vec[k][l] = pos_to[i][l] - pos_from[j][l] + lattice_points[k][l];
         }
-        /* B_lm pos_m */
         for (l = 0; l < 3; l++) {
-          length_tmp = (reduced_basis[l][0] * pos[k][0] +
-                        reduced_basis[l][1] * pos[k][1] +
-                        reduced_basis[l][2] * pos[k][2]);
+          length_tmp = (reduced_basis[l][0] * vec[k][0] +
+                        reduced_basis[l][1] * vec[k][1] +
+                        reduced_basis[l][2] * vec[k][2]);
           length[k] += length_tmp * length_tmp;
         }
         length[k] = sqrt(length[k]);
@@ -1675,7 +1672,11 @@ static void gsv_set_smallest_vectors(double (*smallest_vectors)[27][3],
       for (k = 0; k < 27; k++) {
         if (length[k] - minimum < symprec) {
           for (l = 0; l < 3; l++) {
-            smallest_vectors[i * num_pos_from + j][count][l] = pos[k][l];
+            /* Transform to supercell coordinates */
+            vec_xyz = (trans_mat[l][0] * vec[k][0] +
+                       trans_mat[l][1] * vec[k][1] +
+                       trans_mat[l][2] * vec[k][2]);
+            smallest_vectors[i * num_pos_from + j][count][l] = vec_xyz;
           }
           count++;
         }
