@@ -1642,7 +1642,7 @@ static void gsv_set_smallest_vectors(double (*smallest_vectors)[27][3],
                                      const double symprec)
 {
   int i, j, k, l, count;
-  double length_tmp, minimum;
+  double length_tmp, minimum, pos_xyz;
   double length[27], pos[27][3];
 
   for (i = 0; i < num_pos_to; i++) {
@@ -1675,7 +1675,11 @@ static void gsv_set_smallest_vectors(double (*smallest_vectors)[27][3],
       for (k = 0; k < 27; k++) {
         if (length[k] - minimum < symprec) {
           for (l = 0; l < 3; l++) {
-            smallest_vectors[i * num_pos_from + j][count][l] = pos[k][l];
+            /* Transform to supercell coordinates */
+            pos_xyz = (trans_mat[l][0] * pos[k][0] +
+                       trans_mat[l][1] * pos[k][1] +
+                       trans_mat[l][2] * pos[k][2]);
+            smallest_vectors[i * num_pos_from + j][count][l] = pos_xyz;
           }
           count++;
         }
