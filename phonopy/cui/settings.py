@@ -1952,6 +1952,10 @@ class PhonopyConfParser(ConfParser):
         # Thermal properties
         if 'tprop' in params:
             self._settings.set_is_thermal_properties(params['tprop'])
+            # Exclusive conditions
+            self._settings.set_is_thermal_displacements(False)
+            self._settings.set_is_thermal_displacement_matrices(False)
+            self._settings.set_is_thermal_distances(False)
 
         # Projected thermal properties
         if 'ptprop' in params and params['ptprop']:
@@ -1959,6 +1963,10 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_is_projected_thermal_properties(True)
             self._settings.set_is_eigenvectors(True)
             self._settings.set_is_mesh_symmetry(False)
+            # Exclusive conditions
+            self._settings.set_is_thermal_displacements(False)
+            self._settings.set_is_thermal_displacement_matrices(False)
+            self._settings.set_is_thermal_distances(False)
 
         # Use imaginary frequency as real for thermal property calculation
         if 'pretend_real' in params:
@@ -1969,17 +1977,22 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_is_thermal_displacements(True)
             self._settings.set_is_eigenvectors(True)
             self._settings.set_is_mesh_symmetry(False)
+            # Exclusive conditions
+            self._settings.set_is_thermal_properties(False)
+            self._settings.set_is_thermal_displacement_matrices(False)
+            self._settings.set_is_thermal_distances(True)
 
         # Thermal displacement matrices
-        if 'tdispmat' in params or 'tdispmat_cif' in params:
-            if 'tdispmat' in params and not params['tdispmat']:
-                pass
-            else:
-                self._settings.set_is_thermal_displacement_matrices(True)
-                self._settings.set_is_eigenvectors(True)
-                self._settings.set_is_mesh_symmetry(False)
+        if ('tdispmat' in params and params['tdispmat'] or
+            'tdispmat_cif' in params):
+            self._settings.set_is_thermal_displacement_matrices(True)
+            self._settings.set_is_eigenvectors(True)
+            self._settings.set_is_mesh_symmetry(False)
+            # Exclusive conditions
+            self._settings.set_is_thermal_properties(False)
+            self._settings.set_is_thermal_displacements(False)
+            self._settings.set_is_thermal_distances(False)
 
-        if self._settings.get_is_thermal_displacement_matrices():
             # Temperature used to calculate thermal displacement matrix
             # to write aniso_U to cif
             if 'tdispmat_cif' in params:
@@ -1992,6 +2005,10 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_is_eigenvectors(True)
             self._settings.set_is_mesh_symmetry(False)
             self._settings.set_thermal_atom_pairs(params['tdistance'])
+            # Exclusive conditions
+            self._settings.set_is_thermal_properties(False)
+            self._settings.set_is_thermal_displacements(False)
+            self._settings.set_is_thermal_displacement_matrices(False)
 
         # Group velocity
         if 'is_group_velocity' in params:
