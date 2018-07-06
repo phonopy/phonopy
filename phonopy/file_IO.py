@@ -499,7 +499,6 @@ def _expand_borns(borns, primitive, prim_symmetry):
 #
 # e-v.dat, thermal_properties.yaml
 #
-EQUIVALENCE_TOLERANCE = 1e-5
 def read_thermal_properties_yaml(filenames, factor=1.0):
     import yaml
     try:
@@ -512,7 +511,7 @@ def read_thermal_properties_yaml(filenames, factor=1.0):
     num_integrated_modes = []
     for filename in filenames:
         with open(filename) as f:
-            tp_yaml = yaml.load(f.read(), Loader=Loader)
+            tp_yaml = yaml.load(f, Loader=Loader)
             thermal_properties.append(tp_yaml['thermal_properties'])
             if 'num_modes' in tp_yaml and 'num_integrated_modes' in tp_yaml:
                 num_modes.append(tp_yaml['num_modes'])
@@ -523,27 +522,26 @@ def read_thermal_properties_yaml(filenames, factor=1.0):
     cv = []
     entropy = []
     fe_phonon = []
-    for i, _ in enumerate(filenames):
-        temp.append([v['temperature'] for v in thermal_properties[i]])
-        cv.append([v['heat_capacity'] for v in thermal_properties[i]])
-        entropy.append([v['entropy'] for v in thermal_properties[i]])
-        fe_phonon.append([v['free_energy'] for v in thermal_properties[i]])
+    for i, tp in enumerate(thermal_properties):
+        temp.append([v['temperature'] for v in tp])
+        if not np.allclose(temperatures, temp):
+            print('')
+            print("Check your input files")
+            print("Disagreement of temperature range or step")
+            for t, fname in zip(temp, filenames):
+                print("%s: Range [ %d, %d ], Step %f" %
+                      (fname, int(t[0]), int(t[-1]), t[1] - t[0]))
+            print('')
+            print("Stop phonopy-qha")
+            raise RuntimeError
+        cv.append([v['heat_capacity'] for v in tp])
+        entropy.append([v['entropy'] for v in tp])
+        fe_phonon.append([v['free_energy'] for v in tp])
 
-
-    if _is_temperatures_match(temp):
-        cv = np.array(cv).T * factor
-        entropy = np.array(entropy).T * factor
-        fe_phonon = np.array(fe_phonon).T * factor
-    else:
-        print('')
-        print("Check your input files")
-        print("Disagreement of temperature range or step")
-        for t, fname in zip(temp, filenames):
-            print("%s: Range [ %d, %d ], Step %f" %
-                  (fname, int(t[0]), int(t[-1]), t[1] - t[0]))
-        print('')
-        print("Stop phonopy-qha")
-        raise RuntimeError
+    # shape=(temperatures, volumes)
+    cv = np.array(cv).T * factor
+    entropy = np.array(entropy).T * factor
+    fe_phonon = np.array(fe_phonon).T * factor
 
     return temperatures, cv, entropy, fe_phonon, num_modes, num_integrated_modes
 
@@ -565,16 +563,6 @@ def read_v_e(filename,
     electronic_energies += volumes * pressure / EVAngstromToGPa
 
     return volumes, electronic_energies
-
-def _is_temperatures_match(temperatures):
-    for t in temperatures:
-        if len(t) != len(temperatures[0]):
-            return False
-        if (abs(t[0] - temperatures[0][0]) > EQUIVALENCE_TOLERANCE or
-            abs(t[-1] - temperatures[0][-1]) > EQUIVALENCE_TOLERANCE):
-            return False
-
-    return True
 
 def _parse_QHA_data(filename):
     data = []

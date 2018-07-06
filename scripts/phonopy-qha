@@ -182,7 +182,7 @@ def main(args):
     # Show bulk modulus of v-e data
     if args.is_bulk_modulus_only:
         bulk_modulus = PhonopyQHA(volumes,
-                                  electronic_energies,
+                                  electronic_energies=electronic_energies,
                                   eos=args.eos)
         parameters = bulk_modulus.get_bulk_modulus_parameters()
         print("Volume: %f" % parameters[3])
@@ -201,9 +201,13 @@ def main(args):
         sys.exit(1)
 
     # read data from thermal_properties
-    t_props = read_thermal_properties_yaml(args.filenames[1:(len(volumes)+1)],
-                                           factor=args.factor)
-    T, cv, entropy, fe_phonon, num_modes, num_integrated_modes = t_props
+    (temperatures,
+     cv,
+     entropy,
+     fe_phonon,
+     num_modes,
+     num_integrated_modes) = read_thermal_properties_yaml(
+         args.filenames[1:(len(volumes)+1)], factor=args.factor)
 
     # Treatment of thermal properties with imaginary modes
     if args.exclude_imaginary and num_modes:
@@ -218,10 +222,10 @@ def main(args):
     ##########################
     # Analyzing and plotting #
     ##########################
-    phonopy_qha = PhonopyQHA(volumes[indices],
-                             electronic_energies[indices],
+    phonopy_qha = PhonopyQHA(volumes=volumes[indices],
+                             electronic_energies=electronic_energies[indices],
                              eos=args.eos,
-                             temperatures=T,
+                             temperatures=temperatures,
                              free_energy=fe_phonon[:, indices],
                              cv=cv[:, indices],
                              entropy=entropy[:, indices],
