@@ -3,10 +3,16 @@
 Change Log
 ==========
 
-xxx-xx-2018
------------
+Jun-20-2018: Version 1.13.2
+----------------------------
 
-* ``FULL_FORCE_CONSTANTS`` tag is created (:ref:`full_force_constants_tag`).
+* ``FULL_FORCE_CONSTANTS`` tag is created
+  (:ref:`full_force_constants_tag`).
+* Minor update of script to use QE's ``q2r.x`` output (:ref:`this
+  <qe_q2r>`).
+* Updates and fixes of CRYSTAL and SIESTA interfaces.
+* Updates of labels of irreducible representations of crystallographic
+  point groups.
 
 Apr-21-2018: Version 1.13.0
 ----------------------------
