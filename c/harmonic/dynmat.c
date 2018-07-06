@@ -192,7 +192,7 @@ void dym_get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real,imag)] */
   }
 
   /* This may not be necessary. */
-  make_Hermitian(dd, num_patom * 3);
+  /* make_Hermitian(dd, num_patom * 3); */
 
   free(dd_tmp);
   dd_tmp = NULL;
@@ -255,6 +255,20 @@ void dym_get_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real,imag)] */
       }
     }
   }
+
+  /* Summation over another atomic index */
+  /* for (j = 0; j < num_patom; j++) { */
+  /*   for (k = 0; k < 3; k++) {   /\* alpha *\/ */
+  /*     for (l = 0; l < 3; l++) { /\* beta *\/ */
+  /*       adrs = j * 9 + k * 3 + l; */
+  /*       for (i = 0; i < num_patom; i++) { */
+  /*         adrs_tmp = i * num_patom * 9 + k * num_patom * 3 + j * 3 + l ; */
+  /*         dd_q0[adrs * 2] += dd_tmp2[adrs_tmp * 2]; */
+  /*         dd_q0[adrs * 2 + 1] += dd_tmp2[adrs_tmp * 2 + 1]; */
+  /*       } */
+  /*     } */
+  /*   } */
+  /* } */
 
   for (i = 0; i < num_patom; i++) {
     for (k = 0; k < 3; k++) {   /* alpha */

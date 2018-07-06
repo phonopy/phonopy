@@ -332,9 +332,7 @@ class ConfParser(object):
         self._confs = {}
         self._parameters = {}
         self._args = args
-
-        if filename is not None:
-            self.read_file(filename) # store data in self._confs
+        self._filename = filename
 
     def get_configures(self):
         return self._confs
@@ -347,8 +345,8 @@ class ConfParser(object):
         print("Please check the setting tags and options.")
         sys.exit(1)
 
-    def read_file(self, filename):
-        file = open(filename, 'r')
+    def read_file(self):
+        file = open(self._filename, 'r')
         is_continue = False
         left = None
 
@@ -1314,18 +1312,18 @@ class PhonopyConfParser(ConfParser):
         self._settings = PhonopySettings()
         if filename is not None:
             ConfParser.__init__(self, filename=filename)
-            self.parse_conf() # self.parameters[key] = val
-            self._parse_conf()
-            self._set_settings()
+            self.read_file() # store .conf file setting in self._confs
+            self._parse_conf() # self.parameters[key] = val
+            self._set_settings() # self.parameters -> PhonopySettings
         if args is not None:
+            # To invoke ConfParser.__init__() to flush variables.
             ConfParser.__init__(self, args=args)
-            self.read_options() # store data in self._confs
-            self._read_options()
-            self.parse_conf() # self.parameters[key] = val
-            self._parse_conf()
-            self._set_settings()
+            self._read_options() # store options in self._confs
+            self._parse_conf() # self.parameters[key] = val
+            self._set_settings() # self.parameters -> PhonopySettings
 
     def _read_options(self):
+        self.read_options() # store data in self._confs
         arg_list = vars(self._args)
         if 'band_format' in arg_list:
             if self._args.band_format:
@@ -1496,6 +1494,7 @@ class PhonopyConfParser(ConfParser):
                 self._confs['lapack_solver'] = '.true.'
 
     def _parse_conf(self):
+        self.parse_conf()
         confs = self._confs
 
         for conf_key in confs.keys():
@@ -1769,7 +1768,7 @@ class PhonopyConfParser(ConfParser):
             self.setting_error("MODULATION tag is wrongly set.")
 
     def _set_settings(self):
-        ConfParser.set_settings(self)
+        self.set_settings()
         params = self._parameters
 
         # Is getting least displacements?
@@ -1813,10 +1812,18 @@ class PhonopyConfParser(ConfParser):
         if 'cutoff_radius' in params:
             self._settings.set_cutoff_radius(params['cutoff_radius'])
 
+        # band & mesh mode
+        # This has to come before 'mesh_numbers' and 'band_paths'
+        if 'mesh_numbers' in params and 'band_paths' in params:
+            self._settings.set_run_mode('band_mesh')
+
         # Mesh
         if 'mesh_numbers' in params:
-            self._settings.set_run_mode('mesh')
+            if self._settings.get_run_mode() != 'band_mesh':
+                self._settings.set_run_mode('mesh')
             self._settings.set_mesh_numbers(params['mesh_numbers'])
+        if (self._settings.get_run_mode() == 'mesh' or
+            self._settings.get_run_mode() == 'band_mesh'):
             if 'mp_shift' in params:
                 shift = params['mp_shift']
             else:
@@ -1836,7 +1843,10 @@ class PhonopyConfParser(ConfParser):
 
         # band mode
         if 'band_paths' in params:
-            self._settings.set_run_mode('band')
+            if self._settings.get_run_mode() != 'band_mesh':
+                self._settings.set_run_mode('band')
+        if (self._settings.get_run_mode() == 'band' or
+            self._settings.get_run_mode() == 'band_mesh'):
             if 'band_format' in params:
                 self._settings.set_band_format(params['band_format'])
             if 'band_labels' in params:
@@ -1844,13 +1854,10 @@ class PhonopyConfParser(ConfParser):
             if 'band_connection' in params:
                 self._settings.set_is_band_connection(params['band_connection'])
 
-        # band & mesh mode
-        if 'mesh_numbers' in params and 'band_paths' in params:
-            self._settings.set_run_mode('band_mesh')
-
         # Q-points mode
         if 'qpoints' in params or 'read_qpoints' in params:
             self._settings.set_run_mode('qpoints')
+        if self._settings.get_run_mode() == 'qpoints':
             if 'qpoints_format' in params:
                 self._settings.set_qpoints_format(params['qpoints_format'])
 
@@ -1895,12 +1902,11 @@ class PhonopyConfParser(ConfParser):
                 params['irreps_qpoint'][:3])
             if len(params['irreps_qpoint']) == 4:
                 self._settings.set_irreps_tolerance(params['irreps_qpoint'][3])
-
-            if 'show_irreps' in params:
-                self._settings.set_show_irreps(params['show_irreps'])
-
-            if 'little_cogroup' in params:
-                self._settings.set_is_little_cogroup(params['little_cogroup'])
+            if self._settings.get_run_mode() == 'irreps':
+                if 'show_irreps' in params:
+                    self._settings.set_show_irreps(params['show_irreps'])
+                if 'little_cogroup' in params:
+                    self._settings.set_is_little_cogroup(params['little_cogroup'])
 
         # DOS
         if 'dos_range' in params:
@@ -1925,7 +1931,8 @@ class PhonopyConfParser(ConfParser):
         # Project PDOS x, y, z directions in Cartesian coordinates
         if 'xyz_projection' in params:
             self._settings.set_xyz_projection(params['xyz_projection'])
-            if 'pdos' not in params:
+            if ('pdos' not in params and
+                self._settings.get_pdos_indices() is None):
                 self.set_parameter('pdos', [])
 
         if 'pdos' in params:
@@ -1933,55 +1940,64 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_is_eigenvectors(True)
             self._settings.set_is_dos_mode(True)
             self._settings.set_is_mesh_symmetry(False)
-            if 'projection_direction' in params:
-                if 'xyz_projection' in params and params['xyz_projection']:
-                    pass
-                else:
-                    self._settings.set_projection_direction(
-                        params['projection_direction'])
-                    self._settings.set_is_mesh_symmetry(False)
+
+        if ('projection_direction' in params and
+            not self._settings.get_xyz_projection()):
+            self._settings.set_projection_direction(
+                params['projection_direction'])
+            self._settings.set_is_eigenvectors(True)
+            self._settings.set_is_dos_mode(True)
+            self._settings.set_is_mesh_symmetry(False)
 
         # Thermal properties
         if 'tprop' in params:
             self._settings.set_is_thermal_properties(params['tprop'])
+            # Exclusive conditions
+            self._settings.set_is_thermal_displacements(False)
+            self._settings.set_is_thermal_displacement_matrices(False)
+            self._settings.set_is_thermal_distances(False)
 
         # Projected thermal properties
-        if 'ptprop' in params:
-            if params['ptprop']:
-                self._settings.set_is_thermal_properties(True)
-                self._settings.set_is_projected_thermal_properties(True)
-                self._settings.set_is_eigenvectors(True)
-                self._settings.set_is_mesh_symmetry(False)
+        if 'ptprop' in params and params['ptprop']:
+            self._settings.set_is_thermal_properties(True)
+            self._settings.set_is_projected_thermal_properties(True)
+            self._settings.set_is_eigenvectors(True)
+            self._settings.set_is_mesh_symmetry(False)
+            # Exclusive conditions
+            self._settings.set_is_thermal_displacements(False)
+            self._settings.set_is_thermal_displacement_matrices(False)
+            self._settings.set_is_thermal_distances(False)
 
         # Use imaginary frequency as real for thermal property calculation
         if 'pretend_real' in params:
             self._settings.set_pretend_real(params['pretend_real'])
 
         # Thermal displacements
-        if 'tdisp' in params:
-            if params['tdisp']:
-                self._settings.set_is_thermal_displacements(True)
-                self._settings.set_is_eigenvectors(True)
-                self._settings.set_is_mesh_symmetry(False)
-
-                if 'projection_direction' in params:
-                    self._settings.set_projection_direction(
-                        params['projection_direction'])
-                    self._settings.set_is_mesh_symmetry(False)
+        if 'tdisp' in params and params['tdisp']:
+            self._settings.set_is_thermal_displacements(True)
+            self._settings.set_is_eigenvectors(True)
+            self._settings.set_is_mesh_symmetry(False)
+            # Exclusive conditions
+            self._settings.set_is_thermal_properties(False)
+            self._settings.set_is_thermal_displacement_matrices(False)
+            self._settings.set_is_thermal_distances(True)
 
         # Thermal displacement matrices
-        if 'tdispmat' in params or 'tdispmat_cif' in params:
-            if 'tdispmat' in params and not params['tdispmat']:
-                pass
-            else:
-                self._settings.set_is_thermal_displacement_matrices(True)
-                self._settings.set_is_eigenvectors(True)
-                self._settings.set_is_mesh_symmetry(False)
-                # Temperature used to calculate thermal displacement matrix
-                # to write aniso_U to cif
-                if 'tdispmat_cif' in params:
-                    self._settings.set_thermal_displacement_matrix_temperature(
-                        params['tdispmat_cif'])
+        if ('tdispmat' in params and params['tdispmat'] or
+            'tdispmat_cif' in params):
+            self._settings.set_is_thermal_displacement_matrices(True)
+            self._settings.set_is_eigenvectors(True)
+            self._settings.set_is_mesh_symmetry(False)
+            # Exclusive conditions
+            self._settings.set_is_thermal_properties(False)
+            self._settings.set_is_thermal_displacements(False)
+            self._settings.set_is_thermal_distances(False)
+
+            # Temperature used to calculate thermal displacement matrix
+            # to write aniso_U to cif
+            if 'tdispmat_cif' in params:
+                self._settings.set_thermal_displacement_matrix_temperature(
+                    params['tdispmat_cif'])
 
         # Thermal distances
         if 'tdistance' in params:
@@ -1989,6 +2005,10 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_is_eigenvectors(True)
             self._settings.set_is_mesh_symmetry(False)
             self._settings.set_thermal_atom_pairs(params['tdistance'])
+            # Exclusive conditions
+            self._settings.set_is_thermal_properties(False)
+            self._settings.set_is_thermal_displacements(False)
+            self._settings.set_is_thermal_displacement_matrices(False)
 
         # Group velocity
         if 'is_group_velocity' in params:
@@ -2000,6 +2020,7 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_is_eigenvectors(True)
             self._settings.set_is_mesh_symmetry(False)
 
+        if self._settings.get_is_moment():
             if 'moment_order' in params:
                 self._settings.set_moment_order(params['moment_order'])
 

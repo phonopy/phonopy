@@ -28,7 +28,7 @@ Without plots::
 
 1st argument is the filename of volume-energy data (in the above
 expample, ``e-v.dat``). The volume and energy of the unit cell
-(default units are in :math:`\mathrm{\AA}^3` and eV, respectively). An
+(default units are in :math:`\text{Angstrom}^3` and eV, respectively). An
 example of the volume-energy file is::
 
    #   cell volume   energy of cell other than phonon
@@ -64,13 +64,13 @@ included in the energies, or equivalent effect is applied using
 Options
 ^^^^^^^
 
-``-h`` 
+``-h``
 ~~~~~~~
 
 Show help. The available options are shown. Without any option, the
 results are saved into text files in simple data format.
 
-``--tmax`` 
+``--tmax``
 ~~~~~~~~~~~~
 
 The maximum temperature calculated is specified. This temperature has
@@ -78,32 +78,32 @@ to be lower than the maximum temperature calculated in
 ``thermal_properties.yaml`` to let at least two temperature points
 fewer. The default value is ``--tmax=1000``.
 
-``-p`` 
+``-p``
 ~~~~~~~
 
 The fitting results, volume-temperature relation, and thermal expansion
 coefficient are plotted on the display.
 
-``--sparse`` 
+``--sparse``
 ~~~~~~~~~~~~~~
 
 This is used with ``-s`` or ``-p`` to thin out the number of plots of
 the fitting results at temperatures. When ``--sparse=10``, 1/10 is
 only plotted.
 
-``-s`` 
+``-s``
 ~~~~~~~
 
 The calculated values are written into files.
 
-``--pressure`` 
+``--pressure``
 ~~~~~~~~~~~~~~~~
 
 Pressure is specified in GPa. This corresponds to the :math:`pV` term
 described in the following section :ref:`theory_of_qha`. Note that
 bulk modulus obtained with this option than 0 GPa is incorrect.
 
-``-b`` 
+``-b``
 ~~~~~~~
 
 Fitting volume-energy data to an EOS, and show bulk
@@ -126,25 +126,30 @@ EOS is chosen among ``vinet``, ``birch_murnaghan``, and
 Output files
 ^^^^^^^^^^^^^
 
-The physical units of V and T are :math:`\AA^3` and K,
+The physical units of V and T are :math:`\text{Angstrom}^3` and K,
 respectively. The unit of eV for Helmholtz and Gibbs energies, J/K/mol
 for :math:`C_V` and entropy, GPa for for bulk modulus and pressure
 are used.
 
-- Bulk modulus (GPa) vs T (``bulk_modulus-temperature.*``)
-- Gibbs free energy (eV) vs T (``gibbs-temperature.*``) 
-- Volume change with respect to the volume at 300 K vs T (``volume_expansion.*``)
-- Heat capacity at constant pressure (J/K/mol) vs T derived by
-  :math:`-T\frac{\partial^2 G}{\partial T^2}`  (``Cp-temperature.*``)
-- Heat capacity at constant puressure (J/K/mol) vs T by polynomial
-  fittings of Cv and S (``Cp-temperature_polyfit.*``)
+- Bulk modulus :math:`B_T` (GPa) vs :math:`T` (``bulk_modulus-temperature.*``)
+- Gibbs free energy :math:`G` (eV) vs :math:`T` (``gibbs-temperature.*``)
+- Volume change with respect to the volume at 300 K vs :math:`T`
+  (``volume_expansion.*``)
+- Heat capacity at constant pressure :math:`C_p` (J/K/mol) vs
+  :math:`T` derived by :math:`-T\frac{\partial^2 G}{\partial T^2}`
+  (``Cp-temperature.*``)
+- Heat capacity at constant puressure :math:`C_p` (J/K/mol) vs
+  :math:`T` by polynomial fittings of :math:`C_V` and :math:`S`
+  (``Cp-temperature_polyfit.*``)
 - Helmholtz free energy (eV) vs volume
   (``helmholtz-volume.*``). When ``--pressure`` option is specified,
   energy offset of :math:`pV` is added. See also the following section
   (:ref:`theory_of_qha`).
-- Volume vs T (``volume-temperature.*``)
-- Thermal expansion coefficient vs T (``thermal_expansion.*``)
-- Thermodynamics Grüneisen parameter (no unit) vs T (``gruneisen-temperature.dat``)
+- Volume vs :math:`T` (``volume-temperature.*``)
+- Volumetric thermal expansion coefficient :math:`\beta` vs :math:`T`
+  (``thermal_expansion.*``)
+- Thermodynamics Grüneisen parameter :math:`\gamma = V\beta B_T/C_V`
+  (no unit) vs :math:`T` (``gruneisen-temperature.dat``)
 
 ``Cv-volume.dat``, ``entropy-volume.dat``,
 and ``dsdv-temperature.dat`` (:math:`dS/dV`) are the data internally
@@ -186,4 +191,3 @@ thermal expansion under this approximation.
 
 ``phonopy-qha`` collects the values at volumes and transforms into the
 thermal properties at constant pressure.
-
