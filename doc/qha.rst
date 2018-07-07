@@ -51,7 +51,10 @@ volume points have to be calculated with the same temperature ranges
 and same temperature steps. ``thermal_properties.yaml`` can be
 calculated by following :ref:`thermal_properties_tag`, where the
 physical unit of the Helmholtz free energy is kJ/mol as the default,
-i.e., no need to convert the physical unit in usual cases.
+i.e., no need to convert the physical unit in usual cases. For the
+numerical differentiation in ``phonopy-qha`` against temperatures, one
+more temperature points is needed in ``thermal_properties.yaml`` for
+``phonopy-qha`` calculations.
 
 Another example for Aluminum is found in the ``example/Al-QHA`` directory.
 
@@ -75,7 +78,7 @@ results are saved into text files in simple data format.
 
 The maximum temperature calculated is specified. This temperature has
 to be lower than the maximum temperature calculated in
-``thermal_properties.yaml`` to let at least two temperature points
+``thermal_properties.yaml`` to let at least one temperature points
 fewer. The default value is ``--tmax=1000``.
 
 ``--pressure``
@@ -119,7 +122,7 @@ The calculated values are written into files.
 
 This is used with ``-s`` or ``-p`` to thin out the number of plots of
 the fitting results at temperatures. For example with ``--sparse=10``,
-1/10 is only plotted.
+1 in 10 temperature curves is only plotted.
 
 
 .. _phonopy_qha_output_files:
@@ -135,14 +138,17 @@ are used.
 - Bulk modulus :math:`B_T` (GPa) vs :math:`T` (``bulk_modulus-temperature.*``)
 - Gibbs free energy :math:`G` (eV) vs :math:`T` (``gibbs-temperature.*``)
 - Heat capacity at constant pressure :math:`C_p` (J/K/mol) vs
-  :math:`T` computed by second order numerical differentiation of
-  :math:`-T\frac{\partial^2 G}{\partial T^2}` (``Cp-temperature.*``)
+  :math:`T` computed by :math:`-T\frac{\partial^2 G}{\partial T^2}`
+  from three :math:`G(T)` points (``Cp-temperature.*``)
 - Heat capacity at constant puressure :math:`C_p` (J/K/mol) vs
   :math:`T` computed by polynomial fittings of :math:`C_V(V)`
   (``Cv-volume.dat``) and :math:`S(V)` (``entropy-volume.dat``) for
   :math:`\partial S/\partial V` (``dsdv-temperature.dat``) and
   numerical differentiation of :math:`\partial V/\partial T`, e.g., see
-  Eq.(5) of PRB **81**, 17430 by Togo *et al.* (``Cp-temperature_polyfit.*``)
+  Eq.(5) of PRB **81**, 17430 by Togo *et al.*
+  (``Cp-temperature_polyfit.*``).
+  This may give smoother :math:`C_p` than that from
+  :math:`-T\frac{\partial^2 G}{\partial T^2}`.
 - Volumetric thermal expansion coefficient :math:`\beta` vs :math:`T`
   computed by numerical differentiation (``thermal_expansion.*``)
 - Volume vs :math:`T` (``volume-temperature.*``)
