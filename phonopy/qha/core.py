@@ -113,7 +113,6 @@ class QHA(object):
         self._free_energies = None
 
         self._thermal_expansions = None
-        self._volume_expansions = None
         self._cp_numerical = None
         self._volume_entropy_parameters = None
         self._volume_cv_parameters = None
@@ -174,7 +173,6 @@ class QHA(object):
         # method is used. Therefore number of temperature points are needed
         # than self._max_t_index that nearly equals to the temparature point
         # we expect.
-        self._set_volume_expansion()
         self._set_thermal_expansion() # len = len(t) - 1
         self._set_heat_capacity_P_numerical() # len = len(t) - 2
         self._set_heat_capacity_P_polyfit()
@@ -341,58 +339,6 @@ class QHA(object):
             w.write("%25.15f %25.15f\n" % (self._temperatures[i],
                                            self._thermal_expansions[i]))
         w.close()
-
-    def get_volume_expansion(self):
-        return self._volume_expansions[:self._max_t_index]
-
-    def plot_volume_expansion(self, exp_data=None, symbol='o', _plt=None):
-        if self._temperatures[self._max_t_index] > 300:
-            if plt is None:
-                import matplotlib.pyplot as _plt
-                self._plot_volume_expansion(_plt,
-                                            exp_data=exp_data,
-                                            symbol=symbol)
-                return plt
-            else:
-                self._plot_volume_expansion(plt,
-                                            exp_data=exp_data,
-                                            symbol=symbol)
-        else:
-            return None
-
-    def plot_pdf_volume_expansion(self,
-                                  exp_data=None,
-                                  symbol='o',
-                                  filename='volume_expansion.pdf'):
-        if self._temperatures[self._max_t_index] > 300:
-            import matplotlib.pyplot as plt
-            plt.rcParams['backend'] = 'PDF'
-            plt.rcParams['pdf.fonttype'] = 3
-            plt.rcParams['font.family'] = 'serif'
-            plt.rcParams['axes.labelsize'] = 18
-            plt.rcParams['figure.subplot.left'] = 0.15
-            plt.rcParams['figure.subplot.bottom'] = 0.15
-            plt.rcParams['figure.figsize'] = 8, 6
-
-            fig, ax = plt.subplots()
-            ax.xaxis.set_ticks_position('both')
-            ax.yaxis.set_ticks_position('both')
-            ax.xaxis.set_tick_params(which='both', direction='in')
-            ax.yaxis.set_tick_params(which='both', direction='in')
-
-            self._plot_volume_expansion(plt,
-                                        exp_data=exp_data,
-                                        symbol=symbol)
-            plt.savefig(filename)
-            plt.close()
-
-    def write_volume_expansion(self, filename='volume_expansion.dat'):
-        if self._temperatures[self._max_t_index] > 300:
-            w = open(filename, 'w')
-            for i in range(self._max_t_index):
-                w.write("%20.15f %25.15f\n" % (self._temperatures[i],
-                                               self._volume_expansions[i]))
-            w.close()
 
     def get_gibbs_temperature(self):
         return self._equiv_energies[:self._max_t_index]
@@ -724,27 +670,6 @@ class QHA(object):
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
 
-    def _plot_volume_expansion(
-            self,
-            plt,
-            exp_data=None,
-            symbol='o',
-            xlabel='Temperature (K)',
-            ylabel=r'Volume expansion $\Delta L/L_0 \, (L=V^{\,1/3})$'):
-        plt.plot(self._temperatures[:self._max_t_index],
-                 self._volume_expansions[:self._max_t_index],
-                 'r-')
-
-        if exp_data:
-            plt.plot(exp_data[0],
-                     (exp_data[1] / exp_data[1][0]) ** (1.0 / 3) - 1,
-                     symbol)
-
-        plt.xlabel(xlabel)
-        plt.ylabel(ylabel)
-        plt.xlim(self._temperatures[0],
-                 self._temperatures[self._max_t_index])
-
     def _plot_gibbs_temperature(self,
                                 plt,
                                 xlabel='Temperature (K)',
@@ -830,18 +755,6 @@ class QHA(object):
                         (2 * dt) / self._equiv_volumes[i + 1])
 
         self._thermal_expansions = beta
-
-    def _set_volume_expansion(self):
-        if self._temperatures[self._max_t_index] > 300:
-            l = np.array(self._equiv_volumes) ** (1.0 / 3)
-            for i in range(self._max_t_index):
-                t = self._temperatures[i]
-                if (abs(t - 300) <
-                    (self._temperatures[1] - self._temperatures[0]) / 10):
-                    l_0 = (self._equiv_volumes[i]) ** (1.0 / 3)
-                    break
-
-            self._volume_expansions = l / l_0 - 1
 
     def _set_heat_capacity_P_numerical(self):
         cp = []

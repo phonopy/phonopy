@@ -39,8 +39,7 @@ import sys
 from phonopy.units import *
 from phonopy.interface.vasp import read_vasp, write_vasp
 from phonopy import PhonopyQHA
-from phonopy.file_IO import (read_thermal_properties_yaml, read_v_e,
-                             read_cp, read_ve)
+from phonopy.file_IO import read_thermal_properties_yaml, read_v_e
 
 
 def create_unitcells(unitcell_filename,
@@ -74,17 +73,11 @@ def get_options():
                         is_bulk_modulus_only=False,
                         eos="vinet",
                         energy_shift=None,
-                        symbol='o',
-                        cp_filename=None,
-                        ve_filename=None,
                         thin_number=10,
                         t_max=1000.0)
     parser.add_argument(
         "-b", dest="is_bulk_modulus_only", action="store_true",
         help="Just show Bulk modulus from v-e data")
-    parser.add_argument(
-        "--cp", "--heat_capacity", dest="cp_filename", metavar="FILE",
-        help="Experimental data for heat capacity Cv")
     parser.add_argument(
         "--cu", "--create_unitcells", dest="is_create_unitcells",
         action="store_true",
@@ -116,18 +109,12 @@ def get_options():
         "-s", "--save", dest="is_graph_save", action="store_true",
         help="Save plot data in pdf")
     parser.add_argument(
-        "--symbol", dest="symbol",
-        help="Symbol used to plot experiment points")
-    parser.add_argument(
         "--sparse", dest="thin_number", type=int,
         help=("Thin out the F-V plots of temperature. The value is "
               "used as deviser of number of temperature points."))
     parser.add_argument(
         "--tmax", dest="t_max", type=float,
         help="Maximum calculated temperature")
-    parser.add_argument(
-        "--ve", "--volume_expansion", dest="ve_filename", metavar="FILE",
-        help="Experimental data for volume expansion")
     parser.add_argument(
         "--vf", "--volume_factor", dest="volume_factor", type=float,
         help="Conversion factor of volume to A^3")
@@ -248,35 +235,17 @@ def main(args):
         # - Volume vs Helmholtz free energy
         # - Volume vs Temperature
         # - Thermal expansion coefficient
-        if args.ve_filename is None:
-            exp_data = None
-        else:
-            exp_data = parse_ve(args.ve_filename)
-
-        phonopy_qha.plot_qha(thin_number=args.thin_number,
-                             volume_temp_exp=exp_data).show()
+        phonopy_qha.plot_qha(thin_number=args.thin_number).show()
 
     if args.is_graph_save:
         # Volume vs Helmholts free energy
         phonopy_qha.plot_pdf_helmholtz_volume(thin_number=args.thin_number)
 
         # Volume vs Temperature
-        if args.ve_filename is None:
-            exp_data = None
-        else:
-            exp_data = parse_ve(args.ve_filename)
-        phonopy_qha.plot_pdf_volume_temperature(exp_data=exp_data)
+        phonopy_qha.plot_pdf_volume_temperature()
 
         # Thermal expansion coefficient
         phonopy_qha.plot_pdf_thermal_expansion()
-
-        # Volume expansion
-        if args.ve_filename is None:
-            exp_data = None
-        else:
-            exp_data = parse_ve(args.ve_filename)
-        phonopy_qha.plot_pdf_volume_expansion(exp_data=exp_data,
-                                      symbol=args.symbol)
 
         # G vs Temperature
         phonopy_qha.plot_pdf_gibbs_temperature()
@@ -285,18 +254,10 @@ def main(args):
         phonopy_qha.plot_pdf_bulk_modulus_temperature()
 
         # C_P vs Temperature
-        if args.cp_filename is None:
-            exp_data = None
-        else:
-            exp_data = read_cp(args.cp_filename)
-        phonopy_qha.plot_pdf_heat_capacity_P_numerical(exp_data=exp_data)
+        phonopy_qha.plot_pdf_heat_capacity_P_numerical()
 
         # C_P vs Temperature (poly fit)
-        if args.cp_filename is None:
-            exp_data = None
-        else:
-            exp_data = read_cp(args.cp_filename)
-        phonopy_qha.plot_pdf_heat_capacity_P_polyfit(exp_data=exp_data)
+        phonopy_qha.plot_pdf_heat_capacity_P_polyfit()
 
         # Gruneisen parameter vs Temperature
         phonopy_qha.plot_pdf_gruneisen_temperature()
@@ -304,7 +265,6 @@ def main(args):
     phonopy_qha.write_helmholtz_volume()
     phonopy_qha.write_volume_temperature()
     phonopy_qha.write_thermal_expansion()
-    phonopy_qha.write_volume_expansion()
     phonopy_qha.write_gibbs_temperature()
     phonopy_qha.write_bulk_modulus_temperature()
     phonopy_qha.write_heat_capacity_P_numerical()
