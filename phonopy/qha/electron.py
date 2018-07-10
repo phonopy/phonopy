@@ -70,15 +70,35 @@ class ElectronFreeEnergy(object):
 
     """
 
-    def __init__(self,
-                 energies,
-                 weights):
-        self._energy = energy
-        self._weights = weights
+    def __init__(self, eigenvalues, weights, n_electrons):
+        """
 
+        Parameters
+        ----------
+        eigenvalues: ndarray
+            Eigenvalues.
+            dtype='double'
+            shape=(spin, kpoints, bands)
+        weights: ndarray
+            Geometric k-point weights (number of arms of k-star in BZ).
+            dtype='intc'
+            shape=(irreducible_kpoints,)
+        n_electrons: float
+            Number of electrons in unit cell.
+
+        """
+
+        self._energies = energies
+        self._weights = weights
+        self._n_electrons = n_electrons
+
+        self._n_electrons = None
         self.chemical_potential = None
 
-    def _entropy(self, T):
+    def run(self, T):
+        pass
+
+    def _entropy(self):
         mu = self.chemical_potential
         g = 3 - len(energies)
         S = 0
@@ -89,8 +109,7 @@ class ElectronFreeEnergy(object):
                 S += - np.sum(f * np.log(f) + (1 - f) * np.log(1 - f)) * w
         return S * g
 
-    def _chemical_potential(energies, weights, temperature, num_electrons):
-        T = temperature
+    def _chemical_potential(self):
         emax = np.max(energies)
         emin = np.min(energies)
 
@@ -106,9 +125,8 @@ class ElectronFreeEnergy(object):
 
         return mu
 
-    def _number_of_electrons(energies, weights, chemical_potential, temperature):
-        T = temperature
-        g = 3 - len(energies)
+    def _number_of_electrons(self, mu):
+        g = 3 - self._energies.shape[0] # 2 or 1
         mu = chemical_potential
         n = 0
         for energies_spin in energies:
