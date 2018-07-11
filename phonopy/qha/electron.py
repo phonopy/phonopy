@@ -70,13 +70,13 @@ class ElectronFreeEnergy(object):
 
     """
 
-    def __init__(self, eigenvalues, weights, n_electrons):
+    def __init__(self, eigenvalues, weights, n_electrons, initial_efermi=0.0):
         """
 
         Parameters
         ----------
         eigenvalues: ndarray
-            Eigenvalues.
+            Eigenvalues in eV.
             dtype='double'
             shape=(spin, kpoints, bands)
         weights: ndarray
@@ -85,51 +85,83 @@ class ElectronFreeEnergy(object):
             shape=(irreducible_kpoints,)
         n_electrons: float
             Number of electrons in unit cell.
+        efermi: float
+            Initial Fermi energy
 
         """
 
-        self._energies = energies
+        # shape=(kpoints, spin, bands)
+        self._eigenvalues = np.array(eigenvalues.swapaxes(0, 1),
+                                     dtype='double', order='C')
         self._weights = weights
         self._n_electrons = n_electrons
+        self._initial_efermi = initial_efermi
 
-        self._n_electrons = None
         self.chemical_potential = None
 
+        if self._eigenvalues.shape[1] == 1:
+            self._g = 2
+        elif self._eigenvalues.shape[1] == 2:
+            self._g = 1
+        else:
+            raise RuntimeError
+
+        self._T = None
+        self.mu = None
+        self.entropy = None
+        self.energy = None
+
     def run(self, T):
-        pass
+        """
+
+        Parameters
+        ----------
+        T: float
+            Temperature in K
+
+        """
+
+        self._T = T * Kb
+        self.mu = self._chemical_potential()
+        self.f = self._f(self._eigenvalues, self.mu)
+        self.entropy = self._entropy()
+        self.energy = self._energy()
 
     def _entropy(self):
-        mu = self.chemical_potential
-        g = 3 - len(energies)
         S = 0
-        for energies_spin in energies:
-            for E, w in zip(np.array(energies_spin), weights):
-                f = 1.0 / (1 + np.exp((E - mu) / T))
-                f = np.extract((f > 1e-10) * (f < 1 - 1e-10), f)
-                S += - np.sum(f * np.log(f) + (1 - f) * np.log(1 - f)) * w
-        return S * g
+        for f_k, w in zip(self.f.reshape(len(self._weights), -1),
+                          self._weights):
+            _f = np.extract((f_k > 1e-12) * (f_k < 1 - 1e-12), f_k)
+            S -= (_f * np.log(_f) + (1 - _f) * np.log(1 - _f)).sum() * w
+        return S * self._g * self._T / self._weights.sum()
+
+    def _energy(self):
+        occ_eigvals = self.f * self._eigenvalues
+        return np.dot(occ_eigvals.reshape(len(self._weights), -1).sum(axis=1),
+                      self._weights) * self._g / self._weights.sum()
 
     def _chemical_potential(self):
-        emax = np.max(energies)
-        emin = np.min(energies)
+        emin = np.min(self._eigenvalues)
+        emax = np.max(self._eigenvalues)
+        mu = (emin + emax) / 2
 
-        for i in range(100):
-            mu = (emax + emin) / 2
-            n = self._number_of_electrons(energies, weights, mu, T)
-            if abs(n - num_electrons) < 1e-8:
+        for i in range(1000):
+            n = self._number_of_electrons(mu)
+            if abs(n - self._n_electrons) < 1e-10:
                 break
-            elif (n < num_electrons):
+            elif (n < self._n_electrons):
                 emin = mu
             else:
                 emax = mu
+            mu = (emin + emax) / 2
 
         return mu
 
     def _number_of_electrons(self, mu):
-        g = 3 - self._energies.shape[0] # 2 or 1
-        mu = chemical_potential
-        n = 0
-        for energies_spin in energies:
-            for E, w in zip(np.array(energies_spin), weights):
-                n += np.sum(1.0 / (1 + np.exp((E - mu) / T))) * w
-        return n * g
+        eigvals = self._eigenvalues.reshape(len(self._weights), -1)
+        n = np.dot(self._f(eigvals, mu).sum(axis=1),
+                   self._weights) * self._g / self._weights.sum()
+        return n
+
+    def _f(self, e, mu):
+        return 1.0 / (1 + np.exp((e - mu) / self._T))
