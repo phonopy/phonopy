@@ -1,12 +1,6 @@
 import unittest
-import io
-import sys
 import numpy as np
-import tarfile
-from phonopy.qha.electron import ElectronFreeEnergy
-from phonopy.interface.vasp import VasprunxmlExpat
-import os
-data_dir=os.path.dirname(os.path.abspath(__file__))
+from phonopy.qha.electron import ElectronFreeEnergy, get_free_energy_at_T
 
 eigvals_Al = """ -3.1277  20.6836  20.6836  20.6836  22.1491  22.1491  22.1491  24.4979  27.5181  27.5181  30.3260  32.6840
  -2.9388  18.0492  20.1052  20.1052  22.8186  23.0196  23.0196  26.3365  26.5334  26.5334  29.6719  33.6291
@@ -81,47 +75,85 @@ eigvals_Al = """ -3.1277  20.6836  20.6836  20.6836  22.1491  22.1491  22.1491  
   6.0139   7.3687   8.7944  10.3799  19.9725  21.8262  28.1228  29.1805  35.1953  40.0277  42.0199  42.2035
   7.1712   7.1712   8.1868   9.1337  23.8810  23.8810  24.4184  26.4784  35.2568  40.0588  42.6207  42.6207"""
 
+
 class TestElectronFreeEnergy(unittest.TestCase):
     def setUp(self):
-        # fullpath = os.path.join(data_dir, "..", "interface",
-        #                         "vasprun.xml.tar.bz2")
-        # tar_files = tarfile.open(fullpath)
-        # f = tar_files.extractfile(tar_files.getmembers()[0])
-        fullpath = os.path.join(data_dir, "vasprun.xml")
-        f = io.open(fullpath, 'rb')
-        self.vasprun = VasprunxmlExpat(f)
-        if self.vasprun.parse(debug=True):
-            pass
-        else:
-            raise
+        pass
 
     def tearDown(self):
         pass
 
     def test_Al(self):
+        """
+
+        VASP 5.4.4 was run with following setting parameters.
+
+        POSCAR
+        ------
+        Fm-3m (225) / -F 4 2 3 (523) / m-3m
+           1.0
+             0.0000000000000000    2.0196332190180484    2.0196332190180484
+             2.0196332190180484    0.0000000000000000    2.0196332190180484
+             2.0196332190180484    2.0196332190180484    0.0000000000000000
+         Al
+           1
+        Direct
+           0.0000000000000000  0.0000000000000000  0.0000000000000000
+
+        INCAR
+        -----
+           PREC = Accurate
+         IBRION = -1
+            NSW = 1
+           ISIF = 2
+         NELMIN = 5
+          ENCUT = 300
+          EDIFF = 1.000000e-08
+         EDIFFG = -1.000000e-08
+         ISMEAR = -1
+          SIGMA = 0.08617338256808316
+          IALGO = 38
+          LREAL = .FALSE.
+        ADDGRID = .TRUE.
+          LWAVE = .FALSE.
+         LCHARG = .FALSE.
+
+        KPOINTS
+        -------
+        Automatic mesh
+        0
+        Gamma
+        12 12 12
+             0     0     0
+
+        POTCAR
+        ------
+        PAW_PBE Al 04Jan2001
+
+        """
+
         weights = np.array(
-            [1, 8, 8, 8, 8, 8, 4, 6, 24, 24, 24, 24, 24, 24, 24, 24, 24,
-             12, 6, 24, 24, 24, 24, 24, 24, 24, 12, 6, 24, 24, 24, 24,
-             24, 12, 6, 24, 24, 24, 12, 6, 24, 12, 3, 24, 48, 48, 48, 24,
-             24, 48, 48, 48, 48, 48, 24, 24, 48, 48, 48, 24, 24, 48, 24,
-             12, 24, 48, 24, 24, 48, 24, 12, 6], dtype='intc')
+            [1, 8, 8, 8, 8, 8, 4, 6, 24, 24, 24, 24, 24, 24, 24, 24, 24, 12,
+             6, 24, 24, 24, 24, 24, 24, 24, 12, 6, 24, 24, 24, 24, 24, 12,
+             6, 24, 24, 24, 12, 6, 24, 12, 3, 24, 48, 48, 48, 24, 24, 48,
+             48, 48, 48, 48, 24, 24, 48, 48, 48, 24, 24, 48, 24, 12, 24, 48,
+             24, 24, 48, 24, 12, 6], dtype='intc')
         eigvals = np.reshape([float(x) for x in eigvals_Al.split()],
                              (1, len(weights), -1))
         n_electrons = 3.0
-        # eigvals = self.vasprun.eigenvalues[:, :, :, 0]
-        # weights = self.vasprun.k_weights_int
-        # n_electrons = self.vasprun.NELECT
-        # efermi = self.vasprun.efermi
-        efe = ElectronFreeEnergy(eigvals, weights, n_electrons,
-                                 initial_efermi=-1000)
+        efe = ElectronFreeEnergy(eigvals, weights, n_electrons)
         efe.run(1000)
-        _efermi = efe.mu # E-fermi :   7.9104
-        _entropy = efe.entropy # EENTRO = -0.00959209
-        _energy = efe.energy # EBANDS = 10.76680671
+        _efermi = efe.mu  # E-fermi :   7.9104
+        _entropy = efe.entropy  # EENTRO = -0.00959209
+        _energy = efe.energy  # EBANDS = 10.76680671
 
         self.assertTrue(np.abs(_efermi - 7.9104) < 1e-4)
         self.assertTrue(np.abs(_entropy - 0.00959209) < 1e-6)
         self.assertTrue(np.abs(_energy - 10.76680671) < 1e-6)
+
+        (temperaturs,
+         free_energy) = get_free_energy_at_T(0, 1000, 10,
+                                             eigvals, weights, n_electrons)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestElectronFreeEnergy)

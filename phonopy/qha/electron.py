@@ -35,6 +35,7 @@
 import numpy as np
 from phonopy.units import Kb
 
+
 class ElectronFreeEnergy(object):
     """Fixed density-of-states approximation for energy and entropy of electrons
 
@@ -64,13 +65,19 @@ class ElectronFreeEnergy(object):
 
     Attributes
     ----------
-    chemical_potential:
-        Chemical potential
-
+    entropy: float
+        Entropy in eV (T * S).
+    energy: float
+        Energy in eV.
+    mu: float
+        Chemical potential in eV.
+    f: ndarray
+        dtype=float
+        shape=
 
     """
 
-    def __init__(self, eigenvalues, weights, n_electrons, initial_efermi=0.0):
+    def __init__(self, eigenvalues, weights, n_electrons):
         """
 
         Parameters
@@ -91,13 +98,10 @@ class ElectronFreeEnergy(object):
         """
 
         # shape=(kpoints, spin, bands)
-        self._eigenvalues = np.array(eigenvalues.swapaxes(0, 1),
-                                     dtype='double', order='C')
+        self._eigenvalues = np.array(
+            eigenvalues.swapaxes(0, 1), dtype='double', order='C')
         self._weights = weights
         self._n_electrons = n_electrons
-        self._initial_efermi = initial_efermi
-
-        self.chemical_potential = None
 
         if self._eigenvalues.shape[1] == 1:
             self._g = 2
@@ -107,6 +111,7 @@ class ElectronFreeEnergy(object):
             raise RuntimeError
 
         self._T = None
+        self._f = None
         self.mu = None
         self.entropy = None
         self.energy = None
@@ -121,24 +126,32 @@ class ElectronFreeEnergy(object):
 
         """
 
-        self._T = T * Kb
+        if T < 1e-10:
+            self._T = 1e-10
+        else:
+            self._T = T * Kb
         self.mu = self._chemical_potential()
-        self.f = self._f(self._eigenvalues, self.mu)
+        self._f = self._occupation_number(self._eigenvalues, self.mu)
         self.entropy = self._entropy()
         self.energy = self._energy()
 
+    @property
+    def free_energy(self):
+        return self.energy - self.entropy
+
     def _entropy(self):
         S = 0
-        for f_k, w in zip(self.f.reshape(len(self._weights), -1),
+        for f_k, w in zip(self._f.reshape(len(self._weights), -1),
                           self._weights):
             _f = np.extract((f_k > 1e-12) * (f_k < 1 - 1e-12), f_k)
             S -= (_f * np.log(_f) + (1 - _f) * np.log(1 - _f)).sum() * w
         return S * self._g * self._T / self._weights.sum()
 
     def _energy(self):
-        occ_eigvals = self.f * self._eigenvalues
-        return np.dot(occ_eigvals.reshape(len(self._weights), -1).sum(axis=1),
-                      self._weights) * self._g / self._weights.sum()
+        occ_eigvals = self._f * self._eigenvalues
+        return np.dot(
+            occ_eigvals.reshape(len(self._weights), -1).sum(axis=1),
+            self._weights) * self._g / self._weights.sum()
 
     def _chemical_potential(self):
         emin = np.min(self._eigenvalues)
@@ -159,9 +172,22 @@ class ElectronFreeEnergy(object):
 
     def _number_of_electrons(self, mu):
         eigvals = self._eigenvalues.reshape(len(self._weights), -1)
-        n = np.dot(self._f(eigvals, mu).sum(axis=1),
-                   self._weights) * self._g / self._weights.sum()
+        n = np.dot(
+            self._occupation_number(eigvals, mu).sum(axis=1),
+            self._weights) * self._g / self._weights.sum()
         return n
 
-    def _f(self, e, mu):
-        return 1.0 / (1 + np.exp((e - mu) / self._T))
+    def _occupation_number(self, e, mu):
+        de = (e - mu) / self._T
+        de = np.where(de < 100, de, 100.0)  # To avoid overflow
+        de = np.where(de > -100, de, -100.0)  # To avoid underflow
+        return 1.0 / (1 + np.exp(de))
+
+def get_free_energy_at_T(tmin, tmax, tstep, eigenvalues, weights, n_electrons):
+    free_energy = []
+    efe = ElectronFreeEnergy(eigenvalues, weights, n_electrons)
+    temperatures = np.arange(tmin, tmax + 1e-8, tstep)
+    for T in temperatures:
+        efe.run(T)
+        free_energy.append(efe.free_energy)
+    return temperatures, free_energy
