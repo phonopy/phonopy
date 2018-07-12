@@ -54,11 +54,18 @@ def get_options():
     import argparse
     parser = argparse.ArgumentParser(
         description="Phonopy vasp-born command-line-tool")
-    parser.set_defaults(read_outcar=False,
-                        divisor=1.0)
+    parser.set_defaults(tmax=1000.0,
+                        tmin=0.0,
+                        tstep=10.0)
     parser.add_argument(
-        "--divisor", dest="divisor", type=float,
-        help="Symmetry tolerance to search")
+        "--tmax", dest="tmax", type=float,
+        help="Maximum calculated temperature")
+    parser.add_argument(
+        "--tmin", dest="tmin", type=float,
+        help="Minimum calculated temperature")
+    parser.add_argument(
+        "--tstep", dest="tstep", type=float,
+        help="Calculated temperature step")
     parser.add_argument(
         "filenames", nargs='*',
         help="Filenames: vasprun.xml's of all volumes in correct order")
@@ -98,7 +105,7 @@ def main(args):
         eigenvalues = vxml.eigenvalues[:, :, :, 0]
         n_electrons = vxml.NELECT
         energy = vxml.energies[-1, 1]
-        temps, fe = get_free_energy_at_T(0, 1500, 10,
+        temps, fe = get_free_energy_at_T(args.tmin, args.tmax, args.tstep,
                                          eigenvalues, weights, n_electrons)
         free_energies.append(energy - fe[0] + fe)
         if temperatures is None:

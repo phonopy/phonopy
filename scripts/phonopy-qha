@@ -52,7 +52,7 @@ def get_options():
                         read_efe_file=False,
                         eos="vinet",
                         thin_number=10,
-                        t_max=1000.0)
+                        tmax=1000.0)
     parser.add_argument(
         "-b", dest="is_bulk_modulus_only", action="store_true",
         help="Just show Bulk modulus from v-e data")
@@ -80,7 +80,7 @@ def get_options():
         help=("Thin out the F-V plots of temperature. The value is "
               "used as deviser of number of temperature points."))
     parser.add_argument(
-        "--tmax", dest="t_max", type=float,
+        "--tmax", dest="tmax", type=float,
         help="Maximum calculated temperature")
     parser.add_argument(
         "filenames", nargs='*',
@@ -196,7 +196,7 @@ def main(args):
                              free_energy=fe_phonon[:, indices],
                              cv=cv[:, indices],
                              entropy=entropy[:, indices],
-                             t_max=args.t_max,
+                             t_max=args.tmax,
                              verbose=True)
 
     if num_modes:
