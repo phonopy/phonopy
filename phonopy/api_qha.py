@@ -44,7 +44,6 @@ class PhonopyQHA(object):
                  volumes=None,
                  electronic_energies=None,
                  temperatures=None,
-                 electronic_free_energies=None,
                  free_energy=None,
                  cv=None,
                  entropy=None,
@@ -56,8 +55,6 @@ class PhonopyQHA(object):
 
         Notes
         -----
-        Only one of `electronic_energies` and ``electronic_free_energies``
-        has to be given.
         The first two parameters have to be in this order for the backward
         compatibility.
 
@@ -68,19 +65,14 @@ class PhonopyQHA(object):
             dtype='double'
             shape=(volumes,)
         electronic_energies: array_like
-            Electronic energies (U) in eV. Only one of this and
-            electronic_free_energies has to be given.
+            Electronic energies (U) or electronic free energies (U) in eV.
+            It is assumed as formar if ndim==1 and latter if ndim==2.
             dtype='double'
-            shape=(volumes,)
+            shape=(volumes,) or (temperatuers, volumes)
         temperatures: array_like
             Temperatures ascending order (T) in K
             dtype='double'
             shape=(temperatuers,)
-        electronic_free_energies: array_like
-            Electronic free energies (U) in kJ/mol. Only one of this and
-            electronic_energies has to be given.
-            dtype='double'
-            shape=(temperatuers, volumes)
         free_energy: array_like
             Helmholtz free energy (F) kJ/mol
             dtype='double'

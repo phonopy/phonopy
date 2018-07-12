@@ -85,12 +85,12 @@ class BulkModulus(object):
 
 class QHA(object):
     def __init__(self,
-                 volumes, # Angstrom^3
-                 electronic_energies, # eV
+                 volumes,              # Angstrom^3
+                 electronic_energies,  # eV
                  temperatures,
-                 cv,        # J/K/mol
-                 entropy,   # J/K/mol
-                 fe_phonon, # kJ/mol
+                 cv,                   # J/K/mol
+                 entropy,              # J/K/mol
+                 fe_phonon,            # kJ/mol
                  eos='vinet',
                  t_max=None,
                  energy_plot_factor=None):
@@ -145,9 +145,13 @@ class QHA(object):
         parameters = []
         free_energies = []
 
-        for i in range(num_elems):
-            fe = [e + self._fe_phonon[i, j]
-                  for j, e in enumerate(self._electronic_energies)]
+        for i in range(num_elems):  # loop over temperaturs
+            if self._electronic_energies.ndim == 1:
+                el_energy = self._electronic_energies
+            else:
+                el_energy = self._electronic_energies[i]
+            fe = [ph_e + el_e
+                  for ph_e, el_e in zip(self._fe_phonon[i], el_energy)]
             ep = fit_to_eos(self._volumes, fe, self._eos)
 
             if ep is None:
@@ -181,7 +185,7 @@ class QHA(object):
         self._set_thermal_expansion()
         self._set_heat_capacity_P_numerical()
         self._set_heat_capacity_P_polyfit()
-        self._set_gruneisen_parameter() # To be run after thermal expansion.
+        self._set_gruneisen_parameter()  # To be run after thermal expansion.
 
         self._len = len(self._thermal_expansions)
         assert(self._len + 1 == self._num_elems)
@@ -235,7 +239,6 @@ class QHA(object):
                                   thin_number=10,
                                   filename='helmholtz-volume.pdf'):
         import matplotlib.pyplot as plt
-        from matplotlib.font_manager import FontProperties
 
         plt.rcParams['backend'] = 'PDF'
         plt.rcParams['pdf.fonttype'] = 42
@@ -430,8 +433,9 @@ class QHA(object):
         plt.savefig(filename)
         plt.close()
 
-    def write_bulk_modulus_temperature(self,
-                                       filename='bulk_modulus-temperature.dat'):
+    def write_bulk_modulus_temperature(
+            self,
+            filename='bulk_modulus-temperature.dat'):
         w = open(filename, 'w')
         for i in range(self._len):
             w.write("%20.15f %25.15f\n" % (self._temperatures[i],
@@ -489,9 +493,10 @@ class QHA(object):
         else:
             self._plot_heat_capacity_P_polyfit(plt, Z=Z, exp_data=exp_data)
 
-    def plot_pdf_heat_capacity_P_polyfit(self,
-                                         exp_data=None,
-                                         filename='Cp-temperature_polyfit.pdf'):
+    def plot_pdf_heat_capacity_P_polyfit(
+            self,
+            exp_data=None,
+            filename='Cp-temperature_polyfit.pdf'):
         import matplotlib.pyplot as plt
         plt.rcParams['backend'] = 'PDF'
         plt.rcParams['pdf.fonttype'] = 42
@@ -542,7 +547,7 @@ class QHA(object):
                                            self._cp_polyfit[i]))
         w.close()
 
-        w = open(filename_dsdvt, 'w') # GPa
+        w = open(filename_dsdvt, 'w')  # GPa
         for i in range(self._len):
             w.write("%20.15f %20.15f\n" % (self._temperatures[i],
                                            self._dsdv[i] * 1e21 / Avogadro))
@@ -580,7 +585,8 @@ class QHA(object):
         plt.savefig(filename)
         plt.close()
 
-    def write_gruneisen_temperature(self, filename='gruneisen-temperature.dat'):
+    def write_gruneisen_temperature(self,
+                                    filename='gruneisen-temperature.dat'):
         w = open(filename, 'w')
         for i in range(self._len):
             w.write("%20.15f %25.15f\n" % (self._temperatures[i],
@@ -630,8 +636,8 @@ class QHA(object):
                          - e0,
                          'bo', markeredgecolor='b', markersize=3)
                 plt.plot(volume_points,
-                         self._eos(volume_points, * self._equiv_parameters[i]) *
-                         _energy_plot_factor - e0, 'b-')
+                         self._eos(volume_points, * self._equiv_parameters[i])
+                         * _energy_plot_factor - e0, 'b-')
                 thin_index = i
 
         for i, j in enumerate((0, thin_index)):
@@ -721,7 +727,6 @@ class QHA(object):
 
         plt.xlim(self._temperatures[0],
                  self._temperatures[self._len - 1])
-
 
     def _plot_heat_capacity_P_polyfit(
             self,
