@@ -36,20 +36,24 @@ import numpy as np
 from phonopy.units import Avogadro, EvTokJmol, EVAngstromToGPa
 from phonopy.qha.eos import get_eos, fit_to_eos
 
+
 class BulkModulus(object):
     def __init__(self,
                  volumes,
                  electronic_energies,
                  eos='vinet'):
         self._volumes = volumes
-        self._electronic_energies = electronic_energies
+        if electronic_energies.ndim == 1:
+            self._electronic_energies = electronic_energies
+        else:
+            self._electronic_energies = electronic_energies[0]
         self._eos = get_eos(eos)
 
         (self._energy,
          self._bulk_modulus,
          self._b_prime,
          self._volume) = fit_to_eos(volumes,
-                                    electronic_energies,
+                                    self._electronic_energies,
                                     self._eos)
 
     def get_bulk_modulus(self):

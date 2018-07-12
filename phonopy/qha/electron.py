@@ -36,6 +36,16 @@ import numpy as np
 from phonopy.units import Kb
 
 
+def get_free_energy_at_T(tmin, tmax, tstep, eigenvalues, weights, n_electrons):
+    free_energies = []
+    efe = ElectronFreeEnergy(eigenvalues, weights, n_electrons)
+    temperatures = np.arange(tmin, tmax + 1e-8, tstep)
+    for T in temperatures:
+        efe.run(T)
+        free_energies.append(efe.free_energy)
+    return temperatures, free_energies
+
+
 class ElectronFreeEnergy(object):
     """Fixed density-of-states approximation for energy and entropy of electrons
 
@@ -182,12 +192,3 @@ class ElectronFreeEnergy(object):
         de = np.where(de < 100, de, 100.0)  # To avoid overflow
         de = np.where(de > -100, de, -100.0)  # To avoid underflow
         return 1.0 / (1 + np.exp(de))
-
-def get_free_energy_at_T(tmin, tmax, tstep, eigenvalues, weights, n_electrons):
-    free_energy = []
-    efe = ElectronFreeEnergy(eigenvalues, weights, n_electrons)
-    temperatures = np.arange(tmin, tmax + 1e-8, tstep)
-    for T in temperatures:
-        efe.run(T)
-        free_energy.append(efe.free_energy)
-    return temperatures, free_energy

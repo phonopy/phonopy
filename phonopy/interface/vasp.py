@@ -601,6 +601,7 @@ class Vasprun(object):
                 else:
                     return False
 
+
 class VasprunxmlExpat(object):
     def __init__(self, fileptr):
         """Parsing vasprun.xml by Expat
@@ -625,6 +626,7 @@ class VasprunxmlExpat(object):
         self._is_positions = False
         self._is_symbols = False
         self._is_basis = False
+        self._is_volume = False
         self._is_energy = False
         self._is_k_weights = False
         self._is_eigenvalues = False
@@ -652,6 +654,7 @@ class VasprunxmlExpat(object):
         self._all_points = []
         self._all_lattice = []
         self._all_energies = []
+        self._all_volumes = []
         self._born = []
         self._forces = None
         self._stress = None
@@ -678,14 +681,17 @@ class VasprunxmlExpat(object):
         self.NELECT = None
 
     def parse(self, debug=False):
+        import xml.parsers.expat
         if debug:
             self._p.ParseFile(self._fileptr)
             return True
         else:
             try:
                 self._p.ParseFile(self._fileptr)
-            except:
+            except xml.parsers.expat.ExpatError:
                 return False
+            except Exception:
+                raise
             else:
                 return True
 
@@ -739,11 +745,24 @@ class VasprunxmlExpat(object):
     def get_lattice(self):
         return self.lattice
 
+    @property
+    def volume(self):
+        return np.array(self._all_volumes, dtype='double')
+
     def get_symbols(self):
         return self.symbols
 
     @property
     def energies(self):
+        """
+        Returns
+        -------
+        ndarray
+            dtype='double'
+            shape=(structure opt. steps, 3)
+            [free energy TOTEN, energy(sigma->0), entropy T*S EENTRO]
+
+        """
         return np.array(self._all_energies, dtype='double', order='C')
 
     def get_energies(self):
@@ -830,6 +849,7 @@ class VasprunxmlExpat(object):
             self._is_born or
             self._is_positions or
             self._is_basis or
+            self._is_volume or
             self._is_k_weights or
             self._is_generation):
             if name == 'v':
@@ -876,6 +896,9 @@ class VasprunxmlExpat(object):
                 if attrs['name'] == 'NELECT':
                     self._is_i = True
                     self._is_NELECT = True
+                if not self._is_structure and attrs['name'] == 'volume':
+                    self._is_i = True
+                    self._is_volume = True
 
         if self._is_energy and name == 'i':
             self._is_i = True
@@ -1003,6 +1026,8 @@ class VasprunxmlExpat(object):
                 self._is_efermi = False
             if self._is_NELECT:
                 self._is_NELECT = False
+            if self._is_volume:
+                self._is_volume = False
 
         if name == 'rc':
             self._is_rc = False
@@ -1072,6 +1097,9 @@ class VasprunxmlExpat(object):
 
             if self._is_NELECT:
                 self.NELECT = float(data.strip())
+
+            if self._is_volume:
+                self._all_volumes.append(float(data.strip()))
 
         if self._is_c:
             if self._is_symbols:
