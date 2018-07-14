@@ -44,7 +44,21 @@
 /* 'a++' generalized to an arbitrary increment. */
 /* Performs 'a += b' and returns the old value of a. */
 #ifndef SPG_POST_INCREMENT
-#define SPG_POST_INCREMENT(a, b) (a += (b), a - (b))
+#define SPG_POST_INCREMENT(a, b) ((a) += (b), (a) - (b))
+#endif
+
+/* deal with inline */
+#if   defined(_MSC_VER)
+# define OVL_INLINE __forceinline
+#elif defined(__clang__)
+# define OVL_INLINE __inline__ __attribute__((__always_inline__))
+#elif defined(__GNUC__) && \
+    ( defined(__GNUC_STDC_INLINE__) || \
+     (defined(__STDC__) && (__STDC_VERSION__ >= 199901L)) || \
+     (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 2)) )
+# define OVL_INLINE __inline__ __attribute__((__always_inline__))
+#else
+# define OVL_INLINE /* empty */
 #endif
 
 /* Note: data_out and data_in MUST NOT ALIAS. */
@@ -98,6 +112,69 @@ static int check_total_overlap_for_sorted(SPGCONST double lattice[3][3],
                                           const int types_rotated[],
                                           const int num_pos,
                                           const double symprec);
+
+/* Note that some compilers apparently don't like it
+ * when you have a separate prototype with a function
+ * marked inline, so no prototypes here.
+ *
+ * As an aside, yes, significant performance is lost
+ * for large structures if these functions aren't inlined. */
+
+static OVL_INLINE double cartesian_norm(SPGCONST double lat[3][3],
+                                           const double v[3])
+{
+  double temp[3];
+  temp[0] = lat[0][0] * v[0] + lat[0][1] * v[1] + lat[0][2] * v[2];
+  temp[1] = lat[1][0] * v[0] + lat[1][1] * v[1] + lat[1][2] * v[2];
+  temp[2] = lat[2][0] * v[0] + lat[2][1] * v[1] + lat[2][2] * v[2];
+
+  return sqrt(temp[0] * temp[0] +
+              temp[1] * temp[1] +
+              temp[2] * temp[2]);
+}
+
+static OVL_INLINE int Nint(const double a)
+{
+  if (a < 0.0)
+    return (int) (a - 0.5);
+  else
+    return (int) (a + 0.5);
+}
+
+static OVL_INLINE int has_overlap(const double a[3],
+                                  const double b[3],
+                                  SPGCONST double lattice[3][3],
+                                  const double symprec)
+{
+  double v_diff[3];
+  v_diff[0] = a[0] - b[0];
+  v_diff[2] = a[2] - b[2];
+  v_diff[1] = a[1] - b[1];
+
+  v_diff[0] -= Nint(v_diff[0]);
+  v_diff[1] -= Nint(v_diff[1]);
+  v_diff[2] -= Nint(v_diff[2]);
+
+  if (cartesian_norm(lattice, v_diff) <= symprec) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+static OVL_INLINE int has_overlap_with_same_type(const double a[3],
+                                                 const double b[3],
+                                                 const int type_a,
+                                                 const int type_b,
+                                                 SPGCONST double lattice[3][3],
+                                                 const double symprec)
+{
+  if (type_a == type_b) {
+    return has_overlap(a, b, lattice, symprec);
+  } else {
+    return 0;
+  }
+}
 
 /* ------------------------------------- */
 /*          arg-sorting                  */
@@ -477,12 +554,12 @@ static int check_possible_overlap(OverlapChecker *checker,
     /*  upper bounds on 'i'. For now though, brute force is good enough) */
     is_found = 0;
     for (i = 0; i < checker->size; i++) {
-      if (cel_is_overlap_with_same_type(pos_rot,
-                                        checker->pos_sorted[i],
-                                        type_rot,
-                                        checker->types_sorted[i],
-                                        checker->lattice,
-                                        symprec)) {
+      if (has_overlap_with_same_type(pos_rot,
+                                     checker->pos_sorted[i],
+                                     type_rot,
+                                     checker->types_sorted[i],
+                                     checker->lattice,
+                                     symprec)) {
         is_found = 1;
         break;
       }
@@ -540,12 +617,12 @@ static int check_total_overlap_for_sorted(SPGCONST double lattice[3][3],
         continue;
       }
 
-      if (cel_is_overlap_with_same_type(pos_original[i_orig],
-                                        pos_rotated[i_rot],
-                                        types_original[i_orig],
-                                        types_rotated[i_rot],
-                                        lattice,
-                                        symprec)) {
+      if (has_overlap_with_same_type(pos_original[i_orig],
+                                     pos_rotated[i_rot],
+                                     types_original[i_orig],
+                                     types_rotated[i_rot],
+                                     lattice,
+                                     symprec)) {
         found[i_rot] = 1;
         break;
       }
@@ -555,6 +632,8 @@ static int check_total_overlap_for_sorted(SPGCONST double lattice[3][3],
       /* We never hit the 'break'. */
       /* Failure; a position in pos_original does not */
       /* overlap with any position in pos_rotated. */
+      free(found);
+      found = NULL;
       return 0;
     }
   }

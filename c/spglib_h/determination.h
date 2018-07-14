@@ -49,7 +49,7 @@ typedef struct {
 DataContainer * det_determine_all(const Cell * cell,
                                   const int hall_number,
                                   const double symprec,
-                                  const double angle_tolerance);
+                                  const double angle_symprec);
 void det_free_container(DataContainer * container);
 
 #endif

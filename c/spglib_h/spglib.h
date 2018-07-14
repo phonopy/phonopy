@@ -35,6 +35,9 @@
 #ifndef __spglib_H__
 #define __spglib_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /* SPGCONST is used instead of 'const' so to avoid gcc warning. */
 /* However there should be better way than this way.... */
 #ifndef SPGCONST
@@ -481,4 +484,7 @@ void spg_get_neighboring_grid_points(int relative_grid_points[],
 /* Return 0 if failed */
 int spg_niggli_reduce(double lattice[3][3], const double symprec);
 
+#ifdef __cplusplus
+}
+#endif
 #endif
