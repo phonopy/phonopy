@@ -601,16 +601,19 @@ class Vasprun(object):
                 else:
                     return False
 
+
 class VasprunxmlExpat(object):
     def __init__(self, fileptr):
         """Parsing vasprun.xml by Expat
 
-        Args:
-           fileptr: binary stream. Considering compatibility between python2.7
-               and 3.x, it is prepared as follows:
+        Parameters
+        ----------
+        fileptr: binary stream
+            Considering compatibility between python2.7 and 3.x, it is prepared
+            as follows:
 
-               import io
-               io.open(filename, "rb")
+                import io
+                io.open(filename, "rb")
 
         """
 
@@ -623,12 +626,16 @@ class VasprunxmlExpat(object):
         self._is_positions = False
         self._is_symbols = False
         self._is_basis = False
+        self._is_volume = False
         self._is_energy = False
         self._is_k_weights = False
         self._is_eigenvalues = False
         self._is_epsilon = False
         self._is_born = False
         self._is_efermi = False
+        self._is_generation = False
+        self._is_divisions = False
+        self._is_NELECT = False
 
         self._is_v = False
         self._is_i = False
@@ -646,8 +653,8 @@ class VasprunxmlExpat(object):
         self._all_stress = []
         self._all_points = []
         self._all_lattice = []
-        self._symbols = []
         self._all_energies = []
+        self._all_volumes = []
         self._born = []
         self._forces = None
         self._stress = None
@@ -656,8 +663,8 @@ class VasprunxmlExpat(object):
         self._energies = None
         self._epsilon = None
         self._born_atom = None
-        self._efermi = None
         self._k_weights = None
+        self._k_mesh = None
         self._eigenvalues = None
         self._eig_state = [0, 0]
         self._projectors = None
@@ -669,49 +676,160 @@ class VasprunxmlExpat(object):
         self._p.EndElementHandler = self._end_element
         self._p.CharacterDataHandler = self._char_data
 
-    def parse(self):
-        try:
+        self.efermi = None
+        self.symbols = None
+        self.NELECT = None
+
+    def parse(self, debug=False):
+        import xml.parsers.expat
+        if debug:
             self._p.ParseFile(self._fileptr)
-        except:
-            return False
-        else:
             return True
+        else:
+            try:
+                self._p.ParseFile(self._fileptr)
+            except xml.parsers.expat.ExpatError:
+                return False
+            except Exception:
+                raise
+            else:
+                return True
+
+    @property
+    def forces(self):
+        return np.array(self._all_forces, dtype='double', order='C')
 
     def get_forces(self):
-        return np.array(self._all_forces)
+        return self.forces
+
+    @property
+    def stress(self):
+        return np.array(self._all_stress, dtype='double', order='C')
 
     def get_stress(self):
-        return np.array(self._all_stress)
+        return self.stress
+
+    @property
+    def epsilon(self):
+        return np.array(self._epsilon, dtype='double', order='C')
 
     def get_epsilon(self):
-        return np.array(self._epsilon)
+        return self.epsilon
 
     def get_efermi(self):
-        return self._efermi
+        return self.efermi
+
+    @property
+    def born(self):
+        return np.array(self._born, dtype='double', order='C')
 
     def get_born(self):
-        return np.array(self._born)
+        return self.born
+
+    @property
+    def points(self):
+        return np.array(self._all_points, dtype='double', order='C')
 
     def get_points(self):
-        return np.array(self._all_points)
+        return self.points
+
+    @property
+    def lattice(self):
+        """All basis vectors of structure optimization steps
+
+        Each basis vectors are in row vectors (a, b, c)
+
+        """
+        return np.array(self._all_lattice, dtype='double', order='C')
 
     def get_lattice(self):
-        return np.array(self._all_lattice)
+        return self.lattice
+
+    @property
+    def volume(self):
+        return np.array(self._all_volumes, dtype='double')
 
     def get_symbols(self):
-        return self._symbols
+        return self.symbols
+
+    @property
+    def energies(self):
+        """
+        Returns
+        -------
+        ndarray
+            dtype='double'
+            shape=(structure opt. steps, 3)
+            [free energy TOTEN, energy(sigma->0), entropy T*S EENTRO]
+
+        """
+        return np.array(self._all_energies, dtype='double', order='C')
 
     def get_energies(self):
-        return np.array(self._all_energies)
+        return self.energies
+
+    @property
+    def k_mesh(self):
+        return np.array(self._k_mesh, dtype='intc')
+
+    @property
+    def k_weights(self):
+        """
+        Returns
+        -------
+        ndarray
+            Geometric k-point weights. The sum is normalized to 1, i.e.,
+            Number of arms of k-star in BZ divided by number of all k-points.
+            dtype='double'
+            shape=(irreducible_kpoints,)
+
+        """
+
+        return np.array(self._k_weights, dtype='double')
 
     def get_k_weights(self):
-        return self._k_weights
+        return self.k_weights
+
+    @property
+    def k_weights_int(self):
+        """
+        Returns
+        -------
+        ndarray
+            Geometric k-point weights (number of arms of k-star in BZ).
+            dtype='intc'
+            shape=(irreducible_kpoints,)
+
+        """
+        nk = np.prod(self.k_mesh)
+        _weights = self.k_weights * nk
+        weights = np.rint(_weights).astype('intc')
+        assert (np.abs(weights - _weights) < 1e-7 * nk).all()
+        return np.array(weights, dtype='intc')
+
+    @property
+    def eigenvalues(self):
+        """
+        Returns
+        -------
+        ndarray
+            Eigenvalues and occupations (the last index)
+            dtype='double'
+            shape=(spin, kpoints, bands, 2)
+
+        """
+
+        return np.array(self._eigenvalues, dtype='double', order='C')
 
     def get_eigenvalues(self):
-        return self._eigenvalues
+        return self.eigenvalues
+
+    @property
+    def projectors(self):
+        return self._projectors
 
     def get_projectors(self):
-        return self._projectors
+        return self.projectors
 
     def _start_element(self, name, attrs):
         # Used not to collect energies in <scstep>
@@ -730,10 +848,15 @@ class VasprunxmlExpat(object):
             self._is_epsilon or
             self._is_born or
             self._is_positions or
-            self._is_basis,
-            self._is_k_weights):
+            self._is_basis or
+            self._is_volume or
+            self._is_k_weights or
+            self._is_generation):
             if name == 'v':
                 self._is_v = True
+                if 'name' in attrs.keys():
+                    if attrs['name'] == 'divisions':
+                        self._is_divisions = True
 
         if name == 'varray':
             if 'name' in attrs.keys():
@@ -762,11 +885,20 @@ class VasprunxmlExpat(object):
                         self._is_basis = True
                         self._lattice = []
 
+        if name == 'generation':
+            self._is_generation = True
+
         if name == 'i':
             if 'name' in attrs.keys():
                 if attrs['name'] == 'efermi':
                     self._is_i = True
                     self._is_efermi = True
+                if attrs['name'] == 'NELECT':
+                    self._is_i = True
+                    self._is_NELECT = True
+                if not self._is_structure and attrs['name'] == 'volume':
+                    self._is_i = True
+                    self._is_volume = True
 
         if self._is_energy and name == 'i':
             self._is_i = True
@@ -789,6 +921,7 @@ class VasprunxmlExpat(object):
             if 'name' in attrs.keys():
                 if attrs['name'] == 'atoms':
                     self._is_symbols = True
+                    self.symbols = []
 
                 if attrs['name'] == 'born_charges':
                     self._is_born = True
@@ -867,6 +1000,10 @@ class VasprunxmlExpat(object):
             if self._is_epsilon:
                 self._is_epsilon = False
 
+        if name == 'generation':
+            if self._is_generation:
+                self._is_generation = False
+
         if name == 'array':
             if self._is_symbols:
                 self._is_symbols = False
@@ -880,16 +1017,22 @@ class VasprunxmlExpat(object):
 
         if name == 'v':
             self._is_v = False
+            if self._is_divisions:
+                self._is_divisions = False
 
         if name == 'i':
             self._is_i = False
             if self._is_efermi:
                 self._is_efermi = False
+            if self._is_NELECT:
+                self._is_NELECT = False
+            if self._is_volume:
+                self._is_volume = False
 
         if name == 'rc':
             self._is_rc = False
             if self._is_symbols:
-                self._symbols.pop(-1)
+                self.symbols.pop(-1)
 
         if name == 'c':
             self._is_c = False
@@ -941,16 +1084,26 @@ class VasprunxmlExpat(object):
                 self._born_atom.append(
                     [float(x) for x in data.split()])
 
+            if self._is_generation:
+                if self._is_divisions:
+                    self._k_mesh = [int(x) for x in data.split()]
+
         if self._is_i:
             if self._is_energy:
                 self._energies.append(float(data.strip()))
 
             if self._is_efermi:
-                self._efermi = float(data.strip())
+                self.efermi = float(data.strip())
+
+            if self._is_NELECT:
+                self.NELECT = float(data.strip())
+
+            if self._is_volume:
+                self._all_volumes.append(float(data.strip()))
 
         if self._is_c:
             if self._is_symbols:
-                self._symbols.append(str(data.strip()))
+                self.symbols.append(str(data.strip()))
 
         if self._is_r:
             if self._is_projected and not self._is_proj_eig:

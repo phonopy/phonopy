@@ -1,6 +1,7 @@
 import os
 import sys
 import numpy
+import sysconfig
 
 with_openmp = False
 
@@ -26,6 +27,7 @@ if 'setuptools_scm' in sys.modules.keys():
         git_num = None
 
 include_dirs_numpy = [numpy.get_include()]
+
 cc = None
 if 'CC' in os.environ:
     if 'clang' in os.environ['CC']:
@@ -34,9 +36,9 @@ if 'CC' in os.environ:
         cc = 'gcc'
 
 # Workaround Python issue 21121
-import sysconfig
 config_var = sysconfig.get_config_var("CFLAGS")
-if config_var is not None and "-Werror=declaration-after-statement" in config_var:
+if (config_var is not None and
+    "-Werror=declaration-after-statement" in config_var):
     os.environ['CFLAGS'] = config_var.replace(
         "-Werror=declaration-after-statement", "")
 
@@ -51,13 +53,13 @@ sources_phonopy = ['c/_phonopy.c',
                    'c/kspclib/tetrahedron_method.c']
 
 if with_openmp:
-    extra_compile_args_phonopy = ['-fopenmp',]
+    extra_compile_args_phonopy = ['-fopenmp', ]
     if cc == 'gcc':
-        extra_link_args_phonopy = ['-lgomp',]
+        extra_link_args_phonopy = ['-lgomp', ]
     elif cc == 'clang':
         extra_link_args_phonopy = []
     else:
-        extra_link_args_phonopy = ['-lgomp',]
+        extra_link_args_phonopy = ['-lgomp', ]
 else:
     extra_compile_args_phonopy = []
     extra_link_args_phonopy = []
@@ -74,16 +76,16 @@ extension_phonopy = Extension(
 # _spglib extension #
 #####################
 if with_openmp:
-    extra_compile_args_spglib=['-fopenmp',]
+    extra_compile_args_spglib = ['-fopenmp', ]
     if cc == 'gcc':
-        extra_link_args_spglib=['-lgomp',]
+        extra_link_args_spglib = ['-lgomp', ]
     elif cc == 'clang':
-        extra_link_args_spglib=[]
+        extra_link_args_spglib = []
     else:
-        extra_link_args_spglib=['-lgomp',]
+        extra_link_args_spglib = ['-lgomp', ]
 else:
-    extra_compile_args_spglib=[]
-    extra_link_args_spglib=[]
+    extra_compile_args_spglib = []
+    extra_link_args_spglib = []
 
 extension_spglib = Extension(
     'phonopy._spglib',
@@ -128,6 +130,7 @@ scripts_phonopy = ['scripts/phonopy',
                    'scripts/phonopy-FHI-aims',
                    'scripts/phonopy-bandplot',
                    'scripts/phonopy-vasp-born',
+                   'scripts/phonopy-vasp-elfe',
                    'scripts/phonopy-crystal-born',
                    'scripts/phonopy-propplot',
                    'scripts/phonopy-tdplot',
@@ -142,18 +145,19 @@ if __name__ == '__main__':
     with open("phonopy/version.py") as f:
         for line in f:
             if "__version__" in line:
-                for i, num in enumerate(line.split()[2].strip('\"').split('.')):
+                for i, num in enumerate(
+                        line.split()[2].strip('\"').split('.')):
                     version_nums[i] = int(num)
                 break
 
     # # To deploy to pypi/conda by travis-CI
     if os.path.isfile("__nanoversion__.txt"):
         with open('__nanoversion__.txt') as nv:
-            try :
+            try:
                 for line in nv:
                     nanoversion = int(line.strip())
                     break
-            except ValueError :
+            except ValueError:
                 nanoversion = 0
             if nanoversion:
                 version_nums.append(nanoversion)

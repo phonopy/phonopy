@@ -1185,7 +1185,7 @@ static int set_dataset(SpglibDataset * dataset,
   debug_print(" (line %d, %s).\n", __LINE__, __FILE__);
   debug_print_matrix_d3(exstr->bravais->lattice);
 #ifdef SPGDEBUG
-  for (i = 0; i < bravais->size; i++) {
+  for (i = 0; i < exstr->bravais->size; i++) {
     printf("%d: %f %f %f\n",
            exstr->bravais->types[i],
            exstr->bravais->position[i][0],
