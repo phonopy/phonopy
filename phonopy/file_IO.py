@@ -33,12 +33,12 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
-import os
 try:
     from StringIO import StringIO
 except ImportError:
     from io import StringIO
 import numpy as np
+
 
 #
 # FORCE_SETS
@@ -54,18 +54,22 @@ def write_FORCE_SETS(dataset, filename='FORCE_SETS'):
         fp.write("%-5d\n" % len(displacements))
         for count, disp in enumerate(displacements):
             fp.write("\n%-5d\n" % (disp['number'] + 1))
-            fp.write("%20.16f %20.16f %20.16f\n" % (tuple(disp['displacement'])))
+            fp.write("%20.16f %20.16f %20.16f\n" %
+                     (tuple(disp['displacement'])))
 
             for f in forces[count]:
                 fp.write("%15.10f %15.10f %15.10f\n" % (tuple(f)))
+
 
 def parse_FORCE_SETS(is_translational_invariance=False, filename="FORCE_SETS"):
     with open(filename, 'r') as f:
         return _get_set_of_forces(f, is_translational_invariance)
 
+
 def parse_FORCE_SETS_from_strings(strings, is_translational_invariance=False):
     return _get_set_of_forces(StringIO(strings),
                               is_translational_invariance)
+
 
 def _get_set_of_forces(f, is_translational_invariance):
     set_of_forces = []
@@ -96,11 +100,13 @@ def _get_set_of_forces(f, is_translational_invariance):
 
     return dataset
 
+
 def _get_line_ignore_blank(f):
     line = f.readline().strip()
     if line == '':
         line = _get_line_ignore_blank(f)
     return line
+
 
 def collect_forces(f, num_atom, hook, force_pos, word=None):
     for line in f:
@@ -130,6 +136,7 @@ def collect_forces(f, num_atom, hook, force_pos, word=None):
 
     return forces
 
+
 def iter_collect_forces(filename,
                         num_atom,
                         hook,
@@ -153,6 +160,7 @@ def iter_collect_forces(filename,
                              max_iter)
 
         return forces
+
 
 #
 # FORCE_CONSTANTS, force_constants.hdf5
@@ -190,6 +198,7 @@ def write_FORCE_CONSTANTS(force_constants,
                 for vec in force_constants[i][j]:
                     w.write(("%22.15f"*3 + "\n") % tuple(vec))
 
+
 def write_force_constants_to_hdf5(force_constants,
                                   filename='force_constants.hdf5',
                                   p2s_map=None):
@@ -221,6 +230,7 @@ def write_force_constants_to_hdf5(force_constants,
         if p2s_map is not None:
             w.create_dataset('p2s_map', data=p2s_map)
 
+
 def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS",
                           p2s_map=None):
     with open(filename) as fcfile:
@@ -245,6 +255,7 @@ def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS",
         check_force_constants_indices(idx, idx1, p2s_map, filename)
 
         return force_constants
+
 
 def read_force_constants_hdf5(filename="force_constants.hdf5",
                               p2s_map=None):
@@ -272,12 +283,14 @@ def read_force_constants_hdf5(filename="force_constants.hdf5",
                                           filename)
         return fc
 
+
 def check_force_constants_indices(shape, indices, p2s_map, filename):
     if shape[0] != shape[1] and p2s_map is not None:
         if len(p2s_map) != len(indices) or (p2s_map != indices).any():
             text = ("%s file is inconsistent with the calculation setting. "
                     "PRIMITIVE_AXIS may not be set correctly.") % filename
             raise RuntimeError(text)
+
 
 #
 # disp.yaml
@@ -308,9 +321,10 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
                 direct1 = first_atoms['direction']
                 new_first_atoms.append({'number': atom1,
                                         'displacement': disp1,
-                                        'direction':direct1})
+                                        'direction': direct1})
             else:
-                new_first_atoms.append({'number': atom1, 'displacement': disp1})
+                new_first_atoms.append({'number': atom1,
+                                        'displacement': disp1})
         new_dataset['first_atoms'] = new_first_atoms
 
         if return_cell:
@@ -319,10 +333,12 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
         else:
             return new_dataset
 
+
 def write_disp_yaml_from_dataset(dataset, supercell, filename='disp.yaml'):
     displacements = [(d['number'],) + tuple(d['displacement'])
                      for d in dataset['first_atoms']]
     write_disp_yaml(displacements, supercell, filename=filename)
+
 
 def write_disp_yaml(displacements,
                     supercell,
@@ -345,6 +361,7 @@ def write_disp_yaml(displacements,
     with open(filename, 'w') as w:
         w.write("\n".join(text))
 
+
 #
 # DISP (old phonopy displacement format)
 #
@@ -357,6 +374,7 @@ def parse_DISP(filename='DISP'):
                 displacements.append(
                     [int(a[0])-1, float(a[1]), float(a[2]), float(a[3])])
         return displacements
+
 
 #
 # Parse supercell in disp.yaml
@@ -397,6 +415,7 @@ def parse_QPOINTS(filename="QPOINTS"):
             qpoints.append([fracval(x) for x in f.readline().strip().split()])
         return np.array(qpoints)
 
+
 #
 # BORN
 #
@@ -404,14 +423,18 @@ def parse_BORN(primitive, symprec=1e-5, is_symmetry=True, filename="BORN"):
     with open(filename, 'r') as f:
         return _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry)
 
-def parse_BORN_from_strings(strings, primitive, symprec=1e-5, is_symmetry=True):
+
+def parse_BORN_from_strings(strings, primitive,
+                            symprec=1e-5, is_symmetry=True):
     f = StringIO(strings)
     return _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry)
+
 
 def _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry):
     from phonopy.structure.symmetry import Symmetry
     symmetry = Symmetry(primitive, symprec=symprec, is_symmetry=is_symmetry)
     return get_born_parameters(f, primitive, symmetry)
+
 
 def get_born_parameters(f, primitive, prim_symmetry):
     line_arr = f.readline().split()
@@ -479,6 +502,7 @@ def get_born_parameters(f, primitive, prim_symmetry):
 
     return non_anal
 
+
 def _expand_borns(borns, primitive, prim_symmetry):
     from phonopy.harmonic.force_constants import similarity_transformation
 
@@ -486,7 +510,6 @@ def _expand_borns(borns, primitive, prim_symmetry):
     rotations = prim_symmetry.get_symmetry_operations()['rotations']
     map_operations = prim_symmetry.get_map_operations()
     map_atoms = prim_symmetry.get_map_atoms()
-    independent_atoms = prim_symmetry.get_independent_atoms()
 
     for i in range(primitive.get_number_of_atoms()):
         # R_cart = L R L^-1
@@ -496,11 +519,11 @@ def _expand_borns(borns, primitive, prim_symmetry):
         borns[i] = similarity_transformation(rot_cartesian.transpose(),
                                              borns[map_atoms[i]])
 
+
 #
 # e-v.dat, thermal_properties.yaml
 #
-EQUIVALENCE_TOLERANCE = 1e-5
-def read_thermal_properties_yaml(filenames, factor=1.0):
+def read_thermal_properties_yaml(filenames):
     import yaml
     try:
         from yaml import CLoader as Loader
@@ -508,73 +531,65 @@ def read_thermal_properties_yaml(filenames, factor=1.0):
         from yaml import Loader
 
     thermal_properties = []
+    volumes = []
     num_modes = []
     num_integrated_modes = []
     for filename in filenames:
         with open(filename) as f:
-            tp_yaml = yaml.load(f.read(), Loader=Loader)
+            tp_yaml = yaml.load(f, Loader=Loader)
             thermal_properties.append(tp_yaml['thermal_properties'])
             if 'num_modes' in tp_yaml and 'num_integrated_modes' in tp_yaml:
                 num_modes.append(tp_yaml['num_modes'])
                 num_integrated_modes.append(tp_yaml['num_integrated_modes'])
+            if 'volume' in tp_yaml:
+                volumes.append(tp_yaml['volume'])
 
     temperatures = [v['temperature'] for v in thermal_properties[0]]
     temp = []
     cv = []
     entropy = []
     fe_phonon = []
-    for i, _ in enumerate(filenames):
-        temp.append([v['temperature'] for v in thermal_properties[i]])
-        cv.append([v['heat_capacity'] for v in thermal_properties[i]])
-        entropy.append([v['entropy'] for v in thermal_properties[i]])
-        fe_phonon.append([v['free_energy'] for v in thermal_properties[i]])
+    for i, tp in enumerate(thermal_properties):
+        temp.append([v['temperature'] for v in tp])
+        if not np.allclose(temperatures, temp):
+            print('')
+            print("Check your input files")
+            print("Disagreement of temperature range or step")
+            for t, fname in zip(temp, filenames):
+                print("%s: Range [ %d, %d ], Step %f" %
+                      (fname, int(t[0]), int(t[-1]), t[1] - t[0]))
+            print('')
+            print("Stop phonopy-qha")
+            raise RuntimeError
+        cv.append([v['heat_capacity'] for v in tp])
+        entropy.append([v['entropy'] for v in tp])
+        fe_phonon.append([v['free_energy'] for v in tp])
+
+    # shape=(temperatures, volumes)
+    cv = np.array(cv).T
+    entropy = np.array(entropy).T
+    fe_phonon = np.array(fe_phonon).T
+
+    return (temperatures, cv, entropy, fe_phonon, volumes, num_modes,
+            num_integrated_modes)
 
 
-    if _is_temperatures_match(temp):
-        cv = np.array(cv).T * factor
-        entropy = np.array(entropy).T * factor
-        fe_phonon = np.array(fe_phonon).T * factor
-    else:
-        print('')
-        print("Check your input files")
-        print("Disagreement of temperature range or step")
-        for t, fname in zip(temp, filenames):
-            print("%s: Range [ %d, %d ], Step %f" %
-                  (fname, int(t[0]), int(t[-1]), t[1] - t[0]))
-        print('')
-        print("Stop phonopy-qha")
+def read_v_e(filename):
+    data = _parse_QHA_data(filename)
+    if data.shape[1] != 2:
+        print("File format of %s is incorrect for reading e-v data." %
+              filename)
         raise RuntimeError
-
-    return temperatures, cv, entropy, fe_phonon, num_modes, num_integrated_modes
-
-def read_cp(filename):
-    return _parse_QHA_data(filename)
-
-def read_ve(filename):
-    return _parse_QHA_data(filename)
-
-def read_v_e(filename,
-             factor=1.0,
-             volume_factor=1.0,
-             pressure=0.0):
-    from phonopy.units import EVAngstromToGPa
-
-    volumes, electronic_energies = _parse_QHA_data(filename)
-    volumes *= volume_factor * factor
-    electronic_energies *= factor
-    electronic_energies += volumes * pressure / EVAngstromToGPa
-
+    volumes, electronic_energies = data.T
     return volumes, electronic_energies
 
-def _is_temperatures_match(temperatures):
-    for t in temperatures:
-        if len(t) != len(temperatures[0]):
-            return False
-        if (abs(t[0] - temperatures[0][0]) > EQUIVALENCE_TOLERANCE or
-            abs(t[-1] - temperatures[0][-1]) > EQUIVALENCE_TOLERANCE):
-            return False
 
-    return True
+def read_efe(filename):
+    data = _parse_QHA_data(filename)
+    temperatures = data[:, 0]
+    free_energies = data[:, 1:]
+    return temperatures, free_energies
+
 
 def _parse_QHA_data(filename):
     data = []
@@ -586,4 +601,4 @@ def _parse_QHA_data(filename):
                 data.append([float(x) for x in line.split('#')[0].split()])
             else:
                 data.append([float(x) for x in line.split()])
-        return np.array(data).transpose()
+        return np.array(data)

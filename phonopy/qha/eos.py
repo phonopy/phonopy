@@ -36,7 +36,6 @@ import sys
 import numpy as np
 
 def get_eos(eos):
-
     # Third-order Birch-Murnaghan EOS
     def birch_murnaghan(v, *p):
         """
@@ -85,20 +84,32 @@ def get_eos(eos):
 
 def fit_to_eos(volumes, fe, eos):
     fit = EOSFit(volumes, fe, eos)
-    fit.run([fe[len(fe) // 2], 1.0, 4.0, volumes[len(volumes) // 2]])
-    ev = fit.get_volume()
-    ee = fit.get_energy()
-    eb = fit.get_bulk_modulus()
-    ebp = fit.get_b_prime()
-    return ee, eb, ebp, ev
+    try:
+        fit.fit([fe[len(fe) // 2], 1.0, 4.0, volumes[len(volumes) // 2]])
+    except:
+        pass
+    return fit.parameters
 
 class EOSFit(object):
+    """
+
+    Attributes
+    ----------
+    parameters: ndarray
+        Fitting parameters to EOS corresponding to [energy, B, B', V].
+        dtype=float
+        shape=(4,)
+
+    """
+
     def __init__(self, volume, energy, eos):
         self._energy = np.array(energy)
         self._volume = np.array(volume)
         self._eos = eos
 
-    def run(self, initial_parameter):
+        self.parameters = None
+
+    def fit(self, initial_parameters):
         import sys
         import logging
         import warnings
@@ -112,54 +123,19 @@ class EOSFit(object):
 
         warnings.filterwarnings('error')
 
-        residuals = lambda p, eos, v, e: eos(v, *p) - e
+        def residuals(p, eos, v, e):
+            return eos(v, *p) - e
 
         try:
             result = leastsq(residuals,
-                             initial_parameter,
+                             initial_parameters,
                              args=(self._eos, self._volume, self._energy),
                              full_output=1)
-            #
-            # leastsq is more stable than curve_fit.
-            # The reason is unclear, maybe the default parameters used for
-            # leastsq are different though curve_fit seems to call curve_fit.
-            #
-            # result = curve_fit(self._eos, self._volume, self._energy,
-            #                    p0=initial_parameter)
-
-        except (RuntimeError,
-                RuntimeWarning,
-                scipy.optimize.optimize.OptimizeWarning):
-            logging.exception('')
-            self._parameters = None
-            return sys.exc_info()
+        except RuntimeError:
+            logging.exception('Fitting to EOS failed.')
+            raise
+        except (RuntimeWarning, scipy.optimize.optimize.OptimizeWarning):
+            logging.exception('Difficulty in fitting to EOS.')
+            raise
         else:
-            self._parameters = result[0]
-            return True
-
-    def get_energy(self):
-        if self._parameters is None:
-            return None
-        else:
-            return self._parameters[0]
-
-    def get_volume(self):
-        if self._parameters is None:
-            return None
-        else:
-            return self._parameters[3]
-
-    def get_bulk_modulus(self):
-        if self._parameters is None:
-            return None
-        else:
-            return self._parameters[1]
-
-    def get_b_prime(self):
-        if self._parameters is None:
-            return None
-        else:
-            return self._parameters[2]
-
-    def get_parameters(self):
-        return self._parameters
+            self.parameters = result[0]

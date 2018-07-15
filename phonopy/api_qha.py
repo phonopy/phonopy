@@ -32,38 +32,72 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from phonopy.qha import *
+from phonopy.qha import BulkModulus, QHA
 from phonopy.units import EvTokJmol, EVAngstromToGPa
 
 class PhonopyQHA(object):
+    """PhonopyQHA API
+
+    """
+
     def __init__(self,
-                 volumes,
-                 electronic_energies,
-                 eos='vinet',
+                 volumes=None,
+                 electronic_energies=None,
                  temperatures=None,
                  free_energy=None,
                  cv=None,
                  entropy=None,
+                 eos='vinet',
                  t_max=None,
                  energy_plot_factor=None,
                  verbose=False):
         """
-        The following two have the same number of elements
-          volumes: Unit cell volumes (V) in Angstrom^3
-          electronic_energies: Electronic energies (U) in eV
 
-        The following four have the same number of elements
-          temperatures: Temperatures ascending order (T) in K
-          cv: Heat capacity at constant volume in J/K/mol
-          entropy: Entropy at constant volume (S) J/K/mol
-          free_energy: Helmholtz free energy (F) kJ/mol
+        Notes
+        -----
+        The first two parameters have to be in this order for the backward
+        compatibility.
 
-        eos: Equation of state used for fitting F vs V
-             'vinet', 'murnaghan' or 'birch_murnaghan'
-        tmax: Maximum temperature to be calculated. This has to be not
-              greater than the temperature of the third element from the
-              end of 'temperatre' elements. If max_t=None, the temperature
-              of the third element from the end is used.
+        Parameters
+        ----------
+        volumes: array_like
+            Unit cell volumes (V) in Angstrom^3
+            dtype='double'
+            shape=(volumes,)
+        electronic_energies: array_like
+            Electronic energies (U) or electronic free energies (U) in eV.
+            It is assumed as formar if ndim==1 and latter if ndim==2.
+            dtype='double'
+            shape=(volumes,) or (temperatuers, volumes)
+        temperatures: array_like
+            Temperatures ascending order (T) in K
+            dtype='double'
+            shape=(temperatuers,)
+        free_energy: array_like
+            Helmholtz free energy (F) kJ/mol
+            dtype='double'
+            shape=(temperatuers, volumes)
+        cv: array_like
+            Heat capacity at constant volume in J/K/mol
+            dtype='double'
+            shape=(temperatuers, volumes)
+        entropy: array_like
+            Entropy at constant volume (S) J/K/mol
+            dtype='double'
+            shape=(temperatuers, volumes)
+        eos: str
+            Equation of state used for fitting F vs V.
+            'vinet', 'murnaghan' or 'birch_murnaghan'.
+        t_max: float
+            Maximum temperature to be calculated. This has to be not
+            greater than the temperature of the third element from the
+            end of 'temperatre' elements. If max_t=None, the temperature
+            of the third element from the end is used.
+        energy_plot_factor: float
+            This value is multiplied to energy like values only in plotting.
+        verbose: boolean
+            Show log or not.
+
         """
         self._bulk_modulus = BulkModulus(volumes,
                                          electronic_energies,
@@ -82,32 +116,36 @@ class PhonopyQHA(object):
             self._qha.run(verbose=verbose)
 
     def get_bulk_modulus(self):
+        """Returns bulk modulus computed without phonon free energy"""
         return self._bulk_modulus.get_bulk_modulus()
-            
+
     def get_bulk_modulus_parameters(self):
-        """Returns bulk modulus
-        (lowest energy,
-         bulk modulus,
-         b_prime,
-         equilibrium volume)
+        """
+
+        Returns bulk modulus EOS fitting parameters computed without
+        phonon free energy
+
+        (lowest energy, bulk modulus, b_prime, equilibrium volume)
+
         """
         return self._bulk_modulus.get_parameters()
-    
+
     def plot_bulk_modulus(self):
+        """Returns matplotlib.pyplot of bulk modulus fitting curve"""
         return self._bulk_modulus.plot()
 
-    def get_eos(self):
-        return self._qha.get_eos()
-
     def plot_qha(self, thin_number=10, volume_temp_exp=None):
+        """Returns matplotlib.pyplot of QHA fitting curves at temperatures"""
         return self._qha.plot(thin_number=thin_number,
                               volume_temp_exp=volume_temp_exp)
 
     def get_helmholtz_volume(self):
-        """Returns free_energies
-        
-        free_energies: Free energies calculated at temperatures and volumes
-                       [temperatures][volumes]
+        """Returns free_energies at volumes
+
+        free_energies: list of list of float
+            Free energies calculated at temperatures and volumes
+            shape=(temperatures, volumes)
+
         """
         return self._qha.get_helmholtz_volume()
 
@@ -221,7 +259,7 @@ class PhonopyQHA(object):
 
     def get_heat_capacity_P_numerical(self):
         """Returns heat capacities at constant pressure at temperatures
-        
+
         These values are calculated by -T*d^2G/dT^2.
         """
         return self._qha.get_heat_capacity_P_numerical()

@@ -33,26 +33,33 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.units import *
+from phonopy.units import Kb, THzToEv, EvTokJmol
 
-def mode_cv(temp, freqs): # freqs (eV)
+
+def mode_cv(temp, freqs):  # freqs (eV)
     x = freqs / Kb / temp
-    expVal = np.exp(x) 
+    expVal = np.exp(x)
     return Kb * x ** 2 * expVal / (expVal - 1.0) ** 2
 
+
 def mode_F(temp, freqs):
-    return Kb * temp * np.log(1.0 - np.exp((- freqs) / (Kb * temp))) + freqs / 2
+    return (Kb * temp * np.log(1.0 - np.exp((- freqs) / (Kb * temp)))
+            + freqs / 2)
+
 
 def mode_S(temp, freqs):
     val = freqs / (2 * Kb * temp)
-    return (1 / (2 * temp) * freqs * np.cosh(val) / np.sinh(val) -
-            Kb * np.log(2 * np.sinh(val)))
+    return (1 / (2 * temp) * freqs * np.cosh(val) / np.sinh(val)
+            - Kb * np.log(2 * np.sinh(val)))
+
 
 def mode_ZPE(temp, freqs):
     return freqs / 2
 
+
 def mode_zero(temp, freqs):
     return 0
+
 
 class ThermalPropertiesBase(object):
     def __init__(self,
@@ -134,8 +141,9 @@ class ThermalPropertiesBase(object):
                 for f, fracs in zip(freqs, eigvecs2.T):
                     if f > 0:
                         t_property += func(t, f) * w * fracs
-    
+
             return t_property
+
 
 class ThermalProperties(ThermalPropertiesBase):
     def __init__(self,
@@ -172,7 +180,7 @@ class ThermalProperties(ThermalPropertiesBase):
     def get_number_of_modes(self):
         """Number of phonon modes on sampling mesh"""
         return self._num_modes
-        
+
     def get_zero_point_energy(self):
         return self._zero_point_energy
 
@@ -223,8 +231,8 @@ class ThermalProperties(ThermalPropertiesBase):
 
     def run(self, t_step=None, t_max=None, t_min=None):
         import warnings
-        if (t_step is not None or 
-            t_max is not None or 
+        if (t_step is not None or
+            t_max is not None or
             t_min is not None):
             warnings.warn("keywords for this method are depreciated. "
                           "Use \'set_temperature_range\' or "
@@ -236,12 +244,11 @@ class ThermalProperties(ThermalPropertiesBase):
             self._run_c_thermal_properties()
         except ImportError:
             self._run_py_thermal_properties()
-        
+
         if self._is_projection:
             fe = []
             entropy = []
             cv = []
-            energy = []
             for t in self._temperatures:
                 fe.append(self.get_free_energy(t))
                 entropy.append(self.get_entropy(t) * 1000,)
@@ -256,8 +263,8 @@ class ThermalProperties(ThermalPropertiesBase):
     def get_thermal_properties(self):
         return self._thermal_properties
 
-    def write_yaml(self, filename='thermal_properties.yaml'):
-        lines = self._get_tp_yaml_lines()
+    def write_yaml(self, filename='thermal_properties.yaml', volume=None):
+        lines = self._get_tp_yaml_lines(volume=volume)
         if self._is_projection:
             lines += self._get_projected_tp_yaml_lines()
         with open(filename, 'w') as f:
@@ -272,7 +279,7 @@ class ThermalProperties(ThermalPropertiesBase):
                                   self._temperatures,
                                   self._frequencies,
                                   self._weights)
-        
+
         fe = props[:, 0] * EvTokJmol + self._zero_point_energy
         entropy = props[:, 1] * EvTokJmol * 1000
         cv = props[:, 2] * EvTokJmol * 1000
@@ -282,19 +289,18 @@ class ThermalProperties(ThermalPropertiesBase):
         fe = []
         entropy = []
         cv = []
-        energy = []
         for t in self._temperatures:
             props = self._get_py_thermal_properties(t)
             fe.append(props[0])
             entropy.append(props[1] * 1000)
             cv.append(props[2] * 1000)
-        self._thermal_properties = [self._temperatures,
-                                    np.array(fe, dtype='double', order='C'),
-                                    np.array(entropy, dtype='double', order='C'),
-                                    np.array(cv, dtype='double', order='C')]
+        self._thermal_properties = [
+            self._temperatures,
+            np.array(fe, dtype='double', order='C'),
+            np.array(entropy, dtype='double', order='C'),
+            np.array(cv, dtype='double', order='C')]
 
-        
-    def _get_tp_yaml_lines(self):
+    def _get_tp_yaml_lines(self, volume=None):
         lines = []
         lines.append("# Thermal properties / unit cell (natom)")
         lines.append("")
@@ -304,7 +310,9 @@ class ThermalProperties(ThermalPropertiesBase):
         lines.append("  entropy:       J/K/mol")
         lines.append("  heat_capacity: J/K/mol")
         lines.append("")
-        lines.append("natom: %5d" % (self._frequencies[0].shape[0] // 3))
+        lines.append("natom: %-5d" % (self._frequencies[0].shape[0] // 3))
+        if volume is not None:
+            lines.append("volume: %-20.10f" % volume)
         if self._cutoff_frequency:
             lines.append("cutoff_frequency: %8.3f" % self._cutoff_frequency)
         lines.append("num_modes: %d" % self._num_modes)
@@ -312,10 +320,11 @@ class ThermalProperties(ThermalPropertiesBase):
         if self._band_indices is not None:
             bi = self._band_indices + 1
             lines.append("band_index: [ " + ("%d, " * (len(bi) - 1)) %
-                    tuple(bi[:-1]) + ("%d ]" % bi[-1]))
+                         tuple(bi[:-1]) + ("%d ]" % bi[-1]))
         lines.append("")
         lines.append("zero_point_energy: %15.7f" % self._zero_point_energy)
-        lines.append("high_T_entropy:    %15.7f" % (self._high_T_entropy * 1000))
+        lines.append("high_T_entropy:    %15.7f" %
+                     (self._high_T_entropy * 1000))
         lines.append("")
         lines.append("thermal_properties:")
         temperatures, fe, entropy, cv = self._thermal_properties
@@ -325,7 +334,7 @@ class ThermalProperties(ThermalPropertiesBase):
             lines.append("  entropy:       %15.7f" % entropy[i])
             # Sometimes 'nan' of C_V is returned at low temperature.
             if np.isnan(cv[i]):
-                lines.append("  heat_capacity: %15.7f" % 0 )
+                lines.append("  heat_capacity: %15.7f" % 0)
             else:
                 lines.append("  heat_capacity: %15.7f" % cv[i])
             lines.append("  energy:        %15.7f" %
@@ -368,7 +377,7 @@ class ThermalProperties(ThermalPropertiesBase):
             line += " ] # %13.7f" % np.sum(energy)
             lines.append(line)
         return lines
-            
+
     def _get_py_thermal_properties(self, t):
         return (self.get_free_energy(t),
                 self.get_entropy(t),

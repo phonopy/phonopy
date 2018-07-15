@@ -36,14 +36,17 @@ import numpy as np
 import phonopy.structure.spglib as spg
 from phonopy.structure.atoms import PhonopyAtoms
 
+
 def get_supercell(unitcell, supercell_matrix, is_old_style=True, symprec=1e-5):
     return Supercell(unitcell,
                      supercell_matrix,
                      is_old_style=is_old_style,
                      symprec=symprec)
 
+
 def get_primitive(supercell, primitive_frame, symprec=1e-5):
     return Primitive(supercell, primitive_frame, symprec=symprec)
+
 
 def print_cell(cell, mapping=None, stars=None):
     symbols = cell.get_chemical_symbols()
@@ -71,6 +74,7 @@ def print_cell(cell, mapping=None, stars=None):
             print(line)
         else:
             print(line + " > %d" % (mapping[i] + 1))
+
 
 class Supercell(PhonopyAtoms):
     """Build supercell from supercell matrix and unit cell
@@ -206,7 +210,9 @@ class Supercell(PhonopyAtoms):
 
         # Index of a axis runs fastest for creating lattice points.
         # See numpy.meshgrid document for the complicated index order for 3D
-        b, c, a = np.meshgrid(range(multi[1]), range(multi[2]), range(multi[0]))
+        b, c, a = np.meshgrid(range(multi[1]),
+                              range(multi[2]),
+                              range(multi[0]))
         lattice_points = np.c_[a.ravel(), b.ravel(), c.ravel()]
 
         if P is not None:
@@ -255,15 +261,16 @@ class Supercell(PhonopyAtoms):
 
         m = np.array(supercell_matrix)
         axes = np.array([[0, 0, 0],
-                         m[:,0],
-                         m[:,1],
-                         m[:,2],
-                         m[:,1] + m[:,2],
-                         m[:,2] + m[:,0],
-                         m[:,0] + m[:,1],
-                         m[:,0] + m[:,1] + m[:,2]])
-        frame = [max(axes[:,i]) - min(axes[:,i]) for i in (0,1,2)]
+                         m[:, 0],
+                         m[:, 1],
+                         m[:, 2],
+                         m[:, 1] + m[:, 2],
+                         m[:, 2] + m[:, 0],
+                         m[:, 0] + m[:, 1],
+                         m[:, 0] + m[:, 1] + m[:, 2]])
+        frame = [max(axes[:, i]) - min(axes[:, i]) for i in (0, 1, 2)]
         return frame
+
 
 class Primitive(PhonopyAtoms):
     """Primitive cell
@@ -273,7 +280,7 @@ class Primitive(PhonopyAtoms):
     supercell: PhonopyAtoms
         Supercell
     primitive_matrix: list of list or ndarray
-        Transformation matrix to transform supercell to primitive cell such as::
+        Transformation matrix to transform supercell to primitive cell such as:
            np.dot(primitive_matrix.T, supercell.get_cell())
         shape=(3,3)
     symprec: float, optional
@@ -374,13 +381,14 @@ class Primitive(PhonopyAtoms):
             np.array(supercell.get_cell().T, dtype='double', order='C'),
             self._symprec)
 
+
 def _trim_cell(relative_axes, cell, symprec):
     """Trim overlapping atoms
 
     Parameters
     ----------
     relative_axes: ndarray
-        Transformation matrix to transform supercell to a smaller cell such as::
+        Transformation matrix to transform supercell to a smaller cell such as:
             trimmed_lattice = np.dot(relative_axes.T, cell.get_cell())
         shape=(3,3)
     cell: PhonopyAtoms
@@ -413,7 +421,8 @@ def _trim_cell(relative_axes, cell, symprec):
         trimmed_magmoms = []
     extracted_atoms = []
 
-    positions_in_new_lattice = np.dot(positions, np.linalg.inv(relative_axes).T)
+    positions_in_new_lattice = np.dot(positions,
+                                      np.linalg.inv(relative_axes).T)
     positions_in_new_lattice -= np.floor(positions_in_new_lattice)
     trimmed_positions = np.zeros_like(positions_in_new_lattice)
     num_atom = 0
@@ -459,6 +468,7 @@ def _trim_cell(relative_axes, cell, symprec):
     else:
         return False
 
+
 #
 # Delaunay and Niggli reductions
 #
@@ -492,6 +502,7 @@ def get_reduced_bases(lattice,
     else:
         return spg.delaunay_reduce(lattice, eps=tolerance)
 
+
 def _get_smallest_vectors(supercell, primitive, symprec=1e-5):
     p2s_map = primitive.get_primitive_to_supercell_map()
     supercell_pos = supercell.get_scaled_positions()
@@ -505,6 +516,7 @@ def _get_smallest_vectors(supercell, primitive, symprec=1e-5):
     assert (np.abs(trans_mat_float - trans_mat) < 1e-8).all()
     svecs = np.array(np.dot(svecs, trans_mat), dtype='double', order='C')
     return svecs, multi
+
 
 def get_smallest_vectors(supercell_bases,
                          supercell_pos,
@@ -574,12 +586,13 @@ def get_smallest_vectors(supercell_bases,
     primitive_fracs -= np.rint(primitive_fracs)
     primitive_fracs = np.array(primitive_fracs, dtype='double', order='C')
 
-    # For each vector, we will need to consider all nearby images in the reduced bases.
-    lattice_points = np.array([
-        [i, j, k] for i in (-1, 0, 1)
-                  for j in (-1, 0, 1)
-                  for k in (-1, 0, 1)
-    ], dtype='intc', order='C')
+    # For each vector, we will need to consider all nearby images in the
+    # reduced bases.
+    lattice_points = np.array([[i, j, k]
+                               for i in (-1, 0, 1)
+                               for j in (-1, 0, 1)
+                               for k in (-1, 0, 1)],
+                              dtype='intc', order='C')
 
     # Here's where things get interesting.
     # We want to avoid manually iterating over all possible pairings of
@@ -641,7 +654,8 @@ def get_smallest_vectors(supercell_bases,
     # # We will gather the shortest ones from each list of 27 vectors.
     # shortest_vectors = np.zeros_like(candidate_vectors,
     #                                  dtype='double', order='C')
-    # multiplicity = np.zeros(shortest_vectors.shape[:2], dtype='intc', order='C')
+    # multiplicity = np.zeros(shortest_vectors.shape[:2], dtype='intc',
+    #                         order='C')
 
     # import phonopy._phonopy as phonoc
     # phonoc.gsv_copy_smallest_vectors(shortest_vectors,
@@ -652,10 +666,11 @@ def get_smallest_vectors(supercell_bases,
 
     return shortest_vectors, multiplicity
 
-def compute_all_sg_permutations(positions, # scaled positions
-                                rotations, # scaled
-                                translations, # scaled
-                                lattice, # column vectors
+
+def compute_all_sg_permutations(positions,  # scaled positions
+                                rotations,  # scaled
+                                translations,  # scaled
+                                lattice,  # column vectors
                                 symprec):
     """Compute a permutation for every space group operation.
 
@@ -665,7 +680,7 @@ def compute_all_sg_permutations(positions, # scaled positions
 
     """
 
-    out = [] # Finally the shape is fixed as (num_sym, num_pos_of_supercell).
+    out = []  # Finally the shape is fixed as (num_sym, num_pos_of_supercell).
     for (sym, t) in zip(rotations, translations):
         rotated_positions = np.dot(positions, sym.T) + t
         out.append(compute_permutation_for_rotation(positions,
@@ -674,9 +689,10 @@ def compute_all_sg_permutations(positions, # scaled positions
                                                     symprec))
     return np.array(out, dtype='intc', order='C')
 
-def compute_permutation_for_rotation(positions_a, # scaled positions
+
+def compute_permutation_for_rotation(positions_a,  # scaled positions
                                      positions_b,
-                                     lattice, # column vectors
+                                     lattice,  # column vectors
                                      symprec):
     """Get the overall permutation such that
 
@@ -720,9 +736,10 @@ def compute_permutation_for_rotation(positions_a, # scaled positions
     # 2. Associativity:   x[p][q] == x[p[q]]
     return perm_a[perm_between][np.argsort(perm_b)]
 
-def _compute_permutation_c(positions_a, # scaled positions
+
+def _compute_permutation_c(positions_a,  # scaled positions
                            positions_b,
-                           lattice, # column vectors
+                           lattice,  # column vectors
                            symprec):
     """Version of '_compute_permutation_for_rotation' which just directly
     calls the C function, without any conditioning of the data.
@@ -766,27 +783,27 @@ def _compute_permutation_c(positions_a, # scaled positions
 
     return permutation
 
+
 #
 # Other tiny tools
 #
 def get_angles(lattice):
     a, b, c = get_cell_parameters(lattice)
     alpha = np.arccos(np.vdot(lattice[1], lattice[2]) / b / c) / np.pi * 180
-    beta  = np.arccos(np.vdot(lattice[2], lattice[0]) / c / a) / np.pi * 180
+    beta = np.arccos(np.vdot(lattice[2], lattice[0]) / c / a) / np.pi * 180
     gamma = np.arccos(np.vdot(lattice[0], lattice[1]) / a / b) / np.pi * 180
     return alpha, beta, gamma
 
+
 def get_cell_parameters(lattice):
-    return np.sqrt(np.dot (lattice, lattice.transpose()).diagonal())
+    return np.sqrt(np.dot(lattice, lattice.transpose()).diagonal())
+
 
 def get_cell_matrix(a, b, c, alpha, beta, gamma):
     # These follow 'matrix_lattice_init' in matrix.c of GDIS
     alpha *= np.pi / 180
     beta *= np.pi / 180
     gamma *= np.pi / 180
-    a1 = a
-    a2 = 0.0
-    a3 = 0.0
     b1 = np.cos(gamma)
     b2 = np.sin(gamma)
     b3 = 0.0
@@ -799,6 +816,7 @@ def get_cell_matrix(a, b, c, alpha, beta, gamma):
     lattice[2] = np.array([c1, c2, c3]) * c
     return lattice
 
+
 def determinant(m):
     return (m[0][0] * m[1][1] * m[2][2] -
             m[0][0] * m[1][2] * m[2][1] +
@@ -806,6 +824,7 @@ def determinant(m):
             m[0][1] * m[1][0] * m[2][2] +
             m[0][2] * m[1][0] * m[2][1] -
             m[0][2] * m[1][1] * m[2][0])
+
 
 #
 # Smith normal form for 3x3 integer matrix
@@ -916,7 +935,7 @@ class SNF3x3(object):
 
     def _search_first_pivot(self):
         A = self._A
-        for i in range(3): # column index
+        for i in range(3):  # column index
             if A[i, 0] != 0:
                 return i
 
@@ -1031,9 +1050,11 @@ class SNF3x3(object):
         self._L.append(L.copy())
         self._A = np.dot(L, self._A)
 
+
 def xgcd(vals):
     _xgcd = Xgcd(vals)
     return _xgcd.run()
+
 
 class Xgcd(object):
     def __init__(self, vals):

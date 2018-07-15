@@ -724,6 +724,7 @@ get_space_group_operations(SPGCONST PointSymmetry *lattice_sym,
   return symmetry;
 }
 
+/* lattice_sym.size = 0 is returned if failed. */
 static PointSymmetry get_lattice_symmetry(SPGCONST double cell_lattice[3][3],
                                           const double symprec,
                                           const double angle_symprec)
@@ -761,10 +762,13 @@ static PointSymmetry get_lattice_symmetry(SPGCONST double cell_lattice[3][3],
 
           if (is_identity_metric(metric, metric_orig, symprec, angle_tol)) {
             if (num_sym > 47) {
-              angle_tol *= ANGLE_REDUCE_RATE;
               warning_print("spglib: Too many lattice symmetries was found.\n");
-              warning_print("        Reduce angle tolerance to %f", angle_tol);
-              warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
+              if (angle_tol > 0) {
+                angle_tol *= ANGLE_REDUCE_RATE;
+                warning_print(
+                  "        Reduce angle tolerance to %f\n", angle_tol);
+              }
+              warning_print("        (line %d, %s).\n", __LINE__, __FILE__);
               goto next_attempt;
             }
 
