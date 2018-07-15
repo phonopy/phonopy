@@ -56,19 +56,8 @@ def get_qpoints(mesh_numbers,
                     rotations=rotations,
                     is_mesh_symmetry=is_mesh_symmetry)
 
-    return gp.qpoints, gp.weights()
+    return gp.qpoints, gp.weights
 
-# def extract_ir_grid_points(grid_mapping_table):
-#     ir_gp = []
-#     weights = np.zeros_like(grid_mapping_table)
-#     for i, gp in enumerate(grid_mapping_table):
-#         if i == gp:
-#             ir_gp.append(i)
-#         weights[gp]  += 1
-#     ir_grid_points = np.array(ir_gp, dtype='intc')
-#     ir_weights = np.array(weights[ir_grid_points], dtype='intc')
-
-#     return ir_grid_points, ir_weights
 
 def extract_ir_grid_points(grid_mapping_table):
     ir_grid_points = np.array(np.unique(grid_mapping_table), dtype='intc')
@@ -78,6 +67,7 @@ def extract_ir_grid_points(grid_mapping_table):
     ir_weights = np.array(weights[ir_grid_points], dtype='intc')
 
     return ir_grid_points, ir_weights
+
 
 class GridPoints(object):
     """Class to generate irreducible grid points on uniform mesh grids
@@ -244,11 +234,11 @@ class GridPoints(object):
 
         diffby2 = np.abs(shift * 2 - np.rint(shift * 2))
 
-        if (diffby2 < 0.01).all(): # zero/half shift
+        if (diffby2 < 0.01).all():  # zero or half shift
             diff = np.abs(shift - np.rint(shift))
             if is_gamma_center:
                 is_shift = list(diff > 0.1)
-            else: # Monkhorst-pack
+            else:  # Monkhorst-pack
                 is_shift = list(np.logical_xor((diff > 0.1),
                                                (self._mesh % 2 == 0)) * 1)
         else:
@@ -266,7 +256,6 @@ class GridPoints(object):
         return np.extract(lattice_equiv, mesh_equiv).all()
 
     def _fit_qpoints_in_BZ(self):
-        # reciprocal_lattice: column vectors
         qpoint_set_in_BZ = get_qpoints_in_Brillouin_zone(self._rec_lat,
                                                          self._ir_qpoints)
         qpoints_in_BZ = np.array([q_set[0] for q_set in qpoint_set_in_BZ],
