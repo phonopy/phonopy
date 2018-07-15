@@ -113,15 +113,17 @@ class ThermalDisplacements(ThermalMotion):
         ----------
         iter_phonons:
             Mesh or IterMesh instance
-        masses:
-            Atomic masses
+        masses: array_like
+            Atomic masses.
+            dtype='double'
+            shape=(number of atoms, )
         projection_direction:
             Eigenvector projection direction in Cartesian
             coordinates. If None, eigenvector is not projected.
         freq_min:
-            Phonons having frequency larger than this are included.
+            Minimum phonon frequency to determine wheather include or not.
         freq_max:
-            Phonons having frequency smaller than this are included.
+            Maximum phonon frequency to determine wheather include or not.
 
         """
 
@@ -193,8 +195,8 @@ class ThermalDisplacements(ThermalMotion):
         labels = []
         xyz = ['x', 'y', 'z']
         for i, u in enumerate(self._displacements.transpose()):
-            plots.append(pyplot.plot(self._temperatures, u ))
-            labels.append("%d-%s" % ( i//3 + 1, xyz[i % 3]))
+            plots.append(pyplot.plot(self._temperatures, u))
+            labels.append("%d-%s" % (i//3 + 1, xyz[i % 3]))
 
         if is_legend:
             pyplot.legend(plots, labels, loc='upper left')
@@ -218,17 +220,25 @@ class ThermalDisplacementMatrices(ThermalMotion):
                  masses,
                  freq_min=None,
                  freq_max=None,
-                 lattice=None): # column vectors in real space
+                 lattice=None):
         """Calculate mean square displacement matrices
 
-        Args:
-            iter_phonons: Mesh or IterMesh instance
-            masses: Atomic masses
-            projection_direction: Eigenvector projection direction in Cartesian
-                coordinates. If None, eigenvector is not projected.
-            freq_min: Phonons having frequency larger than this are included.
-            freq_max: Phonons having frequency smaller than this are included.
-            lattice: Lattice parameters
+        Parameters
+        ----------
+        iter_phonons:
+            Mesh or IterMesh instance
+        masses: array_like
+            Atomic masses
+            dtype='double'
+            shape=(number of atoms, )
+        freq_min: float
+            Minimum phonon frequency to determine wheather include or not.
+        freq_max: float
+            Maximum phonon frequency to determine wheather include or not.
+        lattice: array_like
+            Lattice parameters (column vectors) in real space
+            dtype='double'
+            shape=(3, 3)
 
         """
 
@@ -275,23 +285,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
                                      self._ANinv.T)
                     self._disp_matrices_cif[i, j] = mat_cif
 
-        for count, (fs, vecs) in enumerate(self._iter_phonons):
-            if self._projection_direction is not None:
-                p_vecs = np.dot(
-                    vecs.T.reshape(-1, 3),
-                    self._projection_direction).reshape(-1, len(masses))
-                vecs2 = np.abs(p_vecs) ** 2
-            else:
-                vecs2 = (abs(vecs) ** 2).T
-
-            valid_indices = fs > self._fmin
-            if self._fmax is not None:
-                valid_indices *= fs < self._fmax
-
-            for f, v2 in zip(fs[valid_indices], vecs2[valid_indices]):
-                c = v2 / masses
-                for i, t in enumerate(temps):
-                    disps[i] += self.get_Q2(f, t) * c
+        self._get_disp_matrices()
 
     def _get_disp_matrices(self):
         disps = np.zeros((len(self._temperatures), len(self._masses),
@@ -333,7 +327,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
                 lines.append("- temperature:   %15.7f" % t)
                 lines.append("  displacement_matrices:")
                 for j, mat in enumerate(matrices):
-                    ## For checking imaginary part that should be zero
+                    # For checking imaginary part that should be zero
                     # lines.append("  - # atom %d" % (i + 1))
                     # for v in mat:
                     #     lines.append(
@@ -355,9 +349,10 @@ class ThermalDisplacementMatrices(ThermalMotion):
                              m[1, 2], m[0, 2], m[0, 1], j + 1))
             w.write("\n".join(lines))
 
+
 class ThermalDistances(ThermalMotion):
     def __init__(self,
-                 frequencies, # Have to be supplied in THz
+                 frequencies,
                  eigenvectors,
                  supercell,
                  primitive,
@@ -392,18 +387,16 @@ class ThermalDistances(ThermalMotion):
         for i, (atom1, atom2) in enumerate(atom_pairs):
             patom1 = p2p[s2p[atom1]]
             patom2 = p2p[s2p[atom2]]
-            ############################################################
-            # get_equivalent_smallest_vectors is no longer in phonopy. #
-            # To use this class, this method has to be reimplemented   #
-            # in some way.                                             #
-            ############################################################
-            delta_r = get_equivalent_smallest_vectors(
-                atom2,
-                atom1,
-                self._supercell,
-                self._primitive.get_cell(),
-                self._symprec)[0]
+            spos = self._supercell.get_scaled_positions()
 
+            # This may be wrong.
+            delta_r = get_smallest_vectors(
+                self._supercell.get_cell(),
+                spos[[atom2]],
+                spos[[atom1]],
+                symprec=self._symprec)[0]
+
+            # This is no longer implemented.
             self._project_eigenvectors(delta_r, self._primitive.get_cell())
 
             for freqs, vecs, q in zip(self._frequencies,
