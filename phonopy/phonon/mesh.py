@@ -38,6 +38,36 @@ from phonopy.structure.grid_points import GridPoints
 
 
 class MeshBase(object):
+    """Base class of Mesh and IterMesh classes
+
+    Attributes
+    ----------
+    mesh_numbers: ndarray
+       Mesh numbers along a, b, c axes.
+       dtype='intc'
+       shape=(3,)
+    qpoints: ndarray
+       q-points in reduced coordinates of reciprocal lattice
+       dtype='double'
+       shape=(ir-grid points, 3)
+    weights: ndarray
+       Geometric q-point weights. Its sum is the number of grid points.
+       dtype='intc'
+       shape=(ir-grid points,)
+    grid_address: ndarray
+       Addresses of all grid points represented by integers.
+       dtype='intc'
+       shape=(prod(mesh_numbers), 3)
+    ir_grid_points: ndarray
+        Indices of irreducibple grid points in grid_address.
+        dtype='intc'
+        shape=(ir-grid points,)
+    grid_mapping_table: ndarray
+        Index mapping table from all grid points to ir-grid points.
+        dtype='intc'
+        shape=(prod(mesh_numbers),)
+
+    """
     def __init__(self,
                  dynamical_matrix,
                  mesh,
@@ -63,11 +93,10 @@ class MeshBase(object):
                               rotations=rotations,
                               is_mesh_symmetry=is_mesh_symmetry)
 
-        self._qpoints = self._gp.get_ir_qpoints()
-        self._weights = self._gp.get_ir_grid_weights()
+        self._qpoints = self._gp.qpoints
+        self._weights = self._gp.weights
 
         self._frequencies = None
-        self._eigenvalues = None
         self._eigenvectors = None
 
         self._q_count = 0
@@ -75,32 +104,70 @@ class MeshBase(object):
     def get_dynamical_matrix(self):
         return self._dynamical_matrix
 
-    def get_mesh_numbers(self):
+    @property
+    def mesh_numbers(self):
         return self._mesh
 
-    def get_qpoints(self):
+    def get_mesh_numbers(self):
+        return self.mesh_numbers
+
+    @property
+    def qpoints(self):
         return self._qpoints
 
-    def get_weights(self):
+    def get_qpoints(self):
+        return self.qpoints
+
+    @property
+    def weights(self):
         return self._weights
 
+    def get_weights(self):
+        return self.weights
+
+    @property
+    def grid_address(self):
+        return self._gp.grid_address
+
     def get_grid_address(self):
-        return self._gp.get_grid_address()
+        return self.grid_address
+
+    @property
+    def ir_grid_points(self):
+        return self._gp.ir_grid_points
 
     def get_ir_grid_points(self):
-        return self._gp.get_ir_grid_points()
+        return self.ir_grid_points
+
+    @property
+    def grid_mapping_table(self):
+        return self._gp.grid_mapping_table
 
     def get_grid_mapping_table(self):
-        return self._gp.get_grid_mapping_table()
-
-    def get_eigenvalues(self):
-        return self._eigenvalues
-
-    def get_frequencies(self):
-        return self._frequencies
+        return self.grid_mapping_table
 
 
 class Mesh(MeshBase):
+    """Class for phonons on mesh grid
+
+    Frequencies and eigenvectors can be also accessible by iterator
+    representation to be compatible with IterMesh.
+
+    Attributes
+    ----------
+    frequencies: ndarray
+        Phonon frequencies at ir-grid points. Imaginary frequenies are
+        represented by negative real numbers.
+        dtype='double'
+        shape=(ir-grid points, number of bands)
+    eigenvectors: ndarray
+        Phonon eigenvectors at ir-grid points. See the data structure at
+        np.linalg.eigh.
+        dtype='complex128'
+        shape=(ir-grid points, number of bands, number of bands)
+    More attributes from MeshBase should be watched.
+
+    """
     def __init__(self,
                  dynamical_matrix,
                  mesh,
@@ -135,16 +202,16 @@ class Mesh(MeshBase):
         return self.__next__()
 
     def __next__(self):
-        if self._eigenvectors is None:
-            return StopIteration
-
         if self._q_count == len(self._qpoints):
             self._q_count = 0
             raise StopIteration
         else:
             i = self._q_count
             self._q_count += 1
-            return self._frequencies[i], self._eigenvectors[i]
+            if self._eigenvectors is None:
+                return self._frequencies[i], None
+            else:
+                return self._frequencies[i], self._eigenvectors[i]
 
     def run(self):
         self._set_phonon()
@@ -154,7 +221,15 @@ class Mesh(MeshBase):
     def get_group_velocities(self):
         return self._group_velocities
 
-    def get_eigenvectors(self):
+    @property
+    def frequencies(self):
+        return self._frequencies
+
+    def get_frequencies(self):
+        return self.frequencies
+
+    @property
+    def eigenvectors(self):
         """
         Eigenvectors is a numpy array of three dimension.
         The first index runs through q-points.
@@ -165,6 +240,9 @@ class Mesh(MeshBase):
         The second index is for atoms [x1, y1, z1, x2, y2, z2, ...].
         """
         return self._eigenvectors
+
+    def get_eigenvectors(self):
+        return self.eigenvectors
 
     def write_hdf5(self):
         import h5py
@@ -225,8 +303,7 @@ class Mesh(MeshBase):
         num_band = self._cell.get_number_of_atoms() * 3
         num_qpoints = len(self._qpoints)
 
-        self._eigenvalues = np.zeros((num_qpoints, num_band), dtype='double')
-        self._frequencies = np.zeros_like(self._eigenvalues)
+        self._frequencies = np.zeros((num_qpoints, num_band), dtype='double')
         if self._is_eigenvectors or self._use_lapack_solver:
             dtype = "c%d" % (np.dtype('double').itemsize * 2)
             self._eigenvectors = np.zeros(
@@ -241,25 +318,19 @@ class Mesh(MeshBase):
                                    self._factor,
                                    nac_q_direction=None,
                                    lapack_zheev_uplo='L')
-            self._eigenvalues = np.array(self._frequencies ** 2 *
-                                         np.sign(self._frequencies),
-                                         dtype='double',
-                                         order='C') / self._factor ** 2
-            if not self._is_eigenvectors:
-                self._eigenvalues = None
         else:
             for i, q in enumerate(self._qpoints):
                 self._dynamical_matrix.set_dynamical_matrix(q)
                 dm = self._dynamical_matrix.get_dynamical_matrix()
                 if self._is_eigenvectors:
                     eigvals, self._eigenvectors[i] = np.linalg.eigh(dm)
-                    self._eigenvalues[i] = eigvals.real
+                    eigenvalues = eigvals.real
                 else:
-                    self._eigenvalues[i] = np.linalg.eigvalsh(dm).real
-            self._frequencies = np.array(np.sqrt(abs(self._eigenvalues)) *
-                                         np.sign(self._eigenvalues),
-                                         dtype='double',
-                                         order='C') * self._factor
+                    eigenvalues = np.linalg.eigvalsh(dm).real
+                self._frequencies[i] = np.array(np.sqrt(abs(eigenvalues)) *
+                                                np.sign(eigenvalues),
+                                                dtype='double',
+                                                order='C') * self._factor
 
     def _set_group_velocities(self, group_velocity):
         group_velocity.set_q_points(self._qpoints)
@@ -267,6 +338,16 @@ class Mesh(MeshBase):
 
 
 class IterMesh(MeshBase):
+    """Generator class for phonons on mesh grid
+
+    Not like as Mesh class, frequencies and eigenvectors are not
+    stored, instead generated by iterator.
+
+    Attributes
+    ----------
+    Attributes from MeshBase should be watched.
+
+    """
     def __init__(self,
                  dynamical_matrix,
                  mesh,
@@ -303,13 +384,13 @@ class IterMesh(MeshBase):
             self._dynamical_matrix.set_dynamical_matrix(q)
             dm = self._dynamical_matrix.get_dynamical_matrix()
             if self._is_eigenvectors:
-                eigvals, self._eigenvectors = np.linalg.eigh(dm)
-                self._eigenvalues = eigvals.real
+                eigvals, eigenvectors = np.linalg.eigh(dm)
+                eigenvalues = eigvals.real
             else:
-                self._eigenvalues = np.linalg.eigvalsh(dm).real
-            self._frequencies = np.array(np.sqrt(abs(self._eigenvalues)) *
-                                         np.sign(self._eigenvalues),
-                                         dtype='double',
-                                         order='C') * self._factor
+                eigenvalues = np.linalg.eigvalsh(dm).real
+            frequencies = np.array(np.sqrt(abs(eigenvalues)) *
+                                   np.sign(eigenvalues),
+                                   dtype='double',
+                                   order='C') * self._factor
             self._q_count += 1
-            return self._frequencies, self._eigenvectors
+            return frequencies, eigenvectors

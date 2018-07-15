@@ -236,9 +236,12 @@ class Phonopy(object):
     def get_nac_params(self):
         return self._nac_params
 
-    def get_dynamical_matrix(self):
+    @property
+    def dynamical_matrix(self):
         return self._dynamical_matrix
-    dynamical_matrix = property(get_dynamical_matrix)
+
+    def get_dynamical_matrix(self):
+        return self.dynamical_matrix
 
     def set_unitcell(self, unitcell):
         self._unitcell = unitcell
@@ -577,6 +580,13 @@ class Phonopy(object):
             return (self._mesh.get_grid_address(),
                     self._mesh.get_ir_grid_points(),
                     self._mesh.get_grid_mapping_table())
+
+    @property
+    def mesh_numbers(self):
+        if self._mesh is None:
+            return None
+        else:
+            self._mesh.get_mesh_numbers()
 
     def write_hdf5_mesh(self):
         self._mesh.write_hdf5()
