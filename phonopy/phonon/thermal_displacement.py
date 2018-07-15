@@ -36,6 +36,7 @@ import numpy as np
 from phonopy.units import AMU, THzToEv, Kb, EV, Hbar, Angstrom
 from phonopy.interface.cif import write_cif_P1
 
+
 class ThermalMotion(object):
     def __init__(self,
                  masses,
@@ -54,10 +55,8 @@ class ThermalMotion(object):
         self._masses = masses * AMU
         self._masses3 = np.array([[m] * 3 for m in masses]).ravel() * AMU
         self._temperatures = None
-        self._np_overflow = None # Switch of error handling of numpy.
-                                 # 'raise' to see which phonon it is.
 
-    def get_Q2(self, freq, t): # freq in THz
+    def get_Q2(self, freq, t):  # freq in THz
         return Hbar * EV / Angstrom ** 2 * (
             (self._get_population(freq, t) + 0.5) / (freq * 1e12 * 2 * np.pi))
 
@@ -94,11 +93,12 @@ class ThermalMotion(object):
         condition = np.logical_not(t_array < 0)
         self._temperatures = np.extract(condition, t_array)
 
-    def _get_population(self, freq, t): # freq in THz
-        if t < 1: # temperatue less than 1 K is approximated as 0 K.
+    def _get_population(self, freq, t):  # freq in THz
+        if t < 1:  # temperatue less than 1 K is approximated as 0 K.
             return 0
         else:
             return 1.0 / (np.exp(freq * THzToEv / (Kb * t)) - 1)
+
 
 class ThermalDisplacements(ThermalMotion):
     def __init__(self,
@@ -109,13 +109,19 @@ class ThermalDisplacements(ThermalMotion):
                  freq_max=None):
         """Calculate mean square displacements
 
-        Args:
-            iter_phonons: Mesh or IterMesh instance
-            masses: Atomic masses
-            projection_direction: Eigenvector projection direction in Cartesian
-                coordinates. If None, eigenvector is not projected.
-            freq_min: Phonons having frequency larger than this are included.
-            freq_max: Phonons having frequency smaller than this are included.
+        Parameters
+        ----------
+        iter_phonons:
+            Mesh or IterMesh instance
+        masses:
+            Atomic masses
+        projection_direction:
+            Eigenvector projection direction in Cartesian
+            coordinates. If None, eigenvector is not projected.
+        freq_min:
+            Phonons having frequency larger than this are included.
+        freq_max:
+            Phonons having frequency smaller than this are included.
 
         """
 
@@ -245,8 +251,18 @@ class ThermalDisplacementMatrices(ThermalMotion):
     def get_thermal_displacement_matrices(self):
         return (self._temperatures, self._disp_matrices)
 
-    def run(self):
-        np.seterr(over=self._np_overflow)
+    def run(self, np_overflow=None):
+        """
+
+        Parameters
+        ----------
+        np_overflow: str or None
+            Switch of error handling of numpy. 'raise' to see which phonon it
+            is.
+
+        """
+
+        np.seterr(over=np_overflow)
         self._get_disp_matrices()
         np.seterr(over=None)
 

@@ -36,6 +36,7 @@ import numpy as np
 from phonopy.units import VaspToTHz
 from phonopy.structure.grid_points import GridPoints
 
+
 class MeshBase(object):
     def __init__(self,
                  dynamical_matrix,
@@ -45,7 +46,7 @@ class MeshBase(object):
                  is_mesh_symmetry=True,
                  is_eigenvectors=False,
                  is_gamma_center=False,
-                 rotations=None, # Point group operations in real space
+                 rotations=None,  # Point group operations in real space
                  factor=VaspToTHz):
         self._mesh = np.array(mesh, dtype='intc')
         self._is_eigenvectors = is_eigenvectors
@@ -68,6 +69,8 @@ class MeshBase(object):
         self._frequencies = None
         self._eigenvalues = None
         self._eigenvectors = None
+
+        self._q_count = 0
 
     def get_dynamical_matrix(self):
         return self._dynamical_matrix
@@ -107,7 +110,7 @@ class Mesh(MeshBase):
                  is_eigenvectors=False,
                  is_gamma_center=False,
                  group_velocity=None,
-                 rotations=None, # Point group operations in real space
+                 rotations=None,  # Point group operations in real space
                  factor=VaspToTHz,
                  use_lapack_solver=False):
         MeshBase.__init__(self,
@@ -125,8 +128,6 @@ class Mesh(MeshBase):
         self._group_velocities = None
         self._use_lapack_solver = use_lapack_solver
 
-        self._q_count = 0
-
     def __iter__(self):
         return self
 
@@ -138,6 +139,7 @@ class Mesh(MeshBase):
             return StopIteration
 
         if self._q_count == len(self._qpoints):
+            self._q_count = 0
             raise StopIteration
         else:
             i = self._q_count
@@ -178,9 +180,8 @@ class Mesh(MeshBase):
 
     def write_yaml(self):
         w = open('mesh.yaml', 'w')
-        eigenvalues = self._eigenvalues
         natom = self._cell.get_number_of_atoms()
-        rec_lattice = np.linalg.inv(self._cell.get_cell()) # column vectors
+        rec_lattice = np.linalg.inv(self._cell.get_cell())  # column vectors
         distances = np.sqrt(
             np.sum(np.dot(self._qpoints, rec_lattice.T) ** 2, axis=1))
 
@@ -214,10 +215,10 @@ class Mesh(MeshBase):
                     w.write("    eigenvector:\n")
                     for k in range(natom):
                         w.write("    - # atom %d\n" % (k+1))
-                        for l in (0,1,2):
+                        for l in (0, 1, 2):
                             w.write("      - [ %17.14f, %17.14f ]\n" %
-                                    (self._eigenvectors[i,k*3+l,j].real,
-                                     self._eigenvectors[i,k*3+l,j].imag))
+                                    (self._eigenvectors[i, k*3+l, j].real,
+                                     self._eigenvectors[i, k*3+l, j].imag))
             w.write("\n")
 
     def _set_phonon(self):
@@ -264,6 +265,7 @@ class Mesh(MeshBase):
         group_velocity.set_q_points(self._qpoints)
         self._group_velocities = group_velocity.get_group_velocity()
 
+
 class IterMesh(MeshBase):
     def __init__(self,
                  dynamical_matrix,
@@ -273,7 +275,7 @@ class IterMesh(MeshBase):
                  is_mesh_symmetry=True,
                  is_eigenvectors=False,
                  is_gamma_center=False,
-                 rotations=None, # Point group operations in real space
+                 rotations=None,  # Point group operations in real space
                  factor=VaspToTHz):
         MeshBase.__init__(self,
                           dynamical_matrix,
@@ -286,8 +288,6 @@ class IterMesh(MeshBase):
                           rotations=rotations,
                           factor=factor)
 
-        self._q_count = 0
-
     def __iter__(self):
         return self
 
@@ -296,6 +296,7 @@ class IterMesh(MeshBase):
 
     def __next__(self):
         if self._q_count == len(self._qpoints):
+            self._q_count = 0
             raise StopIteration
         else:
             q = self._qpoints[self._q_count]

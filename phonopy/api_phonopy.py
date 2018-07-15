@@ -874,14 +874,18 @@ class Phonopy(object):
                                   freq_max=None):
         """Prepare thermal displacements calculation
 
-        Args:
-            direction:
-                Projection direction in reduced coordinates.
-            freq_min: Phonons having frequency larger than this are included.
-            freq_max: Phonons having frequency smaller than this are included.
+        Parameters
+        ----------
+        direction: array_like or None
+            Projection direction in reduced coordinates.
+            dtype=float
+            shape=(3,)
+        freq_min: float
+            Phonons having frequency larger than this are included.
+        freq_max: float
+            Phonons having frequency smaller than this are included.
 
         """
-        self._thermal_displacements = None
 
         if self._mesh is not None:
             eigvecs = self._mesh.get_eigenvectors()
@@ -903,12 +907,14 @@ class Phonopy(object):
                 return False
 
         if direction is not None:
-            projection_direction = np.dot(direction, self._primitive.get_cell())
-            td = ThermalDisplacements(iter_phonons,
-                                      self._primitive.get_masses(),
-                                      projection_direction=projection_direction,
-                                      freq_min=freq_min,
-                                      freq_max=freq_max)
+            projection_direction = np.dot(direction,
+                                          self._primitive.get_cell())
+            td = ThermalDisplacements(
+                iter_phonons,
+                self._primitive.get_masses(),
+                projection_direction=projection_direction,
+                freq_min=freq_min,
+                freq_max=freq_max)
         else:
             td = ThermalDisplacements(iter_phonons,
                                       self._primitive.get_masses(),
