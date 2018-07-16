@@ -33,8 +33,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-import cmath
 from phonopy.units import VaspToTHz
+
 
 class QpointsPhonon(object):
     def __init__(self,
@@ -89,7 +89,7 @@ class QpointsPhonon(object):
         w = open('qpoints.yaml', 'w')
         w.write("nqpoint: %-7d\n" % len(self._qpoints))
         w.write("natom:   %-7d\n" % self._natom)
-        rec_lattice = np.linalg.inv(self._lattice) # column vectors
+        rec_lattice = np.linalg.inv(self._lattice)  # column vectors
         w.write("reciprocal_lattice:\n")
         for vec, axis in zip(rec_lattice.T, ('a*', 'b*', 'c*')):
             w.write("- [ %12.8f, %12.8f, %12.8f ] # %2s\n" %
@@ -115,8 +115,8 @@ class QpointsPhonon(object):
                 w.write("    frequency: %15.10f\n" % freq)
 
                 if self._gv is not None:
-                    w.write("    group_velocity: [ %13.7f, %13.7f, %13.7f ]\n" %
-                            tuple(self._gv[i, j]))
+                    w.write("    group_velocity: [ %13.7f, %13.7f, %13.7f ]\n"
+                            % tuple(self._gv[i, j]))
 
                 if self._is_eigenvectors:
                     w.write("    eigenvector:\n")

@@ -322,15 +322,18 @@ class Phonopy(object):
             self._set_dynamical_matrix()
 
     def set_displacement_dataset(self, displacement_dataset):
-        """
-        displacement_dataset:
-           {'natom': number_of_atoms_in_supercell,
-            'first_atoms': [
-              {'number': atom index of displaced atom,
-               'displacement': displacement in Cartesian coordinates,
-               'direction': displacement direction with respect to axes
-               'forces': forces on atoms in supercell},
-              {...}, ...]}
+        """Set dataset having displacements and optionally forces
+
+        displacement_dataset: tuple
+            This tuple has the following structure:
+            {'natom': number_of_atoms_in_supercell,
+             'first_atoms': [
+               {'number': atom index of displaced atom,
+                'displacement': displacement in Cartesian coordinates,
+                'forces': forces on atoms in supercell},
+               {...}, ...]}
+            'direction' is not mandatory.
+
         """
         self._displacement_dataset = displacement_dataset
         self._supercells_with_displacements = None
@@ -371,9 +374,6 @@ class Phonopy(object):
                                self._primitive,
                                cutoff_radius,
                                symprec=self._symprec)
-        self._set_dynamical_matrix()
-
-    def set_dynamical_matrix(self):
         self._set_dynamical_matrix()
 
     def generate_displacements(self,
@@ -683,7 +683,13 @@ class Phonopy(object):
                       is_mesh_symmetry=True,
                       is_eigenvectors=False,
                       is_gamma_center=False):
-        """Create an IterMesh instance"""
+        """Create an IterMesh instancer
+
+        Attributes
+        ----------
+        See set_mesh method.
+
+        """
 
         if self._dynamical_matrix is None:
             print("Warning: Dynamical matrix has not yet built.")
@@ -1408,43 +1414,25 @@ class Phonopy(object):
     def _set_dynamical_matrix(self):
         self._dynamical_matrix = None
 
-        if (self._supercell is None or self._primitive is None):
-            print("Bug: Supercell or primitive is not created.")
-            return False
-        elif self._force_constants is None:
-            print("Warning: Force constants are not prepared.")
-            return False
-        elif self._primitive.get_masses() is None:
-            print("Warning: Atomic masses are not correctly set.")
-            return False
-        else:
-            self._dynamical_matrix = get_dynamical_matrix(
-                self._force_constants,
-                self._supercell,
-                self._primitive,
-                self._nac_params,
-                self._frequency_scale_factor,
-                self._dynamical_matrix_decimals,
-                symprec=self._symprec,
-                log_level=self._log_level)
+        if self._supercell is None or self._primitive is None:
+            print("Supercell or primitive is not created.")
+            raise RuntimeError
+        if self._force_constants is None:
+            print("Force constants are not prepared.")
+            raise RuntimeError
+        if self._primitive.get_masses() is None:
+            print("Atomic masses are not correctly set.")
+            raise RuntimeError
 
-            # if self._nac_params is None:
-            #     self._dynamical_matrix = DynamicalMatrix(
-            #         self._supercell,
-            #         self._primitive,
-            #         self._force_constants,
-            #         decimals=self._dynamical_matrix_decimals,
-            #         symprec=self._symprec)
-            # else:
-            #     self._dynamical_matrix = DynamicalMatrixNAC(
-            #         self._supercell,
-            #         self._primitive,
-            #         self._force_constants,
-            #         nac_params=self._nac_params,
-            #         decimals=self._dynamical_matrix_decimals,
-            #         symprec=self._symprec,
-            #         log_level=self._log_level)
-            return True
+        self._dynamical_matrix = get_dynamical_matrix(
+            self._force_constants,
+            self._supercell,
+            self._primitive,
+            self._nac_params,
+            self._frequency_scale_factor,
+            self._dynamical_matrix_decimals,
+            symprec=self._symprec,
+            log_level=self._log_level)
 
     def _search_symmetry(self):
         self._symmetry = Symmetry(self._supercell,
