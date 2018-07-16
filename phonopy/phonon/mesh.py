@@ -43,29 +43,29 @@ class MeshBase(object):
     Attributes
     ----------
     mesh_numbers: ndarray
-       Mesh numbers along a, b, c axes.
-       dtype='intc'
-       shape=(3,)
+        Mesh numbers along a, b, c axes.
+        dtype='intc'
+        shape=(3,)
     qpoints: ndarray
-       q-points in reduced coordinates of reciprocal lattice
-       dtype='double'
-       shape=(ir-grid points, 3)
+        q-points in reduced coordinates of reciprocal lattice
+        dtype='double'
+        shape=(ir-grid points, 3)
     weights: ndarray
-       Geometric q-point weights. Its sum is the number of grid points.
-       dtype='intc'
-       shape=(ir-grid points,)
-    grid_address: ndarray
-       Addresses of all grid points represented by integers.
-       dtype='intc'
-       shape=(prod(mesh_numbers), 3)
-    ir_grid_points: ndarray
-        Indices of irreducibple grid points in grid_address.
+        Geometric q-point weights. Its sum is the number of grid points.
         dtype='intc'
         shape=(ir-grid points,)
-    grid_mapping_table: ndarray
-        Index mapping table from all grid points to ir-grid points.
+    grid_address: ndarray
+        Addresses of all grid points represented by integers.
         dtype='intc'
-        shape=(prod(mesh_numbers),)
+        shape=(prod(mesh_numbers), 3)
+    ir_grid_points: ndarray
+         Indices of irreducibple grid points in grid_address.
+         dtype='intc'
+         shape=(ir-grid points,)
+    grid_mapping_table: ndarray
+         Index mapping table from all grid points to ir-grid points.
+         dtype='intc'
+         shape=(prod(mesh_numbers),)
 
     """
     def __init__(self,
