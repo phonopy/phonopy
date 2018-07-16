@@ -346,6 +346,13 @@ class Phonopy(object):
             disp['forces'] = forces
 
     def set_force_constants(self, force_constants, show_drift=True):
+        fc_shape = force_constants.shape
+        if fc_shape[0] != fc_shape[1]:
+            if self._primitive.get_number_of_atoms() != fc_shape[0]:
+                print("Force constants shape disagrees with crystal "
+                      "structure setting. This may be due to PRIMITIVE_AXIS.")
+                raise RuntimeError
+
         self._force_constants = force_constants
         if show_drift and self._log_level:
             show_drift_force_constants(self._force_constants,
@@ -1407,7 +1414,6 @@ class Phonopy(object):
         if self._primitive.get_masses() is None:
             print("Atomic masses are not correctly set.")
             raise RuntimeError
-
         self._dynamical_matrix = get_dynamical_matrix(
             self._force_constants,
             self._supercell,
