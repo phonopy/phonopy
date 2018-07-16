@@ -103,7 +103,7 @@ class DynamicStructureFactor(object):
         num_atom = self._primitive.get_number_of_atoms()
         for Q, freqs, eigvecs in zip(self.qpoints, self._freqs, self._eigvecs):
             temps, disps = self._get_thermal_displacements(Q)
-            DW = np.exp(-0.5 * np.linalg.norm(Q) * disps[0])
+            DW = np.exp(-0.5 * (np.dot(Q, Q) * disps[0]))
             S = np.zeros(num_atom * 3, dtype='double')
             for i in range(num_atom * 3):
                 if freqs[i] > self._cutoff_frequency:
