@@ -37,7 +37,7 @@
 import sys
 import os
 import numpy as np
-from phonopy import Phonopy, PhonopyGruneisen, PhonopyQHA, __version__
+from phonopy import Phonopy, __version__
 import phonopy.file_IO as file_IO
 from phonopy.cui.settings import PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
@@ -559,10 +559,7 @@ if run_mode == 'displacements':
         is_diagonal=settings.get_is_diagonal_displacement(),
         is_trigonal=settings.get_is_trigonal_displacement())
     displacements = phonon.get_displacements()
-    directions = phonon.get_displacement_directions()
-    file_IO.write_disp_yaml(displacements,
-                            supercell,
-                            directions=directions)
+    file_IO.write_disp_yaml(displacements, supercell)
 
     # Write supercells with displacements
     cells_with_disps = phonon.get_supercells_with_displacements()

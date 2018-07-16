@@ -317,14 +317,8 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
             first_atoms['atom'] -= 1
             atom1 = first_atoms['atom']
             disp1 = first_atoms['displacement']
-            if 'direction' in first_atoms:
-                direct1 = first_atoms['direction']
-                new_first_atoms.append({'number': atom1,
-                                        'displacement': disp1,
-                                        'direction': direct1})
-            else:
-                new_first_atoms.append({'number': atom1,
-                                        'displacement': disp1})
+            new_first_atoms.append({'number': atom1,
+                                    'displacement': disp1})
         new_dataset['first_atoms'] = new_first_atoms
 
         if return_cell:
@@ -342,17 +336,12 @@ def write_disp_yaml_from_dataset(dataset, supercell, filename='disp.yaml'):
 
 def write_disp_yaml(displacements,
                     supercell,
-                    directions=None,
                     filename='disp.yaml'):
     text = []
     text.append("natom: %4d" % supercell.get_number_of_atoms())
     text.append("displacements:")
     for i, disp in enumerate(displacements):
         text.append("- atom: %4d" % (disp[0] + 1))
-        if directions is not None:
-            text.append("  direction:")
-            text.append("    [ %20.16f,%20.16f,%20.16f ]" %
-                        tuple(directions[i][1:4]))
         text.append("  displacement:")
         text.append("    [ %20.16f,%20.16f,%20.16f ]" % tuple(disp[1:4]))
 

@@ -32,8 +32,6 @@ class TestPhonopy(unittest.TestCase):
                         == id(phonon.get_unit_conversion_factor()))
         self.assertTrue(id(phonon.displacements)
                         == id(phonon.get_displacements()))
-        self.assertTrue(id(phonon.displacement_directions)
-                        == id(phonon.get_displacement_directions()))
         self.assertTrue(id(phonon.force_constants)
                         == id(phonon.get_force_constants()))
         self.assertTrue(id(phonon.nac_params) == id(phonon.get_nac_params()))

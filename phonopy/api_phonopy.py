@@ -121,7 +121,6 @@ class Phonopy(object):
         # set_displacements (used only in preprocess)
         self._displacement_dataset = None
         self._displacements = None
-        self._displacement_directions = None
         self._supercells_with_displacements = None
 
         # set_force_constants or set_forces
@@ -250,13 +249,6 @@ class Phonopy(object):
         return self.displacements
 
     @property
-    def displacement_directions(self):
-        return self._displacement_directions
-
-    def get_displacement_directions(self):
-        return self.displacement_directions
-
-    @property
     def force_constants(self):
         return self._force_constants
 
@@ -332,23 +324,15 @@ class Phonopy(object):
                 'displacement': displacement in Cartesian coordinates,
                 'forces': forces on atoms in supercell},
                {...}, ...]}
-            'direction' is not mandatory.
 
         """
         self._displacement_dataset = displacement_dataset
         self._supercells_with_displacements = None
 
         self._displacements = []
-        self._displacement_directions = []
         for disp in self._displacement_dataset['first_atoms']:
             x = disp['displacement']
             self._displacements.append([disp['number'], x[0], x[1], x[2]])
-            if 'direction' in disp:
-                y = disp['direction']
-                self._displacement_directions.append(
-                    [disp['number'], y[0], y[1], y[2]])
-        if not self._displacement_directions:
-            self._displacement_directions = None
 
     def set_forces(self, sets_of_forces):
         """
