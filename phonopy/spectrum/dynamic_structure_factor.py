@@ -75,14 +75,13 @@ class DynamicStructureFactor(object):
 
     def __init__(self,
                  phonon,
-                 q_points,
+                 qpoints,
                  f_params,
                  T,
                  G=None,
                  cutoff_frequency=1e-3):
         self._phonon = phonon
-        self._G = np.array(G)  # reciprocal lattice points
-        self._q_points = np.array(q_points)  # (n_q, 3) array
+        self._qpoints = np.array(qpoints)  # (n_q, 3) array
         self._f_params = f_params
         self._T = T
         self._cutoff_frequency = cutoff_frequency
@@ -93,29 +92,50 @@ class DynamicStructureFactor(object):
         self._freqs = None
         self._eigvecs = None
         self._set_phonon()
+        self._q_count = 0
 
-        self.qpoints = None
-        self.S = None
+        self.qpoints = self._qpoints + np.array(G)  # reciprocal lattice points
+        self.S = np.zeros(self._freqs.shape, dtype='double', order='C')
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        return self.__next__()
+
+    def __next__(self):
+        if self._q_count == len(self._qpoints):
+            self._q_count = 0
+            raise StopIteration
+        else:
+            S = self._run_at_Q()
+            self.S[self._q_count] = S
+            self._q_count += 1
+            return S
 
     def run(self):
-        self.qpoints = self._q_points + self._G
-        self.S = []
-        num_atom = self._primitive.get_number_of_atoms()
-        for Q, freqs, eigvecs in zip(self.qpoints, self._freqs, self._eigvecs):
-            temps, disps = self._get_thermal_displacements(Q)
-            DW = np.exp(-0.5 * (np.dot(Q, Q) * disps[0]))
-            S = np.zeros(num_atom * 3, dtype='double')
-            for i in range(num_atom * 3):
-                if freqs[i] > self._cutoff_frequency:
-                    F = self._phonon_structure_factor(Q, DW, freqs[i],
-                                                      eigvecs[:, i])
-                    n = 1.0 / (np.exp(freqs[i] * THzToEv / (Kb * self._T)) - 1)
-                    S[i] = abs(F) ** 2 * (n + 1)
-            self.S.append(S)
-        self.S = np.array(self.S, dtype='double', order='C')
+        for S in self:
+            pass
+
+    def _run_at_Q(self):
+        Q = self.qpoints[self._q_count]
+        freqs = self._freqs[self._q_count]
+        eigvecs = self._eigvecs[self._q_count]
+        Q_cart = np.dot(self._rec_lat, Q)
+
+        temps, disps = self._get_thermal_displacements(Q)
+        DW = np.exp(-0.5 * (np.dot(Q_cart, Q_cart) * disps[0]))
+        S = np.zeros(len(freqs), dtype='double')
+        for i, f in enumerate(freqs):
+            if f > self._cutoff_frequency:
+                F = self._phonon_structure_factor(Q_cart, DW, f,
+                                                  eigvecs[:, i])
+                n = 1.0 / (np.exp(f * THzToEv / (Kb * self._T)) - 1)
+                S[i] = abs(F) ** 2 * (n + 1)
+        return S
 
     def _set_phonon(self):
-        self._phonon.set_qpoints_phonon(self._q_points, is_eigenvectors=True)
+        self._phonon.set_qpoints_phonon(self._qpoints, is_eigenvectors=True)
         self._freqs, self._eigvecs = self._phonon.get_qpoints_phonon()
 
     def _get_thermal_displacements(self, Q):
@@ -124,20 +144,17 @@ class DynamicStructureFactor(object):
                                                freq_min=1e-3)
         return self._phonon.get_thermal_displacements()
 
-    def _phonon_structure_factor(self, Q, DW, freq, eigvec):
+    def _phonon_structure_factor(self, Q_cart, DW, freq, eigvec):
         num_atom = self._primitive.get_number_of_atoms()
-        pos = self._primitive.get_scaled_positions()
         symbols = self._primitive.get_chemical_symbols()
         masses = self._primitive.get_masses()
         W = eigvec.reshape(-1, 3)
         val = 0
-        Q_cart = np.dot(self._rec_lat, Q)
         for i in range(num_atom):
             m = masses[i]
             f = atomic_form_factor(np.linalg.norm(Q_cart),
                                    self._f_params[symbols[i]])
-            phase = np.exp(2j * np.pi * np.dot(Q, pos[i]))
             QW = np.dot(Q_cart, W[i])
-            val += f / np.sqrt(2 * m) * DW[i] * QW * phase
+            val += f / np.sqrt(2 * m) * DW[i] * QW
         val /= np.sqrt(freq)
         return val
