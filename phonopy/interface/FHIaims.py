@@ -38,6 +38,14 @@
 
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
+# FK 2018/07/19
+def lmap(func, lis):
+    """Python2/3 compatibility:
+        replace map(int, list) with lmap(int, list) that always returns a list
+        instead of an iterator. Otherwise conflicts with np.array in python3. """
+    return list(map(func, lis))
+
+
 def read_aims(filename):
     """Method to read FHI-aims geometry files in phonopy context."""
 
@@ -53,14 +61,14 @@ def read_aims(filename):
         if not len(fields):
             continue
         if fields[0] == "lattice_vector":
-            vec = map(float, fields[1:4])
+            vec = lmap(float, fields[1:4])
             cell.append(vec)
         elif fields[0][0:4] == "atom":
             if fields[0] == "atom":
                 frac = False
             elif fields[0] == "atom_frac":
                 frac = True
-            pos = map(float, fields[1:4])
+            pos = lmap(float, fields[1:4])
             sym = fields[4]
             is_frac.append(frac)
             positions.append(pos)
@@ -137,7 +145,7 @@ def read_aims_output(filename):
             cell = []
             for i in range(3):
                 l += 1
-                vec = map(float, lines[l].split()[1:4])
+                vec = lmap(float, lines[l].split()[1:4])
                 cell.append(vec)
         elif ("Atomic structure:" in line) or ("Updated atomic structure:" in line):
             if "Atomic structure:" in line:
@@ -153,14 +161,14 @@ def read_aims_output(filename):
                l += 1
                fields = lines[l].split()
                sym = fields[i_sym]
-               pos = map(float, fields[i_pos_min:i_pos_max])
+               pos = lmap(float, fields[i_pos_min:i_pos_max])
                symbols.append(sym)
                positions.append(pos)
         elif "Total atomic forces" in line:
             forces = []
             for i in range(N):
                 l += 1
-                force = map(float, lines[l].split()[-3:])
+                force = lmap(float, lines[l].split()[-3:])
                 forces.append(force)
         l += 1
     

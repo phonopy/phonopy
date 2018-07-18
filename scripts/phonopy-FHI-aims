@@ -33,6 +33,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+# 2018/07/19 florian.knoop: python2/3 and matplotlib compatibility to make things work
 # 2016/08/29  togo: Known bug. Support for modulation output doesn't work.
 #
 # 2016/08/29  togo: Minor fix to follow the change of Phonopy instantiation
@@ -116,6 +117,12 @@
 #
 # 2009/12/27 jm : initial version
 
+# FK 2018/07/19
+def lmap(func, lis):
+    """Python2/3 compatibility:
+        replace map(int, list) with lmap(int, list) that always returns a list
+        instead of an iterator. Otherwise conflicts with np.array in python3. """
+    return list(map(func, lis))
 
 class Control:
     def __init__(self, file=None):
@@ -148,10 +155,10 @@ class Control:
                 if (nfields > 2) and (fields[0] == "phonon"):
                     if (fields[1] == "supercell"):
                         if (nfields >= 11):
-                            s = map(int, fields[2:11])
+                            s = lmap(int, fields[2:11])
                             Smat = numpy.array(s).reshape(3,3)
                         elif (nfields >= 5):
-                            s = map(int, fields[2:5])
+                            s = lmap(int, fields[2:5])
                             Smat = numpy.diag(s)
                         else:
                             raise Exception("invalid supercell")
@@ -184,8 +191,8 @@ class Control:
                     if (fields[1] == "hessian"):
                         self.phonon["hessian"] = fields[2:]
                     if (fields[1] == "band") and (len(fields) >= 11):
-                        parameters = { "kstart" : map(float, fields[2:5]),
-                                       "kend" : map(float, fields[5:8]),
+                        parameters = { "kstart" : lmap(float, fields[2:5]),
+                                       "kend" : lmap(float, fields[5:8]),
                                        "npoints" : int(fields[8]),
                                        "startname" : fields[9],
                                        "endname" : fields[10] }
@@ -195,25 +202,25 @@ class Control:
                                        "fend" : float(fields[3]),
                                        "fpoints" : int(fields[4]),
                                        "broad" : float(fields[5]),
-                                       "qdensity" : map(int, fields[6:]) }
+                                       "qdensity" : lmap(int, fields[6:]) }
                         self.phonon["dos"].update(parameters)
                     if (fields[1] == "free_energy") and (len(fields) >= 6):
                         parameters = { "Tstart" : float(fields[2]),
                                        "Tend" : float(fields[3]),
                                        "Tpoints" : int(fields[4]),
-                                       "qdensity" : map(int, fields[5:]) }
+                                       "qdensity" : lmap(int, fields[5:]) }
                         self.phonon["free_energy"].update(parameters)
                     if (fields[1] == "animation") and (len(fields) >= 12):
-                        parameters = { "q" : map(float, fields[2:5]),
+                        parameters = { "q" : lmap(float, fields[2:5]),
                                        "band" : int(fields[5]),
                                        "amp" : float(fields[6]),
                                        "div" : int(fields[7]),
-                                       "shift" : map(float, fields[8:11]),
+                                       "shift" : lmap(float, fields[8:11]),
                                        "files" : fields[11:] }
                         self.phonon["animation"].append(parameters)
                     if (fields[1] == "modulations") :
-                        parameters = { "q" : map(float, fields[2:5]),
-                                       "supercell" : map(int,fields[5:8]), 
+                        parameters = { "q" : lmap(float, fields[2:5]),
+                                       "supercell" : lmap(int,fields[5:8]), 
                                        "delta" : float(fields[8]) }
                         self.phonon["modulations"].update(parameters)
 
@@ -446,11 +453,12 @@ def post_process_band(phonopy_obj, parameters, frequency_unit_factor, is_eigenve
     if write_yaml:
         bs_obj.write_yaml()
     if do_matplotlib:
-        params = { 'axes.labelsize': 20,
-                   'xtick.labelsize' : 16,
-                   'ytick.labelsize' : 16,
-                   'text.fontsize': 24 }
-        plt.rcParams.update(params)
+        # FK: Settings not supported in more recent matplotlib
+        # params = { 'axes.labelsize': 20,
+        #            'xtick.labelsize' : 16,
+        #            'ytick.labelsize' : 16,
+        #            'text.fontsize': 24 }
+        # plt.rcParams.update(params)
         plt.cla()
         for frequencies_band in frequencies:
             plt.plot(bands_distances, frequencies_band*bs_obj.get_unit_conversion_factor(), 'r-')
@@ -486,11 +494,12 @@ def post_process_dos(phonopy_obj, mesh_obj, parameters, do_matplotlib=False):
         f.write("  %20.10f %20.10f \n" % (freq, dos))
     f.close()
     if do_matplotlib:
-        params = { 'axes.labelsize': 20,
-                   'xtick.labelsize' : 16,
-                   'ytick.labelsize' : 16,
-                   'text.fontsize': 24 }
-        plt.rcParams.update(params)
+        # FK: Settings not supported in more recent matplotlib
+        # params = { 'axes.labelsize': 20,
+        #            'xtick.labelsize' : 16,
+        #            'ytick.labelsize' : 16,
+        #            'text.fontsize': 24 }
+        # plt.rcParams.update(params)
         plt.cla()
         plt.plot(omegas, total_dos, 'r-')
         plt.grid(True)
@@ -530,11 +539,12 @@ def post_process_free_energy(phonopy_obj, mesh_obj, parameters, frequency_unit_t
     if write_yaml:
         tp_obj.write_yaml()
     if do_matplotlib:
-        params = { 'axes.labelsize': 20,
-                   'xtick.labelsize' : 16,
-                   'ytick.labelsize' : 16,
-                   'text.fontsize': 24 }
-        plt.rcParams.update(params)
+        # FK: Settings not supported in more recent matplotlib
+        # params = { 'axes.labelsize': 20,
+        #            'xtick.labelsize' : 16,
+        #            'ytick.labelsize' : 16,
+        #            'text.fontsize': 24 }
+        # plt.rcParams.update(params)
         plt.cla()
         plt.plot(T, F_aims, 'r-', label="Free energy (eV/cell)")
         plt.plot(T, U_aims, 'b-', label="Internal energy (eV/cell)")
@@ -878,7 +888,7 @@ if __name__ == "__main__":
                 force -= drift_force / forces.shape[0]
             set_of_forces.append(forces)
         else:
-            print("!!! calculated varies from expected supercell in FHI-aims output %s" % aims_out)
+            print("!!! calculated supercell varies from expected supercell in FHI-aims output %s" % aims_out)
             sys.exit(2)
     print("#")
 
