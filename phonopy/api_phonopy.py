@@ -58,10 +58,11 @@ from phonopy.phonon.thermal_displacement import (ThermalDisplacements,
                                                  ThermalDisplacementMatrices)
 from phonopy.phonon.animation import Animation
 from phonopy.phonon.modulation import Modulation
-from phonopy.phonon.qpoints_mode import QpointsPhonon
+from phonopy.phonon.qpoints import QpointsPhonon
 from phonopy.phonon.irreps import IrReps
 from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.phonon.moment import PhononMoment
+from phonopy.spectrum.dynamic_structure_factor import DynamicStructureFactor
 
 
 class Phonopy(object):
@@ -287,6 +288,38 @@ class Phonopy(object):
             return None
         else:
             return self._mesh.mesh_number
+
+    @property
+    def qpoints(self):
+        return self._qpoints_phonon
+
+    @property
+    def mesh(self):
+        return self._mesh
+
+    @property
+    def itermesh(self):
+        """Returns IterMesh instance
+
+        This instance object does not store phonon data. With very
+        dense mesh and eigenvectors needed, IterMesh can save memory
+        space, but expected to be slow.
+
+        This object is used as a generator. Phonon frequencies and
+        eigenvectos are obtained as follows:
+
+            for i, (freqs, eigvecs) in enumerate(iter_mesh):
+                print(i + 1)
+                print(freqs)
+                print(eigvecs)
+
+        """
+
+        return self._iter_mesh
+
+    @property
+    def dynamic_structure_factor(self):
+        return self._dynamic_structure_factor
 
     def set_unitcell(self, unitcell):
         self._unitcell = unitcell
@@ -698,25 +731,6 @@ class Phonopy(object):
             rotations=self._primitive_symmetry.get_pointgroup_operations(),
             factor=self._factor)
         return True
-
-    def get_iter_mesh(self):
-        """Returns IterMesh instance
-
-        This instance object does not store phonon data. With very
-        dense mesh and eigenvectors needed, IterMesh can save memory
-        space, but expected to be slow.
-
-        This object is used as a generator. Phonon frequencies and
-        eigenvectos are obtained as follows:
-
-            for i, (freqs, eigvecs) in enumerate(iter_mesh):
-                print(i + 1)
-                print(freqs)
-                print(eigvecs)
-
-        """
-
-        return self._iter_mesh
 
     # Plot band structure and DOS (PDOS) together
     def plot_band_structure_and_dos(self, pdos_indices=None, labels=None):
@@ -1387,6 +1401,29 @@ class Phonopy(object):
 
     def get_moment(self):
         return self._moment
+
+    def set_dynamic_structure_factor(self,
+                                     qpoints,
+                                     f_params,
+                                     T,
+                                     G=None,
+                                     freq_min=None,
+                                     freq_max=None,
+                                     run_immediately=True):
+        self._dynamic_structure_factor = DynamicStructureFactor(
+            self._mesh,
+            qpoints,
+            f_params,
+            T,
+            G=G,
+            freq_min=freq_min,
+            freq_max=freq_max)
+        if run_immediately:
+            self._dynamic_structure_factor.run()
+
+    def get_dynamic_structure_factor(self):
+        return (self._dynamic_structure_factor.qpoints,
+                self._dynamic_structure_factor.S)
 
     #################
     # Local methods #
