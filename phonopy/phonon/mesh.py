@@ -59,13 +59,15 @@ class MeshBase(object):
         dtype='intc'
         shape=(prod(mesh_numbers), 3)
     ir_grid_points: ndarray
-         Indices of irreducibple grid points in grid_address.
-         dtype='intc'
-         shape=(ir-grid points,)
+        Indices of irreducibple grid points in grid_address.
+        dtype='intc'
+        shape=(ir-grid points,)
     grid_mapping_table: ndarray
-         Index mapping table from all grid points to ir-grid points.
-         dtype='intc'
-         shape=(prod(mesh_numbers),)
+        Index mapping table from all grid points to ir-grid points.
+        dtype='intc'
+        shape=(prod(mesh_numbers),)
+    dynamical_matrix: DynamicalMatrix
+        Dynamical matrix instance to compute dynamical matrix at q-points.
 
     """
     def __init__(self,
@@ -100,9 +102,6 @@ class MeshBase(object):
         self._eigenvectors = None
 
         self._q_count = 0
-
-    def get_dynamical_matrix(self):
-        return self._dynamical_matrix
 
     @property
     def mesh_numbers(self):
@@ -146,6 +145,13 @@ class MeshBase(object):
     def get_grid_mapping_table(self):
         return self.grid_mapping_table
 
+    @property
+    def dynamical_matrix(self):
+        return self._dynamical_matrix
+
+    def get_dynamical_matrix(self):
+        return self.dynamical_matrix
+
 
 class Mesh(MeshBase):
     """Class for phonons on mesh grid
@@ -159,12 +165,12 @@ class Mesh(MeshBase):
         Phonon frequencies at ir-grid points. Imaginary frequenies are
         represented by negative real numbers.
         dtype='double'
-        shape=(ir-grid points, number of bands)
+        shape=(ir-grid points, bands)
     eigenvectors: ndarray
         Phonon eigenvectors at ir-grid points. See the data structure at
         np.linalg.eigh.
         dtype='complex128'
-        shape=(ir-grid points, number of bands, number of bands)
+        shape=(ir-grid points, bands, bands)
     More attributes from MeshBase should be watched.
 
     """
