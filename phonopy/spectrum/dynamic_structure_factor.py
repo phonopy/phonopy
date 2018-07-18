@@ -34,6 +34,8 @@
 
 import numpy as np
 from phonopy.units import THzToEv, Kb
+from phonopy.phonon.qpoints import QpointsPhonon
+from phonopy.phonon.thermal_displacement import ThermalDisplacements
 
 
 # D. Waasmaier and A. Kirfel, Acta Cryst. A51, 416 (1995)
@@ -74,24 +76,32 @@ class DynamicStructureFactor(object):
     """
 
     def __init__(self,
-                 phonon,
+                 mesh_phonon,
                  qpoints,
                  f_params,
                  T,
                  G=None,
-                 cutoff_frequency=1e-3):
-        self._phonon = phonon
+                 freq_min=None,
+                 freq_max=None):
+        self._mesh_phonon = mesh_phonon
+        self._dynamical_matrix = mesh_phonon.dynamical_matrix
+        self._primitive = self._dynamical_matrix.primitive
         self._qpoints = np.array(qpoints)  # (n_q, 3) array
         self._f_params = f_params
         self._T = T
-        self._cutoff_frequency = cutoff_frequency
+        if freq_min is None:
+            self._fmin = 0
+        else:
+            self._fmin = freq_min
+        if freq_max is None:
+            self._fmax = None
+        else:
+            self._fmax = freq_max
 
-        self._primitive = phonon.get_primitive()
         self._rec_lat = np.linalg.inv(self._primitive.get_cell())
-
         self._freqs = None
         self._eigvecs = None
-        self._set_phonon()
+        self._set_phonon(self._qpoints)
         self._q_count = 0
 
         self.qpoints = self._qpoints + np.array(G)  # reciprocal lattice points
@@ -127,22 +137,29 @@ class DynamicStructureFactor(object):
         DW = np.exp(-0.5 * (np.dot(Q_cart, Q_cart) * disps[0]))
         S = np.zeros(len(freqs), dtype='double')
         for i, f in enumerate(freqs):
-            if f > self._cutoff_frequency:
+            if self._fmin < f:
                 F = self._phonon_structure_factor(Q_cart, DW, f,
                                                   eigvecs[:, i])
                 n = 1.0 / (np.exp(f * THzToEv / (Kb * self._T)) - 1)
                 S[i] = abs(F) ** 2 * (n + 1)
         return S
 
-    def _set_phonon(self):
-        self._phonon.set_qpoints_phonon(self._qpoints, is_eigenvectors=True)
-        self._freqs, self._eigvecs = self._phonon.get_qpoints_phonon()
+    def _set_phonon(self, qpoints):
+        qpoints_phonon = QpointsPhonon(qpoints,
+                                       self._dynamical_matrix,
+                                       is_eigenvectors=True)
+        self._freqs = qpoints_phonon.frequencies
+        self._eigvecs = qpoints_phonon.eigenvectors
 
     def _get_thermal_displacements(self, Q):
-        self._phonon.set_thermal_displacements(temperatures=[self._T],
-                                               direction=Q,
-                                               freq_min=1e-3)
-        return self._phonon.get_thermal_displacements()
+        td = ThermalDisplacements(self._mesh_phonon,
+                                  self._primitive.get_masses(),
+                                  projection_direction=Q,
+                                  freq_min=self._fmin,
+                                  freq_max=self._fmax)
+        td.set_temperatures([self._T])
+        td.run()
+        return td.get_thermal_displacements()
 
     def _phonon_structure_factor(self, Q_cart, DW, freq, eigvec):
         num_atom = self._primitive.get_number_of_atoms()
