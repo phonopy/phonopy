@@ -34,6 +34,7 @@
 
 import numpy as np
 
+
 class DerivativeOfDynamicalMatrix(object):
     """Compute analytical derivative of dynamical matrix
 
@@ -45,12 +46,12 @@ class DerivativeOfDynamicalMatrix(object):
         self._dynmat = dynamical_matrix
         (self._smallest_vectors,
          self._multiplicity) = self._dynmat.get_shortest_vectors()
-        self._force_constants = self._dynmat.get_force_constants()
-        self._scell = self._dynmat.get_supercell()
-        self._pcell = self._dynmat.get_primitive()
+        self._force_constants = self._dynmat.force_constants
+        self._scell = self._dynmat.supercell
+        self._pcell = self._dynmat.primitive
 
-        self._p2s_map = self._dynmat.get_primitive_to_supercell_map()
-        self._s2p_map = self._dynmat.get_supercell_to_primitive_map()
+        self._p2s_map = self._pcell.get_primitive_to_supercell_map()
+        self._s2p_map = self._pcell.get_supercell_to_primitive_map()
         p2p_map = self._pcell.get_primitive_to_primitive_map()
         self._s2pp_map = np.array(
             [p2p_map[self._s2p_map[i]] for i in range(len(self._s2p_map))],
@@ -104,7 +105,7 @@ class DerivativeOfDynamicalMatrix(object):
             nac_factor = 0
             q_dir = None
 
-        if fc.shape[0] == fc.shape[1]: # full fc
+        if fc.shape[0] == fc.shape[1]:  # full fc
             phonoc.derivative_dynmat(ddm.view(dtype='double'),
                                      fc,
                                      np.array(q, dtype='double'),
@@ -197,8 +198,7 @@ class DerivativeOfDynamicalMatrix(object):
                         not self._derivative_order == 2):
                         ddm_elem += d_nac[l, i, j] * phase_multi.sum()
 
-                    ddm_local[l] +=  ddm_elem / mass / multi
-
+                    ddm_local[l] += ddm_elem / mass / multi
 
             ddm[:, (i * 3):(i * 3 + 3), (j * 3):(j * 3 + 3)] = ddm_local
 
