@@ -19,7 +19,7 @@ class TestMesh(unittest.TestCase):
     def testIterMesh(self):
         phonon = self._get_phonon()
         phonon.set_iter_mesh([3, 3, 3], is_eigenvectors=True)
-        imesh = phonon.get_iter_mesh()
+        imesh = phonon.itermesh
         freqs = []
         eigvecs = []
         for i, (f, e) in enumerate(imesh):
@@ -61,8 +61,8 @@ class TestMesh(unittest.TestCase):
         for j, x in enumerate(mesh_obj):
             pass
         assert i == j
-        print(mesh_obj.ir_grid_points.dtype)
-
+        self.assertTrue(id(mesh_obj.dynamical_matrix)
+                        == id(mesh_obj.get_dynamical_matrix()))
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestMesh)
