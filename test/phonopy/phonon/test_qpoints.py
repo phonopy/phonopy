@@ -4,33 +4,16 @@ import numpy as np
 from phonopy import Phonopy
 from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
-from phonopy.phonon.mesh import Mesh
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-class TestMesh(unittest.TestCase):
+class TestQpoints(unittest.TestCase):
     def setUp(self):
         pass
 
     def tearDown(self):
         pass
-
-    def testIterMesh(self):
-        phonon = self._get_phonon()
-        phonon.set_iter_mesh([3, 3, 3], is_eigenvectors=True)
-        imesh = phonon.itermesh
-        freqs = []
-        eigvecs = []
-        for i, (f, e) in enumerate(imesh):
-            freqs.append(f)
-            eigvecs.append(e)
-
-        phonon.set_mesh([3, 3, 3], is_eigenvectors=True)
-        _, _, mesh_freqs, mesh_eigvecs = phonon.get_mesh()
-
-        np.testing.assert_allclose(mesh_freqs, freqs)
-        np.testing.assert_allclose(mesh_eigvecs, eigvecs)
 
     def _get_phonon(self):
         cell = read_vasp(os.path.join(data_dir, "..", "POSCAR_NaCl"))
@@ -48,22 +31,16 @@ class TestMesh(unittest.TestCase):
         phonon.set_nac_params(nac_params)
         return phonon
 
-    def _set_mesh(self):
-        pass
-
-    def testMesh(self):
+    def testQpoints(self):
         phonon = self._get_phonon()
-        mesh_obj = Mesh(phonon.dynamical_matrix, [10, 10, 10],
-                        is_eigenvectors=True)
-        mesh_obj.run()
-        for i, x in enumerate(mesh_obj):
-            pass
-        for j, x in enumerate(mesh_obj):
-            pass
-        assert i == j
-        self.assertTrue(id(mesh_obj.dynamical_matrix)
-                        == id(mesh_obj.get_dynamical_matrix()))
+        phonon.set_qpoints_phonon([0, 0, 0], is_eigenvectors=True)
+        qpoints_phonon = phonon.qpoints
+        np.testing.assert_allclose(qpoints_phonon.eigenvectors,
+                                   qpoints_phonon.get_eigenvectors())
+        np.testing.assert_allclose(qpoints_phonon.frequencies,
+                                   qpoints_phonon.get_frequencies())
+
 
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestMesh)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestQpoints)
     unittest.TextTestRunner(verbosity=2).run(suite)

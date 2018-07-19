@@ -33,10 +33,27 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-import cmath
 from phonopy.units import VaspToTHz
 
+
 class QpointsPhonon(object):
+    """Calculate phonons at specified qpoints
+
+    Attributes
+    ----------
+    frequencies: ndarray
+        Phonon frequencies at ir-grid points. Imaginary frequenies are
+        represented by negative real numbers.
+        dtype='double'
+        shape=(qpoints, bands)
+    eigenvectors: ndarray
+        Phonon eigenvectors at ir-grid points. See the data structure at
+        np.linalg.eigh.
+        dtype='complex128'
+        shape=(qpoints, bands, bands)
+
+    """
+
     def __init__(self,
                  qpoints,
                  dynamical_matrix,
@@ -45,12 +62,12 @@ class QpointsPhonon(object):
                  group_velocity=None,
                  write_dynamical_matrices=False,
                  factor=VaspToTHz):
-        cell = dynamical_matrix.get_primitive()
-        self._natom = cell.get_number_of_atoms()
-        self._masses = cell.get_masses()
-        self._symbols = cell.get_chemical_symbols()
-        self._positions = cell.get_scaled_positions()
-        self._lattice = cell.get_cell()
+        primitive = dynamical_matrix.get_primitive()
+        self._natom = primitive.get_number_of_atoms()
+        self._masses = primitive.get_masses()
+        self._symbols = primitive.get_chemical_symbols()
+        self._positions = primitive.get_scaled_positions()
+        self._lattice = primitive.get_cell()
 
         self._qpoints = qpoints
         self._dynamical_matrix = dynamical_matrix
@@ -67,11 +84,19 @@ class QpointsPhonon(object):
 
         self._run()
 
-    def get_frequencies(self):
+    @property
+    def frequencies(self):
         return self._frequencies
 
-    def get_eigenvectors(self):
+    def get_frequencies(self):
+        return self.frequencies
+
+    @property
+    def eigenvectors(self):
         return self._eigenvectors
+
+    def get_eigenvectors(self):
+        return self.eigenvectors
 
     def write_hdf5(self):
         import h5py
@@ -89,7 +114,7 @@ class QpointsPhonon(object):
         w = open('qpoints.yaml', 'w')
         w.write("nqpoint: %-7d\n" % len(self._qpoints))
         w.write("natom:   %-7d\n" % self._natom)
-        rec_lattice = np.linalg.inv(self._lattice) # column vectors
+        rec_lattice = np.linalg.inv(self._lattice)  # column vectors
         w.write("reciprocal_lattice:\n")
         for vec, axis in zip(rec_lattice.T, ('a*', 'b*', 'c*')):
             w.write("- [ %12.8f, %12.8f, %12.8f ] # %2s\n" %
@@ -115,8 +140,8 @@ class QpointsPhonon(object):
                 w.write("    frequency: %15.10f\n" % freq)
 
                 if self._gv is not None:
-                    w.write("    group_velocity: [ %13.7f, %13.7f, %13.7f ]\n" %
-                            tuple(self._gv[i, j]))
+                    w.write("    group_velocity: [ %13.7f, %13.7f, %13.7f ]\n"
+                            % tuple(self._gv[i, j]))
 
                 if self._is_eigenvectors:
                     w.write("    eigenvector:\n")

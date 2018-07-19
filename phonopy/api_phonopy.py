@@ -45,10 +45,8 @@ from phonopy.harmonic.force_constants import (
     symmetrize_force_constants,
     symmetrize_compact_force_constants,
     show_drift_force_constants,
-    set_translational_invariance,
-    rotational_invariance,
     cutoff_force_constants,
-    set_tensor_symmetry)
+    set_tensor_symmetry_PJ)
 from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
 from phonopy.phonon.band_structure import BandStructure
 from phonopy.phonon.thermal_properties import ThermalProperties
@@ -60,11 +58,12 @@ from phonopy.phonon.thermal_displacement import (ThermalDisplacements,
                                                  ThermalDisplacementMatrices)
 from phonopy.phonon.animation import Animation
 from phonopy.phonon.modulation import Modulation
-from phonopy.phonon.qpoints_mode import QpointsPhonon
+from phonopy.phonon.qpoints import QpointsPhonon
 from phonopy.phonon.irreps import IrReps
 from phonopy.phonon.group_velocity import GroupVelocity
-from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 from phonopy.phonon.moment import PhononMoment
+from phonopy.spectrum.dynamic_structure_factor import DynamicStructureFactor
+
 
 class Phonopy(object):
     def __init__(self,
@@ -123,7 +122,6 @@ class Phonopy(object):
         # set_displacements (used only in preprocess)
         self._displacement_dataset = None
         self._displacements = None
-        self._displacement_directions = None
         self._supercells_with_displacements = None
 
         # set_force_constants or set_forces
@@ -171,70 +169,92 @@ class Phonopy(object):
         # set_group_velocity
         self._group_velocity = None
 
-    def get_version(self):
+    @property
+    def version(self):
         return __version__
 
-    def get_primitive(self):
+    def get_version(self):
+        return self.version
+
+    @property
+    def primitive(self):
         return self._primitive
-    primitive = property(get_primitive)
+
+    def get_primitive(self):
+        return self.primitive
+
+    @property
+    def unitcell(self):
+        return self._unitcell
 
     def get_unitcell(self):
-        return self._unitcell
-    unitcell = property(get_unitcell)
+        return self.unitcell
+
+    @property
+    def supercell(self):
+        return self._supercell
 
     def get_supercell(self):
-        return self._supercell
-    supercell = property(get_supercell)
+        return self.supercell
 
-    def get_symmetry(self):
+    @property
+    def symmetry(self):
         """return symmetry of supercell"""
         return self._symmetry
-    symmetry = property(get_symmetry)
 
-    def get_primitive_symmetry(self):
+    def get_symmetry(self):
+        return self.symmetry
+
+    @property
+    def primitive_symmetry(self):
         """return symmetry of primitive cell"""
         return self._primitive_symmetry
 
-    def get_supercell_matrix(self):
+    def get_primitive_symmetry(self):
+        """return symmetry of primitive cell"""
+        return self.primitive_symmetry
+
+    @property
+    def supercell_matrix(self):
         return self._supercell_matrix
 
-    def get_primitive_matrix(self):
+    def get_supercell_matrix(self):
+        return self.supercell_matrix
+
+    @property
+    def primitive_matrix(self):
         return self._primitive_matrix
 
-    def get_unit_conversion_factor(self):
-        return self._factor
-    unit_conversion_factor = property(get_unit_conversion_factor)
+    def get_primitive_matrix(self):
+        return self.primitive_matrix
 
-    def get_displacement_dataset(self):
+    @property
+    def unit_conversion_factor(self):
+        return self._factor
+
+    def get_unit_conversion_factor(self):
+        return self.unit_conversion_factor
+
+    @property
+    def displacement_dataset(self):
         return self._displacement_dataset
 
-    def get_displacements(self):
+    def get_displacement_dataset(self):
+        return self.displacement_dataset
+
+    @property
+    def displacements(self):
         return self._displacements
-    displacements = property(get_displacements)
 
-    def get_displacement_directions(self):
-        return self._displacement_directions
-    displacement_directions = property(get_displacement_directions)
+    def get_displacements(self):
+        return self.displacements
 
-    def get_supercells_with_displacements(self):
-        if self._displacement_dataset is None:
-            return None
-        else:
-            self._build_supercells_with_displacements()
-            return self._supercells_with_displacements
+    @property
+    def force_constants(self):
+        return self._force_constants
 
     def get_force_constants(self):
-        return self._force_constants
-    force_constants = property(get_force_constants)
-
-    def get_rotational_condition_of_fc(self):
-        return rotational_invariance(self._force_constants,
-                                     self._supercell,
-                                     self._primitive,
-                                     self._symprec)
-
-    def get_nac_params(self):
-        return self._nac_params
+        return self.force_constants
 
     @property
     def dynamical_matrix(self):
@@ -242,6 +262,64 @@ class Phonopy(object):
 
     def get_dynamical_matrix(self):
         return self.dynamical_matrix
+
+    @property
+    def nac_params(self):
+        return self._nac_params
+
+    def get_nac_params(self):
+        return self.nac_params
+
+    @property
+    def supercells_with_displacements(self):
+        if self._displacement_dataset is None:
+            return None
+        else:
+            if self._supercells_with_displacements is None:
+                self._build_supercells_with_displacements()
+            return self._supercells_with_displacements
+
+    def get_supercells_with_displacements(self):
+        return self.supercells_with_displacements
+
+    @property
+    def mesh_numbers(self):
+        if self._mesh is None:
+            return None
+        else:
+            return self._mesh.mesh_number
+
+    @property
+    def qpoints(self):
+        return self._qpoints_phonon
+
+    @property
+    def mesh(self):
+        return self._mesh
+
+    @property
+    def itermesh(self):
+        """Returns IterMesh instance
+
+        This instance object does not store phonon data. With very
+        dense mesh and eigenvectors needed, IterMesh can save memory
+        space, but expected to be slow.
+
+        This object is used as a generator. Phonon frequencies and
+        eigenvectos are obtained as follows:
+
+            for i, (freqs, eigvecs) in enumerate(iter_mesh):
+                print(i + 1)
+                print(freqs)
+                print(eigvecs)
+
+        """
+
+        return self._iter_mesh
+
+    @property
+    def dynamic_structure_factor(self):
+        return self._dynamic_structure_factor
 
     def set_unitcell(self, unitcell):
         self._unitcell = unitcell
@@ -269,29 +347,25 @@ class Phonopy(object):
             self._set_dynamical_matrix()
 
     def set_displacement_dataset(self, displacement_dataset):
-        """
-        displacement_dataset:
-           {'natom': number_of_atoms_in_supercell,
-            'first_atoms': [
-              {'number': atom index of displaced atom,
-               'displacement': displacement in Cartesian coordinates,
-               'direction': displacement direction with respect to axes
-               'forces': forces on atoms in supercell},
-              {...}, ...]}
+        """Set dataset having displacements and optionally forces
+
+        displacement_dataset: tuple
+            This tuple has the following structure:
+            {'natom': number_of_atoms_in_supercell,
+             'first_atoms': [
+               {'number': atom index of displaced atom,
+                'displacement': displacement in Cartesian coordinates,
+                'forces': forces on atoms in supercell},
+               {...}, ...]}
+
         """
         self._displacement_dataset = displacement_dataset
+        self._supercells_with_displacements = None
 
         self._displacements = []
-        self._displacement_directions = []
         for disp in self._displacement_dataset['first_atoms']:
             x = disp['displacement']
             self._displacements.append([disp['number'], x[0], x[1], x[2]])
-            if 'direction' in disp:
-                y = disp['direction']
-                self._displacement_directions.append(
-                    [disp['number'], y[0], y[1], y[2]])
-        if not self._displacement_directions:
-            self._displacement_directions = None
 
     def set_forces(self, sets_of_forces):
         """
@@ -305,6 +379,13 @@ class Phonopy(object):
             disp['forces'] = forces
 
     def set_force_constants(self, force_constants, show_drift=True):
+        fc_shape = force_constants.shape
+        if fc_shape[0] != fc_shape[1]:
+            if self._primitive.get_number_of_atoms() != fc_shape[0]:
+                print("Force constants shape disagrees with crystal "
+                      "structure setting. This may be due to PRIMITIVE_AXIS.")
+                raise RuntimeError
+
         self._force_constants = force_constants
         if show_drift and self._log_level:
             show_drift_force_constants(self._force_constants,
@@ -317,9 +398,6 @@ class Phonopy(object):
                                self._primitive,
                                cutoff_radius,
                                symprec=self._symprec)
-        self._set_dynamical_matrix()
-
-    def set_dynamical_matrix(self):
         self._set_dynamical_matrix()
 
     def generate_displacements(self,
@@ -342,7 +420,7 @@ class Phonopy(object):
               [7, 1, 0, 1], ...]
           where each list is defined by:
              First value:      Atom index in supercell starting with 0
-             Second to fourth: If the direction is displaced or not ( 1, 0, or -1 )
+             Second to fourth: If the direction is displaced or not (1, 0, or -1)
                                with respect to the axes.
 
         """
@@ -358,10 +436,10 @@ class Phonopy(object):
             self._supercell)
         self.set_displacement_dataset(displacement_dataset)
 
-    def  produce_force_constants(self,
-                                 forces=None,
-                                 calculate_full_force_constants=True,
-                                 show_drift=True):
+    def produce_force_constants(self,
+                                forces=None,
+                                calculate_full_force_constants=True,
+                                show_drift=True):
         if forces is not None:
             self.set_forces(forces)
 
@@ -403,8 +481,6 @@ class Phonopy(object):
         self._set_dynamical_matrix()
 
     def symmetrize_force_constants_by_space_group(self):
-        from phonopy.harmonic.force_constants import (set_tensor_symmetry,
-                                                      set_tensor_symmetry_PJ)
         set_tensor_symmetry_PJ(self._force_constants,
                                self._supercell.get_cell().T,
                                self._supercell.get_scaled_positions(),
@@ -425,7 +501,6 @@ class Phonopy(object):
 
         self._dynamical_matrix.set_dynamical_matrix(q)
         return self._dynamical_matrix.get_dynamical_matrix()
-
 
     def get_frequencies(self, q):
         """
@@ -532,6 +607,13 @@ class Phonopy(object):
 
     # Sampling mesh
     def run_mesh(self):
+        """Run phonon calculations on sampling mesh grids
+
+        With ``run_immediately=False`` of ``set_mesh`` method, phonon
+        calculations become ready but are not executed. ``run_mesh`` does it.
+
+        """
+
         if self._mesh is not None:
             self._mesh.run()
 
@@ -543,6 +625,35 @@ class Phonopy(object):
                  is_eigenvectors=False,
                  is_gamma_center=False,
                  run_immediately=True):
+        """Phonon calculations on sampling mesh grids
+
+        Parameters
+        ----------
+        mesh: array_like
+            Mesh numbers along a, b, c axes.
+            dtype='intc'
+            shape=(3,)
+        shift: array_like, optional, default None (no shift)
+            Mesh shifts along a*, b*, c* axes with respect to neighboring grid
+            points from the original mesh (Monkhorst-Pack or Gamma center).
+            0.5 gives half grid shift. Normally 0 or 0.5 is given.
+            Otherwise q-points symmetry search is not performed.
+            dtype='double'
+            shape=(3, )
+        is_time_reversal: bool, optional, default True
+            Time reversal symmetry is considered in symmetry search. By this,
+            inversion symmetry is always included.
+        is_mesh_symmetry: bool, optional, default True
+            Wheather symmetry search is done or not.
+        is_gamma_center: bool, default False
+            Uniform mesh grids are generated centring at Gamma point but not
+            the Monkhorst-Pack scheme.
+        run_immediately: bool, default True
+            With True, phonon calculations are performed immediately, which is
+            usual usage.
+
+        """
+
         if self._dynamical_matrix is None:
             print("Warning: Dynamical matrix has not yet built.")
             self._mesh = None
@@ -568,25 +679,18 @@ class Phonopy(object):
         if self._mesh is None:
             return None
         else:
-            return (self._mesh.get_qpoints(),
-                    self._mesh.get_weights(),
-                    self._mesh.get_frequencies(),
-                    self._mesh.get_eigenvectors())
+            return (self._mesh.qpoints,
+                    self._mesh.weights,
+                    self._mesh.frequencies,
+                    self._mesh.eigenvectors)
 
     def get_mesh_grid_info(self):
         if self._mesh is None:
             return None
         else:
-            return (self._mesh.get_grid_address(),
-                    self._mesh.get_ir_grid_points(),
-                    self._mesh.get_grid_mapping_table())
-
-    @property
-    def mesh_numbers(self):
-        if self._mesh is None:
-            return None
-        else:
-            self._mesh.get_mesh_numbers()
+            return (self._mesh.grid_address,
+                    self._mesh.ir_grid_points,
+                    self._mesh.grid_mapping_table)
 
     def write_hdf5_mesh(self):
         self._mesh.write_hdf5()
@@ -603,10 +707,13 @@ class Phonopy(object):
                       is_mesh_symmetry=True,
                       is_eigenvectors=False,
                       is_gamma_center=False):
-        """Create an IterMesh instance
+        """Create an IterMesh instancer
+
+        Attributes
+        ----------
+        See set_mesh method.
 
         """
-
 
         if self._dynamical_matrix is None:
             print("Warning: Dynamical matrix has not yet built.")
@@ -625,25 +732,6 @@ class Phonopy(object):
             factor=self._factor)
         return True
 
-    def get_iter_mesh(self):
-        """Returns IterMesh instance
-
-        This instance object does not store all phonon data. With very
-        dense mesh and eigenvectors needed, IterMesh can save memory
-        space, but expected to be slow.
-
-        This object is used as an iterator. Phonon frequencies and
-        eigenvectos are obtained as below:
-
-            for i, (freqs, eigvecs) in enumerate(iter_mesh):
-                print(i + 1)
-                print(freqs)
-                print(eigvecs)
-
-        """
-
-        return self._iter_mesh
-
     # Plot band structure and DOS (PDOS) together
     def plot_band_structure_and_dos(self, pdos_indices=None, labels=None):
         import matplotlib.pyplot as plt
@@ -651,7 +739,6 @@ class Phonopy(object):
         if labels:
             from matplotlib import rc
             rc('text', usetex=True)
-
 
         plt.figure(figsize=(10, 6))
         gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1])
@@ -1315,6 +1402,31 @@ class Phonopy(object):
     def get_moment(self):
         return self._moment
 
+    def set_dynamic_structure_factor(self,
+                                     qpoints,
+                                     f_params,
+                                     T,
+                                     G=None,
+                                     sign=1,  # k_f - k_i (1) or k_i - k_f (-1)
+                                     freq_min=None,
+                                     freq_max=None,
+                                     run_immediately=True):
+        self._dynamic_structure_factor = DynamicStructureFactor(
+            self._mesh,
+            qpoints,
+            f_params,
+            T,
+            G=G,
+            sign=sign,
+            freq_min=freq_min,
+            freq_max=freq_max)
+        if run_immediately:
+            self._dynamic_structure_factor.run()
+
+    def get_dynamic_structure_factor(self):
+        return (self._dynamic_structure_factor.qpoints,
+                self._dynamic_structure_factor.S)
+
     #################
     # Local methods #
     #################
@@ -1332,43 +1444,24 @@ class Phonopy(object):
     def _set_dynamical_matrix(self):
         self._dynamical_matrix = None
 
-        if (self._supercell is None or self._primitive is None):
-            print("Bug: Supercell or primitive is not created.")
-            return False
-        elif self._force_constants is None:
-            print("Warning: Force constants are not prepared.")
-            return False
-        elif self._primitive.get_masses() is None:
-            print("Warning: Atomic masses are not correctly set.")
-            return False
-        else:
-            self._dynamical_matrix = get_dynamical_matrix(
-                self._force_constants,
-                self._supercell,
-                self._primitive,
-                self._nac_params,
-                self._frequency_scale_factor,
-                self._dynamical_matrix_decimals,
-                symprec=self._symprec,
-                log_level=self._log_level)
-
-            # if self._nac_params is None:
-            #     self._dynamical_matrix = DynamicalMatrix(
-            #         self._supercell,
-            #         self._primitive,
-            #         self._force_constants,
-            #         decimals=self._dynamical_matrix_decimals,
-            #         symprec=self._symprec)
-            # else:
-            #     self._dynamical_matrix = DynamicalMatrixNAC(
-            #         self._supercell,
-            #         self._primitive,
-            #         self._force_constants,
-            #         nac_params=self._nac_params,
-            #         decimals=self._dynamical_matrix_decimals,
-            #         symprec=self._symprec,
-            #         log_level=self._log_level)
-            return True
+        if self._supercell is None or self._primitive is None:
+            print("Supercell or primitive is not created.")
+            raise RuntimeError
+        if self._force_constants is None:
+            print("Force constants are not prepared.")
+            raise RuntimeError
+        if self._primitive.get_masses() is None:
+            print("Atomic masses are not correctly set.")
+            raise RuntimeError
+        self._dynamical_matrix = get_dynamical_matrix(
+            self._force_constants,
+            self._supercell,
+            self._primitive,
+            self._nac_params,
+            self._frequency_scale_factor,
+            self._dynamical_matrix_decimals,
+            symprec=self._symprec,
+            log_level=self._log_level)
 
     def _search_symmetry(self):
         self._symmetry = Symmetry(self._supercell,
