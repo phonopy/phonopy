@@ -81,6 +81,7 @@ class DynamicStructureFactor(object):
                  f_params,
                  T,
                  G=None,
+                 sign=1,
                  freq_min=None,
                  freq_max=None):
         self._mesh_phonon = mesh_phonon
@@ -97,6 +98,7 @@ class DynamicStructureFactor(object):
             self._fmax = None
         else:
             self._fmax = freq_max
+        self._sign = sign
 
         self._rec_lat = np.linalg.inv(self._primitive.get_cell())
         self._freqs = None
@@ -144,8 +146,8 @@ class DynamicStructureFactor(object):
                 S[i] = abs(F) ** 2 * (n + 1)
         return S
 
-    def _set_phonon(self, qpoints):
-        qpoints_phonon = QpointsPhonon(qpoints,
+    def _set_phonon(self, qpoints, sign=1):
+        qpoints_phonon = QpointsPhonon(qpoints * self._sign,
                                        self._dynamical_matrix,
                                        is_eigenvectors=True)
         self._freqs = qpoints_phonon.frequencies

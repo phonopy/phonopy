@@ -1407,6 +1407,7 @@ class Phonopy(object):
                                      f_params,
                                      T,
                                      G=None,
+                                     sign=1,  # k_f - k_i (1) or k_i - k_f (-1)
                                      freq_min=None,
                                      freq_max=None,
                                      run_immediately=True):
@@ -1416,6 +1417,7 @@ class Phonopy(object):
             f_params,
             T,
             G=G,
+            sign=sign,
             freq_min=freq_min,
             freq_max=freq_max)
         if run_immediately:
