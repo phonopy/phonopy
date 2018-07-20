@@ -53,6 +53,12 @@ from phonopy.phonon.thermal_displacement import ThermalDisplacements
 #   'Si': [5.275329, 2.631338, 3.191038, 33.730728,
 #          1.511514, 0.081119, 1.356849, 86.288640,
 #          2.519114, 1.170087, 0.145073]}  # neutral
+#
+#
+# Neutron scattering length
+# https://www.ncnr.nist.gov/resources/n-lengths/
+# Exmple: {'Na': 3.63,
+#          'Cl': 9.5770}
 
 def atomic_form_factor(Q, f_x):
     a, b = np.array(f_x[:10]).reshape(-1, 2).T
@@ -60,7 +66,16 @@ def atomic_form_factor(Q, f_x):
 
 
 class DynamicStructureFactor(object):
-    """Class to generate irreducible grid points on uniform mesh grids
+    """Calculate dynamic structure factor
+
+    Note
+    ----
+    In computation, the heaviest part is the calculation of thermal
+    displacements that is used in Deby-Waller factor. The heavy part
+    of the thermal displacement is computed many times for the same
+    values. Therefore It is possible to improve the performance of
+    dynamic structure factor, but it requires to make
+    ThermalDisplacements keep Q2 values in its instance.
 
     Attributes
     ----------
@@ -78,17 +93,51 @@ class DynamicStructureFactor(object):
     def __init__(self,
                  mesh_phonon,
                  qpoints,
-                 f_params,
+                 G,
                  T,
-                 G=None,
+                 f_params=None,
+                 scattering_lengths=None,
                  sign=1,
                  freq_min=None,
                  freq_max=None):
+        """
+
+        Parameters
+        ----------
+        mesh_phonon: Mesh or IterMesh
+            Mesh phonon instance that is ready to get frequencies and
+            eigenvectors.
+        qpoints: array_like
+            q-points measured from G-point.
+            dtype='double'
+            shape=(qpoints, 3)
+        G: array_like
+            G-point.
+            dtype='double'
+            shape=(3, )
+        T: float
+            Temperature in K.
+        f_params: dictionary
+            Atomic form factor. Supposed for IXS.
+        scattering_lengths: dictionary
+            Coherent scattering lengths averaged over isotopes and spins.
+            Supposed for INS.
+        sign: float or int, optional (default 1)
+            1 for Q = k_f - k_i. -1 for Q = k_i - k_f.
+        freq_min: float
+            Minimum phonon frequency to determine wheather include or not.
+        freq_max: float
+            Maximum phonon frequency to determine wheather include or not. Only
+            for Debye-Waller factor.
+
+        """
+
         self._mesh_phonon = mesh_phonon
         self._dynamical_matrix = mesh_phonon.dynamical_matrix
         self._primitive = self._dynamical_matrix.primitive
         self._qpoints = np.array(qpoints)  # (n_q, 3) array
         self._f_params = f_params
+        self._b = scattering_lengths
         self._T = T
         if freq_min is None:
             self._fmin = 0
@@ -171,8 +220,13 @@ class DynamicStructureFactor(object):
         val = 0
         for i in range(num_atom):
             m = masses[i]
-            f = atomic_form_factor(np.linalg.norm(Q_cart),
-                                   self._f_params[symbols[i]])
+            if self._f_params is not None:
+                f = atomic_form_factor(np.linalg.norm(Q_cart),
+                                       self._f_params[symbols[i]])
+            elif self._b is not None:
+                f = self._b[symbols[i]]
+            else:
+                raise RuntimeError
             QW = np.dot(Q_cart, W[i])
             val += f / np.sqrt(2 * m) * DW[i] * QW
         val /= np.sqrt(freq)

@@ -1404,19 +1404,21 @@ class Phonopy(object):
 
     def set_dynamic_structure_factor(self,
                                      qpoints,
-                                     f_params,
+                                     G,
                                      T,
-                                     G=None,
-                                     sign=1,  # k_f - k_i (1) or k_i - k_f (-1)
+                                     f_params=None,
+                                     scattering_lengths=None,
+                                     sign=1,
                                      freq_min=None,
                                      freq_max=None,
                                      run_immediately=True):
         self._dynamic_structure_factor = DynamicStructureFactor(
             self._mesh,
             qpoints,
-            f_params,
+            G,
             T,
-            G=G,
+            f_params=f_params,
+            scattering_lengths=scattering_lengths,
             sign=sign,
             freq_min=freq_min,
             freq_max=freq_max)
