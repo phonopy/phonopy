@@ -33,16 +33,17 @@ f_params = {'Na': [3.148690, 2.594987, 4.073989, 6.046925,
                    19.847015, 5.065547, 1.557175, 84.101613,
                    17.802427, 0.487660, -0.806668]}  # neutral
 
-data_str = """0.205043308 4.407286257 1.956218187 0.000104857 0.000540313 0.000315644
-0.158921899 1.003748377 0.523964179 0.000626127 0.000010037 0.000300514
-0.021827309 0.504075274 0.250870053 0.000600811 0.000032282 0.000274957
-0.023738365 0.278889658 0.152882598 0.000000079 0.000602730 0.000224140
-0.196502005 0.002774374 0.106709063 0.000212955 0.000294880 0.000137485
-0.032304029 0.111100967 0.081399008 0.000092400 0.000231328 0.000032545
-0.006701520 0.103384727 0.000031104 0.000051431 0.066050787 0.000024674
-0.001180117 0.087412827 0.000001203 0.000071282 0.055615996 0.000570346
-0.000245315 0.071678812 0.001486225 0.000810228 0.046214590 0.003316495
-0.000859873 0.045889006 0.017310162 0.000148125 0.033398866 0.011523264"""
+data_str = """3.367996077 1.201959804 1.955147618 0.000106157 0.000454346 0.000298235
+0.016284555 1.143720101 0.524137701 0.000039753 0.000522224 0.000285364
+0.144927117 0.380672693 0.250987019 0.000548617 0.000024570 0.000263118
+0.091567062 0.211108177 0.152948171 0.000048560 0.000511550 0.000216252
+0.178871602 0.020477552 0.106741674 0.000086382 0.000396194 0.000133455
+0.012132730 0.131313086 0.081412285 0.000000639 0.000312013 0.000031457
+0.070659606 0.039440702 0.000004427 0.000075654 0.066054549 0.000025104
+0.001504338 0.087090911 0.000023691 0.000049521 0.055616371 0.000571078
+0.069991021 0.001932739 0.001849279 0.000448227 0.046214042 0.003317322
+0.010145664 0.036601431 0.000376900 0.017083458 0.033397592 0.011524631"""
+
 
 class TestDynamicStructureFactor(unittest.TestCase):
     def setUp(self):
@@ -76,11 +77,20 @@ class TestDynamicStructureFactor(unittest.TestCase):
         self._run(G_points_cubic, directions, sign, n_points=n_points)
         Q, S = self.phonon.get_dynamic_structure_factor()
         data_cmp = np.reshape([float(x) for x in data_str.split()], (-1, 6))
-        print(S.shape)
-        print(data_cmp.shape)
         for i in (([0, 1], [2], [3, 4], [5])):
             np.testing.assert_allclose(
-                S[:, i].sum(axis=1), data_cmp[:, i].sum(axis=1), atol=1e-6)
+                S[:, i].sum(axis=1), data_cmp[:, i].sum(axis=1), atol=1e-2)
+
+    def plot_f_Q(f_params):
+        import matplotlib.pyplot as plt
+        x = np.linspace(0.0, 6.0, 101)
+        for elem in ('Si', 'Na', 'Cl', 'Pb', 'Pb0', 'Te'):
+            y = [atomic_form_factor(Q, f_params[elem]) for Q in x]
+            plt.plot(x, y, label=elem)
+        plt.xlim(xmin=0)
+        plt.ylim(ymin=0)
+        plt.legend()
+        plt.show()
 
     def _run(self,
              G_points_cubic,
@@ -121,6 +131,8 @@ class TestDynamicStructureFactor(unittest.TestCase):
                     Q_prim = dsf.qpoints[i]
                     Q_cubic = np.dot(Q_prim, np.linalg.inv(P))
 
+                    # print(("%11.9f " * len(S)) % tuple(S))
+
                     if verbose:
                         print("%f  %f %f %f  %f %f %f %f  %f %f %f %f" %
                               ((distances[0][i + 1], ) + tuple(Q_cubic) +
@@ -130,17 +142,6 @@ class TestDynamicStructureFactor(unittest.TestCase):
                                 S[5])))
                 if verbose:
                     print("")
-
-    def plot_f_Q(f_params):
-        import matplotlib.pyplot as plt
-        x = np.linspace(0.0, 6.0, 101)
-        for elem in ('Si', 'Na', 'Cl', 'Pb', 'Pb0', 'Te'):
-            y = [atomic_form_factor(Q, f_params[elem]) for Q in x]
-            plt.plot(x, y, label=elem)
-        plt.xlim(xmin=0)
-        plt.ylim(ymin=0)
-        plt.legend()
-        plt.show()
 
     def _get_phonon(self):
         cell = read_vasp(os.path.join(data_dir, "..", "POSCAR_NaCl"))
@@ -153,6 +154,7 @@ class TestDynamicStructureFactor(unittest.TestCase):
         force_sets = parse_FORCE_SETS(filename=filename)
         phonon.set_displacement_dataset(force_sets)
         phonon.produce_force_constants()
+        phonon.symmetrize_force_constants()
         filename_born = os.path.join(data_dir, "..", "BORN_NaCl")
         nac_params = parse_BORN(phonon.get_primitive(), filename=filename_born)
         phonon.set_nac_params(nac_params)
