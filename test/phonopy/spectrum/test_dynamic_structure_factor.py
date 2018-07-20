@@ -75,8 +75,12 @@ class TestDynamicStructureFactor(unittest.TestCase):
         sign = 1
         self._run(G_points_cubic, directions, sign, n_points=n_points)
         Q, S = self.phonon.get_dynamic_structure_factor()
-        data_cmp = [float(x) for x in data_str.split()]
-        np.testing.assert_allclose(S.ravel(), data_cmp, atol=1e-6)
+        data_cmp = np.reshape([float(x) for x in data_str.split()], (-1, 6))
+        print(S.shape)
+        print(data_cmp.shape)
+        for i in (([0, 1], [2], [3, 4], [5])):
+            np.testing.assert_allclose(
+                S[:, i].sum(axis=1), data_cmp[:, i].sum(axis=1), atol=1e-6)
 
     def _run(self,
              G_points_cubic,
