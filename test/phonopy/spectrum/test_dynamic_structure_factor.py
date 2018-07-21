@@ -33,17 +33,16 @@ f_params = {'Na': [3.148690, 2.594987, 4.073989, 6.046925,
                    19.847015, 5.065547, 1.557175, 84.101613,
                    17.802427, 0.487660, -0.806668]}  # neutral
 
-data_str = """3.367996077 1.201959804 1.955147618 0.000106157 0.000454346 0.000298235
-0.016284555 1.143720101 0.524137701 0.000039753 0.000522224 0.000285364
-0.144927117 0.380672693 0.250987019 0.000548617 0.000024570 0.000263118
-0.091567062 0.211108177 0.152948171 0.000048560 0.000511550 0.000216252
-0.178871602 0.020477552 0.106741674 0.000086382 0.000396194 0.000133455
-0.012132730 0.131313086 0.081412285 0.000000639 0.000312013 0.000031457
-0.070659606 0.039440702 0.000004427 0.000075654 0.066054549 0.000025104
-0.001504338 0.087090911 0.000023691 0.000049521 0.055616371 0.000571078
-0.069991021 0.001932739 0.001849279 0.000448227 0.046214042 0.003317322
-0.010145664 0.036601431 0.000376900 0.017083458 0.033397592 0.011524631"""
-
+data_str = """51.376255296 18.334995742 29.824311212 0.001619351 0.006930700 0.004549347
+0.248408682 17.446592747 7.995327709 0.000606398 0.007966140 0.004353010
+2.210754520 5.806876564 3.828618814 0.008368748 0.000374804 0.004013668
+1.396786889 3.220296987 2.333109686 0.000740754 0.007803308 0.003298757
+2.728552194 0.312369707 1.628264217 0.001317689 0.006043644 0.002035759
+0.185075698 2.003082681 1.241883374 0.000009746 0.004759531 0.000479857
+1.077859312 0.601638340 0.000067538 0.001154045 1.007612628 0.000382949
+0.022947555 1.328506566 0.000361393 0.000755408 0.848386042 0.008711364
+1.067660562 0.029482478 0.028209365 0.006837366 0.704960564 0.050603265
+0.154764494 0.558327397 0.005749330 0.260595344 0.509455223 0.175799603"""
 
 class TestDynamicStructureFactor(unittest.TestCase):
     def setUp(self):
@@ -66,15 +65,13 @@ class TestDynamicStructureFactor(unittest.TestCase):
                                [-0.5, -0.5, 0.5],
                                [-0.5, -0.5, -0.5]])
         G_points_cubic = ([7, 1, 1], )
-        sign = 1
-        self._run(G_points_cubic, directions, sign, verbose=True)
+        self._run(G_points_cubic, directions, verbose=True)
 
     def test_IXS_G_to_L(self):
         directions = np.array([[0.5, 0.5, 0.5], ])
         n_points = 11
         G_points_cubic = ([7, 1, 1], )
-        sign = 1
-        self._run(G_points_cubic, directions, sign, n_points=n_points)
+        self._run(G_points_cubic, directions, n_points=n_points)
         Q, S = self.phonon.get_dynamic_structure_factor()
         data_cmp = np.reshape([float(x) for x in data_str.split()], (-1, 6))
         for i in (([0, 1], [2], [3, 4], [5])):
@@ -95,7 +92,6 @@ class TestDynamicStructureFactor(unittest.TestCase):
     def _run(self,
              G_points_cubic,
              directions,
-             sign,
              n_points=51,
              verbose=False):
         P = [[0, 0.5, 0.5],
@@ -111,8 +107,7 @@ class TestDynamicStructureFactor(unittest.TestCase):
         for G_cubic in G_points_cubic:
             G_prim = np.dot(G_cubic, P)
             if verbose:
-                print("# G_cubic %s, G_prim %s, sign=%d" %
-                      (G_cubic, G_prim, sign))
+                print("# G_cubic %s, G_prim %s" % (G_cubic, G_prim))
 
             for direction in directions:
                 direction_prim = np.dot(direction, P)
@@ -123,7 +118,6 @@ class TestDynamicStructureFactor(unittest.TestCase):
                                                          G_prim,
                                                          T,
                                                          f_params=f_params,
-                                                         sign=sign,
                                                          freq_min=1e-3,
                                                          run_immediately=False)
                 dsf = self.phonon.dynamic_structure_factor

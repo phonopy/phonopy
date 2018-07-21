@@ -1408,7 +1408,6 @@ class Phonopy(object):
                                      T,
                                      f_params=None,
                                      scattering_lengths=None,
-                                     sign=1,
                                      freq_min=None,
                                      freq_max=None,
                                      run_immediately=True):
@@ -1419,7 +1418,6 @@ class Phonopy(object):
             T,
             f_params=f_params,
             scattering_lengths=scattering_lengths,
-            sign=sign,
             freq_min=freq_min,
             freq_max=freq_max)
         if run_immediately:

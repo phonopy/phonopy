@@ -33,7 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.units import THzToEv, Kb
+from phonopy.units import THzToEv, Kb, AMU, THz
 from phonopy.phonon.qpoints import QpointsPhonon
 from phonopy.phonon.thermal_displacement import ThermalDisplacements
 
@@ -68,6 +68,9 @@ def atomic_form_factor(Q, f_x):
 class DynamicStructureFactor(object):
     """Calculate dynamic structure factor
 
+    Result is given in m^2/J with setting k'/k * N = 1 when b is given
+    in Angstron.
+
     Note
     ----
     In computation, the heaviest part is the calculation of thermal
@@ -97,7 +100,6 @@ class DynamicStructureFactor(object):
                  T,
                  f_params=None,
                  scattering_lengths=None,
-                 sign=1,
                  freq_min=None,
                  freq_max=None):
         """
@@ -122,8 +124,6 @@ class DynamicStructureFactor(object):
         scattering_lengths: dictionary
             Coherent scattering lengths averaged over isotopes and spins.
             Supposed for INS.
-        sign: float or int, optional (default 1)
-            1 for Q = k_f - k_i. -1 for Q = k_i - k_f.
         freq_min: float
             Minimum phonon frequency to determine wheather include or not.
         freq_max: float
@@ -147,13 +147,13 @@ class DynamicStructureFactor(object):
             self._fmax = None
         else:
             self._fmax = freq_max
-        self._sign = sign
 
         self._rec_lat = np.linalg.inv(self._primitive.get_cell())
         self._freqs = None
         self._eigvecs = None
         self._set_phonon(self._qpoints)
         self._q_count = 0
+        self._unit_convertion_factor = 1.0 / (AMU * (2 * np.pi * THz) ** 2)
 
         self.qpoints = self._qpoints + np.array(G)  # reciprocal lattice points
         self.S = np.zeros(self._freqs.shape, dtype='double', order='C')
@@ -193,10 +193,10 @@ class DynamicStructureFactor(object):
                                                   eigvecs[:, i])
                 n = 1.0 / (np.exp(f * THzToEv / (Kb * self._T)) - 1)
                 S[i] = abs(F) ** 2 * (n + 1)
-        return S
+        return S * self._unit_convertion_factor
 
-    def _set_phonon(self, qpoints, sign=1):
-        qpoints_phonon = QpointsPhonon(qpoints * self._sign,
+    def _set_phonon(self, qpoints):
+        qpoints_phonon = QpointsPhonon(qpoints,
                                        self._dynamical_matrix,
                                        is_eigenvectors=True)
         self._freqs = qpoints_phonon.frequencies
