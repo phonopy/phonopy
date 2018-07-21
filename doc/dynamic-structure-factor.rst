@@ -45,3 +45,8 @@ inelastic neutron scattering, :math:`\bar{b}_j` is the average
 scattering length over isotopes and spins. For inelastic X-ray
 scattering, :math:`\bar{b}_j` is replaced by atomic form factor
 :math:`f_j(\mathbf{Q})` and :math:`k'/k \sim 1`.
+
+Currently only :math:`S(\mathbf{Q}, \nu, \omega)^{+1\text{ph}}` is
+calcualted with setting :math:`N k'/k = 1` and the physical unit is
+:math:`\text{m}^2/\text{J}` when :math:`\bar{b}_j` is given in
+Angstrom.
