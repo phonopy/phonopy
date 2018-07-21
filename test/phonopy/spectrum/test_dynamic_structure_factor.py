@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 from phonopy.api_phonopy import Phonopy
-from phonopy.spectrum.dynamic_structure_factor import atomic_form_factor
+from phonopy.spectrum.dynamic_structure_factor import atomic_form_factor_WK1995
 from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
 from phonopy.units import THzToEv
@@ -33,7 +33,7 @@ f_params = {'Na': [3.148690, 2.594987, 4.073989, 6.046925,
                    19.847015, 5.065547, 1.557175, 84.101613,
                    17.802427, 0.487660, -0.806668]}  # neutral
 
-data_str = """51.376255296 18.334995742 29.824311212 0.001619351 0.006930700 0.004549347
+data_AFF = """51.376255296 18.334995742 29.824311212 0.001619351 0.006930700 0.004549347
 0.248408682 17.446592747 7.995327709 0.000606398 0.007966140 0.004353010
 2.210754520 5.806876564 3.828618814 0.008368748 0.000374804 0.004013668
 1.396786889 3.220296987 2.333109686 0.000740754 0.007803308 0.003298757
@@ -43,6 +43,23 @@ data_str = """51.376255296 18.334995742 29.824311212 0.001619351 0.006930700 0.0
 0.022947555 1.328506566 0.000361393 0.000755408 0.848386042 0.008711364
 1.067660562 0.029482478 0.028209365 0.006837366 0.704960564 0.050603265
 0.154764494 0.558327397 0.005749330 0.260595344 0.509455223 0.175799603"""
+
+data_b = """488.005476119 174.157853180 283.396323316 0.078104375 0.334280783 0.222512030
+2.411504032 169.368189835 77.734871696 0.030654493 0.402702435 0.233012989
+21.927810313 57.596665152 38.106498944 0.441055393 0.019753171 0.241568763
+14.164185514 32.655578521 23.806769465 0.041831884 0.440668744 0.241093041
+28.342285489 3.244677313 17.081633995 0.086162866 0.395190136 0.221629241
+1.976398221 21.390647607 13.459023369 0.000893079 0.436134441 0.172349296
+11.908545725 6.647099119 0.018060438 0.308604222 11.371574693 0.088669862
+0.265554389 15.373784116 0.043230528 0.090363214 10.113320387 0.004418905
+13.353241625 0.368737650 0.017140131 0.004154413 9.132411968 0.145120620
+2.298445938 8.291858819 0.039373029 1.784630217 7.566046002 1.203925125"""
+
+def get_func_AFF(f_params):
+    def func(symbol, Q):
+        return atomic_form_factor_WK1995(Q, f_params[symbol])
+    return func
+
 
 class TestDynamicStructureFactor(unittest.TestCase):
     def setUp(self):
@@ -71,9 +88,25 @@ class TestDynamicStructureFactor(unittest.TestCase):
         directions = np.array([[0.5, 0.5, 0.5], ])
         n_points = 11
         G_points_cubic = ([7, 1, 1], )
-        self._run(G_points_cubic, directions, n_points=n_points)
+
+        # Atomic form factor
+        self._run(G_points_cubic,
+                  directions,
+                  func_AFF=get_func_AFF(f_params),
+                  n_points=n_points)
         Q, S = self.phonon.get_dynamic_structure_factor()
-        data_cmp = np.reshape([float(x) for x in data_str.split()], (-1, 6))
+        data_cmp = np.reshape([float(x) for x in data_AFF.split()], (-1, 6))
+        for i in (([0, 1], [2], [3, 4], [5])):
+            np.testing.assert_allclose(
+                S[:, i].sum(axis=1), data_cmp[:, i].sum(axis=1), atol=1e-1)
+
+        # Scattering lengths
+        self._run(G_points_cubic,
+                  directions,
+                  scattering_lengths={'Na': 3.63, 'Cl': 9.5770},
+                  n_points=n_points)
+        Q, S = self.phonon.get_dynamic_structure_factor()
+        data_cmp = np.reshape([float(x) for x in data_b.split()], (-1, 6))
         for i in (([0, 1], [2], [3, 4], [5])):
             np.testing.assert_allclose(
                 S[:, i].sum(axis=1), data_cmp[:, i].sum(axis=1), atol=1e-1)
@@ -82,7 +115,7 @@ class TestDynamicStructureFactor(unittest.TestCase):
         import matplotlib.pyplot as plt
         x = np.linspace(0.0, 6.0, 101)
         for elem in ('Si', 'Na', 'Cl', 'Pb', 'Pb0', 'Te'):
-            y = [atomic_form_factor(Q, f_params[elem]) for Q in x]
+            y = [atomic_form_factor_WK1995(Q, f_params[elem]) for Q in x]
             plt.plot(x, y, label=elem)
         plt.xlim(xmin=0)
         plt.ylim(ymin=0)
@@ -92,6 +125,8 @@ class TestDynamicStructureFactor(unittest.TestCase):
     def _run(self,
              G_points_cubic,
              directions,
+             func_AFF=None,
+             scattering_lengths=None,
              n_points=51,
              verbose=False):
         P = [[0, 0.5, 0.5],
@@ -114,12 +149,24 @@ class TestDynamicStructureFactor(unittest.TestCase):
                 G_to_L = np.array(
                     [direction_prim * x
                      for x in np.arange(1, n_points) / float(n_points - 1)])
-                self.phonon.set_dynamic_structure_factor(G_to_L,
-                                                         G_prim,
-                                                         T,
-                                                         f_params=f_params,
-                                                         freq_min=1e-3,
-                                                         run_immediately=False)
+                if func_AFF is not None:
+                    self.phonon.set_dynamic_structure_factor(
+                        G_to_L,
+                        G_prim,
+                        T,
+                        func_atomic_form_factor=func_AFF,
+                        freq_min=1e-3,
+                        run_immediately=False)
+                elif scattering_lengths is not None:
+                    self.phonon.set_dynamic_structure_factor(
+                        G_to_L,
+                        G_prim,
+                        T,
+                        scattering_lengths=scattering_lengths,
+                        freq_min=1e-3,
+                        run_immediately=False)
+                else:
+                    raise SyntaxError
                 dsf = self.phonon.dynamic_structure_factor
                 for i, S in enumerate(dsf):
                     Q_prim = dsf.qpoints[i]

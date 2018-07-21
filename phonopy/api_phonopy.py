@@ -154,6 +154,9 @@ class Phonopy(object):
         # set_thermal_displacement_matrices
         self._thermal_displacement_matrices = None
 
+        # set_dynamic_structure_factor
+        self._dynamic_structure_factor = None
+
         # set_partial_DOS
         self._pdos = None
 
@@ -1406,7 +1409,7 @@ class Phonopy(object):
                                      qpoints,
                                      G,
                                      T,
-                                     f_params=None,
+                                     func_atomic_form_factor=None,
                                      scattering_lengths=None,
                                      freq_min=None,
                                      freq_max=None,
@@ -1416,7 +1419,7 @@ class Phonopy(object):
             qpoints,
             G,
             T,
-            f_params=f_params,
+            func_atomic_form_factor=func_atomic_form_factor,
             scattering_lengths=scattering_lengths,
             freq_min=freq_min,
             freq_max=freq_max)

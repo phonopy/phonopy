@@ -60,7 +60,7 @@ from phonopy.phonon.thermal_displacement import ThermalDisplacements
 # Exmple: {'Na': 3.63,
 #          'Cl': 9.5770}
 
-def atomic_form_factor(Q, f_x):
+def atomic_form_factor_WK1995(Q, f_x):
     a, b = np.array(f_x[:10]).reshape(-1, 2).T
     return (a * np.exp(-b * Q ** 2)).sum() + f_x[10]
 
@@ -98,7 +98,7 @@ class DynamicStructureFactor(object):
                  qpoints,
                  G,
                  T,
-                 f_params=None,
+                 func_atomic_form_factor=None,
                  scattering_lengths=None,
                  freq_min=None,
                  freq_max=None):
@@ -119,11 +119,24 @@ class DynamicStructureFactor(object):
             shape=(3, )
         T: float
             Temperature in K.
-        f_params: dictionary
-            Atomic form factor. Supposed for IXS.
+        func_atomic_form_factor: Function object
+            Function that returns atomic form factor (``func`` below):
+
+                f_params = {'Na': [3.148690, 2.594987, 4.073989, 6.046925,
+                                   0.767888, 0.070139, 0.995612, 14.1226457,
+                                   0.968249, 0.217037, 0.045300],
+                            'Cl': [1.061802, 0.144727, 7.139886, 1.171795,
+                                   6.524271, 19.467656, 2.355626, 60.320301,
+                                   35.829404, 0.000436, -34.916604],b|
+
+                def get_func_AFF(f_params):
+                    def func(symbol, Q):
+                        return atomic_form_factor_WK1995(Q, f_params[symbol])
+                    return func
+
         scattering_lengths: dictionary
             Coherent scattering lengths averaged over isotopes and spins.
-            Supposed for INS.
+            Supposed for INS. For example, {'Na': 3.63, 'Cl': 9.5770}.
         freq_min: float
             Minimum phonon frequency to determine wheather include or not.
         freq_max: float
@@ -136,7 +149,7 @@ class DynamicStructureFactor(object):
         self._dynamical_matrix = mesh_phonon.dynamical_matrix
         self._primitive = self._dynamical_matrix.primitive
         self._qpoints = np.array(qpoints)  # (n_q, 3) array
-        self._f_params = f_params
+        self._func_AFF = func_atomic_form_factor
         self._b = scattering_lengths
         self._T = T
         if freq_min is None:
@@ -220,9 +233,8 @@ class DynamicStructureFactor(object):
         val = 0
         for i in range(num_atom):
             m = masses[i]
-            if self._f_params is not None:
-                f = atomic_form_factor(np.linalg.norm(Q_cart),
-                                       self._f_params[symbols[i]])
+            if self._func_AFF is not None:
+                f = self._func_AFF(symbols[i], np.linalg.norm(Q_cart))
             elif self._b is not None:
                 f = self._b[symbols[i]]
             else:
