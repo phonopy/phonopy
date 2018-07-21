@@ -56,7 +56,7 @@ class ThermalMotion(object):
         self._masses3 = np.array([[m] * 3 for m in masses]).ravel() * AMU
         self._temperatures = None
 
-    def get_Q2(self, freq, t):  # freq in THz
+    def _get_Q2(self, freq, t):  # freq in THz
         return Hbar * EV / Angstrom ** 2 * (
             (self._get_population(freq, t) + 0.5) / (freq * 1e12 * 2 * np.pi))
 
@@ -182,11 +182,11 @@ class ThermalDisplacements(ThermalMotion):
                 valid_indices *= fs < self._fmax
 
             if len(temps) == 1:
-                Q2 = self.get_Q2(fs[valid_indices], temps[0])
+                Q2 = self._get_Q2(fs[valid_indices], temps[0])
                 disps[0] += np.dot(Q2, vecs2[valid_indices])
             else:
                 for f, v2 in zip(fs[valid_indices], vecs2[valid_indices]):
-                    disps += np.outer(self.get_Q2(f, temps), v2)
+                    disps += np.outer(self._get_Q2(f, temps), v2)
 
         self._displacements = disps / (count + 1)
 
@@ -305,28 +305,31 @@ class ThermalDisplacementMatrices(ThermalMotion):
         self._get_disp_matrices()
 
     def _get_disp_matrices(self):
+        dtype_complex = "c%d" % (np.dtype('double').itemsize * 2)
         disps = np.zeros((len(self._temperatures), len(self._masses),
-                          3, 3), dtype=complex)
+                          3, 3), dtype=dtype_complex)
         for count, (freqs, eigvecs) in enumerate(self._iter_mesh):
             valid_indices = freqs > self._fmin
             if self._fmax is not None:
                 valid_indices *= freqs < self._fmax
             for i_band, (f, vec) in enumerate(
                     zip(freqs[valid_indices], (eigvecs.T)[valid_indices])):
-                c = []
-                for v, m in zip(vec.reshape(-1, 3), self._masses):
-                    c.append(np.outer(v, v.conj()) / m)
+                c = np.zeros((len(self._masses), 3, 3),
+                             dtype=dtype_complex, order='C')
+                for i, (v, m) in enumerate(
+                        zip(vec.reshape(-1, 3), self._masses)):
+                    c[i] = np.outer(v, v.conj()) / m
+
                 # for i, t in enumerate(self._temperatures):
                 #     try:
-                #         disps[i] += self.get_Q2(f, t) * np.array(c)
+                #         disps[i] += self._get_Q2(f, t) * np.array(c)
                 #     except FloatingPointError as e:
                 #         # Probably, overflow in exp(freq / (kB * T))
                 #         print("%s: T=%.1f freq=%.2f (band #%d)" %
                 #               (e, t, f, i_band))
                 try:
-                    for i, Q2 in enumerate(
-                            self.get_Q2(f, self._temperatures)):
-                        disps[i] += Q2 * np.array(c)
+                    Q2 = self._get_Q2(f, self._temperatures)
+                    disps += Q2[:, None, None, None] * c[None, :, :, :]
                 except FloatingPointError as e:
                     # Probably, overflow in exp(freq / (kB * T))
                     print("%s: freq=%.2f (band #%d)" % (e, f, i_band))
@@ -436,7 +439,7 @@ class ThermalDistances(ThermalMotion):
                     v2 = abs(v)**2
                     if f > self._fmin:
                         for j, t in enumerate(self._temperatures):
-                            dists[j, i] += self.get_Q2(f, t) * (
+                            dists[j, i] += self._get_Q2(f, t) * (
                                 v2[patom1] * c1 +
                                 cross_term * c_cross + v2[patom2] * c2)
 
