@@ -76,7 +76,7 @@ class TestDynamicStructureFactor(unittest.TestCase):
         data_cmp = np.reshape([float(x) for x in data_str.split()], (-1, 6))
         for i in (([0, 1], [2], [3, 4], [5])):
             np.testing.assert_allclose(
-                S[:, i].sum(axis=1), data_cmp[:, i].sum(axis=1), atol=1e-2)
+                S[:, i].sum(axis=1), data_cmp[:, i].sum(axis=1), atol=1e-1)
 
     def plot_f_Q(f_params):
         import matplotlib.pyplot as plt
