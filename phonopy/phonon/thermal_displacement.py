@@ -127,7 +127,9 @@ class ThermalDisplacements(ThermalMotion):
         Parameters
         ----------
         iter_mesh:
-            Mesh or IterMesh instance
+            Mesh or IterMesh instance. Grid points must not be reduced by
+            symmetry, i.e., IterMesh instance has to be create
+            ``is_mesh_symmetry=False``.
         masses: array_like
             Atomic masses.
             dtype='double'
@@ -188,6 +190,7 @@ class ThermalDisplacements(ThermalMotion):
                 for f, v2 in zip(fs[valid_indices], vecs2[valid_indices]):
                     disps += np.outer(self._get_Q2(f, temps), v2)
 
+        assert np.prod(self._iter_mesh.mesh_numbers) == count + 1
         self._displacements = disps / (count + 1)
 
     def write_yaml(self):
@@ -243,7 +246,9 @@ class ThermalDisplacementMatrices(ThermalMotion):
         Parameters
         ----------
         iter_mesh:
-            Mesh or IterMesh instance
+            Mesh or IterMesh instance. Grid points must not be reduced by
+            symmetry, i.e., IterMesh instance has to be create
+            ``is_mesh_symmetry=False``.
         masses: array_like
             Atomic masses
             dtype='double'
@@ -333,6 +338,8 @@ class ThermalDisplacementMatrices(ThermalMotion):
                 except FloatingPointError as e:
                     # Probably, overflow in exp(freq / (kB * T))
                     print("%s: freq=%.2f (band #%d)" % (e, f, i_band))
+
+        assert np.prod(self._iter_mesh.mesh_numbers) == count + 1
         self._disp_matrices = disps / (count + 1)
 
     def write_cif(self, cell, temperature_index):
