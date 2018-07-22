@@ -3,7 +3,7 @@
 Dynamic structure factor
 ========================
 
-**This feature is under testing and may be wrongly calculated.**
+**This feature is under testing.**
 
 From Eq. (3.120) in the book "Thermal of Neutron Scattering", coherent
 one-phonon dynamic structure factor is given as
