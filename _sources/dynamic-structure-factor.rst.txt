@@ -39,7 +39,8 @@ with
 where :math:`\mathbf{Q}` is the scattering vector defined as
 :math:`\mathbf{Q} = \mathbf{k} - \mathbf{k}'` with incident wave
 vector :math:`\mathbf{k}` and final wavevector :math:`\mathbf{k}'`
-following the book "Thermal of Neutron Scattering". Note that
+following the book "Thermal of Neutron Scattering". Other variables
+are refered to :ref:`formulations` page. Note that
 the phase convention of the dynamical matrix
 given :ref:`here <dynacmial_matrix_theory>` is used.
 For inelastic neutron scattering, :math:`\bar{b}_j` is the average
