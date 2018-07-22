@@ -79,6 +79,7 @@ Documentation
    command-options
    qha
    Mode Grüneisen parameters <gruneisen>
+   dynamic-structure-factor
    interfaces
    auxiliary-tools
    external-tools

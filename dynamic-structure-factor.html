@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Dynamic structure factor &#8212; Phonopy v.1.13.2</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Interfaces to calculators" href="interfaces.html" />
+    <link rel="prev" title="Calculation of mode Grüneisen parameters" href="gruneisen.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Phonopy</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.13.2</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Dynamic structure factor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Using phonopy as a python module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">Documentation</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Dynamic structure factor</a><ul>
+<li><a class="reference internal" href="#usage">Usage</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="gruneisen.html" title="Previous Chapter: Calculation of mode Grüneisen parameters"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Calculation o...</span>
+    </a>
+  </li>
+  <li>
+    <a href="interfaces.html" title="Next Chapter: Interfaces to calculators"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Interfaces to... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="dynamic-structure-factor">
+<span id="id1"></span><h1>Dynamic structure factor<a class="headerlink" href="#dynamic-structure-factor" title="Permalink to this headline">¶</a></h1>
+<p><strong>This feature is under testing and may be wrongly calculated.</strong></p>
+<p>From Eq. (3.120) in the book “Thermal of Neutron Scattering”, coherent
+one-phonon dynamic structure factor is given as</p>
+<div class="math notranslate">
+\[S(\mathbf{Q}, \nu, \omega)^{+1\text{ph}} =
+\frac{k'}{k} \frac{N}{\hbar}
+\sum_\mathbf{q} |F(\mathbf{Q}, \mathbf{q}\nu)|^2
+(n_{\mathbf{q}\nu} + 1) \delta(\omega - \omega_{\mathbf{q}\nu})
+\Delta(\mathbf{Q-q}),\]</div>
+<p>and</p>
+<div class="math notranslate">
+\[S(\mathbf{Q}, \nu, \omega)^{-1\text{ph}} =
+\frac{k'}{k} \frac{N}{\hbar}
+\sum_\mathbf{q} |F(\mathbf{Q}, \mathbf{q}\nu)|^2
+n_{\mathbf{q}\nu} \delta(\omega + \omega_{\mathbf{q}\nu})
+\Delta(\mathbf{Q+q}),\]</div>
+<p>with</p>
+<div class="math notranslate">
+\[F(\mathbf{Q}, \mathbf{q}\nu) =
+\sum_j \sqrt{\frac{\hbar}{2 m_j \omega_{\mathbf{q}\nu}}}
+\bar{b}_j \exp\left(
+-\frac{1}{2} \langle |\mathbf{Q}\cdot\mathbf{u}(j0)|^2 \rangle
+\right) \mathbf{Q}\cdot\mathbf{e}(j, \mathbf{q}\nu).\]</div>
+<p>where <span class="math notranslate">\(\mathbf{Q}\)</span> is the scattering vector defined as
+<span class="math notranslate">\(\mathbf{Q} = \mathbf{k} - \mathbf{k}'\)</span> with incident wave
+vector <span class="math notranslate">\(\mathbf{k}\)</span> and final wavevector <span class="math notranslate">\(\mathbf{k}'\)</span>
+following the book “Thermal of Neutron Scattering”. Note that
+the phase convention of the dynamical matrix
+given <a class="reference internal" href="formulation.html#dynacmial-matrix-theory"><span class="std std-ref">here</span></a> is used.
+For inelastic neutron scattering, <span class="math notranslate">\(\bar{b}_j\)</span> is the average
+scattering length over isotopes and spins. For inelastic X-ray
+scattering, <span class="math notranslate">\(\bar{b}_j\)</span> is replaced by atomic form factor
+<span class="math notranslate">\(f_j(\mathbf{Q})\)</span> and <span class="math notranslate">\(k'/k \sim 1\)</span>.</p>
+<p>Currently only <span class="math notranslate">\(S(\mathbf{Q}, \nu, \omega)^{+1\text{ph}}\)</span> is
+calcualted with setting <span class="math notranslate">\(N k'/k = 1\)</span> and the physical unit is
+<span class="math notranslate">\(\text{m}^2/\text{J}\)</span> when <span class="math notranslate">\(\bar{b}_j\)</span> is given in
+Angstrom.</p>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>Currently this feature is usable only from API. The following example
+runs with the input files in <code class="docutils literal notranslate"><span class="pre">example/NaCl</span></code>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">phonopy.api_phonopy</span> <span class="k">import</span> <span class="n">Phonopy</span>
+<span class="kn">from</span> <span class="nn">phonopy.spectrum.dynamic_structure_factor</span> <span class="k">import</span> <span class="n">atomic_form_factor_WK1995</span>
+<span class="kn">from</span> <span class="nn">phonopy.interface.vasp</span> <span class="k">import</span> <span class="n">read_vasp</span>
+<span class="kn">from</span> <span class="nn">phonopy.file_IO</span> <span class="k">import</span> <span class="n">parse_FORCE_SETS</span><span class="p">,</span> <span class="n">parse_BORN</span>
+<span class="kn">from</span> <span class="nn">phonopy.units</span> <span class="k">import</span> <span class="n">THzToEv</span>
+
+
+<span class="k">def</span> <span class="nf">get_func_AFF</span><span class="p">(</span><span class="n">f_params</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">Q</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">atomic_form_factor_WK1995</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">f_params</span><span class="p">[</span><span class="n">symbol</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">func</span>
+
+
+<span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">phonon</span><span class="p">,</span>
+        <span class="n">G_points_cubic</span><span class="p">,</span>
+        <span class="n">directions</span><span class="p">,</span>
+        <span class="n">temperature</span><span class="p">,</span>
+        <span class="n">func_AFF</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">scattering_lengths</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_points</span><span class="o">=</span><span class="mi">51</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+    <span class="c1"># Crystal transformation matrix from F-centre to primitive.</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+         <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+         <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>
+
+    <span class="k">for</span> <span class="n">G_cubic</span> <span class="ow">in</span> <span class="n">G_points_cubic</span><span class="p">:</span>
+        <span class="n">G_prim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">G_cubic</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# G_cubic </span><span class="si">%s</span><span class="s2">, G_prim </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">G_cubic</span><span class="p">,</span> <span class="n">G_prim</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">direction</span> <span class="ow">in</span> <span class="n">directions</span><span class="p">:</span>
+            <span class="n">direction_prim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">direction</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
+
+            <span class="n">G_to_L</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">direction_prim</span> <span class="o">*</span> <span class="n">x</span>
+                 <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_points</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_points</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+            <span class="n">phonon</span><span class="o">.</span><span class="n">set_band_structure</span><span class="p">([</span><span class="n">G_to_L</span><span class="p">])</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">distances</span><span class="p">,</span> <span class="n">frequencies</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">get_band_structure</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">func_AFF</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">phonon</span><span class="o">.</span><span class="n">set_dynamic_structure_factor</span><span class="p">(</span>
+                    <span class="n">G_to_L</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+                    <span class="n">G_prim</span><span class="p">,</span>
+                    <span class="n">temperature</span><span class="p">,</span>
+                    <span class="n">func_atomic_form_factor</span><span class="o">=</span><span class="n">func_AFF</span><span class="p">,</span>
+                    <span class="n">freq_min</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+                    <span class="n">run_immediately</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">scattering_lengths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">phonon</span><span class="o">.</span><span class="n">set_dynamic_structure_factor</span><span class="p">(</span>
+                    <span class="n">G_to_L</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+                    <span class="n">G_prim</span><span class="p">,</span>
+                    <span class="n">temperature</span><span class="p">,</span>
+                    <span class="n">scattering_lengths</span><span class="o">=</span><span class="n">scattering_lengths</span><span class="p">,</span>
+                    <span class="n">freq_min</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+                    <span class="n">run_immediately</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">SyntaxError</span>
+            <span class="n">dsf</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">dynamic_structure_factor</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">S</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dsf</span><span class="p">):</span>
+                <span class="n">Q_prim</span> <span class="o">=</span> <span class="n">dsf</span><span class="o">.</span><span class="n">qpoints</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">Q_cubic</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Q_prim</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">P</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%f</span><span class="s2">  </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2">  </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2">  </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span>
+                          <span class="p">((</span><span class="n">distances</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="p">)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">Q_cubic</span><span class="p">)</span> <span class="o">+</span>
+                           <span class="nb">tuple</span><span class="p">(</span><span class="n">frequencies</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">]]</span>
+                                 <span class="o">*</span> <span class="n">THzToEv</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span> <span class="o">+</span>
+                           <span class="p">((</span><span class="n">S</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">S</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">S</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="p">(</span><span class="n">S</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">S</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+                            <span class="n">S</span><span class="p">[</span><span class="mi">5</span><span class="p">])))</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">get_phonon</span><span class="p">():</span>
+    <span class="n">cell</span> <span class="o">=</span> <span class="n">read_vasp</span><span class="p">(</span><span class="s2">&quot;POSCAR&quot;</span><span class="p">)</span>
+    <span class="n">phonon</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span>
+                     <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]),</span>
+                     <span class="n">primitive_matrix</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+                                       <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+                                       <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+    <span class="n">force_sets</span> <span class="o">=</span> <span class="n">parse_FORCE_SETS</span><span class="p">()</span>
+    <span class="n">phonon</span><span class="o">.</span><span class="n">set_displacement_dataset</span><span class="p">(</span><span class="n">force_sets</span><span class="p">)</span>
+    <span class="n">phonon</span><span class="o">.</span><span class="n">produce_force_constants</span><span class="p">()</span>
+    <span class="n">phonon</span><span class="o">.</span><span class="n">symmetrize_force_constants</span><span class="p">()</span>
+    <span class="n">nac_params</span> <span class="o">=</span> <span class="n">parse_BORN</span><span class="p">(</span><span class="n">phonon</span><span class="o">.</span><span class="n">primitive</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;BORN&quot;</span><span class="p">)</span>
+    <span class="n">phonon</span><span class="o">.</span><span class="n">set_nac_params</span><span class="p">(</span><span class="n">nac_params</span><span class="p">)</span>
+
+    <span class="c1"># Mesh sampling calculation is needed for Debye-Waller factor</span>
+    <span class="c1"># This must be done with is_mesh_symmetry=False and is_eigenvectors=True.</span>
+    <span class="n">mesh</span> <span class="o">=</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">11</span><span class="p">]</span>
+    <span class="n">phonon</span><span class="o">.</span><span class="n">set_mesh</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span>
+                    <span class="n">is_mesh_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">is_eigenvectors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">phonon</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">phonon</span> <span class="o">=</span> <span class="n">get_phonon</span><span class="p">()</span>
+
+    <span class="c1"># Written in FCC conventional basis</span>
+    <span class="n">directions_to_L</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+                       <span class="p">[</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]]</span>
+    <span class="n">G_points_cubic</span> <span class="o">=</span> <span class="p">([</span><span class="mi">7</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">)</span>
+    <span class="n">n_points</span> <span class="o">=</span> <span class="mi">11</span>
+    <span class="n">temperature</span> <span class="o">=</span> <span class="mi">300</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# Distance from G point, 6 phonon freqs in meV, &quot;</span>
+          <span class="s2">&quot;6 dynamic structure factors&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# For degenerate bands, summation should be made &quot;</span>
+          <span class="s2">&quot;but here undone.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# Gamma point is not calculated.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># With scattering lengths</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# Running with scattering lengths&quot;</span><span class="p">)</span>
+    <span class="n">run</span><span class="p">(</span><span class="n">phonon</span><span class="p">,</span>
+        <span class="n">G_points_cubic</span><span class="p">,</span>
+        <span class="n">directions_to_L</span><span class="p">,</span>
+        <span class="n">temperature</span><span class="p">,</span>
+        <span class="n">scattering_lengths</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Na&#39;</span><span class="p">:</span> <span class="mf">3.63</span><span class="p">,</span> <span class="s1">&#39;Cl&#39;</span><span class="p">:</span> <span class="mf">9.5770</span><span class="p">},</span>
+        <span class="n">n_points</span><span class="o">=</span><span class="n">n_points</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># With atomic form factor</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# Running with atomic form factor&quot;</span><span class="p">)</span>
+    <span class="c1"># D. Waasmaier and A. Kirfel, Acta Cryst. A51, 416 (1995)</span>
+    <span class="c1"># f(Q) = \sum_i a_i \exp((-b_i Q^2) + c</span>
+    <span class="c1"># Q is in angstron^-1</span>
+    <span class="c1"># a1, b1, a2, b2, a3, b3, a4, b4, a5, b5, c</span>
+    <span class="n">f_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Na&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">3.148690</span><span class="p">,</span> <span class="mf">2.594987</span><span class="p">,</span> <span class="mf">4.073989</span><span class="p">,</span> <span class="mf">6.046925</span><span class="p">,</span>
+                       <span class="mf">0.767888</span><span class="p">,</span> <span class="mf">0.070139</span><span class="p">,</span> <span class="mf">0.995612</span><span class="p">,</span> <span class="mf">14.1226457</span><span class="p">,</span>
+                       <span class="mf">0.968249</span><span class="p">,</span> <span class="mf">0.217037</span><span class="p">,</span> <span class="mf">0.045300</span><span class="p">],</span>  <span class="c1"># 1+</span>
+                <span class="s1">&#39;Cl&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.061802</span><span class="p">,</span> <span class="mf">0.144727</span><span class="p">,</span> <span class="mf">7.139886</span><span class="p">,</span> <span class="mf">1.171795</span><span class="p">,</span>
+                       <span class="mf">6.524271</span><span class="p">,</span> <span class="mf">19.467656</span><span class="p">,</span> <span class="mf">2.355626</span><span class="p">,</span> <span class="mf">60.320301</span><span class="p">,</span>
+                       <span class="mf">35.829404</span><span class="p">,</span> <span class="mf">0.000436</span><span class="p">,</span> <span class="o">-</span><span class="mf">34.916604</span><span class="p">]}</span>  <span class="c1"># 1-</span>
+    <span class="n">run</span><span class="p">(</span><span class="n">phonon</span><span class="p">,</span>
+        <span class="n">G_points_cubic</span><span class="p">,</span>
+        <span class="n">directions_to_L</span><span class="p">,</span>
+        <span class="n">temperature</span><span class="p">,</span>
+        <span class="n">func_AFF</span><span class="o">=</span><span class="n">get_func_AFF</span><span class="p">(</span><span class="n">f_params</span><span class="p">),</span>
+        <span class="n">n_points</span><span class="o">=</span><span class="n">n_points</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/dynamic-structure-factor.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2009, Atsushi Togo.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

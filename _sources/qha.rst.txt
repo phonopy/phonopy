@@ -18,7 +18,7 @@ follows.
 
 To watch selected plots::
 
-   phonopy-qha --sparse=50 -p e-v.dat thermal_properties.yaml-{-{5..1},{0..5}}
+   phonopy-qha -p e-v.dat thermal_properties.yaml-{-{5..1},{0..5}}
 
 .. figure:: Si-QHA.png
 
@@ -51,7 +51,10 @@ volume points have to be calculated with the same temperature ranges
 and same temperature steps. ``thermal_properties.yaml`` can be
 calculated by following :ref:`thermal_properties_tag`, where the
 physical unit of the Helmholtz free energy is kJ/mol as the default,
-i.e., no need to convert the physical unit in usual cases.
+i.e., no need to convert the physical unit in usual cases. For the
+numerical differentiation in ``phonopy-qha`` against temperatures, one
+more temperature points is needed in ``thermal_properties.yaml`` for
+``phonopy-qha`` calculations.
 
 Another example for Aluminum is found in the ``example/Al-QHA`` directory.
 
@@ -75,26 +78,8 @@ results are saved into text files in simple data format.
 
 The maximum temperature calculated is specified. This temperature has
 to be lower than the maximum temperature calculated in
-``thermal_properties.yaml`` to let at least two temperature points
+``thermal_properties.yaml`` to let at least one temperature points
 fewer. The default value is ``--tmax=1000``.
-
-``-p``
-~~~~~~~
-
-The fitting results, volume-temperature relation, and thermal expansion
-coefficient are plotted on the display.
-
-``--sparse``
-~~~~~~~~~~~~~~
-
-This is used with ``-s`` or ``-p`` to thin out the number of plots of
-the fitting results at temperatures. When ``--sparse=10``, 1/10 is
-only plotted.
-
-``-s``
-~~~~~~~
-
-The calculated values are written into files.
 
 ``--pressure``
 ~~~~~~~~~~~~~~~~
@@ -109,7 +94,7 @@ bulk modulus obtained with this option than 0 GPa is incorrect.
 Fitting volume-energy data to an EOS, and show bulk
 modulus (without considering phonons). This is made by::
 
-   phonopy-qha -b e-v.dat
+   % phonopy-qha -b e-v.dat
 
 ``--eos``
 ~~~~~~~~~~~
@@ -119,7 +104,26 @@ EOS is chosen among ``vinet``, ``birch_murnaghan``, and
 
 ::
 
-   phonopy-qha --eos='birch_murnaghan' -b e-v.dat
+   % phonopy-qha --eos='birch_murnaghan' -b e-v.dat
+
+``-p``
+~~~~~~~
+
+The fitting results, volume-temperature relation, and thermal expansion
+coefficient are plotted on the display.
+
+``-s``
+~~~~~~~
+
+The calculated values are written into files.
+
+``--sparse``
+~~~~~~~~~~~~~~
+
+This is used with ``-s`` or ``-p`` to thin out the number of plots of
+the fitting results at temperatures. For example with ``--sparse=10``,
+1 in 10 temperature curves is only plotted.
+
 
 .. _phonopy_qha_output_files:
 
@@ -133,27 +137,27 @@ are used.
 
 - Bulk modulus :math:`B_T` (GPa) vs :math:`T` (``bulk_modulus-temperature.*``)
 - Gibbs free energy :math:`G` (eV) vs :math:`T` (``gibbs-temperature.*``)
-- Volume change with respect to the volume at 300 K vs :math:`T`
-  (``volume_expansion.*``)
 - Heat capacity at constant pressure :math:`C_p` (J/K/mol) vs
-  :math:`T` derived by :math:`-T\frac{\partial^2 G}{\partial T^2}`
-  (``Cp-temperature.*``)
+  :math:`T` computed by :math:`-T\frac{\partial^2 G}{\partial T^2}`
+  from three :math:`G(T)` points (``Cp-temperature.*``)
 - Heat capacity at constant puressure :math:`C_p` (J/K/mol) vs
-  :math:`T` by polynomial fittings of :math:`C_V` and :math:`S`
-  (``Cp-temperature_polyfit.*``)
+  :math:`T` computed by polynomial fittings of :math:`C_V(V)`
+  (``Cv-volume.dat``) and :math:`S(V)` (``entropy-volume.dat``) for
+  :math:`\partial S/\partial V` (``dsdv-temperature.dat``) and
+  numerical differentiation of :math:`\partial V/\partial T`, e.g., see
+  Eq.(5) of PRB **81**, 17430 by Togo *et al.*
+  (``Cp-temperature_polyfit.*``).
+  This may give smoother :math:`C_p` than that from
+  :math:`-T\frac{\partial^2 G}{\partial T^2}`.
+- Volumetric thermal expansion coefficient :math:`\beta` vs :math:`T`
+  computed by numerical differentiation (``thermal_expansion.*``)
+- Volume vs :math:`T` (``volume-temperature.*``)
+- Thermodynamics Grüneisen parameter :math:`\gamma = V\beta B_T/C_V`
+  (no unit) vs :math:`T` (``gruneisen-temperature.dat``)
 - Helmholtz free energy (eV) vs volume
   (``helmholtz-volume.*``). When ``--pressure`` option is specified,
   energy offset of :math:`pV` is added. See also the following section
   (:ref:`theory_of_qha`).
-- Volume vs :math:`T` (``volume-temperature.*``)
-- Volumetric thermal expansion coefficient :math:`\beta` vs :math:`T`
-  (``thermal_expansion.*``)
-- Thermodynamics Grüneisen parameter :math:`\gamma = V\beta B_T/C_V`
-  (no unit) vs :math:`T` (``gruneisen-temperature.dat``)
-
-``Cv-volume.dat``, ``entropy-volume.dat``,
-and ``dsdv-temperature.dat`` (:math:`dS/dV`) are the data internally
-used.
 
 .. _theory_of_qha:
 
