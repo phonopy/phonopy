@@ -80,7 +80,7 @@ def get_band_qpoints(band_paths, npoints):
         nd = len(band_path)
         for i in range(nd - 1):
             diff = np.subtract(band_path[i + 1], band_path[i]) / (npoints - 1)
-            qpoints = [band_path[i].copy()]
+            qpoints = np.array(band_path[i])
             q = np.zeros(3)
             for j in range(npoints - 1):
                 q += diff
