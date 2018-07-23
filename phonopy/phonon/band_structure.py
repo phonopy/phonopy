@@ -32,8 +32,10 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
 import numpy as np
 from phonopy.units import VaspToTHz
+
 
 def estimate_band_connection(prev_eigvecs, eigvecs, prev_band_order):
     metric = np.abs(np.dot(prev_eigvecs.conjugate().T, eigvecs))
@@ -53,12 +55,23 @@ def estimate_band_connection(prev_eigvecs, eigvecs, prev_band_order):
 
     return band_order
 
+
 def get_band_qpoints(band_paths, npoints):
     """Generate qpoints for band structure path
 
-    Args:
-        band_paths: Sets of end points of paths
-        npoints: Number of q-points in each path including end points
+    Parameters
+    ----------
+    band_paths: list of array_likes
+        Sets of end points of paths
+        dtype='double'
+        shape=(sets of paths, paths, 3)
+
+        example:
+            [[[0, 0, 0], [0.5, 0.5, 0], [0.5, 0.5, 0.5]],
+             [[0.5, 0.25, 0.75], [0, 0, 0]]]
+
+    npoints: int
+        Number of q-points in each path including end points
 
     """
 
@@ -66,17 +79,58 @@ def get_band_qpoints(band_paths, npoints):
     for band_path in band_paths:
         nd = len(band_path)
         for i in range(nd - 1):
-            diff = (band_path[i + 1] - band_path[i]) / (npoints - 1)
+            diff = np.subtract(band_path[i + 1], band_path[i]) / (npoints - 1)
             qpoints = [band_path[i].copy()]
             q = np.zeros(3)
-            for j in range(npoints -1):
+            for j in range(npoints - 1):
                 q += diff
                 qpoints.append(band_path[i] + q)
             qpoints_of_paths.append(np.array(qpoints))
 
     return qpoints_of_paths
 
+
 class BandStructure(object):
+    """Class for phonons of q-poitns along reciprocal space paths
+
+    Note
+    ----
+    Numbers of qpoints on paths can be different, therefore qpoints of
+    paths are stored in a list.
+
+    Attributes
+    ----------
+    distances: list of ndarray
+        Distances in reciprocal space made by summing up distances of
+        neighboring q-points except for end points. This is useful to plot
+        the band structure diagram.
+        Each ndarray corresponding to each q-path has
+            dtype='double'
+            shape=(qpoints on a path, )
+    qpoitns: list of ndarray
+        q-points along reciprocal space paths.
+        Each ndarray corresponding to each q-path has
+            dtype='double'
+            shape=(qpoints on a path, 3)
+    frequencies: list of ndarray
+        Phonon frequencies. Imaginary frequenies are represented by negative
+        real numbers.
+        Each ndarray corresponding to each q-path has
+            dtype='double'
+            shape=(qpoints, bands)
+    eigenvectors: list of ndarray
+        Phonon eigenvectors. See the data structure at np.linalg.eigh.
+        Each ndarray corresponding to each q-path has
+            dtype='complex128'
+            shape=(qpoints, bands, bands)
+    group_velocities: list of ndarray
+        Phonon group velocities.
+        Each ndarray corresponding to each q-path has
+            dtype='double'
+            shape=(qpoints, bands, 3)
+
+    """
+
     def __init__(self,
                  paths,
                  dynamical_matrix,
@@ -104,25 +158,53 @@ class BandStructure(object):
         self._group_velocities = None
         self._set_band()
 
-    def get_distances(self):
+    @property
+    def distances(self):
         return self._distances
 
-    def get_qpoints(self):
+    def get_distances(self):
+        return self.distances
+
+    @property
+    def qpoints(self):
         return self._paths
 
-    def get_eigenvalues(self):
-        return self._eigenvalues
+    def get_qpoints(self):
+        return self.qpoints
 
-    def get_eigenvectors(self):
+    @property
+    def eigenvectors(self):
         return self._eigenvectors
 
-    def get_frequencies(self):
+    def get_eigenvectors(self):
+        return self.eigenvectors
+
+    @property
+    def frequencies(self):
         return self._frequencies
 
-    def get_group_velocities(self):
+    def get_frequencies(self):
+        return self.frequencies
+
+    @property
+    def group_velocities(self):
         return self._group_velocities
 
+    def get_group_velocities(self):
+        return self.group_velocities
+
+    def get_eigenvalues(self):
+        warnings.simplefilter("always")
+        warnings.warn(
+            "Bandstructure.get_engenvalues is deprecated.",
+            DeprecationWarning)
+        return self._eigenvalues
+
     def get_unit_conversion_factor(self):
+        warnings.simplefilter("always")
+        warnings.warn(
+            "Bandstructure.get_unit_conversion_factor is deprecated.",
+            DeprecationWarning)
         return self._factor
 
     def plot(self, plt, labels=None):
@@ -163,7 +245,6 @@ class BandStructure(object):
                                    'group_velocity'):
                         w.create_dataset(key, data=np.string_(comment[key]))
             if labels:
-                maxlen = max([len(l) for l in labels])
                 dset = w.create_dataset('label', (len(labels),), dtype='S10')
                 for i, l in enumerate(labels):
                     dset[i] = np.string_(l)
@@ -171,7 +252,7 @@ class BandStructure(object):
     def write_yaml(self, labels=None, comment=None, filename="band.yaml"):
         with open(filename, 'w') as w:
             natom = self._cell.get_number_of_atoms()
-            rec_lattice = np.linalg.inv(self._cell.get_cell()) # column vectors
+            rec_lattice = np.linalg.inv(self._cell.get_cell())  # column vecs
             smat = self._supercell.get_supercell_matrix()
             pmat = self._cell.get_primitive_matrix()
             tmat = np.rint(np.dot(np.linalg.inv(pmat), smat)).astype(int)
@@ -285,7 +366,6 @@ class BandStructure(object):
         eigvecs = []
         group_velocities = []
         distances = []
-        is_nac = self._dynamical_matrix.is_nac()
 
         for path in self._paths:
             self._set_initial_point(path[0])
@@ -329,7 +409,7 @@ class BandStructure(object):
 
             if is_nac:
                 q_direction = None
-                if (np.abs(q) < 0.0001).all(): # For Gamma point
+                if (np.abs(q) < 0.0001).all():  # For Gamma point
                     q_direction = path[0] - path[-1]
                 self._dynamical_matrix.set_dynamical_matrix(
                     q, q_direction=q_direction)

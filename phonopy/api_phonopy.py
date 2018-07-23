@@ -297,6 +297,10 @@ class Phonopy(object):
         return self._qpoints_phonon
 
     @property
+    def band_structure(self):
+        return self._band_structure
+
+    @property
     def mesh(self):
         return self._mesh
 
@@ -1349,9 +1353,8 @@ class Phonopy(object):
     # Group velocity
     def set_group_velocity(self, q_length=None):
         if self._dynamical_matrix is None:
-            print("Warning: Dynamical matrix has not yet built.")
-            self._group_velocity = None
-            return False
+            print("Dynamical matrix has not yet built.")
+            raise RuntimeError
 
         self._group_velocity = GroupVelocity(
             self._dynamical_matrix,
