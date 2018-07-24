@@ -14,7 +14,7 @@ octagons in the work flow). The boxes are jobs being done by phonopy,
 and the circles are input and intermediate output data structures.
 
 .. figure:: procedure.png
-   :scale: 65
+   :scale: 80
    :align: center
 
    Work flow of phonon calculation
