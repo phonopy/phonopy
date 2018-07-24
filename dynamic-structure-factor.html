@@ -7,7 +7,7 @@
     <title>Dynamic structure factor &#8212; Phonopy v.1.13.2</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -18,8 +18,8 @@
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Interfaces to calculators" href="interfaces.html" />
-    <link rel="prev" title="Calculation of mode Grüneisen parameters" href="gruneisen.html" />
+    <link rel="next" title="Calculation of mode Grüneisen parameters" href="gruneisen.html" />
+    <link rel="prev" title="Command options" href="command-options.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -63,9 +63,9 @@
 <li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
 <li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Dynamic structure factor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
@@ -103,11 +103,11 @@
               
                 
   <li>
-    <a href="gruneisen.html" title="Previous Chapter: Calculation of mode Grüneisen parameters"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Calculation o...</span>
+    <a href="command-options.html" title="Previous Chapter: Command options"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Command options</span>
     </a>
   </li>
   <li>
-    <a href="interfaces.html" title="Next Chapter: Interfaces to calculators"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Interfaces to... &raquo;</span>
+    <a href="gruneisen.html" title="Next Chapter: Calculation of mode Grüneisen parameters"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Calculation o... &raquo;</span>
     </a>
   </li>
               
@@ -140,40 +140,40 @@
 <p><strong>This feature is under testing.</strong></p>
 <p>From Eq. (3.120) in the book “Thermal of Neutron Scattering”, coherent
 one-phonon dynamic structure factor is given as</p>
-<div class="math notranslate">
+<div class="math notranslate nohighlight">
 \[S(\mathbf{Q}, \nu, \omega)^{+1\text{ph}} =
 \frac{k'}{k} \frac{N}{\hbar}
 \sum_\mathbf{q} |F(\mathbf{Q}, \mathbf{q}\nu)|^2
 (n_{\mathbf{q}\nu} + 1) \delta(\omega - \omega_{\mathbf{q}\nu})
 \Delta(\mathbf{Q-q}),\]</div>
 <p>and</p>
-<div class="math notranslate">
+<div class="math notranslate nohighlight">
 \[S(\mathbf{Q}, \nu, \omega)^{-1\text{ph}} =
 \frac{k'}{k} \frac{N}{\hbar}
 \sum_\mathbf{q} |F(\mathbf{Q}, \mathbf{q}\nu)|^2
 n_{\mathbf{q}\nu} \delta(\omega + \omega_{\mathbf{q}\nu})
 \Delta(\mathbf{Q+q}),\]</div>
 <p>with</p>
-<div class="math notranslate">
+<div class="math notranslate nohighlight">
 \[F(\mathbf{Q}, \mathbf{q}\nu) =
 \sum_j \sqrt{\frac{\hbar}{2 m_j \omega_{\mathbf{q}\nu}}}
 \bar{b}_j \exp\left(
 -\frac{1}{2} \langle |\mathbf{Q}\cdot\mathbf{u}(j0)|^2 \rangle
 \right) \mathbf{Q}\cdot\mathbf{e}(j, \mathbf{q}\nu).\]</div>
-<p>where <span class="math notranslate">\(\mathbf{Q}\)</span> is the scattering vector defined as
-<span class="math notranslate">\(\mathbf{Q} = \mathbf{k} - \mathbf{k}'\)</span> with incident wave
-vector <span class="math notranslate">\(\mathbf{k}\)</span> and final wavevector <span class="math notranslate">\(\mathbf{k}'\)</span>
+<p>where <span class="math notranslate nohighlight">\(\mathbf{Q}\)</span> is the scattering vector defined as
+<span class="math notranslate nohighlight">\(\mathbf{Q} = \mathbf{k} - \mathbf{k}'\)</span> with incident wave
+vector <span class="math notranslate nohighlight">\(\mathbf{k}\)</span> and final wavevector <span class="math notranslate nohighlight">\(\mathbf{k}'\)</span>
 following the book “Thermal of Neutron Scattering”. Other variables
 are refered to <a class="reference internal" href="formulation.html#formulations"><span class="std std-ref">Formulations</span></a> page. Note that
 the phase convention of the dynamical matrix
 given <a class="reference internal" href="formulation.html#dynacmial-matrix-theory"><span class="std std-ref">here</span></a> is used.
-For inelastic neutron scattering, <span class="math notranslate">\(\bar{b}_j\)</span> is the average
+For inelastic neutron scattering, <span class="math notranslate nohighlight">\(\bar{b}_j\)</span> is the average
 scattering length over isotopes and spins. For inelastic X-ray
-scattering, <span class="math notranslate">\(\bar{b}_j\)</span> is replaced by atomic form factor
-<span class="math notranslate">\(f_j(\mathbf{Q})\)</span> and <span class="math notranslate">\(k'/k \sim 1\)</span>.</p>
-<p>Currently only <span class="math notranslate">\(S(\mathbf{Q}, \nu, \omega)^{+1\text{ph}}\)</span> is
-calcualted with setting <span class="math notranslate">\(N k'/k = 1\)</span> and the physical unit is
-<span class="math notranslate">\(\text{m}^2/\text{J}\)</span> when <span class="math notranslate">\(\bar{b}_j\)</span> is given in
+scattering, <span class="math notranslate nohighlight">\(\bar{b}_j\)</span> is replaced by atomic form factor
+<span class="math notranslate nohighlight">\(f_j(\mathbf{Q})\)</span> and <span class="math notranslate nohighlight">\(k'/k \sim 1\)</span>.</p>
+<p>Currently only <span class="math notranslate nohighlight">\(S(\mathbf{Q}, \nu, \omega)^{+1\text{ph}}\)</span> is
+calcualted with setting <span class="math notranslate nohighlight">\(N k'/k = 1\)</span> and the physical unit is
+<span class="math notranslate nohighlight">\(\text{m}^2/\text{J}\)</span> when <span class="math notranslate nohighlight">\(\bar{b}_j\)</span> is given in
 Angstrom.</p>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
@@ -351,7 +351,7 @@ runs with the input files in <code class="docutils literal notranslate"><span cl
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.6.<br/>
     </p>
   </div>
 </footer>

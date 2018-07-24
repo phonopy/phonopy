@@ -7,7 +7,7 @@
     <title>Quasi harmonic approximation &#8212; Phonopy v.1.13.2</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -18,8 +18,8 @@
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Calculation of mode Grüneisen parameters" href="gruneisen.html" />
-    <link rel="prev" title="Command options" href="command-options.html" />
+    <link rel="next" title="Interfaces to calculators" href="interfaces.html" />
+    <link rel="prev" title="Calculation of mode Grüneisen parameters" href="gruneisen.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -63,8 +63,9 @@
 <li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
 <li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quasi harmonic approximation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
@@ -117,11 +118,11 @@
               
                 
   <li>
-    <a href="command-options.html" title="Previous Chapter: Command options"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Command options</span>
+    <a href="gruneisen.html" title="Previous Chapter: Calculation of mode Grüneisen parameters"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Calculation o...</span>
     </a>
   </li>
   <li>
-    <a href="gruneisen.html" title="Next Chapter: Calculation of mode Grüneisen parameters"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Calculation o... &raquo;</span>
+    <a href="interfaces.html" title="Next Chapter: Interfaces to calculators"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Interfaces to... &raquo;</span>
     </a>
   </li>
               
@@ -181,7 +182,7 @@ follows.</p>
 </div>
 <p>1st argument is the filename of volume-energy data (in the above
 expample, <code class="docutils literal notranslate"><span class="pre">e-v.dat</span></code>). The volume and energy of the unit cell
-(default units are in <span class="math notranslate">\(\text{Angstrom}^3\)</span> and eV, respectively). An
+(default units are in <span class="math notranslate nohighlight">\(\text{Angstrom}^3\)</span> and eV, respectively). An
 example of the volume-energy file is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#   cell volume   energy of cell other than phonon</span>
      <span class="mf">140.030000</span>           <span class="o">-</span><span class="mf">42.132246</span>
@@ -209,7 +210,7 @@ numerical differentiation in <code class="docutils literal notranslate"><span cl
 more temperature points is needed in <code class="docutils literal notranslate"><span class="pre">thermal_properties.yaml</span></code> for
 <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> calculations.</p>
 <p>Another example for Aluminum is found in the <code class="docutils literal notranslate"><span class="pre">example/Al-QHA</span></code> directory.</p>
-<p>If the condition under puressure is expected, <span class="math notranslate">\(PV\)</span> terms may be
+<p>If the condition under puressure is expected, <span class="math notranslate nohighlight">\(PV\)</span> terms may be
 included in the energies, or equivalent effect is applied using
 <code class="docutils literal notranslate"><span class="pre">--pressure</span></code> option.</p>
 <div class="section" id="options">
@@ -228,7 +229,7 @@ fewer. The default value is <code class="docutils literal notranslate"><span cla
 </div>
 <div class="section" id="pressure">
 <h4><code class="docutils literal notranslate"><span class="pre">--pressure</span></code><a class="headerlink" href="#pressure" title="Permalink to this headline">¶</a></h4>
-<p>Pressure is specified in GPa. This corresponds to the <span class="math notranslate">\(pV\)</span> term
+<p>Pressure is specified in GPa. This corresponds to the <span class="math notranslate nohighlight">\(pV\)</span> term
 described in the following section <a class="reference internal" href="#theory-of-qha"><span class="std std-ref">Thermal properties in (T, p) space calculated under QHA</span></a>. Note that
 bulk modulus obtained with this option than 0 GPa is incorrect.</p>
 </div>
@@ -266,33 +267,33 @@ the fitting results at temperatures. For example with <code class="docutils lite
 </div>
 <div class="section" id="output-files">
 <span id="phonopy-qha-output-files"></span><h3><a class="toc-backref" href="#id3">Output files</a><a class="headerlink" href="#output-files" title="Permalink to this headline">¶</a></h3>
-<p>The physical units of V and T are <span class="math notranslate">\(\text{Angstrom}^3\)</span> and K,
+<p>The physical units of V and T are <span class="math notranslate nohighlight">\(\text{Angstrom}^3\)</span> and K,
 respectively. The unit of eV for Helmholtz and Gibbs energies, J/K/mol
-for <span class="math notranslate">\(C_V\)</span> and entropy, GPa for for bulk modulus and pressure
+for <span class="math notranslate nohighlight">\(C_V\)</span> and entropy, GPa for for bulk modulus and pressure
 are used.</p>
 <ul class="simple">
-<li>Bulk modulus <span class="math notranslate">\(B_T\)</span> (GPa) vs <span class="math notranslate">\(T\)</span> (<code class="docutils literal notranslate"><span class="pre">bulk_modulus-temperature.*</span></code>)</li>
-<li>Gibbs free energy <span class="math notranslate">\(G\)</span> (eV) vs <span class="math notranslate">\(T\)</span> (<code class="docutils literal notranslate"><span class="pre">gibbs-temperature.*</span></code>)</li>
-<li>Heat capacity at constant pressure <span class="math notranslate">\(C_p\)</span> (J/K/mol) vs
-<span class="math notranslate">\(T\)</span> computed by <span class="math notranslate">\(-T\frac{\partial^2 G}{\partial T^2}\)</span>
-from three <span class="math notranslate">\(G(T)\)</span> points (<code class="docutils literal notranslate"><span class="pre">Cp-temperature.*</span></code>)</li>
-<li>Heat capacity at constant puressure <span class="math notranslate">\(C_p\)</span> (J/K/mol) vs
-<span class="math notranslate">\(T\)</span> computed by polynomial fittings of <span class="math notranslate">\(C_V(V)\)</span>
-(<code class="docutils literal notranslate"><span class="pre">Cv-volume.dat</span></code>) and <span class="math notranslate">\(S(V)\)</span> (<code class="docutils literal notranslate"><span class="pre">entropy-volume.dat</span></code>) for
-<span class="math notranslate">\(\partial S/\partial V\)</span> (<code class="docutils literal notranslate"><span class="pre">dsdv-temperature.dat</span></code>) and
-numerical differentiation of <span class="math notranslate">\(\partial V/\partial T\)</span>, e.g., see
+<li>Bulk modulus <span class="math notranslate nohighlight">\(B_T\)</span> (GPa) vs <span class="math notranslate nohighlight">\(T\)</span> (<code class="docutils literal notranslate"><span class="pre">bulk_modulus-temperature.*</span></code>)</li>
+<li>Gibbs free energy <span class="math notranslate nohighlight">\(G\)</span> (eV) vs <span class="math notranslate nohighlight">\(T\)</span> (<code class="docutils literal notranslate"><span class="pre">gibbs-temperature.*</span></code>)</li>
+<li>Heat capacity at constant pressure <span class="math notranslate nohighlight">\(C_p\)</span> (J/K/mol) vs
+<span class="math notranslate nohighlight">\(T\)</span> computed by <span class="math notranslate nohighlight">\(-T\frac{\partial^2 G}{\partial T^2}\)</span>
+from three <span class="math notranslate nohighlight">\(G(T)\)</span> points (<code class="docutils literal notranslate"><span class="pre">Cp-temperature.*</span></code>)</li>
+<li>Heat capacity at constant puressure <span class="math notranslate nohighlight">\(C_p\)</span> (J/K/mol) vs
+<span class="math notranslate nohighlight">\(T\)</span> computed by polynomial fittings of <span class="math notranslate nohighlight">\(C_V(V)\)</span>
+(<code class="docutils literal notranslate"><span class="pre">Cv-volume.dat</span></code>) and <span class="math notranslate nohighlight">\(S(V)\)</span> (<code class="docutils literal notranslate"><span class="pre">entropy-volume.dat</span></code>) for
+<span class="math notranslate nohighlight">\(\partial S/\partial V\)</span> (<code class="docutils literal notranslate"><span class="pre">dsdv-temperature.dat</span></code>) and
+numerical differentiation of <span class="math notranslate nohighlight">\(\partial V/\partial T\)</span>, e.g., see
 Eq.(5) of PRB <strong>81</strong>, 17430 by Togo <em>et al.</em>
 (<code class="docutils literal notranslate"><span class="pre">Cp-temperature_polyfit.*</span></code>).
-This may give smoother <span class="math notranslate">\(C_p\)</span> than that from
-<span class="math notranslate">\(-T\frac{\partial^2 G}{\partial T^2}\)</span>.</li>
-<li>Volumetric thermal expansion coefficient <span class="math notranslate">\(\beta\)</span> vs <span class="math notranslate">\(T\)</span>
+This may give smoother <span class="math notranslate nohighlight">\(C_p\)</span> than that from
+<span class="math notranslate nohighlight">\(-T\frac{\partial^2 G}{\partial T^2}\)</span>.</li>
+<li>Volumetric thermal expansion coefficient <span class="math notranslate nohighlight">\(\beta\)</span> vs <span class="math notranslate nohighlight">\(T\)</span>
 computed by numerical differentiation (<code class="docutils literal notranslate"><span class="pre">thermal_expansion.*</span></code>)</li>
-<li>Volume vs <span class="math notranslate">\(T\)</span> (<code class="docutils literal notranslate"><span class="pre">volume-temperature.*</span></code>)</li>
-<li>Thermodynamics Grüneisen parameter <span class="math notranslate">\(\gamma = V\beta B_T/C_V\)</span>
-(no unit) vs <span class="math notranslate">\(T\)</span> (<code class="docutils literal notranslate"><span class="pre">gruneisen-temperature.dat</span></code>)</li>
+<li>Volume vs <span class="math notranslate nohighlight">\(T\)</span> (<code class="docutils literal notranslate"><span class="pre">volume-temperature.*</span></code>)</li>
+<li>Thermodynamics Grüneisen parameter <span class="math notranslate nohighlight">\(\gamma = V\beta B_T/C_V\)</span>
+(no unit) vs <span class="math notranslate nohighlight">\(T\)</span> (<code class="docutils literal notranslate"><span class="pre">gruneisen-temperature.dat</span></code>)</li>
 <li>Helmholtz free energy (eV) vs volume
 (<code class="docutils literal notranslate"><span class="pre">helmholtz-volume.*</span></code>). When <code class="docutils literal notranslate"><span class="pre">--pressure</span></code> option is specified,
-energy offset of <span class="math notranslate">\(pV\)</span> is added. See also the following section
+energy offset of <span class="math notranslate nohighlight">\(pV\)</span> is added. See also the following section
 (<a class="reference internal" href="#theory-of-qha"><span class="std std-ref">Thermal properties in (T, p) space calculated under QHA</span></a>).</li>
 </ul>
 </div>
@@ -308,10 +309,10 @@ constant volume. But what we want to know is thermal properties at
 constant pressure. We need some transformation from function of <em>V</em> to
 function of <em>p</em>. Gibbs free energy is defined at a constant pressure by
 the transformation:</p>
-<div class="math notranslate">
+<div class="math notranslate nohighlight">
 \[G(T, p) = \min_V \left[ U(V) + F_\mathrm{phonon}(T;\,V) + pV \right],\]</div>
 <p>where</p>
-<div class="math notranslate">
+<div class="math notranslate nohighlight">
 \[\min_V[ \text{function of } V ]\]</div>
 <p>means to find unique minimum value in the brackets by changing
 volume. Since volume dependencies of energies in electronic and phonon
@@ -346,7 +347,7 @@ thermal properties at constant pressure.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.6.<br/>
     </p>
   </div>
 </footer>

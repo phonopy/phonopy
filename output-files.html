@@ -7,7 +7,7 @@
     <title>Output files &#8212; Phonopy v.1.13.2</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -63,8 +63,9 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Output files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
 <li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
@@ -294,12 +295,12 @@ represent x, y, and z components:</p>
 displacements. The format is hopefully understood just looking into
 it. ‘displacement’ is written in Cartesian coordinates.  The
 displacement and direction are related by</p>
-<div class="math notranslate">
+<div class="math notranslate nohighlight">
 \[\mathbf{u} = A \frac{( \mathbf{a}, \mathbf{b}, \mathbf{c} ) \mathbf{d}}{|( \mathbf{a}, \mathbf{b}, \mathbf{c} ) \mathbf{d}|},\]</div>
-<p>where <span class="math notranslate">\(\mathbf{u}\)</span> is the displacement in Cartesian coordinates,
-<span class="math notranslate">\(A\)</span> is the amplitude, <span class="math notranslate">\(( \mathbf{a}, \mathbf{b},
+<p>where <span class="math notranslate nohighlight">\(\mathbf{u}\)</span> is the displacement in Cartesian coordinates,
+<span class="math notranslate nohighlight">\(A\)</span> is the amplitude, <span class="math notranslate nohighlight">\(( \mathbf{a}, \mathbf{b},
 \mathbf{c} )\)</span> is the matrix representing supercell lattice vectors
-(three column vectors), and <span class="math notranslate">\(\mathbf{d}\)</span> is the direction along
+(three column vectors), and <span class="math notranslate nohighlight">\(\mathbf{d}\)</span> is the direction along
 the supercell axes.</p>
 </div>
 <div class="section" id="phonopy-yaml-and-phonon-disp-yaml">
@@ -357,7 +358,7 @@ mode</td>
 </tr>
 <tr class="row-even"><td>eigenvector</td>
 <td>Eigenvector at each phonon mode.
-Each eigenvector <span class="math notranslate">\(\mathbf{e}\)</span> of
+Each eigenvector <span class="math notranslate nohighlight">\(\mathbf{e}\)</span> of
 <a class="reference internal" href="formulation.html#dynacmial-matrix-theory"><span class="std std-ref">dynamical matrix</span></a>
 is shown as sets of three
 complex values of each atom along the Cartesian axes in
@@ -477,7 +478,7 @@ when phonopy ran with proper physical units. See
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.6.<br/>
     </p>
   </div>
 </footer>

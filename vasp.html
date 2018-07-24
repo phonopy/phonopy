@@ -7,7 +7,7 @@
     <title>VASP &amp; phonopy calculation &#8212; Phonopy v.1.13.2</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -63,8 +63,9 @@
 <li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
 <li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
@@ -146,7 +147,7 @@ used as an example here. Most files are found at <a class="reference external" h
 <p>In the pre-process, supercell structures with (or without)
 displacements are created from a unit cell fully consiering crystal
 symmetry.</p>
-<p>To obtain supercells (<span class="math notranslate">\(2\times 2\times 3\)</span>) with displacements,
+<p>To obtain supercells (<span class="math notranslate nohighlight">\(2\times 2\times 3\)</span>) with displacements,
 run phonopy:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonopy</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 3&quot;</span>
 </pre></div>
@@ -327,7 +328,7 @@ original values obtained directly from VASP was already very good.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.6.<br/>
     </p>
   </div>
 </footer>

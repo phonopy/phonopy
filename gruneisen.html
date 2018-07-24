@@ -7,7 +7,7 @@
     <title>Calculation of mode Grüneisen parameters &#8212; Phonopy v.1.13.2</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -18,8 +18,8 @@
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Interfaces to calculators" href="interfaces.html" />
-    <link rel="prev" title="Quasi harmonic approximation" href="qha.html" />
+    <link rel="next" title="Quasi harmonic approximation" href="qha.html" />
+    <link rel="prev" title="Dynamic structure factor" href="dynamic-structure-factor.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -63,8 +63,9 @@
 <li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
 <li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
@@ -105,11 +106,11 @@
               
                 
   <li>
-    <a href="qha.html" title="Previous Chapter: Quasi harmonic approximation"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Quasi harmoni...</span>
+    <a href="dynamic-structure-factor.html" title="Previous Chapter: Dynamic structure factor"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Dynamic struc...</span>
     </a>
   </li>
   <li>
-    <a href="interfaces.html" title="Next Chapter: Interfaces to calculators"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Interfaces to... &raquo;</span>
+    <a href="qha.html" title="Next Chapter: Quasi harmonic approximation"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Quasi harmoni... &raquo;</span>
     </a>
   </li>
               
@@ -177,11 +178,11 @@ bands correspond to those of mode Grüneinen parameters.</p>
 <p><a class="reference internal" href="_images/Si-gruneisen-mesh.png"><img alt="i1" src="_images/Si-gruneisen-mesh.png" style="width: 406.0px; height: 306.0px;" /></a></p>
 <p>In the plot (<code class="docutils literal notranslate"><span class="pre">-p</span></code> option), the colors of mode Grüneinen parameters
 are set for band indices with ascending order of phonon frequencies.</p>
-<p>Mode Grüneinen parameter may diverge around <span class="math notranslate">\(\Gamma\)</span>-point. In
+<p>Mode Grüneinen parameter may diverge around <span class="math notranslate nohighlight">\(\Gamma\)</span>-point. In
 the above example for band paths, mode Grüneinen parameters are
-calculated at <span class="math notranslate">\(\Gamma\)</span>-point, but <code class="docutils literal notranslate"><span class="pre">phonopy-gruneisen</span></code> script
+calculated at <span class="math notranslate nohighlight">\(\Gamma\)</span>-point, but <code class="docutils literal notranslate"><span class="pre">phonopy-gruneisen</span></code> script
 avoids showing the values on the plot. Instead the values at the
-neighboring <strong>q</strong>-points of <span class="math notranslate">\(\Gamma\)</span>-point are used for the
+neighboring <strong>q</strong>-points of <span class="math notranslate nohighlight">\(\Gamma\)</span>-point are used for the
 plot.</p>
 </div>
 <div class="section" id="abinit-quantum-espresso-wien2k-and-crystal-interfaces">
@@ -225,28 +226,28 @@ parameters are prepared.</p>
 </div>
 <div class="section" id="method-to-calculate-mode-gruneisen-parameters">
 <h2><a class="toc-backref" href="#id4">Method to calculate mode Grüneisen parameters</a><a class="headerlink" href="#method-to-calculate-mode-gruneisen-parameters" title="Permalink to this headline">¶</a></h2>
-<p>Mode Grüneisen parameter <span class="math notranslate">\(\gamma(\mathbf{q}\nu)\)</span> at the wave
-vector <span class="math notranslate">\(\mathbf{q}\)</span> and band index <span class="math notranslate">\(\nu\)</span> is given by</p>
-<div class="math notranslate">
+<p>Mode Grüneisen parameter <span class="math notranslate nohighlight">\(\gamma(\mathbf{q}\nu)\)</span> at the wave
+vector <span class="math notranslate nohighlight">\(\mathbf{q}\)</span> and band index <span class="math notranslate nohighlight">\(\nu\)</span> is given by</p>
+<div class="math notranslate nohighlight">
 \[\begin{split}\gamma(\mathbf{q}\nu) =&amp; -\frac{V}{\omega(\mathbf{q}\nu)}\frac{\partial
 \omega(\mathbf{q}\nu)}{\partial V}\\
 =&amp;-\frac{V}{2[\omega(\mathbf{q}\nu)]^2}\left&lt;\mathbf{e}(\mathbf{q}\nu)\biggl|
 \frac{\partial D(\mathbf{q})}
 {\partial V}\biggl|\mathbf{e}(\mathbf{q}\nu)\right&gt;,\end{split}\]</div>
-<p>where <span class="math notranslate">\(V\)</span> is the volume, <span class="math notranslate">\(\omega(\mathbf{q}\nu)\)</span> is the
-phonon frequency, <span class="math notranslate">\(D(\mathbf{q})\)</span> is the dynamical matrix,
-and <span class="math notranslate">\(\mathbf{e}(\mathbf{q}\nu)\)</span> is the eigenvector. This is
+<p>where <span class="math notranslate nohighlight">\(V\)</span> is the volume, <span class="math notranslate nohighlight">\(\omega(\mathbf{q}\nu)\)</span> is the
+phonon frequency, <span class="math notranslate nohighlight">\(D(\mathbf{q})\)</span> is the dynamical matrix,
+and <span class="math notranslate nohighlight">\(\mathbf{e}(\mathbf{q}\nu)\)</span> is the eigenvector. This is
 approximated by the finite difference method:</p>
-<div class="math notranslate">
+<div class="math notranslate nohighlight">
 \[\gamma(\mathbf{q}\nu) \simeq -\frac{V}{2[\omega(\mathbf{q}\nu)]^2}
 \left&lt;\mathbf{e}(\mathbf{q}\nu)\biggl|
 \frac{\Delta D(\mathbf{q})}
 {\Delta V}\biggl|\mathbf{e}(\mathbf{q}\nu)\right&gt;.\]</div>
 <p>The <code class="docutils literal notranslate"><span class="pre">phonopy-gruneisen</span></code> script requires three phonon calculations at
 corresponding three volume points. One is for eigenvectors at the
-equilibrium volume (<span class="math notranslate">\(V\)</span>) and the remaining two are for
-<span class="math notranslate">\(\Delta D(\mathbf{q})\)</span> with slightly larger and smaller volumes
-than <span class="math notranslate">\(V\)</span>.</p>
+equilibrium volume (<span class="math notranslate nohighlight">\(V\)</span>) and the remaining two are for
+<span class="math notranslate nohighlight">\(\Delta D(\mathbf{q})\)</span> with slightly larger and smaller volumes
+than <span class="math notranslate nohighlight">\(V\)</span>.</p>
 </div>
 </div>
 
@@ -270,7 +271,7 @@ than <span class="math notranslate">\(V\)</span>.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.6.<br/>
     </p>
   </div>
 </footer>

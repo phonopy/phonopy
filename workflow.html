@@ -7,7 +7,7 @@
     <title>Work flow &#8212; Phonopy v.1.13.2</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -63,8 +63,9 @@
 <li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
 <li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
@@ -89,7 +90,11 @@
   <ul class="dropdown-menu localtoc"
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
-<li><a class="reference internal" href="#">Work flow</a></li>
+<li><a class="reference internal" href="#">Work flow</a><ul>
+<li><a class="reference internal" href="#phonon-calculations-at-constant-volume">Phonon calculations at constant volume</a></li>
+<li><a class="reference internal" href="#combinations-of-phonon-calculations-at-different-volumes">Combinations of phonon calculations at different volumes</a></li>
+</ul>
+</li>
 </ul>
 </ul>
 </li>
@@ -133,15 +138,27 @@
       
   <div class="section" id="work-flow">
 <span id="workflow"></span><h1>Work flow<a class="headerlink" href="#work-flow" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="phonon-calculations-at-constant-volume">
+<h2>Phonon calculations at constant volume<a class="headerlink" href="#phonon-calculations-at-constant-volume" title="Permalink to this headline">¶</a></h2>
 <p>Work flow of phonopy is shown schematically. There are two ways to
 calculate, (1) atomic forces from finite displacements and (2) given
 force constants. You can choose one of them. Forces on atoms or force
 constants are calculated by your favorite calculator (shown by the
-diamonds in the work flow). The boxes are jobs being done by phonopy,
+octagons in the work flow). The boxes are jobs being done by phonopy,
 and the circles are input and intermediate output data structures.</p>
 <div class="figure align-center" id="id1">
-<a class="reference internal image-reference" href="_images/procedure.png"><img alt="_images/procedure.png" src="_images/procedure.png" style="width: 499.85px; height: 535.6px;" /></a>
+<a class="reference internal image-reference" href="_images/procedure.png"><img alt="_images/procedure.png" src="_images/procedure.png" style="width: 719.2px; height: 741.6px;" /></a>
 <p class="caption"><span class="caption-text">Work flow of phonon calculation</span></p>
+</div>
+</div>
+<div class="section" id="combinations-of-phonon-calculations-at-different-volumes">
+<h2>Combinations of phonon calculations at different volumes<a class="headerlink" href="#combinations-of-phonon-calculations-at-different-volumes" title="Permalink to this headline">¶</a></h2>
+<p>Mode Grüneisen parameters can be calculated from two or three phonon
+calculation results obtained at slightly different volume points. See
+the details at <a class="reference internal" href="gruneisen.html#phonopy-gruneisen"><span class="std std-ref">Calculation of mode Grüneisen parameters</span></a>.</p>
+<p>With more volume points and fitting the thermal properties, thermal
+properties at constant pressure are obtained under the (so-called)
+quasi-harmonic approximation. See more details at <a class="reference internal" href="qha.html#phonopy-qha"><span class="std std-ref">Quasi harmonic approximation</span></a>.</p>
 </div>
 </div>
 
@@ -165,7 +182,7 @@ and the circles are input and intermediate output data structures.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.6.<br/>
     </p>
   </div>
 </footer>

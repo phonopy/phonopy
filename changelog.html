@@ -7,7 +7,7 @@
     <title>Change Log &#8212; Phonopy v.1.13.2</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -63,8 +63,9 @@
 <li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
 <li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
@@ -970,7 +971,7 @@ by Jörg Meyer and Christian Carbogno, and also <cite>A set of ``POSCAR`</cite>
 files corresponding to animation frames.</li>
 <li>Fix bugs in <code class="docutils literal notranslate"><span class="pre">trim_cell</span></code> and
 <code class="docutils literal notranslate"><span class="pre">Primitive.__supercell_to_primitive_map</span></code> in <code class="docutils literal notranslate"><span class="pre">cells.py</span></code>. When
-<span class="math notranslate">\(M_s^{-1}M_p\)</span> is not symmetric, the supercell was not created
+<span class="math notranslate nohighlight">\(M_s^{-1}M_p\)</span> is not symmetric, the supercell was not created
 correctly.</li>
 <li><code class="docutils literal notranslate"><span class="pre">phonopy-FHI-aims</span></code> update by jm.</li>
 </ul>
@@ -1144,7 +1145,7 @@ from those in structure with atomic displacements.</li>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.6.<br/>
     </p>
   </div>
 </footer>
