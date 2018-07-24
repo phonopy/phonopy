@@ -33,6 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
+import warnings
 import numpy as np
 from phonopy.version import __version__
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
@@ -83,19 +84,14 @@ class Phonopy(object):
                  log_level=0):
 
         if is_auto_displacements is not None:
-            print("Warning: \'is_auto_displacements\' argument is obsolete.")
-            if is_auto_displacements is False:
-                print("Sets of displacements are not created as default.")
-            else:
-                print("Use \'generate_displacements\' method explicitly to "
-                      "create sets of displacements.")
+            warnings.simplefilter("error")
+            warnings.warn("is_auto_displacements argument is deprecated.",
+                          DeprecationWarning)
 
         if distance is not None:
-            print("Warning: \'distance\' keyword argument is obsolete at "
-                  "Phonopy instantiation.")
-            print("Specify \'distance\' keyword argument when calling "
-                  "\'generate_displacements\'")
-            print("method (See the Phonopy API document).")
+            warnings.simplefilter("error")
+            warnings.warn("distance is deprecated.",
+                          DeprecationWarning)
 
         self._symprec = symprec
         self._factor = factor
@@ -327,6 +323,10 @@ class Phonopy(object):
     @property
     def dynamic_structure_factor(self):
         return self._dynamic_structure_factor
+
+    @property
+    def thermal_properties(self):
+        return self._thermal_properties
 
     def set_unitcell(self, unitcell):
         self._unitcell = unitcell
@@ -925,9 +925,7 @@ class Phonopy(object):
                   "set_thermal_properties")
             return False
         else:
-            tp = ThermalProperties(self._mesh.get_frequencies(),
-                                   weights=self._mesh.get_weights(),
-                                   eigenvectors=self._mesh.get_eigenvectors(),
+            tp = ThermalProperties(self._mesh,
                                    is_projection=is_projection,
                                    band_indices=band_indices,
                                    cutoff_frequency=cutoff_frequency,
@@ -942,8 +940,10 @@ class Phonopy(object):
             self._thermal_properties = tp
 
     def get_thermal_properties(self):
-        temps, fe, entropy, cv = \
-            self._thermal_properties.get_thermal_properties()
+        (temps,
+         fe,
+         entropy,
+         cv) = self._thermal_properties.get_thermal_properties()
         return temps, fe, entropy, cv
 
     def plot_thermal_properties(self):
@@ -1015,13 +1015,11 @@ class Phonopy(object):
                                           self._primitive.get_cell())
             td = ThermalDisplacements(
                 iter_phonons,
-                self._primitive.get_masses(),
                 projection_direction=projection_direction,
                 freq_min=freq_min,
                 freq_max=freq_max)
         else:
             td = ThermalDisplacements(iter_phonons,
-                                      self._primitive.get_masses(),
                                       freq_min=freq_min,
                                       freq_max=freq_max)
 
@@ -1096,7 +1094,6 @@ class Phonopy(object):
 
         tdm = ThermalDisplacementMatrices(
             iter_phonons,
-            self._primitive.get_masses(),
             freq_min=freq_min,
             freq_max=freq_max,
             lattice=self._primitive.get_cell().T)
@@ -1122,37 +1119,6 @@ class Phonopy(object):
                                                  temperature_index):
         self._thermal_displacement_matrices.write_cif(self._primitive,
                                                       temperature_index)
-
-    # Mean square distance between a pair of atoms
-    def set_thermal_distances(self,
-                              atom_pairs,
-                              t_step=10,
-                              t_max=1000,
-                              t_min=0,
-                              cutoff_frequency=None):
-        """
-        atom_pairs: List of list
-          Mean square distances are calculated for the atom_pairs
-          e.g. [[1, 2], [1, 4]]
-
-        cutoff_frequency:
-          phonon modes that have frequencies below cutoff_frequency
-          are ignored.
-        """
-
-        td = ThermalDistances(self._mesh.get_frequencies(),
-                              self._mesh.get_eigenvectors(),
-                              self._supercell,
-                              self._primitive,
-                              self._mesh.get_qpoints(),
-                              cutoff_frequency=cutoff_frequency)
-        td.set_temperature_range(t_min, t_max, t_step)
-        td.run(atom_pairs)
-
-        self._thermal_distances = td
-
-    def write_yaml_thermal_distances(self):
-        self._thermal_distances.write_yaml()
 
     # Sampling at q-points
     def set_qpoints_phonon(self,

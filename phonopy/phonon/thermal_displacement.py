@@ -39,10 +39,10 @@ from phonopy.interface.cif import write_cif_P1
 
 class ThermalMotion(object):
     def __init__(self,
-                 masses,
+                 iter_mesh,
                  freq_min=None,
                  freq_max=None):
-
+        self._iter_mesh = iter_mesh
         if freq_min is None:
             self._fmin = 0
         else:
@@ -52,6 +52,7 @@ class ThermalMotion(object):
         else:
             self._fmax = freq_max
 
+        masses = iter_mesh.dynamical_matrix.primitive.get_masses()
         self._masses = masses * AMU
         self._masses3 = np.array([[m] * 3 for m in masses]).ravel() * AMU
         self._temperatures = None
@@ -118,7 +119,6 @@ class ThermalMotion(object):
 class ThermalDisplacements(ThermalMotion):
     def __init__(self,
                  iter_mesh,
-                 masses,
                  projection_direction=None,
                  freq_min=None,
                  freq_max=None):
@@ -130,10 +130,6 @@ class ThermalDisplacements(ThermalMotion):
             Mesh or IterMesh instance. Grid points must not be reduced by
             symmetry, i.e., IterMesh instance has to be create
             ``is_mesh_symmetry=False``.
-        masses: array_like
-            Atomic masses.
-            dtype='double'
-            shape=(number of atoms, )
         projection_direction:
             Eigenvector projection direction in Cartesian
             coordinates. If None, eigenvector is not projected.
@@ -144,19 +140,15 @@ class ThermalDisplacements(ThermalMotion):
 
         """
 
-        self._iter_mesh = iter_mesh
-
+        ThermalMotion.__init__(self,
+                               iter_mesh,
+                               freq_min=freq_min,
+                               freq_max=freq_max)
         if projection_direction is None:
             self._projection_direction = None
         else:
             self._projection_direction = (projection_direction /
                                           np.linalg.norm(projection_direction))
-
-        ThermalMotion.__init__(self,
-                               masses,
-                               freq_min=freq_min,
-                               freq_max=freq_max)
-
         self._displacements = None
 
     def get_thermal_displacements(self):
@@ -211,15 +203,13 @@ class ThermalDisplacements(ThermalMotion):
                 f.write(" ] # atom %d\n" % (i + 1))
 
     def plot(self, pyplot, is_legend=False):
-        plots = []
-        labels = []
         xyz = ['x', 'y', 'z']
         for i, u in enumerate(self._displacements.transpose()):
-            plots.append(pyplot.plot(self._temperatures, u))
-            labels.append("%d-%s" % (i//3 + 1, xyz[i % 3]))
+            pyplot.plot(self._temperatures, u,
+                        label=("%d-%s" % (i//3 + 1, xyz[i % 3])))
 
         if is_legend:
-            pyplot.legend(plots, labels, loc='upper left')
+            pyplot.legend(loc='upper left')
 
     def _project_eigenvectors(self):
         """Eigenvectors are projected along Cartesian direction"""
@@ -237,7 +227,6 @@ class ThermalDisplacements(ThermalMotion):
 class ThermalDisplacementMatrices(ThermalMotion):
     def __init__(self,
                  iter_mesh,
-                 masses,
                  freq_min=None,
                  freq_max=None,
                  lattice=None):
@@ -249,10 +238,6 @@ class ThermalDisplacementMatrices(ThermalMotion):
             Mesh or IterMesh instance. Grid points must not be reduced by
             symmetry, i.e., IterMesh instance has to be create
             ``is_mesh_symmetry=False``.
-        masses: array_like
-            Atomic masses
-            dtype='double'
-            shape=(number of atoms, )
         freq_min: float
             Minimum phonon frequency to determine wheather include or not.
         freq_max: float
@@ -265,13 +250,11 @@ class ThermalDisplacementMatrices(ThermalMotion):
         """
 
         ThermalMotion.__init__(self,
-                               masses,
+                               iter_mesh,
                                freq_min=freq_min,
                                freq_max=freq_max)
-
         self._disp_matrices = None
         self._disp_matrices_cif = None
-        self._iter_mesh = iter_mesh
 
         if lattice is not None:
             A = lattice
