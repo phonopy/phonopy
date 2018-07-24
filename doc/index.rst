@@ -38,11 +38,12 @@ The following features of phonopy are highlighted:
 - :ref:`Phonon group velocity <group_velocity>`
 - :ref:`Thermal ellipsoids <thermal_displacement_matrices_tag>` / :ref:`Mean square displacements <thermal_displacements_tag>`
 - :ref:`Irreducible representations of normal modes <irreducible_representation_related_tags>`
-- :ref:`Quasi-harmonic approximation <phonopy_qha>`: Thermal expansion, heat
-  capacity at constant pressure (Cp),
-- :ref:`Mode Grüneisen parameters <phonopy_gruneisen>`
+- :ref:`Dynamic structure factor for INS and IXS <dynamic_structure_factor>`
 - :ref:`Non-analytical-term correction <nac_tag>`: LO-TO splitting
   (:ref:`Born effective charges and dielectric constant are required. <born_file>`)
+- :ref:`Mode Grüneisen parameters <phonopy_gruneisen>`
+- :ref:`Quasi-harmonic approximation <phonopy_qha>`: Thermal expansion, heat
+  capacity at constant pressure (Cp),
 - :ref:`Interfaces to calculators <calculator_interfaces>`:
   :ref:`VASP <tutorial>`,
   :ref:`VASP DFPT <vasp_dfpt_interface>`,
@@ -77,9 +78,9 @@ Documentation
    output-files
    setting-tags
    command-options
-   qha
-   Mode Grüneisen parameters <gruneisen>
    dynamic-structure-factor
+   Mode Grüneisen parameters <gruneisen>
+   qha
    interfaces
    auxiliary-tools
    external-tools

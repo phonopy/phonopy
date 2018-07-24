@@ -2,14 +2,18 @@ digraph phonopy {
   graph [bgcolor=transparent];
   "Phonopy pre-process" [shape = box, style = filled];
   "Phonopy post-process" [shape = box, style = filled];
-  "Force calc." [shape = diamond];
-  "Force-constant calc." [shape = diamond];
+  "Force calc." [shape = octagon];
+  "Force-constant calc." [shape = octagon];
   "Band structure" [shape = box];
   "Mesh sampling" [shape = box];
-  "Animation" [shape = box];
+  "Atomic modulations" [shape = box];
   "Thermal properties" [shape = box];
   "DOS" [shape = box];
   "PDOS" [shape = box];
+  "Mean square displacement" [shape = box];
+  "Arbitrary q-point" [shape = box];
+  "Irreducible reps." [shape = box];
+  "Dynamic structure factor" [shape = box];
 
   "unit cell" -> "Phonopy pre-process";
   "supercell size" -> "Phonopy pre-process";
@@ -23,14 +27,21 @@ digraph phonopy {
   
   "unit cell" -> "Phonopy post-process";
   "supercell size" -> "Phonopy post-process";
-  "force constants" -> "Phonopy post-process";
   "primitive cell size" -> "Phonopy post-process";
+  "Non-analytical term\ncorrection parameters\n(optional)" -> "Phonopy post-process";
+  "force constants" -> "Phonopy post-process";
 
   "Phonopy post-process" -> "Band structure";
   "Phonopy post-process" -> "Mesh sampling";
-  "Phonopy post-process" -> "Animation" [label = "with eigenvectors"];
+  "Phonopy post-process" -> "Arbitrary q-point";
 
   "Mesh sampling" -> "DOS";
-  "Mesh sampling" -> "PDOS" [label = "with eigenvectors"];
+  "Mesh sampling" -> "PDOS";
   "Mesh sampling" -> "Thermal properties";
+  "Mesh sampling" -> "Mean square displacement";
+
+  "Mean square displacement" -> "Dynamic structure factor";
+  "Arbitrary q-point" -> "Dynamic structure factor";
+  "Arbitrary q-point" -> "Atomic modulations";
+  "Arbitrary q-point" -> "Irreducible reps.";
 }
