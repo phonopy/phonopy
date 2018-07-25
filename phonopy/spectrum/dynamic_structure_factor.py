@@ -217,7 +217,6 @@ class DynamicStructureFactor(object):
 
     def _get_thermal_displacements(self, Q):
         td = ThermalDisplacements(self._mesh_phonon,
-                                  self._primitive.get_masses(),
                                   projection_direction=Q,
                                   freq_min=self._fmin,
                                   freq_max=self._fmax)
