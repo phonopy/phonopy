@@ -58,7 +58,7 @@ def mode_ZPE(temp, freqs):
 
 
 def mode_zero(temp, freqs):
-    return 0
+    return np.zeros_like(freqs)
 
 
 class ThermalPropertiesBase(object):
@@ -70,7 +70,11 @@ class ThermalPropertiesBase(object):
                  pretend_real=False):
         self._is_projection = is_projection
         self._band_indices = None
-        self._cutoff_frequency = cutoff_frequency
+
+        if cutoff_frequency is None or cutoff_frequency < 0:
+            self._cutoff_frequency = 0.0
+        else:
+            self._cutoff_frequency = cutoff_frequency
 
         if band_indices is not None:
             bi = np.hstack(band_indices).astype('intc')
@@ -86,15 +90,13 @@ class ThermalPropertiesBase(object):
 
         if pretend_real:
             self._frequencies = abs(self._frequencies)
-        elif cutoff_frequency is not None:
-            self._frequencies = np.where(self._frequencies > cutoff_frequency,
-                                         self._frequencies, -1)
         self._frequencies = np.array(self._frequencies,
                                      dtype='double', order='C') * THzToEv
         self._weights = mesh.weights
         self._num_modes = self._frequencies.shape[1] * self._weights.sum()
         self._num_integrated_modes = np.sum(
-            self._weights * (self._frequencies > 0).sum(axis=1))
+            self._weights * (self._frequencies >
+                             self._cutoff_frequency).sum(axis=1))
 
     def get_free_energy(self, t):
         if t > 0:
@@ -121,18 +123,17 @@ class ThermalPropertiesBase(object):
         if not self._is_projection:
             t_property = 0.0
             for freqs, w in zip(self._frequencies, self._weights):
-                t_property += np.sum(
-                    func(t, np.extract(freqs > 0, freqs))) * w
+                cond = freqs > self._cutoff_frequency
+                t_property += np.sum(func(t, freqs[cond])) * w
             return t_property
         else:
             t_property = np.zeros(len(self._frequencies[0]), dtype='double')
             for freqs, eigvecs2, w in zip(self._frequencies,
                                           np.abs(self._eigenvectors) ** 2,
                                           self._weights):
-                for f, fracs in zip(freqs, eigvecs2.T):
-                    if f > 0:
-                        t_property += func(t, f) * w * fracs
-
+                cond = freqs > self._cutoff_frequency
+                t_property += np.dot(eigvecs2[:, cond],
+                                     func(t, freqs[cond])) * w
             return t_property
 
 
@@ -291,8 +292,17 @@ class ThermalProperties(ThermalPropertiesBase):
         phonoc.thermal_properties(props,
                                   self._temperatures,
                                   self._frequencies,
-                                  self._weights)
+                                  self._weights,
+                                  self._cutoff_frequency)
+        # for f, w in zip(self._frequencies, self._weights):
+        #     phonoc.thermal_properties(
+        #         props,
+        #         self._temperatures,
+        #         np.array(f, dtype='double', order='C')[None, :],
+        #         np.array([w], dtype='intc'),
+        #         cutoff_frequency)
 
+        props /= np.sum(self._weights)
         fe = props[:, 0] * EvTokJmol + self._zero_point_energy
         entropy = props[:, 1] * EvTokJmol * 1000
         cv = props[:, 2] * EvTokJmol * 1000
@@ -326,8 +336,7 @@ class ThermalProperties(ThermalPropertiesBase):
         lines.append("natom: %-5d" % (self._frequencies[0].shape[0] // 3))
         if volume is not None:
             lines.append("volume: %-20.10f" % volume)
-        if self._cutoff_frequency:
-            lines.append("cutoff_frequency: %8.3f" % self._cutoff_frequency)
+        lines.append("cutoff_frequency: %8.3f" % self._cutoff_frequency)
         lines.append("num_modes: %d" % self._num_modes)
         lines.append("num_integrated_modes: %d" % self._num_integrated_modes)
         if self._band_indices is not None:

@@ -55,7 +55,6 @@ from phonopy.phonon.mesh import Mesh, IterMesh
 from phonopy.units import VaspToTHz
 from phonopy.phonon.dos import TotalDos, PartialDos
 from phonopy.phonon.thermal_displacement import (ThermalDisplacements,
-                                                 ThermalDistances,
                                                  ThermalDisplacementMatrices)
 from phonopy.phonon.animation import Animation
 from phonopy.phonon.modulation import Modulation
@@ -788,10 +787,8 @@ class Phonopy(object):
                       tetrahedron_method=False):
 
         if self._mesh is None:
-            print("Warning: \'set_mesh\' has to finish correctly "
-                  "before DOS calculation.")
-            self._total_dos = None
-            return False
+            print("\'set_mesh\' has to be done before DOS calculation.")
+            raise RuntimeError
 
         total_dos = TotalDos(self._mesh,
                              sigma=sigma,
@@ -849,19 +846,19 @@ class Phonopy(object):
         self._pdos = None
 
         if self._mesh is None:
-            print("Warning: \'set_mesh\' has to be called before "
-                  "PDOS calculation.")
-            return False
+            print("\'set_mesh\' has to be done before PDOS calculation.")
+            raise RuntimeError
 
-        if self._mesh.get_eigenvectors() is None:
-            print("Warning: Eigenvectors have to be calculated.")
-            return False
+        if self._mesh.eigenvectors is None:
+            print("\'set_mesh\' had to be called with "
+                  "is_eigenvectors=True.")
+            return RuntimeError
 
         num_grid = np.prod(self._mesh.get_mesh_numbers())
         if num_grid != len(self._mesh.get_ir_grid_points()):
-            print("Warning: \'set_mesh\' has to be called with "
+            print("\'set_mesh\' had to be called with "
                   "is_mesh_symmetry=False.")
-            return False
+            raise RuntimeError
 
         if direction is not None:
             direction_cart = np.dot(direction, self._primitive.get_cell())
