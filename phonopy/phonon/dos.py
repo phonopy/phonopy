@@ -197,16 +197,16 @@ def run_tetrahedron_method_dos(mesh,
 class Dos(object):
     def __init__(self, mesh_object, sigma=None, tetrahedron_method=False):
         self._mesh_object = mesh_object
-        self._frequencies = mesh_object.get_frequencies()
-        self._weights = mesh_object.get_weights()
+        self._frequencies = mesh_object.frequencies
+        self._weights = mesh_object.weights
         if tetrahedron_method:
             self._tetrahedron_mesh = TetrahedronMesh(
-                mesh_object.get_dynamical_matrix().get_primitive(),
+                mesh_object.dynamical_matrix.primitive,
                 self._frequencies,
-                mesh_object.get_mesh_numbers(),
-                mesh_object.get_grid_address(),
-                mesh_object.get_grid_mapping_table(),
-                mesh_object.get_ir_grid_points())
+                mesh_object.mesh_numbers,
+                mesh_object.grid_address,
+                mesh_object.grid_mapping_table,
+                mesh_object.ir_grid_points)
         else:
             self._tetrahedron_mesh = None
 
@@ -285,16 +285,16 @@ class TotalDos(Dos):
                     self._dos += np.sum(iw * self._weights[i], axis=1)
 
     def _run_tetrahedron_method_dos(self):
-        mesh = self._mesh_object.get_mesh_numbers()
-        cell = self._mesh_object.get_dynamical_matrix().get_primitive()
+        mesh_numbers = self._mesh_object.mesh_numbers
+        cell = self._mesh_object.dynamical_matrix.primitive
         reciprocal_lattice = np.linalg.inv(cell.get_cell())
-        tm = TetrahedronMethod(reciprocal_lattice, mesh=mesh)
+        tm = TetrahedronMethod(reciprocal_lattice, mesh=mesh_numbers)
         self._dos = run_tetrahedron_method_dos(
-            mesh,
+            mesh_numbers,
             self._frequency_points,
             self._frequencies,
-            self._mesh_object.get_grid_address(),
-            self._mesh_object.get_grid_mapping_table(),
+            self._mesh_object.grid_address,
+            self._mesh_object.grid_mapping_table,
             tm.get_tetrahedra())
 
     def get_dos(self):
@@ -386,7 +386,7 @@ class PartialDos(Dos):
                      mesh_object,
                      sigma=sigma,
                      tetrahedron_method=tetrahedron_method)
-        self._eigenvectors = self._mesh_object.get_eigenvectors()
+        self._eigenvectors = self._mesh_object.eigenvectors
         self._partial_dos = None
 
         if xyz_projection:
@@ -441,16 +441,16 @@ class PartialDos(Dos):
             self._partial_dos += np.dot(iw * w, self._eigvecs2[i].T).T
 
     def _run_tetrahedron_method_dos(self):
-        mesh = self._mesh_object.get_mesh_numbers()
-        cell = self._mesh_object.get_dynamical_matrix().get_primitive()
+        mesh_numbers = self._mesh_object.mesh_numbers
+        cell = self._mesh_object.dynamical_matrix.primitive
         reciprocal_lattice = np.linalg.inv(cell.get_cell())
-        tm = TetrahedronMethod(reciprocal_lattice, mesh=mesh)
+        tm = TetrahedronMethod(reciprocal_lattice, mesh=mesh_numbers)
         pdos = run_tetrahedron_method_dos(
-            mesh,
+            mesh_numbers,
             self._frequency_points,
             self._frequencies,
-            self._mesh_object.get_grid_address(),
-            self._mesh_object.get_grid_mapping_table(),
+            self._mesh_object.grid_address,
+            self._mesh_object.grid_mapping_table,
             tm.get_tetrahedra(),
             coef=self._eigvecs2)
         self._partial_dos = pdos.T
