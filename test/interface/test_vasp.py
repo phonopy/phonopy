@@ -9,6 +9,7 @@ from phonopy.file_IO import parse_FORCE_SETS
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
+
 class TestVASP(unittest.TestCase):
 
     def setUp(self):
@@ -18,12 +19,13 @@ class TestVASP(unittest.TestCase):
         pass
 
     def test_read_vasp(self):
-        cell = read_vasp(os.path.join(data_dir, "../POSCAR_NaCl"))
+        cell = read_vasp(os.path.join(data_dir, "..", "POSCAR_NaCl"))
         filename = os.path.join(data_dir, "NaCl-vasp.yaml")
         cell_ref = get_unitcell_from_phonopy_yaml(filename)
         self.assertTrue(
             (np.abs(cell.get_cell() - cell_ref.get_cell()) < 1e-5).all())
-        diff_pos = cell.get_scaled_positions() - cell_ref.get_scaled_positions()
+        diff_pos = (cell.get_scaled_positions()
+                    - cell_ref.get_scaled_positions())
         diff_pos -= np.rint(diff_pos)
         self.assertTrue((np.abs(diff_pos) < 1e-5).all())
         for s, s_r in zip(cell.get_chemical_symbols(),
@@ -42,6 +44,7 @@ class TestVASP(unittest.TestCase):
             # print("")
             ref = dataset['first_atoms'][i]['forces']
             np.testing.assert_allclose(ref, vr.read_forces(), atol=1e-8)
+
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestVASP)

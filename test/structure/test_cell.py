@@ -8,6 +8,7 @@ from phonopy.interface.phonopy_yaml import get_unitcell_from_phonopy_yaml
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
+
 class TestSupercell(unittest.TestCase):
 
     def setUp(self):
@@ -41,8 +42,8 @@ class TestSupercell(unittest.TestCase):
         self._smats = []
         self._smats.append(np.diag([1, 2, 3]))
         self._smats.append([[-1, 1, 1],
-                            [ 1,-1, 1],
-                            [ 1, 1,-1]])
+                            [1, -1, 1],
+                            [1, 1, -1]])
 
         self._fnames = ("SiO2-123.yaml", "Si-conv.yaml")
 
@@ -68,7 +69,6 @@ class TestSupercell(unittest.TestCase):
             np.testing.assert_allclose(scell.get_masses(),
                                        scell_yaml.get_masses(),
                                        atol=1e-5)
-
 
 
 if __name__ == '__main__':

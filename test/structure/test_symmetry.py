@@ -7,25 +7,27 @@ from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell
 from phonopy.interface.phonopy_yaml import get_unitcell_from_phonopy_yaml
 import os
-data_dir=os.path.dirname(os.path.abspath(__file__))
+
+data_dir = os.path.dirname(os.path.abspath(__file__))
+
 
 class TestSymmetry(unittest.TestCase):
 
     def setUp(self):
         pass
-    
+
     def tearDown(self):
         pass
-    
+
     def test_get_map_operations(self):
         symprec = 1e-5
         cell = get_unitcell_from_phonopy_yaml(
-            os.path.join(data_dir,"../NaCl.yaml"))
+            os.path.join(data_dir, "..", "NaCl.yaml"))
         scell = get_supercell(cell, np.diag([2, 2, 2]), symprec=symprec)
         symmetry = Symmetry(scell, symprec=symprec)
-        start = time.time()
+        # start = time.time()
         symmetry._set_map_operations()
-        end = time.time()
+        # end = time.time()
         # print(end - start)
         map_ops = symmetry.get_map_operations()
         map_atoms = symmetry.get_map_atoms()
@@ -40,12 +42,13 @@ class TestSymmetry(unittest.TestCase):
 
     def test_magmom(self):
         symprec = 1e-5
-        cell = get_unitcell_from_phonopy_yaml(os.path.join(data_dir,"Cr.yaml"))
+        cell = get_unitcell_from_phonopy_yaml(
+            os.path.join(data_dir, "Cr.yaml"))
         symmetry_nonspin = Symmetry(cell, symprec=symprec)
         atom_map_nonspin = symmetry_nonspin.get_map_atoms()
         len_sym_nonspin = len(
             symmetry_nonspin.get_symmetry_operations()['rotations'])
-        
+
         spin = [1, -1]
         cell_withspin = cell.copy()
         cell_withspin.set_magnetic_moments(spin)
@@ -67,6 +70,7 @@ class TestSymmetry(unittest.TestCase):
         self.assertFalse((atom_map_nonspin == atom_map_brokenspin).all())
         self.assertTrue(len_sym_nonspin == len_sym_withspin)
         self.assertFalse(len_sym_nonspin == len_sym_brokenspin)
+
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestSymmetry)

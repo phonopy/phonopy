@@ -5,24 +5,26 @@ from phonopy import Phonopy
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_FORCE_SETS
+
 import os
 data_dir = os.path.dirname(os.path.abspath(__file__))
+
 
 class TestPhonopyYaml(unittest.TestCase):
 
     def setUp(self):
         pass
-    
+
     def tearDown(self):
         pass
-    
+
     def test_read_poscar_yaml(self):
-        filename = os.path.join(data_dir,"NaCl-vasp.yaml")
+        filename = os.path.join(data_dir, "NaCl-vasp.yaml")
         cell = self._get_unitcell(filename)
         self._compare(cell)
 
     def test_read_phonopy_yaml(self):
-        filename = os.path.join(data_dir,"phonopy.yaml")
+        filename = os.path.join(data_dir, "phonopy.yaml")
         cell = self._get_unitcell(filename)
         self._compare(cell)
 
@@ -33,10 +35,11 @@ class TestPhonopyYaml(unittest.TestCase):
         # print(phpy_yaml)
 
     def _compare(self, cell):
-        cell_ref = read_vasp(os.path.join(data_dir, "../POSCAR_NaCl"))
+        cell_ref = read_vasp(os.path.join(data_dir, "..", "POSCAR_NaCl"))
         self.assertTrue(
             (np.abs(cell.get_cell() - cell_ref.get_cell()) < 1e-5).all())
-        diff_pos = cell.get_scaled_positions() - cell_ref.get_scaled_positions()
+        diff_pos = (cell.get_scaled_positions()
+                    - cell_ref.get_scaled_positions())
         diff_pos -= np.rint(diff_pos)
         self.assertTrue((np.abs(diff_pos) < 1e-5).all())
         for s, s_r in zip(cell.get_chemical_symbols(),
@@ -50,7 +53,7 @@ class TestPhonopyYaml(unittest.TestCase):
         return unitcell
 
     def _get_phonon(self):
-        cell = read_vasp(os.path.join(data_dir, "../POSCAR_NaCl"))
+        cell = read_vasp(os.path.join(data_dir, "..", "POSCAR_NaCl"))
         phonon = Phonopy(cell,
                          np.diag([2, 2, 2]),
                          primitive_matrix=[[0, 0.5, 0.5],
@@ -60,7 +63,6 @@ class TestPhonopyYaml(unittest.TestCase):
         force_sets = parse_FORCE_SETS(filename=filename)
         phonon.set_displacement_dataset(force_sets)
         phonon.produce_force_constants()
-        supercell = phonon.get_supercell()
         born_elems = {'Na': [[1.08703, 0, 0],
                              [0, 1.08703, 0],
                              [0, 0, 1.08703]],
@@ -76,6 +78,7 @@ class TestPhonopyYaml(unittest.TestCase):
                                'factor': factors,
                                'dielectric': epsilon})
         return phonon
+
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestPhonopyYaml)

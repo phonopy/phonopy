@@ -155,6 +155,7 @@ class TestElectronFreeEnergy(unittest.TestCase):
          free_energy) = get_free_energy_at_T(0, 1000, 10,
                                              eigvals, weights, n_electrons)
 
+
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestElectronFreeEnergy)
     unittest.TextTestRunner(verbosity=2).run(suite)

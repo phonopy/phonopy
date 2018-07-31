@@ -3,14 +3,14 @@ try:
     from StringIO import StringIO
 except ImportError:
     from io import StringIO
-import sys
 import numpy as np
 from phonopy import Phonopy
 from phonopy.phonon.moment import PhononMoment
 from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
 import os
-data_dir=os.path.dirname(os.path.abspath(__file__))
+
+data_dir = os.path.dirname(os.path.abspath(__file__))
 
 result_full_range = """
  1.000000  1.000000  1.000000
@@ -21,9 +21,10 @@ result_full_range = """
 12.456609 13.099933 11.894505
 """
 
+
 class TestMoment(unittest.TestCase):
     def setUp(self):
-        self._cell = read_vasp(os.path.join(data_dir, "../POSCAR_NaCl"))
+        self._cell = read_vasp(os.path.join(data_dir, "..", "POSCAR_NaCl"))
 
     def tearDown(self):
         pass
@@ -57,7 +58,8 @@ class TestMoment(unittest.TestCase):
         for i in range(3):
             moment.run(order=i)
             vals[i + 3, 0] = moment.get_moment()
-            self.assertTrue(np.abs(moment.get_moment() - data[i + 3, 0]) < 1e-5)
+            self.assertTrue(
+                np.abs(moment.get_moment() - data[i + 3, 0]) < 1e-5)
 
         moment = PhononMoment(f, w, eigenvectors=e)
         moment.set_frequency_range(freq_min=3, freq_max=4)
@@ -79,16 +81,17 @@ class TestMoment(unittest.TestCase):
                          primitive_matrix=[[0, 0.5, 0.5],
                                            [0.5, 0, 0.5],
                                            [0.5, 0.5, 0]])
-        filename = os.path.join(data_dir, "../FORCE_SETS_NaCl")
+        filename = os.path.join(data_dir, "..", "FORCE_SETS_NaCl")
         force_sets = parse_FORCE_SETS(filename=filename)
         phonon.set_displacement_dataset(force_sets)
         phonon.produce_force_constants()
-        filename_born = os.path.join(data_dir, "../BORN_NaCl")
+        filename_born = os.path.join(data_dir, "..", "BORN_NaCl")
         nac_params = parse_BORN(phonon.get_primitive(), filename=filename_born)
         nac_params['method'] = 'wang'
         phonon.set_nac_params(nac_params)
 
         return phonon
+
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestMoment)

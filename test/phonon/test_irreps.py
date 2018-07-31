@@ -1,6 +1,5 @@
 import unittest
 import os
-import sys
 try:
     from StringIO import StringIO
 except ImportError:
@@ -665,6 +664,7 @@ chars_Pbar43m = """ 3.  0. -1.  0. -1.  0. -1.  0. -1.  0.  1.  0. -1.  0.  1.  
  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.
  3.  0. -1.  0. -1.  0. -1.  0. -1.  0.  1.  0. -1.  0.  1.  0. -0.  0.  1.  0.  0.  0. -1.  0.  0.  0.  1.  0. -0.  0. -1.  0. -0.  0. -1.  0. -0.  0.  1.  0.  0.  0.  1.  0.  0.  0. -1.  0."""
 
+
 class TestIrreps(unittest.TestCase):
     def setUp(self):
         pass
@@ -848,11 +848,11 @@ class TestIrreps(unittest.TestCase):
         np.testing.assert_allclose(chars, data, atol=1e-5)
 
     def _get_phonon(self, spgtype, dim, pmat):
-        cell = read_vasp(os.path.join(data_dir,"POSCAR_%s" % spgtype))
+        cell = read_vasp(os.path.join(data_dir, "POSCAR_%s" % spgtype))
         phonon = Phonopy(cell,
                          np.diag(dim),
                          primitive_matrix=pmat)
-        filename = os.path.join(data_dir,"FORCE_SETS_%s" % spgtype)
+        filename = os.path.join(data_dir, "FORCE_SETS_%s" % spgtype)
         force_sets = parse_FORCE_SETS(filename=filename)
         phonon.set_displacement_dataset(force_sets)
         phonon.produce_force_constants()
@@ -868,6 +868,7 @@ class TestIrreps(unittest.TestCase):
         data = np.loadtxt(StringIO(data_str))
         data = data.view(dtype="c%d" % (data.itemsize * 2))
         return data
+
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestIrreps)
