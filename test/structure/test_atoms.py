@@ -2,6 +2,7 @@ import unittest
 
 from phonopy.structure.atoms import PhonopyAtoms, Atoms
 
+
 class TestCell(unittest.TestCase):
 
     def setUp(self):
@@ -26,10 +27,10 @@ class TestCell(unittest.TestCase):
         self._cells.append(Atoms(cell=lattice,
                                  scaled_positions=points,
                                  symbols=symbols))
-    
+
     def tearDown(self):
         pass
-    
+
     def test_atoms(self):
         for cell in self._cells:
             print(cell.get_cell())
@@ -40,6 +41,7 @@ class TestCell(unittest.TestCase):
     def test_phonopy_atoms(self):
         for cell in self._cells:
             print(PhonopyAtoms(atoms=cell))
+
 
 if __name__ == '__main__':
     unittest.main()

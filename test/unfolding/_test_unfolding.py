@@ -1,50 +1,50 @@
 import unittest
-import sys
 import numpy as np
 from phonopy.structure.cells import get_supercell
 from phonopy.unfolding import Unfolding
 from phonopy import Phonopy
 from phonopy.interface.vasp import read_vasp
-from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.file_IO import parse_FORCE_SETS
 # from phonopy.interface.vasp import write_vasp
 import os
-data_dir=os.path.dirname(os.path.abspath(__file__))
+
+data_dir = os.path.dirname(os.path.abspath(__file__))
+
 
 class TestUnfolding(unittest.TestCase):
 
     def setUp(self):
-        self._cell = read_vasp(os.path.join(data_dir,"../POSCAR_NaCl"))
+        self._cell = read_vasp(os.path.join(data_dir, "..", "POSCAR_NaCl"))
         # print(self._cell)
         self._unfolding = None
-    
+
     def tearDown(self):
         pass
-    
+
     def test_Unfolding_NaCl(self):
-        ## mesh
+        # mesh
         # nd = 10
         # qpoints = np.array(list(np.ndindex(nd, nd, nd))) / float(nd)
-        ## band
+        # band
         nd = 50
-        qpoints = np.array([[x,] * 3 for x in range(nd)]) / float(nd)
+        qpoints = np.array([[x, ] * 3 for x in range(nd)]) / float(nd)
 
-        unfolding_supercell_matrix=[[-2, 2, 2],
-                                    [2, -2, 2],
-                                    [2, 2, -2]]
+        unfolding_supercell_matrix = [[-2, 2, 2],
+                                      [2, -2, 2],
+                                      [2, 2, -2]]
         self._prepare_unfolding(qpoints, unfolding_supercell_matrix)
         self._run_unfolding()
         weights = self._get_weights(qpoints, unfolding_supercell_matrix)
         # self._write_weights(weights, "unfolding.dat")
-        self._compare(weights, os.path.join(data_dir,"bin-unfolding.dat"))
+        self._compare(weights, os.path.join(data_dir, "bin-unfolding.dat"))
 
     def test_Unfolding_SC(self):
-        ## mesh
+        # mesh
         # nd = 10
         # qpoints = np.array(list(np.ndindex(nd, nd, nd))) / float(nd)
-        ## band
+        # band
         nd = 100
-        qpoints = np.array([[x,] * 3 for x in range(nd)]) / float(nd)
+        qpoints = np.array([[x, ] * 3 for x in range(nd)]) / float(nd)
 
         unfolding_supercell_matrix = np.diag([4, 4, 4])
         self._prepare_unfolding(qpoints, unfolding_supercell_matrix)
@@ -59,8 +59,7 @@ class TestUnfolding(unittest.TestCase):
         # self._write_bin_data(bin_data, filename)
         with open(filename) as f:
             bin_data_in_file = np.loadtxt(f)
-            np.testing.assert_allclose(bin_data, bin_data_in_file,
-                                       atol=1e-2, rtol=0)
+            np.testing.assert_allclose(bin_data, bin_data_in_file, atol=1e-2)
 
     def _prepare_unfolding(self, qpoints, unfolding_supercell_matrix):
         supercell = get_supercell(self._cell, np.diag([2, 2, 2]))
@@ -69,7 +68,7 @@ class TestUnfolding(unittest.TestCase):
         mapping = range(supercell.get_number_of_atoms())
         self._unfolding = Unfolding(phonon,
                                     unfolding_supercell_matrix,
-                                    supercell.get_scaled_positions(),  
+                                    supercell.get_scaled_positions(),
                                     mapping,
                                     qpoints)
 
@@ -81,7 +80,7 @@ class TestUnfolding(unittest.TestCase):
         P = np.linalg.inv(unfolding_supercell_matrix)
         comm_points = self._unfolding.get_commensurate_points()
         # (nd + 1, num_atom_super / num_atom_prim, num_atom_super * 3)
-        weights = self._unfolding.get_unfolding_weights() 
+        weights = self._unfolding.get_unfolding_weights()
         freqs = self._unfolding.get_frequencies()
 
         out_vals = []
@@ -112,7 +111,8 @@ class TestUnfolding(unittest.TestCase):
     def _get_phonon(self, cell):
         phonon = Phonopy(cell,
                          np.diag([1, 1, 1]))
-        force_sets = parse_FORCE_SETS(filename=os.path.join(data_dir,"FORCE_SETS"))
+        force_sets = parse_FORCE_SETS(
+            filename=os.path.join(data_dir, "FORCE_SETS"))
         phonon.set_displacement_dataset(force_sets)
         phonon.produce_force_constants()
         return phonon
@@ -147,14 +147,14 @@ class TestUnfolding(unittest.TestCase):
         x = np.around(x, decimals=5)
         y = np.around(y, decimals=5)
         w = np.array(w)
-    
+
         points = {}
         for e_x, e_y, e_z in zip(x, y, w):
             if (e_x, e_y) in points:
                 points[(e_x, e_y)] += e_z
             else:
                 points[(e_x, e_y)] = e_z
-    
+
         x = []
         y = []
         w = []
@@ -162,12 +162,13 @@ class TestUnfolding(unittest.TestCase):
             x.append(key[0])
             y.append(key[1])
             w.append(points[key])
-    
+
         data = np.transpose([x, y, w])
         data = sorted(data, key=lambda data: data[1])
         data = sorted(data, key=lambda data: data[0])
 
         return np.array(data)
+
 
 if __name__ == '__main__':
     unittest.main()

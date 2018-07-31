@@ -54,6 +54,7 @@ pdos_thm_str = """-0.750122 0.000000 0.000000
 6.249878 0.322527 0.138692
 7.249878 0.000000 0.000000"""
 
+
 class TestDOS(unittest.TestCase):
     def setUp(self):
         self._phonon = self._get_phonon()

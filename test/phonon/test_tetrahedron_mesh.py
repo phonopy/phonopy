@@ -3,17 +3,14 @@ try:
     from StringIO import StringIO
 except ImportError:
     from io import StringIO
-import sys
 import numpy as np
 from phonopy import Phonopy
 from phonopy.interface.vasp import read_vasp
-from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
-from phonopy.structure.symmetry import Symmetry
-from phonopy.structure.spglib import get_stabilized_reciprocal_mesh
-from phonopy.structure.tetrahedron_method import TetrahedronMethod
+from phonopy.file_IO import parse_FORCE_SETS
 from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 import os
-data_dir=os.path.dirname(os.path.abspath(__file__))
+
+data_dir = os.path.dirname(os.path.abspath(__file__))
 
 dos_str = """-0.672024 0.000000 0.029844 0.005522 0.731712 0.029450 1.433580 0.116998
 2.135448 0.200612 2.837315 0.329781 3.539183 0.905737 4.241051 1.808068
@@ -26,26 +23,25 @@ dos_str = """-0.672024 0.000000 0.029844 0.005522 0.731712 0.029450 1.433580 0.1
 21.787746 0.035963 22.489614 0.047177 23.191481 0.068537 23.893349 0.092864
 24.595217 0.204422 25.297085 0.252177 25.998953 0.676881 26.700820 0.000000"""
 
+
 class TestTetrahedronMesh(unittest.TestCase):
     def setUp(self):
         pass
-    
+
     def tearDown(self):
         pass
-    
+
     def test_Amm2(self):
         data = np.loadtxt(StringIO(dos_str))
-        phonon = self._get_phonon("Amm2", 
+        phonon = self._get_phonon("Amm2",
                                   [3, 2, 2],
                                   [[1, 0, 0],
                                    [0, 0.5, -0.5],
                                    [0, 0.5, 0.5]])
         mesh = [11, 11, 11]
         primitive = phonon.get_primitive()
-        symmetry = phonon.get_primitive_symmetry()
         phonon.set_mesh([11, 11, 11])
         qpoints, weights, frequencies, _ = phonon.get_mesh()
-        rotations = symmetry.get_pointgroup_operations()
         (grid_address,
          ir_grid_points,
          grid_mapping_table) = phonon.get_mesh_grid_info()
@@ -74,14 +70,16 @@ class TestTetrahedronMesh(unittest.TestCase):
             print(("%f " * 8) % tuple(row))
 
     def _get_phonon(self, spgtype, dim, pmat):
-        cell = read_vasp(os.path.join(data_dir,"POSCAR_%s" % spgtype))
+        cell = read_vasp(os.path.join(data_dir, "POSCAR_%s" % spgtype))
         phonon = Phonopy(cell,
                          np.diag(dim),
                          primitive_matrix=pmat)
-        force_sets = parse_FORCE_SETS(filename=os.path.join(data_dir,"FORCE_SETS_%s" % spgtype))
+        force_sets = parse_FORCE_SETS(
+            filename=os.path.join(data_dir, "FORCE_SETS_%s" % spgtype))
         phonon.set_displacement_dataset(force_sets)
         phonon.produce_force_constants()
         return phonon
+
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestTetrahedronMesh)

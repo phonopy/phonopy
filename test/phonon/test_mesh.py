@@ -64,6 +64,7 @@ class TestMesh(unittest.TestCase):
         self.assertTrue(id(mesh_obj.dynamical_matrix)
                         == id(mesh_obj.get_dynamical_matrix()))
 
+
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestMesh)
     unittest.TextTestRunner(verbosity=2).run(suite)
