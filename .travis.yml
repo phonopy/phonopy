@@ -31,7 +31,7 @@ install:
 script:
     - cd test
     - python -m unittest discover -b
-    - cd ../..
+    - cd ..
 
 deploy:
     # testing pypi
