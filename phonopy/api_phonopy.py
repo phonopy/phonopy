@@ -961,8 +961,7 @@ class Phonopy(object):
 
     def write_yaml_thermal_properties(self,
                                       filename='thermal_properties.yaml'):
-        volume = self.primitive.get_volume()
-        self._thermal_properties.write_yaml(filename=filename, volume=volume)
+        self._thermal_properties.write_yaml(filename=filename)
 
     # Thermal displacement
     def set_thermal_displacements(self,

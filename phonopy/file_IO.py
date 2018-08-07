@@ -520,7 +520,6 @@ def read_thermal_properties_yaml(filenames):
         from yaml import Loader
 
     thermal_properties = []
-    volumes = []
     num_modes = []
     num_integrated_modes = []
     for filename in filenames:
@@ -530,8 +529,6 @@ def read_thermal_properties_yaml(filenames):
             if 'num_modes' in tp_yaml and 'num_integrated_modes' in tp_yaml:
                 num_modes.append(tp_yaml['num_modes'])
                 num_integrated_modes.append(tp_yaml['num_integrated_modes'])
-            if 'volume' in tp_yaml:
-                volumes.append(tp_yaml['volume'])
 
     temperatures = [v['temperature'] for v in thermal_properties[0]]
     temp = []
@@ -559,7 +556,7 @@ def read_thermal_properties_yaml(filenames):
     entropy = np.array(entropy).T
     fe_phonon = np.array(fe_phonon).T
 
-    return (temperatures, cv, entropy, fe_phonon, volumes, num_modes,
+    return (temperatures, cv, entropy, fe_phonon, num_modes,
             num_integrated_modes)
 
 
