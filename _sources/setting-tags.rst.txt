@@ -225,7 +225,7 @@ post process of phonon calculation.
 
 Finite atomic displacement distance is set as specified value when
 creating supercells with displacements. The default displacement
-amplitude is 0.01 :math:`\textrm{\AA}`, but when the ``wien2k`` or
+amplitude is 0.01 Angstrom, but when the ``wien2k`` or
 ``abinit`` option is specified, the default value is 0.02 Bohr.
 
 ``DIAG``
@@ -697,7 +697,7 @@ usages of ``TMAX``, ``TMIN``, ``TSTEP`` tags are same as those in
 frequencies in THz, which is the default setting of phonopy, are used to
 obtain the mean square displacements, therefore physical units have to
 be set properly for it (see :ref:`calculator_interfaces`.) The result
-is given in :math:`\textrm{\AA}^2` and writen into
+is given in :math:`\text{Angstrom}^2` and writen into
 ``thermal_displacements.yaml``. See the detail of the method,
 :ref:`thermal_displacement`. These tags must be used with
 :ref:`mesh_sampling_tags`
@@ -729,7 +729,7 @@ is the default setting of phonopy, are
 used to obtain the mean square displacement matricies, therefore
 physical units have to be set properly for it (see
 :ref:`calculator_interfaces`.) The result is given in
-:math:`\textrm{\AA}^2` and writen into
+:math:`\text{Angstrom}^2` and writen into
 ``thermal_displacement_matrices.yaml`` where six matrix elements are
 given in the order of xx, yy, zz, yz, xz, xy.  In this yaml file,
 ``displacement_matrices`` and ``displacement_matrices_cif`` correspond
@@ -765,7 +765,7 @@ frequencies in THz, which is the default setting of phonopy, are used
 to obtain the mean square displacement matricies, therefore physical
 units have to be set properly for it (see
 :ref:`calculator_interfaces`.) The result is given in
-:math:`\textrm{\AA}^2`.
+:math:`\textrm{Angstrom}^2`.
 
 ``mesh.yaml`` or ``mesh.hdf5`` is not written out from phonopy-1.11.14.
 

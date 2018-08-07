@@ -530,7 +530,7 @@ post process of phonon calculation.</p>
 <span id="displacement-distance-tag"></span><h3><a class="toc-backref" href="#id17"><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE</span></code></a><a class="headerlink" href="#displacement-distance" title="Permalink to this headline">¶</a></h3>
 <p>Finite atomic displacement distance is set as specified value when
 creating supercells with displacements. The default displacement
-amplitude is 0.01 <span class="math notranslate nohighlight">\(\textrm{\AA}\)</span>, but when the <code class="docutils literal notranslate"><span class="pre">wien2k</span></code> or
+amplitude is 0.01 Angstrom, but when the <code class="docutils literal notranslate"><span class="pre">wien2k</span></code> or
 <code class="docutils literal notranslate"><span class="pre">abinit</span></code> option is specified, the default value is 0.02 Bohr.</p>
 </div>
 <div class="section" id="diag">
@@ -883,7 +883,7 @@ usages of <code class="docutils literal notranslate"><span class="pre">TMAX</spa
 frequencies in THz, which is the default setting of phonopy, are used to
 obtain the mean square displacements, therefore physical units have to
 be set properly for it (see <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.) The result
-is given in <span class="math notranslate nohighlight">\(\textrm{\AA}^2\)</span> and writen into
+is given in <span class="math notranslate nohighlight">\(\text{Angstrom}^2\)</span> and writen into
 <code class="docutils literal notranslate"><span class="pre">thermal_displacements.yaml</span></code>. See the detail of the method,
 <a class="reference internal" href="formulation.html#thermal-displacement"><span class="std std-ref">Thermal displacement</span></a>. These tags must be used with
 <a class="reference internal" href="#mesh-sampling-tags"><span class="std std-ref">Mesh sampling tags</span></a></p>
@@ -909,7 +909,7 @@ is the default setting of phonopy, are
 used to obtain the mean square displacement matricies, therefore
 physical units have to be set properly for it (see
 <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.) The result is given in
-<span class="math notranslate nohighlight">\(\textrm{\AA}^2\)</span> and writen into
+<span class="math notranslate nohighlight">\(\text{Angstrom}^2\)</span> and writen into
 <code class="docutils literal notranslate"><span class="pre">thermal_displacement_matrices.yaml</span></code> where six matrix elements are
 given in the order of xx, yy, zz, yz, xz, xy.  In this yaml file,
 <code class="docutils literal notranslate"><span class="pre">displacement_matrices</span></code> and <code class="docutils literal notranslate"><span class="pre">displacement_matrices_cif</span></code> correspond
@@ -938,7 +938,7 @@ frequencies in THz, which is the default setting of phonopy, are used
 to obtain the mean square displacement matricies, therefore physical
 units have to be set properly for it (see
 <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.) The result is given in
-<span class="math notranslate nohighlight">\(\textrm{\AA}^2\)</span>.</p>
+<span class="math notranslate nohighlight">\(\textrm{Angstrom}^2\)</span>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">mesh.yaml</span></code> or <code class="docutils literal notranslate"><span class="pre">mesh.hdf5</span></code> is not written out from phonopy-1.11.14.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">TDISPMAT_CIF</span> <span class="o">=</span> <span class="mf">1273.0</span>
 </pre></div>
