@@ -33,7 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 from phonopy.version import __version__
-
 from phonopy.api_phonopy import Phonopy
 from phonopy.api_gruneisen import PhonopyGruneisen
 from phonopy.api_qha import PhonopyQHA
+from phonopy.cui.load import load

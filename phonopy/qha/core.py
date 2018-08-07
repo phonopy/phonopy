@@ -81,9 +81,9 @@ class BulkModulus(object):
         import matplotlib.pyplot as plt
         ep = self.get_parameters()
         vols = self._volumes
-        plt.plot(vols, self._electronic_energies, 'bo', markersize=4)
         volume_points = np.linspace(min(vols), max(vols), 201)
         plt.plot(volume_points, self._eos(volume_points, *ep), 'r-')
+        plt.plot(vols, self._electronic_energies, 'bo', markersize=4)
         return plt
 
 
@@ -677,7 +677,7 @@ class QHA(object):
             self,
             plt,
             xlabel='Temperature (K)',
-            ylabel=r'Thermal expansion $\times 10^6 (\mathrm{K}^{-1})$'):
+            ylabel=r'Thermal expansion $(10^{-6} \mathrm{K}^{-1})$'):
 
         beta = np.array(self._thermal_expansions) * 1e6
         plt.plot(self._temperatures[:self._len],

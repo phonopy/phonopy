@@ -29,7 +29,7 @@ install:
     - python setup.py install
 
 script:
-    - cd test/phonopy
+    - cd test
     - python -m unittest discover -b
     - cd ../..
 

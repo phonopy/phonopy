@@ -2,35 +2,46 @@ digraph phonopy {
   graph [bgcolor=transparent];
   "Phonopy pre-process" [shape = box, style = filled];
   "Phonopy post-process" [shape = box, style = filled];
-  "Force calc." [shape = diamond];
-  "Force-constant calc." [shape = diamond];
+  "Force calc." [shape = octagon];
+  "Force-constant calc." [shape = octagon];
   "Band structure" [shape = box];
   "Mesh sampling" [shape = box];
-  "Animation" [shape = box];
+  "Atomic modulations" [shape = box];
   "Thermal properties" [shape = box];
   "DOS" [shape = box];
   "PDOS" [shape = box];
+  "Mean square displacement" [shape = box];
+  "Specific q-point" [shape = box];
+  "Irreducible reps." [shape = box];
+  "Dynamic structure factor" [shape = box];
 
-  "unit cell" -> "Phonopy pre-process";
-  "supercell size" -> "Phonopy pre-process";
-  "Phonopy pre-process" -> displacements;
-  displacements -> "Force calc." [label = "(1)"];
-  "Phonopy pre-process" -> supercell;
-  supercell -> "Force calc." [label = "(1)"];
-  supercell -> "Force-constant calc." [label = "(2)"];
-  "Force calc." -> "force constants" [label = "(1)"];
-  "Force-constant calc." -> "force constants" [label = "(2)"]; 
+  "Unit cell" -> "Phonopy pre-process";
+  "Supercell size" -> "Phonopy pre-process";
+  "Phonopy pre-process" -> Displacements;
+  Displacements -> "Force calc." [label = "(1)"];
+  "Phonopy pre-process" -> Supercell;
+  Supercell -> "Force calc." [label = "(1)"];
+  Supercell -> "Force-constant calc." [label = "(2)"];
+  "Force calc." -> "Force constants" [label = "(1)"];
+  "Force-constant calc." -> "Force constants" [label = "(2)"]; 
   
-  "unit cell" -> "Phonopy post-process";
-  "supercell size" -> "Phonopy post-process";
-  "force constants" -> "Phonopy post-process";
-  "primitive cell size" -> "Phonopy post-process";
+  "Unit cell" -> "Phonopy post-process";
+  "Supercell size" -> "Phonopy post-process";
+  "Primitive cell size\n(optional)" -> "Phonopy post-process";
+  "Non-analytical term\ncorrection parameters\n(optional)" -> "Phonopy post-process";
+  "Force constants" -> "Phonopy post-process";
 
   "Phonopy post-process" -> "Band structure";
   "Phonopy post-process" -> "Mesh sampling";
-  "Phonopy post-process" -> "Animation" [label = "with eigenvectors"];
+  "Phonopy post-process" -> "Specific q-point";
 
   "Mesh sampling" -> "DOS";
-  "Mesh sampling" -> "PDOS" [label = "with eigenvectors"];
+  "Mesh sampling" -> "PDOS";
   "Mesh sampling" -> "Thermal properties";
+  "Mesh sampling" -> "Mean square displacement";
+
+  "Mean square displacement" -> "Dynamic structure factor";
+  "Specific q-point" -> "Dynamic structure factor";
+  "Specific q-point" -> "Atomic modulations";
+  "Specific q-point" -> "Irreducible reps.";
 }
