@@ -130,7 +130,7 @@ scripts_phonopy = ['scripts/phonopy',
                    'scripts/phonopy-FHI-aims',
                    'scripts/phonopy-bandplot',
                    'scripts/phonopy-vasp-born',
-                   'scripts/phonopy-vasp-elfe',
+                   'scripts/phonopy-vasp-efe',
                    'scripts/phonopy-crystal-born',
                    'scripts/phonopy-propplot',
                    'scripts/phonopy-tdplot',
@@ -181,7 +181,9 @@ if __name__ == '__main__':
               install_requires=['numpy', 'PyYAML', 'matplotlib', 'h5py'],
               provides=['phonopy'],
               scripts=scripts_phonopy,
-              ext_modules=ext_modules_phonopy)
+              ext_modules=ext_modules_phonopy,
+              test_suite='nose.collector',
+              tests_require=['nose'])
     else:
         setup(name='phonopy',
               version=version_number,
@@ -193,4 +195,6 @@ if __name__ == '__main__':
               requires=['numpy', 'PyYAML', 'matplotlib', 'h5py'],
               provides=['phonopy'],
               scripts=scripts_phonopy,
-              ext_modules=ext_modules_phonopy)
+              ext_modules=ext_modules_phonopy,
+              test_suite='nose.collector',
+              tests_require=['nose'])

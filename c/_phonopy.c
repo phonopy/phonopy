@@ -106,12 +106,12 @@ static void gsv_set_smallest_vectors(double (*smallest_vectors)[27][3],
                                      PHPYCONST double reduced_basis[3][3],
                                      PHPYCONST int trans_mat[3][3],
                                      const double symprec);
-static double get_free_energy_omega(const double temperature,
-                                    const double omega);
-static double get_entropy_omega(const double temperature,
-                                const double omega);
-static double get_heat_capacity_omega(const double temperature,
-                                      const double omega);
+static double get_free_energy(const double temperature,
+                                    const double f);
+static double get_entropy(const double temperature,
+                                const double f);
+static double get_heat_capacity(const double temperature,
+                                      const double f);
 static void set_index_permutation_symmetry_fc(double * fc,
                                               const int natom);
 static void set_translational_symmetry_fc(double * fc,
@@ -129,7 +129,7 @@ static void set_translational_symmetry_compact_fc(double * fc,
                                                   const int n_satom,
                                                   const int n_patom);
 
-/* static double get_energy_omega(double temperature, double omega); */
+/* static double get_energy(double temperature, double f); */
 static int nint(const double a);
 
 struct module_state {
@@ -1000,6 +1000,8 @@ static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args)
   PyArrayObject* py_frequencies;
   PyArrayObject* py_weights;
 
+  double cutoff_frequency;
+
   double *temperatures;
   double* freqs;
   double *thermal_props;
@@ -1010,14 +1012,15 @@ static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args)
 
   int i, j, k;
   long sum_weights;
-  double omega;
+  double f;
   double *tp;
 
-  if (!PyArg_ParseTuple(args, "OOOO",
+  if (!PyArg_ParseTuple(args, "OOOOd",
                         &py_thermal_props,
                         &py_temperatures,
                         &py_frequencies,
-                        &py_weights)) {
+                        &py_weights,
+                        &cutoff_frequency)) {
     return NULL;
   }
 
@@ -1029,50 +1032,36 @@ static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args)
   w = (int*)PyArray_DATA(py_weights);
   num_bands = PyArray_DIMS(py_frequencies)[1];
 
-  for (i = 0; i < num_temp * 3; i++) {
-    thermal_props[i] = 0;
-  }
-
   tp = (double*)malloc(sizeof(double) * num_qpoints * num_temp * 3);
   for (i = 0; i < num_qpoints * num_temp * 3; i++) {
     tp[i] = 0;
   }
 
-#pragma omp parallel for private(j, k, omega)
+#pragma omp parallel for private(j, k, f)
   for (i = 0; i < num_qpoints; i++){
     for (j = 0; j < num_temp; j++) {
       for (k = 0; k < num_bands; k++){
-        omega = freqs[i * num_bands + k];
-        if (temperatures[j] > 0 && omega > 0.0) {
+        f = freqs[i * num_bands + k];
+        if (temperatures[j] > 0 && f > cutoff_frequency) {
           tp[i * num_temp * 3 + j * 3] +=
-            get_free_energy_omega(temperatures[j], omega) * w[i];
+            get_free_energy(temperatures[j], f) * w[i];
           tp[i * num_temp * 3 + j * 3 + 1] +=
-            get_entropy_omega(temperatures[j], omega) * w[i];
+            get_entropy(temperatures[j], f) * w[i];
           tp[i * num_temp * 3 + j * 3 + 2] +=
-            get_heat_capacity_omega(temperatures[j], omega)* w[i];
+            get_heat_capacity(temperatures[j], f) * w[i];
         }
       }
     }
   }
 
-  for (i = 0; i < num_temp * 3; i++) {
-    for (j = 0; j < num_qpoints; j++) {
-      thermal_props[i] += tp[j * num_temp * 3 + i];
+  for (i = 0; i < num_qpoints; i++) {
+    for (j = 0; j < num_temp * 3; j++) {
+      thermal_props[j] += tp[i * num_temp * 3 + j];
     }
   }
 
   free(tp);
-
-  sum_weights = 0;
-#pragma omp parallel for reduction(+:sum_weights)
-  for (i = 0; i < num_qpoints; i++){
-    sum_weights += w[i];
-  }
-
-  for (i = 0; i < num_temp * 3; i++) {
-    thermal_props[i] /= sum_weights;
-  }
-
+  tp = NULL;
 
   Py_RETURN_NONE;
 }
@@ -1487,43 +1476,40 @@ static PyObject * py_tetrahedron_method_dos(PyObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
-static double get_free_energy_omega(const double temperature,
-                                    const double omega)
+static double get_free_energy(const double temperature, const double f)
 {
   /* temperature is defined by T (K) */
-  /* omega must be normalized to eV. */
-  return KB * temperature * log(1 - exp(- omega / (KB * temperature)));
+  /* 'f' must be given in eV. */
+  return KB * temperature * log(1 - exp(- f / (KB * temperature)));
 }
 
-static double get_entropy_omega(const double temperature,
-                                const double omega)
+static double get_entropy(const double temperature, const double f)
 {
   /* temperature is defined by T (K) */
-  /* omega must be normalized to eV. */
+  /* 'f' must be given in eV. */
   double val;
 
-  val = omega / (2 * KB * temperature);
-  return 1 / (2 * temperature) * omega * cosh(val) / sinh(val) - KB * log(2 * sinh(val));
+  val = f / (2 * KB * temperature);
+  return 1 / (2 * temperature) * f * cosh(val) / sinh(val) - KB * log(2 * sinh(val));
 }
 
-static double get_heat_capacity_omega(const double temperature,
-                                      const double omega)
+static double get_heat_capacity(const double temperature, const double f)
 {
   /* temperature is defined by T (K) */
-  /* omega must be normalized to eV. */
+  /* 'f' must be given in eV. */
   /* If val is close to 1. Then expansion is used. */
   double val, val1, val2;
 
-  val = omega / (KB * temperature);
+  val = f / (KB * temperature);
   val1 = exp(val);
   val2 = (val) / (val1 - 1);
   return KB * val1 * val2 * val2;
 }
 
-/* static double get_energy_omega(double temperature, double omega){ */
+/* static double get_energy(double temperature, double f){ */
 /*   /\* temperature is defined by T (K) *\/ */
-/*   /\* omega must be normalized to eV. *\/ */
-/*   return omega / (exp(omega / (KB * temperature)) - 1); */
+/*   /\* 'f' must be given in eV. *\/ */
+/*   return f / (exp(f / (KB * temperature)) - 1); */
 /* } */
 
 static int compute_permutation(int * rot_atom,

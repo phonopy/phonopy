@@ -37,6 +37,7 @@ import numpy as np
 from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
+
 def write_total_dos(frequency_points,
                     total_dos,
                     comment=None):
@@ -46,6 +47,7 @@ def write_total_dos(frequency_points,
 
     for freq, dos in zip(frequency_points, total_dos):
         fp.write("%20.10f%20.10f\n" % (freq, dos))
+
 
 def write_partial_dos(frequency_points,
                       partial_dos,
@@ -92,6 +94,7 @@ def plot_total_dos(pyplot,
 
     pyplot.grid(draw_grid)
 
+
 def plot_partial_dos(pyplot,
                      frequency_points,
                      partial_dos,
@@ -137,6 +140,7 @@ def plot_partial_dos(pyplot,
 
     pyplot.grid(draw_grid)
 
+
 class NormalDistribution(object):
     def __init__(self, sigma):
         self._sigma = sigma
@@ -145,6 +149,7 @@ class NormalDistribution(object):
         return 1.0 / np.sqrt(2 * np.pi) / self._sigma * \
             np.exp(-x**2 / 2.0 / self._sigma**2)
 
+
 class CauchyDistribution(object):
     def __init__(self, gamma):
         self._gamma = gamma
@@ -152,13 +157,14 @@ class CauchyDistribution(object):
     def calc(self, x):
         return self._gamma / np.pi / (x**2 + self._gamma**2)
 
+
 def run_tetrahedron_method_dos(mesh,
                                frequency_points,
                                frequencies,
                                grid_address,
                                grid_mapping_table,
                                relative_grid_address,
-                               coef=None): # for each grid point
+                               coef=None):  # for each grid point
     try:
         import phonopy._phonopy as phonoc
     except ImportError:
@@ -183,23 +189,24 @@ def run_tetrahedron_method_dos(mesh,
                                   grid_mapping_table,
                                   relative_grid_address)
     if coef is None:
-        return dos[:,:,:,0].sum(axis=0).sum(axis=0) / np.prod(mesh)
+        return dos[:, :, :, 0].sum(axis=0).sum(axis=0) / np.prod(mesh)
     else:
         return dos.sum(axis=0).sum(axis=0) / np.prod(mesh)
+
 
 class Dos(object):
     def __init__(self, mesh_object, sigma=None, tetrahedron_method=False):
         self._mesh_object = mesh_object
-        self._frequencies = mesh_object.get_frequencies()
-        self._weights = mesh_object.get_weights()
+        self._frequencies = mesh_object.frequencies
+        self._weights = mesh_object.weights
         if tetrahedron_method:
             self._tetrahedron_mesh = TetrahedronMesh(
-                mesh_object.get_dynamical_matrix().get_primitive(),
+                mesh_object.dynamical_matrix.primitive,
                 self._frequencies,
-                mesh_object.get_mesh_numbers(),
-                mesh_object.get_grid_address(),
-                mesh_object.get_grid_mapping_table(),
-                mesh_object.get_ir_grid_points())
+                mesh_object.mesh_numbers,
+                mesh_object.grid_address,
+                mesh_object.grid_mapping_table,
+                mesh_object.ir_grid_points)
         else:
             self._tetrahedron_mesh = None
 
@@ -251,6 +258,7 @@ class Dos(object):
                                            f_max + f_delta * 0.1,
                                            f_delta)
 
+
 class TotalDos(Dos):
     def __init__(self, mesh_object, sigma=None, tetrahedron_method=False):
         Dos.__init__(self,
@@ -277,16 +285,16 @@ class TotalDos(Dos):
                     self._dos += np.sum(iw * self._weights[i], axis=1)
 
     def _run_tetrahedron_method_dos(self):
-        mesh = self._mesh_object.get_mesh_numbers()
-        cell = self._mesh_object.get_dynamical_matrix().get_primitive()
+        mesh_numbers = self._mesh_object.mesh_numbers
+        cell = self._mesh_object.dynamical_matrix.primitive
         reciprocal_lattice = np.linalg.inv(cell.get_cell())
-        tm = TetrahedronMethod(reciprocal_lattice, mesh=mesh)
+        tm = TetrahedronMethod(reciprocal_lattice, mesh=mesh_numbers)
         self._dos = run_tetrahedron_method_dos(
-            mesh,
+            mesh_numbers,
             self._frequency_points,
             self._frequencies,
-            self._mesh_object.get_grid_address(),
-            self._mesh_object.get_grid_mapping_table(),
+            self._mesh_object.grid_address,
+            self._mesh_object.grid_mapping_table,
             tm.get_tetrahedra())
 
     def get_dos(self):
@@ -312,7 +320,7 @@ class TotalDos(Dos):
         freq_max = self._frequency_points.max()
 
         if freq_max_fit is None:
-            N_fit = int(len(self._frequency_points) / 4.0) # Hard coded
+            N_fit = int(len(self._frequency_points) / 4.0)  # Hard coded
         else:
             N_fit = int(freq_max_fit / (freq_max - freq_min) *
                         len(self._frequency_points))
@@ -364,7 +372,7 @@ class TotalDos(Dos):
     def _get_density_of_states_at_freq(self, f):
         return np.sum(np.dot(
             self._weights, self._smearing_function.calc(self._frequencies - f))
-            ) /  np.sum(self._weights)
+        ) / np.sum(self._weights)
 
 
 class PartialDos(Dos):
@@ -378,7 +386,7 @@ class PartialDos(Dos):
                      mesh_object,
                      sigma=sigma,
                      tetrahedron_method=tetrahedron_method)
-        self._eigenvectors = self._mesh_object.get_eigenvectors()
+        self._eigenvectors = self._mesh_object.eigenvectors
         self._partial_dos = None
 
         if xyz_projection:
@@ -419,7 +427,7 @@ class PartialDos(Dos):
         for i, freq in enumerate(self._frequency_points):
             amplitudes = self._smearing_function.calc(self._frequencies - freq)
             for j in range(self._partial_dos.shape[0]):
-                self._partial_dos[j, i]= np.dot(
+                self._partial_dos[j, i] = np.dot(
                     weights, self._eigvecs2[:, j, :] * amplitudes).sum()
 
     def _run_tetrahedron_method(self):
@@ -433,16 +441,16 @@ class PartialDos(Dos):
             self._partial_dos += np.dot(iw * w, self._eigvecs2[i].T).T
 
     def _run_tetrahedron_method_dos(self):
-        mesh = self._mesh_object.get_mesh_numbers()
-        cell = self._mesh_object.get_dynamical_matrix().get_primitive()
+        mesh_numbers = self._mesh_object.mesh_numbers
+        cell = self._mesh_object.dynamical_matrix.primitive
         reciprocal_lattice = np.linalg.inv(cell.get_cell())
-        tm = TetrahedronMethod(reciprocal_lattice, mesh=mesh)
+        tm = TetrahedronMethod(reciprocal_lattice, mesh=mesh_numbers)
         pdos = run_tetrahedron_method_dos(
-            mesh,
+            mesh_numbers,
             self._frequency_points,
             self._frequencies,
-            self._mesh_object.get_grid_address(),
-            self._mesh_object.get_grid_mapping_table(),
+            self._mesh_object.grid_address,
+            self._mesh_object.grid_mapping_table,
             tm.get_tetrahedra(),
             coef=self._eigvecs2)
         self._partial_dos = pdos.T

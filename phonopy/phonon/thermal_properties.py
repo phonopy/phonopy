@@ -58,52 +58,45 @@ def mode_ZPE(temp, freqs):
 
 
 def mode_zero(temp, freqs):
-    return 0
+    return np.zeros_like(freqs)
 
 
 class ThermalPropertiesBase(object):
     def __init__(self,
-                 frequencies,
-                 weights=None,
-                 eigenvectors=None,
+                 mesh,
                  is_projection=False,
                  band_indices=None,
                  cutoff_frequency=None,
                  pretend_real=False):
-        self._band_indices = None
-        self._frequencies = None
-        self._eigenvectors = None
-        self._weights = None
         self._is_projection = is_projection
-        self._cutoff_frequency = cutoff_frequency
+        self._band_indices = None
+
+        if cutoff_frequency is None or cutoff_frequency < 0:
+            self._cutoff_frequency = 0.0
+        else:
+            self._cutoff_frequency = cutoff_frequency
 
         if band_indices is not None:
             bi = np.hstack(band_indices).astype('intc')
             self._band_indices = bi
-            self._frequencies = np.array(frequencies[:, bi],
+            self._frequencies = np.array(mesh.frequencies[:, bi],
                                          dtype='double', order='C')
-            if eigenvectors is not None:
-                self._eigenvectors = np.array(eigenvectors[:, :, bi],
+            if mesh.eigenvectors is not None:
+                self._eigenvectors = np.array(mesh.eigenvectors[:, :, bi],
                                               dtype='double', order='C')
         else:
-            self._frequencies = frequencies
-            self._eigenvectors = eigenvectors
+            self._frequencies = mesh.frequencies
+            self._eigenvectors = mesh.eigenvectors
 
         if pretend_real:
             self._frequencies = abs(self._frequencies)
-        elif cutoff_frequency is not None:
-            self._frequencies = np.where(self._frequencies > cutoff_frequency,
-                                         self._frequencies, -1)
         self._frequencies = np.array(self._frequencies,
                                      dtype='double', order='C') * THzToEv
-        if weights is None:
-            self._weights = np.ones(frequencies.shape[0], dtype='intc')
-        else:
-            self._weights = weights
-
+        self._weights = mesh.weights
         self._num_modes = self._frequencies.shape[1] * self._weights.sum()
         self._num_integrated_modes = np.sum(
-            self._weights * (self._frequencies > 0).sum(axis=1))
+            self._weights * (self._frequencies >
+                             self._cutoff_frequency).sum(axis=1))
 
     def get_free_energy(self, t):
         if t > 0:
@@ -130,34 +123,29 @@ class ThermalPropertiesBase(object):
         if not self._is_projection:
             t_property = 0.0
             for freqs, w in zip(self._frequencies, self._weights):
-                t_property += np.sum(
-                    func(t, np.extract(freqs > 0, freqs))) * w
+                cond = freqs > self._cutoff_frequency
+                t_property += np.sum(func(t, freqs[cond])) * w
             return t_property
         else:
             t_property = np.zeros(len(self._frequencies[0]), dtype='double')
             for freqs, eigvecs2, w in zip(self._frequencies,
                                           np.abs(self._eigenvectors) ** 2,
                                           self._weights):
-                for f, fracs in zip(freqs, eigvecs2.T):
-                    if f > 0:
-                        t_property += func(t, f) * w * fracs
-
+                cond = freqs > self._cutoff_frequency
+                t_property += np.dot(eigvecs2[:, cond],
+                                     func(t, freqs[cond])) * w
             return t_property
 
 
 class ThermalProperties(ThermalPropertiesBase):
     def __init__(self,
-                 frequencies,
-                 weights=None,
-                 eigenvectors=None,
+                 mesh,
                  is_projection=False,
                  band_indices=None,
                  cutoff_frequency=None,
                  pretend_real=False):
         ThermalPropertiesBase.__init__(self,
-                                       frequencies,
-                                       weights=weights,
-                                       eigenvectors=eigenvectors,
+                                       mesh,
                                        is_projection=is_projection,
                                        band_indices=band_indices,
                                        cutoff_frequency=cutoff_frequency,
@@ -170,22 +158,51 @@ class ThermalProperties(ThermalPropertiesBase):
 
         self._set_high_T_entropy_and_zero_point_energy()
 
-    def get_temperatures(self):
+    @property
+    def temperatures(self):
         return self._temperatures
 
-    def get_number_of_integrated_modes(self):
+    def get_temperatures(self):
+        return self.temperatures
+
+    @property
+    def thermal_properties(self):
+        return self._thermal_properties
+
+    def get_thermal_properties(self):
+        return self.thermal_properties
+
+    @property
+    def zero_point_energy(self):
+        return self._zero_point_energy
+
+    def get_zero_point_energy(self):
+        return self.zero_point_energy
+
+    @property
+    def high_T_entropy(self):
+        return self._high_T_entropy
+
+    def get_high_T_entropy(self):
+        return self.high_T_entropy
+
+    @property
+    def number_of_integrated_modes(self):
         """Number of phonon modes used for integration on sampling mesh"""
         return self._num_integrated_modes
 
-    def get_number_of_modes(self):
+    def get_number_of_integrated_modes(self):
+        """Number of phonon modes used for integration on sampling mesh"""
+        return self.number_of_integrated_modes
+
+    @property
+    def number_of_modes(self):
         """Number of phonon modes on sampling mesh"""
         return self._num_modes
 
-    def get_zero_point_energy(self):
-        return self._zero_point_energy
-
-    def get_high_T_entropy(self):
-        return self._high_T_entropy
+    def get_number_of_modes(self):
+        """Number of phonon modes on sampling mesh"""
+        return self.number_of_modes
 
     def set_temperature_range(self, t_min=None, t_max=None, t_step=None):
         if t_min is None:
@@ -260,9 +277,6 @@ class ThermalProperties(ThermalPropertiesBase):
                 np.array(entropy, dtype='double'),
                 np.array(cv, dtype='double')]
 
-    def get_thermal_properties(self):
-        return self._thermal_properties
-
     def write_yaml(self, filename='thermal_properties.yaml', volume=None):
         lines = self._get_tp_yaml_lines(volume=volume)
         if self._is_projection:
@@ -278,8 +292,17 @@ class ThermalProperties(ThermalPropertiesBase):
         phonoc.thermal_properties(props,
                                   self._temperatures,
                                   self._frequencies,
-                                  self._weights)
+                                  self._weights,
+                                  self._cutoff_frequency)
+        # for f, w in zip(self._frequencies, self._weights):
+        #     phonoc.thermal_properties(
+        #         props,
+        #         self._temperatures,
+        #         np.array(f, dtype='double', order='C')[None, :],
+        #         np.array([w], dtype='intc'),
+        #         cutoff_frequency)
 
+        props /= np.sum(self._weights)
         fe = props[:, 0] * EvTokJmol + self._zero_point_energy
         entropy = props[:, 1] * EvTokJmol * 1000
         cv = props[:, 2] * EvTokJmol * 1000
@@ -296,9 +319,9 @@ class ThermalProperties(ThermalPropertiesBase):
             cv.append(props[2] * 1000)
         self._thermal_properties = [
             self._temperatures,
-            np.array(fe, dtype='double', order='C'),
-            np.array(entropy, dtype='double', order='C'),
-            np.array(cv, dtype='double', order='C')]
+            np.array(fe, dtype='double'),
+            np.array(entropy, dtype='double'),
+            np.array(cv, dtype='double')]
 
     def _get_tp_yaml_lines(self, volume=None):
         lines = []
@@ -313,8 +336,7 @@ class ThermalProperties(ThermalPropertiesBase):
         lines.append("natom: %-5d" % (self._frequencies[0].shape[0] // 3))
         if volume is not None:
             lines.append("volume: %-20.10f" % volume)
-        if self._cutoff_frequency:
-            lines.append("cutoff_frequency: %8.3f" % self._cutoff_frequency)
+        lines.append("cutoff_frequency: %8.3f" % self._cutoff_frequency)
         lines.append("num_modes: %d" % self._num_modes)
         lines.append("num_integrated_modes: %d" % self._num_integrated_modes)
         if self._band_indices is not None:

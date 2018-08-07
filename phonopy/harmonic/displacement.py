@@ -62,12 +62,11 @@ def direction_to_displacement(displacement_directions,
         disp_cartesian = np.dot(direction, lattice)
         disp_cartesian *= distance / np.linalg.norm(disp_cartesian)
         first_atoms.append({'number': disp[0],
-                            'displacement': disp_cartesian,
-                            'direction': direction})
+                            'displacement': disp_cartesian})
     displacement_dataset = {
         'natom': supercell.get_number_of_atoms(),
         'first_atoms': first_atoms}
-    
+
     return displacement_dataset
 
 def get_least_displacements(symmetry,
@@ -102,7 +101,7 @@ def get_least_displacements(symmetry,
                 print("----%d----" % (i + 1))
                 for v in rot:
                     print("%2d %2d %2d" % tuple(v))
-        
+
         for disp in get_displacement(site_symmetry,
                                      directions,
                                      is_trigonal,
@@ -187,7 +186,7 @@ def get_displacement_two(site_symmetry,
                 if det != 0:
                     return i, [direction, second_direction]
     return None, None
-    
+
 def is_minus_displacement(direction, site_symmetry):
     is_minus = True
     for r in site_symmetry:
@@ -211,8 +210,8 @@ def determinant(a, b, c):
         + a[1] * b[2] * c[0] - a[1] * b[0] * c[2] \
         + a[2] * b[0] * c[1] - a[2] * b[1] * c[0]
     return det
-        
-        
+
+
 def print_displacements(symmetry,
                         directions=directions_diag):
     displacements = get_least_displacements(symmetry, directions)
@@ -221,4 +220,3 @@ def print_displacements(symmetry,
     print("----------------------------")
     for key in displacements:
         print("%4d  %s" % (key + 1, displacements[key]))
-
