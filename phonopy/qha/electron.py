@@ -57,11 +57,13 @@ class ElectronFreeEnergy(object):
 
     .. math::
 
-       S_i = -gk_{\mathrm{B}}\Sigma_i\[f_i \ln f_i + (1-f_i)\ln (1-f_i)\]
+       S_\text{el}(V) = -gk_{\mathrm{B}}\Sigma_i \{ f_i(V) \ln f_i(V) +
+       [1-f_i(V)]\ln [1-f_i(V)] \}
 
     .. math::
 
-       f_i = \left[1+\exp\left(\frac{\epsilon_i - \mu}{T}\right)\right\]^{-1}
+       f_i(V) = \left\{ 1 + \exp\left[\frac{\epsilon_i(V) - \mu(V)}{T}\right]
+       \right\}^{-1}
 
     where :math:`g` is 1 for non-spin polarized systems and 2 for spin
     polarized systems.
@@ -71,7 +73,7 @@ class ElectronFreeEnergy(object):
 
     .. math::
 
-       E_i = f_i \epsilon_i
+       E_\text{el}(V) = g\sum_i f_i(V) \epsilon_i(V)
 
     Attributes
     ----------
@@ -79,11 +81,10 @@ class ElectronFreeEnergy(object):
         Entropy in eV (T * S).
     energy: float
         Energy in eV.
+    free_energy: float
+        energy - entropy in eV.
     mu: float
         Chemical potential in eV.
-    f: ndarray
-        dtype=float
-        shape=
 
     """
 
