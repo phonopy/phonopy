@@ -41,10 +41,10 @@ import io
 import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.atoms import symbol_map, atom_data
-from phonopy.structure.symmetry import Symmetry, elaborate_borns_and_epsilon
-from phonopy.file_IO import (write_FORCE_SETS, write_force_constants_to_hdf5,
+from phonopy.structure.symmetry import elaborate_borns_and_epsilon
+from phonopy.file_IO import (write_force_constants_to_hdf5,
                              write_FORCE_CONSTANTS)
-elaborate_borns_and_epsilon
+
 
 def parse_set_of_forces(num_atoms,
                         forces_filenames,

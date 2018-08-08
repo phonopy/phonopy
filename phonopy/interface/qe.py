@@ -35,17 +35,18 @@
 import sys
 import numpy as np
 
-from phonopy.file_IO import (iter_collect_forces, write_force_constants_to_hdf5,
+from phonopy.file_IO import (iter_collect_forces,
+                             write_force_constants_to_hdf5,
                              write_FORCE_CONSTANTS)
 from phonopy.interface.vasp import (get_scaled_positions_lines, check_forces,
                                     get_drift_forces)
 from phonopy.units import Bohr
-from phonopy.cui.settings import fracval
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.atoms import symbol_map
 from phonopy.structure.cells import get_supercell, get_primitive
 from phonopy.harmonic.dynmat_to_fc import (
     distribute_force_constants_by_translations)
+
 
 def parse_set_of_forces(num_atoms,
                         forces_filenames,
@@ -75,8 +76,10 @@ def parse_set_of_forces(num_atoms,
     else:
         return []
 
+
 def read_pwscf(filename):
-    pwscf_in = PwscfIn(open(filename).readlines())
+    with open(filename) as f:
+        pwscf_in = PwscfIn(f.readlines())
     tags = pwscf_in.get_tags()
     lattice = tags['cell_parameters']
     positions = [pos[1] for pos in tags['atomic_positions']]
@@ -136,9 +139,11 @@ def read_pwscf(filename):
 
     return cell, pp_filenames
 
+
 def write_pwscf(filename, cell, pp_filenames):
     f = open(filename, 'w')
     f.write(get_pwscf_structure(cell, pp_filenames=pp_filenames))
+
 
 def write_supercells_with_displacements(supercell,
                                         cells_with_displacements,
@@ -155,6 +160,7 @@ def write_supercells_with_displacements(supercell,
             write_pwscf(filename,
                         cell,
                         pp_filenames)
+
 
 def get_pwscf_structure(cell, pp_filenames=None):
     lattice = cell.get_cell()
@@ -178,7 +184,8 @@ def get_pwscf_structure(cell, pp_filenames=None):
         if pp_filenames is None:
             lines += " %2s %10.5f   %s_PP_filename\n" % (symbol, mass, symbol)
         else:
-            lines += " %2s %10.5f   %s\n" % (symbol, mass, pp_filenames[symbol])
+            lines += " %2s %10.5f   %s\n" % (symbol, mass,
+                                             pp_filenames[symbol])
     lines += "ATOMIC_POSITIONS crystal\n"
     for i, (symbol, pos_line) in enumerate(zip(
             chemical_symbols,
@@ -188,6 +195,7 @@ def get_pwscf_structure(cell, pp_filenames=None):
             lines += "\n"
 
     return lines
+
 
 class PwscfIn(object):
     def __init__(self, lines):
@@ -280,7 +288,7 @@ class PwscfIn(object):
                 print("celldm(1) has to be specified when using alat.")
                 sys.exit(1)
             else:
-                factor = self._tags['celldm(1)'] # in Bohr
+                factor = self._tags['celldm(1)']  # in Bohr
         elif unit == 'angstrom':
             factor = 1.0 / Bohr
         else:
@@ -329,6 +337,7 @@ class PwscfIn(object):
                  self._values[i * 3 + 2]])
 
         self._tags['atomic_species'] = species
+
 
 class PH_Q2R(object):
     """Parse QE/q2r output and create supercell force constants array
@@ -409,10 +418,10 @@ class PH_Q2R(object):
 
         Note
         ----
-        Born effective charges and dielectric constant tensor are read from
-        QE output file if they exist. But this means dipole-dipole contributions
-        are removed from force constants and this force constants matrix is not
-        usable in phonopy.
+        Born effective charges and dielectric constant tensor are read
+        from QE output file if they exist. But this means
+        dipole-dipole contributions are removed from force constants
+        and this force constants matrix is not usable in phonopy.
 
         Arguments
         ---------
