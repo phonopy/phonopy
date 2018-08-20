@@ -90,6 +90,9 @@ class TestPrimitive(unittest.TestCase):
         np.testing.assert_array_equal(
             self._pcell.s2p_map,
             self._pcell.get_supercell_to_primitive_map())
+        np.testing.assert_array_equal(
+            self._pcell.atomic_permutations,
+            self._pcell.get_atomic_permutations())
         self.assertTrue(id(self._pcell.p2p_map)
                         == id(self._pcell.get_primitive_to_primitive_map()))
 

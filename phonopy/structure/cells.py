@@ -332,7 +332,7 @@ class Primitive(PhonopyAtoms):
 
     @property
     def atomic_permutations(self):
-        self._atomic_permutations
+        return self._atomic_permutations
 
     def get_atomic_permutations(self):
         return self.atomic_permutations
