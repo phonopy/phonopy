@@ -32,10 +32,11 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import textwrap
 import numpy as np
-import sys
 from phonopy.structure.cells import (get_smallest_vectors,
                                      compute_permutation_for_rotation)
+
 
 def get_force_constants(set_of_forces,
                         symmetry,
@@ -53,12 +54,13 @@ def get_force_constants(set_of_forces,
                               atom_list=atom_list)
     return force_constants
 
+
 def get_fc2(supercell,
             symmetry,
             dataset,
             atom_list=None,
             decimals=None):
-    """Force_constants is computed.
+    """Force constants are computed.
 
     Force constants, Phi, are calculated from sets for forces, F, and
     atomic displacement, d:
@@ -110,6 +112,7 @@ def get_fc2(supercell,
 
     return force_constants
 
+
 def cutoff_force_constants(force_constants,
                            supercell,
                            primitive,
@@ -132,6 +135,7 @@ def cutoff_force_constants(force_constants,
         for j in range(fc_shape[1]):
             if min_distances[j, i] > cutoff_radius:
                 force_constants[i, j] = 0.0
+
 
 def symmetrize_force_constants(force_constants, level=1):
     """Symmetry force constants by translational and permutation symmetries
@@ -165,6 +169,7 @@ def symmetrize_force_constants(force_constants, level=1):
             set_translational_invariance(force_constants)
             set_permutation_symmetry(force_constants)
         set_translational_invariance(force_constants)
+
 
 def symmetrize_compact_force_constants(force_constants,
                                        primitive,
@@ -206,10 +211,11 @@ def symmetrize_compact_force_constants(force_constants,
                 "Corresponding pytono code is not implemented.")
         raise RuntimeError(text)
 
+
 def distribute_force_constants(force_constants,
                                atom_list_done,
-                               lattice, # column vectors
-                               rotations, # scaled (fractional)
+                               lattice,  # column vectors
+                               rotations,  # scaled (fractional)
                                permutations,
                                atom_list=None):
     map_atoms, map_syms = _get_sym_mappings_from_permutations(
@@ -229,6 +235,7 @@ def distribute_force_constants(force_constants,
                           permutations,
                           np.array(map_atoms, dtype='intc'),
                           np.array(map_syms, dtype='intc'))
+
 
 def solve_force_constants(force_constants,
                           disp_atom_number,
@@ -255,7 +262,8 @@ def solve_force_constants(force_constants,
         symprec)
     return None
 
-def get_positions_sent_by_rot_inv(lattice, # column vectors
+
+def get_positions_sent_by_rot_inv(lattice,  # column vectors
                                   positions,
                                   site_symmetry,
                                   symprec):
@@ -271,11 +279,13 @@ def get_positions_sent_by_rot_inv(lattice, # column vectors
 
     return np.array(rot_map_syms, dtype='intc', order='C')
 
+
 def get_rotated_displacement(displacements, site_sym_cart):
     rot_disps = []
     for u in displacements:
         rot_disps.append([np.dot(sym, u) for sym in site_sym_cart])
     return np.reshape(rot_disps, (-1, 3))
+
 
 def get_rotated_forces(forces_syms, site_sym_cart):
     rot_forces = []
@@ -284,8 +294,9 @@ def get_rotated_forces(forces_syms, site_sym_cart):
 
     return rot_forces
 
+
 def set_tensor_symmetry_old(force_constants,
-                            lattice, # column vectors
+                            lattice,  # column vectors
                             positions,
                             symmetry):
     """Full force constants are symmetrized using crystal symmetry.
@@ -337,8 +348,9 @@ def set_tensor_symmetry_old(force_constants,
             # Take average and set to new force cosntants
             force_constants[i, j] = tmp_fc / len(rotations)
 
+
 def set_tensor_symmetry(force_constants,
-                        lattice, # column vectors
+                        lattice,  # column vectors
                         positions,
                         symmetry):
     rotations = symmetry.get_symmetry_operations()['rotations']
@@ -382,6 +394,7 @@ def set_tensor_symmetry(force_constants,
 
     force_constants[:] = fc_new
 
+
 def set_tensor_symmetry_PJ(force_constants,
                            lattice,
                            positions,
@@ -410,7 +423,7 @@ def set_tensor_symmetry_PJ(force_constants,
     cart_rot = np.array([similarity_transformation(lattice, rot).T
                          for rot in rotations])
     cart_rot_inv = np.array([np.linalg.inv(rot) for rot in cart_rot])
-    fcm = np.array([force_constants[mapa[n],:,:,:][:,mapa[n],:,:]
+    fcm = np.array([force_constants[mapa[n], :, :, :][:, mapa[n], :, :]
                     for n in range(N)])
     s = np.transpose(np.array([np.dot(cart_rot[n],
                                       np.dot(fcm[n], cart_rot_inv[n]))
@@ -418,6 +431,7 @@ def set_tensor_symmetry_PJ(force_constants,
     force_constants[:] = np.array(np.average(s, axis=0),
                                   dtype='double',
                                   order='C')
+
 
 def set_translational_invariance(force_constants):
     """Translational invariance is imposed (obsoleted)
@@ -431,7 +445,8 @@ def set_translational_invariance(force_constants):
     """
 
     for i in range(2):
-       set_translational_invariance_per_index(force_constants, index=i)
+        set_translational_invariance_per_index(force_constants, index=i)
+
 
 def set_translational_invariance_per_index(fc2, index=0):
     for i in range(fc2.shape[1 - index]):
@@ -442,6 +457,7 @@ def set_translational_invariance_per_index(fc2, index=0):
             else:
                 fc2[i, :, j, k] -= np.sum(
                     fc2[i, :, j, k]) / fc2.shape[1]
+
 
 def set_permutation_symmetry(force_constants):
     """Enforce permutation symmetry to force cosntants by
@@ -462,6 +478,7 @@ def set_permutation_symmetry(force_constants):
         for j in range(force_constants.shape[1]):
             force_constants[i, j] = (force_constants[i, j] +
                                      fc_copy[j, i].T) / 2
+
 
 def rotational_invariance(force_constants,
                           supercell,
@@ -499,6 +516,7 @@ def rotational_invariance(force_constants,
             for vec in mat:
                 print("%10.5f %10.5f %10.5f" % tuple(vec))
 
+
 def force_constants_log(force_constants):
     fs = force_constants
     for i, fs_i in enumerate(fs):
@@ -511,6 +529,7 @@ def force_constants_log(force_constants):
 def similarity_transformation(rot, mat):
     """ R x M x R^-1 """
     return np.dot(rot, np.dot(mat, np.linalg.inv(rot)))
+
 
 def show_drift_force_constants(force_constants,
                                primitive=None,
@@ -577,6 +596,7 @@ def get_nsym_list_and_s2pp(s2p_map,
                           for i, target in enumerate(s2p_map)], dtype='intc')
     return s2pp, nsym_list
 
+
 def _get_drift_per_index(force_constants):
     num_atom = force_constants.shape[0]
     maxval = 0
@@ -588,9 +608,7 @@ def _get_drift_per_index(force_constants):
             jk = [j, k]
     return maxval, jk
 
-#################
-# Local methods #
-#################
+
 def _solve_force_constants_svd(disp_atom_number,
                                displacements,
                                sets_of_forces,
@@ -622,6 +640,7 @@ def _solve_force_constants_svd(disp_atom_number,
         combined_forces = np.reshape(combined_forces, (-1, 3))
         fc[i] = -np.dot(inv_displacements, combined_forces)
     return fc
+
 
 def _get_force_constants_disps(force_constants,
                                supercell,
@@ -664,17 +683,17 @@ def _get_force_constants_disps(force_constants,
 
         site_symmetry = symmetry.get_site_symmetry(disp_atom_number)
 
-        fc_info = solve_force_constants(
-            force_constants,
-            disp_atom_number,
-            disps,
-            sets_of_forces,
-            supercell,
-            site_symmetry,
-            symprec,
-            atom_list=atom_list)
+        solve_force_constants(force_constants,
+                              disp_atom_number,
+                              disps,
+                              sets_of_forces,
+                              supercell,
+                              site_symmetry,
+                              symprec,
+                              atom_list=atom_list)
 
     return disp_atom_list
+
 
 def _combine_force_constants_equivalent_atoms(fc_combined,
                                               force_constants,
@@ -697,6 +716,7 @@ def _combine_force_constants_equivalent_atoms(fc_combined,
 
     return num_equiv_atoms
 
+
 def _average_force_constants_by_sitesym(fc_new,
                                         fc_i,
                                         i,
@@ -714,6 +734,7 @@ def _average_force_constants_by_sitesym(fc_new,
     fc_new[i] /= num_sitesym
 
     return num_sitesym
+
 
 def _get_atom_indices_by_symmetry(lattice,
                                   positions,
@@ -743,6 +764,7 @@ def _get_atom_indices_by_symmetry(lattice,
     mapa = np.array([index_array[mr] for mr in m])
     return mapa
 
+
 def _get_shortest_distance_in_PBC(pos_i, pos_j, reduced_bases):
     distances = []
     for k in (-1, 0, 1):
@@ -751,6 +773,7 @@ def _get_shortest_distance_in_PBC(pos_i, pos_j, reduced_bases):
                 diff = pos_j + np.array([k, l, m]) - pos_i
                 distances.append(np.linalg.norm(np.dot(diff, reduced_bases)))
     return np.min(distances)
+
 
 def _get_sym_mappings_from_permutations(permutations, atom_list_done):
 
@@ -781,18 +804,20 @@ def _get_sym_mappings_from_permutations(permutations, atom_list_done):
 
     # filled with -1
     map_atoms = np.zeros((num_pos,), dtype='intc') - 1
-    map_syms  = np.zeros((num_pos,), dtype='intc') - 1
+    map_syms = np.zeros((num_pos,), dtype='intc') - 1
 
     atom_list_done = set(atom_list_done)
     for atom_todo in range(num_pos):
         for (sym_index, permutation) in enumerate(permutations):
             if permutation[atom_todo] in atom_list_done:
                 map_atoms[atom_todo] = permutation[atom_todo]
-                map_syms[atom_todo]  = sym_index
+                map_syms[atom_todo] = sym_index
                 break
         else:
-            print("Input forces are not enough to calculate force constants,")
-            print("or something wrong (e.g. crystal structure does not match).")
+            text = ("Input forces are not enough to calculate force constants,"
+                    "or something wrong (e.g. crystal structure does not "
+                    "match).")
+            print(textwrap.fill(text))
             raise ValueError
 
     assert set(map_atoms) & set(atom_list_done) == set(map_atoms)
