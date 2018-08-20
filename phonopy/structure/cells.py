@@ -306,20 +306,36 @@ class Primitive(PhonopyAtoms):
     def get_primitive_matrix(self):
         return self._primitive_matrix
 
-    def get_primitive_to_supercell_map(self):
+    @property
+    def p2s_map(self):
         return self._p2s_map
 
-    def get_supercell_to_primitive_map(self):
+    def get_primitive_to_supercell_map(self):
+        return self.p2s_map
+
+    @property
+    def s2p_map(self):
         return self._s2p_map
 
-    def get_primitive_to_primitive_map(self):
+    def get_supercell_to_primitive_map(self):
+        return self.s2p_map
+
+    @property
+    def p2p_map(self):
         return self._p2p_map
+
+    def get_primitive_to_primitive_map(self):
+        return self.p2p_map
 
     def get_smallest_vectors(self):
         return self._smallest_vectors, self._multiplicity
 
+    @property
+    def atomic_permutations(self):
+        self._atomic_permutations
+
     def get_atomic_permutations(self):
-        return self._atomic_permutations
+        return self.atomic_permutations
 
     def _primitive_cell(self, supercell):
         trimmed_cell_ = _trim_cell(self._primitive_matrix,
