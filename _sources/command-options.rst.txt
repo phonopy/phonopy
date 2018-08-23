@@ -49,7 +49,7 @@ tags:
 * ``--nosym`` (``SYMMETRY = .FALSE.``)
 * ``--nomeshsym`` (``MESH_SYMMETRY = .FALSE.``)
 * ``--nowritemesh`` (``WRITE_MESH = .FALSE.``)
-* ``--pa``, ``--primitive-axis`` (``PRIMITIVE_AXIS``)
+* ``--pa``, ``--primitive-axes`` (``PRIMITIVE_AXES``)
 * ``--pd``, ``--projection-direction`` (``PROJECTION_DIRECTION``)
 * ``--pdos`` (``PDOS``)
 * ``--pr``, ``--pretend-real`` (``PRETEND_REAL = .TRUE.``)
@@ -452,4 +452,4 @@ printed out and phonopy stops without going to phonon analysis.
 
 This tag can be used together with the ``--cell`` (``-c``),
 ``--abinit``, ``--qe``, ``--elk``, ``--wien2k``, ``--siesta``,
-``--crystal`` or ``--primitive_axis`` option.
+``--crystal`` or ``--primitive-axes`` option.

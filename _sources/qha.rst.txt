@@ -197,9 +197,9 @@ polarized systems, respectively. For VASP, a script to create
 
 where ``vasprun.xml-{00..10}`` have to be computed for the same unit
 cells as those used for ``thermal_properties.yaml``.  When ``phonopy``
-was run with ``PRIMITIVE_AXIS`` or ``--pa`` option, the unit cells for
+was run with ``PRIMITIVE_AXES`` or ``--pa`` option, the unit cells for
 computing electronic eigenvalues have to be carefully chosen to agree
-with those after applying ``PRIMITIVE_AXIS``, or energies are scaled a
+with those after applying ``PRIMITIVE_AXES``, or energies are scaled a
 posteriori.
 
 .. _phonopy_qha_output_files:

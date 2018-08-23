@@ -220,11 +220,6 @@ class. The <code class="docutils literal notranslate"><span class="pre">PhonopyA
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy.structure.atoms</span> <span class="k">import</span> <span class="n">PhonopyAtoms</span>
 </pre></div>
 </div>
-<p>In the older versions of phonopy, the class name was simply <code class="docutils literal notranslate"><span class="pre">Atoms</span></code>,
-so it should be imported as:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy.structure.atoms</span> <span class="k">import</span> <span class="n">Atoms</span> <span class="k">as</span> <span class="n">PhonopyAtoms</span>
-</pre></div>
-</div>
 </div>
 <div class="section" id="work-flow">
 <h2><a class="toc-backref" href="#id4">Work flow</a><a class="headerlink" href="#work-flow" title="Permalink to this headline">¶</a></h2>
@@ -335,10 +330,13 @@ from forces and displacements, simply set your force constants by</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">set_force_constants</span><span class="p">(</span><span class="n">force_constants</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The force constants matrix is given in 4 dimensional array
-(better to be a numpy array of <code class="docutils literal notranslate"><span class="pre">dtype='double',</span> <span class="pre">order='C'</span></code>).
-The shape of force constants matrix is <code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">N,</span> <span class="pre">3,</span> <span class="pre">3)</span></code> where <code class="docutils literal notranslate"><span class="pre">N</span></code>
-is the number of atoms in the supercell and 3 gives Cartesian axes.</p>
+<p>The force constants matrix is given in 4 dimensional array (better to
+be a numpy array of <code class="docutils literal notranslate"><span class="pre">dtype='double',</span> <span class="pre">order='C'</span></code>).  The shape of
+force constants matrix is <code class="docutils literal notranslate"><span class="pre">(N,</span> <span class="pre">N,</span> <span class="pre">3,</span> <span class="pre">3)</span></code> where <code class="docutils literal notranslate"><span class="pre">N</span></code> is the number
+of atoms in the supercell and 3 gives Cartesian axes.  The compact
+force constants matrix with <code class="docutils literal notranslate"><span class="pre">(Np,</span> <span class="pre">N,</span> <span class="pre">3,</span> <span class="pre">3)</span></code> where <code class="docutils literal notranslate"><span class="pre">Np</span></code> is the
+number of atoms in the primitive cell is also supported. See the
+details at <a class="reference internal" href="input-files.html#file-force-constants"><span class="std std-ref">FORCE_CONSTANTS and force_constants.hdf5</span></a>.</p>
 <div class="section" id="band-structure">
 <h4>Band structure<a class="headerlink" href="#band-structure" title="Permalink to this headline">¶</a></h4>
 <p>Set band paths (<code class="docutils literal notranslate"><span class="pre">set_band_structure</span></code>) and get the results
