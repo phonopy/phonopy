@@ -133,7 +133,7 @@ def get_parser():
         nac_method=None,
         nac_q_direction=None,
         pretend_real=False,
-        primitive_axis=None,
+        primitive_axes=None,
         projection_direction=None,
         qe_mode=False,
         qpoints=None,
@@ -346,8 +346,8 @@ def get_parser():
         "-p", "--plot", dest="is_graph_plot", action="store_true",
         help="Plot data")
     parser.add_argument(
-        "--pa", "--primitive-axis", dest="primitive_axis",
-        help="Same as PRIMITIVE_AXIS tag")
+        "--pa", "--primitive-axis", "--primitive-axes", dest="primitive_axes",
+        help="Same as PRIMITIVE_AXES tag")
     parser.add_argument(
         "--pd", "--projection-direction", dest="projection_direction",
         help="Same as PROJECTION_DIRECTION tag")

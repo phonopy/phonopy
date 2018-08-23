@@ -479,9 +479,14 @@ class ConfParser(object):
             if opt_num_freqs:
                 self._confs['num_frequency_points'] = opt_num_freqs
 
+        # For backword compatibility
         if 'primitive_axis' in arg_list:
             if self._args.primitive_axis:
-                self._confs['primitive_axis'] = self._args.primitive_axis
+                self._confs['primitive_axes'] = self._args.primitive_axis
+
+        if 'primitive_axes' in arg_list:
+            if self._args.primitive_axes:
+                self._confs['primitive_axes'] = self._args.primitive_axes
 
         if 'supercell_dimension' in arg_list:
             if self._args.supercell_dimension:
@@ -564,7 +569,7 @@ class ConfParser(object):
                 if np.linalg.det(p_axis) < 1e-8:
                     self.setting_error("%s has to have positive determinant." %
                                        conf_key.upper())
-                self.set_parameter('primitive_axis', p_axis)
+                self.set_parameter('primitive_axes', p_axis)
 
             if conf_key == 'mass':
                 self.set_parameter(
@@ -867,8 +872,8 @@ class ConfParser(object):
                 params['pm_displacement'])
 
         # Primitive cell shape
-        if 'primitive_axis' in params:
-            self._settings.set_primitive_matrix(params['primitive_axis'])
+        if 'primitive_axes' in params:
+            self._settings.set_primitive_matrix(params['primitive_axes'])
 
         # Q-points mode
         if 'qpoints' in params:
