@@ -70,17 +70,17 @@ vectors, i.e., :math:`( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u}
 
 .. _primitive_axis_tag:
 
-``PRIMITIVE_AXIS`` or ``PRIMITIVE_AXES``
+``PRIMITIVE_AXES`` or ``PRIMITIVE_AXIS``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ::
 
-   PRIMITIVE_AXIS = 0.0 0.5 0.5  0.5 0.0 0.5  0.5 0.5 0.0
+   PRIMITIVE_AXES = 0.0 0.5 0.5  0.5 0.0 0.5  0.5 0.5 0.0
 
 Likewise,
 
 ::
 
-   PRIMITIVE_AXIS = 0 1/2 1/2  1/2 0 1/2  1/2 1/2 0
+   PRIMITIVE_AXES = 0 1/2 1/2  1/2 0 1/2  1/2 1/2 0
 
 The primitive cell for building the dynamical matrix is created by
 multiplying primitive-axis matrix :math:`M_\mathrm{p}`. Let the matrix
