@@ -79,42 +79,6 @@ def print_cell(cell, mapping=None, stars=None):
 class Supercell(PhonopyAtoms):
     """Build supercell from supercell matrix and unit cell
 
-    Note
-    ----
-
-    ``is_old_style=True`` invokes the following algorithm.
-    In this function, unit cell is considered
-      [1,0,0]
-      [0,1,0]
-      [0,0,1].
-    Supercell matrix is given by relative ratio, e.g,
-      [-1, 1, 1]
-      [ 1,-1, 1]  is for FCC from simple cubic.
-      [ 1, 1,-1].
-    In this case multiplicities of surrounding simple lattice are [2,2,2].
-    First, create supercell with surrounding simple lattice.
-    Second, trim the surrounding supercell with the target lattice.
-
-    ``is_old_style=False`` calls the Smith normal form.
-
-    These two algorithm may order atoms in different ways. So for the
-    backward compatibitily, ``is_old_style=True`` is the default
-    option. However the Smith normal form shows far better performance
-    in case of very large supercell multiplicities.
-
-    Parameters
-    ----------
-    unitcell: PhonopyAtoms
-        Unit cell
-    supercell_matrix: ndarray or list of list
-        Transformation matrix from unit cell to supercell. The
-        elements have to be integers.
-        shape=(3,3)
-    is_old_stype: bool
-        This swithes the algorithms. See Note.
-    symprec: float, optional
-        Tolerance to find overlapping atoms in supercell cell. The default
-        values is 1e-5.
 
     """
 
@@ -123,6 +87,47 @@ class Supercell(PhonopyAtoms):
                  supercell_matrix,
                  is_old_style=True,
                  symprec=1e-5):
+        """
+
+        Note
+        ----
+
+        ``is_old_style=True`` invokes the following algorithm.
+        In this function, unit cell is considered
+          [1,0,0]
+          [0,1,0]
+          [0,0,1].
+        Supercell matrix is given by relative ratio, e.g,
+          [-1, 1, 1]
+          [ 1,-1, 1]  is for FCC from simple cubic.
+          [ 1, 1,-1].
+        In this case multiplicities of surrounding simple lattice are [2,2,2].
+        First, create supercell with surrounding simple lattice.
+        Second, trim the surrounding supercell with the target lattice.
+
+        ``is_old_style=False`` calls the Smith normal form.
+
+        These two algorithm may order atoms in different ways. So for the
+        backward compatibitily, ``is_old_style=True`` is the default
+        option. However the Smith normal form shows far better performance
+        in case of very large supercell multiplicities.
+
+        Parameters
+        ----------
+        unitcell: PhonopyAtoms
+            Unit cell
+        supercell_matrix: ndarray or list of list
+            Transformation matrix from unit cell to supercell. The
+            elements have to be integers.
+            shape=(3,3)
+        is_old_stype: bool
+            This swithes the algorithms. See Note.
+        symprec: float, optional
+            Tolerance to find overlapping atoms in supercell cell. The default
+            values is 1e-5.
+
+        """
+
         self._is_old_style = is_old_style
         self._s2u_map = None
         self._u2s_map = None
@@ -275,21 +280,53 @@ class Supercell(PhonopyAtoms):
 class Primitive(PhonopyAtoms):
     """Primitive cell
 
-    Parameters
+    Attributes
     ----------
-    supercell: PhonopyAtoms
-        Supercell
-    primitive_matrix: list of list or ndarray
-        Transformation matrix to transform supercell to primitive cell such as:
-           np.dot(primitive_matrix.T, supercell.get_cell())
-        shape=(3,3)
-    symprec: float, optional
-        Tolerance to find overlapping atoms in primitive cell. The default
-        values is 1e-5.
+    p2s_map : ndarray
+        Mapping table from atoms in primitive cell to those in supercell.
+        Supercell atomic indices are used.
+        dtype='intc'
+        shape=(num_atoms_in_primitive_cell,)
+    s2p_map : ndarray
+        Mapping table from atoms in supercell cell to those in primitive cell.
+        Supercell atomic indices are used.
+        dtype='intc'
+        shape=(num_atoms_in_supercell,)
+    p2p_map : dict
+        Mapping of primitive cell atoms in supercell to those in primitive
+        cell.
+        ex. {0: 0, 4: 1}
+    atomic_permutations : ndarray
+        Atomic position transitions by space group operations are represented
+        by changes of indices.
+        dtype='intc'
+        shape=(num_rot, num_atoms_in_supercell)
+        ex.       supercell atomic indices
+                 [[0, 1, 2, 3, 4, 5, 6, 7],
+            rot   [1, 2, 3, 0, 5, 6, 7, 4],
+          indices [2, 3, 0, 1, 6, 7, 4, 5],
+                  [3, 0, 1, 2, 7, 4, 5, 6]]
 
     """
 
     def __init__(self, supercell, primitive_matrix, symprec=1e-5):
+        """
+
+        Parameters
+        ----------
+        supercell: PhonopyAtoms
+            Supercell
+        primitive_matrix: list of list or ndarray
+            Transformation matrix to transform supercell to primitive cell
+            such as:
+               np.dot(primitive_matrix.T, supercell.get_cell())
+            shape=(3,3)
+        symprec: float, optional
+            Tolerance to find overlapping atoms in primitive cell. The default
+            values is 1e-5.
+
+        """
+
         self._primitive_matrix = np.array(primitive_matrix)
         self._symprec = symprec
         self._p2s_map = None
