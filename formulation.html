@@ -632,15 +632,15 @@ i\mathbf{q}\cdot\mathbf{r})\)</span>, however in phonopy documentation,
 represented like <span class="math notranslate nohighlight">\(\exp(i\mathbf{q}\cdot\mathbf{r})\)</span> (e.g., see
 Eq. <a class="reference internal" href="#equation-eq-dynmat">(1)</a>). In the output of the reciprocal basis vectors,
 <span class="math notranslate nohighlight">\(2\pi\)</span> is not included, e.g., in <code class="docutils literal notranslate"><span class="pre">band.yaml</span></code>.</p>
-<p>In phonopy, unless <a class="reference internal" href="setting-tags.html#primitive-axis-tag"><span class="std std-ref">PRIMITIVE_AXIS or PRIMITIVE_AXES</span></a> (or <code class="docutils literal notranslate"><span class="pre">--pa</span></code> option) is
+<p>In phonopy, unless <a class="reference internal" href="setting-tags.html#primitive-axis-tag"><span class="std std-ref">PRIMITIVE_AXES or PRIMITIVE_AXIS</span></a> (or <code class="docutils literal notranslate"><span class="pre">--pa</span></code> option) is
 specified, basis vectors in direct space <span class="math notranslate nohighlight">\(( \mathbf{a} \;
 \mathbf{b} \; \mathbf{c})\)</span> are set from the input unit celll structure
 even if it is a supercell or a conventional unit cell having centring,
 therefore the basis vectors in the reciprocal space are given by
-Eq. <a class="reference internal" href="#equation-eq-rec-basis-vectors">(2)</a>. When using <a class="reference internal" href="setting-tags.html#primitive-axis-tag"><span class="std std-ref">PRIMITIVE_AXIS or PRIMITIVE_AXES</span></a>,
+Eq. <a class="reference internal" href="#equation-eq-rec-basis-vectors">(2)</a>. When using <a class="reference internal" href="setting-tags.html#primitive-axis-tag"><span class="std std-ref">PRIMITIVE_AXES or PRIMITIVE_AXIS</span></a>,
 <span class="math notranslate nohighlight">\(( \mathbf{a} \; \mathbf{b} \; \mathbf{c})\)</span> are set from those
 transformed by the transformation matrix <span class="math notranslate nohighlight">\(M_\text{p}\)</span> as written
-at <a class="reference internal" href="setting-tags.html#primitive-axis-tag"><span class="std std-ref">PRIMITIVE_AXIS or PRIMITIVE_AXES</span></a>, therefore <span class="math notranslate nohighlight">\(( \mathbf{a}^{*} \;
+at <a class="reference internal" href="setting-tags.html#primitive-axis-tag"><span class="std std-ref">PRIMITIVE_AXES or PRIMITIVE_AXIS</span></a>, therefore <span class="math notranslate nohighlight">\(( \mathbf{a}^{*} \;
 \mathbf{b}^{*} \; \mathbf{c}^{*} )\)</span> are given by those calculated
 following Eq. <a class="reference internal" href="#equation-eq-rec-basis-vectors">(2)</a> with this <span class="math notranslate nohighlight">\(( \mathbf{a}
 \; \mathbf{b} \; \mathbf{c})\)</span>.</p>
@@ -723,7 +723,7 @@ the elements of <span class="math notranslate nohighlight">\(\boldsymbol{P}^{\ma
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.6.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.7.<br/>
     </p>
   </div>
 </footer>
