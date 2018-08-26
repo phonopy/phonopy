@@ -282,6 +282,10 @@ class Primitive(PhonopyAtoms):
 
     Attributes
     ----------
+    primitive_matrix : ndarray
+        Transformation matrix from supercell to primitive cell
+        dtype='double'
+        shape=(3,3)
     p2s_map : ndarray
         Mapping table from atoms in primitive cell to those in supercell.
         Supercell atomic indices are used.
@@ -327,7 +331,8 @@ class Primitive(PhonopyAtoms):
 
         """
 
-        self._primitive_matrix = np.array(primitive_matrix)
+        self._primitive_matrix = np.array(primitive_matrix,
+                                          dtype='double', order='C')
         self._symprec = symprec
         self._p2s_map = None
         self._s2p_map = None
@@ -340,8 +345,12 @@ class Primitive(PhonopyAtoms):
         self._set_smallest_vectors(supercell)
         self._set_atomic_permutations(supercell)
 
-    def get_primitive_matrix(self):
+    @property
+    def primitive_matrix(self):
         return self._primitive_matrix
+
+    def get_primitive_matrix(self):
+        return self.primitive_matrix
 
     @property
     def p2s_map(self):
