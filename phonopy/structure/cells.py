@@ -301,13 +301,13 @@ class Primitive(PhonopyAtoms):
         cell.
         ex. {0: 0, 4: 1}
     atomic_permutations : ndarray
-        Atomic position transitions by space group operations are represented
+        Atomic position transitions by pure translations are represented
         by changes of indices.
         dtype='intc'
-        shape=(num_rot, num_atoms_in_supercell)
+        shape=(num_trans, num_atoms_in_supercell)
         ex.       supercell atomic indices
                  [[0, 1, 2, 3, 4, 5, 6, 7],
-            rot   [1, 2, 3, 0, 5, 6, 7, 4],
+           trans  [1, 2, 3, 0, 5, 6, 7, 4],
           indices [2, 3, 0, 1, 6, 7, 4, 5],
                   [3, 0, 1, 2, 7, 4, 5, 6]]
 
