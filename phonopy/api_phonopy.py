@@ -345,7 +345,8 @@ class Phonopy(object):
         u2s_map = self._supercell.get_unitcell_to_supercell_map()
         u_masses = s_masses[u2s_map]
         self._unitcell.set_masses(u_masses)
-        self._set_dynamical_matrix()
+        if self._force_constants is not None:
+            self._set_dynamical_matrix()
 
     def set_nac_params(self, nac_params=None):
         self._nac_params = nac_params

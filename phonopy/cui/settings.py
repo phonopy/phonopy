@@ -376,8 +376,12 @@ class ConfParser(object):
     def read_options(self):
         arg_list = vars(self._args)
         if 'band_indices' in arg_list:
-            if self._args.band_indices is not None:
-                self._confs['band_indices'] = self._args.band_indices
+            band_indices = self._args.band_indices
+            if band_indices is not None:
+                if type(band_indices) is list:
+                    self._confs['band_indices'] = " ".join(band_indices)
+                else:
+                    self._confs['band_indices'] = band_indices
 
         if 'band_paths' in arg_list:
             if self._args.band_paths is not None:
@@ -468,12 +472,18 @@ class ConfParser(object):
                 self._confs['trigonal'] = '.true.'
 
         if 'masses' in arg_list:
-            if self._args.masses:
-                self._confs['mass'] = self._args.masses
+            if self._args.masses is not None:
+                if type(self._args.masses) is list:
+                    self._confs['mass'] = " ".join(self._args.masses)
+                else:
+                    self._confs['mass'] = self._args.masses
 
         if 'magmoms' in arg_list:
-            if self._args.magmoms:
-                self._confs['magmom'] = self._args.magmoms
+            if self._args.magmoms is not None:
+                if type(self._args.magmoms) is list:
+                    self._confs['magmom'] = " ".join(self._args.magmoms)
+                else:
+                    self._confs['magmom'] = self._args.magmoms
 
         if 'mesh_numbers' in arg_list:
             mesh = self._args.mesh_numbers
@@ -515,11 +525,18 @@ class ConfParser(object):
 
         if 'qpoints' in arg_list:
             if self._args.qpoints is not None:
-                self._confs['qpoints'] = self._args.qpoints
+                if type(dim) is list:
+                    self._confs['qpoints'] = " ".join(self._args.qpoints)
+                else:
+                    self._confs['qpoints'] = self._args.qpoints
 
         if 'nac_q_direction' in arg_list:
-            if self._args.nac_q_direction is not None:
-                self._confs['q_direction'] = self._args.nac_q_direction
+            q_dir = self._args.nac_q_direction
+            if q_dir is not None:
+                if type(q_dir) is list:
+                    self._confs['q_direction'] = " ".join(q_dir)
+                else:
+                    self._confs['q_direction'] = q_dir
 
         if 'nac_method' in arg_list:
             if self._args.nac_method is not None:
@@ -1338,15 +1355,15 @@ class PhonopyConfParser(ConfParser):
         self._settings = PhonopySettings()
         if filename is not None:
             ConfParser.__init__(self, filename=filename)
-            self.read_file() # store .conf file setting in self._confs
-            self._parse_conf() # self.parameters[key] = val
-            self._set_settings() # self.parameters -> PhonopySettings
+            self.read_file()  # store .conf file setting in self._confs
+            self._parse_conf()  # self.parameters[key] = val
+            self._set_settings()  # self.parameters -> PhonopySettings
         if args is not None:
             # To invoke ConfParser.__init__() to flush variables.
             ConfParser.__init__(self, args=args)
-            self._read_options() # store options in self._confs
-            self._parse_conf() # self.parameters[key] = val
-            self._set_settings() # self.parameters -> PhonopySettings
+            self._read_options()  # store options in self._confs
+            self._parse_conf()  # self.parameters[key] = val
+            self._set_settings()  # self.parameters -> PhonopySettings
 
     def _read_options(self):
         self.read_options() # store data in self._confs
@@ -1356,8 +1373,8 @@ class PhonopyConfParser(ConfParser):
                 self._confs['band_format'] = self._args.band_format
 
         if 'band_labels' in arg_list:
-            if self._args.band_labels:
-                self._confs['band_labels'] = self._args.band_labels
+            if self._args.band_labels is not None:
+                self._confs['band_labels'] = " ".join(self._args.band_labels)
 
         if 'is_displacement' in arg_list:
             if self._args.is_displacement:
@@ -1372,8 +1389,8 @@ class PhonopyConfParser(ConfParser):
                 self._confs['dos'] = '.true.'
 
         if 'pdos' in arg_list:
-            if self._args.pdos:
-                self._confs['pdos'] = self._args.pdos
+            if self._args.pdos is not None:
+                self._confs['pdos'] = " ".join(self._args.pdos)
 
         if 'xyz_projection' in arg_list:
             if self._args.xyz_projection:
@@ -1427,7 +1444,7 @@ class PhonopyConfParser(ConfParser):
         if 'projection_direction' in arg_list:
             opt_proj_dir = self._args.projection_direction
             if opt_proj_dir is not None:
-                self._confs['projection_direction'] = opt_proj_dir
+                self._confs['projection_direction'] = " ".join(opt_proj_dir)
 
         if 'read_force_constants' in arg_list:
             if self._args.read_force_constants:
@@ -1471,7 +1488,7 @@ class PhonopyConfParser(ConfParser):
 
         if 'irreps_qpoint' in arg_list:
             if self._args.irreps_qpoint is not None:
-                self._confs['irreps'] = self._args.irreps_qpoint
+                self._confs['irreps'] = " ".join(self._args.irreps_qpoint)
 
         if 'show_irreps' in arg_list:
             if self._args.show_irreps:
@@ -1491,11 +1508,11 @@ class PhonopyConfParser(ConfParser):
 
         if 'modulation' in arg_list:
             if self._args.modulation:
-                self._confs['modulation'] = self._args.modulation
+                self._confs['modulation'] = " ".join(self._args.modulation)
 
         if 'anime' in arg_list:
             if self._args.anime:
-                self._confs['anime'] = self._args.anime
+                self._confs['anime'] = " ".join(self._args.anime)
 
         if 'is_group_velocity' in arg_list:
             if self._args.is_group_velocity:
