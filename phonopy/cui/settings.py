@@ -35,12 +35,14 @@
 import sys
 import numpy as np
 
+
 def fracval(frac):
     if frac.find('/') == -1:
         return float(frac)
     else:
         x = frac.split('/')
         return float(x[0]) / float(x[1])
+
 
 class Settings(object):
     def __init__(self):
@@ -379,7 +381,10 @@ class ConfParser(object):
 
         if 'band_paths' in arg_list:
             if self._args.band_paths is not None:
-                self._confs['band'] = self._args.band_paths
+                if type(self._args.band_paths) is list:
+                    self._confs['band'] = " ".join(self._args.band_paths)
+                else:
+                    self._confs['band'] = self._args.band_paths
 
         if 'band_points' in arg_list:
             if self._args.band_points is not None:
@@ -471,8 +476,12 @@ class ConfParser(object):
                 self._confs['magmom'] = self._args.magmoms
 
         if 'mesh_numbers' in arg_list:
-            if self._args.mesh_numbers:
-                self._confs['mesh_numbers'] = self._args.mesh_numbers
+            mesh = self._args.mesh_numbers
+            if mesh is not None:
+                if type(mesh) is list:
+                    self._confs['mesh_numbers'] = " ".join(mesh)
+                else:
+                    self._confs['mesh_numbers'] = mesh
 
         if 'num_frequency_points' in arg_list:
             opt_num_freqs = self._args.num_frequency_points
@@ -481,16 +490,28 @@ class ConfParser(object):
 
         # For backword compatibility
         if 'primitive_axis' in arg_list:
-            if self._args.primitive_axis:
-                self._confs['primitive_axes'] = self._args.primitive_axis
+            if self._args.primitive_axis is not None:
+                if type(self._args.primitive_axis) is list:
+                    primitive_axes = " ".join(self._args.primitive_axis)
+                    self._confs['primitive_axes'] = primitive_axes
+                else:
+                    self._confs['primitive_axes'] = self._args.primitive_axis
 
         if 'primitive_axes' in arg_list:
             if self._args.primitive_axes:
-                self._confs['primitive_axes'] = self._args.primitive_axes
+                if type(self._args.primitive_axes) is list:
+                    primitive_axes = " ".join(self._args.primitive_axes)
+                    self._confs['primitive_axes'] = primitive_axes
+                else:
+                    self._confs['primitive_axes'] = self._args.primitive_axes
 
         if 'supercell_dimension' in arg_list:
-            if self._args.supercell_dimension:
-                self._confs['dim'] = self._args.supercell_dimension
+            dim = self._args.supercell_dimension
+            if dim is not None:
+                if type(dim) is list:
+                    self._confs['dim'] = " ".join(dim)
+                else:
+                    self._confs['dim'] = dim
 
         if 'qpoints' in arg_list:
             if self._args.qpoints is not None:

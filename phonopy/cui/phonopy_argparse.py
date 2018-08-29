@@ -34,6 +34,7 @@
 
 import sys
 
+
 def fix_deprecated_option_names(argv):
     deprecated = []
     for i, v in enumerate(argv[1:]):
@@ -46,6 +47,7 @@ def fix_deprecated_option_names(argv):
 
     return deprecated
 
+
 def show_deprecated_option_warnings(deprecated):
     lines = ["Option names with underscores are deprecated, by which",
              "the underscores are replaced by dashes. Therefore"]
@@ -57,6 +59,7 @@ def show_deprecated_option_warnings(deprecated):
     print('\n'.join(lines))
     print("*" * maxlen)
     print("")
+
 
 def get_parser():
     deprecated = fix_deprecated_option_names(sys.argv)
@@ -168,7 +171,7 @@ def get_parser():
         "--anime", dest="anime",
         help="Same as ANIME tag")
     parser.add_argument(
-        "--band", dest="band_paths",
+        "--band", nargs='+', dest="band_paths",
         help="Same behavior as BAND tag")
     parser.add_argument(
         "--band-connection", dest="is_band_connection", action="store_true",
@@ -208,7 +211,7 @@ def get_parser():
         "-d", "--displacement", dest="is_displacement", action="store_true",
         help="Create supercells with displacements")
     parser.add_argument(
-        "--dim", dest="supercell_dimension",
+        "--dim", nargs='+', dest="supercell_dimension",
         help="Same behavior as DIM tag")
     parser.add_argument(
         "--dm-decimals", dest="dynamical_matrix_decimals",
@@ -316,7 +319,7 @@ def get_parser():
         "--modulation", dest="modulation",
         help="Same as MODULATION tag")
     parser.add_argument(
-        "--mp", "--mesh", dest="mesh_numbers",
+        "--mp", "--mesh", nargs='+', dest="mesh_numbers",
         help="Same behavior as MP tag")
     parser.add_argument(
         "--moment", dest="is_moment", action="store_true",
@@ -346,7 +349,8 @@ def get_parser():
         "-p", "--plot", dest="is_graph_plot", action="store_true",
         help="Plot data")
     parser.add_argument(
-        "--pa", "--primitive-axis", "--primitive-axes", dest="primitive_axes",
+        "--pa", "--primitive-axis", "--primitive-axes",
+        nargs='+', dest="primitive_axes",
         help="Same as PRIMITIVE_AXES tag")
     parser.add_argument(
         "--pd", "--projection-direction", dest="projection_direction",
