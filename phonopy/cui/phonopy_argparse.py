@@ -396,7 +396,7 @@ def get_parser():
         "--readfc-format", dest="readfc_format",
         help="Force constants input file-format")
     parser.add_argument(
-        "--read-qpointsfc", dest="read_qpoints", action="store_true",
+        "--read-qpoints", dest="read_qpoints", action="store_true",
         help="Read QPOITNS")
     parser.add_argument(
         "-s", "--save", dest="is_graph_save", action="store_true",
