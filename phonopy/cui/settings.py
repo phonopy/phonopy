@@ -525,7 +525,7 @@ class ConfParser(object):
 
         if 'qpoints' in arg_list:
             if self._args.qpoints is not None:
-                if type(dim) is list:
+                if type(self._args.qpoints) is list:
                     self._confs['qpoints'] = " ".join(self._args.qpoints)
                 else:
                     self._confs['qpoints'] = self._args.qpoints
@@ -547,8 +547,11 @@ class ConfParser(object):
                 self._confs['read_qpoints'] = '.true.'
 
         if 'sigma' in arg_list:
-            if self._args.sigma:
-                self._confs['sigma'] = self._args.sigma
+            if self._args.sigma is not None:
+                if type(self._args.sigma) is list:
+                    self._confs['sigma'] = " ".join(self._args.sigma)
+                else:
+                    self._confs['sigma'] = self._args.sigma
 
         if 'tmax' in arg_list:
             if self._args.tmax:
