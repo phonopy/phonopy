@@ -85,7 +85,7 @@ class TestDynamicStructureFactor(unittest.TestCase):
         G_points_cubic = ([7, 1, 1], )
         self._run(G_points_cubic, directions, verbose=True)
 
-    def test_IXS_G_to_L(self):
+    def test_IXS_G_to_L(self, verbose=True):
         directions = np.array([[0.5, 0.5, 0.5], ])
         n_points = 11
         G_points_cubic = ([7, 1, 1], )
@@ -99,7 +99,15 @@ class TestDynamicStructureFactor(unittest.TestCase):
         data_cmp = np.reshape([float(x) for x in data_AFF.split()], (-1, 6))
         for i in (([0, 1], [2], [3, 4], [5])):
             np.testing.assert_allclose(
-                S[:, i].sum(axis=1), data_cmp[:, i].sum(axis=1), atol=1e-1)
+                S[:6, i].sum(axis=1), data_cmp[:6, i].sum(axis=1), atol=1e-5)
+            if verbose:
+                print(S[:6, i].sum(axis=1) - data_cmp[:6, i].sum(axis=1))
+
+        for i in (([0, 1], [2, 3], [4], [5])):
+            np.testing.assert_allclose(
+                S[6:, i].sum(axis=1), data_cmp[6:, i].sum(axis=1), atol=1e-5)
+            if verbose:
+                print(S[6:, i].sum(axis=1) - data_cmp[6:, i].sum(axis=1))
 
         # Scattering lengths
         self._run(G_points_cubic,
@@ -111,9 +119,13 @@ class TestDynamicStructureFactor(unittest.TestCase):
         for i in (([0, 1], [2], [3, 4], [5])):
             np.testing.assert_allclose(
                 S[:6, i].sum(axis=1), data_cmp[:6, i].sum(axis=1), atol=1e-5)
+            if verbose:
+                print(S[:6, i].sum(axis=1) - data_cmp[:6, i].sum(axis=1))
         for i in (([0, 1], [2, 3], [4], [5])):
             np.testing.assert_allclose(
                 S[6:, i].sum(axis=1), data_cmp[6:, i].sum(axis=1), atol=1e-5)
+            if verbose:
+                print(S[6:, i].sum(axis=1) - data_cmp[6:, i].sum(axis=1))
 
     def plot_f_Q(f_params):
         import matplotlib.pyplot as plt
