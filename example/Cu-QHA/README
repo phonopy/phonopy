@@ -1,0 +1,23 @@
+Cu QHA example. VASP 5.4.4 was used with PBEsol as xc-functinal. PW-cutoff-energy 480 eV, Methefessel Paxton scheme with 0.2 eV smearing width, 16x16x16 k-point mesh for conventional unit cell, and 2x2x2 supercell were employed.
+
+To run example with temperature independent electronic energy,
+
+% phonopy-qha -p --tmax=1300 e-v.dat thermal_properties.yaml-{00..10}
+
+or with temperature dependent electronic free energy
+
+% phonopy-qha -p --tmax=1300 --efe fe-v.dat e-v.dat thermal_properties.yaml-{00..10}
+
+In the latter case, unit cell volumes are read from thermal_properties.yaml files. In old phonopy, the volume information was not written in thermal_properties.yaml file, therefore, calculating thermal_properties.yaml with newer phonopy is necessary to use this feature.
+
+The format of fe-v.dat file as follows. The first column gives temperatures. The remaining columns are for electronic free energies with different volumes. The order of columns (except for temperature colunm) has to correspond to that of thermal_properties.yaml files to be passed to phonopy-qha command, i.e., thermal_properties.yaml-{00..10} in the above example.
+
+fe-v.dat was created from vasprun.xml's of unit cell electronic structure calculations by
+
+    energy(sigma->0) - energy(T=0) + energy(T) - entropy(T) * T
+
+where energy(sigma->0) is that found in VASP result, and energy(T) and entropy(T) are computed at fixed electronic DOS and eigenvalues obtained from VASP results with Fermi-Dirac distribution. A script to do this is prepared. fe-v.dat and e-v.dat are created by
+
+% phonopy-vasp-efe --tmax=1500 vasprun.xml-{00..10}
+
+vasprun.xml-{00..10} are obtained by unzipping vasprun.xmls.tar.lzma.

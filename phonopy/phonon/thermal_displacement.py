@@ -34,15 +34,15 @@
 
 import numpy as np
 from phonopy.units import AMU, THzToEv, Kb, EV, Hbar, Angstrom
-from phonopy.structure.cells import get_equivalent_smallest_vectors
 from phonopy.interface.cif import write_cif_P1
+
 
 class ThermalMotion(object):
     def __init__(self,
-                 masses,
+                 iter_mesh,
                  freq_min=None,
                  freq_max=None):
-
+        self._iter_mesh = iter_mesh
         if freq_min is None:
             self._fmin = 0
         else:
@@ -52,13 +52,12 @@ class ThermalMotion(object):
         else:
             self._fmax = freq_max
 
+        masses = iter_mesh.dynamical_matrix.primitive.get_masses()
         self._masses = masses * AMU
         self._masses3 = np.array([[m] * 3 for m in masses]).ravel() * AMU
         self._temperatures = None
-        self._np_overflow = None # Switch of error handling of numpy.
-                                 # 'raise' to see which phonon it is.
 
-    def get_Q2(self, freq, t): # freq in THz
+    def _get_Q2(self, freq, t):  # freq in THz
         return Hbar * EV / Angstrom ** 2 * (
             (self._get_population(freq, t) + 0.5) / (freq * 1e12 * 2 * np.pi))
 
@@ -95,44 +94,61 @@ class ThermalMotion(object):
         condition = np.logical_not(t_array < 0)
         self._temperatures = np.extract(condition, t_array)
 
-    def _get_population(self, freq, t): # freq in THz
-        if t < 1: # temperatue less than 1 K is approximated as 0 K.
-            return 0
+    def _get_population(self, freq, t):  # freq in THz
+        """Return phonon population number
+
+        Three types of combinations of array inputs are possible.
+        - single freq and single t
+        - single freq and len(t) > 1
+        - len(freq) > 1 and single t
+
+        """
+        condition = t > 1.0
+        if type(condition) == bool or type(condition) == np.bool_:
+            if condition:
+                return 1.0 / (np.exp(freq * THzToEv / (Kb * t)) - 1)
+            else:
+                return 0.0
         else:
-            return 1.0 / (np.exp(freq * THzToEv / (Kb * t)) - 1)
+            vals = np.zeros(len(t), dtype='double')
+            vals[condition] = 1.0 / (
+                np.exp(freq * THzToEv / (Kb * t[condition])) - 1)
+            return vals
+
 
 class ThermalDisplacements(ThermalMotion):
     def __init__(self,
-                 iter_phonons,
-                 masses,
+                 iter_mesh,
                  projection_direction=None,
                  freq_min=None,
                  freq_max=None):
         """Calculate mean square displacements
 
-        Args:
-            iter_phonons: Mesh or IterMesh instance
-            masses: Atomic masses
-            projection_direction: Eigenvector projection direction in Cartesian
-                coordinates. If None, eigenvector is not projected.
-            freq_min: Phonons having frequency larger than this are included.
-            freq_max: Phonons having frequency smaller than this are included.
+        Parameters
+        ----------
+        iter_mesh:
+            Mesh or IterMesh instance. Grid points must not be reduced by
+            symmetry, i.e., IterMesh instance has to be create
+            ``is_mesh_symmetry=False``.
+        projection_direction:
+            Eigenvector projection direction in Cartesian
+            coordinates. If None, eigenvector is not projected.
+        freq_min:
+            Minimum phonon frequency to determine wheather include or not.
+        freq_max:
+            Maximum phonon frequency to determine wheather include or not.
 
         """
 
-        self._iter_phonons = iter_phonons
-
+        ThermalMotion.__init__(self,
+                               iter_mesh,
+                               freq_min=freq_min,
+                               freq_max=freq_max)
         if projection_direction is None:
             self._projection_direction = None
         else:
             self._projection_direction = (projection_direction /
                                           np.linalg.norm(projection_direction))
-
-        ThermalMotion.__init__(self,
-                               masses,
-                               freq_min=freq_min,
-                               freq_max=freq_max)
-
         self._displacements = None
 
     def get_thermal_displacements(self):
@@ -146,24 +162,27 @@ class ThermalDisplacements(ThermalMotion):
         temps = self._temperatures
         disps = np.zeros((len(temps), len(masses)), dtype=float)
 
-        for count, (fs, vecs) in enumerate(self._iter_phonons):
+        for count, (fs, vecs) in enumerate(self._iter_mesh):
             if self._projection_direction is not None:
                 p_vecs = np.dot(
                     vecs.T.reshape(-1, 3),
                     self._projection_direction).reshape(-1, len(masses))
-                vecs2 = np.abs(p_vecs) ** 2
+                vecs2 = np.abs(p_vecs) ** 2 / masses
             else:
-                vecs2 = (abs(vecs) ** 2).T
+                vecs2 = (abs(vecs) ** 2).T / masses
 
             valid_indices = fs > self._fmin
             if self._fmax is not None:
                 valid_indices *= fs < self._fmax
 
-            for f, v2 in zip(fs[valid_indices], vecs2[valid_indices]):
-                c = v2 / masses
-                for i, t in enumerate(temps):
-                    disps[i] += self.get_Q2(f, t) * c
+            if len(temps) == 1:
+                Q2 = self._get_Q2(fs[valid_indices], temps[0])
+                disps[0] += np.dot(Q2, vecs2[valid_indices])
+            else:
+                for f, v2 in zip(fs[valid_indices], vecs2[valid_indices]):
+                    disps += np.outer(self._get_Q2(f, temps), v2)
 
+        assert np.prod(self._iter_mesh.mesh_numbers) == count + 1
         self._displacements = disps / (count + 1)
 
     def write_yaml(self):
@@ -184,15 +203,13 @@ class ThermalDisplacements(ThermalMotion):
                 f.write(" ] # atom %d\n" % (i + 1))
 
     def plot(self, pyplot, is_legend=False):
-        plots = []
-        labels = []
         xyz = ['x', 'y', 'z']
         for i, u in enumerate(self._displacements.transpose()):
-            plots.append(pyplot.plot(self._temperatures, u ))
-            labels.append("%d-%s" % ( i//3 + 1, xyz[i % 3]))
+            pyplot.plot(self._temperatures, u,
+                        label=("%d-%s" % (i//3 + 1, xyz[i % 3])))
 
         if is_legend:
-            pyplot.legend(plots, labels, loc='upper left')
+            pyplot.legend(loc='upper left')
 
     def _project_eigenvectors(self):
         """Eigenvectors are projected along Cartesian direction"""
@@ -209,32 +226,35 @@ class ThermalDisplacements(ThermalMotion):
 
 class ThermalDisplacementMatrices(ThermalMotion):
     def __init__(self,
-                 iter_phonons,
-                 masses,
+                 iter_mesh,
                  freq_min=None,
                  freq_max=None,
-                 lattice=None): # column vectors in real space
+                 lattice=None):
         """Calculate mean square displacement matrices
 
-        Args:
-            iter_phonons: Mesh or IterMesh instance
-            masses: Atomic masses
-            projection_direction: Eigenvector projection direction in Cartesian
-                coordinates. If None, eigenvector is not projected.
-            freq_min: Phonons having frequency larger than this are included.
-            freq_max: Phonons having frequency smaller than this are included.
-            lattice: Lattice parameters
+        Parameters
+        ----------
+        iter_mesh:
+            Mesh or IterMesh instance. Grid points must not be reduced by
+            symmetry, i.e., IterMesh instance has to be create
+            ``is_mesh_symmetry=False``.
+        freq_min: float
+            Minimum phonon frequency to determine wheather include or not.
+        freq_max: float
+            Maximum phonon frequency to determine wheather include or not.
+        lattice: array_like
+            Lattice parameters (column vectors) in real space
+            dtype='double'
+            shape=(3, 3)
 
         """
 
         ThermalMotion.__init__(self,
-                               masses,
+                               iter_mesh,
                                freq_min=freq_min,
                                freq_max=freq_max)
-
         self._disp_matrices = None
         self._disp_matrices_cif = None
-        self._iter_phonons = iter_phonons
 
         if lattice is not None:
             A = lattice
@@ -246,8 +266,18 @@ class ThermalDisplacementMatrices(ThermalMotion):
     def get_thermal_displacement_matrices(self):
         return (self._temperatures, self._disp_matrices)
 
-    def run(self):
-        np.seterr(over=self._np_overflow)
+    def run(self, np_overflow=None):
+        """
+
+        Parameters
+        ----------
+        np_overflow: str or None
+            Switch of error handling of numpy. 'raise' to see which phonon it
+            is.
+
+        """
+
+        np.seterr(over=np_overflow)
         self._get_disp_matrices()
         np.seterr(over=None)
 
@@ -260,43 +290,39 @@ class ThermalDisplacementMatrices(ThermalMotion):
                                      self._ANinv.T)
                     self._disp_matrices_cif[i, j] = mat_cif
 
-        for count, (fs, vecs) in enumerate(self._iter_phonons):
-            if self._projection_direction is not None:
-                p_vecs = np.dot(
-                    vecs.T.reshape(-1, 3),
-                    self._projection_direction).reshape(-1, len(masses))
-                vecs2 = np.abs(p_vecs) ** 2
-            else:
-                vecs2 = (abs(vecs) ** 2).T
-
-            valid_indices = fs > self._fmin
-            if self._fmax is not None:
-                valid_indices *= fs < self._fmax
-
-            for f, v2 in zip(fs[valid_indices], vecs2[valid_indices]):
-                c = v2 / masses
-                for i, t in enumerate(temps):
-                    disps[i] += self.get_Q2(f, t) * c
+        self._get_disp_matrices()
 
     def _get_disp_matrices(self):
+        dtype_complex = "c%d" % (np.dtype('double').itemsize * 2)
         disps = np.zeros((len(self._temperatures), len(self._masses),
-                          3, 3), dtype=complex)
-        for count, (freqs, eigvecs) in enumerate(self._iter_phonons):
+                          3, 3), dtype=dtype_complex)
+        for count, (freqs, eigvecs) in enumerate(self._iter_mesh):
             valid_indices = freqs > self._fmin
             if self._fmax is not None:
                 valid_indices *= freqs < self._fmax
             for i_band, (f, vec) in enumerate(
                     zip(freqs[valid_indices], (eigvecs.T)[valid_indices])):
-                c = []
-                for v, m in zip(vec.reshape(-1, 3), self._masses):
-                    c.append(np.outer(v, v.conj()) / m)
-                for i, t in enumerate(self._temperatures):
-                    try:
-                        disps[i] += self.get_Q2(f, t) * np.array(c)
-                    except FloatingPointError as e:
-                        # Probably, overflow in exp(freq / (kB * T))
-                        print("%s: T=%.1f freq=%.2f (band #%d)" %
-                              (e, t, f, i_band))
+                c = np.zeros((len(self._masses), 3, 3),
+                             dtype=dtype_complex, order='C')
+                for i, (v, m) in enumerate(
+                        zip(vec.reshape(-1, 3), self._masses)):
+                    c[i] = np.outer(v, v.conj()) / m
+
+                # for i, t in enumerate(self._temperatures):
+                #     try:
+                #         disps[i] += self._get_Q2(f, t) * np.array(c)
+                #     except FloatingPointError as e:
+                #         # Probably, overflow in exp(freq / (kB * T))
+                #         print("%s: T=%.1f freq=%.2f (band #%d)" %
+                #               (e, t, f, i_band))
+                try:
+                    Q2 = self._get_Q2(f, self._temperatures)
+                    disps += Q2[:, None, None, None] * c[None, :, :, :]
+                except FloatingPointError as e:
+                    # Probably, overflow in exp(freq / (kB * T))
+                    print("%s: freq=%.2f (band #%d)" % (e, f, i_band))
+
+        assert np.prod(self._iter_mesh.mesh_numbers) == count + 1
         self._disp_matrices = disps / (count + 1)
 
     def write_cif(self, cell, temperature_index):
@@ -318,7 +344,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
                 lines.append("- temperature:   %15.7f" % t)
                 lines.append("  displacement_matrices:")
                 for j, mat in enumerate(matrices):
-                    ## For checking imaginary part that should be zero
+                    # For checking imaginary part that should be zero
                     # lines.append("  - # atom %d" % (i + 1))
                     # for v in mat:
                     #     lines.append(
@@ -340,9 +366,10 @@ class ThermalDisplacementMatrices(ThermalMotion):
                              m[1, 2], m[0, 2], m[0, 1], j + 1))
             w.write("\n".join(lines))
 
+
 class ThermalDistances(ThermalMotion):
     def __init__(self,
-                 frequencies, # Have to be supplied in THz
+                 frequencies,
                  eigenvectors,
                  supercell,
                  primitive,
@@ -377,13 +404,16 @@ class ThermalDistances(ThermalMotion):
         for i, (atom1, atom2) in enumerate(atom_pairs):
             patom1 = p2p[s2p[atom1]]
             patom2 = p2p[s2p[atom2]]
-            delta_r = get_equivalent_smallest_vectors(
-                atom2,
-                atom1,
-                self._supercell,
-                self._primitive.get_cell(),
-                self._symprec)[0]
+            spos = self._supercell.get_scaled_positions()
 
+            # This may be wrong.
+            delta_r = get_smallest_vectors(
+                self._supercell.get_cell(),
+                spos[[atom2]],
+                spos[[atom1]],
+                symprec=self._symprec)[0]
+
+            # This is no longer implemented.
             self._project_eigenvectors(delta_r, self._primitive.get_cell())
 
             for freqs, vecs, q in zip(self._frequencies,
@@ -399,7 +429,7 @@ class ThermalDistances(ThermalMotion):
                     v2 = abs(v)**2
                     if f > self._fmin:
                         for j, t in enumerate(self._temperatures):
-                            dists[j, i] += self.get_Q2(f, t) * (
+                            dists[j, i] += self._get_Q2(f, t) * (
                                 v2[patom1] * c1 +
                                 cross_term * c_cross + v2[patom2] * c2)
 

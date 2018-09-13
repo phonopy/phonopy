@@ -137,14 +137,22 @@ def main(args):
                     symmetrize_tensors=args.symmetrize_tensors,
                     symprec=args.symprec)
         except UserWarning:
-            sys.exit(1)
-        else:
+            text = "# Symmetry broken"
+            lines = [text]
+            print("\n".join(lines))
+            sys.exit(0)
+
+        try:
             text = "# epsilon and Z* of atoms "
             text += ' '.join(["%d" % n for n in atom_indices + 1])
-            print(text)
-            print(("%13.8f" * 9) % tuple(epsilon.flatten()))
+            lines = [text]
+            lines.append(("%13.8f " * 9) % tuple(epsilon.flatten()))
             for z in borns:
-                print(("%13.8f" * 9) % tuple(z.flatten()))
+                lines.append(("%13.8f " * 9) % tuple(z.flatten()))
+        except:
+            sys.exit(1)
+        else:
+            print("\n".join(lines))
             sys.exit(0)
 
     sys.exit(1)

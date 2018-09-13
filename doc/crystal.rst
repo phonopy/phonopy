@@ -12,14 +12,17 @@ Supported features
 ---------------------------
 
 The CRYSTAL interface reads the unit cell from a CRYSTAL output file
-(lattice vectors, conventional atomic numbers, fractional atomic positions)
+(lattice vectors, conventional atomic numbers, fractional atomic positions).
 For optimization outputs, the final geometry in the file is read.
 
-If dielectric tensor and effective Born charges are present, the interface
-creates a BORN file for Non-analytical correction (:ref:`nac_tag`).
+If dielectric tensor and effective Born charges are available, they can be
+read with ``phonopy-crystal-born`` script. The script creates a BORN file for 
+:ref:`nac_tag`.
+
 The recommended strategy is to carry out a Gamma-point frequency calculation
-with INTENS and INTCPHF. This produces all required quantities and also confirms that
-the structure optimization has converged to a true local minimum.
+with INTENS and INTCPHF and use this as input to Phonopy. This produces all 
+required quantities and also confirms that the structure optimization has 
+converged to a true local minimum.
 
 If ATOMSPIN keyword is present, magnetic moments are read from it. There
 is very little experience on using this feature, so be careful.
@@ -69,10 +72,10 @@ parameter is not needed
    Then, CRYSTAL supercell calculations are executed to obtain forces on
    atoms, e.g., as follows::
 
-     % runcry14 supercell-001.d12
+     % runcry17 supercell-001.d12
 
-3) To create ``FORCE_SETS``, that is used by phonopy,
-   the following phonopy command is executed::
+3) To create ``FORCE_SETS`` file required by phonopy,
+   the following command is executed::
 
      % phonopy --crystal -f supercell-001.o
 
@@ -96,17 +99,18 @@ parameter is not needed
       | |_) | | | | (_) | | | | (_) || |_) | |_| |
       | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
       |_|                            |_|    |___/
-                                           1.11.6
+                                           1.13.0
 
 
      Python version 2.7.3
-     Spglib version 1.9.9
+     Spglib version 1.10.3
      Calculator interface: crystal
      Band structure mode
      Settings:
        Supercell: [4 4 4]
      Spacegroup: Fd-3m (227)
      Computing force constants...
+     max drift of force constants: 0.000000 (xx) 0.000000 (zz)
      Reciprocal space paths in reduced coordinates:
      [ 0.00  0.00  0.00] --> [ 0.50  0.00  0.50]
      [ 0.50  0.00  0.50] --> [ 0.50  0.25  0.75]
@@ -137,8 +141,8 @@ parameter is not needed
 Non-analytical term correction (Optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The workflow for a CRYSTAL-Phonopy calculation with Non-analytical correction
-is outlined here using the NaCl example found in ``example/NaCl-CRYSTAL``.
+The workflow for a CRYSTAL-Phonopy calculation with :ref:`nac_tag` is outlined here 
+using the NaCl example found in ``example/NaCl-CRYSTAL``.
 
 In this example, the CRYSTAL output file is ``crystal.o``.
 This is the default for the CRYSTAL interface, so, the ``-c crystal.o``
@@ -171,14 +175,31 @@ The workflow is very similar to the Si example below:
    the ``BORN`` file manually following the ``BORN`` format
    (:ref:`born_file`).
 
-2) Run the supercell inputs with CRYSTAL
+2) Create ``BORN`` file with ``phonopy-crystal-born`` script::
 
-3) Collect forces::
+     phonopy-crystal-born > BORN
+
+   By default, ``phonopy-crystal-born`` looks for a file called crystal.o.
+   File with some other name can be given as an argument to the script.
+   The ``BORN`` file created by the script should look like this::
+
+     default
+     1.8126 0.0000 0.0000 0.0000 1.8126 0.0000 0.0000 0.0000 1.8126
+     1.0238 0.0000 0.0000 0.0000 1.0238 0.0000 0.0000 0.0000 1.0238
+     -1.0238 -0.0000 -0.0000 -0.0000 -1.0238 0.0000 -0.0000 0.0000 -1.0238
+
+   If you don't want to run a FREQCALC-INTENS-INTCPHF calculation, but have
+   the necessary data from some other source, you can create the ``BORN`` file
+   manually following the ``BORN`` format (:ref:`born_file`).
+
+3) Run the supercell inputs with CRYSTAL as in the Si example above.
+
+4) Collect forces::
 
      phonopy --crystal -f supercell-*o
 
-4) Calculate phonon dispersion data into band.yaml and save band.pdf,
-   using Non-analytical correction --nac::
+5) Calculate phonon dispersion data into band.yaml and save band.pdf,
+   using non-analytical correction ``--nac``::
 
      phonopy --crystal --dim="4 4 4" -p -s --nac band.conf
 

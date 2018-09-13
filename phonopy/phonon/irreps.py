@@ -42,7 +42,7 @@ from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 # from Wikipedia http://en.wikipedia.org/wiki/List_of_character_tables_for_chemically_important_3D_point_groups
 character_table = {
     # C1 (1)
-    '1': 
+    '1':
     [{'rotation_list': ('E'),
       'character_table': {'A' : ( 1 )},
       'mapping_table': {'E': ((( 1, 0, 0 ),
@@ -50,7 +50,7 @@ character_table = {
                                ( 0, 0, 1 )),)}}],
 
     # Ci (2)
-    '-1': 
+    '-1':
     [{'rotation_list': ('E', 'i'),
       'character_table': {'Ag' : ( 1, 1 ),
                           'Au' : ( 1,-1 )},
@@ -62,8 +62,16 @@ character_table = {
                                ( 0, 0,-1 )),)}}],
 
     # C2 (3)
-    '2': None,
-
+    '2':
+    [{'rotation_list': ('E', 'C2'),
+      'character_table': {'A' : (1, 1),
+                          'B' : (1, -1)},
+      'mapping_table': {'E' : ((( 1, 0, 0 ),
+                                ( 0, 1, 0 ),
+                                ( 0, 0, 1 )),),
+                        'C2': (((-1, 0, 0 ),
+                                ( 0, 1, 0 ),
+                                ( 0, 0,-1 )),)}}],
     # C1v = Cs = C1h (4)
     'm':
     [{'rotation_list': ('E', 'sgh'),
@@ -207,7 +215,7 @@ character_table = {
                         'S4': ((( 0, 1, 0 ),
                                 (-1, 0, 0 ),
                                 ( 0, 0,-1 )),
-		               (( 0,-1, 0 ),
+                               (( 0,-1, 0 ),
                                 ( 1, 0, 0 ),
                                 ( 0, 0,-1 )),)}}],
 
@@ -238,7 +246,7 @@ character_table = {
                         'S4' : ((( 0, 1, 0 ),
                                  (-1, 0, 0 ),
                                  ( 0, 0, -1 ),),
-		                (( 0,-1, 0 ),
+                                (( 0,-1, 0 ),
                                  ( 1, 0, 0 ),
                                  ( 0, 0,-1 )),),
                         'sgh': ((( 1, 0, 0 ),
@@ -325,7 +333,7 @@ character_table = {
                         'S4'  : ((( 0, 1, 0 ),
                                   (-1, 0, 0 ),
                                   ( 0, 0,-1 )),
-		                 (( 0,-1, 0 ),
+                                 (( 0,-1, 0 ),
                                   ( 1, 0, 0 ),
                                   ( 0, 0,-1 )),),
                         'C2z' : (((-1, 0, 0 ),
@@ -355,7 +363,7 @@ character_table = {
                         'S4'    : ((( 0, 1, 0 ),
                                     (-1, 0, 0 ),
                                     ( 0, 0,-1 )),
-		                   (( 0,-1, 0 ),
+                                   (( 0,-1, 0 ),
                                     ( 1, 0, 0 ),
                                     ( 0, 0,-1 )),),
                         'C2z'   : (((-1, 0, 0 ),
@@ -504,7 +512,29 @@ character_table = {
                                   ( 0, 0,-1 )),)}}],
 
     # C3v (19)
-    '3m': None,
+    '3m':
+    [{'rotation_list': ('E', 'C3', 'sgv'),
+      'character_table': {'A1': (1, 1, 1),
+                          'A2': (1, 1,-1),
+                          'E' : (2,-1, 0)},
+      'mapping_table': {'E'   : ((( 1, 0, 0),
+                                  ( 0, 1, 0),
+                                  ( 0, 0, 1)),),
+                        'C3'  : ((( 0,-1, 0),
+                                  ( 1,-1, 0),
+                                  ( 0, 0, 1)),
+                                 ((-1, 1, 0),
+                                  (-1, 0, 0),
+                                  ( 0, 0, 1)),),
+                        'sgv' : ((( 0,-1, 0),
+                                  (-1, 0, 0),
+                                  ( 0, 0, 1)),
+                                 ((-1, 1, 0),
+                                  ( 0, 1, 0),
+                                  ( 0, 0, 1)),
+                                 (( 1, 0, 0),
+                                  ( 1,-1, 0),
+                                  ( 0, 0, 1)),)}}],
 
     # D3d (20)
     '-3m':
@@ -553,13 +583,59 @@ character_table = {
                                   ( 0, 0, 1 )),)}}],
 
     # C6 (21)
-    '6': None,
+    '6':
+    [{'rotation_list': ('E', 'C6', 'C3', 'C2'),
+      'character_table': {'A' : ( 1, 1, 1, 1),
+                          'B' : ( 1,-1, 1,-1),
+                          'E1': ( 2, 1,-1,-2),
+                          'E2': ( 2,-1,-1, 2)},
+      'mapping_table': {'E'  : ((( 1, 0, 0),
+                                 ( 0, 1, 0),
+                                 ( 0, 0, 1)),),
+                        'C6' : ((( 1,-1, 0),
+                                 ( 1, 0, 0),
+                                 ( 0, 0, 1)),
+                                (( 0, 1, 0),
+                                 (-1, 1, 0),
+                                 ( 0, 0, 1)),),
+                        'C3' : ((( 0,-1, 0),
+                                 ( 1,-1, 0),
+                                 ( 0, 0, 1)),
+                                ((-1, 1, 0),
+                                 (-1, 0, 0),
+                                 ( 0, 0, 1)),),
+                        'C2' : (((-1, 0, 0),
+                                 ( 0,-1, 0),
+                                 ( 0, 0, 1)),)}}],
 
     # C3h (22)
-    '-6': None,
+    '-6':
+    [{'rotation_list': ('E', 'C3', 'sgh', 'S3'),
+      'character_table': {'A\''   : ( 1, 1, 1, 1),
+                          'E\''   : ( 2,-1, 2,-1),
+                          'A\'\'' : ( 1, 1,-1,-1),
+                          'E\'\'' : ( 2,-1,-2, 1)},
+      'mapping_table': {'E'  : ((( 1, 0, 0),
+                                 ( 0, 1, 0),
+                                 ( 0, 0, 1)),),
+                        'C3' : ((( 0,-1, 0),
+                                 ( 1,-1, 0),
+                                 ( 0, 0, 1)),
+                                ((-1, 1, 0),
+                                 (-1, 0, 0),
+                                 ( 0, 0, 1)),),
+                        'sgh' : ((( 1, 0, 0),
+                                  ( 0, 1, 0),
+                                  ( 0, 0,-1)),),
+                        'S3'  : (((-1, 1, 0),
+                                  (-1, 0, 0),
+                                  ( 0, 0,-1)),
+                                 (( 0,-1, 0),
+                                  ( 1,-1, 0),
+                                  ( 0, 0,-1)),)}}],
 
     # C6h (23)
-    '6/m': 
+    '6/m':
     [{'rotation_list': ('E', 'C6', 'C3', 'C2', 'i', 'S3', 'S6', 'sgh'),
       'character_table': {'Ag':  ( 1, 1, 1, 1, 1, 1, 1, 1 ),
                           'Bg':  ( 1,-1, 1,-1, 1,-1, 1,-1 ),
@@ -607,7 +683,50 @@ character_table = {
                                     ( 0, 0,-1 )),)}}],
 
     # D6 (24)
-    '622': None,
+    '622':
+    [{'rotation_list': ('E', 'C6', 'C3', 'C2', 'C2\'', 'C2\'\''),
+      'character_table': {'A1' : ( 1, 1, 1, 1, 1, 1),
+                          'A2' : ( 1, 1, 1, 1,-1,-1),
+                          'B1' : ( 1,-1, 1,-1, 1,-1),
+                          'B2' : ( 1,-1, 1,-1,-1, 1),
+                          'E1' : ( 2, 1,-1,-2, 0, 0),
+                          'E2' : ( 2,-1,-1, 2, 0, 0)},
+      'mapping_table': { 'E'      : ((( 1, 0, 0),
+                                      ( 0, 1, 0),
+                                      ( 0, 0, 1)),),
+                         'C6'     : ((( 1,-1, 0),
+                                      ( 1, 0, 0),
+                                      ( 0, 0, 1)),
+                                     (( 0, 1, 0),
+                                      (-1, 1, 0),
+                                      ( 0, 0, 1)),),
+                         'C3'     : ((( 0,-1, 0),
+                                      ( 1,-1, 0),
+                                      ( 0, 0, 1)),
+                                     ((-1, 1, 0),
+                                      (-1, 0, 0),
+                                      ( 0, 0, 1)),),
+                         'C2'     : (((-1, 0, 0),
+                                      ( 0,-1, 0),
+                                      ( 0, 0, 1)),),
+                         'C2\''   : ((( 0, 1, 0),
+                                      ( 1, 0, 0),
+                                      ( 0, 0,-1)),
+                                     (( 1,-1, 0),
+                                      ( 0,-1, 0),
+                                      ( 0, 0,-1)),
+                                     ((-1, 0, 0),
+                                      (-1, 1, 0),
+                                      ( 0, 0,-1)),),
+                         'C2\'\'' : ((( 0,-1, 0),
+                                      (-1, 0, 0),
+                                      ( 0, 0,-1)),
+                                     ((-1, 1, 0),
+                                      ( 0, 1, 0),
+                                      ( 0, 0,-1)),
+                                     (( 1, 0, 0),
+                                      ( 1,-1, 0),
+                                      ( 0, 0,-1)),)}}],
 
     # C6v (25)
     '6mm':
@@ -779,7 +898,7 @@ character_table = {
                                     ( 0, 0, 1 )),
                                    ((-1, 0, 0 ),
                                     (-1, 1, 0 ),
-                                    ( 0, 0, 1 )),),             
+                                    ( 0, 0, 1 )),),
                         'sgv'   : ((( 0,-1, 0 ),
                                     (-1, 0, 0 ),
                                     ( 0, 0, 1 )),
@@ -791,13 +910,210 @@ character_table = {
                                     ( 0, 0, 1 )),)}}],
 
     # T (28)
-    '23': None,
+    '23':
+    [{'rotation_list': ('E', 'C3', 'C2'),
+      'character_table': {'A' : (1, 1, 1),
+                          'E' : (2,-1, 2),
+                          'T' : (3, 0,-1)},
+      'mapping_table': {'E'  : ((( 1, 0, 0),
+                                 ( 0, 1, 0),
+                                 ( 0, 0, 1)),),
+                        'C3' : ((( 0, 0, 1),
+                                 ( 1, 0, 0),
+                                 ( 0, 1, 0)),
+                                (( 0, 0, 1),
+                                 (-1, 0, 0),
+                                 ( 0,-1, 0)),
+                                (( 0, 0,-1),
+                                 (-1, 0, 0),
+                                 ( 0, 1, 0)),
+                                (( 0, 0,-1),
+                                 ( 1, 0, 0),
+                                 ( 0,-1, 0)),
+                                (( 0, 1, 0),
+                                 ( 0, 0, 1),
+                                 ( 1, 0, 0)),
+                                (( 0,-1, 0),
+                                 ( 0, 0, 1),
+                                 (-1, 0, 0)),
+                                (( 0, 1, 0),
+                                 ( 0, 0,-1),
+                                 (-1, 0, 0)),
+                                (( 0,-1, 0),
+                                 ( 0, 0,-1),
+                                 ( 1, 0, 0)),),
+                        'C2' : (((-1, 0, 0),
+                                 ( 0,-1, 0),
+                                 ( 0, 0, 1)),
+                                ((-1, 0, 0),
+                                 ( 0, 1, 0),
+                                 ( 0, 0,-1)),
+                                (( 1, 0, 0),
+                                 ( 0,-1, 0),
+                                 ( 0, 0,-1)),)}}],
 
     # Th (29)
-    'm-3': None,
+    'm-3':
+    [{'rotation_list': ('E', 'C3', 'C2', 'i', 'S6', 'sgh'),
+      'character_table': {'Ag' : ( 1, 1, 1, 1, 1, 1),
+                          'Au' : ( 1, 1, 1,-1,-1,-1),
+                          'Eg' : ( 2,-1, 2, 2,-1, 2),
+                          'Eu' : ( 2,-1, 2,-2, 1,-2),
+                          'Tg' : ( 3, 0,-1, 3, 0,-1),
+                          'Tu' : ( 3, 0,-1,-3, 0, 1)},
+      'mapping_table': {'E'  : ((( 1, 0, 0),
+                                 ( 0, 1, 0),
+                                 ( 0, 0, 1)),),
+                        'C3' : ((( 0, 0, 1),
+                                 ( 1, 0, 0),
+                                 ( 0, 1, 0)),
+                                (( 0, 0, 1),
+                                 (-1, 0, 0),
+                                 ( 0,-1, 0)),
+                                (( 0, 0,-1),
+                                 (-1, 0, 0),
+                                 ( 0, 1, 0)),
+                                (( 0, 0,-1),
+                                 ( 1, 0, 0),
+                                 ( 0,-1, 0)),
+                                (( 0, 1, 0),
+                                 ( 0, 0, 1),
+                                 ( 1, 0, 0)),
+                                (( 0,-1, 0),
+                                 ( 0, 0, 1),
+                                 (-1, 0, 0)),
+                                (( 0, 1, 0),
+                                 ( 0, 0,-1),
+                                 (-1, 0, 0)),
+                                (( 0,-1, 0),
+                                 ( 0, 0,-1),
+                                 ( 1, 0, 0)),),
+                        'C2' : (((-1, 0, 0),
+                                 ( 0,-1, 0),
+                                 ( 0, 0, 1)),
+                                ((-1, 0, 0),
+                                 ( 0, 1, 0),
+                                 ( 0, 0,-1)),
+                                (( 1, 0, 0),
+                                 ( 0,-1, 0),
+                                 ( 0, 0,-1)),),
+                        'i'  : (((-1, 0, 0),
+                                 ( 0,-1, 0),
+                                 ( 0, 0,-1)),),
+                        'S6' : ((( 0, 0,-1),
+                                 (-1, 0, 0),
+                                 ( 0,-1, 0)),
+                                (( 0, 0,-1),
+                                 ( 1, 0, 0),
+                                 ( 0, 1, 0)),
+                                (( 0, 0, 1),
+                                 ( 1, 0, 0),
+                                 ( 0,-1, 0)),
+                                (( 0, 0, 1),
+                                 (-1, 0, 0),
+                                 ( 0, 1, 0)),
+                                (( 0,-1, 0),
+                                 ( 0, 0,-1),
+                                 (-1, 0, 0)),
+                                (( 0, 1, 0),
+                                 ( 0, 0,-1),
+                                 ( 1, 0, 0)),
+                                (( 0,-1, 0),
+                                 ( 0, 0, 1),
+                                 ( 1, 0, 0)),
+                                (( 0, 1, 0),
+                                 ( 0, 0, 1),
+                                 (-1, 0, 0)),),
+                        'sgh': ((( 1, 0, 0),
+                                 ( 0, 1, 0),
+                                 ( 0, 0,-1)),
+                                (( 1, 0, 0),
+                                 ( 0,-1, 0),
+                                 ( 0, 0, 1)),
+                                ((-1, 0, 0),
+                                 ( 0, 1, 0),
+                                 ( 0, 0, 1)),)}}],
 
     # O (30)
-    '432': None,
+    '432':
+    [{'rotation_list': ('E', 'C4', 'C2', 'C3', 'C2\''),
+      'character_table': {'A1' : ( 1, 1, 1, 1, 1),
+                          'A2' : ( 1,-1, 1, 1,-1),
+                          'E'  : ( 2, 0, 2,-1, 0),
+                          'T1' : ( 3, 1,-1, 0,-1),
+                          'T2' : ( 3,-1,-1, 0, 1)},
+      'mapping_table': {'E'   : ((( 1, 0, 0),
+                                  ( 0, 1, 0),
+                                  ( 0, 0, 1)),),
+                        'C4'  : ((( 0, 1, 0),
+                                  (-1, 0, 0),
+                                  ( 0, 0, 1)),
+                                 (( 0,-1, 0),
+                                  ( 1, 0, 0),
+                                  ( 0, 0, 1)),
+                                 (( 1, 0, 0),
+                                  ( 0, 0, 1),
+                                  ( 0,-1, 0)),
+                                 (( 1, 0, 0),
+                                  ( 0, 0,-1),
+                                  ( 0, 1, 0)),
+                                 (( 0, 0, 1),
+                                  ( 0, 1, 0),
+                                  (-1, 0, 0)),
+                                 (( 0, 0,-1),
+                                  ( 0, 1, 0),
+                                  ( 1, 0, 0)),),
+                        'C2'  : (((-1, 0, 0),
+                                  ( 0,-1, 0),
+                                  ( 0, 0, 1)),
+                                 ((-1, 0, 0),
+                                  ( 0, 1, 0),
+                                  ( 0, 0,-1)),
+                                 (( 1, 0, 0),
+                                  ( 0,-1, 0),
+                                  ( 0, 0,-1)),),
+                        'C3'  : ((( 0, 0, 1),
+                                  ( 1, 0, 0),
+                                  ( 0, 1, 0)),
+                                 (( 0, 0, 1),
+                                  (-1, 0, 0),
+                                  ( 0,-1, 0)),
+                                 (( 0, 0,-1),
+                                  (-1, 0, 0),
+                                  ( 0, 1, 0)),
+                                 (( 0, 0,-1),
+                                  ( 1, 0, 0),
+                                  ( 0,-1, 0)),
+                                 (( 0, 1, 0),
+                                  ( 0, 0, 1),
+                                  ( 1, 0, 0)),
+                                 (( 0,-1, 0),
+                                  ( 0, 0, 1),
+                                  (-1, 0, 0)),
+                                 (( 0, 1, 0),
+                                  ( 0, 0,-1),
+                                  (-1, 0, 0)),
+                                 (( 0,-1, 0),
+                                  ( 0, 0,-1),
+                                  ( 1, 0, 0)),),
+                        'C2\'': ((( 0,-1, 0),
+                                  (-1, 0, 0),
+                                  ( 0, 0,-1)),
+                                 (( 0, 1, 0),
+                                  ( 1, 0, 0),
+                                  ( 0, 0,-1)),
+                                 ((-1, 0, 0),
+                                  ( 0, 0, 1),
+                                  ( 0, 1, 0)),
+                                 ((-1, 0, 0),
+                                  ( 0, 0,-1),
+                                  ( 0,-1, 0)),
+                                 (( 0, 0, 1),
+                                  ( 0,-1, 0),
+                                  ( 1, 0, 0)),
+                                 (( 0, 0,-1),
+                                  ( 0,-1, 0),
+                                  (-1, 0, 0)),)}}],
 
     # Td (31)
     '-43m':
@@ -893,7 +1209,7 @@ character_table = {
                           'A2u': ( 1, 1,-1,-1, 1,-1, 1,-1,-1, 1 ),
                           'Eu' : ( 2,-1, 0, 0, 2,-2, 0, 1,-2, 0 ),
                           'T1u': ( 3, 0,-1, 1,-1,-3,-1, 0, 1, 1 ),
-                          'T2u': ( 3, 0, 1,-1,-1,-3, 1, 0, 1,-1 ) },
+                          'T2u': ( 3, 0, 1,-1,-1,-3, 1, 0, 1,-1 )},
       'mapping_table': {'E'   : ((( 1, 0, 0 ),
                                   ( 0, 1, 0 ),
                                   ( 0, 0, 1 )),),
@@ -1075,7 +1391,7 @@ class IrReps(object):
             print("Your unit cell may be transformed to a primitive cell "
                   "by PRIMITIVE_AXIS tag.")
             return False
-        
+
         (self._rotations_at_q,
          self._translations_at_q) = self._get_rotations_at_q()
 
@@ -1115,7 +1431,7 @@ class IrReps(object):
         ddm_q = np.sum([self._ddm.get_derivative_of_dynamical_matrix()[i] *
                         self._q[i] for i in range(3)], axis=0)
         return deg_sets
-        
+
     def get_band_indices(self):
         return self._degenerate_sets
 
@@ -1152,7 +1468,7 @@ class IrReps(object):
     def _set_eigenvectors(self, dm):
         if self._nac_q_direction is not None and (np.abs(self._q) < 1e-5).all():
             dm.set_dynamical_matrix(self._q, q_direction=self._nac_q_direction)
-        else:        
+        else:
             dm.set_dynamical_matrix(self._q)
         eigvals, self._eigvecs = np.linalg.eigh(dm.get_dynamical_matrix())
         self._freqs = np.sqrt(abs(eigvals)) * np.sign(eigvals) * self._factor
@@ -1164,7 +1480,7 @@ class IrReps(object):
                         self._symmetry_dataset['translations']):
 
             # Using r is used instead of np.linalg.inv(r)
-            diff = np.dot(self._q, r) - self._q 
+            diff = np.dot(self._q, r) - self._q
 
             if (abs(diff - np.rint(diff)) < self._symprec).all():
                 rotations_at_q.append(r)
@@ -1199,13 +1515,13 @@ class IrReps(object):
 
     def _get_ground_matrix(self):
         matrices = []
-        
+
         for (r, t) in zip(self._rotations_at_q,
                           self._translations_at_q):
-    
+
             lat = self._primitive.get_cell().T
             r_cart = similarity_transformation(lat, r)
-    
+
             perm_mat = self._get_modified_permutation_matrix(r, t)
             matrices.append(np.kron(perm_mat, r_cart))
 
@@ -1237,16 +1553,16 @@ class IrReps(object):
                     # _get_irreps().
                     phase_factor = np.dot(
                         self._q, np.dot(np.linalg.inv(r), p2 - p_rot))
-                    
+
                     # This phase factor comes from non-pure-translation of
                     # each symmetry opration.
                     if self._is_little_cogroup:
                         phase_factor += np.dot(t, self._q)
-                        
+
                     matrix[j, i] = np.exp(2j * np.pi * phase_factor)
 
         return matrix
-    
+
     def _get_irreps(self):
         eigvecs = []
         phases = np.kron(
@@ -1265,7 +1581,7 @@ class IrReps(object):
                     vec = eigvecs[band_indices[0]]
                     irrep_Rs.append([[np.vdot(vec, np.dot(mat, vec))]])
                     continue
-                
+
                 irrep_R = np.zeros((l, l), dtype=complex)
                 for i, b_i in enumerate(band_indices):
                     vec_i = eigvecs[b_i]
@@ -1290,7 +1606,7 @@ class IrReps(object):
         return np.sum([mat * r[i, j].conj() for mat, r
                        in zip(self._ground_matrices, self._irreps[idx_irrep])],
                       axis=0) * dim / self._g
-    
+
     def _get_rotation_symbols(self):
         ptg_symbol = self._pointgroup_symbol
         for ct in character_table[ptg_symbol]:
@@ -1329,7 +1645,7 @@ class IrReps(object):
                     ir_labels.append(ct_label)
                     found = True
                     break
-                
+
             if not found:
                 ir_labels.append(None)
 
@@ -1341,7 +1657,7 @@ class IrReps(object):
                     print("%s %s" % (text, ct_label))
                 else:
                     print("%s Not found" % text)
-                
+
         return ir_labels
 
     def _is_primitive_cell(self):
@@ -1353,7 +1669,7 @@ class IrReps(object):
                     return False
         else:
             return True
-    
+
     def _show(self, show_irreps):
         print('')
         print("-------------------------------")
@@ -1362,7 +1678,7 @@ class IrReps(object):
         print("q-point: %s" % self._q)
         print("Point group: %s" % self._pointgroup_symbol)
         print('')
-        
+
         if (np.abs(self._q) < self._symprec).all():
             width = 6
             print("Original rotation matrices:")
@@ -1402,11 +1718,11 @@ class IrReps(object):
 
         if show_irreps:
             self._show_irreps()
-    
+
     def _show_irreps(self):
         print("IR representations:")
         print('')
-        
+
         for i, (deg_set, irrep_Rs) in enumerate(zip(self._degenerate_sets,
                                                     self._irreps)):
             print("%3d (%8.3f):" % (deg_set[0] + 1, self._freqs[deg_set[0]]))
@@ -1419,7 +1735,7 @@ class IrReps(object):
                             sign_r = " "
                         else:
                             sign_r = "-"
-                        
+
                         if irrep_Rkl.imag > 0:
                             sign_i = "+"
                         else:
@@ -1429,7 +1745,7 @@ class IrReps(object):
                             str_index = "%2d" % (j + 1)
                         else:
                             str_index = "  "
-                            
+
                         if l > 0:
                             str_index = ''
 
@@ -1480,7 +1796,7 @@ class IrReps(object):
 
         if show_irreps:
             self._write_yaml_irreps(w)
-            
+
         w.close()
 
     def _write_yaml_irreps(self, file_pointer):
@@ -1506,7 +1822,7 @@ class IrReps(object):
                             w.write("%10.7f, %10.7f,   " % (x.real, x.imag))
                         w.write("%10.7f, %10.7f ] # (" %
                                 (v[-1].real, v[-1].imag))
-                        
+
                         w.write(("%5.0f" * len(v)) %
                                 tuple((np.angle(v) / np.pi * 180) % 360))
                         w.write(")\n")
@@ -1515,9 +1831,9 @@ class IrReps(object):
                     w.write("  - [ [ %10.7f, %10.7f ] ] # (%3.0f) %d %s\n" %
                             (x.real, x.imag,
                              (np.angle(x) / np.pi * 180) % 360, j + 1, symbol))
-                
+
         pass
-                
+
 def _get_rotation_symbol(rotation, mapping_table):
     for k in mapping_table:
         v = mapping_table[k]
@@ -1614,4 +1930,3 @@ def _print_rotations(rotations,
                                  width,
                                  num_rest,
                                  i))
-

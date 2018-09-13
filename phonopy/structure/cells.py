@@ -34,7 +34,8 @@
 
 import numpy as np
 import phonopy.structure.spglib as spg
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.atoms import PhonopyAtoms
+
 
 def get_supercell(unitcell, supercell_matrix, is_old_style=True, symprec=1e-5):
     return Supercell(unitcell,
@@ -42,8 +43,10 @@ def get_supercell(unitcell, supercell_matrix, is_old_style=True, symprec=1e-5):
                      is_old_style=is_old_style,
                      symprec=symprec)
 
+
 def get_primitive(supercell, primitive_frame, symprec=1e-5):
     return Primitive(supercell, primitive_frame, symprec=symprec)
+
 
 def print_cell(cell, mapping=None, stars=None):
     symbols = cell.get_chemical_symbols()
@@ -72,20 +75,47 @@ def print_cell(cell, mapping=None, stars=None):
         else:
             print(line + " > %d" % (mapping[i] + 1))
 
-class Supercell(Atoms):
-    """Build supercell from supercell matrix
-    In this function, unit cell is considered
-    [1,0,0]
-    [0,1,0]
-    [0,0,1].
-    Supercell matrix is given by relative ratio, e.g,
-    [-1, 1, 1]
-    [ 1,-1, 1]  is for FCC from simple cubic.
-    [ 1, 1,-1]
-    In this case multiplicities of surrounding simple lattice are [2,2,2].
 
+class Supercell(PhonopyAtoms):
+    """Build supercell from supercell matrix and unit cell
+
+    Note
+    ----
+
+    ``is_old_style=True`` invokes the following algorithm.
+    In this function, unit cell is considered
+      [1,0,0]
+      [0,1,0]
+      [0,0,1].
+    Supercell matrix is given by relative ratio, e.g,
+      [-1, 1, 1]
+      [ 1,-1, 1]  is for FCC from simple cubic.
+      [ 1, 1,-1].
+    In this case multiplicities of surrounding simple lattice are [2,2,2].
     First, create supercell with surrounding simple lattice.
     Second, trim the surrounding supercell with the target lattice.
+
+    ``is_old_style=False`` calls the Smith normal form.
+
+    These two algorithm may order atoms in different ways. So for the
+    backward compatibitily, ``is_old_style=True`` is the default
+    option. However the Smith normal form shows far better performance
+    in case of very large supercell multiplicities.
+
+    Parameters
+    ----------
+    unitcell: PhonopyAtoms
+        Unit cell
+    supercell_matrix: ndarray or list of list
+        Transformation matrix from unit cell to supercell. The
+        elements have to be integers.
+        shape=(3,3)
+    is_old_stype: bool
+        This swithes the algorithms. See Note.
+    symprec: float, optional
+        Tolerance to find overlapping atoms in supercell cell. The default
+        values is 1e-5.
+
     """
 
     def __init__(self,
@@ -150,15 +180,16 @@ class Supercell(Atoms):
             print("Probably some atoms are overwrapped. "
                   "The mapping table is give below.")
             print(mapping_table)
-            Atoms.__init__(self)
+            PhonopyAtoms.__init__(self)
         else:
-            Atoms.__init__(self,
-                           numbers=supercell.get_atomic_numbers(),
-                           masses=supercell.get_masses(),
-                           magmoms=supercell.get_magnetic_moments(),
-                           scaled_positions=supercell.get_scaled_positions(),
-                           cell=supercell.get_cell(),
-                           pbc=True)
+            PhonopyAtoms.__init__(
+                self,
+                numbers=supercell.get_atomic_numbers(),
+                masses=supercell.get_masses(),
+                magmoms=supercell.get_magnetic_moments(),
+                scaled_positions=supercell.get_scaled_positions(),
+                cell=supercell.get_cell(),
+                pbc=True)
             self._u2s_map = np.arange(num_uatom) * N
             self._u2u_map = dict([(j, i) for i, j in enumerate(self._u2s_map)])
             self._s2u_map = np.array(u2sur_map)[sur2s_map] * N
@@ -179,7 +210,9 @@ class Supercell(Atoms):
 
         # Index of a axis runs fastest for creating lattice points.
         # See numpy.meshgrid document for the complicated index order for 3D
-        b, c, a = np.meshgrid(range(multi[1]), range(multi[2]), range(multi[0]))
+        b, c, a = np.meshgrid(range(multi[1]),
+                              range(multi[2]),
+                              range(multi[0]))
         lattice_points = np.c_[a.ravel(), b.ravel(), c.ravel()]
 
         if P is not None:
@@ -210,12 +243,12 @@ class Supercell(Atoms):
         else:
             magmoms_multi = np.repeat(magmoms, n_l)
 
-        simple_supercell = Atoms(numbers=numbers_multi,
-                                 masses=masses_multi,
-                                 magmoms=magmoms_multi,
-                                 scaled_positions=positions_multi,
-                                 cell=np.dot(mat, lattice),
-                                 pbc=True)
+        simple_supercell = PhonopyAtoms(numbers=numbers_multi,
+                                        masses=masses_multi,
+                                        magmoms=magmoms_multi,
+                                        scaled_positions=positions_multi,
+                                        cell=np.dot(mat, lattice),
+                                        pbc=True)
 
         return simple_supercell, atom_map
 
@@ -228,23 +261,35 @@ class Supercell(Atoms):
 
         m = np.array(supercell_matrix)
         axes = np.array([[0, 0, 0],
-                         m[:,0],
-                         m[:,1],
-                         m[:,2],
-                         m[:,1] + m[:,2],
-                         m[:,2] + m[:,0],
-                         m[:,0] + m[:,1],
-                         m[:,0] + m[:,1] + m[:,2]])
-        frame = [max(axes[:,i]) - min(axes[:,i]) for i in (0,1,2)]
+                         m[:, 0],
+                         m[:, 1],
+                         m[:, 2],
+                         m[:, 1] + m[:, 2],
+                         m[:, 2] + m[:, 0],
+                         m[:, 0] + m[:, 1],
+                         m[:, 0] + m[:, 1] + m[:, 2]])
+        frame = [max(axes[:, i]) - min(axes[:, i]) for i in (0, 1, 2)]
         return frame
 
-class Primitive(Atoms):
-    def __init__(self, supercell, primitive_matrix, symprec=1e-5):
-        """
-        primitive_matrix (3x3 matrix):
-        Primitive lattice is given with respect to supercell by
+
+class Primitive(PhonopyAtoms):
+    """Primitive cell
+
+    Parameters
+    ----------
+    supercell: PhonopyAtoms
+        Supercell
+    primitive_matrix: list of list or ndarray
+        Transformation matrix to transform supercell to primitive cell such as:
            np.dot(primitive_matrix.T, supercell.get_cell())
-        """
+        shape=(3,3)
+    symprec: float, optional
+        Tolerance to find overlapping atoms in primitive cell. The default
+        values is 1e-5.
+
+    """
+
+    def __init__(self, supercell, primitive_matrix, symprec=1e-5):
         self._primitive_matrix = np.array(primitive_matrix)
         self._symprec = symprec
         self._p2s_map = None
@@ -252,10 +297,11 @@ class Primitive(Atoms):
         self._p2p_map = None
         self._smallest_vectors = None
         self._multiplicity = None
+        self._atomic_permutations = None
         self._primitive_cell(supercell)
-        self._supercell_to_primitive_map(supercell.get_scaled_positions())
-        self._primitive_to_primitive_map()
+        self._map_atomic_indices(supercell.get_scaled_positions())
         self._set_smallest_vectors(supercell)
+        self._set_atomic_permutations(supercell)
 
     def get_primitive_matrix(self):
         return self._primitive_matrix
@@ -272,52 +318,88 @@ class Primitive(Atoms):
     def get_smallest_vectors(self):
         return self._smallest_vectors, self._multiplicity
 
+    def get_atomic_permutations(self):
+        return self._atomic_permutations
+
     def _primitive_cell(self, supercell):
         trimmed_cell_ = _trim_cell(self._primitive_matrix,
                                    supercell,
                                    self._symprec)
         if trimmed_cell_:
             trimmed_cell, p2s_map, mapping_table = trimmed_cell_
-            Atoms.__init__(self,
-                           numbers=trimmed_cell.get_atomic_numbers(),
-                           masses=trimmed_cell.get_masses(),
-                           magmoms=trimmed_cell.get_magnetic_moments(),
-                           scaled_positions=trimmed_cell.get_scaled_positions(),
-                           cell=trimmed_cell.get_cell(),
-                           pbc=True)
+            PhonopyAtoms.__init__(
+                self,
+                numbers=trimmed_cell.get_atomic_numbers(),
+                masses=trimmed_cell.get_masses(),
+                magmoms=trimmed_cell.get_magnetic_moments(),
+                scaled_positions=trimmed_cell.get_scaled_positions(),
+                cell=trimmed_cell.get_cell(),
+                pbc=True)
             self._p2s_map = np.array(p2s_map, dtype='intc')
         else:
             raise ValueError
 
-    def _supercell_to_primitive_map(self, pos):
-        inv_F = np.linalg.inv(self._primitive_matrix)
-        s2p_map = []
-        for i in range(pos.shape[0]):
-            s_pos = np.dot(pos[i], inv_F.T)
-            for j in self._p2s_map:
-                p_pos = np.dot(pos[j], inv_F.T)
-                diff = p_pos - s_pos
-                diff -= np.rint(diff)
-                if (abs(diff) < self._symprec).all():
-                    s2p_map.append(j)
-                    break
-        self._s2p_map = np.array(s2p_map, dtype='intc')
+    def _map_atomic_indices(self, s_pos_orig):
+        frac_pos = np.dot(s_pos_orig, np.linalg.inv(self._primitive_matrix).T)
 
-    def _primitive_to_primitive_map(self):
-        """
-        Mapping table from supercell index to primitive index
-        in primitive cell
-        """
+        p2s_positions = frac_pos[self._p2s_map]
+        s2p_map = []
+        for s_pos in frac_pos:
+
+            # Compute distances from s_pos to all positions in _p2s_map.
+            frac_diffs = p2s_positions - s_pos
+            frac_diffs -= np.rint(frac_diffs)
+
+            cart_diffs = np.dot(frac_diffs, self.cell)
+            distances = np.sqrt((cart_diffs**2).sum(axis=1))
+
+            # Find the one distance that's short enough.
+            matches = (distances < self._symprec).tolist()
+            assert matches.count(True) == 1
+            index = matches.index(True)
+
+            s2p_map.append(self._p2s_map[index])
+
+        self._s2p_map = np.array(s2p_map, dtype='intc')
         self._p2p_map = dict([(j, i) for i, j in enumerate(self._p2s_map)])
 
     def _set_smallest_vectors(self, supercell):
         self._smallest_vectors, self._multiplicity = _get_smallest_vectors(
-            supercell, self, self._symprec)
+            supercell, self, symprec=self._symprec)
+
+    def _set_atomic_permutations(self, supercell):
+        positions = supercell.get_scaled_positions()
+        diff = positions - positions[self._p2s_map[0]]
+        trans = np.array(diff[np.where(self._s2p_map == self._p2s_map[0])[0]],
+                         dtype='double', order='C')
+        rotations = np.array([np.eye(3, dtype='intc')] * len(trans),
+                             dtype='intc', order='C')
+        self._atomic_permutations = compute_all_sg_permutations(
+            positions,
+            rotations,
+            trans,
+            np.array(supercell.get_cell().T, dtype='double', order='C'),
+            self._symprec)
+
 
 def _trim_cell(relative_axes, cell, symprec):
-    """
-    relative_axes: relative axes to supercell axes
-    Trim positions outside relative axes
+    """Trim overlapping atoms
+
+    Parameters
+    ----------
+    relative_axes: ndarray
+        Transformation matrix to transform supercell to a smaller cell such as:
+            trimmed_lattice = np.dot(relative_axes.T, cell.get_cell())
+        shape=(3,3)
+    cell: PhonopyAtoms
+        A supercell
+    symprec: float
+        Tolerance to find overlapping atoms in the trimmed cell
+
+    Returns
+    -------
+    tuple
+        trimmed_cell, extracted_atoms, mapping_table
 
     """
     positions = cell.get_scaled_positions()
@@ -339,7 +421,8 @@ def _trim_cell(relative_axes, cell, symprec):
         trimmed_magmoms = []
     extracted_atoms = []
 
-    positions_in_new_lattice = np.dot(positions, np.linalg.inv(relative_axes).T)
+    positions_in_new_lattice = np.dot(positions,
+                                      np.linalg.inv(relative_axes).T)
     positions_in_new_lattice -= np.floor(positions_in_new_lattice)
     trimmed_positions = np.zeros_like(positions_in_new_lattice)
     num_atom = 0
@@ -374,28 +457,44 @@ def _trim_cell(relative_axes, cell, symprec):
     # scale is not always to become integer.
     scale = 1.0 / np.linalg.det(relative_axes)
     if len(numbers) == np.rint(scale * len(trimmed_numbers)):
-        trimmed_cell = Atoms(numbers=trimmed_numbers,
-                             masses=trimmed_masses,
-                             magmoms=trimmed_magmoms,
-                             scaled_positions=trimmed_positions[:num_atom],
-                             cell=trimmed_lattice,
-                             pbc=True)
+        trimmed_cell = PhonopyAtoms(
+            numbers=trimmed_numbers,
+            masses=trimmed_masses,
+            magmoms=trimmed_magmoms,
+            scaled_positions=trimmed_positions[:num_atom],
+            cell=trimmed_lattice,
+            pbc=True)
         return trimmed_cell, extracted_atoms, mapping_table
     else:
         return False
 
+
 #
-# Delaunay reduction
+# Delaunay and Niggli reductions
 #
 def get_reduced_bases(lattice,
                       method='delaunay',
                       tolerance=1e-5):
-    """Apply reduction to basis vectors
+    """Search kinds of shortest basis vectors
 
-    args:
-        basis as row vectors, [a, b, c]^T
-    return:
-         reduced basin as row vectors, [a_red, b_red, c_red]^T
+    Parameters
+    ----------
+    lattice : ndarray or list of list
+        Basis vectors by row vectors, [a, b, c]^T
+        shape=(3, 3)
+    method : str
+        delaunay: Delaunay reduction
+        niggli: Niggli reduction
+    tolerance : float
+        Tolerance to find shortest basis vecotrs
+
+    Returns
+    --------
+    Reduced basis as row vectors, [a_red, b_red, c_red]^T
+        dtype='double'
+        shape=(3, 3)
+        order='C'
+
     """
 
     if method == 'niggli':
@@ -403,104 +502,97 @@ def get_reduced_bases(lattice,
     else:
         return spg.delaunay_reduce(lattice, eps=tolerance)
 
-#
-# Shortest pairs of atoms in supercell (Wigner-Seitz like)
-#
-# This is currently no longer used in phonopy, but still used by
-# phono3py. In phono3py, this is used to measure the shortest distance
-# between arbitrary pair of atoms in supercell. Therefore this method
-# may be moved to phono3py, but this way of use can also happen in
-# phonopy in the future, so let's keep it for a while.
-#
-def get_equivalent_smallest_vectors(atom_number_supercell,
-                                    atom_number_primitive,
-                                    supercell,
-                                    primitive_lattice,
-                                    symprec):
-    reduced_bases = get_reduced_bases(supercell.get_cell(), symprec)
-    reduced_bases_inv = np.linalg.inv(reduced_bases)
-    cart_positions = supercell.get_positions()
 
-    # Atomic positions are confined into the delaunay-reduced superlattice.
-    # Their positions will lie in the range -0.5 < x < 0.5, so that vectors
-    # drawn between them have components in the range -1 < x < 1.
-    def reduced_frac_pos(i):
-        vec = np.dot(cart_positions[i], reduced_bases_inv)
-        return vec - np.rint(vec)
-    p_pos = reduced_frac_pos(atom_number_primitive)
-    s_pos = reduced_frac_pos(atom_number_supercell)
-
-    # The vector arrow is from the atom in the primitive cell to the
-    # atom in the supercell.
-    differences = _get_equivalent_smallest_vectors_simple(s_pos - p_pos,
-                                                          reduced_bases,
-                                                          symprec)
-
-    # Return fractional coords in the basis of the primitive cell
-    #  rather than the supercell.
-    relative_scale = reduced_bases.dot(np.linalg.inv(primitive_lattice))
-    return differences.dot(relative_scale)
-
-# Given:
-#  - A delaunay-reduced lattice (row vectors)
-#  - A fractional vector (with respect to that lattice)
-#      whose coords lie in the range (-1 < x < 1)
-# Produce:
-#  - All fractional vectors of shortest length that are translationally
-#      equivalent to that vector under the lattice.
-def _get_equivalent_smallest_vectors_simple(frac_vector,
-                                            reduced_bases, # row vectors
-                                            symprec):
-
-    # Try all nearby images of the vector
-    lattice_points = np.array([
-        [i, j, k] for i in (-1, 0, 1)
-                  for j in (-1, 0, 1)
-                  for k in (-1, 0, 1)
-    ])
-    candidates = frac_vector + lattice_points
-
-    # Filter out the best ones by computing cartesian lengths.
-    # (A "clever" optimizer might try to skip the square root calculation here,
-    #  but he would be wrong; we're comparing a *difference* to the tolerance)
-    lengths = np.sqrt(np.sum(np.dot(candidates, reduced_bases)**2, axis=1))
-    return candidates[lengths - lengths.min() < symprec]
-
-def _get_smallest_vectors(supercell, primitive, symprec):
-    """
-    shortest_vectors:
-
-      Shortest vectors from an atom in primitive cell to an atom in
-      supercell in the fractional coordinates. If an atom in supercell
-      is on the border centered at an atom in primitive and there are
-      multiple vectors that have the same distance and different
-      directions, several shortest vectors are stored. The
-      multiplicity is stored in another array, "multiplicity".
-      [atom_super, atom_primitive, multiple-vectors, 3]
-
-    multiplicity:
-      Number of multiple shortest vectors (third index of "shortest_vectors")
-      [atom_super, atom_primitive]
-    """
-
-    # useful data from arguments
+def _get_smallest_vectors(supercell, primitive, symprec=1e-5):
     p2s_map = primitive.get_primitive_to_supercell_map()
-    size_super = supercell.get_number_of_atoms()
-    size_prim = primitive.get_number_of_atoms()
-    reduced_bases = get_reduced_bases(supercell.get_cell(), symprec)
+    supercell_pos = supercell.get_scaled_positions()
+    primitive_pos = supercell_pos[p2s_map]
+    supercell_bases = supercell.get_cell()
+    primitive_bases = primitive.get_cell()
+    svecs, multi = get_smallest_vectors(
+        supercell_bases, supercell_pos, primitive_pos, symprec=symprec)
+    trans_mat_float = np.dot(supercell_bases, np.linalg.inv(primitive_bases))
+    trans_mat = np.rint(trans_mat_float).astype(int)
+    assert (np.abs(trans_mat_float - trans_mat) < 1e-8).all()
+    svecs = np.array(np.dot(svecs, trans_mat), dtype='double', order='C')
+    return svecs, multi
+
+
+def get_smallest_vectors(supercell_bases,
+                         supercell_pos,
+                         primitive_pos,
+                         symprec=1e-5):
+    """Find shortest atomic pair vectors
+
+    Note
+    ----
+    Shortest vectors from an atom in primitive cell to an atom in
+    supercell in the fractional coordinates of primitive cell. If an
+    atom in supercell is on the border centered at an atom in
+    primitive and there are multiple vectors that have the same
+    distance (up to tolerance) and different directions, several
+    shortest vectors are stored.
+    In fact, this method is not limited to search shortest vectors between
+    sueprcell atoms and primitive cell atoms, but can be used to measure
+    shortest vectors between atoms in periodic supercell lattice frame.
+
+    Parameters
+    ----------
+    supercell_bases : ndarray
+        Supercell basis vectors as row vectors, (a, b, c)^T. Must be order='C'.
+        dtype='double'
+        shape=(3, 3)
+    supercell_pos : array_like
+        Atomic positions in fractional coordinates of supercell.
+        dtype='double'
+        shape=(size_super, 3)
+    primitive_pos : array_like
+        Atomic positions in fractional coordinates of supercell. Note that not
+        in fractional coodinates of primitive cell.
+        dtype='double'
+        shape=(size_prim, 3)
+    symprec : float, optional, default=1e-5
+        Tolerance to find equal distances of vectors
+
+    Returns
+    -------
+    shortest_vectors : ndarray
+        Shortest vectors in supercell coordinates. The 27 in shape is the
+        possible maximum number of elements.
+        dtype='double'
+        shape=(size_super, size_prim, 27, 3)
+    multiplicities : ndarray
+        Number of equidistance shortest vectors
+        dtype='intc'
+        shape=(size_super, size_prim)
+
+    """
+
+    reduced_bases = get_reduced_bases(supercell_bases,
+                                      method='delaunay',
+                                      tolerance=symprec)
+    trans_mat_float = np.dot(supercell_bases, np.linalg.inv(reduced_bases))
+    trans_mat = np.rint(trans_mat_float).astype(int)
+    assert (np.abs(trans_mat_float - trans_mat) < 1e-8).all()
+    trans_mat_inv_float = np.linalg.inv(trans_mat)
+    trans_mat_inv = np.rint(trans_mat_inv_float).astype(int)
+    assert (np.abs(trans_mat_inv_float - trans_mat_inv) < 1e-8).all()
 
     # Reduce all positions into the cell formed by the reduced bases.
-    supercell_fracs = np.dot(supercell.get_positions(),
-                             np.linalg.inv(reduced_bases))
+    supercell_fracs = np.dot(supercell_pos, trans_mat)
     supercell_fracs -= np.rint(supercell_fracs)
-    primitive_fracs = supercell_fracs[list(p2s_map)]
+    supercell_fracs = np.array(supercell_fracs, dtype='double', order='C')
+    primitive_fracs = np.dot(primitive_pos, trans_mat)
+    primitive_fracs -= np.rint(primitive_fracs)
+    primitive_fracs = np.array(primitive_fracs, dtype='double', order='C')
 
-    # For each vector, we will need to consider all nearby images in the reduced bases.
-    lattice_points = np.array([
-        [i, j, k] for i in (-1, 0, 1)
-                  for j in (-1, 0, 1)
-                  for k in (-1, 0, 1)
-    ])
+    # For each vector, we will need to consider all nearby images in the
+    # reduced bases.
+    lattice_points = np.array([[i, j, k]
+                               for i in (-1, 0, 1)
+                               for j in (-1, 0, 1)
+                               for k in (-1, 0, 1)],
+                              dtype='intc', order='C')
 
     # Here's where things get interesting.
     # We want to avoid manually iterating over all possible pairings of
@@ -511,52 +603,186 @@ def _get_smallest_vectors(supercell, primitive, symprec):
     # as possible, since numpy can shell out to BLAS to handle the
     # real heavy lifting.
 
-    # For every atom in the supercell and every atom in the primitive cell,
-    # we want 27 images of the vector between them.
-    #
-    # 'None' is used to insert trivial axes to make these arrays broadcast.
-    #
-    # shape: (size_super, size_prim, 27, 3)
-    candidate_fracs = (
-        supercell_fracs[:, None, None, :]    # shape: (size_super, 1, 1, 3)
-        - primitive_fracs[None, :, None, :]  # shape: (1, size_prim, 1, 3)
-        + lattice_points[None, None, :, :]   # shape: (1, 1, 27, 3)
-    )
-
-    # To compute the lengths, we want cartesian positions.
-    #
-    # Conveniently, calling 'numpy.dot' between a 4D array and a 2D array
-    # does vector-matrix multiplication on each row vector in the last axis
-    # of the 4D array.
-    #
-    # shape: (size_super, size_prim, 27, 3)
-    candidate_carts = np.dot(candidate_fracs, reduced_bases)
-    # shape: (size_super, size_prim, 27)
-    lengths = np.sqrt(np.sum(candidate_carts**2, axis=-1))
-
-    # Create the output, initially consisting of all candidate vectors scaled
-    # by the primitive cell.
-    #
-    # shape: (size_super, size_prim, 27, 3)
-    candidate_vectors = np.dot(
-        candidate_fracs,
-        reduced_bases.dot(np.linalg.inv(primitive.get_cell())))
-
-    # The last final bits are done in C.
-    #
-    # We will gather the shortest ones from each list of 27 vectors.
-    shortest_vectors = np.zeros_like(candidate_vectors,
-                                     dtype='double', order='C')
-    multiplicity = np.zeros((size_super, size_prim), dtype='intc', order='C')
-
+    shortest_vectors = np.zeros(
+        (len(supercell_fracs), len(primitive_fracs), 27, 3),
+        dtype='double', order='C')
+    multiplicity = np.zeros((len(supercell_fracs), len(primitive_fracs)),
+                            dtype='intc', order='C')
     import phonopy._phonopy as phonoc
-    phonoc.gsv_copy_smallest_vectors(shortest_vectors,
-                                     multiplicity,
-                                     candidate_vectors,
-                                     lengths,
-                                     symprec)
+    phonoc.gsv_set_smallest_vectors(
+        shortest_vectors,
+        multiplicity,
+        supercell_fracs,
+        primitive_fracs,
+        lattice_points,
+        np.array(reduced_bases.T, dtype='double', order='C'),
+        np.array(trans_mat_inv.T, dtype='intc', order='C'),
+        symprec)
+
+    # # For every atom in the supercell and every atom in the primitive cell,
+    # # we want 27 images of the vector between them.
+    # #
+    # # 'None' is used to insert trivial axes to make these arrays broadcast.
+    # #
+    # # shape: (size_super, size_prim, 27, 3)
+    # candidate_fracs = (
+    #     supercell_fracs[:, None, None, :]    # shape: (size_super, 1, 1, 3)
+    #     - primitive_fracs[None, :, None, :]  # shape: (1, size_prim, 1, 3)
+    #     + lattice_points[None, None, :, :]   # shape: (1, 1, 27, 3)
+    # )
+
+    # # To compute the lengths, we want cartesian positions.
+    # #
+    # # Conveniently, calling 'numpy.dot' between a 4D array and a 2D array
+    # # does vector-matrix multiplication on each row vector in the last axis
+    # # of the 4D array.
+    # #
+    # # shape: (size_super, size_prim, 27)
+    # lengths = np.array(np.sqrt(
+    #     np.sum(np.dot(candidate_fracs, reduced_bases)**2, axis=-1)),
+    #                    dtype='double', order='C')
+
+    # # Create the output, initially consisting of all candidate vectors scaled
+    # # by the primitive cell.
+    # #
+    # # shape: (size_super, size_prim, 27, 3)
+    # candidate_vectors = np.array(np.dot(candidate_fracs, trans_mat_inv),
+    #                              dtype='double', order='C')
+
+    # # The last final bits are done in C.
+    # #
+    # # We will gather the shortest ones from each list of 27 vectors.
+    # shortest_vectors = np.zeros_like(candidate_vectors,
+    #                                  dtype='double', order='C')
+    # multiplicity = np.zeros(shortest_vectors.shape[:2], dtype='intc',
+    #                         order='C')
+
+    # import phonopy._phonopy as phonoc
+    # phonoc.gsv_copy_smallest_vectors(shortest_vectors,
+    #                                  multiplicity,
+    #                                  candidate_vectors,
+    #                                  lengths,
+    #                                  symprec)
 
     return shortest_vectors, multiplicity
+
+
+def compute_all_sg_permutations(positions,  # scaled positions
+                                rotations,  # scaled
+                                translations,  # scaled
+                                lattice,  # column vectors
+                                symprec):
+    """Compute a permutation for every space group operation.
+
+    See 'compute_permutation_for_rotation' for more info.
+
+    Output has shape (num_rot, num_pos)
+
+    """
+
+    out = []  # Finally the shape is fixed as (num_sym, num_pos_of_supercell).
+    for (sym, t) in zip(rotations, translations):
+        rotated_positions = np.dot(positions, sym.T) + t
+        out.append(compute_permutation_for_rotation(positions,
+                                                    rotated_positions,
+                                                    lattice,
+                                                    symprec))
+    return np.array(out, dtype='intc', order='C')
+
+
+def compute_permutation_for_rotation(positions_a,  # scaled positions
+                                     positions_b,
+                                     lattice,  # column vectors
+                                     symprec):
+    """Get the overall permutation such that
+
+        positions_a[perm[i]] == positions_b[i]   (modulo the lattice)
+
+    or in numpy speak,
+
+        positions_a[perm] == positions_b   (modulo the lattice)
+
+    This version is optimized for the case where positions_a and positions_b
+    are related by a rotation.
+
+    """
+
+    # Sort both sides by some measure which is likely to produce a small
+    # maximum value of (sorted_rotated_index - sorted_original_index).
+    # The C code is optimized for this case, reducing an O(n^2)
+    # search down to ~O(n). (for O(n log n) work overall, including the sort)
+    #
+    # We choose distance from the nearest bravais lattice point as our measure.
+    def sort_by_lattice_distance(fracs):
+        carts = np.dot(fracs - np.rint(fracs), lattice.T)
+        perm = np.argsort(np.sum(carts**2, axis=1))
+        sorted_fracs = np.array(fracs[perm], dtype='double', order='C')
+        return perm, sorted_fracs
+
+    (perm_a, sorted_a) = sort_by_lattice_distance(positions_a)
+    (perm_b, sorted_b) = sort_by_lattice_distance(positions_b)
+
+    # Call the C code on our conditioned inputs.
+    perm_between = _compute_permutation_c(sorted_a,
+                                          sorted_b,
+                                          lattice,
+                                          symprec)
+
+    # Compose all of the permutations for the full permutation.
+    #
+    # Note the following properties of permutation arrays:
+    #
+    # 1. Inverse:         if  x[perm] == y  then  x == y[argsort(perm)]
+    # 2. Associativity:   x[p][q] == x[p[q]]
+    return perm_a[perm_between][np.argsort(perm_b)]
+
+
+def _compute_permutation_c(positions_a,  # scaled positions
+                           positions_b,
+                           lattice,  # column vectors
+                           symprec):
+    """Version of '_compute_permutation_for_rotation' which just directly
+    calls the C function, without any conditioning of the data.
+    Skipping the conditioning step makes this EXTREMELY slow on large
+    structures.
+
+    """
+
+    permutation = np.zeros(shape=(len(positions_a),), dtype='intc')
+
+    def permutation_error():
+        raise ValueError("Input forces are not enough to calculate force constants, "
+                         "or something wrong (e.g. crystal structure does not match).")
+
+    try:
+        import phonopy._phonopy as phonoc
+        is_found = phonoc.compute_permutation(permutation,
+                                              lattice,
+                                              positions_a,
+                                              positions_b,
+                                              symprec)
+
+        if not is_found:
+            permutation_error()
+
+    except ImportError:
+        for i, pos_b in enumerate(positions_b):
+            diffs = positions_a - pos_b
+            diffs -= np.rint(diffs)
+            diffs = np.dot(diffs, lattice.T)
+
+            possible_j = np.nonzero(
+                np.sqrt(np.sum(diffs**2, axis=1)) < symprec)[0]
+            if len(possible_j) != 1:
+                permutation_error()
+
+            permutation[i] = possible_j[0]
+
+        if -1 in permutation:
+            permutation_error()
+
+    return permutation
+
 
 #
 # Other tiny tools
@@ -564,21 +790,20 @@ def _get_smallest_vectors(supercell, primitive, symprec):
 def get_angles(lattice):
     a, b, c = get_cell_parameters(lattice)
     alpha = np.arccos(np.vdot(lattice[1], lattice[2]) / b / c) / np.pi * 180
-    beta  = np.arccos(np.vdot(lattice[2], lattice[0]) / c / a) / np.pi * 180
+    beta = np.arccos(np.vdot(lattice[2], lattice[0]) / c / a) / np.pi * 180
     gamma = np.arccos(np.vdot(lattice[0], lattice[1]) / a / b) / np.pi * 180
     return alpha, beta, gamma
 
+
 def get_cell_parameters(lattice):
-    return np.sqrt(np.dot (lattice, lattice.transpose()).diagonal())
+    return np.sqrt(np.dot(lattice, lattice.transpose()).diagonal())
+
 
 def get_cell_matrix(a, b, c, alpha, beta, gamma):
     # These follow 'matrix_lattice_init' in matrix.c of GDIS
     alpha *= np.pi / 180
     beta *= np.pi / 180
     gamma *= np.pi / 180
-    a1 = a
-    a2 = 0.0
-    a3 = 0.0
     b1 = np.cos(gamma)
     b2 = np.sin(gamma)
     b3 = 0.0
@@ -591,6 +816,7 @@ def get_cell_matrix(a, b, c, alpha, beta, gamma):
     lattice[2] = np.array([c1, c2, c3]) * c
     return lattice
 
+
 def determinant(m):
     return (m[0][0] * m[1][1] * m[2][2] -
             m[0][0] * m[1][2] * m[2][1] +
@@ -598,6 +824,7 @@ def determinant(m):
             m[0][1] * m[1][0] * m[2][2] +
             m[0][2] * m[1][0] * m[2][1] -
             m[0][2] * m[1][1] * m[2][0])
+
 
 #
 # Smith normal form for 3x3 integer matrix
@@ -708,7 +935,7 @@ class SNF3x3(object):
 
     def _search_first_pivot(self):
         A = self._A
-        for i in range(3): # column index
+        for i in range(3):  # column index
             if A[i, 0] != 0:
                 return i
 
@@ -823,9 +1050,11 @@ class SNF3x3(object):
         self._L.append(L.copy())
         self._A = np.dot(L, self._A)
 
+
 def xgcd(vals):
     _xgcd = Xgcd(vals)
     return _xgcd.run()
+
 
 class Xgcd(object):
     def __init__(self, vals):

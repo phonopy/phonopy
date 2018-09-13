@@ -34,17 +34,28 @@
 
 import numpy as np
 
+
 class DerivativeOfDynamicalMatrix(object):
+    """Compute analytical derivative of dynamical matrix
+
+    This can be used dynamical matrix without NAC or with Wang-NAC.
+
+    """
+
     def __init__(self, dynamical_matrix):
         self._dynmat = dynamical_matrix
         (self._smallest_vectors,
          self._multiplicity) = self._dynmat.get_shortest_vectors()
-        self._force_constants = self._dynmat.get_force_constants()
-        self._scell = self._dynmat.get_supercell()
-        self._pcell = self._dynmat.get_primitive()
+        self._force_constants = self._dynmat.force_constants
+        self._scell = self._dynmat.supercell
+        self._pcell = self._dynmat.primitive
 
-        self._p2s_map = self._dynmat.get_primitive_to_supercell_map()
-        self._s2p_map = self._dynmat.get_supercell_to_primitive_map()
+        self._p2s_map = self._pcell.get_primitive_to_supercell_map()
+        self._s2p_map = self._pcell.get_supercell_to_primitive_map()
+        p2p_map = self._pcell.get_primitive_to_primitive_map()
+        self._s2pp_map = np.array(
+            [p2p_map[self._s2p_map[i]] for i in range(len(self._s2p_map))],
+            dtype='intc')
         self._mass = self._pcell.get_masses()
 
         self._ddm = None
@@ -65,7 +76,7 @@ class DerivativeOfDynamicalMatrix(object):
             self._derivative_order = order
         else:
             print("Error: derivative order has to be 1 or 2")
-        
+
     def get_derivative_of_dynamical_matrix(self):
         return self._ddm
 
@@ -94,22 +105,40 @@ class DerivativeOfDynamicalMatrix(object):
             nac_factor = 0
             q_dir = None
 
-        phonoc.derivative_dynmat(ddm.view(dtype='double'),
-                                 fc,
-                                 np.array(q, dtype='double'),
-                                 np.array(self._pcell.get_cell().T,
-                                          dtype='double', order='C'),
-                                 vectors,
-                                 multiplicity,
-                                 mass,
-                                 self._s2p_map,
-                                 self._p2s_map,
-                                 nac_factor,
-                                 born,
-                                 dielectric,
-                                 q_dir)
+        if fc.shape[0] == fc.shape[1]:  # full fc
+            phonoc.derivative_dynmat(ddm.view(dtype='double'),
+                                     fc,
+                                     np.array(q, dtype='double'),
+                                     np.array(self._pcell.get_cell().T,
+                                              dtype='double', order='C'),
+                                     vectors,
+                                     multiplicity,
+                                     mass,
+                                     self._s2p_map,
+                                     self._p2s_map,
+                                     nac_factor,
+                                     born,
+                                     dielectric,
+                                     q_dir)
+        else:
+            phonoc.derivative_dynmat(ddm.view(dtype='double'),
+                                     fc,
+                                     np.array(q, dtype='double'),
+                                     np.array(self._pcell.get_cell().T,
+                                              dtype='double', order='C'),
+                                     vectors,
+                                     multiplicity,
+                                     mass,
+                                     self._s2pp_map,
+                                     np.arange(len(self._p2s_map),
+                                               dtype='intc'),
+                                     nac_factor,
+                                     born,
+                                     dielectric,
+                                     q_dir)
+
         self._ddm = ddm
-        
+
     def _run_py(self, q, q_direction=None):
         if self._dynmat.is_nac():
             if q_direction is None:
@@ -133,7 +162,7 @@ class DerivativeOfDynamicalMatrix(object):
         itemsize = self._force_constants.itemsize
         ddm = np.zeros((num_elem, 3 * num_patom, 3 * num_patom),
                        dtype=("c%d" % (itemsize * 2)))
-        
+
         for i, j in list(np.ndindex(num_patom, num_patom)):
             s_i = self._p2s_map[i]
             s_j = self._p2s_map[j]
@@ -162,15 +191,14 @@ class DerivativeOfDynamicalMatrix(object):
                     fc_elem = fc[s_i, k] + fc_nac[i, j]
                 else:
                     fc_elem = fc[s_i, k]
-                        
+
                 for l in range(num_elem):
                     ddm_elem = fc_elem * (coef[:, l] * phase_multi).sum()
                     if (self._dynmat.is_nac() and
                         not self._derivative_order == 2):
                         ddm_elem += d_nac[l, i, j] * phase_multi.sum()
 
-                    ddm_local[l] +=  ddm_elem / mass / multi
-                                         
+                    ddm_local[l] += ddm_elem / mass / multi
 
             ddm[:, (i * 3):(i * 3 + 3), (j * 3):(j * 3 + 3)] = ddm_local
 
@@ -203,7 +231,7 @@ class DerivativeOfDynamicalMatrix(object):
         N = num_satom // num_atom
 
         return nac_q * nac_factor / N
-    
+
     def _d_nac(self, q_direction):
         num_atom = self._pcell.get_number_of_atoms()
         d_nac_q = np.zeros((3, num_atom, num_atom, 3, 3), dtype='double')

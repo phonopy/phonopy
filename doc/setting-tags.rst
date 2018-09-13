@@ -225,7 +225,7 @@ post process of phonon calculation.
 
 Finite atomic displacement distance is set as specified value when
 creating supercells with displacements. The default displacement
-amplitude is 0.01 :math:`\textrm{\AA}`, but when the ``wien2k`` or
+amplitude is 0.01 Angstrom, but when the ``wien2k`` or
 ``abinit`` option is specified, the default value is 0.02 Bohr.
 
 ``DIAG``
@@ -297,7 +297,7 @@ probably necessary to place it between two $ characters.
    BAND_LABELS = X $\Gamma$ L
 
 .. |bandlabels| image:: band-labels.png
-                :scale: 50
+                :scale: 25
 
 |bandlabels|
 
@@ -323,7 +323,7 @@ number of points calculated in band segments by the ``BAND_POINTS`` tag.
    BAND_CONNECTION = .TRUE.
 
 .. |bandconnection| image:: band-connection.png
-                    :scale: 50
+                    :scale: 25
 
 |bandconnection|
 
@@ -697,7 +697,7 @@ usages of ``TMAX``, ``TMIN``, ``TSTEP`` tags are same as those in
 frequencies in THz, which is the default setting of phonopy, are used to
 obtain the mean square displacements, therefore physical units have to
 be set properly for it (see :ref:`calculator_interfaces`.) The result
-is given in :math:`\textrm{\AA}^2` and writen into
+is given in :math:`\text{Angstrom}^2` and writen into
 ``thermal_displacements.yaml``. See the detail of the method,
 :ref:`thermal_displacement`. These tags must be used with
 :ref:`mesh_sampling_tags`
@@ -729,7 +729,7 @@ is the default setting of phonopy, are
 used to obtain the mean square displacement matricies, therefore
 physical units have to be set properly for it (see
 :ref:`calculator_interfaces`.) The result is given in
-:math:`\textrm{\AA}^2` and writen into
+:math:`\text{Angstrom}^2` and writen into
 ``thermal_displacement_matrices.yaml`` where six matrix elements are
 given in the order of xx, yy, zz, yz, xz, xy.  In this yaml file,
 ``displacement_matrices`` and ``displacement_matrices_cif`` correspond
@@ -765,7 +765,7 @@ frequencies in THz, which is the default setting of phonopy, are used
 to obtain the mean square displacement matricies, therefore physical
 units have to be set properly for it (see
 :ref:`calculator_interfaces`.) The result is given in
-:math:`\textrm{\AA}^2`.
+:math:`\textrm{Angstrom}^2`.
 
 ``mesh.yaml`` or ``mesh.hdf5`` is not written out from phonopy-1.11.14.
 
@@ -882,10 +882,21 @@ Non-analytical term correction
 Non-analytical term correction is applied to dynamical
 matrix. ``BORN`` file has to be prepared in the current directory. See
 :ref:`born_file` and :ref:`non_analytical_term_correction_theory`.
+The default method is ``NAC_METHOD = GONZE`` after v1.13.0.
 
 ::
 
    NAC = .TRUE.
+
+.. _nac_method_tag:
+
+``NAC_METHOD``
+~~~~~~~~~~~~~~~
+
+The method of non-analytical term correction is chosen by this tag
+between two, ``NAC_METHOD = GONZE`` (:ref:`reference_dp_dp_NAC`) and
+``NAC_METHOD = WANG`` (:ref:`reference_wang_NAC`), and the default is
+the former after v1.13.0.
 
 ``Q_DIRECTION``
 ~~~~~~~~~~~~~~~~
@@ -927,7 +938,10 @@ Technical details are shown at :ref:`group_velocity`.
 ~~~~~~~~~~~~~~~
 
 The reciprocal distance used for finite difference method is
-specified. The default value is 1e-4.
+specified. The default value is ``1e-5`` for the method of non-analytical
+term correction by Gonze *et al.*. In other case, unless this tag is
+specified, analytical derivative is used instead of the finite
+difference method.
 
 ::
 
@@ -958,14 +972,18 @@ Symmetry search on the reciprocal sampling mesh is disabled by setting
 ``FC_SYMMETRY``
 ~~~~~~~~~~~~~~~~
 
-This tag is used to symmetrize force constants partly. The number of
-iteration of the following set of symmetrization applied to force
-constants is specified. The default value is 0. In the case of VASP,
-this tag is usually unnecessary to be specified.
+**Changed at v1.12.3**
+
+Previously this tag required a number for the iteration. From version
+1.12.3, the way of symmetrization for translation invariance is
+modified and this number became unnecessary.
+
+This tag is used to symmetrize force constants by translational
+symmetry and permutation symmetry with ``.TRUE.`` or ``.FALSE.``.
 
 ::
 
-   FC_SYMMETRY = 1
+   FC_SYMMETRY = .TRUE.
 
 
 From the translation invariance condition,
@@ -976,56 +994,20 @@ From the translation invariance condition,
 
 where *i* and *j* are the atom indices, and :math:`\alpha` and
 :math:`\beta` are the Catesian indices for atoms *i* and *j*,
-respectively. Force constants are symmetric in each pair as
+respectively. When this condition is broken, the sum gives non-zero
+value. This value is subtracted from the diagonal blocks. Force
+constants are symmetric in each pair as
 
 .. math::
 
    \Phi_{ij}^{\alpha\beta}
         = \frac{\partial^2 U}{\partial u_i^\alpha \partial u_j^\beta}
         = \frac{\partial^2 U}{\partial u_j^\beta \partial u_i^\alpha}
-	= \Phi_{ji}^{\beta\alpha}
+        = \Phi_{ji}^{\beta\alpha}
 
-These symmetrizations break the symmetry conditions each other. Be
-careful that the other symmetries of force constants, i.e., the
+Mind that the other symmetries of force constants, i.e., the
 symmetry from crystal symmetry or rotational symmetry, are broken to
-force applying ``FC_SYMMETRY``.
-
-.. Tolerance of the crystal symmetry search is given by phonopy option of
-.. ``--tolerance``.
-
-.. ``TRANSLATION``
-.. ~~~~~~~~~~~~~~~
-
-.. Translational invariance is forced by setting ``TRANSLATION =
-.. .TRUE.``. The default value is ``.FALSE.``. The input forces are
-.. summed up in each Cartesian axis and the average are subtracted from
-.. the forces.
-
-.. ``PERMUTATION``
-.. ~~~~~~~~~~~~~~~
-
-.. Symmetry of force constants:
-
-.. .. math::
-
-..    \Phi_{ij}^{\alpha\beta}
-..         = \frac{\partial^2 U}{\partial u_i^\alpha \partial u_j^\beta}
-..         = \frac{\partial^2 U}{\partial u_j^\beta \partial u_i^\alpha}
-.. 	= \Phi_{ji}^{\beta\alpha}
-
-.. is imposed with ``PERMUTATION = .TRUE.``. The default value is
-.. ``.FALSE.``. This is not necessary to be set, because dynamical
-.. matrix is always forced to be Hermitian in phonopy, i.e.,
-.. :math:`D^{\alpha\beta}_{ij} = (D^{\beta\alpha}_{ji})^*`.
-
-.. ``MP_REDUCE``
-.. ~~~~~~~~~~~~~~
-
-.. When mesh sampling, time reversal symmetry is imposed by setting
-.. ``MP_REDUCE = .TRUE.``. The default value is ``.TRUE.``. If you don't
-.. want time reversal symmetry, you have to set as ``MP_REDUCE =
-.. .FALSE.``.
-
+use ``FC_SYMMETRY``.
 
 .. _force_constants_tag:
 
@@ -1047,6 +1029,17 @@ READ``, force constants are read from ``FORCE_CONSTANTS`` file. With
 
 The file format of ``FORCE_CONSTANTS`` is shown
 :ref:`here <file_force_constants>`.
+
+.. _full_force_constants_tag:
+
+``FULL_FORCE_CONSTANTS``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+``FULL_FORCE_CONSTANTS = .TRUE.`` is used to compute full supercell
+constants matrix. The default setting is ``.FALSE.``. By ``.TRUE.`` or
+``.FALSE.``, the array shape becomes ``(n_patom, n_satom, 3, 3)`` or
+``(n_satom, n_satom, 3, 3)``, respectively. The detail is found at
+:ref:`file_force_constants`.
 
 ``READ_FORCE_CONSTANTS``
 ~~~~~~~~~~~~~~~~~~~~~~~~~

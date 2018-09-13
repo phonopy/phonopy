@@ -33,10 +33,15 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
 import numpy as np
 
+def Atoms(*args, **kwargs):
+    warnings.warn("phonopy.atoms.Atoms is deprecated. Please use "
+                  "PhonopyAtoms instead of Atoms.", DeprecationWarning)
+    return PhonopyAtoms(*args, **kwargs)
 
-class Atoms(object):
+class _Atoms(object):
     """A class compatible with the ASE Atoms class.
 
     Only the necessary stuffs to phonopy are implemented. The data
@@ -153,14 +158,6 @@ class Atoms(object):
     def get_volume(self):
         return np.linalg.det(self.cell)
 
-    def copy(self):
-        return Atoms(cell=self.cell,
-                     scaled_positions=self.scaled_positions,
-                     masses=self.masses,
-                     magmoms=self.magmoms,
-                     symbols=self.symbols,
-                     pbc=True)
-
     def _set_cell(self, cell):
         self.cell = np.array(cell, dtype='double', order='C')
 
@@ -227,7 +224,7 @@ class Atoms(object):
             if len(self.numbers) != len(self.magmoms):
                 raise RuntimeError('len(numbers) != len(magmoms).')
 
-class PhonopyAtoms(Atoms):
+class PhonopyAtoms(_Atoms):
     def __init__(self,
                  symbols=None,
                  numbers=None,
@@ -239,23 +236,31 @@ class PhonopyAtoms(Atoms):
                  atoms=None,
                  pbc=True):  # pbc is dummy argument, and never used.
         if atoms:
-            Atoms.__init__(self,
-                           numbers=atoms.get_atomic_numbers(),
-                           masses=atoms.get_masses(),
-                           magmoms=atoms.get_magnetic_moments(),
-                           scaled_positions=atoms.get_scaled_positions(),
-                           cell=atoms.get_cell(),
-                           pbc=True)
+            _Atoms.__init__(self,
+                            numbers=atoms.get_atomic_numbers(),
+                            masses=atoms.get_masses(),
+                            magmoms=atoms.get_magnetic_moments(),
+                            scaled_positions=atoms.get_scaled_positions(),
+                            cell=atoms.get_cell(),
+                            pbc=True)
         else:
-            Atoms.__init__(self,
-                           symbols=symbols,
-                           numbers=numbers,
-                           masses=masses,
-                           magmoms=magmoms,
-                           scaled_positions=scaled_positions,
-                           positions=positions,
-                           cell=cell,
-                           pbc=True)
+            _Atoms.__init__(self,
+                            symbols=symbols,
+                            numbers=numbers,
+                            masses=masses,
+                            magmoms=magmoms,
+                            scaled_positions=scaled_positions,
+                            positions=positions,
+                            cell=cell,
+                            pbc=True)
+
+    def copy(self):
+        return PhonopyAtoms(cell=self.cell,
+                            scaled_positions=self.scaled_positions,
+                            masses=self.masses,
+                            magmoms=self.magmoms,
+                            symbols=self.symbols,
+                            pbc=True)
 
     def get_yaml_lines(self):
         lines = ["lattice:"]

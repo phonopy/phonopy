@@ -1,0 +1,51 @@
+This is an NaCl example of parsing q2r.x output for creating phonopy readable force constants file.
+
+NaCl.dyn* and NaCl.fc are found in output888.tar.lzma.
+
+How to run QE codes
+---------------------
+
+% mpirun -np 16 /home/togo/espresso/bin/pw.x -in NaCl.in|tee NaCl.out
+% mpirun -np 16 /home/togo/espresso/bin/ph.x -in NaCl.ph.in|tee NaCl.ph.out
+% mpirun -np 16 /home/togo/espresso/bin/ph.x -in NaCl.ph-gamma.in|tee NaCl.ph-gamma.out
+
+NaCl.dyn1 contains dielectric constant and Born effective charges. With this running q2r.x, force constants are corrected, but phonopy needs uncorrected force constants. So replace NaCl.dyn1 by NaCl.dyn calculated by NaCl.ph-gamma.in, though manually removing dielectric constant and Born effective charges from NaCl.dyn1 seems working.
+
+% cp NaCl.dyn1 NaCl.dyn1.bak
+% cp NaCl.dyn NaCl.dyn1
+% mpirun -np 16 /home/togo/espresso/bin/q2r.x -in q2r.in|tee q2r.out
+
+By this, NaCl.fc is created.
+
+How to run phonopy q2r.x output parser
+---------------------------------------
+
+% python make_fc_q2r.py NaCl.in NaCl.fc
+
+About make_fc_q2r.py, see https://atztogo.github.io/phonopy/pwscf.html.
+
+% phonopy --qe -c NaCl.in --dim="8 8 8" --band="0 0 0  1/2 0 0  1/2 1/2 0  0 0 0  1/2 1/2 1/2" --readfc --fc-symmetry --readfc-format=hdf5
+
+How to obtain BORN
+-------------------
+
+% cp NaCl.dyn1.bak NaCl.dyn1
+% mpirun -np 16 /home/togo/espresso/bin/q2r.x -in q2r.in|tee q2r.out
+% cp NaCl.dyn NaCl.dyn1
+
+NaCl.fc is created. The force constants in this NaCl.fc is not usable for phonopy if dielectric constants and Born effective charges are contained. This is because this force constants are partially corrected by QE's implemented NAC method. Phonopy needs uncorrected force constants.
+
+% python make_born_q2r.py NaCl.in NaCl.fc > BORN
+
+BORN is obtained as follows:
+
+default
+   2.47441330   0.00000000   0.00000000   0.00000000   2.47441330   0.00000000   0.00000000   0.00000000   2.47441330
+   1.10071230   0.00000000   0.00000000   0.00000000   1.10071230   0.00000000   0.00000000   0.00000000   1.10071230
+  -1.10071230   0.00000000   0.00000000   0.00000000  -1.10071230   0.00000000   0.00000000   0.00000000  -1.10071230
+
+About make_born_q2r.py, see https://atztogo.github.io/phonopy/pwscf.html.
+
+% phonopy --qe -c NaCl.in --dim="8 8 8" --band="0 0 0  1/2 0 0  1/2 1/2 0  0 0 0  1/2 1/2 1/2" --readfc --fc-symmetry --readfc-format=hdf5 --nac
+
+

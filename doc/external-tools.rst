@@ -12,6 +12,30 @@ of phonopy under current style of phonopy development. However
 useful tools should be known. If developers want to use here to notify
 their tools, please contact via the phonopy mailing list.
 
+Phonopy-Spectroscopy
+---------------------
+
+Phonopy-Spectroscopy is a project to add the capability to simulate
+vibrational spectra to the Phonopy code.
+
+https://github.com/JMSkelton/Phonopy-Spectroscopy
+
+Features
+^^^^^^^^^
+
+* Calculate infrared (IR) intensities from Phonopy or VASP calculations.
+* Calculate Raman-activity tensors and scalar-averaged intensities within the far-from-resonance approximation.
+* Prepare peak tables including assigning modes to irreducible representations (Phonopy interface).
+* Output customisable simulated spectra with support for multiple unit systems and simulated instrumental broadening.
+* Include first-principles mode linewidths from Phono3py calculations
+  (Phonopy interface).
+
+Examples
+^^^^^^^^
+
+* https://github.com/JMSkelton/Phonopy-Spectroscopy/tree/master/Examples/a-SiO2
+* https://github.com/JMSkelton/Phonopy-Spectroscopy/tree/master/Examples/Benzene-Derivatives
+
 LADYtools
 ----------
 
@@ -41,4 +65,3 @@ developed but the core features are in place and new users are
 welcome.
 
 https://github.com/ajjackson/ascii-phonons
-

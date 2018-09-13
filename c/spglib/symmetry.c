@@ -39,6 +39,7 @@
 #include "delaunay.h"
 #include "mathfunc.h"
 #include "symmetry.h"
+#include "overlap.h"
 
 #include "debug.h"
 
@@ -415,14 +416,6 @@ static VecDBL * get_translation(SPGCONST int rot[3][3],
   is_found = NULL;
   trans = NULL;
 
-#ifdef _OPENMP
-  int num_min_type_atoms;
-  int *min_type_atoms;
-  double vec[3];
-
-  min_type_atoms = NULL;
-#endif
-
   if ((is_found = (int*) malloc(sizeof(int)*cell->size)) == NULL) {
     warning_print("spglib: Memory could not be allocated ");
     return NULL;
@@ -442,57 +435,6 @@ static VecDBL * get_translation(SPGCONST int rot[3][3],
   /* Set min_atom_index as the origin to measure the distance between atoms. */
   mat_multiply_matrix_vector_id3(origin, rot, cell->position[min_atom_index]);
 
-#ifdef _OPENMP
-  if (cell->size < NUM_ATOMS_CRITERION_FOR_OPENMP || is_identity) {
-    /* In this case, OpenMP multithreading is not used. */
-    num_trans = search_translation_part(is_found,
-                                        cell,
-                                        rot,
-                                        min_atom_index,
-                                        origin,
-                                        symprec,
-                                        is_identity);
-    if (num_trans == 0) {
-      goto ret;
-    }
-  } else {
-    /* In this case, OpenMP multithreading is used. */
-    /* Collect indices of atoms with the type where the minimum number */
-    /* of atoms belong. */
-    if ((min_type_atoms = (int*) malloc(sizeof(int)*cell->size)) == NULL) {
-      warning_print("spglib: Memory could not be allocated ");
-      goto ret;
-    }
-
-    num_min_type_atoms = 0;
-    for (i = 0; i < cell->size; i++) {
-      if (cell->types[i] == cell->types[min_atom_index]) {
-        min_type_atoms[num_min_type_atoms] = i;
-        num_min_type_atoms++;
-      }
-    }
-#pragma omp parallel for private(j, vec)
-    for (i = 0; i < num_min_type_atoms; i++) {
-      for (j = 0; j < 3; j++) {
-        vec[j] = cell->position[min_type_atoms[i]][j] - origin[j];
-      }
-      if (is_overlap_all_atoms(vec,
-                               rot,
-                               cell,
-                               symprec,
-                               is_identity)) {
-        is_found[min_type_atoms[i]] = 1;
-      }
-    }
-
-    free(min_type_atoms);
-    min_type_atoms = NULL;
-
-    for (i = 0; i < cell->size; i++) {
-      num_trans += is_found[i];
-    }
-  }
-#else
   num_trans = search_translation_part(is_found,
                                       cell,
                                       rot,
@@ -500,10 +442,9 @@ static VecDBL * get_translation(SPGCONST int rot[3][3],
                                       origin,
                                       symprec,
                                       is_identity);
-  if (num_trans == 0) {
+  if (num_trans == -1 || num_trans == 0) {
     goto ret;
   }
-#endif
 
   if ((trans = mat_alloc_VecDBL(num_trans)) == NULL) {
     goto ret;
@@ -527,6 +468,7 @@ static VecDBL * get_translation(SPGCONST int rot[3][3],
   return trans;
 }
 
+/* Returns -1 on failure. */
 static int search_translation_part(int atoms_found[],
                                    const Cell * cell,
                                    SPGCONST int rot[3][3],
@@ -535,8 +477,15 @@ static int search_translation_part(int atoms_found[],
                                    const double symprec,
                                    const int is_identity)
 {
-  int i, j, num_trans;
+  int i, j, num_trans, is_overlap;
   double trans[3];
+  OverlapChecker * checker;
+
+  checker = NULL;
+
+  if ((checker = ovl_overlap_checker_init(cell)) == NULL) {
+    return -1;
+  }
 
   num_trans = 0;
 
@@ -552,11 +501,15 @@ static int search_translation_part(int atoms_found[],
     for (j = 0; j < 3; j++) {
       trans[j] = cell->position[i][j] - origin[j];
     }
-    if (is_overlap_all_atoms(trans,
-                             rot,
-                             cell,
-                             symprec,
-                             is_identity)) {
+
+    is_overlap = ovl_check_total_overlap(checker,
+                                         trans,
+                                         rot,
+                                         symprec,
+                                         is_identity);
+    if (is_overlap == -1) {
+      goto err;
+    } else if (is_overlap) {
       atoms_found[i] = 1;
       num_trans++;
       if (is_identity) {
@@ -568,7 +521,14 @@ static int search_translation_part(int atoms_found[],
     }
   }
 
+  ovl_overlap_checker_free(checker);
+  checker = NULL;
   return num_trans;
+
+ err:
+  ovl_overlap_checker_free(checker);
+  checker = NULL;
+  return -1;
 }
 
 static int search_pure_translations(int atoms_found[],
@@ -627,55 +587,34 @@ static int search_pure_translations(int atoms_found[],
   return num_trans;
 }
 
+/* Thoroughly confirms that a given symmetry operation is a symmetry. */
+/* This is a convenient wrapper around ovl_check_total_overlap. */
+/* -1: Error.  0: Not a symmetry.  1: Is a symmetry. */
 static int is_overlap_all_atoms(const double trans[3],
                                 SPGCONST int rot[3][3],
                                 const Cell * cell,
                                 const double symprec,
                                 const int is_identity)
 {
-  int i, j, k, is_found;
-  double pos_rot[3], d_frac[3], d[3];
+  OverlapChecker * checker;
+  int result;
 
-  for (i = 0; i < cell->size; i++) {
-    if (is_identity) { /* Identity matrix is treated as special for speed-up. */
-      for (j = 0; j < 3; j++) {
-        pos_rot[j] = cell->position[i][j] + trans[j];
-      }
-    } else {
-      mat_multiply_matrix_vector_id3(pos_rot,
-                                     rot,
-                                     cell->position[i]);
-      for (j = 0; j < 3; j++) {
-        pos_rot[j] += trans[j];
-      }
-    }
+  checker = NULL;
 
-    is_found = 0;
-    for (j = 0; j < cell->size; j++) {
-      if (cell->types[i] == cell->types[j]) {
-        /* here cel_is_overlap can be used, but for the tuning */
-        /* purpose, write it again */
-        for (k = 0; k < 3; k++) {
-          d_frac[k] = pos_rot[k] - cell->position[j][k];
-          d_frac[k] -= mat_Nint(d_frac[k]);
-        }
-        mat_multiply_matrix_vector_d3(d, cell->lattice, d_frac);
-        if (sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]) < symprec) {
-          is_found = 1;
-          break;
-        }
-      }
-    }
-
-    if (! is_found) {
-      goto not_found;
-    }
+  if ((checker = ovl_overlap_checker_init(cell)) == NULL) {
+    return -1;
   }
 
-  return 1;  /* found */
+  result = ovl_check_total_overlap(checker,
+                                   trans,
+                                   rot,
+                                   symprec,
+                                   is_identity);
 
- not_found:
-  return 0;
+  ovl_overlap_checker_free(checker);
+  checker = NULL;
+
+  return result;
 }
 
 static int get_index_with_least_atoms(const Cell *cell)
@@ -785,6 +724,7 @@ get_space_group_operations(SPGCONST PointSymmetry *lattice_sym,
   return symmetry;
 }
 
+/* lattice_sym.size = 0 is returned if failed. */
 static PointSymmetry get_lattice_symmetry(SPGCONST double cell_lattice[3][3],
                                           const double symprec,
                                           const double angle_symprec)
@@ -822,10 +762,13 @@ static PointSymmetry get_lattice_symmetry(SPGCONST double cell_lattice[3][3],
 
           if (is_identity_metric(metric, metric_orig, symprec, angle_tol)) {
             if (num_sym > 47) {
-              angle_tol *= ANGLE_REDUCE_RATE;
               warning_print("spglib: Too many lattice symmetries was found.\n");
-              warning_print("        Reduce angle tolerance to %f", angle_tol);
-              warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
+              if (angle_tol > 0) {
+                angle_tol *= ANGLE_REDUCE_RATE;
+                warning_print(
+                  "        Reduce angle tolerance to %f\n", angle_tol);
+              }
+              warning_print("        (line %d, %s).\n", __LINE__, __FILE__);
               goto next_attempt;
             }
 

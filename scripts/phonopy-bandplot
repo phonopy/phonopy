@@ -68,7 +68,7 @@ def read_band_yaml(filename):
             data['segment_nqpoint'],
             labels)
 
-def read_dos_dat(filename):
+def read_dos_dat(filename, pdos_indices=None, dos_factor=None):
     dos = []
     frequencies = []
     for line in open(filename):
@@ -77,7 +77,23 @@ def read_dos_dat(filename):
         ary = [float(x) for x in line.split()]
         frequencies.append(ary.pop(0))
         dos.append(ary)
-    return np.array(frequencies), np.array(dos)
+    dos = np.array(dos)
+    frequencies = np.array(frequencies)
+
+    if pdos_indices:
+        pi = []
+        for nums in pdos_indices.split(','):
+            pi.append([int(x) - 1 for x in nums.split()])
+        dos_sum = []
+        for indices in pi:
+            dos_sum.append(dos[:, indices].sum(axis=1))
+        dos_sum.append(dos.sum(axis=1))
+        dos = np.transpose(dos_sum)
+
+    if dos_factor:
+        dos *= dos_factor
+
+    return frequencies, dos
 
 def get_options():
     # Parse options
@@ -88,6 +104,7 @@ def get_options():
                         dos=None,
                         dos_max=None,
                         dos_min=None,
+                        dos_factor=None,
                         factor=1.0,
                         f_max=None,
                         f_min=None,
@@ -95,6 +112,7 @@ def get_options():
                         is_points=False,
                         is_vertial_line=False,
                         output_filename=None,
+                        pdos_indices=None,
                         xlabel=None,
                         ylabel=None,
                         show_legend=False,
@@ -103,14 +121,17 @@ def get_options():
         "--band-labels", dest="band_labels",
         help="Show labels at band segments")
     parser.add_argument(
-        "--dos", dest="dos",
-        help="Read dos.dat type file and plot with band structure")
-    parser.add_argument(
         "--dmax", dest="dos_max", type=float,
         help="Maximum DOS plotted")
     parser.add_argument(
         "--dmin", dest="dos_min", type=float,
         help="Minimum DOS plotted")
+    parser.add_argument(
+        "--dos", dest="dos",
+        help="Read dos.dat type file and plot with band structure")
+    parser.add_argument(
+        "--dos-factor", dest="dos_factor", type=float,
+        help="Factor to be multiplied with DOS.")
     parser.add_argument(
         "--factor", dest="factor", type=float,
         help="Conversion factor to favorite frequency unit")
@@ -123,6 +144,9 @@ def get_options():
     parser.add_argument(
         "--gnuplot", dest="is_gnuplot", action="store_true",
         help="Output in gnuplot data style")
+    parser.add_argument(
+        "-i", "--indices", dest="pdos_indices",
+        help="Indices like 1 2, 3 4 5 6...")
     parser.add_argument(
         "--legend", dest="show_legend", action="store_true",
         help="Show legend")
@@ -193,7 +217,9 @@ def main(args):
         print("# distance  frequency (bands are separated by blank lines)")
 
     if args.dos:
-        dos_frequencies, dos = read_dos_dat(args.dos)
+        dos_frequencies, dos = read_dos_dat(args.dos,
+                                            pdos_indices=args.pdos_indices,
+                                            dos_factor=args.dos_factor)
 
     for i, filename in enumerate(filenames):
         (distances,
@@ -287,6 +313,19 @@ def main(args):
             plt.legend()
 
         if args.dos:
+            arg_fmax = len(dos_frequencies)
+            if args.f_max is not None:
+                for i, f in enumerate(dos_frequencies):
+                    if f > args.f_max:
+                        arg_fmax = i
+                        break
+            arg_fmin = 0
+            if args.f_min is not None:
+                for i, f in enumerate(dos_frequencies):
+                    if f > args.f_min:
+                        if i > 0:
+                            arg_fmin = i - 1
+                        break
             ax2 = plt.subplot(gs[0, 1], sharey=ax1)
             ax2.xaxis.set_ticks_position('both')
             ax2.yaxis.set_ticks_position('both')
@@ -295,7 +334,16 @@ def main(args):
 
             plt.subplots_adjust(wspace=0.03)
             plt.setp(ax2.get_yticklabels(), visible=False)
-            plt.plot(dos, dos_frequencies)
+
+            for pdos in dos.T:
+                if args.dos_max:
+                    _pdos = _plot_dos(pdos[arg_fmin:arg_fmax],
+                                      dos_frequencies[arg_fmin:arg_fmax],
+                                      args.dos_max)
+                    plt.plot(_pdos[1], _pdos[0])
+                else:
+                    plt.plot(pdos[arg_fmin:arg_fmax],
+                             dos_frequencies[arg_fmin:arg_fmax])
             plt.xlabel('DOS')
 
             ax2.set_xlim((0, None))
@@ -315,6 +363,55 @@ def main(args):
             plt.savefig(args.output_filename)
         else:
             plt.show()
+
+def _plot_dos(d, f, dmax):
+    pdos = []
+    for f1, f2, d1, d2 in zip(f[:-1], f[1:], d[:-1], d[1:]):
+        pdos += _cut_dos([f1, d1], [f2, d2], dmax)
+    return np.transpose(pdos)
+
+def _cut_dos(p1, p2, dmax):
+    """Cut DOS at dmax
+
+    ** Cutting by fmin and fmax should be implemented someday. **
+
+    Args:
+        p1: (f1, d1)
+        p2: (f2, d2)
+
+    When d1 < dmax and d2 < dmax
+        p1: (f1, d1)
+        p2: (f2, d2)
+    When d1 < dmax and d2 > dmax
+        p1: (f1, d1)
+        pi: (fi, dmax), f1 < fi < f2
+        p2: (f2, dmax)
+    Whend1 > dmax and d2 < dmax,
+        p1: (f1, dmax)
+        pi: (fi, dmax), f1 < fi < f2
+        p2: (f2, d2)
+    When d2 > dmax and d1 > dmax
+        p1: (f1, dmax)
+        p2: (f2, dmax)
+
+    """
+
+    def _get_fi(p1, p2, dmax):
+        df = p2[0] - p1[0]
+        dd = p2[1] - p1[1]
+        fi = (dmax - p1[1]) / dd * df + p1[0]
+        return fi
+
+    if p1[1] < dmax and p2[1] < dmax:
+        return [p1, p2]
+    elif p1[1] < dmax and p2[1] > dmax:
+        fi = _get_fi(p1, p2, dmax)
+        return [p1, [fi, dmax], [p2[0], dmax]]
+    elif p1[1] > dmax and p2[1] < dmax:
+        fi = _get_fi(p1, p2, dmax)
+        return [[p1[0], dmax], [fi, dmax], p2]
+    else:
+        return [[p1[0], dmax], [p1[0], dmax]]
 
 if __name__ == "__main__":
     main(get_options())

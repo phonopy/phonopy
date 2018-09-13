@@ -29,7 +29,7 @@ Parlinski-Li-Kawazoe method
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Parlinski-Li-Kawazoe method is based on the supercell approach with
-the finite displacement method. 
+the finite displacement method.
 
 Force constants are calculated using Moore–Penrose pseudoinverse by
 fitting symmetry reduced elements of force constans to the linear
@@ -72,18 +72,29 @@ generated macroscopic field changes force constants near
 non-analytical term correction.
 
 - \R. M. Pick, M. H. Cohen, and R. M. Martin, Phys. Rev. B 1, 910, (1970)
-- \P. Giannozzi, S. Degironcoli, P. Pavone, and S. Baroni,  Phys. Rev. B 43, 7231 (1991)
-- \X. Gonze, and C. Lee, Phys. Rev. B 55, 10355 (1997)
+
+.. _reference_dp_dp_NAC:
+
+Correction by dipole-dipole interaction
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+1. \P. Giannozzi, S. Degironcoli, P. Pavone, and S. Baroni,
+   Phys. Rev. B 43, 7231 (1991)
+2. X. Gonze, J.-C. Charlier, D.C. Allan, and M.P. Teter
+   Phys. Rev. B 50, 13035(R) (1994)
+3. \X. Gonze, and C. Lee, Phys. Rev. B 55, 10355 (1997)
+
+Currently phonopy implements the method by Gonze *et al.* written in the
+above two papers (2 and 3) as the default method.
 
 .. _reference_wang_NAC:
 
 Interpolation scheme at general *q*-points with non-analytical term correction
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The above non-anarytical term correction can be applied only at
-:math:`\mathbf{q}\rightarrow \mathbf{0}`. To connect smoothly to
-general **q** points, the following interpolation scheme is employed
-in phonopy (:ref:`nac_tag`).
+This is an interpolation scheme using phonons at
+:math:`\mathbf{q}\rightarrow \mathbf{0}` with the correction by Pick
+*et al.* and other commensurate points.
 
 - \Y. Wang , J. J. Wang , W. Y. Wang , Z. G. Mei , S. L. Shang , L. Q. Chen and
   Z K Liu, J. Phys.: Condens. Matter. 22, 202201 (2010)
@@ -132,4 +143,3 @@ For the study of basics
 - Introduction to Lattice Dynamics, Martin. T. Dove, Cambridge
   university press
 - Thermodynamics of Crystals, Duane C. Wallace, Dover Publications
-

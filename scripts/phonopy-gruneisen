@@ -43,7 +43,7 @@ from phonopy.interface import (read_crystal_structure,
                                get_default_physical_units)
 from phonopy.file_IO import (parse_FORCE_SETS, parse_BORN,
                              parse_FORCE_CONSTANTS, read_force_constants_hdf5)
-from phonopy.units import VaspToTHz
+
 
 def fracval(frac):
     if frac.find('/') == -1:
@@ -51,6 +51,7 @@ def fracval(frac):
     else:
         x = frac.split('/')
         return float(x[0]) / float(x[1])
+
 
 def get_cell(cell_filename, interface_mode, yaml_mode=False):
     cell, optional_structure_file_information = read_crystal_structure(
@@ -63,6 +64,7 @@ def get_cell(cell_filename, interface_mode, yaml_mode=False):
         sys.exit(1)
 
     return cell
+
 
 def get_phonon(cell_filename,
                force_sets_filename,
@@ -89,8 +91,8 @@ def get_phonon(cell_filename,
         if nac_params['factor'] is None:
             nac_params['factor'] = physical_units['nac_factor']
         phonon.set_nac_params(nac_params)
-    phonon.set_dynamical_matrix()
     return phonon
+
 
 def get_phonon_from_force_constants(cell_filename,
                                     force_constants_filename,
@@ -118,11 +120,11 @@ def get_phonon_from_force_constants(cell_filename,
         nac_params = parse_BORN(phonon.get_primitive(),
                                 filename=born_filename,
                                 symprec=symprec)
-        if nac_params['factor'] == None:
+        if nac_params['factor'] is None:
             nac_params['factor'] = physical_units['nac_factor']
         phonon.set_nac_params(nac_params)
-    phonon.set_dynamical_matrix()
     return phonon
+
 
 def get_options():
     import argparse
@@ -147,7 +149,7 @@ def get_options():
         marker='o',
         markersize=None,
         primitive_axis=None,
-        pwscf_mode=False,
+        qe_mode=False,
         sampling_mesh=None,
         save_graph=False,
         siesta_mode=False,
@@ -221,8 +223,8 @@ def get_options():
         "--pa", "--primitive_axis", dest="primitive_axis",
         help="Same as PRIMITIVE_AXIS tags")
     parser.add_argument(
-        "--pwscf", dest="pwscf_mode", action="store_true",
-        help="Invoke Pwscf mode")
+        "--qe", "--pwscf", dest="qe_mode", action="store_true",
+        help="Invoke Quantum espresso mode")
     parser.add_argument(
         "--q_cutoff", dest="cutoff_wave_vector", type=float,
         help="Acoustic modes inside cutoff wave vector is treated.")
@@ -266,6 +268,7 @@ def get_options():
     args = parser.parse_args()
     return args
 
+
 def main(args):
     import warnings
     warnings.filterwarnings('error')
@@ -304,7 +307,6 @@ def main(args):
         print("--dim option has to be specified.")
         sys.exit(1)
 
-
     #
     # Phonopy gruneisen interface mode
     #
@@ -312,8 +314,8 @@ def main(args):
         interface_mode = 'wien2k'
     elif args.abinit_mode:
         interface_mode = 'abinit'
-    elif args.pwscf_mode:
-        interface_mode = 'pwscf'
+    elif args.qe_mode:
+        interface_mode = 'qe'
     elif args.elk_mode:
         interface_mode = 'elk'
     elif args.siesta_mode:
@@ -324,7 +326,6 @@ def main(args):
         interface_mode = 'vasp'
     physical_units = get_default_physical_units(interface_mode)
 
-
     if args.factor is not None:
         physical_units['factor'] = args.factor
 
@@ -332,7 +333,6 @@ def main(args):
         cell_filename = args.cell_filename
     else:
         cell_filename = get_default_cell_filename(interface_mode)
-
 
     phonons = []
     for i in range(3):
@@ -377,9 +377,9 @@ def main(args):
                                 symprec=args.symprec)
             phonons.append(phonon)
 
-    gruneisen = PhonopyGruneisen(phonons[0], # equilibrium
-                                 phonons[1], # plus
-                                 phonons[2]) # minus
+    gruneisen = PhonopyGruneisen(phonons[0],  # equilibrium
+                                 phonons[1],  # plus
+                                 phonons[2])  # minus
 
     if args.plot_graph:
         if args.save_graph:
@@ -400,8 +400,9 @@ def main(args):
         gruneisen.set_band_structure(bands)
         gruneisen.write_yaml_band_structure()
         if args.plot_graph:
-            plt = gruneisen.plot_band_structure(epsilon=args.cutoff_wave_vector,
-                                                color_scheme=args.color_scheme)
+            plt = gruneisen.plot_band_structure(
+                epsilon=args.cutoff_wave_vector,
+                color_scheme=args.color_scheme)
             if args.title is not None:
                 plt.suptitle(args.title)
 
@@ -450,6 +451,7 @@ def main(args):
                 plt.savefig("gruneisen.pdf")
         else:
             plt.show()
+
 
 if __name__ == "__main__":
     main(get_options())

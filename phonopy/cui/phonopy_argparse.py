@@ -82,7 +82,6 @@ def get_parser():
         cp2k_mode=False,
         dftbp_mode=False,
         fc_symmetry=None,
-        fc_computation_algorithm=None,
         fc_format=None,
         fc_spg_symmetry=False,
         fits_debye_model=False,
@@ -94,12 +93,14 @@ def get_parser():
         fmin=None,
         frequency_conversion_factor=None,
         fpitch=None,
+        frequency_scale_factor=None,
         gv_delta_q=None,
         is_band_connection=False,
         is_check_symmetry=False,
         is_displacement=False,
         is_dos_mode=False,
         is_eigenvectors=False,
+        is_full_fc=False,
         is_gamma_center=False,
         is_graph_plot=False,
         is_graph_save=False,
@@ -130,14 +131,15 @@ def get_parser():
         mesh_numbers=None,
         modulation=None,
         moment_order=None,
+        nac_method=None,
+        nac_q_direction=None,
         pretend_real=False,
         primitive_axis=None,
         projection_direction=None,
-        pwscf_mode=False,
+        qe_mode=False,
         qpoints=None,
         qpoints_format=None,
         quiet=False,
-        q_direction=None,
         read_fc_format=None,
         read_force_constants=False,
         read_qpoints=False,
@@ -230,14 +232,11 @@ def get_parser():
         help="Create FORCE_SETS")
     parser.add_argument(
         "--factor", dest="frequency_conversion_factor", type=float,
-        help="Conversion factor to favorite frequency unit")
+        help="Frequency unit conversion factor")
     parser.add_argument(
         "--fc", "--force-constants", nargs=1, dest="force_constants",
         help=("Create FORCE_CONSTANTS from vaspurn.xml. "
               "vasprun.xml has to be passed as argument."))
-    parser.add_argument(
-        "--fc-computation-algorithm", dest="fc_computation_algorithm",
-        help="Switch computation algorithm of force constants")
     parser.add_argument(
         "--fc-decimals", dest="force_constants_decimals", type=int,
         help="Decimals of values of force constants")
@@ -248,11 +247,19 @@ def get_parser():
         "--fc-spg-symmetry", dest="fc_spg_symmetry", action="store_true",
         help="Enforce space group symmetry to force constants")
     parser.add_argument(
-        "--fc-symmetry", dest="fc_symmetry", type=int,
+        "--fc-symmetry", dest="fc_symmetry", action="store_true",
         help="Symmetrize force constants")
     parser.add_argument(
         "--fits-debye-model", dest="fits_debye_model", action="store_true",
         help="Fits total DOS to a Debye model")
+    parser.add_argument(
+        "--freq-scale", dest="frequency_scale_factor", type=float,
+        help=("Squared scale factor multiplied as fc2 * factor^2. Therefore "
+              "frequency is changed but the contribution from NAC is not "
+              "changed."))
+    parser.add_argument(
+        "--full-fc", dest="is_full_fc", action="store_true",
+        help="Calculate full supercell force constants matrix")
     parser.add_argument(
         "--fz", "--force-sets-zero", nargs='+', dest="force_sets_zero",
         help=("Create FORCE_SETS. disp.yaml in the current directory and "
@@ -325,6 +332,9 @@ def get_parser():
         "--nac", dest="is_nac", action="store_true",
         help="Non-analytical term correction")
     parser.add_argument(
+        "--nac-method", dest="nac_method",
+        help="Non-analytical term correction method: Gonze (default) or Wang")
+    parser.add_argument(
         "--nodiag", dest="is_nodiag", action="store_true",
         help="Set displacements parallel to axes")
     parser.add_argument(
@@ -361,8 +371,8 @@ def get_parser():
         dest="is_projected_thermal_properties", action="store_true",
         help="Output projected thermal properties")
     parser.add_argument(
-        "--pwscf", dest="pwscf_mode",
-        action="store_true", help="Invoke Pwscf mode")
+        "--qe", "--pwscf", dest="qe_mode",
+        action="store_true", help="Invoke Quantum espresso (QE) mode")
     parser.add_argument(
         "--qpoints", dest="qpoints",
         help="Calculate at specified q-points")
@@ -370,7 +380,7 @@ def get_parser():
         "--qpoints-format", dest="qpoints_format",
         help="Q-points output file-format")
     parser.add_argument(
-        "--q-direction", dest="q_direction",
+        "--q-direction", dest="nac_q_direction",
         help=("Direction of q-vector perturbation used for NAC at "
               "q->0, and group velocity for degenerate phonon "
               "mode in q-points mode"))

@@ -41,10 +41,10 @@ import io
 import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.atoms import symbol_map, atom_data
-from phonopy.structure.cells import get_primitive, get_supercell
-from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
+from phonopy.structure.symmetry import Symmetry, elaborate_borns_and_epsilon
 from phonopy.file_IO import (write_FORCE_SETS, write_force_constants_to_hdf5,
                              write_FORCE_CONSTANTS)
+elaborate_borns_and_epsilon
 
 def parse_set_of_forces(num_atoms,
                         forces_filenames,
@@ -276,32 +276,36 @@ def get_scaled_positions_lines(scaled_positions):
     return "\n".join(_get_scaled_positions_lines(scaled_positions))
 
 def _get_scaled_positions_lines(scaled_positions):
-    lines = []
-    for i, vec in enumerate(scaled_positions):
-        line_str = ""
-        for x in (vec - np.rint(vec)):
-            if float('%20.16f' % x) < 0.0:
-                line_str += "%20.16f" % (x + 1.0)
-            else:
-                line_str += "%20.16f" % (x)
-        lines.append(line_str)
+    # map into 0 <= x < 1.
+    # (the purpose of the second '% 1' is to handle a surprising
+    #  edge case for small negative numbers: '-1e-30 % 1 == 1.0')
+    unit_positions = scaled_positions % 1 % 1
 
-    return lines
+    return [
+        " %19.16f %19.16f %19.16f" % tuple(vec)
+        for vec in unit_positions.tolist() # lists are faster for iteration
+    ]
 
 def sort_positions_by_symbols(symbols, positions):
-    reduced_symbols = _get_reduced_symbols(symbols)
-    sorted_positions = []
-    sort_list = []
-    num_atoms = np.zeros(len(reduced_symbols), dtype=int)
-    for i, rs in enumerate(reduced_symbols):
-        for j, (s, p) in enumerate(zip(symbols, positions)):
-            if rs == s:
-                sorted_positions.append(p)
-                sort_list.append(j)
-                num_atoms[i] += 1
-    return num_atoms, reduced_symbols, np.array(sorted_positions), sort_list
+    from collections import Counter
 
-def get_vasp_structure_lines(atoms, direct=True, is_vasp5=False):
+    # unique symbols in order of first appearance in 'symbols'
+    reduced_symbols = _unique_stable(symbols)
+
+    # counts of each symbol
+    counts_dict = Counter(symbols)
+    counts_list = [counts_dict[s] for s in reduced_symbols]
+
+    # sort positions by symbol (using the order defined by reduced_symbols).
+    # using a stable sort algorithm matches the behavior of previous versions
+    #  of phonopy (but is not otherwise necessary)
+    sort_keys = [reduced_symbols.index(i) for i in symbols]
+    perm = _argsort_stable(sort_keys)
+    sorted_positions = positions[perm]
+
+    return counts_list, reduced_symbols, sorted_positions, perm
+
+def get_vasp_structure_lines(atoms, direct=True, is_vasp5=True):
     (num_atoms,
      symbols,
      scaled_positions,
@@ -327,12 +331,23 @@ def get_vasp_structure_lines(atoms, direct=True, is_vasp5=False):
 
     return lines
 
-def _get_reduced_symbols(symbols):
-    reduced_symbols = []
-    for s in symbols:
-        if not (s in reduced_symbols):
-            reduced_symbols.append(s)
-    return reduced_symbols
+# Get all unique values from a iterable.
+# Unlike `list(set(iterable))`, this is a stable algorithm;
+# items are returned in order of their first appearance.
+def _unique_stable(iterable):
+    seen_list = []
+    seen_set = set()
+    for x in iterable:
+        if x not in seen_set:
+            seen_set.add(x)
+            seen_list.append(x)
+    return seen_list
+
+# Alternative to `np.argsort(keys)` that uses a stable sorting algorithm
+# so that indices tied for the same value are listed in increasing order
+def _argsort_stable(keys):
+    # Python's built-in sort algorithm is a stable sort
+    return sorted(range(len(keys)), key=keys.__getitem__)
 
 #
 # Non-analytical term
@@ -360,14 +375,15 @@ def get_born_vasprunxml(filename="vasprun.xml",
         else:
             return None
 
-    return _get_indep_borns(ucell,
-                            borns,
-                            epsilon,
-                            primitive_matrix=primitive_matrix,
-                            supercell_matrix=supercell_matrix,
-                            is_symmetry=is_symmetry,
-                            symmetrize_tensors=symmetrize_tensors,
-                            symprec=symprec)
+    return elaborate_borns_and_epsilon(
+        ucell,
+        borns,
+        epsilon,
+        primitive_matrix=primitive_matrix,
+        supercell_matrix=supercell_matrix,
+        is_symmetry=is_symmetry,
+        symmetrize_tensors=symmetrize_tensors,
+        symprec=symprec)
 
 def get_born_OUTCAR(poscar_filename="POSCAR",
                     outcar_filename=None,
@@ -386,104 +402,15 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
     if len(borns) == 0 or len(epsilon) == 0:
         return None
     else:
-        return _get_indep_borns(ucell,
-                                borns,
-                                epsilon,
-                                primitive_matrix=primitive_matrix,
-                                supercell_matrix=supercell_matrix,
-                                is_symmetry=is_symmetry,
-                                symmetrize_tensors=symmetrize_tensors,
-                                symprec=symprec)
-
-def _get_indep_borns(ucell,
-                     borns,
-                     epsilon,
-                     primitive_matrix=None,
-                     supercell_matrix=None,
-                     is_symmetry=True,
-                     symmetrize_tensors=False,
-                     symprec=1e-5):
-    """Parse Born effective charges and dielectric constants
-
-
-     Args:
-         ucell (Atoms): Unit cell structure
-         borns (np.array): Born effective charges of ucell
-         epsilon (np.array): Dielectric constant tensor
-
-     Returns:
-         (np.array) Born effective charges of symmetrically independent atoms
-             in primitive cell
-         (np.array) Dielectric constant
-         (np.array) Atomic index mapping table from supercell to primitive cell
-             of independent atoms
-
-     Raises:
-          AssertionError: Inconsistency of number of atoms or Born effective
-              charges.
-
-     Warning:
-         Broken symmetry of Born effective charges
-
-     """
-
-    assert len(borns) == ucell.get_number_of_atoms(), \
-        "num_atom %d != len(borns) %d" % (ucell.get_number_of_atoms(),
-                                          len(borns))
-
-    if symmetrize_tensors:
-        borns_, epsilon_ = symmetrize_borns_and_epsilon(borns,
-                                                        epsilon,
-                                                        ucell,
-                                                        symprec=symprec,
-                                                        is_symmetry=is_symmetry)
-
-        if (abs(borns - borns_) > 0.1).any():
-            lines = ["Born effective charge symmetry is largely broken. "
-                     "Largest different among elements: "
-                     "%s" % np.amax(abs(borns - borns_))]
-            import warnings
-            warnings.warn("\n".join(lines))
-
-        borns = borns_
-        epsilon = epsilon_
-
-    borns, s_indep_atoms = _extract_independent_borns(
-        borns,
-        ucell,
-        primitive_matrix=primitive_matrix,
-        supercell_matrix=supercell_matrix,
-        is_symmetry=is_symmetry,
-        symprec=symprec)
-
-    return borns, epsilon, s_indep_atoms
-
-def _extract_independent_borns(borns,
-                               ucell,
-                               primitive_matrix=None,
-                               supercell_matrix=None,
-                               is_symmetry=True,
-                               symprec=1e-5):
-    if primitive_matrix is None:
-        pmat = np.eye(3)
-    else:
-        pmat = primitive_matrix
-    if supercell_matrix is None:
-        smat = np.eye(3, dtype='intc')
-    else:
-        smat = supercell_matrix
-
-    inv_smat = np.linalg.inv(smat)
-    scell = get_supercell(ucell, smat, symprec=symprec)
-    pcell = get_primitive(scell, np.dot(inv_smat, pmat), symprec=symprec)
-    p2s = np.array(pcell.get_primitive_to_supercell_map(), dtype='intc')
-    p_sym = Symmetry(pcell, is_symmetry=is_symmetry, symprec=symprec)
-    s_indep_atoms = p2s[p_sym.get_independent_atoms()]
-    u2u = scell.get_unitcell_to_unitcell_map()
-    u_indep_atoms = [u2u[x] for x in s_indep_atoms]
-    reduced_borns = borns[u_indep_atoms].copy()
-
-    return reduced_borns, s_indep_atoms
+        return elaborate_borns_and_epsilon(
+            ucell,
+            borns,
+            epsilon,
+            primitive_matrix=primitive_matrix,
+            supercell_matrix=supercell_matrix,
+            is_symmetry=is_symmetry,
+            symmetrize_tensors=symmetrize_tensors,
+            symprec=symprec)
 
 def _read_born_and_epsilon_from_OUTCAR(filename):
     with open(filename) as outcar:
@@ -674,16 +601,19 @@ class Vasprun(object):
                 else:
                     return False
 
+
 class VasprunxmlExpat(object):
     def __init__(self, fileptr):
         """Parsing vasprun.xml by Expat
 
-        Args:
-           fileptr: binary stream. Considering compatibility between python2.7
-               and 3.x, it is prepared as follows:
+        Parameters
+        ----------
+        fileptr: binary stream
+            Considering compatibility between python2.7 and 3.x, it is prepared
+            as follows:
 
-               import io
-               io.open(filename, "rb")
+                import io
+                io.open(filename, "rb")
 
         """
 
@@ -696,12 +626,16 @@ class VasprunxmlExpat(object):
         self._is_positions = False
         self._is_symbols = False
         self._is_basis = False
+        self._is_volume = False
         self._is_energy = False
         self._is_k_weights = False
         self._is_eigenvalues = False
         self._is_epsilon = False
         self._is_born = False
         self._is_efermi = False
+        self._is_generation = False
+        self._is_divisions = False
+        self._is_NELECT = False
 
         self._is_v = False
         self._is_i = False
@@ -719,8 +653,8 @@ class VasprunxmlExpat(object):
         self._all_stress = []
         self._all_points = []
         self._all_lattice = []
-        self._symbols = []
         self._all_energies = []
+        self._all_volumes = []
         self._born = []
         self._forces = None
         self._stress = None
@@ -729,8 +663,8 @@ class VasprunxmlExpat(object):
         self._energies = None
         self._epsilon = None
         self._born_atom = None
-        self._efermi = None
         self._k_weights = None
+        self._k_mesh = None
         self._eigenvalues = None
         self._eig_state = [0, 0]
         self._projectors = None
@@ -742,49 +676,160 @@ class VasprunxmlExpat(object):
         self._p.EndElementHandler = self._end_element
         self._p.CharacterDataHandler = self._char_data
 
-    def parse(self):
-        try:
+        self.efermi = None
+        self.symbols = None
+        self.NELECT = None
+
+    def parse(self, debug=False):
+        import xml.parsers.expat
+        if debug:
             self._p.ParseFile(self._fileptr)
-        except:
-            return False
-        else:
             return True
+        else:
+            try:
+                self._p.ParseFile(self._fileptr)
+            except xml.parsers.expat.ExpatError:
+                return False
+            except Exception:
+                raise
+            else:
+                return True
+
+    @property
+    def forces(self):
+        return np.array(self._all_forces, dtype='double', order='C')
 
     def get_forces(self):
-        return np.array(self._all_forces)
+        return self.forces
+
+    @property
+    def stress(self):
+        return np.array(self._all_stress, dtype='double', order='C')
 
     def get_stress(self):
-        return np.array(self._all_stress)
+        return self.stress
+
+    @property
+    def epsilon(self):
+        return np.array(self._epsilon, dtype='double', order='C')
 
     def get_epsilon(self):
-        return np.array(self._epsilon)
+        return self.epsilon
 
     def get_efermi(self):
-        return self._efermi
+        return self.efermi
+
+    @property
+    def born(self):
+        return np.array(self._born, dtype='double', order='C')
 
     def get_born(self):
-        return np.array(self._born)
+        return self.born
+
+    @property
+    def points(self):
+        return np.array(self._all_points, dtype='double', order='C')
 
     def get_points(self):
-        return np.array(self._all_points)
+        return self.points
+
+    @property
+    def lattice(self):
+        """All basis vectors of structure optimization steps
+
+        Each basis vectors are in row vectors (a, b, c)
+
+        """
+        return np.array(self._all_lattice, dtype='double', order='C')
 
     def get_lattice(self):
-        return np.array(self._all_lattice)
+        return self.lattice
+
+    @property
+    def volume(self):
+        return np.array(self._all_volumes, dtype='double')
 
     def get_symbols(self):
-        return self._symbols
+        return self.symbols
+
+    @property
+    def energies(self):
+        """
+        Returns
+        -------
+        ndarray
+            dtype='double'
+            shape=(structure opt. steps, 3)
+            [free energy TOTEN, energy(sigma->0), entropy T*S EENTRO]
+
+        """
+        return np.array(self._all_energies, dtype='double', order='C')
 
     def get_energies(self):
-        return np.array(self._all_energies)
+        return self.energies
+
+    @property
+    def k_mesh(self):
+        return np.array(self._k_mesh, dtype='intc')
+
+    @property
+    def k_weights(self):
+        """
+        Returns
+        -------
+        ndarray
+            Geometric k-point weights. The sum is normalized to 1, i.e.,
+            Number of arms of k-star in BZ divided by number of all k-points.
+            dtype='double'
+            shape=(irreducible_kpoints,)
+
+        """
+
+        return np.array(self._k_weights, dtype='double')
 
     def get_k_weights(self):
-        return self._k_weights
+        return self.k_weights
+
+    @property
+    def k_weights_int(self):
+        """
+        Returns
+        -------
+        ndarray
+            Geometric k-point weights (number of arms of k-star in BZ).
+            dtype='intc'
+            shape=(irreducible_kpoints,)
+
+        """
+        nk = np.prod(self.k_mesh)
+        _weights = self.k_weights * nk
+        weights = np.rint(_weights).astype('intc')
+        assert (np.abs(weights - _weights) < 1e-7 * nk).all()
+        return np.array(weights, dtype='intc')
+
+    @property
+    def eigenvalues(self):
+        """
+        Returns
+        -------
+        ndarray
+            Eigenvalues and occupations (the last index)
+            dtype='double'
+            shape=(spin, kpoints, bands, 2)
+
+        """
+
+        return np.array(self._eigenvalues, dtype='double', order='C')
 
     def get_eigenvalues(self):
-        return self._eigenvalues
+        return self.eigenvalues
+
+    @property
+    def projectors(self):
+        return self._projectors
 
     def get_projectors(self):
-        return self._projectors
+        return self.projectors
 
     def _start_element(self, name, attrs):
         # Used not to collect energies in <scstep>
@@ -803,10 +848,15 @@ class VasprunxmlExpat(object):
             self._is_epsilon or
             self._is_born or
             self._is_positions or
-            self._is_basis,
-            self._is_k_weights):
+            self._is_basis or
+            self._is_volume or
+            self._is_k_weights or
+            self._is_generation):
             if name == 'v':
                 self._is_v = True
+                if 'name' in attrs.keys():
+                    if attrs['name'] == 'divisions':
+                        self._is_divisions = True
 
         if name == 'varray':
             if 'name' in attrs.keys():
@@ -835,11 +885,20 @@ class VasprunxmlExpat(object):
                         self._is_basis = True
                         self._lattice = []
 
+        if name == 'generation':
+            self._is_generation = True
+
         if name == 'i':
             if 'name' in attrs.keys():
                 if attrs['name'] == 'efermi':
                     self._is_i = True
                     self._is_efermi = True
+                if attrs['name'] == 'NELECT':
+                    self._is_i = True
+                    self._is_NELECT = True
+                if not self._is_structure and attrs['name'] == 'volume':
+                    self._is_i = True
+                    self._is_volume = True
 
         if self._is_energy and name == 'i':
             self._is_i = True
@@ -862,6 +921,7 @@ class VasprunxmlExpat(object):
             if 'name' in attrs.keys():
                 if attrs['name'] == 'atoms':
                     self._is_symbols = True
+                    self.symbols = []
 
                 if attrs['name'] == 'born_charges':
                     self._is_born = True
@@ -940,6 +1000,10 @@ class VasprunxmlExpat(object):
             if self._is_epsilon:
                 self._is_epsilon = False
 
+        if name == 'generation':
+            if self._is_generation:
+                self._is_generation = False
+
         if name == 'array':
             if self._is_symbols:
                 self._is_symbols = False
@@ -953,16 +1017,22 @@ class VasprunxmlExpat(object):
 
         if name == 'v':
             self._is_v = False
+            if self._is_divisions:
+                self._is_divisions = False
 
         if name == 'i':
             self._is_i = False
             if self._is_efermi:
                 self._is_efermi = False
+            if self._is_NELECT:
+                self._is_NELECT = False
+            if self._is_volume:
+                self._is_volume = False
 
         if name == 'rc':
             self._is_rc = False
             if self._is_symbols:
-                self._symbols.pop(-1)
+                self.symbols.pop(-1)
 
         if name == 'c':
             self._is_c = False
@@ -1014,16 +1084,26 @@ class VasprunxmlExpat(object):
                 self._born_atom.append(
                     [float(x) for x in data.split()])
 
+            if self._is_generation:
+                if self._is_divisions:
+                    self._k_mesh = [int(x) for x in data.split()]
+
         if self._is_i:
             if self._is_energy:
                 self._energies.append(float(data.strip()))
 
             if self._is_efermi:
-                self._efermi = float(data.strip())
+                self.efermi = float(data.strip())
+
+            if self._is_NELECT:
+                self.NELECT = float(data.strip())
+
+            if self._is_volume:
+                self._all_volumes.append(float(data.strip()))
 
         if self._is_c:
             if self._is_symbols:
-                self._symbols.append(str(data.strip()))
+                self.symbols.append(str(data.strip()))
 
         if self._is_r:
             if self._is_projected and not self._is_proj_eig:

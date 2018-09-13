@@ -3,14 +3,50 @@
 Change Log
 ==========
 
-Dec-9-2017
+Jun-20-2018: Version 1.13.2
+----------------------------
+
+* ``FULL_FORCE_CONSTANTS`` tag is created
+  (:ref:`full_force_constants_tag`).
+* Minor update of script to use QE's ``q2r.x`` output (:ref:`this
+  <qe_q2r>`).
+* Updates and fixes of CRYSTAL and SIESTA interfaces.
+* Updates of labels of irreducible representations of crystallographic
+  point groups.
+
+Apr-21-2018: Version 1.13.0
+----------------------------
+
+* Non-analytical term correction by Gonze *et al.*
+  (:ref:`reference_dp_dp_NAC`) is implemented and now this is the
+  default NAC method. The former default method by Wang *et al.*
+  (:ref:`reference_wang_NAC`) can be invoked by using ``NAC_METHOD`` tag
+  (:ref:`nac_method_tag`).
+
+Jan-31-2018: Version 1.12.6
+----------------------------
+
+* Force constants file formats of ``FORCE_CONSTANTS`` and
+  ``force_constants.hdf5`` are extended to support smaller size force
+  constants. Backward compatibility is preserved. See
+  :ref:`file_force_constants`. To write out force constants, the
+  compact format is chosen as the default for usual cases.
+* Performance improvement of phonopy and spglib by Michael
+  Lamparski which is effective especially for larger unit cell systems.
+
+Jan-7-2018: Version 1.12.4
 -----------------------------
 
-* For thermal displacements (and its matrices), ``FMIN (--fmin)`` and
-  ``FMAX (--fmax)`` can be used to limit phonons included to the
-  summation as the minimum and maximum frequenceis,
-  respectively. Instead, ``CUTOFF_FREQUENCY (--cutoff-freq)`` does not
-  work for thermal displacements.
+* For thermal displacements (and its matrices), ``FMIN`` `(``--fmin``)
+  and ``FMAX`` (``--fmax``) can be used to limit phonons included to
+  the summation as the minimum and maximum frequenceis,
+  respectively. Instead, ``CUTOFF_FREQUENCY`` (``--cutoff-freq``) does
+  not work for thermal displacements.
+* The way of symmetrization for translation invariance is modified. As
+  a result, ``FC_SYMMETRY`` became a Boolean, i.e., ``FC_SYMMETRY =
+  .TRUE.`` (``--fc-symmetry``), and no need to specify a number.
+* Experimental support to parse Quantum ESPRESSO ``q2r.x`` output from
+  python script.
 
 Nov-8-2017: Version 1.12.2
 -----------------------------
