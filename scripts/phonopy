@@ -298,6 +298,9 @@ elif args.cp2k_mode:
 elif args.crystal_mode:
     interface_mode = 'crystal'
     from phonopy.interface.crystal import write_supercells_with_displacements
+elif args.dftbp_mode:
+    interface_mode = 'dftbp'
+    from phonopy.interface.dftbp import write_supercells_with_displacements
 else:
     if args.vasp_mode:
         interface_mode = 'vasp'
@@ -535,7 +538,8 @@ if run_mode == 'displacements':
             interface_mode == 'elk' or
             interface_mode == 'pwscf' or
             interface_mode == 'siesta' or
-            interface_mode == 'cp2k'):
+            interface_mode == 'cp2k' or
+            interface_mode == 'dftbp'):
             displacement_distance = 0.02
         elif interface_mode == 'crystal':
             displacement_distance = 0.01
@@ -584,6 +588,10 @@ if run_mode == 'displacements':
                                             conv_numbers,
                                             settings.get_supercell_matrix(),
                                             template_file="TEMPLATE")
+    elif interface_mode == 'dftbp':
+        write_supercells_with_displacements(supercell,
+                                            cells_with_disps,
+                                            filename=unitcell_filename)
     else: # default or vasp
         write_supercells_with_displacements(supercell, cells_with_disps)
 
