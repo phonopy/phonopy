@@ -13,9 +13,9 @@ DFTB+ phonon band structures are created as follows:
 
    % phonopy -d --dim="2 2 2" --dftb+
 
-   This example builds 2 x 2 x 2 supercell files. These are stored in the ``disp-xxx`` directories. Note that you have to increase the supercell dimension until you reach convergence of the band structure. 
+   This example builds 2 x 2 x 2 supercell files. These are stored in the ``disp-xxx`` directories. Note that you have to increase the supercell dimension until you reach convergence of the band structure.
 
-2) Go to each ``disp-xxx`` directory and perform a DFTB+ calculations. After this operation each of the directories should contain a ``detailed.out`` file. 
+2) Go to each ``disp-xxx`` directory and perform a DFTB+ calculations. After this operation each of the directories should contain a ``detailed.out`` file.
 
 3) Create ``FORCE_SETS`` by
 
@@ -25,13 +25,13 @@ DFTB+ phonon band structures are created as follows:
 
    To run this command, ``disp.yaml`` has to be located in the current
    directory because the atomic displacements are written into the
-   FORCE_SETS file. 
+   FORCE_SETS file.
 
 4) Create a ``band.conf`` file to specify the path in the Brillouin zone you are interested in (see phonopy documentation). Then post-process the phonopy data ::
 
-   % phonopy -p band.conf --dftb+ 
+   % phonopy -p band.conf --dftb+
 
-5) Create a band structure in gnuplot format :: 
+5) Create a band structure in gnuplot format ::
 
    % phonopy-bandplot --gnuplot band.yaml > band.dat
 

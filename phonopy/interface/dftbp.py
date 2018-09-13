@@ -36,10 +36,10 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
 
 def read_dftbp(filename):
     """ Reads DFTB+ structure files in gen format.
-    
+
     Args:
         filename: name of the gen-file to be read
-        
+
     Returns:
         atoms: an object of the phonopy.Atoms class, representing the structure
         found in filename
@@ -53,9 +53,9 @@ def read_dftbp(filename):
     for ss in lines:
         if ss.strip().startswith('#'):
             lines.remove(ss)
-    
+
     natoms = int(lines[0].split()[0])
-    symbols = lines[1].split()    
+    symbols = lines[1].split()
 
     if (lines[0].split()[1].lower() == 'f'):
         is_scaled = True
@@ -64,7 +64,7 @@ def read_dftbp(filename):
     else:
         is_scaled = False
         scale_pos = dftbpToBohr
-        scale_latvecs = dftbpToBohr       
+        scale_latvecs = dftbpToBohr
 
     # assign positions and expanded symbols
     positions = []
@@ -75,10 +75,10 @@ def read_dftbp(filename):
 
         expaned_symbols.append(symbols[int(lsplit[1]) - 1])
         positions.append([float(ss)*scale_pos for ss in lsplit[2:5]])
-        
+
     # origin is ignored, may be used in future
     origin = [float(ss) for ss in lines[natoms+2].split()]
-    
+
     # assign coords of unitcell
     cell = []
 
@@ -87,7 +87,7 @@ def read_dftbp(filename):
 
         cell.append([float(ss)*scale_latvecs for ss in lsplit[:3]])
     cell = np.array(cell)
-    
+
     if is_scaled:
         atoms = Atoms(symbols=expaned_symbols,
                       cell=cell,
@@ -96,7 +96,7 @@ def read_dftbp(filename):
         atoms = Atoms(symbols=expaned_symbols,
                       cell=cell,
                       positions=positions)
-    
+
     return atoms
 
 #
@@ -106,7 +106,7 @@ def get_reduced_symbols(symbols):
     """Reduces expanded list of symbols.
 
     Args:
-        symbols: list containing any chemical symbols as often as 
+        symbols: list containing any chemical symbols as often as
         the atom appears in the structure
 
     Returns:
@@ -129,23 +129,23 @@ def write_dftbp(filename, atoms):
         atoms: object containing information about structure
     """
     scale_pos = dftbpToBohr
-    
+
     lines = ""
-    
+
     # 1. line, use absolute positions
     natoms = atoms.get_number_of_atoms()
     lines += str(natoms)
     lines += ' S \n'
-    
+
     # 2. line
     expaned_symbols = atoms.get_chemical_symbols()
     symbols = get_reduced_symbols(expaned_symbols)
     lines += ' '.join(symbols) + '\n'
-    
+
     atom_numbers = []
     for ss in expaned_symbols:
         atom_numbers.append(symbols.index(ss) + 1)
-    
+
     positions = atoms.get_positions()/scale_pos
 
     for ii in range(natoms):
@@ -165,11 +165,11 @@ def write_dftbp(filename, atoms):
         lines += cell_str
 
     outfile = open(filename, 'w')
-    outfile.write(lines)  
+    outfile.write(lines)
 
 def write_supercells_with_displacements(supercell, cells_with_disps, filename):
     """Writes perfect supercell and supercells with displacements
-    
+
     Args:
         supercell: perfect supercell
         cells_with_disps: supercells with displaced atoms
@@ -177,6 +177,6 @@ def write_supercells_with_displacements(supercell, cells_with_disps, filename):
     """
 
     write_dftbp(filename + "S", supercell)
-    
+
     for ii in range(len(cells_with_disps)):
         write_dftbp(filename + "S-{:03d}".format(ii+1), cells_with_disps[ii])
