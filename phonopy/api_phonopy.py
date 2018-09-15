@@ -40,7 +40,7 @@ from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell, get_primitive
 from phonopy.harmonic.displacement import (get_least_displacements,
-                                           direction_to_displacement)
+                                           directions_to_displacement_dataset)
 from phonopy.harmonic.force_constants import (
     get_fc2,
     symmetrize_force_constants,
@@ -356,9 +356,18 @@ class Phonopy(object):
     def set_displacement_dataset(self, displacement_dataset):
         """Set dataset having displacements and optionally forces
 
-        displacement_dataset: tuple
-            This tuple has the following structure:
-            {'natom': number_of_atoms_in_supercell,
+        Note
+        ----
+        Elements of the list accessed by 'first_atoms' corresponds to each
+        displaced supercell. Each displaced supercell contains only one
+        displacement. dict['first_atoms']['forces'] gives atomic forces in
+        each displaced supercell.
+
+        Parameters
+        ----------
+        displacement_dataset : dict
+            This dict has the following structure:
+            {'natom': number of atoms in supercell,
              'first_atoms': [
                {'number': atom index of displaced atom,
                 'displacement': displacement in Cartesian coordinates,
@@ -375,29 +384,60 @@ class Phonopy(object):
             self._displacements.append([disp['number'], x[0], x[1], x[2]])
 
     def set_forces(self, sets_of_forces):
-        """
-        sets_of_forces:
-           [[[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # first supercell
+        """Set forces in displacement dataset.
+
+        Parameters
+        ----------
+        sets_of_forces : array_like
+            A set of atomic forces in displaced supercells. The order of
+            displaced supercells has to match with that in displacement
+            dataset.
+            shape=(displaced supercells, atoms in supercell, 3)
+            dtype='double'
+
+            [[[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # first supercell
              [[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # second supercell
-             ...                                                  ]
+             ...
+            ]
+
         """
-        for disp, forces in zip(
-                self._displacement_dataset['first_atoms'], sets_of_forces):
+
+        for disp, forces in zip(self._displacement_dataset['first_atoms'],
+                                sets_of_forces):
             disp['forces'] = forces
 
     def set_force_constants(self, force_constants, show_drift=True):
-        fc_shape = force_constants.shape
-        if fc_shape[0] != fc_shape[1]:
-            if self._primitive.get_number_of_atoms() != fc_shape[0]:
-                print("Force constants shape disagrees with crystal "
-                      "structure setting. This may be due to PRIMITIVE_AXIS.")
-                raise RuntimeError
+        """Set force constants
+
+        Parameters
+        ----------
+        force_constants : array_like
+            Force constants matrix. If this is given in own condiguous ndarray
+            with order='C' and dtype='double', internal copy of data is
+            avoided. Therefore some computational resources are saved.
+            shape=(atoms in supercell, atoms in supercell, 3, 3)
+            dtype='double'
+
+        """
+
+        if type(force_constants) is np.ndarray:
+            fc_shape = force_constants.shape
+            if fc_shape[0] != fc_shape[1]:
+                if self._primitive.get_number_of_atoms() != fc_shape[0]:
+                    print("Force constants shape disagrees with crystal "
+                          "structure setting. This may be due to "
+                          "PRIMITIVE_AXIS.")
+                    raise RuntimeError
 
         self._force_constants = force_constants
+        self._set_dynamical_matrix()
+        # DynamialMatrix instance transforms force constants in correct
+        # type of numpy array.
+        self._force_constants = self._dynamical_matrix.force_constants
+
         if show_drift and self._log_level:
             show_drift_force_constants(self._force_constants,
                                        primitive=self._primitive)
-        self._set_dynamical_matrix()
 
     def set_force_constants_zero_with_radius(self, cutoff_radius):
         cutoff_force_constants(self._force_constants,
@@ -412,32 +452,14 @@ class Phonopy(object):
                                is_plusminus='auto',
                                is_diagonal=True,
                                is_trigonal=False):
-        """Generate displacements automatically
-
-        displacemsts: List of displacements in Cartesian coordinates.
-           [[0, 0.01, 0.00, 0.00], ...]
-        where each set of elements is defined by:
-           First value:      Atom index in supercell starting with 0
-           Second to fourth: Displacement in Cartesian coordinates
-
-        displacement_directions:
-          List of directions with respect to axes. This gives only the
-          symmetrically non equivalent directions. The format is like:
-             [[0, 1, 0, 0],
-              [7, 1, 0, 1], ...]
-          where each list is defined by:
-             First value:      Atom index in supercell starting with 0
-             Second to fourth: If the direction is displaced or not (1, 0, or -1)
-                               with respect to the axes.
-
-        """
+        """Generate displacement dataset"""
         displacement_directions = get_least_displacements(
             self._symmetry,
             is_plusminus=is_plusminus,
             is_diagonal=is_diagonal,
             is_trigonal=is_trigonal,
             log_level=self._log_level)
-        displacement_dataset = direction_to_displacement(
+        displacement_dataset = directions_to_displacement_dataset(
             displacement_directions,
             distance,
             self._supercell)

@@ -192,8 +192,8 @@ class DynamicalMatrix(object):
             self._set_py_dynamical_matrix(q)
 
     def _set_force_constants(self, fc):
-        if (type(fc) == np.ndarray and
-            fc.dtype == np.dtype('double') and
+        if (type(fc) is np.ndarray and
+            fc.dtype is np.dtype('double') and
             fc.flags.aligned and
             fc.flags.owndata and
             fc.flags.c_contiguous):
