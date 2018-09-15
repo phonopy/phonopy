@@ -29,9 +29,7 @@ install:
     - python setup.py install
 
 script:
-    - cd test
-    - python -m unittest discover -b
-    - cd ..
+    - python setup.py test
 
 deploy:
     # testing pypi
