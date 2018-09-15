@@ -255,7 +255,7 @@ def print_settings(settings):
     else:
         print("  Supercell: %s" % np.diag(settings.get_supercell_matrix()))
     if settings.get_primitive_matrix() is not None:
-        print("  Primitive axis:")
+        print("  Primitive matrix:")
         for v in settings.get_primitive_matrix():
             print("    %s" % v)
 
