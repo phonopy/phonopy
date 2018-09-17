@@ -169,7 +169,7 @@ class DynamicStructureFactor(object):
         self._q_count = 0
         self._unit_convertion_factor = 1.0 / (AMU * (2 * np.pi * THz) ** 2)
 
-        self.qpoints = self._qpoints + np.array(G)  # reciprocal lattice points
+        self.Qpoints = self._qpoints + np.array(G)  # reciprocal lattice points
         self.S = np.zeros(self._freqs.shape, dtype='double', order='C')
 
     def __iter__(self):
@@ -195,11 +195,14 @@ class DynamicStructureFactor(object):
     def _run_at_Q(self):
         freqs = self._freqs[self._q_count]
         eigvecs = self._eigvecs[self._q_count]
-        Q_cart = np.dot(self._rec_lat, self.qpoints[self._q_count])
-        q_cart = np.dot(self._rec_lat, self._qpoints[self._q_count])
-        proj_dir = q_cart / np.linalg.norm(q_cart)
-        _, disps = self._get_thermal_displacements(proj_dir)
-        DW = np.exp(-0.5 * (np.dot(Q_cart, proj_dir) ** 2 * disps[0]))
+        Q_cart = np.dot(self._rec_lat, self.Qpoints[self._q_count])
+        Q_length = np.linalg.norm(Q_cart)
+        if Q_length < 1e-8:
+            DW = np.zeros(len(self._primitive.get_number_of_atoms()),
+                          dtype='double')
+        else:
+            _, disps = self._get_thermal_displacements(Q_cart)
+            DW = np.exp(-0.5 * Q_length ** 2 * disps[0])
         S = np.zeros(len(freqs), dtype='double')
         for i, f in enumerate(freqs):
             if self._fmin < f:

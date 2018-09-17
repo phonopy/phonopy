@@ -1,6 +1,6 @@
 .. _phonopy_module:
 
-Using phonopy as a python module
+Phonopy API for Python
 =================================
 
 .. contents::

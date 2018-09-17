@@ -16,36 +16,46 @@ one-phonon dynamic structure factor is given as
    (n_{\mathbf{q}\nu} + 1) \delta(\omega - \omega_{\mathbf{q}\nu})
    \Delta(\mathbf{Q-q}),
 
-and
-
 .. math::
 
    S(\mathbf{Q}, \nu, \omega)^{-1\text{ph}} =
    \frac{k'}{k} \frac{N}{\hbar}
    \sum_\mathbf{q} |F(\mathbf{Q}, \mathbf{q}\nu)|^2
    n_{\mathbf{q}\nu} \delta(\omega + \omega_{\mathbf{q}\nu})
-   \Delta(\mathbf{Q+q}),
+   \Delta(\mathbf{Q-q}),
 
 with
 
 .. math::
 
-   F(\mathbf{Q}, \mathbf{q}\nu) =
-   \sum_j \sqrt{\frac{\hbar}{2 m_j \omega_{\mathbf{q}\nu}}}
-   \bar{b}_j \exp\left(
-   -\frac{1}{2} \langle |\mathbf{Q}\cdot\mathbf{u}(j0)|^2 \rangle
-   \right) \mathbf{Q}\cdot\mathbf{e}(j, \mathbf{q}\nu).
+   F(\mathbf{Q}, \mathbf{q}\nu) = \sum_j \sqrt{\frac{\hbar}{2 m_j
+   \omega_{\mathbf{q}\nu}}} \bar{b}_j \exp\left( -\frac{1}{2} \langle
+   |\mathbf{Q}\cdot\mathbf{u}(j0)|^2 \rangle \right)
+   \exp[-i(\mathbf{Q-q})\cdot\mathbf{r}(j0)]
+   \mathbf{Q}\cdot\mathbf{e}(j, \mathbf{q}\nu).
 
 where :math:`\mathbf{Q}` is the scattering vector defined as
 :math:`\mathbf{Q} = \mathbf{k} - \mathbf{k}'` with incident wave
-vector :math:`\mathbf{k}` and final wavevector :math:`\mathbf{k}'`
-following the book "Thermal of Neutron Scattering". Other variables
-are refered to :ref:`formulations` page. Note that
-the phase convention of the dynamical matrix
-given :ref:`here <dynacmial_matrix_theory>` is used.
-For inelastic neutron scattering, :math:`\bar{b}_j` is the average
-scattering length over isotopes and spins. For inelastic X-ray
-scattering, :math:`\bar{b}_j` is replaced by atomic form factor
+vector :math:`\mathbf{k}` and final wavevector
+:math:`\mathbf{k}'`. Similarly, :math:`\omega=1/\hbar (E-E')` where
+:math:`E` and :math:`E'` are the energies of the incident and final
+particles. These follow the convention of the book "Thermal of Neutron
+Scattering". In some other text books, their definitions have opposite
+sign. :math:`\Delta(\mathbf{Q-q})` is defined so that
+:math:`\Delta(\mathbf{Q-q})=1` with
+:math:`\mathbf{Q}-\mathbf{q}=\mathbf{G}` and
+:math:`\Delta(\mathbf{Q-q})=0` with :math:`\mathbf{Q}-\mathbf{q} \neq
+\mathbf{G}` where :math:`\mathbf{G}` is any reciprocal lattice
+vector. Other variables are refered to :ref:`formulations` page. Note
+that the phase convention of the dynamical matrix given :ref:`here
+<dynacmial_matrix_theory>` is used. This changes the representation of
+the phase factor in :math:`F(\mathbf{Q}, \mathbf{q}\nu)` from that
+given in the book "Thermal of Neutron Scattering", but the additional
+term :math:`\exp(i\mathbf{q}\cdot\mathbf{r})` comes from the different
+phase convention of the dynamical matrix or equivalently the
+eigenvector. For inelastic neutron scattering, :math:`\bar{b}_j` is
+the average scattering length over isotopes and spins. For inelastic
+X-ray scattering, :math:`\bar{b}_j` is replaced by atomic form factor
 :math:`f_j(\mathbf{Q})` and :math:`k'/k \sim 1`.
 
 Currently only :math:`S(\mathbf{Q}, \nu, \omega)^{+1\text{ph}}` is
@@ -61,12 +71,12 @@ runs with the input files in ``example/NaCl``.
 
 ::
 
+   #!/usr/bin/env python
+
    import numpy as np
-   from phonopy.api_phonopy import Phonopy
+   from phonopy import load
    from phonopy.spectrum.dynamic_structure_factor import atomic_form_factor_WK1995
-   from phonopy.interface.vasp import read_vasp
-   from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
-   from phonopy.units import THzToEv
+   from phonopy.phonon.degeneracy import degenerate_sets
 
 
    def get_func_AFF(f_params):
@@ -83,29 +93,31 @@ runs with the input files in ``example/NaCl``.
            scattering_lengths=None,
            n_points=51,
            verbose=False):
+       P = phonon.primitive_matrix
 
-       # Crystal transformation matrix from F-centre to primitive.
-       P = [[0, 0.5, 0.5],
-            [0.5, 0, 0.5],
-            [0.5, 0.5, 0]]
-
-       for G_cubic in G_points_cubic:
+       for G_cubic in np.array(G_points_cubic):
            G_prim = np.dot(G_cubic, P)
-           if verbose:
-               print("# G_cubic %s, G_prim %s" % (G_cubic, G_prim))
-
            for direction in directions:
                direction_prim = np.dot(direction, P)
 
-               G_to_L = np.array(
+               if verbose:
+                   print("# %s to %s (Primitive: %s to %s)"
+                         % (G_cubic, G_cubic + direction,
+                            G_prim, G_prim + direction_prim))
+
+               qpoints = np.array(
                    [direction_prim * x
                     for x in np.arange(n_points) / float(n_points - 1)])
-               phonon.set_band_structure([G_to_L])
+               phonon.set_band_structure([qpoints])
                _, distances, frequencies, _ = phonon.get_band_structure()
+               # Remove Gamma point because number of bands is different.
+               qpoints = qpoints[1:]
+               distances = distances[0][1:]
+               frequencies = frequencies[0][1:]
 
                if func_AFF is not None:
                    phonon.set_dynamic_structure_factor(
-                       G_to_L[1:],
+                       qpoints,
                        G_prim,
                        temperature,
                        func_atomic_form_factor=func_AFF,
@@ -113,7 +125,7 @@ runs with the input files in ``example/NaCl``.
                        run_immediately=False)
                elif scattering_lengths is not None:
                    phonon.set_dynamic_structure_factor(
-                       G_to_L[1:],
+                       qpoints,
                        G_prim,
                        temperature,
                        scattering_lengths=scattering_lengths,
@@ -122,34 +134,34 @@ runs with the input files in ``example/NaCl``.
                else:
                    raise SyntaxError
                dsf = phonon.dynamic_structure_factor
-               for i, S in enumerate(dsf):
-                   Q_prim = dsf.qpoints[i]
-                   Q_cubic = np.dot(Q_prim, np.linalg.inv(P))
+               for i, S in enumerate(dsf):  # Use as iterator
+                   Q_cubic = np.dot(dsf.Qpoints[i], np.linalg.inv(P))
 
                    if verbose:
-                       print("%f  %f %f %f  %f %f %f %f  %f %f %f %f" %
-                             ((distances[0][i + 1], ) + tuple(Q_cubic) +
-                              tuple(frequencies[0][i + 1][[0, 2, 3, 5]]
-                                    * THzToEv * 1000) +
-                              ((S[0] + S[1]) / 2, S[2], (S[3] + S[4]) / 2,
-                               S[5])))
+                       f = frequencies[i]
+                       bi_sets = degenerate_sets(f)
+                       text = "%f  " % distances[i]
+                       text += "%f %f %f  " % tuple(Q_cubic)
+                       text += " ".join(["%f" % (f[bi].sum() / len(bi))
+                                         for bi in bi_sets])
+                       text += "  "
+                       text += " ".join(["%f" % (S[bi].sum()) for bi in bi_sets])
+                       print(text)
+
                if verbose:
+                   print("")
                    print("")
 
 
-   def get_phonon():
-       cell = read_vasp("POSCAR")
-       phonon = Phonopy(cell,
-                        np.diag([2, 2, 2]),
-                        primitive_matrix=[[0, 0.5, 0.5],
-                                          [0.5, 0, 0.5],
-                                          [0.5, 0.5, 0]])
-       force_sets = parse_FORCE_SETS()
-       phonon.set_displacement_dataset(force_sets)
-       phonon.produce_force_constants()
+   if __name__ == '__main__':
+       phonon = load(np.diag([2, 2, 2]),
+                     primitive_matrix=[[0, 0.5, 0.5],
+                                       [0.5, 0, 0.5],
+                                       [0.5, 0.5, 0]],
+                     unitcell_filename="POSCAR",
+                     force_sets_filename="FORCE_SETS",
+                     born_filename="BORN")
        phonon.symmetrize_force_constants()
-       nac_params = parse_BORN(phonon.primitive, filename="BORN")
-       phonon.set_nac_params(nac_params)
 
        # Mesh sampling calculation is needed for Debye-Waller factor
        # This must be done with is_mesh_symmetry=False and is_eigenvectors=True.
@@ -158,24 +170,17 @@ runs with the input files in ``example/NaCl``.
                        is_mesh_symmetry=False,
                        is_eigenvectors=True)
 
-       return phonon
-
-
-   if __name__ == '__main__':
-       phonon = get_phonon()
-
-       # Written in FCC conventional basis
+       # Gamma-L path i FCC conventional basis
        directions_to_L = [[0.5, 0.5, 0.5],
                           [-0.5, 0.5, 0.5]]
-       G_points_cubic = ([7, 1, 1], )
-       n_points = 11
+       G_points_cubic = ([3, 3, 3], )
+       n_points = 51
        temperature = 300
 
-       print("# Distance from G point, 6 phonon freqs in meV, "
-             "6 dynamic structure factors")
-       print("# For degenerate bands, summation should be made "
-             "but here undone.")
-       print("# Gamma point is not calculated.")
+       print("# Distance from Gamma point, 4 band frequencies in meV, "
+             "4 dynamic structure factors")
+       print("# For degenerate bands, summations are made.")
+       print("# Gamma point is omitted due to different number of bands.")
        print("")
 
        # With scattering lengths
