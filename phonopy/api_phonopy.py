@@ -1415,7 +1415,7 @@ class Phonopy(object):
             self._dynamic_structure_factor.run()
 
     def get_dynamic_structure_factor(self):
-        return (self._dynamic_structure_factor.qpoints,
+        return (self._dynamic_structure_factor.Qpoints,
                 self._dynamic_structure_factor.S)
 
     #################
