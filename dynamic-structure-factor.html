@@ -69,7 +69,7 @@
 <li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Using phonopy as a python module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
 <li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
@@ -146,30 +146,40 @@ one-phonon dynamic structure factor is given as</p>
 \sum_\mathbf{q} |F(\mathbf{Q}, \mathbf{q}\nu)|^2
 (n_{\mathbf{q}\nu} + 1) \delta(\omega - \omega_{\mathbf{q}\nu})
 \Delta(\mathbf{Q-q}),\]</div>
-<p>and</p>
 <div class="math notranslate nohighlight">
 \[S(\mathbf{Q}, \nu, \omega)^{-1\text{ph}} =
 \frac{k'}{k} \frac{N}{\hbar}
 \sum_\mathbf{q} |F(\mathbf{Q}, \mathbf{q}\nu)|^2
 n_{\mathbf{q}\nu} \delta(\omega + \omega_{\mathbf{q}\nu})
-\Delta(\mathbf{Q+q}),\]</div>
+\Delta(\mathbf{Q-q}),\]</div>
 <p>with</p>
 <div class="math notranslate nohighlight">
-\[F(\mathbf{Q}, \mathbf{q}\nu) =
-\sum_j \sqrt{\frac{\hbar}{2 m_j \omega_{\mathbf{q}\nu}}}
-\bar{b}_j \exp\left(
--\frac{1}{2} \langle |\mathbf{Q}\cdot\mathbf{u}(j0)|^2 \rangle
-\right) \mathbf{Q}\cdot\mathbf{e}(j, \mathbf{q}\nu).\]</div>
+\[F(\mathbf{Q}, \mathbf{q}\nu) = \sum_j \sqrt{\frac{\hbar}{2 m_j
+\omega_{\mathbf{q}\nu}}} \bar{b}_j \exp\left( -\frac{1}{2} \langle
+|\mathbf{Q}\cdot\mathbf{u}(j0)|^2 \rangle \right)
+\exp[-i(\mathbf{Q-q})\cdot\mathbf{r}(j0)]
+\mathbf{Q}\cdot\mathbf{e}(j, \mathbf{q}\nu).\]</div>
 <p>where <span class="math notranslate nohighlight">\(\mathbf{Q}\)</span> is the scattering vector defined as
 <span class="math notranslate nohighlight">\(\mathbf{Q} = \mathbf{k} - \mathbf{k}'\)</span> with incident wave
-vector <span class="math notranslate nohighlight">\(\mathbf{k}\)</span> and final wavevector <span class="math notranslate nohighlight">\(\mathbf{k}'\)</span>
-following the book “Thermal of Neutron Scattering”. Other variables
-are refered to <a class="reference internal" href="formulation.html#formulations"><span class="std std-ref">Formulations</span></a> page. Note that
-the phase convention of the dynamical matrix
-given <a class="reference internal" href="formulation.html#dynacmial-matrix-theory"><span class="std std-ref">here</span></a> is used.
-For inelastic neutron scattering, <span class="math notranslate nohighlight">\(\bar{b}_j\)</span> is the average
-scattering length over isotopes and spins. For inelastic X-ray
-scattering, <span class="math notranslate nohighlight">\(\bar{b}_j\)</span> is replaced by atomic form factor
+vector <span class="math notranslate nohighlight">\(\mathbf{k}\)</span> and final wavevector
+<span class="math notranslate nohighlight">\(\mathbf{k}'\)</span>. Similarly, <span class="math notranslate nohighlight">\(\omega=1/\hbar (E-E')\)</span> where
+<span class="math notranslate nohighlight">\(E\)</span> and <span class="math notranslate nohighlight">\(E'\)</span> are the energies of the incident and final
+particles. These follow the convention of the book “Thermal of Neutron
+Scattering”. In some other text books, their definitions have opposite
+sign. <span class="math notranslate nohighlight">\(\Delta(\mathbf{Q-q})\)</span> is defined so that
+<span class="math notranslate nohighlight">\(\Delta(\mathbf{Q-q})=1\)</span> with
+<span class="math notranslate nohighlight">\(\mathbf{Q}-\mathbf{q}=\mathbf{G}\)</span> and
+<span class="math notranslate nohighlight">\(\Delta(\mathbf{Q-q})=0\)</span> with <span class="math notranslate nohighlight">\(\mathbf{Q}-\mathbf{q} \neq
+\mathbf{G}\)</span> where <span class="math notranslate nohighlight">\(\mathbf{G}\)</span> is any reciprocal lattice
+vector. Other variables are refered to <a class="reference internal" href="formulation.html#formulations"><span class="std std-ref">Formulations</span></a> page. Note
+that the phase convention of the dynamical matrix given <a class="reference internal" href="formulation.html#dynacmial-matrix-theory"><span class="std std-ref">here</span></a> is used. This changes the representation of
+the phase factor in <span class="math notranslate nohighlight">\(F(\mathbf{Q}, \mathbf{q}\nu)\)</span> from that
+given in the book “Thermal of Neutron Scattering”, but the additional
+term <span class="math notranslate nohighlight">\(\exp(i\mathbf{q}\cdot\mathbf{r})\)</span> comes from the different
+phase convention of the dynamical matrix or equivalently the
+eigenvector. For inelastic neutron scattering, <span class="math notranslate nohighlight">\(\bar{b}_j\)</span> is
+the average scattering length over isotopes and spins. For inelastic
+X-ray scattering, <span class="math notranslate nohighlight">\(\bar{b}_j\)</span> is replaced by atomic form factor
 <span class="math notranslate nohighlight">\(f_j(\mathbf{Q})\)</span> and <span class="math notranslate nohighlight">\(k'/k \sim 1\)</span>.</p>
 <p>Currently only <span class="math notranslate nohighlight">\(S(\mathbf{Q}, \nu, \omega)^{+1\text{ph}}\)</span> is
 calcualted with setting <span class="math notranslate nohighlight">\(N k'/k = 1\)</span> and the physical unit is
@@ -179,12 +189,12 @@ Angstrom.</p>
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p>Currently this feature is usable only from API. The following example
 runs with the input files in <code class="docutils literal notranslate"><span class="pre">example/NaCl</span></code>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">phonopy.api_phonopy</span> <span class="k">import</span> <span class="n">Phonopy</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">phonopy</span> <span class="k">import</span> <span class="n">load</span>
 <span class="kn">from</span> <span class="nn">phonopy.spectrum.dynamic_structure_factor</span> <span class="k">import</span> <span class="n">atomic_form_factor_WK1995</span>
-<span class="kn">from</span> <span class="nn">phonopy.interface.vasp</span> <span class="k">import</span> <span class="n">read_vasp</span>
-<span class="kn">from</span> <span class="nn">phonopy.file_IO</span> <span class="k">import</span> <span class="n">parse_FORCE_SETS</span><span class="p">,</span> <span class="n">parse_BORN</span>
-<span class="kn">from</span> <span class="nn">phonopy.units</span> <span class="k">import</span> <span class="n">THzToEv</span>
+<span class="kn">from</span> <span class="nn">phonopy.phonon.degeneracy</span> <span class="k">import</span> <span class="n">degenerate_sets</span>
 
 
 <span class="k">def</span> <span class="nf">get_func_AFF</span><span class="p">(</span><span class="n">f_params</span><span class="p">):</span>
@@ -201,29 +211,31 @@ runs with the input files in <code class="docutils literal notranslate"><span cl
         <span class="n">scattering_lengths</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">n_points</span><span class="o">=</span><span class="mi">51</span><span class="p">,</span>
         <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">primitive_matrix</span>
 
-    <span class="c1"># Crystal transformation matrix from F-centre to primitive.</span>
-    <span class="n">P</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-         <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-         <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>
-
-    <span class="k">for</span> <span class="n">G_cubic</span> <span class="ow">in</span> <span class="n">G_points_cubic</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">G_cubic</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">G_points_cubic</span><span class="p">):</span>
         <span class="n">G_prim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">G_cubic</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# G_cubic </span><span class="si">%s</span><span class="s2">, G_prim </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">G_cubic</span><span class="p">,</span> <span class="n">G_prim</span><span class="p">))</span>
-
         <span class="k">for</span> <span class="n">direction</span> <span class="ow">in</span> <span class="n">directions</span><span class="p">:</span>
             <span class="n">direction_prim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">direction</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
 
-            <span class="n">G_to_L</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2"> (Primitive: </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2">)&quot;</span>
+                      <span class="o">%</span> <span class="p">(</span><span class="n">G_cubic</span><span class="p">,</span> <span class="n">G_cubic</span> <span class="o">+</span> <span class="n">direction</span><span class="p">,</span>
+                         <span class="n">G_prim</span><span class="p">,</span> <span class="n">G_prim</span> <span class="o">+</span> <span class="n">direction_prim</span><span class="p">))</span>
+
+            <span class="n">qpoints</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
                 <span class="p">[</span><span class="n">direction_prim</span> <span class="o">*</span> <span class="n">x</span>
                  <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_points</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_points</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
-            <span class="n">phonon</span><span class="o">.</span><span class="n">set_band_structure</span><span class="p">([</span><span class="n">G_to_L</span><span class="p">])</span>
+            <span class="n">phonon</span><span class="o">.</span><span class="n">set_band_structure</span><span class="p">([</span><span class="n">qpoints</span><span class="p">])</span>
             <span class="n">_</span><span class="p">,</span> <span class="n">distances</span><span class="p">,</span> <span class="n">frequencies</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">get_band_structure</span><span class="p">()</span>
+            <span class="c1"># Remove Gamma point because number of bands is different.</span>
+            <span class="n">qpoints</span> <span class="o">=</span> <span class="n">qpoints</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">distances</span> <span class="o">=</span> <span class="n">distances</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">frequencies</span> <span class="o">=</span> <span class="n">frequencies</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
 
             <span class="k">if</span> <span class="n">func_AFF</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">phonon</span><span class="o">.</span><span class="n">set_dynamic_structure_factor</span><span class="p">(</span>
-                    <span class="n">G_to_L</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+                    <span class="n">qpoints</span><span class="p">,</span>
                     <span class="n">G_prim</span><span class="p">,</span>
                     <span class="n">temperature</span><span class="p">,</span>
                     <span class="n">func_atomic_form_factor</span><span class="o">=</span><span class="n">func_AFF</span><span class="p">,</span>
@@ -231,7 +243,7 @@ runs with the input files in <code class="docutils literal notranslate"><span cl
                     <span class="n">run_immediately</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">scattering_lengths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">phonon</span><span class="o">.</span><span class="n">set_dynamic_structure_factor</span><span class="p">(</span>
-                    <span class="n">G_to_L</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+                    <span class="n">qpoints</span><span class="p">,</span>
                     <span class="n">G_prim</span><span class="p">,</span>
                     <span class="n">temperature</span><span class="p">,</span>
                     <span class="n">scattering_lengths</span><span class="o">=</span><span class="n">scattering_lengths</span><span class="p">,</span>
@@ -240,34 +252,34 @@ runs with the input files in <code class="docutils literal notranslate"><span cl
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">SyntaxError</span>
             <span class="n">dsf</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">dynamic_structure_factor</span>
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">S</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dsf</span><span class="p">):</span>
-                <span class="n">Q_prim</span> <span class="o">=</span> <span class="n">dsf</span><span class="o">.</span><span class="n">qpoints</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                <span class="n">Q_cubic</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Q_prim</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">P</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">S</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dsf</span><span class="p">):</span>  <span class="c1"># Use as iterator</span>
+                <span class="n">Q_cubic</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dsf</span><span class="o">.</span><span class="n">Qpoints</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">P</span><span class="p">))</span>
 
                 <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%f</span><span class="s2">  </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2">  </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2">  </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span>
-                          <span class="p">((</span><span class="n">distances</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="p">)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">Q_cubic</span><span class="p">)</span> <span class="o">+</span>
-                           <span class="nb">tuple</span><span class="p">(</span><span class="n">frequencies</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">]]</span>
-                                 <span class="o">*</span> <span class="n">THzToEv</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span> <span class="o">+</span>
-                           <span class="p">((</span><span class="n">S</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">S</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">S</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="p">(</span><span class="n">S</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">S</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
-                            <span class="n">S</span><span class="p">[</span><span class="mi">5</span><span class="p">])))</span>
+                    <span class="n">f</span> <span class="o">=</span> <span class="n">frequencies</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">bi_sets</span> <span class="o">=</span> <span class="n">degenerate_sets</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                    <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%f</span><span class="s2">  &quot;</span> <span class="o">%</span> <span class="n">distances</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2">  &quot;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">Q_cubic</span><span class="p">)</span>
+                    <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">bi</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">bi</span><span class="p">))</span>
+                                      <span class="k">for</span> <span class="n">bi</span> <span class="ow">in</span> <span class="n">bi_sets</span><span class="p">])</span>
+                    <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot;  &quot;</span>
+                    <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">S</span><span class="p">[</span><span class="n">bi</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span> <span class="k">for</span> <span class="n">bi</span> <span class="ow">in</span> <span class="n">bi_sets</span><span class="p">])</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">get_phonon</span><span class="p">():</span>
-    <span class="n">cell</span> <span class="o">=</span> <span class="n">read_vasp</span><span class="p">(</span><span class="s2">&quot;POSCAR&quot;</span><span class="p">)</span>
-    <span class="n">phonon</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span>
-                     <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]),</span>
-                     <span class="n">primitive_matrix</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-                                       <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-                                       <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
-    <span class="n">force_sets</span> <span class="o">=</span> <span class="n">parse_FORCE_SETS</span><span class="p">()</span>
-    <span class="n">phonon</span><span class="o">.</span><span class="n">set_displacement_dataset</span><span class="p">(</span><span class="n">force_sets</span><span class="p">)</span>
-    <span class="n">phonon</span><span class="o">.</span><span class="n">produce_force_constants</span><span class="p">()</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">phonon</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]),</span>
+                  <span class="n">primitive_matrix</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+                                    <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+                                    <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span>
+                  <span class="n">unitcell_filename</span><span class="o">=</span><span class="s2">&quot;POSCAR&quot;</span><span class="p">,</span>
+                  <span class="n">force_sets_filename</span><span class="o">=</span><span class="s2">&quot;FORCE_SETS&quot;</span><span class="p">,</span>
+                  <span class="n">born_filename</span><span class="o">=</span><span class="s2">&quot;BORN&quot;</span><span class="p">)</span>
     <span class="n">phonon</span><span class="o">.</span><span class="n">symmetrize_force_constants</span><span class="p">()</span>
-    <span class="n">nac_params</span> <span class="o">=</span> <span class="n">parse_BORN</span><span class="p">(</span><span class="n">phonon</span><span class="o">.</span><span class="n">primitive</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;BORN&quot;</span><span class="p">)</span>
-    <span class="n">phonon</span><span class="o">.</span><span class="n">set_nac_params</span><span class="p">(</span><span class="n">nac_params</span><span class="p">)</span>
 
     <span class="c1"># Mesh sampling calculation is needed for Debye-Waller factor</span>
     <span class="c1"># This must be done with is_mesh_symmetry=False and is_eigenvectors=True.</span>
@@ -276,24 +288,17 @@ runs with the input files in <code class="docutils literal notranslate"><span cl
                     <span class="n">is_mesh_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                     <span class="n">is_eigenvectors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">phonon</span>
-
-
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="n">phonon</span> <span class="o">=</span> <span class="n">get_phonon</span><span class="p">()</span>
-
-    <span class="c1"># Written in FCC conventional basis</span>
+    <span class="c1"># Gamma-L path i FCC conventional basis</span>
     <span class="n">directions_to_L</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
                        <span class="p">[</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]]</span>
-    <span class="n">G_points_cubic</span> <span class="o">=</span> <span class="p">([</span><span class="mi">7</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">)</span>
-    <span class="n">n_points</span> <span class="o">=</span> <span class="mi">11</span>
+    <span class="n">G_points_cubic</span> <span class="o">=</span> <span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">)</span>
+    <span class="n">n_points</span> <span class="o">=</span> <span class="mi">51</span>
     <span class="n">temperature</span> <span class="o">=</span> <span class="mi">300</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# Distance from G point, 6 phonon freqs in meV, &quot;</span>
-          <span class="s2">&quot;6 dynamic structure factors&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# For degenerate bands, summation should be made &quot;</span>
-          <span class="s2">&quot;but here undone.&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# Gamma point is not calculated.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# Distance from Gamma point, 4 band frequencies in meV, &quot;</span>
+          <span class="s2">&quot;4 dynamic structure factors&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# For degenerate bands, summations are made.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# Gamma point is omitted due to different number of bands.&quot;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
     <span class="c1"># With scattering lengths</span>
@@ -351,7 +356,7 @@ runs with the input files in <code class="docutils literal notranslate"><span cl
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.7.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.6.<br/>
     </p>
   </div>
 </footer>
