@@ -7,7 +7,7 @@ from phonopy.interface.vasp import (get_scaled_positions_lines, check_forces,
                                     get_drift_forces)
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
-    hook = 'Total Forces'
+    hook = 'forces              :real:2:'
     is_parsed = True
     force_sets = []
     for i, filename in enumerate(forces_filenames):
