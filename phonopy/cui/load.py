@@ -32,6 +32,8 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import os
+import numpy as np
 from phonopy.api_phonopy import Phonopy
 from phonopy.units import VaspToTHz
 from phonopy.interface import (read_crystal_structure,
@@ -62,11 +64,48 @@ def load(supercell_matrix,
     else:
         _unitcell = unitcell
 
+    if len(np.ravel(supercell_matrix)) == 3:
+        _supercell_matrix = np.diag(supercell_matrix)
+    elif len(np.ravel(supercell_matrix)) == 9:
+        _supercell_matrix = np.reshape(supercell_matrix, (3, 3))
+    else:
+        print("supercell_matrix shape has to be (3,) or (3, 3)")
+        raise RuntimeError
+
+    if primitive_matrix is None:
+        _primitive_matrix = None
+    elif primitive_matrix == 'F':
+        _primitive_matrix = [[0, 1./2, 1./2],
+                             [1./2, 0, 1./2],
+                             [1./2, 1./2, 0]]
+    elif primitive_matrix == 'I':
+        _primitive_matrix = [[-1./2, 1./2, 1./2],
+                             [1./2, -1./2, 1./2],
+                             [1./2, 1./2, -1./2]]
+    elif primitive_matrix == 'A':
+        _primitive_matrix = [[1, 0, 0],
+                             [0, 1./2, -1./2],
+                             [0, 1./2, 1./2]]
+    elif primitive_matrix == 'C':
+        _primitive_matrix = [[1./2, 1./2, 0],
+                             [-1./2, 1./2, 0],
+                             [0, 0, 1]]
+    elif primitive_matrix == 'R':
+        _primitive_matrix = [[2./3, -1./3, -1./3],
+                             [1./3, 1./3, -2./3],
+                             [1./3, 1./3, 1./3]]
+    elif len(np.ravel(primitive_matrix)) == 9:
+        _primitive_matrix = np.reshape(primitive_matrix, (3, 3))
+    else:
+        print("primitive_matrix has to be either a 3x3 matrix, "
+              "'F', 'I', 'A', 'C', or 'R'")
+        raise RuntimeError
+
     # units keywords: factor, nac_factor, distance_to_A
     units = get_default_physical_units(calculator)
     phonon = Phonopy(_unitcell,
-                     supercell_matrix,
-                     primitive_matrix=primitive_matrix,
+                     _supercell_matrix,
+                     primitive_matrix=_primitive_matrix,
                      factor=units['factor'])
 
     if nac_params is None:
@@ -94,6 +133,10 @@ def load(supercell_matrix,
         phonon.set_force_constants(fc)
     elif force_sets_filename is not None:
         force_sets = parse_FORCE_SETS(filename=force_sets_filename)
+        phonon.set_displacement_dataset(force_sets)
+        phonon.produce_force_constants()
+    elif os.path.isfile("FORCE_SETS"):
+        force_sets = parse_FORCE_SETS()
         phonon.set_displacement_dataset(force_sets)
         phonon.produce_force_constants()
 
