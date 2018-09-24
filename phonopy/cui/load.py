@@ -137,7 +137,8 @@ def load(supercell_matrix,
         phonon.produce_force_constants()
     elif os.path.isfile("FORCE_SETS"):
         force_sets = parse_FORCE_SETS()
-        phonon.set_displacement_dataset(force_sets)
-        phonon.produce_force_constants()
+        if force_sets['natom'] == phonon.supercell.get_number_of_atoms():
+            phonon.set_displacement_dataset(force_sets)
+            phonon.produce_force_constants()
 
     return phonon
