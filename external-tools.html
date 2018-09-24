@@ -18,7 +18,7 @@
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Using phonopy as a python module" href="phonopy-module.html" />
+    <link rel="next" title="Phonopy API for Python" href="phonopy-module.html" />
     <link rel="prev" title="Auxiliary tools" href="auxiliary-tools.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -69,7 +69,7 @@
 <li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">External tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Using phonopy as a python module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
 <li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
@@ -96,6 +96,7 @@
 <li><a class="reference internal" href="#examples">Examples</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#phonolammps">phonolammps</a></li>
 <li><a class="reference internal" href="#ladytools">LADYtools</a></li>
 <li><a class="reference internal" href="#snaxs-interface">SNAXS interface</a></li>
 <li><a class="reference internal" href="#ascii-phonons">Ascii-phonons</a></li>
@@ -114,7 +115,7 @@
     </a>
   </li>
   <li>
-    <a href="phonopy-module.html" title="Next Chapter: Using phonopy as a python module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Using phonopy... &raquo;</span>
+    <a href="phonopy-module.html" title="Next Chapter: Phonopy API for Python"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Phonopy API f... &raquo;</span>
     </a>
   </li>
               
@@ -151,13 +152,26 @@ the difficulties of the maintenance and the test by main developers
 of phonopy under current style of phonopy development. However
 useful tools should be known. If developers want to use here to notify
 their tools, please contact via the phonopy mailing list.</p>
+<div class="contents local topic" id="contents">
+<ul class="simple">
+<li><a class="reference internal" href="#phonopy-spectroscopy" id="id2">Phonopy-Spectroscopy</a><ul>
+<li><a class="reference internal" href="#features" id="id3">Features</a></li>
+<li><a class="reference internal" href="#examples" id="id4">Examples</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#phonolammps" id="id5">phonolammps</a></li>
+<li><a class="reference internal" href="#ladytools" id="id6">LADYtools</a></li>
+<li><a class="reference internal" href="#snaxs-interface" id="id7">SNAXS interface</a></li>
+<li><a class="reference internal" href="#ascii-phonons" id="id8">Ascii-phonons</a></li>
+</ul>
+</div>
 <div class="section" id="phonopy-spectroscopy">
-<h2>Phonopy-Spectroscopy<a class="headerlink" href="#phonopy-spectroscopy" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id2">Phonopy-Spectroscopy</a><a class="headerlink" href="#phonopy-spectroscopy" title="Permalink to this headline">¶</a></h2>
 <p>Phonopy-Spectroscopy is a project to add the capability to simulate
 vibrational spectra to the Phonopy code.</p>
 <p><a class="reference external" href="https://github.com/JMSkelton/Phonopy-Spectroscopy">https://github.com/JMSkelton/Phonopy-Spectroscopy</a></p>
 <div class="section" id="features">
-<h3>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id3">Features</a><a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li>Calculate infrared (IR) intensities from Phonopy or VASP calculations.</li>
 <li>Calculate Raman-activity tensors and scalar-averaged intensities within the far-from-resonance approximation.</li>
@@ -168,27 +182,32 @@ vibrational spectra to the Phonopy code.</p>
 </ul>
 </div>
 <div class="section" id="examples">
-<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id4">Examples</a><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><a class="reference external" href="https://github.com/JMSkelton/Phonopy-Spectroscopy/tree/master/Examples/a-SiO2">https://github.com/JMSkelton/Phonopy-Spectroscopy/tree/master/Examples/a-SiO2</a></li>
 <li><a class="reference external" href="https://github.com/JMSkelton/Phonopy-Spectroscopy/tree/master/Examples/Benzene-Derivatives">https://github.com/JMSkelton/Phonopy-Spectroscopy/tree/master/Examples/Benzene-Derivatives</a></li>
 </ul>
 </div>
 </div>
+<div class="section" id="phonolammps">
+<span id="external-tools-phonolammps"></span><h2><a class="toc-backref" href="#id5">phonolammps</a><a class="headerlink" href="#phonolammps" title="Permalink to this headline">¶</a></h2>
+<p>LAMMPS interface for phonon calculations using phonopy</p>
+<p><a class="reference external" href="https://github.com/abelcarreras/phonolammps">https://github.com/abelcarreras/phonolammps</a></p>
+</div>
 <div class="section" id="ladytools">
-<h2>LADYtools<a class="headerlink" href="#ladytools" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id6">LADYtools</a><a class="headerlink" href="#ladytools" title="Permalink to this headline">¶</a></h2>
 <p>A set of helpful tolls for ab initio calculation software packages like
 ABINIT VASP CRYSTAL etc.</p>
 <p><a class="reference external" href="https://github.com/ladyteam/ladytools/wiki">https://github.com/ladyteam/ladytools/wiki</a></p>
 </div>
 <div class="section" id="snaxs-interface">
-<h2>SNAXS interface<a class="headerlink" href="#snaxs-interface" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id7">SNAXS interface</a><a class="headerlink" href="#snaxs-interface" title="Permalink to this headline">¶</a></h2>
 <p>Simulating Neutron And X-ray Scans; a tool for condensed-matter
 scientists studying phonons using neutron scattering.</p>
 <p><a class="reference external" href="https://github.com/danparshall/snaxs">https://github.com/danparshall/snaxs</a></p>
 </div>
 <div class="section" id="ascii-phonons">
-<h2>Ascii-phonons<a class="headerlink" href="#ascii-phonons" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id8">Ascii-phonons</a><a class="headerlink" href="#ascii-phonons" title="Permalink to this headline">¶</a></h2>
 <p>Ascii-phonons is a visualisation code which uses Blender (an
 open-source 3D graphics package) to generate animated GIFs and static
 arrow diagrams of phonon eigenmodes. These may be rendered at

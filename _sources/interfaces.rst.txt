@@ -6,7 +6,9 @@ Interfaces to calculators
 The interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT, Elk,
 SIESTA, and CRYSTAL are built in to the usual phonopy command. See the
 command options and how to invoke each of them at
-:ref:`force_calculators`.
+:ref:`force_calculators`. :ref:`LAMMPS interface
+<external_tools_phonolammps>` is provided as an external tool by Abel
+Carreras.
 
 Physical unit system for calculator
 ------------------------------------

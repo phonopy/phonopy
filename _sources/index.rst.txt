@@ -56,7 +56,8 @@ The following features of phonopy are highlighted:
   :ref:`Elk <elk_interface>`,
   :ref:`FHI-aims <FHI_aims_interface>`,
   :ref:`WIEN2k <wien2k_interface>`,
-  :ref:`CRYSTAL <crystal_interface>`
+  :ref:`CRYSTAL <crystal_interface>`,
+  :ref:`LAMMPS (external) <external_tools_phonolammps>`
 - :ref:`Phonopy API for Python <phonopy_module>`
 
 
