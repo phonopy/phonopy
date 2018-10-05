@@ -174,12 +174,12 @@ needed.
    set ``$PATH`` and ``$PYTHONPATH``::
 
       export PYTHONPATH=~/.local/lib:$PYTHONPATH
-      export PYTH=~/.local/bin:$PATH
+      export PATH=~/.local/bin:$PATH
 
    or if ``PYTHONPATH`` is not yet set in your system::
 
       export PYTHONPATH=~/.local/lib
-      export PYTH=~/.local/bin:$PATH
+      export PATH=~/.local/bin:$PATH
 
    in your ``.bashrc`` (or maybe ``.bash_profile``), ``.zshenv``, or
    other script for the other shells.

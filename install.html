@@ -11,7 +11,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
@@ -328,12 +328,12 @@ installed. Those locations can be <code class="docutils literal notranslate"><sp
 <li><p class="first">Assuming the installation location is those shown in the step 2,
 set <code class="docutils literal notranslate"><span class="pre">$PATH</span></code> and <code class="docutils literal notranslate"><span class="pre">$PYTHONPATH</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>export PYTHONPATH=~/.local/lib:$PYTHONPATH
-export PYTH=~/.local/bin:$PATH
+export PATH=~/.local/bin:$PATH
 </pre></div>
 </div>
 <p>or if <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code> is not yet set in your system:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>export PYTHONPATH=~/.local/lib
-export PYTH=~/.local/bin:$PATH
+export PATH=~/.local/bin:$PATH
 </pre></div>
 </div>
 <p>in your <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code> (or maybe <code class="docutils literal notranslate"><span class="pre">.bash_profile</span></code>), <code class="docutils literal notranslate"><span class="pre">.zshenv</span></code>, or
@@ -493,7 +493,7 @@ messages when ploting:</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.6.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.<br/>
     </p>
   </div>
 </footer>
