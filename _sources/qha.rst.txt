@@ -222,7 +222,7 @@ are used.
   (``Cv-volume.dat``) and :math:`S(V)` (``entropy-volume.dat``) for
   :math:`\partial S/\partial V` (``dsdv-temperature.dat``) and
   numerical differentiation of :math:`\partial V/\partial T`, e.g., see
-  Eq.(5) of PRB **81**, 17430 by Togo *et al.*
+  Eq.(5) of PRB **81**, 174301 by Togo *et al.*
   (``Cp-temperature_polyfit.*``).
   This may give smoother :math:`C_p` than that from
   :math:`-T\frac{\partial^2 G}{\partial T^2}`.
