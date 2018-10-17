@@ -85,6 +85,7 @@ class Settings(object):
         self._tmax = 1000
         self._tmin = 0
         self._tstep = 10
+        self._use_alm = False
         self._yaml_mode = False
 
     def set_band_paths(self, band_paths):
@@ -320,6 +321,12 @@ class Settings(object):
 
     def get_time_reversal_symmetry(self):
         return self._is_time_reversal_symmetry
+
+    def set_use_alm(self, use_alm):
+        self._use_alm = use_alm
+
+    def get_use_alm(self):
+        return self._use_alm
 
     def set_yaml_mode(self, yaml_mode):
         self._yaml_mode = yaml_mode
@@ -565,6 +572,10 @@ class ConfParser(object):
             if self._args.tstep:
                 self._confs['tstep'] = self._args.tstep
 
+        if 'use_alm' in arg_list:
+            if self._args.use_alm:
+                self._confs['alm'] = '.true.'
+
         if 'yaml_mode' in arg_list:
             if self._args.yaml_mode:
                 self._confs['yaml_mode'] = '.true.'
@@ -792,6 +803,11 @@ class ConfParser(object):
             if conf_key == 'gv_delta_q':
                 self.set_parameter('gv_delta_q', float(confs['gv_delta_q']))
 
+            # Use ALM for generating force constants
+            if conf_key == 'alm':
+                if confs['alm'].lower() == '.true.':
+                    self.set_parameter('alm', True)
+
             # Phonopy YAML mode
             if conf_key == 'yaml_mode':
                 if confs['yaml_mode'].lower() == '.true.':
@@ -968,6 +984,10 @@ class ConfParser(object):
         # This number includes end points
         if 'band_points' in params:
             self._settings.set_band_points(params['band_points'])
+
+        # Use ALM to generating force constants
+        if 'alm' in params:
+            self._settings.set_use_alm(params['alm'])
 
         # Activate phonopy YAML mode
         if 'yaml_mode' in params:

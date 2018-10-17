@@ -153,6 +153,7 @@ def get_parser():
         tmax=None,
         tmin=None,
         tstep=None,
+        use_alm=False,
         vasp_mode=False,
         verbose=False,
         wien2k_mode=False,
@@ -165,6 +166,9 @@ def get_parser():
     parser.add_argument(
         "--abinit", dest="abinit_mode", action="store_true",
         help="Invoke Abinit mode")
+    parser.add_argument(
+        "--alm", dest="use_alm", action="store_true",
+        help="Use ALM for generating force constants")
     parser.add_argument(
         "--amplitude", dest="displacement_distance", type=float,
         help="Distance of displacements")
