@@ -57,6 +57,63 @@ def load(supercell_matrix,
          symprec=1e-5,
          is_symmetry=True,
          log_level=0):
+    """Create Phonopy instance from parameters and/or input files.
+
+    When unitcell and unitcell_filename are not given, file name that is default
+    for the chosen calculator is looked for in the current directory as the
+    default behaviour.
+
+    When force_sets_filename and force_constants_filename are not given,
+    'FORCE_SETS' is looked for in the current directory as the default
+    behaviour.
+
+    Parameters
+    ----------
+    supercell_matrix : array_like
+        Supercell matrix multiplied to input cell basis vectors.
+        shape=(3, ) or (3, 3), where the former is considered a diagonal matrix.
+        dtype=int
+    primitive_matrix : array_like, optional
+        Primitive matrix multiplied to input cell basis vectors. Default is
+        the identity matrix.
+        shape=(3, 3)
+        dtype=float
+    nac_params : dict, optional
+        Parameters required for non-analytical term correction. Default is None.
+        {'born': Born effective charges
+                 (array_like, shape=(primitive cell atoms, 3, 3), dtype=float),
+         'dielectric': Dielectric constant matrix
+                       (array_like, shape=(3, 3), dtype=float),
+         'factor': unit conversion facotr (float)}
+    unitcell : PhonopyAtoms, optional
+        Input unit cell. Default is None.
+    calculator : str, optional.
+        Calculator used for computing forces. This is used to switch the set
+        of physical units. Default is 'vasp'.
+    unitcell_filename : str, optional
+        Input unit cell filename. Default is None.
+    born_filename : str, optional
+        Filename corresponding to 'BORN', a file contains non-analytical term
+        correction parameters.
+    force_sets_filename : str, optional
+        Filename of a file corresponding to 'FORCE_SETS', a file contains sets
+        of forces and displacements. Default is None.
+    factor : float, optional
+        Phonon frequency unit conversion factor. Default is
+        phonopy.units.VaspToTHz.
+    frequency_scale_factor : float, optional
+        Factor multiplied to calculated phonon frequency. Default is None,
+        i.e., effectively 1.
+    symprec : float, optional
+        Tolerance used to find crystal symmetry. Default is 1e-5.
+    is_symmetry : bool, optional
+        Setting False, crystal symmetry except for lattice translation is not
+        considered. Default is True.
+    log_level : int, optional
+        Verbosity control. Default is 0.
+
+    """
+
 
     if unitcell is None:
         _unitcell, _ = read_crystal_structure(filename=unitcell_filename,
