@@ -301,8 +301,8 @@ class Primitive(PhonopyAtoms):
         cell.
         ex. {0: 0, 4: 1}
     atomic_permutations : ndarray
-        Atomic position transitions by pure translations are represented
-        by changes of indices.
+        Atomic position permutation by pure translations is represented by
+        changes of indices.
         dtype='intc'
         shape=(num_trans, num_atoms_in_supercell)
         ex.       supercell atomic indices

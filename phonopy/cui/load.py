@@ -59,9 +59,9 @@ def load(supercell_matrix,
          log_level=0):
     """Create Phonopy instance from parameters and/or input files.
 
-    When unitcell and unitcell_filename are not given, file name that is default
-    for the chosen calculator is looked for in the current directory as the
-    default behaviour.
+    When unitcell and unitcell_filename are not given, file name that is
+    default for the chosen calculator is looked for in the current directory
+    as the default behaviour.
 
     When force_sets_filename and force_constants_filename are not given,
     'FORCE_SETS' is looked for in the current directory as the default
@@ -73,13 +73,18 @@ def load(supercell_matrix,
         Supercell matrix multiplied to input cell basis vectors.
         shape=(3, ) or (3, 3), where the former is considered a diagonal matrix.
         dtype=int
-    primitive_matrix : array_like, optional
+    primitive_matrix : array_like or str, optional
         Primitive matrix multiplied to input cell basis vectors. Default is
         the identity matrix.
         shape=(3, 3)
         dtype=float
+        When 'F', 'I', 'A', 'C', or 'R' is given instead of a 3x3 matrix,
+        the primitive matrix defined at
+        https://atztogo.github.io/spglib/definition.html
+        is used.
     nac_params : dict, optional
-        Parameters required for non-analytical term correction. Default is None.
+        Parameters required for non-analytical term correction. Default is
+        None.
         {'born': Born effective charges
                  (array_like, shape=(primitive cell atoms, 3, 3), dtype=float),
          'dielectric': Dielectric constant matrix
@@ -113,7 +118,6 @@ def load(supercell_matrix,
         Verbosity control. Default is 0.
 
     """
-
 
     if unitcell is None:
         _unitcell, _ = read_crystal_structure(filename=unitcell_filename,
@@ -189,12 +193,16 @@ def load(supercell_matrix,
                                        p2s_map=p2s_map)
         phonon.set_force_constants(fc)
     elif force_sets_filename is not None:
-        force_sets = parse_FORCE_SETS(filename=force_sets_filename)
-        phonon.set_displacement_dataset(force_sets)
-        phonon.produce_force_constants()
+        natom = phonon.supercell.get_number_of_atoms()
+        force_sets = parse_FORCE_SETS(natom=natom,
+                                      filename=force_sets_filename)
+        if force_sets:
+            phonon.set_displacement_dataset(force_sets)
+            phonon.produce_force_constants()
     elif os.path.isfile("FORCE_SETS"):
-        force_sets = parse_FORCE_SETS()
-        if force_sets['natom'] == phonon.supercell.get_number_of_atoms():
+        natom = phonon.supercell.get_number_of_atoms()
+        force_sets = parse_FORCE_SETS(natom=natom)
+        if force_sets:
             phonon.set_displacement_dataset(force_sets)
             phonon.produce_force_constants()
 
