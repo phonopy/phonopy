@@ -434,7 +434,6 @@ class Phonopy(object):
         self._displacement_dataset = displacement_dataset
         self._supercells_with_displacements = None
 
-
     @forces.setter
     def forces(self, sets_of_forces):
         """Set forces in displacement dataset.
@@ -460,7 +459,7 @@ class Phonopy(object):
                                     sets_of_forces):
                 disp['forces'] = forces
         elif 'forces' in self._displacement_dataset:
-            forces = np.array(set_of_forces, dtype='double', order='C')
+            forces = np.array(sets_of_forces, dtype='double', order='C')
             self._displacement_dataset['forces'] = forces
 
     def set_forces(self, sets_of_forces):

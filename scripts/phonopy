@@ -469,8 +469,8 @@ else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
         log_level=log_level)
 
     num_atom = unitcell.get_number_of_atoms()
-    num_satom = determinant(settings.get_supercell_matrix()) * num_atom
-    p2s_map = phonon.get_primitive().get_primitive_to_supercell_map()
+    num_satom = phonon.supercell.get_number_of_atoms()
+    p2s_map = phonon.primitive.p2s_map
 
     if settings.get_read_force_constants():
         if settings.get_is_hdf5() or settings.get_readfc_format() == 'hdf5':
@@ -513,7 +513,7 @@ else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
             sys.exit(1)
 
     elif file_exists("FORCE_SETS", log_level):
-        force_sets = file_IO.parse_FORCE_SETS()
+        force_sets = file_IO.parse_FORCE_SETS(natom=num_satom)
         if force_sets['natom'] != num_satom:
             error_text = "Number of atoms in supercell is not consistent with "
             error_text += "the data in FORCE_SETS.\n"
@@ -525,8 +525,8 @@ else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
             sys.exit(1)
 
 
-supercell = phonon.get_supercell()
-primitive = phonon.get_primitive()
+supercell = phonon.supercell
+primitive = phonon.primitive
 
 # Set atomic masses of primitive cell
 if settings.get_masses() is not None:
