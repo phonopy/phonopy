@@ -34,6 +34,7 @@
 
 import sys
 import numpy as np
+from phonopy.harmonic.force_constants import distribute_force_constants
 
 
 def get_fc2(supercell,
@@ -80,14 +81,28 @@ def get_fc2(supercell,
                 v1, v2 = indices // 3
                 c1, c2 = indices % 3
                 fc2[p2p_map[v1], v2, c1, c2] = fc
-        else:
+        elif atom_list is None or (atom_list == np.range(natom)):
             fc2 = np.zeros((natom, natom, 3, 3), dtype='double', order='C')
             for fc, indices in zip(*alm.get_fc(1, mode='all')):
                 v1, v2 = indices // 3
                 c1, c2 = indices % 3
                 fc2[v1, v2, c1, c2] = fc
-            if atom_list is not None:
-                fc2 = np.array(fc2[atom_list], dtype='double', order='C')
+        else:
+            fc2 = np.zeros((natom, natom, 3, 3), dtype='double', order='C')
+            for fc, indices in zip(*alm.get_fc(1, mode='origin')):
+                v1, v2 = indices // 3
+                c1, c2 = indices % 3
+                fc2[v1, v2, c1, c2] = fc
+            N = natom // primitive.get_number_of_atoms()
+            rotations = np.array([np.eye(3, dtype='intc'), ] * N,
+                                 dtype='intc', order='C')
+            distribute_force_constants(fc2,
+                                       p2s_map,
+                                       lattice,
+                                       rotations,
+                                       primitive.atomic_permutations,
+                                       atom_list=atom_list)
+            fc2 = np.array(fc2[atom_list], dtype='double', order='C')
 
     if log_level:
         print("--------------------------------"

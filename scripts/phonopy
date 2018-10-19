@@ -667,7 +667,7 @@ elif os.path.exists("FORCE_SETS"):
 
     if settings.get_fc_spg_symmetry() or settings.get_is_full_fc():
         # Need to calculate full force constant tensors
-        phonon.produce_force_constants()
+        phonon.produce_force_constants(use_alm=settings.get_use_alm())
     else:  # Only force constants between atoms in primitive cell and supercell
         phonon.produce_force_constants(calculate_full_force_constants=False,
                                        use_alm=settings.get_use_alm())
