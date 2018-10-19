@@ -81,18 +81,22 @@ def get_fc2(supercell,
                 v1, v2 = indices // 3
                 c1, c2 = indices % 3
                 fc2[p2p_map[v1], v2, c1, c2] = fc
+                if v2 in p2s_map:
+                    fc2[p2p_map[v2], v1, c2, c1] = fc
         elif atom_list is None or (atom_list == np.range(natom)):
             fc2 = np.zeros((natom, natom, 3, 3), dtype='double', order='C')
             for fc, indices in zip(*alm.get_fc(1, mode='all')):
                 v1, v2 = indices // 3
                 c1, c2 = indices % 3
                 fc2[v1, v2, c1, c2] = fc
-        else:
+                fc2[v2, v1, c2, c1] = fc
+        else:  # This case would not happen.
             fc2 = np.zeros((natom, natom, 3, 3), dtype='double', order='C')
             for fc, indices in zip(*alm.get_fc(1, mode='origin')):
                 v1, v2 = indices // 3
                 c1, c2 = indices % 3
                 fc2[v1, v2, c1, c2] = fc
+                fc2[v2, v1, c2, c1] = fc
             N = natom // primitive.get_number_of_atoms()
             rotations = np.array([np.eye(3, dtype='intc'), ] * N,
                                  dtype='intc', order='C')
