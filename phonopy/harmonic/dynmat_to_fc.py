@@ -65,6 +65,11 @@ def get_commensurate_points(supercell_matrix):  # wrt primitive cell
 def get_commensurate_points_in_integers(supercell_matrix):
     """Commensurate q-points in integer representation are returned.
 
+    A set of integer representation of lattice points is transformed to
+    the equivalent set of lattice points in fractional coordinates with
+    respect to supercell basis vectors by
+        integer_lattice_points / det(supercell_matrix)
+
     Parameters
     ----------
     supercell_matrix : array_like
@@ -77,13 +82,6 @@ def get_commensurate_points_in_integers(supercell_matrix):
     lattice_points : ndarray
         Integer representation of lattice points in supercell.
         shape=(N, 3)
-    prod_D : int
-        An integer to convert integer representation of lattice points to
-        fractional coordinates with respect to supercell basis vectors,
-        which are easily obtained by
-            lattice_points / float(prod_D)
-        The set of the transformed points is equivalent to that obtained by
-        using get_commensurate_points.
 
     """
     smat = np.array(supercell_matrix, dtype=int)
@@ -94,10 +92,9 @@ def get_commensurate_points_in_integers(supercell_matrix):
     lattice_points = np.dot(np.c_[a.ravel() * D[1] * D[2],
                                   b.ravel() * D[0] * D[2],
                                   c.ravel() * D[0] * D[1]], snf.Q.T)
-    prod_D = np.prod(D)
-    lattice_points = np.array(lattice_points % prod_D, dtype='intc', order='C')
-
-    return lattice_points, prod_D
+    lattice_points = np.array(lattice_points % np.prod(D),
+                              dtype='intc', order='C')
+    return lattice_points
 
 
 class DynmatToForceConstants(object):

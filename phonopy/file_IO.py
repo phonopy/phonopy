@@ -95,9 +95,6 @@ def _get_set_of_forces(f, natom=None, is_translational_invariance=False):
 
 def _get_set_of_forces_type2(f, natom):
     data = np.loadtxt(f, dtype='double')
-    print(data.shape[0])
-    print(natom)
-
     if data.shape[1] != 6 or data.shape[0] % natom != 0:
         print("Data shape of forces and displacements is incorrect.")
         raise RuntimeError
