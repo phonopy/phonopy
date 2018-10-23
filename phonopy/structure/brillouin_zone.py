@@ -65,10 +65,17 @@ search_space = np.array([
         [0, 0, -1]], dtype='intc')
 
 
-def get_qpoints_in_Brillouin_zone(reciprocal_lattice, qpoints):
+def get_qpoints_in_Brillouin_zone(reciprocal_lattice,
+                                  qpoints,
+                                  only_unique=False,
+                                  tolerance=0.01):
     bz = BrillouinZone(reciprocal_lattice)
     bz.run(qpoints)
-    return bz.shortest_qpoints
+    if only_unique:
+        return np.array([pts[0] for pts in bz.shortest_qpoints],
+                        dtype='double', order='C')
+    else:
+        return bz.shortest_qpoints
 
 
 class BrillouinZone(object):

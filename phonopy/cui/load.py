@@ -52,6 +52,7 @@ def load(supercell_matrix,
          born_filename=None,
          force_sets_filename=None,
          force_constants_filename=None,
+         use_alm=False,
          factor=VaspToTHz,
          frequency_scale_factor=None,
          symprec=1e-5,
@@ -103,6 +104,12 @@ def load(supercell_matrix,
     force_sets_filename : str, optional
         Filename of a file corresponding to 'FORCE_SETS', a file contains sets
         of forces and displacements. Default is None.
+    force_constants_filename : str, optional
+        Filename of a file corresponding to 'FORCE_CONSTANTS' or
+        'force_constants.hdf5', a file contains force constants.
+        Default is None.
+    use_alm : bool, optional
+        Default is False.
     factor : float, optional
         Phonon frequency unit conversion factor. Default is
         phonopy.units.VaspToTHz.
@@ -198,12 +205,16 @@ def load(supercell_matrix,
                                       filename=force_sets_filename)
         if force_sets:
             phonon.set_displacement_dataset(force_sets)
-            phonon.produce_force_constants()
+            phonon.produce_force_constants(
+                calculate_full_force_constants=False,
+                use_alm=use_alm)
     elif os.path.isfile("FORCE_SETS"):
         natom = phonon.supercell.get_number_of_atoms()
         force_sets = parse_FORCE_SETS(natom=natom)
         if force_sets:
             phonon.set_displacement_dataset(force_sets)
-            phonon.produce_force_constants()
+            phonon.produce_force_constants(
+                calculate_full_force_constants=False,
+                use_alm=use_alm)
 
     return phonon
