@@ -38,36 +38,36 @@ class TestRandomDisplacement(unittest.TestCase):
         rd = RandomDisplacement(phonon.dynamical_matrix,
                                 cutoff_frequency=0.01)
 
-        import matplotlib.pyplot as plt
-        fig = plt.figure()
+        # import matplotlib.pyplot as plt
+        # fig = plt.figure()
 
-        ax1 = fig.add_subplot(211)
-        vals_Na = []
-        vals_Cl = []
-        for i in range(1000):
-            rd.run(500)
-            vals_Na.append(rd.u[:32])
-            vals_Cl.append(rd.u[32:])
-        d_Na = np.sqrt((np.reshape(vals_Na, (-1, 3)) ** 2).sum(axis=1))
-        d_Cl = np.sqrt((np.reshape(vals_Cl, (-1, 3)) ** 2).sum(axis=1))
-        ax1.hist(d_Na, 50)
-        ax1.hist(d_Cl, 50)
-        ax1.set_xlim(0, 1)
+        # ax1 = fig.add_subplot(211)
+        # vals_Na = []
+        # vals_Cl = []
+        # for i in range(1000):
+        #     rd.run(500)
+        #     vals_Na.append(rd.u[:32])
+        #     vals_Cl.append(rd.u[32:])
+        # d_Na = np.sqrt((np.reshape(vals_Na, (-1, 3)) ** 2).sum(axis=1))
+        # d_Cl = np.sqrt((np.reshape(vals_Cl, (-1, 3)) ** 2).sum(axis=1))
+        # ax1.hist(d_Na, 50)
+        # ax1.hist(d_Cl, 50)
+        # ax1.set_xlim(0, 1)
 
-        ax2 = fig.add_subplot(212)
-        vals_Na = []
-        vals_Cl = []
-        for i in range(1000):
-            rd.run(1000)
-            vals_Na.append(rd.u[:32])
-            vals_Cl.append(rd.u[32:])
-        d_Na = np.sqrt((np.reshape(vals_Na, (-1, 3)) ** 2).sum(axis=1))
-        d_Cl = np.sqrt((np.reshape(vals_Cl, (-1, 3)) ** 2).sum(axis=1))
-        ax2.hist(d_Na, 50)
-        ax2.hist(d_Cl, 50)
-        ax2.set_xlim(0, 1)
+        # ax2 = fig.add_subplot(212)
+        # vals_Na = []
+        # vals_Cl = []
+        # for i in range(1000):
+        #     rd.run(1000)
+        #     vals_Na.append(rd.u[:32])
+        #     vals_Cl.append(rd.u[32:])
+        # d_Na = np.sqrt((np.reshape(vals_Na, (-1, 3)) ** 2).sum(axis=1))
+        # d_Cl = np.sqrt((np.reshape(vals_Cl, (-1, 3)) ** 2).sum(axis=1))
+        # ax2.hist(d_Na, 50)
+        # ax2.hist(d_Cl, 50)
+        # ax2.set_xlim(0, 1)
 
-        plt.show()
+        # plt.show()
 
 
 if __name__ == '__main__':

@@ -82,6 +82,9 @@ class RandomDisplacement(object):
         self._T = None
         self.u = None
 
+        self._unit_conversion = (Hbar * EV / AMU / THz
+                                 / (2 * np.pi) / Angstrom ** 2)
+
     def run(self, T):
         """
 
@@ -161,14 +164,12 @@ class RandomDisplacement(object):
         return u * np.sqrt(2)
 
     def _get_sigma(self, eigvals, T, mode=2):
-        unit = Hbar * EV / AMU / THz / (2 * np.pi) / Angstrom ** 2
-
         if mode == 0:  # Ignore modes having negative eigenvalues
             idx = np.where(eigvals * self._factor ** 2
                            > self._cutoff_frequency ** 2)[0]
             freqs = np.sqrt(eigvals[idx]) * self._factor
             n = 1.0 / (np.exp(freqs * THzToEv / (Kb * T)) - 1)
-            sigma2 = unit / freqs * (0.5 + n)
+            sigma2 = self._unit_conversion / freqs * (0.5 + n)
             sigma = np.zeros(len(eigvals), dtype='double')
             sigma[idx] = np.sqrt(sigma2)
         elif mode == 1:  # Use absolute frequencies
@@ -176,7 +177,7 @@ class RandomDisplacement(object):
                            > self._cutoff_frequency ** 2)[0]
             freqs = np.sqrt(abs(eigvals[idx])) * self._factor
             n = 1.0 / (np.exp(freqs * THzToEv / (Kb * T)) - 1)
-            sigma2 = unit / freqs * (0.5 + n)
+            sigma2 = self._unit_conversion / freqs * (0.5 + n)
             sigma = np.zeros(len(eigvals), dtype='double')
             sigma[idx] = np.sqrt(sigma2)
         elif mode == 2:  # Raise to lowest positive absolute value
@@ -186,7 +187,7 @@ class RandomDisplacement(object):
                              < -self._cutoff_frequency ** 2)[0]
             freqs = np.sqrt(eigvals[idx]) * self._factor
             n = 1.0 / (np.exp(freqs * THzToEv / (Kb * T)) - 1)
-            sigma2 = unit / freqs * (0.5 + n)
+            sigma2 = self._unit_conversion / freqs * (0.5 + n)
             sigma = np.zeros(len(eigvals), dtype='double')
             sigma[idx] = np.sqrt(sigma2)
             sigma[idx_n] = sigma[idx[np.argmin(freqs)]]
