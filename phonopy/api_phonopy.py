@@ -57,6 +57,7 @@ from phonopy.units import VaspToTHz
 from phonopy.phonon.dos import TotalDos, PartialDos
 from phonopy.phonon.thermal_displacement import (ThermalDisplacements,
                                                  ThermalDisplacementMatrices)
+from phonopy.phonon.random_displacements import RandomDisplacements
 from phonopy.phonon.animation import Animation
 from phonopy.phonon.modulation import Modulation
 from phonopy.phonon.qpoints import QpointsPhonon
@@ -1213,6 +1214,15 @@ class Phonopy(object):
                                                  temperature_index):
         self._thermal_displacement_matrices.write_cif(self._primitive,
                                                       temperature_index)
+
+    def set_random_displacements(self, T, n, cutoff_frequency=None):
+        rd = RandomDisplacements(self._dynamical_matrix,
+                                 cutoff_frequency=cutoff_frequency,
+                                 factor=self._factor)
+
+        # for i in range(n):
+
+
 
     # Sampling at q-points
     def set_qpoints_phonon(self,

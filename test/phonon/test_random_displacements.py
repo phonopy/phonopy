@@ -4,12 +4,12 @@ import numpy as np
 from phonopy import Phonopy
 from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
-from phonopy.phonon.random_displacement import RandomDisplacement
+from phonopy.phonon.random_displacements import RandomDisplacements
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-class TestRandomDisplacement(unittest.TestCase):
+class TestRandomDisplacements(unittest.TestCase):
     def setUp(self):
         pass
 
@@ -35,8 +35,8 @@ class TestRandomDisplacement(unittest.TestCase):
     def test_NaCl(self):
         phonon = self._get_phonon_NaCl()
         np.random.seed(19680801)
-        rd = RandomDisplacement(phonon.dynamical_matrix,
-                                cutoff_frequency=0.01)
+        rd = RandomDisplacements(phonon.dynamical_matrix,
+                                 cutoff_frequency=0.01)
 
         # import matplotlib.pyplot as plt
         # fig = plt.figure()
@@ -71,5 +71,5 @@ class TestRandomDisplacement(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestRandomDisplacement)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestRandomDisplacements)
     unittest.TextTestRunner(verbosity=2).run(suite)
