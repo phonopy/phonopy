@@ -1215,14 +1215,20 @@ class Phonopy(object):
         self._thermal_displacement_matrices.write_cif(self._primitive,
                                                       temperature_index)
 
-    def set_random_displacements(self, T, n, cutoff_frequency=None):
-        rd = RandomDisplacements(self._dynamical_matrix,
-                                 cutoff_frequency=cutoff_frequency,
-                                 factor=self._factor)
+    def set_random_displacements(self,
+                                 T,
+                                 number_of_snapshots=1,
+                                 cutoff_frequency=None):
+        self._random_displacements = RandomDisplacements(
+            self._dynamical_matrix,
+            cutoff_frequency=cutoff_frequency,
+            factor=self._factor)
+        self._random_displacements.run(
+            T, number_of_snapshots=number_of_snapshots)
 
-        # for i in range(n):
-
-
+    def get_random_displacements(self):
+        if self._random_displacements is not None:
+            return self._random_displacements.u
 
     # Sampling at q-points
     def set_qpoints_phonon(self,

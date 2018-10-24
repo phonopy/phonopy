@@ -137,7 +137,8 @@ class RandomDisplacements(object):
             eigvals, eigvecs = np.linalg.eigh(dm.real)
             self._eigvals_ii.append(eigvals)
             self._eigvecs_ii.append(eigvecs)
-            self._phase_ii.append(np.cos(2 * np.pi * np.dot(pos, q)))
+            self._phase_ii.append(
+                np.cos(2 * np.pi * np.dot(pos, q)).reshape(-1, 1))
 
         qpoints_ij = get_qpoints_in_Brillouin_zone(
             self._rec_lat,
@@ -149,7 +150,8 @@ class RandomDisplacements(object):
             eigvals, eigvecs = np.linalg.eigh(dm)
             self._eigvals_ij.append(eigvals)
             self._eigvecs_ij.append(eigvecs)
-            self._phase_ij.append(np.exp(2j * np.pi * np.dot(pos, q)))
+            self._phase_ij.append(
+                np.exp(2j * np.pi * np.dot(pos, q)).reshape(-1, 1))
 
     def _solve_ii(self, T, number_of_snapshots):
         natom = self._dynmat.supercell.get_number_of_atoms()
@@ -162,7 +164,7 @@ class RandomDisplacements(object):
                 number_of_snapshots, len(eigvals)) * sigma
             u_red = np.dot(dist_func, eigvecs.T).reshape(
                 number_of_snapshots, -1, 3)[:, self._s2pp, :]
-            u += (u_red.swapaxes(1, 2) * phase).swapaxes(1, 2)
+            u += u_red * phase
 
         return u
 
@@ -175,11 +177,10 @@ class RandomDisplacements(object):
             sigma = self._get_sigma(eigvals, T)
             dist_func = sigma * np.random.randn(
                 2, number_of_snapshots, len(eigvals))
-
             u_red = np.dot(dist_func, eigvecs.T).reshape(
                 2, number_of_snapshots, -1, 3)[:, :, self._s2pp, :]
-            u += (u_red[0].swapaxes(1, 2) * phase).swapaxes(1, 2).real
-            u -= (u_red[1].swapaxes(1, 2) * phase).swapaxes(1, 2).imag
+            u += (u_red[0] * phase).real
+            u -= (u_red[1] * phase).imag
 
         return u * np.sqrt(2)
 
