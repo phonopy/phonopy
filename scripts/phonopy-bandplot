@@ -221,6 +221,7 @@ def main(args):
                                             pdos_indices=args.pdos_indices,
                                             dos_factor=args.dos_factor)
 
+    curves = []
     for i, filename in enumerate(filenames):
         (distances,
          frequencies,
@@ -260,10 +261,11 @@ def main(args):
             q = 0
             for j, nq in enumerate(segment_nqpoint):
                 if j == 0:
-                    plt.plot(distances[q:(q + nq)],
-                             frequencies[q:(q + nq)] * args.factor,
-                             colors[i],
-                             label=filename)
+                    curves.append(
+                        plt.plot(distances[q:(q + nq)],
+                                 frequencies[q:(q + nq)] * args.factor,
+                                 colors[i],
+                                 label=filename)[0])
                 else:
                     plt.plot(distances[q:(q + nq)],
                              frequencies[q:(q + nq)] * args.factor,
@@ -310,7 +312,7 @@ def main(args):
             plt.title(args.title)
 
         if args.show_legend:
-            plt.legend()
+            plt.legend(handles=curves)
 
         if args.dos:
             arg_fmax = len(dos_frequencies)
