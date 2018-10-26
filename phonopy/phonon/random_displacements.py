@@ -103,7 +103,7 @@ class RandomDisplacements(object):
         self._phase_ij = []
         self._prepare()
 
-    def run(self, T, number_of_snapshots=1):
+    def run(self, T, number_of_snapshots=1, seed=None):
         """
 
         Parameters
@@ -112,8 +112,13 @@ class RandomDisplacements(object):
             Temperature in Kelvin.
         number_of_snapshots : int
             Number of snapshots to be generated.
+        seed : int or None, optional
+            Random seed passed to np.random.seed. Default is None. Integer
+            number has to be positive.
 
         """
+
+        np.random.seed(seed=seed)
 
         N = len(self._comm_points)
         u_ii = self._solve_ii(T, number_of_snapshots)

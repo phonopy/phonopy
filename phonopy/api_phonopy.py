@@ -1218,13 +1218,16 @@ class Phonopy(object):
     def set_random_displacements(self,
                                  T,
                                  number_of_snapshots=1,
+                                 seed=None,
                                  cutoff_frequency=None):
         self._random_displacements = RandomDisplacements(
             self._dynamical_matrix,
             cutoff_frequency=cutoff_frequency,
             factor=self._factor)
         self._random_displacements.run(
-            T, number_of_snapshots=number_of_snapshots)
+            T,
+            number_of_snapshots=number_of_snapshots,
+            seed=seed)
 
     def get_random_displacements(self):
         if self._random_displacements is not None:
