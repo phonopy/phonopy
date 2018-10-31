@@ -642,7 +642,11 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         grid = np.meshgrid(pts, pts, pts)
         for i in range(3):
             G[:, i] = grid[i].ravel()
+        grid = None
+        del grid
         G_vec_list = np.dot(G, rec_lat.T)
+        G = None
+        del G
         G_norm2 = ((G_vec_list) ** 2).sum(axis=1)
         return np.array(G_vec_list[G_norm2 < G_cutoff ** 2],
                         dtype='double', order='C')

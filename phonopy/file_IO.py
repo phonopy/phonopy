@@ -61,17 +61,52 @@ def write_FORCE_SETS(dataset, filename='FORCE_SETS'):
                 fp.write("%15.10f %15.10f %15.10f\n" % (tuple(f)))
 
 
-def parse_FORCE_SETS(is_translational_invariance=False, filename="FORCE_SETS"):
+def parse_FORCE_SETS(natom=None,
+                     is_translational_invariance=False,
+                     filename="FORCE_SETS"):
     with open(filename, 'r') as f:
-        return _get_set_of_forces(f, is_translational_invariance)
+        return _get_set_of_forces(
+            f,
+            natom=natom,
+            is_translational_invariance=is_translational_invariance)
 
 
-def parse_FORCE_SETS_from_strings(strings, is_translational_invariance=False):
-    return _get_set_of_forces(StringIO(strings),
-                              is_translational_invariance)
+def parse_FORCE_SETS_from_strings(strings,
+                                  natom=None,
+                                  is_translational_invariance=False):
+    return _get_set_of_forces(
+        StringIO(strings),
+        natom=natom,
+        is_translational_invariance=is_translational_invariance)
 
 
-def _get_set_of_forces(f, is_translational_invariance):
+def _get_set_of_forces(f, natom=None, is_translational_invariance=False):
+    first_line_ary = _get_line_ignore_blank(f).split()
+    f.seek(0)
+    if len(first_line_ary) == 1:
+        if natom is None or int(first_line_ary[0]) == natom:
+            return _get_set_of_forces_type1(f, is_translational_invariance)
+        else:
+            print("Number of forces is not consistent with supercell setting.")
+            raise RuntimeError
+    elif len(first_line_ary) == 6:
+        return _get_set_of_forces_type2(f, natom)
+
+
+def _get_set_of_forces_type2(f, natom):
+    data = np.loadtxt(f, dtype='double')
+    if data.shape[1] != 6 or data.shape[0] % natom != 0:
+        print("Data shape of forces and displacements is incorrect.")
+        raise RuntimeError
+    data = data.reshape(-1, natom, 6)
+    dataset = {'natom': natom}
+    dataset['displacements'] = np.array(data[:, :, :3],
+                                        dtype='double', order='C')
+    dataset['forces'] = np.array(data[:, :, 3:], dtype='double', order='C')
+    return dataset
+
+
+def _get_set_of_forces_type1(f, is_translational_invariance):
     set_of_forces = []
     num_atom = int(_get_line_ignore_blank(f))
     num_displacements = int(_get_line_ignore_blank(f))

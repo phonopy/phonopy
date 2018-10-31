@@ -221,6 +221,7 @@ def main(args):
                                             pdos_indices=args.pdos_indices,
                                             dos_factor=args.dos_factor)
 
+    curves = []
     for i, filename in enumerate(filenames):
         (distances,
          frequencies,
@@ -260,10 +261,11 @@ def main(args):
             q = 0
             for j, nq in enumerate(segment_nqpoint):
                 if j == 0:
-                    plt.plot(distances[q:(q + nq)],
-                             frequencies[q:(q + nq)] * args.factor,
-                             colors[i],
-                             label=filename)
+                    curves.append(
+                        plt.plot(distances[q:(q + nq)],
+                                 frequencies[q:(q + nq)] * args.factor,
+                                 colors[i],
+                                 label=filename)[0])
                 else:
                     plt.plot(distances[q:(q + nq)],
                              frequencies[q:(q + nq)] * args.factor,
@@ -286,9 +288,9 @@ def main(args):
 
         plt.xlim(distances[0], distances[-1])
         if args.f_max is not None:
-            plt.ylim(ymax=args.f_max)
+            plt.ylim(top=args.f_max)
         if args.f_min is not None:
-            plt.ylim(ymin=args.f_min)
+            plt.ylim(bottom=args.f_min)
         plt.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
         if len(filenames) == 1:
             xticks = segment_positions
@@ -310,7 +312,7 @@ def main(args):
             plt.title(args.title)
 
         if args.show_legend:
-            plt.legend()
+            plt.legend(handles=curves)
 
         if args.dos:
             arg_fmax = len(dos_frequencies)
@@ -349,13 +351,13 @@ def main(args):
             ax2.set_xlim((0, None))
 
             if args.f_max is not None:
-                plt.ylim(ymax=args.f_max)
+                plt.ylim(top=args.f_max)
             if args.f_min is not None:
-                plt.ylim(ymin=args.f_min)
+                plt.ylim(bottom=args.f_min)
             if args.dos_max is not None:
-                plt.xlim(xmax=args.dos_max)
+                plt.xlim(right=args.dos_max)
             if args.dos_min is not None:
-                plt.xlim(xmin=args.dos_min)
+                plt.xlim(left=args.dos_min)
 
         if args.output_filename is not None:
             plt.rcParams['pdf.fonttype'] = 42

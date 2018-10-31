@@ -34,6 +34,7 @@
 
 import numpy as np
 
+
 def degenerate_sets(freqs, cutoff=1e-4):
     indices = []
     done = []
@@ -51,6 +52,7 @@ def degenerate_sets(freqs, cutoff=1e-4):
 
     return indices
 
+
 def get_eigenvectors(q,
                      dm,
                      ddm,
@@ -59,7 +61,7 @@ def get_eigenvectors(q,
                      nac_q_direction=None):
     if nac_q_direction is not None and (np.abs(q) < 1e-5).all():
         dm.set_dynamical_matrix(q, q_direction=nac_q_direction)
-    else:        
+    else:
         dm.set_dynamical_matrix(q)
     eigvals, eigvecs = np.linalg.eigh(dm.get_dynamical_matrix())
     eigvals = eigvals.real
@@ -73,6 +75,7 @@ def get_eigenvectors(q,
 
     return eigvals, rot_eigvecs
 
+
 def rotate_eigenvectors(eigvals, eigvecs, dD):
     rot_eigvecs = np.zeros_like(eigvecs)
     eigvals_dD = np.zeros_like(eigvals)
@@ -81,6 +84,7 @@ def rotate_eigenvectors(eigvals, eigvecs, dD):
         eigvals_dD[deg], eigvecs_dD = np.linalg.eigh(dD_part)
         rot_eigvecs[:, deg] = np.dot(eigvecs[:, deg], eigvecs_dD)
     return rot_eigvecs, eigvals_dD
+
 
 def _get_dD(q, ddm, perturbation):
     ddm.run(q)
@@ -98,4 +102,3 @@ def _get_dD(q, ddm, perturbation):
         dD += 2 * perturbation[0] * perturbation[2] * ddm_vals[4]
         dD += 2 * perturbation[1] * perturbation[2] * ddm_vals[3]
         return dD / np.linalg.norm(perturbation) ** 2
-
