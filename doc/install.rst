@@ -22,7 +22,11 @@ To install::
 
 This phonopy's conda package is prepared and maintained by
 Paweł T. Jochym at conda-forge channel (please be aware that this is
-not a trivial job). The h5py installation is optional but recommended.
+not a trivial job). Installation of h5py is optional. When using hdf5
+files from NFS mouted location, the latest h5py may not work. In this
+case, installation of an older version is recommended::
+
+   % conda install hdf5=1.8.18
 
 Minimum steps to install and use phonopy via conda
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -37,7 +41,7 @@ environment).
 
    % conda create -n phonopy python=3
    % conda activate phonopy
-   % conda install -n phonopy -c conda-forge phonopy h5py
+   % conda install -c conda-forge phonopy h5py
 
 To exit from this conda's environment::
 
