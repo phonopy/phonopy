@@ -195,7 +195,12 @@ To install:</p>
 </div>
 <p>This phonopy’s conda package is prepared and maintained by
 Paweł T. Jochym at conda-forge channel (please be aware that this is
-not a trivial job). The h5py installation is optional but recommended.</p>
+not a trivial job). Installation of h5py is optional. When using hdf5
+files from NFS mouted location, the latest h5py may not work. In this
+case, installation of an older version is recommended:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">conda</span> <span class="n">install</span> <span class="n">hdf5</span><span class="o">=</span><span class="mf">1.8</span><span class="o">.</span><span class="mi">18</span>
+</pre></div>
+</div>
 <div class="section" id="minimum-steps-to-install-and-use-phonopy-via-conda">
 <h3><a class="toc-backref" href="#id2">Minimum steps to install and use phonopy via conda</a><a class="headerlink" href="#minimum-steps-to-install-and-use-phonopy-via-conda" title="Permalink to this headline">¶</a></h3>
 <p>In the following procedure, conda’s environment (see <a class="reference external" href="https://conda.io/docs/user-guide/tasks/manage-environments.html">details at conda
@@ -204,7 +209,7 @@ is used not to interfere existing environment (mainly python
 environment).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">phonopy</span> <span class="n">python</span><span class="o">=</span><span class="mi">3</span>
 <span class="o">%</span> <span class="n">conda</span> <span class="n">activate</span> <span class="n">phonopy</span>
-<span class="o">%</span> <span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">n</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="n">phonopy</span> <span class="n">h5py</span>
+<span class="o">%</span> <span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="n">phonopy</span> <span class="n">h5py</span>
 </pre></div>
 </div>
 <p>To exit from this conda’s environment:</p>
