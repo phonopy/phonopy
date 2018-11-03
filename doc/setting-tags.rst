@@ -108,11 +108,13 @@ determined by,
 
    ( \mathbf{a}_\mathrm{p} \; \mathbf{b}_\mathrm{p} \; \mathbf{c}_\mathrm{p} )
    =  ( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \;
-   \mathbf{c}_\mathrm{u} ) M_\mathrm{p}
+   \mathbf{c}_\mathrm{u} ) M_\mathrm{p}.
 
-Be careful that the axes in ``POSCAR`` is defined by three row
-vectors, i.e., :math:`( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u}
-\; \mathbf{c}_\mathrm{u} )^T`.
+:math:`M_\mathrm{p}` is a change of basis matrix and so
+:math:`M_\mathrm{p}^{-1}` must be an integer matrix. Be careful that
+:math:the axes in ``POSCAR`` is defined by three row vectors, i.e.,
+:math::math:`( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \;
+:math:\mathbf{c}_\mathrm{u} )^T`.
 
 ``ATOM_NAME``
 ~~~~~~~~~~~~~
