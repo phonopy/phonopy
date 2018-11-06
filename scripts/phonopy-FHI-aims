@@ -33,6 +33,10 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+# 2018/11/05 fidanyan: support of constrain_relaxation .true. flags in geometry.in
+#                      to calculate displacements for a subsystem only (e.g. the adsorbed layer without surface itself).
+#                      This simple wrap is NOT supposed to work together with supercells other than 1 1 1.
+#
 # 2018/07/19 florian.knoop: python2/3 and matplotlib compatibility to make things work
 # 2016/08/29  togo: Known bug. Support for modulation output doesn't work.
 #
@@ -823,7 +827,10 @@ if __name__ == "__main__":
     frequency_unit_to_THz = AimsFrequencyUnitFactorsToTHz[frequency_unit]
 
     print("# reading geometry.in")
-    cell = read_aims("geometry.in")
+    cell, full_cell, constraints = read_aims("geometry.in")
+    if (True in constraints) and ((supercell_matrix != numpy.eye(3)).all()):
+        raise RuntimeError("Current version does not support supercell and fixed atoms simultaneously.")
+
     if cell.get_magnetic_moments() is not None:
         print( "# | initial_moments found and about to be replicated in supercells")
         print( "# | WARNING: No consideration in symmetry analysis, i.e.")
@@ -847,7 +854,13 @@ if __name__ == "__main__":
     if not any(map(os.path.isdir, directories)):
         for (supercell, directory) in zip(supercells, directories):
             os.mkdir(directory)
-            write_aims(os.path.join(directory, "geometry.in"), supercell)
+            if True in constraints:
+                tmparray = numpy.asarray(full_cell.get_positions())
+                tmparray[~constraints] = supercell.get_positions()
+                full_cell.set_positions(tmparray.tolist())
+                write_aims(os.path.join(directory, "geometry.in"), full_cell, constraints)
+            else:
+                write_aims(os.path.join(directory, "geometry.in"), supercell)
             shutil.copy("control.in", directory)
         print( "!   Please calculate forces with FHI-aims for the (supercell) structures")
         print( "!   which have been generated in the subdirectories")
@@ -875,13 +888,16 @@ if __name__ == "__main__":
         #    - numerical tolerances are required when comparing read in positions and cell vectors
         #    - FHI-aims does not support other than 0 or 3 periodic directions
         tol = 1.0e-6
-        if ( (supercell_calculated.get_number_of_atoms() == supercell.get_number_of_atoms()) and
-             (supercell_calculated.get_atomic_numbers() == supercell.get_atomic_numbers()).all() and
-             (abs(supercell_calculated.get_positions()-supercell.get_positions()) < tol).all() and
-             (abs(supercell_calculated.get_cell()-supercell.get_cell()) < tol).all() ):
+        tmparray = numpy.asarray(full_cell.get_positions())
+        tmparray[~constraints] = supercell.get_positions()
+        full_cell.set_positions(tmparray.tolist())
+        if ( (supercell_calculated.get_number_of_atoms() == full_cell.get_number_of_atoms()) and
+             (supercell_calculated.get_atomic_numbers() == full_cell.get_atomic_numbers()).all() and
+             (abs(supercell_calculated.get_positions()-full_cell.get_positions()) < tol).all() and
+             (abs(supercell_calculated.get_cell()-full_cell.get_cell()) < tol).all() ):
             # read_aims_output reads in forces from FHI-aims output as list structure, 
             # but further processing below requires numpy array
-            forces = numpy.array(supercell_calculated.get_forces())
+            forces = numpy.array(supercell_calculated.get_forces())[~constraints]
             drift_force = forces.sum(axis=0)
             print("#   | correcting drift : %11.5f %11.5f %11.5f" % tuple(drift_force))
             for force in forces:

@@ -37,7 +37,9 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
+import numpy
 
+# fidanyan 2018/11/05
 # FK 2018/07/19
 def lmap(func, lis):
     """Python2/3 compatibility:
@@ -56,6 +58,8 @@ def read_aims(filename):
     positions = []
     symbols = []
     magmoms = []
+    constraints = []
+    constrain_warning = True    # prevents errors due to constrained lattice_vectors and some bad-formatting cases
     for line in lines:
         fields = line.split()
         if not len(fields):
@@ -74,25 +78,54 @@ def read_aims(filename):
             positions.append(pos)
             symbols.append(sym)
             magmoms.append(None)
+            constraints.append(False)
+            constrain_warning = False   # The only correct place for constrain_relaxation is after the atom line
+
         # implicitly assuming that initial_moments line adhere to FHI-aims geometry.in specification,
         # i.e. two subsequent initial_moments lines do not occur
         # if they do, the value specified in the last line is taken here - without any warning
         elif fields[0] == "initial_moment":
             magmoms[-1] = float(fields[1])
 
+        elif fields[0] == "constrain_relaxation":
+            if constrain_warning:
+                raise RuntimeError('\'constrain_relaxation\' found in wrong place. '
+                                   'If you have constrained lattice vectors, please remove constraints.')
+            if fields[1] == ".true.":
+                constraints[-1] = True
+            constrain_warning = True    # Two 'constrain_relaxation' one after another is bad.
+
     for (n,frac) in enumerate(is_frac):
         if frac:
             pos = [ sum( [ positions[n][l] * cell[l][i] for l in range(3) ] ) for i in range(3) ]
             positions[n] = pos
+
+    symbols = numpy.asarray(symbols)
+    positions = numpy.asarray(positions)
+    magmoms = numpy.asarray(magmoms)
+    constraints = numpy.asarray(constraints)
+
+    reduced_symbols = symbols[~constraints].tolist()
+    reduced_positions = positions[~constraints].tolist()
+    reduced_magmoms = magmoms[~constraints].tolist()
+    symbols = symbols.tolist()
+    positions = positions.tolist()
+    magmoms = magmoms.tolist()
+
+    if True in constraints:
+        print("geometry.in contains constrained atoms. They will not be included to the Hessian.")
+
     if None in magmoms:
-        atoms = Atoms(cell=cell, symbols=symbols, positions=positions)
+        atoms = Atoms(cell=cell, symbols=reduced_symbols, positions=reduced_positions)
+        all_atoms = Atoms(cell=cell, symbols=symbols, positions=positions)
     else:
-        atoms = Atoms(cell=cell, symbols=symbols, positions=positions, magmoms=magmoms)
+        atoms = Atoms(cell=cell, symbols=reduced_symbols, positions=reduced_positions, magmoms=reduced_magmoms)
+        all_atoms = Atoms(cell=cell, symbols=symbols, positions=positions, magmoms=magmoms)
 
-    return atoms
+    return (atoms, all_atoms, constraints)
 
 
-def write_aims(filename, atoms):
+def write_aims(filename, atoms, constraints=None):
     """Method to write FHI-aims geometry files in phonopy context."""
 
     lines = ""
@@ -116,6 +149,9 @@ def write_aims(filename, atoms):
         lines += atom_line % (tuple(positions[n]) + (symbols[n],))
         if magmoms is not None:
             lines += initial_moment_line % magmoms[n]
+        if constraints is not None:
+            if constraints[n]:
+                lines += "constrain_relaxation .true.\n"
 
     with open(filename, 'w') as f:
         f.write(lines)
