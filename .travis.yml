@@ -21,7 +21,6 @@ before_install:
     - conda update --yes conda
 
 install:
-    - python -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
     - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy h5py pyyaml matplotlib setuptools setuptools_scm
     - pwd
     - ./get_nanoversion.sh

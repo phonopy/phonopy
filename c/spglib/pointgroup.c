@@ -443,7 +443,9 @@ Pointgroup ptg_get_transformation_matrix(int transform_mat[3][3],
     get_axes(axes, pointgroup.laue, &pointsym);
     set_transformation_matrix(transform_mat, axes);
   } else {
-    pointgroup = ptg_get_pointgroup(0);
+    warning_print("spglib: No point group was found ");
+    warning_print("(line %d, %s).\n", __LINE__, __FILE__);
+    pointgroup.number = 0;
   }
 
   return pointgroup;
