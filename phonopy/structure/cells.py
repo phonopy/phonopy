@@ -1146,3 +1146,48 @@ class Xgcd(object):
         v = self._vals
         r, s, t = self._rst
         return "%d = %d * (%d) + %d * (%d)" % (r, v[0], s, v[1], t)
+
+
+def get_primitive_matrix_by_centring(centring):
+    if centring == 'P':
+        return [[1, 0, 0],
+                [0, 1, 0],
+                [0, 0, 1]]
+    elif centring == 'F':
+        return [[0, 1./2, 1./2],
+                [1./2, 0, 1./2],
+                [1./2, 1./2, 0]]
+    elif centring == 'I':
+        return [[-1./2, 1./2, 1./2],
+                [1./2, -1./2, 1./2],
+                [1./2, 1./2, -1./2]]
+    elif centring == 'A':
+        return [[1, 0, 0],
+                [0, 1./2, -1./2],
+                [0, 1./2, 1./2]]
+    elif centring == 'C':
+        return [[1./2, 1./2, 0],
+                [-1./2, 1./2, 0],
+                [0, 0, 1]]
+    elif centring == 'R':
+        return [[2./3, -1./3, -1./3],
+                [1./3, 1./3, -2./3],
+                [1./3, 1./3, 1./3]]
+    else:
+        return None
+
+
+def guess_primitive_matrix(unitcell, symprec=1e-5):
+    if unitcell.get_magnetic_moments() is not None:
+        msg = "Can not be used with the unit cell having magnetic moments."
+        raise RuntimeError(msg)
+
+    lattice = unitcell.get_cell()
+    cell = (lattice,
+            unitcell.get_scaled_positions(),
+            unitcell.get_atomic_numbers())
+    dataset = spg.get_symmetry_dataset(cell, symprec=1e-5)
+    tmat = dataset['transformation_matrix']
+    centring = dataset['international'][0]
+    pmat = get_primitive_matrix_by_centring(centring)
+    return np.dot(np.linalg.inv(tmat), pmat)

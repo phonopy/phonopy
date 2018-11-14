@@ -36,6 +36,8 @@ import os
 import numpy as np
 from phonopy.api_phonopy import Phonopy
 from phonopy.units import VaspToTHz
+from phonopy.structure.cells import (guess_primitive_matrix,
+                                     get_primitive_matrix_by_centring)
 from phonopy.interface import (read_crystal_structure,
                                get_default_physical_units)
 from phonopy.file_IO import (parse_BORN, parse_FORCE_SETS,
@@ -72,7 +74,8 @@ def load(supercell_matrix,
     ----------
     supercell_matrix : array_like
         Supercell matrix multiplied to input cell basis vectors.
-        shape=(3, ) or (3, 3), where the former is considered a diagonal matrix.
+        shape=(3, ) or (3, 3), where the former is considered a diagonal
+        matrix.
         dtype=int
     primitive_matrix : array_like or str, optional
         Primitive matrix multiplied to input cell basis vectors. Default is
@@ -137,37 +140,30 @@ def load(supercell_matrix,
     elif len(np.ravel(supercell_matrix)) == 9:
         _supercell_matrix = np.reshape(supercell_matrix, (3, 3))
     else:
-        print("supercell_matrix shape has to be (3,) or (3, 3)")
-        raise RuntimeError
+        msg = "supercell_matrix shape has to be (3,) or (3, 3)"
+        raise RuntimeError(msg)
 
-    if primitive_matrix is None:
-        _primitive_matrix = None
-    elif primitive_matrix == 'F':
-        _primitive_matrix = [[0, 1./2, 1./2],
-                             [1./2, 0, 1./2],
-                             [1./2, 1./2, 0]]
-    elif primitive_matrix == 'I':
-        _primitive_matrix = [[-1./2, 1./2, 1./2],
-                             [1./2, -1./2, 1./2],
-                             [1./2, 1./2, -1./2]]
-    elif primitive_matrix == 'A':
-        _primitive_matrix = [[1, 0, 0],
-                             [0, 1./2, -1./2],
-                             [0, 1./2, 1./2]]
-    elif primitive_matrix == 'C':
-        _primitive_matrix = [[1./2, 1./2, 0],
-                             [-1./2, 1./2, 0],
-                             [0, 0, 1]]
-    elif primitive_matrix == 'R':
-        _primitive_matrix = [[2./3, -1./3, -1./3],
-                             [1./3, 1./3, -2./3],
-                             [1./3, 1./3, 1./3]]
+    if primitive_matrix in (None, 'F', 'I', 'A', 'C', 'R', 'auto'):
+        if primitive_matrix == 'auto':
+            _primitive_matrix = guess_primitive_matrix(_unitcell,
+                                                       symprec=symprec)
+        else:
+            _primitive_matrix = get_primitive_matrix_by_centring(
+                primitive_matrix)
     elif len(np.ravel(primitive_matrix)) == 9:
-        _primitive_matrix = np.reshape(primitive_matrix, (3, 3))
+        matrix = np.reshape(primitive_matrix, (3, 3))
+        if matrix.dtype.kind in ('i', 'u', 'f'):
+            det = np.linalg.det(matrix)
+            if symprec < det and det < 1 + symprec:
+                _primitive_matrix = matrix
+            else:
+                msg = ("Determinant of primitive_matrix has to be larger "
+                       "than 0")
+                raise RuntimeError(msg)
     else:
-        print("primitive_matrix has to be either a 3x3 matrix, "
-              "'F', 'I', 'A', 'C', or 'R'")
-        raise RuntimeError
+        msg = ("primitive_matrix has to be a 3x3 matrix, None, 'auto', "
+               "'F', 'I', 'A', 'C', or 'R'")
+        raise RuntimeError(msg)
 
     # units keywords: factor, nac_factor, distance_to_A
     units = get_default_physical_units(calculator)
