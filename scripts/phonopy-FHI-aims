@@ -898,10 +898,13 @@ if __name__ == "__main__":
             # read_aims_output reads in forces from FHI-aims output as list structure, 
             # but further processing below requires numpy array
             forces = numpy.array(supercell_calculated.get_forces())[~constraints]
-            drift_force = forces.sum(axis=0)
-            print("#   | correcting drift : %11.5f %11.5f %11.5f" % tuple(drift_force))
-            for force in forces:
-                force -= drift_force / forces.shape[0]
+            if (True in constraints):
+                print("#   | drift correction is disabled to keep the forcefield of excluded subsystem.")
+            else:
+                drift_force = forces.sum(axis=0)
+                print("#   | correcting drift : %11.5f %11.5f %11.5f" % tuple(drift_force))
+                for force in forces:
+                    force -= drift_force / forces.shape[0]
             set_of_forces.append(forces)
         else:
             print("!!! calculated supercell varies from expected supercell in FHI-aims output %s" % aims_out)
