@@ -275,12 +275,10 @@ class Phonopy(object):
         disp = np.array(displacements, dtype='double', order='C')
         if (disp.ndim != 3 or
             disp.shape[1:] != (self._supercell.get_number_of_atoms(), 3)):
-            print("Array shape of displacements is incorrect.")
-            raise RuntimeError
+            raise RuntimeError("Array shape of displacements is incorrect.")
 
         if 'first_atoms' in self._displacement_dataset:
-            print("This displacement format is not supported.")
-            raise RuntimeError
+            raise RuntimeError("This displacement format is not supported.")
 
         self._displacement_dataset['displacements'] = disp
 
@@ -485,10 +483,10 @@ class Phonopy(object):
             fc_shape = force_constants.shape
             if fc_shape[0] != fc_shape[1]:
                 if self._primitive.get_number_of_atoms() != fc_shape[0]:
-                    print("Force constants shape disagrees with crystal "
-                          "structure setting. This may be due to "
-                          "PRIMITIVE_AXIS.")
-                    raise RuntimeError
+                    msg = ("Force constants shape disagrees with crystal "
+                           "structure setting. This may be due to "
+                           "PRIMITIVE_AXIS.")
+                    raise RuntimeError(msg)
 
         self._force_constants = force_constants
         self._set_dynamical_matrix()
@@ -540,11 +538,9 @@ class Phonopy(object):
         if 'first_atoms' in self._displacement_dataset:
             for disp in self._displacement_dataset['first_atoms']:
                 if 'forces' not in disp:
-                    print("Forces are not yet set.")
-                    raise RuntimeError
+                    raise RuntimeError("Forces are not yet set.")
         elif 'forces' not in self._displacement_dataset:
-            print("Forces are not yet set.")
-            raise RuntimeError
+            raise RuntimeError("Forces are not yet set.")
 
         if calculate_full_force_constants:
             self._run_force_constants_from_forces(
@@ -881,8 +877,8 @@ class Phonopy(object):
                       tetrahedron_method=False):
 
         if self._mesh is None:
-            print("\'set_mesh\' has to be done before DOS calculation.")
-            raise RuntimeError
+            msg = "\'set_mesh\' has to be done before DOS calculation."
+            raise RuntimeError(msg)
 
         total_dos = TotalDos(self._mesh,
                              sigma=sigma,
@@ -912,9 +908,9 @@ class Phonopy(object):
 
     def plot_total_DOS(self):
         if self._total_dos is None:
-            print("\'set_total_dos\' has to be done before plotting "
-                  "total DOS.")
-            raise RuntimeError
+            msg = ("\'set_total_dos\' has to be done before plotting "
+                   "total DOS.")
+            raise RuntimeError(msg)
 
         import matplotlib.pyplot as plt
 
@@ -945,19 +941,17 @@ class Phonopy(object):
         self._pdos = None
 
         if self._mesh is None:
-            print("\'set_mesh\' has to be done before PDOS calculation.")
-            raise RuntimeError
+            msg = "\'set_mesh\' has to be done before PDOS calculation."
+            raise RuntimeError(msg)
 
         if self._mesh.eigenvectors is None:
-            print("\'set_mesh\' had to be called with "
-                  "is_eigenvectors=True.")
-            return RuntimeError
+            msg = "\'set_mesh\' had to be called with is_eigenvectors=True."
+            return RuntimeError(msg)
 
         num_grid = np.prod(self._mesh.get_mesh_numbers())
         if num_grid != len(self._mesh.get_ir_grid_points()):
-            print("\'set_mesh\' had to be called with "
-                  "is_mesh_symmetry=False.")
-            raise RuntimeError
+            msg = "\'set_mesh\' had to be called with is_mesh_symmetry=False."
+            raise RuntimeError(msg)
 
         if direction is not None:
             direction_cart = np.dot(direction, self._primitive.get_cell())
@@ -1432,8 +1426,7 @@ class Phonopy(object):
     # Group velocity
     def set_group_velocity(self, q_length=None):
         if self._dynamical_matrix is None:
-            print("Dynamical matrix has not yet built.")
-            raise RuntimeError
+            raise RuntimeError("Dynamical matrix has not yet built.")
 
         self._group_velocity = GroupVelocity(
             self._dynamical_matrix,
@@ -1528,6 +1521,10 @@ class Phonopy(object):
                     atom_list=distributed_atom_list,
                     log_level=self._log_level)
             else:
+                if 'displacements' in self._displacement_dataset:
+                    msg = ("This data format of displacement_dataset is not "
+                           "supported unless use_alm=True.")
+                    raise RuntimeError(msg)
                 self._force_constants = get_fc2(
                     self._supercell,
                     self._symmetry,
@@ -1539,14 +1536,11 @@ class Phonopy(object):
         self._dynamical_matrix = None
 
         if self._supercell is None or self._primitive is None:
-            print("Supercell or primitive is not created.")
-            raise RuntimeError
+            raise RuntimeError("Supercell or primitive is not created.")
         if self._force_constants is None:
-            print("Force constants are not prepared.")
-            raise RuntimeError
+            raise RuntimeError("Force constants are not prepared.")
         if self._primitive.get_masses() is None:
-            print("Atomic masses are not correctly set.")
-            raise RuntimeError
+            raise RuntimeError("Atomic masses are not correctly set.")
         self._dynamical_matrix = get_dynamical_matrix(
             self._force_constants,
             self._supercell,
@@ -1611,7 +1605,7 @@ class Phonopy(object):
         try:
             self._primitive = get_primitive(
                 self._supercell, trans_mat, self._symprec)
-        except ValueError as err:
-            print("Creating primitive cell is failed.")
-            print("PRIMITIVE_AXIS may be incorrectly specified.")
-            raise
+        except ValueError:
+            msg = ("Creating primitive cell is failed. "
+                   "PRIMITIVE_AXIS may be incorrectly specified.")
+            raise RuntimeError(msg)

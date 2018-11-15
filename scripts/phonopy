@@ -434,7 +434,7 @@ if magmoms is not None:
 # Set primitive matrix #
 ########################
 primitive_matrix = settings.get_primitive_matrix()
-if primitive_matrix == 'auto':
+if type(primitive_matrix) is str and primitive_matrix == 'auto':
     primitive_matrix = guess_primitive_matrix(unitcell, symprec=args.symprec)
 
 ################################################
@@ -560,7 +560,8 @@ if log_level > 0:
     if interface_mode:
         print("Calculator interface: %s" % interface_mode)
     print_settings(settings)
-    if settings.get_primitive_matrix() == 'auto':
+    if (type(settings.get_primitive_matrix()) is str and
+        settings.get_primitive_matrix() == 'auto'):
         for v in primitive_matrix:
             print("    %s" % v)
     if magmoms is None:

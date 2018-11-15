@@ -61,8 +61,7 @@ def get_fc2(supercell,
     try:
         from alm import ALM
     except ImportError:
-        print("ALM python module was not found.")
-        raise
+        raise ModuleNotFoundError("ALM python module was not found.")
 
     sys.stdout.flush()
     with ALM(lattice, positions, numbers) as alm:
