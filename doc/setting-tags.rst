@@ -72,7 +72,12 @@ vectors, i.e., :math:`( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u}
 
 ``PRIMITIVE_AXES`` or ``PRIMITIVE_AXIS``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-::
+
+When specified, transformation from the input unit cell to the
+primitive cell is performed. With this, the primitive cell basis
+vectors are used as the coordinate system for the phonon calculation.
+The transformation matrix is specified by nine values. The first,
+second, and third three values give the rows of the 3x3 matrix as follows::
 
    PRIMITIVE_AXES = 0.0 0.5 0.5  0.5 0.0 0.5  0.5 0.5 0.0
 
@@ -83,12 +88,12 @@ Likewise,
    PRIMITIVE_AXES = 0 1/2 1/2  1/2 0 1/2  1/2 1/2 0
 
 The primitive cell for building the dynamical matrix is created by
-multiplying primitive-axis matrix :math:`M_\mathrm{p}`. Let the matrix
-as,
+multiplying primitive-axis matrix :math:`\mathrm{M}_\mathrm{p}`. Let
+the matrix as,
 
 .. math::
 
-   M_\mathrm{p} = \begin{pmatrix}
+   \mathrm{M}_\mathrm{p} = \begin{pmatrix}
    0.0 & 0.5 & 0.5 \\
    0.5 & 0.0 & 0.5 \\
    0.5 & 0.5 & 0.0
@@ -108,13 +113,20 @@ determined by,
 
    ( \mathbf{a}_\mathrm{p} \; \mathbf{b}_\mathrm{p} \; \mathbf{c}_\mathrm{p} )
    =  ( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \;
-   \mathbf{c}_\mathrm{u} ) M_\mathrm{p}.
+   \mathbf{c}_\mathrm{u} ) \mathrm{M}_\mathrm{p}.
 
-:math:`M_\mathrm{p}` is a change of basis matrix and so
-:math:`M_\mathrm{p}^{-1}` must be an integer matrix. Be careful that
+:math:`\mathrm{M}_\mathrm{p}` is a change of basis matrix and so
+:math:`\mathrm{M}_\mathrm{p}^{-1}` must be an integer matrix. Be careful that
 :math:the axes in ``POSCAR`` is defined by three row vectors, i.e.,
-:math::math:`( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \;
-:math:\mathbf{c}_\mathrm{u} )^T`.
+:math:`( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \;
+\mathbf{c}_\mathrm{u} )^T`.
+
+**New in v1.14.0** ``PRIMITIVE_AXES = AUTO`` is supported. This
+enables to choose the transformation matrix automatically. Since the choice
+of the primitive cell is arbitrary, it is recommended to use
+``PRIMITIVE_AXES = AUTO`` to check if a possible transformation matrix
+exists or not.
+
 
 ``ATOM_NAME``
 ~~~~~~~~~~~~~
