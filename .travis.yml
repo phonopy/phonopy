@@ -19,6 +19,7 @@ before_install:
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
     - conda update --yes conda
+    - echo $TRAVIS_TAG
 
 install:
     - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy h5py pyyaml matplotlib setuptools setuptools_scm
@@ -35,6 +36,7 @@ deploy:
     - provider: pypi
       server: https://test.pypi.org/legacy/
       skip_cleanup: true
+      skip_existing: true
       distributions: sdist
       user: atztogo
       password:
@@ -58,6 +60,7 @@ deploy:
     # production pypi
     - provider: pypi
       skip_cleanup: true
+      skip_existing: true
       distributions: sdist
       user: atztogo
       password:
