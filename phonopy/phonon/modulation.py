@@ -33,12 +33,12 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-import sys
 from phonopy.structure.cells import get_supercell
 from phonopy.interface.vasp import write_vasp
 from phonopy.units import VaspToTHz
 from phonopy.phonon.degeneracy import get_eigenvectors
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
+
 
 class Modulation(object):
     def __init__(self,
@@ -53,13 +53,13 @@ class Modulation(object):
         """Class describe atomic modulations
 
         Atomic modulations corresponding to phonon modes are created.
-        
+
         """
         self._dm = dynamical_matrix
         self._primitive = dynamical_matrix.get_primitive()
         self._phonon_modes = phonon_modes
         self._dimension = dimension
-        self._delta_q = delta_q # 1st/2nd order perturbation direction
+        self._delta_q = delta_q  # 1st/2nd order perturbation direction
         self._nac_q_direction = nac_q_direction
         self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
         self._derivative_order = derivative_order
@@ -90,7 +90,7 @@ class Modulation(object):
             self._u.append(u)
             self._eigvecs.append(eigvecs[:, band_index])
             self._eigvals.append(eigvals[band_index])
-            
+
     def get_modulated_supercells(self):
         modulations = []
         for u in self._u:
@@ -106,7 +106,7 @@ class Modulation(object):
             cell = self._get_cell_with_modulation(u)
             write_vasp((filename+"-%03d") % (i+1), cell, direct=True)
             deltas.append(u)
-    
+
         sum_of_deltas = np.sum(deltas, axis=0)
         cell = self._get_cell_with_modulation(sum_of_deltas)
         write_vasp(filename, cell, direct=True)
@@ -116,13 +116,10 @@ class Modulation(object):
 
     def write_yaml(self):
         self._write_yaml()
-                    
+
     def _get_cell_with_modulation(self, modulation):
         lattice = self._supercell.get_cell()
         positions = self._supercell.get_positions()
-        masses = self._supercell.get_masses()
-        magmoms = self._supercell.get_magnetic_moments()
-        symbols = self._supercell.get_chemical_symbols()
         positions += modulation.real
         scaled_positions = np.dot(positions, np.linalg.inv(lattice))
         for p in scaled_positions:
@@ -146,7 +143,7 @@ class Modulation(object):
             dim = np.eye(3, dtype='intc')
 
         return dim
-        
+
     def _get_displacements(self, eigvec, q, amplitude, argument):
         m = self._supercell.get_masses()
         s2u_map = self._supercell.get_supercell_to_unitcell_map()
@@ -154,18 +151,19 @@ class Modulation(object):
         s2uu_map = [u2u_map[x] for x in s2u_map]
         spos = self._supercell.get_scaled_positions()
         dim = self._supercell.get_supercell_matrix()
-        coefs = np.exp(2j * np.pi * np.dot(np.dot(spos, dim.T), q)) / np.sqrt(m)
+        coefs = (np.exp(2j * np.pi * np.dot(np.dot(spos, dim.T), q))
+                 / np.sqrt(m))
         u = []
         for i, coef in enumerate(coefs):
             eig_index = s2uu_map[i] * 3
             u.append(eigvec[eig_index:eig_index + 3] * coef)
-        
+
         u = np.array(u) / np.sqrt(len(m))
         phase_factor = self._get_phase_factor(u, argument)
         u *= phase_factor * amplitude
-        
+
         return u
-        
+
     def _get_phase_factor(self, modulation, argument):
         u = np.ravel(modulation)
         index_max_elem = np.argmax(abs(u))
@@ -198,8 +196,7 @@ class Modulation(object):
         for u, mode in zip(self._u,
                            self._phonon_modes):
             q = mode[0]
-            w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" %
-                       tuple(q))
+            w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))
             w.write("  band: %d\n" % (mode[1] + 1))
             w.write("  amplitude: %f\n" % mode[2])
             w.write("  phase: %f\n" % mode[3])
@@ -225,8 +222,8 @@ class Modulation(object):
         for eigvec, freq, mode in zip(self._eigvecs,
                                       freqs,
                                       self._phonon_modes):
-            w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" %
-                       tuple(mode[0]))
+            w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n"
+                    % tuple(mode[0]))
             w.write("  band: %d\n" % (mode[1] + 1))
             w.write("  amplitude: %f\n" % mode[2])
             w.write("  phase: %f\n" % mode[3])
@@ -237,7 +234,7 @@ class Modulation(object):
                 for k in (0, 1, 2):
                     val = eigvec[j * 3 + k]
                     w.write("    - [ %17.14f, %17.14f ] # %f\n" %
-                               (val.real, val.imag, np.angle(val, deg=True)))
+                            (val.real, val.imag, np.angle(val, deg=True)))
 
     def _write_cell_yaml(self, cell, w):
         lattice = cell.get_cell()
@@ -247,7 +244,7 @@ class Modulation(object):
         w.write("  atom_info:\n")
         for m, s in zip(masses, symbols):
             w.write("  - { name: %2s, mass: %10.5f }\n" % (s, m))
-        
+
         w.write("  reciprocal_lattice:\n")
         for vec, axis in zip(np.linalg.inv(lattice), ('a*', 'b*', 'c*')):
             w.write("  - [ %12.8f, %12.8f, %12.8f ] # %2s\n" %

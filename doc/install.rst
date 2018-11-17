@@ -7,6 +7,92 @@ Installation
    :depth: 3
    :local:
 
+.. _install_conda:
+
+Using conda
+-----------
+
+Conda is an open source package management system. Once the conda
+system is set-up (see `details about conda setting up
+<https://conda.io/docs/user-guide/install/index.html>`_), the installation
+of phonopy is super easy for any of Linux, MacOSX, and Windows.
+To install::
+
+   % conda install -c conda-forge phonopy h5py
+
+This phonopy's conda package is prepared and maintained by
+Paweł T. Jochym at conda-forge channel (please be aware that this is
+not a trivial job). Installation of h5py is optional. When using hdf5
+files from NFS mouted location, the latest h5py may not work. In this
+case, installation of an older version is recommended::
+
+   % conda install hdf5=1.8.18
+
+Minimum steps to install and use phonopy via conda
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the following procedure, conda's environment (see `details at conda
+web site
+<https://conda.io/docs/user-guide/tasks/manage-environments.html>`_)
+is used not to interfere existing environment (mainly python
+environment).
+
+::
+
+   % conda create -n phonopy python=3
+   % conda activate phonopy
+   % conda install -c conda-forge phonopy h5py
+
+To exit from this conda's environment::
+
+   % conda deactivate
+
+To use this phonopy, entering this environment is necessary like below.
+
+::
+
+   % conda activate phonopy
+   (phonopy) % phonopy
+           _
+     _ __ | |__   ___  _ __   ___   _ __  _   _
+    | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
+    | |_) | | | | (_) | | | | (_) || |_) | |_| |
+    | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
+    |_|                            |_|    |___/
+                                    1.13.2-r107
+
+
+   Crystal structure file of POSCAR (default file name) could not be found.
+     ___ _ __ _ __ ___  _ __
+    / _ \ '__| '__/ _ \| '__|
+   |  __/ |  | | | (_) | |
+    \___|_|  |_|  \___/|_|
+
+
+Using pip
+---------
+
+Installation of phonopy via pip is not very recommended. :ref:`install_conda`
+as rewritten above is recommended.
+
+Phonopy pip wheel is not prepared. So before installing phonopy using
+pip, Python C-API compilation environment has to be prepared. Then
+phonopy is installed using pip by::
+
+   % pip install phonopy
+
+If you see the error message like below in the installation process::
+
+   _phonopy.c:35:20: fatal error: Python.h: No such file or directory
+
+development tools for building python module are additionally
+necessary and are installed using OS's package management system,
+e.g.,::
+
+   sudo apt-get install python-dev
+
+.. _install_from_source:
+
 From source code
 -----------------
 
@@ -92,54 +178,17 @@ needed.
    set ``$PATH`` and ``$PYTHONPATH``::
 
       export PYTHONPATH=~/.local/lib:$PYTHONPATH
-      export PYTH=~/.local/bin:$PATH
+      export PATH=~/.local/bin:$PATH
 
    or if ``PYTHONPATH`` is not yet set in your system::
 
       export PYTHONPATH=~/.local/lib
-      export PYTH=~/.local/bin:$PATH
+      export PATH=~/.local/bin:$PATH
 
    in your ``.bashrc`` (or maybe ``.bash_profile``), ``.zshenv``, or
    other script for the other shells.
 
 
-.. _install_conda:
-
-conda
-------
-
-Conda is a good choice for all users (Linux/MacOSX/Windows).
-The Linux (64bit) conda packages are prepared by the author and
-can be installed using::
-
-   % conda install numpy scipy h5py pyyaml matplotlib
-   % conda install -c atztogo phonopy
-
-Currently conda packages for the other OS: (MacOSX, Windows and other flavours
-of Linux), are prepared by conda-forge project and may be installed using::
-
-   % conda install -c conda-forge phonopy
-
-The conda-forge packages are usually available within few days after
-the release.
-
-
-pip
-----
-
-Phonopy is installed using pip by::
-
-   % pip install phonopy
-
-If you see the error message like below in the installation process::
-
-   _phonopy.c:35:20: fatal error: Python.h: No such file or directory
-
-development tools for building python module are additionally
-necessary and are installed using OS's package management system,
-e.g.,::
-
-   sudo apt-get install python-dev
 
 .. _install_trouble_shooting:
 

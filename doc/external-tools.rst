@@ -4,13 +4,18 @@ External tools
 ===============
 
 Here external tools related to phonopy but supported by the groups out
-of the phonopy project are listed.
+of the phonopy project are introduced.
 
 Each of the tools is not supported by the phonopy project because of
 the difficulties of the maintenance and the test by main developers
 of phonopy under current style of phonopy development. However
 useful tools should be known. If developers want to use here to notify
 their tools, please contact via the phonopy mailing list.
+
+.. contents::
+   :depth: 2
+   :local:
+
 
 Phonopy-Spectroscopy
 ---------------------
@@ -35,6 +40,17 @@ Examples
 
 * https://github.com/JMSkelton/Phonopy-Spectroscopy/tree/master/Examples/a-SiO2
 * https://github.com/JMSkelton/Phonopy-Spectroscopy/tree/master/Examples/Benzene-Derivatives
+
+
+.. _external_tools_phonolammps:
+
+phonolammps
+-----------
+
+LAMMPS interface for phonon calculations using phonopy
+
+https://github.com/abelcarreras/phonolammps
+
 
 LADYtools
 ----------

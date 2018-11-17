@@ -260,6 +260,8 @@ static Cell * trim_cell(int * mapping_table,
   Cell *trimmed_cell;
   VecDBL * position;
   int *overlap_table;
+  int tmp_mat_int[3][3];
+  double tmp_mat[3][3];
 
   debug_print("trim_cell\n");
 
@@ -269,6 +271,16 @@ static Cell * trim_cell(int * mapping_table,
 
   ratio = abs(mat_Nint(mat_get_determinant_d3(cell->lattice) /
                        mat_get_determinant_d3(trimmed_lattice)));
+
+  mat_inverse_matrix_d3(tmp_mat, trimmed_lattice, symprec);
+  mat_multiply_matrix_d3(tmp_mat, tmp_mat, cell->lattice);
+  mat_cast_matrix_3d_to_3i(tmp_mat_int, tmp_mat);
+  if (abs(mat_get_determinant_i3(tmp_mat_int)) != ratio) {
+    warning_print("spglib: Determinant of change of basis matrix "
+                  "has to be same as volume ratio (line %d, %s).\n",
+                  __LINE__, __FILE__);
+    goto err;
+  }
 
   /* Check if cell->size is dividable by ratio */
   if ((cell->size / ratio) * ratio != cell->size) {

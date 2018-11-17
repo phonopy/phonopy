@@ -57,7 +57,7 @@ if with_openmp:
     if cc == 'gcc':
         extra_link_args_phonopy = ['-lgomp', ]
     elif cc == 'clang':
-        extra_link_args_phonopy = []
+        extra_link_args_phonopy = ['-lomp']
     else:
         extra_link_args_phonopy = ['-lgomp', ]
 else:
@@ -75,12 +75,12 @@ extension_phonopy = Extension(
 #####################
 # _spglib extension #
 #####################
-if with_openmp:
+if False:  # Always no openmp for spglib
     extra_compile_args_spglib = ['-fopenmp', ]
     if cc == 'gcc':
         extra_link_args_spglib = ['-lgomp', ]
     elif cc == 'clang':
-        extra_link_args_spglib = []
+        extra_link_args_spglib = ['-lomp']
     else:
         extra_link_args_spglib = ['-lgomp', ]
 else:

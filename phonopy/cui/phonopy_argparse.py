@@ -34,6 +34,7 @@
 
 import sys
 
+
 def fix_deprecated_option_names(argv):
     deprecated = []
     for i, v in enumerate(argv[1:]):
@@ -46,6 +47,7 @@ def fix_deprecated_option_names(argv):
 
     return deprecated
 
+
 def show_deprecated_option_warnings(deprecated):
     lines = ["Option names with underscores are deprecated, by which",
              "the underscores are replaced by dashes. Therefore"]
@@ -57,6 +59,7 @@ def show_deprecated_option_warnings(deprecated):
     print('\n'.join(lines))
     print("*" * maxlen)
     print("")
+
 
 def get_parser():
     deprecated = fix_deprecated_option_names(sys.argv)
@@ -132,8 +135,9 @@ def get_parser():
         moment_order=None,
         nac_method=None,
         nac_q_direction=None,
+        pdos=None,
         pretend_real=False,
-        primitive_axis=None,
+        primitive_axes=None,
         projection_direction=None,
         qe_mode=False,
         qpoints=None,
@@ -149,6 +153,7 @@ def get_parser():
         tmax=None,
         tmin=None,
         tstep=None,
+        use_alm=False,
         vasp_mode=False,
         verbose=False,
         wien2k_mode=False,
@@ -162,19 +167,22 @@ def get_parser():
         "--abinit", dest="abinit_mode", action="store_true",
         help="Invoke Abinit mode")
     parser.add_argument(
+        "--alm", dest="use_alm", action="store_true",
+        help="Use ALM for generating force constants")
+    parser.add_argument(
         "--amplitude", dest="displacement_distance", type=float,
         help="Distance of displacements")
     parser.add_argument(
-        "--anime", dest="anime",
+        "--anime", nargs='+', dest="anime",
         help="Same as ANIME tag")
     parser.add_argument(
-        "--band", dest="band_paths",
+        "--band", nargs='+', dest="band_paths",
         help="Same behavior as BAND tag")
     parser.add_argument(
         "--band-connection", dest="is_band_connection", action="store_true",
         help="Treat band crossings")
     parser.add_argument(
-        "--band-labels", dest="band_labels",
+        "--band-labels", nargs='+', dest="band_labels",
         help="Show labels at band segments")
     parser.add_argument(
         "--band-format", dest="band_format",
@@ -184,7 +192,7 @@ def get_parser():
         help=("Number of points calculated on a band segment in "
               "the band structure mode"))
     parser.add_argument(
-        "--bi", "--band-indices", dest="band_indices",
+        "--bi", "--band-indices", nargs='+', dest="band_indices",
         help=("Band indices to be included to calcualte thermal "
               "properties"))
     parser.add_argument(
@@ -208,7 +216,7 @@ def get_parser():
         "-d", "--displacement", dest="is_displacement", action="store_true",
         help="Create supercells with displacements")
     parser.add_argument(
-        "--dim", dest="supercell_dimension",
+        "--dim", nargs='+', dest="supercell_dimension",
         help="Same behavior as DIM tag")
     parser.add_argument(
         "--dm-decimals", dest="dynamical_matrix_decimals",
@@ -285,7 +293,7 @@ def get_parser():
         "--hdf5", dest="is_hdf5", action="store_true",
         help="Use hdf5 for force constants")
     parser.add_argument(
-        "--irreps", "--irreps-qpoint", dest="irreps_qpoint",
+        "--irreps", "--irreps-qpoint", nargs='+', dest="irreps_qpoint",
         help="A q-point where characters of irreps are calculated")
     # parser.add_argument(
     #     "--lapack-solver", dest="lapack_solver", action="store_true",
@@ -304,19 +312,19 @@ def get_parser():
         "--loglevel", dest="loglevel", type=int,
         help="Log level")
     parser.add_argument(
-        "--mass", dest="masses",
+        "--mass", nargs='+', dest="masses",
         help="Same as MASS tag")
     parser.add_argument(
-        "--magmom", dest="magmoms",
+        "--magmom", nargs='+', dest="magmoms",
         help="Same as MAGMOM tag")
     parser.add_argument(
         "--mesh-format", dest="mesh_format",
         help="Mesh output file-format")
     parser.add_argument(
-        "--modulation", dest="modulation",
+        "--modulation", nargs='+', dest="modulation",
         help="Same as MODULATION tag")
     parser.add_argument(
-        "--mp", "--mesh", dest="mesh_numbers",
+        "--mp", "--mesh", nargs='+', dest="mesh_numbers",
         help="Same behavior as MP tag")
     parser.add_argument(
         "--moment", dest="is_moment", action="store_true",
@@ -346,13 +354,15 @@ def get_parser():
         "-p", "--plot", dest="is_graph_plot", action="store_true",
         help="Plot data")
     parser.add_argument(
-        "--pa", "--primitive-axis", dest="primitive_axis",
-        help="Same as PRIMITIVE_AXIS tag")
+        "--pa", "--primitive-axis", "--primitive-axes",
+        nargs='+', dest="primitive_axes",
+        help="Same as PRIMITIVE_AXES tag")
     parser.add_argument(
-        "--pd", "--projection-direction", dest="projection_direction",
+        "--pd", "--projection-direction", nargs='+',
+        dest="projection_direction",
         help="Same as PROJECTION_DIRECTION tag")
     parser.add_argument(
-        "--pdos", dest="pdos",
+        "--pdos", nargs='+', dest="pdos",
         help="Same as PDOS tag")
     parser.add_argument(
         "--pm", dest="is_plusminus_displacements", action="store_true",
@@ -370,13 +380,13 @@ def get_parser():
         "--qe", "--pwscf", dest="qe_mode",
         action="store_true", help="Invoke Quantum espresso (QE) mode")
     parser.add_argument(
-        "--qpoints", dest="qpoints",
+        "--qpoints", nargs='+', dest="qpoints",
         help="Calculate at specified q-points")
     parser.add_argument(
         "--qpoints-format", dest="qpoints_format",
         help="Q-points output file-format")
     parser.add_argument(
-        "--q-direction", dest="nac_q_direction",
+        "--q-direction", nargs='+', dest="nac_q_direction",
         help=("Direction of q-vector perturbation used for NAC at "
               "q->0, and group velocity for degenerate phonon "
               "mode in q-points mode"))
@@ -390,7 +400,7 @@ def get_parser():
         "--readfc-format", dest="readfc_format",
         help="Force constants input file-format")
     parser.add_argument(
-        "--read-qpointsfc", dest="read_qpoints", action="store_true",
+        "--read-qpoints", dest="read_qpoints", action="store_true",
         help="Read QPOITNS")
     parser.add_argument(
         "-s", "--save", dest="is_graph_save", action="store_true",

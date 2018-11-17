@@ -64,73 +64,64 @@ search_space = np.array([
         [0, -1, 1],
         [0, 0, -1]], dtype='intc')
 
-def get_qpoints_in_Brillouin_zone(primitive_vectors, qpoints):
-    bz = BrillouinZone(primitive_vectors)
+
+def get_qpoints_in_Brillouin_zone(reciprocal_lattice,
+                                  qpoints,
+                                  only_unique=False,
+                                  tolerance=0.01):
+    bz = BrillouinZone(reciprocal_lattice)
     bz.run(qpoints)
-    return bz.get_shortest_qpoints()
+    if only_unique:
+        return np.array([pts[0] for pts in bz.shortest_qpoints],
+                        dtype='double', order='C')
+    else:
+        return bz.shortest_qpoints
+
 
 class BrillouinZone(object):
-    def __init__(self, primitive_vectors):
-        self._primitive_vectors = primitive_vectors # column vectors
-        self._tolerance = min(np.sum(primitive_vectors ** 2, axis=0)) * 0.01
-        self._reduced_bases = get_reduced_bases(primitive_vectors.T)
-        self._tmat = np.dot(np.linalg.inv(self._primitive_vectors),
-                            self._reduced_bases)
+    """Move qpoints to first Brillouin zone by lattice translation.
+
+    Attributes
+    ----------
+    shortest_qpoints : list
+        Each element of the list contains a set of q-points that are in first
+        Brillouin zone (BZ). When inside BZ, there is only one q-point for
+        each element, but on the surface, multiple q-points that are
+        distinguished by non-zero lattice translation are stored.
+
+    """
+
+    def __init__(self, reciprocal_lattice, tolerance=0.01):
+        """
+
+        Parameters
+        ----------
+        reciprocal_lattice : array_like
+            Primitive cell basis vectors given in column vectors.
+            shape=(3,3)
+            dtype=float
+        tolerance : float, optional
+            Default = 0.01
+
+        """
+
+        self._reciprocal_lattice = np.array(reciprocal_lattice)
+        self._tolerance = min(
+            np.sum(reciprocal_lattice ** 2, axis=0)) * tolerance
+        self._reduced_bases = get_reduced_bases(reciprocal_lattice.T)
+        self._tmat = np.dot(np.linalg.inv(self._reciprocal_lattice),
+                            self._reduced_bases.T)
         self._tmat_inv = np.linalg.inv(self._tmat)
-        self._shortest_qpoints = None
+        self.shortest_qpoints = None
 
     def run(self, qpoints):
         reduced_qpoints = np.dot(qpoints, self._tmat_inv.T)
-        self._shortest_qpoints = []
+        self.shortest_qpoints = []
         for q in reduced_qpoints:
-            distances = np.array([(np.dot(self._reduced_bases, q + g) ** 2).sum()
-                                  for g in search_space], dtype='double')
+            distances = (np.dot(q + search_space,
+                                self._reduced_bases) ** 2).sum(axis=1)
             min_dist = min(distances)
-            shortest_indices = [i for i, d in enumerate(distances - min_dist)
-                                if abs(d) < self._tolerance]
-            self._shortest_qpoints.append(
+            shortest_indices = np.where(
+                distances < min_dist + self._tolerance)[0]
+            self.shortest_qpoints.append(
                 np.dot(search_space[shortest_indices] + q, self._tmat.T))
-
-    def get_shortest_qpoints(self):
-        return self._shortest_qpoints
-
-if __name__ == '__main__':
-    from phonopy.interface.vasp import read_vasp
-    from phonopy.structure.symmetry import Symmetry, get_lattice_vector_equivalence
-    from phonopy.structure.spglib import get_ir_reciprocal_mesh, relocate_BZ_grid_address
-    import sys
-
-    cell = read_vasp(sys.argv[1])
-    symmetry = Symmetry(cell)
-    mesh = [4, 4, 4]
-    is_shift = np.array([0, 0, 0], dtype='intc')
-    mapping_table, grid_address = get_ir_reciprocal_mesh(
-        mesh,
-        cell,
-        is_shift=is_shift)
-    ir_grid_points = np.unique(mapping_table)
-    primitive_vectors = np.linalg.inv(cell.get_cell())
-    bz_grid_address, bz_map = relocate_BZ_grid_address(
-        grid_address,
-        mesh,
-        np.linalg.inv(cell.get_cell()),
-        is_shift=is_shift)
-
-    bz_points = np.extract(bz_map > -1, bz_map)
-    qpoints = (grid_address + is_shift / 2.0) / mesh
-    qpoints -= (qpoints > 0.5001) * 1
-
-    bz = BrillouinZone(primitive_vectors)
-    bz.run(qpoints)
-    sv = bz.get_shortest_qpoints()
-    print("%d %d" % (len(bz_points), np.sum(len(x) for x in sv)))
-    for q, vs in zip(qpoints, sv):
-        if np.allclose(q, vs[0]):
-            print(q)
-        else:
-            print("%s * %s" % (q, np.linalg.norm(np.dot(primitive_vectors, q))))
-        for v in vs:
-            print("%s %s" % (v, np.linalg.norm(np.dot(primitive_vectors, v))))
-
-    rotations = symmetry.get_reciprocal_operations()
-    print(get_lattice_vector_equivalence(rotations))

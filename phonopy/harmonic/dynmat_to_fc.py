@@ -36,16 +36,66 @@ import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_supercell
 from phonopy.harmonic.force_constants import distribute_force_constants
+from phonopy.structure.cells import SNF3x3
 
-def get_commensurate_points(supercell_matrix): # wrt primitive cell
+
+def get_commensurate_points(supercell_matrix):  # wrt primitive cell
+    """Commensurate q-points are returned.
+
+    Parameters
+    ----------
+    supercell_matrix : array_like
+        Supercell matrix with respect to primitive cell basis vectors.
+        shape=(3, 3)
+        dtype=intc
+
+    """
+
+    smat = np.array(supercell_matrix, dtype=int)
     rec_primitive = PhonopyAtoms(numbers=[1],
                                  scaled_positions=[[0, 0, 0]],
                                  cell=np.diag([1, 1, 1]),
                                  pbc=True)
-    rec_supercell = get_supercell(rec_primitive, supercell_matrix.T)
+    rec_supercell = get_supercell(rec_primitive, smat.T)
     q_pos = rec_supercell.get_scaled_positions()
     return np.array(np.where(q_pos > 1 - 1e-15, q_pos - 1, q_pos),
                     dtype='double', order='C')
+
+
+def get_commensurate_points_in_integers(supercell_matrix):
+    """Commensurate q-points in integer representation are returned.
+
+    A set of integer representation of lattice points is transformed to
+    the equivalent set of lattice points in fractional coordinates with
+    respect to supercell basis vectors by
+        integer_lattice_points / det(supercell_matrix)
+
+    Parameters
+    ----------
+    supercell_matrix : array_like
+        Supercell matrix with respect to primitive cell basis vectors.
+        shape=(3, 3)
+        dtype=intc
+
+    Returns
+    -------
+    lattice_points : ndarray
+        Integer representation of lattice points in supercell.
+        shape=(N, 3)
+
+    """
+    smat = np.array(supercell_matrix, dtype=int)
+    snf = SNF3x3(smat.T)
+    snf.run()
+    D = snf.A.diagonal()
+    b, c, a = np.meshgrid(range(D[1]), range(D[2]), range(D[0]))
+    lattice_points = np.dot(np.c_[a.ravel() * D[1] * D[2],
+                                  b.ravel() * D[0] * D[2],
+                                  c.ravel() * D[0] * D[1]], snf.Q.T)
+    lattice_points = np.array(lattice_points % np.prod(D),
+                              dtype='intc', order='C')
+    return lattice_points
+
 
 class DynmatToForceConstants(object):
     def __init__(self,
@@ -57,7 +107,7 @@ class DynmatToForceConstants(object):
                  symprec=1e-5):
         self._primitive = primitive
         self._supercell = supercell
-        supercell_matrix = np.linalg.inv(self._primitive.get_primitive_matrix())
+        supercell_matrix = np.linalg.inv(self._primitive.primitive_matrix)
         supercell_matrix = np.rint(supercell_matrix).astype('intc')
         self._commensurate_points = get_commensurate_points(supercell_matrix)
         (self._shortest_vectors,
@@ -101,7 +151,8 @@ class DynmatToForceConstants(object):
                                             eigenvectors_at_qpoints):
                 eigvals = frequencies ** 2 * np.sign(frequencies)
                 dm.append(
-                    np.dot(np.dot(eigvecs, np.diag(eigvals)), eigvecs.T.conj()))
+                    np.dot(np.dot(eigvecs, np.diag(eigvals)),
+                           eigvecs.T.conj()))
         else:
             dm = dynmat
 
@@ -170,6 +221,7 @@ class DynmatToForceConstants(object):
                                   (p_i * 3):(p_i * 3 + 3),
                                   (p_j * 3):(p_j * 3 + 3)] * coef
         return sum_q.real
+
 
 def distribute_force_constants_by_translations(fc, primitive, supercell):
     s2p = primitive.get_supercell_to_primitive_map()
