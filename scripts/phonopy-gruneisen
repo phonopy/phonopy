@@ -148,7 +148,7 @@ def get_options():
         band_points=51,
         marker='o',
         markersize=None,
-        primitive_axis=None,
+        primitive_axes=None,
         qe_mode=False,
         sampling_mesh=None,
         save_graph=False,
@@ -220,8 +220,8 @@ def get_options():
         "-p", "--plot", dest="plot_graph", action="store_true",
         help="Plot data")
     parser.add_argument(
-        "--pa", "--primitive_axis", dest="primitive_axis",
-        help="Same as PRIMITIVE_AXIS tags")
+        "--pa", "--primitive-axis", "--primitive-axes", dest="primitive_axes",
+        help="Same as PRIMITIVE_AXES tags")
     parser.add_argument(
         "--qe", "--pwscf", dest="qe_mode", action="store_true",
         help="Invoke Quantum espresso mode")
@@ -285,11 +285,11 @@ def main(args):
                          "have to be spefied.\n")
         sys.exit(1)
 
-    if args.primitive_axis:
-        primitive_axis = np.array(
-            [fracval(x) for x in args.primitive_axis.split()]).reshape(3, 3)
+    if args.primitive_axes:
+        primitive_axes = np.array(
+            [fracval(x) for x in args.primitive_axes.split()]).reshape(3, 3)
     else:
-        primitive_axis = np.eye(3)
+        primitive_axes = np.eye(3)
 
     if args.supercell_dimension:
         dim = [int(x) for x in args.supercell_dimension.split()]
@@ -348,7 +348,7 @@ def main(args):
                     "%s/%s" % (directory, cell_filename),
                     "%s/force_constants.hdf5" % directory,
                     dim,
-                    primitive_matrix=primitive_axis,
+                    primitive_matrix=primitive_axes,
                     born_filename=born_filename,
                     physical_units=physical_units,
                     interface_mode=interface_mode,
@@ -359,7 +359,7 @@ def main(args):
                     "%s/%s" % (directory, cell_filename),
                     "%s/FORCE_CONSTANTS" % directory,
                     dim,
-                    primitive_matrix=primitive_axis,
+                    primitive_matrix=primitive_axes,
                     born_filename=born_filename,
                     physical_units=physical_units,
                     interface_mode=interface_mode,
@@ -369,7 +369,7 @@ def main(args):
             phonon = get_phonon("%s/%s" % (directory, cell_filename),
                                 "%s/FORCE_SETS" % directory,
                                 dim,
-                                primitive_matrix=primitive_axis,
+                                primitive_matrix=primitive_axes,
                                 born_filename=born_filename,
                                 physical_units=physical_units,
                                 interface_mode=interface_mode,

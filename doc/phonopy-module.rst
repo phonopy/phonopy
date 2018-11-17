@@ -1,6 +1,6 @@
 .. _phonopy_module:
 
-Using phonopy as a python module
+Phonopy API for Python
 =================================
 
 .. contents::
@@ -22,11 +22,6 @@ class is made to be similar to the ASE's ``Atoms``
 class. The ``PhonopyAtoms`` module is imported by::
 
    from phonopy.structure.atoms import PhonopyAtoms
-
-In the older versions of phonopy, the class name was simply ``Atoms``,
-so it should be imported as::
-
-   from phonopy.structure.atoms import Atoms as PhonopyAtoms
 
 Work flow
 ----------
@@ -149,10 +144,13 @@ from forces and displacements, simply set your force constants by
 
    phonon.set_force_constants(force_constants)
 
-The force constants matrix is given in 4 dimensional array
-(better to be a numpy array of ``dtype='double', order='C'``).
-The shape of force constants matrix is ``(N, N, 3, 3)`` where ``N``
-is the number of atoms in the supercell and 3 gives Cartesian axes.
+The force constants matrix is given in 4 dimensional array (better to
+be a numpy array of ``dtype='double', order='C'``).  The shape of
+force constants matrix is ``(N, N, 3, 3)`` where ``N`` is the number
+of atoms in the supercell and 3 gives Cartesian axes.  The compact
+force constants matrix with ``(Np, N, 3, 3)`` where ``Np`` is the
+number of atoms in the primitive cell is also supported. See the
+details at :ref:`file_force_constants`.
 
 Band structure
 """""""""""""""

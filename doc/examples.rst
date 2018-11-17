@@ -3,13 +3,19 @@
 Examples
 ===============
 
+Example files are found at
+https://github.com/atztogo/phonopy/tree/master/example. The same are
+found in the example directory of the phonopy package downloaded at
+https://github.com/atztogo/phonopy/archive/master.zip. The followings
+show how some of those examples work. Note that sometimes the
+followings are outdated than the examples in the phonopy package. So
+the results or displace outputs can be different.
+
+
 .. contents::
    :depth: 2
    :local:
 
-Example files are stored in the ``example`` directory of distributed
-source package that can be downloaded at
-https://pypi.python.org/pypi/phonopy .
 
 Si
 ---

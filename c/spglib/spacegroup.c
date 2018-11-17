@@ -49,7 +49,7 @@
 #include "debug.h"
 
 #define REDUCE_RATE 0.95
-#define NUM_ATTEMPT 20
+#define NUM_ATTEMPT 100
 #define INT_PREC 0.1
 
 static double change_of_basis_monocli[36][3][3] = {
@@ -302,15 +302,15 @@ static double F_mat[3][3] = {{    0, 1./2, 1./2 },
                              { 1./2,    0, 1./2 },
                              { 1./2, 1./2,    0 }};
 
-static Spacegroup search_spacegroup_with_symmetry(const Cell * primitive,
-                                                  const int candidates[],
-                                                  const int num_candidates,
-                                                  const Symmetry *symmetry,
-                                                  const double symprec,
-                                                  const double angle_tolerance);
-static Spacegroup get_spacegroup(const int hall_number,
-                                 const double origin_shift[3],
-                                 SPGCONST double conv_lattice[3][3]);
+static Spacegroup * search_spacegroup_with_symmetry(const Cell * primitive,
+                                                    const int candidates[],
+                                                    const int num_candidates,
+                                                    const Symmetry *symmetry,
+                                                    const double symprec,
+                                                    const double angle_tolerance);
+static Spacegroup * get_spacegroup(const int hall_number,
+                                   const double origin_shift[3],
+                                   SPGCONST double conv_lattice[3][3]);
 static int iterative_search_hall_number(double origin_shift[3],
                                         double conv_lattice[3][3],
                                         const int candidates[],
@@ -372,23 +372,23 @@ static int get_centering_shifts(double shift[3][3],
 
 
 /* Return spacegroup.number = 0 if failed */
-Spacegroup spa_search_spacegroup(const Cell * primitive,
-                                 const int hall_number,
-                                 const double symprec,
-                                 const double angle_tolerance)
+Spacegroup * spa_search_spacegroup(const Cell * primitive,
+                                   const int hall_number,
+                                   const double symprec,
+                                   const double angle_tolerance)
 {
-  Spacegroup spacegroup;
+  Spacegroup *spacegroup;
   Symmetry *symmetry;
   int candidate[1];
 
   debug_print("search_spacegroup (tolerance = %f):\n", symprec);
 
   symmetry = NULL;
-  spacegroup.number = 0;
+  spacegroup = NULL;
 
   if ((symmetry = sym_get_operation(primitive, symprec, angle_tolerance)) ==
       NULL) {
-    goto ret;
+    return NULL;
   }
 
   if (hall_number > 0) {
@@ -414,17 +414,18 @@ Spacegroup spa_search_spacegroup(const Cell * primitive,
   sym_free_symmetry(symmetry);
   symmetry = NULL;
 
- ret:
   return spacegroup;
 }
 
-
-Spacegroup spa_search_spacegroup_with_symmetry(const Symmetry *symmetry,
-                                               const double symprec)
+/* Retrun 0 if failed */
+int spa_search_spacegroup_with_symmetry(const Symmetry *symmetry,
+                                        const double symprec)
 {
-  int i;
-  Spacegroup spacegroup;
+  int i, hall_number;
+  Spacegroup *spacegroup;
   Cell *primitive;
+
+  spacegroup = NULL;
 
   primitive = cel_alloc_cell(1);
   mat_copy_matrix_d3(primitive->lattice, identity);
@@ -437,7 +438,14 @@ Spacegroup spa_search_spacegroup_with_symmetry(const Symmetry *symmetry,
                                                symmetry,
                                                symprec,
                                                -1.0);
-  return spacegroup;
+  if (spacegroup != NULL) {
+    hall_number = spacegroup->hall_number;
+    free(spacegroup);
+    spacegroup = NULL;
+    return hall_number;
+  } else {
+    return 0;
+  }
 }
 
 /* Return NULL if failed */
@@ -583,30 +591,29 @@ Cell * spa_transform_from_primitive(const Cell * primitive,
   return trimmed_cell;
 }
 
-/* Return spacegroup.number = 0 if failed */
-static Spacegroup search_spacegroup_with_symmetry(const Cell * primitive,
-                                                  const int candidates[],
-                                                  const int num_candidates,
-                                                  const Symmetry *symmetry,
-                                                  const double symprec,
-                                                  const double angle_tolerance)
+/* Return NULL if failed */
+static Spacegroup * search_spacegroup_with_symmetry(const Cell * primitive,
+                                                    const int candidates[],
+                                                    const int num_candidates,
+                                                    const Symmetry *symmetry,
+                                                    const double symprec,
+                                                    const double angle_tolerance)
 {
   int hall_number;
   double conv_lattice[3][3];
   double origin_shift[3];
-  Spacegroup spacegroup;
+  Spacegroup *spacegroup;
   PointSymmetry pointsym;
 
   debug_print("search_spacegroup (tolerance = %f):\n", symprec);
 
-  hall_number = 0;
-  spacegroup.number = 0;
+  spacegroup = NULL;
 
   pointsym = ptg_get_pointsymmetry(symmetry->rot, symmetry->size);
   if (pointsym.size < symmetry->size) {
     warning_print("spglib: Point symmetry of primitive cell is broken. ");
     warning_print("(line %d, %s).\n", __LINE__, __FILE__);
-    goto ret;
+    return NULL;
   }
 
   hall_number = iterative_search_hall_number(origin_shift,
@@ -617,41 +624,44 @@ static Spacegroup search_spacegroup_with_symmetry(const Cell * primitive,
                                              symmetry,
                                              symprec,
                                              angle_tolerance);
+  if (hall_number == 0) {
+    return NULL;
+  }
+
   spacegroup = get_spacegroup(hall_number, origin_shift, conv_lattice);
 
- ret:
   return spacegroup;
 }
 
 /* Return spacegroup.number = 0 if failed */
-static Spacegroup get_spacegroup(const int hall_number,
-                                 const double origin_shift[3],
-                                 SPGCONST double conv_lattice[3][3])
+static Spacegroup * get_spacegroup(const int hall_number,
+                                   const double origin_shift[3],
+                                   SPGCONST double conv_lattice[3][3])
 {
-  Spacegroup spacegroup;
+  Spacegroup *spacegroup;
   SpacegroupType spacegroup_type;
 
-  spacegroup.number = 0;
-  spacegroup_type = spgdb_get_spacegroup_type(hall_number);
+  spacegroup = NULL;
 
-  if (spacegroup_type.number > 0) {
-    mat_copy_matrix_d3(spacegroup.bravais_lattice, conv_lattice);
-    mat_copy_vector_d3(spacegroup.origin_shift, origin_shift);
-    spacegroup.number = spacegroup_type.number;
-    spacegroup.hall_number = hall_number;
-    spacegroup.pointgroup_number = spacegroup_type.pointgroup_number;
-    strcpy(spacegroup.schoenflies,
-           spacegroup_type.schoenflies);
-    strcpy(spacegroup.hall_symbol,
-           spacegroup_type.hall_symbol);
-    strcpy(spacegroup.international,
-           spacegroup_type.international);
-    strcpy(spacegroup.international_long,
-           spacegroup_type.international_full);
-    strcpy(spacegroup.international_short,
+  if ((spacegroup = (Spacegroup*) malloc(sizeof(Spacegroup))) == NULL) {
+    warning_print("spglib: Memory could not be allocated.");
+    return NULL;
+  }
+
+  if (0 < hall_number && hall_number < 531) {
+    spacegroup_type = spgdb_get_spacegroup_type(hall_number);
+    mat_copy_matrix_d3(spacegroup->bravais_lattice, conv_lattice);
+    mat_copy_vector_d3(spacegroup->origin_shift, origin_shift);
+    spacegroup->number = spacegroup_type.number;
+    spacegroup->hall_number = hall_number;
+    spacegroup->pointgroup_number = spacegroup_type.pointgroup_number;
+    strcpy(spacegroup->schoenflies, spacegroup_type.schoenflies);
+    strcpy(spacegroup->hall_symbol, spacegroup_type.hall_symbol);
+    strcpy(spacegroup->international, spacegroup_type.international);
+    strcpy(spacegroup->international_long, spacegroup_type.international_full);
+    strcpy(spacegroup->international_short,
            spacegroup_type.international_short);
-    strcpy(spacegroup.choice,
-           spacegroup_type.choice);
+    strcpy(spacegroup->choice, spacegroup_type.choice);
   }
 
   return spacegroup;
@@ -691,7 +701,7 @@ static int iterative_search_hall_number(double origin_shift[3],
   tolerance = symprec;
   for (attempt = 0; attempt < NUM_ATTEMPT; attempt++) {
 
-    warning_print("spglib: Attempt %d tolerance = %f failed",
+    warning_print("spglib: Attempt %d tolerance = %e failed",
                   attempt, tolerance);
     warning_print("(line %d, %s).\n", __LINE__, __FILE__);
 

@@ -79,42 +79,6 @@ def print_cell(cell, mapping=None, stars=None):
 class Supercell(PhonopyAtoms):
     """Build supercell from supercell matrix and unit cell
 
-    Note
-    ----
-
-    ``is_old_style=True`` invokes the following algorithm.
-    In this function, unit cell is considered
-      [1,0,0]
-      [0,1,0]
-      [0,0,1].
-    Supercell matrix is given by relative ratio, e.g,
-      [-1, 1, 1]
-      [ 1,-1, 1]  is for FCC from simple cubic.
-      [ 1, 1,-1].
-    In this case multiplicities of surrounding simple lattice are [2,2,2].
-    First, create supercell with surrounding simple lattice.
-    Second, trim the surrounding supercell with the target lattice.
-
-    ``is_old_style=False`` calls the Smith normal form.
-
-    These two algorithm may order atoms in different ways. So for the
-    backward compatibitily, ``is_old_style=True`` is the default
-    option. However the Smith normal form shows far better performance
-    in case of very large supercell multiplicities.
-
-    Parameters
-    ----------
-    unitcell: PhonopyAtoms
-        Unit cell
-    supercell_matrix: ndarray or list of list
-        Transformation matrix from unit cell to supercell. The
-        elements have to be integers.
-        shape=(3,3)
-    is_old_stype: bool
-        This swithes the algorithms. See Note.
-    symprec: float, optional
-        Tolerance to find overlapping atoms in supercell cell. The default
-        values is 1e-5.
 
     """
 
@@ -123,6 +87,47 @@ class Supercell(PhonopyAtoms):
                  supercell_matrix,
                  is_old_style=True,
                  symprec=1e-5):
+        """
+
+        Note
+        ----
+
+        ``is_old_style=True`` invokes the following algorithm.
+        In this function, unit cell is considered
+          [1,0,0]
+          [0,1,0]
+          [0,0,1].
+        Supercell matrix is given by relative ratio, e.g,
+          [-1, 1, 1]
+          [ 1,-1, 1]  is for FCC from simple cubic.
+          [ 1, 1,-1].
+        In this case multiplicities of surrounding simple lattice are [2,2,2].
+        First, create supercell with surrounding simple lattice.
+        Second, trim the surrounding supercell with the target lattice.
+
+        ``is_old_style=False`` calls the Smith normal form.
+
+        These two algorithm may order atoms in different ways. So for the
+        backward compatibitily, ``is_old_style=True`` is the default
+        option. However the Smith normal form shows far better performance
+        in case of very large supercell multiplicities.
+
+        Parameters
+        ----------
+        unitcell: PhonopyAtoms
+            Unit cell
+        supercell_matrix: ndarray or list of list
+            Transformation matrix from unit cell to supercell. The
+            elements have to be integers.
+            shape=(3,3)
+        is_old_stype: bool
+            This swithes the algorithms. See Note.
+        symprec: float, optional
+            Tolerance to find overlapping atoms in supercell cell. The default
+            values is 1e-5.
+
+        """
+
         self._is_old_style = is_old_style
         self._s2u_map = None
         self._u2s_map = None
@@ -275,22 +280,59 @@ class Supercell(PhonopyAtoms):
 class Primitive(PhonopyAtoms):
     """Primitive cell
 
-    Parameters
+    Attributes
     ----------
-    supercell: PhonopyAtoms
-        Supercell
-    primitive_matrix: list of list or ndarray
-        Transformation matrix to transform supercell to primitive cell such as:
-           np.dot(primitive_matrix.T, supercell.get_cell())
+    primitive_matrix : ndarray
+        Transformation matrix from supercell to primitive cell
+        dtype='double'
         shape=(3,3)
-    symprec: float, optional
-        Tolerance to find overlapping atoms in primitive cell. The default
-        values is 1e-5.
+    p2s_map : ndarray
+        Mapping table from atoms in primitive cell to those in supercell.
+        Supercell atomic indices are used.
+        dtype='intc'
+        shape=(num_atoms_in_primitive_cell,)
+    s2p_map : ndarray
+        Mapping table from atoms in supercell cell to those in primitive cell.
+        Supercell atomic indices are used.
+        dtype='intc'
+        shape=(num_atoms_in_supercell,)
+    p2p_map : dict
+        Mapping of primitive cell atoms in supercell to those in primitive
+        cell.
+        ex. {0: 0, 4: 1}
+    atomic_permutations : ndarray
+        Atomic position permutation by pure translations is represented by
+        changes of indices.
+        dtype='intc'
+        shape=(num_trans, num_atoms_in_supercell)
+        ex.       supercell atomic indices
+                 [[0, 1, 2, 3, 4, 5, 6, 7],
+           trans  [1, 2, 3, 0, 5, 6, 7, 4],
+          indices [2, 3, 0, 1, 6, 7, 4, 5],
+                  [3, 0, 1, 2, 7, 4, 5, 6]]
 
     """
 
     def __init__(self, supercell, primitive_matrix, symprec=1e-5):
-        self._primitive_matrix = np.array(primitive_matrix)
+        """
+
+        Parameters
+        ----------
+        supercell: PhonopyAtoms
+            Supercell
+        primitive_matrix: list of list or ndarray
+            Transformation matrix to transform supercell to primitive cell
+            such as:
+               np.dot(primitive_matrix.T, supercell.get_cell())
+            shape=(3,3)
+        symprec: float, optional
+            Tolerance to find overlapping atoms in primitive cell. The default
+            values is 1e-5.
+
+        """
+
+        self._primitive_matrix = np.array(primitive_matrix,
+                                          dtype='double', order='C')
         self._symprec = symprec
         self._p2s_map = None
         self._s2p_map = None
@@ -303,23 +345,43 @@ class Primitive(PhonopyAtoms):
         self._set_smallest_vectors(supercell)
         self._set_atomic_permutations(supercell)
 
-    def get_primitive_matrix(self):
+    @property
+    def primitive_matrix(self):
         return self._primitive_matrix
 
-    def get_primitive_to_supercell_map(self):
+    def get_primitive_matrix(self):
+        return self.primitive_matrix
+
+    @property
+    def p2s_map(self):
         return self._p2s_map
 
-    def get_supercell_to_primitive_map(self):
+    def get_primitive_to_supercell_map(self):
+        return self.p2s_map
+
+    @property
+    def s2p_map(self):
         return self._s2p_map
 
-    def get_primitive_to_primitive_map(self):
+    def get_supercell_to_primitive_map(self):
+        return self.s2p_map
+
+    @property
+    def p2p_map(self):
         return self._p2p_map
+
+    def get_primitive_to_primitive_map(self):
+        return self.p2p_map
 
     def get_smallest_vectors(self):
         return self._smallest_vectors, self._multiplicity
 
-    def get_atomic_permutations(self):
+    @property
+    def atomic_permutations(self):
         return self._atomic_permutations
+
+    def get_atomic_permutations(self):
+        return self.atomic_permutations
 
     def _primitive_cell(self, supercell):
         trimmed_cell_ = _trim_cell(self._primitive_matrix,
@@ -1084,3 +1146,48 @@ class Xgcd(object):
         v = self._vals
         r, s, t = self._rst
         return "%d = %d * (%d) + %d * (%d)" % (r, v[0], s, v[1], t)
+
+
+def get_primitive_matrix_by_centring(centring):
+    if centring == 'P':
+        return [[1, 0, 0],
+                [0, 1, 0],
+                [0, 0, 1]]
+    elif centring == 'F':
+        return [[0, 1./2, 1./2],
+                [1./2, 0, 1./2],
+                [1./2, 1./2, 0]]
+    elif centring == 'I':
+        return [[-1./2, 1./2, 1./2],
+                [1./2, -1./2, 1./2],
+                [1./2, 1./2, -1./2]]
+    elif centring == 'A':
+        return [[1, 0, 0],
+                [0, 1./2, -1./2],
+                [0, 1./2, 1./2]]
+    elif centring == 'C':
+        return [[1./2, 1./2, 0],
+                [-1./2, 1./2, 0],
+                [0, 0, 1]]
+    elif centring == 'R':
+        return [[2./3, -1./3, -1./3],
+                [1./3, 1./3, -2./3],
+                [1./3, 1./3, 1./3]]
+    else:
+        return None
+
+
+def guess_primitive_matrix(unitcell, symprec=1e-5):
+    if unitcell.get_magnetic_moments() is not None:
+        msg = "Can not be used with the unit cell having magnetic moments."
+        raise RuntimeError(msg)
+
+    lattice = unitcell.get_cell()
+    cell = (lattice,
+            unitcell.get_scaled_positions(),
+            unitcell.get_atomic_numbers())
+    dataset = spg.get_symmetry_dataset(cell, symprec=1e-5)
+    tmat = dataset['transformation_matrix']
+    centring = dataset['international'][0]
+    pmat = get_primitive_matrix_by_centring(centring)
+    return np.dot(np.linalg.inv(tmat), pmat)

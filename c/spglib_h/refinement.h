@@ -45,12 +45,13 @@ typedef struct {
   int *wyckoffs;
   int *equivalent_atoms;
   int *std_mapping_to_primitive;
+  double rotation[3][3];
 } ExactStructure;
 
 ExactStructure *
-ref_get_exact_structure_and_symmetry(const Cell * primitive,
+ref_get_exact_structure_and_symmetry(Spacegroup * spacegroup,
+                                     const Cell * primitive,
                                      const Cell * cell,
-                                     SPGCONST Spacegroup * spacegroup,
                                      const int * mapping_table,
                                      const double symprec);
 void ref_free_exact_structure(ExactStructure *exstr);

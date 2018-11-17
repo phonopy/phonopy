@@ -399,6 +399,13 @@ int mat_norm_squared_i3(const int a[3])
   return a[0] * a[0] + a[1] * a[1] + a[2] * a[2];
 }
 
+void mat_cross_product_d3(double v[3], const double a[3], const double b[3])
+{
+  v[0] = a[1] * b[2] - a[2] * b[1];
+  v[1] = a[2] * b[0] - a[0] * b[2];
+  v[2] = a[0] * b[1] - a[1] * b[0];
+}
+
 double mat_Dabs(const double a)
 {
   if (a < 0.0)

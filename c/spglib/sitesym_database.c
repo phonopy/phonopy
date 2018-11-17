@@ -34,6 +34,10 @@
 
 #include "sitesym_database.h"
 
+/* This gives number of Wyckoff positions. */
+/* Space group No. 1: 1 = 1-0 */
+/* Space group No. 2: 9 = 11-2 */
+/* Space group No. 3: 5 = 16-1 */
 static const int position_wyckoff[] =
   {    0, /* The first element is dummy. */
        1,    2,   11,   16,   21,   26,   27,   28,   29,   32,
@@ -91,8 +95,16 @@ static const int position_wyckoff[] =
     3373, 3385, 3397, 3409, 3419, 3428, 3437, 3445, 3453, 3465,
     3473, };
 
+/* Each number gives 'Coordinates' of first element of each Wyckoff position. */
+/* Space group No. 1 (1 elem): 63923 */
+/* Space group No. 2 (9 elems): 63923, 657239062,  27383062, 630995062, .., */
+/* Each number contains r=3x3 and t=3x1 matrices that are used as */
+/* x' = rx + t, where x is a point coordinates of atoms. */
+/* If x is at the 'Coordinates', x'=x (mod Z). */
+/* 63923 is decoded to identity and (0, 0, 0) matrices, respectively. */
+/* See ssmdb_get_coordinate. */
 static const int coordinates_first[] =
-  {         0,
+  {         0, /* The first element is dummy. */
         63923,     63923, 657239062,  27383062, 630995062,
     656145562, 629901562,  26289562,   1139062,     45562,
         63923, 630995197, 629901697,   1139197,     45697,
@@ -789,8 +801,11 @@ static const int coordinates_first[] =
     158056444,    610537,     64201, 472984312, 158056312,
     164343937,     45562, };
 
-static const int num_sitesym[] =
-  {   0,
+/* Multiplicities of Wyckoff positions */
+/* Space group No. 1 (1 elem): 1 */
+/* Space group No. 2 (9 elems): 2, 1, 1, 1, 1, 1, 1, 1, 1 */
+static const int multiplicities[] =
+  {   0, /* The first element is dummy. */
       1,   2,   1,   1,   1,   1,   1,   1,   1,   1,
       2,   1,   1,   1,   1,   2,   1,   1,   1,   1,
       2,   1,   1,   1,   1,   2,   2,   2,   4,   2,
@@ -1148,13 +1163,13 @@ int ssmdb_get_coordinate(int rot[3][3],
   int i, rot_enc, trans_enc;
   int rows[3], trans_int[3];
 
-  /* Orbits are compressed using ternary numerical system for */
+  /* 'Coordinates' are compressed using ternary numerical system for */
   /* rotation and base-24 system for translation. Elements of the first coloum */
   /* of rotation matrix can be one of {-2,-1,0,1,2} and the other elements can */
   /* be one of {-1,0,1}. Translation can have one of */
   /* {0,2,3,4,6,8,9,10,12,14,15,16,18,20,21,22} */
-  /* divided by 24. Therefore 45^3 * 24^3 = 1259712000 different values can */
-  /* enough map Wyckoff positions. */
+  /* divided by 24. Therefore 45^3 * 24^3 = 1259712000 different values */
+  /* are enough to map coordinates of Wyckoff positions. */
 
   rot_enc = coordinates_first[index] % 91125; /* = 45**3 */
   rows[0] = rot_enc / 2025;        /* = 45**2 */
@@ -1175,7 +1190,7 @@ int ssmdb_get_coordinate(int rot[3][3],
     trans[i] = ((double) trans_int[i]) / 24;
   }
 
-  return num_sitesym[index];
+  return multiplicities[index];
 }
 
 void ssmdb_get_wyckoff_indices(int indices[2], const int index)

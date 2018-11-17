@@ -66,12 +66,12 @@ typedef enum {
   R_CENTER,
 } Centering;
 
-Spacegroup spa_search_spacegroup(const Cell * primitive,
-                                 const int hall_number,
-                                 const double symprec,
-                                 const double angle_tolerance);
-Spacegroup spa_search_spacegroup_with_symmetry(const Symmetry *symmetry,
-                                               const double symprec);
+Spacegroup * spa_search_spacegroup(const Cell * primitive,
+                                   const int hall_number,
+                                   const double symprec,
+                                   const double angle_tolerance);
+int spa_search_spacegroup_with_symmetry(const Symmetry *symmetry,
+                                        const double symprec);
 Cell * spa_transform_to_primitive(int * mapping_table,
                                   const Cell * cell,
                                   SPGCONST double trans_mat[3][3],

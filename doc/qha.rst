@@ -134,6 +134,8 @@ This is used with ``-s`` or ``-p`` to thin out the number of plots of
 the fitting results at temperatures. For example with ``--sparse=10``,
 1 in 10 temperature curves is only plotted.
 
+.. _phonopy_qha_efe_option:
+
 ``--efe``
 ~~~~~~~~~~
 
@@ -197,9 +199,9 @@ polarized systems, respectively. For VASP, a script to create
 
 where ``vasprun.xml-{00..10}`` have to be computed for the same unit
 cells as those used for ``thermal_properties.yaml``.  When ``phonopy``
-was run with ``PRIMITIVE_AXIS`` or ``--pa`` option, the unit cells for
+was run with ``PRIMITIVE_AXES`` or ``--pa`` option, the unit cells for
 computing electronic eigenvalues have to be carefully chosen to agree
-with those after applying ``PRIMITIVE_AXIS``, or energies are scaled a
+with those after applying ``PRIMITIVE_AXES``, or energies are scaled a
 posteriori.
 
 .. _phonopy_qha_output_files:
@@ -222,7 +224,7 @@ are used.
   (``Cv-volume.dat``) and :math:`S(V)` (``entropy-volume.dat``) for
   :math:`\partial S/\partial V` (``dsdv-temperature.dat``) and
   numerical differentiation of :math:`\partial V/\partial T`, e.g., see
-  Eq.(5) of PRB **81**, 17430 by Togo *et al.*
+  Eq.(5) of PRB **81**, 174301 by Togo *et al.*
   (``Cp-temperature_polyfit.*``).
   This may give smoother :math:`C_p` than that from
   :math:`-T\frac{\partial^2 G}{\partial T^2}`.

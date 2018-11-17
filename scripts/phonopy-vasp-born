@@ -39,6 +39,7 @@ import warnings
 import numpy as np
 from phonopy.interface.vasp import get_born_OUTCAR, get_born_vasprunxml
 
+
 def fracval(frac):
     if frac.find('/') == -1:
         return float(frac)
@@ -46,13 +47,14 @@ def fracval(frac):
         x = frac.split('/')
         return float(x[0]) / float(x[1])
 
+
 def get_options():
     # Parse options
     import argparse
     parser = argparse.ArgumentParser(
         description="Phonopy vasp-born command-line-tool")
     parser.set_defaults(num_atoms=None,
-                        primitive_axis =None,
+                        primitive_axes=None,
                         supercell_matrix=None,
                         symmetrize_tensors=True,
                         read_outcar=False,
@@ -61,10 +63,10 @@ def get_options():
         "--dim", dest="supercell_matrix",
         help="Same behavior as DIM tag")
     parser.add_argument(
-        "--pa", "--primitive_axis", dest="primitive_axis",
-        help="Same as PRIMITIVE_AXIS tags")
+        "--pa", "--primitive-axis", "--primitive-axes", dest="primitive_axes",
+        help="Same as PRIMITIVE_AXES tags")
     parser.add_argument(
-        "--nost", "--no_symmetrize_tensors", dest="symmetrize_tensors",
+        "--nost", "--no-symmetrize-tensors", dest="symmetrize_tensors",
         action="store_false",
         help="Prevent from symmetrizing tensors")
     parser.add_argument(
@@ -80,6 +82,7 @@ def get_options():
     args = parser.parse_args()
     return args
 
+
 def main(args):
     if args.filenames:
         outcar_filename = args.filenames[0]
@@ -94,15 +97,15 @@ def main(args):
     else:
         poscar_filename = "POSCAR"
 
-    if args.primitive_axis:
-        vals = [fracval(x) for x in args.primitive_axis.split()]
+    if args.primitive_axes:
+        vals = [fracval(x) for x in args.primitive_axes.split()]
         if len(vals) == 9:
-            primitive_axis = np.array(vals).reshape(3, 3)
+            primitive_axes = np.array(vals).reshape(3, 3)
         else:
             print("Primitive axes are incorrectly set.")
             sys.exit(1)
     else:
-        primitive_axis = np.eye(3)
+        primitive_axes = np.eye(3)
 
     if args.supercell_matrix:
         vals = [int(x) for x in args.supercell_matrix.split()]
@@ -116,7 +119,7 @@ def main(args):
     else:
         supercell_matrix = np.eye(3, dtype='intc')
 
-    with warnings.catch_warnings() as w:
+    with warnings.catch_warnings():
         # To catch warnings as error, set warnings.simplefilter("error")
         warnings.simplefilter("always")
 
@@ -125,14 +128,14 @@ def main(args):
                 borns, epsilon, atom_indices = get_born_OUTCAR(
                     poscar_filename=poscar_filename,
                     outcar_filename=outcar_filename,
-                    primitive_matrix=primitive_axis,
+                    primitive_matrix=primitive_axes,
                     supercell_matrix=supercell_matrix,
                     symmetrize_tensors=args.symmetrize_tensors,
                     symprec=args.symprec)
             else:
                 borns, epsilon, atom_indices = get_born_vasprunxml(
                     filename=outcar_filename,
-                    primitive_matrix=primitive_axis,
+                    primitive_matrix=primitive_axes,
                     supercell_matrix=supercell_matrix,
                     symmetrize_tensors=args.symmetrize_tensors,
                     symprec=args.symprec)
@@ -156,6 +159,7 @@ def main(args):
             sys.exit(0)
 
     sys.exit(1)
+
 
 if __name__ == "__main__":
     main(get_options())

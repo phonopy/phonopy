@@ -33,17 +33,20 @@ The following features of phonopy are highlighted:
 .. |i3| image:: QHA.png
         :width: 15%
 
-- :ref:`Phonon band structure <band_structure_related_tags>`, :ref:`phonon DOS and partial-DOS <dos_related_tags>`
-- :ref:`Phonon thermal properties <thermal_properties_tag>`: Free energy, heat capacity (Cv), and entropy
+- :ref:`Phonon band structure <band_structure_related_tags>`,
+  :ref:`phonon DOS and partial-DOS <dos_related_tags>`
+- :ref:`Phonon thermal properties <thermal_properties_tag>`:
+  Free energy, heat capacity (Cv), and entropy
 - :ref:`Phonon group velocity <group_velocity>`
-- :ref:`Thermal ellipsoids <thermal_displacement_matrices_tag>` / :ref:`Mean square displacements <thermal_displacements_tag>`
+- :ref:`Thermal ellipsoids <thermal_displacement_matrices_tag>` /
+  :ref:`Mean square displacements <thermal_displacements_tag>`
 - :ref:`Irreducible representations of normal modes <irreducible_representation_related_tags>`
 - :ref:`Dynamic structure factor for INS and IXS <dynamic_structure_factor>`
 - :ref:`Non-analytical-term correction <nac_tag>`: LO-TO splitting
   (:ref:`Born effective charges and dielectric constant are required. <born_file>`)
 - :ref:`Mode Grüneisen parameters <phonopy_gruneisen>`
 - :ref:`Quasi-harmonic approximation <phonopy_qha>`: Thermal expansion, heat
-  capacity at constant pressure (Cp),
+  capacity at constant pressure (Cp)
 - :ref:`Interfaces to calculators <calculator_interfaces>`:
   :ref:`VASP <tutorial>`,
   :ref:`VASP DFPT <vasp_dfpt_interface>`,
@@ -53,8 +56,9 @@ The following features of phonopy are highlighted:
   :ref:`Elk <elk_interface>`,
   :ref:`FHI-aims <FHI_aims_interface>`,
   :ref:`WIEN2k <wien2k_interface>`,
-  :ref:`CRYSTAL <crystal_interface>`
-- :ref:`Python APIs <phonopy_module>`
+  :ref:`CRYSTAL <crystal_interface>`,
+  :ref:`LAMMPS (external) <external_tools_phonolammps>`
+- :ref:`Phonopy API for Python <phonopy_module>`
 
 
 A presentation in pdf for introduction to phonopy is downloaded `***here***

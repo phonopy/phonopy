@@ -43,7 +43,7 @@ from phonopy.cui.settings import PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.cui.phonopy_argparse import (get_parser,
                                           show_deprecated_option_warnings)
-from phonopy.structure.cells import print_cell, determinant
+from phonopy.structure.cells import print_cell, guess_primitive_matrix
 from phonopy.structure.atoms import atom_data, symbol_map
 from phonopy.interface import (create_FORCE_SETS, read_crystal_structure,
                                get_default_physical_units)
@@ -255,9 +255,12 @@ def print_settings(settings):
     else:
         print("  Supercell: %s" % np.diag(settings.get_supercell_matrix()))
     if settings.get_primitive_matrix() is not None:
-        print("  Primitive axis:")
-        for v in settings.get_primitive_matrix():
-            print("    %s" % v)
+        if settings.get_primitive_matrix() is 'auto':
+            print("  Primitive matrix: Auto")
+        else:
+            print("  Primitive matrix:")
+            for v in settings.get_primitive_matrix():
+                print("    %s" % v)
 
 
 #################
@@ -419,12 +422,29 @@ if magmoms is not None:
             print_error()
         sys.exit(1)
 
+    if settings.get_primitive_matrix() == 'auto':
+        error_text = "'PRIMITIVE_AXES = auto' can not be used with MAGMOM"
+        print_error_message(error_text)
+        if log_level > 0:
+            print_error()
+        sys.exit(1)
+
+
+########################
+# Set primitive matrix #
+########################
+primitive_matrix = settings.get_primitive_matrix()
+if type(primitive_matrix) is str and primitive_matrix == 'auto':
+    primitive_matrix = guess_primitive_matrix(unitcell, symprec=args.symprec)
+
 ################################################
 # Check crystal symmetry and exit (--symmetry) #
 ################################################
 if args.is_check_symmetry:
+    if primitive_matrix == 'auto':
+        primitive_matrix = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
     check_symmetry(unitcell,
-                   primitive_axis=settings.get_primitive_matrix(),
+                   primitive_axis=primitive_matrix,
                    symprec=args.symprec,
                    distance_to_A=physical_units['distance_to_A'],
                    phonopy_version=phonopy_version)
@@ -458,7 +478,7 @@ else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
     phonon = Phonopy(
         unitcell,
         settings.get_supercell_matrix(),
-        primitive_matrix=settings.get_primitive_matrix(),
+        primitive_matrix=primitive_matrix,
         factor=physical_units['factor'],
         frequency_scale_factor=settings.get_frequency_scale_factor(),
         dynamical_matrix_decimals=settings.get_dm_decimals(),
@@ -469,8 +489,8 @@ else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
         log_level=log_level)
 
     num_atom = unitcell.get_number_of_atoms()
-    num_satom = determinant(settings.get_supercell_matrix()) * num_atom
-    p2s_map = phonon.get_primitive().get_primitive_to_supercell_map()
+    num_satom = phonon.supercell.get_number_of_atoms()
+    p2s_map = phonon.primitive.p2s_map
 
     if settings.get_read_force_constants():
         if settings.get_is_hdf5() or settings.get_readfc_format() == 'hdf5':
@@ -513,7 +533,7 @@ else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
             sys.exit(1)
 
     elif file_exists("FORCE_SETS", log_level):
-        force_sets = file_IO.parse_FORCE_SETS()
+        force_sets = file_IO.parse_FORCE_SETS(natom=num_satom)
         if force_sets['natom'] != num_satom:
             error_text = "Number of atoms in supercell is not consistent with "
             error_text += "the data in FORCE_SETS.\n"
@@ -525,8 +545,8 @@ else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
             sys.exit(1)
 
 
-supercell = phonon.get_supercell()
-primitive = phonon.get_primitive()
+supercell = phonon.supercell
+primitive = phonon.primitive
 
 # Set atomic masses of primitive cell
 if settings.get_masses() is not None:
@@ -540,6 +560,10 @@ if log_level > 0:
     if interface_mode:
         print("Calculator interface: %s" % interface_mode)
     print_settings(settings)
+    if (type(settings.get_primitive_matrix()) is str and
+        settings.get_primitive_matrix() == 'auto'):
+        for v in primitive_matrix:
+            print("    %s" % v)
     if magmoms is None:
         print("Spacegroup: %s" %
               phonon.get_symmetry().get_international_table())
@@ -660,13 +684,17 @@ if settings.get_read_force_constants():
 elif os.path.exists("FORCE_SETS"):
     phonon.set_displacement_dataset(force_sets)
     if log_level > 0:
-        print("Computing force constants...")
+        if settings.get_use_alm():
+            print("Computing force constants by ALM...")
+        else:
+            print("Computing force constants...")
 
     if settings.get_fc_spg_symmetry() or settings.get_is_full_fc():
         # Need to calculate full force constant tensors
-        phonon.produce_force_constants()
+        phonon.produce_force_constants(use_alm=settings.get_use_alm())
     else:  # Only force constants between atoms in primitive cell and supercell
-        phonon.produce_force_constants(calculate_full_force_constants=False)
+        phonon.produce_force_constants(calculate_full_force_constants=False,
+                                       use_alm=settings.get_use_alm())
 
 # Impose cutoff radius on force constants
 cutoff_radius = settings.get_cutoff_radius()

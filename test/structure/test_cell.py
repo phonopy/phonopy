@@ -3,7 +3,7 @@ import unittest
 import os
 import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
-from phonopy.structure.cells import get_supercell
+from phonopy.structure.cells import get_supercell, get_primitive
 from phonopy.interface.phonopy_yaml import get_unitcell_from_phonopy_yaml
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
@@ -71,6 +71,34 @@ class TestSupercell(unittest.TestCase):
                                        atol=1e-5)
 
 
+class TestPrimitive(unittest.TestCase):
+
+    def setUp(self):
+        cell = get_unitcell_from_phonopy_yaml(
+            os.path.join(data_dir, "..", "NaCl.yaml"))
+        self._pcell = get_primitive(cell, [[0, 0.5, 0.5],
+                                           [0.5, 0, 0.5],
+                                           [0.5, 0.5, 0]])
+
+    def tearDown(self):
+        pass
+
+    def test_properties(self):
+        np.testing.assert_array_equal(
+            self._pcell.p2s_map,
+            self._pcell.get_primitive_to_supercell_map())
+        np.testing.assert_array_equal(
+            self._pcell.s2p_map,
+            self._pcell.get_supercell_to_primitive_map())
+        np.testing.assert_array_equal(
+            self._pcell.atomic_permutations,
+            self._pcell.get_atomic_permutations())
+        self.assertTrue(id(self._pcell.p2p_map)
+                        == id(self._pcell.get_primitive_to_primitive_map()))
+
+
+
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestSupercell)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestPrimitive)
     unittest.TextTestRunner(verbosity=2).run(suite)

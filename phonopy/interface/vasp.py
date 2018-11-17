@@ -41,10 +41,10 @@ import io
 import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.atoms import symbol_map, atom_data
-from phonopy.structure.symmetry import Symmetry, elaborate_borns_and_epsilon
-from phonopy.file_IO import (write_FORCE_SETS, write_force_constants_to_hdf5,
+from phonopy.structure.symmetry import elaborate_borns_and_epsilon
+from phonopy.file_IO import (write_force_constants_to_hdf5,
                              write_FORCE_CONSTANTS)
-elaborate_borns_and_epsilon
+
 
 def parse_set_of_forces(num_atoms,
                         forces_filenames,
@@ -77,6 +77,7 @@ def parse_set_of_forces(num_atoms,
     else:
         return []
 
+
 def check_forces(forces, num_atom, filename, verbose=True):
     if len(forces) != num_atom:
         if verbose:
@@ -88,6 +89,7 @@ def check_forces(forces, num_atom, filename, verbose=True):
         return False
     else:
         return True
+
 
 def get_drift_forces(forces, filename=None, verbose=True):
     drift_force = np.sum(forces, axis=0) / len(forces)
@@ -102,6 +104,7 @@ def get_drift_forces(forces, filename=None, verbose=True):
         sys.stdout.flush()
 
     return drift_force
+
 
 def create_FORCE_CONSTANTS(filename, is_hdf5, log_level):
     fc_and_atom_types = parse_force_constants(filename)
@@ -132,6 +135,7 @@ def create_FORCE_CONSTANTS(filename, is_hdf5, log_level):
         print("Atom types: %s" % (" ".join(atom_types)))
     return 0
 
+
 def parse_force_constants(filename):
     """Return force constants and chemical elements
 
@@ -151,12 +155,14 @@ def parse_force_constants(filename):
 # read VASP POSCAR
 #
 def read_vasp(filename, symbols=None):
-    with open(filename) as infile :
+    with open(filename) as infile:
         lines = infile.readlines()
     return _get_atoms_from_poscar(lines, symbols)
 
+
 def read_vasp_from_strings(strings, symbols=None):
     return _get_atoms_from_poscar(StringIO(strings).readlines(), symbols)
+
 
 def _get_atoms_from_poscar(lines, symbols):
     line1 = [x for x in lines[0].split()]
@@ -205,11 +211,13 @@ def _get_atoms_from_poscar(lines, symbols):
 
     return atoms
 
+
 def _is_exist_symbols(symbols):
     for s in symbols:
         if not (s in symbol_map):
             return False
     return True
+
 
 def _expand_symbols(num_atoms, symbols=None):
     expanded_symbols = []
@@ -234,13 +242,28 @@ def _expand_symbols(num_atoms, symbols=None):
 
     return expanded_symbols
 
+
 #
 # write vasp POSCAR
 #
-def write_vasp(filename, atoms, direct=True):
-    lines = get_vasp_structure_lines(atoms, direct=direct)
+def write_vasp(filename, cell, direct=True):
+    """Write crystal structure to a VASP POSCAR style file.
+
+    Parameters
+    ----------
+    filename : str
+        Filename.
+    cell : PhonopyAtoms
+        Crystal structure.
+    direct : bool, optional
+        In 'Direct' or not in VASP POSCAR format. Default is True.
+
+    """
+
+    lines = get_vasp_structure_lines(cell, direct=direct)
     with open(filename, 'w') as w:
         w.write("\n".join(lines))
+
 
 def write_supercells_with_displacements(supercell,
                                         cells_with_displacements,
@@ -249,17 +272,19 @@ def write_supercells_with_displacements(supercell,
     write_vasp("SPOSCAR", supercell, direct=True)
     for i, cell in enumerate(cells_with_displacements):
         if cell is not None:
-            write_vasp("{pre_filename}-{0:0{width}}".format(i + 1,
-                                                   pre_filename=pre_filename,
-                                                   width=width),
+            write_vasp("{pre_filename}-{0:0{width}}".format(
+                i + 1,
+                pre_filename=pre_filename,
+                width=width),
                        cell,
                        direct=True)
 
     _write_magnetic_moments(supercell)
 
+
 def _write_magnetic_moments(cell):
     magmoms = cell.get_magnetic_moments()
-    if magmoms is not  None:
+    if magmoms is not None:
         w = open("MAGMOM", 'w')
         (num_atoms,
          symbols,
@@ -272,8 +297,10 @@ def _write_magnetic_moments(cell):
         w.write("\n")
         w.close()
 
+
 def get_scaled_positions_lines(scaled_positions):
     return "\n".join(_get_scaled_positions_lines(scaled_positions))
+
 
 def _get_scaled_positions_lines(scaled_positions):
     # map into 0 <= x < 1.
@@ -283,8 +310,9 @@ def _get_scaled_positions_lines(scaled_positions):
 
     return [
         " %19.16f %19.16f %19.16f" % tuple(vec)
-        for vec in unit_positions.tolist() # lists are faster for iteration
+        for vec in unit_positions.tolist()  # lists are faster for iteration
     ]
+
 
 def sort_positions_by_symbols(symbols, positions):
     from collections import Counter
@@ -304,6 +332,7 @@ def sort_positions_by_symbols(symbols, positions):
     sorted_positions = positions[perm]
 
     return counts_list, reduced_symbols, sorted_positions, perm
+
 
 def get_vasp_structure_lines(atoms, direct=True, is_vasp5=True):
     (num_atoms,
@@ -331,6 +360,7 @@ def get_vasp_structure_lines(atoms, direct=True, is_vasp5=True):
 
     return lines
 
+
 # Get all unique values from a iterable.
 # Unlike `list(set(iterable))`, this is a stable algorithm;
 # items are returned in order of their first appearance.
@@ -343,11 +373,13 @@ def _unique_stable(iterable):
             seen_list.append(x)
     return seen_list
 
+
 # Alternative to `np.argsort(keys)` that uses a stable sorting algorithm
 # so that indices tied for the same value are listed in increasing order
 def _argsort_stable(keys):
     # Python's built-in sort algorithm is a stable sort
     return sorted(range(len(keys)), key=keys.__getitem__)
+
 
 #
 # Non-analytical term
@@ -385,6 +417,7 @@ def get_born_vasprunxml(filename="vasprun.xml",
         symmetrize_tensors=symmetrize_tensors,
         symprec=symprec)
 
+
 def get_born_OUTCAR(poscar_filename="POSCAR",
                     outcar_filename=None,
                     primitive_matrix=None,
@@ -411,6 +444,7 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
             is_symmetry=is_symmetry,
             symmetrize_tensors=symmetrize_tensors,
             symprec=symprec)
+
 
 def _read_born_and_epsilon_from_OUTCAR(filename):
     with open(filename) as outcar:
@@ -452,6 +486,7 @@ def _read_born_and_epsilon_from_OUTCAR(filename):
 
     return borns, epsilon
 
+
 #
 # vasprun.xml handling
 #
@@ -469,6 +504,7 @@ class VasprunWrapper(object):
             return element
         else:
             return "<i type=\"string\" name=\"PRECFOCK\"></i>"
+
 
 class Vasprun(object):
     def __init__(self, fileptr, use_expat=False):
@@ -872,7 +908,8 @@ class VasprunxmlExpat(object):
                     self._is_k_weights = True
                     self._k_weights = []
 
-                if attrs['name'] == 'epsilon' or attrs['name'] == 'epsilon_scf':
+                if (attrs['name'] == 'epsilon' or
+                    attrs['name'] == 'epsilon_scf'):
                     self._is_epsilon = True
                     self._epsilon = []
 
@@ -1132,7 +1169,8 @@ def read_XDATCAR(filename="XDATCAR"):
         lattice = np.transpose([a, b, c]) * scale
         symbols = f.readline().split()
         numbers_of_atoms = np.array(
-            [int(x) for x in f.readline().split()[:len(symbols)]], dtype='intc')
+            [int(x) for x in f.readline().split()[:len(symbols)]],
+            dtype='intc')
 
     if lattice is not None:
         data = np.loadtxt(filename, skiprows=7, comments='D')
@@ -1141,11 +1179,13 @@ def read_XDATCAR(filename="XDATCAR"):
     else:
         return None
 
+
 #
 # OUTCAR handling (obsolete)
 #
 def read_force_constant_OUTCAR(filename):
     return get_force_constants_OUTCAR(filename)
+
 
 def get_force_constants_OUTCAR(filename):
     file = open(filename)
