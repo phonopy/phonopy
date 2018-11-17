@@ -3,6 +3,22 @@
 Change Log
 ==========
 
+Nov-17-2018: Version 1.14.0
+---------------------------
+
+* From this version, a trial to follow Semantic Versioning starts.
+* Automatic determination of transformation matrix from the input unit
+  cell to the primitive is implemented (``PRIMITIVE_AXES = AUTO`` or
+  ``--pa='auto'``).
+* Spglib update to v1.11.1.
+* Experimental support for dynamical structure factor
+  (:ref:`dynamic_structure_factor`).
+* Experimental support in phonopy-QHA for temperature dependent energy
+  input (:ref:`--efe <phonopy_qha_efe_option>` option) from a file. To
+  create this input file for a simple electron free energy was made
+  for VASP (``phonopy-vasp-efe``).
+
+
 Jun-20-2018: Version 1.13.2
 ----------------------------
 

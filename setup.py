@@ -168,11 +168,13 @@ if __name__ == '__main__':
         print("Failed to get version number in setup.py.")
         raise
 
-    version_number = ".".join(["%d" % n for n in version_nums])
+    version = ".".join(["%d" % n for n in version_nums[:3]])
+    if len(version_nums) > 3:
+        version += "-%d" % version_nums[3]
 
     if use_setuptools:
         setup(name='phonopy',
-              version=version_number,
+              version=version,
               description='This is the phonopy module.',
               author='Atsushi Togo',
               author_email='atz.togo@gmail.com',
@@ -186,7 +188,7 @@ if __name__ == '__main__':
               tests_require=['nose'])
     else:
         setup(name='phonopy',
-              version=version_number,
+              version=version,
               description='This is the phonopy module.',
               author='Atsushi Togo',
               author_email='atz.togo@gmail.com',

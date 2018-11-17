@@ -134,6 +134,8 @@ This is used with ``-s`` or ``-p`` to thin out the number of plots of
 the fitting results at temperatures. For example with ``--sparse=10``,
 1 in 10 temperature curves is only plotted.
 
+.. _phonopy_qha_efe_option:
+
 ``--efe``
 ~~~~~~~~~~
 
