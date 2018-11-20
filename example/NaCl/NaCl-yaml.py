@@ -1,7 +1,7 @@
 from phonopy import Phonopy
 from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
-from phonopy.interface import PhonopyYaml
+from phonopy.interface.phonopy_yaml import PhonopyYaml
 
 unitcell = read_vasp("POSCAR")
 phonon = Phonopy(unitcell,

@@ -4,7 +4,7 @@ import numpy as np
 import tarfile
 import os
 from phonopy.interface.vasp import Vasprun, read_vasp
-from phonopy.interface import get_unitcell_from_phonopy_yaml
+from phonopy.interface.phonopy_yaml import get_unitcell_from_phonopy_yaml
 from phonopy.file_IO import parse_FORCE_SETS
 
 data_dir = os.path.dirname(os.path.abspath(__file__))

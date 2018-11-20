@@ -4,7 +4,7 @@ import os
 import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.cells import get_supercell, get_primitive
-from phonopy.interface import get_unitcell_from_phonopy_yaml
+from phonopy.interface.phonopy_yaml import get_unitcell_from_phonopy_yaml
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 

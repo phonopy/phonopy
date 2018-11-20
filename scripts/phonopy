@@ -136,8 +136,10 @@ def finalize_phonopy(log_level,
                      interface_mode,
                      filename="phonopy.yaml"):
     if log_level > 0:
+        units = get_default_physical_units(interface_mode)
         phpy_yaml = PhonopyYaml(configuration=phonopy_conf.get_configures(),
-                                calculator=interface_mode)
+                                calculator=interface_mode,
+                                physical_units=units)
         phpy_yaml.set_phonon_info(phonon)
         with open(filename, 'w') as w:
             w.write(str(phpy_yaml))

@@ -1,7 +1,7 @@
 import unittest
 
 import numpy as np
-from phonopy.interface import get_unitcell_from_phonopy_yaml
+from phonopy.interface.phonopy_yaml import get_unitcell_from_phonopy_yaml
 from phonopy.interface.abinit import read_abinit
 import os
 
