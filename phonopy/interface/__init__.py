@@ -35,16 +35,18 @@
 import os
 from phonopy.file_IO import parse_disp_yaml, write_FORCE_SETS
 
+
 def read_crystal_structure(filename=None,
                            interface_mode=None,
                            chemical_symbols=None,
                            yaml_mode=False):
     if filename is None:
-        unitcell_filename = get_default_cell_filename(interface_mode, yaml_mode)
+        unitcell_filename = get_default_cell_filename(interface_mode,
+                                                      yaml_mode)
     else:
         unitcell_filename = filename
 
-    if not os.path.exists(unitcell_filename):
+    if not os.path.isfile(unitcell_filename):
         if filename is None:
             return None, (unitcell_filename + " (default file name)",)
         else:

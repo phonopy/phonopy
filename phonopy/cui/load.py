@@ -51,6 +51,7 @@ def load(supercell_matrix=None,
          unitcell=None,
          nac_params=None,
          unitcell_filename=None,
+         supercell_filename=None,
          born_filename=None,
          force_sets_filename=None,
          force_constants_filename=None,
@@ -93,7 +94,7 @@ def load(supercell_matrix=None,
         Calculator used for computing forces. This is used to switch the set
         of physical units. Default is 'vasp'.
     unitcell : PhonopyAtoms, optional
-        Input unit cell. Default is None.
+        Input unit cell. Default is None. Probably this will be deprecated.
     nac_params : dict, optional
         Parameters required for non-analytical term correction. Default is
         None. The priority for NAC is nac_params > born_filename > is_nac.
@@ -102,8 +103,13 @@ def load(supercell_matrix=None,
          'dielectric': Dielectric constant matrix
                        (array_like, shape=(3, 3), dtype=float),
          'factor': unit conversion facotr (float)}
+        Probably this will be deprecated.
     unitcell_filename : str, optional
         Input unit cell filename. Default is None.
+    supercell_filename : str, optional
+        Input supercell filename. Default value of primitive_matrix is set to
+        'auto' (can be overwitten). supercell_matrix is ignored. Default is
+        None.
     born_filename : str, optional
         Filename corresponding to 'BORN', a file contains non-analytical term
         correction parameters.
@@ -137,15 +143,13 @@ def load(supercell_matrix=None,
 
     """
 
-    if unitcell is None:
-        _unitcell, _ = read_crystal_structure(filename=unitcell_filename,
-                                              interface_mode=calculator)
-    else:
-        _unitcell = unitcell
-
-    _supercell_matrix = _get_supercell_matrix(supercell_matrix)
-    _primitive_matrix = _get_primitive_matrix(
-        primitive_matrix, _unitcell, symprec)
+    cell, smat, pmat = _get_cell_settings(unitcell_filename,
+                                          supercell_filename,
+                                          unitcell,
+                                          calculator,
+                                          primitive_matrix,
+                                          supercell_matrix,
+                                          symprec)
 
     # units keywords: factor, nac_factor, distance_to_A
     units = get_default_physical_units(calculator)
@@ -153,9 +157,9 @@ def load(supercell_matrix=None,
         _factor = units['factor']
     else:
         _factor = factor
-    phonon = Phonopy(_unitcell,
-                     _supercell_matrix,
-                     primitive_matrix=_primitive_matrix,
+    phonon = Phonopy(cell,
+                     smat,
+                     primitive_matrix=pmat,
                      factor=_factor,
                      frequency_scale_factor=frequency_scale_factor,
                      symprec=symprec,
@@ -171,6 +175,38 @@ def load(supercell_matrix=None,
                          force_sets_filename,
                          use_alm)
     return phonon
+
+
+def _get_cell_settings(unitcell_filename,
+                       supercell_filename,
+                       unitcell,
+                       calculator,
+                       pmat,
+                       smat,
+                       symprec):
+    if unitcell_filename is not None:
+        cell, filename = read_crystal_structure(
+            filename=unitcell_filename, interface_mode=calculator)
+        _smat = _get_supercell_matrix(smat)
+        _pmat = pmat
+    elif supercell_filename is not None:
+        cell, filename = read_crystal_structure(
+            filename=supercell_filename, interface_mode=calculator)
+        _smat = np.eye(3, dtype='intc', order='C')
+        if pmat is None:
+            _pmat = 'auto'
+    elif unitcell is not None:
+        cell = unitcell
+    else:
+        raise RuntimeError("Cell has to be specified.")
+
+    if cell is None:
+        msg = "'%s' could not be found." % filename
+        raise FileNotFoundError(msg)
+
+    _pmat = _get_primitive_matrix(_pmat, cell, symprec)
+
+    return cell, _smat, _pmat
 
 
 def _get_supercell_matrix(smat):
