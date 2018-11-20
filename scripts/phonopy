@@ -43,11 +43,16 @@ from phonopy.cui.settings import PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.cui.phonopy_argparse import (get_parser,
                                           show_deprecated_option_warnings)
-from phonopy.structure.cells import print_cell, guess_primitive_matrix
+from phonopy.structure.cells import (print_cell, guess_primitive_matrix,
+                                     determinant)
 from phonopy.structure.atoms import atom_data, symbol_map
 from phonopy.interface import (create_FORCE_SETS, read_crystal_structure,
-                               get_default_physical_units)
-from phonopy.interface.phonopy_yaml import PhonopyYaml
+                               get_default_physical_units,
+                               get_default_displacement_distance,
+                               get_interface_mode,
+                               write_supercells_with_displacements,
+                               PhonopyYaml)
+from phonopy.interface.vasp import create_FORCE_CONSTANTS
 
 phonopy_version = __version__
 
@@ -293,34 +298,7 @@ if log_level > 0:
 ##########################
 # Phonopy interface mode #
 ##########################
-if args.wien2k_mode:
-    interface_mode = 'wien2k'
-    from phonopy.interface.wien2k import write_supercells_with_displacements
-elif args.abinit_mode:
-    interface_mode = 'abinit'
-    from phonopy.interface.abinit import write_supercells_with_displacements
-elif args.qe_mode:
-    interface_mode = 'qe'
-    from phonopy.interface.qe import write_supercells_with_displacements
-elif args.elk_mode:
-    interface_mode = 'elk'
-    from phonopy.interface.elk import write_supercells_with_displacements
-elif args.siesta_mode:
-    interface_mode = 'siesta'
-    from phonopy.interface.siesta import write_supercells_with_displacements
-elif args.cp2k_mode:
-    interface_mode = 'cp2k'
-    from phonopy.interface.cp2k import write_supercells_with_displacements
-elif args.crystal_mode:
-    interface_mode = 'crystal'
-    from phonopy.interface.crystal import write_supercells_with_displacements
-else:
-    if args.vasp_mode:
-        interface_mode = 'vasp'
-    else:
-        interface_mode = None
-    from phonopy.interface.vasp import write_supercells_with_displacements
-    from phonopy.interface.vasp import create_FORCE_CONSTANTS
+interface_mode = get_interface_mode(args)
 
 physical_units = get_default_physical_units(interface_mode)
 
@@ -389,12 +367,12 @@ else:
 ##################
 # Read unit cell #
 ##################
-unitcell, optional_structure_file_information = read_crystal_structure(
+unitcell, optional_structure_info = read_crystal_structure(
     filename=settings.get_cell_filename(),
     interface_mode=interface_mode,
     chemical_symbols=settings.get_chemical_symbols(),
     yaml_mode=settings.get_yaml_mode())
-unitcell_filename = optional_structure_file_information[0]
+unitcell_filename = optional_structure_info[0]
 
 if unitcell is None:
     print_error_message("Crystal structure file of %s could not be found." %
@@ -577,17 +555,8 @@ if log_level > 1:
 #################################
 if run_mode == 'displacements':
     if settings.get_displacement_distance() is None:
-        if (interface_mode == 'wien2k' or
-            interface_mode == 'abinit' or
-            interface_mode == 'elk' or
-            interface_mode == 'qe' or
-            interface_mode == 'siesta' or
-            interface_mode == 'cp2k'):
-            displacement_distance = 0.02
-        elif interface_mode == 'crystal':
-            displacement_distance = 0.01
-        else:  # default or vasp
-            displacement_distance = 0.01
+        displacement_distance = get_default_displacement_distance(
+            interface_mode)
     else:
         displacement_distance = settings.get_displacement_distance()
 
@@ -601,35 +570,12 @@ if run_mode == 'displacements':
 
     # Write supercells with displacements
     cells_with_disps = phonon.get_supercells_with_displacements()
-
-    if interface_mode == 'wien2k':
-        npts, r0s, rmts = optional_structure_file_information[1:4]
-        write_supercells_with_displacements(
-            supercell,
-            cells_with_disps,
-            npts,
-            r0s,
-            rmts,
-            settings.get_supercell_matrix(),
-            filename=unitcell_filename)
-    elif interface_mode in ('abinit', 'cp2k'):
-        write_supercells_with_displacements(supercell, cells_with_disps)
-    elif (interface_mode == 'qe' or
-          interface_mode == 'elk' or
-          interface_mode == 'siesta'):
-        write_supercells_with_displacements(
-            supercell,
-            cells_with_disps,
-            optional_structure_file_information[1])
-    elif interface_mode == 'crystal':
-        conv_numbers = optional_structure_file_information[1]
-        write_supercells_with_displacements(supercell,
-                                            cells_with_disps,
-                                            conv_numbers,
-                                            settings.get_supercell_matrix(),
-                                            template_file="TEMPLATE")
-    else:  # default or vasp
-        write_supercells_with_displacements(supercell, cells_with_disps)
+    N = abs(determinant(phonon.supercell_matrix))
+    write_supercells_with_displacements(interface_mode,
+                                        supercell,
+                                        cells_with_disps,
+                                        N,
+                                        optional_structure_info)
 
     if log_level > 0:
         print('')

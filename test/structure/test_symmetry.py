@@ -5,7 +5,7 @@ import time
 
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell
-from phonopy.interface.phonopy_yaml import get_unitcell_from_phonopy_yaml
+from phonopy.interface import get_unitcell_from_phonopy_yaml
 import os
 
 data_dir = os.path.dirname(os.path.abspath(__file__))

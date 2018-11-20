@@ -79,12 +79,12 @@ def read_crystal(filename):
     crystal_in = CrystalIn(f_crystal.readlines())
     f_crystal.close()
     tags = crystal_in.get_tags()
-     
-     
-    cell = Atoms(cell=tags['lattice_vectors'], 
+
+
+    cell = Atoms(cell=tags['lattice_vectors'],
                  symbols=tags['atomic_species'],
                  scaled_positions=tags['coordinates'])
-    
+
     magmoms = tags['magnetic_moments']
     if magmoms is not None:
         # Print out symmetry information for magnetic cases
@@ -99,7 +99,7 @@ def read_crystal(filename):
         print("CRYSTAL-interface: Magnetic structure, number of operations with spin: %d" %
               len(symmetry.get_symmetry_operations()['rotations']))
         print("")
-    
+
     return cell, tags['conv_numbers']
 
 def write_crystal(filename, cell, conv_numbers, template_file="TEMPLATE", write_symmetry=False):
@@ -136,7 +136,7 @@ def write_crystal(filename, cell, conv_numbers, template_file="TEMPLATE", write_
         lines += atomspins + "\n"
     lines += "GRADCAL\n"
     lines += "END\n"
-    
+
     # Write the input file
     f_inputfile = open(filename + '.d12', 'w')
     f_inputfile.writelines(lines)
@@ -145,24 +145,13 @@ def write_crystal(filename, cell, conv_numbers, template_file="TEMPLATE", write_
 def write_supercells_with_displacements(supercell,
                                         cells_with_displacements,
                                         conv_numbers,
-                                        supercell_matrix,
+                                        num_unitcells_in_supercell,
                                         pre_filename="supercell",
                                         width=3,
                                         template_file="TEMPLATE"):
-
-    # From wien2k.py: derive conventional atomic numbers 
-    # for the supercell from the original unit cell
-    v = supercell_matrix
-    det = (  v[0,0] * v[1,1] * v[2,2]
-           + v[0,1] * v[1,2] * v[2,0]
-           + v[0,2] * v[1,0] * v[2,1]
-           - v[0,0] * v[1,2] * v[2,1]
-           - v[0,1] * v[1,0] * v[2,2]
-           - v[0,2] * v[1,1] * v[2,0])
-    
     convnum_super = []
     for i in conv_numbers:
-        for j in range(abs(det)):
+        for j in range(num_unitcells_in_supercell):
             convnum_super.append(i)
 
     # Currently, symmetry is not used by default
@@ -230,7 +219,7 @@ def get_crystal_structure(cell, conv_numbers, write_symmetry=False):
         lines += ("  %d " + "%16.12f"*3 + "\n") % (i,  pos[0], pos[1], pos[2])
 
     return lines
-    
+
 class CrystalIn:
     def __init__(self, lines):
         # conv_numbers = CRYSTAL conventional atomic number mapping: 'Ge' -> 32 or 'Ge' -> 232
@@ -319,10 +308,10 @@ class CrystalIn:
                 print(magmoms)
             else:
                 print("CRYSTAL-interface: Invalid ATOMSPIN entry, magnetic moments have not been set")
-        else: 
-            print("") 
+        else:
+            print("")
 
-            
+
 if __name__ == '__main__':
     import sys
     from phonopy.structure.symmetry import Symmetry

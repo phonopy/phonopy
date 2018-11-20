@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from phonopy.interface.phonopy_yaml import get_unitcell_from_phonopy_yaml
+from phonopy.interface import get_unitcell_from_phonopy_yaml
 from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
 from phonopy.structure.cells import get_supercell, get_primitive
 import os

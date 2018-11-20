@@ -1379,23 +1379,28 @@ class PhonopySettings(Settings):
     def get_xyz_projection(self):
         return self._xyz_projection
 
+
 class PhonopyConfParser(ConfParser):
     def __init__(self, filename=None, args=None):
         self._settings = PhonopySettings()
+        confs = {}
         if filename is not None:
             ConfParser.__init__(self, filename=filename)
             self.read_file()  # store .conf file setting in self._confs
             self._parse_conf()  # self.parameters[key] = val
             self._set_settings()  # self.parameters -> PhonopySettings
+            confs.update(self._confs)
         if args is not None:
             # To invoke ConfParser.__init__() to flush variables.
             ConfParser.__init__(self, args=args)
             self._read_options()  # store options in self._confs
             self._parse_conf()  # self.parameters[key] = val
             self._set_settings()  # self.parameters -> PhonopySettings
+            confs.update(self._confs)
+        self._confs = confs
 
     def _read_options(self):
-        self.read_options() # store data in self._confs
+        self.read_options()  # store data in self._confs
         arg_list = vars(self._args)
         if 'band_format' in arg_list:
             if self._args.band_format:
