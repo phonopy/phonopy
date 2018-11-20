@@ -35,7 +35,6 @@
 import os
 import numpy as np
 from phonopy.api_phonopy import Phonopy
-from phonopy.units import VaspToTHz
 from phonopy.structure.cells import (guess_primitive_matrix,
                                      get_primitive_matrix_by_centring)
 from phonopy.interface import (read_crystal_structure,
