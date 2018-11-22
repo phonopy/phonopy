@@ -723,13 +723,16 @@ class ConfParser(object):
 
             if conf_key == 'band':
                 bands = []
-                for section in confs['band'].split(','):
-                    points = [fracval(x) for x in section.split()]
-                    if len(points) % 3 != 0 or len(points) < 6:
-                        self.setting_error("BAND is incorrectly set.")
-                        break
-                    bands.append(np.array(points).reshape(-1, 3))
-                self.set_parameter('band_paths', bands)
+                if confs['band'].strip().lower() == 'auto':
+                    self.set_parameter('band_paths', 'auto')
+                else:
+                    for section in confs['band'].split(','):
+                        points = [fracval(x) for x in section.split()]
+                        if len(points) % 3 != 0 or len(points) < 6:
+                            self.setting_error("BAND is incorrectly set.")
+                            break
+                        bands.append(np.array(points).reshape(-1, 3))
+                    self.set_parameter('band_paths', bands)
 
             if conf_key == 'qpoints':
                 if confs['qpoints'].lower() == '.true.':
@@ -754,9 +757,11 @@ class ConfParser(object):
                 self.set_parameter('nac_method', confs['nac_method'].lower())
 
             if conf_key == 'q_direction':
-                q_direction = [fracval(x) for x in confs['q_direction'].split()]
+                q_direction = [fracval(x)
+                               for x in confs['q_direction'].split()]
                 if len(q_direction) < 3:
-                    self.setting_error("Number of elements of q_direction is less than 3")
+                    self.setting_error("Number of elements of q_direction "
+                                       "is less than 3")
                 else:
                     self.set_parameter('nac_q_direction', q_direction)
 
@@ -984,6 +989,8 @@ class ConfParser(object):
         #  array([[ 0.5,  0.5,  0. ],
         #         [ 0. ,  0. ,  0. ],
         #         [ 0.5,  0.5,  0.5]])]
+        # or
+        # BAND = AUTO
         if 'band_paths' in params:
             self._settings.set_band_paths(params['band_paths'])
 
@@ -1379,23 +1386,28 @@ class PhonopySettings(Settings):
     def get_xyz_projection(self):
         return self._xyz_projection
 
+
 class PhonopyConfParser(ConfParser):
     def __init__(self, filename=None, args=None):
         self._settings = PhonopySettings()
+        confs = {}
         if filename is not None:
             ConfParser.__init__(self, filename=filename)
             self.read_file()  # store .conf file setting in self._confs
             self._parse_conf()  # self.parameters[key] = val
             self._set_settings()  # self.parameters -> PhonopySettings
+            confs.update(self._confs)
         if args is not None:
             # To invoke ConfParser.__init__() to flush variables.
             ConfParser.__init__(self, args=args)
             self._read_options()  # store options in self._confs
             self._parse_conf()  # self.parameters[key] = val
             self._set_settings()  # self.parameters -> PhonopySettings
+            confs.update(self._confs)
+        self._confs = confs
 
     def _read_options(self):
-        self.read_options() # store data in self._confs
+        self.read_options()  # store data in self._confs
         arg_list = vars(self._args)
         if 'band_format' in arg_list:
             if self._args.band_format:

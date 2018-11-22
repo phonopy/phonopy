@@ -40,9 +40,9 @@ from phonopy.interface.vasp import (get_scaled_positions_lines,
                                     sort_positions_by_symbols,
                                     check_forces,
                                     get_drift_forces)
-from phonopy.units import Bohr
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.atoms import symbol_map
+
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
     hook = 'Forces :'
@@ -71,6 +71,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
     else:
         return []
 
+
 def read_elk(filename):
     elk_in = ElkIn(open(filename).readlines())
     tags = elk_in.get_variables()
@@ -83,7 +84,7 @@ def read_elk(filename):
             numbers.append(symbol_map[s])
         else:
             numbers.append(0)
-            
+
     for i, n in enumerate(numbers):
         if n == 0:
             for j in range(1, 119):
@@ -100,9 +101,11 @@ def read_elk(filename):
                  cell=avec,
                  scaled_positions=pos_all), spfnames
 
+
 def write_elk(filename, cell, sp_filenames):
     f = open(filename, 'w')
     f.write(get_elk_structure(cell, sp_filenames))
+
 
 def write_supercells_with_displacements(supercell,
                                         cells_with_displacements,
@@ -110,6 +113,7 @@ def write_supercells_with_displacements(supercell,
     write_elk("supercell.in", supercell, sp_filenames)
     for i, cell in enumerate(cells_with_displacements):
         write_elk("supercell-%03d.in" % (i + 1), cell, sp_filenames)
+
 
 def get_elk_structure(cell, sp_filenames=None):
     lattice = cell.get_cell()
@@ -133,12 +137,14 @@ def get_elk_structure(cell, sp_filenames=None):
     for i, (n, s) in enumerate(zip(num_atoms, spfnames)):
         lines += " \'%s\'\n" % s
         lines += " %d\n" % n
-        lines += get_scaled_positions_lines(scaled_positions[n_pos:(n_pos + n)])
+        lines += get_scaled_positions_lines(
+            scaled_positions[n_pos:(n_pos + n)])
         if i < len(num_atoms) - 1:
             lines += "\n"
         n_pos += n
-        
+
     return lines
+
 
 class ElkIn(object):
     def __init__(self, lines):
@@ -151,18 +157,17 @@ class ElkIn(object):
         self._tags = {'atoms': None,
                       'avec':  None,
                       'scale': [1.0, 1.0, 1.0]}
-        self._lines = iter(lines)
+        self._lines = lines[:]
         self._collect()
 
     def get_variables(self):
         return self._tags
 
     def _collect(self):
-        elements = {}
         while True:
             try:
-                line_str = self._lines.next().strip()
-            except StopIteration:
+                line_str = self._lines.pop(0).strip()
+            except IndexError:
                 break
 
             if len(line_str) == 0:
@@ -175,43 +180,43 @@ class ElkIn(object):
                 self._set_methods[elems[0]]()
 
     def _set_atoms(self):
-        nspecies = int(self._lines.next().split()[0])
+        nspecies = int(self._lines.pop(0).split()[0])
         spfnames = []
         positions = []
         for i in range(nspecies):
-            spfnames.append(self._lines.next().split()[0].strip('\''))
-            natoms = int(self._lines.next().split()[0])
+            spfnames.append(self._lines.pop(0).split()[0].strip('\''))
+            natoms = int(self._lines.pop(0).split()[0])
             pos_sp = []
             for j in range(natoms):
                 pos_sp.append(
-                    [float(x) for x in self._lines.next().split()[:3]])
+                    [float(x) for x in self._lines.pop(0).split()[:3]])
             positions.append(pos_sp)
-            
+
         self._tags['atoms'] = {'spfnames':  spfnames,
                                'positions': positions}
-            
+
     def _set_avec(self):
         avec = []
         for i in range(3):
-            avec.append([float(x) for x in self._lines.next().split()[:3]])
+            avec.append([float(x) for x in self._lines.pop(0).split()[:3]])
         self._tags['avec'] = avec
 
     def _set_scale(self):
-        scale = float(self._lines.next().split()[0])
+        scale = float(self._lines.pop(0).split()[0])
         for i in range(3):
             self._tags['scale'][i] = scale
 
     def _set_scale1(self):
-        self._tags['scale'][0] = float(self._lines.next().split()[0])
+        self._tags['scale'][0] = float(self._lines.pop(0).split()[0])
 
     def _set_scale2(self):
-        self._tags['scale'][1] = float(self._lines.next().split()[0])
+        self._tags['scale'][1] = float(self._lines.pop(0).split()[0])
 
     def _set_scale3(self):
-        self._tags['scale'][2] = float(self._lines.next().split()[0])
-        
+        self._tags['scale'][2] = float(self._lines.pop(0).split()[0])
+
+
 if __name__ == '__main__':
-    import sys
     from phonopy.structure.symmetry import Symmetry
     cell, sp_filenames = read_elk(sys.argv[1])
     symmetry = Symmetry(cell)

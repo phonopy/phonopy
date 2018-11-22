@@ -4,7 +4,7 @@ import numpy as np
 import tarfile
 import os
 from phonopy.interface.vasp import Vasprun, read_vasp
-from phonopy.interface.phonopy_yaml import get_unitcell_from_phonopy_yaml
+from phonopy.interface.phonopy_yaml import read_cell_yaml
 from phonopy.file_IO import parse_FORCE_SETS
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
@@ -21,7 +21,7 @@ class TestVASP(unittest.TestCase):
     def test_read_vasp(self):
         cell = read_vasp(os.path.join(data_dir, "..", "POSCAR_NaCl"))
         filename = os.path.join(data_dir, "NaCl-vasp.yaml")
-        cell_ref = get_unitcell_from_phonopy_yaml(filename)
+        cell_ref = read_cell_yaml(filename)
         self.assertTrue(
             (np.abs(cell.get_cell() - cell_ref.get_cell()) < 1e-5).all())
         diff_pos = (cell.get_scaled_positions()

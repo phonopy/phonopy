@@ -43,11 +43,19 @@ from phonopy.cui.settings import PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.cui.phonopy_argparse import (get_parser,
                                           show_deprecated_option_warnings)
-from phonopy.structure.cells import print_cell, guess_primitive_matrix
+from phonopy.structure.cells import (print_cell, guess_primitive_matrix,
+                                     determinant)
 from phonopy.structure.atoms import atom_data, symbol_map
 from phonopy.interface import (create_FORCE_SETS, read_crystal_structure,
-                               get_default_physical_units)
-from phonopy.interface.phonopy_yaml import PhonopyYaml
+                               get_default_physical_units,
+                               get_default_displacement_distance,
+                               get_interface_mode,
+                               write_supercells_with_displacements,
+                               PhonopyYaml)
+from phonopy.interface.vasp import create_FORCE_CONSTANTS
+from phonopy.phonon.band_structure import (get_band_qpoints,
+                                           get_band_qpoints_by_seekpath)
+
 
 phonopy_version = __version__
 
@@ -131,8 +139,10 @@ def finalize_phonopy(log_level,
                      interface_mode,
                      filename="phonopy.yaml"):
     if log_level > 0:
+        units = get_default_physical_units(interface_mode)
         phpy_yaml = PhonopyYaml(configuration=phonopy_conf.get_configures(),
-                                calculator=interface_mode)
+                                calculator=interface_mode,
+                                physical_units=units)
         phpy_yaml.set_phonon_info(phonon)
         with open(filename, 'w') as w:
             w.write(str(phpy_yaml))
@@ -167,10 +177,14 @@ def print_cells(phonon, unitcell_filename):
     print("-" * 76)
 
 
-def print_settings(settings):
+def print_settings(settings, is_primitive_axes_auto, primitive_matrix):
     run_mode = settings.get_run_mode()
     if run_mode == 'band':
-        print("Band structure mode")
+        if (type(settings.get_band_paths()) is str and
+            settings.get_band_paths() == 'auto'):
+            print("Band structure mode (Auto)")
+        else:
+            print("Band structure mode")
     if run_mode == 'mesh':
         print("Mesh sampling mode")
     if run_mode == 'band_mesh':
@@ -254,13 +268,14 @@ def print_settings(settings):
             print("    %s" % v)
     else:
         print("  Supercell: %s" % np.diag(settings.get_supercell_matrix()))
-    if settings.get_primitive_matrix() is not None:
-        if settings.get_primitive_matrix() is 'auto':
-            print("  Primitive matrix: Auto")
-        else:
-            print("  Primitive matrix:")
-            for v in settings.get_primitive_matrix():
-                print("    %s" % v)
+    if is_primitive_axes_auto:
+        print("  Primitive matrix (Auto):")
+        for v in primitive_matrix:
+            print("    %s" % v)
+    elif settings.get_primitive_matrix() is not None:
+        print("  Primitive matrix:")
+        for v in primitive_matrix:
+            print("    %s" % v)
 
 
 #################
@@ -293,34 +308,7 @@ if log_level > 0:
 ##########################
 # Phonopy interface mode #
 ##########################
-if args.wien2k_mode:
-    interface_mode = 'wien2k'
-    from phonopy.interface.wien2k import write_supercells_with_displacements
-elif args.abinit_mode:
-    interface_mode = 'abinit'
-    from phonopy.interface.abinit import write_supercells_with_displacements
-elif args.qe_mode:
-    interface_mode = 'qe'
-    from phonopy.interface.qe import write_supercells_with_displacements
-elif args.elk_mode:
-    interface_mode = 'elk'
-    from phonopy.interface.elk import write_supercells_with_displacements
-elif args.siesta_mode:
-    interface_mode = 'siesta'
-    from phonopy.interface.siesta import write_supercells_with_displacements
-elif args.cp2k_mode:
-    interface_mode = 'cp2k'
-    from phonopy.interface.cp2k import write_supercells_with_displacements
-elif args.crystal_mode:
-    interface_mode = 'crystal'
-    from phonopy.interface.crystal import write_supercells_with_displacements
-else:
-    if args.vasp_mode:
-        interface_mode = 'vasp'
-    else:
-        interface_mode = None
-    from phonopy.interface.vasp import write_supercells_with_displacements
-    from phonopy.interface.vasp import create_FORCE_CONSTANTS
+interface_mode = get_interface_mode(args)
 
 physical_units = get_default_physical_units(interface_mode)
 
@@ -389,12 +377,12 @@ else:
 ##################
 # Read unit cell #
 ##################
-unitcell, optional_structure_file_information = read_crystal_structure(
+unitcell, optional_structure_info = read_crystal_structure(
     filename=settings.get_cell_filename(),
     interface_mode=interface_mode,
     chemical_symbols=settings.get_chemical_symbols(),
     yaml_mode=settings.get_yaml_mode())
-unitcell_filename = optional_structure_file_information[0]
+unitcell_filename = optional_structure_info[0]
 
 if unitcell is None:
     print_error_message("Crystal structure file of %s could not be found." %
@@ -433,9 +421,15 @@ if magmoms is not None:
 ########################
 # Set primitive matrix #
 ########################
-primitive_matrix = settings.get_primitive_matrix()
-if type(primitive_matrix) is str and primitive_matrix == 'auto':
+# When BAND = AUTO, automatic choice of primitive matrix is activated.
+is_band_auto = (type(settings.get_band_paths()) is str and
+                settings.get_band_paths() == 'auto')
+is_primitive_axes_auto = (type(settings.get_primitive_matrix()) is str and
+                          settings.get_primitive_matrix() == 'auto')
+if is_primitive_axes_auto or is_band_auto:
     primitive_matrix = guess_primitive_matrix(unitcell, symprec=args.symprec)
+else:
+    primitive_matrix = settings.get_primitive_matrix()
 
 ################################################
 # Check crystal symmetry and exit (--symmetry) #
@@ -559,11 +553,12 @@ if log_level > 0:
     print("Spglib version %d.%d.%d" % spglib.get_version())
     if interface_mode:
         print("Calculator interface: %s" % interface_mode)
-    print_settings(settings)
-    if (type(settings.get_primitive_matrix()) is str and
-        settings.get_primitive_matrix() == 'auto'):
-        for v in primitive_matrix:
-            print("    %s" % v)
+    if is_band_auto and not is_primitive_axes_auto:
+        print("Automatic band structure mode forced automatic choice "
+              "of primitive axes.")
+    print_settings(settings,
+                   (is_primitive_axes_auto or is_band_auto),
+                   primitive_matrix)
     if magmoms is None:
         print("Spacegroup: %s" %
               phonon.get_symmetry().get_international_table())
@@ -577,17 +572,8 @@ if log_level > 1:
 #################################
 if run_mode == 'displacements':
     if settings.get_displacement_distance() is None:
-        if (interface_mode == 'wien2k' or
-            interface_mode == 'abinit' or
-            interface_mode == 'elk' or
-            interface_mode == 'qe' or
-            interface_mode == 'siesta' or
-            interface_mode == 'cp2k'):
-            displacement_distance = 0.02
-        elif interface_mode == 'crystal':
-            displacement_distance = 0.01
-        else:  # default or vasp
-            displacement_distance = 0.01
+        displacement_distance = get_default_displacement_distance(
+            interface_mode)
     else:
         displacement_distance = settings.get_displacement_distance()
 
@@ -601,35 +587,12 @@ if run_mode == 'displacements':
 
     # Write supercells with displacements
     cells_with_disps = phonon.get_supercells_with_displacements()
-
-    if interface_mode == 'wien2k':
-        npts, r0s, rmts = optional_structure_file_information[1:4]
-        write_supercells_with_displacements(
-            supercell,
-            cells_with_disps,
-            npts,
-            r0s,
-            rmts,
-            settings.get_supercell_matrix(),
-            filename=unitcell_filename)
-    elif interface_mode in ('abinit', 'cp2k'):
-        write_supercells_with_displacements(supercell, cells_with_disps)
-    elif (interface_mode == 'qe' or
-          interface_mode == 'elk' or
-          interface_mode == 'siesta'):
-        write_supercells_with_displacements(
-            supercell,
-            cells_with_disps,
-            optional_structure_file_information[1])
-    elif interface_mode == 'crystal':
-        conv_numbers = optional_structure_file_information[1]
-        write_supercells_with_displacements(supercell,
-                                            cells_with_disps,
-                                            conv_numbers,
-                                            settings.get_supercell_matrix(),
-                                            template_file="TEMPLATE")
-    else:  # default or vasp
-        write_supercells_with_displacements(supercell, cells_with_disps)
+    N = abs(determinant(phonon.supercell_matrix))
+    write_supercells_with_displacements(interface_mode,
+                                        supercell,
+                                        cells_with_disps,
+                                        N,
+                                        optional_structure_info)
 
     if log_level > 0:
         print('')
@@ -792,14 +755,27 @@ if run_mode == 'qpoints':
 # Band structure and mesh sampling
 elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
     if run_mode == 'band' or run_mode == 'band_mesh':
-        from phonopy.phonon.band_structure import get_band_qpoints
-
-        band_paths = settings.get_band_paths()
         if settings.get_band_points() is None:
             npoints = 51
         else:
             npoints = settings.get_band_points()
-        bands = get_band_qpoints(band_paths, npoints)
+        band_paths = settings.get_band_paths()
+
+        if type(band_paths) is str and band_paths == 'auto':
+            print("SeeK-path is used to generate band paths.")
+            print("About SeeK-path https://seekpath.readthedocs.io/ "
+                  "(citation there-in)")
+            is_legacy = False
+            bands, labels, path_connections = get_band_qpoints_by_seekpath(
+                primitive.to_tuple(), npoints)
+        else:
+            is_legacy = True
+            bands = get_band_qpoints(band_paths, npoints)
+            path_connections = []
+            for paths in band_paths:
+                path_connections += [True, ] * (len(paths) - 2)
+                path_connections.append(False)
+            labels = settings.get_band_labels()
 
         if log_level > 0:
             print("Reciprocal space paths in reduced coordinates:")
@@ -817,15 +793,15 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
             comment = {'calculator': interface_mode}
 
         if settings.get_is_hdf5() or settings.get_band_format() == 'hdf5':
-            phonon.write_hdf5_band_structure(labels=settings.get_band_labels(),
-                                             comment=comment)
+            phonon.write_hdf5_band_structure(labels=labels, comment=comment)
         else:
-            phonon.write_yaml_band_structure(labels=settings.get_band_labels(),
-                                             comment=comment)
+            phonon.write_yaml_band_structure(labels=labels, comment=comment)
 
         if args.is_graph_plot and run_mode != 'band_mesh':
             plot = phonon.plot_band_structure(
-                labels=settings.get_band_labels())
+                labels=labels,
+                path_connections=path_connections,
+                is_legacy=is_legacy)
             if args.is_graph_save:
                 plot.savefig('band.pdf')
             else:

@@ -33,25 +33,97 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import os
+from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.file_IO import parse_disp_yaml, write_FORCE_SETS
+
+
+def get_interface_mode(args):
+    if args.wien2k_mode:
+        return 'wien2k'
+    elif args.abinit_mode:
+        return 'abinit'
+    elif args.qe_mode:
+        return 'qe'
+    elif args.elk_mode:
+        return 'elk'
+    elif args.siesta_mode:
+        return 'siesta'
+    elif args.cp2k_mode:
+        return 'cp2k'
+    elif args.crystal_mode:
+        return 'crystal'
+    elif args.vasp_mode:
+        return 'vasp'
+    else:
+        return None
+
+
+def write_supercells_with_displacements(interface_mode,
+                                        supercell,
+                                        cells_with_disps,
+                                        num_unitcells_in_supercell,
+                                        optional_structure_info):
+    if interface_mode is None or interface_mode == 'vasp':
+        from phonopy.interface.vasp import write_supercells_with_displacements
+        write_supercells_with_displacements(supercell, cells_with_disps)
+    elif interface_mode is 'abinit':
+        from phonopy.interface.abinit import write_supercells_with_displacements
+        write_supercells_with_displacements(supercell, cells_with_disps)
+    elif interface_mode is 'qe':
+        from phonopy.interface.qe import write_supercells_with_displacements
+        write_supercells_with_displacements(supercell,
+                                            cells_with_disps,
+                                            optional_structure_info[1])
+    elif interface_mode == 'wien2k':
+        from phonopy.interface.wien2k import write_supercells_with_displacements
+        unitcell_filename, npts, r0s, rmts = optional_structure_info
+        write_supercells_with_displacements(
+            supercell,
+            cells_with_disps,
+            npts,
+            r0s,
+            rmts,
+            num_unitcells_in_supercell,
+            filename=unitcell_filename)
+    elif interface_mode == 'elk':
+        from phonopy.interface.elk import write_supercells_with_displacements
+        write_supercells_with_displacements(supercell,
+                                            cells_with_disps,
+                                            optional_structure_info[1])
+    elif interface_mode == 'siesta':
+        from phonopy.interface.siesta import write_supercells_with_displacements
+        write_supercells_with_displacements(supercell,
+                                            cells_with_disps,
+                                            optional_structure_info[1])
+    elif interface_mode == 'cp2k':
+        from phonopy.interface.cp2k import write_supercells_with_displacements
+        write_supercells_with_displacements(supercell, cells_with_disps)
+    elif interface_mode == 'crystal':
+        from phonopy.interface.crystal import write_supercells_with_displacements
+        write_supercells_with_displacements(supercell,
+                                            cells_with_disps,
+                                            optional_structure_info[1],
+                                            num_unitcells_in_supercell,
+                                            template_file="TEMPLATE")
+
 
 def read_crystal_structure(filename=None,
                            interface_mode=None,
                            chemical_symbols=None,
                            yaml_mode=False):
     if filename is None:
-        unitcell_filename = get_default_cell_filename(interface_mode, yaml_mode)
+        unitcell_filename = get_default_cell_filename(interface_mode,
+                                                      yaml_mode)
     else:
         unitcell_filename = filename
 
-    if not os.path.exists(unitcell_filename):
+    if not os.path.isfile(unitcell_filename):
         if filename is None:
             return None, (unitcell_filename + " (default file name)",)
         else:
             return None, (unitcell_filename,)
 
     if yaml_mode:
-        from phonopy.interface.phonopy_yaml import PhonopyYaml
         phpy_yaml = PhonopyYaml()
         phpy_yaml.read(unitcell_filename)
         unitcell = phpy_yaml.get_unitcell()
@@ -100,6 +172,7 @@ def read_crystal_structure(filename=None,
         unitcell, conv_numbers = read_crystal(unitcell_filename)
         return unitcell, (unitcell_filename, conv_numbers)
 
+
 def get_default_cell_filename(interface_mode, yaml_mode):
     if yaml_mode:
         return "POSCAR.yaml"
@@ -117,6 +190,36 @@ def get_default_cell_filename(interface_mode, yaml_mode):
         return "unitcell.inp"
     if interface_mode == 'crystal':
         return "crystal.o"
+
+
+def get_default_supercell_filename(interface_mode, yaml_mode):
+    if yaml_mode:
+        return "SPOSCAR.yaml"
+    elif interface_mode is None or interface_mode == 'vasp':
+        return "SPOSCAR"
+    elif interface_mode in ('abinit', 'elk', 'qe'):
+        return "supercell.in"
+    elif interface_mode == 'wien2k':
+        return "case.structS"
+    elif interface_mode == 'siesta':
+        return "supercell.fdf"
+    elif interface_mode == 'cp2k':
+        return "supercell.inp"
+    elif interface_mode == 'crystal':
+        return None  # supercell.ext can not be parsed by crystal interface.
+    else:
+        return None
+
+
+def get_default_displacement_distance(interface_mode):
+    if interface_mode in ('wien2k', 'abinit', 'elk', 'qe', 'siesta', 'cp2k'):
+        displacement_distance = 0.02
+    elif interface_mode == 'crystal':
+        displacement_distance = 0.01
+    else:  # default or vasp
+        displacement_distance = 0.01
+    return displacement_distance
+
 
 def get_default_physical_units(interface_mode):
     """Return physical units used for calculators
@@ -138,42 +241,61 @@ def get_default_physical_units(interface_mode):
 
     units = {'factor': None,
              'nac_factor': None,
-             'distance_to_A': None}
+             'distance_to_A': None,
+             'force_constants_unit': None,
+             'length_unit': None}
 
     if interface_mode is None or interface_mode == 'vasp':
         units['factor'] = VaspToTHz
         units['nac_factor'] = Hartree * Bohr
         units['distance_to_A'] = 1.0
+        units['force_constants_unit'] = 'eV/Angstrom^2'
+        units['length_unit'] = 'Angstrom'
     elif interface_mode == 'abinit':
         units['factor'] = AbinitToTHz
         units['nac_factor'] = Hartree / Bohr
         units['distance_to_A'] = Bohr
+        units['force_constants_unit'] = 'eV/Angstrom.au'
+        units['length_unit'] = 'au'
     elif interface_mode == 'qe':
         units['factor'] = PwscfToTHz
         units['nac_factor'] = 2.0
         units['distance_to_A'] = Bohr
+        units['force_constants_unit'] = 'Ry/au^2'
+        units['length_unit'] = 'au'
     elif interface_mode == 'wien2k':
         units['factor'] = Wien2kToTHz
         units['nac_factor'] = 2000.0
         units['distance_to_A'] = Bohr
+        units['force_constants_unit'] = 'mRy/au^2'
+        units['length_unit'] = 'au'
     elif interface_mode == 'elk':
         units['factor'] = ElkToTHz
         units['nac_factor'] = 1.0
         units['distance_to_A'] = Bohr
+        units['force_constants_unit'] = 'hartree/au^2'
+        units['length_unit'] = 'au'
     elif interface_mode == 'siesta':
         units['factor'] = SiestaToTHz
         units['nac_factor'] = Hartree / Bohr
         units['distance_to_A'] = Bohr
+        units['force_constants_unit'] = 'eV/Angstrom.au'
+        units['length_unit'] = 'au'
     elif interface_mode == 'cp2k':
         units['factor'] = CP2KToTHz
         units['nac_factor'] = Hartree / Bohr  # in a.u.
         units['distance_to_A'] = Bohr
+        units['force_constants_unit'] = 'hartree/au^2'
+        units['length_unit'] = 'Angstrom'
     elif interface_mode == 'crystal':
         units['factor'] = CrystalToTHz
         units['nac_factor'] = Hartree * Bohr
         units['distance_to_A'] = 1.0
+        units['force_constants_unit'] = 'eV/Angstrom^2'
+        units['length_unit'] = 'Angstrom'
 
     return units
+
 
 def create_FORCE_SETS(interface_mode,
                       force_filenames,
@@ -183,14 +305,8 @@ def create_FORCE_SETS(interface_mode,
                       disp_filename='disp.yaml',
                       force_sets_filename='FORCE_SETS',
                       log_level=0):
-    if (interface_mode is None or
-        interface_mode == 'vasp' or
-        interface_mode == 'abinit' or
-        interface_mode == 'elk' or
-        interface_mode == 'qe' or
-        interface_mode == 'siesta' or
-        interface_mode == 'cp2k' or
-        interface_mode == 'crystal'):
+    if interface_mode in (None, 'vasp', 'abinit', 'elk', 'qe', 'siesta',
+                          'cp2k', 'crystal'):
         disp_dataset = parse_disp_yaml(filename=disp_filename)
         num_atoms = disp_dataset['natom']
         num_displacements = len(disp_dataset['first_atoms'])
@@ -243,6 +359,7 @@ def create_FORCE_SETS(interface_mode,
 
     return 0
 
+
 def get_force_sets(interface_mode,
                    num_atoms,
                    num_displacements,
@@ -279,6 +396,7 @@ def get_force_sets(interface_mode,
 
     return force_sets
 
+
 def _check_number_of_files(num_displacements,
                            force_filenames,
                            disp_filename):
@@ -291,6 +409,7 @@ def _check_number_of_files(num_displacements,
         return 1
     else:
         return 0
+
 
 def _subtract_residual_forces(force_sets):
     for i in range(1, len(force_sets)):

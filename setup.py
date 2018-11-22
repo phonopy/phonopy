@@ -147,7 +147,7 @@ if __name__ == '__main__':
             if "__version__" in line:
                 for i, num in enumerate(
                         line.split()[2].strip('\"').split('.')):
-                    version_nums[i] = int(num)
+                    version_nums[i] = num
                 break
 
     # # To deploy to pypi/conda by travis-CI
@@ -168,7 +168,7 @@ if __name__ == '__main__':
         print("Failed to get version number in setup.py.")
         raise
 
-    version = ".".join(["%d" % n for n in version_nums[:3]])
+    version = ".".join(["%s" % n for n in version_nums[:3]])
     if len(version_nums) > 3:
         version += "-%d" % version_nums[3]
 
