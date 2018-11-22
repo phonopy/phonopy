@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from phonopy.interface.phonopy_yaml import get_unitcell_from_phonopy_yaml
+from phonopy.interface.phonopy_yaml import read_cell_yaml
 from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
 from phonopy.structure.cells import get_supercell, get_primitive
 import os
@@ -12,8 +12,7 @@ class TestDynmatToFc(unittest.TestCase):
 
     def setUp(self):
         filename = os.path.join("..", "NaCl.yaml")
-        self._cell = get_unitcell_from_phonopy_yaml(
-            os.path.join(data_dir, filename))
+        self._cell = read_cell_yaml(os.path.join(data_dir, filename))
 
     def tearDown(self):
         pass

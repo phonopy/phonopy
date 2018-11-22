@@ -1,7 +1,7 @@
 import unittest
 
 import numpy as np
-from phonopy.interface.phonopy_yaml import get_unitcell_from_phonopy_yaml
+from phonopy.interface.phonopy_yaml import read_cell_yaml
 from phonopy.interface.qe import read_pwscf
 import os
 
@@ -20,7 +20,7 @@ class TestPwscf(unittest.TestCase):
         cell, pp_filenames = read_pwscf(os.path.join(data_dir,
                                                      "NaCl-pwscf.in"))
         filename = os.path.join(data_dir, "NaCl-abinit-pwscf.yaml")
-        cell_ref = get_unitcell_from_phonopy_yaml(filename)
+        cell_ref = read_cell_yaml(filename)
         self.assertTrue(
             (np.abs(cell.get_cell() - cell_ref.get_cell()) < 1e-5).all())
         diff_pos = (cell.get_scaled_positions()

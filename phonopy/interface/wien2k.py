@@ -159,21 +159,13 @@ def parse_wien2k_struct(filename):
 def write_supercells_with_displacements(supercell,
                                         cells_with_displacements,
                                         npts, r0s, rmts,
-                                        supercell_matrix,
+                                        num_unitcells_in_supercell,
                                         filename="wien2k-"):
-    v = supercell_matrix
-    det = (v[0, 0] * v[1, 1] * v[2, 2]
-           + v[0, 1] * v[1, 2] * v[2, 0]
-           + v[0, 2] * v[1, 0] * v[2, 1]
-           - v[0, 0] * v[1, 2] * v[2, 1]
-           - v[0, 1] * v[1, 0] * v[2, 2]
-           - v[0, 2] * v[1, 1] * v[2, 0])
-
     npts_super = []
     r0s_super = []
     rmts_super = []
     for i, j, k in zip(npts, r0s, rmts):
-        for l in range(abs(det)):
+        for l in range(num_unitcells_in_supercell):
             npts_super.append(i)
             r0s_super.append(j)
             rmts_super.append(k)

@@ -62,7 +62,7 @@ def write_partial_dos(frequency_points,
         fp.write("\n")
 
 
-def plot_total_dos(pyplot,
+def plot_total_dos(ax,
                    frequency_points,
                    total_dos,
                    freq_Debye=None,
@@ -77,25 +77,25 @@ def plot_total_dos(pyplot,
         freqs = np.linspace(0, freq_Debye, num_points + 1)
 
     if flip_xy:
-        pyplot.plot(total_dos, frequency_points, 'r-')
+        ax.plot(total_dos, frequency_points, 'r-')
         if freq_Debye:
-            pyplot.plot(np.append(Debye_fit_coef * freqs**2, 0),
-                        np.append(freqs, freq_Debye), 'b-')
+            ax.plot(np.append(Debye_fit_coef * freqs**2, 0),
+                    np.append(freqs, freq_Debye), 'b-')
     else:
-        pyplot.plot(frequency_points, total_dos, 'r-')
+        ax.plot(frequency_points, total_dos, 'r-')
         if freq_Debye:
-            pyplot.plot(np.append(freqs, freq_Debye),
-                        np.append(Debye_fit_coef * freqs**2, 0), 'b-')
+            ax.plot(np.append(freqs, freq_Debye),
+                    np.append(Debye_fit_coef * freqs**2, 0), 'b-')
 
     if xlabel:
-        pyplot.xlabel(xlabel)
+        ax.set_xlabel(xlabel)
     if ylabel:
-        pyplot.ylabel(ylabel)
+        ax.set_ylabel(ylabel)
 
-    pyplot.grid(draw_grid)
+    ax.grid(draw_grid)
 
 
-def plot_partial_dos(pyplot,
+def plot_partial_dos(ax,
                      frequency_points,
                      partial_dos,
                      indices=None,
@@ -126,19 +126,19 @@ def plot_partial_dos(pyplot,
                 raise ValueError
             pdos_sum += partial_dos[i]
         if flip_xy:
-            plots.append(pyplot.plot(pdos_sum, frequency_points))
+            plots.append(ax.plot(pdos_sum, frequency_points))
         else:
-            plots.append(pyplot.plot(frequency_points, pdos_sum))
+            plots.append(ax.plot(frequency_points, pdos_sum))
 
     if legend is not None:
-        pyplot.legend(legend)
+        ax.legend(legend)
 
     if xlabel:
-        pyplot.xlabel(xlabel)
+        ax.set_xlabel(xlabel)
     if ylabel:
-        pyplot.ylabel(ylabel)
+        ax.set_ylabel(ylabel)
 
-    pyplot.grid(draw_grid)
+    ax.grid(draw_grid)
 
 
 class NormalDistribution(object):
@@ -332,7 +332,7 @@ class TotalDos(Dos):
         self._Debye_fit_coef = a2
 
     def plot(self,
-             pyplot,
+             ax,
              xlabel=None,
              ylabel=None,
              draw_grid=True,
@@ -349,7 +349,7 @@ class TotalDos(Dos):
         if ylabel is not None:
             _ylabel = ylabel
 
-        plot_total_dos(pyplot,
+        plot_total_dos(ax,
                        self._frequency_points,
                        self._dos,
                        freq_Debye=self._freq_Debye,
@@ -463,7 +463,7 @@ class PartialDos(Dos):
         return self._frequency_points, self._partial_dos
 
     def plot(self,
-             pyplot,
+             ax,
              indices=None,
              legend=None,
              xlabel=None,
@@ -483,7 +483,7 @@ class PartialDos(Dos):
         if ylabel is not None:
             _ylabel = ylabel
 
-        plot_partial_dos(pyplot,
+        plot_partial_dos(ax,
                          self._frequency_points,
                          self._partial_dos,
                          indices=indices,
