@@ -37,3 +37,4 @@ from phonopy.api_phonopy import Phonopy
 from phonopy.api_gruneisen import PhonopyGruneisen
 from phonopy.api_qha import PhonopyQHA
 from phonopy.cui.load import load
+from phonopy.interface.phonopy_yaml import read_cell_yaml

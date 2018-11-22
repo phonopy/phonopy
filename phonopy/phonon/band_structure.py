@@ -86,6 +86,78 @@ def get_band_qpoints(band_paths, npoints):
     return qpoints_of_paths
 
 
+def get_band_qpoints_by_seekpath(primitive, npoints):
+    """q-points along BZ high symmetry paths are generated using seekpath.
+
+    Parameters
+    ----------
+    primitive : PhonopyAtoms
+        Primitive cell.
+    npoints : int
+        Number of q-points sampled along a path including end points.
+
+    Returns
+    -------
+    bands : List of ndarray
+        Sets of qpoints that can be passed to phonopy.set_band_structure().
+        shape of each ndarray : (npoints, 3)
+    labels : List of pairs of str
+        Symbols of end points of paths.
+    connections : List of bool
+        This gives one path is connected to the next path, i.e., if False,
+        there is a jump of q-points. Number of elements is the same at
+        that of paths.
+
+    """
+
+    try:
+        import seekpath
+    except ImportError:
+        raise ImportError("You need to install seekpath.")
+
+    band_path = seekpath.get_path(primitive)
+    point_coords = band_path['point_coords']
+    qpoints_of_paths = []
+    for path in band_path['path']:
+        q_s = np.array(point_coords[path[0]])
+        q_e = np.array(point_coords[path[1]])
+        band = [q_s + (q_e - q_s) / (npoints - 1) * i for i in range(npoints)]
+        qpoints_of_paths.append(band)
+
+    labels, path_connections = _get_labels(band_path['path'])
+
+    return qpoints_of_paths, labels, path_connections
+
+
+def _get_labels(pairs_of_symbols):
+    path_connections = []
+    labels = []
+
+    for i, pairs in enumerate(pairs_of_symbols[:-1]):
+        if pairs[1] != pairs_of_symbols[i + 1][0]:
+            path_connections.append(False)
+            labels += list(pairs)
+        else:
+            path_connections.append(True)
+            labels.append(pairs[0])
+    path_connections.append(False)
+    labels += list(pairs_of_symbols[-1])
+
+    for i, l in enumerate(labels):
+        if 'GAMMA' in l:
+            labels[i] = "$" + l.replace("GAMMA", "\Gamma") + "$"
+        elif 'SIGMA' in l:
+            labels[i] = "$" + l.replace("SIGMA", "\Sigma") + "$"
+        elif 'DELTA' in l:
+            labels[i] = "$" + l.replace("DELTA", "\Delta") + "$"
+        elif 'LAMBDA' in l:
+            labels[i] = "$" + l.replace("LAMBDA", "\Lambda") + "$"
+        else:
+            labels[i] = "$\mathrm{%s}$" % l
+
+    return labels, path_connections
+
+
 class BandStructure(object):
     """Class for phonons of q-poitns along reciprocal space paths
 
@@ -134,6 +206,26 @@ class BandStructure(object):
                  is_band_connection=False,
                  group_velocity=None,
                  factor=VaspToTHz):
+        """
+
+        Parameters
+        ----------
+        paths : List of ndarray
+            Sets of qpoints that can be passed to phonopy.set_band_structure().
+            shape of each ndarray : (npoints, 3)
+        dynamical_matrix : DynamicalMatrix or DynamicalMatrixNAC
+            Dynamical matrix calculator.
+        is_eigenvectors : bool
+            Flag whether eigenvectors are calculated or not.
+        is_band_connection : bool
+            Flag whether each band is connected or not. This is achieved by
+            comparing similarity of eigenvectors of neghboring poins. Sometimes
+            this fails.
+        group_velocity : GroupVelocity
+            Group velocity calculator.
+
+        """
+
         self._dynamical_matrix = dynamical_matrix
         self._cell = dynamical_matrix.get_primitive()
         self._supercell = dynamical_matrix.get_supercell()
@@ -145,6 +237,7 @@ class BandStructure(object):
         self._group_velocity = group_velocity
 
         self._paths = [np.array(path) for path in paths]
+
         self._distances = []
         self._distance = 0.
         self._special_points = [0.]
@@ -203,24 +296,87 @@ class BandStructure(object):
             DeprecationWarning)
         return self._factor
 
-    def plot(self, plt, labels=None):
+    def plot(self, ax, labels=None, path_connections=None, is_legacy=True):
+        if is_legacy:
+            self._plot_legacy(ax, labels=labels)
+        else:
+            self._plot(ax, labels=labels, path_connections=path_connections)
+
+    def _plot(self, axs, labels=None, path_connections=None):
+        if path_connections is None:
+            connections = [True, ] * len(self._paths)
+        else:
+            connections = path_connections
+
+        max_freq = np.max(self._frequencies)
+        max_dist = np.max(self._distances)
+        scale = max_freq / max_dist * 1.5
+        distances = [d * scale for d in self._distances]
+
+        # T T T F F -> [[0, 3], [4, 4]]
+        lefts = [0]
+        rights = []
+        for i, c in enumerate(connections):
+            if not c:
+                lefts.append(i + 1)
+                rights.append(i)
+        seg_indices = [list(range(l, r + 1)) for l, r in zip(lefts, rights)]
+        special_points = []
+        for indices in seg_indices:
+            pts = [distances[i][0] for i in indices]
+            pts.append(distances[indices[-1]][-1])
+            special_points.append(pts)
+
+        axs[0].set_ylabel('Frequency (THz)')
+        l_count = 0
+        for ax, spts in zip(axs, special_points):
+            ax.xaxis.set_ticks_position('both')
+            ax.yaxis.set_ticks_position('both')
+            ax.xaxis.set_tick_params(which='both', direction='in')
+            ax.yaxis.set_tick_params(which='both', direction='in')
+            ax.set_xlim(spts[0], spts[-1])
+            ax.set_xticks(spts)
+            if labels is None:
+                ax.set_xticklabels(['', ] * len(spts))
+            else:
+                ax.set_xticklabels(labels[l_count:(l_count + len(spts))])
+                l_count += len(spts)
+            ax.plot([spts[0], spts[-1]], [0, 0],
+                    linestyle=':', linewidth=0.5, color='b')
+
+        count = 0
+        for d, f, c in zip(distances, self._frequencies, connections):
+            ax = axs[count]
+            ax.plot(d, f, 'r-', linewidth=1)
+            if not c:
+                count += 1
+
+    def _plot_legacy(self, ax, labels=None):
+        ax.xaxis.set_ticks_position('both')
+        ax.yaxis.set_ticks_position('both')
+        ax.xaxis.set_tick_params(which='both', direction='in')
+        ax.yaxis.set_tick_params(which='both', direction='in')
+
         for distances, frequencies in zip(self._distances,
                                           self._frequencies):
             for freqs in frequencies.T:
                 if self._is_band_connection:
-                    plt.plot(distances, freqs, '-')
+                    ax.plot(distances, freqs, '-')
                 else:
-                    plt.plot(distances, freqs, 'r-')
+                    ax.plot(distances, freqs, 'r-')
 
-        plt.ylabel('Frequency')
-        plt.xlabel('Wave vector')
+        ax.set_ylabel('Frequency')
+        ax.set_xlabel('Wave vector')
 
         if labels and len(labels) == len(self._special_points):
-            plt.xticks(self._special_points, labels)
+            ax.set_xticks(self._special_points)
+            ax.set_xticklabels(labels)
         else:
-            plt.xticks(self._special_points, [''] * len(self._special_points))
-        plt.xlim(0, self._distance)
-        plt.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
+            ax.set_xticks(self._special_points)
+            ax.set_xticklabels(['', ] * len(self._special_points))
+
+        ax.set_xlim(0, self._distance)
+        ax.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
 
     def write_hdf5(self, labels=None, comment=None, filename="band.hdf5"):
         import h5py

@@ -723,13 +723,16 @@ class ConfParser(object):
 
             if conf_key == 'band':
                 bands = []
-                for section in confs['band'].split(','):
-                    points = [fracval(x) for x in section.split()]
-                    if len(points) % 3 != 0 or len(points) < 6:
-                        self.setting_error("BAND is incorrectly set.")
-                        break
-                    bands.append(np.array(points).reshape(-1, 3))
-                self.set_parameter('band_paths', bands)
+                if confs['band'].strip().lower() == 'auto':
+                    self.set_parameter('band_paths', 'auto')
+                else:
+                    for section in confs['band'].split(','):
+                        points = [fracval(x) for x in section.split()]
+                        if len(points) % 3 != 0 or len(points) < 6:
+                            self.setting_error("BAND is incorrectly set.")
+                            break
+                        bands.append(np.array(points).reshape(-1, 3))
+                    self.set_parameter('band_paths', bands)
 
             if conf_key == 'qpoints':
                 if confs['qpoints'].lower() == '.true.':
@@ -754,9 +757,11 @@ class ConfParser(object):
                 self.set_parameter('nac_method', confs['nac_method'].lower())
 
             if conf_key == 'q_direction':
-                q_direction = [fracval(x) for x in confs['q_direction'].split()]
+                q_direction = [fracval(x)
+                               for x in confs['q_direction'].split()]
                 if len(q_direction) < 3:
-                    self.setting_error("Number of elements of q_direction is less than 3")
+                    self.setting_error("Number of elements of q_direction "
+                                       "is less than 3")
                 else:
                     self.set_parameter('nac_q_direction', q_direction)
 
@@ -984,6 +989,8 @@ class ConfParser(object):
         #  array([[ 0.5,  0.5,  0. ],
         #         [ 0. ,  0. ,  0. ],
         #         [ 0.5,  0.5,  0.5]])]
+        # or
+        # BAND = AUTO
         if 'band_paths' in params:
             self._settings.set_band_paths(params['band_paths'])
 

@@ -49,6 +49,7 @@ def load(supercell_matrix=None,
          is_nac=False,
          calculator="vasp",
          unitcell=None,
+         supercell=None,
          nac_params=None,
          unitcell_filename=None,
          supercell_filename=None,
@@ -94,7 +95,13 @@ def load(supercell_matrix=None,
         Calculator used for computing forces. This is used to switch the set
         of physical units. Default is 'vasp'.
     unitcell : PhonopyAtoms, optional
-        Input unit cell. Default is None. Probably this will be deprecated.
+        Input unit cell. Default is None. The priority for cell is
+        unitcell_filename > supercell_filename > unitcell > supercell.
+    supercell : PhonopyAtoms, optional
+        Input supercell cell. Default value of primitive_matrix is set to
+        'auto' (can be overwitten). supercell_matrix is ignored. Default is
+        None. The priority for cell is
+        unitcell_filename > supercell_filename > unitcell > supercell.
     nac_params : dict, optional
         Parameters required for non-analytical term correction. Default is
         None. The priority for NAC is nac_params > born_filename > is_nac.
@@ -103,13 +110,14 @@ def load(supercell_matrix=None,
          'dielectric': Dielectric constant matrix
                        (array_like, shape=(3, 3), dtype=float),
          'factor': unit conversion facotr (float)}
-        Probably this will be deprecated.
     unitcell_filename : str, optional
-        Input unit cell filename. Default is None.
+        Input unit cell filename. Default is None. The priority for cell is
+        unitcell_filename > supercell_filename > unitcell > supercell.
     supercell_filename : str, optional
         Input supercell filename. Default value of primitive_matrix is set to
         'auto' (can be overwitten). supercell_matrix is ignored. Default is
-        None.
+        None. The priority for cell is
+        unitcell_filename > supercell_filename > unitcell > supercell.
     born_filename : str, optional
         Filename corresponding to 'BORN', a file contains non-analytical term
         correction parameters.
@@ -146,6 +154,7 @@ def load(supercell_matrix=None,
     cell, smat, pmat = _get_cell_settings(unitcell_filename,
                                           supercell_filename,
                                           unitcell,
+                                          supercell,
                                           calculator,
                                           primitive_matrix,
                                           supercell_matrix,
@@ -180,6 +189,7 @@ def load(supercell_matrix=None,
 def _get_cell_settings(unitcell_filename,
                        supercell_filename,
                        unitcell,
+                       supercell,
                        calculator,
                        pmat,
                        smat,
@@ -197,6 +207,11 @@ def _get_cell_settings(unitcell_filename,
             _pmat = 'auto'
     elif unitcell is not None:
         cell = unitcell
+    elif supercell is not None:
+        cell = supercell
+        _smat = np.eye(3, dtype='intc', order='C')
+        if pmat is None:
+            _pmat = 'auto'
     else:
         raise RuntimeError("Cell has to be specified.")
 

@@ -32,13 +32,11 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import sys
 import numpy as np
 try:
     import yaml
 except ImportError:
-    print("You need to install python-yaml.")
-    sys.exit(1)
+    raise ImportError("You need to install python-yaml.")
 
 try:
     from yaml import CLoader as Loader
@@ -49,10 +47,17 @@ except ImportError:
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
 
-def get_unitcell_from_phonopy_yaml(filename):
+def read_cell_yaml(filename, cell_type='unitcell'):
     ph_yaml = PhonopyYaml()
     ph_yaml.read(filename)
-    return ph_yaml.get_unitcell()
+    if ph_yaml.unitcell and cell_type == 'unitcell':
+        return ph_yaml.unitcell
+    elif ph_yaml.primitive and cell_type == 'primitive':
+        return ph_yaml.primitive
+    elif ph_yaml.supercell and cell_type == 'supercell':
+        return ph_yaml.supercell
+    else:
+        return None
 
 
 class PhonopyYaml(object):
@@ -66,9 +71,10 @@ class PhonopyYaml(object):
         self._physical_units = physical_units
         self._show_force_constants = show_force_constants
 
-        self._unitcell = None
-        self._primitive = None
-        self._supercell = None
+        self.unitcell = None
+        self.primitive = None
+        self.supercell = None
+
         self._supercell_matrix = None
         self._symmetry = None  # symmetry of supercell
         self._primitive_matrix = None
@@ -78,45 +84,33 @@ class PhonopyYaml(object):
         self._nac_params = None
         self._version = None
 
-    def get_unitcell(self):
-        return self._unitcell
-
-    def set_unitcell(self, cell):
-        self._unitcell = cell
-
-    def get_primitive(self):
-        return self._primitive
-
-    def get_supercell(self):
-        return self._supercell
-
     def read(self, filename):
         with open(filename) as infile:
             self._load(infile)
 
     def set_phonon_info(self, phonopy):
+        self.unitcell = phonopy.get_unitcell()
+        self.primitive = phonopy.get_primitive()
+        self.supercell = phonopy.get_supercell()
         self._version = phonopy.get_version()
-        self._unitcell = phonopy.get_unitcell()
-        self._primitive = phonopy.get_primitive()
-        self._supercell = phonopy.get_supercell()
         self._supercell_matrix = phonopy.get_supercell_matrix()
         self._symmetry = phonopy.get_symmetry()
         self._primitive_matrix = phonopy.get_primitive_matrix()
         self._force_constants = phonopy.get_force_constants()
-        self._s2p_map = self._primitive.get_supercell_to_primitive_map()
-        u2s_map = self._supercell.get_unitcell_to_supercell_map()
-        u2u_map = self._supercell.get_unitcell_to_unitcell_map()
-        s2u_map = self._supercell.get_supercell_to_unitcell_map()
+        self._s2p_map = self.primitive.get_supercell_to_primitive_map()
+        u2s_map = self.supercell.get_unitcell_to_supercell_map()
+        u2u_map = self.supercell.get_unitcell_to_unitcell_map()
+        s2u_map = self.supercell.get_supercell_to_unitcell_map()
         self._u2p_map = [u2u_map[i] for i in (s2u_map[self._s2p_map])[u2s_map]]
         self._nac_params = phonopy.get_nac_params()
 
     def get_yaml_lines(self):
         lines = []
         nac_factor = None
-        if self._primitive is None:
+        if self.primitive is None:
             symbols = None
         else:
-            symbols = self._primitive.get_chemical_symbols()
+            symbols = self.primitive.get_chemical_symbols()
         if self._nac_params is not None:
             born = self._nac_params['born']
             nac_factor = self._nac_params['factor']
@@ -171,21 +165,21 @@ class PhonopyYaml(object):
                 lines.append("- [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
             lines.append("")
 
-        if self._primitive is not None:
+        if self.primitive is not None:
             lines.append("primitive_cell:")
-            for line in self._primitive.get_yaml_lines():
+            for line in self.primitive.get_yaml_lines():
                 lines.append("  " + line)
             lines.append("  reciprocal_lattice: # without 2pi")
-            rec_lat = np.linalg.inv(self._primitive.get_cell())
+            rec_lat = np.linalg.inv(self.primitive.get_cell())
             for v, a in zip(rec_lat.T, ('a*', 'b*', 'c*')):
                 lines.append("  - [ %21.15f, %21.15f, %21.15f ] # %s" %
                              (v[0], v[1], v[2], a))
             lines.append("")
 
-        if self._unitcell is not None:
+        if self.unitcell is not None:
             lines.append("unit_cell:")
             count = 0
-            for line in self._unitcell.get_yaml_lines():
+            for line in self.unitcell.get_yaml_lines():
                 lines.append("  " + line)
                 if self._u2p_map is not None and "mass" in line:
                     lines.append("    reduced_to: %d" %
@@ -193,10 +187,10 @@ class PhonopyYaml(object):
                     count += 1
             lines.append("")
 
-        if self._supercell is not None:
+        if self.supercell is not None:
             lines.append("supercell:")
             count = 0
-            for line in self._supercell.get_yaml_lines():
+            for line in self.supercell.get_yaml_lines():
                 lines.append("  " + line)
                 if self._s2p_map is not None and "mass" in line:
                     lines.append("    reduced_to: %d" %
@@ -223,7 +217,7 @@ class PhonopyYaml(object):
 
         if self._show_force_constants and self._force_constants is not None:
             lines.append("force_constants:")
-            natom = self._supercell.get_number_of_atoms()
+            natom = self.supercell.get_number_of_atoms()
             for (i, j) in list(np.ndindex((natom, natom))):
                 lines.append("- # (%d, %d)" % (i + 1, j + 1))
                 for v in self._force_constants[i, j]:
@@ -238,14 +232,15 @@ class PhonopyYaml(object):
     def _load(self, fp):
         self._data = yaml.load(fp, Loader=Loader)
         if 'unit_cell' in self._data:
-            self._unitcell = self._parse_cell(self._data['unit_cell'])
+            self.unitcell = self._parse_cell(self._data['unit_cell'])
         if 'primitive_cell' in self._data:
-            self._primitive = self._parse_cell(self._data['primitive_cell'])
+            self.primitive = self._parse_cell(self._data['primitive_cell'])
         if 'supercell' in self._data:
-            self._supercell = self._parse_cell(self._data['supercell'])
-        if self._unitcell is None:
-            if 'lattice' in self._data and 'points' in self._data:
-                self._unitcell = self._parse_cell(self._data)
+            self.supercell = self._parse_cell(self._data['supercell'])
+        if self.unitcell is None:
+            if ('lattice' in self._data and
+                ('points' in self._data or 'atoms' in self._data)):
+                self.unitcell = self._parse_cell(self._data)
 
     def _parse_cell(self, cell_yaml):
         lattice = None

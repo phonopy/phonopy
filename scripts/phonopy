@@ -53,6 +53,9 @@ from phonopy.interface import (create_FORCE_SETS, read_crystal_structure,
                                write_supercells_with_displacements,
                                PhonopyYaml)
 from phonopy.interface.vasp import create_FORCE_CONSTANTS
+from phonopy.phonon.band_structure import (get_band_qpoints,
+                                           get_band_qpoints_by_seekpath)
+
 
 phonopy_version = __version__
 
@@ -174,10 +177,14 @@ def print_cells(phonon, unitcell_filename):
     print("-" * 76)
 
 
-def print_settings(settings):
+def print_settings(settings, is_primitive_axes_auto, primitive_matrix):
     run_mode = settings.get_run_mode()
     if run_mode == 'band':
-        print("Band structure mode")
+        if (type(settings.get_band_paths()) is str and
+            settings.get_band_paths() == 'auto'):
+            print("Band structure mode (Auto)")
+        else:
+            print("Band structure mode")
     if run_mode == 'mesh':
         print("Mesh sampling mode")
     if run_mode == 'band_mesh':
@@ -261,13 +268,14 @@ def print_settings(settings):
             print("    %s" % v)
     else:
         print("  Supercell: %s" % np.diag(settings.get_supercell_matrix()))
-    if settings.get_primitive_matrix() is not None:
-        if settings.get_primitive_matrix() is 'auto':
-            print("  Primitive matrix: Auto")
-        else:
-            print("  Primitive matrix:")
-            for v in settings.get_primitive_matrix():
-                print("    %s" % v)
+    if is_primitive_axes_auto:
+        print("  Primitive matrix (Auto):")
+        for v in primitive_matrix:
+            print("    %s" % v)
+    elif settings.get_primitive_matrix() is not None:
+        print("  Primitive matrix:")
+        for v in primitive_matrix:
+            print("    %s" % v)
 
 
 #################
@@ -413,9 +421,15 @@ if magmoms is not None:
 ########################
 # Set primitive matrix #
 ########################
-primitive_matrix = settings.get_primitive_matrix()
-if type(primitive_matrix) is str and primitive_matrix == 'auto':
+# When BAND = AUTO, automatic choice of primitive matrix is activated.
+is_band_auto = (type(settings.get_band_paths()) is str and
+                settings.get_band_paths() == 'auto')
+is_primitive_axes_auto = (type(settings.get_primitive_matrix()) is str and
+                          settings.get_primitive_matrix() == 'auto')
+if is_primitive_axes_auto or is_band_auto:
     primitive_matrix = guess_primitive_matrix(unitcell, symprec=args.symprec)
+else:
+    primitive_matrix = settings.get_primitive_matrix()
 
 ################################################
 # Check crystal symmetry and exit (--symmetry) #
@@ -539,11 +553,12 @@ if log_level > 0:
     print("Spglib version %d.%d.%d" % spglib.get_version())
     if interface_mode:
         print("Calculator interface: %s" % interface_mode)
-    print_settings(settings)
-    if (type(settings.get_primitive_matrix()) is str and
-        settings.get_primitive_matrix() == 'auto'):
-        for v in primitive_matrix:
-            print("    %s" % v)
+    if is_band_auto and not is_primitive_axes_auto:
+        print("Automatic band structure mode forced automatic choice "
+              "of primitive axes.")
+    print_settings(settings,
+                   (is_primitive_axes_auto or is_band_auto),
+                   primitive_matrix)
     if magmoms is None:
         print("Spacegroup: %s" %
               phonon.get_symmetry().get_international_table())
@@ -740,14 +755,27 @@ if run_mode == 'qpoints':
 # Band structure and mesh sampling
 elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
     if run_mode == 'band' or run_mode == 'band_mesh':
-        from phonopy.phonon.band_structure import get_band_qpoints
-
-        band_paths = settings.get_band_paths()
         if settings.get_band_points() is None:
             npoints = 51
         else:
             npoints = settings.get_band_points()
-        bands = get_band_qpoints(band_paths, npoints)
+        band_paths = settings.get_band_paths()
+
+        if type(band_paths) is str and band_paths == 'auto':
+            print("SeeK-path is used to generate band paths.")
+            print("About SeeK-path https://seekpath.readthedocs.io/ "
+                  "(citation there-in)")
+            is_legacy = False
+            bands, labels, path_connections = get_band_qpoints_by_seekpath(
+                primitive.to_tuple(), npoints)
+        else:
+            is_legacy = True
+            bands = get_band_qpoints(band_paths, npoints)
+            path_connections = []
+            for paths in band_paths:
+                path_connections += [True, ] * (len(paths) - 2)
+                path_connections.append(False)
+            labels = settings.get_band_labels()
 
         if log_level > 0:
             print("Reciprocal space paths in reduced coordinates:")
@@ -765,15 +793,15 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
             comment = {'calculator': interface_mode}
 
         if settings.get_is_hdf5() or settings.get_band_format() == 'hdf5':
-            phonon.write_hdf5_band_structure(labels=settings.get_band_labels(),
-                                             comment=comment)
+            phonon.write_hdf5_band_structure(labels=labels, comment=comment)
         else:
-            phonon.write_yaml_band_structure(labels=settings.get_band_labels(),
-                                             comment=comment)
+            phonon.write_yaml_band_structure(labels=labels, comment=comment)
 
         if args.is_graph_plot and run_mode != 'band_mesh':
             plot = phonon.plot_band_structure(
-                labels=settings.get_band_labels())
+                labels=labels,
+                path_connections=path_connections,
+                is_legacy=is_legacy)
             if args.is_graph_save:
                 plot.savefig('band.pdf')
             else:

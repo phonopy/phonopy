@@ -49,8 +49,7 @@ class TestPhonopyYaml(unittest.TestCase):
     def _get_unitcell(self, filename):
         phpy_yaml = PhonopyYaml()
         phpy_yaml.read(filename)
-        unitcell = phpy_yaml.get_unitcell()
-        return unitcell
+        return phpy_yaml.unitcell
 
     def _get_phonon(self):
         cell = read_vasp(os.path.join(data_dir, "..", "POSCAR_NaCl"))
