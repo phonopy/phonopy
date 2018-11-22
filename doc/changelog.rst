@@ -3,6 +3,22 @@
 Change Log
 ==========
 
+Nov-22-2018: Version 1.14.2
+---------------------------
+
+* This is the release for preparing features for future and is not
+  well tested.
+* Code refactoring to ease the developement of calculator
+  interface. Most of calculator interface dependent codes are moved to
+  ``phonopy.interface.__init__.py``.
+* For eary adaptors, two experimental features were made:
+
+  - Convenient Phonopy instance loader and crystal structure yaml parser
+    (``phonopy.load()`` and ``phonopy.read_cell_yaml()``).
+  - Automatic band paths generation using SeeKpath
+    (https://seekpath.readthedocs.io/) (``BAND = AUTO``). Installion
+    of SeekPath is needed.
+
 Nov-17-2018: Version 1.14.0
 ---------------------------
 
