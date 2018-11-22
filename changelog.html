@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Change Log &#8212; Phonopy v.1.14.0</title>
+    <title>Change Log &#8212; Phonopy v.1.14.2</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -38,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.14.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.14.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -91,6 +91,7 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Change Log</a><ul>
+<li><a class="reference internal" href="#nov-22-2018-version-1-14-2">Nov-22-2018: Version 1.14.2</a></li>
 <li><a class="reference internal" href="#nov-17-2018-version-1-14-0">Nov-17-2018: Version 1.14.0</a></li>
 <li><a class="reference internal" href="#jun-20-2018-version-1-13-2">Jun-20-2018: Version 1.13.2</a></li>
 <li><a class="reference internal" href="#apr-21-2018-version-1-13-0">Apr-21-2018: Version 1.13.0</a></li>
@@ -220,6 +221,24 @@
       
   <div class="section" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="nov-22-2018-version-1-14-2">
+<h2>Nov-22-2018: Version 1.14.2<a class="headerlink" href="#nov-22-2018-version-1-14-2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>This is the release for preparing features for future and is not
+well tested.</li>
+<li>Code refactoring to ease the developement of calculator
+interface. Most of calculator interface dependent codes are moved to
+<code class="docutils literal notranslate"><span class="pre">phonopy.interface.__init__.py</span></code>.</li>
+<li>For eary adaptors, two experimental features were made:<ul>
+<li>Convenient Phonopy instance loader and crystal structure yaml parser
+(<code class="docutils literal notranslate"><span class="pre">phonopy.load()</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy.read_cell_yaml()</span></code>).</li>
+<li>Automatic band paths generation using SeeKpath
+(<a class="reference external" href="https://seekpath.readthedocs.io/">https://seekpath.readthedocs.io/</a>) (<code class="docutils literal notranslate"><span class="pre">BAND</span> <span class="pre">=</span> <span class="pre">AUTO</span></code>). Installion
+of SeekPath is needed.</li>
+</ul>
+</li>
+</ul>
+</div>
 <div class="section" id="nov-17-2018-version-1-14-0">
 <h2>Nov-17-2018: Version 1.14.0<a class="headerlink" href="#nov-17-2018-version-1-14-0" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
