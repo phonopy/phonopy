@@ -168,7 +168,7 @@ if __name__ == '__main__':
         print("Failed to get version number in setup.py.")
         raise
 
-    version = ".".join(["%d" % n for n in version_nums[:3]])
+    version = ".".join(["%s" % n for n in version_nums[:3]])
     if len(version_nums) > 3:
         version += "-%d" % version_nums[3]
 
