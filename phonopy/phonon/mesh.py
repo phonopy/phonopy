@@ -37,6 +37,35 @@ from phonopy.units import VaspToTHz
 from phonopy.structure.grid_points import GridPoints
 
 
+def length2mesh(length, lattice):
+    """Convert length to mesh for q-point sampling
+
+    This conversion for each reciprocal axis follows VASP convention by
+        N = max(1, int(l * |a|^* + 0.5))
+    'int' means rounding down, not rounding to nearest integer.
+
+    Parameters
+    ----------
+    length : float
+        Length having the unit of direct space length.
+    lattice : array_like
+        Basis vectors of primitive cell in row vectors.
+        dtype='double'
+        shape=(3, 3)
+
+    Returns
+    -------
+    array_like
+        dtype=int
+        shape=(3,)
+
+    """
+    rec_lattice = np.linalg.inv(lattice)
+    rec_lat_lengths = np.sqrt(np.diagonal(np.dot(rec_lattice.T, rec_lattice)))
+    mesh = (rec_lat_lengths * length + 0.5).astype(int)
+    return np.maximum(mesh, [1, 1, 1])
+
+
 class MeshBase(object):
     """Base class of Mesh and IterMesh classes
 

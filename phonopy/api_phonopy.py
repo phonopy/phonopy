@@ -675,7 +675,7 @@ class Phonopy(object):
                             path_connections=None,
                             is_legacy=True):
         import matplotlib.pyplot as plt
-        from mpl_toolkits.axes_grid1 import ImageGrid
+
         if labels:
             from matplotlib import rc
             rc('text', usetex=True)
@@ -683,19 +683,18 @@ class Phonopy(object):
         if is_legacy:
             fig, axs = plt.subplots(1, 1)
         else:
+            from mpl_toolkits.axes_grid1 import ImageGrid
             n = len([x for x in path_connections if not x])
             fig = plt.figure()
             axs = ImageGrid(fig, 111,  # similar to subplot(111)
                             nrows_ncols=(1, n),
-                            axes_pad=0.1,
+                            axes_pad=0.11,
                             add_all=True,
                             label_mode="L")
         self._band_structure.plot(axs,
                                   labels=labels,
                                   path_connections=path_connections,
                                   is_legacy=is_legacy)
-        fig.tight_layout()
-
         return plt
 
     def write_hdf5_band_structure(self,
@@ -842,40 +841,74 @@ class Phonopy(object):
         return True
 
     # Plot band structure and DOS (PDOS) together
-    def plot_band_structure_and_dos(self, pdos_indices=None, labels=None):
+    def plot_band_structure_and_dos(self,
+                                    pdos_indices=None,
+                                    labels=None,
+                                    path_connections=None,
+                                    is_legacy=True):
         import matplotlib.pyplot as plt
-        import matplotlib.gridspec as gridspec
         if labels:
             from matplotlib import rc
             rc('text', usetex=True)
 
-        plt.figure(figsize=(10, 6))
-        gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1])
+        if is_legacy:
+            import matplotlib.gridspec as gridspec
+            # plt.figure(figsize=(10, 6))
+            gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1])
+            ax2 = plt.subplot(gs[0, 1])
+            if pdos_indices is None:
+                self._total_dos.plot(ax2,
+                                     ylabel="",
+                                     draw_grid=False,
+                                     flip_xy=True)
+            else:
+                self._pdos.plot(ax2,
+                                indices=pdos_indices,
+                                ylabel="",
+                                draw_grid=False,
+                                flip_xy=True)
+            ax2.set_xlim((0, None))
+            plt.setp(ax2.get_yticklabels(), visible=False)
 
-        ax2 = plt.subplot(gs[0, 1])
-        ax2.xaxis.set_ticks_position('both')
-        ax2.yaxis.set_ticks_position('both')
-        ax2.xaxis.set_tick_params(which='both', direction='in')
-        ax2.yaxis.set_tick_params(which='both', direction='in')
-        if pdos_indices is None:
-            self._total_dos.plot(ax2,
-                                 ylabel="",
-                                 draw_grid=False,
-                                 flip_xy=True)
+            ax1 = plt.subplot(gs[0, 0], sharey=ax2)
+            self._band_structure.plot(ax1, labels=labels)
+
+            plt.subplots_adjust(wspace=0.03)
+            plt.tight_layout()
         else:
-            self._pdos.plot(ax2,
-                            indices=pdos_indices,
-                            ylabel="",
-                            draw_grid=False,
-                            flip_xy=True)
-        ax2.set_xlim((0, None))
-        plt.setp(ax2.get_yticklabels(), visible=False)
+            from mpl_toolkits.axes_grid1 import ImageGrid
+            n = len([x for x in path_connections if not x]) + 1
+            fig = plt.figure()
+            axs = ImageGrid(fig, 111,  # similar to subplot(111)
+                            nrows_ncols=(1, n),
+                            axes_pad=0.11,
+                            add_all=True,
+                            label_mode="L")
+            self._band_structure.plot(axs[:-1],
+                                      labels=labels,
+                                      path_connections=path_connections,
+                                      is_legacy=is_legacy)
 
-        ax1 = plt.subplot(gs[0, 0], sharey=ax2)
-        self._band_structure.plot(ax1, labels=labels)
-
-        plt.subplots_adjust(wspace=0.03)
-        plt.tight_layout()
+            if pdos_indices is None:
+                freqs, dos = self._total_dos.get_dos()
+                self._total_dos.plot(axs[-1],
+                                     xlabel="",
+                                     ylabel="",
+                                     draw_grid=False,
+                                     flip_xy=True)
+            else:
+                freqs, dos = self._pdos.get_partial_dos()
+                self._pdos.plot(axs[-1],
+                                indices=pdos_indices,
+                                xlabel="",
+                                ylabel="",
+                                draw_grid=False,
+                                flip_xy=True)
+            fmax = np.max(freqs)
+            dmax = np.max(dos)
+            axs[-1].set_aspect(dmax / fmax * 3)
+            axs[-1].axhline(y=0, linestyle=':', linewidth=0.5, color='b')
+            axs[-1].set_xlim((0, None))
 
         return plt
 
@@ -926,13 +959,7 @@ class Phonopy(object):
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
-        ax.xaxis.set_ticks_position('both')
-        ax.yaxis.set_ticks_position('both')
-        ax.xaxis.set_tick_params(which='both', direction='in')
-        ax.yaxis.set_tick_params(which='both', direction='in')
-
         self._total_dos.plot(ax, draw_grid=False)
-
         ax.set_ylim((0, None))
 
         return plt

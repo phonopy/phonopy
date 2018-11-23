@@ -71,21 +71,26 @@ def plot_total_dos(ax,
                    ylabel=None,
                    draw_grid=True,
                    flip_xy=False):
+    ax.xaxis.set_ticks_position('both')
+    ax.yaxis.set_ticks_position('both')
+    ax.xaxis.set_tick_params(which='both', direction='in')
+    ax.yaxis.set_tick_params(which='both', direction='in')
+
     if freq_Debye is not None:
         freq_pitch = frequency_points[1] - frequency_points[0]
         num_points = int(freq_Debye / freq_pitch)
         freqs = np.linspace(0, freq_Debye, num_points + 1)
 
     if flip_xy:
-        ax.plot(total_dos, frequency_points, 'r-')
+        ax.plot(total_dos, frequency_points, 'r-', linewidth=1)
         if freq_Debye:
             ax.plot(np.append(Debye_fit_coef * freqs**2, 0),
-                    np.append(freqs, freq_Debye), 'b-')
+                    np.append(freqs, freq_Debye), 'b-', linewidth=1)
     else:
-        ax.plot(frequency_points, total_dos, 'r-')
+        ax.plot(frequency_points, total_dos, 'r-', linewidth=1)
         if freq_Debye:
             ax.plot(np.append(freqs, freq_Debye),
-                    np.append(Debye_fit_coef * freqs**2, 0), 'b-')
+                    np.append(Debye_fit_coef * freqs**2, 0), 'b-', linewidth=1)
 
     if xlabel:
         ax.set_xlabel(xlabel)
@@ -104,6 +109,11 @@ def plot_partial_dos(ax,
                      ylabel=None,
                      draw_grid=True,
                      flip_xy=False):
+    ax.xaxis.set_ticks_position('both')
+    ax.yaxis.set_ticks_position('both')
+    ax.xaxis.set_tick_params(which='both', direction='in')
+    ax.yaxis.set_tick_params(which='both', direction='in')
+
     plots = []
     num_pdos = len(partial_dos)
 
@@ -126,9 +136,9 @@ def plot_partial_dos(ax,
                 raise ValueError
             pdos_sum += partial_dos[i]
         if flip_xy:
-            plots.append(ax.plot(pdos_sum, frequency_points))
+            plots.append(ax.plot(pdos_sum, frequency_points, linewidth=1))
         else:
-            plots.append(ax.plot(frequency_points, pdos_sum))
+            plots.append(ax.plot(frequency_points, pdos_sum, linewidth=1))
 
     if legend is not None:
         ax.legend(legend)
