@@ -435,6 +435,8 @@ is_primitive_axes_auto = (type(settings.get_primitive_matrix()) is str and
 if settings.get_supercell_matrix() is None:
     is_primitive_axes_auto = True
     supercell_matrix = np.eye(3, dtype='intc')
+else:
+    supercell_matrix = settings.get_supercell_matrix()
 
 if is_primitive_axes_auto or is_band_auto:
     primitive_matrix = guess_primitive_matrix(unitcell, symprec=args.symprec)
