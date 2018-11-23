@@ -713,10 +713,14 @@ class ConfParser(object):
                 self.set_parameter('dm_decimals', confs['dm_decimals'])
 
             if conf_key in ['mesh_numbers', 'mp', 'mesh']:
-                vals = [int(x) for x in confs[conf_key].split()]
-                if len(vals) < 3:
+                vals = [x for x in confs[conf_key].split()]
+                if len(vals) == 1:
+                    self.set_parameter('mesh_numbers', float(vals[0]))
+                elif len(vals) < 3:
                     self.setting_error("Mesh numbers are incorrectly set.")
-                self.set_parameter('mesh_numbers', vals[:3])
+                else:
+                    self.set_parameter('mesh_numbers',
+                                       [int(x) for x in vals[:3]])
 
             if conf_key == 'band_points':
                 self.set_parameter('band_points', int(confs['band_points']))

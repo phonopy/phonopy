@@ -55,6 +55,7 @@ from phonopy.interface import (create_FORCE_SETS, read_crystal_structure,
 from phonopy.interface.vasp import create_FORCE_CONSTANTS
 from phonopy.phonon.band_structure import (get_band_qpoints,
                                            get_band_qpoints_by_seekpath)
+from phonopy.phonon.mesh import length2mesh
 
 
 phonopy_version = __version__
@@ -177,7 +178,10 @@ def print_cells(phonon, unitcell_filename):
     print("-" * 76)
 
 
-def print_settings(settings, is_primitive_axes_auto, primitive_matrix):
+def print_settings(settings,
+                   is_primitive_axes_auto,
+                   primitive_matrix,
+                   supercell_matrix):
     run_mode = settings.get_run_mode()
     if run_mode == 'band':
         if (type(settings.get_band_paths()) is str and
@@ -230,7 +234,11 @@ def print_settings(settings, is_primitive_axes_auto, primitive_matrix):
     if settings.get_lapack_solver():
         print("  Use Lapack solver via Lapacke: on")
     if run_mode == 'mesh' or run_mode == 'band_mesh':
-        print("  Sampling mesh: %s" % np.array(settings.get_mesh()[0]))
+        mesh = settings.get_mesh_numbers()
+        if type(mesh) is float:
+            print("  Length for sampling mesh: %.1f" % mesh)
+        else:
+            print("  Sampling mesh: %s" % np.array(mesh))
         if settings.get_is_thermal_properties():
             cutoff_freq = settings.get_cutoff_frequency()
             if cutoff_freq is None:
@@ -261,13 +269,12 @@ def print_settings(settings, is_primitive_axes_auto, primitive_matrix):
                         text)
             if text:
                 print(text)
-    if (np.diag(np.diag(settings.get_supercell_matrix()))
-        - settings.get_supercell_matrix()).any():
+    if (np.diag(np.diag(supercell_matrix)) - supercell_matrix).any():
         print("  Supercell matrix:")
-        for v in settings.get_supercell_matrix():
+        for v in supercell_matrix:
             print("    %s" % v)
     else:
-        print("  Supercell: %s" % np.diag(settings.get_supercell_matrix()))
+        print("  Supercell: %s" % np.diag(supercell_matrix))
     if is_primitive_axes_auto:
         print("  Primitive matrix (Auto):")
         for v in primitive_matrix:
@@ -294,6 +301,10 @@ if args.quiet or args.is_check_symmetry:
 if args.loglevel is not None:
     log_level = args.loglevel
 
+if args.is_graph_save:
+    import matplotlib
+    matplotlib.use('Agg')
+
 ################
 # Phonopy logo #
 ################
@@ -309,17 +320,11 @@ if log_level > 0:
 # Phonopy interface mode #
 ##########################
 interface_mode = get_interface_mode(args)
-
 physical_units = get_default_physical_units(interface_mode)
-
-if args.is_graph_save:
-    import matplotlib
-    matplotlib.use('Agg')
 
 ###########################
 # Integrated helper tools #
 ###########################
-
 # Create FORCE_SETS (-f or --force_sets)
 if args.force_sets or args.force_sets_zero:
     if args.force_sets:
@@ -417,19 +422,34 @@ if magmoms is not None:
             print_error()
         sys.exit(1)
 
-
-########################
-# Set primitive matrix #
-########################
+######################################
+# Set supercell and primitive matrix #
+######################################
 # When BAND = AUTO, automatic choice of primitive matrix is activated.
 is_band_auto = (type(settings.get_band_paths()) is str and
                 settings.get_band_paths() == 'auto')
 is_primitive_axes_auto = (type(settings.get_primitive_matrix()) is str and
                           settings.get_primitive_matrix() == 'auto')
+
+# When DIM is not set, PRIMITIVE_AXES = AUTO is set.
+if settings.get_supercell_matrix() is None:
+    is_primitive_axes_auto = True
+    supercell_matrix = np.eye(3, dtype='intc')
+
 if is_primitive_axes_auto or is_band_auto:
     primitive_matrix = guess_primitive_matrix(unitcell, symprec=args.symprec)
 else:
     primitive_matrix = settings.get_primitive_matrix()
+
+if settings.get_supercell_matrix() is None:
+    if is_primitive_axes_auto or is_band_auto:
+        supercell_matrix = np.eye(3, dtype='intc')
+    else:
+        msg = "Supercell matrix (DIM or --dim) is not found."
+        print_error_message(msg)
+        if log_level > 0:
+            print_error()
+        sys.exit(1)
 
 ################################################
 # Check crystal symmetry and exit (--symmetry) #
@@ -451,16 +471,10 @@ if args.is_check_symmetry:
 ##########################
 run_mode = settings.get_run_mode()
 
-if settings.get_supercell_matrix() is None:
-    print_error_message("Supercell matrix (DIM or --dim) is not found.")
-    if log_level > 0:
-        print_error()
-    sys.exit(1)
-
 # Prepare phonopy object
 if run_mode == 'displacements':
     phonon = Phonopy(unitcell,
-                     settings.get_supercell_matrix(),
+                     supercell_matrix,
                      symprec=args.symprec,
                      is_symmetry=settings.get_is_symmetry(),
                      log_level=log_level)
@@ -471,7 +485,7 @@ else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
 
     phonon = Phonopy(
         unitcell,
-        settings.get_supercell_matrix(),
+        supercell_matrix,
         primitive_matrix=primitive_matrix,
         factor=physical_units['factor'],
         frequency_scale_factor=settings.get_frequency_scale_factor(),
@@ -558,7 +572,8 @@ if log_level > 0:
               "of primitive axes.")
     print_settings(settings,
                    (is_primitive_axes_auto or is_band_auto),
-                   primitive_matrix)
+                   primitive_matrix,
+                   supercell_matrix)
     if magmoms is None:
         print("Spacegroup: %s" %
               phonon.get_symmetry().get_international_table())
@@ -814,6 +829,12 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
          q_symmetry,
          is_gamma_center) = settings.get_mesh()
 
+        if type(mesh) is float:
+            mesh_numbers = length2mesh(mesh, primitive.get_cell())
+            print("Mesh numbers: %s" % mesh_numbers)
+        else:
+            mesh_numbers = np.array(mesh)
+
         if (settings.get_is_thermal_displacements() or
             settings.get_is_thermal_displacement_matrices()):
             if settings.get_cutoff_frequency() is not None:
@@ -825,14 +846,14 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                 sys.exit(1)
 
             phonon.set_iter_mesh(
-                mesh,
+                mesh_numbers,
                 mesh_shift,
                 is_time_reversal=t_symmetry,
                 is_mesh_symmetry=q_symmetry,
                 is_eigenvectors=settings.get_is_eigenvectors(),
                 is_gamma_center=settings.get_is_gamma_center())
         else:
-            phonon.set_mesh(mesh,
+            phonon.set_mesh(mesh_numbers,
                             mesh_shift,
                             is_time_reversal=t_symmetry,
                             is_mesh_symmetry=q_symmetry,
@@ -843,7 +864,7 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
             if log_level > 0:
                 if q_symmetry:
                     print("Number of irreducible q-points on sampling mesh: "
-                          "%d/%d" % (weights.shape[0], np.prod(mesh)))
+                          "%d/%d" % (weights.shape[0], np.prod(mesh_numbers)))
                 else:
                     print("Number of q-points on sampling mesh: %d" %
                           weights.shape[0])
@@ -1077,10 +1098,14 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
         if settings.get_pdos_indices() is not None:
             plot = phonon.plot_band_structure_and_dos(
                 pdos_indices=pdos_indices,
-                labels=settings.get_band_labels())
+                labels=labels,
+                path_connections=path_connections,
+                is_legacy=is_legacy)
         else:
             plot = phonon.plot_band_structure_and_dos(
-                labels=settings.get_band_labels())
+                labels=labels,
+                path_connections=path_connections,
+                is_legacy=is_legacy)
         if args.is_graph_save:
             plot.savefig('band_dos.pdf')
         else:
