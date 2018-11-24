@@ -54,6 +54,8 @@ def get_interface_mode(args):
         return 'crystal'
     elif args.vasp_mode:
         return 'vasp'
+    elif args.phonopy_yaml_mode:
+        return 'phonopy_yaml'
     else:
         return None
 
@@ -110,91 +112,112 @@ def write_supercells_with_displacements(interface_mode,
 def read_crystal_structure(filename=None,
                            interface_mode=None,
                            chemical_symbols=None,
-                           yaml_mode=False):
+                           read_supercell=False):
     if filename is None:
-        unitcell_filename = get_default_cell_filename(interface_mode,
-                                                      yaml_mode)
-    else:
-        unitcell_filename = filename
-
-    if not os.path.isfile(unitcell_filename):
-        if filename is None:
-            return None, (unitcell_filename + " (default file name)",)
+        if read_supercell:
+            cell_filename = get_default_cell_filename(interface_mode)
         else:
-            return None, (unitcell_filename,)
+            cell_filename = get_default_supercell_filename(interface_mode)
+    else:
+        cell_filename = filename
 
-    if yaml_mode:
-        phpy_yaml = PhonopyYaml()
-        phpy_yaml.read(unitcell_filename)
-        unitcell = phpy_yaml.get_unitcell()
-        return unitcell, (unitcell_filename,)
+    if interface_mode != "phonopy_yaml":
+        if cell_filename is not None and not os.path.isfile(cell_filename):
+            if filename is None:
+                return None, (cell_filename + " (default file name)",)
+            else:
+                return None, (cell_filename,)
+    else:
+        if filename is None:
+            cell_filename = None
+            for fname in ("phonopy_disp.yaml", "phonopy.yaml"):
+                if os.path.isfile(fname):
+                    cell_filename = fname
+                    break
+            if cell_filename is None:
+                msg = ("phonopy_disp.yaml or phonopy.yaml "
+                       "(default file name)")
+                return None, (msg,)
+        else:
+            if not os.path.isfile(cell_filename):
+                return None, (cell_filename,)
 
-    if interface_mode is None or interface_mode == 'vasp':
+    if interface_mode == 'phonopy_yaml':
+        phpy = PhonopyYaml()
+        phpy.read(cell_filename)
+        if phpy.supercell is None:  # supposed "disp.yaml"
+            return phpy.unitcell, (cell_filename, None)
+        else:  # supposed "phonopy_disp.yaml" or "phonopy.yaml"
+            if read_supercell:
+                cell = phpy.supercell
+            else:
+                cell = phpy.unitcell
+            if 'phonopy' in phpy.yaml and 'calculator' in phpy.yaml['phonopy']:
+                calculator = phpy.yaml['phonopy']['calculator']
+            else:
+                calculator = None
+            return cell, (cell_filename, calculator)
+    elif interface_mode is None or interface_mode == 'vasp':
         from phonopy.interface.vasp import read_vasp
         if chemical_symbols is None:
-            unitcell = read_vasp(unitcell_filename)
+            unitcell = read_vasp(cell_filename)
         else:
-            unitcell = read_vasp(unitcell_filename, symbols=chemical_symbols)
-        return unitcell, (unitcell_filename,)
-
-    if interface_mode == 'abinit':
+            unitcell = read_vasp(cell_filename, symbols=chemical_symbols)
+        return unitcell, (cell_filename,)
+    elif interface_mode == 'abinit':
         from phonopy.interface.abinit import read_abinit
-        unitcell = read_abinit(unitcell_filename)
-        return unitcell, (unitcell_filename,)
-
-    if interface_mode == 'qe':
+        unitcell = read_abinit(cell_filename)
+        return unitcell, (cell_filename,)
+    elif interface_mode == 'qe':
         from phonopy.interface.qe import read_pwscf
-        unitcell, pp_filenames = read_pwscf(unitcell_filename)
-        return unitcell, (unitcell_filename, pp_filenames)
-
-    if interface_mode == 'wien2k':
+        unitcell, pp_filenames = read_pwscf(cell_filename)
+        return unitcell, (cell_filename, pp_filenames)
+    elif interface_mode == 'wien2k':
         from phonopy.interface.wien2k import parse_wien2k_struct
-        unitcell, npts, r0s, rmts = parse_wien2k_struct(unitcell_filename)
-        return unitcell, (unitcell_filename, npts, r0s, rmts)
-
-    if interface_mode == 'elk':
+        unitcell, npts, r0s, rmts = parse_wien2k_struct(cell_filename)
+        return unitcell, (cell_filename, npts, r0s, rmts)
+    elif interface_mode == 'elk':
         from phonopy.interface.elk import read_elk
-        unitcell, sp_filenames = read_elk(unitcell_filename)
-        return unitcell, (unitcell_filename, sp_filenames)
-
-    if interface_mode == 'siesta':
+        unitcell, sp_filenames = read_elk(cell_filename)
+        return unitcell, (cell_filename, sp_filenames)
+    elif interface_mode == 'siesta':
         from phonopy.interface.siesta import read_siesta
-        unitcell, atypes = read_siesta(unitcell_filename)
-        return unitcell, (unitcell_filename, atypes)
-
-    if interface_mode == 'cp2k':
+        unitcell, atypes = read_siesta(cell_filename)
+        return unitcell, (cell_filename, atypes)
+    elif interface_mode == 'cp2k':
         from phonopy.interface.cp2k import read_cp2k
-        unitcell = read_cp2k(unitcell_filename)
-        return unitcell, (unitcell_filename,)
-
-    if interface_mode == 'crystal':
+        unitcell = read_cp2k(cell_filename)
+        return unitcell, (cell_filename,)
+    elif interface_mode == 'crystal':
         from phonopy.interface.crystal import read_crystal
-        unitcell, conv_numbers = read_crystal(unitcell_filename)
-        return unitcell, (unitcell_filename, conv_numbers)
+        unitcell, conv_numbers = read_crystal(cell_filename)
+        return unitcell, (cell_filename, conv_numbers)
 
 
-def get_default_cell_filename(interface_mode, yaml_mode):
-    if yaml_mode:
-        return "POSCAR.yaml"
-    if interface_mode is None or interface_mode == 'vasp':
+def get_default_cell_filename(interface_mode):
+    if interface_mode == 'phonopy_yaml':
+        return "phonopy_disp.yaml"
+    elif interface_mode is None or interface_mode == 'vasp':
         return "POSCAR"
-    if interface_mode in ('abinit', 'qe'):
+    elif interface_mode in ('abinit', 'qe'):
         return "unitcell.in"
-    if interface_mode == 'wien2k':
+    elif interface_mode == 'wien2k':
         return "case.struct"
-    if interface_mode == 'elk':
+    elif interface_mode == 'elk':
         return "elk.in"
-    if interface_mode == 'siesta':
+    elif interface_mode == 'siesta':
         return "input.fdf"
-    if interface_mode == 'cp2k':
+    elif interface_mode == 'cp2k':
         return "unitcell.inp"
-    if interface_mode == 'crystal':
+    elif interface_mode == 'crystal':
         return "crystal.o"
+    else:
+        return None
 
 
-def get_default_supercell_filename(interface_mode, yaml_mode):
-    if yaml_mode:
-        return "SPOSCAR.yaml"
+def get_default_supercell_filename(interface_mode):
+    if interface_mode == 'phonopy_yaml':
+        return "phonopy_disp.yaml"
     elif interface_mode is None or interface_mode == 'vasp':
         return "SPOSCAR"
     elif interface_mode in ('abinit', 'elk', 'qe'):

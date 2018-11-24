@@ -86,7 +86,6 @@ class Settings(object):
         self._tmin = 0
         self._tstep = 10
         self._use_alm = False
-        self._yaml_mode = False
 
     def set_band_paths(self, band_paths):
         self._band_paths = band_paths
@@ -327,12 +326,6 @@ class Settings(object):
 
     def get_use_alm(self):
         return self._use_alm
-
-    def set_yaml_mode(self, yaml_mode):
-        self._yaml_mode = yaml_mode
-
-    def get_yaml_mode(self):
-        return self._yaml_mode
 
 
 # Parse phonopy setting filen
@@ -575,10 +568,6 @@ class ConfParser(object):
         if 'use_alm' in arg_list:
             if self._args.use_alm:
                 self._confs['alm'] = '.true.'
-
-        if 'yaml_mode' in arg_list:
-            if self._args.yaml_mode:
-                self._confs['yaml_mode'] = '.true.'
 
     def parse_conf(self):
         confs = self._confs
@@ -823,11 +812,6 @@ class ConfParser(object):
                 if confs['alm'].lower() == '.true.':
                     self.set_parameter('alm', True)
 
-            # Phonopy YAML mode
-            if conf_key == 'yaml_mode':
-                if confs['yaml_mode'].lower() == '.true.':
-                    self.set_parameter('yaml_mode', True)
-
     def set_parameter(self, key, val):
         self._parameters[key] = val
 
@@ -1006,9 +990,6 @@ class ConfParser(object):
         if 'alm' in params:
             self._settings.set_use_alm(params['alm'])
 
-        # Activate phonopy YAML mode
-        if 'yaml_mode' in params:
-            self._settings.set_yaml_mode(params['yaml_mode'])
 
 #
 # For phonopy

@@ -136,6 +136,7 @@ def get_parser():
         nac_method=None,
         nac_q_direction=None,
         pdos=None,
+        phonopy_yaml_mode=False,
         pretend_real=False,
         primitive_axes=None,
         projection_direction=None,
@@ -160,8 +161,7 @@ def get_parser():
         write_dynamical_matrices=False,
         write_force_constants=False,
         write_fc_format=None,
-        write_mesh=True,
-        yaml_mode=False)
+        write_mesh=True)
 
     parser.add_argument(
         "--abinit", dest="abinit_mode", action="store_true",
@@ -377,6 +377,10 @@ def get_parser():
         dest="is_projected_thermal_properties", action="store_true",
         help="Output projected thermal properties")
     parser.add_argument(
+        "--py", "--phonopy-yaml",
+        dest="phonopy_yaml_mode", action="store_true",
+        help="Activate phonopy YAML mode")
+    parser.add_argument(
         "--qe", "--pwscf", dest="qe_mode",
         action="store_true", help="Invoke Quantum espresso (QE) mode")
     parser.add_argument(
@@ -477,9 +481,6 @@ def get_parser():
     parser.add_argument(
         "--xyz-projection", dest="xyz_projection", action="store_true",
         help="Project PDOS x, y, z directions in Cartesian coordinates")
-    parser.add_argument(
-        "--yaml", dest="yaml_mode", action="store_true",
-        help="Activate phonopy YAML mode")
     parser.add_argument(
         "conf_file", nargs='*',
         help="Phonopy configure file")

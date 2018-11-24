@@ -74,6 +74,7 @@ class PhonopyYaml(object):
         self.unitcell = None
         self.primitive = None
         self.supercell = None
+        self.yaml = None
 
         self._supercell_matrix = None
         self._symmetry = None  # symmetry of supercell
@@ -230,17 +231,17 @@ class PhonopyYaml(object):
         return "\n".join(self.get_yaml_lines())
 
     def _load(self, fp):
-        self._data = yaml.load(fp, Loader=Loader)
-        if 'unit_cell' in self._data:
-            self.unitcell = self._parse_cell(self._data['unit_cell'])
-        if 'primitive_cell' in self._data:
-            self.primitive = self._parse_cell(self._data['primitive_cell'])
-        if 'supercell' in self._data:
-            self.supercell = self._parse_cell(self._data['supercell'])
+        self.yaml = yaml.load(fp, Loader=Loader)
+        if 'unit_cell' in self.yaml:
+            self.unitcell = self._parse_cell(self.yaml['unit_cell'])
+        if 'primitive_cell' in self.yaml:
+            self.primitive = self._parse_cell(self.yaml['primitive_cell'])
+        if 'supercell' in self.yaml:
+            self.supercell = self._parse_cell(self.yaml['supercell'])
         if self.unitcell is None:
-            if ('lattice' in self._data and
-                ('points' in self._data or 'atoms' in self._data)):
-                self.unitcell = self._parse_cell(self._data)
+            if ('lattice' in self.yaml and
+                ('points' in self.yaml or 'atoms' in self.yaml)):
+                self.unitcell = self._parse_cell(self.yaml)
 
     def _parse_cell(self, cell_yaml):
         lattice = None

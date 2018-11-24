@@ -180,9 +180,19 @@ def print_cells(phonon, unitcell_filename):
 
 def print_settings(settings,
                    is_primitive_axes_auto,
+                   is_band_auto,
                    primitive_matrix,
-                   supercell_matrix):
+                   supercell_matrix,
+                   optional_structure_info):
     run_mode = settings.get_run_mode()
+    if optional_structure_info[1]:
+        print("Calculator interface: %s" % optional_structure_info[1])
+    print("Crystal structure was read from \"%s\"" %
+          optional_structure_info[0])
+
+    if is_band_auto and not is_primitive_axes_auto:
+        print("Automatic band structure mode forced automatic choice "
+              "of primitive axes.")
     if run_mode == 'band':
         if (type(settings.get_band_paths()) is str and
             settings.get_band_paths() == 'auto'):
@@ -275,7 +285,7 @@ def print_settings(settings,
             print("    %s" % v)
     else:
         print("  Supercell: %s" % np.diag(supercell_matrix))
-    if is_primitive_axes_auto:
+    if is_primitive_axes_auto or is_band_auto:
         print("  Primitive matrix (Auto):")
         for v in primitive_matrix:
             print("    %s" % v)
@@ -320,7 +330,6 @@ if log_level > 0:
 # Phonopy interface mode #
 ##########################
 interface_mode = get_interface_mode(args)
-physical_units = get_default_physical_units(interface_mode)
 
 ###########################
 # Integrated helper tools #
@@ -386,8 +395,10 @@ unitcell, optional_structure_info = read_crystal_structure(
     filename=settings.get_cell_filename(),
     interface_mode=interface_mode,
     chemical_symbols=settings.get_chemical_symbols(),
-    yaml_mode=settings.get_yaml_mode())
+    read_supercell=(settings.get_supercell_matrix() is None))
 unitcell_filename = optional_structure_info[0]
+if interface_mode == 'phonopy_yaml':
+    interface_mode = optional_structure_info[1]
 
 if unitcell is None:
     print_error_message("Crystal structure file of %s could not be found." %
@@ -452,6 +463,11 @@ if settings.get_supercell_matrix() is None:
         if log_level > 0:
             print_error()
         sys.exit(1)
+
+######################
+# Set physical units #
+######################
+physical_units = get_default_physical_units(interface_mode)
 
 ################################################
 # Check crystal symmetry and exit (--symmetry) #
@@ -567,15 +583,12 @@ if log_level > 0:
     print("Python version %d.%d.%d" % sys.version_info[:3])
     import phonopy.structure.spglib as spglib
     print("Spglib version %d.%d.%d" % spglib.get_version())
-    if interface_mode:
-        print("Calculator interface: %s" % interface_mode)
-    if is_band_auto and not is_primitive_axes_auto:
-        print("Automatic band structure mode forced automatic choice "
-              "of primitive axes.")
     print_settings(settings,
-                   (is_primitive_axes_auto or is_band_auto),
+                   is_primitive_axes_auto,
+                   is_band_auto,
                    primitive_matrix,
-                   supercell_matrix)
+                   supercell_matrix,
+                   optional_structure_info)
     if magmoms is None:
         print("Spacegroup: %s" %
               phonon.get_symmetry().get_international_table())
