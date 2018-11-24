@@ -183,7 +183,6 @@ def finalize_phonopy(log_level,
 
 
 def print_cells(phonon, unitcell_filename):
-    print("Crystal structure is read from \'%s\'." % unitcell_filename)
     supercell = phonon.get_supercell()
     unitcell = phonon.get_unitcell()
     primitive = phonon.get_primitive()
@@ -193,17 +192,13 @@ def print_cells(phonon, unitcell_filename):
         dtype='intc')
     s_indep_atoms = phonon.get_symmetry().get_independent_atoms()
     p_indep_atoms = mapping[s_indep_atoms]
-    if unitcell.get_number_of_atoms() == primitive.get_number_of_atoms():
-        print("-" * 32 + " unit cell " + "-" * 33)
-        print_cell(primitive, stars=p_indep_atoms)
-    else:
-        u2s_map = supercell.get_unitcell_to_supercell_map()
-        print("-" * 30 + " primitive cell " + "-" * 30)
-        print_cell(primitive, stars=p_indep_atoms)
-        print("-" * 32 + " unit cell " + "-" * 33)  # 32 + 11 + 33 = 76
-        u2u_map = supercell.get_unitcell_to_unitcell_map()
-        u_indep_atoms = [u2u_map[x] for x in s_indep_atoms]
-        print_cell(unitcell, mapping=mapping[u2s_map], stars=u_indep_atoms)
+    u2s_map = supercell.get_unitcell_to_supercell_map()
+    print("-" * 30 + " primitive cell " + "-" * 30)
+    print_cell(primitive, stars=p_indep_atoms)
+    print("-" * 32 + " unit cell " + "-" * 33)  # 32 + 11 + 33 = 76
+    u2u_map = supercell.get_unitcell_to_unitcell_map()
+    u_indep_atoms = [u2u_map[x] for x in s_indep_atoms]
+    print_cell(unitcell, mapping=mapping[u2s_map], stars=u_indep_atoms)
     print("-" * 32 + " super cell " + "-" * 32)
     print_cell(supercell, mapping=mapping, stars=s_indep_atoms)
     print("-" * 76)
@@ -219,7 +214,7 @@ def print_settings(settings,
     run_mode = settings.get_run_mode()
     if interface_mode:
         print("Calculator interface: %s" % interface_mode)
-    print("Crystal structure was read from \"%s\"" % cell_filename)
+    print("Crystal structure was read from \"%s\"." % cell_filename)
     if is_band_auto and not is_primitive_axes_auto:
         print("Automatic band structure mode forced automatic choice "
               "of primitive axes.")
