@@ -632,10 +632,12 @@ if log_level > 0:
     if magmoms is None:
         print("Spacegroup: %s" %
               phonon.get_symmetry().get_international_table())
-
-# Print cells
-if log_level > 1:
-    print_cells(phonon, unitcell_filename)
+    if log_level > 1:
+        print_cells(phonon, unitcell_filename)
+    else:
+        print("Use -v option to watch primitive cell, unit cell, "
+              "and supercell structures.")
+    print('')
 
 #################################
 # Create displacements and exit #
