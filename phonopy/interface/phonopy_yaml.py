@@ -45,6 +45,7 @@ except ImportError:
     from yaml import Loader, Dumper
 
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.file_IO import get_disp_yaml_lines
 
 
 def read_cell_yaml(filename, cell_type='unitcell'):
@@ -65,11 +66,13 @@ class PhonopyYaml(object):
                  configuration=None,
                  calculator=None,
                  physical_units=None,
+                 show_displacements=False,
                  show_force_constants=False):
         self._configuration = configuration
         self._calculator = calculator
         self._physical_units = physical_units
         self._show_force_constants = show_force_constants
+        self._show_displacements = show_displacements
 
         self.unitcell = None
         self.primitive = None
@@ -90,15 +93,16 @@ class PhonopyYaml(object):
             self._load(infile)
 
     def set_phonon_info(self, phonopy):
-        self.unitcell = phonopy.get_unitcell()
-        self.primitive = phonopy.get_primitive()
-        self.supercell = phonopy.get_supercell()
-        self._version = phonopy.get_version()
-        self._supercell_matrix = phonopy.get_supercell_matrix()
-        self._symmetry = phonopy.get_symmetry()
-        self._primitive_matrix = phonopy.get_primitive_matrix()
-        self._force_constants = phonopy.get_force_constants()
-        self._s2p_map = self.primitive.get_supercell_to_primitive_map()
+        self.unitcell = phonopy.unitcell
+        self.primitive = phonopy.primitive
+        self.supercell = phonopy.supercell
+        self._version = phonopy.version
+        self._supercell_matrix = phonopy.supercell_matrix
+        self._symmetry = phonopy.symmetry
+        self._primitive_matrix = phonopy.primitive_matrix
+        self._force_constants = phonopy.force_constants
+        self._displacements = phonopy.displacements
+        self._s2p_map = self.primitive.s2p_map
         u2s_map = self.supercell.get_unitcell_to_supercell_map()
         u2u_map = self.supercell.get_unitcell_to_unitcell_map()
         s2u_map = self.supercell.get_supercell_to_unitcell_map()
@@ -158,6 +162,10 @@ class PhonopyYaml(object):
             if "\"" in hall_symbol:
                 hall_symbol = hall_symbol.replace("\"", "\\\"")
             lines.append("  Hall_symbol: \"%s\"" % hall_symbol)
+            lines.append("")
+
+        if self._show_displacements:
+            lines += get_disp_yaml_lines(self._displacements, self.supercell)
             lines.append("")
 
         if self._primitive_matrix is not None:

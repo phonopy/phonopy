@@ -38,7 +38,10 @@ import sys
 import os
 import numpy as np
 from phonopy import Phonopy, __version__
-import phonopy.file_IO as file_IO
+from phonopy.file_IO import (read_force_constants_hdf5, parse_FORCE_CONSTANTS,
+                             parse_FORCE_SETS, write_disp_yaml,
+                             get_born_parameters, write_FORCE_CONSTANTS,
+                             write_force_constants_to_hdf5, parse_QPOINTS)
 from phonopy.cui.settings import PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.cui.phonopy_argparse import (get_parser,
@@ -123,11 +126,36 @@ def print_error_message(message):
     print(message)
 
 
-def file_exists(filename, log_level):
+def file_exists(filename, log_level, is_any=False):
     if os.path.exists(filename):
         return True
     else:
-        error_text = "%s not found." % filename
+        if is_any:
+            return False
+        else:
+            error_text = "%s not found." % filename
+            print_error_message(error_text)
+            if log_level > 0:
+                print_error()
+            sys.exit(1)
+
+
+def files_exist(filename_list, log_level, is_any=False):
+    filenames = []
+    for filename in filename_list:
+        if file_exists(filename, log_level, is_any=is_any):
+            filenames.append(filename)
+
+    if filenames:
+        return filenames
+    else:
+        if len(filenames) == 2:
+            all_filenames = "\"%s\" or \"%s\"" % tuple(filenames)
+        else:
+            all_filenames = ", ".join(["\"%s\"" %
+                                       fn for fn in filename_list[:-1]])
+            all_filenames += " or \"%s\"" % filename_list[-1]
+        error_text = "Any of %s was not found." % all_filenames
         print_error_message(error_text)
         if log_level > 0:
             print_error()
@@ -138,12 +166,14 @@ def finalize_phonopy(log_level,
                      phonopy_conf,
                      phonon,
                      interface_mode,
+                     write_displacements=False,
                      filename="phonopy.yaml"):
     if log_level > 0:
         units = get_default_physical_units(interface_mode)
         phpy_yaml = PhonopyYaml(configuration=phonopy_conf.get_configures(),
                                 calculator=interface_mode,
-                                physical_units=units)
+                                physical_units=units,
+                                show_displacements=write_displacements)
         phpy_yaml.set_phonon_info(phonon)
         with open(filename, 'w') as w:
             w.write(str(phpy_yaml))
@@ -183,13 +213,12 @@ def print_settings(settings,
                    is_band_auto,
                    primitive_matrix,
                    supercell_matrix,
-                   optional_structure_info):
+                   cell_filename,
+                   interface_mode):
     run_mode = settings.get_run_mode()
-    if optional_structure_info[1]:
+    if interface_mode:
         print("Calculator interface: %s" % optional_structure_info[1])
-    print("Crystal structure was read from \"%s\"" %
-          optional_structure_info[0])
-
+    print("Crystal structure was read from \"%s\"" % cell_filename)
     if is_band_auto and not is_primitive_axes_auto:
         print("Automatic band structure mode forced automatic choice "
               "of primitive axes.")
@@ -346,13 +375,15 @@ if args.force_sets or args.force_sets_zero:
         print_error_message("Something wrong for parsing arguments.")
         sys.exit(0)
 
-    file_exists('disp.yaml', log_level)
-    for filename in filenames:
-        file_exists(filename, log_level)
+    disp_filenames = files_exist(['phonopy_disp.yaml', 'disp.yaml'],
+                                 log_level, is_any=True)
+    files_exist(filenames, log_level)
 
-    if force_sets_zero_mode:
-        print("Forces in %s are subtracted from forces in all other files." %
-              filenames[0])
+    if log_level > 0:
+        print("Displacements were read from \"%s\"." % disp_filenames[0])
+        if force_sets_zero_mode:
+            print("Forces in %s are subtracted from forces in all "
+                  "other files." % filenames[0])
 
     error_num = create_FORCE_SETS(
         interface_mode,
@@ -360,6 +391,7 @@ if args.force_sets or args.force_sets_zero:
         args.symprec,
         is_wien2k_p1=args.is_wien2k_p1,
         force_sets_zero_mode=force_sets_zero_mode,
+        disp_filename=disp_filenames[0],
         log_level=log_level)
     if log_level > 0:
         print_end()
@@ -381,9 +413,9 @@ if args.force_constants:
 # Read phonopy settings #
 #########################
 if len(args.conf_file) > 0:
-    if file_exists(args.conf_file[0], log_level):
-        phonopy_conf = PhonopyConfParser(filename=args.conf_file[0], args=args)
-        settings = phonopy_conf.get_settings()
+    file_exists(args.conf_file[0], log_level)
+    phonopy_conf = PhonopyConfParser(filename=args.conf_file[0], args=args)
+    settings = phonopy_conf.get_settings()
 else:
     phonopy_conf = PhonopyConfParser(args=args)
     settings = phonopy_conf.get_settings()
@@ -528,15 +560,14 @@ else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
                     print_error()
                 sys.exit(1)
 
-            if file_exists("force_constants.hdf5", log_level):
-                fc = file_IO.read_force_constants_hdf5(
-                    filename="force_constants.hdf5",
-                    p2s_map=p2s_map)
-                fc_filename = "force_constants.hdf5"
-
-        elif file_exists("FORCE_CONSTANTS", log_level):
-            fc = file_IO.parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS",
-                                               p2s_map=p2s_map)
+            file_exists("force_constants.hdf5", log_level)
+            fc = read_force_constants_hdf5(filename="force_constants.hdf5",
+                                           p2s_map=p2s_map)
+            fc_filename = "force_constants.hdf5"
+        else:
+            file_exists("FORCE_CONSTANTS", log_level)
+            fc = parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS",
+                                       p2s_map=p2s_map)
             fc_filename = "FORCE_CONSTANTS"
 
         if log_level > 0:
@@ -558,8 +589,9 @@ else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
                 print_error()
             sys.exit(1)
 
-    elif file_exists("FORCE_SETS", log_level):
-        force_sets = file_IO.parse_FORCE_SETS(natom=num_satom)
+    else:
+        file_exists("FORCE_SETS", log_level)
+        force_sets = parse_FORCE_SETS(natom=num_satom)
         if force_sets['natom'] != num_satom:
             error_text = "Number of atoms in supercell is not consistent with "
             error_text += "the data in FORCE_SETS.\n"
@@ -588,7 +620,8 @@ if log_level > 0:
                    is_band_auto,
                    primitive_matrix,
                    supercell_matrix,
-                   optional_structure_info)
+                   optional_structure_info[0],
+                   interface_mode)
     if magmoms is None:
         print("Spacegroup: %s" %
               phonon.get_symmetry().get_international_table())
@@ -613,7 +646,9 @@ if run_mode == 'displacements':
         is_diagonal=settings.get_is_diagonal_displacement(),
         is_trigonal=settings.get_is_trigonal_displacement())
     displacements = phonon.get_displacements()
-    file_IO.write_disp_yaml(displacements, supercell)
+
+    # From phonopy v1.14.4, displacements are written into phonopy_disp.yaml.
+    # write_disp_yaml(displacements, supercell)
 
     # Write supercells with displacements
     cells_with_disps = phonon.get_supercells_with_displacements()
@@ -632,6 +667,7 @@ if run_mode == 'displacements':
                      phonopy_conf,
                      phonon,
                      interface_mode,
+                     write_displacements=True,
                      filename="phonopy_disp.yaml")
 
 ########################################
@@ -639,37 +675,36 @@ if run_mode == 'displacements':
 ########################################
 # Non-analytical term correction (LO-TO splitting)
 if settings.get_is_nac():
-    if file_exists("BORN", log_level):
-        nac_params = file_IO.get_born_parameters(
-            open("BORN"),
-            primitive,
-            phonon.get_primitive_symmetry())
-        if not nac_params:
-            error_text = "BORN file could not be read correctly."
-            print_error_message(error_text)
-            if log_level > 0:
-                print_error()
-            sys.exit(1)
-        if nac_params['factor'] is None:
-            nac_params['factor'] = physical_units['nac_factor']
-        if settings.get_nac_method() is not None:
-            nac_params['method'] = settings.get_nac_method()
-        phonon.set_nac_params(nac_params=nac_params)
+    file_exists("BORN", log_level)
+    nac_params = get_born_parameters(open("BORN"),
+                                     primitive,
+                                     phonon.get_primitive_symmetry())
+    if not nac_params:
+        error_text = "BORN file could not be read correctly."
+        print_error_message(error_text)
+        if log_level > 0:
+            print_error()
+        sys.exit(1)
+    if nac_params['factor'] is None:
+        nac_params['factor'] = physical_units['nac_factor']
+    if settings.get_nac_method() is not None:
+        nac_params['method'] = settings.get_nac_method()
+    phonon.set_nac_params(nac_params=nac_params)
 
-        if log_level > 1:
-            print("-" * 27 + " Dielectric constant " + "-" * 28)
-            for v in nac_params['dielectric']:
-                print("         %12.7f %12.7f %12.7f" % tuple(v))
-            print("-" * 26 + " Born effective charges " + "-" * 26)
-            symbols = primitive.get_chemical_symbols()
-            for i, (z, s) in enumerate(zip(nac_params['born'], symbols)):
-                for j, v in enumerate(z):
-                    if j == 0:
-                        text = "%5d %-2s" % (i + 1, s)
-                    else:
-                        text = "        "
-                    print("%s %12.7f %12.7f %12.7f" % ((text,) + tuple(v)))
-            print("-" * 76)
+    if log_level > 1:
+        print("-" * 27 + " Dielectric constant " + "-" * 28)
+        for v in nac_params['dielectric']:
+            print("         %12.7f %12.7f %12.7f" % tuple(v))
+        print("-" * 26 + " Born effective charges " + "-" * 26)
+        symbols = primitive.get_chemical_symbols()
+        for i, (z, s) in enumerate(zip(nac_params['born'], symbols)):
+            for j, v in enumerate(z):
+                if j == 0:
+                    text = "%5d %-2s" % (i + 1, s)
+                else:
+                    text = "        "
+                print("%s %12.7f %12.7f %12.7f" % ((text,) + tuple(v)))
+        print("-" * 76)
 
 # Force constants
 if settings.get_read_force_constants():
@@ -701,8 +736,8 @@ if settings.get_fc_spg_symmetry():
         print("Force constants are symmetrized by space group operations.")
         print("This may take some time...")
     phonon.symmetrize_force_constants_by_space_group()
-    file_IO.write_FORCE_CONSTANTS(phonon.get_force_constants(),
-                                  filename='FORCE_CONSTANTS_SPG')
+    write_FORCE_CONSTANTS(phonon.get_force_constants(),
+                          filename='FORCE_CONSTANTS_SPG')
     if log_level > 0:
         print("Symmetrized force constants are written into "
               "FORCE_CONSTANTS_SPG.")
@@ -716,13 +751,12 @@ if settings.get_fc_symmetry():
 if settings.get_write_force_constants():
     p2s_map = primitive.get_primitive_to_supercell_map()
     if settings.get_is_hdf5() or settings.get_writefc_format() == 'hdf5':
-        file_IO.write_force_constants_to_hdf5(phonon.get_force_constants(),
-                                              p2s_map=p2s_map)
+        write_force_constants_to_hdf5(phonon.get_force_constants(),
+                                      p2s_map=p2s_map)
         if log_level > 0:
             print("Force constants are written into force_constants.hdf5.")
     else:
-        file_IO.write_FORCE_CONSTANTS(phonon.get_force_constants(),
-                                      p2s_map=p2s_map)
+        write_FORCE_CONSTANTS(phonon.get_force_constants(), p2s_map=p2s_map)
         if log_level > 0:
             print("Force constants are written into FORCE_CONSTANTS.")
 
@@ -757,7 +791,7 @@ if settings.get_is_group_velocity():
 # QPOINTS mode
 if run_mode == 'qpoints':
     if settings.get_read_qpoints():
-        q_points = file_IO.parse_QPOINTS()
+        q_points = parse_QPOINTS()
         if log_level > 0:
             print("Frequencies at q-points given by QPOINTS:")
     elif settings.get_qpoints():

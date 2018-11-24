@@ -340,9 +340,16 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
         from yaml import Loader
 
     with open(filename) as f:
-        dataset = yaml.load(f, Loader=Loader)
-        natom = dataset['natom']
         new_dataset = {}
+        dataset = yaml.load(f, Loader=Loader)
+        if 'phonopy' in dataset and 'calculator' in dataset['phonopy']:
+            dataset['calculator'] = dataset['phonopy']['calculator']
+        if 'natom' in dataset:
+            natom = dataset['natom']
+        elif 'supercell' and 'points' in dataset['supercell']:
+            natom = len(dataset['supercell']['points'])
+        else:
+            raise RuntimeError("%s doesn't contain necessary information.")
         new_dataset['natom'] = natom
         new_first_atoms = []
         for first_atoms in dataset['displacements']:
@@ -366,21 +373,24 @@ def write_disp_yaml_from_dataset(dataset, supercell, filename='disp.yaml'):
     write_disp_yaml(displacements, supercell, filename=filename)
 
 
-def write_disp_yaml(displacements,
-                    supercell,
-                    filename='disp.yaml'):
-    text = []
-    text.append("natom: %4d" % supercell.get_number_of_atoms())
-    text.append("displacements:")
-    for i, disp in enumerate(displacements):
-        text.append("- atom: %4d" % (disp[0] + 1))
-        text.append("  displacement:")
-        text.append("    [ %20.16f,%20.16f,%20.16f ]" % tuple(disp[1:4]))
-
-    text.append(str(supercell))
+def write_disp_yaml(displacements, supercell, filename='disp.yaml'):
+    lines = []
+    lines.append("natom: %4d" % supercell.get_number_of_atoms())
+    lines += get_disp_yaml_lines(displacements, supercell)
+    lines.append(str(supercell))
 
     with open(filename, 'w') as w:
-        w.write("\n".join(text))
+        w.write("\n".join(lines))
+
+
+def get_disp_yaml_lines(displacements, supercell):
+    lines = []
+    lines.append("displacements:")
+    for i, disp in enumerate(displacements):
+        lines.append("- atom: %4d" % (disp[0] + 1))
+        lines.append("  displacement:")
+        lines.append("    [ %20.16f,%20.16f,%20.16f ]" % tuple(disp[1:4]))
+    return lines
 
 
 #

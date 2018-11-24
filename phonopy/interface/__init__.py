@@ -115,9 +115,9 @@ def read_crystal_structure(filename=None,
                            read_supercell=False):
     if filename is None:
         if read_supercell:
-            cell_filename = get_default_cell_filename(interface_mode)
-        else:
             cell_filename = get_default_supercell_filename(interface_mode)
+        else:
+            cell_filename = get_default_cell_filename(interface_mode)
     else:
         cell_filename = filename
 
