@@ -426,8 +426,6 @@ else:
 _interface_mode = get_interface_mode(args)
 if settings.get_supercell_matrix() is None and _interface_mode is None:
     _interface_mode = "phonopy_yaml"
-else:
-    _interface_mode = interface_mode
 unitcell, optional_structure_info = read_crystal_structure(
     filename=settings.get_cell_filename(),
     interface_mode=_interface_mode,
