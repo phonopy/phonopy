@@ -343,7 +343,7 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
         new_dataset = {}
         dataset = yaml.load(f, Loader=Loader)
         if 'phonopy' in dataset and 'calculator' in dataset['phonopy']:
-            dataset['calculator'] = dataset['phonopy']['calculator']
+            new_dataset['calculator'] = dataset['phonopy']['calculator']
         if 'natom' in dataset:
             natom = dataset['natom']
         elif 'supercell' and 'points' in dataset['supercell']:
@@ -352,7 +352,13 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
             raise RuntimeError("%s doesn't contain necessary information.")
         new_dataset['natom'] = natom
         new_first_atoms = []
-        for first_atoms in dataset['displacements']:
+
+        try:
+            displacements = dataset['displacements']
+        except KeyError:
+            raise
+
+        for first_atoms in displacements:
             first_atoms['atom'] -= 1
             atom1 = first_atoms['atom']
             disp1 = first_atoms['displacement']
@@ -413,24 +419,27 @@ def parse_DISP(filename='DISP'):
 def get_cell_from_disp_yaml(dataset):
     from phonopy.structure.atoms import PhonopyAtoms
 
-    lattice = dataset['lattice']
-    if 'points' in dataset:
-        data_key = 'points'
-        pos_key = 'coordinates'
-    elif 'atoms' in dataset:
-        data_key = 'atoms'
-        pos_key = 'position'
-    else:
-        data_key = None
-        pos_key = None
+    if 'lattice' in dataset:
+        lattice = dataset['lattice']
+        if 'points' in dataset:
+            data_key = 'points'
+            pos_key = 'coordinates'
+        elif 'atoms' in dataset:
+            data_key = 'atoms'
+            pos_key = 'position'
+        else:
+            data_key = None
+            pos_key = None
 
-    positions = [x[pos_key] for x in dataset[data_key]]
-    symbols = [x['symbol'] for x in dataset[data_key]]
-    cell = PhonopyAtoms(cell=lattice,
-                        scaled_positions=positions,
-                        symbols=symbols,
-                        pbc=True)
-    return cell
+        positions = [x[pos_key] for x in dataset[data_key]]
+        symbols = [x['symbol'] for x in dataset[data_key]]
+        cell = PhonopyAtoms(cell=lattice,
+                            scaled_positions=positions,
+                            symbols=symbols,
+                            pbc=True)
+        return cell
+    else:
+        return get_cell_from_disp_yaml(dataset['supercell'])
 
 
 #

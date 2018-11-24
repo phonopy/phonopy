@@ -41,7 +41,8 @@ from phonopy import Phonopy, __version__
 from phonopy.file_IO import (read_force_constants_hdf5, parse_FORCE_CONSTANTS,
                              parse_FORCE_SETS, write_disp_yaml,
                              get_born_parameters, write_FORCE_CONSTANTS,
-                             write_force_constants_to_hdf5, parse_QPOINTS)
+                             write_force_constants_to_hdf5, parse_QPOINTS,
+                             parse_disp_yaml)
 from phonopy.cui.settings import PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.cui.phonopy_argparse import (get_parser,
@@ -133,7 +134,7 @@ def file_exists(filename, log_level, is_any=False):
         if is_any:
             return False
         else:
-            error_text = "%s not found." % filename
+            error_text = "\"%s\" was not found." % filename
             print_error_message(error_text)
             if log_level > 0:
                 print_error()
@@ -217,7 +218,7 @@ def print_settings(settings,
                    interface_mode):
     run_mode = settings.get_run_mode()
     if interface_mode:
-        print("Calculator interface: %s" % optional_structure_info[1])
+        print("Calculator interface: %s" % interface_mode)
     print("Crystal structure was read from \"%s\"" % cell_filename)
     if is_band_auto and not is_primitive_axes_auto:
         print("Automatic band structure mode forced automatic choice "
@@ -355,16 +356,12 @@ if log_level > 0:
     if deprecated:
         show_deprecated_option_warnings(deprecated)
 
-##########################
-# Phonopy interface mode #
-##########################
-interface_mode = get_interface_mode(args)
-
 ###########################
 # Integrated helper tools #
 ###########################
 # Create FORCE_SETS (-f or --force_sets)
 if args.force_sets or args.force_sets_zero:
+    interface_mode = get_interface_mode(args)
     if args.force_sets:
         filenames = args.force_sets
         force_sets_zero_mode = False
@@ -377,13 +374,21 @@ if args.force_sets or args.force_sets_zero:
 
     disp_filenames = files_exist(['phonopy_disp.yaml', 'disp.yaml'],
                                  log_level, is_any=True)
-    files_exist(filenames, log_level)
+    if disp_filenames[0] == 'phonopy_disp.yaml':
+        try:
+            dataset = parse_disp_yaml(filename='phonopy_disp.yaml')
+            interface_mode = dataset['calculator']
+            disp_filename = 'phonopy_disp.yaml'
+        except KeyError:
+            file_exists('disp.yaml', log_level)
+            if log_level > 0:
+                print("\"phonopy_disp.yaml\" was found but wasn't used "
+                      "because of the old-style format.")
+            disp_filename = 'disp.yaml'
+    else:
+        disp_filename = disp_filenames[0]
 
-    if log_level > 0:
-        print("Displacements were read from \"%s\"." % disp_filenames[0])
-        if force_sets_zero_mode:
-            print("Forces in %s are subtracted from forces in all "
-                  "other files." % filenames[0])
+    files_exist(filenames, log_level)
 
     error_num = create_FORCE_SETS(
         interface_mode,
@@ -391,7 +396,7 @@ if args.force_sets or args.force_sets_zero:
         args.symprec,
         is_wien2k_p1=args.is_wien2k_p1,
         force_sets_zero_mode=force_sets_zero_mode,
-        disp_filename=disp_filenames[0],
+        disp_filename=disp_filename,
         log_level=log_level)
     if log_level > 0:
         print_end()
@@ -420,17 +425,24 @@ else:
     phonopy_conf = PhonopyConfParser(args=args)
     settings = phonopy_conf.get_settings()
 
-##################
-# Read unit cell #
-##################
+##########################################
+# Set calculator interface and read cell #
+##########################################
+_interface_mode = get_interface_mode(args)
+if settings.get_supercell_matrix() is None and _interface_mode is None:
+    _interface_mode = "phonopy_yaml"
+else:
+    _interface_mode = interface_mode
 unitcell, optional_structure_info = read_crystal_structure(
     filename=settings.get_cell_filename(),
-    interface_mode=interface_mode,
+    interface_mode=_interface_mode,
     chemical_symbols=settings.get_chemical_symbols(),
     read_supercell=(settings.get_supercell_matrix() is None))
 unitcell_filename = optional_structure_info[0]
-if interface_mode == 'phonopy_yaml':
+if _interface_mode == 'phonopy_yaml':
     interface_mode = optional_structure_info[1]
+else:
+    interface_mode = _interface_mode
 
 if unitcell is None:
     print_error_message("Crystal structure file of %s could not be found." %
@@ -661,7 +673,13 @@ if run_mode == 'displacements':
 
     if log_level > 0:
         print('')
-        print("disp.yaml and supercells have been created.")
+        print("\"phonopy_disp.yaml\" and supercells have been created.")
+        print('')
+        print("NOTE:")
+        print("  From phonopy v1.14.4, displacements are written into "
+              "\"phonopy_disp.yaml\".")
+        print("  \"disp.yaml\" is still supported to read, but will be "
+              "deprecated.")
 
     finalize_phonopy(log_level,
                      phonopy_conf,

@@ -328,6 +328,22 @@ def create_FORCE_SETS(interface_mode,
                       disp_filename='disp.yaml',
                       force_sets_filename='FORCE_SETS',
                       log_level=0):
+    if log_level > 0:
+        if interface_mode:
+            print("Calculator interface: %s" % interface_mode)
+        print("Displacements were read from \"%s\"." % disp_filename)
+        if disp_filename == 'disp.yaml':
+            print('')
+            print("NOTE:")
+            print("  From phonopy v1.14.4, displacements are written into "
+                  "\"phonopy_disp.yaml\".")
+            print("  \"disp.yaml\" is still supported to read, but will be "
+                  "deprecated.")
+            print('')
+        if force_sets_zero_mode:
+            print("Forces in %s are subtracted from forces in all "
+                  "other files." % force_filenames[0])
+
     if interface_mode in (None, 'vasp', 'abinit', 'elk', 'qe', 'siesta',
                           'cp2k', 'crystal'):
         disp_dataset = parse_disp_yaml(filename=disp_filename)
