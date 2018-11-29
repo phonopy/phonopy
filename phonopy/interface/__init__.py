@@ -33,6 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import os
+import numpy as np
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.file_IO import parse_disp_yaml, write_FORCE_SETS
 
@@ -111,13 +112,9 @@ def write_supercells_with_displacements(interface_mode,
 
 def read_crystal_structure(filename=None,
                            interface_mode=None,
-                           chemical_symbols=None,
-                           read_supercell=False):
+                           chemical_symbols=None):
     if filename is None:
-        if read_supercell:
-            cell_filename = get_default_supercell_filename(interface_mode)
-        else:
-            cell_filename = get_default_cell_filename(interface_mode)
+        cell_filename = get_default_cell_filename(interface_mode)
     else:
         cell_filename = filename
 
@@ -145,18 +142,19 @@ def read_crystal_structure(filename=None,
     if interface_mode == 'phonopy_yaml':
         phpy = PhonopyYaml()
         phpy.read(cell_filename)
-        if phpy.supercell is None:  # supposed "disp.yaml"
-            return phpy.unitcell, (cell_filename, None)
-        else:  # supposed "phonopy_disp.yaml" or "phonopy.yaml"
-            if read_supercell:
-                cell = phpy.supercell
-            else:
-                cell = phpy.unitcell
-            if 'phonopy' in phpy.yaml and 'calculator' in phpy.yaml['phonopy']:
+        cell = phpy.unitcell
+        if 'phonopy' in phpy.yaml:
+            if 'calculator' in phpy.yaml['phonopy']:
                 calculator = phpy.yaml['phonopy']['calculator']
             else:
                 calculator = None
-            return cell, (cell_filename, calculator)
+            tmat = np.dot(np.linalg.inv(cell.get_cell().T),
+                          phpy.supercell.get_cell().T)
+            tmat = np.rint(tmat).astype('intc')
+        else:
+            calculator = None
+            tmat = np.eye(3, dtype='intc')
+        return cell, (cell_filename, calculator, tmat)
     elif interface_mode is None or interface_mode == 'vasp':
         from phonopy.interface.vasp import read_vasp
         if chemical_symbols is None:

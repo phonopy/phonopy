@@ -420,22 +420,57 @@ else:
     phonopy_conf = PhonopyConfParser(args=args)
     settings = phonopy_conf.get_settings()
 
-##########################################
-# Set calculator interface and read cell #
-##########################################
-_interface_mode = get_interface_mode(args)
-if settings.get_supercell_matrix() is None and _interface_mode is None:
+is_band_auto = (type(settings.get_band_paths()) is str and
+                settings.get_band_paths() == 'auto')
+
+##################################################
+# Set calculator interface and crystal structure #
+##################################################
+_supercell_matrix = settings.get_supercell_matrix()
+
+# 1. When DIM is not set, PRIMITIVE_AXES = AUTO is set.
+# 2. If BAND == AUTO, PRIMITIVE_AXES = AUTO is set.
+if _supercell_matrix is None or is_band_auto:
+    is_primitive_axes_auto = True
+else:
+    is_primitive_axes_auto = (type(settings.get_primitive_matrix()) is str and
+                              settings.get_primitive_matrix() == 'auto')
+
+if _supercell_matrix is None:
     _interface_mode = "phonopy_yaml"
+else:
+    _interface_mode = get_interface_mode(args)
+
 unitcell, optional_structure_info = read_crystal_structure(
     filename=settings.get_cell_filename(),
     interface_mode=_interface_mode,
-    chemical_symbols=settings.get_chemical_symbols(),
-    read_supercell=(settings.get_supercell_matrix() is None))
+    chemical_symbols=settings.get_chemical_symbols())
+
 unitcell_filename = optional_structure_info[0]
+
 if _interface_mode == 'phonopy_yaml':
+    # interface_mode and supercell_matrix are overwritten.
     interface_mode = optional_structure_info[1]
+    _supercell_matrix = optional_structure_info[2]
 else:
     interface_mode = _interface_mode
+
+if _supercell_matrix is None:
+    if is_primitive_axes_auto:
+        supercell_matrix = np.eye(3, dtype='intc')
+    else:
+        msg = "Supercell matrix (DIM or --dim) is not found."
+        print_error_message(msg)
+        if log_level > 0:
+            print_error()
+        sys.exit(1)
+else:
+    supercell_matrix = _supercell_matrix
+
+if is_primitive_axes_auto:
+    primitive_matrix = guess_primitive_matrix(unitcell, symprec=args.symprec)
+else:
+    primitive_matrix = settings.get_primitive_matrix()
 
 if unitcell is None:
     print_error_message("Crystal structure file of %s could not be found." %
@@ -463,40 +498,10 @@ if magmoms is not None:
             print_error()
         sys.exit(1)
 
-    if settings.get_primitive_matrix() == 'auto':
-        error_text = "'PRIMITIVE_AXES = auto' can not be used with MAGMOM"
+    if is_primitive_axes_auto == 'auto':
+        error_text = ("'PRIMITIVE_AXES = auto', 'BAND = auto', or no DIM "
+                      "setting can not be used with MAGMOM.")
         print_error_message(error_text)
-        if log_level > 0:
-            print_error()
-        sys.exit(1)
-
-######################################
-# Set supercell and primitive matrix #
-######################################
-# When BAND = AUTO, automatic choice of primitive matrix is activated.
-is_band_auto = (type(settings.get_band_paths()) is str and
-                settings.get_band_paths() == 'auto')
-is_primitive_axes_auto = (type(settings.get_primitive_matrix()) is str and
-                          settings.get_primitive_matrix() == 'auto')
-
-# When DIM is not set, PRIMITIVE_AXES = AUTO is set.
-if settings.get_supercell_matrix() is None:
-    is_primitive_axes_auto = True
-    supercell_matrix = np.eye(3, dtype='intc')
-else:
-    supercell_matrix = settings.get_supercell_matrix()
-
-if is_primitive_axes_auto or is_band_auto:
-    primitive_matrix = guess_primitive_matrix(unitcell, symprec=args.symprec)
-else:
-    primitive_matrix = settings.get_primitive_matrix()
-
-if settings.get_supercell_matrix() is None:
-    if is_primitive_axes_auto or is_band_auto:
-        supercell_matrix = np.eye(3, dtype='intc')
-    else:
-        msg = "Supercell matrix (DIM or --dim) is not found."
-        print_error_message(msg)
         if log_level > 0:
             print_error()
         sys.exit(1)
