@@ -43,19 +43,17 @@ from phonopy.file_IO import (read_force_constants_hdf5, parse_FORCE_CONSTANTS,
                              get_born_parameters, write_FORCE_CONSTANTS,
                              write_force_constants_to_hdf5, parse_QPOINTS,
                              parse_disp_yaml)
+from phonopy.cui.collect_cell_info import collect_cell_info
 from phonopy.cui.settings import PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.cui.phonopy_argparse import (get_parser,
                                           show_deprecated_option_warnings)
-from phonopy.structure.cells import (print_cell, guess_primitive_matrix,
-                                     determinant)
+from phonopy.structure.cells import (print_cell, determinant)
 from phonopy.structure.atoms import atom_data, symbol_map
-from phonopy.interface import (create_FORCE_SETS, read_crystal_structure,
-                               get_default_physical_units,
+from phonopy.interface import (create_FORCE_SETS, get_default_physical_units,
                                get_default_displacement_distance,
-                               get_interface_mode,
                                write_supercells_with_displacements,
-                               PhonopyYaml)
+                               PhonopyYaml, get_interface_mode)
 from phonopy.interface.vasp import create_FORCE_CONSTANTS
 from phonopy.phonon.band_structure import (get_band_qpoints,
                                            get_band_qpoints_by_seekpath)
@@ -219,8 +217,7 @@ def print_settings(settings,
         print("Automatic band structure mode forced automatic choice "
               "of primitive axes.")
     if run_mode == 'band':
-        if (type(settings.get_band_paths()) is str and
-            settings.get_band_paths() == 'auto'):
+        if is_band_auto:
             print("Band structure mode (Auto)")
         else:
             print("Band structure mode")
@@ -426,68 +423,21 @@ is_band_auto = (type(settings.get_band_paths()) is str and
 ##################################################
 # Set calculator interface and crystal structure #
 ##################################################
-_supercell_matrix = settings.get_supercell_matrix()
-
-# 1. When DIM is not set, PRIMITIVE_AXES = AUTO is set.
-# 2. If BAND == AUTO, PRIMITIVE_AXES = AUTO is set.
-if _supercell_matrix is None or is_band_auto:
-    is_primitive_axes_auto = True
-else:
-    is_primitive_axes_auto = (type(settings.get_primitive_matrix()) is str and
-                              settings.get_primitive_matrix() == 'auto')
-
-if _supercell_matrix is None:
-    _interface_mode = "phonopy_yaml"
-else:
-    _interface_mode = get_interface_mode(args)
-
-unitcell, optional_structure_info = read_crystal_structure(
-    filename=settings.get_cell_filename(),
-    interface_mode=_interface_mode,
-    chemical_symbols=settings.get_chemical_symbols())
-unitcell_filename = optional_structure_info[0]
-
-if unitcell is None:
-    str_list = unitcell_filename.split()
-    filename_srt = "\"%s\"" % str_list[0]
-    if len(str_list) > 1:
-        filename_srt += " " + " ".join(str_list[1:])
-    msg = "%s could not be found." % filename_srt
-    print_error_message("Crystal structure file of " + msg)
+cell_info = collect_cell_info(
+    supercell_matrix=settings.get_supercell_matrix(),
+    primitive_matrix=settings.get_primitive_matrix(),
+    interface_mode=get_interface_mode(args),
+    cell_filename=settings.get_cell_filename(),
+    chemical_symbols=settings.get_chemical_symbols(),
+    enforce_primitive_matrix_auto=is_band_auto,
+    symprec=args.symprec)
+if type(cell_info) is str:
+    print_error_message(cell_info)
     if log_level > 0:
         print_error()
     sys.exit(1)
-
-if _interface_mode == 'phonopy_yaml':
-    # interface_mode and supercell_matrix are overwritten.
-    interface_mode = optional_structure_info[1]
-    _supercell_matrix = optional_structure_info[2]
-else:
-    interface_mode = _interface_mode
-
-if _supercell_matrix is None:
-    if is_primitive_axes_auto:
-        supercell_matrix = np.eye(3, dtype='intc')
-    else:
-        msg = "Supercell matrix (DIM or --dim) is not found."
-        print_error_message(msg)
-        if log_level > 0:
-            print_error()
-        sys.exit(1)
-else:
-    supercell_matrix = _supercell_matrix
-
-if is_primitive_axes_auto:
-    primitive_matrix = guess_primitive_matrix(unitcell, symprec=args.symprec)
-else:
-    primitive_matrix = settings.get_primitive_matrix()
-
-# Check unit cell
-if np.linalg.det(unitcell.get_cell()) < 0.0:
-    print_error_message("Lattice vectors have to follow the right-hand rule.")
-    if log_level > 0:
-        print_error()
-    sys.exit(1)
+(unitcell, supercell_matrix, primitive_matrix, is_primitive_axes_auto,
+ unitcell_filename, optional_structure_info, interface_mode) = cell_info
 
 # Set magnetic moments
 magmoms = settings.get_magnetic_moments()
@@ -845,7 +795,7 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
             npoints = settings.get_band_points()
         band_paths = settings.get_band_paths()
 
-        if type(band_paths) is str and band_paths == 'auto':
+        if is_band_auto:
             print("SeeK-path is used to generate band paths.")
             print("About SeeK-path https://seekpath.readthedocs.io/ "
                   "(citation there-in)")

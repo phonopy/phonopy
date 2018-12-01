@@ -39,26 +39,21 @@ from phonopy.file_IO import parse_disp_yaml, write_FORCE_SETS
 
 
 def get_interface_mode(args):
-    if args.wien2k_mode:
-        return 'wien2k'
-    elif args.abinit_mode:
-        return 'abinit'
-    elif args.qe_mode:
-        return 'qe'
-    elif args.elk_mode:
-        return 'elk'
-    elif args.siesta_mode:
-        return 'siesta'
-    elif args.cp2k_mode:
-        return 'cp2k'
-    elif args.crystal_mode:
-        return 'crystal'
-    elif args.vasp_mode:
-        return 'vasp'
-    elif args.phonopy_yaml_mode:
-        return 'phonopy_yaml'
-    else:
-        return None
+    """Return calculator name
+
+    The calculator name is obtained from command option arguments where
+    argparse is used. The argument attribute name has to be
+    "{calculator}_mode". Then this method returns {calculator}.
+
+    """
+
+    calculator_list = ['wien2k', 'abinit', 'qe', 'elk', 'siesta', 'cp2k',
+                       'crystal', 'vasp']
+    for calculator in calculator_list:
+        mode = "%s_mode" % calculator
+        if mode in args and args.__dict__[mode]:
+            return calculator
+    return None
 
 
 def write_supercells_with_displacements(interface_mode,
@@ -112,7 +107,8 @@ def write_supercells_with_displacements(interface_mode,
 
 def read_crystal_structure(filename=None,
                            interface_mode=None,
-                           chemical_symbols=None):
+                           chemical_symbols=None,
+                           command_name="phonopy"):
     if filename is None:
         cell_filename = get_default_cell_filename(interface_mode)
     else:
@@ -121,31 +117,26 @@ def read_crystal_structure(filename=None,
     if interface_mode != "phonopy_yaml":
         if cell_filename is not None and not os.path.isfile(cell_filename):
             if filename is None:
-                return None, (cell_filename + " (default file name)",)
+                return None, (cell_filename, "(default file name)")
             else:
                 return None, (cell_filename,)
     else:
-        if filename is None:
-            cell_filename = None
-            for fname in ("phonopy_disp.yaml", "phonopy.yaml"):
-                if os.path.isfile(fname):
-                    cell_filename = fname
-                    break
-            if cell_filename is None:
-                msg = ("phonopy_disp.yaml or phonopy.yaml "
-                       "(default file name)")
-                return None, (msg,)
-        else:
-            if not os.path.isfile(cell_filename):
-                return None, (cell_filename,)
+        cell_filename = None
+        for fname in ("%s_disp.yaml" % command_name, "%s.yaml" % command_name):
+            if os.path.isfile(fname):
+                cell_filename = fname
+                break
+        if cell_filename is None:
+            return None, ("%s_disp.yaml" % command_name,
+                          "%s.yaml" % command_name, "")
 
     if interface_mode == 'phonopy_yaml':
         phpy = PhonopyYaml()
         phpy.read(cell_filename)
         cell = phpy.unitcell
-        if 'phonopy' in phpy.yaml:
-            if 'calculator' in phpy.yaml['phonopy']:
-                calculator = phpy.yaml['phonopy']['calculator']
+        if command_name in phpy.yaml:
+            if 'calculator' in phpy.yaml[command_name]:
+                calculator = phpy.yaml[command_name]['calculator']
             else:
                 calculator = None
             tmat = np.dot(np.linalg.inv(cell.get_cell().T),
