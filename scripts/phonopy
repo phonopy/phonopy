@@ -248,7 +248,7 @@ def print_settings(settings,
         else:
             print('')
     if run_mode == 'displacements':
-        print("Creating displacements")
+        print("Displacements creation mode")
         if not settings.get_is_plusminus_displacement() == 'auto':
             if settings.get_is_plusminus_displacement():
                 print("  Plus Minus displacement: full plus minus directions")
@@ -662,7 +662,7 @@ if run_mode == 'displacements':
         is_trigonal=settings.get_is_trigonal_displacement())
     displacements = phonon.get_displacements()
 
-    # From phonopy v1.14.4, displacements are written into phonopy_disp.yaml.
+    # From phonopy v1.15.0, displacements are written into phonopy_disp.yaml.
     # write_disp_yaml(displacements, supercell)
 
     # Write supercells with displacements
@@ -675,12 +675,11 @@ if run_mode == 'displacements':
                                         optional_structure_info)
 
     if log_level > 0:
-        print('')
         print("\"phonopy_disp.yaml\" and supercells have been created.")
         print('')
         print("NOTE:")
-        print("  From phonopy v1.14.4, displacements are written into "
-              "\"phonopy_disp.yaml\".")
+        print("  Displacements information is written into "
+              "\"phonopy_disp.yaml\" from v1.15.0.")
         print("  \"disp.yaml\" is still supported to read, but will be "
               "deprecated.")
 
