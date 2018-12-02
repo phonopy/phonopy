@@ -60,6 +60,7 @@ class Settings(object):
         self._frequency_conversion_factor = None
         self._frequency_scale_factor = None
         self._gv_delta_q = None
+        self._is_band_const_interval = False
         self._is_diagonal_displacement = True
         self._is_eigenvectors = False
         self._is_mesh_symmetry = True
@@ -176,6 +177,12 @@ class Settings(object):
 
     def get_group_velocity_delta_q(self):
         return self._gv_delta_q
+
+    def set_is_band_const_interval(self, is_band_const_interval):
+        self._is_band_const_interval = is_band_const_interval
+
+    def get_is_band_const_interval(self):
+        return self._is_band_const_interval
 
     def set_is_diagonal_displacement(self, is_diag):
         self._is_diagonal_displacement = is_diag
@@ -438,6 +445,10 @@ class ConfParser(object):
         if 'gv_delta_q' in arg_list:
             if self._args.gv_delta_q:
                 self._confs['gv_delta_q'] = self._args.gv_delta_q
+
+        if 'is_band_const_interval' in arg_list:
+            if self._args.is_band_const_interval:
+                self._confs['band_const_interval'] = '.true.'
 
         if 'is_eigenvectors' in arg_list:
             if self._args.is_eigenvectors:
@@ -714,6 +725,12 @@ class ConfParser(object):
             if conf_key == 'band_points':
                 self.set_parameter('band_points', int(confs['band_points']))
 
+            if conf_key == 'band_const_interval':
+                if confs['band_const_interval'].lower() == '.false.':
+                    self.set_parameter('is_band_const_interval', False)
+                elif confs['band_const_interval'].lower() == '.true.':
+                    self.set_parameter('is_band_const_interval', True)
+
             if conf_key == 'band':
                 bands = []
                 if confs['band'].strip().lower() == 'auto':
@@ -985,6 +1002,10 @@ class ConfParser(object):
         # This number includes end points
         if 'band_points' in params:
             self._settings.set_band_points(params['band_points'])
+
+        if 'is_band_const_interval' in params:
+            self._settings.set_is_band_const_interval(
+                params['is_band_const_interval'])
 
         # Use ALM to generating force constants
         if 'alm' in params:

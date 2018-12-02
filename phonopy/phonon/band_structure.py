@@ -56,8 +56,13 @@ def estimate_band_connection(prev_eigvecs, eigvecs, prev_band_order):
     return band_order
 
 
-def get_band_qpoints(band_paths, npoints):
+def get_band_qpoints(band_paths, npoints, rec_lattice=None):
     """Generate qpoints for band structure path
+
+    Note
+    ----
+
+    Behavior changes with and without rec_lattice given.
 
     Parameters
     ----------
@@ -71,22 +76,32 @@ def get_band_qpoints(band_paths, npoints):
              [[0.5, 0.25, 0.75], [0, 0, 0]]]
 
     npoints: int
-        Number of q-points in each path including end points
+        Number of q-points in each path including end points.
+
+    rec_lattice: array_like, optional
+        When given, q-points are sampled in a similar interval. The longest
+        path length divided by npoints including end points is used as the
+        reference interval. Reciprocal basis vectors given in column vectors.
+        dtype='double'
+        shape=(3, 3)
 
     """
 
+    npts = _get_npts(band_paths, npoints, rec_lattice)
     qpoints_of_paths = []
+    c = 0
     for band_path in band_paths:
         nd = len(band_path)
         for i in range(nd - 1):
-            delta = np.subtract(band_path[i + 1], band_path[i]) / (npoints - 1)
-            qpoints = [delta * j for j in range(npoints)]
+            delta = np.subtract(band_path[i + 1], band_path[i]) / (npts[c] - 1)
+            qpoints = [delta * j for j in range(npts[c])]
             qpoints_of_paths.append(np.array(qpoints) + band_path[i])
+            c += 1
 
     return qpoints_of_paths
 
 
-def get_band_qpoints_by_seekpath(primitive, npoints):
+def get_band_qpoints_by_seekpath(primitive, npoints, is_const_interval=False):
     """q-points along BZ high symmetry paths are generated using seekpath.
 
     Parameters
@@ -95,6 +110,10 @@ def get_band_qpoints_by_seekpath(primitive, npoints):
         Primitive cell.
     npoints : int
         Number of q-points sampled along a path including end points.
+    is_const_interval : bool, optional
+        When True, q-points are sampled in a similar interval. The longest
+        path length divided by npoints including end points is used as the
+        reference interval. Default is False.
 
     Returns
     -------
@@ -115,18 +134,51 @@ def get_band_qpoints_by_seekpath(primitive, npoints):
     except ImportError:
         raise ImportError("You need to install seekpath.")
 
-    band_path = seekpath.get_path(primitive)
+    band_path = seekpath.get_path(primitive.to_tuple())
     point_coords = band_path['point_coords']
     qpoints_of_paths = []
+    if is_const_interval:
+        reclat = np.linalg.inv(primitive.get_cell())
+    else:
+        reclat = None
+    band_paths = []
     for path in band_path['path']:
         q_s = np.array(point_coords[path[0]])
         q_e = np.array(point_coords[path[1]])
-        band = [q_s + (q_e - q_s) / (npoints - 1) * i for i in range(npoints)]
+        band_paths.append([q_s, q_e])
+    npts = _get_npts(band_paths, npoints, reclat)
+
+    for c, path in enumerate(band_path['path']):
+        q_s = np.array(point_coords[path[0]])
+        q_e = np.array(point_coords[path[1]])
+        band = [q_s + (q_e - q_s) / (npts[c] - 1) * i for i in range(npts[c])]
         qpoints_of_paths.append(band)
 
     labels, path_connections = _get_labels(band_path['path'])
 
     return qpoints_of_paths, labels, path_connections
+
+
+def _get_npts(band_paths, npoints, rec_lattice):
+    if rec_lattice is not None:
+        path_lengths = []
+        for band_path in band_paths:
+            nd = len(band_path)
+            for i in range(nd - 1):
+                vector = np.subtract(band_path[i + 1], band_path[i])
+                length = np.linalg.norm(np.dot(rec_lattice, vector))
+                path_lengths.append(length)
+        max_length = max(path_lengths)
+        npts = [np.rint(l / max_length * npoints).astype(int)
+                for l in path_lengths]
+    else:
+        npts = [npoints, ] * np.sum([len(paths) for paths in band_paths])
+
+    for i, npt in enumerate(npts):
+        if npt < 2:
+            npts[i] = 2
+
+    return npts
 
 
 def _get_labels(pairs_of_symbols):
@@ -308,8 +360,8 @@ class BandStructure(object):
         else:
             connections = path_connections
 
-        max_freq = np.max(self._frequencies)
-        max_dist = np.max(self._distances)
+        max_freq = max([np.max(fq) for fq in self._frequencies])
+        max_dist = self._distances[-1][-1]
         scale = max_freq / max_dist * 1.5
         distances = [d * scale for d in self._distances]
 

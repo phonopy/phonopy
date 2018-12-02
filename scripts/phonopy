@@ -801,10 +801,16 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                   "(citation there-in)")
             is_legacy = False
             bands, labels, path_connections = get_band_qpoints_by_seekpath(
-                primitive.to_tuple(), npoints)
+                primitive, npoints,
+                is_const_interval=settings.get_is_band_const_interval())
         else:
             is_legacy = True
-            bands = get_band_qpoints(band_paths, npoints)
+            if settings.get_is_band_const_interval():
+                reclat = np.linalg.inv(primitive.get_cell())
+                bands = get_band_qpoints(band_paths, npoints,
+                                         rec_lattice=reclat)
+            else:
+                bands = get_band_qpoints(band_paths, npoints)
             path_connections = []
             for paths in band_paths:
                 path_connections += [True, ] * (len(paths) - 2)

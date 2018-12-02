@@ -98,6 +98,7 @@ def get_parser():
         frequency_scale_factor=None,
         gv_delta_q=None,
         is_band_connection=False,
+        is_band_const_interval=False,
         is_check_symmetry=False,
         is_displacement=False,
         is_dos_mode=False,
@@ -181,6 +182,10 @@ def get_parser():
     parser.add_argument(
         "--band-connection", dest="is_band_connection", action="store_true",
         help="Treat band crossings")
+    parser.add_argument(
+        "--band-const-interval", dest="is_band_const_interval",
+        action="store_true",
+        help="Band paths are sampled with similar interval.")
     parser.add_argument(
         "--band-labels", nargs='+', dest="band_labels",
         help="Show labels at band segments")
