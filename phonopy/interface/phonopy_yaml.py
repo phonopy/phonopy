@@ -131,7 +131,9 @@ class PhonopyYaml(object):
         if self._configuration is not None:
             lines.append("  configuration:")
             for key in self._configuration:
-                val = self._configuration[key].replace('\\', '\\\\')
+                val = self._configuration[key]
+                if type(val) is str:
+                    val = val.replace('\\', '\\\\')
                 lines.append("    %s: \"%s\"" % (key, val))
             lines.append("")
 

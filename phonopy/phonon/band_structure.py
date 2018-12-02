@@ -141,19 +141,14 @@ def get_band_qpoints_by_seekpath(primitive, npoints, is_const_interval=False):
         reclat = np.linalg.inv(primitive.get_cell())
     else:
         reclat = None
-    band_paths = []
-    for path in band_path['path']:
-        q_s = np.array(point_coords[path[0]])
-        q_e = np.array(point_coords[path[1]])
-        band_paths.append([q_s, q_e])
+    band_paths = [[point_coords[path[0]], point_coords[path[1]]]
+                  for path in band_path['path']]
     npts = _get_npts(band_paths, npoints, reclat)
-
     for c, path in enumerate(band_path['path']):
         q_s = np.array(point_coords[path[0]])
         q_e = np.array(point_coords[path[1]])
         band = [q_s + (q_e - q_s) / (npts[c] - 1) * i for i in range(npts[c])]
         qpoints_of_paths.append(band)
-
     labels, path_connections = _get_labels(band_path['path'])
 
     return qpoints_of_paths, labels, path_connections
