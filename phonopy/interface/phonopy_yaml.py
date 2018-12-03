@@ -40,9 +40,8 @@ except ImportError:
 
 try:
     from yaml import CLoader as Loader
-    from yaml import CDumper as Dumper
 except ImportError:
-    from yaml import Loader, Dumper
+    from yaml import Loader
 
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.file_IO import get_disp_yaml_lines
@@ -88,6 +87,8 @@ class PhonopyYaml(object):
         self._nac_params = None
         self._version = None
 
+        self._command_name = "phonopy"
+
     def read(self, filename):
         with open(filename) as infile:
             self._load(infile)
@@ -100,14 +101,16 @@ class PhonopyYaml(object):
         self._supercell_matrix = phonopy.supercell_matrix
         self._symmetry = phonopy.symmetry
         self._primitive_matrix = phonopy.primitive_matrix
-        self._force_constants = phonopy.force_constants
-        self._displacements = phonopy.displacements
         self._s2p_map = self.primitive.s2p_map
-        u2s_map = self.supercell.get_unitcell_to_supercell_map()
-        u2u_map = self.supercell.get_unitcell_to_unitcell_map()
-        s2u_map = self.supercell.get_supercell_to_unitcell_map()
+        u2s_map = self.supercell.u2s_map
+        u2u_map = self.supercell.u2u_map
+        s2u_map = self.supercell.s2u_map
         self._u2p_map = [u2u_map[i] for i in (s2u_map[self._s2p_map])[u2s_map]]
-        self._nac_params = phonopy.get_nac_params()
+        self._nac_params = phonopy.nac_params
+
+        if self._command_name == "phonopy":
+            self._force_constants = phonopy.force_constants
+            self._displacements = phonopy.displacements
 
     def get_yaml_lines(self):
         lines = []
@@ -122,7 +125,7 @@ class PhonopyYaml(object):
             dielectric = self._nac_params['dielectric']
 
         if self._version:
-            lines.append("phonopy:")
+            lines.append("%s:" % self._command_name)
             lines.append("  version: %s" % self._version)
         if self._calculator:
             lines.append("  calculator: %s" % self._calculator)
@@ -143,7 +146,8 @@ class PhonopyYaml(object):
         if units is not None:
             if units['length_unit'] is not None:
                 lines.append("  length: \"%s\"" % units['length_unit'])
-            if units['force_constants_unit'] is not None:
+            if (self._command_name == "phonopy" and
+                units['force_constants_unit'] is not None):
                 lines.append("  force_constants: \"%s\"" %
                              units['force_constants_unit'])
         lines.append("")
@@ -167,8 +171,7 @@ class PhonopyYaml(object):
             lines.append("")
 
         if self._show_displacements:
-            lines += get_disp_yaml_lines(self._displacements, self.supercell)
-            lines.append("")
+            lines += self._displacements_yaml_lines()
 
         if self._primitive_matrix is not None:
             lines.append("primitive_matrix:")
@@ -226,15 +229,32 @@ class PhonopyYaml(object):
                 lines.append("  - [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
             lines.append("")
 
-        if self._show_force_constants and self._force_constants is not None:
-            lines.append("force_constants:")
-            natom = self.supercell.get_number_of_atoms()
-            for (i, j) in list(np.ndindex((natom, natom))):
-                lines.append("- # (%d, %d)" % (i + 1, j + 1))
-                for v in self._force_constants[i, j]:
-                    lines.append("  - [ %21.15f, %21.15f, %21.15f ]" %
-                                 tuple(v))
+        if self._show_force_constants:
+            lines += self._force_constants_yaml_lines()
 
+        return lines
+
+    def _displacements_yaml_lines(self):
+        lines = get_disp_yaml_lines(self._displacements, self.supercell)
+        lines.append("")
+        return lines
+
+    def _force_constants_yaml_lines(self):
+        if self._force_constants is None:
+            return []
+
+        shape = self._force_constants.shape[:2]
+        lines = ["force_constants:", ]
+        if shape[0] == shape[1]:
+            lines.append("  format: \"full\"")
+        else:
+            lines.append("  format: \"compact\"")
+        lines.append("  shape: [ %d, %d ]" % shape)
+        lines.append("  elements:")
+        for (i, j) in list(np.ndindex(shape)):
+            lines.append("  - # (%d, %d)" % (i + 1, j + 1))
+            for v in self._force_constants[i, j]:
+                lines.append("    - [ %21.15f, %21.15f, %21.15f ]" % tuple(v))
         return lines
 
     def __str__(self):
