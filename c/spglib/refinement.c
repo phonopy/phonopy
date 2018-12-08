@@ -39,8 +39,10 @@
 #include <stdlib.h>
 #include "refinement.h"
 #include "cell.h"
+#include "hall_symbol.h"
 #include "mathfunc.h"
 #include "pointgroup.h"
+#include "spacegroup.h"
 #include "spg_database.h"
 #include "site_symmetry.h"
 #include "symmetry.h"
@@ -139,11 +141,7 @@ get_symmetry_in_original_cell(SPGCONST int t_mat[3][3],
 static Symmetry *
 copy_symmetry_upon_lattice_points(const VecDBL *pure_trans,
                                   const Symmetry *t_sym);
-static void find_similar_bravais_lattice(double bravais_lattice[3][3],
-                                         double origin_shift[3],
-                                         const Symmetry *symmetry,
-                                         SPGCONST double std_lattice[3][3],
-                                         SPGCONST double orig_lattice[3][3]);
+static int find_similar_bravais_lattice(Spacegroup *spacegroup);
 static void measure_rigid_rotation(double rotation[3][3],
                                    SPGCONST double bravais_lattice[3][3],
                                    SPGCONST double std_lattice[3][3]);
@@ -165,7 +163,7 @@ ref_get_exact_structure_and_symmetry(Spacegroup * spacegroup,
                                      const double symprec)
 {
   int *std_mapping_to_primitive, *wyckoffs, *equivalent_atoms;
-  double std_lattice[3][3], rotation[3][3];
+  double rotation[3][3];
   Cell *bravais;
   Symmetry *symmetry;
   ExactStructure *exact_structure;
@@ -177,21 +175,18 @@ ref_get_exact_structure_and_symmetry(Spacegroup * spacegroup,
   symmetry = NULL;
   exact_structure = NULL;
 
+  /* spacegroup->bravais_lattice is overwirten. */
+  /* spacegroup->origin_shift is overwirten. */
+  if (!find_similar_bravais_lattice(spacegroup)) {
+    goto err;
+  }
+
   if ((symmetry = get_refined_symmetry_operations(cell,
                                                   primitive,
                                                   spacegroup,
                                                   symprec)) == NULL) {
     goto err;
   }
-
-  get_conventional_lattice(std_lattice, spacegroup);
-  /* spacegroup->bravais_lattice is overwirten. */
-  /* spacegroup->origin_shift is overwirten. */
-  find_similar_bravais_lattice(spacegroup->bravais_lattice,
-                               spacegroup->origin_shift,
-                               symmetry,
-                               std_lattice,
-                               cell->lattice);
 
   if ((wyckoffs = (int*) malloc(sizeof(int) * cell->size)) == NULL) {
     warning_print("spglib: Memory could not be allocated.");
@@ -1334,45 +1329,42 @@ copy_symmetry_upon_lattice_points(const VecDBL *pure_trans,
   return symmetry;
 }
 
-static void find_similar_bravais_lattice(double bravais_lattice[3][3],
-                                         double origin_shift[3],
-                                         const Symmetry *symmetry,
-                                         SPGCONST double std_lattice[3][3],
-                                         SPGCONST double orig_lattice[3][3])
+static int find_similar_bravais_lattice(Spacegroup *spacegroup)
 {
   int i, j, k, rot_i;
+  Symmetry *conv_sym;
   double min_length2, length2, diff;
-  double tmat[3][3], inv_tmat[3][3], tmp_mat[3][3];
-  double brv_dot_tmat[3][3], rot_lat[3][3];
-  double tmp_vec[3], p[3], shortest_p[3];
+  double tmp_mat[3][3], std_lattice[3][3];
+  double rot_lat[3][3];
+  double p[3], shortest_p[3], tmp_vec[3];
 
-  /* (a_s,b_s,c_s)^-1 */
-  mat_inverse_matrix_d3(tmp_mat, bravais_lattice, 0);
-  /* P = (a_s,b_s,c_s)^-1(a, b, c): tmat */
-  mat_multiply_matrix_d3(tmat, tmp_mat, orig_lattice);
-  /* P^-1 */
-  mat_inverse_matrix_d3(inv_tmat, tmat, 0);
-  /* (a_s,b_s,c_s)P */
-  mat_multiply_matrix_d3(brv_dot_tmat, bravais_lattice, tmat);
+  conv_sym = NULL;
+
+  if ((conv_sym = spgdb_get_spacegroup_operations(spacegroup->hall_number))
+      == NULL) {
+    return 0;
+  }
+
+  get_conventional_lattice(std_lattice, spacegroup);
 
   min_length2 = 0;
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {
-      min_length2 += bravais_lattice[i][j] * bravais_lattice[i][j];
+      min_length2 += spacegroup->bravais_lattice[i][j]
+        * spacegroup->bravais_lattice[i][j];
     }
   }
 
   /* For no best match */
   rot_i = -1;
 
-  for (i = 0; i < symmetry->size; i++) {
-    if (mat_get_determinant_i3(symmetry->rot[i]) < 0) {
+  for (i = 0; i < conv_sym->size; i++) {
+    if (mat_get_determinant_i3(conv_sym->rot[i]) < 0) {
       continue;
     }
 
-    /* R_s = PRP-1, (a_s,b_s,c_s) PRP^-1 */
-    mat_multiply_matrix_di3(tmp_mat, brv_dot_tmat, symmetry->rot[i]);
-    mat_multiply_matrix_d3(tmp_mat, tmp_mat, inv_tmat);
+    /* (a_s', b_s', c_s') = (a_s,b_s,c_s) Rs */
+    mat_multiply_matrix_di3(tmp_mat, spacegroup->bravais_lattice, conv_sym->rot[i]);
     length2 = 0;
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++) {
@@ -1387,42 +1379,53 @@ static void find_similar_bravais_lattice(double bravais_lattice[3][3],
     }
   }
 
+  /* Given a symmetry operation (W, w), Which is that for */
+  /* standardized system, i.e., (a_s, b_s, c_s) and x_s = (P, p)x, */
+  /* we view this as change of basis, i.e., inverse of it. */
+  /* (W, w)^-1 = (W^-1, -W^-1 w) because */
+  /* (W, w)x = x~ -> W^-1 x~ - W^-1 w = (W^-1, -W^-1 w)x~ = x. */
+  /* */
+  /* We can check this geometrically. */
+  /* Basis vectors are roatated and its origin is shifted by W and w. */
+  /* (a_s, b_s, c_s) W = (a_s', b_s', c_s') */
+  /* The shift is measured in the coordinated before rotation. */
+  /* Therefore */
+  /* (a_s, b_s, c_s) w = (a_s', b_s', c_s') w' -> w' = W^-1 w. */
+  /* From the definition of transformation, we have (W^-1, -W^-1 w). */
+  /* From x_s = (P, p) x and x_s' = (W^-1, -W^-1 w) x_s. */
+  /* Finally, */
+  /* (W^-1, -W^-1 w)(P, p) x = W^-1Px+W^-1p-W^-1w = (W^-1P, W^-1p-W^-1w) */
   min_length2 = 3;
   if (rot_i > -1) {
-    mat_copy_matrix_d3(bravais_lattice, rot_lat);
-
-    /* PR */
-    mat_multiply_matrix_di3(tmp_mat, tmat, symmetry->rot[rot_i]);
-    /* R_s = PRP^-1 */
-    mat_multiply_matrix_d3(tmp_mat, tmp_mat, inv_tmat);
-    /* R_s^-1 = (PRP^-1)^-1 */
-    mat_inverse_matrix_d3(tmp_mat, tmp_mat, 0);
-
-    for (i = 0; i < symmetry->size; i++) {
-      if (!mat_check_identity_matrix_i3(symmetry->rot[i],
-                                        symmetry->rot[rot_i])) {
+    for (i = 0; i < conv_sym->size; i++) {
+      if (!mat_check_identity_matrix_i3(conv_sym->rot[i],
+                                        conv_sym->rot[rot_i])) {
         continue;
       }
-      mat_copy_vector_d3(p, origin_shift);
-      /* t_s = Pt */
-      mat_multiply_matrix_vector_d3(tmp_vec, tmat, symmetry->trans[i]);
-      /* R_s^-1 t_s */
-      mat_multiply_matrix_vector_d3(tmp_vec, tmp_mat, tmp_vec);
+      mat_cast_matrix_3i_to_3d(tmp_mat, conv_sym->rot[i]);
+      mat_inverse_matrix_d3(tmp_mat, tmp_mat, 0);
+      mat_multiply_matrix_vector_d3(p, tmp_mat, spacegroup->origin_shift);
+      mat_multiply_matrix_vector_d3(tmp_vec, tmp_mat, conv_sym->trans[i]);
       for (j = 0; j < 3; j++) {
-        p[j] += tmp_vec[j];
+        p[j] -= tmp_vec[j];
         p[j] -= mat_Nint(p[j]);
       }
       length2 = mat_norm_squared_d3(p);
       if (length2 < min_length2) {
         min_length2 = length2;
         for (j = 0; j < 3; j++) {
-          p[j] = mat_Dmod1(p[j]);
+          p[j] = mat_Dmod1(p[j] + 1e-8) - 1e-8;
         }
         mat_copy_vector_d3(shortest_p, p);
       }
     }
-    mat_copy_vector_d3(origin_shift, shortest_p);
+    mat_copy_vector_d3(spacegroup->origin_shift, shortest_p);
+    mat_copy_matrix_d3(spacegroup->bravais_lattice, rot_lat);
   }
+
+  sym_free_symmetry(conv_sym);
+  conv_sym = NULL;
+  return 1;
 }
 
 static void measure_rigid_rotation(double rotation[3][3],

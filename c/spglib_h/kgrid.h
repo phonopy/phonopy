@@ -72,10 +72,12 @@
 
 void kgd_get_all_grid_addresses(int grid_address[][3], const int mesh[3]);
 int kgd_get_grid_point_double_mesh(const int address_double[3],
-				   const int mesh[3]);
+                                   const int mesh[3]);
+long kgd_get_long_grid_point_double_mesh(const int address_double[3],
+                                         const int mesh[3]);
 void kgd_get_grid_address_double_mesh(int address_double[3],
-				      const int address[3],
-				      const int mesh[3],
-				      const int is_shift[3]);
+                                      const int address[3],
+                                      const int mesh[3],
+                                      const int is_shift[3]);
 
 #endif

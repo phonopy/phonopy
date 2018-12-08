@@ -38,40 +38,70 @@
 #include "mathfunc.h"
 
 int kpt_get_irreducible_reciprocal_mesh(int grid_address[][3],
-					int map[],
-					const int mesh[3],
-					const int is_shift[3],
-					const MatINT *rot_reciprocal);
+                                        int ir_mapping_table[],
+                                        const int mesh[3],
+                                        const int is_shift[3],
+                                        const MatINT *rot_reciprocal);
+long kpt_get_long_irreducible_reciprocal_mesh(int grid_address[][3],
+                                              long ir_mapping_table[],
+                                              const int mesh[3],
+                                              const int is_shift[3],
+                                              const MatINT *rot_reciprocal);
 int kpt_get_stabilized_reciprocal_mesh(int grid_address[][3],
-				       int map[],
-				       const int mesh[3],
-				       const int is_shift[3],
-				       const int is_time_reversal,
-				       const MatINT * rotations,
-				       const int num_q,
-				       SPGCONST double qpoints[][3]);
+                                       int ir_mapping_table[],
+                                       const int mesh[3],
+                                       const int is_shift[3],
+                                       const int is_time_reversal,
+                                       const MatINT * rotations,
+                                       const int num_q,
+                                       SPGCONST double qpoints[][3]);
+long kpt_get_long_stabilized_reciprocal_mesh(int grid_address[][3],
+                                             long ir_mapping_table[],
+                                             const int mesh[3],
+                                             const int is_shift[3],
+                                             const int is_time_reversal,
+                                             const MatINT * rotations,
+                                             const int num_q,
+                                             SPGCONST double qpoints[][3]);
 void kpt_get_grid_points_by_rotations(int rot_grid_points[],
-				      const int address_orig[3],
-				      const MatINT * rot_reciprocal,
-				      const int mesh[3],
-				      const int is_shift[3]);
+                                      const int address_orig[3],
+                                      const MatINT * rot_reciprocal,
+                                      const int mesh[3],
+                                      const int is_shift[3]);
+void kpt_get_long_grid_points_by_rotations(long rot_grid_points[],
+                                           const int address_orig[3],
+                                           const MatINT * rot_reciprocal,
+                                           const int mesh[3],
+                                           const int is_shift[3]);
 void kpt_get_BZ_grid_points_by_rotations(int rot_grid_points[],
-					 const int address_orig[3],
-					 const MatINT * rot_reciprocal,
-					 const int mesh[3],
-					 const int is_shift[3],
-					 const int bz_map[]);
+                                         const int address_orig[3],
+                                         const MatINT * rot_reciprocal,
+                                         const int mesh[3],
+                                         const int is_shift[3],
+                                         const int bz_map[]);
+void kpt_get_long_BZ_grid_points_by_rotations(long rot_grid_points[],
+                                              const int address_orig[3],
+                                              const MatINT * rot_reciprocal,
+                                              const int mesh[3],
+                                              const int is_shift[3],
+                                              const long bz_map[]);
 int kpt_relocate_BZ_grid_address(int bz_grid_address[][3],
-				 int bz_map[],
-				 SPGCONST int grid_address[][3],
-				 const int mesh[3],
-				 SPGCONST double rec_lattice[3][3],
-				 const int is_shift[3]);
+                                 int bz_map[],
+                                 SPGCONST int grid_address[][3],
+                                 const int mesh[3],
+                                 SPGCONST double rec_lattice[3][3],
+                                 const int is_shift[3]);
+long kpt_relocate_long_BZ_grid_address(int bz_grid_address[][3],
+                                       long bz_map[],
+                                       SPGCONST int grid_address[][3],
+                                       const int mesh[3],
+                                       SPGCONST double rec_lattice[3][3],
+                                       const int is_shift[3]);
 MatINT *kpt_get_point_group_reciprocal(const MatINT * rotations,
-				       const int is_time_reversal);
+                                       const int is_time_reversal);
 MatINT *kpt_get_point_group_reciprocal_with_q(const MatINT * rot_reciprocal,
-					      const double symprec,
-					      const int num_q,
-					      SPGCONST double qpoints[][3]);
+                                              const double symprec,
+                                              const int num_q,
+                                              SPGCONST double qpoints[][3]);
 
 #endif
