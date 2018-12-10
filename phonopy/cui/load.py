@@ -32,16 +32,9 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import os
-import numpy as np
 from phonopy.api_phonopy import Phonopy
-from phonopy.structure.cells import (guess_primitive_matrix,
-                                     get_primitive_matrix_by_centring)
-from phonopy.interface import (read_crystal_structure,
-                               get_default_physical_units)
-from phonopy.file_IO import (parse_BORN, parse_FORCE_SETS,
-                             read_force_constants_hdf5,
-                             parse_FORCE_CONSTANTS)
+from phonopy.interface import get_default_physical_units
+import phonopy.cui.load_helper as load_helper
 
 
 def load(supercell_matrix=None,
@@ -151,14 +144,14 @@ def load(supercell_matrix=None,
 
     """
 
-    cell, smat, pmat = _get_cell_settings(unitcell_filename,
-                                          supercell_filename,
-                                          unitcell,
-                                          supercell,
-                                          calculator,
-                                          primitive_matrix,
-                                          supercell_matrix,
-                                          symprec)
+    cell, smat, pmat = load_helper.get_cell_settings(unitcell_filename,
+                                                     supercell_filename,
+                                                     unitcell,
+                                                     supercell,
+                                                     calculator,
+                                                     primitive_matrix,
+                                                     supercell_matrix,
+                                                     symprec)
 
     # units keywords: factor, nac_factor, distance_to_A
     units = get_default_physical_units(calculator)
@@ -174,142 +167,13 @@ def load(supercell_matrix=None,
                      symprec=symprec,
                      is_symmetry=is_symmetry,
                      log_level=log_level)
-    _set_nac_params(phonon,
-                    nac_params,
-                    born_filename,
-                    is_nac,
-                    units['nac_factor'])
-    _set_force_constants(phonon,
-                         force_constants_filename,
-                         force_sets_filename,
-                         use_alm)
+    load_helper.set_nac_params(phonon,
+                               nac_params,
+                               born_filename,
+                               is_nac,
+                               units['nac_factor'])
+    load_helper.set_force_constants(phonon,
+                                    force_constants_filename,
+                                    force_sets_filename,
+                                    use_alm)
     return phonon
-
-
-def _get_cell_settings(unitcell_filename,
-                       supercell_filename,
-                       unitcell,
-                       supercell,
-                       calculator,
-                       pmat,
-                       smat,
-                       symprec):
-    if unitcell_filename is not None:
-        cell, filename = read_crystal_structure(
-            filename=unitcell_filename, interface_mode=calculator)
-        _smat = _get_supercell_matrix(smat)
-        _pmat = pmat
-    elif supercell_filename is not None:
-        cell, filename = read_crystal_structure(
-            filename=supercell_filename, interface_mode=calculator)
-        _smat = np.eye(3, dtype='intc', order='C')
-        if pmat is None:
-            _pmat = 'auto'
-    elif unitcell is not None:
-        cell = unitcell
-    elif supercell is not None:
-        cell = supercell
-        _smat = np.eye(3, dtype='intc', order='C')
-        if pmat is None:
-            _pmat = 'auto'
-    else:
-        raise RuntimeError("Cell has to be specified.")
-
-    if cell is None:
-        msg = "'%s' could not be found." % filename
-        raise FileNotFoundError(msg)
-
-    _pmat = _get_primitive_matrix(_pmat, cell, symprec)
-
-    return cell, _smat, _pmat
-
-
-def _get_supercell_matrix(smat):
-    if smat is None:
-        _smat = np.eye(3, dtype='intc', order='C')
-    elif len(np.ravel(smat)) == 3:
-        _smat = np.diag(smat)
-    elif len(np.ravel(smat)) == 9:
-        _smat = np.reshape(smat, (3, 3))
-    else:
-        msg = "supercell_matrix shape has to be (3,) or (3, 3)"
-        raise RuntimeError(msg)
-    return _smat
-
-
-def _get_primitive_matrix(pmat, unitcell, symprec):
-    if type(pmat) is str and pmat in ('F', 'I', 'A', 'C', 'R', 'auto'):
-        if pmat == 'auto':
-            _pmat = guess_primitive_matrix(unitcell, symprec=symprec)
-        else:
-            _pmat = get_primitive_matrix_by_centring(pmat)
-    elif pmat is None:
-        _pmat = None
-    elif len(np.ravel(pmat)) == 9:
-        matrix = np.reshape(pmat, (3, 3))
-        if matrix.dtype.kind in ('i', 'u', 'f'):
-            det = np.linalg.det(matrix)
-            if symprec < det and det < 1 + symprec:
-                _pmat = matrix
-            else:
-                msg = ("Determinant of primitive_matrix has to be larger "
-                       "than 0")
-                raise RuntimeError(msg)
-    else:
-        msg = ("primitive_matrix has to be a 3x3 matrix, None, 'auto', "
-               "'F', 'I', 'A', 'C', or 'R'")
-        raise RuntimeError(msg)
-
-    return _pmat
-
-
-def _set_nac_params(phonon, nac_params, born_filename, is_nac, nac_factor):
-    if nac_params is not None:
-        _nac_params = nac_params
-    elif born_filename is not None:
-        _nac_params = parse_BORN(phonon.primitive, filename=born_filename)
-    elif is_nac is True:
-        if os.path.isfile("BORN"):
-            _nac_params = parse_BORN(phonon.primitive, filename="BORN")
-        else:
-            raise RuntimeError("BORN file doesn't exist at current directory.")
-    else:
-        _nac_params = None
-
-    if _nac_params is not None:
-        if _nac_params['factor'] is None:
-            _nac_params['factor'] = nac_factor
-        phonon.set_nac_params(_nac_params)
-
-
-def _set_force_constants(phonon,
-                         force_constants_filename,
-                         force_sets_filename,
-                         use_alm):
-    natom = phonon.supercell.get_number_of_atoms()
-
-    if force_constants_filename is not None:
-        dot_split = force_constants_filename.split('.')
-        p2s_map = phonon.primitive.get_primitive_to_supercell_map()
-        if len(dot_split) > 1 and dot_split[-1] == 'hdf5':
-            fc = read_force_constants_hdf5(filename=force_constants_filename,
-                                           p2s_map=p2s_map)
-        else:
-            fc = parse_FORCE_CONSTANTS(filename=force_constants_filename,
-                                       p2s_map=p2s_map)
-        phonon.set_force_constants(fc)
-    elif force_sets_filename is not None:
-        force_sets = parse_FORCE_SETS(natom=natom,
-                                      filename=force_sets_filename)
-        if force_sets:
-            phonon.set_displacement_dataset(force_sets)
-            phonon.produce_force_constants(
-                calculate_full_force_constants=False,
-                use_alm=use_alm)
-    elif os.path.isfile("FORCE_SETS"):
-        force_sets = parse_FORCE_SETS(natom=natom)
-        if force_sets:
-            phonon.set_displacement_dataset(force_sets)
-            phonon.produce_force_constants(
-                calculate_full_force_constants=False,
-                use_alm=use_alm)
