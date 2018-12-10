@@ -50,7 +50,8 @@ from phonopy.harmonic.force_constants import (
     set_tensor_symmetry_PJ)
 from phonopy.interface.alm import get_fc2 as get_alm_fc2
 from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
-from phonopy.phonon.band_structure import BandStructure
+from phonopy.phonon.band_structure import (BandStructure,
+                                           get_band_qpoints_by_seekpath)
 from phonopy.phonon.thermal_properties import ThermalProperties
 from phonopy.phonon.mesh import Mesh, IterMesh
 from phonopy.units import VaspToTHz
@@ -669,6 +670,14 @@ class Phonopy(object):
                 band.get_distances(),
                 band.get_frequencies(),
                 band.get_eigenvectors())
+
+    def auto_plot_band_structure(self, npoints=101):
+        bands, labels, path_connections = get_band_qpoints_by_seekpath(
+            self._primitive, npoints, is_const_interval=True)
+        self.set_band_structure(bands)
+        return self.plot_band_structure(labels=labels,
+                                        path_connections=path_connections,
+                                        is_legacy=False)
 
     def plot_band_structure(self,
                             labels=None,
