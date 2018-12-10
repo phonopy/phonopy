@@ -40,7 +40,7 @@ import phonopy.cui.load_helper as load_helper
 def load(supercell_matrix=None,
          primitive_matrix=None,
          is_nac=False,
-         calculator="vasp",
+         calculator=None,
          unitcell=None,
          supercell=None,
          nac_params=None,
@@ -86,7 +86,7 @@ def load(supercell_matrix=None,
         The priority for NAC is nac_params > born_filename > is_nac ('BORN')
     calculator : str, optional.
         Calculator used for computing forces. This is used to switch the set
-        of physical units. Default is 'vasp'.
+        of physical units. Default is None, which is equivalent to "vasp".
     unitcell : PhonopyAtoms, optional
         Input unit cell. Default is None. The priority for cell is
         unitcell_filename > supercell_filename > unitcell > supercell.
@@ -144,14 +144,15 @@ def load(supercell_matrix=None,
 
     """
 
-    cell, smat, pmat = load_helper.get_cell_settings(unitcell_filename,
-                                                     supercell_filename,
-                                                     unitcell,
-                                                     supercell,
-                                                     calculator,
-                                                     primitive_matrix,
-                                                     supercell_matrix,
-                                                     symprec)
+    cell, smat, pmat = load_helper.get_cell_settings(
+        supercell_matrix=supercell_matrix,
+        primitive_matrix=primitive_matrix,
+        unitcell=unitcell,
+        supercell=supercell,
+        unitcell_filename=unitcell_filename,
+        supercell_filename=supercell_filename,
+        calculator=calculator,
+        symprec=symprec)
 
     # units keywords: factor, nac_factor, distance_to_A
     units = get_default_physical_units(calculator)
@@ -172,8 +173,9 @@ def load(supercell_matrix=None,
                                born_filename,
                                is_nac,
                                units['nac_factor'])
-    load_helper.set_force_constants(phonon,
-                                    force_constants_filename,
-                                    force_sets_filename,
-                                    use_alm)
+    load_helper.set_force_constants(
+        phonon,
+        force_constants_filename=force_constants_filename,
+        force_sets_filename=force_sets_filename,
+        use_alm=use_alm)
     return phonon

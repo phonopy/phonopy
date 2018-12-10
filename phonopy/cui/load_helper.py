@@ -42,31 +42,31 @@ from phonopy.file_IO import (parse_BORN, parse_FORCE_SETS,
                              parse_FORCE_CONSTANTS)
 
 
-def get_cell_settings(unitcell_filename,
-                      supercell_filename,
-                      unitcell,
-                      supercell,
-                      calculator,
-                      pmat,
-                      smat,
-                      symprec):
+def get_cell_settings(supercell_matrix=None,
+                      primitive_matrix=None,
+                      unitcell=None,
+                      supercell=None,
+                      unitcell_filename=None,
+                      supercell_filename=None,
+                      calculator=None,
+                      symprec=1e-5):
     if unitcell_filename is not None:
         cell, filename = read_crystal_structure(
             filename=unitcell_filename, interface_mode=calculator)
-        _smat = _get_supercell_matrix(smat)
-        _pmat = pmat
+        _smat = _get_supercell_matrix(supercell_matrix)
+        _pmat = primitive_matrix
     elif supercell_filename is not None:
         cell, filename = read_crystal_structure(
             filename=supercell_filename, interface_mode=calculator)
         _smat = np.eye(3, dtype='intc', order='C')
-        if pmat is None:
+        if primitive_matrix is None:
             _pmat = 'auto'
     elif unitcell is not None:
         cell = unitcell
     elif supercell is not None:
         cell = supercell
         _smat = np.eye(3, dtype='intc', order='C')
-        if pmat is None:
+        if primitive_matrix is None:
             _pmat = 'auto'
     else:
         raise RuntimeError("Cell has to be specified.")
@@ -99,10 +99,11 @@ def set_nac_params(phonon, nac_params, born_filename, is_nac, nac_factor):
         phonon.set_nac_params(_nac_params)
 
 
-def set_force_constants(phonon,
-                        force_constants_filename,
-                        force_sets_filename,
-                        use_alm):
+def set_force_constants(
+        phonon,
+        force_constants_filename=None,
+        force_sets_filename=None,
+        use_alm=False):
     natom = phonon.supercell.get_number_of_atoms()
 
     if force_constants_filename is not None:
