@@ -59,14 +59,14 @@ def get_cell_settings(supercell_matrix=None,
         cell, filename = read_crystal_structure(
             filename=supercell_filename, interface_mode=calculator)
         _smat = np.eye(3, dtype='intc', order='C')
-        if primitive_matrix is None:
+        if primitive_matrix is None or primitive_matrix == "auto":
             _pmat = 'auto'
     elif unitcell is not None:
         cell = unitcell
     elif supercell is not None:
         cell = supercell
         _smat = np.eye(3, dtype='intc', order='C')
-        if primitive_matrix is None:
+        if primitive_matrix is None or primitive_matrix == "auto":
             _pmat = 'auto'
     else:
         raise RuntimeError("Cell has to be specified.")
