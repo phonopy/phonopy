@@ -276,7 +276,7 @@ class QHA(object):
     def plot_volume_temperature(self, exp_data=None):
         import matplotlib.pyplot as plt
 
-        fig, ax = fig.subplots()
+        fig, ax = plt.subplots()
         self._plot_volume_temperature(ax, exp_data=exp_data)
 
         return plt
@@ -704,8 +704,8 @@ class QHA(object):
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.plot(self._temperatures[:self._len],
-                 self._equiv_bulk_modulus[:self._len],
-                 'r-')
+                self._equiv_bulk_modulus[:self._len],
+                'r-')
         ax.set_xlim(self._temperatures[0],
                     self._temperatures[self._len - 1])
 
