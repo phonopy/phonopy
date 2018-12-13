@@ -151,11 +151,9 @@ class PhonopyQHA(object):
 
     def plot_helmholtz_volume(self,
                               thin_number=10,
-                              plt=None,
                               xlabel=r'Volume $(\AA^3)$',
                               ylabel='Free energy'):
         return self._qha.plot_helmholtz_volume(thin_number=thin_number,
-                                               plt=plt,
                                                xlabel=xlabel,
                                                ylabel=ylabel)
 
@@ -172,8 +170,8 @@ class PhonopyQHA(object):
         """Returns volumes at temperatures"""
         return self._qha.get_volume_temperature()
 
-    def plot_volume_temperature(self, exp_data=None, plt=None):
-        return self._qha.plot_volume_temperature(exp_data=exp_data, plt=plt)
+    def plot_volume_temperature(self, exp_data=None):
+        return self._qha.plot_volume_temperature(exp_data=exp_data)
 
     def plot_pdf_volume_temperature(self,
                                     exp_data=None,
@@ -188,8 +186,8 @@ class PhonopyQHA(object):
         """Returns thermal expansion coefficients at temperatures"""
         return self._qha.get_thermal_expansion()
 
-    def plot_thermal_expansion(self, plt=None):
-        return self._qha.plot_thermal_expansion(plt=plt)
+    def plot_thermal_expansion(self):
+        return self._qha.plot_thermal_expansion()
 
     def plot_pdf_thermal_expansion(self,
                                    filename='thermal_expansion.pdf'):
@@ -203,10 +201,9 @@ class PhonopyQHA(object):
         """Return volume expansions at temperatures"""
         return self._qha.get_volume_expansion()
 
-    def plot_volume_expansion(self, exp_data=None, symbol='o', plt=None):
+    def plot_volume_expansion(self, exp_data=None, symbol='o'):
         return self._qha.plot_volume_expansion(exp_data=exp_data,
-                                               symbol=symbol,
-                                               plt=plt)
+                                               symbol=symbol)
 
     def plot_pdf_volume_expansion(self,
                                   exp_data=None,
@@ -224,11 +221,9 @@ class PhonopyQHA(object):
         return self._qha.get_gibbs_temperature()
 
     def plot_gibbs_temperature(self,
-                               plt=None,
                                xlabel='Temperature (K)',
                                ylabel='Gibbs free energy'):
-        return self._qha.plot_gibbs_temperature(plt=plt,
-                                                xlabel=xlabel,
+        return self._qha.plot_gibbs_temperature(xlabel=xlabel,
                                                 ylabel=ylabel)
 
     def plot_pdf_gibbs_temperature(self, filename='gibbs-temperature.pdf'):
@@ -242,11 +237,9 @@ class PhonopyQHA(object):
         return self._qha.get_bulk_modulus_temperature()
 
     def plot_bulk_modulus_temperature(self,
-                                      plt=None,
                                       xlabel='Temperature (K)',
                                       ylabel='Bulk modulus'):
-        return self._qha.plot_bulk_modulus_temperature(plt=plt,
-                                                       xlabel=xlabel,
+        return self._qha.plot_bulk_modulus_temperature(xlabel=xlabel,
                                                        ylabel=ylabel)
 
     def plot_pdf_bulk_modulus_temperature(self,
@@ -264,10 +257,9 @@ class PhonopyQHA(object):
         """
         return self._qha.get_heat_capacity_P_numerical()
 
-    def plot_heat_capacity_P_numerical(self, Z=1, exp_data=None, plt=None):
+    def plot_heat_capacity_P_numerical(self, Z=1, exp_data=None):
         return self._qha.plot_heat_capacity_P_numerical(Z=Z,
-                                                        exp_data=exp_data,
-                                                        plt=plt)
+                                                        exp_data=exp_data)
 
     def plot_pdf_heat_capacity_P_numerical(self,
                                            exp_data=None,
@@ -286,10 +278,9 @@ class PhonopyQHA(object):
         """
         return self._qha.get_heat_capacity_P_polyfit()
 
-    def plot_heat_capacity_P_polyfit(self, exp_data=None, Z=1, plt=None):
+    def plot_heat_capacity_P_polyfit(self, exp_data=None, Z=1):
         return self._qha.plot_heat_capacity_P_polyfit(Z=Z,
-                                                      exp_data=exp_data,
-                                                      plt=plt)
+                                                      exp_data=exp_data)
 
     def plot_pdf_heat_capacity_P_polyfit(self,
                                          exp_data=None,
@@ -311,8 +302,8 @@ class PhonopyQHA(object):
         """Returns Gruneisen parameters at temperatures"""
         return self._qha.get_gruneisen_temperature()
 
-    def plot_gruneisen_temperature(self, plt=None):
-        return self._qha.plot_gruneisen_temperature(plt=plt)
+    def plot_gruneisen_temperature(self):
+        return self._qha.plot_gruneisen_temperature()
 
     def plot_pdf_gruneisen_temperature(self,
                                        filename='gruneisen-temperature.pdf'):
