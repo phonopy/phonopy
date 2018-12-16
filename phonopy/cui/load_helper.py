@@ -53,21 +53,23 @@ def get_cell_settings(supercell_matrix=None,
     if unitcell_filename is not None:
         cell, filename = read_crystal_structure(
             filename=unitcell_filename, interface_mode=calculator)
-        _smat = _get_supercell_matrix(supercell_matrix)
-        _pmat = primitive_matrix
+        smat = _get_supercell_matrix(supercell_matrix)
+        pmat = primitive_matrix
     elif supercell_filename is not None:
         cell, filename = read_crystal_structure(
             filename=supercell_filename, interface_mode=calculator)
-        _smat = np.eye(3, dtype='intc', order='C')
+        smat = np.eye(3, dtype='intc', order='C')
         if primitive_matrix is None or primitive_matrix == "auto":
-            _pmat = 'auto'
+            pmat = 'auto'
     elif unitcell is not None:
         cell = unitcell
+        smat = _get_supercell_matrix(supercell_matrix)
+        pmat = primitive_matrix
     elif supercell is not None:
         cell = supercell
-        _smat = np.eye(3, dtype='intc', order='C')
+        smat = np.eye(3, dtype='intc', order='C')
         if primitive_matrix is None or primitive_matrix == "auto":
-            _pmat = 'auto'
+            pmat = 'auto'
     else:
         raise RuntimeError("Cell has to be specified.")
 
@@ -75,9 +77,9 @@ def get_cell_settings(supercell_matrix=None,
         msg = "'%s' could not be found." % filename
         raise FileNotFoundError(msg)
 
-    _pmat = _get_primitive_matrix(_pmat, cell, symprec)
+    pmat = _get_primitive_matrix(pmat, cell, symprec)
 
-    return cell, _smat, _pmat
+    return cell, smat, pmat
 
 
 def set_nac_params(phonon, nac_params, born_filename, is_nac, nac_factor):
