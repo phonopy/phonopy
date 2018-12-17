@@ -671,13 +671,22 @@ class Phonopy(object):
                 band.get_frequencies(),
                 band.get_eigenvectors())
 
-    def auto_plot_band_structure(self, npoints=101):
+    def auto_band_structure(self,
+                            npoints=101,
+                            is_plot=False,
+                            write_yaml=False,
+                            filename="band.yaml"):
         bands, labels, path_connections = get_band_qpoints_by_seekpath(
             self._primitive, npoints, is_const_interval=True)
         self.set_band_structure(bands)
-        return self.plot_band_structure(labels=labels,
-                                        path_connections=path_connections,
-                                        is_legacy=False)
+
+        if write_yaml:
+            self.write_yaml_band_structure(labels=labels,
+                                           filename=filename)
+        if is_plot:
+            return self.plot_band_structure(labels=labels,
+                                            path_connections=path_connections,
+                                            is_legacy=False)
 
     def plot_band_structure(self,
                             labels=None,
