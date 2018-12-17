@@ -53,7 +53,7 @@ from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
 from phonopy.phonon.band_structure import (BandStructure,
                                            get_band_qpoints_by_seekpath)
 from phonopy.phonon.thermal_properties import ThermalProperties
-from phonopy.phonon.mesh import Mesh, IterMesh
+from phonopy.phonon.mesh import Mesh, IterMesh, length2mesh
 from phonopy.units import VaspToTHz
 from phonopy.phonon.dos import TotalDos, PartialDos
 from phonopy.phonon.thermal_displacement import (ThermalDisplacements,
@@ -237,6 +237,10 @@ class Phonopy(object):
         return self.unit_conversion_factor
 
     @property
+    def dataset(self):
+        return self.displacement_dataset
+
+    @property
     def displacement_dataset(self):
         return self._displacement_dataset
 
@@ -401,6 +405,10 @@ class Phonopy(object):
         self._nac_params = nac_params
         if self._force_constants is not None:
             self._set_dynamical_matrix()
+
+    @dataset.setter
+    def dataset(self, dataset):
+        self._displacement_dataset = dataset
 
     def set_displacement_dataset(self, displacement_dataset):
         """Set dataset having displacements and optionally forces
@@ -801,6 +809,37 @@ class Phonopy(object):
             self._mesh.run()
         return True
 
+    def auto_mesh(self,
+                  length=100.0,
+                  shift=None,
+                  is_time_reversal=True,
+                  is_mesh_symmetry=True,
+                  is_eigenvectors=False,
+                  is_gamma_center=False,
+                  run_immediately=True):
+        """Automatic mesh q-point sampling
+
+        This conversion for each reciprocal axis follows VASP convention by
+            N = max(1, int(l * |a|^* + 0.5))
+        'int' means rounding down, not rounding to nearest integer.
+
+        Parameters
+        ----------
+        length : float, optional
+            Length having the unit of direct space length. Default is 100.
+        See other parameters in set_mesh.
+
+        """
+
+        mesh = length2mesh(length, self._primitive.get_cell())
+        self.set_mesh(mesh,
+                      shift=shift,
+                      is_time_reversal=is_time_reversal,
+                      is_mesh_symmetry=is_mesh_symmetry,
+                      is_eigenvectors=is_eigenvectors,
+                      is_gamma_center=is_gamma_center,
+                      run_immediately=run_immediately)
+
     def get_mesh(self):
         if self._mesh is None:
             return None
@@ -950,6 +989,17 @@ class Phonopy(object):
         self._total_dos = total_dos
         return True
 
+    def auto_total_DOS(self,
+                       length=100.0,
+                       is_time_reversal=True,
+                       is_mesh_symmetry=True,
+                       is_gamma_center=False):
+        self.auto_mesh(length=length,
+                       is_time_reversal=is_time_reversal,
+                       is_mesh_symmetry=is_mesh_symmetry,
+                       is_gamma_center=is_gamma_center)
+        self.set_total_DOS(tetrahedron_method=True)
+
     def get_total_DOS(self):
         """
         Retern frequencies and total dos.
@@ -1021,6 +1071,17 @@ class Phonopy(object):
         self._pdos.set_draw_area(freq_min, freq_max, freq_pitch)
         self._pdos.run()
         return True
+
+    def auto_partial_DOS(self,
+                         length=100.0,
+                         is_time_reversal=True,
+                         is_gamma_center=False):
+        self.auto_mesh(length=length,
+                       is_time_reversal=is_time_reversal,
+                       is_mesh_symmetry=False,
+                       is_eigenvectors=True,
+                       is_gamma_center=is_gamma_center)
+        self.set_partial_DOS(tetrahedron_method=True)
 
     def get_partial_DOS(self):
         """
