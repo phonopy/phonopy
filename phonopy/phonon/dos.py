@@ -40,26 +40,28 @@ from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
 def write_total_dos(frequency_points,
                     total_dos,
-                    comment=None):
-    fp = open('total_dos.dat', 'w')
-    if comment is not None:
-        fp.write("# %s\n" % comment)
+                    comment=None,
+                    filename="total_dos.dat"):
+    with open(filename, 'w') as fp:
+        if comment is not None:
+            fp.write("# %s\n" % comment)
 
-    for freq, dos in zip(frequency_points, total_dos):
-        fp.write("%20.10f%20.10f\n" % (freq, dos))
+        for freq, dos in zip(frequency_points, total_dos):
+            fp.write("%20.10f%20.10f\n" % (freq, dos))
 
 
 def write_partial_dos(frequency_points,
                       partial_dos,
-                      comment=None):
-    fp = open('partial_dos.dat', 'w')
-    if comment is not None:
-        fp.write("# %s\n" % comment)
+                      comment=None,
+                      filename="partial_dos.dat"):
+    with open(filename, 'w') as fp:
+        if comment is not None:
+            fp.write("# %s\n" % comment)
 
-    for freq, pdos in zip(frequency_points, partial_dos.T):
-        fp.write("%20.10f" % freq)
-        fp.write(("%20.10f" * len(pdos)) % tuple(pdos))
-        fp.write("\n")
+        for freq, pdos in zip(frequency_points, partial_dos.T):
+            fp.write("%20.10f" % freq)
+            fp.write(("%20.10f" * len(pdos)) % tuple(pdos))
+            fp.write("\n")
 
 
 def plot_total_dos(ax,
@@ -369,7 +371,7 @@ class TotalDos(Dos):
                        draw_grid=draw_grid,
                        flip_xy=flip_xy)
 
-    def write(self):
+    def write(self, filename="total_dos.dat"):
         if self._tetrahedron_mesh is None:
             comment = "Sigma = %f" % self._sigma
         else:
@@ -377,7 +379,8 @@ class TotalDos(Dos):
 
         write_total_dos(self._frequency_points,
                         self._dos,
-                        comment=comment)
+                        comment=comment,
+                        filename=filename)
 
     def _get_density_of_states_at_freq(self, f):
         return np.sum(np.dot(
@@ -503,7 +506,7 @@ class PartialDos(Dos):
                          draw_grid=draw_grid,
                          flip_xy=flip_xy)
 
-    def write(self):
+    def write(self, filename="partial_dos.dat"):
         if self._tetrahedron_mesh is None:
             comment = "Sigma = %f" % self._sigma
         else:
@@ -511,4 +514,5 @@ class PartialDos(Dos):
 
         write_partial_dos(self._frequency_points,
                           self._partial_dos,
-                          comment=comment)
+                          comment=comment,
+                          filename=filename)

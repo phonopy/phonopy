@@ -681,7 +681,7 @@ class Phonopy(object):
 
     def auto_band_structure(self,
                             npoints=101,
-                            is_plot=False,
+                            plot=False,
                             write_yaml=False,
                             filename="band.yaml"):
         bands, labels, path_connections = get_band_qpoints_by_seekpath(
@@ -691,7 +691,7 @@ class Phonopy(object):
         if write_yaml:
             self.write_yaml_band_structure(labels=labels,
                                            filename=filename)
-        if is_plot:
+        if plot:
             return self.plot_band_structure(labels=labels,
                                             path_connections=path_connections,
                                             is_legacy=False)
@@ -993,12 +993,19 @@ class Phonopy(object):
                        length=100.0,
                        is_time_reversal=True,
                        is_mesh_symmetry=True,
-                       is_gamma_center=False):
+                       is_gamma_center=False,
+                       plot=False,
+                       write_dat=False,
+                       filename="total_dos.dat"):
         self.auto_mesh(length=length,
                        is_time_reversal=is_time_reversal,
                        is_mesh_symmetry=is_mesh_symmetry,
                        is_gamma_center=is_gamma_center)
         self.set_total_DOS(tetrahedron_method=True)
+        if write_dat:
+            self.write_total_DOS(filename=filename)
+        if plot:
+            return self.plot_total_DOS()
 
     def get_total_DOS(self):
         """
@@ -1032,8 +1039,8 @@ class Phonopy(object):
 
         return plt
 
-    def write_total_DOS(self):
-        self._total_dos.write()
+    def write_total_DOS(self, filename="total_dos.dat"):
+        self._total_dos.write(filename=filename)
 
     # PDOS
     def set_partial_DOS(self,
@@ -1075,13 +1082,23 @@ class Phonopy(object):
     def auto_partial_DOS(self,
                          length=100.0,
                          is_time_reversal=True,
-                         is_gamma_center=False):
+                         is_gamma_center=False,
+                         plot=False,
+                         pdos_indices=None,
+                         legend=None,
+                         write_dat=False,
+                         filename="partial_dos.dat"):
         self.auto_mesh(length=length,
                        is_time_reversal=is_time_reversal,
                        is_mesh_symmetry=False,
                        is_eigenvectors=True,
                        is_gamma_center=is_gamma_center)
         self.set_partial_DOS(tetrahedron_method=True)
+        if write_dat:
+            self.write_partial_DOS(filename=filename)
+        if plot:
+            return self.plot_partial_DOS(pdos_indices=pdos_indices,
+                                         legend=legend)
 
     def get_partial_DOS(self):
         """
@@ -1097,6 +1114,23 @@ class Phonopy(object):
         return self._pdos.get_partial_dos()
 
     def plot_partial_DOS(self, pdos_indices=None, legend=None):
+        """Plot partial DOS
+
+        Parameters
+        ----------
+        pdos_indices : list of list, optional
+            Sets of indices of atoms whose partial DOS are summed over.
+            The indices start with 0. An example is as follwos:
+                pdos_indices=[[0, 1], [2, 3, 4, 5]]
+             Default is None, which means
+                pdos_indices=[[i] for i in range(natom)]
+        legend : list of instances such as str or int, optional
+             The str(instance) are shown in legend.
+             It has to be len(pdos_indices)==len(legend). Default is None.
+             When None, legend is not shown.
+
+        """
+
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
@@ -1114,8 +1148,8 @@ class Phonopy(object):
 
         return plt
 
-    def write_partial_DOS(self):
-        self._pdos.write()
+    def write_partial_DOS(self, filename="partial_dos.dat"):
+        self._pdos.write(filename=filename)
 
     # Thermal property
     def set_thermal_properties(self,
