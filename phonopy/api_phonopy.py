@@ -36,8 +36,9 @@ import sys
 import warnings
 import numpy as np
 from phonopy.version import __version__
+from phonopy.interface import PhonopyYaml
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
-from phonopy.structure.symmetry import Symmetry
+from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
 from phonopy.structure.cells import get_supercell, get_primitive
 from phonopy.harmonic.displacement import (get_least_displacements,
                                            directions_to_displacement_dataset)
@@ -401,10 +402,14 @@ class Phonopy(object):
         if self._force_constants is not None:
             self._set_dynamical_matrix()
 
-    def set_nac_params(self, nac_params=None):
+    @nac_params.setter
+    def nac_params(self, nac_params):
         self._nac_params = nac_params
         if self._force_constants is not None:
             self._set_dynamical_matrix()
+
+    def set_nac_params(self, nac_params):
+        self.nac_params = nac_params
 
     @dataset.setter
     def dataset(self, dataset):
@@ -1656,6 +1661,12 @@ class Phonopy(object):
         return (self._dynamic_structure_factor.Qpoints,
                 self._dynamic_structure_factor.S)
 
+    def damp(self, filename="phonopy.yaml"):
+        phpy_yaml = PhonopyYaml(show_force_sets=True)
+        phpy_yaml.set_phonon_info(self)
+        with open(filename, 'w') as w:
+            w.write(str(phpy_yaml))
+
     #################
     # Local methods #
     #################
@@ -1686,6 +1697,18 @@ class Phonopy(object):
     def _set_dynamical_matrix(self):
         self._dynamical_matrix = None
 
+        if self._is_symmetry:
+            borns, epsilon = symmetrize_borns_and_epsilon(
+                self._nac_params['born'],
+                self._nac_params['dielectric'],
+                self._primitive,
+                symprec=self._symprec)
+            nac_params = {'born': borns,
+                          'dielectric': epsilon,
+                          'factor': self._nac_params['factor']}
+        else:
+            nac_params = self._nac_params
+
         if self._supercell is None or self._primitive is None:
             raise RuntimeError("Supercell or primitive is not created.")
         if self._force_constants is None:
@@ -1696,7 +1719,7 @@ class Phonopy(object):
             self._force_constants,
             self._supercell,
             self._primitive,
-            self._nac_params,
+            nac_params,
             self._frequency_scale_factor,
             self._dynamical_matrix_decimals,
             symprec=self._symprec,

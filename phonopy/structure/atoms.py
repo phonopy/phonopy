@@ -236,10 +236,14 @@ class PhonopyAtoms(_Atoms):
                  atoms=None,
                  pbc=True):  # pbc is dummy argument, and never used.
         if atoms:
+            try:
+                magmoms = atoms.get_magnetic_moments()
+            except RuntimeError:
+                magmoms = None
             _Atoms.__init__(self,
                             numbers=atoms.get_atomic_numbers(),
                             masses=atoms.get_masses(),
-                            magmoms=atoms.get_magnetic_moments(),
+                            magmoms=magmoms,
                             scaled_positions=atoms.get_scaled_positions(),
                             cell=atoms.get_cell(),
                             pbc=True)

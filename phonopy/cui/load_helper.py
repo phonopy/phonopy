@@ -40,9 +40,11 @@ from phonopy.structure.cells import (guess_primitive_matrix,
 from phonopy.file_IO import (parse_BORN, parse_FORCE_SETS,
                              read_force_constants_hdf5,
                              parse_FORCE_CONSTANTS)
+from phonopy.structure.atoms import PhonopyAtoms
 
 
-def get_cell_settings(supercell_matrix=None,
+def get_cell_settings(phonopy_yaml=None,
+                      supercell_matrix=None,
                       primitive_matrix=None,
                       unitcell=None,
                       supercell=None,
@@ -62,11 +64,11 @@ def get_cell_settings(supercell_matrix=None,
         if primitive_matrix is None or primitive_matrix == "auto":
             pmat = 'auto'
     elif unitcell is not None:
-        cell = unitcell
+        cell = PhonopyAtoms(atoms=unitcell)
         smat = _get_supercell_matrix(supercell_matrix)
         pmat = primitive_matrix
     elif supercell is not None:
-        cell = supercell
+        cell = PhonopyAtoms(atoms=supercell)
         smat = np.eye(3, dtype='intc', order='C')
         if primitive_matrix is None or primitive_matrix == "auto":
             pmat = 'auto'
@@ -103,12 +105,16 @@ def set_nac_params(phonon, nac_params, born_filename, is_nac, nac_factor):
 
 def set_force_constants(
         phonon,
+        dataset=None,
         force_constants_filename=None,
         force_sets_filename=None,
         use_alm=False):
     natom = phonon.supercell.get_number_of_atoms()
 
-    if force_constants_filename is not None:
+    _dataset = None
+    if dataset is not None:
+        _dataset = dataset
+    elif force_constants_filename is not None:
         dot_split = force_constants_filename.split('.')
         p2s_map = phonon.primitive.get_primitive_to_supercell_map()
         if len(dot_split) > 1 and dot_split[-1] == 'hdf5':
@@ -119,20 +125,16 @@ def set_force_constants(
                                        p2s_map=p2s_map)
         phonon.set_force_constants(fc)
     elif force_sets_filename is not None:
-        force_sets = parse_FORCE_SETS(natom=natom,
-                                      filename=force_sets_filename)
-        if force_sets:
-            phonon.set_displacement_dataset(force_sets)
-            phonon.produce_force_constants(
-                calculate_full_force_constants=False,
-                use_alm=use_alm)
+        _dataset = parse_FORCE_SETS(natom=natom,
+                                    filename=force_sets_filename)
     elif os.path.isfile("FORCE_SETS"):
-        force_sets = parse_FORCE_SETS(natom=natom)
-        if force_sets:
-            phonon.set_displacement_dataset(force_sets)
-            phonon.produce_force_constants(
-                calculate_full_force_constants=False,
-                use_alm=use_alm)
+        _dataset = parse_FORCE_SETS(natom=natom)
+
+    if _dataset:
+        phonon.set_displacement_dataset(_dataset)
+        phonon.produce_force_constants(
+            calculate_full_force_constants=False,
+            use_alm=use_alm)
 
 
 def _get_supercell_matrix(smat):

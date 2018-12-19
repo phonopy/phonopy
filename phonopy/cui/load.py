@@ -33,11 +33,12 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 from phonopy.api_phonopy import Phonopy
-from phonopy.interface import get_default_physical_units
+from phonopy.interface import get_default_physical_units, PhonopyYaml
 import phonopy.cui.load_helper as load_helper
 
 
-def load(supercell_matrix=None,
+def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
+         supercell_matrix=None,
          primitive_matrix=None,
          is_nac=False,
          calculator=None,
@@ -67,6 +68,8 @@ def load(supercell_matrix=None,
 
     Parameters
     ----------
+    phonopy_yaml : str, optional
+        Filename of "phonopy.yaml"-like file. Default is None.
     supercell_matrix : array_like, optional
         Supercell matrix multiplied to input cell basis vectors.
         shape=(3, ) or (3, 3), where the former is considered a diagonal
@@ -144,15 +147,31 @@ def load(supercell_matrix=None,
 
     """
 
-    cell, smat, pmat = load_helper.get_cell_settings(
-        supercell_matrix=supercell_matrix,
-        primitive_matrix=primitive_matrix,
-        unitcell=unitcell,
-        supercell=supercell,
-        unitcell_filename=unitcell_filename,
-        supercell_filename=supercell_filename,
-        calculator=calculator,
-        symprec=symprec)
+    if phonopy_yaml is None:
+        cell, smat, pmat = load_helper.get_cell_settings(
+            supercell_matrix=supercell_matrix,
+            primitive_matrix=primitive_matrix,
+            unitcell=unitcell,
+            supercell=supercell,
+            unitcell_filename=unitcell_filename,
+            supercell_filename=supercell_filename,
+            calculator=calculator,
+            symprec=symprec)
+        _nac_params = nac_params
+        _dataset = None
+    else:
+        phpy_yaml = PhonopyYaml()
+        phpy_yaml.read(phonopy_yaml)
+        cell = phpy_yaml.unitcell
+        smat = phpy_yaml.supercell_matrix
+        if smat is None:
+            raise RuntimeError("%s could not be parsed.")
+        if primitive_matrix is 'auto':
+            pmat = 'auto'
+        else:
+            pmat = phpy_yaml.primitive_matrix
+        _nac_params = phpy_yaml.nac_params
+        _dataset = phpy_yaml.dataset
 
     # units keywords: factor, nac_factor, distance_to_A
     units = get_default_physical_units(calculator)
@@ -169,12 +188,13 @@ def load(supercell_matrix=None,
                      is_symmetry=is_symmetry,
                      log_level=log_level)
     load_helper.set_nac_params(phonon,
-                               nac_params,
+                               _nac_params,
                                born_filename,
                                is_nac,
                                units['nac_factor'])
     load_helper.set_force_constants(
         phonon,
+        dataset=_dataset,
         force_constants_filename=force_constants_filename,
         force_sets_filename=force_sets_filename,
         use_alm=use_alm)

@@ -459,6 +459,21 @@ def parse_QPOINTS(filename="QPOINTS"):
 #
 # BORN
 #
+def write_BORN(primitive, borns, epsilon, filename="BORN"):
+    from phonopy.structure.symmetry import elaborate_borns_and_epsilon
+    borns, epsilon, atom_indices = elaborate_borns_and_epsilon(
+        primitive, borns, epsilon, symmetrize_tensors=True)
+
+    text = "# epsilon and Z* of atoms "
+    text += ' '.join(["%d" % n for n in atom_indices + 1])
+    lines = [text, ]
+    lines.append(("%13.8f " * 9) % tuple(epsilon.flatten()))
+    for z in borns:
+        lines.append(("%13.8f " * 9) % tuple(z.flatten()))
+    with open(filename, 'w') as w:
+        w.write('\n'.join(lines))
+
+
 def parse_BORN(primitive, symprec=1e-5, is_symmetry=True, filename="BORN"):
     with open(filename, 'r') as f:
         return _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry)
