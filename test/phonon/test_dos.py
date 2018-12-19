@@ -115,7 +115,7 @@ class TestDOS(unittest.TestCase):
 
     def _get_phonon(self):
         phonon = phonopy.load(
-            [[2, 0, 0], [0, 2, 0], [0, 0, 2]],
+            supercell_matrix=[[2, 0, 0], [0, 2, 0], [0, 0, 2]],
             primitive_matrix=[[0, 0.5, 0.5],
                               [0.5, 0, 0.5],
                               [0.5, 0.5, 0]],

@@ -309,7 +309,8 @@ class PhonopyYaml(object):
         if 'dielectric_constant' in self.yaml:
             _nac_params['dielectric'] = np.array(
                 self.yaml['dielectric_constant'], dtype='double', order='C')
-        if 'nac_unit_conversion_factor' in self.yaml[self._command_name]:
+        if (self._command_name in self.yaml and
+            'nac_unit_conversion_factor' in self.yaml[self._command_name]):
             _nac_params['factor'] = self.yaml[self._command_name][
                 'nac_unit_conversion_factor']
         if 'born' in _nac_params and 'dielectric' in _nac_params:

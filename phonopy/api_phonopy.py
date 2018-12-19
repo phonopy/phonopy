@@ -1697,7 +1697,7 @@ class Phonopy(object):
     def _set_dynamical_matrix(self):
         self._dynamical_matrix = None
 
-        if self._is_symmetry:
+        if self._is_symmetry and self._nac_params is not None:
             borns, epsilon = symmetrize_borns_and_epsilon(
                 self._nac_params['born'],
                 self._nac_params['dielectric'],

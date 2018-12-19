@@ -185,7 +185,7 @@ class TestDynamicStructureFactor(unittest.TestCase):
         filename_cell = os.path.join(data_dir, "..", "POSCAR_NaCl")
         filename_forces = os.path.join(data_dir, "..", "FORCE_SETS_NaCl")
         filename_born = os.path.join(data_dir, "..", "BORN_NaCl")
-        phonon = load(np.diag([2, 2, 2]),
+        phonon = load(supercell_matrix=[2, 2, 2],
                       primitive_matrix=[[0, 0.5, 0.5],
                                         [0.5, 0, 0.5],
                                         [0.5, 0.5, 0]],
