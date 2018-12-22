@@ -1661,7 +1661,7 @@ class Phonopy(object):
         return (self._dynamic_structure_factor.Qpoints,
                 self._dynamic_structure_factor.S)
 
-    def damp(self, filename="phonopy.yaml"):
+    def dump(self, filename="phonopy.yaml"):
         phpy_yaml = PhonopyYaml(show_force_sets=True)
         phpy_yaml.set_phonon_info(self)
         with open(filename, 'w') as w:
