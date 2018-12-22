@@ -202,7 +202,7 @@ class DynamicStructureFactor(object):
                           dtype='double')
         else:
             _, disps = self._get_thermal_displacements(Q_cart)
-            DW = np.exp(-0.5 * Q_length ** 2 * disps[0])
+            DW = np.exp(-0.5 * (2 * np.pi * Q_length) ** 2 * disps[0])
         S = np.zeros(len(freqs), dtype='double')
         for i, f in enumerate(freqs):
             if self._fmin < f:
@@ -242,7 +242,7 @@ class DynamicStructureFactor(object):
                 f = self._b[symbols[i]]
             else:
                 raise RuntimeError
-            QW = np.dot(Q_cart, W[i])
+            QW = np.dot(Q_cart, W[i]) * 2 * np.pi
             val += f / np.sqrt(2 * m) * DW[i] * QW * phase[i]
         val /= np.sqrt(freq)
         return val
