@@ -53,6 +53,7 @@ data_b = """419.130446 1822.138324 963.242515  13.761210  59.574804  39.950123
  14.660547  66.825066  39.113987  13.994019  66.322994  27.156663
 105.091902  19.498305   0.282731  14.487294  89.011152   9.748889"""
 
+
 def get_func_AFF(f_params):
     def func(symbol, Q):
         return atomic_form_factor_WK1995(Q, f_params[symbol])
@@ -161,16 +162,14 @@ class TestDynamicStructureFactor(unittest.TestCase):
                      for x in np.arange(1, n_points) / float(n_points - 1)])
                 if func_AFF is not None:
                     self.phonon.set_dynamic_structure_factor(
-                        G_to_L,
-                        G_prim,
+                        G_to_L + G_prim,
                         T,
                         func_atomic_form_factor=func_AFF,
                         freq_min=1e-3,
                         run_immediately=False)
                 elif scattering_lengths is not None:
                     self.phonon.set_dynamic_structure_factor(
-                        G_to_L,
-                        G_prim,
+                        G_to_L + G_prim,
                         T,
                         scattering_lengths=scattering_lengths,
                         freq_min=1e-3,

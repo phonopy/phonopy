@@ -1637,8 +1637,7 @@ class Phonopy(object):
         return self._moment
 
     def set_dynamic_structure_factor(self,
-                                     qpoints,
-                                     G,
+                                     Qpoints,
                                      T,
                                      func_atomic_form_factor=None,
                                      scattering_lengths=None,
@@ -1647,8 +1646,7 @@ class Phonopy(object):
                                      run_immediately=True):
         self._dynamic_structure_factor = DynamicStructureFactor(
             self._mesh,
-            qpoints,
-            G,
+            Qpoints,
             T,
             func_atomic_form_factor=func_atomic_form_factor,
             scattering_lengths=scattering_lengths,
@@ -1658,7 +1656,7 @@ class Phonopy(object):
             self._dynamic_structure_factor.run()
 
     def get_dynamic_structure_factor(self):
-        return (self._dynamic_structure_factor.Qpoints,
+        return (self._dynamic_structure_factor.qpoints,
                 self._dynamic_structure_factor.S)
 
     def dump(self, filename="phonopy.yaml"):
