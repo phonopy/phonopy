@@ -679,11 +679,14 @@ class VasprunxmlExpat(object):
         self._is_c = False
         self._is_set = False
         self._is_r = False
+        self._is_field = False
 
         self._is_scstep = False
         self._is_structure = False
         self._is_projected = False
         self._is_proj_eig = False
+        self._is_field_string = False
+        self._is_pseudopotential = False
 
         self._all_forces = []
         self._all_stress = []
@@ -705,6 +708,9 @@ class VasprunxmlExpat(object):
         self._eig_state = [0, 0]
         self._projectors = None
         self._proj_state = [0, 0, 0]
+        self._field_val = None
+        self._pseudopotentials = []
+        self._ps_atom = None
 
         self._p = xml.parsers.expat.ParserCreate()
         self._p.buffer_text = True
@@ -867,6 +873,21 @@ class VasprunxmlExpat(object):
     def get_projectors(self):
         return self.projectors
 
+    @property
+    def pseudopotentials(self):
+        """Returns pseudo potential information
+
+        Example:
+            [[2, u'N', 14.001, 5.0, u'PAW_PBE N 08Apr2002'],
+             [2, u'Ga', 69.723, 13.0, u'PAW_PBE Ga_d 06Jul2010']]
+
+        """
+
+        return self._pseudopotentials
+
+    def get_pseudopotentials(self):
+        return self.pseudopotentials
+
     def _start_element(self, name, attrs):
         # Used not to collect energies in <scstep>
         if name == 'scstep':
@@ -922,6 +943,13 @@ class VasprunxmlExpat(object):
                         self._is_basis = True
                         self._lattice = []
 
+        if name == 'field':
+            if 'type' in attrs:
+                if attrs['type'] == 'string':
+                    self._is_field_string = True
+            else:
+                self._is_field = True
+
         if name == 'generation':
             self._is_generation = True
 
@@ -953,6 +981,15 @@ class VasprunxmlExpat(object):
         if self._is_born and name == 'set':
             self._is_set = True
             self._born_atom = []
+
+        if self._field_val == 'pseudopotential':
+            if name == 'set':
+                self._is_set = True
+            if name == 'rc' and self._is_set:
+                self._is_rc = True
+                self._ps_atom = []
+            if name == 'c':
+                self._is_c = True
 
         if name == 'array':
             if 'name' in attrs.keys():
@@ -1081,16 +1118,30 @@ class VasprunxmlExpat(object):
             self._is_projected = False
 
         if name == 'eigenvalues':
+            self._is_eigenvalues = False
             if self._is_projected:
                 self._is_proj_eig = False
-            else:
-                self._is_eigenvalues = False
 
         if name == 'set':
             self._is_set = False
             if self._is_born:
                 self._born.append(self._born_atom)
                 self._born_atom = None
+
+        if name == 'field':
+            self._is_field_string = False
+            self._is_field = False
+
+        if self._field_val == 'pseudopotential':
+            if name == 'set':
+                self._is_set = False
+                self._field_val = None
+            if name == 'rc' and self._is_set:
+                self._is_rc = False
+                self._pseudopotentials.append(self._ps_atom)
+                self._ps_atom = None
+            if name == 'c':
+                self._is_c = False
 
     def _char_data(self, data):
         if self._is_v:
@@ -1141,6 +1192,18 @@ class VasprunxmlExpat(object):
         if self._is_c:
             if self._is_symbols:
                 self.symbols.append(str(data.strip()))
+            if (self._field_val == 'pseudopotential' and
+                self._is_set and self._is_rc):
+                if len(self._ps_atom) == 0:
+                    self._ps_atom.append(int(data.strip()))
+                elif len(self._ps_atom) == 1:
+                    self._ps_atom.append(data.strip())
+                elif len(self._ps_atom) == 2:
+                    self._ps_atom.append(float(data.strip()))
+                elif len(self._ps_atom) == 3:
+                    self._ps_atom.append(float(data.strip()))
+                elif len(self._ps_atom) == 4:
+                    self._ps_atom.append(data.strip())
 
         if self._is_r:
             if self._is_projected and not self._is_proj_eig:
@@ -1151,6 +1214,9 @@ class VasprunxmlExpat(object):
                 s, k = self._eig_state
                 vals = [float(x) for x in data.split()]
                 self._eigenvalues[s][k].append(vals)
+
+        if self._is_field_string:
+            self._field_val = data.strip()
 
 
 #
