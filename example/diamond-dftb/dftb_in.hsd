@@ -14,13 +14,14 @@ Hamiltonian = DFTB {
         C = "p" # s and p functions, read parameter file for details
     }
 
-    # location of Slater-Koster parameter data
+    # local location of Slater-Koster parameter data files.
+    # These are available at https://www.dftb.org/parameters
     SlaterKosterFiles = Type2FileNames {
         Separator = "-"
         Suffix = ".skf"
     }
 
-    # Example for a fairly large supercell, so not many k-points
+    # Example uses a fairly large supercell, so not many k-points are included
     KPointsAndWeights = SupercellFolding {
         2 0 0
         0 2 0

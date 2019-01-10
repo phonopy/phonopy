@@ -57,7 +57,7 @@ if with_openmp:
     if cc == 'gcc':
         extra_link_args_phonopy = ['-lgomp', ]
     elif cc == 'clang':
-        extra_link_args_phonopy = []
+        extra_link_args_phonopy = ['-lomp']
     else:
         extra_link_args_phonopy = ['-lgomp', ]
 else:
@@ -75,12 +75,12 @@ extension_phonopy = Extension(
 #####################
 # _spglib extension #
 #####################
-if with_openmp:
+if False:  # Always no openmp for spglib
     extra_compile_args_spglib = ['-fopenmp', ]
     if cc == 'gcc':
         extra_link_args_spglib = ['-lgomp', ]
     elif cc == 'clang':
-        extra_link_args_spglib = []
+        extra_link_args_spglib = ['-lomp']
     else:
         extra_link_args_spglib = ['-lgomp', ]
 else:
@@ -147,7 +147,7 @@ if __name__ == '__main__':
             if "__version__" in line:
                 for i, num in enumerate(
                         line.split()[2].strip('\"').split('.')):
-                    version_nums[i] = int(num)
+                    version_nums[i] = num
                 break
 
     # # To deploy to pypi/conda by travis-CI
@@ -168,11 +168,13 @@ if __name__ == '__main__':
         print("Failed to get version number in setup.py.")
         raise
 
-    version_number = ".".join(["%d" % n for n in version_nums])
+    version = ".".join(["%s" % n for n in version_nums[:3]])
+    if len(version_nums) > 3:
+        version += "-%d" % version_nums[3]
 
     if use_setuptools:
         setup(name='phonopy',
-              version=version_number,
+              version=version,
               description='This is the phonopy module.',
               author='Atsushi Togo',
               author_email='atz.togo@gmail.com',
@@ -186,7 +188,7 @@ if __name__ == '__main__':
               tests_require=['nose'])
     else:
         setup(name='phonopy',
-              version=version_number,
+              version=version,
               description='This is the phonopy module.',
               author='Atsushi Togo',
               author_email='atz.togo@gmail.com',

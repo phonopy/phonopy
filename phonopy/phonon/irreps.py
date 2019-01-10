@@ -1494,9 +1494,7 @@ class IrReps(object):
     def _get_conventional_rotations(self):
         rotations = self._rotations_at_q.copy()
         pointgroup_symbol = self._symmetry_dataset['pointgroup']
-        std_lat = self._symmetry_dataset['std_lattice']
-        prm_lat = self._primitive.get_cell()
-        transformation_matrix = np.dot(np.linalg.inv(std_lat.T), prm_lat.T)
+        transformation_matrix = self._symmetry_dataset['transformation_matrix']
         conventional_rotations = self._transform_rotations(
             transformation_matrix, rotations)
 

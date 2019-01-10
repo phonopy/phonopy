@@ -42,6 +42,7 @@ from phonopy.units import Bohr
 from phonopy.cui.settings import fracval
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
+
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
     hook = 'cartesian forces (eV/Angstrom)'
     is_parsed = True
@@ -65,8 +66,10 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
     else:
         return []
 
+
 def read_abinit(filename):
-    abinit_in = AbinitIn(open(filename).readlines())
+    with open(filename) as f:
+        abinit_in = AbinitIn(f.readlines())
     tags = abinit_in.get_variables()
     acell = tags['acell']
     rprim = tags['rprim'].T
@@ -77,7 +80,7 @@ def read_abinit(filename):
             lattice[i] *= scalecart[i]
 
     if tags['xcart'] is not None:
-        pos_bohr = np.transpose(tags['xcart'])        
+        pos_bohr = np.transpose(tags['xcart'])
         positions = np.dot(np.linalg.inv(lattice), pos_bohr).T
     elif tags['xangst'] is not None:
         pos_bohr = np.transpose(tags['xangst']) / Bohr
@@ -91,9 +94,11 @@ def read_abinit(filename):
                  cell=lattice.T,
                  scaled_positions=positions)
 
+
 def write_abinit(filename, cell):
     with open(filename, 'w') as f:
         f.write(get_abinit_structure(cell))
+
 
 def write_supercells_with_displacements(supercell,
                                         cells_with_displacements,
@@ -106,6 +111,7 @@ def write_supercells_with_displacements(supercell,
             pre_filename=pre_filename,
             width=width)
         write_abinit(filename, cell)
+
 
 def get_abinit_structure(cell):
     znucl = []
@@ -130,6 +136,7 @@ def get_abinit_structure(cell):
     lines += get_scaled_positions_lines(cell.get_scaled_positions())
 
     return lines
+
 
 class AbinitIn(object):
     def __init__(self, lines):
@@ -188,7 +195,6 @@ class AbinitIn(object):
                 self._set_methods[tag]()
 
     def _get_numerical_values(self, char_string, num_type='float'):
-        vals = []
         m = 1
 
         if '*' in char_string:
@@ -281,12 +287,3 @@ class AbinitIn(object):
                 break
 
         self._tags['znucl'] = znucl[:ntypat]
-
-if __name__ == '__main__':
-    import sys
-    from phonopy.structure.symmetry import Symmetry
-    abinit = AbinitIn(open(sys.argv[1]).readlines())
-    cell = read_abinit(sys.argv[1])
-    symmetry = Symmetry(cell)
-    print("# %s" % symmetry.get_international_table())
-    print(get_abinit_structure(cell))

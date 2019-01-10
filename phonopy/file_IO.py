@@ -61,17 +61,52 @@ def write_FORCE_SETS(dataset, filename='FORCE_SETS'):
                 fp.write("%15.10f %15.10f %15.10f\n" % (tuple(f)))
 
 
-def parse_FORCE_SETS(is_translational_invariance=False, filename="FORCE_SETS"):
+def parse_FORCE_SETS(natom=None,
+                     is_translational_invariance=False,
+                     filename="FORCE_SETS"):
     with open(filename, 'r') as f:
-        return _get_set_of_forces(f, is_translational_invariance)
+        return _get_set_of_forces(
+            f,
+            natom=natom,
+            is_translational_invariance=is_translational_invariance)
 
 
-def parse_FORCE_SETS_from_strings(strings, is_translational_invariance=False):
-    return _get_set_of_forces(StringIO(strings),
-                              is_translational_invariance)
+def parse_FORCE_SETS_from_strings(strings,
+                                  natom=None,
+                                  is_translational_invariance=False):
+    return _get_set_of_forces(
+        StringIO(strings),
+        natom=natom,
+        is_translational_invariance=is_translational_invariance)
 
 
-def _get_set_of_forces(f, is_translational_invariance):
+def _get_set_of_forces(f, natom=None, is_translational_invariance=False):
+    first_line_ary = _get_line_ignore_blank(f).split()
+    f.seek(0)
+    if len(first_line_ary) == 1:
+        if natom is None or int(first_line_ary[0]) == natom:
+            return _get_set_of_forces_type1(f, is_translational_invariance)
+        else:
+            msg = "Number of forces is not consistent with supercell setting."
+            raise RuntimeError(msg)
+    elif len(first_line_ary) == 6:
+        return _get_set_of_forces_type2(f, natom)
+
+
+def _get_set_of_forces_type2(f, natom):
+    data = np.loadtxt(f, dtype='double')
+    if data.shape[1] != 6 or data.shape[0] % natom != 0:
+        msg = "Data shape of forces and displacements is incorrect."
+        raise RuntimeError(msg)
+    data = data.reshape(-1, natom, 6)
+    dataset = {'natom': natom}
+    dataset['displacements'] = np.array(data[:, :, :3],
+                                        dtype='double', order='C')
+    dataset['forces'] = np.array(data[:, :, 3:], dtype='double', order='C')
+    return dataset
+
+
+def _get_set_of_forces_type1(f, is_translational_invariance):
     set_of_forces = []
     num_atom = int(_get_line_ignore_blank(f))
     num_displacements = int(_get_line_ignore_blank(f))
@@ -194,7 +229,7 @@ def write_FORCE_CONSTANTS(force_constants,
         w.write("%4d %4d\n" % fc_shape[:2])
         for i, s_i in enumerate(indices):
             for j in range(fc_shape[1]):
-                w.write("%4d%4d\n" % (s_i + 1, j + 1))
+                w.write("%d %d\n" % (s_i + 1, j + 1))
                 for vec in force_constants[i][j]:
                     w.write(("%22.15f"*3 + "\n") % tuple(vec))
 
@@ -222,8 +257,7 @@ def write_force_constants_to_hdf5(force_constants,
     try:
         import h5py
     except ImportError:
-        print("You need to install python-h5py.")
-        raise
+        raise ModuleNotFoundError("You need to install python-h5py.")
 
     with h5py.File(filename, 'w') as w:
         w.create_dataset('force_constants', data=force_constants)
@@ -262,8 +296,7 @@ def read_force_constants_hdf5(filename="force_constants.hdf5",
     try:
         import h5py
     except ImportError:
-        print("You need to install python-h5py.")
-        raise
+        raise ModuleNotFoundError("You need to install python-h5py.")
 
     with h5py.File(filename, 'r') as f:
         if 'fc2' in f:
@@ -299,8 +332,7 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
     try:
         import yaml
     except ImportError:
-        print("You need to install python-yaml.")
-        raise
+        raise ModuleNotFoundError("You need to install python-yaml.")
 
     try:
         from yaml import CLoader as Loader
@@ -538,15 +570,15 @@ def read_thermal_properties_yaml(filenames):
     for i, tp in enumerate(thermal_properties):
         temp.append([v['temperature'] for v in tp])
         if not np.allclose(temperatures, temp):
-            print('')
-            print("Check your input files")
-            print("Disagreement of temperature range or step")
+            msg = ['', ]
+            msg.append("Check your input files")
+            msg.append("Disagreement of temperature range or step")
             for t, fname in zip(temp, filenames):
-                print("%s: Range [ %d, %d ], Step %f" %
-                      (fname, int(t[0]), int(t[-1]), t[1] - t[0]))
-            print('')
-            print("Stop phonopy-qha")
-            raise RuntimeError
+                msg.append("%s: Range [ %d, %d ], Step %f" %
+                           (fname, int(t[0]), int(t[-1]), t[1] - t[0]))
+            msg.append('')
+            msg.append("Stop phonopy-qha")
+            raise RuntimeError(msg)
         cv.append([v['heat_capacity'] for v in tp])
         entropy.append([v['entropy'] for v in tp])
         fe_phonon.append([v['free_energy'] for v in tp])
@@ -563,9 +595,9 @@ def read_thermal_properties_yaml(filenames):
 def read_v_e(filename):
     data = _parse_QHA_data(filename)
     if data.shape[1] != 2:
-        print("File format of %s is incorrect for reading e-v data." %
-              filename)
-        raise RuntimeError
+        msg = ("File format of %s is incorrect for reading e-v data." %
+               filename)
+        raise RuntimeError(msg)
     volumes, electronic_energies = data.T
     return volumes, electronic_energies
 

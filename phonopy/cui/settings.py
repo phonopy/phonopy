@@ -35,12 +35,14 @@
 import sys
 import numpy as np
 
+
 def fracval(frac):
     if frac.find('/') == -1:
         return float(frac)
     else:
         x = frac.split('/')
         return float(x[0]) / float(x[1])
+
 
 class Settings(object):
     def __init__(self):
@@ -83,6 +85,7 @@ class Settings(object):
         self._tmax = 1000
         self._tmin = 0
         self._tstep = 10
+        self._use_alm = False
         self._yaml_mode = False
 
     def set_band_paths(self, band_paths):
@@ -319,6 +322,12 @@ class Settings(object):
     def get_time_reversal_symmetry(self):
         return self._is_time_reversal_symmetry
 
+    def set_use_alm(self, use_alm):
+        self._use_alm = use_alm
+
+    def get_use_alm(self):
+        return self._use_alm
+
     def set_yaml_mode(self, yaml_mode):
         self._yaml_mode = yaml_mode
 
@@ -374,12 +383,19 @@ class ConfParser(object):
     def read_options(self):
         arg_list = vars(self._args)
         if 'band_indices' in arg_list:
-            if self._args.band_indices is not None:
-                self._confs['band_indices'] = self._args.band_indices
+            band_indices = self._args.band_indices
+            if band_indices is not None:
+                if type(band_indices) is list:
+                    self._confs['band_indices'] = " ".join(band_indices)
+                else:
+                    self._confs['band_indices'] = band_indices
 
         if 'band_paths' in arg_list:
             if self._args.band_paths is not None:
-                self._confs['band'] = self._args.band_paths
+                if type(self._args.band_paths) is list:
+                    self._confs['band'] = " ".join(self._args.band_paths)
+                else:
+                    self._confs['band'] = self._args.band_paths
 
         if 'band_points' in arg_list:
             if self._args.band_points is not None:
@@ -463,37 +479,71 @@ class ConfParser(object):
                 self._confs['trigonal'] = '.true.'
 
         if 'masses' in arg_list:
-            if self._args.masses:
-                self._confs['mass'] = self._args.masses
+            if self._args.masses is not None:
+                if type(self._args.masses) is list:
+                    self._confs['mass'] = " ".join(self._args.masses)
+                else:
+                    self._confs['mass'] = self._args.masses
 
         if 'magmoms' in arg_list:
-            if self._args.magmoms:
-                self._confs['magmom'] = self._args.magmoms
+            if self._args.magmoms is not None:
+                if type(self._args.magmoms) is list:
+                    self._confs['magmom'] = " ".join(self._args.magmoms)
+                else:
+                    self._confs['magmom'] = self._args.magmoms
 
         if 'mesh_numbers' in arg_list:
-            if self._args.mesh_numbers:
-                self._confs['mesh_numbers'] = self._args.mesh_numbers
+            mesh = self._args.mesh_numbers
+            if mesh is not None:
+                if type(mesh) is list:
+                    self._confs['mesh_numbers'] = " ".join(mesh)
+                else:
+                    self._confs['mesh_numbers'] = mesh
 
         if 'num_frequency_points' in arg_list:
             opt_num_freqs = self._args.num_frequency_points
             if opt_num_freqs:
                 self._confs['num_frequency_points'] = opt_num_freqs
 
+        # For backword compatibility
         if 'primitive_axis' in arg_list:
-            if self._args.primitive_axis:
-                self._confs['primitive_axis'] = self._args.primitive_axis
+            if self._args.primitive_axis is not None:
+                if type(self._args.primitive_axis) is list:
+                    primitive_axes = " ".join(self._args.primitive_axis)
+                    self._confs['primitive_axes'] = primitive_axes
+                else:
+                    self._confs['primitive_axes'] = self._args.primitive_axis
+
+        if 'primitive_axes' in arg_list:
+            if self._args.primitive_axes:
+                if type(self._args.primitive_axes) is list:
+                    primitive_axes = " ".join(self._args.primitive_axes)
+                    self._confs['primitive_axes'] = primitive_axes
+                else:
+                    self._confs['primitive_axes'] = self._args.primitive_axes
 
         if 'supercell_dimension' in arg_list:
-            if self._args.supercell_dimension:
-                self._confs['dim'] = self._args.supercell_dimension
+            dim = self._args.supercell_dimension
+            if dim is not None:
+                if type(dim) is list:
+                    self._confs['dim'] = " ".join(dim)
+                else:
+                    self._confs['dim'] = dim
 
         if 'qpoints' in arg_list:
             if self._args.qpoints is not None:
-                self._confs['qpoints'] = self._args.qpoints
+                if type(self._args.qpoints) is list:
+                    self._confs['qpoints'] = " ".join(self._args.qpoints)
+                else:
+                    self._confs['qpoints'] = self._args.qpoints
 
         if 'nac_q_direction' in arg_list:
-            if self._args.nac_q_direction is not None:
-                self._confs['q_direction'] = self._args.nac_q_direction
+            q_dir = self._args.nac_q_direction
+            if q_dir is not None:
+                if type(q_dir) is list:
+                    self._confs['q_direction'] = " ".join(q_dir)
+                else:
+                    self._confs['q_direction'] = q_dir
 
         if 'nac_method' in arg_list:
             if self._args.nac_method is not None:
@@ -504,8 +554,11 @@ class ConfParser(object):
                 self._confs['read_qpoints'] = '.true.'
 
         if 'sigma' in arg_list:
-            if self._args.sigma:
-                self._confs['sigma'] = self._args.sigma
+            if self._args.sigma is not None:
+                if type(self._args.sigma) is list:
+                    self._confs['sigma'] = " ".join(self._args.sigma)
+                else:
+                    self._confs['sigma'] = self._args.sigma
 
         if 'tmax' in arg_list:
             if self._args.tmax:
@@ -518,6 +571,10 @@ class ConfParser(object):
         if 'tstep' in arg_list:
             if self._args.tstep:
                 self._confs['tstep'] = self._args.tstep
+
+        if 'use_alm' in arg_list:
+            if self._args.use_alm:
+                self._confs['alm'] = '.true.'
 
         if 'yaml_mode' in arg_list:
             if self._args.yaml_mode:
@@ -549,22 +606,28 @@ class ConfParser(object):
                 if matrix.shape == (3, 3):
                     if np.linalg.det(matrix) < 1:
                         self.setting_error(
-                            'Determinant of supercell matrix has to be positive.')
+                            'Determinant of supercell matrix has to be '
+                            'positive.')
                     else:
                         self.set_parameter('supercell_matrix', matrix)
 
             if conf_key in ('primitive_axis', 'primitive_axes'):
-                if not len(confs[conf_key].split()) == 9:
-                    self.setting_error("Number of elements in %s has to be 9." %
-                                       conf_key.upper())
-                p_axis = []
-                for x in confs[conf_key].split():
-                    p_axis.append(fracval(x))
-                p_axis = np.array(p_axis).reshape(3,3)
-                if np.linalg.det(p_axis) < 1e-8:
-                    self.setting_error("%s has to have positive determinant." %
-                                       conf_key.upper())
-                self.set_parameter('primitive_axis', p_axis)
+                if confs[conf_key].strip().lower() == 'auto':
+                    self.set_parameter('primitive_axes', 'auto')
+                elif not len(confs[conf_key].split()) == 9:
+                    self.setting_error(
+                        "Number of elements in %s has to be 9." %
+                        conf_key.upper())
+                else:
+                    p_axis = []
+                    for x in confs[conf_key].split():
+                        p_axis.append(fracval(x))
+                    p_axis = np.array(p_axis).reshape(3, 3)
+                    if np.linalg.det(p_axis) < 1e-8:
+                        self.setting_error(
+                            "%s has to have positive determinant." %
+                            conf_key.upper())
+                    self.set_parameter('primitive_axes', p_axis)
 
             if conf_key == 'mass':
                 self.set_parameter(
@@ -660,13 +723,16 @@ class ConfParser(object):
 
             if conf_key == 'band':
                 bands = []
-                for section in confs['band'].split(','):
-                    points = [fracval(x) for x in section.split()]
-                    if len(points) % 3 != 0 or len(points) < 6:
-                        self.setting_error("BAND is incorrectly set.")
-                        break
-                    bands.append(np.array(points).reshape(-1, 3))
-                self.set_parameter('band_paths', bands)
+                if confs['band'].strip().lower() == 'auto':
+                    self.set_parameter('band_paths', 'auto')
+                else:
+                    for section in confs['band'].split(','):
+                        points = [fracval(x) for x in section.split()]
+                        if len(points) % 3 != 0 or len(points) < 6:
+                            self.setting_error("BAND is incorrectly set.")
+                            break
+                        bands.append(np.array(points).reshape(-1, 3))
+                    self.set_parameter('band_paths', bands)
 
             if conf_key == 'qpoints':
                 if confs['qpoints'].lower() == '.true.':
@@ -691,9 +757,11 @@ class ConfParser(object):
                 self.set_parameter('nac_method', confs['nac_method'].lower())
 
             if conf_key == 'q_direction':
-                q_direction = [fracval(x) for x in confs['q_direction'].split()]
+                q_direction = [fracval(x)
+                               for x in confs['q_direction'].split()]
                 if len(q_direction) < 3:
-                    self.setting_error("Number of elements of q_direction is less than 3")
+                    self.setting_error("Number of elements of q_direction "
+                                       "is less than 3")
                 else:
                     self.set_parameter('nac_q_direction', q_direction)
 
@@ -745,6 +813,11 @@ class ConfParser(object):
             # Group velocity finite difference
             if conf_key == 'gv_delta_q':
                 self.set_parameter('gv_delta_q', float(confs['gv_delta_q']))
+
+            # Use ALM for generating force constants
+            if conf_key == 'alm':
+                if confs['alm'].lower() == '.true.':
+                    self.set_parameter('alm', True)
 
             # Phonopy YAML mode
             if conf_key == 'yaml_mode':
@@ -867,8 +940,8 @@ class ConfParser(object):
                 params['pm_displacement'])
 
         # Primitive cell shape
-        if 'primitive_axis' in params:
-            self._settings.set_primitive_matrix(params['primitive_axis'])
+        if 'primitive_axes' in params:
+            self._settings.set_primitive_matrix(params['primitive_axes'])
 
         # Q-points mode
         if 'qpoints' in params:
@@ -916,12 +989,18 @@ class ConfParser(object):
         #  array([[ 0.5,  0.5,  0. ],
         #         [ 0. ,  0. ,  0. ],
         #         [ 0.5,  0.5,  0.5]])]
+        # or
+        # BAND = AUTO
         if 'band_paths' in params:
             self._settings.set_band_paths(params['band_paths'])
 
         # This number includes end points
         if 'band_points' in params:
             self._settings.set_band_points(params['band_points'])
+
+        # Use ALM to generating force constants
+        if 'alm' in params:
+            self._settings.set_use_alm(params['alm'])
 
         # Activate phonopy YAML mode
         if 'yaml_mode' in params:
@@ -1307,31 +1386,36 @@ class PhonopySettings(Settings):
     def get_xyz_projection(self):
         return self._xyz_projection
 
+
 class PhonopyConfParser(ConfParser):
     def __init__(self, filename=None, args=None):
         self._settings = PhonopySettings()
+        confs = {}
         if filename is not None:
             ConfParser.__init__(self, filename=filename)
-            self.read_file() # store .conf file setting in self._confs
-            self._parse_conf() # self.parameters[key] = val
-            self._set_settings() # self.parameters -> PhonopySettings
+            self.read_file()  # store .conf file setting in self._confs
+            self._parse_conf()  # self.parameters[key] = val
+            self._set_settings()  # self.parameters -> PhonopySettings
+            confs.update(self._confs)
         if args is not None:
             # To invoke ConfParser.__init__() to flush variables.
             ConfParser.__init__(self, args=args)
-            self._read_options() # store options in self._confs
-            self._parse_conf() # self.parameters[key] = val
-            self._set_settings() # self.parameters -> PhonopySettings
+            self._read_options()  # store options in self._confs
+            self._parse_conf()  # self.parameters[key] = val
+            self._set_settings()  # self.parameters -> PhonopySettings
+            confs.update(self._confs)
+        self._confs = confs
 
     def _read_options(self):
-        self.read_options() # store data in self._confs
+        self.read_options()  # store data in self._confs
         arg_list = vars(self._args)
         if 'band_format' in arg_list:
             if self._args.band_format:
                 self._confs['band_format'] = self._args.band_format
 
         if 'band_labels' in arg_list:
-            if self._args.band_labels:
-                self._confs['band_labels'] = self._args.band_labels
+            if self._args.band_labels is not None:
+                self._confs['band_labels'] = " ".join(self._args.band_labels)
 
         if 'is_displacement' in arg_list:
             if self._args.is_displacement:
@@ -1346,8 +1430,8 @@ class PhonopyConfParser(ConfParser):
                 self._confs['dos'] = '.true.'
 
         if 'pdos' in arg_list:
-            if self._args.pdos:
-                self._confs['pdos'] = self._args.pdos
+            if self._args.pdos is not None:
+                self._confs['pdos'] = " ".join(self._args.pdos)
 
         if 'xyz_projection' in arg_list:
             if self._args.xyz_projection:
@@ -1401,7 +1485,7 @@ class PhonopyConfParser(ConfParser):
         if 'projection_direction' in arg_list:
             opt_proj_dir = self._args.projection_direction
             if opt_proj_dir is not None:
-                self._confs['projection_direction'] = opt_proj_dir
+                self._confs['projection_direction'] = " ".join(opt_proj_dir)
 
         if 'read_force_constants' in arg_list:
             if self._args.read_force_constants:
@@ -1445,7 +1529,7 @@ class PhonopyConfParser(ConfParser):
 
         if 'irreps_qpoint' in arg_list:
             if self._args.irreps_qpoint is not None:
-                self._confs['irreps'] = self._args.irreps_qpoint
+                self._confs['irreps'] = " ".join(self._args.irreps_qpoint)
 
         if 'show_irreps' in arg_list:
             if self._args.show_irreps:
@@ -1465,11 +1549,11 @@ class PhonopyConfParser(ConfParser):
 
         if 'modulation' in arg_list:
             if self._args.modulation:
-                self._confs['modulation'] = self._args.modulation
+                self._confs['modulation'] = " ".join(self._args.modulation)
 
         if 'anime' in arg_list:
             if self._args.anime:
-                self._confs['anime'] = self._args.anime
+                self._confs['anime'] = " ".join(self._args.anime)
 
         if 'is_group_velocity' in arg_list:
             if self._args.is_group_velocity:

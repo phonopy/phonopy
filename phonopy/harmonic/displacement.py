@@ -34,27 +34,28 @@
 
 import numpy as np
 
-directions_axis = np.array([[ 1, 0, 0 ],
-                            [ 0, 1, 0 ],
-                            [ 0, 0, 1 ]])
+directions_axis = np.array([[1, 0, 0],
+                            [0, 1, 0],
+                            [0, 0, 1]])
 
-directions_diag = np.array([[ 1, 0, 0 ],
-                            [ 0, 1, 0 ],
-                            [ 0, 0, 1 ],
-                            [ 1, 1, 0 ],
-                            [ 1, 0, 1 ],
-                            [ 0, 1, 1 ],
-                            [ 1,-1, 0 ],
-                            [ 1, 0,-1 ],
-                            [ 0, 1,-1 ],
-                            [ 1, 1, 1 ],
-                            [ 1, 1,-1 ],
-                            [ 1,-1, 1 ],
-                            [-1, 1, 1 ]])
+directions_diag = np.array([[1, 0, 0],
+                            [0, 1, 0],
+                            [0, 0, 1],
+                            [1, 1, 0],
+                            [1, 0, 1],
+                            [0, 1, 1],
+                            [1, -1, 0],
+                            [1, 0, -1],
+                            [0, 1, -1],
+                            [1, 1, 1],
+                            [1, 1, -1],
+                            [1, -1, 1],
+                            [-1, 1, 1]])
 
-def direction_to_displacement(displacement_directions,
-                              distance,
-                              supercell):
+
+def directions_to_displacement_dataset(displacement_directions,
+                                       distance,
+                                       supercell):
     lattice = supercell.get_cell()
     first_atoms = []
     for disp in displacement_directions:
@@ -69,19 +70,26 @@ def direction_to_displacement(displacement_directions,
 
     return displacement_dataset
 
+
 def get_least_displacements(symmetry,
                             is_plusminus='auto',
                             is_diagonal=True,
                             is_trigonal=False,
                             log_level=0):
-    """
-    Return least displacements
+    """Return a set of displacements
 
-    Format:
-      [[atom_num, disp_x, disp_y, disp_z],
-       [atom_num, disp_x, disp_y, disp_z],
-       ...
-     ]
+    Returns
+    -------
+    array_like
+        List of directions with respect to axes. This gives only the
+        symmetrically non equivalent directions. The format is like:
+           [[0, 1, 0, 0],
+            [7, 1, 0, 1], ...]
+        where each list is defined by:
+           First value:      Atom index in supercell starting with 0
+           Second to fourth: If the direction is displaced or not (1, 0, or -1)
+                             with respect to the axes.
+
     """
     displacements = []
     if is_diagonal:
@@ -117,6 +125,7 @@ def get_least_displacements(symmetry,
                                       -disp[0], -disp[1], -disp[2]])
 
     return displacements
+
 
 def get_displacement(site_symmetry,
                      directions=directions_diag,
@@ -155,6 +164,7 @@ def get_displacement(site_symmetry,
     # Three
     return [directions[0], directions[1], directions[2]]
 
+
 def get_displacement_one(site_symmetry,
                          directions=directions_diag):
     for direction in directions:
@@ -170,6 +180,7 @@ def get_displacement_one(site_symmetry,
                 if det != 0:
                     return i, [direction]
     return None, None
+
 
 def get_displacement_two(site_symmetry,
                          directions=directions_diag):
@@ -187,6 +198,7 @@ def get_displacement_two(site_symmetry,
                     return i, [direction, second_direction]
     return None, None
 
+
 def is_minus_displacement(direction, site_symmetry):
     is_minus = True
     for r in site_symmetry:
@@ -198,6 +210,7 @@ def is_minus_displacement(direction, site_symmetry):
             break
     return is_minus
 
+
 def is_trigonal_axis(r):
     r3 = np.dot(np.dot(r, r), r)
     if (r3 == np.eye(3, dtype=int)).all():
@@ -205,10 +218,11 @@ def is_trigonal_axis(r):
     else:
         return False
 
+
 def determinant(a, b, c):
-    det = a[0] * b[1] * c[2] - a[0] * b[2] * c[1] \
-        + a[1] * b[2] * c[0] - a[1] * b[0] * c[2] \
-        + a[2] * b[0] * c[1] - a[2] * b[1] * c[0]
+    det = (a[0] * b[1] * c[2] - a[0] * b[2] * c[1]
+           + a[1] * b[2] * c[0] - a[1] * b[0] * c[2]
+           + a[2] * b[0] * c[1] - a[2] * b[1] * c[0])
     return det
 
 

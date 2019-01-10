@@ -32,13 +32,13 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import sys
 import numpy as np
 import phonopy.structure.spglib as spg
 from phonopy.structure.symmetry import Symmetry, find_primitive, get_pointgroup
-from phonopy.structure.cells import get_primitive, print_cell, get_supercell
+from phonopy.structure.cells import get_primitive
 from phonopy.interface.vasp import write_vasp
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
+
 
 def check_symmetry(input_cell,
                    primitive_axis=None,
@@ -74,6 +74,7 @@ def check_symmetry(input_cell,
                         pbc=True)
         print("# Bravais lattice is written into BPOSCAR.")
         write_vasp('BPOSCAR', bravais)
+
 
 def _get_symmetry_yaml(cell, symmetry, phonopy_version=None):
     rotations = symmetry.get_symmetry_operations()['rotations']

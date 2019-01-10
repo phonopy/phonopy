@@ -262,6 +262,9 @@ class PhonopyAtoms(_Atoms):
                             symbols=self.symbols,
                             pbc=True)
 
+    def to_tuple(self):
+        return (self.cell, self.scaled_positions, self.numbers)
+
     def get_yaml_lines(self):
         lines = ["lattice:"]
         for v, a in zip(self.cell, ('a', 'b', 'c')):

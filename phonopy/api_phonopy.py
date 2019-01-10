@@ -40,7 +40,7 @@ from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell, get_primitive
 from phonopy.harmonic.displacement import (get_least_displacements,
-                                           direction_to_displacement)
+                                           directions_to_displacement_dataset)
 from phonopy.harmonic.force_constants import (
     get_fc2,
     symmetrize_force_constants,
@@ -48,6 +48,7 @@ from phonopy.harmonic.force_constants import (
     show_drift_force_constants,
     cutoff_force_constants,
     set_tensor_symmetry_PJ)
+from phonopy.interface.alm import get_fc2 as get_alm_fc2
 from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
 from phonopy.phonon.band_structure import BandStructure
 from phonopy.phonon.thermal_properties import ThermalProperties
@@ -56,6 +57,7 @@ from phonopy.units import VaspToTHz
 from phonopy.phonon.dos import TotalDos, PartialDos
 from phonopy.phonon.thermal_displacement import (ThermalDisplacements,
                                                  ThermalDisplacementMatrices)
+from phonopy.phonon.random_displacements import RandomDisplacements
 from phonopy.phonon.animation import Animation
 from phonopy.phonon.modulation import Modulation
 from phonopy.phonon.qpoints import QpointsPhonon
@@ -114,9 +116,9 @@ class Phonopy(object):
         self._search_symmetry()
         self._search_primitive_symmetry()
 
-        # set_displacements (used only in preprocess)
-        self._displacement_dataset = None
-        self._displacements = None
+        # displacements
+        self._displacement_dataset = {'natom':
+                                      self._supercell.get_number_of_atoms()}
         self._supercells_with_displacements = None
 
         # set_force_constants or set_forces
@@ -242,10 +244,43 @@ class Phonopy(object):
 
     @property
     def displacements(self):
-        return self._displacements
+        disps = []
+        if 'first_atoms' in self._displacement_dataset:
+            for disp in self._displacement_dataset['first_atoms']:
+                x = disp['displacement']
+                disps.append([disp['number'], x[0], x[1], x[2]])
+        elif 'displacements' in self._displacement_dataset:
+            disps = self._displacement_dataset['displacements']
+
+        return disps
 
     def get_displacements(self):
         return self.displacements
+
+    @displacements.setter
+    def displacements(self, displacements):
+        """Set displacemens
+
+        Parameters
+        ----------
+        displacemens : array_like
+            Snapshots of atomic displacements of all atoms in supercell.
+            Only all displacements in each supercell case is supported.
+            shape=(snapshots, natom, 3)
+            dtype='double'
+            order='C'
+
+        """
+
+        disp = np.array(displacements, dtype='double', order='C')
+        if (disp.ndim != 3 or
+            disp.shape[1:] != (self._supercell.get_number_of_atoms(), 3)):
+            raise RuntimeError("Array shape of displacements is incorrect.")
+
+        if 'first_atoms' in self._displacement_dataset:
+            raise RuntimeError("This displacement format is not supported.")
+
+        self._displacement_dataset['displacements'] = disp
 
     @property
     def force_constants(self):
@@ -253,6 +288,19 @@ class Phonopy(object):
 
     def get_force_constants(self):
         return self.force_constants
+
+    @property
+    def forces(self):
+        if 'forces' in self._displacement_dataset:
+            return self._displacement_dataset['forces']
+        elif 'first_atoms' in self._displacement_dataset:
+            forces = []
+            for disp in self._displacement_dataset['first_atoms']:
+                if 'forces' in disp:
+                    forces.append = disp['forces']
+            return forces
+        else:
+            return []
 
     @property
     def dynamical_matrix(self):
@@ -345,7 +393,8 @@ class Phonopy(object):
         u2s_map = self._supercell.get_unitcell_to_supercell_map()
         u_masses = s_masses[u2s_map]
         self._unitcell.set_masses(u_masses)
-        self._set_dynamical_matrix()
+        if self._force_constants is not None:
+            self._set_dynamical_matrix()
 
     def set_nac_params(self, nac_params=None):
         self._nac_params = nac_params
@@ -355,48 +404,101 @@ class Phonopy(object):
     def set_displacement_dataset(self, displacement_dataset):
         """Set dataset having displacements and optionally forces
 
-        displacement_dataset: tuple
-            This tuple has the following structure:
-            {'natom': number_of_atoms_in_supercell,
-             'first_atoms': [
-               {'number': atom index of displaced atom,
-                'displacement': displacement in Cartesian coordinates,
-                'forces': forces on atoms in supercell},
-               {...}, ...]}
+        Note
+        ----
+        Elements of the list accessed by 'first_atoms' corresponds to each
+        displaced supercell. Each displaced supercell contains only one
+        displacement. dict['first_atoms']['forces'] gives atomic forces in
+        each displaced supercell.
+
+        Parameters
+        ----------
+        displacement_dataset : dict
+            There are two dict structures.
+            1. One atomic displacement in each supercell:
+                {'natom': number of atoms in supercell,
+                 'first_atoms': [
+                   {'number': atom index of displaced atom,
+                    'displacement': displacement in Cartesian coordinates,
+                    'forces': forces on atoms in supercell},
+                   {...}, ...]}
+            2. All atomic displacements in each supercell:
+                {'natom': number of atoms in supercell,
+                 'displacements': ndarray, dtype='double', order='C',
+                                  shape=(natom, snapshots, 3)
+                 'forces': ndarray, dtype='double',, order='C',
+                                  shape=(natom, snapshots, 3)}
 
         """
         self._displacement_dataset = displacement_dataset
         self._supercells_with_displacements = None
 
-        self._displacements = []
-        for disp in self._displacement_dataset['first_atoms']:
-            x = disp['displacement']
-            self._displacements.append([disp['number'], x[0], x[1], x[2]])
+    @forces.setter
+    def forces(self, sets_of_forces):
+        """Set forces in displacement dataset.
+
+        Parameters
+        ----------
+        sets_of_forces : array_like
+            A set of atomic forces in displaced supercells. The order of
+            displaced supercells has to match with that in displacement
+            dataset.
+            shape=(displaced supercells, atoms in supercell, 3)
+            dtype='double'
+
+            [[[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # first supercell
+             [[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # second supercell
+             ...
+            ]
+
+        """
+
+        if 'first_atoms' in self._displacement_dataset:
+            for disp, forces in zip(self._displacement_dataset['first_atoms'],
+                                    sets_of_forces):
+                disp['forces'] = forces
+        elif 'forces' in self._displacement_dataset:
+            forces = np.array(sets_of_forces, dtype='double', order='C')
+            self._displacement_dataset['forces'] = forces
 
     def set_forces(self, sets_of_forces):
-        """
-        sets_of_forces:
-           [[[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # first supercell
-             [[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # second supercell
-             ...                                                  ]
-        """
-        for disp, forces in zip(
-                self._displacement_dataset['first_atoms'], sets_of_forces):
-            disp['forces'] = forces
+        self.forces = sets_of_forces
 
-    def set_force_constants(self, force_constants, show_drift=True):
-        fc_shape = force_constants.shape
-        if fc_shape[0] != fc_shape[1]:
-            if self._primitive.get_number_of_atoms() != fc_shape[0]:
-                print("Force constants shape disagrees with crystal "
-                      "structure setting. This may be due to PRIMITIVE_AXIS.")
-                raise RuntimeError
+    @force_constants.setter
+    def force_constants(self, force_constants):
+        """Set force constants
+
+        Parameters
+        ----------
+        force_constants : array_like
+            Force constants matrix. If this is given in own condiguous ndarray
+            with order='C' and dtype='double', internal copy of data is
+            avoided. Therefore some computational resources are saved.
+            shape=(atoms in supercell, atoms in supercell, 3, 3)
+            dtype='double'
+
+        """
+
+        if type(force_constants) is np.ndarray:
+            fc_shape = force_constants.shape
+            if fc_shape[0] != fc_shape[1]:
+                if self._primitive.get_number_of_atoms() != fc_shape[0]:
+                    msg = ("Force constants shape disagrees with crystal "
+                           "structure setting. This may be due to "
+                           "PRIMITIVE_AXIS.")
+                    raise RuntimeError(msg)
 
         self._force_constants = force_constants
+        self._set_dynamical_matrix()
+        # DynamialMatrix instance transforms force constants in correct
+        # type of numpy array.
+        self._force_constants = self._dynamical_matrix.force_constants
+
+    def set_force_constants(self, force_constants, show_drift=True):
+        self.force_constants = force_constants
         if show_drift and self._log_level:
             show_drift_force_constants(self._force_constants,
                                        primitive=self._primitive)
-        self._set_dynamical_matrix()
 
     def set_force_constants_zero_with_radius(self, cutoff_radius):
         cutoff_force_constants(self._force_constants,
@@ -411,32 +513,14 @@ class Phonopy(object):
                                is_plusminus='auto',
                                is_diagonal=True,
                                is_trigonal=False):
-        """Generate displacements automatically
-
-        displacemsts: List of displacements in Cartesian coordinates.
-           [[0, 0.01, 0.00, 0.00], ...]
-        where each set of elements is defined by:
-           First value:      Atom index in supercell starting with 0
-           Second to fourth: Displacement in Cartesian coordinates
-
-        displacement_directions:
-          List of directions with respect to axes. This gives only the
-          symmetrically non equivalent directions. The format is like:
-             [[0, 1, 0, 0],
-              [7, 1, 0, 1], ...]
-          where each list is defined by:
-             First value:      Atom index in supercell starting with 0
-             Second to fourth: If the direction is displaced or not (1, 0, or -1)
-                               with respect to the axes.
-
-        """
+        """Generate displacement dataset"""
         displacement_directions = get_least_displacements(
             self._symmetry,
             is_plusminus=is_plusminus,
             is_diagonal=is_diagonal,
             is_trigonal=is_trigonal,
             log_level=self._log_level)
-        displacement_dataset = direction_to_displacement(
+        displacement_dataset = directions_to_displacement_dataset(
             displacement_directions,
             distance,
             self._supercell)
@@ -445,22 +529,28 @@ class Phonopy(object):
     def produce_force_constants(self,
                                 forces=None,
                                 calculate_full_force_constants=True,
+                                use_alm=False,
                                 show_drift=True):
         if forces is not None:
             self.set_forces(forces)
 
         # A primitive check if 'forces' key is in displacement_dataset.
-        for disp in self._displacement_dataset['first_atoms']:
-            if 'forces' not in disp:
-                return False
+        if 'first_atoms' in self._displacement_dataset:
+            for disp in self._displacement_dataset['first_atoms']:
+                if 'forces' not in disp:
+                    raise RuntimeError("Forces are not yet set.")
+        elif 'forces' not in self._displacement_dataset:
+            raise RuntimeError("Forces are not yet set.")
 
         if calculate_full_force_constants:
             self._run_force_constants_from_forces(
+                use_alm=use_alm,
                 decimals=self._force_constants_decimals)
         else:
             p2s_map = self._primitive.get_primitive_to_supercell_map()
             self._run_force_constants_from_forces(
                 distributed_atom_list=p2s_map,
+                use_alm=use_alm,
                 decimals=self._force_constants_decimals)
 
         if show_drift and self._log_level:
@@ -580,19 +670,32 @@ class Phonopy(object):
                 band.get_frequencies(),
                 band.get_eigenvectors())
 
-    def plot_band_structure(self, labels=None):
+    def plot_band_structure(self,
+                            labels=None,
+                            path_connections=None,
+                            is_legacy=True):
         import matplotlib.pyplot as plt
+        from mpl_toolkits.axes_grid1 import ImageGrid
         if labels:
             from matplotlib import rc
             rc('text', usetex=True)
 
-        fig, ax = plt.subplots()
-        ax.xaxis.set_ticks_position('both')
-        ax.yaxis.set_ticks_position('both')
-        ax.xaxis.set_tick_params(which='both', direction='in')
-        ax.yaxis.set_tick_params(which='both', direction='in')
+        if is_legacy:
+            fig, axs = plt.subplots(1, 1)
+        else:
+            n = len([x for x in path_connections if not x])
+            fig = plt.figure()
+            axs = ImageGrid(fig, 111,  # similar to subplot(111)
+                            nrows_ncols=(1, n),
+                            axes_pad=0.1,
+                            add_all=True,
+                            label_mode="L")
+        self._band_structure.plot(axs,
+                                  labels=labels,
+                                  path_connections=path_connections,
+                                  is_legacy=is_legacy)
+        fig.tight_layout()
 
-        self._band_structure.plot(plt, labels=labels)
         return plt
 
     def write_hdf5_band_structure(self,
@@ -748,33 +851,31 @@ class Phonopy(object):
 
         plt.figure(figsize=(10, 6))
         gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1])
-        ax1 = plt.subplot(gs[0, 0])
-        ax1.xaxis.set_ticks_position('both')
-        ax1.yaxis.set_ticks_position('both')
-        ax1.xaxis.set_tick_params(which='both', direction='in')
-        ax1.yaxis.set_tick_params(which='both', direction='in')
-        self._band_structure.plot(plt, labels=labels)
-        ax2 = plt.subplot(gs[0, 1], sharey=ax1)
+
+        ax2 = plt.subplot(gs[0, 1])
         ax2.xaxis.set_ticks_position('both')
         ax2.yaxis.set_ticks_position('both')
         ax2.xaxis.set_tick_params(which='both', direction='in')
         ax2.yaxis.set_tick_params(which='both', direction='in')
-        plt.subplots_adjust(wspace=0.03)
-        plt.setp(ax2.get_yticklabels(), visible=False)
-
         if pdos_indices is None:
-            self._total_dos.plot(plt,
+            self._total_dos.plot(ax2,
                                  ylabel="",
                                  draw_grid=False,
                                  flip_xy=True)
         else:
-            self._pdos.plot(plt,
+            self._pdos.plot(ax2,
                             indices=pdos_indices,
                             ylabel="",
                             draw_grid=False,
                             flip_xy=True)
-
         ax2.set_xlim((0, None))
+        plt.setp(ax2.get_yticklabels(), visible=False)
+
+        ax1 = plt.subplot(gs[0, 0], sharey=ax2)
+        self._band_structure.plot(ax1, labels=labels)
+
+        plt.subplots_adjust(wspace=0.03)
+        plt.tight_layout()
 
         return plt
 
@@ -787,8 +888,8 @@ class Phonopy(object):
                       tetrahedron_method=False):
 
         if self._mesh is None:
-            print("\'set_mesh\' has to be done before DOS calculation.")
-            raise RuntimeError
+            msg = "\'set_mesh\' has to be done before DOS calculation."
+            raise RuntimeError(msg)
 
         total_dos = TotalDos(self._mesh,
                              sigma=sigma,
@@ -817,6 +918,11 @@ class Phonopy(object):
         return self._total_dos.get_Debye_frequency()
 
     def plot_total_DOS(self):
+        if self._total_dos is None:
+            msg = ("\'set_total_dos\' has to be done before plotting "
+                   "total DOS.")
+            raise RuntimeError(msg)
+
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
@@ -825,7 +931,7 @@ class Phonopy(object):
         ax.xaxis.set_tick_params(which='both', direction='in')
         ax.yaxis.set_tick_params(which='both', direction='in')
 
-        self._total_dos.plot(plt, draw_grid=False)
+        self._total_dos.plot(ax, draw_grid=False)
 
         ax.set_ylim((0, None))
 
@@ -846,19 +952,17 @@ class Phonopy(object):
         self._pdos = None
 
         if self._mesh is None:
-            print("\'set_mesh\' has to be done before PDOS calculation.")
-            raise RuntimeError
+            msg = "\'set_mesh\' has to be done before PDOS calculation."
+            raise RuntimeError(msg)
 
         if self._mesh.eigenvectors is None:
-            print("\'set_mesh\' had to be called with "
-                  "is_eigenvectors=True.")
-            return RuntimeError
+            msg = "\'set_mesh\' had to be called with is_eigenvectors=True."
+            return RuntimeError(msg)
 
         num_grid = np.prod(self._mesh.get_mesh_numbers())
         if num_grid != len(self._mesh.get_ir_grid_points()):
-            print("\'set_mesh\' had to be called with "
-                  "is_mesh_symmetry=False.")
-            raise RuntimeError
+            msg = "\'set_mesh\' had to be called with is_mesh_symmetry=False."
+            raise RuntimeError(msg)
 
         if direction is not None:
             direction_cart = np.dot(direction, self._primitive.get_cell())
@@ -895,7 +999,7 @@ class Phonopy(object):
         ax.xaxis.set_tick_params(which='both', direction='in')
         ax.yaxis.set_tick_params(which='both', direction='in')
 
-        self._pdos.plot(plt,
+        self._pdos.plot(ax,
                         indices=pdos_indices,
                         legend=legend,
                         draw_grid=False)
@@ -1116,6 +1220,24 @@ class Phonopy(object):
         self._thermal_displacement_matrices.write_cif(self._primitive,
                                                       temperature_index)
 
+    def set_random_displacements(self,
+                                 T,
+                                 number_of_snapshots=1,
+                                 seed=None,
+                                 cutoff_frequency=None):
+        self._random_displacements = RandomDisplacements(
+            self._dynamical_matrix,
+            cutoff_frequency=cutoff_frequency,
+            factor=self._factor)
+        self._random_displacements.run(
+            T,
+            number_of_snapshots=number_of_snapshots,
+            seed=seed)
+
+    def get_random_displacements(self):
+        if self._random_displacements is not None:
+            return self._random_displacements.u
+
     # Sampling at q-points
     def set_qpoints_phonon(self,
                            q_points,
@@ -1315,8 +1437,7 @@ class Phonopy(object):
     # Group velocity
     def set_group_velocity(self, q_length=None):
         if self._dynamical_matrix is None:
-            print("Dynamical matrix has not yet built.")
-            raise RuntimeError
+            raise RuntimeError("Dynamical matrix has not yet built.")
 
         self._group_velocity = GroupVelocity(
             self._dynamical_matrix,
@@ -1392,7 +1513,7 @@ class Phonopy(object):
             self._dynamic_structure_factor.run()
 
     def get_dynamic_structure_factor(self):
-        return (self._dynamic_structure_factor.qpoints,
+        return (self._dynamic_structure_factor.Qpoints,
                 self._dynamic_structure_factor.S)
 
     #################
@@ -1400,27 +1521,37 @@ class Phonopy(object):
     #################
     def _run_force_constants_from_forces(self,
                                          distributed_atom_list=None,
+                                         use_alm=False,
                                          decimals=None):
         if self._displacement_dataset is not None:
-            self._force_constants = get_fc2(
-                self._supercell,
-                self._symmetry,
-                self._displacement_dataset,
-                atom_list=distributed_atom_list,
-                decimals=decimals)
+            if use_alm:
+                self._force_constants = get_alm_fc2(
+                    self._supercell,
+                    self._primitive,
+                    self._displacement_dataset,
+                    atom_list=distributed_atom_list,
+                    log_level=self._log_level)
+            else:
+                if 'displacements' in self._displacement_dataset:
+                    msg = ("This data format of displacement_dataset is not "
+                           "supported unless use_alm=True.")
+                    raise RuntimeError(msg)
+                self._force_constants = get_fc2(
+                    self._supercell,
+                    self._symmetry,
+                    self._displacement_dataset,
+                    atom_list=distributed_atom_list,
+                    decimals=decimals)
 
     def _set_dynamical_matrix(self):
         self._dynamical_matrix = None
 
         if self._supercell is None or self._primitive is None:
-            print("Supercell or primitive is not created.")
-            raise RuntimeError
+            raise RuntimeError("Supercell or primitive is not created.")
         if self._force_constants is None:
-            print("Force constants are not prepared.")
-            raise RuntimeError
+            raise RuntimeError("Force constants are not prepared.")
         if self._primitive.get_masses() is None:
-            print("Atomic masses are not correctly set.")
-            raise RuntimeError
+            raise RuntimeError("Atomic masses are not correctly set.")
         self._dynamical_matrix = get_dynamical_matrix(
             self._force_constants,
             self._supercell,
@@ -1485,7 +1616,7 @@ class Phonopy(object):
         try:
             self._primitive = get_primitive(
                 self._supercell, trans_mat, self._symprec)
-        except ValueError as err:
-            print("Creating primitive cell is failed.")
-            print("PRIMITIVE_AXIS may be incorrectly specified.")
-            raise
+        except ValueError:
+            msg = ("Creating primitive cell is failed. "
+                   "PRIMITIVE_AXIS may be incorrectly specified.")
+            raise RuntimeError(msg)

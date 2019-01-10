@@ -32,13 +32,13 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import sys
 import numpy as np
 import phonopy.structure.spglib as spg
 from phonopy.structure.cells import (get_primitive, get_supercell,
                                      compute_all_sg_permutations)
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.harmonic.force_constants import similarity_transformation
+
 
 class Symmetry(object):
     def __init__(self, cell, symprec=1e-5, is_symmetry=True):
@@ -139,10 +139,10 @@ class Symmetry(object):
             rotations = self._symmetry_operations['rotations']
             translations = self._symmetry_operations['translations']
             self._atomic_permutations = compute_all_sg_permutations(
-                positions, # scaled positions
-                rotations, # scaled
-                translations, # scaled
-                lattice, # column vectors
+                positions,  # scaled positions
+                rotations,  # scaled
+                translations,  # scaled
+                lattice,  # column vectors
                 self._symprec)
 
         return self._atomic_permutations
@@ -185,8 +185,8 @@ class Symmetry(object):
         self._symmetry_operations = {
             'rotations': self._dataset['rotations'],
             'translations': self._dataset['translations']}
-        self._international_table = "%s (%d)" % (self._dataset['international'],
-                                                 self._dataset['number'])
+        self._international_table = "%s (%d)" % (
+            self._dataset['international'], self._dataset['number'])
         self._wyckoff_letters = self._dataset['wyckoffs']
 
         self._map_atoms = self._dataset['equivalent_atoms']
@@ -253,9 +253,8 @@ class Symmetry(object):
         map_operations = np.zeros(len(pos), dtype='intc')
 
         for i, eq_atom in enumerate(self._map_atoms):
-            for j, (r, t) in enumerate(
-                zip(ops['rotations'], ops['translations'])):
-
+            for j, (r, t) in enumerate(zip(ops['rotations'],
+                                           ops['translations'])):
                 diff = np.dot(pos[i], r.T) + t - pos[eq_atom]
                 diff -= np.rint(diff)
                 dist = np.linalg.norm(np.dot(diff, lattice))
@@ -312,9 +311,11 @@ def find_primitive(cell, symprec=1e-5):
                      cell=lattice,
                      pbc=True)
 
+
 def get_pointgroup(rotations):
     ptg = spg.get_pointgroup(rotations)
     return ptg[0].strip(), ptg[2]
+
 
 def get_lattice_vector_equivalence(point_symmetry):
     """Return (b==c, c==a, a==b)"""
@@ -336,6 +337,7 @@ def get_lattice_vector_equivalence(point_symmetry):
             equivalence[0] = True
 
     return equivalence
+
 
 def elaborate_borns_and_epsilon(ucell,
                                 borns,
@@ -376,11 +378,12 @@ def elaborate_borns_and_epsilon(ucell,
                                           len(borns))
 
     if symmetrize_tensors:
-        borns_, epsilon_ = symmetrize_borns_and_epsilon(borns,
-                                                        epsilon,
-                                                        ucell,
-                                                        symprec=symprec,
-                                                        is_symmetry=is_symmetry)
+        borns_, epsilon_ = symmetrize_borns_and_epsilon(
+            borns,
+            epsilon,
+            ucell,
+            symprec=symprec,
+            is_symmetry=is_symmetry)
 
         if (abs(borns - borns_) > 0.1).any():
             lines = ["Born effective charge symmetry is largely broken. "
@@ -437,6 +440,7 @@ def symmetrize_borns_and_epsilon(borns,
 
     return borns_, epsilon_
 
+
 def _symmetrize_2nd_rank_tensor(tensor, symmetry_operations, lattice):
     sym_cart = [similarity_transformation(lattice.T, r)
                 for r in symmetry_operations]
@@ -444,6 +448,7 @@ def _symmetrize_2nd_rank_tensor(tensor, symmetry_operations, lattice):
     for sym in sym_cart:
         sum_tensor += similarity_transformation(sym, tensor)
     return sum_tensor / len(symmetry_operations)
+
 
 def _extract_independent_borns(borns,
                                ucell,

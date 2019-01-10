@@ -145,7 +145,7 @@ specified.
    phonopy-vasp-born --nost
 
 
-``--pa``, ``--primitive_axis``
+``--pa``, ``--primitive-axes``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This is same as :ref:`primitive_axis_tag`.

@@ -40,6 +40,7 @@ from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_angles, get_cell_parameters
 from phonopy.harmonic.force_constants import similarity_transformation
 
+
 def parse_set_of_forces(disps,
                         forces_filenames,
                         supercell,
@@ -83,96 +84,88 @@ def parse_set_of_forces(disps,
     else:
         return []
 
+
 def parse_wien2k_struct(filename):
+    with open(filename) as f:
+        # 1
+        title = f.readline().rstrip()
 
-    file = open(filename)
+        # 2
+        num_site = int(f.readline()[27:30])
 
-    # 1
-    title = file.readline().rstrip()
+        # 3
+        f.readline()
 
-    # 2
-    num_site = int(file.readline()[27:30])
+        # 4
+        line = f.readline()
+        a = float(line[0:10])
+        b = float(line[10:20])
+        c = float(line[20:30])
+        alpha = float(line[30:40])
+        beta = float(line[40:50])
+        gamma = float(line[50:60])
 
-    # 3
-    file.readline()
+        lattice = _transform_axis(alpha, beta, gamma, a, b, c)
 
-    # 4
-    line = file.readline()
-    a = float(line[0:10])
-    b = float(line[10:20])
-    c = float(line[20:30])
-    alpha = float(line[30:40])
-    beta  = float(line[40:50])
-    gamma = float(line[50:60])
+        symbols = []
+        positions = []
+        npts = []
+        r0s = []
+        rmts = []
 
-    lattice = _transform_axis(alpha, beta, gamma, a, b, c)
-
-    symbols = []
-    positions = []
-    npts = []
-    r0s = []
-    rmts = []
-
-    for i in range(num_site):
-        # 5
-        line = file.readline()
-        x = float(line[12:22])
-        y = float(line[25:35])
-        z = float(line[38:48])
-        positions.append([x, y, z])
-
-        # 6
-        line = file.readline()
-        multi = int(line[15:17])
-
-        for j in range(multi - 1):
-            line = file.readline()
+        for i in range(num_site):
+            # 5
+            line = f.readline()
             x = float(line[12:22])
             y = float(line[25:35])
             z = float(line[38:48])
             positions.append([x, y, z])
 
-        # 7
-        line = file.readline()
-        chemical_symbol = line[0:2].strip()
-        npt = int(line[15:20])
-        r0 = float(line[25:35])
-        rmt = float(line[40:50])
+            # 6
+            line = f.readline()
+            multi = int(line[15:17])
 
-        for j in range(multi):
-            symbols.append(chemical_symbol)
-            npts.append(npt)
-            r0s.append(r0)
-            rmts.append(rmt)
+            for j in range(multi - 1):
+                line = f.readline()
+                x = float(line[12:22])
+                y = float(line[25:35])
+                z = float(line[38:48])
+                positions.append([x, y, z])
 
-        # 8 - 10
-        for j in range(3):
-            file.readline()
+            # 7
+            line = f.readline()
+            chemical_symbol = line[0:2].strip()
+            npt = int(line[15:20])
+            r0 = float(line[25:35])
+            rmt = float(line[40:50])
 
-    cell = Atoms(symbols=symbols,
-                 scaled_positions=positions,
-                 cell=lattice)
+            for j in range(multi):
+                symbols.append(chemical_symbol)
+                npts.append(npt)
+                r0s.append(r0)
+                rmts.append(rmt)
 
-    return cell, npts, r0s, rmts
+            # 8 - 10
+            for j in range(3):
+                f.readline()
+
+        cell = Atoms(symbols=symbols,
+                     scaled_positions=positions,
+                     cell=lattice)
+
+        return cell, npts, r0s, rmts
+
 
 def write_supercells_with_displacements(supercell,
                                         cells_with_displacements,
                                         npts, r0s, rmts,
-                                        supercell_matrix,
+                                        num_unitcells_in_supercell,
                                         filename="wien2k-"):
-    v = supercell_matrix
-    det = (  v[0,0] * v[1,1] * v[2,2]
-           + v[0,1] * v[1,2] * v[2,0]
-           + v[0,2] * v[1,0] * v[2,1]
-           - v[0,0] * v[1,2] * v[2,1]
-           - v[0,1] * v[1,0] * v[2,2]
-           - v[0,2] * v[1,1] * v[2,0])
-
     npts_super = []
     r0s_super = []
     rmts_super = []
     for i, j, k in zip(npts, r0s, rmts):
-        for l in range(abs(det)):
+        for l in range(num_unitcells_in_supercell):
             npts_super.append(i)
             r0s_super.append(j)
             rmts_super.append(k)
@@ -189,8 +182,8 @@ def write_supercells_with_displacements(supercell,
         w.write(_get_wien2k_struct(cell, npts_super, r0s_super, rmts_super))
         w.close()
 
-def _get_wien2k_struct(cell, npts, r0s, rmts):
 
+def _get_wien2k_struct(cell, npts, r0s, rmts):
     num_atom = cell.get_number_of_atoms()
     lattice = cell.get_cell()
     a, b, c = get_cell_parameters(lattice)
@@ -215,8 +208,7 @@ def _get_wien2k_struct(cell, npts, r0s, rmts):
         a, b, c, alpha, beta, gamma)
 
     for i, pos in enumerate(positions):
-
-        for j in (0,1,2):
+        for j in (0, 1, 2):
             if pos[j] < 0:
                 pos[j] += 1
             if int(float("%10.8f" % pos[j])) == 1:
@@ -241,13 +233,14 @@ def _get_wien2k_struct(cell, npts, r0s, rmts):
         text += "%-20s%10.7f%10.7f%10.7f\n" % ("", 0, 1, 0)
         text += "%-20s%10.7f%10.7f%10.7f\n" % ("", 0, 0, 1)
 
-    text +="   0      NUMBER OF SYMMETRY OPERATIONS"
+    text += "   0      NUMBER OF SYMMETRY OPERATIONS"
 
     return text
 
+
 def _transform_axis(alpha, beta, gamma, a, b, c):
     alpha = alpha / 180 * np.pi
-    beta  = beta  / 180 * np.pi
+    beta = beta / 180 * np.pi
     gamma = gamma / 180 * np.pi
 
     cz = c
@@ -255,11 +248,12 @@ def _transform_axis(alpha, beta, gamma, a, b, c):
     bz = np.cos(alpha) * b
     by = np.sin(alpha) * b
 
-    az = np.cos(beta)  * a
+    az = np.cos(beta) * a
     ay = (np.cos(gamma) - np.cos(beta) * np.cos(alpha)) / np.sin(alpha) * a
     ax = np.sqrt(a**2 - ay**2 - az**2)
 
-    return [ax,ay,az], [0,by,bz], [0,0,cz]
+    return [ax, ay, az], [0, by, bz], [0, 0, cz]
+
 
 def _parse_core_param(file):
     npts = []
@@ -273,9 +267,10 @@ def _parse_core_param(file):
         vals = line.strip().split()
         npts.append(int(vals[1]))
         r0s.append(float(vals[2]))
-        rmts.append (float(vals[3]))
+        rmts.append(float(vals[3]))
 
     return npts, r0s, rmts
+
 
 def _get_forces_wien2k(filename, lattice):
     forces = []
@@ -295,6 +290,7 @@ def _get_forces_wien2k(filename, lattice):
                 num_atom = int(line[4:7])
 
     return forces[-num_atom:]
+
 
 def _distribute_forces(supercell, disp, forces, filename, symprec):
     natom = supercell.get_number_of_atoms()
@@ -331,8 +327,8 @@ def _distribute_forces(supercell, disp, forces, filename, symprec):
         print("\'%s\' at wien2k calculation." % filename)
         force_set = forces
     elif len(forces) != len(independent_atoms):
-        print("Non-equivalent atoms of %s could not be recognized by phonopy." %
-              filename)
+        print("Non-equivalent atoms of %s could not be recognized by phonopy."
+              % filename)
         return False
     else:
         # 1. Transform wien2k forces to those on independent atoms
@@ -363,6 +359,7 @@ def _distribute_forces(supercell, disp, forces, filename, symprec):
 
     return force_set
 
+
 def _get_independent_atoms_in_dot_scf(filename):
     positions = []
     for line in open(filename):
@@ -376,10 +373,9 @@ def _get_independent_atoms_in_dot_scf(filename):
                 y = float(line[35:42])
                 z = float(line[43:50])
             num_atom = int(line[4:7])
-            positions.append([x,y,z])
+            positions.append([x, y, z])
 
     return np.array(positions)[-num_atom:]
-
 
 
 if __name__ == '__main__':
@@ -389,7 +385,7 @@ if __name__ == '__main__':
     def clean_scaled_positions(cell):
         positions = cell.get_scaled_positions()
         for pos in positions:
-            for i in (0,1,2):
+            for i in (0, 1, 2):
                 # The following %19.16f follows write_vasp
                 if float("%19.16f" % pos[i]) >= 1:
                     pos[i] -= 1.0
