@@ -966,9 +966,10 @@ class Phonopy(object):
                                 ylabel="",
                                 draw_grid=False,
                                 flip_xy=True)
-            fmax = np.max(freqs)
-            dmax = np.max(dos)
-            axs[-1].set_aspect(dmax / fmax * 3)
+            xlim = axs[-1].get_xlim()
+            ylim = axs[-1].get_ylim()
+            aspect = (xlim[1] - xlim[0]) / (ylim[1] - ylim[0]) * 3
+            axs[-1].set_aspect(aspect)
             axs[-1].axhline(y=0, linestyle=':', linewidth=0.5, color='b')
             axs[-1].set_xlim((0, None))
 

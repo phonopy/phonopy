@@ -357,8 +357,8 @@ class BandStructure(object):
 
         max_freq = max([np.max(fq) for fq in self._frequencies])
         max_dist = self._distances[-1][-1]
-        scale = max_freq / max_dist * 1.5
-        distances = [d * scale for d in self._distances]
+        plot_xscale = max_freq / max_dist * 1.5
+        distances = [d * plot_xscale for d in self._distances]
 
         # T T T F F -> [[0, 3], [4, 4]]
         lefts = [0]
