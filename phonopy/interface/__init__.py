@@ -48,13 +48,12 @@ def get_interface_mode(args):
     """
 
     calculator_list = ['wien2k', 'abinit', 'qe', 'elk', 'siesta', 'cp2k',
-                       'crystal', 'vasp']
+                       'crystal', 'vasp','dftbp']
     for calculator in calculator_list:
         mode = "%s_mode" % calculator
         if mode in args and args.__dict__[mode]:
             return calculator
     return None
-
 
 def write_supercells_with_displacements(interface_mode,
                                         supercell,
@@ -103,6 +102,9 @@ def write_supercells_with_displacements(interface_mode,
                                             optional_structure_info[1],
                                             num_unitcells_in_supercell,
                                             template_file="TEMPLATE")
+    elif interface_mode == 'dftbp':
+        from phonopy.interface.dftbp import write_supercells_with_displacements
+        write_supercells_with_displacements(supercell, cells_with_disps)
 
 
 def read_crystal_structure(filename=None,
@@ -181,7 +183,10 @@ def read_crystal_structure(filename=None,
         from phonopy.interface.crystal import read_crystal
         unitcell, conv_numbers = read_crystal(cell_filename)
         return unitcell, (cell_filename, conv_numbers)
-
+    elif interface_mode == 'dftbp':
+        from phonopy.interface.dftbp import read_dftbp
+        unitcell = read_dftbp(cell_filename)
+        return unitcell, (cell_filename,)
 
 def get_default_cell_filename(interface_mode):
     if interface_mode == 'phonopy_yaml':
@@ -200,9 +205,10 @@ def get_default_cell_filename(interface_mode):
         return "unitcell.inp"
     elif interface_mode == 'crystal':
         return "crystal.o"
+    elif interface_mode == 'dftbp':
+        return "geo.gen"
     else:
         return None
-
 
 def get_default_supercell_filename(interface_mode):
     if interface_mode == 'phonopy_yaml':
@@ -219,6 +225,8 @@ def get_default_supercell_filename(interface_mode):
         return "supercell.inp"
     elif interface_mode == 'crystal':
         return None  # supercell.ext can not be parsed by crystal interface.
+    elif interface_mode == 'dftbp':
+        return "geo.gen"
     else:
         return None
 
@@ -244,12 +252,13 @@ def get_default_physical_units(interface_mode):
     qe            : Ry,      au,        AMU,         Ry/au
     siesta        : eV,      au,        AMU,         eV/Angstroem
     CRYSTAL       : eV,      Angstrom,  AMU,         eV/Angstroem
+    DFTB+         : hartree, au,        AMU          hartree/au
 
     """
 
     from phonopy.units import (Wien2kToTHz, AbinitToTHz, PwscfToTHz, ElkToTHz,
                                SiestaToTHz, VaspToTHz, CP2KToTHz, CrystalToTHz,
-                               Hartree, Bohr)
+                               DftbpToTHz, Hartree, Bohr)
 
     units = {'factor': None,
              'nac_factor': None,
@@ -305,6 +314,12 @@ def get_default_physical_units(interface_mode):
         units['distance_to_A'] = 1.0
         units['force_constants_unit'] = 'eV/Angstrom^2'
         units['length_unit'] = 'Angstrom'
+    elif interface_mode == 'dftbp':
+        units['factor'] = DftbpToTHz
+        units['nac_factor'] = Hartree * Bohr
+        units['distance_to_A'] = Bohr
+        units['force_constants_unit'] = 'hartree/au^2'
+        units['length_unit'] = 'Angstrom'
 
     return units
 
@@ -334,7 +349,7 @@ def create_FORCE_SETS(interface_mode,
                   "other files." % force_filenames[0])
 
     if interface_mode in (None, 'vasp', 'abinit', 'elk', 'qe', 'siesta',
-                          'cp2k', 'crystal'):
+                          'cp2k', 'crystal', 'dftbp'):
         disp_dataset = parse_disp_yaml(filename=disp_filename)
         num_atoms = disp_dataset['natom']
         num_displacements = len(disp_dataset['first_atoms'])
@@ -415,6 +430,8 @@ def get_force_sets(interface_mode,
         from phonopy.interface.cp2k import parse_set_of_forces
     elif interface_mode == 'crystal':
         from phonopy.interface.crystal import parse_set_of_forces
+    elif interface_mode == 'dftbp':
+        from phonopy.interface.dftbp import parse_set_of_forces
     else:
         return []
 

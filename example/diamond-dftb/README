@@ -1,0 +1,18 @@
+This is an example of the use of the DFTB+ interface. An input is
+given in the dftb_in.hsd file along with the conventional unit cell in
+geo.gen. This example also requires the pbc-0-3 Slater-Koster
+parameteters for carbon
+(https://www.dftb.org/parameters/download/pbc/pbc-0-3-cc/).
+
+1) Create the (one) displaced supercell structure(s):
+   phonopy -d --dim="4 4 4" --dftb+ 
+
+2) Run the supercell input with dftb+. This has been pre-calculated
+   with DFTB+ version 18.2, with the required data stored in the file
+   results.tag.
+
+3) Collect the forces:
+   phonopy -f results.tag --dftb+  ...
+
+4) Calculate phonon dispersion data into band.yaml and save band.pdf:
+   phonopy --dftb+ --dim="4 4 4" -p -s band.conf

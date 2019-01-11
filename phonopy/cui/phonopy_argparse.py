@@ -83,7 +83,8 @@ def get_parser():
         elk_mode=False,
         siesta_mode=False,
         cp2k_mode=False,
-        fc_symmetry=False,
+        dftbp_mode=False,
+        fc_symmetry=None,
         fc_format=None,
         fc_spg_symmetry=False,
         fits_debye_model=False,
@@ -220,6 +221,9 @@ def get_parser():
     parser.add_argument(
         "-d", "--displacement", dest="is_displacement", action="store_true",
         help="Create supercells with displacements")
+    parser.add_argument(
+        "--dftb+", dest="dftbp_mode", action="store_true",
+        help="Invoke dftb+ mode")
     parser.add_argument(
         "--dim", nargs='+', dest="supercell_dimension",
         help="Same behavior as DIM tag")
