@@ -62,8 +62,8 @@ def directions_to_displacement_dataset(displacement_directions,
         direction = disp[1:]
         disp_cartesian = np.dot(direction, lattice)
         disp_cartesian *= distance / np.linalg.norm(disp_cartesian)
-        first_atoms.append({'number': disp[0],
-                            'displacement': disp_cartesian})
+        first_atoms.append({'number': int(disp[0]),
+                            'displacement': disp_cartesian.tolist()})
     displacement_dataset = {
         'natom': supercell.get_number_of_atoms(),
         'first_atoms': first_atoms}

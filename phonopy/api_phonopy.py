@@ -413,7 +413,7 @@ class Phonopy(object):
 
     @dataset.setter
     def dataset(self, dataset):
-        self._displacement_dataset = dataset
+        self.set_displacement_dataset(dataset)
 
     def set_displacement_dataset(self, displacement_dataset):
         """Set dataset having displacements and optionally forces
@@ -1660,7 +1660,7 @@ class Phonopy(object):
         return (self._dynamic_structure_factor.qpoints,
                 self._dynamic_structure_factor.S)
 
-    def dump(self, filename="phonopy.yaml"):
+    def save_inputs(self, filename="phonopy.yaml"):
         phpy_yaml = PhonopyYaml(show_force_sets=True)
         phpy_yaml.set_phonon_info(self)
         with open(filename, 'w') as w:
