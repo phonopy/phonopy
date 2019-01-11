@@ -44,22 +44,30 @@ import numpy as np
 # FORCE_SETS
 #
 def write_FORCE_SETS(dataset, filename='FORCE_SETS'):
+    lines = get_FORCE_SETS_lines(dataset)
+    with open(filename, 'w') as w:
+        w.write("\n".join(lines))
+
+
+def get_FORCE_SETS_lines(dataset, forces=None):
     num_atom = dataset['natom']
     displacements = dataset['first_atoms']
-    forces = [x['forces'] for x in dataset['first_atoms']]
+    if forces is None:
+        _forces = [x['forces'] for x in dataset['first_atoms']]
+    else:
+        _forces = forces
 
-    # Write FORCE_SETS
-    with open(filename, 'w') as fp:
-        fp.write("%-5d\n" % num_atom)
-        fp.write("%-5d\n" % len(displacements))
-        for count, disp in enumerate(displacements):
-            fp.write("\n%-5d\n" % (disp['number'] + 1))
-            fp.write("%20.16f %20.16f %20.16f\n" %
-                     (tuple(disp['displacement'])))
+    lines = []
+    lines.append("%-5d" % num_atom)
+    lines.append("%-5d" % len(displacements))
+    for count, disp in enumerate(displacements):
+        lines.append("")
+        lines.append("%-5d" % (disp['number'] + 1))
+        lines.append("%20.16f %20.16f %20.16f" % tuple(disp['displacement']))
+        for f in _forces[count]:
+            lines.append("%15.10f %15.10f %15.10f" % tuple(f))
 
-            for f in forces[count]:
-                fp.write("%15.10f %15.10f %15.10f\n" % (tuple(f)))
-
+    return lines
 
 def parse_FORCE_SETS(natom=None,
                      is_translational_invariance=False,
@@ -219,19 +227,27 @@ def write_FORCE_CONSTANTS(force_constants,
 
     """
 
+    lines = get_FORCE_CONSTANTS_lines(force_constants, p2s_map=p2s_map)
+    with open(filename, 'w') as w:
+        w.write("\n".join(lines))
+
+
+def get_FORCE_CONSTANTS_lines(force_constants, p2s_map=None):
     if p2s_map is not None and len(p2s_map) == force_constants.shape[0]:
         indices = p2s_map
     else:
         indices = np.arange(force_constants.shape[0], dtype='intc')
 
-    with open(filename, 'w') as w:
-        fc_shape = force_constants.shape
-        w.write("%4d %4d\n" % fc_shape[:2])
-        for i, s_i in enumerate(indices):
-            for j in range(fc_shape[1]):
-                w.write("%d %d\n" % (s_i + 1, j + 1))
-                for vec in force_constants[i][j]:
-                    w.write(("%22.15f"*3 + "\n") % tuple(vec))
+    lines = []
+    fc_shape = force_constants.shape
+    lines.append("%4d %4d" % fc_shape[:2])
+    for i, s_i in enumerate(indices):
+        for j in range(fc_shape[1]):
+            lines.append("%d %d" % (s_i + 1, j + 1))
+            for vec in force_constants[i][j]:
+                lines.append(("%22.15f" * 3) % tuple(vec))
+
+    return lines
 
 
 def write_force_constants_to_hdf5(force_constants,
@@ -460,9 +476,22 @@ def parse_QPOINTS(filename="QPOINTS"):
 # BORN
 #
 def write_BORN(primitive, borns, epsilon, filename="BORN"):
+    lines = get_BORN_lines(primitive, borns, epsilon)
+    with open(filename, 'w') as w:
+        w.write('\n'.join(lines))
+
+
+def get_BORN_lines(unitcell, borns, epsilon,
+                   factor=None,
+                   primitive_matrix=None,
+                   supercell_matrix=None,
+                   symprec=1e-5):
     from phonopy.structure.symmetry import elaborate_borns_and_epsilon
     borns, epsilon, atom_indices = elaborate_borns_and_epsilon(
-        primitive, borns, epsilon, symmetrize_tensors=True)
+        unitcell, borns, epsilon, symmetrize_tensors=True,
+        primitive_matrix=primitive_matrix,
+        supercell_matrix=supercell_matrix,
+        symprec=symprec)
 
     text = "# epsilon and Z* of atoms "
     text += ' '.join(["%d" % n for n in atom_indices + 1])
@@ -470,8 +499,7 @@ def write_BORN(primitive, borns, epsilon, filename="BORN"):
     lines.append(("%13.8f " * 9) % tuple(epsilon.flatten()))
     for z in borns:
         lines.append(("%13.8f " * 9) % tuple(z.flatten()))
-    with open(filename, 'w') as w:
-        w.write('\n'.join(lines))
+    return lines
 
 
 def parse_BORN(primitive, symprec=1e-5, is_symmetry=True, filename="BORN"):
