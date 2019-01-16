@@ -37,7 +37,7 @@ import warnings
 import numpy as np
 from phonopy.version import __version__
 from phonopy.interface import PhonopyYaml
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
 from phonopy.structure.cells import get_supercell, get_primitive
 from phonopy.harmonic.displacement import (get_least_displacements,
@@ -104,7 +104,7 @@ class Phonopy(object):
         self._log_level = log_level
 
         # Create supercell and primitive cell
-        self._unitcell = Atoms(atoms=unitcell)
+        self._unitcell = PhonopyAtoms(atoms=unitcell)
         self._supercell_matrix = supercell_matrix
         self._primitive_matrix = primitive_matrix
         self._supercell = None
@@ -250,6 +250,27 @@ class Phonopy(object):
 
     @property
     def displacements(self):
+        """Return displacements
+
+        Returns
+        -------
+        There are two types of displacement dataset. See the docstring
+        of set_displacement_dataset about types 1 and 2 for displacement
+        dataset format.
+
+        Type-1, List of list
+            The internal list has 4 elements such as [32, 0.01, 0.0, 0.0]].
+            The first element is the supercell atom index starting with 0.
+            The remaining three elements give the displacement in Cartesian
+            coordinates.
+        Type-2, array_like
+            Displacements of all atoms of all supercells in Cartesian
+            coordinates.
+            shape=(supercells, natom, 3)
+            dtype='double'
+
+        """
+
         disps = []
         if 'first_atoms' in self._displacement_dataset:
             for disp in self._displacement_dataset['first_atoms']:
@@ -270,9 +291,9 @@ class Phonopy(object):
         Parameters
         ----------
         displacemens : array_like
-            Snapshots of atomic displacements of all atoms in supercell.
+            Atomic displacements of all atoms of all supercells.
             Only all displacements in each supercell case is supported.
-            shape=(snapshots, natom, 3)
+            shape=(supercells, natom, 3)
             dtype='double'
             order='C'
 
@@ -303,10 +324,10 @@ class Phonopy(object):
             forces = []
             for disp in self._displacement_dataset['first_atoms']:
                 if 'forces' in disp:
-                    forces.append = disp['forces']
+                    forces.append(disp['forces'])
             return forces
         else:
-            return []
+            return None
 
     @property
     def dynamical_matrix(self):
@@ -429,22 +450,36 @@ class Phonopy(object):
         ----------
         displacement_dataset : dict
             There are two dict structures.
-            1. One atomic displacement in each supercell:
+            Type 1. One atomic displacement in each supercell:
                 {'natom': number of atoms in supercell,
                  'first_atoms': [
                    {'number': atom index of displaced atom,
                     'displacement': displacement in Cartesian coordinates,
                     'forces': forces on atoms in supercell},
                    {...}, ...]}
-            2. All atomic displacements in each supercell:
+            Type 2. All atomic displacements in each supercell:
                 {'natom': number of atoms in supercell,
                  'displacements': ndarray, dtype='double', order='C',
-                                  shape=(natom, snapshots, 3)
+                                  shape=(supercells, natom, 3)
                  'forces': ndarray, dtype='double',, order='C',
-                                  shape=(natom, snapshots, 3)}
+                                  shape=(supercells, natom, 3)}
+            In type 2, displacements and forces can be given by numpy array
+            with different shape but that can be reshaped to
+            (supercells, natom, 3).
 
         """
-        self._displacement_dataset = displacement_dataset
+        dds = displacement_dataset
+        if 'displacements' in dds:
+            natom = self._supercell.get_number_of_atoms()
+            if type(dds['displacements']) is np.ndarray:
+                if dds['displacements'].ndim in (1, 2):
+                    d = dds['displacements'].reshape((-1, natom, 3))
+                    dds['displacements'] = d
+            if type(dds['forces']) is np.ndarray:
+                if dds['forces'].ndim in (1, 2):
+                    f = dds['forces'].reshape((-1, natom, 3))
+                    dds['forces'] = f
+        self._displacement_dataset = dds
         self._supercells_with_displacements = None
 
     @forces.setter
@@ -1527,7 +1562,7 @@ class Phonopy(object):
         return True
 
     def get_modulated_supercells(self):
-        """Returns cells with modulations as Atoms instances"""
+        """Returns cells with modulations as PhonopyAtoms instances"""
         return self._modulation.get_modulated_supercells()
 
     def get_modulations_and_supercell(self):
@@ -1536,7 +1571,7 @@ class Phonopy(object):
         (modulations, supercell)
 
         modulations: Atomic modulations of supercell in Cartesian coordinates
-        supercell: Supercell as an Atoms instance.
+        supercell: Supercell as an PhonopyAtoms instance.
 
         """
         return self._modulation.get_modulations_and_supercell()
@@ -1749,7 +1784,7 @@ class Phonopy(object):
         for disp in self._displacement_dataset['first_atoms']:
             positions = self._supercell.get_positions()
             positions[disp['number']] += disp['displacement']
-            supercells.append(Atoms(
+            supercells.append(PhonopyAtoms(
                     numbers=self._supercell.get_atomic_numbers(),
                     masses=self._supercell.get_masses(),
                     magmoms=self._supercell.get_magnetic_moments(),

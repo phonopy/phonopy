@@ -248,15 +248,37 @@ class PhonopyYaml(object):
         return lines
 
     def _force_sets_yaml_lines(self):
+        if 'first_atoms' in self._dataset:
+            return self._force_sets_yaml_lines_type1()
+        elif 'displacements'  in self._dataset:
+            return self._force_sets_yaml_lines_type2()
+        else:
+            return []
+
+    def _force_sets_yaml_lines_type1(self):
         lines = ["displacements:", ]
         for i, d in enumerate(self._dataset['first_atoms']):
             lines.append("- atom: %4d" % (d['number'] + 1))
             lines.append("  displacement:")
             lines.append("    [ %20.16f,%20.16f,%20.16f ]"
                          % tuple(d['displacement']))
-            lines.append("  forces:")
-            for f in d['forces']:
-                lines.append("  - [ %20.16f,%20.16f,%20.16f ]" % tuple(f))
+            if 'forces' in d:
+                lines.append("  forces:")
+                for f in d['forces']:
+                    lines.append("  - [ %20.16f,%20.16f,%20.16f ]" % tuple(f))
+        lines.append("")
+        return lines
+
+    def _force_sets_yaml_lines_type2(self):
+        lines = ["displacements:", ]
+        for i, (dset, fset) in enumerate(zip(self._dataset['displacements'],
+                                             self._dataset['forces'])):
+            lines.append("- # %4d" % (i + 1))
+            for j, (d, f) in enumerate(zip(dset, fset)):
+                lines.append("  - displacement: # %d" % (j + 1))
+                lines.append("      [ %20.16f,%20.16f,%20.16f ]" % tuple(d))
+                lines.append("    force:")
+                lines.append("      [ %20.16f,%20.16f,%20.16f ]" % tuple(f))
         lines.append("")
         return lines
 
@@ -294,8 +316,11 @@ class PhonopyYaml(object):
                 ('points' in self.yaml or 'atoms' in self.yaml)):
                 self.unitcell = self._parse_cell(self.yaml)
         if 'displacements' in self.yaml:
-            if 'forces' in self.yaml['displacements'][0]:
-                self.dataset = self._parse_force_sets()
+            disp = self.yaml['displacements'][0]
+            if type(disp) is dict and 'forces' in disp:
+                    self.dataset = self._parse_force_sets_type1()
+            elif type(disp) is list and 'forces' in disp[0]:
+                self.dataset = self._parse_force_sets_type2()
         if 'supercell_matrix' in self.yaml:
             self.supercell_matrix = np.array(self.yaml['supercell_matrix'],
                                              dtype='intc', order='C')
@@ -368,7 +393,7 @@ class PhonopyYaml(object):
         else:
             return None
 
-    def _parse_force_sets(self):
+    def _parse_force_sets_type1(self):
         natom = len(self.yaml['displacements'][0]['forces'])
         dataset = {'natom': natom}
         first_atoms = []
@@ -379,3 +404,14 @@ class PhonopyYaml(object):
                 'forces': np.array(d['forces'], dtype='double', order='C')})
         dataset['first_atoms'] = first_atoms
         return dataset
+
+    def _parse_force_sets_type2(self):
+        nsets = len(self.yaml['displacements'])
+        natom = len(self.yaml['displacements'][0])
+        forces = np.zeros((nsets, natom, 3), dtype='double', order='C')
+        displacements = np.zeros((nsets, natom, 3), dtype='double', order='C')
+        for i, dfset in enumerate(self.yaml['displacements']):
+            for j, df in enumerate(dfset):
+                forces[i, j] = df['force']
+                displacements[i, j] = df['displacement']
+        return {'forces': forces, 'displacements': displacements}

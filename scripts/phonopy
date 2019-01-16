@@ -555,7 +555,11 @@ else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
     else:
         file_exists("FORCE_SETS", log_level)
         force_sets = parse_FORCE_SETS(natom=num_satom)
-        if force_sets['natom'] != num_satom:
+        if 'natom' in force_sets:
+            natom = force_sets['natom']
+        else:
+            natom = force_sets['forces'].shape[1]
+        if natom != num_satom:
             error_text = "Number of atoms in supercell is not consistent with "
             error_text += "the data in FORCE_SETS.\n"
             error_text += ("Please carefully check DIM, FORCE_SETS,"

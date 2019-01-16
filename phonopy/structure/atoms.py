@@ -36,10 +36,12 @@
 import warnings
 import numpy as np
 
+
 def Atoms(*args, **kwargs):
     warnings.warn("phonopy.atoms.Atoms is deprecated. Please use "
                   "PhonopyAtoms instead of Atoms.", DeprecationWarning)
     return PhonopyAtoms(*args, **kwargs)
+
 
 class _Atoms(object):
     """A class compatible with the ASE Atoms class.
@@ -266,8 +268,18 @@ class PhonopyAtoms(_Atoms):
                             symbols=self.symbols,
                             pbc=True)
 
+    def totuple(self):
+        if self.magmoms:
+            return (self.cell, self.scaled_positions, self.numbers,
+                    self.magmoms)
+        else:
+            return (self.cell, self.scaled_positions, self.numbers)
+
     def to_tuple(self):
-        return (self.cell, self.scaled_positions, self.numbers)
+        warnings.warn(
+            "PhonopyAtoms.to_tuple is deprecated. Please use "
+            "PhonopyAtoms.totuple instead.", DeprecationWarning)
+        return self.totuple()
 
     def get_yaml_lines(self):
         lines = ["lattice:"]

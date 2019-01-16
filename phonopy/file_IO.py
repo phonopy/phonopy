@@ -50,6 +50,22 @@ def write_FORCE_SETS(dataset, filename='FORCE_SETS'):
 
 
 def get_FORCE_SETS_lines(dataset, forces=None):
+    """Generate FORCE_SETS string
+
+    See the format of dataset in the docstring of
+    Phonopy.set_displacement_dataset. Optionally for the type-1 (traditional)
+    format, forces can be given. In this case, sets of forces are
+    unnecessary to be stored in the dataset.
+
+    """
+
+    if 'first_atoms' in dataset:
+        return _get_FORCE_SETS_lines_type1(dataset, forces=forces)
+    elif 'forces' in dataset:
+        return _get_FORCE_SETS_lines_type2(dataset)
+
+
+def _get_FORCE_SETS_lines_type1(dataset, forces=None):
     num_atom = dataset['natom']
     displacements = dataset['first_atoms']
     if forces is None:
@@ -68,6 +84,17 @@ def get_FORCE_SETS_lines(dataset, forces=None):
             lines.append("%15.10f %15.10f %15.10f" % tuple(f))
 
     return lines
+
+
+def _get_FORCE_SETS_lines_type2(dataset):
+    lines = []
+    for displacements, forces in zip(dataset['displacements'],
+                                     dataset['forces']):
+        for d, f in zip(displacements, forces):
+            lines.append(("%15.8f" * 6) % (tuple(d) + tuple(f)))
+
+    return lines
+
 
 def parse_FORCE_SETS(natom=None,
                      is_translational_invariance=False,
@@ -103,14 +130,19 @@ def _get_set_of_forces(f, natom=None, is_translational_invariance=False):
 
 def _get_set_of_forces_type2(f, natom):
     data = np.loadtxt(f, dtype='double')
-    if data.shape[1] != 6 or data.shape[0] % natom != 0:
+    if data.shape[1] != 6 or (natom and data.shape[0] % natom != 0):
         msg = "Data shape of forces and displacements is incorrect."
         raise RuntimeError(msg)
-    data = data.reshape(-1, natom, 6)
-    dataset = {'natom': natom}
-    dataset['displacements'] = np.array(data[:, :, :3],
-                                        dtype='double', order='C')
-    dataset['forces'] = np.array(data[:, :, 3:], dtype='double', order='C')
+    if natom:
+        data = data.reshape(-1, natom, 6)
+        displacements = data[:, :, :3]
+        forces = data[:, :, 3:]
+    else:
+        displacements = data[:, :3]
+        forces = data[:, 3:]
+    dataset = {'displacements':
+               np.array(displacements, dtype='double', order='C'),
+               'forces': np.array(forces, dtype='double', order='C')}
     return dataset
 
 

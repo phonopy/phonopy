@@ -48,12 +48,13 @@ def get_interface_mode(args):
     """
 
     calculator_list = ['wien2k', 'abinit', 'qe', 'elk', 'siesta', 'cp2k',
-                       'crystal', 'vasp','dftbp']
+                       'crystal', 'vasp', 'dftbp']
     for calculator in calculator_list:
         mode = "%s_mode" % calculator
         if mode in args and args.__dict__[mode]:
             return calculator
     return None
+
 
 def write_supercells_with_displacements(interface_mode,
                                         supercell,
@@ -188,6 +189,7 @@ def read_crystal_structure(filename=None,
         unitcell = read_dftbp(cell_filename)
         return unitcell, (cell_filename,)
 
+
 def get_default_cell_filename(interface_mode):
     if interface_mode == 'phonopy_yaml':
         return "phonopy_disp.yaml"
@@ -210,6 +212,7 @@ def get_default_cell_filename(interface_mode):
     else:
         return None
 
+
 def get_default_supercell_filename(interface_mode):
     if interface_mode == 'phonopy_yaml':
         return "phonopy_disp.yaml"
@@ -226,7 +229,7 @@ def get_default_supercell_filename(interface_mode):
     elif interface_mode == 'crystal':
         return None  # supercell.ext can not be parsed by crystal interface.
     elif interface_mode == 'dftbp':
-        return "geo.gen"
+        return "geo.genS"
     else:
         return None
 
@@ -319,7 +322,7 @@ def get_default_physical_units(interface_mode):
         units['nac_factor'] = Hartree * Bohr
         units['distance_to_A'] = Bohr
         units['force_constants_unit'] = 'hartree/au^2'
-        units['length_unit'] = 'Angstrom'
+        units['length_unit'] = 'au'
 
     return units
 
