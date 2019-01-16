@@ -269,11 +269,11 @@ class PhonopyAtoms(_Atoms):
                             pbc=True)
 
     def totuple(self):
-        if self.magmoms:
+        if self.magmoms is None:
+            return (self.cell, self.scaled_positions, self.numbers)
+        else:
             return (self.cell, self.scaled_positions, self.numbers,
                     self.magmoms)
-        else:
-            return (self.cell, self.scaled_positions, self.numbers)
 
     def to_tuple(self):
         warnings.warn(

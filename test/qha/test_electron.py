@@ -84,7 +84,7 @@ class TestElectronFreeEnergy(unittest.TestCase):
         pass
 
     def test_Al(self):
-        """
+        """ElectronFreeEnergy for Aluminium
 
         VASP 5.4.4 was run with following setting parameters.
 
