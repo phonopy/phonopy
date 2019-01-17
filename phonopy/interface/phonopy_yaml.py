@@ -65,15 +65,10 @@ class PhonopyYaml(object):
                  configuration=None,
                  calculator=None,
                  physical_units=None,
-                 show_force_sets=False,
-                 show_displacements=False,
-                 show_force_constants=False):
+                 settings=None):
         self._configuration = configuration
         self._calculator = calculator
         self._physical_units = physical_units
-        self._show_force_sets = show_force_sets
-        self._show_force_constants = show_force_constants
-        self._show_displacements = show_displacements
 
         self.unitcell = None
         self.primitive = None
@@ -83,6 +78,7 @@ class PhonopyYaml(object):
         self.supercell_matrix = None
         self.primitive_matrix = None
         self.nac_params = None
+        self.force_constants = None
 
         self._supercell_matrix = None
         self._symmetry = None  # symmetry of supercell
@@ -94,6 +90,13 @@ class PhonopyYaml(object):
         self._version = None
 
         self._command_name = "phonopy"
+        self._settings = {'force_sets': True,
+                          'displacements': True,
+                          'force_constants': False,
+                          'born_effective_charge': True,
+                          'dielectric_constant': True}
+        if type(settings) is dict:
+            self._settings.update(settings)
 
     def read(self, filename):
         with open(filename) as infile:
@@ -216,28 +219,30 @@ class PhonopyYaml(object):
             lines.append("")
 
         if self._nac_params is not None:
-            lines.append("born_effective_charge:")
-            for i, z in enumerate(born):
-                text = "- # %d" % (i + 1)
-                if symbols:
-                    text += " (%s)" % symbols[i]
-                lines.append(text)
-                for v in z:
-                    lines.append("  - [ %18.15f, %18.15f, %18.15f ]" %
-                                 tuple(v))
-            lines.append("")
+            if self._settings['born_effective_charge']:
+                lines.append("born_effective_charge:")
+                for i, z in enumerate(born):
+                    text = "- # %d" % (i + 1)
+                    if symbols:
+                        text += " (%s)" % symbols[i]
+                    lines.append(text)
+                    for v in z:
+                        lines.append("  - [ %18.15f, %18.15f, %18.15f ]" %
+                                     tuple(v))
+                lines.append("")
 
-            lines.append("dielectric_constant:")
-            for v in dielectric:
-                lines.append("  - [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
-            lines.append("")
+            if self._settings['dielectric_constant']:
+                lines.append("dielectric_constant:")
+                for v in dielectric:
+                    lines.append("  - [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
+                lines.append("")
 
-        if self._show_force_sets:
+        if self._settings['force_sets']:
             lines += self._force_sets_yaml_lines()
-        elif self._show_displacements:
+        elif self._settings['displacements']:
             lines += self._displacements_yaml_lines()
 
-        if self._show_force_constants:
+        if self._settings['force_constants']:
             lines += self._force_constants_yaml_lines()
 
         return lines
@@ -315,7 +320,11 @@ class PhonopyYaml(object):
             if ('lattice' in self.yaml and
                 ('points' in self.yaml or 'atoms' in self.yaml)):
                 self.unitcell = self._parse_cell(self.yaml)
-        if 'displacements' in self.yaml:
+        if 'force_constants' in self.yaml:
+            shape = tuple(self.yaml['force_constants']['shape']) + (3, 3)
+            fc = np.reshape(self.yaml['force_constants']['elements'], shape)
+            self.force_constants = np.array(fc, dtype='double', order='C')
+        elif 'displacements' in self.yaml:
             disp = self.yaml['displacements'][0]
             if type(disp) is dict and 'forces' in disp:
                     self.dataset = self._parse_force_sets_type1()

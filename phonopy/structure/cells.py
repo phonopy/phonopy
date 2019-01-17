@@ -208,7 +208,7 @@ class Supercell(PhonopyAtoms):
                 cell=supercell.get_cell(),
                 pbc=True)
             self._u2s_map = np.arange(num_uatom) * N
-            self._u2u_map = dict([(j, i) for i, j in enumerate(self._u2s_map)])
+            self._u2u_map = {j: i for i, j in enumerate(self._u2s_map)}
             self._s2u_map = np.array(u2sur_map)[sur2s_map] * N
 
     def _get_simple_supercell(self, unitcell, multi, P):

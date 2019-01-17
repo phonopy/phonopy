@@ -159,6 +159,7 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
             symprec=symprec)
         _nac_params = nac_params
         _dataset = None
+        _fc = None
     else:
         phpy_yaml = PhonopyYaml()
         phpy_yaml.read(phonopy_yaml)
@@ -172,6 +173,10 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
             pmat = phpy_yaml.primitive_matrix
         _nac_params = phpy_yaml.nac_params
         _dataset = phpy_yaml.dataset
+        if phpy_yaml.force_constants is None:
+            _fc = None
+        else:
+            _fc = phpy_yaml.force_constants
 
     # units keywords: factor, nac_factor, distance_to_A
     units = get_default_physical_units(calculator)
@@ -192,10 +197,13 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
                                born_filename,
                                is_nac,
                                units['nac_factor'])
-    load_helper.set_force_constants(
-        phonon,
-        dataset=_dataset,
-        force_constants_filename=force_constants_filename,
-        force_sets_filename=force_sets_filename,
-        use_alm=use_alm)
+    if _fc is None:
+        load_helper.set_force_constants(
+            phonon,
+            dataset=_dataset,
+            force_constants_filename=force_constants_filename,
+            force_sets_filename=force_sets_filename,
+            use_alm=use_alm)
+    else:
+        phonon.force_constants = _fc
     return phonon

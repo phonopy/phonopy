@@ -381,32 +381,62 @@ def elaborate_borns_and_epsilon(ucell,
             ucell,
             symprec=symprec,
             is_symmetry=is_symmetry)
+    else:
+        borns_ = borns
+        epsilon_ = epsilon
 
-        if (abs(borns - borns_) > 0.1).any():
-            lines = ["Born effective charge symmetry is largely broken. "
-                     "Largest different among elements: "
-                     "%s" % np.amax(abs(borns - borns_))]
-            import warnings
-            warnings.warn("\n".join(lines))
-
-        borns = borns_
-        epsilon = epsilon_
-
-    borns, s_indep_atoms = _extract_independent_borns(
-        borns,
+    indeps_in_supercell, indeps_in_unitcell = _extract_independent_atoms(
         ucell,
         primitive_matrix=primitive_matrix,
         supercell_matrix=supercell_matrix,
         is_symmetry=is_symmetry,
         symprec=symprec)
 
-    return borns, epsilon, s_indep_atoms
+    return borns_[indeps_in_unitcell].copy(), epsilon_, indeps_in_supercell
+
 
 def symmetrize_borns_and_epsilon(borns,
                                  epsilon,
                                  ucell,
+                                 primitive_matrix=None,
+                                 supercell_matrix=None,
                                  symprec=1e-5,
                                  is_symmetry=True):
+    """Symmetrize Born effective charges and dielectric tensor
+
+    Parameters
+    ----------
+    borns: array_like
+        Born effective charges.
+        shape=(unitcell_atoms, 3, 3)
+        dtype='double'
+    epsilon: array_like
+        Dielectric constant
+        shape=(3, 3)
+        dtype='double'
+    ucell: PhonopyAtoms
+        Unit cell
+    primitive_matrix: array_like, optional
+        Primitive matrix. This is used to select Born effective charges in
+        primitive cell. If None (default), Born effective charges in unit cell
+        are returned.
+        shape=(3, 3)
+        dtype='double'
+    supercell_matrix: array_like, optional
+        Supercell matrix. This is used to select Born effective charges in
+        **primitive cell**. Supercell matrix is needed because primitive
+        cell is created first creating supercell from unit cell, then
+        the primitive cell is created from the supercell. If None (defautl),
+        1x1x1 supercell is created.
+        shape=(3, 3)
+        dtype='int'
+    symprec: float, optional
+        Symmetry tolerance. Default is 1e-5
+    is_symmetry: bool, optinal
+        By setting False, symmetrization can be switched off. Default is True.
+
+    """
+
     lattice = ucell.get_cell()
     positions = ucell.get_scaled_positions()
     u_sym = Symmetry(ucell, is_symmetry=is_symmetry, symprec=symprec)
@@ -435,7 +465,23 @@ def symmetrize_borns_and_epsilon(borns,
     sum_born = borns_.sum(axis=0) / len(borns_)
     borns_ -= sum_born
 
-    return borns_, epsilon_
+    if (abs(borns - borns_) > 0.1).any():
+        lines = ["Born effective charge symmetry is largely broken. "
+                 "Largest different among elements: "
+                 "%s" % np.amax(abs(borns - borns_))]
+        import warnings
+        warnings.warn("\n".join(lines))
+
+    if primitive_matrix is None:
+        return borns_, epsilon_
+    else:
+        scell, pcell = _get_supercell_and_primitive(
+            ucell,
+            primitive_matrix=primitive_matrix,
+            supercell_matrix=supercell_matrix,
+            symprec=symprec)
+        idx = [scell.u2u_map[i] for i in scell.s2u_map[pcell.p2s_map]]
+        return borns_[idx], epsilon_
 
 
 def _symmetrize_2nd_rank_tensor(tensor, symmetry_operations, lattice):
@@ -447,12 +493,27 @@ def _symmetrize_2nd_rank_tensor(tensor, symmetry_operations, lattice):
     return sum_tensor / len(symmetry_operations)
 
 
-def _extract_independent_borns(borns,
-                               ucell,
+def _extract_independent_atoms(ucell,
                                primitive_matrix=None,
                                supercell_matrix=None,
                                is_symmetry=True,
                                symprec=1e-5):
+    scell, pcell = _get_supercell_and_primitive(
+        ucell,
+        primitive_matrix=primitive_matrix,
+        supercell_matrix=supercell_matrix,
+        symprec=symprec)
+    p_sym = Symmetry(pcell, is_symmetry=is_symmetry, symprec=symprec)
+    s_indep_atoms = pcell.p2s_map[p_sym.get_independent_atoms()]
+    u_indep_atoms = [scell.u2u_map[x] for x in s_indep_atoms]
+
+    return s_indep_atoms, u_indep_atoms
+
+
+def _get_supercell_and_primitive(ucell,
+                                 primitive_matrix=None,
+                                 supercell_matrix=None,
+                                 symprec=1e-5):
     if primitive_matrix is None:
         pmat = np.eye(3)
     else:
@@ -465,12 +526,5 @@ def _extract_independent_borns(borns,
     inv_smat = np.linalg.inv(smat)
     scell = get_supercell(ucell, smat, symprec=symprec)
     pcell = get_primitive(scell, np.dot(inv_smat, pmat), symprec=symprec)
-    p2s = np.array(pcell.get_primitive_to_supercell_map(), dtype='intc')
-    p_sym = Symmetry(pcell, is_symmetry=is_symmetry, symprec=symprec)
 
-    s_indep_atoms = p2s[p_sym.get_independent_atoms()]
-    u2u = scell.get_unitcell_to_unitcell_map()
-    u_indep_atoms = [u2u[x] for x in s_indep_atoms]
-    reduced_borns = borns[u_indep_atoms].copy()
-
-    return reduced_borns, s_indep_atoms
+    return scell, pcell

@@ -33,7 +33,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
-import warnings
 import numpy as np
 from phonopy.version import __version__
 from phonopy.interface import PhonopyYaml
@@ -75,27 +74,14 @@ class Phonopy(object):
                  supercell_matrix,
                  primitive_matrix=None,
                  nac_params=None,
-                 distance=None,
                  factor=VaspToTHz,
                  frequency_scale_factor=None,
-                 is_auto_displacements=None,
                  dynamical_matrix_decimals=None,
                  force_constants_decimals=None,
                  symprec=1e-5,
                  is_symmetry=True,
                  use_lapack_solver=False,
                  log_level=0):
-
-        if is_auto_displacements is not None:
-            warnings.simplefilter("error")
-            warnings.warn("is_auto_displacements argument is deprecated.",
-                          DeprecationWarning)
-
-        if distance is not None:
-            warnings.simplefilter("error")
-            warnings.warn("distance is deprecated.",
-                          DeprecationWarning)
-
         self._symprec = symprec
         self._factor = factor
         self._frequency_scale_factor = frequency_scale_factor
@@ -608,8 +594,6 @@ class Phonopy(object):
 
         self._set_dynamical_matrix()
 
-        return True
-
     def symmetrize_force_constants(self, level=1, show_drift=True):
         if self._force_constants.shape[0] == self._force_constants.shape[1]:
             symmetrize_force_constants(self._force_constants, level=level)
@@ -641,8 +625,8 @@ class Phonopy(object):
     def get_dynamical_matrix_at_q(self, q):
         self._set_dynamical_matrix()
         if self._dynamical_matrix is None:
-            print("Warning: Dynamical matrix has not yet built.")
-            return None
+            msg = ("Dynamical matrix has not yet built.")
+            raise RuntimeError(msg)
 
         self._dynamical_matrix.set_dynamical_matrix(q)
         return self._dynamical_matrix.get_dynamical_matrix()
@@ -655,8 +639,8 @@ class Phonopy(object):
         """
         self._set_dynamical_matrix()
         if self._dynamical_matrix is None:
-            print("Warning: Dynamical matrix has not yet built.")
-            return None
+            msg = ("Dynamical matrix has not yet built.")
+            raise RuntimeError(msg)
 
         self._dynamical_matrix.set_dynamical_matrix(q)
         dm = self._dynamical_matrix.get_dynamical_matrix()
@@ -677,8 +661,8 @@ class Phonopy(object):
         """
         self._set_dynamical_matrix()
         if self._dynamical_matrix is None:
-            print("Warning: Dynamical matrix has not yet built.")
-            return None
+            msg = ("Dynamical matrix has not yet built.")
+            raise RuntimeError(msg)
 
         self._dynamical_matrix.set_dynamical_matrix(q)
         dm = self._dynamical_matrix.get_dynamical_matrix()
@@ -697,11 +681,13 @@ class Phonopy(object):
     def set_band_structure(self,
                            bands,
                            is_eigenvectors=False,
-                           is_band_connection=False):
+                           is_band_connection=False,
+                           path_connections=None,
+                           labels=None,
+                           is_legacy_plot=False):
         if self._dynamical_matrix is None:
-            print("Warning: Dynamical matrix has not yet built.")
-            self._band_structure = None
-            return False
+            msg = ("Dynamical matrix has not yet built.")
+            raise RuntimeError(msg)
 
         self._band_structure = BandStructure(
             bands,
@@ -709,15 +695,20 @@ class Phonopy(object):
             is_eigenvectors=is_eigenvectors,
             is_band_connection=is_band_connection,
             group_velocity=self._group_velocity,
+            path_connections=path_connections,
+            labels=labels,
+            is_legacy_plot=is_legacy_plot,
             factor=self._factor)
-        return True
 
     def get_band_structure(self):
-        band = self._band_structure
-        return (band.get_qpoints(),
-                band.get_distances(),
-                band.get_frequencies(),
-                band.get_eigenvectors())
+        retvals = (self._band_structure.qpoints,
+                   self._band_structure.distances,
+                   self._band_structure.frequencies,
+                   self._band_structure.eigenvectors)
+        if self._band_structure.group_velocities is None:
+            return retvals
+        else:
+            return retvals + (self._band_structure.group_velocities, )
 
     def auto_band_structure(self,
                             npoints=101,
@@ -726,58 +717,46 @@ class Phonopy(object):
                             filename="band.yaml"):
         bands, labels, path_connections = get_band_qpoints_by_seekpath(
             self._primitive, npoints, is_const_interval=True)
-        self.set_band_structure(bands)
-
+        self.set_band_structure(bands,
+                                path_connections=path_connections,
+                                labels=labels,
+                                is_legacy_plot=False)
         if write_yaml:
-            self.write_yaml_band_structure(labels=labels,
-                                           filename=filename)
+            self.write_yaml_band_structure(filename=filename)
         if plot:
-            return self.plot_band_structure(labels=labels,
-                                            path_connections=path_connections,
-                                            is_legacy=False)
+            return self.plot_band_structure()
 
-    def plot_band_structure(self,
-                            labels=None,
-                            path_connections=None,
-                            is_legacy=True):
+    def plot_band_structure(self):
         import matplotlib.pyplot as plt
 
-        if labels:
+        if self._band_structure.labels:
             from matplotlib import rc
             rc('text', usetex=True)
 
-        if is_legacy:
+        if self._band_structure.is_legacy_plot:
             fig, axs = plt.subplots(1, 1)
         else:
             from mpl_toolkits.axes_grid1 import ImageGrid
-            n = len([x for x in path_connections if not x])
+            n = len([x for x in self._band_structure.path_connections
+                     if not x])
             fig = plt.figure()
             axs = ImageGrid(fig, 111,  # similar to subplot(111)
                             nrows_ncols=(1, n),
                             axes_pad=0.11,
                             add_all=True,
                             label_mode="L")
-        self._band_structure.plot(axs,
-                                  labels=labels,
-                                  path_connections=path_connections,
-                                  is_legacy=is_legacy)
+        self._band_structure.plot(axs)
         return plt
 
     def write_hdf5_band_structure(self,
-                                  labels=None,
                                   comment=None,
                                   filename="band.hdf5"):
-        self._band_structure.write_hdf5(labels=labels,
-                                        comment=comment,
-                                        filename=filename)
+        self._band_structure.write_hdf5(comment=comment, filename=filename)
 
     def write_yaml_band_structure(self,
-                                  labels=None,
                                   comment=None,
                                   filename="band.yaml"):
-        self._band_structure.write_yaml(labels=labels,
-                                        comment=comment,
-                                        filename=filename)
+        self._band_structure.write_yaml(comment=comment, filename=filename)
 
     # Sampling mesh
     def run_mesh(self):
@@ -829,9 +808,8 @@ class Phonopy(object):
         """
 
         if self._dynamical_matrix is None:
-            print("Warning: Dynamical matrix has not yet built.")
-            self._mesh = None
-            return False
+            msg = ("Dynamical matrix has not yet built.")
+            raise RuntimeError(msg)
 
         self._mesh = Mesh(
             self._dynamical_matrix,
@@ -847,7 +825,6 @@ class Phonopy(object):
             use_lapack_solver=self._use_lapack_solver)
         if run_immediately:
             self._mesh.run()
-        return True
 
     def auto_mesh(self,
                   length=100.0,
@@ -855,13 +832,13 @@ class Phonopy(object):
                   is_time_reversal=True,
                   is_mesh_symmetry=True,
                   is_eigenvectors=False,
-                  is_gamma_center=False,
+                  is_gamma_center=True,
                   run_immediately=True):
         """Automatic mesh q-point sampling
 
         This conversion for each reciprocal axis follows VASP convention by
-            N = max(1, int(l * |a|^* + 0.5))
-        'int' means rounding down, not rounding to nearest integer.
+            N = max(1, nint(l * |a|^*))
+        'nint' is the function to return the nearest integer.
 
         Parameters
         ----------
@@ -921,9 +898,8 @@ class Phonopy(object):
         """
 
         if self._dynamical_matrix is None:
-            print("Warning: Dynamical matrix has not yet built.")
-            self._iter_mesh = None
-            return False
+            msg = ("Dynamical matrix has not yet built.")
+            raise RuntimeError(msg)
 
         self._iter_mesh = IterMesh(
             self._dynamical_matrix,
@@ -935,20 +911,15 @@ class Phonopy(object):
             is_gamma_center=is_gamma_center,
             rotations=self._primitive_symmetry.get_pointgroup_operations(),
             factor=self._factor)
-        return True
 
     # Plot band structure and DOS (PDOS) together
-    def plot_band_structure_and_dos(self,
-                                    pdos_indices=None,
-                                    labels=None,
-                                    path_connections=None,
-                                    is_legacy=True):
+    def plot_band_structure_and_dos(self, pdos_indices=None):
         import matplotlib.pyplot as plt
-        if labels:
+        if self._band_structure.labels:
             from matplotlib import rc
             rc('text', usetex=True)
 
-        if is_legacy:
+        if self._band_structure.is_legacy_plot:
             import matplotlib.gridspec as gridspec
             # plt.figure(figsize=(10, 6))
             gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1])
@@ -968,23 +939,21 @@ class Phonopy(object):
             plt.setp(ax2.get_yticklabels(), visible=False)
 
             ax1 = plt.subplot(gs[0, 0], sharey=ax2)
-            self._band_structure.plot(ax1, labels=labels)
+            self._band_structure.plot(ax1)
 
             plt.subplots_adjust(wspace=0.03)
             plt.tight_layout()
         else:
             from mpl_toolkits.axes_grid1 import ImageGrid
-            n = len([x for x in path_connections if not x]) + 1
+            n = len([x for x in self._band_structure.path_connections
+                     if not x]) + 1
             fig = plt.figure()
             axs = ImageGrid(fig, 111,  # similar to subplot(111)
                             nrows_ncols=(1, n),
                             axes_pad=0.11,
                             add_all=True,
                             label_mode="L")
-            self._band_structure.plot(axs[:-1],
-                                      labels=labels,
-                                      path_connections=path_connections,
-                                      is_legacy=is_legacy)
+            self._band_structure.plot(axs[:-1])
 
             if pdos_indices is None:
                 freqs, dos = self._total_dos.get_dos()
@@ -1016,7 +985,7 @@ class Phonopy(object):
                       freq_min=None,
                       freq_max=None,
                       freq_pitch=None,
-                      tetrahedron_method=False):
+                      tetrahedron_method=True):
 
         if self._mesh is None:
             msg = "\'set_mesh\' has to be done before DOS calculation."
@@ -1028,7 +997,6 @@ class Phonopy(object):
         total_dos.set_draw_area(freq_min, freq_max, freq_pitch)
         total_dos.run()
         self._total_dos = total_dos
-        return True
 
     def auto_total_DOS(self,
                        length=100.0,
@@ -1089,7 +1057,7 @@ class Phonopy(object):
                         freq_min=None,
                         freq_max=None,
                         freq_pitch=None,
-                        tetrahedron_method=False,
+                        tetrahedron_method=True,
                         direction=None,
                         xyz_projection=False):
         self._pdos = None
@@ -1100,7 +1068,7 @@ class Phonopy(object):
 
         if self._mesh.eigenvectors is None:
             msg = "\'set_mesh\' had to be called with is_eigenvectors=True."
-            return RuntimeError(msg)
+            raise RuntimeError(msg)
 
         num_grid = np.prod(self._mesh.get_mesh_numbers())
         if num_grid != len(self._mesh.get_ir_grid_points()):
@@ -1118,7 +1086,6 @@ class Phonopy(object):
                                 xyz_projection=xyz_projection)
         self._pdos.set_draw_area(freq_min, freq_max, freq_pitch)
         self._pdos.run()
-        return True
 
     def auto_partial_DOS(self,
                          length=100.0,
@@ -1203,9 +1170,9 @@ class Phonopy(object):
                                cutoff_frequency=None,
                                pretend_real=False):
         if self._mesh is None:
-            print("Warning: set_mesh has to be done before "
-                  "set_thermal_properties")
-            return False
+            msg = ("\'set_mesh\' has to be done before"
+                   "\'set_thermal_properties\'.")
+            raise RuntimeError(msg)
         else:
             tp = ThermalProperties(self._mesh,
                                    is_projection=is_projection,
@@ -1276,20 +1243,22 @@ class Phonopy(object):
             eigvecs = self._mesh.get_eigenvectors()
             mesh_nums = self._mesh.get_mesh_numbers()
             if eigvecs is None:
-                print("Warning: Eigenvectors have to be calculated.")
-                return False
+                msg = ("\'set_mesh\' or \'set_iter_mesh\' had to be "
+                       "called with is_eigenvectors=True.")
+                raise RuntimeError(msg)
             if np.prod(mesh_nums) != len(eigvecs):
-                print("Warning: Sampling mesh must not be symmetrized.")
-                return False
+                msg = ("\'set_mesh\' or \'set_iter_mesh\' had to be "
+                       "called with is_mesh_symmetry=False.")
+                raise RuntimeError(msg)
 
             iter_phonons = self._mesh
         else:
             if self._iter_mesh is not None:
                 iter_phonons = self._iter_mesh
             else:
-                print("Warning: \'set_mesh\' has to finish correctly "
-                      "before \'set_thermal_displacements\'.")
-                return False
+                msg = ("\'set_mesh\' or \'set_iter_mesh\' has to be done "
+                       "before \'set_thermal_displacements\'.")
+                raise RuntimeError(msg)
 
         if direction is not None:
             projection_direction = np.dot(direction,
@@ -1311,7 +1280,6 @@ class Phonopy(object):
         td.run()
 
         self._thermal_displacements = td
-        return True
 
     def get_thermal_displacements(self):
         if self._thermal_displacements is not None:
@@ -1358,20 +1326,22 @@ class Phonopy(object):
         if self._mesh is not None:
             eigvecs = self._mesh.get_eigenvectors()
             if eigvecs is None:
-                print("Warning: Eigenvectors have to be calculated.")
-                return False
+                msg = ("\'set_mesh\' or \'set_iter_mesh\' had to be "
+                       "called with is_eigenvectors=True.")
+                return RuntimeError(msg)
             if np.prod(self._mesh.get_mesh_numbers()) != len(eigvecs):
-                print("Warning: Sampling mesh must not be symmetrized.")
-                return False
+                msg = ("\'set_mesh\' or \'set_iter_mesh\' had to be "
+                       "called with is_mesh_symmetry=False.")
+                raise RuntimeError(msg)
 
             iter_phonons = self._mesh
         else:
             if self._iter_mesh is not None:
                 iter_phonons = self._iter_mesh
             else:
-                print("Warning: \'set_mesh\' has to finish correctly "
-                      "before \'set_thermal_displacement_matrices\'.")
-                return False
+                msg = ("\'set_mesh\' or \'set_iter_mesh\' has to be done "
+                       "before \'set_thermal_displacement_matrices\'.")
+                raise RuntimeError(msg)
 
         tdm = ThermalDisplacementMatrices(
             iter_phonons,
@@ -1386,7 +1356,6 @@ class Phonopy(object):
         tdm.run()
 
         self._thermal_displacement_matrices = tdm
-        return True
 
     def get_thermal_displacement_matrices(self):
         tdm = self._thermal_displacement_matrices
@@ -1426,9 +1395,8 @@ class Phonopy(object):
                            is_eigenvectors=False,
                            write_dynamical_matrices=False):
         if self._dynamical_matrix is None:
-            print("Warning: Dynamical matrix has not yet built.")
-            self._qpoints_phonon = None
-            return False
+            msg = ("Dynamical matrix has not yet built.")
+            raise RuntimeError(msg)
 
         self._qpoints_phonon = QpointsPhonon(
             np.reshape(q_points, (-1, 3)),
@@ -1438,7 +1406,6 @@ class Phonopy(object):
             group_velocity=self._group_velocity,
             write_dynamical_matrices=write_dynamical_matrices,
             factor=self._factor)
-        return True
 
     def get_qpoints_phonon(self):
         return (self._qpoints_phonon.get_frequencies(),
@@ -1460,8 +1427,8 @@ class Phonopy(object):
                         shift=None,
                         filename=None):
         if self._dynamical_matrix is None:
-            print("Warning: Dynamical matrix has not yet built.")
-            return False
+            msg = ("Dynamical matrix has not yet built.")
+            raise RuntimeError(msg)
 
         if q_point is None:
             animation = Animation([0, 0, 0],
@@ -1489,9 +1456,8 @@ class Phonopy(object):
             anime_type == 'jmol' or
             anime_type == 'poscar'):
             if band_index is None or amplitude is None or num_div is None:
-                print("Warning: Parameters are not correctly set for "
-                      "animation.")
-                return False
+                msg = ("Parameters are not correctly set for animation.")
+                raise RuntimeError(msg)
 
             if anime_type == 'arc' or anime_type is None:
                 if filename:
@@ -1537,8 +1503,6 @@ class Phonopy(object):
                                            amplitude,
                                            num_div)
 
-        return True
-
     # Atomic modulation of normal mode
     def set_modulations(self,
                         dimension,
@@ -1547,9 +1511,8 @@ class Phonopy(object):
                         derivative_order=None,
                         nac_q_direction=None):
         if self._dynamical_matrix is None:
-            print("Warning: Dynamical matrix has not yet built.")
-            self._modulation = None
-            return False
+            msg = ("Dynamical matrix has not yet built.")
+            raise RuntimeError(msg)
 
         self._modulation = Modulation(self._dynamical_matrix,
                                       dimension,
@@ -1559,7 +1522,6 @@ class Phonopy(object):
                                       nac_q_direction=nac_q_direction,
                                       factor=self._factor)
         self._modulation.run()
-        return True
 
     def get_modulated_supercells(self):
         """Returns cells with modulations as PhonopyAtoms instances"""
@@ -1590,9 +1552,8 @@ class Phonopy(object):
                    nac_q_direction=None,
                    degeneracy_tolerance=1e-4):
         if self._dynamical_matrix is None:
-            print("Warning: Dynamical matrix has not yet built.")
-            self._irreps = None
-            return None
+            msg = ("Dynamical matrix has not yet built.")
+            raise RuntimeError(msg)
 
         self._irreps = IrReps(
             self._dynamical_matrix,
@@ -1626,7 +1587,6 @@ class Phonopy(object):
             symmetry=self._primitive_symmetry,
             frequency_factor_to_THz=self._factor,
             log_level=self._log_level)
-        return True
 
     def get_group_velocity(self):
         return self._group_velocity.get_group_velocity()
@@ -1637,9 +1597,6 @@ class Phonopy(object):
         self._group_velocity.set_q_points([q_point])
         return self._group_velocity.get_group_velocity()[0]
 
-    def get_group_velocities_on_bands(self):
-        return self._band_structure.get_group_velocities()
-
     # Moment
     def set_moment(self,
                    order=1,
@@ -1647,13 +1604,14 @@ class Phonopy(object):
                    freq_min=None,
                    freq_max=None):
         if self._mesh is None:
-            print("Warning: set_mesh has to be done before set_moment")
-            return False
+            msg = ("\'set_mesh\' has to be done before \'set_moment\'.")
+            raise RuntimeError(msg)
         else:
             if is_projection:
                 if self._mesh.get_eigenvectors() is None:
-                    print("Warning: Eigenvectors have to be calculated.")
-                    return False
+                    msg = ("\'set_mesh\' had to be called with "
+                           "is_eigenvectors=True.")
+                    return RuntimeError(msg)
                 moment = PhononMoment(
                     self._mesh.get_frequencies(),
                     weights=self._mesh.get_weights(),
@@ -1667,7 +1625,6 @@ class Phonopy(object):
                                            freq_max=freq_max)
             moment.run(order=order)
             self._moment = moment.get_moment()
-            return True
 
     def get_moment(self):
         return self._moment
@@ -1695,8 +1652,28 @@ class Phonopy(object):
         return (self._dynamic_structure_factor.qpoints,
                 self._dynamic_structure_factor.S)
 
-    def save_inputs(self, filename="phonopy.yaml"):
-        phpy_yaml = PhonopyYaml(show_force_sets=True)
+    def save(self,
+             filename="phonopy-params.yaml",
+             settings=None):
+        """Save parameters in Phonopy instants into file.
+
+        Parameters
+        ----------
+        filename: str, optional
+            File name. Default is "phonopy-params.yaml"
+        settings: dict, optional
+            It is described which parameters are written out. Only
+            the settings expected to be updated from the following
+            default settings are needed to be set in the dictionary.
+            The possible parameters and their default settings are:
+                {'force_sets': True,
+                 'displacements': True,
+                 'force_constants': False,
+                 'born_effective_charge': True,
+                 'dielectric_constant': True}
+
+        """
+        phpy_yaml = PhonopyYaml(settings=settings)
         phpy_yaml.set_phonon_info(self)
         with open(filename, 'w') as w:
             w.write(str(phpy_yaml))

@@ -35,7 +35,7 @@ class TestBandStructure(unittest.TestCase):
     def testBand(self):
         band_paths = [[[0, 0, 0], [0.5, 0.5, 0.5]],
                       [[0.5, 0.5, 0], [0, 0, 0], [0.5, 0.25, 0.75]]]
-        qpoints = get_band_qpoints(band_paths, 11)
+        qpoints = get_band_qpoints(band_paths, npoints=11)
         phonon = self._get_phonon()
         phonon.set_group_velocity()
         phonon.set_band_structure(qpoints)

@@ -39,7 +39,7 @@ except ImportError:
     from io import StringIO
 import io
 import numpy as np
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.atoms import symbol_map, atom_data
 from phonopy.structure.symmetry import elaborate_borns_and_epsilon
 from phonopy.file_IO import (write_force_constants_to_hdf5,
@@ -201,13 +201,13 @@ def _get_atoms_from_poscar(lines, symbols):
         positions.append([float(x) for x in lines[i].split()[:3]])
 
     if is_scaled:
-        atoms = Atoms(symbols=expaned_symbols,
-                      cell=cell,
-                      scaled_positions=positions)
+        atoms = PhonopyAtoms(symbols=expaned_symbols,
+                             cell=cell,
+                             scaled_positions=positions)
     else:
-        atoms = Atoms(symbols=expaned_symbols,
-                      cell=cell,
-                      positions=positions)
+        atoms = PhonopyAtoms(symbols=expaned_symbols,
+                             cell=cell,
+                             positions=positions)
 
     return atoms
 
@@ -391,19 +391,12 @@ def get_born_vasprunxml(filename="vasprun.xml",
                         symmetrize_tensors=False,
                         symprec=1e-5):
     import io
-    borns = []
-    epsilon = []
     with io.open(filename, "rb") as f:
         vasprun = VasprunxmlExpat(f)
         if vasprun.parse():
-            epsilon = vasprun.get_epsilon()
-            borns = vasprun.get_born()
-            lattice = vasprun.get_lattice()[-1]
-            points = vasprun.get_points()[-1]
-            symbols = vasprun.get_symbols()
-            ucell = Atoms(symbols=symbols,
-                          scaled_positions=points,
-                          cell=lattice)
+            epsilon = vasprun.epsilon
+            borns = vasprun.born
+            ucell = vasprun.cell
         else:
             return None
 
@@ -887,6 +880,12 @@ class VasprunxmlExpat(object):
 
     def get_pseudopotentials(self):
         return self.pseudopotentials
+
+    @property
+    def cell(self):
+        return PhonopyAtoms(symbols=self.symbols,
+                            scaled_positions=self.points[-1],
+                            cell=self.lattice[-1])
 
     def _start_element(self, name, attrs):
         # Used not to collect energies in <scstep>

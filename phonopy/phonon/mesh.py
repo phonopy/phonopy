@@ -62,7 +62,7 @@ def length2mesh(length, lattice):
     """
     rec_lattice = np.linalg.inv(lattice)
     rec_lat_lengths = np.sqrt(np.diagonal(np.dot(rec_lattice.T, rec_lattice)))
-    mesh = (rec_lat_lengths * length + 0.5).astype(int)
+    mesh = np.rint(rec_lat_lengths * length).astype(int)
     return np.maximum(mesh, [1, 1, 1])
 
 

@@ -56,7 +56,18 @@ def estimate_band_connection(prev_eigvecs, eigvecs, prev_band_order):
     return band_order
 
 
-def get_band_qpoints(band_paths, npoints, rec_lattice=None):
+def get_band_qpoints_and_path_connections(band_paths, npoints=51,
+                                          rec_lattice=None):
+    path_connections = []
+    for paths in band_paths:
+        path_connections += [True, ] * (len(paths) - 2)
+        path_connections.append(False)
+    return (get_band_qpoints(band_paths, npoints=npoints,
+                             rec_lattice=rec_lattice),
+            path_connections)
+
+
+def get_band_qpoints(band_paths, npoints=51, rec_lattice=None):
     """Generate qpoints for band structure path
 
     Note
@@ -75,8 +86,8 @@ def get_band_qpoints(band_paths, npoints, rec_lattice=None):
             [[[0, 0, 0], [0.5, 0.5, 0], [0.5, 0.5, 0.5]],
              [[0.5, 0.25, 0.75], [0, 0, 0]]]
 
-    npoints: int
-        Number of q-points in each path including end points.
+    npoints: int, optional
+        Number of q-points in each path including end points. Default is 51.
 
     rec_lattice: array_like, optional
         When given, q-points are sampled in a similar interval. The longest
@@ -243,6 +254,14 @@ class BandStructure(object):
         Each ndarray corresponding to each q-path has
             dtype='double'
             shape=(qpoints, bands, 3)
+    path_connections : List of bool, optional
+        This gives whether each path is connected to the next path or not,
+        i.e., if False, there is a jump of q-points. Number of elements is
+        the same at that of paths. Default is None.
+    labels : List of str, optional
+        This is only used in graphical plot of band structure and gives
+        labels of end points of each path. The number of labels is equal
+        to (2 - np.array(path_connections)).sum().
 
     """
 
@@ -252,6 +271,9 @@ class BandStructure(object):
                  is_eigenvectors=False,
                  is_band_connection=False,
                  group_velocity=None,
+                 path_connections=None,
+                 labels=None,
+                 is_legacy_plot=False,
                  factor=VaspToTHz):
         """
 
@@ -262,14 +284,25 @@ class BandStructure(object):
             shape of each ndarray : (npoints, 3)
         dynamical_matrix : DynamicalMatrix or DynamicalMatrixNAC
             Dynamical matrix calculator.
-        is_eigenvectors : bool
-            Flag whether eigenvectors are calculated or not.
-        is_band_connection : bool
+        is_eigenvectors : bool, optional
+            Flag whether eigenvectors are calculated or not. Default is False.
+        is_band_connection : bool, optional
             Flag whether each band is connected or not. This is achieved by
             comparing similarity of eigenvectors of neghboring poins. Sometimes
-            this fails.
-        group_velocity : GroupVelocity
-            Group velocity calculator.
+            this fails. Default is False.
+        group_velocity : GroupVelocity, optional
+            Group velocity calculator. Default is None.
+        path_connections : List of bool, optional
+            This is only used in graphical plot of band structure and gives
+            whether each path is connected to the next path or not,
+            i.e., if False, there is a jump of q-points. Number of elements is
+            the same at that of paths. Default is None.
+        labels : List of str, optional
+            This is only used in graphical plot of band structure and gives
+            labels of end points of each path. The number of labels is equal
+            to (2 - np.array(path_connections)).sum().
+        is_legacy_plot: bool, optional
+            This makes the old style band structure plot. Default is False.
 
         """
 
@@ -284,7 +317,21 @@ class BandStructure(object):
         self._group_velocity = group_velocity
 
         self._paths = [np.array(path) for path in paths]
-
+        self._is_legacy_plot = is_legacy_plot
+        self._labels = None
+        self._path_connections = None
+        if self._is_legacy_plot:
+            if labels is not None and len(labels) == len(self._paths) + 1:
+                self._labels = labels
+        else:
+            if path_connections is None:
+                self._path_connections = [True, ] * len(self._paths)
+                self._path_connections[-1] = False
+            else:
+                self._path_connections = path_connections
+            if (labels is not None and
+                len(labels) == (2 - np.array(self._path_connections)).sum()):
+                self._labels = labels
         self._distances = []
         self._distance = 0.
         self._special_points = [0.]
@@ -343,18 +390,25 @@ class BandStructure(object):
             DeprecationWarning)
         return self._factor
 
-    def plot(self, ax, labels=None, path_connections=None, is_legacy=True):
-        if is_legacy:
-            self._plot_legacy(ax, labels=labels)
-        else:
-            self._plot(ax, labels=labels, path_connections=path_connections)
+    @property
+    def labels(self):
+        return self._labels
 
-    def _plot(self, axs, labels=None, path_connections=None):
-        if path_connections is None:
-            connections = [True, ] * len(self._paths)
-        else:
-            connections = path_connections
+    @property
+    def path_connections(self):
+        return self._path_connections
 
+    @property
+    def is_legacy_plot(self):
+        return self._is_legacy_plot
+
+    def plot(self, ax):
+        if self._is_legacy_plot:
+            self._plot_legacy(ax)
+        else:
+            self._plot(ax)
+
+    def _plot(self, axs):
         max_freq = max([np.max(fq) for fq in self._frequencies])
         max_dist = self._distances[-1][-1]
         plot_xscale = max_freq / max_dist * 1.5
@@ -363,7 +417,7 @@ class BandStructure(object):
         # T T T F F -> [[0, 3], [4, 4]]
         lefts = [0]
         rights = []
-        for i, c in enumerate(connections):
+        for i, c in enumerate(self._path_connections):
             if not c:
                 lefts.append(i + 1)
                 rights.append(i)
@@ -383,22 +437,24 @@ class BandStructure(object):
             ax.yaxis.set_tick_params(which='both', direction='in')
             ax.set_xlim(spts[0], spts[-1])
             ax.set_xticks(spts)
-            if labels is None:
+            if self._labels is None:
                 ax.set_xticklabels(['', ] * len(spts))
             else:
-                ax.set_xticklabels(labels[l_count:(l_count + len(spts))])
+                ax.set_xticklabels(self._labels[l_count:(l_count + len(spts))])
                 l_count += len(spts)
             ax.plot([spts[0], spts[-1]], [0, 0],
                     linestyle=':', linewidth=0.5, color='b')
 
         count = 0
-        for d, f, c in zip(distances, self._frequencies, connections):
+        for d, f, c in zip(distances,
+                           self._frequencies,
+                           self._path_connections):
             ax = axs[count]
             ax.plot(d, f, 'r-', linewidth=1)
             if not c:
                 count += 1
 
-    def _plot_legacy(self, ax, labels=None):
+    def _plot_legacy(self, ax):
         ax.xaxis.set_ticks_position('both')
         ax.yaxis.set_ticks_position('both')
         ax.xaxis.set_tick_params(which='both', direction='in')
@@ -415,9 +471,9 @@ class BandStructure(object):
         ax.set_ylabel('Frequency')
         ax.set_xlabel('Wave vector')
 
-        if labels and len(labels) == len(self._special_points):
+        if self._labels and len(self._labels) == len(self._special_points):
             ax.set_xticks(self._special_points)
-            ax.set_xticklabels(labels)
+            ax.set_xticklabels(self._labels)
         else:
             ax.set_xticks(self._special_points)
             ax.set_xticklabels(['', ] * len(self._special_points))
@@ -425,7 +481,7 @@ class BandStructure(object):
         ax.set_xlim(0, self._distance)
         ax.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
 
-    def write_hdf5(self, labels=None, comment=None, filename="band.hdf5"):
+    def write_hdf5(self, comment=None, filename="band.hdf5"):
         import h5py
         with h5py.File(filename, 'w') as w:
             w.create_dataset('path', data=self._paths)
@@ -443,12 +499,14 @@ class BandStructure(object):
                                    'eigenvector',
                                    'group_velocity'):
                         w.create_dataset(key, data=np.string_(comment[key]))
-            if labels:
-                dset = w.create_dataset('label', (len(labels),), dtype='S10')
-                for i, l in enumerate(labels):
+            if self._labels:
+                max_len = max([len(l) for l in self._labels])
+                dset = w.create_dataset(
+                    'label', (len(self._labels),), dtype='S%d' % max_len)
+                for i, l in enumerate(self._labels):
                     dset[i] = np.string_(l)
 
-    def write_yaml(self, labels=None, comment=None, filename="band.yaml"):
+    def write_yaml(self, comment=None, filename="band.yaml"):
         with open(filename, 'w') as w:
             natom = self._cell.get_number_of_atoms()
             rec_lattice = np.linalg.inv(self._cell.get_cell())  # column vecs
@@ -472,6 +530,21 @@ class BandStructure(object):
             text.append("npath: %-7d" % len(self._paths))
             text.append("segment_nqpoint:")
             text += ["- %d" % nq for nq in nq_paths]
+            if self._labels:
+                text.append("labels:")
+                if self._is_legacy_plot:
+                    for i in range(len(self._paths)):
+                        text.append("- [ \'%s\', \'%s\' ]" %
+                                    (self._labels[i], self._labels[i + 1]))
+                else:
+                    i = 0
+                    for c in self._path_connections:
+                        text.append("- [ \'%s\', \'%s\' ]" %
+                                    (self._labels[i], self._labels[i + 1]))
+                        if c:
+                            i += 1
+                        else:
+                            i += 2
             text.append("reciprocal_lattice:")
             for vec, axis in zip(rec_lattice.T, ('a*', 'b*', 'c*')):
                 text.append("- [ %12.8f, %12.8f, %12.8f ] # %2s" %
@@ -498,36 +571,24 @@ class BandStructure(object):
                     eigenvectors = None
                 else:
                     eigenvectors = self._eigenvectors[i]
-                _labels = None
-                if labels is not None:
-                    if len(labels) == len(self._paths) + 1:
-                        _labels = (labels[i], labels[i + 1])
-
                 w.write("\n".join(self._get_q_segment_yaml(qpoints,
                                                            distances,
                                                            frequencies,
                                                            eigenvectors,
-                                                           group_velocities,
-                                                           _labels)))
+                                                           group_velocities)))
 
     def _get_q_segment_yaml(self,
                             qpoints,
                             distances,
                             frequencies,
                             eigenvectors,
-                            group_velocities,
-                            labels):
+                            group_velocities):
         natom = self._cell.get_number_of_atoms()
         text = []
         for j in range(len(qpoints)):
             q = qpoints[j]
             text.append("- q-position: [ %12.7f, %12.7f, %12.7f ]" % tuple(q))
             text.append("  distance: %12.7f" % distances[j])
-            if labels is not None:
-                if j == 0:
-                    text.append("  label: \'%s\'" % labels[0])
-                elif j == len(qpoints) - 1:
-                    text.append("  label: \'%s\'" % labels[1])
             text.append("  band:")
             for k, freq in enumerate(frequencies[j]):
                 text.append("  - # %d" % (k + 1))

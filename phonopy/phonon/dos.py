@@ -211,7 +211,7 @@ class Dos(object):
         self._mesh_object = mesh_object
         self._frequencies = mesh_object.frequencies
         self._weights = mesh_object.weights
-        if tetrahedron_method:
+        if tetrahedron_method and sigma is None:
             self._tetrahedron_mesh = TetrahedronMesh(
                 mesh_object.dynamical_matrix.primitive,
                 self._frequencies,

@@ -39,9 +39,10 @@ from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.phonon.degeneracy import degenerate_sets
 
-def get_group_velocity(q, # q-point
+
+def get_group_velocity(q,  # q-point
                        dynamical_matrix,
-                       q_length=None, # finite distance in q
+                       q_length=None,  # finite distance in q
                        symmetry=None,
                        frequency_factor_to_THz=VaspToTHz,
                        log_level=0):
@@ -62,6 +63,7 @@ def get_group_velocity(q, # q-point
                        log_level=log_level)
     gv.set_q_points([q])
     return gv.get_group_velocity()[0]
+
 
 def delta_dynamical_matrix(q,
                            delta_q,

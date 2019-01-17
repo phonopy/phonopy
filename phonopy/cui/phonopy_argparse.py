@@ -111,6 +111,7 @@ def get_parser():
         is_group_velocity=False,
         is_hdf5=False,
         is_legend=False,
+        is_legacy_plot=False,
         is_little_cogroup=False,
         is_moment=False,
         is_nac=False,
@@ -118,7 +119,7 @@ def get_parser():
         is_nomeshsym=False,
         is_nosym=False,
         is_plusminus_displacements=False,
-        is_tetrahedron_method=False,
+        is_tetrahedron_method=True,
         is_thermal_displacements=False,
         is_thermal_displacement_matrices=False,
         is_thermal_displacement_matrices_cif=None,
@@ -313,6 +314,9 @@ def get_parser():
         "--legend", dest="is_legend", action="store_true",
         help="Legend of plots is shown in thermal displacements")
     parser.add_argument(
+        "--legacy-plot", dest="is_legacy_plot", action="store_true",
+        help="Legacy style band structure pl")
+    parser.add_argument(
         "--lcg", "--little-cogroup", dest="is_little_cogroup",
         action="store_true",
         help=("Show irreps of little co-group (or point-group of "
@@ -447,9 +451,9 @@ def get_parser():
         dest="thermal_displacement_matrices_cif", type=float,
         help="Write cif with aniso_U for which temperature is specified")
     parser.add_argument(
-        "--thm", "--tetrahedron-method", dest="is_tetrahedron_method",
-        action="store_true",
-        help="Use tetrahedron method for DOS/PDOS")
+        "--nothm", "--no-tetrahedron-method", dest="is_tetrahedron_method",
+        action="store_false",
+        help="Do not use tetrahedron method for DOS/PDOS")
     parser.add_argument(
         "--tmax", dest="tmax", type=float,
         help="Maximum calculated temperature")

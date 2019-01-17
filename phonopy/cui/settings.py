@@ -68,13 +68,12 @@ class Settings(object):
         self._is_rotational_invariance = False
         self._is_plusminus_displacement = 'auto'
         self._is_symmetry = True
-        self._is_tetrahedron_method = False
+        self._is_tetrahedron_method = True
         self._is_time_reversal_symmetry = True
         self._is_trigonal_displacement = False
         self._magmoms = None
         self._masses = None
         self._mesh = None
-        self._mesh_shift = None
         self._nac_method = None
         self._nac_q_direction = None
         self._num_frequency_points = None
@@ -261,12 +260,6 @@ class Settings(object):
 
     def get_mesh_numbers(self):
         return self._mesh
-
-    def set_mesh_shift(self, mesh_shift):
-        self._mesh_shift = mesh_shift
-
-    def get_mesh_shift(self):
-        return self._mesh_shift
 
     def set_min_temperature(self, tmin):
         self._tmin = tmin
@@ -475,8 +468,8 @@ class ConfParser(object):
                 self._confs['pm'] = '.true.'
 
         if 'is_tetrahedron_method' in arg_list:
-            if self._args.is_tetrahedron_method:
-                self._confs['tetrahedron'] = '.true.'
+            if not self._args.is_tetrahedron_method:
+                self._confs['tetrahedron'] = '.false.'
 
         if 'is_trigonal_displacements' in arg_list:
             if self._args.is_trigonal_displacements:
@@ -1041,6 +1034,7 @@ class PhonopySettings(Settings):
         self._is_group_velocity = False
         self._is_gamma_center = False
         self._is_hdf5 = False
+        self._is_legacy_plot = False
         self._is_little_cogroup = False
         self._is_moment = False
         self._is_plusminus_displacement = 'auto'
@@ -1050,6 +1044,7 @@ class PhonopySettings(Settings):
         self._is_thermal_properties = False
         self._is_projected_thermal_properties = False
         self._lapack_solver = False
+        self._mesh_shift = None
         self._mesh_format = 'yaml'
         self._modulation = None
         self._moment_order = None
@@ -1141,6 +1136,12 @@ class PhonopySettings(Settings):
     def get_max_frequency(self):
         return self._fmax
 
+    def set_mesh_shift(self, mesh_shift):
+        self._mesh_shift = mesh_shift
+
+    def get_mesh_shift(self):
+        return self._mesh_shift
+
     def set_min_frequency(self, fmin):
         self._fmin = fmin
 
@@ -1195,6 +1196,12 @@ class PhonopySettings(Settings):
     def get_is_hdf5(self):
         return self._is_hdf5
 
+    def set_is_legacy_plot(self, is_legacy_plot):
+        self._is_legacy_plot = is_legacy_plot
+
+    def get_is_legacy_plot(self):
+        return self._is_legacy_plot
+
     def set_is_little_cogroup(self, is_little_cogroup):
         self._is_little_cogroup = is_little_cogroup
 
@@ -1242,27 +1249,6 @@ class PhonopySettings(Settings):
 
     def get_lapack_solver(self):
         return self._lapack_solver
-
-    def set_mesh(self,
-                 mesh,
-                 mesh_shift=None,
-                 is_time_reversal_symmetry=True,
-                 is_mesh_symmetry=True,
-                 is_gamma_center=False):
-        if mesh_shift is None:
-            mesh_shift = [0.,0.,0.]
-        self._mesh = mesh
-        self._mesh_shift = mesh_shift
-        self._is_time_reversal_symmetry = is_time_reversal_symmetry
-        self._is_mesh_symmetry = is_mesh_symmetry
-        self._is_gamma_center = is_gamma_center
-
-    def get_mesh(self):
-        return (self._mesh,
-                self._mesh_shift,
-                self._is_time_reversal_symmetry,
-                self._is_mesh_symmetry,
-                self._is_gamma_center)
 
     def set_mesh_format(self, mesh_format):
         self._mesh_format = mesh_format
@@ -1395,6 +1381,11 @@ class PhonopySettings(Settings):
 
 class PhonopyConfParser(ConfParser):
     def __init__(self, filename=None, args=None):
+        # This is fragile implementation.
+        # Remember that options have to be activated only
+        # when it changes the default value, i.e.,
+        # _read_options has to be written in this way.
+
         self._settings = PhonopySettings()
         confs = {}
         if filename is not None:
@@ -1545,6 +1536,10 @@ class PhonopyConfParser(ConfParser):
             if self._args.is_little_cogroup:
                 self._confs['little_cogroup'] = '.true.'
 
+        if 'is_legacy_plot' in arg_list:
+            if self._args.is_legacy_plot:
+                self._confs['legacy_plot'] = '.true.'
+
         if 'is_band_connection' in arg_list:
             if self._args.is_band_connection:
                 self._confs['band_connection'] = '.true.'
@@ -1602,6 +1597,10 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'band_connection':
                 if confs['band_connection'].lower() == '.true.':
                     self.set_parameter('band_connection', True)
+
+            if conf_key == 'legacy_plot':
+                if confs['legacy_plot'].lower() == '.true.':
+                    self.set_parameter('legacy_plot', True)
 
             if conf_key == 'force_constants':
                 self.set_parameter('force_constants',
@@ -1661,14 +1660,17 @@ class PhonopyConfParser(ConfParser):
                     self.set_parameter('fc_spg_symmetry', True)
 
             if conf_key == 'readfc_format':
-                self.set_parameter('readfc_format', confs['readfc_format'].lower())
+                self.set_parameter('readfc_format',
+                                   confs['readfc_format'].lower())
 
             if conf_key == 'writefc_format':
-                self.set_parameter('writefc_format', confs['writefc_format'].lower())
+                self.set_parameter('writefc_format',
+                                   confs['writefc_format'].lower())
 
             if conf_key == 'fc_format':
                 self.set_parameter('readfc_format', confs['fc_format'].lower())
-                self.set_parameter('writefc_format', confs['fc_format'].lower())
+                self.set_parameter('writefc_format',
+                                   confs['fc_format'].lower())
 
             # Animation
             if conf_key == 'anime':
@@ -1915,10 +1917,7 @@ class PhonopyConfParser(ConfParser):
         if (self._settings.get_run_mode() == 'mesh' or
             self._settings.get_run_mode() == 'band_mesh'):
             if 'mp_shift' in params:
-                shift = params['mp_shift']
-            else:
-                shift = [0.,0.,0.]
-            self._settings.set_mesh_shift(shift)
+                self._settings.set_mesh_shift(params['mp_shift'])
             if 'is_time_reversal_symmetry' in params:
                 if not params['is_time_reversal_symmetry']:
                     self._settings.set_time_reversal_symmetry(False)
@@ -1943,6 +1942,8 @@ class PhonopyConfParser(ConfParser):
                 self._settings.set_band_labels(params['band_labels'])
             if 'band_connection' in params:
                 self._settings.set_is_band_connection(params['band_connection'])
+            if 'legacy_plot' in params:
+                self._settings.set_is_legacy_plot(params['legacy_plot'])
 
         # Q-points mode
         if 'qpoints' in params or 'read_qpoints' in params:
