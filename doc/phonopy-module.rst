@@ -65,18 +65,18 @@ argument. The supercells with displacements are obtained by
                                       [0.5, 0, 0.5],
                                       [0.5, 0.5, 0]])
    phonon.generate_displacements(distance=0.03)
-   supercells = phonon.get_supercells_with_displacements()
+   supercells = phonon.supercells_with_displacements
 
 In this example, the displacement distance is set to 0.03 (in Angstrom
 if the crystal structure uses the Angstrom unit and the default value
 is 0.01.)
 
-The frequency unit conversion factor to THz has to be set by using the ``factor``
-keyword in ``Phonopy`` class. The factors are ``VaspToTHz`` for VASP,
-``Wien2kToTHz`` for Wien2k, ``AbinitToTHz`` for Abinit,
-``PwscfToTHz`` for Pwscf, ``ElkToTHz`` for Elk, ``SiestaToTHz``
-for Siesta, and ``CrystalToTHz for CRYSTAL``. ``VaspToTHz`` is the default value.
-For example::
+The frequency unit conversion factor to THz has to be set by using the
+``factor`` keyword in ``Phonopy`` class. The factors are ``VaspToTHz``
+for VASP, ``Wien2kToTHz`` for Wien2k, ``AbinitToTHz`` for Abinit,
+``PwscfToTHz`` for Pwscf, ``ElkToTHz`` for Elk, ``SiestaToTHz`` for
+Siesta, ``CrystalToTHz`` for CRYSTAL ``VaspToTHz``, and ``DftbpToTHz``
+for DFTB+ is the default value.  For example::
 
    from phonopy.units import AbinitToTHz
 
@@ -85,7 +85,6 @@ For example::
                     primitive_matrix=[[0, 0.5, 0.5],
                                       [0.5, 0, 0.5],
                                       [0.5, 0.5, 0]],
-                    distance=0.03,
                     factor=AbinitToTHz)
 
 Some more information on physical unit conversion is found at
@@ -128,7 +127,7 @@ follows::
 
 This is set to the ``Phonopy`` object by::
 
-   phonopy.set_displacement_dataset(displacement_dataset)
+   phonopy.dataset = displacement_dataset
 
 From the set of displacements and forces, force constants internally
 with calculated suuprcell sets of forces by
@@ -142,7 +141,7 @@ from forces and displacements, simply set your force constants by
 
 ::
 
-   phonon.set_force_constants(force_constants)
+   phonon.force_constants = force_constants
 
 The force constants matrix is given in 4 dimensional array (better to
 be a numpy array of ``dtype='double', order='C'``).  The shape of
@@ -152,53 +151,123 @@ force constants matrix with ``(Np, N, 3, 3)`` where ``Np`` is the
 number of atoms in the primitive cell is also supported. See the
 details at :ref:`file_force_constants`.
 
+Phonon calculation
+-------------------
+
+Save parameters (``phonopy.save``)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Basic information and parameters needed for phonon calculation are
+saved into a file by ``phonopy.save``.
+
+::
+
+   phonon.save()
+
+The default file name is ``phonopy-params.yaml``. Force sets,
+displacements, Born effective charges, and dielectric constant are
+written in the default behaviour. If force constants are needed to be
+written in the yaml file, the argument ``settings`` is set as follows::
+
+   phonon.save(settings={'force_constants': True})
+
+
+Shortcut to load input files (``phonopy.load``)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``phonopy.load`` is a convenient python method to create ``Phonopy``
+instance loading forces, displacements, and parameters for
+non-analytical term correction. The details are found in the docstring
+that can be seen by (e.g., in ipython)
+
+::
+
+   In [1]: import phonopy
+   In [2]: help(phonopy.load)
+
+Examples of how to use ``phonopy.load`` are listed below.
+
+``phonopy-params.yaml`` may contain all information needed to prepare
+phonon calculation::
+
+   phonon = phonopy.load("phonopy-params.yaml")
+
+More detailed configuration can be given as follows::
+
+   phonon = phonopy.load(supercell_matrix=[2, 2, 2],
+                         primitive_matrix='auto',
+                         unitcell_filename="POSCAR",
+                         force_constants_filename="force_constants.hdf5",
+                         is_nac=True)
+
+With ``is_nac=True``, ``BORN`` file in the current directory is read.
+If supercell is passed and ``primitive matrix`` and
+``supercell_matrix`` are not set, the primitive cell is automatically
+searched::
+
+   phonon = phonopy.load(supercell_filename="SPOSCAR",
+                         force_constants_filename="force_constants.hdf5",
+                         is_nac=True)
+
+If ``FORCE_SETS`` exists in the current directory, this below works::
+
+   phonon = phonopy.load(supercell_filename="SPOSCAR", is_nac=True)
+
 Band structure
-"""""""""""""""
+^^^^^^^^^^^^^^^
 
 Set band paths (``set_band_structure``) and get the results
 (``get_band_structure``).
 
 A tuple of (q-points, distances, frequencies, eigenvectors) is
-obtained by ``get_band_structure()``. Eigenvectors can be obtained
-when ``is_eigenvectors=True`` at ``set_band_structure()``. Eigenvalues
-are stored in a numpy array with the shape of (number_of_bands,
-len(distances)).  Phonon frequency is sqrt(eigenvalue). A negative
-eigenvalue has to correspond to the imaginary frequency, but for the
-plotting, it is set as the negative value in the above example. In
-addition, you need to multiply by your unit conversion factor. In the
-case of VASP to transform to THz, the factor is 15.633302.
+returned by ``get_band_structure()``. When group velocity calculation
+is set (see :ref:`phonopy_module_group_velocity`), (q-points,
+distances, frequencies, eigenvectors, group velocities) are returned.
+Eigenvectors can be obtained when ``is_eigenvectors=True`` at
+``set_band_structure()``. Eigenvalues are stored in a numpy array with
+the shape of (number_of_bands, len(distances)).  Phonon frequency is
+sqrt(eigenvalue). A negative eigenvalue has to correspond to the
+imaginary frequency, but for the plotting, it is set as the negative
+value in the above example. In addition, you need to multiply by your
+unit conversion factor. In the case of VASP to transform to THz, the
+factor is 15.633302.
+
+In ``example/NaCl``, the phonopy is executed from python script, e.g.,
 
 ::
 
-   bands = []
-   q_start  = np.array([0.5, 0.5, 0.0])
-   q_end    = np.array([0.0, 0.0, 0.0])
-   band = []
-   for i in range(51):
-       band.append(q_start + (q_end - q_start) / 50 * i)
-   bands.append(band)
+   import phonopy
+   from phonopy.phonon.band_structure import get_band_qpoints_and_path_connections
 
-   q_start  = np.array([0.0, 0.0, 0.0])
-   q_end    = np.array([0.5, 0.0, 0.0])
-   band = []
-   for i in range(51):
-       band.append(q_start + (q_end - q_start) / 50 * i)
-   bands.append(band)
+   path = [[[0, 0, 0], [0.5, 0, 0.5], [0.625, 0.25, 0.625]],
+           [[0.375, 0.375, 0.75], [0, 0, 0], [0.5, 0.5, 0.5], [0.5, 0.25, 0.75]]]
+   labels = ["$\Gamma$", "X", "U", "K", "$\Gamma$", "L", "W"]
+   qpoints, connections = get_band_qpoints_and_path_connections(path, npoints=51)
+   phonon = phonopy.load(unitcell_filename="POSCAR",
+                         supercell_matrix=[2, 2, 2],
+                         primitive_matrix='F',
+                         is_nac=True)
+   phonon.set_band_structure(qpoints, path_connections=connections, labels=labels)
+   phonon.set_mesh([20, 20, 20], is_gamma_center=True)
+   phonon.plot_band_structure_and_dos().show()
 
-   phonon.set_band_structure(bands)
-   phonon.plot_band_structure().show()
-
-   q_points, distances, frequencies, eigvecs = phonon.get_band_structure()
-
-To obtain eigenvectors, it is necessary to inform to store
-eigenvectors by::
+``path_connections`` and ``labels`` are unnecessary to set unless nice
+looking plotting is needed. To obtain eigenvectors, it is necessary to
+inform to store eigenvectors by::
 
    phonon.set_band_structure(bands, is_eigenvectors=True)
 
+Automatic selection of band paths using `SeeK-path
+<https://seekpath.readthedocs.io/en/latest/>`_ is invoked by
 
+::
+
+   phonon.auto_band_structure()
+
+To use this method, ``seekpath`` python module is needed.
 
 Mesh sampling
-""""""""""""""
+^^^^^^^^^^^^^^
 
 Set sampling mesh (``set_mesh``) in reciprocal space. The irreducible
 *q*-points and corresponding *q*-point weights, eigenvalues, and
@@ -219,7 +288,7 @@ eigenvectors by::
 
 
 DOS and PDOS
-"""""""""""""
+^^^^^^^^^^^^^
 
 Before starting mesh sampling has to be finished. Then set parameters
 (``set_total_DOS`` or ``set_partial_DOS``) and write the results into
@@ -233,7 +302,7 @@ sampling. ``get_total_DOS`` and ``get_partial_DOS`` are under preparation.
    phonon.plot_total_DOS().show()
 
 Thermal properties
-"""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^
 
 Before starting the thermal property calculation, the mesh sampling
 calclation has to be done in the **THz unit**. The unit conversion
@@ -257,7 +326,7 @@ temperaturs, Helmholtz free energy, entropy, and heat capacity.
 
 
 Non-analytical term correction
-"""""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To apply non-analytical term correction, Born effective charge tensors
 for all atoms in **primitive** cell, dielectric constant tensor, and
@@ -266,24 +335,25 @@ given in Cartesian coordinates.
 
 ::
 
-   born = [[[1.08703, 0, 0],
-            [0, 1.08703, 0],
-            [0, 0, 1.08703]],
-           [[-1.08672, 0, 0],
-            [0, -1.08672, 0],
-            [0, 0, -1.08672]]]
-   epsilon = [[2.43533967, 0, 0],
-              [0, 2.43533967, 0],
-              [0, 0, 2.43533967]]
+   born = [[[1.08878299, 0, 0],
+            [0, 1.08878299, 0],
+            [0, 0, 1.08878299]],
+           [[-1.08878299, 0, 0],
+            [0, -1.08878299, 0],
+            [0, 0, -1.08878299]]]
+   epsilon = [[2.56544559, 0, 0],
+              [0, 2.56544559, 0],
+              [0, 0, 2.56544559]]
    factors = 14.400
    phonon.set_nac_params({'born': born,
                           'factor': factors,
                           'dielectric': epsilon})
 
-.. _phonopy_eigenvectors:
+
+.. _phonopy_module_group_velocity:
 
 Group velocity
-"""""""""""""""""""
+^^^^^^^^^^^^^^^
 
 A group velocity at a q-point is obtained by::
 
@@ -549,45 +619,33 @@ Getting parameters for non-analytical term correction
 Parameters for non-analytical term correction may be made as
 follows. This example assumes that the user knows what are the unit
 cell and primitive cell and that the Born effective charge and
-dielectric constant were calculated using VASP code for the unit cell.
+dielectric constant were calculated using VASP code by the unit cell.
 
 ::
 
     import io
     import numpy as np
-    from phonopy import Phonopy
     from phonopy.units import Hartree, Bohr
-    from phonopy.structure.atoms import PhonopyAtoms
     from phonopy.structure.symmetry import symmetrize_borns_and_epsilon
     from phonopy.interface.vasp import VasprunxmlExpat
 
     with io.open("vasprun.xml", "rb") as f:
         vasprun = VasprunxmlExpat(f)
         if vasprun.parse():
-            epsilon = vasprun.get_epsilon()
-            borns = vasprun.get_born()
-            lattice = vasprun.get_lattice()[-1]
-            points = vasprun.get_points()[-1]
-            symbols = vasprun.get_symbols()
-            unit_cell = PhonopyAtoms(symbols=symbols,
-                                     scaled_positions=points,
-                                     cell=lattice)
-
-    symprec = 1e-5
-    phonon = Phonopy(unit_cell,
-                     np.diag([1, 1, 1]),
-                     primitive_matrix=[[0, 0.5, 0.5],
-                                       [0.5, 0, 0.5],
-                                       [0.5, 0.5, 0]],
-                     symprec=symprec)
+            epsilon = vasprun.epsilon
+            borns = vasprun.born
+            unitcell = vasprun.cell
 
     borns_, epsilon_ = symmetrize_borns_and_epsilon(
-        borns, epsilon, unit_cell, symprec=symprec)
-    np.testing.assert_allclose(borns, borns_, atol=1e-1)
-    np.testing.assert_allclose(epsilon, epsilon_, atol=1e-1)
+        borns,
+        epsilon,
+        unitcell,
+        primitive_matrix=[[0, 0.5, 0.5],
+                          [0.5, 0, 0.5],
+                          [0.5, 0.5, 0]],
+        supercell_matrix=np.diag([2, 2, 2]),
+        symprec=1e-5)
 
-    pcell = phonon.get_primitive()
-    p2s_map = pcell.get_primitive_to_supercell_map()
-    nac_params = {'born': np.array([borns_[i] for i in p2s_map]),
+    nac_params = {'born': borns_,
                   'factor': Hartree * Bohr,
                   'dielectric': epsilon_}

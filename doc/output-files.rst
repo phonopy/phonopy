@@ -20,15 +20,15 @@ Sets of phonon frequencies on band paths calculated by the
 :ref:`band-structure mode <band_structure_related_tags>`
 (e.g. ``BAND`` tag) are stored in the YAML format.
 
-``band.yaml`` is viewed using the tool ``bandplot``
-(:ref:`bandplot_tool`). ``bandplot`` can convert the data in the YAML
+``band.yaml`` is viewed using the tool ``phonopy-bandplot``
+(:ref:`bandplot_tool`). ``phonopy-bandplot`` can convert the data in the YAML
 format to that in the gnuplot-style format using the ``--gnuplot`` option.
 
 ``mesh.yaml``
 ^^^^^^^^^^^^^^
 
 A set of frequencies on irreducible q-points of a q-point mesh by the
-:ref:`mesh-sampling mode <dos_related_tags>` (``MP`` tag) is stored in
+:ref:`mesh-sampling mode <dos_related_tags>` (``MESH`` tag) is stored in
 the YAML format.
 
 ``qpoints.yaml``
@@ -44,7 +44,7 @@ A set of frequencies calculated by the
 :ref:`Thermal properties <thermal_properties_tag>` calculated
 are stored in the YAML format.
 
-The auxiliary tool ``propplot`` (:ref:`propplot_tool`) can be used to
+The auxiliary tool ``phonopy-propplot`` (:ref:`propplot_tool`) can be used to
 plot the content of ``thermal_properties.yaml``.
 
 ``thermal_displacements.yaml``
@@ -72,7 +72,7 @@ order.
 simple format, respectively.
 
 ``total_dos.dat`` and ``partial_dos.dat`` are viewed using the
-auxiliary tool ``pdosplot`` (:ref:`pdosplot_tool`).
+auxiliary tool ``phonopy-pdosplot`` (:ref:`pdosplot_tool`).
 
 File format of ``partial_dos.dat``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -127,26 +127,19 @@ represent x, y, and z components::
 ``disp.yaml``
 ^^^^^^^^^^^^^^^
 
-This file contains information to create supercells with
-displacements. The format is hopefully understood just looking into
-it. 'displacement' is written in Cartesian coordinates.  The
-displacement and direction are related by
-
-.. math::
-
-  \mathbf{u} = A \frac{( \mathbf{a}, \mathbf{b}, \mathbf{c} ) \mathbf{d}}{|( \mathbf{a}, \mathbf{b}, \mathbf{c} ) \mathbf{d}|},
-
-where :math:`\mathbf{u}` is the displacement in Cartesian coordinates,
-:math:`A` is the amplitude, :math:`( \mathbf{a}, \mathbf{b},
-\mathbf{c} )` is the matrix representing supercell lattice vectors
-(three column vectors), and :math:`\mathbf{d}` is the direction along
-the supercell axes.
+In phonopy version 2.0 or later, ``disp.yaml`` is
+obsolete and ``disp.yaml`` is replaced by ``phonopy_disp.yaml``.
 
 ``phonopy.yaml`` and ``phonon_disp.yaml``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Phonopy configurations and crystal structures are stored to remember
-what a user executed.
+Phonopy configurations and crystal structures are stored in these
+files when running pre-process (``phonopy_disp.yaml``) or post-process
+(``phonopy.yaml``).
+
+``phonopy_disp.yaml`` contains information used to create supercells
+with displacements. The format is hopefully understood just looking
+into it. ``displacement`` is written in Cartesian coordinates.
 
 ``.hdf5`` files
 ^^^^^^^^^^^^^^^^^
@@ -163,7 +156,14 @@ python case. For each computer language, e.g., Ruby, each YAML parser
 is prepared and you can use those libraries to parse YAML files and
 analyze the data easily in conjunction with your favorite
 language. See http://www.yaml.org/. The basic of the YAML format is
-found easily on the web.
+found easily on the web. In python, it is very easy to parse phonopy's
+yaml files, e.g.,
+
+::
+
+   import yaml
+   with open("band.yaml") as f:
+       data = yaml.load(f)
 
 ``mesh.yaml``, ``band.yaml``, ``qpoints.yaml``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -229,12 +229,3 @@ The physical units of the thermal properties are given in the unit
 section of this YAML file. However the physical units are only correct
 when phonopy ran with proper physical units. See
 :ref:`thermal_properties_tag`.
-
-``disp.yaml``
-^^^^^^^^^^^^^
-
-============== =======================================================
-============== =======================================================
-direction      A displacement in the reduced coordinates.
-displacement   A displacement in the Cartesian coordinates.
-============== =======================================================

@@ -3,6 +3,20 @@
 Change Log
 ==========
 
+Jan-16-2019: Version 2.0
+---------------------------
+
+* ``disp.yaml`` is replaced by ``phonopy_disp.yaml``. For the backward
+  compatibility, when ``phonopy_disp.yaml`` is not found,
+  ``disp.yaml`` is used.
+* New calculator interface for DFTB+ written by Ben Hourahine.
+* Minor update of the look of band structure plot. The format in
+  ``band.yaml`` for treating labels was changed.
+* ``MESH`` accepts a length value, whcih works in the same way as VASP
+  automatic k-mesh generation (see :ref:`mp_tag`).
+* For plotting DOS, it is changed to choose linear tetrahedron method
+  as default, but not smearing method.
+
 Nov-22-2018: Version 1.14.2
 ---------------------------
 

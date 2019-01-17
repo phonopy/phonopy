@@ -373,6 +373,27 @@ Examples of an even mesh with :math:`\Gamma` center in two ways,
    MESH = 8 8 8
    MP_SHIFT = 1/2 1/2 1/2
 
+If only one float value is given, e.g., ``MESH = 100.0``,
+:math:`\Gamma` centred sampling mesh is generated with the mesh
+numbers :math:`(N_{\mathbf{a}^*}, N_{\mathbf{b}^*}, N_{\mathbf{c}^*})`
+computed following the convention of the VASP automatic
+k-point generation, which is
+
+.. math::
+
+   N_{\mathbf{a}^*} = \max[1, \mathrm{nint}(l|\mathbf{a}^*|)], \;
+   N_{\mathbf{b}^*} = \max[1, \mathrm{nint}(l|\mathbf{b}^*|)], \;
+   N_{\mathbf{c}^*} = \max[1, \mathrm{nint}(l|\mathbf{c}^*|)],
+
+where :math:`l` is the value to be specified. With this,
+``GAMMA_CENTER`` becomes simply ignored, but ``MP_SHIFT`` works on top
+of the :math:`\Gamma` centred sampling mesh.
+
+::
+
+   MESh = 100
+
+
 ``MP_SHIFT``
 ~~~~~~~~~~~~~~~~~~
 
@@ -1318,8 +1339,6 @@ format. The file format is changed as follows:
 
 ``HDF5``
 ~~~~~~~~~~~
-
-**This tag is deprecated.**
 
 The following output files are written in hdf5 format instead of their
 original formats (in parenthesis) by ``HDF5 = .TRUE.``.  In addition,
