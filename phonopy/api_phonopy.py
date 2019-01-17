@@ -320,6 +320,7 @@ class Phonopy(object):
         return self._dynamical_matrix
 
     def get_dynamical_matrix(self):
+        """Return DynamicalMatrix instance"""
         return self.dynamical_matrix
 
     @property
@@ -623,6 +624,22 @@ class Phonopy(object):
 
     # Single q-point
     def get_dynamical_matrix_at_q(self, q):
+        """Calculate dynamical matrix at a given q-point
+
+        Parameters
+        ----------
+        q: array_like
+            A q-vector.
+            shape=(3,), dtype='double'
+
+        Returns
+        -------
+        dynamical_matrix: ndarray
+            Dynamical matrix.
+            shape=(bands, bands), dtype='complex'
+
+        """
+
         self._set_dynamical_matrix()
         if self._dynamical_matrix is None:
             msg = ("Dynamical matrix has not yet built.")
@@ -632,10 +649,20 @@ class Phonopy(object):
         return self._dynamical_matrix.get_dynamical_matrix()
 
     def get_frequencies(self, q):
-        """
-        Calculate phonon frequencies at q
+        """Calculate phonon frequencies at a given q-point
 
-        q: q-vector in reduced coordinates of primitive cell
+        Parameters
+        ----------
+        q: array_like
+            A q-vector.
+            shape=(3,), dtype='double'
+
+        Returns
+        -------
+        frequencies: ndarray
+            Phonon frequencies.
+            shape=(bands, ), dtype='double'
+
         """
         self._set_dynamical_matrix()
         if self._dynamical_matrix is None:
@@ -654,10 +681,25 @@ class Phonopy(object):
         return np.array(frequencies) * self._factor
 
     def get_frequencies_with_eigenvectors(self, q):
-        """
-        Calculate phonon frequencies and eigenvectors at q
+        """Calculate phonon frequencies and eigenvectors at a given q-point
 
-        q: q-vector in reduced coordinates of primitive cell
+        Parameters
+        ----------
+        q: array_like
+        A q-vector.
+        shape=(3,)
+
+        Returns
+        -------
+        (frequencies, eigenvectors)
+
+        frequencies: ndarray
+            Phonon frequencies
+            shape=(bands, ), dtype='double'
+        eigenvectors: ndarray
+            Phonon eigenvectors
+            shape=(bands, bands), dtype='complex'
+
         """
         self._set_dynamical_matrix()
         if self._dynamical_matrix is None:
@@ -701,6 +743,35 @@ class Phonopy(object):
             factor=self._factor)
 
     def get_band_structure(self):
+        """Returns calclated band structures
+
+        Returns
+        -------
+        (q-points, distances, frequencies, eigenvectors).
+
+        When set_group_velocity() was done,
+        (q-points, distances, frequencies, eigenvectors, group velocities)
+
+        Each tuple element is a list containing properties on number of paths.
+        The number of q-points on one path can be different from that on the
+        other path. Each set of properties on a path is ndarray and is
+        explained as below:
+
+        q-points[i]: ndarray
+            q-points in reduced coordinates of reciprocal space without 2pi.
+            shape=(q-points, 3), dtype='double'
+        distances[i]: ndarray
+            Distances in reciprocal space along paths
+            shape=(q-points,), dtype='double'
+        frequencies[i]: ndarray
+            Phonon frequencies
+            shape=(q-points, bands), dtype='double'
+        eigenvectors[i]: ndarray
+            Phonon eigenvectors
+            shape=(q-points, bands, bands), dtype='double'
+
+        """
+
         retvals = (self._band_structure.qpoints,
                    self._band_structure.distances,
                    self._band_structure.frequencies,
@@ -1189,6 +1260,15 @@ class Phonopy(object):
             self._thermal_properties = tp
 
     def get_thermal_properties(self):
+        """Return thermal properties
+
+        Returns
+        -------
+        tuple
+        (temperatures, free energy, entropy, heat capacity)
+
+        """
+
         (temps,
          fe,
          entropy,
