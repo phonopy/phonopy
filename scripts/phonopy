@@ -506,6 +506,7 @@ else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
         frequency_scale_factor=settings.get_frequency_scale_factor(),
         dynamical_matrix_decimals=settings.get_dm_decimals(),
         force_constants_decimals=settings.get_fc_decimals(),
+        group_velocity_delta_q=settings.get_group_velocity_delta_q(),
         symprec=args.symprec,
         is_symmetry=settings.get_is_symmetry(),
         use_lapack_solver=settings.get_lapack_solver(),
@@ -756,10 +757,6 @@ if len(symbols_with_no_mass) > 0:
         print_end()
     sys.exit(1)
 
-# Group velocity
-if settings.get_is_group_velocity():
-    phonon.set_group_velocity(q_length=settings.get_group_velocity_delta_q())
-
 #######################
 # Phonon calculations #
 #######################
@@ -887,13 +884,15 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                             use_iter_mesh=True,
                             run_immediately=False)
         else:
-            phonon.run_mesh(mesh=mesh_numbers,
-                            shift=mesh_shift,
-                            is_time_reversal=t_symmetry,
-                            is_mesh_symmetry=q_symmetry,
-                            with_eigenvectors=settings.get_is_eigenvectors(),
-                            is_gamma_center=is_gamma_center,
-                            run_immediately=False)
+            phonon.run_mesh(
+                mesh=mesh_numbers,
+                shift=mesh_shift,
+                is_time_reversal=t_symmetry,
+                is_mesh_symmetry=q_symmetry,
+                with_eigenvectors=settings.get_is_eigenvectors(),
+                with_group_velocities=settings.get_is_group_velocity(),
+                is_gamma_center=is_gamma_center,
+                run_immediately=False)
             if log_level > 0:
                 weights = phonon.mesh.weights
                 if q_symmetry:
@@ -925,10 +924,10 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
             tstep = tprop_range['step']
             tmax = tprop_range['max']
             tmin = tprop_range['min']
-            phonon.set_thermal_properties(
-                tstep,
-                tmax,
-                tmin,
+            phonon.run_thermal_properties(
+                t_min=tmin,
+                t_max=tmax,
+                t_step=tstep,
                 is_projection=settings.get_is_projected_thermal_properties(),
                 band_indices=settings.get_band_indices(),
                 cutoff_frequency=settings.get_cutoff_frequency(),
@@ -941,10 +940,11 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                                                   'S [J/K/mol]',
                                                   'C_v [J/K/mol]',
                                                   'E [kJ/mol]'))
-                (temps,
-                 fe,
-                 entropy,
-                 heat_capacity) = phonon.get_thermal_properties()
+                tp = phonon.get_thermal_properties_dict()
+                temps = tp['temperatures']
+                fe = tp['free_energy']
+                entropy = tp['entropy']
+                heat_capacity = tp['heat_capacity']
                 for T, F, S, CV in zip(temps, fe, entropy, heat_capacity):
                     print(("%12.3f " + "%15.7f" * 4) %
                           (T, F, S, CV, F + T * S / 1000))

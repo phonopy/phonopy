@@ -207,11 +207,11 @@ def run_tetrahedron_method_dos(mesh,
 
 
 class Dos(object):
-    def __init__(self, mesh_object, sigma=None, tetrahedron_method=False):
+    def __init__(self, mesh_object, sigma=None, use_tetrahedron_method=False):
         self._mesh_object = mesh_object
         self._frequencies = mesh_object.frequencies
         self._weights = mesh_object.weights
-        if tetrahedron_method and sigma is None:
+        if use_tetrahedron_method and sigma is None:
             self._tetrahedron_mesh = TetrahedronMesh(
                 mesh_object.dynamical_matrix.primitive,
                 self._frequencies,
@@ -226,6 +226,10 @@ class Dos(object):
         self._sigma = sigma
         self.set_draw_area()
         self.set_smearing_function('Normal')
+
+    @property
+    def frequency_points(self):
+        return self._frequency_points
 
     def set_smearing_function(self, function_name):
         """
@@ -272,11 +276,11 @@ class Dos(object):
 
 
 class TotalDos(Dos):
-    def __init__(self, mesh_object, sigma=None, tetrahedron_method=False):
+    def __init__(self, mesh_object, sigma=None, use_tetrahedron_method=False):
         Dos.__init__(self,
                      mesh_object,
                      sigma=sigma,
-                     tetrahedron_method=tetrahedron_method)
+                     use_tetrahedron_method=use_tetrahedron_method)
         self._dos = None
         self._freq_Debye = None
         self._Debye_fit_coef = None
@@ -296,18 +300,9 @@ class TotalDos(Dos):
                 for i, iw in enumerate(thm):
                     self._dos += np.sum(iw * self._weights[i], axis=1)
 
-    def _run_tetrahedron_method_dos(self):
-        mesh_numbers = self._mesh_object.mesh_numbers
-        cell = self._mesh_object.dynamical_matrix.primitive
-        reciprocal_lattice = np.linalg.inv(cell.get_cell())
-        tm = TetrahedronMethod(reciprocal_lattice, mesh=mesh_numbers)
-        self._dos = run_tetrahedron_method_dos(
-            mesh_numbers,
-            self._frequency_points,
-            self._frequencies,
-            self._mesh_object.grid_address,
-            self._mesh_object.grid_mapping_table,
-            tm.get_tetrahedra())
+    @property
+    def dos(self):
+        return self._dos
 
     def get_dos(self):
         """
@@ -382,6 +377,19 @@ class TotalDos(Dos):
                         comment=comment,
                         filename=filename)
 
+    def _run_tetrahedron_method_dos(self):
+        mesh_numbers = self._mesh_object.mesh_numbers
+        cell = self._mesh_object.dynamical_matrix.primitive
+        reciprocal_lattice = np.linalg.inv(cell.get_cell())
+        tm = TetrahedronMethod(reciprocal_lattice, mesh=mesh_numbers)
+        self._dos = run_tetrahedron_method_dos(
+            mesh_numbers,
+            self._frequency_points,
+            self._frequencies,
+            self._mesh_object.grid_address,
+            self._mesh_object.grid_mapping_table,
+            tm.get_tetrahedra())
+
     def _get_density_of_states_at_freq(self, f):
         return np.sum(np.dot(
             self._weights, self._smearing_function.calc(self._frequencies - f))
@@ -392,13 +400,13 @@ class PartialDos(Dos):
     def __init__(self,
                  mesh_object,
                  sigma=None,
-                 tetrahedron_method=False,
+                 use_tetrahedron_method=False,
                  direction=None,
                  xyz_projection=False):
         Dos.__init__(self,
                      mesh_object,
                      sigma=sigma,
-                     tetrahedron_method=tetrahedron_method)
+                     use_tetrahedron_method=use_tetrahedron_method)
         self._eigenvectors = self._mesh_object.eigenvectors
         self._partial_dos = None
 
@@ -423,6 +431,10 @@ class PartialDos(Dos):
 
         self._openmp_thm = True
 
+    @property
+    def partial_dos(self):
+        return self._partial_dos
+
     def run(self):
         if self._tetrahedron_mesh is None:
             self._run_smearing_method()
@@ -431,42 +443,6 @@ class PartialDos(Dos):
                 self._run_tetrahedron_method_dos()
             else:
                 self._run_tetrahedron_method()
-
-    def _run_smearing_method(self):
-        num_pdos = self._eigvecs2.shape[1]
-        num_freqs = len(self._frequency_points)
-        self._partial_dos = np.zeros((num_pdos, num_freqs), dtype='double')
-        weights = self._weights / float(np.sum(self._weights))
-        for i, freq in enumerate(self._frequency_points):
-            amplitudes = self._smearing_function.calc(self._frequencies - freq)
-            for j in range(self._partial_dos.shape[0]):
-                self._partial_dos[j, i] = np.dot(
-                    weights, self._eigvecs2[:, j, :] * amplitudes).sum()
-
-    def _run_tetrahedron_method(self):
-        num_pdos = self._eigvecs2.shape[1]
-        num_freqs = len(self._frequency_points)
-        self._partial_dos = np.zeros((num_pdos, num_freqs), dtype='double')
-        thm = self._tetrahedron_mesh
-        thm.set(value='I', frequency_points=self._frequency_points)
-        for i, iw in enumerate(thm):
-            w = self._weights[i]
-            self._partial_dos += np.dot(iw * w, self._eigvecs2[i].T).T
-
-    def _run_tetrahedron_method_dos(self):
-        mesh_numbers = self._mesh_object.mesh_numbers
-        cell = self._mesh_object.dynamical_matrix.primitive
-        reciprocal_lattice = np.linalg.inv(cell.get_cell())
-        tm = TetrahedronMethod(reciprocal_lattice, mesh=mesh_numbers)
-        pdos = run_tetrahedron_method_dos(
-            mesh_numbers,
-            self._frequency_points,
-            self._frequencies,
-            self._mesh_object.grid_address,
-            self._mesh_object.grid_mapping_table,
-            tm.get_tetrahedra(),
-            coef=self._eigvecs2)
-        self._partial_dos = pdos.T
 
     def get_partial_dos(self):
         """
@@ -516,3 +492,39 @@ class PartialDos(Dos):
                           self._partial_dos,
                           comment=comment,
                           filename=filename)
+
+    def _run_smearing_method(self):
+        num_pdos = self._eigvecs2.shape[1]
+        num_freqs = len(self._frequency_points)
+        self._partial_dos = np.zeros((num_pdos, num_freqs), dtype='double')
+        weights = self._weights / float(np.sum(self._weights))
+        for i, freq in enumerate(self._frequency_points):
+            amplitudes = self._smearing_function.calc(self._frequencies - freq)
+            for j in range(self._partial_dos.shape[0]):
+                self._partial_dos[j, i] = np.dot(
+                    weights, self._eigvecs2[:, j, :] * amplitudes).sum()
+
+    def _run_tetrahedron_method(self):
+        num_pdos = self._eigvecs2.shape[1]
+        num_freqs = len(self._frequency_points)
+        self._partial_dos = np.zeros((num_pdos, num_freqs), dtype='double')
+        thm = self._tetrahedron_mesh
+        thm.set(value='I', frequency_points=self._frequency_points)
+        for i, iw in enumerate(thm):
+            w = self._weights[i]
+            self._partial_dos += np.dot(iw * w, self._eigvecs2[i].T).T
+
+    def _run_tetrahedron_method_dos(self):
+        mesh_numbers = self._mesh_object.mesh_numbers
+        cell = self._mesh_object.dynamical_matrix.primitive
+        reciprocal_lattice = np.linalg.inv(cell.get_cell())
+        tm = TetrahedronMethod(reciprocal_lattice, mesh=mesh_numbers)
+        pdos = run_tetrahedron_method_dos(
+            mesh_numbers,
+            self._frequency_points,
+            self._frequencies,
+            self._mesh_object.grid_address,
+            self._mesh_object.grid_mapping_table,
+            tm.get_tetrahedra(),
+            coef=self._eigvecs2)
+        self._partial_dos = pdos.T
