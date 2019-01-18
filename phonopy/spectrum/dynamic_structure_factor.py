@@ -214,7 +214,7 @@ class DynamicStructureFactor(object):
     def _set_phonon(self):
         qpoints_phonon = QpointsPhonon(self.qpoints,
                                        self._dynamical_matrix,
-                                       is_eigenvectors=True)
+                                       with_eigenvectors=True)
         self.frequencies = qpoints_phonon.frequencies
         self._eigvecs = qpoints_phonon.eigenvectors
 

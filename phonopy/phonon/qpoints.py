@@ -58,7 +58,7 @@ class QpointsPhonon(object):
                  qpoints,
                  dynamical_matrix,
                  nac_q_direction=None,
-                 is_eigenvectors=False,
+                 with_eigenvectors=False,
                  group_velocity=None,
                  write_dynamical_matrices=False,
                  factor=VaspToTHz):
@@ -72,12 +72,12 @@ class QpointsPhonon(object):
         self._qpoints = qpoints
         self._dynamical_matrix = dynamical_matrix
         self._nac_q_direction = nac_q_direction
-        self._is_eigenvectors = is_eigenvectors
+        self._with_eigenvectors = with_eigenvectors
         self._group_velocity = group_velocity
         self._write_dynamical_matrix = write_dynamical_matrices
         self._factor = factor
 
-        self._gv = None
+        self._group_velocities = None
         self._dm = None
         self._eigenvectors = None
         self._frequencies = None
@@ -98,15 +98,22 @@ class QpointsPhonon(object):
     def get_eigenvectors(self):
         return self.eigenvectors
 
+    @property
+    def group_velocities(self):
+        return self._group_velocities
+
+    def get_group_velocities(self):
+        return self.group_velocities
+
     def write_hdf5(self):
         import h5py
         with h5py.File('qpoints.hdf5', 'w') as w:
             w.create_dataset('qpoint', data=self._qpoints)
             w.create_dataset('frequency', data=self._frequencies)
-            if self._is_eigenvectors:
+            if self._with_eigenvectors:
                 w.create_dataset('eigenvector', data=self._eigenvectors)
-            if self._gv is not None:
-                w.create_dataset('group_velocity', data=self._gv)
+            if self._group_velocities is not None:
+                w.create_dataset('group_velocity', data=self._group_velocities)
             if self._write_dynamical_matrix:
                 w.create_dataset('dynamical_matrix', data=self._dm)
 
@@ -139,11 +146,11 @@ class QpointsPhonon(object):
                 w.write("  - # %d\n" % (j + 1))
                 w.write("    frequency: %15.10f\n" % freq)
 
-                if self._gv is not None:
+                if self._group_velocities is not None:
                     w.write("    group_velocity: [ %13.7f, %13.7f, %13.7f ]\n"
-                            % tuple(self._gv[i, j]))
+                            % tuple(self._group_velocities[i, j]))
 
-                if self._is_eigenvectors:
+                if self._with_eigenvectors:
                     w.write("    eigenvector:\n")
                     for k in range(self._natom):
                         w.write("    - # atom %d\n" % (k + 1))
@@ -157,20 +164,20 @@ class QpointsPhonon(object):
         if self._group_velocity is not None:
             self._group_velocity.set_q_points(
                 self._qpoints, perturbation=self._nac_q_direction)
-            self._gv = self._group_velocity.get_group_velocity()
+            self._group_velocities = self._group_velocity.get_group_velocity()
 
         if self._write_dynamical_matrix:
             self._dm = []
 
         self._frequencies = []
-        if self._is_eigenvectors:
+        if self._with_eigenvectors:
             self._eigenvectors = []
 
         for q in self._qpoints:
             dm = self._get_dynamical_matrix(q)
             if self._write_dynamical_matrix:
                 self._dm.append(dm)
-            if self._is_eigenvectors:
+            if self._with_eigenvectors:
                 eigvals, eigvecs = np.linalg.eigh(dm)
                 self._eigenvectors.append(eigvecs)
             else:
@@ -182,8 +189,9 @@ class QpointsPhonon(object):
         self._frequencies = np.array(self._frequencies,
                                      dtype='double', order='C')
         dtype = "c%d" % (np.dtype('double').itemsize * 2)
-        self._eigenvectors = np.array(self._eigenvectors,
-                                      dtype=dtype, order='C')
+        if self._with_eigenvectors:
+            self._eigenvectors = np.array(self._eigenvectors,
+                                          dtype=dtype, order='C')
 
     def _get_dynamical_matrix(self, q):
         if (self._dynamical_matrix.is_nac() and

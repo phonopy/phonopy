@@ -145,7 +145,7 @@ def get_band_qpoints_by_seekpath(primitive, npoints, is_const_interval=False):
     except ImportError:
         raise ImportError("You need to install seekpath.")
 
-    band_path = seekpath.get_path(primitive.to_tuple())
+    band_path = seekpath.get_path(primitive.totuple())
     point_coords = band_path['point_coords']
     qpoints_of_paths = []
     if is_const_interval:
@@ -268,7 +268,7 @@ class BandStructure(object):
     def __init__(self,
                  paths,
                  dynamical_matrix,
-                 is_eigenvectors=False,
+                 with_eigenvectors=False,
                  is_band_connection=False,
                  group_velocity=None,
                  path_connections=None,
@@ -279,12 +279,13 @@ class BandStructure(object):
 
         Parameters
         ----------
-        paths : List of ndarray
+        paths : List of array_like
             Sets of qpoints that can be passed to phonopy.set_band_structure().
-            shape of each ndarray : (npoints, 3)
+            Numbers of qpoints can be different.
+            shape of each array_like : (qpoints, 3)
         dynamical_matrix : DynamicalMatrix or DynamicalMatrixNAC
             Dynamical matrix calculator.
-        is_eigenvectors : bool, optional
+        with_eigenvectors : bool, optional
             Flag whether eigenvectors are calculated or not. Default is False.
         is_band_connection : bool, optional
             Flag whether each band is connected or not. This is achieved by
@@ -310,10 +311,10 @@ class BandStructure(object):
         self._cell = dynamical_matrix.get_primitive()
         self._supercell = dynamical_matrix.get_supercell()
         self._factor = factor
-        self._is_eigenvectors = is_eigenvectors
+        self._with_eigenvectors = with_eigenvectors
         self._is_band_connection = is_band_connection
         if is_band_connection:
-            self._is_eigenvectors = True
+            self._with_eigenvectors = True
         self._group_velocity = group_velocity
 
         self._paths = [np.array(path) for path in paths]
@@ -636,7 +637,7 @@ class BandStructure(object):
              gv_on_path) = self._solve_dm_on_path(path)
 
             eigvals.append(np.array(eigvals_on_path))
-            if self._is_eigenvectors:
+            if self._with_eigenvectors:
                 eigvecs.append(np.array(eigvecs_on_path))
             if self._group_velocity is not None:
                 group_velocities.append(np.array(gv_on_path))
@@ -644,7 +645,7 @@ class BandStructure(object):
             self._special_points.append(self._distance)
 
         self._eigenvalues = eigvals
-        if self._is_eigenvectors:
+        if self._with_eigenvectors:
             self._eigenvectors = eigvecs
         if self._group_velocity is not None:
             self._group_velocities = group_velocities
@@ -677,7 +678,7 @@ class BandStructure(object):
                 self._dynamical_matrix.set_dynamical_matrix(q)
             dm = self._dynamical_matrix.get_dynamical_matrix()
 
-            if self._is_eigenvectors:
+            if self._with_eigenvectors:
                 eigvals, eigvecs = np.linalg.eigh(dm)
                 eigvals = eigvals.real
             else:
@@ -698,7 +699,7 @@ class BandStructure(object):
                 prev_eigvecs = eigvecs
             else:
                 eigvals_on_path.append(eigvals)
-                if self._is_eigenvectors:
+                if self._with_eigenvectors:
                     eigvecs_on_path.append(eigvecs)
                 if self._group_velocity is not None:
                     gv_on_path.append(gv[i])

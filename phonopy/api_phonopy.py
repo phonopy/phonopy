@@ -33,6 +33,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
+import warnings
+import textwrap
 import numpy as np
 from phonopy.version import __version__
 from phonopy.interface import PhonopyYaml
@@ -66,6 +68,8 @@ from phonopy.phonon.irreps import IrReps
 from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.phonon.moment import PhononMoment
 from phonopy.spectrum.dynamic_structure_factor import DynamicStructureFactor
+
+warnings.simplefilter("always")
 
 
 class Phonopy(object):
@@ -124,9 +128,6 @@ class Phonopy(object):
         # set_mesh
         self._mesh = None
 
-        # set_iter_mesh
-        self._iter_mesh = None
-
         # set_tetrahedron_method
         self._tetrahedron_method = None
 
@@ -156,6 +157,7 @@ class Phonopy(object):
 
         # set_group_velocity
         self._group_velocity = None
+        self._gv_delta_q = None
 
     @property
     def version(self):
@@ -279,9 +281,7 @@ class Phonopy(object):
         displacemens : array_like
             Atomic displacements of all atoms of all supercells.
             Only all displacements in each supercell case is supported.
-            shape=(supercells, natom, 3)
-            dtype='double'
-            order='C'
+            shape=(supercells, natom, 3), dtype='double', order='C'
 
         """
 
@@ -360,26 +360,6 @@ class Phonopy(object):
     @property
     def mesh(self):
         return self._mesh
-
-    @property
-    def itermesh(self):
-        """Returns IterMesh instance
-
-        This instance object does not store phonon data. With very
-        dense mesh and eigenvectors needed, IterMesh can save memory
-        space, but expected to be slow.
-
-        This object is used as a generator. Phonon frequencies and
-        eigenvectos are obtained as follows:
-
-            for i, (freqs, eigvecs) in enumerate(iter_mesh):
-                print(i + 1)
-                print(freqs)
-                print(eigvecs)
-
-        """
-
-        return self._iter_mesh
 
     @property
     def dynamic_structure_factor(self):
@@ -479,8 +459,7 @@ class Phonopy(object):
             A set of atomic forces in displaced supercells. The order of
             displaced supercells has to match with that in displacement
             dataset.
-            shape=(displaced supercells, atoms in supercell, 3)
-            dtype='double'
+            shape=(displaced supercells, atoms in supercell, 3), dtype='double'
 
             [[[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # first supercell
              [[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # second supercell
@@ -510,7 +489,7 @@ class Phonopy(object):
             Force constants matrix. If this is given in own condiguous ndarray
             with order='C' and dtype='double', internal copy of data is
             avoided. Therefore some computational resources are saved.
-            shape=(atoms in supercell, atoms in supercell, 3, 3)
+            shape=(atoms in supercell, atoms in supercell, 3, 3),
             dtype='double'
 
         """
@@ -686,8 +665,8 @@ class Phonopy(object):
         Parameters
         ----------
         q: array_like
-        A q-vector.
-        shape=(3,)
+            A q-vector.
+            shape=(3,)
 
         Returns
         -------
@@ -695,10 +674,10 @@ class Phonopy(object):
 
         frequencies: ndarray
             Phonon frequencies
-            shape=(bands, ), dtype='double'
+            shape=(bands, ), dtype='double', order='C'
         eigenvectors: ndarray
             Phonon eigenvectors
-            shape=(bands, bands), dtype='complex'
+            shape=(bands, bands), dtype='complex', order='C'
 
         """
         self._set_dynamical_matrix()
@@ -720,6 +699,67 @@ class Phonopy(object):
         return np.array(frequencies) * self._factor, eigenvectors
 
     # Band structure
+    def run_band_structure(self,
+                           paths,
+                           with_eigenvectors=False,
+                           with_group_velocities=False,
+                           is_band_connection=False,
+                           path_connections=None,
+                           labels=None,
+                           is_legacy_plot=False):
+        """Phonon calculations on sampling mesh grids
+
+        Parameters
+        ----------
+        paths : List of array_like
+            Sets of qpoints that can be passed to phonopy.set_band_structure().
+            Numbers of qpoints can be different.
+            shape of each array_like : (qpoints, 3)
+        with_eigenvectors : bool, optional
+            Flag whether eigenvectors are calculated or not. Default is False.
+        with_group_velocities : bool, optional
+            Flag whether group velocities are calculated or not. Default is
+            False.
+        is_band_connection : bool, optional
+            Flag whether each band is connected or not. This is achieved by
+            comparing similarity of eigenvectors of neghboring poins. Sometimes
+            this fails. Default is False.
+        path_connections : List of bool, optional
+            This is only used in graphical plot of band structure and gives
+            whether each path is connected to the next path or not,
+            i.e., if False, there is a jump of q-points. Number of elements is
+            the same at that of paths. Default is None.
+        labels : List of str, optional
+            This is only used in graphical plot of band structure and gives
+            labels of end points of each path. The number of labels is equal
+            to (2 - np.array(path_connections)).sum().
+        is_legacy_plot: bool, optional
+            This makes the old style band structure plot. Default is False.
+
+        """
+
+        if self._dynamical_matrix is None:
+            msg = ("Dynamical matrix has not yet built.")
+            raise RuntimeError(msg)
+
+        if with_group_velocities:
+            if self._group_velocity is None:
+                self.set_group_velocity()
+            group_velocity = self._group_velocity
+        else:
+            group_velocity = None
+
+        self._band_structure = BandStructure(
+            paths,
+            self._dynamical_matrix,
+            with_eigenvectors=with_eigenvectors,
+            is_band_connection=is_band_connection,
+            group_velocity=group_velocity,
+            path_connections=path_connections,
+            labels=labels,
+            is_legacy_plot=is_legacy_plot,
+            factor=self._factor)
+
     def set_band_structure(self,
                            bands,
                            is_eigenvectors=False,
@@ -727,30 +767,72 @@ class Phonopy(object):
                            path_connections=None,
                            labels=None,
                            is_legacy_plot=False):
-        if self._dynamical_matrix is None:
-            msg = ("Dynamical matrix has not yet built.")
+        warnings.warn("Phonopy.set_band_structure is deprecated. "
+                      "Use Phonopy.run_band_structure.", DeprecationWarning)
+
+        if self._group_velocity is None:
+            with_group_velocities = False
+        else:
+            with_group_velocities = True
+        self.run_band_structure(bands,
+                                with_eigenvectors=is_eigenvectors,
+                                with_group_velocities=with_group_velocities,
+                                is_band_connection=is_band_connection,
+                                path_connections=path_connections,
+                                labels=labels,
+                                is_legacy_plot=is_legacy_plot)
+
+    def get_band_structure_dict(self):
+        """Returns calclated band structures
+
+        Returns
+        -------
+        dict
+            keys: qpoints, distances, frequencies, eigenvectors, and
+                  group_velocities
+            Each dict value is a list containing properties on number of paths.
+            The number of q-points on one path can be different from that on
+            the other path. Each set of properties on a path is ndarray and is
+            explained as below:
+
+            qpoints[i]: ndarray
+                q-points in reduced coordinates of reciprocal space without
+                2pi.
+                shape=(q-points, 3), dtype='double'
+            distances[i]: ndarray
+                Distances in reciprocal space along paths.
+                shape=(q-points,), dtype='double'
+            frequencies[i]: ndarray
+                Phonon frequencies
+                shape=(q-points, bands), dtype='double'
+            eigenvectors[i]: ndarray
+                Phonon eigenvectors. None if eigenvectors are not stored.
+                shape=(q-points, bands, bands), dtype='complex'
+            group_velocities[i]: ndarray
+                Phonon group velocities. None if group velocities are not
+                calculated.
+                shape=(q-points, bands, 3), dtype='double'
+
+        """
+
+        if self._band_structure is None:
+            msg = ("run_band_structure has to be done.")
             raise RuntimeError(msg)
 
-        self._band_structure = BandStructure(
-            bands,
-            self._dynamical_matrix,
-            is_eigenvectors=is_eigenvectors,
-            is_band_connection=is_band_connection,
-            group_velocity=self._group_velocity,
-            path_connections=path_connections,
-            labels=labels,
-            is_legacy_plot=is_legacy_plot,
-            factor=self._factor)
+        retdict = {'qpoints': self._band_structure.qpoints,
+                   'distances': self._band_structure.distances,
+                   'frequencies': self._band_structure.frequencies,
+                   'eigenvectors': self._band_structure.eigenvectors,
+                   'group_velocities': self._band_structure.group_velocities}
+
+        return retdict
 
     def get_band_structure(self):
         """Returns calclated band structures
 
         Returns
         -------
-        (q-points, distances, frequencies, eigenvectors).
-
-        When set_group_velocity() was done,
-        (q-points, distances, frequencies, eigenvectors, group velocities)
+        (q-points, distances, frequencies, eigenvectors)
 
         Each tuple element is a list containing properties on number of paths.
         The number of q-points on one path can be different from that on the
@@ -761,34 +843,47 @@ class Phonopy(object):
             q-points in reduced coordinates of reciprocal space without 2pi.
             shape=(q-points, 3), dtype='double'
         distances[i]: ndarray
-            Distances in reciprocal space along paths
+            Distances in reciprocal space along paths.
             shape=(q-points,), dtype='double'
         frequencies[i]: ndarray
             Phonon frequencies
             shape=(q-points, bands), dtype='double'
         eigenvectors[i]: ndarray
-            Phonon eigenvectors
-            shape=(q-points, bands, bands), dtype='double'
+            Phonon eigenvectors. None if eigenvectors are not stored.
+            shape=(q-points, bands, bands), dtype='complex'
+        group_velocities[i]: ndarray
+            Phonon group velocities. None if group velocities are not
+            calculated.
+            shape=(q-points, bands, 3), dtype='double'
 
         """
+
+        warnings.warn("Phonopy.get_band_structure is deprecated. "
+                      "Use Phonopy.get_band_structure_dict.",
+                      DeprecationWarning)
+
+        if self._band_structure is None:
+            msg = ("run_band_structure has to be done.")
+            raise RuntimeError(msg)
 
         retvals = (self._band_structure.qpoints,
                    self._band_structure.distances,
                    self._band_structure.frequencies,
                    self._band_structure.eigenvectors)
-        if self._band_structure.group_velocities is None:
-            return retvals
-        else:
-            return retvals + (self._band_structure.group_velocities, )
+        return retvals
 
     def auto_band_structure(self,
                             npoints=101,
+                            with_eigenvectors=False,
+                            with_group_velocities=False,
                             plot=False,
                             write_yaml=False,
                             filename="band.yaml"):
         bands, labels, path_connections = get_band_qpoints_by_seekpath(
             self._primitive, npoints, is_const_interval=True)
-        self.set_band_structure(bands,
+        self.run_band_structure(bands,
+                                with_eigenvectors=with_eigenvectors,
+                                with_group_velocities=with_group_velocities,
                                 path_connections=path_connections,
                                 labels=labels,
                                 is_legacy_plot=False)
@@ -829,16 +924,87 @@ class Phonopy(object):
                                   filename="band.yaml"):
         self._band_structure.write_yaml(comment=comment, filename=filename)
 
-    # Sampling mesh
-    def run_mesh(self):
-        """Run phonon calculations on sampling mesh grids
+    def run_mesh(self,
+                 mesh=100.0,
+                 shift=None,
+                 is_time_reversal=True,
+                 is_mesh_symmetry=True,
+                 with_eigenvectors=False,
+                 is_gamma_center=False,
+                 use_iter_mesh=False,
+                 run_immediately=True):
+        """Phonon calculations on sampling mesh grids
 
-        With ``run_immediately=False`` of ``set_mesh`` method, phonon
-        calculations become ready but are not executed. ``run_mesh`` does it.
+        Parameters
+        ----------
+        mesh: array_like or float, optional
+            Mesh numbers along a, b, c axes when array_like object is given.
+            dtype='intc', shape=(3,)
+            When float value is given, uniform mesh is generated following
+            VASP convention by
+                N = max(1, nint(l * |a|^*))
+            where 'nint' is the function to return the nearest integer. In this
+            case, it is forced to set is_gamma_center=True.
+            Default value is 100.0.
+        shift: array_like, optional, default None (no shift)
+            Mesh shifts along a*, b*, c* axes with respect to neighboring grid
+            points from the original mesh (Monkhorst-Pack or Gamma center).
+            0.5 gives half grid shift. Normally 0 or 0.5 is given.
+            Otherwise q-points symmetry search is not performed.
+            dtype='double', shape=(3, )
+        is_time_reversal: bool, optional, default True
+            Time reversal symmetry is considered in symmetry search. By this,
+            inversion symmetry is always included.
+        is_mesh_symmetry: bool, optional, default True
+            Wheather symmetry search is done or not.
+        with_eigenvectors: bool, optional, default False
+            Eigenvectors are stored by setting True.
+        is_gamma_center: bool, default False
+            Uniform mesh grids are generated centring at Gamma point but not
+            the Monkhorst-Pack scheme. When type(mesh) is float, this parameter
+            setting is ignored and it is forced to set is_gamma_center=True.
+        run_immediately: bool, default True
+            With True, phonon calculations are performed immediately, which is
+            usual usage.
 
         """
 
-        if self._mesh is not None:
+        if self._dynamical_matrix is None:
+            msg = ("Dynamical matrix has not yet built.")
+            raise RuntimeError(msg)
+
+        if type(mesh) is list or type(mesh) is np.ndarray:
+            mesh_nums = mesh
+            _is_gamma_center = is_gamma_center
+        else:
+            mesh_nums = length2mesh(mesh, self._primitive.get_cell())
+            _is_gamma_center = True
+
+        if use_iter_mesh:
+            self._mesh = IterMesh(
+                self._dynamical_matrix,
+                mesh,
+                shift=shift,
+                is_time_reversal=is_time_reversal,
+                is_mesh_symmetry=is_mesh_symmetry,
+                with_eigenvectors=with_eigenvectors,
+                is_gamma_center=is_gamma_center,
+                rotations=self._primitive_symmetry.get_pointgroup_operations(),
+                factor=self._factor)
+        else:
+            self._mesh = Mesh(
+                self._dynamical_matrix,
+                mesh_nums,
+                shift=shift,
+                is_time_reversal=is_time_reversal,
+                is_mesh_symmetry=is_mesh_symmetry,
+                with_eigenvectors=with_eigenvectors,
+                is_gamma_center=_is_gamma_center,
+                group_velocity=self._group_velocity,
+                rotations=self._primitive_symmetry.get_pointgroup_operations(),
+                factor=self._factor,
+                use_lapack_solver=self._use_lapack_solver)
+        if run_immediately:
             self._mesh.run()
 
     def set_mesh(self,
@@ -869,6 +1035,8 @@ class Phonopy(object):
             inversion symmetry is always included.
         is_mesh_symmetry: bool, optional, default True
             Wheather symmetry search is done or not.
+        is_eigenvectors: bool, optional, default False
+            Eigenvectors are stored by setting True.
         is_gamma_center: bool, default False
             Uniform mesh grids are generated centring at Gamma point but not
             the Monkhorst-Pack scheme.
@@ -878,72 +1046,90 @@ class Phonopy(object):
 
         """
 
-        if self._dynamical_matrix is None:
-            msg = ("Dynamical matrix has not yet built.")
-            raise RuntimeError(msg)
+        warnings.warn("Phonopy.set_mesh is deprecated. "
+                      "Use Phonopy.run_mesh.", DeprecationWarning)
 
-        self._mesh = Mesh(
-            self._dynamical_matrix,
-            mesh,
-            shift=shift,
-            is_time_reversal=is_time_reversal,
-            is_mesh_symmetry=is_mesh_symmetry,
-            is_eigenvectors=is_eigenvectors,
-            is_gamma_center=is_gamma_center,
-            group_velocity=self._group_velocity,
-            rotations=self._primitive_symmetry.get_pointgroup_operations(),
-            factor=self._factor,
-            use_lapack_solver=self._use_lapack_solver)
-        if run_immediately:
-            self._mesh.run()
-
-    def auto_mesh(self,
-                  length=100.0,
-                  shift=None,
-                  is_time_reversal=True,
-                  is_mesh_symmetry=True,
-                  is_eigenvectors=False,
-                  is_gamma_center=True,
-                  run_immediately=True):
-        """Automatic mesh q-point sampling
-
-        This conversion for each reciprocal axis follows VASP convention by
-            N = max(1, nint(l * |a|^*))
-        'nint' is the function to return the nearest integer.
-
-        Parameters
-        ----------
-        length : float, optional
-            Length having the unit of direct space length. Default is 100.
-        See other parameters in set_mesh.
-
-        """
-
-        mesh = length2mesh(length, self._primitive.get_cell())
-        self.set_mesh(mesh,
+        self.run_mesh(mesh,
                       shift=shift,
                       is_time_reversal=is_time_reversal,
                       is_mesh_symmetry=is_mesh_symmetry,
-                      is_eigenvectors=is_eigenvectors,
+                      with_eigenvectors=is_eigenvectors,
                       is_gamma_center=is_gamma_center,
                       run_immediately=run_immediately)
 
-    def get_mesh(self):
+    def get_mesh_dict(self):
+        """Returns calculated mesh sampling phonons
+
+        Returns
+        -------
+        dict
+            keys: qpoints, weights, frequencies, eigenvectors, and
+                  group_velocities
+
+            Each value for the corresponding key is explained as below.
+
+            qpoints: ndarray
+                q-points in reduced coordinates of reciprocal lattice
+                dtype='double'
+                shape=(ir-grid points, 3)
+            weights: ndarray
+                Geometric q-point weights. Its sum is the number of grid
+                points.
+                dtype='intc'
+                shape=(ir-grid points,)
+            frequencies: ndarray
+                Phonon frequencies at ir-grid points. Imaginary frequenies are
+                represented by negative real numbers.
+                dtype='double'
+                shape=(ir-grid points, bands)
+            eigenvectors: ndarray
+                Phonon eigenvectors at ir-grid points. See the data structure
+                at np.linalg.eigh.
+                dtype='complex'
+                shape=(ir-grid points, bands, bands)
+            group_velocities: ndarray
+                Phonon group velocities at ir-grid points.
+                dtype='double'
+                shape=(ir-grid points, bands, 3)
+
+        """
         if self._mesh is None:
-            return None
-        else:
-            return (self._mesh.qpoints,
-                    self._mesh.weights,
-                    self._mesh.frequencies,
-                    self._mesh.eigenvectors)
+            msg = ("run_mesh has to be done.")
+            raise RuntimeError(msg)
+
+        retdict = {'qpoints': self._mesh.qpoints,
+                   'weights': self._mesh.weights,
+                   'frequencies': self._mesh.frequencies,
+                   'eigenvectors': self._mesn.eigenvectors,
+                   'group_velocities': self._mesh.group_velocities}
+
+        return retdict
+
+    def get_mesh(self):
+        warnings.warn("Phonopy.get_mesh is deprecated. "
+                      "Use Phonopy.get_mesh_dict.",
+                      DeprecationWarning)
+
+        if self._mesh is None:
+            msg = ("run_mesh has to be done.")
+            raise RuntimeError(msg)
+
+        return (self._mesh.qpoints,
+                self._mesh.weights,
+                self._mesh.frequencies,
+                self._mesh.eigenvectors)
 
     def get_mesh_grid_info(self):
+        warnings.warn("Phonopy.get_mesh_grid_info is deprecated. "
+                      "Use attributes of phonon.mesh instance.",
+                      DeprecationWarning)
         if self._mesh is None:
-            return None
-        else:
-            return (self._mesh.grid_address,
-                    self._mesh.ir_grid_points,
-                    self._mesh.grid_mapping_table)
+            msg = ("run_mesh has to be done.")
+            raise RuntimeError(msg)
+
+        return (self._mesh.grid_address,
+                self._mesh.ir_grid_points,
+                self._mesh.grid_mapping_table)
 
     def write_hdf5_mesh(self):
         self._mesh.write_hdf5()
@@ -968,20 +1154,18 @@ class Phonopy(object):
 
         """
 
-        if self._dynamical_matrix is None:
-            msg = ("Dynamical matrix has not yet built.")
-            raise RuntimeError(msg)
+        warnings.warn("Phonopy.set_iter_mesh is deprecated. "
+                      "Use Phonopy.run_mesh with use_iter_mesh=True.",
+                      DeprecationWarning)
 
-        self._iter_mesh = IterMesh(
-            self._dynamical_matrix,
-            mesh,
-            shift=shift,
-            is_time_reversal=is_time_reversal,
-            is_mesh_symmetry=is_mesh_symmetry,
-            is_eigenvectors=is_eigenvectors,
-            is_gamma_center=is_gamma_center,
-            rotations=self._primitive_symmetry.get_pointgroup_operations(),
-            factor=self._factor)
+        self.run_mesh(mesh=mesh,
+                      shift=shift,
+                      is_time_reversal=is_time_reversal,
+                      is_mesh_symmetry=is_mesh_symmetry,
+                      with_eigenvectors=is_eigenvectors,
+                      is_gamma_center=is_gamma_center,
+                      use_iter_mesh=True,
+                      run_immediately=False)
 
     # Plot band structure and DOS (PDOS) together
     def plot_band_structure_and_dos(self, pdos_indices=None):
@@ -1059,7 +1243,7 @@ class Phonopy(object):
                       tetrahedron_method=True):
 
         if self._mesh is None:
-            msg = "\'set_mesh\' has to be done before DOS calculation."
+            msg = "set_mesh has to be done before DOS calculation."
             raise RuntimeError(msg)
 
         total_dos = TotalDos(self._mesh,
@@ -1077,10 +1261,10 @@ class Phonopy(object):
                        plot=False,
                        write_dat=False,
                        filename="total_dos.dat"):
-        self.auto_mesh(length=length,
-                       is_time_reversal=is_time_reversal,
-                       is_mesh_symmetry=is_mesh_symmetry,
-                       is_gamma_center=is_gamma_center)
+        self.run_mesh(mesh=length,
+                      is_time_reversal=is_time_reversal,
+                      is_mesh_symmetry=is_mesh_symmetry,
+                      is_gamma_center=is_gamma_center)
         self.set_total_DOS(tetrahedron_method=True)
         if write_dat:
             self.write_total_DOS(filename=filename)
@@ -1107,7 +1291,7 @@ class Phonopy(object):
 
     def plot_total_DOS(self):
         if self._total_dos is None:
-            msg = ("\'set_total_dos\' has to be done before plotting "
+            msg = ("set_total_dos has to be done before plotting "
                    "total DOS.")
             raise RuntimeError(msg)
 
@@ -1134,16 +1318,16 @@ class Phonopy(object):
         self._pdos = None
 
         if self._mesh is None:
-            msg = "\'set_mesh\' has to be done before PDOS calculation."
+            msg = "set_mesh has to be done before PDOS calculation."
             raise RuntimeError(msg)
 
         if self._mesh.eigenvectors is None:
-            msg = "\'set_mesh\' had to be called with is_eigenvectors=True."
+            msg = "set_mesh had to be called with is_eigenvectors=True."
             raise RuntimeError(msg)
 
         num_grid = np.prod(self._mesh.get_mesh_numbers())
         if num_grid != len(self._mesh.get_ir_grid_points()):
-            msg = "\'set_mesh\' had to be called with is_mesh_symmetry=False."
+            msg = "set_mesh had to be called with is_mesh_symmetry=False."
             raise RuntimeError(msg)
 
         if direction is not None:
@@ -1167,11 +1351,11 @@ class Phonopy(object):
                          legend=None,
                          write_dat=False,
                          filename="partial_dos.dat"):
-        self.auto_mesh(length=length,
-                       is_time_reversal=is_time_reversal,
-                       is_mesh_symmetry=False,
-                       is_eigenvectors=True,
-                       is_gamma_center=is_gamma_center)
+        self.run_mesh(mesh=length,
+                      is_time_reversal=is_time_reversal,
+                      is_mesh_symmetry=False,
+                      with_eigenvectors=True,
+                      is_gamma_center=is_gamma_center)
         self.set_partial_DOS(tetrahedron_method=True)
         if write_dat:
             self.write_partial_DOS(filename=filename)
@@ -1181,7 +1365,7 @@ class Phonopy(object):
 
     def get_partial_DOS(self):
         """
-        Retern frequencies and partial_dos.
+        Return frequencies and partial_dos.
         The first element is freqs and the second is partial_dos.
 
         frequencies: [freq1, freq2, ...]
@@ -1241,8 +1425,8 @@ class Phonopy(object):
                                cutoff_frequency=None,
                                pretend_real=False):
         if self._mesh is None:
-            msg = ("\'set_mesh\' has to be done before"
-                   "\'set_thermal_properties\'.")
+            msg = ("set_mesh has to be done before"
+                   "set_thermal_properties.")
             raise RuntimeError(msg)
         else:
             tp = ThermalProperties(self._mesh,
@@ -1264,7 +1448,6 @@ class Phonopy(object):
 
         Returns
         -------
-        tuple
         (temperatures, free energy, entropy, heat capacity)
 
         """
@@ -1319,37 +1502,33 @@ class Phonopy(object):
 
         """
 
-        if self._mesh is not None:
-            eigvecs = self._mesh.get_eigenvectors()
-            mesh_nums = self._mesh.get_mesh_numbers()
-            if eigvecs is None:
-                msg = ("\'set_mesh\' or \'set_iter_mesh\' had to be "
-                       "called with is_eigenvectors=True.")
-                raise RuntimeError(msg)
-            if np.prod(mesh_nums) != len(eigvecs):
-                msg = ("\'set_mesh\' or \'set_iter_mesh\' had to be "
-                       "called with is_mesh_symmetry=False.")
-                raise RuntimeError(msg)
+        if self._dynamical_matrix is None:
+            msg = ("Dynamical matrix has not yet built.")
+            raise RuntimeError(msg)
 
-            iter_phonons = self._mesh
+        if self._mesh is None:
+            msg = ("run_mesh has to be done.")
+            raise RuntimeError(msg)
         else:
-            if self._iter_mesh is not None:
-                iter_phonons = self._iter_mesh
-            else:
-                msg = ("\'set_mesh\' or \'set_iter_mesh\' has to be done "
-                       "before \'set_thermal_displacements\'.")
+            mesh_nums = self._mesh.mesh_numbers
+            ir_grid_points = self._mesh.ir_grid_points
+            if not self._mesh.with_eigenvectors:
+                msg = ("run_mesh has to be done with with_eigenvectors=True.")
+                raise RuntimeError(msg)
+            if np.prod(mesh_nums) != len(ir_grid_points):
+                msg = ("run_mesh has to be done with is_mesh_symmetry=False.")
                 raise RuntimeError(msg)
 
         if direction is not None:
             projection_direction = np.dot(direction,
                                           self._primitive.get_cell())
             td = ThermalDisplacements(
-                iter_phonons,
+                self._mesh,
                 projection_direction=projection_direction,
                 freq_min=freq_min,
                 freq_max=freq_max)
         else:
-            td = ThermalDisplacements(iter_phonons,
+            td = ThermalDisplacements(self._mesh,
                                       freq_min=freq_min,
                                       freq_max=freq_max)
 
@@ -1401,30 +1580,25 @@ class Phonopy(object):
             freq_max: Phonons having frequency smaller than this are included.
 
         """
-        self._thermal_displacement_matrices = None
+        if self._dynamical_matrix is None:
+            msg = ("Dynamical matrix has not yet built.")
+            raise RuntimeError(msg)
 
-        if self._mesh is not None:
-            eigvecs = self._mesh.get_eigenvectors()
-            if eigvecs is None:
-                msg = ("\'set_mesh\' or \'set_iter_mesh\' had to be "
-                       "called with is_eigenvectors=True.")
-                return RuntimeError(msg)
-            if np.prod(self._mesh.get_mesh_numbers()) != len(eigvecs):
-                msg = ("\'set_mesh\' or \'set_iter_mesh\' had to be "
-                       "called with is_mesh_symmetry=False.")
-                raise RuntimeError(msg)
-
-            iter_phonons = self._mesh
+        if self._mesh is None:
+            msg = ("run_mesh has to be done.")
+            raise RuntimeError(msg)
         else:
-            if self._iter_mesh is not None:
-                iter_phonons = self._iter_mesh
-            else:
-                msg = ("\'set_mesh\' or \'set_iter_mesh\' has to be done "
-                       "before \'set_thermal_displacement_matrices\'.")
+            mesh_nums = self._mesh.mesh_numbers
+            ir_grid_points = self._mesh.ir_grid_points
+            if not self._mesh.with_eigenvectors:
+                msg = ("run_mesh has to be done with with_eigenvectors=True.")
+                raise RuntimeError(msg)
+            if np.prod(mesh_nums) != len(ir_grid_points):
+                msg = ("run_mesh has to be done with is_mesh_symmetry=False.")
                 raise RuntimeError(msg)
 
         tdm = ThermalDisplacementMatrices(
-            iter_phonons,
+            self._mesh,
             freq_min=freq_min,
             freq_max=freq_max,
             lattice=self._primitive.get_cell().T)
@@ -1482,14 +1656,16 @@ class Phonopy(object):
             np.reshape(q_points, (-1, 3)),
             self._dynamical_matrix,
             nac_q_direction=nac_q_direction,
-            is_eigenvectors=is_eigenvectors,
+            with_eigenvectors=is_eigenvectors,
             group_velocity=self._group_velocity,
             write_dynamical_matrices=write_dynamical_matrices,
             factor=self._factor)
 
     def get_qpoints_phonon(self):
-        return (self._qpoints_phonon.get_frequencies(),
-                self._qpoints_phonon.get_eigenvectors())
+        warnings.warn("Phonopy.get_qpoints_phonon is deprecated. "
+                      "Use Phonopy.run_band_structure.", DeprecationWarning)
+        return (self._qpoints_phonon.frequencies,
+                self._qpoints_phonon.eigenvectors)
 
     def write_hdf5_qpoints_phonon(self):
         self._qpoints_phonon.write_hdf5()
@@ -1661,12 +1837,29 @@ class Phonopy(object):
         if self._dynamical_matrix is None:
             raise RuntimeError("Dynamical matrix has not yet built.")
 
+        if self._gv_delta_q is None:
+            self._gv_delta_q = q_length
+        if (self._dynamical_matrix.is_nac() and
+            self._dynamical_matrix.get_nac_method() == 'gonze' and
+            self._gv_delta_q is None):
+            self._gv_delta_q = 1e-5
+            if self._log_level:
+                msg = "Group velocity calculation:\n"
+                text = ("Analytical derivative of dynamical matrix is not "
+                        "implemented for NAC by Gonze et al. Instead "
+                        "numerical derivative of it is used with dq=1e-5 "
+                        "for group velocity calculation.")
+                msg += textwrap.fill(text,
+                                     initial_indent="  ",
+                                     subsequent_indent="  ",
+                                     width=70)
+                print(msg)
+
         self._group_velocity = GroupVelocity(
             self._dynamical_matrix,
-            q_length=q_length,
+            q_length=self._gv_delta_q,
             symmetry=self._primitive_symmetry,
-            frequency_factor_to_THz=self._factor,
-            log_level=self._log_level)
+            frequency_factor_to_THz=self._factor)
 
     def get_group_velocity(self):
         return self._group_velocity.get_group_velocity()
@@ -1677,6 +1870,14 @@ class Phonopy(object):
         self._group_velocity.set_q_points([q_point])
         return self._group_velocity.get_group_velocity()[0]
 
+    def get_group_velocities_on_bands(self):
+        warnings.warn("Phonopy.get_group_velocities_on_bands is deprecated. "
+                      "Use Phonopy.[mode].group_velocities attribute or "
+                      "Phonopy.get_[mode]_dict()[group_velocities], where "
+                      "[mode] is band_structure, mesh, or qpoints.",
+                      DeprecationWarning)
+        return self._band_structure.group_velocities
+
     # Moment
     def set_moment(self,
                    order=1,
@@ -1684,12 +1885,12 @@ class Phonopy(object):
                    freq_min=None,
                    freq_max=None):
         if self._mesh is None:
-            msg = ("\'set_mesh\' has to be done before \'set_moment\'.")
+            msg = ("set_mesh has to be done before set_moment.")
             raise RuntimeError(msg)
         else:
             if is_projection:
                 if self._mesh.get_eigenvectors() is None:
-                    msg = ("\'set_mesh\' had to be called with "
+                    msg = ("set_mesh had to be called with "
                            "is_eigenvectors=True.")
                     return RuntimeError(msg)
                 moment = PhononMoment(
@@ -1815,6 +2016,9 @@ class Phonopy(object):
             self._dynamical_matrix_decimals,
             symprec=self._symprec,
             log_level=self._log_level)
+
+        if self._group_velocity is not None:
+            self.set_group_velocity()
 
     def _search_symmetry(self):
         self._symmetry = Symmetry(self._supercell,

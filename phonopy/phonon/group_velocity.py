@@ -32,6 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
 import textwrap
 import numpy as np
 from phonopy.units import VaspToTHz
@@ -44,8 +45,7 @@ def get_group_velocity(q,  # q-point
                        dynamical_matrix,
                        q_length=None,  # finite distance in q
                        symmetry=None,
-                       frequency_factor_to_THz=VaspToTHz,
-                       log_level=0):
+                       frequency_factor_to_THz=VaspToTHz):
     """
     If frequencies and eigenvectors are supplied they are used
     instead of calculating them at q-point (but not at q+dq and q-dq).
@@ -59,8 +59,7 @@ def get_group_velocity(q,  # q-point
     gv = GroupVelocity(dynamical_matrix,
                        q_length=q_length,
                        symmetry=symmetry,
-                       frequency_factor_to_THz=frequency_factor_to_THz,
-                       log_level=log_level)
+                       frequency_factor_to_THz=frequency_factor_to_THz)
     gv.set_q_points([q])
     return gv.get_group_velocity()[0]
 
@@ -93,8 +92,7 @@ class GroupVelocity(object):
                  q_length=None,
                  symmetry=None,
                  frequency_factor_to_THz=VaspToTHz,
-                 cutoff_frequency=1e-4,
-                 log_level=0):
+                 cutoff_frequency=1e-4):
         """
         q_points is a list of sets of q-point and q-direction:
         [[q-point, q-direction], [q-point, q-direction], ...]
@@ -109,16 +107,6 @@ class GroupVelocity(object):
         if self._dynmat.is_nac() and self._dynmat.get_nac_method() == 'gonze':
             if self._q_length is None:
                 self._q_length = 1e-5
-                if log_level:
-                    print("Group velocity calculation:")
-                    text = ("Analytical derivative of dynamical matrix is not "
-                            "implemented for NAC by Gonze et al. Instead "
-                            "numerical derivative of it is used with dq=1e-5 "
-                            "for group velocity calculation.")
-                    print(textwrap.fill(text,
-                                        initial_indent="  ",
-                                        subsequent_indent="  ",
-                                        width=70))
         if self._q_length is None:
             self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
         else:

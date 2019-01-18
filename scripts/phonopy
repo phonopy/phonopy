@@ -59,7 +59,6 @@ from phonopy.phonon.band_structure import (get_band_qpoints,
                                            get_band_qpoints_by_seekpath)
 from phonopy.phonon.mesh import length2mesh
 
-
 phonopy_version = __version__
 
 
@@ -830,9 +829,10 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                 print("[%6.3f %6.3f %6.3f] --> [%6.3f %6.3f %6.3f]" %
                       (tuple(band[0]) + tuple(band[-1])))
 
-        phonon.set_band_structure(
+        phonon.run_band_structure(
             bands,
-            is_eigenvectors=settings.get_is_eigenvectors(),
+            with_eigenvectors=settings.get_is_eigenvectors(),
+            with_group_velocities=settings.get_is_group_velocity(),
             is_band_connection=settings.get_is_band_connection(),
             path_connections=path_connections,
             labels=labels,
@@ -862,8 +862,8 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
         is_gamma_center = settings.get_is_gamma_center()
 
         if type(mesh) is float:
-            mesh_numbers = length2mesh(mesh, primitive.get_cell())
             is_gamma_center = True
+            mesh_numbers = length2mesh(mesh, primitive.get_cell())
             print("Mesh numbers: %s" % mesh_numbers)
         else:
             mesh_numbers = np.array(mesh)
@@ -878,23 +878,24 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                     print_error()
                 sys.exit(1)
 
-            phonon.set_iter_mesh(
-                mesh_numbers,
-                mesh_shift,
-                is_time_reversal=t_symmetry,
-                is_mesh_symmetry=q_symmetry,
-                is_eigenvectors=settings.get_is_eigenvectors(),
-                is_gamma_center=is_gamma_center)
-        else:
-            phonon.set_mesh(mesh_numbers,
-                            mesh_shift,
+            phonon.run_mesh(mesh=mesh_numbers,
+                            shift=mesh_shift,
                             is_time_reversal=t_symmetry,
                             is_mesh_symmetry=q_symmetry,
-                            is_eigenvectors=settings.get_is_eigenvectors(),
+                            with_eigenvectors=settings.get_is_eigenvectors(),
+                            is_gamma_center=is_gamma_center,
+                            use_iter_mesh=True,
+                            run_immediately=False)
+        else:
+            phonon.run_mesh(mesh=mesh_numbers,
+                            shift=mesh_shift,
+                            is_time_reversal=t_symmetry,
+                            is_mesh_symmetry=q_symmetry,
+                            with_eigenvectors=settings.get_is_eigenvectors(),
                             is_gamma_center=is_gamma_center,
                             run_immediately=False)
-            weights = phonon.get_mesh()[1]
             if log_level > 0:
+                weights = phonon.mesh.weights
                 if q_symmetry:
                     print("Number of irreducible q-points on sampling mesh: "
                           "%d/%d" % (weights.shape[0], np.prod(mesh_numbers)))
@@ -903,7 +904,7 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                           weights.shape[0])
                 print("Calculating phonons on sampling mesh...")
 
-            phonon.run_mesh()
+            phonon.mesh.run()
 
             if settings.get_write_mesh():
                 if (settings.get_is_hdf5() or

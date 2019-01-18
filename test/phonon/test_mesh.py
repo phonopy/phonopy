@@ -54,7 +54,7 @@ class TestMesh(unittest.TestCase):
     def testMesh(self):
         phonon = self._get_phonon()
         mesh_obj = Mesh(phonon.dynamical_matrix, [10, 10, 10],
-                        is_eigenvectors=True)
+                        with_eigenvectors=True)
         mesh_obj.run()
         for i, x in enumerate(mesh_obj):
             pass
