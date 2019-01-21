@@ -342,9 +342,9 @@ def create_FORCE_SETS(interface_mode,
         if disp_filename == 'disp.yaml':
             print('')
             print("NOTE:")
-            print("  From phonopy v1.14.4, displacements are written into "
+            print("  From phonopy v2.0, displacements are written into "
                   "\"phonopy_disp.yaml\".")
-            print("  \"disp.yaml\" is still supported to read, but will be "
+            print("  \"disp.yaml\" is still supported for reading, but is "
                   "deprecated.")
             print('')
         if force_sets_zero_mode:
