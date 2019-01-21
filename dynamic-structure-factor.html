@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Dynamic structure factor &#8212; Phonopy v.1.14.2</title>
+    <title>Dynamic structure factor &#8212; Phonopy v.2.0.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -38,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.14.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -195,142 +195,130 @@ runs with the input files in <code class="docutils literal notranslate"><span cl
 <span class="kn">from</span> <span class="nn">phonopy</span> <span class="k">import</span> <span class="n">load</span>
 <span class="kn">from</span> <span class="nn">phonopy.spectrum.dynamic_structure_factor</span> <span class="k">import</span> <span class="n">atomic_form_factor_WK1995</span>
 <span class="kn">from</span> <span class="nn">phonopy.phonon.degeneracy</span> <span class="k">import</span> <span class="n">degenerate_sets</span>
+<span class="kn">from</span> <span class="nn">phonopy.units</span> <span class="k">import</span> <span class="n">THzToEv</span>
 
 
-<span class="k">def</span> <span class="nf">get_func_AFF</span><span class="p">(</span><span class="n">f_params</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_AFF_func</span><span class="p">(</span><span class="n">f_params</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">Q</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">atomic_form_factor_WK1995</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">f_params</span><span class="p">[</span><span class="n">symbol</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">func</span>
 
 
 <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">phonon</span><span class="p">,</span>
-        <span class="n">G_points_cubic</span><span class="p">,</span>
-        <span class="n">directions</span><span class="p">,</span>
+        <span class="n">Qpoints</span><span class="p">,</span>
         <span class="n">temperature</span><span class="p">,</span>
-        <span class="n">func_AFF</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">scattering_lengths</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">n_points</span><span class="o">=</span><span class="mi">51</span><span class="p">,</span>
-        <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="n">P</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">primitive_matrix</span>
+        <span class="n">atomic_form_factor_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">scattering_lengths</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># Transformation to the Q-points in reciprocal primitive basis vectors</span>
+    <span class="n">Q_prim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Qpoints</span><span class="p">,</span> <span class="n">phonon</span><span class="o">.</span><span class="n">primitive_matrix</span><span class="p">)</span>
+    <span class="c1"># Q_prim must be passed to the phonopy dynamical structure factor code.</span>
+    <span class="n">phonon</span><span class="o">.</span><span class="n">run_dynamic_structure_factor</span><span class="p">(</span>
+        <span class="n">Q_prim</span><span class="p">,</span>
+        <span class="n">temperature</span><span class="p">,</span>
+        <span class="n">atomic_form_factor_func</span><span class="o">=</span><span class="n">atomic_form_factor_func</span><span class="p">,</span>
+        <span class="n">scattering_lengths</span><span class="o">=</span><span class="n">scattering_lengths</span><span class="p">,</span>
+        <span class="n">freq_min</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+    <span class="n">dsf</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">dynamic_structure_factor</span>
+    <span class="n">q_cartesian</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dsf</span><span class="o">.</span><span class="n">qpoints</span><span class="p">,</span>
+                         <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">phonon</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">get_cell</span><span class="p">())</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">q_cartesian</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
 
-    <span class="k">for</span> <span class="n">G_cubic</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">G_points_cubic</span><span class="p">):</span>
-        <span class="n">G_prim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">G_cubic</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">direction</span> <span class="ow">in</span> <span class="n">directions</span><span class="p">:</span>
-            <span class="n">direction_prim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">direction</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# [1] Distance from Gamma point,&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# [2-4] Q-points in cubic reciprocal space, &quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# [5-8] 4 band frequencies in meV (becaues of degeneracy), &quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# [9-12] 4 dynamic structure factors.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# For degenerate bands, dynamic structure factors are summed.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2"> (Primitive: </span><span class="si">%s</span><span class="s2"> to </span><span class="si">%s</span><span class="s2">)&quot;</span>
-                      <span class="o">%</span> <span class="p">(</span><span class="n">G_cubic</span><span class="p">,</span> <span class="n">G_cubic</span> <span class="o">+</span> <span class="n">direction</span><span class="p">,</span>
-                         <span class="n">G_prim</span><span class="p">,</span> <span class="n">G_prim</span> <span class="o">+</span> <span class="n">direction_prim</span><span class="p">))</span>
-
-            <span class="n">qpoints</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">direction_prim</span> <span class="o">*</span> <span class="n">x</span>
-                 <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_points</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_points</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
-            <span class="n">phonon</span><span class="o">.</span><span class="n">set_band_structure</span><span class="p">([</span><span class="n">qpoints</span><span class="p">])</span>
-            <span class="n">_</span><span class="p">,</span> <span class="n">distances</span><span class="p">,</span> <span class="n">frequencies</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">get_band_structure</span><span class="p">()</span>
-            <span class="c1"># Remove Gamma point because number of bands is different.</span>
-            <span class="n">qpoints</span> <span class="o">=</span> <span class="n">qpoints</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-            <span class="n">distances</span> <span class="o">=</span> <span class="n">distances</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
-            <span class="n">frequencies</span> <span class="o">=</span> <span class="n">frequencies</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
-
-            <span class="k">if</span> <span class="n">func_AFF</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">phonon</span><span class="o">.</span><span class="n">set_dynamic_structure_factor</span><span class="p">(</span>
-                    <span class="n">qpoints</span><span class="p">,</span>
-                    <span class="n">G_prim</span><span class="p">,</span>
-                    <span class="n">temperature</span><span class="p">,</span>
-                    <span class="n">func_atomic_form_factor</span><span class="o">=</span><span class="n">func_AFF</span><span class="p">,</span>
-                    <span class="n">freq_min</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
-                    <span class="n">run_immediately</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">scattering_lengths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">phonon</span><span class="o">.</span><span class="n">set_dynamic_structure_factor</span><span class="p">(</span>
-                    <span class="n">qpoints</span><span class="p">,</span>
-                    <span class="n">G_prim</span><span class="p">,</span>
-                    <span class="n">temperature</span><span class="p">,</span>
-                    <span class="n">scattering_lengths</span><span class="o">=</span><span class="n">scattering_lengths</span><span class="p">,</span>
-                    <span class="n">freq_min</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
-                    <span class="n">run_immediately</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">SyntaxError</span>
-            <span class="n">dsf</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">dynamic_structure_factor</span>
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">S</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dsf</span><span class="p">):</span>  <span class="c1"># Use as iterator</span>
-                <span class="n">Q_cubic</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dsf</span><span class="o">.</span><span class="n">Qpoints</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">P</span><span class="p">))</span>
-
-                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                    <span class="n">f</span> <span class="o">=</span> <span class="n">frequencies</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                    <span class="n">bi_sets</span> <span class="o">=</span> <span class="n">degenerate_sets</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-                    <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%f</span><span class="s2">  &quot;</span> <span class="o">%</span> <span class="n">distances</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                    <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2">  &quot;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">Q_cubic</span><span class="p">)</span>
-                    <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">bi</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">bi</span><span class="p">))</span>
-                                      <span class="k">for</span> <span class="n">bi</span> <span class="ow">in</span> <span class="n">bi_sets</span><span class="p">])</span>
-                    <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot;  &quot;</span>
-                    <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">S</span><span class="p">[</span><span class="n">bi</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span> <span class="k">for</span> <span class="n">bi</span> <span class="ow">in</span> <span class="n">bi_sets</span><span class="p">])</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="c1"># Use as iterator</span>
+    <span class="k">for</span> <span class="n">Q</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">S</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">Qpoints</span><span class="p">,</span> <span class="n">distances</span><span class="p">,</span> <span class="n">dsf</span><span class="o">.</span><span class="n">frequencies</span><span class="p">,</span>
+                          <span class="n">dsf</span><span class="o">.</span><span class="n">dynamic_structure_factors</span><span class="p">):</span>
+        <span class="n">bi_sets</span> <span class="o">=</span> <span class="n">degenerate_sets</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>  <span class="c1"># to treat for band degeneracy</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%f</span><span class="s2">  &quot;</span> <span class="o">%</span> <span class="n">d</span>
+        <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2"> </span><span class="si">%f</span><span class="s2">  &quot;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+        <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">bi</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">*</span> <span class="n">THzToEv</span> <span class="o">*</span> <span class="mi">1000</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">bi</span><span class="p">))</span>
+                          <span class="k">for</span> <span class="n">bi</span> <span class="ow">in</span> <span class="n">bi_sets</span><span class="p">])</span>
+        <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot;  &quot;</span>
+        <span class="n">text</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">S</span><span class="p">[</span><span class="n">bi</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span> <span class="k">for</span> <span class="n">bi</span> <span class="ow">in</span> <span class="n">bi_sets</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="n">phonon</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]),</span>
-                  <span class="n">primitive_matrix</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-                                    <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-                                    <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span>
-                  <span class="n">unitcell_filename</span><span class="o">=</span><span class="s2">&quot;POSCAR&quot;</span><span class="p">,</span>
-                  <span class="n">force_sets_filename</span><span class="o">=</span><span class="s2">&quot;FORCE_SETS&quot;</span><span class="p">,</span>
-                  <span class="n">born_filename</span><span class="o">=</span><span class="s2">&quot;BORN&quot;</span><span class="p">)</span>
-    <span class="n">phonon</span><span class="o">.</span><span class="n">symmetrize_force_constants</span><span class="p">()</span>
+    <span class="n">phonon</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">supercell_matrix</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+                  <span class="n">primitive_matrix</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">,</span>
+                  <span class="n">unitcell_filename</span><span class="o">=</span><span class="s2">&quot;POSCAR&quot;</span><span class="p">)</span>
 
-    <span class="c1"># Mesh sampling calculation is needed for Debye-Waller factor</span>
-    <span class="c1"># This must be done with is_mesh_symmetry=False and is_eigenvectors=True.</span>
+    <span class="c1"># Q-points in reduced coordinates wrt cubic reciprocal space</span>
+    <span class="n">Qpoints</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">2.970000</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.970000</span><span class="p">,</span> <span class="mf">2.970000</span><span class="p">],</span>
+               <span class="p">[</span><span class="mf">2.950000</span><span class="p">,</span> <span class="mf">2.950000</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.950000</span><span class="p">],</span>
+               <span class="p">[</span><span class="mf">2.930000</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.930000</span><span class="p">,</span> <span class="mf">2.930000</span><span class="p">],</span>
+               <span class="p">[</span><span class="mf">2.905000</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.905000</span><span class="p">,</span> <span class="mf">2.905000</span><span class="p">],</span>
+               <span class="p">[</span><span class="mf">2.895000</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.895000</span><span class="p">,</span> <span class="mf">2.895000</span><span class="p">],</span>
+               <span class="p">[</span><span class="mf">2.880000</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.880000</span><span class="p">,</span> <span class="mf">2.880000</span><span class="p">],</span>
+               <span class="p">[</span><span class="mf">2.850000</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.850000</span><span class="p">,</span> <span class="mf">2.850000</span><span class="p">],</span>
+               <span class="p">[</span><span class="mf">2.810000</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.810000</span><span class="p">,</span> <span class="mf">2.810000</span><span class="p">],</span>
+               <span class="p">[</span><span class="mf">2.735000</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.735000</span><span class="p">,</span> <span class="mf">2.735000</span><span class="p">],</span>
+               <span class="p">[</span><span class="mf">2.660000</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.660000</span><span class="p">,</span> <span class="mf">2.660000</span><span class="p">],</span>
+               <span class="p">[</span><span class="mf">2.580000</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.580000</span><span class="p">,</span> <span class="mf">2.580000</span><span class="p">],</span>
+               <span class="p">[</span><span class="mf">2.500000</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.500000</span><span class="p">,</span> <span class="mf">2.500000</span><span class="p">]]</span>
+
+    <span class="c1"># Mesh sampling phonon calculation is needed for Debye-Waller factor.</span>
+    <span class="c1"># This must be done with is_mesh_symmetry=False and with_eigenvectors=True.</span>
     <span class="n">mesh</span> <span class="o">=</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">11</span><span class="p">]</span>
-    <span class="n">phonon</span><span class="o">.</span><span class="n">set_mesh</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span>
+    <span class="n">phonon</span><span class="o">.</span><span class="n">run_mesh</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span>
                     <span class="n">is_mesh_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                    <span class="n">is_eigenvectors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="c1"># Gamma-L path i FCC conventional basis</span>
-    <span class="n">directions_to_L</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-                       <span class="p">[</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]]</span>
-    <span class="n">G_points_cubic</span> <span class="o">=</span> <span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">)</span>
-    <span class="n">n_points</span> <span class="o">=</span> <span class="mi">51</span>
+                    <span class="n">with_eigenvectors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">temperature</span> <span class="o">=</span> <span class="mi">300</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# Distance from Gamma point, 4 band frequencies in meV, &quot;</span>
-          <span class="s2">&quot;4 dynamic structure factors&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# For degenerate bands, summations are made.&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# Gamma point is omitted due to different number of bands.&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">IXS</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="c1"># With scattering lengths</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# Running with scattering lengths&quot;</span><span class="p">)</span>
-    <span class="n">run</span><span class="p">(</span><span class="n">phonon</span><span class="p">,</span>
-        <span class="n">G_points_cubic</span><span class="p">,</span>
-        <span class="n">directions_to_L</span><span class="p">,</span>
-        <span class="n">temperature</span><span class="p">,</span>
-        <span class="n">scattering_lengths</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Na&#39;</span><span class="p">:</span> <span class="mf">3.63</span><span class="p">,</span> <span class="s1">&#39;Cl&#39;</span><span class="p">:</span> <span class="mf">9.5770</span><span class="p">},</span>
-        <span class="n">n_points</span><span class="o">=</span><span class="n">n_points</span><span class="p">,</span>
-        <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">IXS</span><span class="p">:</span>
+        <span class="c1"># For IXS, atomic form factor is needed and given as a function as</span>
+        <span class="c1"># a parameter.</span>
+        <span class="c1"># D. Waasmaier and A. Kirfel, Acta Cryst. A51, 416 (1995)</span>
+        <span class="c1"># f(Q) = \sum_i a_i \exp((-b_i Q^2) + c</span>
+        <span class="c1"># Q is in angstron^-1</span>
+        <span class="c1"># a1, b1, a2, b2, a3, b3, a4, b4, a5, b5, c</span>
+        <span class="n">f_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Na&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">3.148690</span><span class="p">,</span> <span class="mf">2.594987</span><span class="p">,</span> <span class="mf">4.073989</span><span class="p">,</span> <span class="mf">6.046925</span><span class="p">,</span>
+                           <span class="mf">0.767888</span><span class="p">,</span> <span class="mf">0.070139</span><span class="p">,</span> <span class="mf">0.995612</span><span class="p">,</span> <span class="mf">14.1226457</span><span class="p">,</span>
+                           <span class="mf">0.968249</span><span class="p">,</span> <span class="mf">0.217037</span><span class="p">,</span> <span class="mf">0.045300</span><span class="p">],</span>  <span class="c1"># 1+</span>
+                    <span class="s1">&#39;Cl&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.061802</span><span class="p">,</span> <span class="mf">0.144727</span><span class="p">,</span> <span class="mf">7.139886</span><span class="p">,</span> <span class="mf">1.171795</span><span class="p">,</span>
+                           <span class="mf">6.524271</span><span class="p">,</span> <span class="mf">19.467656</span><span class="p">,</span> <span class="mf">2.355626</span><span class="p">,</span> <span class="mf">60.320301</span><span class="p">,</span>
+                           <span class="mf">35.829404</span><span class="p">,</span> <span class="mf">0.000436</span><span class="p">,</span> <span class="o">-</span><span class="mf">34.916604</span><span class="p">]}</span>  <span class="c1"># 1-</span>
+        <span class="n">AFF_func</span> <span class="o">=</span> <span class="n">get_AFF_func</span><span class="p">(</span><span class="n">f_params</span><span class="p">)</span>
+        <span class="n">run</span><span class="p">(</span><span class="n">phonon</span><span class="p">,</span>
+            <span class="n">Qpoints</span><span class="p">,</span>
+            <span class="n">temperature</span><span class="p">,</span>
+            <span class="n">atomic_form_factor_func</span><span class="o">=</span><span class="n">AFF_func</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># For INS, scattering length has to be given.</span>
+        <span class="c1"># The following values is obtained at (Coh b)</span>
+        <span class="c1"># https://www.nist.gov/ncnr/neutron-scattering-lengths-list</span>
+        <span class="n">run</span><span class="p">(</span><span class="n">phonon</span><span class="p">,</span>
+            <span class="n">Qpoints</span><span class="p">,</span>
+            <span class="n">temperature</span><span class="p">,</span>
+            <span class="n">scattering_lengths</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Na&#39;</span><span class="p">:</span> <span class="mf">3.63</span><span class="p">,</span> <span class="s1">&#39;Cl&#39;</span><span class="p">:</span> <span class="mf">9.5770</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>The output of the script is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># [1] Distance from Gamma point,</span>
+<span class="c1"># [2-4] Q-points in cubic reciprocal space,</span>
+<span class="c1"># [5-8] 4 band frequencies in meV (becaues of degeneracy),</span>
+<span class="c1"># [9-12] 4 dynamic structure factors.</span>
+<span class="c1"># For degenerate bands, dynamic structure factors are summed.</span>
 
-    <span class="c1"># With atomic form factor</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# Running with atomic form factor&quot;</span><span class="p">)</span>
-    <span class="c1"># D. Waasmaier and A. Kirfel, Acta Cryst. A51, 416 (1995)</span>
-    <span class="c1"># f(Q) = \sum_i a_i \exp((-b_i Q^2) + c</span>
-    <span class="c1"># Q is in angstron^-1</span>
-    <span class="c1"># a1, b1, a2, b2, a3, b3, a4, b4, a5, b5, c</span>
-    <span class="n">f_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Na&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">3.148690</span><span class="p">,</span> <span class="mf">2.594987</span><span class="p">,</span> <span class="mf">4.073989</span><span class="p">,</span> <span class="mf">6.046925</span><span class="p">,</span>
-                       <span class="mf">0.767888</span><span class="p">,</span> <span class="mf">0.070139</span><span class="p">,</span> <span class="mf">0.995612</span><span class="p">,</span> <span class="mf">14.1226457</span><span class="p">,</span>
-                       <span class="mf">0.968249</span><span class="p">,</span> <span class="mf">0.217037</span><span class="p">,</span> <span class="mf">0.045300</span><span class="p">],</span>  <span class="c1"># 1+</span>
-                <span class="s1">&#39;Cl&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.061802</span><span class="p">,</span> <span class="mf">0.144727</span><span class="p">,</span> <span class="mf">7.139886</span><span class="p">,</span> <span class="mf">1.171795</span><span class="p">,</span>
-                       <span class="mf">6.524271</span><span class="p">,</span> <span class="mf">19.467656</span><span class="p">,</span> <span class="mf">2.355626</span><span class="p">,</span> <span class="mf">60.320301</span><span class="p">,</span>
-                       <span class="mf">35.829404</span><span class="p">,</span> <span class="mf">0.000436</span><span class="p">,</span> <span class="o">-</span><span class="mf">34.916604</span><span class="p">]}</span>  <span class="c1"># 1-</span>
-    <span class="n">run</span><span class="p">(</span><span class="n">phonon</span><span class="p">,</span>
-        <span class="n">G_points_cubic</span><span class="p">,</span>
-        <span class="n">directions_to_L</span><span class="p">,</span>
-        <span class="n">temperature</span><span class="p">,</span>
-        <span class="n">func_AFF</span><span class="o">=</span><span class="n">get_func_AFF</span><span class="p">(</span><span class="n">f_params</span><span class="p">),</span>
-        <span class="n">n_points</span><span class="o">=</span><span class="n">n_points</span><span class="p">,</span>
-        <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="mf">0.009132</span>  <span class="mf">2.970000</span> <span class="o">-</span><span class="mf">2.970000</span> <span class="mf">2.970000</span>  <span class="mf">0.977517</span> <span class="mf">1.648183</span> <span class="mf">19.035705</span> <span class="mf">30.535702</span>  <span class="mf">0.000000</span> <span class="mf">706.475380</span> <span class="mf">0.000000</span> <span class="mf">16.137386</span>
+<span class="mf">0.015219</span>  <span class="mf">2.950000</span> <span class="mf">2.950000</span> <span class="o">-</span><span class="mf">2.950000</span>  <span class="mf">1.640522</span> <span class="mf">2.747087</span> <span class="mf">18.994893</span> <span class="mf">30.479078</span>  <span class="mf">0.000000</span> <span class="mf">262.113412</span> <span class="mf">0.000000</span> <span class="mf">16.366740</span>
+<span class="mf">0.021307</span>  <span class="mf">2.930000</span> <span class="o">-</span><span class="mf">2.930000</span> <span class="mf">2.930000</span>  <span class="mf">2.298710</span> <span class="mf">3.841226</span> <span class="mf">18.935185</span> <span class="mf">30.395654</span>  <span class="mf">0.000000</span> <span class="mf">138.116831</span> <span class="mf">0.000000</span> <span class="mf">16.619581</span>
+<span class="mf">0.028917</span>  <span class="mf">2.905000</span> <span class="o">-</span><span class="mf">2.905000</span> <span class="mf">2.905000</span>  <span class="mf">3.116160</span> <span class="mf">5.200214</span> <span class="mf">18.836546</span> <span class="mf">30.256295</span>  <span class="mf">0.000000</span> <span class="mf">78.225945</span> <span class="mf">0.000000</span> <span class="mf">16.965983</span>
+<span class="mf">0.031961</span>  <span class="mf">2.895000</span> <span class="o">-</span><span class="mf">2.895000</span> <span class="mf">2.895000</span>  <span class="mf">3.441401</span> <span class="mf">5.740457</span> <span class="mf">18.790421</span> <span class="mf">30.190463</span>  <span class="mf">0.000000</span> <span class="mf">65.174556</span> <span class="mf">0.000000</span> <span class="mf">17.112970</span>
+<span class="mf">0.036526</span>  <span class="mf">2.880000</span> <span class="o">-</span><span class="mf">2.880000</span> <span class="mf">2.880000</span>  <span class="mf">3.927209</span> <span class="mf">6.546550</span> <span class="mf">18.714922</span> <span class="mf">30.081791</span>  <span class="mf">0.000000</span> <span class="mf">51.288627</span> <span class="mf">0.000000</span> <span class="mf">17.341206</span>
+<span class="mf">0.045658</span>  <span class="mf">2.850000</span> <span class="o">-</span><span class="mf">2.850000</span> <span class="mf">2.850000</span>  <span class="mf">4.890522</span> <span class="mf">8.140492</span> <span class="mf">18.544488</span> <span class="mf">29.832346</span>  <span class="mf">0.000000</span> <span class="mf">34.845699</span> <span class="mf">0.000000</span> <span class="mf">17.819327</span>
+<span class="mf">0.057833</span>  <span class="mf">2.810000</span> <span class="o">-</span><span class="mf">2.810000</span> <span class="mf">2.810000</span>  <span class="mf">6.154512</span> <span class="mf">10.217882</span> <span class="mf">18.286153</span> <span class="mf">29.444246</span>  <span class="mf">0.000000</span> <span class="mf">23.864605</span> <span class="mf">0.000000</span> <span class="mf">18.476926</span>
+<span class="mf">0.080662</span>  <span class="mf">2.735000</span> <span class="o">-</span><span class="mf">2.735000</span> <span class="mf">2.735000</span>  <span class="mf">8.440068</span> <span class="mf">13.902951</span> <span class="mf">17.731951</span> <span class="mf">28.589254</span>  <span class="mf">0.000000</span> <span class="mf">15.762830</span> <span class="mf">0.000000</span> <span class="mf">19.591803</span>
+<span class="mf">0.103491</span>  <span class="mf">2.660000</span> <span class="o">-</span><span class="mf">2.660000</span> <span class="mf">2.660000</span>  <span class="mf">10.559231</span> <span class="mf">17.071210</span> <span class="mf">17.175478</span> <span class="mf">27.602958</span>  <span class="mf">0.000000</span> <span class="mf">0.000000</span> <span class="mf">14.349345</span> <span class="mf">20.000676</span>
+<span class="mf">0.127842</span>  <span class="mf">2.580000</span> <span class="o">-</span><span class="mf">2.580000</span> <span class="mf">2.580000</span>  <span class="mf">12.497611</span> <span class="mf">16.203093</span> <span class="mf">19.926659</span> <span class="mf">26.474218</span>  <span class="mf">0.000000</span> <span class="mf">0.000000</span> <span class="mf">18.814845</span> <span class="mf">17.496644</span>
+<span class="mf">0.152193</span>  <span class="mf">2.500000</span> <span class="o">-</span><span class="mf">2.500000</span> <span class="mf">2.500000</span>  <span class="mf">13.534679</span> <span class="mf">15.548262</span> <span class="mf">21.156819</span> <span class="mf">25.813428</span>  <span class="mf">0.000000</span> <span class="mf">0.000000</span> <span class="mf">34.134746</span> <span class="mf">6.765951</span>
 </pre></div>
 </div>
 </div>
@@ -356,7 +344,7 @@ runs with the input files in <code class="docutils literal notranslate"><span cl
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
     </p>
   </div>
 </footer>

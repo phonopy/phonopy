@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>How to watch animation &#8212; Phonopy v.2.0.0</title>
+    <title>DFTB+ &amp; phonopy calculation &#8212; Phonopy v.2.0.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -18,8 +18,8 @@
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Command options" href="command-options.html" />
-    <link rel="prev" title="Setting tags" href="setting-tags.html" />
+    <link rel="next" title="VASP-DFPT &amp; phonopy calculation" href="vasp-dfpt.html" />
+    <link rel="prev" title="CRYSTAL &amp; phonopy calculation" href="crystal.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -61,12 +61,12 @@
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
 <li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
@@ -90,7 +90,10 @@
   <ul class="dropdown-menu localtoc"
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
-<li><a class="reference internal" href="#">How to watch animation</a></li>
+<li><a class="reference internal" href="#">DFTB+ &amp; phonopy calculation</a><ul>
+<li><a class="reference internal" href="#how-to-run">How to run</a></li>
+</ul>
+</li>
 </ul>
 </ul>
 </li>
@@ -100,11 +103,11 @@
               
                 
   <li>
-    <a href="setting-tags.html" title="Previous Chapter: Setting tags"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Setting tags</span>
+    <a href="crystal.html" title="Previous Chapter: CRYSTAL & phonopy calculation"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; CRYSTAL & pho...</span>
     </a>
   </li>
   <li>
-    <a href="command-options.html" title="Next Chapter: Command options"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Command options &raquo;</span>
+    <a href="vasp-dfpt.html" title="Next Chapter: VASP-DFPT & phonopy calculation"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">VASP-DFPT & p... &raquo;</span>
     </a>
   </li>
               
@@ -132,33 +135,57 @@
   <div class="row">
     <div class="col-md-12 content">
       
-  <div class="section" id="how-to-watch-animation">
-<span id="create-animation"></span><h1>How to watch animation<a class="headerlink" href="#how-to-watch-animation" title="Permalink to this headline">¶</a></h1>
-<p>To watch each phonon mode, v_sim is recommended. The file
-<code class="docutils literal notranslate"><span class="pre">anime.ascii</span></code> is supposed to work with v_sim version 3.51 or later.
-An example how to watch phonon modes at a <em>q</em>-point is shown as follows.</p>
-<p>First, you need to create a phonopy input file with, e.g., <code class="docutils literal notranslate"><span class="pre">ANIME</span> <span class="pre">=</span>
-<span class="pre">0.5</span> <span class="pre">0.5</span> <span class="pre">0</span></code>. After running phonopy with this input file, you get
-<code class="docutils literal notranslate"><span class="pre">anime.ascii</span></code> that contains all phonon modes at the <em>q</em>-point. Then
-start v_sim</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">v_sim</span> <span class="n">anime</span><span class="o">.</span><span class="n">ascii</span>
+  <div class="section" id="dftb-phonopy-calculation">
+<span id="dftbp-interface"></span><h1>DFTB+ &amp; phonopy calculation<a class="headerlink" href="#dftb-phonopy-calculation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="how-to-run">
+<h2>How to run<a class="headerlink" href="#how-to-run" title="Permalink to this headline">¶</a></h2>
+<p>DFTB+ phonon band structures are created as follows:</p>
+<ol class="arabic">
+<li><p class="first">Create a DFTB+ input file dftb_in.hsd that is set up to perform a
+single-point energy and force calculation for a structure which is named
+<code class="docutils literal notranslate"><span class="pre">geo.gen</span></code>. The dftb_in.hsd file should turn on force evaluation by setting
+<code class="docutils literal notranslate"><span class="pre">CalculateForces</span> <span class="pre">=</span> <span class="pre">Yes</span></code> in its analysis block, and write the tagged results
+by enabling <code class="docutils literal notranslate"><span class="pre">WriteResultsTag</span> <span class="pre">=</span> <span class="pre">Yes</span></code> in its options.</p>
+</li>
+<li><p class="first">Generate the the required set of structures and the <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> file by
+issuing the command</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;4 4 4&quot;</span> <span class="o">--</span><span class="n">dftb</span><span class="o">+</span>
 </pre></div>
 </div>
-<p>After opening the graphical user interface, you can find a tab called
-<strong>Phonons</strong>. There you can see the phonon modes at the <em>q</em>-point that
-you specified in the phonopy input file. Then select one of the phonon
-modes and watch by pushing the play button. Because only the unit cell
-shows up at the start of v_sim, if you want to watch a phonon
-modulation with a longer period, then change the values of <strong>Expand
-nodes</strong> in the <strong>Box and symmetry</strong> tab
-(<a class="reference external" href="http://inac.cea.fr/L_Sim/V_Sim/user_guide.html#trans">http://inac.cea.fr/L_Sim/V_Sim/user_guide.html#trans</a>).  This is
-especially important when you choose a <em>q</em>-point other than the
-<span class="math notranslate nohighlight">\(\Gamma\)</span>-point.</p>
-<p>V_sim has a good graphical user interface and also a lot of command
-line options. To read the manual well and to check the command line
-options help you to use v_sim comfortably, e.g.,</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">v_sim</span> <span class="o">-</span><span class="n">w</span> <span class="n">oneWindow</span> <span class="n">anime</span><span class="o">.</span><span class="n">ascii</span> <span class="o">-</span><span class="n">x</span> <span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span> <span class="o">-</span><span class="n">t</span> <span class="mf">0.5</span><span class="p">:</span><span class="mf">0.5</span><span class="p">:</span><span class="mf">0.5</span>
+<p>This example builds 2 x 2 x 2 supercell files. The undistorted supercell is
+stored in <code class="docutils literal notranslate"><span class="pre">geo.genS</span></code>, while the required displacements are stored in files
+matching the pattern <code class="docutils literal notranslate"><span class="pre">geo.genS-*</span></code>. Note that you have to increase the
+supercell dimension until you reach convergence of the band structure.</p>
+</li>
+</ol>
+<ol class="arabic" start="2">
+<li><p class="first">For each each <code class="docutils literal notranslate"><span class="pre">geo.genS-*</span></code> structure perform a DFTB+ calculations,
+retaining the resulting <code class="docutils literal notranslate"><span class="pre">detailed.out</span></code> file.</p>
+</li>
+<li><p class="first">Create the <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file with the command</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-*/</span><span class="n">results</span><span class="o">.</span><span class="n">tag</span> <span class="o">--</span><span class="n">dftb</span><span class="o">+</span>  <span class="o">...</span>
 </pre></div>
+</div>
+<p>Where the location of all of the <code class="docutils literal notranslate"><span class="pre">results.tag</span></code> files is given on the
+command line. To run this command, the <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> file has to be located
+in the current directory, because the atomic displacements are written into
+the FORCE_SETS file.</p>
+</li>
+<li><p class="first">Create a <code class="docutils literal notranslate"><span class="pre">band.conf</span></code> file to specify the path in the Brillouin zone you are
+interested in (see the phonopy documentation). Then post-process the phonopy
+data, either in the settings file (DIM) or by providing the dimensions of the
+the supercell repeat on the command line</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;4 4 4&quot;</span> <span class="o">--</span><span class="n">dftb</span><span class="o">+</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Create a band structure in gnuplot format</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">bandplot</span> <span class="o">--</span><span class="n">gnuplot</span> <span class="n">band</span><span class="o">.</span><span class="n">yaml</span> <span class="o">&gt;</span> <span class="n">band</span><span class="o">.</span><span class="n">dat</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<p>All major phonopy options should be available for the DFTB+ interface.</p>
 </div>
 </div>
 
@@ -175,7 +202,7 @@ options help you to use v_sim comfortably, e.g.,</p>
         <br/>
         
 <div id="sourcelink">
-  <a href="_sources/animation.rst.txt"
+  <a href="_sources/dftb+.rst.txt"
      rel="nofollow">Source</a>
 </div>
       

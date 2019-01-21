@@ -3,6 +3,88 @@
 Change Log
 ==========
 
+Jan-16-2019: Version 2.0
+---------------------------
+
+* ``disp.yaml`` is replaced by ``phonopy_disp.yaml``. For the backward
+  compatibility, when ``phonopy_disp.yaml`` is not found,
+  ``disp.yaml`` is used.
+* New calculator interface for DFTB+ written by Ben Hourahine.
+* Minor update of the look of band structure plot. The format in
+  ``band.yaml`` for treating labels was changed.
+* ``MESH`` accepts a length value, whcih works in the same way as VASP
+  automatic k-mesh generation (see :ref:`mp_tag`).
+* For plotting DOS, it is changed to choose linear tetrahedron method
+  as default, but not smearing method.
+* Output file name of projected DOS was renamed from
+  ``partial_dos.dat`` to ``projected_dos.dat``.
+
+API change at version 2.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* ``Phonopy.get_band_structure()`` is deprecated. Instead use
+  ``Phonopy.get_band_structure_dict()``.
+* ``Phonopy.get_mesh()`` is deprecated. Instead use
+  ``Phonopy.get_mesh_dict()``.
+* ``Phonopy.set_band_structure()`` is deprecated. Instead use
+  ``Phonopy.run_band_structure()`` where ``is_eigenvectors`` keyword
+  argument is replaced by ``with_eigenvectors``.
+* ``Phonopy.set_mesh()`` is deprecated. Instead use
+  ``Phonopy.run_mesh()`` where ``is_eigenvectors`` keyword argument is
+  replaced by ``with_eigenvectors``.
+* Previous behaviour of ``Phonopy.run_mesh()`` is achieved by
+  ``phonopy.mesh.run()``.
+* ``Phonopy.set_qpoints_phonon()`` is deprecated. Use
+  ``Phonopy.run_qpoints()`` where ``is_eigenvectors`` keyword
+  argument is replaced by ``with_eigenvectors``.
+* ``Phonopy.get_qpoints_phonon()`` is deprecated. Instead use
+  ``Phonopy.get_qpoints_dict()``.
+* ``Phonopy.get_group_velocity()`` is deprecated. Use
+  ``Phonopy.mode.group_velocities`` attribute or
+  ``Phonopy.get_*mode*_dict()['group_velocities']``, where ``*mode*`` is
+  ``band_structure``, ``mesh``, or ``qpoints``.
+* ``Phonopy.get_group_velocities_on_bands()`` is deprecated.
+* ``Phonopy.get_mesh_grid_info()`` is deprecated.
+* ``Phonopy.set_iter_mesh()`` is deprecated. Use ``Phonopy.mesh()`` with
+  ``use_iter_mesh=True``.
+* ``Phonopy.itermesh`` was removed. IterMesh instance is stored in
+  phonopy.mesh.
+* ``Phonopy.set_group_velocity()`` is deprecated. No need to call.
+  ``gv_delta_q`` can be set at ``Phonopy.__init__()``.
+* ``Phonopy.set_unitcell()`` is deprecated.
+* ``Phonopy.set_total_DOS()`` is deprecated. Use
+  ``Phonopy.run_total_dos()``.
+* ``Phonopy.get_total_DOS()`` is deprecated. Use
+  ``Phonopy.get_total_dos_dict()``.
+* ``Phonopy.write_total_DOS()`` is deprecated. Use
+  ``Phonopy.write_total_dos()``.
+* ``Phonopy.plot_total_DOS()`` is deprecated. Use
+  ``Phonopy.plot_total_dos()``.
+* ``Phonopy.set_partial_DOS()`` is deprecated. Use
+  ``Phonopy.run_projected_dos()``.
+* ``Phonopy.get_partial_DOS()`` is deprecated. Use
+  ``Phonopy.get_projected_dos_dict()``.
+* ``Phonopy.write_partial_DOS()`` is deprecated. Use
+  ``Phonopy.write_projected_dos()``.
+* ``Phonopy.plot_partial_DOS()`` is deprecated. Use
+  ``Phonopy.plot_projected_dos()``.
+* ``Phonopy.partial_dos`` attribute is
+  deprecated. Use ``Phonopy.projected_dos`` attribute.
+* ``Phonopy.set_thermal_properties()`` is deprecated. Use
+  ``Phonopy.run_thermal_properties()``.
+* ``Phonopy.get_thermal_properties()`` is deprecated. Use
+  ``Phonopy.get_thermal_properties_dict()``.
+* ``Phonopy.set_thermal_displacements()`` is deprecated. Use
+  ``Phonopy.run_thermal_displacements()``.
+* ``Phonopy.get_thermal_displacements()`` is deprecated. Use
+  ``Phonopy.get_thermal_displacements_dict()``.
+* ``Phonopy.set_thermal_displacement_matrices()`` is deprecated. Use
+  ``Phonopy.run_thermal_displacement_matrices()``.
+* ``Phonopy.get_thermal_displacement_matrices()`` is deprecated. Use
+  ``Phonopy.get_thermal_displacements_matrices_dict()``.
+* New ``Phonopy.auto_total_dos()``.
+* New ``Phonopy.auto_partial_dos()``.
+
 Nov-22-2018: Version 1.14.2
 ---------------------------
 

@@ -4,7 +4,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Change Log &#8212; Phonopy v.1.14.2</title>
+    <title>Change Log &#8212; Phonopy v.2.0.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -38,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.14.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -91,6 +91,10 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Change Log</a><ul>
+<li><a class="reference internal" href="#jan-16-2019-version-2-0">Jan-16-2019: Version 2.0</a><ul>
+<li><a class="reference internal" href="#api-change-at-version-2-0">API change at version 2.0</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#nov-22-2018-version-1-14-2">Nov-22-2018: Version 1.14.2</a></li>
 <li><a class="reference internal" href="#nov-17-2018-version-1-14-0">Nov-17-2018: Version 1.14.0</a></li>
 <li><a class="reference internal" href="#jun-20-2018-version-1-13-2">Jun-20-2018: Version 1.13.2</a></li>
@@ -221,6 +225,90 @@
       
   <div class="section" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="jan-16-2019-version-2-0">
+<h2>Jan-16-2019: Version 2.0<a class="headerlink" href="#jan-16-2019-version-2-0" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> is replaced by <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>. For the backward
+compatibility, when <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> is not found,
+<code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> is used.</li>
+<li>New calculator interface for DFTB+ written by Ben Hourahine.</li>
+<li>Minor update of the look of band structure plot. The format in
+<code class="docutils literal notranslate"><span class="pre">band.yaml</span></code> for treating labels was changed.</li>
+<li><code class="docutils literal notranslate"><span class="pre">MESH</span></code> accepts a length value, whcih works in the same way as VASP
+automatic k-mesh generation (see <a class="reference internal" href="setting-tags.html#mp-tag"><span class="std std-ref">MESH, MP, or MESH_NUMBERS</span></a>).</li>
+<li>For plotting DOS, it is changed to choose linear tetrahedron method
+as default, but not smearing method.</li>
+<li>Output file name of projected DOS was renamed from
+<code class="docutils literal notranslate"><span class="pre">partial_dos.dat</span></code> to <code class="docutils literal notranslate"><span class="pre">projected_dos.dat</span></code>.</li>
+</ul>
+<div class="section" id="api-change-at-version-2-0">
+<h3>API change at version 2.0<a class="headerlink" href="#api-change-at-version-2-0" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.get_band_structure()</span></code> is deprecated. Instead use
+<code class="docutils literal notranslate"><span class="pre">Phonopy.get_band_structure_dict()</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.get_mesh()</span></code> is deprecated. Instead use
+<code class="docutils literal notranslate"><span class="pre">Phonopy.get_mesh_dict()</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.set_band_structure()</span></code> is deprecated. Instead use
+<code class="docutils literal notranslate"><span class="pre">Phonopy.run_band_structure()</span></code> where <code class="docutils literal notranslate"><span class="pre">is_eigenvectors</span></code> keyword
+argument is replaced by <code class="docutils literal notranslate"><span class="pre">with_eigenvectors</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.set_mesh()</span></code> is deprecated. Instead use
+<code class="docutils literal notranslate"><span class="pre">Phonopy.run_mesh()</span></code> where <code class="docutils literal notranslate"><span class="pre">is_eigenvectors</span></code> keyword argument is
+replaced by <code class="docutils literal notranslate"><span class="pre">with_eigenvectors</span></code>.</li>
+<li>Previous behaviour of <code class="docutils literal notranslate"><span class="pre">Phonopy.run_mesh()</span></code> is achieved by
+<code class="docutils literal notranslate"><span class="pre">phonopy.mesh.run()</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.set_qpoints_phonon()</span></code> is deprecated. Use
+<code class="docutils literal notranslate"><span class="pre">Phonopy.run_qpoints()</span></code> where <code class="docutils literal notranslate"><span class="pre">is_eigenvectors</span></code> keyword
+argument is replaced by <code class="docutils literal notranslate"><span class="pre">with_eigenvectors</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.get_qpoints_phonon()</span></code> is deprecated. Instead use
+<code class="docutils literal notranslate"><span class="pre">Phonopy.get_qpoints_dict()</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.get_group_velocity()</span></code> is deprecated. Use
+<code class="docutils literal notranslate"><span class="pre">Phonopy.mode.group_velocities</span></code> attribute or
+<code class="docutils literal notranslate"><span class="pre">Phonopy.get_*mode*_dict()['group_velocities']</span></code>, where <code class="docutils literal notranslate"><span class="pre">*mode*</span></code> is
+<code class="docutils literal notranslate"><span class="pre">band_structure</span></code>, <code class="docutils literal notranslate"><span class="pre">mesh</span></code>, or <code class="docutils literal notranslate"><span class="pre">qpoints</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.get_group_velocities_on_bands()</span></code> is deprecated.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.get_mesh_grid_info()</span></code> is deprecated.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.set_iter_mesh()</span></code> is deprecated. Use <code class="docutils literal notranslate"><span class="pre">Phonopy.mesh()</span></code> with
+<code class="docutils literal notranslate"><span class="pre">use_iter_mesh=True</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.itermesh</span></code> was removed. IterMesh instance is stored in
+phonopy.mesh.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.set_group_velocity()</span></code> is deprecated. No need to call.
+<code class="docutils literal notranslate"><span class="pre">gv_delta_q</span></code> can be set at <code class="docutils literal notranslate"><span class="pre">Phonopy.__init__()</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.set_unitcell()</span></code> is deprecated.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.set_total_DOS()</span></code> is deprecated. Use
+<code class="docutils literal notranslate"><span class="pre">Phonopy.run_total_dos()</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.get_total_DOS()</span></code> is deprecated. Use
+<code class="docutils literal notranslate"><span class="pre">Phonopy.get_total_dos_dict()</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.write_total_DOS()</span></code> is deprecated. Use
+<code class="docutils literal notranslate"><span class="pre">Phonopy.write_total_dos()</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.plot_total_DOS()</span></code> is deprecated. Use
+<code class="docutils literal notranslate"><span class="pre">Phonopy.plot_total_dos()</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.set_partial_DOS()</span></code> is deprecated. Use
+<code class="docutils literal notranslate"><span class="pre">Phonopy.run_projected_dos()</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.get_partial_DOS()</span></code> is deprecated. Use
+<code class="docutils literal notranslate"><span class="pre">Phonopy.get_projected_dos_dict()</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.write_partial_DOS()</span></code> is deprecated. Use
+<code class="docutils literal notranslate"><span class="pre">Phonopy.write_projected_dos()</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.plot_partial_DOS()</span></code> is deprecated. Use
+<code class="docutils literal notranslate"><span class="pre">Phonopy.plot_projected_dos()</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.partial_dos</span></code> attribute is
+deprecated. Use <code class="docutils literal notranslate"><span class="pre">Phonopy.projected_dos</span></code> attribute.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.set_thermal_properties()</span></code> is deprecated. Use
+<code class="docutils literal notranslate"><span class="pre">Phonopy.run_thermal_properties()</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.get_thermal_properties()</span></code> is deprecated. Use
+<code class="docutils literal notranslate"><span class="pre">Phonopy.get_thermal_properties_dict()</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.set_thermal_displacements()</span></code> is deprecated. Use
+<code class="docutils literal notranslate"><span class="pre">Phonopy.run_thermal_displacements()</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.get_thermal_displacements()</span></code> is deprecated. Use
+<code class="docutils literal notranslate"><span class="pre">Phonopy.get_thermal_displacements_dict()</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.set_thermal_displacement_matrices()</span></code> is deprecated. Use
+<code class="docutils literal notranslate"><span class="pre">Phonopy.run_thermal_displacement_matrices()</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">Phonopy.get_thermal_displacement_matrices()</span></code> is deprecated. Use
+<code class="docutils literal notranslate"><span class="pre">Phonopy.get_thermal_displacements_matrices_dict()</span></code>.</li>
+<li>New <code class="docutils literal notranslate"><span class="pre">Phonopy.auto_total_dos()</span></code>.</li>
+<li>New <code class="docutils literal notranslate"><span class="pre">Phonopy.auto_partial_dos()</span></code>.</li>
+</ul>
+</div>
+</div>
 <div class="section" id="nov-22-2018-version-1-14-2">
 <h2>Nov-22-2018: Version 1.14.2<a class="headerlink" href="#nov-22-2018-version-1-14-2" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -1181,7 +1269,7 @@ from those in structure with atomic displacements.</li>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
     </p>
   </div>
 </footer>
