@@ -150,8 +150,6 @@ class TestDynamicStructureFactor(unittest.TestCase):
             [directions[0] * x
              for x in np.arange(0, n_points) / float(n_points - 1)])
         self.phonon.run_band_structure([G_to_L])
-        distances = self.phonon.band_structure.distances
-        frequencies = self.phonon.band_structure.frequencies
 
         T = 300
         for G_cubic in G_points_cubic:
@@ -162,19 +160,17 @@ class TestDynamicStructureFactor(unittest.TestCase):
                     [direction_prim * x
                      for x in np.arange(1, n_points) / float(n_points - 1)])
                 if func_AFF is not None:
-                    self.phonon.set_dynamic_structure_factor(
+                    self.phonon.init_dynamic_structure_factor(
                         G_to_L + G_prim,
                         T,
-                        func_atomic_form_factor=func_AFF,
-                        freq_min=1e-3,
-                        run_immediately=False)
+                        atomic_form_factor_func=func_AFF,
+                        freq_min=1e-3)
                 elif scattering_lengths is not None:
-                    self.phonon.set_dynamic_structure_factor(
+                    self.phonon.init_dynamic_structure_factor(
                         G_to_L + G_prim,
                         T,
                         scattering_lengths=scattering_lengths,
-                        freq_min=1e-3,
-                        run_immediately=False)
+                        freq_min=1e-3)
                 else:
                     raise SyntaxError
                 dsf = self.phonon.dynamic_structure_factor

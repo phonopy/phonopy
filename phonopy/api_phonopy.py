@@ -2477,7 +2477,7 @@ class Phonopy(object):
 
     def get_dynamic_structure_factor(self):
         return (self._dynamic_structure_factor.qpoints,
-                self._dynamic_structure_factor.S)
+                self._dynamic_structure_factor.dynamic_structure_factors)
 
     def run_random_displacements(self,
                                  T,
