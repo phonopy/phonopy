@@ -69,7 +69,8 @@ from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.phonon.moment import PhononMoment
 from phonopy.spectrum.dynamic_structure_factor import DynamicStructureFactor
 
-warnings.simplefilter("always")
+# Uncomment below to watch DeprecationWarning,
+# warnings.simplefilter("always")
 
 
 class Phonopy(object):
