@@ -999,7 +999,16 @@ P1 symmetry is enforced to the input unit cell by setting ``SYMMETRY = .FALSE``.
 ~~~~~~~~~~~~~~~~~~
 
 Symmetry search on the reciprocal sampling mesh is disabled by setting
-``MESH_SYMMETRY = .FALSE.``.
+``MESH_SYMMETRY = .FALSE.``. In some case such as hexagonal systems or
+primitive cells of cubic systems having F and I-centrings, the results
+with and without mesh symmetry give slightly different values for
+those proprerties that can employ mesh symmetry. This happens when the
+uniform sampling mesh made along basis vectors desn't have the same
+crystallographic point group as the crystal itself. This symmetry
+breaking may be also seen by the fact that ``weight`` written in
+``mesh.yaml`` can be different from possible order of product group of
+site-symmetry group and time revesal symmetry. Generally the
+difference becomes smaller when increasing the sampling mesh numbers.
 
 
 .. _fc_symmetry_tag:
