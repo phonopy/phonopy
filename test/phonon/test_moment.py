@@ -33,11 +33,14 @@ class TestMoment(unittest.TestCase):
         data = np.loadtxt(StringIO(result_full_range), dtype='double')
 
         phonon = self._get_phonon(self._cell)
-        moment = phonon.set_mesh([13, 13, 13],
-                                 is_eigenvectors=True,
+        moment = phonon.run_mesh([13, 13, 13],
+                                 with_eigenvectors=True,
                                  is_mesh_symmetry=False)
         num_atom = phonon.get_primitive().get_number_of_atoms()
-        q, w, f, e = phonon.get_mesh()
+        q = phonon.mesh.qpoints
+        w = phonon.mesh.weights
+        f = phonon.mesh.frequencies
+        e = phonon.mesh.eigenvectors
         vals = np.zeros((6, num_atom + 1), dtype='double')
 
         moment = PhononMoment(f, w)

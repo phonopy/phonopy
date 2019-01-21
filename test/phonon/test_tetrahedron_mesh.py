@@ -40,8 +40,10 @@ class TestTetrahedronMesh(unittest.TestCase):
                                    [0, 0.5, 0.5]])
         mesh = [11, 11, 11]
         primitive = phonon.get_primitive()
-        phonon.set_mesh([11, 11, 11])
-        qpoints, weights, frequencies, _ = phonon.get_mesh()
+        phonon.run_mesh([11, 11, 11])
+        qpoints = phonon.mesh.qpoints
+        weights = phonon.mesh.weights
+        frequencies = phonon.mesh.frequencies
         grid_address = phonon.mesh.grid_address
         ir_grid_points = phonon.mesh.ir_grid_points
         grid_mapping_table = phonon.mesh.grid_mapping_table

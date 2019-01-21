@@ -40,7 +40,7 @@ import phonopy.cui.load_helper as load_helper
 def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
          supercell_matrix=None,
          primitive_matrix=None,
-         is_nac=False,
+         is_nac=True,
          calculator=None,
          unitcell=None,
          supercell=None,
@@ -69,7 +69,8 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
     Parameters
     ----------
     phonopy_yaml : str, optional
-        Filename of "phonopy.yaml"-like file. Default is None.
+        Filename of "phonopy.yaml"-like file. If this is given, the data
+        in the file are parsed. Default is None.
     supercell_matrix : array_like, optional
         Supercell matrix multiplied to input cell basis vectors.
         shape=(3, ) or (3, 3), where the former is considered a diagonal
@@ -85,8 +86,9 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         https://atztogo.github.io/spglib/definition.html
         is used.
     is_nac : bool, optional
-        If True, look for 'BORN' file.
-        The priority for NAC is nac_params > born_filename > is_nac ('BORN')
+        If True, look for 'BORN' file. If False, NAS is turned off.
+        The priority for NAC is nac_params > born_filename > is_nac ('BORN').
+        Default is True.
     calculator : str, optional.
         Calculator used for computing forces. This is used to switch the set
         of physical units. Default is None, which is equivalent to "vasp".
@@ -171,12 +173,12 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
             pmat = 'auto'
         else:
             pmat = phpy_yaml.primitive_matrix
-        _nac_params = phpy_yaml.nac_params
-        _dataset = phpy_yaml.dataset
-        if phpy_yaml.force_constants is None:
-            _fc = None
+        if is_nac:
+            _nac_params = phpy_yaml.nac_params
         else:
-            _fc = phpy_yaml.force_constants
+            _nac_params = None
+        _dataset = phpy_yaml.dataset
+        _fc =  phpy_yaml.force_constants
 
     # units keywords: factor, nac_factor, distance_to_A
     units = get_default_physical_units(calculator)

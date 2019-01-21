@@ -24,8 +24,8 @@ class TestThermalProperties(unittest.TestCase):
 
     def testThermalProperties(self):
         phonon = self._get_phonon()
-        phonon.set_mesh([5, 5, 5])
-        phonon.set_thermal_properties(t_step=100, t_max=900)
+        phonon.run_mesh([5, 5, 5])
+        phonon.run_thermal_properties(t_step=100, t_max=900)
         tp = phonon.thermal_properties
         np.testing.assert_allclose(tp.temperatures, tp.get_temperatures())
         np.testing.assert_allclose(tp.thermal_properties,

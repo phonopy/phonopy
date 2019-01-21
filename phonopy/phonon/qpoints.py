@@ -60,7 +60,7 @@ class QpointsPhonon(object):
                  nac_q_direction=None,
                  with_eigenvectors=False,
                  group_velocity=None,
-                 write_dynamical_matrices=False,
+                 with_dynamical_matrices=False,
                  factor=VaspToTHz):
         primitive = dynamical_matrix.get_primitive()
         self._natom = primitive.get_number_of_atoms()
@@ -74,13 +74,14 @@ class QpointsPhonon(object):
         self._nac_q_direction = nac_q_direction
         self._with_eigenvectors = with_eigenvectors
         self._group_velocity = group_velocity
-        self._write_dynamical_matrix = write_dynamical_matrices
+        self._with_dynamical_matrices = with_dynamical_matrices
         self._factor = factor
 
         self._group_velocities = None
         self._dm = None
         self._eigenvectors = None
         self._frequencies = None
+        self._dynamical_matrices = None
 
         self._run()
 
@@ -105,6 +106,10 @@ class QpointsPhonon(object):
     def get_group_velocities(self):
         return self.group_velocities
 
+    @property
+    def dynamical_matrices(self):
+        return self._dynamical_matrices
+
     def write_hdf5(self):
         import h5py
         with h5py.File('qpoints.hdf5', 'w') as w:
@@ -114,7 +119,7 @@ class QpointsPhonon(object):
                 w.create_dataset('eigenvector', data=self._eigenvectors)
             if self._group_velocities is not None:
                 w.create_dataset('group_velocity', data=self._group_velocities)
-            if self._write_dynamical_matrix:
+            if self._with_dynamical_matrices:
                 w.create_dataset('dynamical_matrix', data=self._dm)
 
     def write_yaml(self):
@@ -130,7 +135,7 @@ class QpointsPhonon(object):
 
         for i, q in enumerate(self._qpoints):
             w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))
-            if self._write_dynamical_matrix:
+            if self._with_dynamical_matrices:
                 w.write("  dynamical_matrix:\n")
                 for row in self._dm[i]:
                     w.write("  - [ ")
@@ -166,8 +171,8 @@ class QpointsPhonon(object):
                 self._qpoints, perturbation=self._nac_q_direction)
             self._group_velocities = self._group_velocity.get_group_velocity()
 
-        if self._write_dynamical_matrix:
-            self._dm = []
+        if self._with_dynamical_matrices:
+            dynamical_matrices = []
 
         self._frequencies = []
         if self._with_eigenvectors:
@@ -175,8 +180,8 @@ class QpointsPhonon(object):
 
         for q in self._qpoints:
             dm = self._get_dynamical_matrix(q)
-            if self._write_dynamical_matrix:
-                self._dm.append(dm)
+            if self._with_dynamical_matrices:
+                dynamical_matrices.append(dm)
             if self._with_eigenvectors:
                 eigvals, eigvecs = np.linalg.eigh(dm)
                 self._eigenvectors.append(eigvecs)
@@ -192,6 +197,9 @@ class QpointsPhonon(object):
         if self._with_eigenvectors:
             self._eigenvectors = np.array(self._eigenvectors,
                                           dtype=dtype, order='C')
+        if self._with_dynamical_matrices:
+            self._dynamical_matrices = np.array(dynamical_matrices,
+                                                dtype=dtype, order='C')
 
     def _get_dynamical_matrix(self, q):
         if (self._dynamical_matrix.is_nac() and

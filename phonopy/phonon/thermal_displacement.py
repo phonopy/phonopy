@@ -61,8 +61,12 @@ class ThermalMotion(object):
         return Hbar * EV / Angstrom ** 2 * (
             (self._get_population(freq, t) + 0.5) / (freq * 1e12 * 2 * np.pi))
 
-    def get_temperatures(self):
+    @property
+    def temperatures(self):
         return self._temperatures
+
+    def get_temperatures(self):
+        return self.temperatures
 
     def set_temperature_range(self, t_min=None, t_max=None, t_step=None):
         if t_min is None:
@@ -150,6 +154,10 @@ class ThermalDisplacements(ThermalMotion):
             self._projection_direction = (projection_direction /
                                           np.linalg.norm(projection_direction))
         self._displacements = None
+
+    @property
+    def thermal_displacements(self):
+        return self._displacements
 
     def get_thermal_displacements(self):
         return (self._temperatures, self._displacements)
@@ -267,6 +275,14 @@ class ThermalDisplacementMatrices(ThermalMotion):
         else:
             self._ANinv = None
 
+    @property
+    def thermal_displacement_matrices(self):
+        return self._disp_matrices
+
+    @property
+    def thermal_displacement_matrices_cif(self):
+        return self._disp_matrices_cif
+
     def get_thermal_displacement_matrices(self):
         return (self._temperatures, self._disp_matrices)
 
@@ -290,7 +306,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
                                                dtype='double')
             for i, matrices in enumerate(self._disp_matrices):
                 for j, mat in enumerate(matrices):
-                    mat_cif = np.dot(np.dot(self._ANinv, mat.real),
+                    mat_cif = np.dot(np.dot(self._ANinv, mat),
                                      self._ANinv.T)
                     self._disp_matrices_cif[i, j] = mat_cif
 
@@ -327,7 +343,8 @@ class ThermalDisplacementMatrices(ThermalMotion):
                     print("%s: freq=%.2f (band #%d)" % (e, f, i_band))
 
         assert np.prod(self._iter_mesh.mesh_numbers) == count + 1
-        self._disp_matrices = disps / (count + 1)
+        assert (abs(disps.imag) < 1e-10).all()
+        self._disp_matrices = disps.real / (count + 1)
 
     def write_cif(self, cell, temperature_index):
         write_cif_P1(cell,
@@ -353,7 +370,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
                 #     lines.append(
                 #         "    [ %8.5f, %8.5f, %8.5f, %8.5f, %8.5f, %8.5f ]"
                 #         % (tuple(v.real) + tuple(v.imag)))
-                m = mat.real
+                m = mat
                 lines.append(
                     ("  - [ " + "%8.5f, " * 5 + "%8.5f ] # atom %d") %
                     (m[0, 0], m[1, 1], m[2, 2],

@@ -87,8 +87,8 @@ class DynamicStructureFactor(object):
        q-points in reduced coordinates measured from nearest G point.
        dtype='double'
        shape=(qpoints, 3)
-    S: ndarray
-       Dynamic structure factor
+    dynamic_structure_factors: ndarray
+       Dynamic structure factors.
        dtype='double'
        shape=(qpoints, phonon bands)
 
@@ -98,7 +98,7 @@ class DynamicStructureFactor(object):
                  mesh_phonon,
                  Qpoints,
                  T,
-                 func_atomic_form_factor=None,
+                 atomic_form_factor_func=None,
                  scattering_lengths=None,
                  freq_min=None,
                  freq_max=None):
@@ -115,7 +115,7 @@ class DynamicStructureFactor(object):
             shape=(qpoints, 3)
         T: float
             Temperature in K.
-        func_atomic_form_factor: Function object
+        atomic_form_factor_func: Function object
             Function that returns atomic form factor (``func`` below):
 
                 f_params = {'Na': [3.148690, 2.594987, 4.073989, 6.046925,
@@ -146,7 +146,7 @@ class DynamicStructureFactor(object):
         self._primitive = self._dynamical_matrix.primitive
         self._Qpoints = np.array(Qpoints)  # (n_q, 3) array
 
-        self._func_AFF = func_atomic_form_factor
+        self._func_AFF = atomic_form_factor_func
         self._b = scattering_lengths
         self._T = T
         if freq_min is None:
@@ -169,7 +169,8 @@ class DynamicStructureFactor(object):
         self._q_count = 0
         self._unit_convertion_factor = 1.0 / (AMU * (2 * np.pi * THz) ** 2)
 
-        self.S = np.zeros(self.frequencies.shape, dtype='double', order='C')
+        self.dynamic_structure_factors = np.zeros(self.frequencies.shape,
+                                                  dtype='double', order='C')
 
     def __iter__(self):
         return self
@@ -183,7 +184,7 @@ class DynamicStructureFactor(object):
             raise StopIteration
         else:
             S = self._run_at_Q()
-            self.S[self._q_count] = S
+            self.dynamic_structure_factors[self._q_count] = S
             self._q_count += 1
             return S
 

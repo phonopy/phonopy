@@ -64,9 +64,9 @@ class TestDynamicStructureFactor(unittest.TestCase):
     def setUp(self):
         self.phonon = self._get_phonon()
         mesh = [5, 5, 5]
-        self.phonon.set_mesh(mesh,
+        self.phonon.run_mesh(mesh,
                              is_mesh_symmetry=False,
-                             is_eigenvectors=True)
+                             with_eigenvectors=True)
 
     def tearDown(self):
         pass
@@ -149,8 +149,9 @@ class TestDynamicStructureFactor(unittest.TestCase):
         G_to_L = np.array(
             [directions[0] * x
              for x in np.arange(0, n_points) / float(n_points - 1)])
-        self.phonon.set_band_structure([G_to_L])
-        _, distances, frequencies, _ = self.phonon.get_band_structure()
+        self.phonon.run_band_structure([G_to_L])
+        distances = self.phonon.band_structure.distances
+        frequencies = self.phonon.band_structure.frequencies
 
         T = 300
         for G_cubic in G_points_cubic:

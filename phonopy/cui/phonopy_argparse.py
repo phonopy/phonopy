@@ -448,6 +448,7 @@ def get_parser():
         help="Output thermal displacement matrices")
     parser.add_argument(
         "--tdm-cif", "--thermal-displacement-matrix-cif",
+        metavar='TEMPERATURE',
         dest="thermal_displacement_matrices_cif", type=float,
         help="Write cif with aniso_U for which temperature is specified")
     parser.add_argument(

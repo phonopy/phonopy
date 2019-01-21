@@ -18,17 +18,18 @@ class TestMesh(unittest.TestCase):
 
     def testIterMesh(self):
         phonon = self._get_phonon()
-        phonon.run_mesh(mesh=[3, 3, 3],
-                        with_eigenvectors=True,
-                        use_iter_mesh=True)
+        phonon.init_mesh(mesh=[3, 3, 3],
+                         with_eigenvectors=True,
+                         use_iter_mesh=True)
         freqs = []
         eigvecs = []
         for i, (f, e) in enumerate(phonon.mesh):
             freqs.append(f)
             eigvecs.append(e)
 
-        phonon.set_mesh([3, 3, 3], is_eigenvectors=True)
-        _, _, mesh_freqs, mesh_eigvecs = phonon.get_mesh()
+        phonon.run_mesh([3, 3, 3], with_eigenvectors=True)
+        mesh_freqs = phonon.mesh.frequencies
+        mesh_eigvecs = phonon.mesh.eigenvectors
 
         np.testing.assert_allclose(mesh_freqs, freqs)
         np.testing.assert_allclose(mesh_eigvecs, eigvecs)

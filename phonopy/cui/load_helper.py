@@ -85,6 +85,7 @@ def get_cell_settings(phonopy_yaml=None,
 
 
 def set_nac_params(phonon, nac_params, born_filename, is_nac, nac_factor):
+    _nac_params = None
     if nac_params is not None:
         _nac_params = nac_params
     elif born_filename is not None:
@@ -92,15 +93,11 @@ def set_nac_params(phonon, nac_params, born_filename, is_nac, nac_factor):
     elif is_nac is True:
         if os.path.isfile("BORN"):
             _nac_params = parse_BORN(phonon.primitive, filename="BORN")
-        else:
-            raise RuntimeError("BORN file doesn't exist at current directory.")
-    else:
-        _nac_params = None
 
     if _nac_params is not None:
         if _nac_params['factor'] is None:
             _nac_params['factor'] = nac_factor
-        phonon.set_nac_params(_nac_params)
+        phonon.nac_params = _nac_params
 
 
 def set_force_constants(

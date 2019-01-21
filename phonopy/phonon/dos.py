@@ -435,6 +435,10 @@ class PartialDos(Dos):
     def partial_dos(self):
         return self._partial_dos
 
+    @property
+    def projected_dos(self):
+        return self._partial_dos
+
     def run(self):
         if self._tetrahedron_mesh is None:
             self._run_smearing_method()

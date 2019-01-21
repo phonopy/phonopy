@@ -265,6 +265,8 @@ class Mesh(MeshBase):
 
     @property
     def frequencies(self):
+        if self._frequencies is None:
+            self.run()
         return self._frequencies
 
     def get_frequencies(self):
@@ -281,6 +283,8 @@ class Mesh(MeshBase):
         The third index corresponds to the eigenvalue's index.
         The second index is for atoms [x1, y1, z1, x2, y2, z2, ...].
         """
+        if self._frequencies is None:
+            self.run()
         return self._eigenvectors
 
     def get_eigenvectors(self):
@@ -288,6 +292,8 @@ class Mesh(MeshBase):
 
     @property
     def group_velocities(self):
+        if self._frequencies is None:
+            self.run()
         return self._group_velocities
 
     def get_group_velocities(self):
