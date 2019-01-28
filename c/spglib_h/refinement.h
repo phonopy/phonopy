@@ -36,13 +36,14 @@
 #define __refinement_H__
 
 #include "cell.h"
-#include "symmetry.h"
 #include "spacegroup.h"
+#include "symmetry.h"
 
 typedef struct {
   Cell *bravais;
   Symmetry *symmetry;
   int *wyckoffs;
+  char (*site_symmetry_symbols)[7];
   int *equivalent_atoms;
   int *std_mapping_to_primitive;
   double rotation[3][3];

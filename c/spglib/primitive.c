@@ -388,7 +388,6 @@ static int get_primitive_lattice_vectors_iterative(double prim_lattice[3][3],
                                       vectors,
                                       cell,
                                       tolerance)) {
-
       mat_free_VecDBL(vectors);
       vectors = NULL;
       mat_free_VecDBL(pure_trans_reduced);

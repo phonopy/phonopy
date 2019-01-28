@@ -33,6 +33,7 @@
 /* POSSIBILITY OF SUCH DAMAGE. */
 
 #include <Python.h>
+#include <assert.h>
 #include <stdio.h>
 #include <numpy/arrayobject.h>
 #include <spglib.h>
@@ -215,14 +216,14 @@ static PyObject * py_get_dataset(PyObject *self, PyObject *args)
   PyArrayObject* position;
   PyArrayObject* atom_type;
   PyObject *array, *vec, *mat, *rot, *trans, *wyckoffs, *equiv_atoms;
-  PyObject *mapping_to_primitive;
+  PyObject *site_symmetry_symbols, *mapping_to_primitive;
   PyObject *std_lattice, *std_types, *std_positions, *std_mapping_to_primitive;
   PyObject *std_rotation;
 
   int i, j, k, n;
   double (*lat)[3];
   double (*pos)[3];
-  int num_atom;
+  int num_atom, len_list;
   int* typat;
 
   if (!PyArg_ParseTuple(args, "OOOidd",
@@ -250,7 +251,8 @@ static PyObject * py_get_dataset(PyObject *self, PyObject *args)
     Py_RETURN_NONE;
   }
 
-  array = PyList_New(18);
+  len_list = 19;
+  array = PyList_New(len_list);
   n = 0;
 
   /* Space group number, international symbol, hall symbol */
@@ -315,17 +317,22 @@ static PyObject * py_get_dataset(PyObject *self, PyObject *args)
 
   /* Wyckoff letters, Equivalent atoms */
   wyckoffs = PyList_New(dataset->n_atoms);
+  site_symmetry_symbols = PyList_New(dataset->n_atoms);
   equiv_atoms = PyList_New(dataset->n_atoms);
   mapping_to_primitive = PyList_New(dataset->n_atoms);
   for (i = 0; i < dataset->n_atoms; i++) {
     PyList_SetItem(wyckoffs, i,
                    PyLong_FromLong((long) dataset->wyckoffs[i]));
+    PyList_SetItem(site_symmetry_symbols, i,
+                   PYUNICODE_FROMSTRING(dataset->site_symmetry_symbols[i]));
     PyList_SetItem(equiv_atoms, i,
                    PyLong_FromLong((long) dataset->equivalent_atoms[i]));
     PyList_SetItem(mapping_to_primitive, i,
                    PyLong_FromLong((long) dataset->mapping_to_primitive[i]));
   }
   PyList_SetItem(array, n, wyckoffs);
+  n++;
+  PyList_SetItem(array, n, site_symmetry_symbols);
   n++;
   PyList_SetItem(array, n, equiv_atoms);
   n++;
@@ -382,6 +389,8 @@ static PyObject * py_get_dataset(PyObject *self, PyObject *args)
   /* n++; */
   PyList_SetItem(array, n, PYUNICODE_FROMSTRING(dataset->pointgroup_symbol));
   n++;
+
+  assert(n != len_list);
 
   spg_free_dataset(dataset);
 
