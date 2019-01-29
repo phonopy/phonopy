@@ -62,13 +62,15 @@ static int set_equivalent_atom(VecDBL *positions,
                                const Symmetry * conv_sym,
                                const double symprec);
 static int set_Wyckoffs_labels(int * wyckoffs,
+                               char (*site_symmetry_symbols)[7],
                                const VecDBL *positions,
                                const int * equiv_atoms,
                                const Cell * conv_prim,
                                const Symmetry * conv_sym,
                                const int hall_number,
                                const double symprec);
-static int get_Wyckoff_notation(const double position[3],
+static int get_Wyckoff_notation(char site_sym_symbol[7],
+                                const double position[3],
                                 const Symmetry * conv_sym,
                                 SPGCONST double bravais_lattice[3][3],
                                 const int hall_number,
@@ -77,6 +79,7 @@ static int get_Wyckoff_notation(const double position[3],
 /* Return NULL if failed */
 VecDBL * ssm_get_exact_positions(int *wyckoffs,
                                  int *equiv_atoms,
+                                 char (*site_symmetry_symbols)[7],
                                  const Cell * conv_prim,
                                  const Symmetry * conv_sym,
                                  const int hall_number,
@@ -99,6 +102,7 @@ VecDBL * ssm_get_exact_positions(int *wyckoffs,
     }
 
     if (set_Wyckoffs_labels(wyckoffs,
+                            site_symmetry_symbols,
                             positions,
                             equiv_atoms,
                             conv_prim,
@@ -272,6 +276,7 @@ static void set_exact_location(double position[3],
 }
 
 static int set_Wyckoffs_labels(int *wyckoffs,
+                               char (*site_symmetry_symbols)[7],
                                const VecDBL *positions,
                                const int * equiv_atoms,
                                const Cell * conv_prim,
@@ -279,11 +284,12 @@ static int set_Wyckoffs_labels(int *wyckoffs,
                                const int hall_number,
                                const double symprec)
 {
-  int i, w;
+  int i, j, w;
 
   for (i = 0; i < conv_prim->size; i++) {
     if (i == equiv_atoms[i]) {
-      w = get_Wyckoff_notation(positions->vec[i],
+      w = get_Wyckoff_notation(site_symmetry_symbols[i],
+                               positions->vec[i],
                                conv_sym,
                                conv_prim->lattice,
                                hall_number,
@@ -299,6 +305,9 @@ static int set_Wyckoffs_labels(int *wyckoffs,
   for (i = 0; i < conv_prim->size; i++) {
     if (i != equiv_atoms[i]) {
       wyckoffs[i] = wyckoffs[equiv_atoms[i]];
+      for (j = 0; j < 7; j++) {
+        site_symmetry_symbols[i][j] = site_symmetry_symbols[equiv_atoms[i]][j];
+      }
     }
   }
 
@@ -309,7 +318,8 @@ static int set_Wyckoffs_labels(int *wyckoffs,
 }
 
 /* Return -1 if failed */
-static int get_Wyckoff_notation(const double position[3],
+static int get_Wyckoff_notation(char site_sym_symbol[7],
+                                const double position[3],
                                 const Symmetry * conv_sym,
                                 SPGCONST double bravais_lattice[3][3],
                                 const int hall_number,
@@ -372,6 +382,7 @@ static int get_Wyckoff_notation(const double position[3],
         /* Database is made reversed order, e.g., gfedcba. */
         /* wyckoff is set 0 1 2 3 4... for a b c d e..., respectively. */
         wyckoff_letter = indices_wyc[1] - i - 1;
+        ssmdb_get_site_symmetry_symbol(site_sym_symbol, indices_wyc[0] + i);
         goto end;
       }
     }

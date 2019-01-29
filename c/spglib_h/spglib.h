@@ -119,6 +119,7 @@ extern "C" {
     double (*translations)[3];
     int n_atoms;
     int *wyckoffs;
+    char (*site_symmetry_symbols)[7];
     int *equivalent_atoms;
     int *mapping_to_primitive;
     int n_std_atoms;
@@ -378,8 +379,8 @@ extern "C" {
 /* Each element of shift[] is 0 or non-zero. */
   int spg_get_grid_point_from_address(const int grid_address[3],
                                       const int mesh[3]);
-  long spg_get_long_grid_point_from_address(const int grid_address[3],
-                                            const int mesh[3]);
+  size_t spg_get_dense_grid_point_from_address(const int grid_address[3],
+                                               const int mesh[3]);
 
 /* Irreducible reciprocal grid points are searched from uniform */
 /* mesh grid points specified by ``mesh`` and ``is_shift``. */
@@ -407,16 +408,16 @@ extern "C" {
                                  const int types[],
                                  const int num_atom,
                                  const double symprec);
-  long spg_get_long_ir_reciprocal_mesh(int grid_address[][3],
-                                       long ir_mapping_table[],
-                                       const int mesh[3],
-                                       const int is_shift[3],
-                                       const int is_time_reversal,
-                                       SPGCONST double lattice[3][3],
-                                       SPGCONST double position[][3],
-                                       const int types[],
-                                       const int num_atom,
-                                       const double symprec);
+  size_t spg_get_dense_ir_reciprocal_mesh(int grid_address[][3],
+                                          size_t ir_mapping_table[],
+                                          const int mesh[3],
+                                          const int is_shift[3],
+                                          const int is_time_reversal,
+                                          SPGCONST double lattice[3][3],
+                                          SPGCONST double position[][3],
+                                          const int types[],
+                                          const int num_atom,
+                                          const double symprec);
 
 /* The irreducible k-points are searched from unique k-point mesh */
 /* grids from real space lattice vectors and rotation matrices of */
@@ -435,15 +436,15 @@ extern "C" {
                                          SPGCONST int rotations[][3][3],
                                          const int num_q,
                                          SPGCONST double qpoints[][3]);
-  long spg_get_long_stabilized_reciprocal_mesh(int grid_address[][3],
-                                               long ir_mapping_table[],
-                                               const int mesh[3],
-                                               const int is_shift[3],
-                                               const int is_time_reversal,
-                                               const int num_rot,
-                                               SPGCONST int rotations[][3][3],
-                                               const int num_q,
-                                               SPGCONST double qpoints[][3]);
+  size_t spg_get_dense_stabilized_reciprocal_mesh(int grid_address[][3],
+                                                  size_t ir_mapping_table[],
+                                                  const int mesh[3],
+                                                  const int is_shift[3],
+                                                  const int is_time_reversal,
+                                                  const int num_rot,
+                                                  SPGCONST int rotations[][3][3],
+                                                  const int num_q,
+                                                  SPGCONST double qpoints[][3]);
 
 /* Rotation operations in reciprocal space ``rot_reciprocal`` are applied */
 /* to a grid address ``address_orig`` and resulting grid points are stored in */
@@ -454,12 +455,12 @@ extern "C" {
                                        SPGCONST int rot_reciprocal[][3][3],
                                        const int mesh[3],
                                        const int is_shift[3]);
-  int spg_get_long_grid_points_by_rotations(long rot_grid_points[],
-                                            const int address_orig[3],
-                                            const int num_rot,
-                                            SPGCONST int rot_reciprocal[][3][3],
-                                            const int mesh[3],
-                                            const int is_shift[3]);
+  int spg_get_dense_grid_points_by_rotations(size_t rot_grid_points[],
+                                             const int address_orig[3],
+                                             const int num_rot,
+                                             SPGCONST int rot_reciprocal[][3][3],
+                                             const int mesh[3],
+                                             const int is_shift[3]);
 
   int spg_get_BZ_grid_points_by_rotations(int rot_grid_points[],
                                           const int address_orig[3],
@@ -468,13 +469,13 @@ extern "C" {
                                           const int mesh[3],
                                           const int is_shift[3],
                                           const int bz_map[]);
-  int spg_get_long_BZ_grid_points_by_rotations(long rot_grid_points[],
-                                               const int address_orig[3],
-                                               const int num_rot,
-                                               SPGCONST int rot_reciprocal[][3][3],
-                                               const int mesh[3],
-                                               const int is_shift[3],
-                                               const long bz_map[]);
+  int spg_get_dense_BZ_grid_points_by_rotations(size_t rot_grid_points[],
+                                                const int address_orig[3],
+                                                const int num_rot,
+                                                SPGCONST int rot_reciprocal[][3][3],
+                                                const int mesh[3],
+                                                const int is_shift[3],
+                                                const size_t bz_map[]);
 
 /* Grid addresses are relocated inside Brillouin zone. */
 /* Number of ir-grid-points inside Brillouin zone is returned. */
@@ -504,12 +505,12 @@ extern "C" {
                                    const int mesh[3],
                                    SPGCONST double rec_lattice[3][3],
                                    const int is_shift[3]);
-  long spg_relocate_long_BZ_grid_address(int bz_grid_address[][3],
-                                         long bz_map[],
-                                         SPGCONST int grid_address[][3],
-                                         const int mesh[3],
-                                         SPGCONST double rec_lattice[3][3],
-                                         const int is_shift[3]);
+  size_t spg_relocate_dense_BZ_grid_address(int bz_grid_address[][3],
+                                            size_t bz_map[],
+                                            SPGCONST int grid_address[][3],
+                                            const int mesh[3],
+                                            SPGCONST double rec_lattice[3][3],
+                                            const int is_shift[3]);
 
   void spg_get_neighboring_grid_points(int relative_grid_points[],
                                        const int grid_point,
