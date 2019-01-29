@@ -118,9 +118,11 @@ static size_t get_grid_point_single_mesh(const int address[3],
                                          const int mesh[3])
 {
 #ifndef GRID_ORDER_XYZ
-  return address[2] * mesh[0] * mesh[1] + address[1] * mesh[0] + address[0];
+  return (address[2] * mesh[0] * (size_t)(mesh[1])
+          + address[1] * mesh[0] + address[0]);
 #else
-  return address[0] * mesh[1] * mesh[2] + address[1] * mesh[2] + address[2];
+  return (address[0] * mesh[1] * (size_t)(mesh[2])
+          + address[1] * mesh[2] + address[2]);
 #endif
 }
 
