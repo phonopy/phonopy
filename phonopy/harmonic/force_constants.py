@@ -284,7 +284,7 @@ def get_rotated_displacement(displacements, site_sym_cart):
     rot_disps = []
     for u in displacements:
         rot_disps.append([np.dot(sym, u) for sym in site_sym_cart])
-    return np.reshape(rot_disps, (-1, 3))
+    return np.array(np.reshape(rot_disps, (-1, 3)), dtype='double', order='C')
 
 
 def get_rotated_forces(forces_syms, site_sym_cart):

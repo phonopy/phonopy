@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h>
 #include "arithmetic.h"
 #include "cell.h"
 #include "debug.h"
@@ -163,7 +164,7 @@ static int get_schoenflies(char symbol[7],
 /* kpoints */
 /*---------*/
 static int get_ir_reciprocal_mesh(int grid_address[][3],
-                                  int map[],
+                                  int ir_mapping_table[],
                                   const int mesh[3],
                                   const int is_shift[3],
                                   const int is_time_reversal,
@@ -173,16 +174,36 @@ static int get_ir_reciprocal_mesh(int grid_address[][3],
                                   const int num_atom,
                                   const double symprec,
                                   const double angle_tolerance);
+static size_t get_dense_ir_reciprocal_mesh(int grid_address[][3],
+                                           size_t ir_mapping_table[],
+                                           const int mesh[3],
+                                           const int is_shift[3],
+                                           const int is_time_reversal,
+                                           SPGCONST double lattice[3][3],
+                                           SPGCONST double position[][3],
+                                           const int types[],
+                                           const size_t num_atom,
+                                           const double symprec,
+                                           const double angle_tolerance);
 
 static int get_stabilized_reciprocal_mesh(int grid_address[][3],
-                                          int map[],
+                                          int ir_mapping_table[],
                                           const int mesh[3],
                                           const int is_shift[3],
                                           const int is_time_reversal,
                                           const int num_rot,
                                           SPGCONST int rotations[][3][3],
-                                          const int num_q,
+                                          const size_t num_q,
                                           SPGCONST double qpoints[][3]);
+static size_t get_dense_stabilized_reciprocal_mesh(int grid_address[][3],
+                                                   size_t ir_mapping_table[],
+                                                   const int mesh[3],
+                                                   const int is_shift[3],
+                                                   const int is_time_reversal,
+                                                   const size_t num_rot,
+                                                   SPGCONST int rotations[][3][3],
+                                                   const size_t num_q,
+                                                   SPGCONST double qpoints[][3]);
 
 /*========*/
 /* global */
@@ -841,8 +862,24 @@ int spg_get_grid_point_from_address(const int grid_address[3],
   return kgd_get_grid_point_double_mesh(address_double, mesh);
 }
 
+size_t spg_get_dense_grid_point_from_address(const int grid_address[3],
+                                             const int mesh[3])
+{
+  int address_double[3];
+  int is_shift[3];
+
+  is_shift[0] = 0;
+  is_shift[1] = 0;
+  is_shift[2] = 0;
+  kgd_get_grid_address_double_mesh(address_double,
+                                   grid_address,
+                                   mesh,
+                                   is_shift);
+  return kgd_get_dense_grid_point_double_mesh(address_double, mesh);
+}
+
 int spg_get_ir_reciprocal_mesh(int grid_address[][3],
-                               int map[],
+                               int ir_mapping_table[],
                                const int mesh[3],
                                const int is_shift[3],
                                const int is_time_reversal,
@@ -853,7 +890,7 @@ int spg_get_ir_reciprocal_mesh(int grid_address[][3],
                                const double symprec)
 {
   return get_ir_reciprocal_mesh(grid_address,
-                                map,
+                                ir_mapping_table,
                                 mesh,
                                 is_shift,
                                 is_time_reversal,
@@ -865,8 +902,32 @@ int spg_get_ir_reciprocal_mesh(int grid_address[][3],
                                 -1.0);
 }
 
+size_t spg_get_dense_ir_reciprocal_mesh(int grid_address[][3],
+                                        size_t ir_mapping_table[],
+                                        const int mesh[3],
+                                        const int is_shift[3],
+                                        const int is_time_reversal,
+                                        SPGCONST double lattice[3][3],
+                                        SPGCONST double position[][3],
+                                        const int types[],
+                                        const int num_atom,
+                                        const double symprec)
+{
+  return get_dense_ir_reciprocal_mesh(grid_address,
+                                     ir_mapping_table,
+                                     mesh,
+                                     is_shift,
+                                     is_time_reversal,
+                                     lattice,
+                                     position,
+                                     types,
+                                     num_atom,
+                                     symprec,
+                                     -1.0);
+}
+
 int spg_get_stabilized_reciprocal_mesh(int grid_address[][3],
-                                       int map[],
+                                       int ir_mapping_table[],
                                        const int mesh[3],
                                        const int is_shift[3],
                                        const int is_time_reversal,
@@ -876,7 +937,7 @@ int spg_get_stabilized_reciprocal_mesh(int grid_address[][3],
                                        SPGCONST double qpoints[][3])
 {
   return get_stabilized_reciprocal_mesh(grid_address,
-                                        map,
+                                        ir_mapping_table,
                                         mesh,
                                         is_shift,
                                         is_time_reversal,
@@ -884,6 +945,27 @@ int spg_get_stabilized_reciprocal_mesh(int grid_address[][3],
                                         rotations,
                                         num_q,
                                         qpoints);
+}
+
+size_t spg_get_dense_stabilized_reciprocal_mesh(int grid_address[][3],
+                                                size_t ir_mapping_table[],
+                                                const int mesh[3],
+                                                const int is_shift[3],
+                                                const int is_time_reversal,
+                                                const int num_rot,
+                                                SPGCONST int rotations[][3][3],
+                                                const int num_q,
+                                                SPGCONST double qpoints[][3])
+{
+  return get_dense_stabilized_reciprocal_mesh(grid_address,
+                                              ir_mapping_table,
+                                              mesh,
+                                              is_shift,
+                                              is_time_reversal,
+                                              num_rot,
+                                              rotations,
+                                              num_q,
+                                              qpoints);
 }
 
 int spg_get_grid_points_by_rotations(int rot_grid_points[],
@@ -910,6 +992,36 @@ int spg_get_grid_points_by_rotations(int rot_grid_points[],
                                    rot,
                                    mesh,
                                    is_shift);
+  mat_free_MatINT(rot);
+  rot = NULL;
+
+  return 1;
+}
+
+int spg_get_dense_grid_points_by_rotations(size_t rot_grid_points[],
+                                           const int address_orig[3],
+                                           const int num_rot,
+                                           SPGCONST int rot_reciprocal[][3][3],
+                                           const int mesh[3],
+                                           const int is_shift[3])
+{
+  int i;
+  MatINT *rot;
+
+  rot = NULL;
+
+  if ((rot = mat_alloc_MatINT(num_rot)) == NULL) {
+    return 0;
+  }
+
+  for (i = 0; i < num_rot; i++) {
+    mat_copy_matrix_i3(rot->mat[i], rot_reciprocal[i]);
+  }
+  kpt_get_dense_grid_points_by_rotations(rot_grid_points,
+                                         address_orig,
+                                         rot,
+                                         mesh,
+                                         is_shift);
   mat_free_MatINT(rot);
   rot = NULL;
 
@@ -948,6 +1060,38 @@ int spg_get_BZ_grid_points_by_rotations(int rot_grid_points[],
   return 1;
 }
 
+int spg_get_dense_BZ_grid_points_by_rotations(size_t rot_grid_points[],
+                                              const int address_orig[3],
+                                              const int num_rot,
+                                              SPGCONST int rot_reciprocal[][3][3],
+                                              const int mesh[3],
+                                              const int is_shift[3],
+                                              const size_t bz_map[])
+{
+  int i;
+  MatINT *rot;
+
+  rot = NULL;
+
+  if ((rot = mat_alloc_MatINT(num_rot)) == NULL) {
+    return 0;
+  }
+
+  for (i = 0; i < num_rot; i++) {
+    mat_copy_matrix_i3(rot->mat[i], rot_reciprocal[i]);
+  }
+  kpt_get_dense_BZ_grid_points_by_rotations(rot_grid_points,
+                                            address_orig,
+                                            rot,
+                                            mesh,
+                                            is_shift,
+                                            bz_map);
+  mat_free_MatINT(rot);
+  rot = NULL;
+
+  return 1;
+}
+
 int spg_relocate_BZ_grid_address(int bz_grid_address[][3],
                                  int bz_map[],
                                  SPGCONST int grid_address[][3],
@@ -961,6 +1105,21 @@ int spg_relocate_BZ_grid_address(int bz_grid_address[][3],
                                       mesh,
                                       rec_lattice,
                                       is_shift);
+}
+
+size_t spg_relocate_dense_BZ_grid_address(int bz_grid_address[][3],
+                                          size_t bz_map[],
+                                          SPGCONST int grid_address[][3],
+                                          const int mesh[3],
+                                          SPGCONST double rec_lattice[3][3],
+                                          const int is_shift[3])
+{
+  return kpt_relocate_dense_BZ_grid_address(bz_grid_address,
+                                            bz_map,
+                                            grid_address,
+                                            mesh,
+                                            rec_lattice,
+                                            is_shift);
 }
 
 /*--------*/
@@ -1128,7 +1287,7 @@ static int set_dataset(SpglibDataset * dataset,
                        SPGCONST Spacegroup * spacegroup,
                        ExactStructure *exstr)
 {
-  int i;
+  int i, j;
   double inv_lat[3][3];
   Pointgroup pointgroup;
 
@@ -1172,6 +1331,12 @@ static int set_dataset(SpglibDataset * dataset,
     goto err;
   }
 
+  if ((dataset->site_symmetry_symbols =
+       (char(*)[7]) malloc(sizeof(char[7]) * cell->size)) == NULL) {
+    warning_print("spglib: Memory could not be allocated.");
+    goto err;
+  }
+
   if ((dataset->equivalent_atoms =
        (int*) malloc(sizeof(int) * dataset->n_atoms)) == NULL) {
     warning_print("spglib: Memory could not be allocated.");
@@ -1180,6 +1345,9 @@ static int set_dataset(SpglibDataset * dataset,
 
   for (i = 0; i < dataset->n_atoms; i++) {
     dataset->wyckoffs[i] = exstr->wyckoffs[i];
+    for (j = 0; j < 7; j++) {
+      dataset->site_symmetry_symbols[i][j] = exstr->site_symmetry_symbols[i][j];
+    }
     dataset->equivalent_atoms[i] = exstr->equivalent_atoms[i];
   }
 
@@ -1189,8 +1357,8 @@ static int set_dataset(SpglibDataset * dataset,
     goto err;
   }
 
-  debug_print("Refined cell after ref_get_Wyckoff_positions\n");
-  debug_print(" (line %d, %s).\n", __LINE__, __FILE__);
+  debug_print("[line %d, %s]\n", __LINE__, __FILE__);
+  debug_print("refined cell after ref_get_Wyckoff_positions\n");
   debug_print_matrix_d3(exstr->bravais->lattice);
 #ifdef SPGDEBUG
   for (i = 0; i < exstr->bravais->size; i++) {
@@ -1257,6 +1425,10 @@ static int set_dataset(SpglibDataset * dataset,
   if (dataset->mapping_to_primitive != NULL) {
     free(dataset->mapping_to_primitive);
     dataset->mapping_to_primitive = NULL;
+  }
+  if (dataset->site_symmetry_symbols != NULL) {
+    free(dataset->site_symmetry_symbols);
+    dataset->site_symmetry_symbols = NULL;
   }
   if (dataset->wyckoffs != NULL) {
     free(dataset->wyckoffs);
@@ -1864,7 +2036,7 @@ static int get_schoenflies(char symbol[7],
 /* kpoints */
 /*---------*/
 static int get_ir_reciprocal_mesh(int grid_address[][3],
-                                  int map[],
+                                  int ir_mapping_table[],
                                   const int mesh[3],
                                   const int is_shift[3],
                                   const int is_time_reversal,
@@ -1900,10 +2072,61 @@ static int get_ir_reciprocal_mesh(int grid_address[][3],
   }
   rot_reciprocal = kpt_get_point_group_reciprocal(rotations, is_time_reversal);
   num_ir = kpt_get_irreducible_reciprocal_mesh(grid_address,
-                                               map,
+                                               ir_mapping_table,
                                                mesh,
                                                is_shift,
                                                rot_reciprocal);
+  mat_free_MatINT(rot_reciprocal);
+  rot_reciprocal = NULL;
+  mat_free_MatINT(rotations);
+  rotations = NULL;
+  spg_free_dataset(dataset);
+  dataset = NULL;
+  return num_ir;
+}
+
+static size_t get_dense_ir_reciprocal_mesh(int grid_address[][3],
+                                           size_t ir_mapping_table[],
+                                           const int mesh[3],
+                                           const int is_shift[3],
+                                           const int is_time_reversal,
+                                           SPGCONST double lattice[3][3],
+                                           SPGCONST double position[][3],
+                                           const int types[],
+                                           const size_t num_atom,
+                                           const double symprec,
+                                           const double angle_tolerance)
+{
+  SpglibDataset *dataset;
+  int i;
+  size_t num_ir;
+  MatINT *rotations, *rot_reciprocal;
+
+  if ((dataset = get_dataset(lattice,
+                             position,
+                             types,
+                             num_atom,
+                             0,
+                             symprec,
+                             angle_tolerance)) == NULL) {
+    return 0;
+  }
+
+  if ((rotations = mat_alloc_MatINT(dataset->n_operations)) == NULL) {
+    spg_free_dataset(dataset);
+    dataset = NULL;
+    return 0;
+  }
+
+  for (i = 0; i < dataset->n_operations; i++) {
+    mat_copy_matrix_i3(rotations->mat[i], dataset->rotations[i]);
+  }
+  rot_reciprocal = kpt_get_point_group_reciprocal(rotations, is_time_reversal);
+  num_ir = kpt_get_dense_irreducible_reciprocal_mesh(grid_address,
+                                                     ir_mapping_table,
+                                                     mesh,
+                                                     is_shift,
+                                                     rot_reciprocal);
   mat_free_MatINT(rot_reciprocal);
   rot_reciprocal = NULL;
   mat_free_MatINT(rotations);
@@ -1920,7 +2143,7 @@ static int get_stabilized_reciprocal_mesh(int grid_address[][3],
                                           const int is_time_reversal,
                                           const int num_rot,
                                           SPGCONST int rotations[][3][3],
-                                          const int num_q,
+                                          const size_t num_q,
                                           SPGCONST double qpoints[][3])
 {
   MatINT *rot_real;
@@ -1944,6 +2167,44 @@ static int get_stabilized_reciprocal_mesh(int grid_address[][3],
                                               rot_real,
                                               num_q,
                                               qpoints);
+
+  mat_free_MatINT(rot_real);
+  rot_real = NULL;
+
+  return num_ir;
+}
+
+static size_t get_dense_stabilized_reciprocal_mesh(int grid_address[][3],
+                                                   size_t ir_mapping_table[],
+                                                   const int mesh[3],
+                                                   const int is_shift[3],
+                                                   const int is_time_reversal,
+                                                   const size_t num_rot,
+                                                   SPGCONST int rotations[][3][3],
+                                                   const size_t num_q,
+                                                   SPGCONST double qpoints[][3])
+{
+  MatINT *rot_real;
+  size_t i, num_ir;
+
+  rot_real = NULL;
+
+  if ((rot_real = mat_alloc_MatINT(num_rot)) == NULL) {
+    return 0;
+  }
+
+  for (i = 0; i < num_rot; i++) {
+    mat_copy_matrix_i3(rot_real->mat[i], rotations[i]);
+  }
+
+  num_ir = kpt_get_dense_stabilized_reciprocal_mesh(grid_address,
+                                                    ir_mapping_table,
+                                                    mesh,
+                                                    is_shift,
+                                                    is_time_reversal,
+                                                    rot_real,
+                                                    num_q,
+                                                    qpoints);
 
   mat_free_MatINT(rot_real);
   rot_real = NULL;

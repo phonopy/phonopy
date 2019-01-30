@@ -34,6 +34,7 @@
 
 import numpy as np
 
+
 class PhononMoment(object):
     def __init__(self,
                  frequencies,
@@ -47,8 +48,12 @@ class PhononMoment(object):
         self.set_frequency_range()
         self._moment = None
 
-    def get_moment(self):
+    @property
+    def moment(self):
         return self._moment
+
+    def get_moment(self):
+        return self.moment
 
     def set_frequency_range(self,
                             freq_min=None,

@@ -14,17 +14,17 @@ class TestBrillouinZone(unittest.TestCase):
 
     def test_FCC(self):
         direct_lat = [[0, 2.73, 2.73], [2.73, 0, 2.73], [2.73, 2.73, 0]]
-        mesh = [4, 4, 4]
         is_shift = [0, 0, 0]
-        self._testBrillouinZone(direct_lat, mesh, is_shift)
+        self._testBrillouinZone(direct_lat, [4, 4, 4], is_shift)
+        self._testBrillouinZone(direct_lat, [5, 5, 5], is_shift)
 
     def test_Hexagonal(self):
         direct_lat = [[3.0751691007292523, 0, 0],
                       [-1.5375845503646262, 2.6631745621644800, 0],
                       [0, 0, 3.5270080068586522]]
-        mesh = [4, 4, 4]
         is_shift = [0, 0, 0]
-        self._testBrillouinZone(direct_lat, mesh, is_shift)
+        self._testBrillouinZone(direct_lat, [4, 4, 4], is_shift)
+        self._testBrillouinZone(direct_lat, [5, 5, 5], is_shift)
 
     def _testBrillouinZone(self, direct_lat, mesh, is_shift):
         _, grid_address = get_stabilized_reciprocal_mesh(

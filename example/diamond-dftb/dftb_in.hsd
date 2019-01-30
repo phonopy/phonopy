@@ -1,0 +1,48 @@
+# Input for DFTB+ diamond primitive cell example, see
+# https://www.dftbplus.org/ for details of code useage
+
+Geometry = GenFormat {
+    # geometry input file
+    <<< geo.genS-001
+}
+
+Hamiltonian = DFTB {
+    
+    SCC = No # non-self-consistent, as diamond
+    
+    MaxAngularMomentum = {
+        C = "p" # s and p functions, read parameter file for details
+    }
+
+    # local location of Slater-Koster parameter data files.
+    # These are available at https://www.dftb.org/parameters
+    SlaterKosterFiles = Type2FileNames {
+        Separator = "-"
+        Suffix = ".skf"
+    }
+
+    # Example uses a fairly large supercell, so not many k-points are included
+    KPointsAndWeights = SupercellFolding {
+        2 0 0
+        0 2 0
+        0 0 2
+        0.5 0.5 0.5
+    }
+    
+}
+
+Options = {
+    # Required options for storing data needed by phonopy
+    WriteResultsTag = Yes
+}
+
+ParserOptions = {
+    # input parser version for DFTB+ 18.2, but this is backward
+    # compatible
+    ParserVersion = 6
+}
+
+Analysis = {
+    # required option for phonopy
+    CalculateForces = Yes
+}

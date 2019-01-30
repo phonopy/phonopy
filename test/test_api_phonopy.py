@@ -39,9 +39,8 @@ class TestPhonopy(unittest.TestCase):
                         == id(phonon.get_supercells_with_displacements()))
         self.assertTrue(id(phonon.displacement_dataset)
                         == id(phonon.get_displacement_dataset()))
-        phonon.set_mesh([11, 11, 11], is_eigenvectors=True)
-        phonon.get_mesh()
-        phonon.get_mesh_grid_info()
+        phonon.run_mesh([11, 11, 11], with_eigenvectors=True)
+        phonon.get_mesh_dict()
 
     def _get_phonon(self):
         cell = read_vasp(os.path.join(data_dir, "POSCAR_NaCl"))

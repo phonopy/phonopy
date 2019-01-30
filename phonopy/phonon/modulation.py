@@ -58,7 +58,7 @@ class Modulation(object):
         self._dm = dynamical_matrix
         self._primitive = dynamical_matrix.get_primitive()
         self._phonon_modes = phonon_modes
-        self._dimension = dimension
+        self._dimension = np.array(dimension).ravel()
         self._delta_q = delta_q  # 1st/2nd order perturbation direction
         self._nac_q_direction = nac_q_direction
         self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)

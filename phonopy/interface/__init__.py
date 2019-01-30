@@ -33,29 +33,27 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import os
+import numpy as np
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.file_IO import parse_disp_yaml, write_FORCE_SETS
 
 
 def get_interface_mode(args):
-    if args.wien2k_mode:
-        return 'wien2k'
-    elif args.abinit_mode:
-        return 'abinit'
-    elif args.qe_mode:
-        return 'qe'
-    elif args.elk_mode:
-        return 'elk'
-    elif args.siesta_mode:
-        return 'siesta'
-    elif args.cp2k_mode:
-        return 'cp2k'
-    elif args.crystal_mode:
-        return 'crystal'
-    elif args.vasp_mode:
-        return 'vasp'
-    else:
-        return None
+    """Return calculator name
+
+    The calculator name is obtained from command option arguments where
+    argparse is used. The argument attribute name has to be
+    "{calculator}_mode". Then this method returns {calculator}.
+
+    """
+
+    calculator_list = ['wien2k', 'abinit', 'qe', 'elk', 'siesta', 'cp2k',
+                       'crystal', 'vasp', 'dftbp']
+    for calculator in calculator_list:
+        mode = "%s_mode" % calculator
+        if mode in args and args.__dict__[mode]:
+            return calculator
+    return None
 
 
 def write_supercells_with_displacements(interface_mode,
@@ -105,96 +103,119 @@ def write_supercells_with_displacements(interface_mode,
                                             optional_structure_info[1],
                                             num_unitcells_in_supercell,
                                             template_file="TEMPLATE")
+    elif interface_mode == 'dftbp':
+        from phonopy.interface.dftbp import write_supercells_with_displacements
+        write_supercells_with_displacements(supercell, cells_with_disps)
 
 
 def read_crystal_structure(filename=None,
                            interface_mode=None,
                            chemical_symbols=None,
-                           yaml_mode=False):
+                           command_name="phonopy"):
     if filename is None:
-        unitcell_filename = get_default_cell_filename(interface_mode,
-                                                      yaml_mode)
+        cell_filename = get_default_cell_filename(interface_mode)
     else:
-        unitcell_filename = filename
+        cell_filename = filename
 
-    if not os.path.isfile(unitcell_filename):
-        if filename is None:
-            return None, (unitcell_filename + " (default file name)",)
+    if interface_mode != "phonopy_yaml":
+        if cell_filename is not None and not os.path.isfile(cell_filename):
+            if filename is None:
+                return None, (cell_filename, "(default file name)")
+            else:
+                return None, (cell_filename,)
+    else:
+        cell_filename = None
+        for fname in ("%s_disp.yaml" % command_name, "%s.yaml" % command_name):
+            if os.path.isfile(fname):
+                cell_filename = fname
+                break
+        if cell_filename is None:
+            return None, ("%s_disp.yaml" % command_name,
+                          "%s.yaml" % command_name, "")
+
+    if interface_mode == 'phonopy_yaml':
+        phpy = PhonopyYaml()
+        phpy.read(cell_filename)
+        cell = phpy.unitcell
+        if command_name in phpy.yaml:
+            if 'calculator' in phpy.yaml[command_name]:
+                calculator = phpy.yaml[command_name]['calculator']
+            else:
+                calculator = None
+            tmat = np.dot(np.linalg.inv(cell.get_cell().T),
+                          phpy.supercell.get_cell().T)
+            tmat = np.rint(tmat).astype('intc')
         else:
-            return None, (unitcell_filename,)
-
-    if yaml_mode:
-        phpy_yaml = PhonopyYaml()
-        phpy_yaml.read(unitcell_filename)
-        unitcell = phpy_yaml.get_unitcell()
-        return unitcell, (unitcell_filename,)
-
-    if interface_mode is None or interface_mode == 'vasp':
+            calculator = None
+            tmat = np.eye(3, dtype='intc')
+        return cell, (cell_filename, calculator, tmat)
+    elif interface_mode is None or interface_mode == 'vasp':
         from phonopy.interface.vasp import read_vasp
         if chemical_symbols is None:
-            unitcell = read_vasp(unitcell_filename)
+            unitcell = read_vasp(cell_filename)
         else:
-            unitcell = read_vasp(unitcell_filename, symbols=chemical_symbols)
-        return unitcell, (unitcell_filename,)
-
-    if interface_mode == 'abinit':
+            unitcell = read_vasp(cell_filename, symbols=chemical_symbols)
+        return unitcell, (cell_filename,)
+    elif interface_mode == 'abinit':
         from phonopy.interface.abinit import read_abinit
-        unitcell = read_abinit(unitcell_filename)
-        return unitcell, (unitcell_filename,)
-
-    if interface_mode == 'qe':
+        unitcell = read_abinit(cell_filename)
+        return unitcell, (cell_filename,)
+    elif interface_mode == 'qe':
         from phonopy.interface.qe import read_pwscf
-        unitcell, pp_filenames = read_pwscf(unitcell_filename)
-        return unitcell, (unitcell_filename, pp_filenames)
-
-    if interface_mode == 'wien2k':
+        unitcell, pp_filenames = read_pwscf(cell_filename)
+        return unitcell, (cell_filename, pp_filenames)
+    elif interface_mode == 'wien2k':
         from phonopy.interface.wien2k import parse_wien2k_struct
-        unitcell, npts, r0s, rmts = parse_wien2k_struct(unitcell_filename)
-        return unitcell, (unitcell_filename, npts, r0s, rmts)
-
-    if interface_mode == 'elk':
+        unitcell, npts, r0s, rmts = parse_wien2k_struct(cell_filename)
+        return unitcell, (cell_filename, npts, r0s, rmts)
+    elif interface_mode == 'elk':
         from phonopy.interface.elk import read_elk
-        unitcell, sp_filenames = read_elk(unitcell_filename)
-        return unitcell, (unitcell_filename, sp_filenames)
-
-    if interface_mode == 'siesta':
+        unitcell, sp_filenames = read_elk(cell_filename)
+        return unitcell, (cell_filename, sp_filenames)
+    elif interface_mode == 'siesta':
         from phonopy.interface.siesta import read_siesta
-        unitcell, atypes = read_siesta(unitcell_filename)
-        return unitcell, (unitcell_filename, atypes)
-
-    if interface_mode == 'cp2k':
+        unitcell, atypes = read_siesta(cell_filename)
+        return unitcell, (cell_filename, atypes)
+    elif interface_mode == 'cp2k':
         from phonopy.interface.cp2k import read_cp2k
-        unitcell = read_cp2k(unitcell_filename)
-        return unitcell, (unitcell_filename,)
-
-    if interface_mode == 'crystal':
+        unitcell = read_cp2k(cell_filename)
+        return unitcell, (cell_filename,)
+    elif interface_mode == 'crystal':
         from phonopy.interface.crystal import read_crystal
-        unitcell, conv_numbers = read_crystal(unitcell_filename)
-        return unitcell, (unitcell_filename, conv_numbers)
+        unitcell, conv_numbers = read_crystal(cell_filename)
+        return unitcell, (cell_filename, conv_numbers)
+    elif interface_mode == 'dftbp':
+        from phonopy.interface.dftbp import read_dftbp
+        unitcell = read_dftbp(cell_filename)
+        return unitcell, (cell_filename,)
 
 
-def get_default_cell_filename(interface_mode, yaml_mode):
-    if yaml_mode:
-        return "POSCAR.yaml"
-    if interface_mode is None or interface_mode == 'vasp':
+def get_default_cell_filename(interface_mode):
+    if interface_mode == 'phonopy_yaml':
+        return "phonopy_disp.yaml"
+    elif interface_mode is None or interface_mode == 'vasp':
         return "POSCAR"
-    if interface_mode in ('abinit', 'qe'):
+    elif interface_mode in ('abinit', 'qe'):
         return "unitcell.in"
-    if interface_mode == 'wien2k':
+    elif interface_mode == 'wien2k':
         return "case.struct"
-    if interface_mode == 'elk':
+    elif interface_mode == 'elk':
         return "elk.in"
-    if interface_mode == 'siesta':
+    elif interface_mode == 'siesta':
         return "input.fdf"
-    if interface_mode == 'cp2k':
+    elif interface_mode == 'cp2k':
         return "unitcell.inp"
-    if interface_mode == 'crystal':
+    elif interface_mode == 'crystal':
         return "crystal.o"
+    elif interface_mode == 'dftbp':
+        return "geo.gen"
+    else:
+        return None
 
 
-def get_default_supercell_filename(interface_mode, yaml_mode):
-    if yaml_mode:
-        return "SPOSCAR.yaml"
+def get_default_supercell_filename(interface_mode):
+    if interface_mode == 'phonopy_yaml':
+        return "phonopy_disp.yaml"
     elif interface_mode is None or interface_mode == 'vasp':
         return "SPOSCAR"
     elif interface_mode in ('abinit', 'elk', 'qe'):
@@ -207,6 +228,8 @@ def get_default_supercell_filename(interface_mode, yaml_mode):
         return "supercell.inp"
     elif interface_mode == 'crystal':
         return None  # supercell.ext can not be parsed by crystal interface.
+    elif interface_mode == 'dftbp':
+        return "geo.genS"
     else:
         return None
 
@@ -232,12 +255,13 @@ def get_default_physical_units(interface_mode):
     qe            : Ry,      au,        AMU,         Ry/au
     siesta        : eV,      au,        AMU,         eV/Angstroem
     CRYSTAL       : eV,      Angstrom,  AMU,         eV/Angstroem
+    DFTB+         : hartree, au,        AMU          hartree/au
 
     """
 
     from phonopy.units import (Wien2kToTHz, AbinitToTHz, PwscfToTHz, ElkToTHz,
                                SiestaToTHz, VaspToTHz, CP2KToTHz, CrystalToTHz,
-                               Hartree, Bohr)
+                               DftbpToTHz, Hartree, Bohr)
 
     units = {'factor': None,
              'nac_factor': None,
@@ -293,6 +317,12 @@ def get_default_physical_units(interface_mode):
         units['distance_to_A'] = 1.0
         units['force_constants_unit'] = 'eV/Angstrom^2'
         units['length_unit'] = 'Angstrom'
+    elif interface_mode == 'dftbp':
+        units['factor'] = DftbpToTHz
+        units['nac_factor'] = Hartree * Bohr
+        units['distance_to_A'] = Bohr
+        units['force_constants_unit'] = 'hartree/au^2'
+        units['length_unit'] = 'au'
 
     return units
 
@@ -305,8 +335,24 @@ def create_FORCE_SETS(interface_mode,
                       disp_filename='disp.yaml',
                       force_sets_filename='FORCE_SETS',
                       log_level=0):
+    if log_level > 0:
+        if interface_mode:
+            print("Calculator interface: %s" % interface_mode)
+        print("Displacements were read from \"%s\"." % disp_filename)
+        if disp_filename == 'disp.yaml':
+            print('')
+            print("NOTE:")
+            print("  From phonopy v2.0, displacements are written into "
+                  "\"phonopy_disp.yaml\".")
+            print("  \"disp.yaml\" is still supported for reading, but is "
+                  "deprecated.")
+            print('')
+        if force_sets_zero_mode:
+            print("Forces in %s are subtracted from forces in all "
+                  "other files." % force_filenames[0])
+
     if interface_mode in (None, 'vasp', 'abinit', 'elk', 'qe', 'siesta',
-                          'cp2k', 'crystal'):
+                          'cp2k', 'crystal', 'dftbp'):
         disp_dataset = parse_disp_yaml(filename=disp_filename)
         num_atoms = disp_dataset['natom']
         num_displacements = len(disp_dataset['first_atoms'])
@@ -387,6 +433,8 @@ def get_force_sets(interface_mode,
         from phonopy.interface.cp2k import parse_set_of_forces
     elif interface_mode == 'crystal':
         from phonopy.interface.crystal import parse_set_of_forces
+    elif interface_mode == 'dftbp':
+        from phonopy.interface.dftbp import parse_set_of_forces
     else:
         return []
 

@@ -51,6 +51,7 @@
 #define REDUCE_RATE 0.95
 #define NUM_ATTEMPT 100
 #define INT_PREC 0.1
+#define ZERO_PREC 1e-10
 
 static double change_of_basis_monocli[36][3][3] = {
   {{ 1, 0, 0 }, /* b  first turn; two axes are flipped in second turn */
@@ -608,6 +609,9 @@ static Spacegroup * search_spacegroup_with_symmetry(const Cell * primitive,
   debug_print("search_spacegroup (tolerance = %f):\n", symprec);
 
   spacegroup = NULL;
+  origin_shift[0] = 0;
+  origin_shift[1] = 0;
+  origin_shift[2] = 0;
 
   pointsym = ptg_get_pointsymmetry(symmetry->rot, symmetry->size);
   if (pointsym.size < symmetry->size) {
@@ -752,6 +756,11 @@ static int search_hall_number(double origin_shift[3],
   pointgroup = ptg_get_transformation_matrix(int_transform_mat,
                                              symmetry->rot,
                                              symmetry->size);
+
+  debug_print("[line %d, %s]\n", __LINE__, __FILE__);
+  debug_print("initial tranformation matrix\n");
+  debug_print_matrix_i3(int_transform_mat);
+
   if (pointgroup.number == 0) {
     goto err;
   }
@@ -785,6 +794,10 @@ static int search_hall_number(double origin_shift[3],
   mat_multiply_matrix_id3(transform_mat, int_transform_mat, correction_mat);
   mat_multiply_matrix_d3(conv_lattice, primitive_lattice, transform_mat);
 
+  debug_print("[line %d, %s]\n", __LINE__, __FILE__);
+  debug_print("tranformation matrix\n");
+  debug_print_matrix_d3(transform_mat);
+
   if ((conv_symmetry = get_initial_conventional_symmetry(centering,
                                                          transform_mat,
                                                          symmetry)) == NULL) {
@@ -800,6 +813,11 @@ static int search_hall_number(double origin_shift[3],
                              centering,
                              conv_symmetry,
                              symprec)) {
+
+      debug_print("[line %d, %s]\n", __LINE__, __FILE__);
+      debug_print("origin shift\n");
+      debug_print_vector_d3(origin_shift);
+
       hall_number = candidates[i];
       break;
     }
@@ -1147,13 +1165,13 @@ static int match_hall_symbol_db_monocli(double origin_shift[3],
     /* discard if principal angle is acute. */
     if (vec[0][0] * vec[1][0] +
         vec[0][1] * vec[1][1] +
-        vec[0][2] * vec[1][2] > 0) {
+        vec[0][2] * vec[1][2] > ZERO_PREC) {
       continue;
     }
 
     /* Choose |a| < |b| < |c| if there are freedom. */
     if (num_hall_types == 3) {
-      if (norms[0] > norms[1]) {continue;}
+      if (norms[0] > norms[1] + ZERO_PREC) {continue;}
     }
 
 
@@ -1218,7 +1236,7 @@ static int match_hall_symbol_db_ortho(double origin_shift[3],
         norms[l] = mat_norm_squared_d3(vec);
         l++;
       }
-      if (norms[0] > norms[1]) {continue;}
+      if (norms[0] > norms[1] + ZERO_PREC) {continue;}
     }
 
     if (num_free_axes == 3) {
@@ -1226,7 +1244,8 @@ static int match_hall_symbol_db_ortho(double origin_shift[3],
         for (k = 0; k < 3; k++) {vec[k] = changed_lattice[k][j];}
         norms[j] = mat_norm_squared_d3(vec);
       }
-      if (norms[0] > norms[1] || norms[0] > norms[2]) {continue;}
+      if ((norms[0] > norms[1] + ZERO_PREC) ||
+          (norms[0] > norms[2] + ZERO_PREC)) {continue;}
     }
 
     if (num_free_axes == 6) {
@@ -1234,7 +1253,8 @@ static int match_hall_symbol_db_ortho(double origin_shift[3],
         for (k = 0; k < 3; k++) {vec[k] = changed_lattice[k][j];}
         norms[j] = mat_norm_squared_d3(vec);
       }
-      if (norms[0] > norms[1] || norms[1] > norms[2]) {continue;}
+      if ((norms[0] > norms[1] + ZERO_PREC) ||
+          (norms[1] > norms[2] + ZERO_PREC)) {continue;}
     }
 
     if ((changed_symmetry = get_conventional_symmetry(change_of_basis_ortho[i],

@@ -98,21 +98,21 @@ class ThermalPropertiesBase(object):
             self._weights * (self._frequencies >
                              self._cutoff_frequency).sum(axis=1))
 
-    def get_free_energy(self, t):
+    def run_free_energy(self, t):
         if t > 0:
             free_energy = self._calculate_thermal_property(mode_F, t)
         else:
             free_energy = self._calculate_thermal_property(mode_ZPE, None)
         return free_energy / np.sum(self._weights) * EvTokJmol
 
-    def get_heat_capacity_v(self, t):
+    def run_heat_capacity(self, t):
         if t > 0:
             cv = self._calculate_thermal_property(mode_cv, t)
         else:
             cv = self._calculate_thermal_property(mode_zero, None)
         return cv / np.sum(self._weights) * EvTokJmol
 
-    def get_entropy(self, t):
+    def run_entropy(self, t):
         if t > 0:
             entropy = self._calculate_thermal_property(mode_S, t)
         else:
@@ -267,9 +267,9 @@ class ThermalProperties(ThermalPropertiesBase):
             entropy = []
             cv = []
             for t in self._temperatures:
-                fe.append(self.get_free_energy(t))
-                entropy.append(self.get_entropy(t) * 1000,)
-                cv.append(self.get_heat_capacity_v(t) * 1000)
+                fe.append(self.run_free_energy(t))
+                entropy.append(self.run_entropy(t) * 1000,)
+                cv.append(self.run_heat_capacity(t) * 1000)
 
             self._projected_thermal_properties = [
                 self._temperatures,
@@ -401,9 +401,9 @@ class ThermalProperties(ThermalPropertiesBase):
         return lines
 
     def _get_py_thermal_properties(self, t):
-        return (self.get_free_energy(t),
-                self.get_entropy(t),
-                self.get_heat_capacity_v(t))
+        return (self.run_free_energy(t),
+                self.run_entropy(t),
+                self.run_heat_capacity(t))
 
     def _set_high_T_entropy_and_zero_point_energy(self):
         zp_energy = 0.0

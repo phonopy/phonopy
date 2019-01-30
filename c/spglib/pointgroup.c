@@ -42,6 +42,7 @@
 #include "debug.h"
 
 #define NUM_ROT_AXES 73
+#define ZERO_PREC 1e-10
 
 typedef struct {
   int table[10];
@@ -704,7 +705,7 @@ static int laue2m(int axes[3],
   is_found = 0;
   for (i = 0; i < num_ortho_axis; i++) {
     norm = mat_norm_squared_i3(rot_axes[ortho_axes[i]]);
-    if (norm < min_norm) {
+    if (norm < min_norm - ZERO_PREC) {
       min_norm = norm;
       axes[0] = ortho_axes[i];
       is_found = 1;
@@ -717,7 +718,7 @@ static int laue2m(int axes[3],
   is_found = 0;
   for (i = 0; i < num_ortho_axis; i++) {
     norm = mat_norm_squared_i3(rot_axes[ortho_axes[i]]);
-    if (norm < min_norm && (! (ortho_axes[i] == axes[0]))) {
+    if ((norm < min_norm - ZERO_PREC) && (ortho_axes[i] != axes[0])) {
       min_norm = norm;
       axes[2] = ortho_axes[i];
       is_found = 1;
@@ -797,7 +798,7 @@ static int laue4m(int axes[3],
   is_found = 0;
   for (i = 0; i < num_ortho_axis; i++) {
     norm = mat_norm_squared_i3(rot_axes[ortho_axes[i]]);
-    if (norm < min_norm) {
+    if (norm < min_norm - ZERO_PREC) {
       min_norm = norm;
       axes[0] = ortho_axes[i];
       is_found = 1;
@@ -919,7 +920,7 @@ static int laue3(int axes[3],
   is_found = 0;
   for (i = 0; i < num_ortho_axis; i++) {
     norm = mat_norm_squared_i3(rot_axes[ortho_axes[i]]);
-    if (norm < min_norm) {
+    if (norm < min_norm - ZERO_PREC) {
       min_norm = norm;
       axes[0] = ortho_axes[i];
       is_found = 1;
@@ -1283,19 +1284,19 @@ static void sort_axes(int axes[3])
   int axis;
   int t_mat[3][3];
 
-  if (axes[1] > axes[2]) {
+  if (axes[1] > axes[2] + ZERO_PREC) {
     axis = axes[1];
     axes[1] = axes[2];
     axes[2] = axis;
   }
 
-  if (axes[0] > axes[1]) {
+  if (axes[0] > axes[1] + ZERO_PREC) {
     axis = axes[0];
     axes[0] = axes[1];
     axes[1] = axis;
   }
 
-  if (axes[1] > axes[2]) {
+  if (axes[1] > axes[2] + ZERO_PREC) {
     axis = axes[1];
     axes[1] = axes[2];
     axes[2] = axis;

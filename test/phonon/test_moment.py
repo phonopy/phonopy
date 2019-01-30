@@ -13,12 +13,12 @@ import os
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
 result_full_range = """
+1.000000  1.000000  1.000000
+ 4.063222  4.236805  3.889623
+17.935854 19.412820 16.458756
  1.000000  1.000000  1.000000
- 4.062876  4.237382  3.888355
-17.935853 19.412818 16.458755
- 1.000000  1.000000  1.000000
- 3.515492  3.605997  3.436413
-12.456609 13.099933 11.894505
+ 3.530039  3.621065  3.451029
+12.557720 13.205191 11.995720
 """
 
 
@@ -33,11 +33,14 @@ class TestMoment(unittest.TestCase):
         data = np.loadtxt(StringIO(result_full_range), dtype='double')
 
         phonon = self._get_phonon(self._cell)
-        moment = phonon.set_mesh([13, 13, 13],
-                                 is_eigenvectors=True,
+        moment = phonon.run_mesh([13, 13, 13],
+                                 with_eigenvectors=True,
                                  is_mesh_symmetry=False)
         num_atom = phonon.get_primitive().get_number_of_atoms()
-        q, w, f, e = phonon.get_mesh()
+        q = phonon.mesh.qpoints
+        w = phonon.mesh.weights
+        f = phonon.mesh.frequencies
+        e = phonon.mesh.eigenvectors
         vals = np.zeros((6, num_atom + 1), dtype='double')
 
         moment = PhononMoment(f, w)

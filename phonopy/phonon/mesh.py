@@ -37,6 +37,35 @@ from phonopy.units import VaspToTHz
 from phonopy.structure.grid_points import GridPoints
 
 
+def length2mesh(length, lattice):
+    """Convert length to mesh for q-point sampling
+
+    This conversion for each reciprocal axis follows VASP convention by
+        N = max(1, int(l * |a|^* + 0.5))
+    'int' means rounding down, not rounding to nearest integer.
+
+    Parameters
+    ----------
+    length : float
+        Length having the unit of direct space length.
+    lattice : array_like
+        Basis vectors of primitive cell in row vectors.
+        dtype='double'
+        shape=(3, 3)
+
+    Returns
+    -------
+    array_like
+        dtype=int
+        shape=(3,)
+
+    """
+    rec_lattice = np.linalg.inv(lattice)
+    rec_lat_lengths = np.sqrt(np.diagonal(np.dot(rec_lattice.T, rec_lattice)))
+    mesh = np.rint(rec_lat_lengths * length).astype(int)
+    return np.maximum(mesh, [1, 1, 1])
+
+
 class MeshBase(object):
     """Base class of Mesh and IterMesh classes
 
@@ -76,12 +105,12 @@ class MeshBase(object):
                  shift=None,
                  is_time_reversal=True,
                  is_mesh_symmetry=True,
-                 is_eigenvectors=False,
+                 with_eigenvectors=False,
                  is_gamma_center=False,
                  rotations=None,  # Point group operations in real space
                  factor=VaspToTHz):
         self._mesh = np.array(mesh, dtype='intc')
-        self._is_eigenvectors = is_eigenvectors
+        self._with_eigenvectors = with_eigenvectors
         self._factor = factor
         self._cell = dynamical_matrix.get_primitive()
         self._dynamical_matrix = dynamical_matrix
@@ -152,6 +181,10 @@ class MeshBase(object):
     def get_dynamical_matrix(self):
         return self.dynamical_matrix
 
+    @property
+    def with_eigenvectors(self):
+        return self._with_eigenvectors
+
 
 class Mesh(MeshBase):
     """Class for phonons on mesh grid
@@ -184,7 +217,7 @@ class Mesh(MeshBase):
                  shift=None,
                  is_time_reversal=True,
                  is_mesh_symmetry=True,
-                 is_eigenvectors=False,
+                 with_eigenvectors=False,
                  is_gamma_center=False,
                  group_velocity=None,
                  rotations=None,  # Point group operations in real space
@@ -196,7 +229,7 @@ class Mesh(MeshBase):
                           shift=shift,
                           is_time_reversal=is_time_reversal,
                           is_mesh_symmetry=is_mesh_symmetry,
-                          is_eigenvectors=is_eigenvectors,
+                          with_eigenvectors=with_eigenvectors,
                           is_gamma_center=is_gamma_center,
                           rotations=rotations,
                           factor=factor)
@@ -206,6 +239,8 @@ class Mesh(MeshBase):
         self._use_lapack_solver = use_lapack_solver
 
     def __iter__(self):
+        if self._frequencies is None:
+            self.run()
         return self
 
     def next(self):
@@ -230,6 +265,8 @@ class Mesh(MeshBase):
 
     @property
     def frequencies(self):
+        if self._frequencies is None:
+            self.run()
         return self._frequencies
 
     def get_frequencies(self):
@@ -246,6 +283,8 @@ class Mesh(MeshBase):
         The third index corresponds to the eigenvalue's index.
         The second index is for atoms [x1, y1, z1, x2, y2, z2, ...].
         """
+        if self._frequencies is None:
+            self.run()
         return self._eigenvectors
 
     def get_eigenvectors(self):
@@ -253,6 +292,8 @@ class Mesh(MeshBase):
 
     @property
     def group_velocities(self):
+        if self._frequencies is None:
+            self.run()
         return self._group_velocities
 
     def get_group_velocities(self):
@@ -271,57 +312,63 @@ class Mesh(MeshBase):
                 w.create_dataset('group_velocity', data=self._group_velocities)
 
     def write_yaml(self):
-        w = open('mesh.yaml', 'w')
         natom = self._cell.get_number_of_atoms()
         rec_lattice = np.linalg.inv(self._cell.get_cell())  # column vectors
         distances = np.sqrt(
             np.sum(np.dot(self._qpoints, rec_lattice.T) ** 2, axis=1))
 
-        w.write("mesh: [ %5d, %5d, %5d ]\n" % tuple(self._mesh))
-        w.write("nqpoint: %-7d\n" % self._qpoints.shape[0])
-        w.write("reciprocal_lattice:\n")
+        lines = []
+
+        lines.append("mesh: [ %5d, %5d, %5d ]" % tuple(self._mesh))
+        lines.append("nqpoint: %-7d" % self._qpoints.shape[0])
+        lines.append("reciprocal_lattice:")
         for vec, axis in zip(rec_lattice.T, ('a*', 'b*', 'c*')):
-            w.write("- [ %12.8f, %12.8f, %12.8f ] # %2s\n" %
-                    (tuple(vec) + (axis,)))
-        w.write("natom:   %-7d\n" % natom)
-        w.write(str(self._cell))
-        w.write("\n")
-        w.write("phonon:\n")
+            lines.append("- [ %12.8f, %12.8f, %12.8f ] # %2s" %
+                         (tuple(vec) + (axis,)))
+        lines.append("natom:   %-7d" % natom)
+        lines.append(str(self._cell))
+        lines.append("")
+        lines.append("phonon:")
 
         for i, (q, d) in enumerate(zip(self._qpoints, distances)):
-            w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))
-            w.write("  distance_from_gamma: %12.9f\n" % d)
-            w.write("  weight: %-5d\n" % self._weights[i])
-            w.write("  band:\n")
+            lines.append("- q-position: [ %12.7f, %12.7f, %12.7f ]"
+                         % tuple(q))
+            lines.append("  distance_from_gamma: %12.9f" % d)
+            lines.append("  weight: %-5d" % self._weights[i])
+            lines.append("  band:")
 
             for j, freq in enumerate(self._frequencies[i]):
-                w.write("  - # %d\n" % (j + 1))
-                w.write("    frequency:  %15.10f\n" % freq)
+                lines.append("  - # %d" % (j + 1))
+                lines.append("    frequency:  %15.10f" % freq)
 
                 if self._group_velocities is not None:
-                    w.write("    group_velocity: ")
-                    w.write("[ %13.7f, %13.7f, %13.7f ]\n" %
-                            tuple(self._group_velocities[i, j]))
+                    lines.append("    group_velocity: "
+                                 "[ %13.7f, %13.7f, %13.7f ]" %
+                                 tuple(self._group_velocities[i, j]))
 
-                if self._is_eigenvectors:
-                    w.write("    eigenvector:\n")
+                if self._with_eigenvectors:
+                    lines.append("    eigenvector:")
                     for k in range(natom):
-                        w.write("    - # atom %d\n" % (k+1))
+                        lines.append("    - # atom %d" % (k+1))
                         for l in (0, 1, 2):
-                            w.write("      - [ %17.14f, %17.14f ]\n" %
-                                    (self._eigenvectors[i, k*3+l, j].real,
-                                     self._eigenvectors[i, k*3+l, j].imag))
-            w.write("\n")
+                            lines.append(
+                                "      - [ %17.14f, %17.14f ]"
+                                % (self._eigenvectors[i, k*3+l, j].real,
+                                   self._eigenvectors[i, k*3+l, j].imag))
+            lines.append("")
+
+        with open('mesh.yaml', 'w') as w:
+            w.write("\n".join(lines))
 
     def _set_phonon(self):
         num_band = self._cell.get_number_of_atoms() * 3
         num_qpoints = len(self._qpoints)
 
         self._frequencies = np.zeros((num_qpoints, num_band), dtype='double')
-        if self._is_eigenvectors or self._use_lapack_solver:
+        if self._with_eigenvectors or self._use_lapack_solver:
             dtype = "c%d" % (np.dtype('double').itemsize * 2)
             self._eigenvectors = np.zeros(
-                (num_qpoints, num_band, num_band,), dtype=dtype)
+                (num_qpoints, num_band, num_band,), dtype=dtype, order='C')
 
         if self._use_lapack_solver:
             from phono3py.phonon.solver import get_phonons_at_qpoints
@@ -336,7 +383,7 @@ class Mesh(MeshBase):
             for i, q in enumerate(self._qpoints):
                 self._dynamical_matrix.set_dynamical_matrix(q)
                 dm = self._dynamical_matrix.get_dynamical_matrix()
-                if self._is_eigenvectors:
+                if self._with_eigenvectors:
                     eigvals, self._eigenvectors[i] = np.linalg.eigh(dm)
                     eigenvalues = eigvals.real
                 else:
@@ -369,7 +416,7 @@ class IterMesh(MeshBase):
                  shift=None,
                  is_time_reversal=True,
                  is_mesh_symmetry=True,
-                 is_eigenvectors=False,
+                 with_eigenvectors=False,
                  is_gamma_center=False,
                  rotations=None,  # Point group operations in real space
                  factor=VaspToTHz):
@@ -379,7 +426,7 @@ class IterMesh(MeshBase):
                           shift=shift,
                           is_time_reversal=is_time_reversal,
                           is_mesh_symmetry=is_mesh_symmetry,
-                          is_eigenvectors=is_eigenvectors,
+                          with_eigenvectors=with_eigenvectors,
                           is_gamma_center=is_gamma_center,
                           rotations=rotations,
                           factor=factor)
@@ -398,7 +445,7 @@ class IterMesh(MeshBase):
             q = self._qpoints[self._q_count]
             self._dynamical_matrix.set_dynamical_matrix(q)
             dm = self._dynamical_matrix.get_dynamical_matrix()
-            if self._is_eigenvectors:
+            if self._with_eigenvectors:
                 eigvals, eigenvectors = np.linalg.eigh(dm)
                 eigenvalues = eigvals.real
             else:
