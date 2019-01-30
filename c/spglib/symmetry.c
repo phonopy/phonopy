@@ -455,7 +455,7 @@ static VecDBL * get_translation(SPGCONST int rot[3][3],
     if (is_found[i]) {
       for (j = 0; j < 3; j++) {
         trans->vec[k][j] = cell->position[i][j] - origin[j];
-        trans->vec[k][j] -= mat_Nint(trans->vec[k][j]);
+        trans->vec[k][j] = mat_Dmod1(trans->vec[k][j]);
       }
       k++;
     }

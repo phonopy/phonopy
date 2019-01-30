@@ -33,6 +33,7 @@
 /* POSSIBILITY OF SUCH DAMAGE. */
 
 #include <stdio.h>
+#include "debug.h"
 #include "hall_symbol.h"
 #include "spg_database.h"
 #include "spacegroup.h"
@@ -1398,7 +1399,7 @@ static int is_hall_symbol(double shift[3],
                           const int hall_number,
                           SPGCONST double primitive_lattice[3][3],
                           const Symmetry *symmetry,
-                          Centering centering,
+                          const Centering centering,
                           SPGCONST int generators[3][9],
                           SPGCONST double VSpU[3][9],
                           const double symprec);
@@ -1668,7 +1669,7 @@ static int is_hall_symbol_cubic(double shift[3],
                          centering,
                          cubic_generators[i],
                          cubic_VSpU[i],
-                         symprec)) {return 1;}
+                         symprec)) {goto found;}
     }
 
     if (centering == BODY) {
@@ -1679,7 +1680,7 @@ static int is_hall_symbol_cubic(double shift[3],
                          centering,
                          cubic_generators[i],
                          cubic_I_VSpU[i],
-                         symprec)) {return 1;}
+                         symprec)) {goto found;}
     }
 
     if (centering == FACE) {
@@ -1690,11 +1691,14 @@ static int is_hall_symbol_cubic(double shift[3],
                          centering,
                          cubic_generators[i],
                          cubic_F_VSpU[i],
-                         symprec)) {return 1;}
+                         symprec)) {goto found;}
     }
   }
 
   return 0;
+
+found:
+  return 1;
 }
 
 static int is_hall_symbol_hexa(double shift[3],
@@ -2007,7 +2011,7 @@ static int is_hall_symbol(double shift[3],
                           const int hall_number,
                           SPGCONST double primitive_lattice[3][3],
                           const Symmetry *symmetry,
-                          Centering centering,
+                          const Centering centering,
                           SPGCONST int generators[3][9],
                           SPGCONST double VSpU[3][9],
                           const double symprec)
@@ -2016,6 +2020,10 @@ static int is_hall_symbol(double shift[3],
   int operation_index[2];
   int rot[3][3][3];
   double trans[3][3];
+
+  debug_print("[line %d, %s]\n", __LINE__, __FILE__);
+  debug_print("primitive lattice\n");
+  debug_print_matrix_d3(primitive_lattice);
 
   spgdb_get_operation_index(operation_index, hall_number);
 
@@ -2048,6 +2056,10 @@ static int is_hall_symbol(double shift[3],
   return 0;
 
  found:
+  debug_print("[line %d, %s]\n", __LINE__, __FILE__);
+  debug_print("origin shift\n");
+  debug_print_vector_d3(shift);
+
   return 1;
 }
 

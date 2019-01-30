@@ -40,6 +40,7 @@
 #include "debug.h"
 
 #define NUM_ATTEMPT 100
+#define ZERO_PREC 1e-10
 
 static int delaunay_reduce(double red_lattice[3][3],
                            SPGCONST double lattice[3][3],
@@ -171,7 +172,7 @@ static void get_delaunay_shortest_vectors(double basis[4][3],
   /* Bubble sort */
   for (i = 0; i < 6; i++) {
     for (j = 0; j < 6; j++) {
-      if (mat_norm_squared_d3(b[j]) > mat_norm_squared_d3(b[j+1]) + symprec) {
+      if (mat_norm_squared_d3(b[j]) > mat_norm_squared_d3(b[j+1]) + ZERO_PREC) {
         mat_copy_vector_d3(tmpvec, b[j]);
         mat_copy_vector_d3(b[j], b[j+1]);
         mat_copy_vector_d3(b[j+1], tmpvec);
@@ -369,7 +370,7 @@ static void get_delaunay_shortest_vectors_2D(double basis[3][3],
   /* Bubble sort */
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {
-      if (mat_norm_squared_d3(b[j]) > mat_norm_squared_d3(b[j + 1])) {
+      if (mat_norm_squared_d3(b[j]) > mat_norm_squared_d3(b[j + 1]) + ZERO_PREC) {
         mat_copy_vector_d3(tmpvec, b[j]);
         mat_copy_vector_d3(b[j], b[j + 1]);
         mat_copy_vector_d3(b[j + 1], tmpvec);

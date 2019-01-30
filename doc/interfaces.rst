@@ -44,6 +44,7 @@ used as shown below::
    SIESTA  | input.fdf
    Elk     | elk.in
    CRYSTAL | crystal.o
+   DFTB+   | geo.gen
 
 Default displacement distances
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -61,6 +62,7 @@ shown below::
    SIESTA  | 0.02 au (bohr)
    Elk     | 0.02 au (bohr)
    CRYSTAL | 0.01 Angstrom
+   DFTB+   | 0.01 au (bohr)
 
 .. _frequency_default_value_interfaces:
 
@@ -76,6 +78,7 @@ Default unit conversion factor of phonon frequency to THz
    SIESTA  | 21.49068
    Elk     | 154.10794
    CRYSTAL | 15.633302
+   DFTB+   | 154.10794
 
 .. _nac_default_value_interfaces:
 
@@ -91,6 +94,7 @@ Default unit conversion factor for non-analytical term correction
    SIESTA  | 51.422090
    Elk     | 1
    CRYSTAL | 14.399652
+   DFTB+   | 14.399652
 
 
 .. _tutorials_for_calculators:
@@ -113,6 +117,7 @@ Short tutorials for force calculators are found in the following pages.
    siesta
    elk
    crystal
+   dftb+
 
 VASP DFPT force constants
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^

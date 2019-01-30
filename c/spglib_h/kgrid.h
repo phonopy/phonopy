@@ -35,6 +35,8 @@
 #ifndef __kgrid_H__
 #define __kgrid_H__
 
+#include <stddef.h>
+
 /* #define GRID_ORDER_XYZ */
 /* This changes behaviour of index order of address. */
 /* Without GRID_ORDER_XYZ, left most element of address runs first. */
@@ -72,10 +74,12 @@
 
 void kgd_get_all_grid_addresses(int grid_address[][3], const int mesh[3]);
 int kgd_get_grid_point_double_mesh(const int address_double[3],
-				   const int mesh[3]);
+                                   const int mesh[3]);
+size_t kgd_get_dense_grid_point_double_mesh(const int address_double[3],
+                                            const int mesh[3]);
 void kgd_get_grid_address_double_mesh(int address_double[3],
-				      const int address[3],
-				      const int mesh[3],
-				      const int is_shift[3]);
+                                      const int address[3],
+                                      const int mesh[3],
+                                      const int is_shift[3]);
 
 #endif

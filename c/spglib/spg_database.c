@@ -8496,7 +8496,6 @@ static const int symmetry_operation_index[][2] = {
   {  96, 7293}, /* 530 */
 };
 
-static int remove_space(char symbol[], const int num_char);
 static void replace_equal_char(char symbol[], const int position);
 
 int spgdb_get_operation(int rot[3][3], double trans[3], const int hall_number)
@@ -8581,18 +8580,18 @@ SpacegroupType spgdb_get_spacegroup_type(const int hall_number)
     spgtype = spacegroup_types[0];
   }
 
-  remove_space(spgtype.schoenflies, 7);
-  position = remove_space(spgtype.hall_symbol, 17);
+  spgdb_remove_space(spgtype.schoenflies, 7);
+  position = spgdb_remove_space(spgtype.hall_symbol, 17);
   replace_equal_char(spgtype.hall_symbol, position);
-  remove_space(spgtype.international, 32);
-  remove_space(spgtype.international_full, 20);
-  remove_space(spgtype.international_short, 11);
-  remove_space(spgtype.choice, 6);
+  spgdb_remove_space(spgtype.international, 32);
+  spgdb_remove_space(spgtype.international_full, 20);
+  spgdb_remove_space(spgtype.international_short, 11);
+  spgdb_remove_space(spgtype.choice, 6);
 
   return spgtype;
 }
 
-static int remove_space(char symbol[], const int num_char) {
+int spgdb_remove_space(char symbol[], const int num_char) {
   int i;
 
   for (i = num_char - 2; i > -1; i--) {

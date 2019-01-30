@@ -1,6 +1,6 @@
 import unittest
 
-from phonopy.structure.atoms import PhonopyAtoms, Atoms
+from phonopy.structure.atoms import PhonopyAtoms
 
 
 class TestCell(unittest.TestCase):
@@ -18,15 +18,15 @@ class TestCell(unittest.TestCase):
                   [0.8, 0.2, 0.5]]
 
         self._cells = []
-        self._cells.append(Atoms(cell=lattice,
-                                 scaled_positions=points,
-                                 symbols=symbols))
+        self._cells.append(PhonopyAtoms(cell=lattice,
+                                        scaled_positions=points,
+                                        symbols=symbols))
 
         # The element for which mass is not defined.
         symbols = ['Ac'] * 2 + ['O'] * 4
-        self._cells.append(Atoms(cell=lattice,
-                                 scaled_positions=points,
-                                 symbols=symbols))
+        self._cells.append(PhonopyAtoms(cell=lattice,
+                                        scaled_positions=points,
+                                        symbols=symbols))
 
     def tearDown(self):
         pass

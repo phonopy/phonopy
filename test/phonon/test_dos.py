@@ -64,9 +64,10 @@ class TestDOS(unittest.TestCase):
 
     def testTotalDOS(self):
         phonon = self._phonon
-        phonon.set_mesh([5, 5, 5])
-        phonon.set_total_DOS(freq_pitch=1)
-        freqs, dos = phonon.get_total_DOS()
+        phonon.run_mesh([5, 5, 5])
+        phonon.run_total_dos(freq_pitch=1, use_tetrahedron_method=False)
+        dos = phonon.total_dos.dos
+        freqs = phonon.total_dos.frequency_points
         data_ref = np.reshape([float(x) for x in tdos_str.split()], (-1, 2))
         np.testing.assert_allclose(data_ref, np.c_[freqs, dos], atol=1e-5)
         # for f, d in zip(freqs, dos):
@@ -74,10 +75,10 @@ class TestDOS(unittest.TestCase):
 
     def testTotalDOSTetrahedron(self):
         phonon = self._phonon
-        phonon.set_mesh([5, 5, 5])
-        phonon.set_total_DOS(freq_pitch=1,
-                             tetrahedron_method=True)
-        freqs, dos = phonon.get_total_DOS()
+        phonon.run_mesh([5, 5, 5])
+        phonon.run_total_dos(freq_pitch=1, use_tetrahedron_method=True)
+        dos = phonon.total_dos.dos
+        freqs = phonon.total_dos.frequency_points
         data_ref = np.reshape([float(x) for x in tdos_thm_str.split()],
                               (-1, 2))
         np.testing.assert_allclose(data_ref, np.c_[freqs, dos], atol=1e-5)
@@ -86,11 +87,12 @@ class TestDOS(unittest.TestCase):
 
     def testPartialDOS(self):
         phonon = self._phonon
-        phonon.set_mesh([5, 5, 5],
+        phonon.run_mesh([5, 5, 5],
                         is_mesh_symmetry=False,
-                        is_eigenvectors=True)
-        phonon.set_partial_DOS(freq_pitch=1)
-        freqs, pdos = phonon.get_partial_DOS()
+                        with_eigenvectors=True)
+        phonon.run_projected_dos(freq_pitch=1, use_tetrahedron_method=False)
+        pdos = phonon.projected_dos.projected_dos
+        freqs = phonon.projected_dos.frequency_points
         data_ref = np.reshape([float(x) for x in pdos_str.split()],
                               (-1, 3)).T
         np.testing.assert_allclose(data_ref, np.vstack([freqs, pdos]),
@@ -100,12 +102,12 @@ class TestDOS(unittest.TestCase):
 
     def testPartialDOSTetrahedron(self):
         phonon = self._phonon
-        phonon.set_mesh([5, 5, 5],
+        phonon.run_mesh([5, 5, 5],
                         is_mesh_symmetry=False,
-                        is_eigenvectors=True)
-        phonon.set_partial_DOS(freq_pitch=1,
-                               tetrahedron_method=True)
-        freqs, pdos = phonon.get_partial_DOS()
+                        with_eigenvectors=True)
+        phonon.run_projected_dos(freq_pitch=1, use_tetrahedron_method=True)
+        pdos = phonon.projected_dos.projected_dos
+        freqs = phonon.projected_dos.frequency_points
         data_ref = np.reshape([float(x) for x in pdos_thm_str.split()],
                               (-1, 3)).T
         np.testing.assert_allclose(data_ref, np.vstack([freqs, pdos]),
@@ -115,7 +117,7 @@ class TestDOS(unittest.TestCase):
 
     def _get_phonon(self):
         phonon = phonopy.load(
-            [[2, 0, 0], [0, 2, 0], [0, 0, 2]],
+            supercell_matrix=[[2, 0, 0], [0, 2, 0], [0, 0, 2]],
             primitive_matrix=[[0, 0.5, 0.5],
                               [0.5, 0, 0.5],
                               [0.5, 0.5, 0]],

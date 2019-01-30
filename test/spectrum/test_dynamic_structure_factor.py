@@ -31,27 +31,27 @@ f_params = {'Na': [3.148690, 2.594987, 4.073989, 6.046925,
                    19.847015, 5.065547, 1.557175, 84.101613,
                    17.802427, 0.487660, -0.806668]}  # neutral
 
-data_AFF = """5.171588679 1.845620236 3.025894647 0.124171430 0.531444271 0.357372083
-0.023856320 1.675511060 0.792733731 0.046252215 0.607606835 0.365938849
-0.201611049 0.529561499 0.375299494 0.629569610 0.028195996 0.376744812
-0.122785611 0.283082649 0.233015457 0.057604235 0.606819089 0.388606570
-0.241073793 0.027598574 0.174838303 0.120170236 0.551166577 0.399921690
-0.017676892 0.191317799 0.155253863 0.001382605 0.675194157 0.408290981
-0.124073001 0.069254933 0.037429027 0.639561207 0.163254273 0.408934148
-0.003757843 0.217553444 0.213773706 0.446843472 0.205635357 0.389828659
-0.335273837 0.009258283 0.461748466 0.111918275 0.311894016 0.321054550
-0.155257213 0.560104925 0.005767736 0.261429629 0.511077151 0.176362423"""
+data_AFF = """24.667711 107.241033  56.790650   1.503984   6.511022   4.367984
+ 11.096544  20.711955  14.740982   1.433353   6.396630   4.378300
+  0.278391  13.365829   6.897108   1.011313   6.702354   4.409389
+  1.236102   6.291708   4.204622   0.003613   7.620877   4.443622
+  4.883593   0.023340   3.061993   0.132558   7.394646   4.458698
+  0.617678   3.079363   2.596512   0.277884   7.115873   4.423664
+  2.402336   0.834150   0.477915   6.703289   2.558175   4.282036
+  3.403626   0.000000   0.000000   6.746252   2.960792   3.903300
+  0.843466   3.844651   4.055997   1.451136   4.058122   2.996062
+  7.076301   1.312907   0.041285   2.115464   5.993513   1.423553"""
 
-data_b = """99.367366854 35.461912077 57.989024624 1.109493894 4.748549446 3.191839110
-0.483763005 33.976333211 15.902329182 0.422741848 5.553481879 3.338937967
-4.324846943 11.359855711 7.850959264 5.886910551 0.263652029 3.509134839
-2.773336666 6.393937243 5.030350431 0.550562310 5.799777024 3.688180663
-5.647859305 0.646577389 3.821967934 1.171203888 5.371783065 3.853918874
-0.418131844 4.525459914 3.344658336 0.013681138 6.681172229 3.970863352
-2.850888142 1.591305647 0.373114126 6.375514924 3.354075619 3.970894110
-0.079674882 4.612631104 2.112023136 4.414685828 3.888741010 3.698457365
-6.120367922 0.169008406 4.303015992 1.042962054 5.252650957 2.818141845
-2.305763345 8.318257049 0.039499076 1.790343459 7.590133448 1.207779368"""
+data_b = """419.130446 1822.138324 963.242515  13.761210  59.574804  39.950123
+197.165487 368.013923 260.035228  13.428822  59.928869  40.951942
+  5.179328 248.664406 126.202841   9.703159  64.306530  42.148073
+ 23.998851 122.153147  79.243864   0.035467  74.818658  43.331628
+ 97.966965   0.468213  58.692973   1.328661  74.118529  44.206394
+ 12.580089  62.716603  49.697403   2.831812  72.515311  44.331894
+ 48.416674  16.811463   4.914526  68.931708  47.766185  42.920032
+ 65.462476   0.000000   0.000000  68.889885  52.478615  38.287576
+ 14.660547  66.825066  39.113987  13.994019  66.322994  27.156663
+105.091902  19.498305   0.282731  14.487294  89.011152   9.748889"""
 
 
 def get_func_AFF(f_params):
@@ -64,9 +64,9 @@ class TestDynamicStructureFactor(unittest.TestCase):
     def setUp(self):
         self.phonon = self._get_phonon()
         mesh = [5, 5, 5]
-        self.phonon.set_mesh(mesh,
+        self.phonon.run_mesh(mesh,
                              is_mesh_symmetry=False,
-                             is_eigenvectors=True)
+                             with_eigenvectors=True)
 
     def tearDown(self):
         pass
@@ -85,7 +85,7 @@ class TestDynamicStructureFactor(unittest.TestCase):
 
     def test_IXS_G_to_L(self, verbose=False):
         directions = np.array([[0.5, 0.5, 0.5], ])
-        n_points = 11
+        n_points = 11  # Gamma point is excluded, so will be len(S) = 10.
         G_points_cubic = ([7, 1, 1], )
 
         # Atomic form factor
@@ -95,17 +95,17 @@ class TestDynamicStructureFactor(unittest.TestCase):
                   n_points=n_points)
         Q, S = self.phonon.get_dynamic_structure_factor()
         data_cmp = np.reshape([float(x) for x in data_AFF.split()], (-1, 6))
+        if verbose:
+            for S_at_Q in S:
+                print(("%10.6f " * 6) % tuple(S_at_Q))
+
+        # Treatment of degeneracy
         for i in (([0, 1], [2], [3, 4], [5])):
             np.testing.assert_allclose(
                 S[:6, i].sum(axis=1), data_cmp[:6, i].sum(axis=1), atol=1e-5)
-            if verbose:
-                print(S[:6, i].sum(axis=1) - data_cmp[:6, i].sum(axis=1))
-
         for i in (([0, 1], [2, 3], [4], [5])):
             np.testing.assert_allclose(
                 S[6:, i].sum(axis=1), data_cmp[6:, i].sum(axis=1), atol=1e-5)
-            if verbose:
-                print(S[6:, i].sum(axis=1) - data_cmp[6:, i].sum(axis=1))
 
         # Scattering lengths
         self._run(G_points_cubic,
@@ -114,16 +114,17 @@ class TestDynamicStructureFactor(unittest.TestCase):
                   n_points=n_points)
         Q, S = self.phonon.get_dynamic_structure_factor()
         data_cmp = np.reshape([float(x) for x in data_b.split()], (-1, 6))
+        if verbose:
+            for S_at_Q in S:
+                print(("%10.6f " * 6) % tuple(S_at_Q))
+
+        # Treatment of degeneracy
         for i in (([0, 1], [2], [3, 4], [5])):
             np.testing.assert_allclose(
                 S[:6, i].sum(axis=1), data_cmp[:6, i].sum(axis=1), atol=1e-5)
-            if verbose:
-                print(S[:6, i].sum(axis=1) - data_cmp[:6, i].sum(axis=1))
         for i in (([0, 1], [2, 3], [4], [5])):
             np.testing.assert_allclose(
                 S[6:, i].sum(axis=1), data_cmp[6:, i].sum(axis=1), atol=1e-5)
-            if verbose:
-                print(S[6:, i].sum(axis=1) - data_cmp[6:, i].sum(axis=1))
 
     def plot_f_Q(f_params):
         import matplotlib.pyplot as plt
@@ -148,8 +149,7 @@ class TestDynamicStructureFactor(unittest.TestCase):
         G_to_L = np.array(
             [directions[0] * x
              for x in np.arange(0, n_points) / float(n_points - 1)])
-        self.phonon.set_band_structure([G_to_L])
-        _, distances, frequencies, _ = self.phonon.get_band_structure()
+        self.phonon.run_band_structure([G_to_L])
 
         T = 300
         for G_cubic in G_points_cubic:
@@ -160,21 +160,17 @@ class TestDynamicStructureFactor(unittest.TestCase):
                     [direction_prim * x
                      for x in np.arange(1, n_points) / float(n_points - 1)])
                 if func_AFF is not None:
-                    self.phonon.set_dynamic_structure_factor(
-                        G_to_L,
-                        G_prim,
+                    self.phonon.init_dynamic_structure_factor(
+                        G_to_L + G_prim,
                         T,
-                        func_atomic_form_factor=func_AFF,
-                        freq_min=1e-3,
-                        run_immediately=False)
+                        atomic_form_factor_func=func_AFF,
+                        freq_min=1e-3)
                 elif scattering_lengths is not None:
-                    self.phonon.set_dynamic_structure_factor(
-                        G_to_L,
-                        G_prim,
+                    self.phonon.init_dynamic_structure_factor(
+                        G_to_L + G_prim,
                         T,
                         scattering_lengths=scattering_lengths,
-                        freq_min=1e-3,
-                        run_immediately=False)
+                        freq_min=1e-3)
                 else:
                     raise SyntaxError
                 dsf = self.phonon.dynamic_structure_factor
@@ -185,7 +181,7 @@ class TestDynamicStructureFactor(unittest.TestCase):
         filename_cell = os.path.join(data_dir, "..", "POSCAR_NaCl")
         filename_forces = os.path.join(data_dir, "..", "FORCE_SETS_NaCl")
         filename_born = os.path.join(data_dir, "..", "BORN_NaCl")
-        phonon = load(np.diag([2, 2, 2]),
+        phonon = load(supercell_matrix=[2, 2, 2],
                       primitive_matrix=[[0, 0.5, 0.5],
                                         [0.5, 0, 0.5],
                                         [0.5, 0.5, 0]],

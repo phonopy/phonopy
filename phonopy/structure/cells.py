@@ -138,14 +138,26 @@ class Supercell(PhonopyAtoms):
     def get_supercell_matrix(self):
         return self._supercell_matrix
 
-    def get_supercell_to_unitcell_map(self):
+    @property
+    def s2u_map(self):
         return self._s2u_map
 
-    def get_unitcell_to_supercell_map(self):
+    def get_supercell_to_unitcell_map(self):
+        return self.s2u_map
+
+    @property
+    def u2s_map(self):
         return self._u2s_map
 
-    def get_unitcell_to_unitcell_map(self):
+    def get_unitcell_to_supercell_map(self):
+        return self.u2s_map
+
+    @property
+    def u2u_map(self):
         return self._u2u_map
+
+    def get_unitcell_to_unitcell_map(self):
+        return self.u2u_map
 
     def _create_supercell(self, unitcell, symprec):
         mat = self._supercell_matrix
@@ -196,7 +208,7 @@ class Supercell(PhonopyAtoms):
                 cell=supercell.get_cell(),
                 pbc=True)
             self._u2s_map = np.arange(num_uatom) * N
-            self._u2u_map = dict([(j, i) for i, j in enumerate(self._u2s_map)])
+            self._u2u_map = {j: i for i, j in enumerate(self._u2s_map)}
             self._s2u_map = np.array(u2sur_map)[sur2s_map] * N
 
     def _get_simple_supercell(self, unitcell, multi, P):

@@ -83,7 +83,8 @@ def get_parser():
         elk_mode=False,
         siesta_mode=False,
         cp2k_mode=False,
-        fc_symmetry=False,
+        dftbp_mode=False,
+        fc_symmetry=None,
         fc_format=None,
         fc_spg_symmetry=False,
         fits_debye_model=False,
@@ -98,6 +99,7 @@ def get_parser():
         frequency_scale_factor=None,
         gv_delta_q=None,
         is_band_connection=False,
+        is_band_const_interval=False,
         is_check_symmetry=False,
         is_displacement=False,
         is_dos_mode=False,
@@ -109,6 +111,7 @@ def get_parser():
         is_group_velocity=False,
         is_hdf5=False,
         is_legend=False,
+        is_legacy_plot=False,
         is_little_cogroup=False,
         is_moment=False,
         is_nac=False,
@@ -116,7 +119,7 @@ def get_parser():
         is_nomeshsym=False,
         is_nosym=False,
         is_plusminus_displacements=False,
-        is_tetrahedron_method=False,
+        is_tetrahedron_method=True,
         is_thermal_displacements=False,
         is_thermal_displacement_matrices=False,
         is_thermal_displacement_matrices_cif=None,
@@ -136,6 +139,7 @@ def get_parser():
         nac_method=None,
         nac_q_direction=None,
         pdos=None,
+        phonopy_yaml_mode=False,
         pretend_real=False,
         primitive_axes=None,
         projection_direction=None,
@@ -160,8 +164,7 @@ def get_parser():
         write_dynamical_matrices=False,
         write_force_constants=False,
         write_fc_format=None,
-        write_mesh=True,
-        yaml_mode=False)
+        write_mesh=True)
 
     parser.add_argument(
         "--abinit", dest="abinit_mode", action="store_true",
@@ -181,6 +184,10 @@ def get_parser():
     parser.add_argument(
         "--band-connection", dest="is_band_connection", action="store_true",
         help="Treat band crossings")
+    parser.add_argument(
+        "--band-const-interval", dest="is_band_const_interval",
+        action="store_true",
+        help="Band paths are sampled with similar interval.")
     parser.add_argument(
         "--band-labels", nargs='+', dest="band_labels",
         help="Show labels at band segments")
@@ -215,6 +222,9 @@ def get_parser():
     parser.add_argument(
         "-d", "--displacement", dest="is_displacement", action="store_true",
         help="Create supercells with displacements")
+    parser.add_argument(
+        "--dftb+", dest="dftbp_mode", action="store_true",
+        help="Invoke dftb+ mode")
     parser.add_argument(
         "--dim", nargs='+', dest="supercell_dimension",
         help="Same behavior as DIM tag")
@@ -304,6 +314,9 @@ def get_parser():
         "--legend", dest="is_legend", action="store_true",
         help="Legend of plots is shown in thermal displacements")
     parser.add_argument(
+        "--legacy-plot", dest="is_legacy_plot", action="store_true",
+        help="Legacy style band structure pl")
+    parser.add_argument(
         "--lcg", "--little-cogroup", dest="is_little_cogroup",
         action="store_true",
         help=("Show irreps of little co-group (or point-group of "
@@ -377,6 +390,10 @@ def get_parser():
         dest="is_projected_thermal_properties", action="store_true",
         help="Output projected thermal properties")
     parser.add_argument(
+        "--py", "--phonopy-yaml",
+        dest="phonopy_yaml_mode", action="store_true",
+        help="Activate phonopy YAML mode")
+    parser.add_argument(
         "--qe", "--pwscf", dest="qe_mode",
         action="store_true", help="Invoke Quantum espresso (QE) mode")
     parser.add_argument(
@@ -431,12 +448,13 @@ def get_parser():
         help="Output thermal displacement matrices")
     parser.add_argument(
         "--tdm-cif", "--thermal-displacement-matrix-cif",
+        metavar='TEMPERATURE',
         dest="thermal_displacement_matrices_cif", type=float,
         help="Write cif with aniso_U for which temperature is specified")
     parser.add_argument(
-        "--thm", "--tetrahedron-method", dest="is_tetrahedron_method",
-        action="store_true",
-        help="Use tetrahedron method for DOS/PDOS")
+        "--nothm", "--no-tetrahedron-method", dest="is_tetrahedron_method",
+        action="store_false",
+        help="Do not use tetrahedron method for DOS/PDOS")
     parser.add_argument(
         "--tmax", dest="tmax", type=float,
         help="Maximum calculated temperature")
@@ -477,9 +495,6 @@ def get_parser():
     parser.add_argument(
         "--xyz-projection", dest="xyz_projection", action="store_true",
         help="Project PDOS x, y, z directions in Cartesian coordinates")
-    parser.add_argument(
-        "--yaml", dest="yaml_mode", action="store_true",
-        help="Activate phonopy YAML mode")
     parser.add_argument(
         "conf_file", nargs='*',
         help="Phonopy configure file")

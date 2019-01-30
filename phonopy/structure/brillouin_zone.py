@@ -97,7 +97,7 @@ class BrillouinZone(object):
         Parameters
         ----------
         reciprocal_lattice : array_like
-            Primitive cell basis vectors given in column vectors.
+            Reciprocal primitive cell basis vectors given in column vectors.
             shape=(3,3)
             dtype=float
         tolerance : float, optional
@@ -116,6 +116,7 @@ class BrillouinZone(object):
 
     def run(self, qpoints):
         reduced_qpoints = np.dot(qpoints, self._tmat_inv.T)
+        reduced_qpoints -= np.rint(reduced_qpoints)
         self.shortest_qpoints = []
         for q in reduced_qpoints:
             distances = (np.dot(q + search_space,

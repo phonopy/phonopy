@@ -188,6 +188,7 @@ def get_symmetry_dataset(cell,
             'rotations',
             'translations',
             'wyckoffs',
+            'site_symmetry_symbols',
             'equivalent_atoms',
             'mapping_to_primitive',
             'std_lattice',
@@ -213,6 +214,8 @@ def get_symmetry_dataset(cell,
                                        dtype='double', order='C')
     letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     dataset['wyckoffs'] = [letters[x] for x in dataset['wyckoffs']]
+    dataset['site_symmetry_symbols'] = [
+        s.strip() for s in dataset['site_symmetry_symbols']]
     dataset['equivalent_atoms'] = np.array(dataset['equivalent_atoms'],
                                            dtype='intc')
     dataset['mapping_to_primitive'] = np.array(dataset['mapping_to_primitive'],

@@ -44,21 +44,56 @@ import numpy as np
 # FORCE_SETS
 #
 def write_FORCE_SETS(dataset, filename='FORCE_SETS'):
+    lines = get_FORCE_SETS_lines(dataset)
+    with open(filename, 'w') as w:
+        w.write("\n".join(lines))
+
+
+def get_FORCE_SETS_lines(dataset, forces=None):
+    """Generate FORCE_SETS string
+
+    See the format of dataset in the docstring of
+    Phonopy.set_displacement_dataset. Optionally for the type-1 (traditional)
+    format, forces can be given. In this case, sets of forces are
+    unnecessary to be stored in the dataset.
+
+    """
+
+    if 'first_atoms' in dataset:
+        return _get_FORCE_SETS_lines_type1(dataset, forces=forces)
+    elif 'forces' in dataset:
+        return _get_FORCE_SETS_lines_type2(dataset)
+
+
+def _get_FORCE_SETS_lines_type1(dataset, forces=None):
     num_atom = dataset['natom']
     displacements = dataset['first_atoms']
-    forces = [x['forces'] for x in dataset['first_atoms']]
+    if forces is None:
+        _forces = [x['forces'] for x in dataset['first_atoms']]
+    else:
+        _forces = forces
 
-    # Write FORCE_SETS
-    with open(filename, 'w') as fp:
-        fp.write("%-5d\n" % num_atom)
-        fp.write("%-5d\n" % len(displacements))
-        for count, disp in enumerate(displacements):
-            fp.write("\n%-5d\n" % (disp['number'] + 1))
-            fp.write("%20.16f %20.16f %20.16f\n" %
-                     (tuple(disp['displacement'])))
+    lines = []
+    lines.append("%-5d" % num_atom)
+    lines.append("%-5d" % len(displacements))
+    for count, disp in enumerate(displacements):
+        lines.append("")
+        lines.append("%-5d" % (disp['number'] + 1))
+        lines.append("%20.16f %20.16f %20.16f" % tuple(disp['displacement']))
+        for f in _forces[count]:
+            lines.append("%15.10f %15.10f %15.10f" % tuple(f))
 
-            for f in forces[count]:
-                fp.write("%15.10f %15.10f %15.10f\n" % (tuple(f)))
+    return lines
+
+
+def _get_FORCE_SETS_lines_type2(dataset):
+    lines = []
+    for displacements, forces in zip(dataset['displacements'],
+                                     dataset['forces']):
+        for d, f in zip(displacements, forces):
+            lines.append(("%15.8f" * 6) % (tuple(d) + tuple(f)))
+
+    return lines
 
 
 def parse_FORCE_SETS(natom=None,
@@ -95,14 +130,19 @@ def _get_set_of_forces(f, natom=None, is_translational_invariance=False):
 
 def _get_set_of_forces_type2(f, natom):
     data = np.loadtxt(f, dtype='double')
-    if data.shape[1] != 6 or data.shape[0] % natom != 0:
+    if data.shape[1] != 6 or (natom and data.shape[0] % natom != 0):
         msg = "Data shape of forces and displacements is incorrect."
         raise RuntimeError(msg)
-    data = data.reshape(-1, natom, 6)
-    dataset = {'natom': natom}
-    dataset['displacements'] = np.array(data[:, :, :3],
-                                        dtype='double', order='C')
-    dataset['forces'] = np.array(data[:, :, 3:], dtype='double', order='C')
+    if natom:
+        data = data.reshape(-1, natom, 6)
+        displacements = data[:, :, :3]
+        forces = data[:, :, 3:]
+    else:
+        displacements = data[:, :3]
+        forces = data[:, 3:]
+    dataset = {'displacements':
+               np.array(displacements, dtype='double', order='C'),
+               'forces': np.array(forces, dtype='double', order='C')}
     return dataset
 
 
@@ -219,19 +259,27 @@ def write_FORCE_CONSTANTS(force_constants,
 
     """
 
+    lines = get_FORCE_CONSTANTS_lines(force_constants, p2s_map=p2s_map)
+    with open(filename, 'w') as w:
+        w.write("\n".join(lines))
+
+
+def get_FORCE_CONSTANTS_lines(force_constants, p2s_map=None):
     if p2s_map is not None and len(p2s_map) == force_constants.shape[0]:
         indices = p2s_map
     else:
         indices = np.arange(force_constants.shape[0], dtype='intc')
 
-    with open(filename, 'w') as w:
-        fc_shape = force_constants.shape
-        w.write("%4d %4d\n" % fc_shape[:2])
-        for i, s_i in enumerate(indices):
-            for j in range(fc_shape[1]):
-                w.write("%d %d\n" % (s_i + 1, j + 1))
-                for vec in force_constants[i][j]:
-                    w.write(("%22.15f"*3 + "\n") % tuple(vec))
+    lines = []
+    fc_shape = force_constants.shape
+    lines.append("%4d %4d" % fc_shape[:2])
+    for i, s_i in enumerate(indices):
+        for j in range(fc_shape[1]):
+            lines.append("%d %d" % (s_i + 1, j + 1))
+            for vec in force_constants[i][j]:
+                lines.append(("%22.15f" * 3) % tuple(vec))
+
+    return lines
 
 
 def write_force_constants_to_hdf5(force_constants,
@@ -340,12 +388,25 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
         from yaml import Loader
 
     with open(filename) as f:
-        dataset = yaml.load(f, Loader=Loader)
-        natom = dataset['natom']
         new_dataset = {}
+        dataset = yaml.load(f, Loader=Loader)
+        if 'phonopy' in dataset and 'calculator' in dataset['phonopy']:
+            new_dataset['calculator'] = dataset['phonopy']['calculator']
+        if 'natom' in dataset:
+            natom = dataset['natom']
+        elif 'supercell' and 'points' in dataset['supercell']:
+            natom = len(dataset['supercell']['points'])
+        else:
+            raise RuntimeError("%s doesn't contain necessary information.")
         new_dataset['natom'] = natom
         new_first_atoms = []
-        for first_atoms in dataset['displacements']:
+
+        try:
+            displacements = dataset['displacements']
+        except KeyError:
+            raise
+
+        for first_atoms in displacements:
             first_atoms['atom'] -= 1
             atom1 = first_atoms['atom']
             disp1 = first_atoms['displacement']
@@ -366,21 +427,24 @@ def write_disp_yaml_from_dataset(dataset, supercell, filename='disp.yaml'):
     write_disp_yaml(displacements, supercell, filename=filename)
 
 
-def write_disp_yaml(displacements,
-                    supercell,
-                    filename='disp.yaml'):
-    text = []
-    text.append("natom: %4d" % supercell.get_number_of_atoms())
-    text.append("displacements:")
-    for i, disp in enumerate(displacements):
-        text.append("- atom: %4d" % (disp[0] + 1))
-        text.append("  displacement:")
-        text.append("    [ %20.16f,%20.16f,%20.16f ]" % tuple(disp[1:4]))
-
-    text.append(str(supercell))
+def write_disp_yaml(displacements, supercell, filename='disp.yaml'):
+    lines = []
+    lines.append("natom: %4d" % supercell.get_number_of_atoms())
+    lines += get_disp_yaml_lines(displacements, supercell)
+    lines.append(str(supercell))
 
     with open(filename, 'w') as w:
-        w.write("\n".join(text))
+        w.write("\n".join(lines))
+
+
+def get_disp_yaml_lines(displacements, supercell):
+    lines = []
+    lines.append("displacements:")
+    for i, disp in enumerate(displacements):
+        lines.append("- atom: %4d" % (disp[0] + 1))
+        lines.append("  displacement:")
+        lines.append("    [ %20.16f,%20.16f,%20.16f ]" % tuple(disp[1:4]))
+    return lines
 
 
 #
@@ -403,24 +467,27 @@ def parse_DISP(filename='DISP'):
 def get_cell_from_disp_yaml(dataset):
     from phonopy.structure.atoms import PhonopyAtoms
 
-    lattice = dataset['lattice']
-    if 'points' in dataset:
-        data_key = 'points'
-        pos_key = 'coordinates'
-    elif 'atoms' in dataset:
-        data_key = 'atoms'
-        pos_key = 'position'
-    else:
-        data_key = None
-        pos_key = None
+    if 'lattice' in dataset:
+        lattice = dataset['lattice']
+        if 'points' in dataset:
+            data_key = 'points'
+            pos_key = 'coordinates'
+        elif 'atoms' in dataset:
+            data_key = 'atoms'
+            pos_key = 'position'
+        else:
+            data_key = None
+            pos_key = None
 
-    positions = [x[pos_key] for x in dataset[data_key]]
-    symbols = [x['symbol'] for x in dataset[data_key]]
-    cell = PhonopyAtoms(cell=lattice,
-                        scaled_positions=positions,
-                        symbols=symbols,
-                        pbc=True)
-    return cell
+        positions = [x[pos_key] for x in dataset[data_key]]
+        symbols = [x['symbol'] for x in dataset[data_key]]
+        cell = PhonopyAtoms(cell=lattice,
+                            scaled_positions=positions,
+                            symbols=symbols,
+                            pbc=True)
+        return cell
+    else:
+        return get_cell_from_disp_yaml(dataset['supercell'])
 
 
 #
@@ -440,6 +507,33 @@ def parse_QPOINTS(filename="QPOINTS"):
 #
 # BORN
 #
+def write_BORN(primitive, borns, epsilon, filename="BORN"):
+    lines = get_BORN_lines(primitive, borns, epsilon)
+    with open(filename, 'w') as w:
+        w.write('\n'.join(lines))
+
+
+def get_BORN_lines(unitcell, borns, epsilon,
+                   factor=None,
+                   primitive_matrix=None,
+                   supercell_matrix=None,
+                   symprec=1e-5):
+    from phonopy.structure.symmetry import elaborate_borns_and_epsilon
+    borns, epsilon, atom_indices = elaborate_borns_and_epsilon(
+        unitcell, borns, epsilon, symmetrize_tensors=True,
+        primitive_matrix=primitive_matrix,
+        supercell_matrix=supercell_matrix,
+        symprec=symprec)
+
+    text = "# epsilon and Z* of atoms "
+    text += ' '.join(["%d" % n for n in atom_indices + 1])
+    lines = [text, ]
+    lines.append(("%13.8f " * 9) % tuple(epsilon.flatten()))
+    for z in borns:
+        lines.append(("%13.8f " * 9) % tuple(z.flatten()))
+    return lines
+
+
 def parse_BORN(primitive, symprec=1e-5, is_symmetry=True, filename="BORN"):
     with open(filename, 'r') as f:
         return _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry)
