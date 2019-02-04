@@ -39,24 +39,34 @@
 #define THMCONST
 #endif
 
+#include <stddef.h>
+
 void thm_get_relative_grid_address(int relative_grid_address[24][4][3],
-				   THMCONST double rec_lattice[3][3]);
+                                   THMCONST double rec_lattice[3][3]);
 void thm_get_all_relative_grid_address(int relative_grid_address[4][24][4][3]);
 double thm_get_integration_weight(const double omega,
-				  THMCONST double tetrahedra_omegas[24][4],
-				  const char function);
+                                  THMCONST double tetrahedra_omegas[24][4],
+                                  const char function);
 void
 thm_get_integration_weight_at_omegas(double *integration_weights,
-				     const int num_omegas,
-				     const double *omegas,
-				     THMCONST double tetrahedra_omegas[24][4],
-				     const char function);
+                                     const int num_omegas,
+                                     const double *omegas,
+                                     THMCONST double tetrahedra_omegas[24][4],
+                                     const char function);
 void thm_get_neighboring_grid_points(int neighboring_grid_points[],
-				     const int grid_point,
-				     THMCONST int relative_grid_address[][3],
-				     const int num_relative_grid_address,
-				     const int mesh[3],
-				     THMCONST int bz_grid_address[][3],
-				     const int bz_map[]);
+                                     const int grid_point,
+                                     THMCONST int relative_grid_address[][3],
+                                     const int num_relative_grid_address,
+                                     const int mesh[3],
+                                     THMCONST int bz_grid_address[][3],
+                                     const int bz_map[]);
+void
+thm_get_dense_neighboring_grid_points(size_t neighboring_grid_points[],
+                                      const size_t grid_point,
+                                      THMCONST int relative_grid_address[][3],
+                                      const int num_relative_grid_address,
+                                      const int mesh[3],
+                                      THMCONST int bz_grid_address[][3],
+                                      const size_t bz_map[]);
 
 #endif

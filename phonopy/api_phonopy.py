@@ -1707,8 +1707,8 @@ class Phonopy(object):
                       "Use Phonopy.plot_projected_dos (lowercase on DOS).",
                       DeprecationWarning)
 
-        return self.plot_partial_dos(pdos_indices=pdos_indices,
-                                     legend=legend)
+        return self.plot_projected_dos(pdos_indices=pdos_indices,
+                                       legend=legend)
 
     def plot_projected_dos(self, pdos_indices=None, legend=None):
         """Plot projected DOS

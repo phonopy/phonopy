@@ -34,6 +34,7 @@
 
 #include <Python.h>
 #include <stdio.h>
+#include <stddef.h>
 #include <math.h>
 #include <float.h>
 #include <numpy/arrayobject.h>
@@ -1011,7 +1012,6 @@ static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args)
   int num_temp;
 
   int i, j, k;
-  long sum_weights;
   double f;
   double *tp;
 
@@ -1140,16 +1140,16 @@ static PyObject *py_thm_neighboring_grid_points(PyObject *self, PyObject *args)
   PyArrayObject* py_mesh;
   PyArrayObject* py_bz_grid_address;
   PyArrayObject* py_bz_map;
-  int grid_point;
+  long grid_point;
 
-  int* relative_grid_points;
   int (*relative_grid_address)[3];
   int num_relative_grid_address;
   int *mesh;
   int (*bz_grid_address)[3];
-  int *bz_map;
+  size_t *bz_map_size_t;
+  size_t *relative_grid_points_size_t;
 
-  if (!PyArg_ParseTuple(args, "OiOOOO",
+  if (!PyArg_ParseTuple(args, "OlOOOO",
                         &py_relative_grid_points,
                         &grid_point,
                         &py_relative_grid_address,
@@ -1159,20 +1159,20 @@ static PyObject *py_thm_neighboring_grid_points(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  relative_grid_points = (int*)PyArray_DATA(py_relative_grid_points);
   relative_grid_address = (int(*)[3])PyArray_DATA(py_relative_grid_address);
   num_relative_grid_address = PyArray_DIMS(py_relative_grid_address)[0];
   mesh = (int*)PyArray_DATA(py_mesh);
   bz_grid_address = (int(*)[3])PyArray_DATA(py_bz_grid_address);
-  bz_map = (int*)PyArray_DATA(py_bz_map);
+  bz_map_size_t = (size_t*)PyArray_DATA(py_bz_map);
+  relative_grid_points_size_t = (size_t*)PyArray_DATA(py_relative_grid_points);
 
-  thm_get_neighboring_grid_points(relative_grid_points,
-                                  grid_point,
-                                  relative_grid_address,
-                                  num_relative_grid_address,
-                                  mesh,
-                                  bz_grid_address,
-                                  bz_map);
+  thm_get_dense_neighboring_grid_points(relative_grid_points_size_t,
+                                        grid_point,
+                                        relative_grid_address,
+                                        num_relative_grid_address,
+                                        mesh,
+                                        bz_grid_address,
+                                        bz_map_size_t);
   Py_RETURN_NONE;
 }
 
@@ -1364,20 +1364,20 @@ static PyObject * py_tetrahedron_method_dos(PyObject *self, PyObject *args)
   double* frequencies;
   double* coef;
   int (*grid_address)[3];
-  int num_gp;
-  int num_ir_gp;
+  size_t num_gp, num_ir_gp;
   int num_coef;
   int num_band;
-  int* grid_mapping_table;
+  size_t *grid_mapping_table;
   int (*relative_grid_address)[4][3];
 
   int is_shift[3] = {0, 0, 0};
-  int i, j, k, l, m, q, r, count;
+  size_t i, j, k, l, m, q, r, count;
+  size_t ir_gps[24][4];
   int g_addr[3];
-  int ir_gps[24][4];
   double tetrahedra[24][4];
   int address_double[3];
-  int *gp2ir, *ir_grid_points, *weights;
+  size_t *gp2ir, *ir_grid_points;
+  int *weights;
   double iw;
 
   gp2ir = NULL;
@@ -1402,17 +1402,17 @@ static PyObject * py_tetrahedron_method_dos(PyObject *self, PyObject *args)
   freq_points = (double*)PyArray_DATA(py_freq_points);
   num_freq_points = (int)PyArray_DIMS(py_freq_points)[0];
   frequencies = (double*)PyArray_DATA(py_frequencies);
-  num_ir_gp = (int)PyArray_DIMS(py_frequencies)[0];
+  num_ir_gp = (size_t)PyArray_DIMS(py_frequencies)[0];
   num_band = (int)PyArray_DIMS(py_frequencies)[1];
   coef = (double*)PyArray_DATA(py_coef);
   num_coef = (int)PyArray_DIMS(py_coef)[1];
   grid_address = (int(*)[3])PyArray_DATA(py_grid_address);
-  num_gp = (int)PyArray_DIMS(py_grid_address)[0];
-  grid_mapping_table = (int*)PyArray_DATA(py_grid_mapping_table);
+  num_gp = (size_t)PyArray_DIMS(py_grid_address)[0];
+  grid_mapping_table = (size_t*)PyArray_DATA(py_grid_mapping_table);
   relative_grid_address = (int(*)[4][3])PyArray_DATA(py_relative_grid_address);
 
-  gp2ir = (int*)malloc(sizeof(int) * num_gp);
-  ir_grid_points = (int*)malloc(sizeof(int) * num_ir_gp);
+  gp2ir = (size_t*)malloc(sizeof(size_t) * num_gp);
+  ir_grid_points = (size_t*)malloc(sizeof(size_t) * num_ir_gp);
   weights = (int*)malloc(sizeof(int) * num_ir_gp);
 
   count = 0;

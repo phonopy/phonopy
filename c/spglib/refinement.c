@@ -301,6 +301,10 @@ void ref_free_exact_structure(ExactStructure *exstr)
       free(exstr->std_mapping_to_primitive);
       exstr->std_mapping_to_primitive = NULL;
     }
+    if (exstr->site_symmetry_symbols != NULL) {
+      free(exstr->site_symmetry_symbols);
+      exstr->site_symmetry_symbols = NULL;
+    }
     free(exstr);
   }
 }
