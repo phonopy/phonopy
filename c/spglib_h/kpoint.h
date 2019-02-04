@@ -64,28 +64,21 @@ size_t kpt_get_dense_stabilized_reciprocal_mesh(int grid_address[][3],
                                                 const MatINT * rotations,
                                                 const size_t num_q,
                                                 SPGCONST double qpoints[][3]);
-void kpt_get_grid_points_by_rotations(int rot_grid_points[],
-                                      const int address_orig[3],
-                                      const MatINT * rot_reciprocal,
-                                      const int mesh[3],
-                                      const int is_shift[3]);
-void kpt_get_dense_grid_points_by_rotations(size_t rot_grid_points[],
-                                            const int address_orig[3],
-                                            const MatINT * rot_reciprocal,
-                                            const int mesh[3],
-                                            const int is_shift[3]);
-void kpt_get_BZ_grid_points_by_rotations(int rot_grid_points[],
-                                         const int address_orig[3],
-                                         const MatINT * rot_reciprocal,
-                                         const int mesh[3],
-                                         const int is_shift[3],
-                                         const int bz_map[]);
-void kpt_get_dense_BZ_grid_points_by_rotations(size_t rot_grid_points[],
-                                               const int address_orig[3],
-                                               const MatINT * rot_reciprocal,
-                                               const int mesh[3],
-                                               const int is_shift[3],
-                                               const size_t bz_map[]);
+void
+kpt_get_dense_grid_points_by_rotations(size_t rot_grid_points[],
+                                       const int address_orig[3],
+                                       SPGCONST int (*rot_reciprocal)[3][3],
+                                       const int num_rot,
+                                       const int mesh[3],
+                                       const int is_shift[3]);
+void
+kpt_get_dense_BZ_grid_points_by_rotations(size_t rot_grid_points[],
+                                          const int address_orig[3],
+                                          SPGCONST int (*rot_reciprocal)[3][3],
+                                          const int num_rot,
+                                          const int mesh[3],
+                                          const int is_shift[3],
+                                          const size_t bz_map[]);
 int kpt_relocate_BZ_grid_address(int bz_grid_address[][3],
                                  int bz_map[],
                                  SPGCONST int grid_address[][3],

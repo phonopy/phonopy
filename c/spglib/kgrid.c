@@ -33,6 +33,7 @@
 /* POSSIBILITY OF SUCH DAMAGE. */
 
 #include <stddef.h>
+#include <assert.h>
 #include "kgrid.h"
 
 static void get_all_grid_addresses(int grid_address[][3], const int mesh[3]);
@@ -77,7 +78,7 @@ void kgd_get_grid_address_double_mesh(int address_double[3],
 static void get_all_grid_addresses(int grid_address[][3], const int mesh[3])
 {
   int i, j, k;
-  long grid_point;
+  size_t grid_point;
   int address[3];
 
   for (i = 0; i < mesh[0]; i++) {
@@ -87,6 +88,9 @@ static void get_all_grid_addresses(int grid_address[][3], const int mesh[3])
       for (k = 0; k < mesh[2]; k++) {
         address[2] = k;
         grid_point = get_grid_point_single_mesh(address, mesh);
+
+        assert(mesh[0] * mesh[1] * mesh[2] > grid_point);
+
         grid_address[grid_point][0] = address[0];
         grid_address[grid_point][1] = address[1];
         grid_address[grid_point][2] = address[2];
