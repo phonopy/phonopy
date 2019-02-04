@@ -716,7 +716,8 @@ get_dense_ir_reciprocal_mesh_distortion(int grid_address[][3],
         }
       }
       if (indivisible) {continue;}
-      grid_point_rot = kgd_get_grid_point_double_mesh(address_double_rot, mesh);
+      grid_point_rot =
+        kgd_get_dense_grid_point_double_mesh(address_double_rot, mesh);
       if (grid_point_rot < ir_mapping_table[i]) {
 #ifdef _OPENMP
         ir_mapping_table[i] = grid_point_rot;
