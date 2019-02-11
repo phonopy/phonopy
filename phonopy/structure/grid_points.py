@@ -93,12 +93,10 @@ class GridPoints(object):
        shape=(prod(mesh_numbers), 3)
     ir_grid_points: ndarray
         Indices of irreducibple grid points in grid_address.
-        dtype='intc'
-        shape=(ir-grid points,)
+        dtype='uintp', shape=(ir-grid points,)
     grid_mapping_table: ndarray
         Index mapping table from all grid points to ir-grid points.
-        dtype='intc'
-        shape=(prod(mesh_numbers),)
+        dtype='uintp', shape=(prod(mesh_numbers),)
 
     """
 

@@ -82,7 +82,7 @@ def _get_tetrahedra_frequencies_C(gp,
     t_frequencies = np.zeros((1, frequencies.shape[1], 24, 4),
                              dtype='double')
     phonoc.get_tetrahedra_frequencies(t_frequencies,
-                                      np.array([gp], dtype='intc'),
+                                      np.array([gp], dtype='uintp'),
                                       mesh,
                                       grid_address,
                                       gp_ir_index,
@@ -138,11 +138,11 @@ class TetrahedronMesh(object):
             Mapping of grid points to irreducible grid points given by
             GridPoints class.
             shape=(prod(mesh),)
-            dtype='intc'
+            dtype='uintp'
         ir_grid_points : ndarray
             Irreducible gird points given by GridPoints class.
             shape=(len(np.unique(grid_mapping_table)),)
-            dtype='intc'
+            dtype='uintp'
         grid_order : list of int, optional
             This controls how grid addresses are stored either C style or
             Fortran style.
@@ -164,7 +164,7 @@ class TetrahedronMesh(object):
                 self._grid_order = [1, mesh[0], mesh[0] * mesh[1]]
             else:
                 self._grid_order = grid_order
-        self._ir_grid_points = np.array(ir_grid_points, dtype='intc')
+        self._ir_grid_points = ir_grid_points
 
         self._gp_ir_index = None
 

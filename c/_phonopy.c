@@ -1291,17 +1291,17 @@ static PyObject * py_get_tetrahedra_frequenies(PyObject *self, PyObject *args)
   PyArrayObject* py_frequencies;
 
   double* freq_tetras;
-  int* grid_points;
+  size_t* grid_points;
   int num_gp_in;
   int* mesh;
   int (*grid_address)[3];
-  int* gp_ir_index;
+  size_t* gp_ir_index;
   int (*relative_grid_address)[3];
   double* frequencies;
   int num_band;
 
   int is_shift[3] = {0, 0, 0};
-  int i, j, k, gp;
+  size_t i, j, k, gp;
   int g_addr[3];
   int address_double[3];
 
@@ -1317,11 +1317,11 @@ static PyObject * py_get_tetrahedra_frequenies(PyObject *self, PyObject *args)
   }
 
   freq_tetras = (double*)PyArray_DATA(py_freq_tetras);
-  grid_points = (int*)PyArray_DATA(py_grid_points);
+  grid_points = (size_t*)PyArray_DATA(py_grid_points);
   num_gp_in = (int)PyArray_DIMS(py_grid_points)[0];
   mesh = (int*)PyArray_DATA(py_mesh);
   grid_address = (int(*)[3])PyArray_DATA(py_grid_address);
-  gp_ir_index = (int*)PyArray_DATA(py_gp_ir_index);
+  gp_ir_index = (size_t*)PyArray_DATA(py_gp_ir_index);
   relative_grid_address = (int(*)[3])PyArray_DATA(py_relative_grid_address);
   frequencies = (double*)PyArray_DATA(py_frequencies);
   num_band = (int)PyArray_DIMS(py_frequencies)[1];
@@ -1337,7 +1337,7 @@ static PyObject * py_get_tetrahedra_frequenies(PyObject *self, PyObject *args)
                                        g_addr,
                                        mesh,
                                        is_shift);
-      gp = kgd_get_grid_point_double_mesh(address_double, mesh);
+      gp = kgd_get_dense_grid_point_double_mesh(address_double, mesh);
       freq_tetras[i * num_band * 96 + j] =
         frequencies[gp_ir_index[gp] * num_band + j / 96];
     }
