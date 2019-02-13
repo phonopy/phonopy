@@ -543,10 +543,8 @@ class Phonopy(object):
                     raise RuntimeError(msg)
 
         self._force_constants = force_constants
-        self._set_dynamical_matrix()
-        # DynamialMatrix instance transforms force constants in correct
-        # type of numpy array.
-        self._force_constants = self._dynamical_matrix.force_constants
+        if self._primitive.get_masses() is not None:
+            self._set_dynamical_matrix()
 
     def set_force_constants(self, force_constants, show_drift=True):
         self.force_constants = force_constants
@@ -560,7 +558,8 @@ class Phonopy(object):
                                self._primitive,
                                cutoff_radius,
                                symprec=self._symprec)
-        self._set_dynamical_matrix()
+        if self._primitive.get_masses() is not None:
+            self._set_dynamical_matrix()
 
     def generate_displacements(self,
                                distance=0.01,
@@ -611,7 +610,8 @@ class Phonopy(object):
             show_drift_force_constants(self._force_constants,
                                        primitive=self._primitive)
 
-        self._set_dynamical_matrix()
+        if self._primitive.get_masses() is not None:
+            self._set_dynamical_matrix()
 
     def symmetrize_force_constants(self, level=1, show_drift=True):
         if self._force_constants.shape[0] == self._force_constants.shape[1]:
@@ -626,7 +626,8 @@ class Phonopy(object):
                                        primitive=self._primitive,
                                        values_only=True)
 
-        self._set_dynamical_matrix()
+        if self._primitive.get_masses() is not None:
+            self._set_dynamical_matrix()
 
     def symmetrize_force_constants_by_space_group(self):
         set_tensor_symmetry_PJ(self._force_constants,
@@ -634,7 +635,8 @@ class Phonopy(object):
                                self._supercell.get_scaled_positions(),
                                self._symmetry)
 
-        self._set_dynamical_matrix()
+        if self._primitive.get_masses() is not None:
+            self._set_dynamical_matrix()
 
     #####################
     # Phonon properties #
@@ -2584,6 +2586,9 @@ class Phonopy(object):
             self._dynamical_matrix_decimals,
             symprec=self._symprec,
             log_level=self._log_level)
+        # DynamialMatrix instance transforms force constants in correct
+        # type of numpy array.
+        self._force_constants = self._dynamical_matrix.force_constants
 
         if self._group_velocity is not None:
             self._set_group_velocity()

@@ -690,9 +690,9 @@ if settings.get_is_nac():
 
 # Force constants
 if settings.get_read_force_constants():
-    phonon.set_force_constants(fc)
+    phonon.force_constants = fc
 elif os.path.exists("FORCE_SETS"):
-    phonon.set_displacement_dataset(force_sets)
+    phonon.dataset = force_sets
     if log_level > 0:
         if settings.get_use_alm():
             print("Computing force constants by ALM...")
