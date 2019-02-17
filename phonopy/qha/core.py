@@ -49,12 +49,23 @@ class BulkModulus(object):
             self._electronic_energies = electronic_energies[0]
         self._eos = get_eos(eos)
 
-        (self._energy,
-         self._bulk_modulus,
-         self._b_prime,
-         self._volume) = fit_to_eos(volumes,
-                                    self._electronic_energies,
-                                    self._eos)
+        self._energy = None
+        self._bulk_modulus = None
+        self._b_prime = None
+
+        try:
+            (self._energy,
+             self._bulk_modulus,
+             self._b_prime,
+             self._volume) = fit_to_eos(volumes,
+                                        self._electronic_energies,
+                                        self._eos)
+        except TypeError:
+            msg = ["Failed to fit to \"%s\" equation of states." % eos]
+            if len(volumes) < 4:
+                msg += ["At least 4 volume points are needed for the fitting."]
+            msg += ["Careful choice of volume points is recommended."]
+            raise RuntimeError("\n".join(msg))
 
     def get_bulk_modulus(self):
         return self._bulk_modulus
@@ -157,7 +168,11 @@ class QHA(object):
                 el_energy = self._electronic_energies[i]
             fe = [ph_e + el_e
                   for ph_e, el_e in zip(self._fe_phonon[i], el_energy)]
-            ep = fit_to_eos(self._volumes, fe, self._eos)
+
+            try:
+                ep = fit_to_eos(self._volumes, fe, self._eos)
+            except TypeError:
+                print("Fitting failure at T=%.1f" % self._all_temperatures[i])
 
             if ep is None:
                 # Simply omit volume point where the fitting failed.
@@ -795,17 +810,40 @@ class QHA(object):
             t = self._temperatures[j]
             x = self._equiv_volumes[j]
 
-            parameters = np.polyfit(self._volumes, self._cv[j], 4)
+            try:
+                parameters = np.polyfit(self._volumes, self._cv[j], 4)
+            except np.lib.polynomial.RankWarning:
+                msg = [
+                    "Failed to fit heat capacities to polynomial of degree 4."]
+                if len(self._volumes) < 5:
+                    msg += [
+                        "At least 5 volume points are needed for the fitting."]
+                raise RuntimeError("\n".join(msg))
+
             cv_p = np.dot(parameters, np.array([x**4, x**3, x**2, x, 1]))
             self._volume_cv_parameters.append(parameters)
 
-            parameters = np.polyfit(self._volumes, self._entropy[j], 4)
+            try:
+                parameters = np.polyfit(self._volumes, self._entropy[j], 4)
+            except np.lib.polynomial.RankWarning:
+                msg = [
+                    "Failed to fit entropies to polynomial of degree 4."]
+                if len(self._volumes) < 5:
+                    msg += [
+                        "At least 5 volume points are needed for the fitting."]
+                raise RuntimeError("\n".join(msg))
+
             dsdv_t = np.dot(parameters[:4], np.array(
                 [4 * x**3, 3 * x**2, 2 * x, 1]))
             self._volume_entropy_parameters.append(parameters)
 
-            parameters = np.polyfit(self._temperatures[j - 1:j + 2],
-                                    self._equiv_volumes[j - 1: j + 2], 2)
+            try:
+                parameters = np.polyfit(self._temperatures[j - 1:j + 2],
+                                        self._equiv_volumes[j - 1: j + 2], 2)
+            except np.lib.polynomial.RankWarning:
+                msg = ("Failed to fit equilibrium volumes vs T to "
+                       "polynomial of degree 2.")
+                raise RuntimeError(msg)
             dvdt = parameters[0] * t + parameters[1]
 
             cp.append(cv_p + t * dvdt * dsdv_t)
@@ -824,7 +862,15 @@ class QHA(object):
             v = self._equiv_volumes[i]
             kt = self._equiv_bulk_modulus[i]
             beta = self._thermal_expansions[i]
-            parameters = np.polyfit(self._volumes, self._cv[i], 4)
+            try:
+                parameters = np.polyfit(self._volumes, self._cv[i], 4)
+            except np.lib.polynomial.RankWarning:
+                msg = [
+                    "Failed to fit heat capacities to polynomial of degree 4."]
+                if len(self._volumes) < 5:
+                    msg += [
+                        "At least 5 volume points are needed for the fitting."]
+                raise RuntimeError("\n".join(msg))
             cv = (np.dot(parameters, [v**4, v**3, v**2, v, 1]) /
                   v / 1000 / EvTokJmol * EVAngstromToGPa)
             if cv < 1e-10:

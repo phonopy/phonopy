@@ -12,8 +12,11 @@ Usage of ``phonopy-qha``
 
 Using phonopy results of thermal properties, thermal expansion and
 heat capacity at constant pressure can be calculated under the
-quasi-harmonic approximation. ``phonopy-qha`` is the script to
-calculate them. An example of the usage for ``example/Si-QHA`` is as
+quasi-harmonic approximation. ``phonopy-qha`` is the script to run
+fitting and calculation to perform it. Mind that at leave 5 volume
+points are needed to run ``phonopy-qha`` for fitting.
+
+An example of the usage for ``example/Si-QHA`` is as
 follows.
 
 To watch selected plots::
@@ -28,10 +31,11 @@ Without plots::
 
 The first argument is the filename of volume-energy data (in the above
 expample, ``e-v.dat``). The volumes and energies are given in
-:math:`\text{Angstrom}^3` and eV, respectively. The energies are only
-dependent on volume but not on temperature. Therefore in the simplest
-case, these are taken as the electronic total energies at 0K. An
-example of the volume-energy file is::
+:math:`\text{Angstrom}^3` and eV, respectively. Theses energies are
+only dependent on volume but not on temperature unless using ``--efe``
+option. Therefore in the simplest case, these are taken as the
+electronic total energies at 0K. An example of the volume-energy file
+is::
 
    #   cell volume   energy of cell other than phonon
         140.030000           -42.132246

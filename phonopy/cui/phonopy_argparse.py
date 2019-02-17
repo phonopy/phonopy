@@ -98,6 +98,7 @@ def get_parser():
         fpitch=None,
         frequency_scale_factor=None,
         gv_delta_q=None,
+        # hdf5_compression=None,
         is_band_connection=False,
         is_band_const_interval=False,
         is_check_symmetry=False,
@@ -302,6 +303,9 @@ def get_parser():
     parser.add_argument(
         "--hdf5", dest="is_hdf5", action="store_true",
         help="Use hdf5 for force constants")
+    # parser.add_argument(
+    #     "--hdf5-compression", dest="hdf5_compression",
+    #     help="hdf5 compression filter")
     parser.add_argument(
         "--irreps", "--irreps-qpoint", nargs='+', dest="irreps_qpoint",
         help="A q-point where characters of irreps are calculated")
