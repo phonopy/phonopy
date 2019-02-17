@@ -167,8 +167,10 @@
 <h2><a class="toc-backref" href="#id1">Usage of <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code></a><a class="headerlink" href="#usage-of-phonopy-qha" title="Permalink to this headline">¶</a></h2>
 <p>Using phonopy results of thermal properties, thermal expansion and
 heat capacity at constant pressure can be calculated under the
-quasi-harmonic approximation. <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> is the script to
-calculate them. An example of the usage for <code class="docutils literal notranslate"><span class="pre">example/Si-QHA</span></code> is as
+quasi-harmonic approximation. <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> is the script to run
+fitting and calculation to perform it. Mind that at leave 5 volume
+points are needed to run <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> for fitting.</p>
+<p>An example of the usage for <code class="docutils literal notranslate"><span class="pre">example/Si-QHA</span></code> is as
 follows.</p>
 <p>To watch selected plots:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonopy</span><span class="o">-</span><span class="n">qha</span> <span class="o">-</span><span class="n">p</span> <span class="n">e</span><span class="o">-</span><span class="n">v</span><span class="o">.</span><span class="n">dat</span> <span class="n">thermal_properties</span><span class="o">.</span><span class="n">yaml</span><span class="o">-</span><span class="p">{</span><span class="o">-</span><span class="p">{</span><span class="mf">5.</span><span class="o">.</span><span class="mi">1</span><span class="p">},{</span><span class="mf">0.</span><span class="o">.</span><span class="mi">5</span><span class="p">}}</span>
@@ -183,10 +185,11 @@ follows.</p>
 </div>
 <p>The first argument is the filename of volume-energy data (in the above
 expample, <code class="docutils literal notranslate"><span class="pre">e-v.dat</span></code>). The volumes and energies are given in
-<span class="math notranslate nohighlight">\(\text{Angstrom}^3\)</span> and eV, respectively. The energies are only
-dependent on volume but not on temperature. Therefore in the simplest
-case, these are taken as the electronic total energies at 0K. An
-example of the volume-energy file is:</p>
+<span class="math notranslate nohighlight">\(\text{Angstrom}^3\)</span> and eV, respectively. Theses energies are
+only dependent on volume but not on temperature unless using <code class="docutils literal notranslate"><span class="pre">--efe</span></code>
+option. Therefore in the simplest case, these are taken as the
+electronic total energies at 0K. An example of the volume-energy file
+is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#   cell volume   energy of cell other than phonon</span>
      <span class="mf">140.030000</span>           <span class="o">-</span><span class="mf">42.132246</span>
      <span class="mf">144.500000</span>           <span class="o">-</span><span class="mf">42.600974</span>
