@@ -310,6 +310,10 @@ class PhonopyYaml(object):
 
     def _load(self, fp):
         self.yaml = yaml.load(fp, Loader=Loader)
+        if type(self.yaml) is str:
+            msg = "Could not open %s's yaml file." % self._command_name
+            raise TypeError(msg)
+
         if 'unit_cell' in self.yaml:
             self.unitcell = self._parse_cell(self.yaml['unit_cell'])
         if 'primitive_cell' in self.yaml:

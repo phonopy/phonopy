@@ -2504,14 +2504,14 @@ class Phonopy(object):
         return self._random_displacements.u
 
     def save(self,
-             filename="phonopy-params.yaml",
+             filename="phonopy_params.yaml",
              settings=None):
         """Save parameters in Phonopy instants into file.
 
         Parameters
         ----------
         filename: str, optional
-            File name. Default is "phonopy-params.yaml"
+            File name. Default is "phonopy_params.yaml"
         settings: dict, optional
             It is described which parameters are written out. Only
             the settings expected to be updated from the following

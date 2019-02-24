@@ -67,9 +67,11 @@ def collect_cell_info(supercell_matrix=None,
         # interface_mode and supercell_matrix are overwritten.
         interface_mode_out = optional_structure_info[1]
         _supercell_matrix = optional_structure_info[2]
+        has_read_phonopy_yaml = True
     else:
         interface_mode_out = _interface_mode
         _supercell_matrix = supercell_matrix
+        has_read_phonopy_yaml = False
 
     if _supercell_matrix is None and is_primitive_axes_auto:
         supercell_matrix_out = np.eye(3, dtype='intc')
@@ -112,4 +114,5 @@ def collect_cell_info(supercell_matrix=None,
 
     return (unitcell, supercell_matrix_out, primitive_matrix_out,
             is_primitive_axes_auto, unitcell_filename,
-            optional_structure_info, interface_mode_out)
+            optional_structure_info, interface_mode_out,
+            has_read_phonopy_yaml)

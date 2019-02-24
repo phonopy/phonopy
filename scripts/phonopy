@@ -443,7 +443,8 @@ if type(cell_info) is str:
         print_error()
     sys.exit(1)
 (unitcell, supercell_matrix, primitive_matrix, is_primitive_axes_auto,
- unitcell_filename, optional_structure_info, interface_mode) = cell_info
+ unitcell_filename, optional_structure_info, interface_mode,
+ has_read_phonopy_yaml) = cell_info
 
 # Set magnetic moments
 magmoms = settings.get_magnetic_moments()
@@ -656,11 +657,23 @@ if run_mode == 'displacements':
 ########################################
 # Non-analytical term correction (LO-TO splitting)
 if settings.get_is_nac():
-    file_exists("BORN", log_level)
-    with open("BORN") as f_born:
-        nac_params = get_born_parameters(f_born,
-                                         primitive,
-                                         phonon.get_primitive_symmetry())
+    nac_params = None
+    if has_read_phonopy_yaml:
+        ph_yaml = PhonopyYaml()
+        ph_yaml.read(unitcell_filename)
+        if ph_yaml.nac_params is not None:
+            nac_params = ph_yaml.nac_params
+            if log_level:
+                print("NAC parameters are read from \"%s\"."
+                      % unitcell_filename)
+    if nac_params is None and file_exists("BORN", log_level):
+        with open("BORN") as f_born:
+            nac_params = get_born_parameters(f_born,
+                                             primitive,
+                                             phonon.get_primitive_symmetry())
+            if log_level:
+                print("NAC parameters are read from \"%s\"." % "BORN")
+
     if not nac_params:
         error_text = "BORN file could not be read correctly."
         print_error_message(error_text)

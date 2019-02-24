@@ -125,8 +125,10 @@ def read_crystal_structure(filename=None,
                 return None, (cell_filename,)
     else:
         cell_filename = None
-        for fname in ("%s_disp.yaml" % command_name, "%s.yaml" % command_name):
-            if os.path.isfile(fname):
+        for fname in (filename,
+                      "%s_disp.yaml" % command_name,
+                      "%s.yaml" % command_name):
+            if fname and os.path.isfile(fname):
                 cell_filename = fname
                 break
         if cell_filename is None:
@@ -135,20 +137,23 @@ def read_crystal_structure(filename=None,
 
     if interface_mode == 'phonopy_yaml':
         phpy = PhonopyYaml()
-        phpy.read(cell_filename)
-        cell = phpy.unitcell
-        if command_name in phpy.yaml:
-            if 'calculator' in phpy.yaml[command_name]:
-                calculator = phpy.yaml[command_name]['calculator']
+        try:
+            phpy.read(cell_filename)
+            cell = phpy.unitcell
+            if command_name in phpy.yaml:
+                if 'calculator' in phpy.yaml[command_name]:
+                    calculator = phpy.yaml[command_name]['calculator']
+                else:
+                    calculator = None
+                tmat = np.dot(np.linalg.inv(cell.get_cell().T),
+                              phpy.supercell.get_cell().T)
+                tmat = np.rint(tmat).astype('intc')
             else:
                 calculator = None
-            tmat = np.dot(np.linalg.inv(cell.get_cell().T),
-                          phpy.supercell.get_cell().T)
-            tmat = np.rint(tmat).astype('intc')
-        else:
-            calculator = None
-            tmat = np.eye(3, dtype='intc')
-        return cell, (cell_filename, calculator, tmat)
+                tmat = np.eye(3, dtype='intc')
+            return cell, (cell_filename, calculator, tmat)
+        except TypeError:
+            return None, (cell_filename, None, None)
     elif interface_mode is None or interface_mode == 'vasp':
         from phonopy.interface.vasp import read_vasp
         if chemical_symbols is None:
