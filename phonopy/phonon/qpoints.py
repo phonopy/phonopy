@@ -78,7 +78,6 @@ class QpointsPhonon(object):
         self._factor = factor
 
         self._group_velocities = None
-        self._dm = None
         self._eigenvectors = None
         self._frequencies = None
         self._dynamical_matrices = None
@@ -120,7 +119,8 @@ class QpointsPhonon(object):
             if self._group_velocities is not None:
                 w.create_dataset('group_velocity', data=self._group_velocities)
             if self._with_dynamical_matrices:
-                w.create_dataset('dynamical_matrix', data=self._dm)
+                w.create_dataset('dynamical_matrix',
+                                 data=self._dynamical_matrices)
 
     def write_yaml(self):
         w = open('qpoints.yaml', 'w')
@@ -137,7 +137,7 @@ class QpointsPhonon(object):
             w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))
             if self._with_dynamical_matrices:
                 w.write("  dynamical_matrix:\n")
-                for row in self._dm[i]:
+                for row in self._dynamical_matrices[i]:
                     w.write("  - [ ")
                     for j, elem in enumerate(row):
                         w.write("%15.10f, %15.10f" % (elem.real, elem.imag))
