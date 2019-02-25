@@ -40,7 +40,8 @@ from phonopy.version import __version__
 from phonopy.interface import PhonopyYaml
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
-from phonopy.structure.cells import get_supercell, get_primitive
+from phonopy.structure.cells import (get_supercell, get_primitive,
+                                     guess_primitive_matrix)
 from phonopy.harmonic.displacement import (get_least_displacements,
                                            directions_to_displacement_dataset)
 from phonopy.harmonic.force_constants import (
@@ -98,7 +99,10 @@ class Phonopy(object):
         # Create supercell and primitive cell
         self._unitcell = PhonopyAtoms(atoms=unitcell)
         self._supercell_matrix = supercell_matrix
-        self._primitive_matrix = primitive_matrix
+        if primitive_matrix == 'auto':
+            self._primitive_matrix = self._guess_primitive_matrix()
+        else:
+            self._primitive_matrix = primitive_matrix
         self._supercell = None
         self._primitive = None
         self._build_supercell()
@@ -2677,3 +2681,6 @@ class Phonopy(object):
             msg = ("Creating primitive cell is failed. "
                    "PRIMITIVE_AXIS may be incorrectly specified.")
             raise RuntimeError(msg)
+
+    def _guess_primitive_matrix(self):
+        return guess_primitive_matrix(self._unitcell, symprec=self._symprec)
