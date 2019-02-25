@@ -99,7 +99,7 @@ class Phonopy(object):
         # Create supercell and primitive cell
         self._unitcell = PhonopyAtoms(atoms=unitcell)
         self._supercell_matrix = supercell_matrix
-        if primitive_matrix == 'auto':
+        if type(primitive_matrix) is str and primitive_matrix == 'auto':
             self._primitive_matrix = self._guess_primitive_matrix()
         else:
             self._primitive_matrix = primitive_matrix

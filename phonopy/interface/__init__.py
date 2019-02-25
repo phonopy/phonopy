@@ -140,16 +140,14 @@ def read_crystal_structure(filename=None,
         try:
             phpy.read(cell_filename)
             cell = phpy.unitcell
+            calculator = None
             if command_name in phpy.yaml:
                 if 'calculator' in phpy.yaml[command_name]:
                     calculator = phpy.yaml[command_name]['calculator']
-                else:
-                    calculator = None
-                tmat = np.dot(np.linalg.inv(cell.get_cell().T),
-                              phpy.supercell.get_cell().T)
-                tmat = np.rint(tmat).astype('intc')
+            if ('supercell_matrix' in phpy.yaml and
+                phpy.yaml['supercell_matrix'] is not None):
+                tmat = phpy.supercell_matrix
             else:
-                calculator = None
                 tmat = np.eye(3, dtype='intc')
             return cell, (cell_filename, calculator, tmat)
         except TypeError:
