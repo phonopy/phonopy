@@ -154,6 +154,8 @@ details at :ref:`file_force_constants`.
 Phonon calculation
 -------------------
 
+.. _phonopy_save_parameters:
+
 Save parameters (``phonopy.save``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -164,7 +166,7 @@ saved into a file by ``phonopy.save``.
 
    phonon.save()
 
-The default file name is ``phonopy-params.yaml``. Force sets,
+The default file name is ``phonopy_params.yaml``. Force sets,
 displacements, Born effective charges, and dielectric constant are
 written in the default behaviour. If force constants are needed to be
 written in the yaml file, the argument ``settings`` is set as follows::

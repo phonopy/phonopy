@@ -45,11 +45,12 @@ if (config_var is not None and
 ######################
 # _phonopy extension #
 ######################
-include_dirs_phonopy = ['c/harmonic_h', 'c/kspclib_h'] + include_dirs_numpy
+include_dirs_phonopy = (['c/harmonic_h', 'c/kspclib_h', 'c/spglib_h']
+                        + include_dirs_numpy)
 sources_phonopy = ['c/_phonopy.c',
                    'c/harmonic/dynmat.c',
                    'c/harmonic/derivative_dynmat.c',
-                   'c/kspclib/kgrid.c',
+                   'c/spglib/kgrid.c',
                    'c/kspclib/tetrahedron_method.c']
 
 if with_openmp:

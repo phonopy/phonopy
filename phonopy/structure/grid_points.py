@@ -60,7 +60,8 @@ def get_qpoints(mesh_numbers,
 
 
 def extract_ir_grid_points(grid_mapping_table):
-    ir_grid_points = np.array(np.unique(grid_mapping_table), dtype='intc')
+    ir_grid_points = np.array(np.unique(grid_mapping_table),
+                              dtype=grid_mapping_table.dtype)
     weights = np.zeros_like(grid_mapping_table)
     for i, gp in enumerate(grid_mapping_table):
         weights[gp] += 1
@@ -92,12 +93,10 @@ class GridPoints(object):
        shape=(prod(mesh_numbers), 3)
     ir_grid_points: ndarray
         Indices of irreducibple grid points in grid_address.
-        dtype='intc'
-        shape=(ir-grid points,)
+        dtype='uintp', shape=(ir-grid points,)
     grid_mapping_table: ndarray
         Index mapping table from all grid points to ir-grid points.
-        dtype='intc'
-        shape=(prod(mesh_numbers),)
+        dtype='uintp', shape=(prod(mesh_numbers),)
 
     """
 
@@ -269,16 +268,19 @@ class GridPoints(object):
             self._mesh,
             rotations,
             is_shift=self._is_shift,
-            is_time_reversal=is_time_reversal)
+            is_time_reversal=is_time_reversal,
+            is_dense=True)
 
         shift = np.array(self._is_shift, dtype='intc') * 0.5
 
         if self._fit_in_BZ:
-            self._grid_address = relocate_BZ_grid_address(
+            grid_address, _ = relocate_BZ_grid_address(
                 grid_address,
                 self._mesh,
                 self._rec_lat,
-                is_shift=self._is_shift)[0][:np.prod(self._mesh)]
+                is_shift=self._is_shift,
+                is_dense=True)
+            self._grid_address = grid_address[:np.prod(self._mesh)]
         else:
             self._grid_address = grid_address
 

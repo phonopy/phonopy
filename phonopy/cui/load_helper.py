@@ -35,8 +35,7 @@
 import os
 import numpy as np
 from phonopy.interface import read_crystal_structure
-from phonopy.structure.cells import (guess_primitive_matrix,
-                                     get_primitive_matrix_by_centring)
+from phonopy.structure.cells import get_primitive_matrix_by_centring
 from phonopy.file_IO import (parse_BORN, parse_FORCE_SETS,
                              read_force_constants_hdf5,
                              parse_FORCE_CONSTANTS)
@@ -150,7 +149,7 @@ def _get_supercell_matrix(smat):
 def _get_primitive_matrix(pmat, unitcell, symprec):
     if type(pmat) is str and pmat in ('F', 'I', 'A', 'C', 'R', 'auto'):
         if pmat == 'auto':
-            _pmat = guess_primitive_matrix(unitcell, symprec=symprec)
+            _pmat = pmat
         else:
             _pmat = get_primitive_matrix_by_centring(pmat)
     elif pmat is None:
