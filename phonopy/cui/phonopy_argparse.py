@@ -98,6 +98,7 @@ def get_parser():
         fpitch=None,
         frequency_scale_factor=None,
         gv_delta_q=None,
+        # hdf5_compression=None,
         is_band_connection=False,
         is_band_const_interval=False,
         is_check_symmetry=False,
@@ -139,7 +140,6 @@ def get_parser():
         nac_method=None,
         nac_q_direction=None,
         pdos=None,
-        phonopy_yaml_mode=False,
         pretend_real=False,
         primitive_axes=None,
         projection_direction=None,
@@ -302,6 +302,9 @@ def get_parser():
     parser.add_argument(
         "--hdf5", dest="is_hdf5", action="store_true",
         help="Use hdf5 for force constants")
+    # parser.add_argument(
+    #     "--hdf5-compression", dest="hdf5_compression",
+    #     help="hdf5 compression filter")
     parser.add_argument(
         "--irreps", "--irreps-qpoint", nargs='+', dest="irreps_qpoint",
         help="A q-point where characters of irreps are calculated")
@@ -389,10 +392,6 @@ def get_parser():
         "--pt", "--projected-thermal-property",
         dest="is_projected_thermal_properties", action="store_true",
         help="Output projected thermal properties")
-    parser.add_argument(
-        "--py", "--phonopy-yaml",
-        dest="phonopy_yaml_mode", action="store_true",
-        help="Activate phonopy YAML mode")
     parser.add_argument(
         "--qe", "--pwscf", dest="qe_mode",
         action="store_true", help="Invoke Quantum espresso (QE) mode")

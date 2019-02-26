@@ -32,8 +32,8 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import sys
 import numpy as np
+
 
 def get_eos(eos):
     # Third-order Birch-Murnaghan EOS
@@ -74,9 +74,9 @@ def get_eos(eos):
         return p[0] + (9 * p[1] * p[3] / (xi**2)
                        * (1 + (xi * (1 - x) - 1) * np.exp(xi * (1 - x))))
 
-    if eos=='murnaghan':
+    if eos == 'murnaghan':
         return murnaghan
-    elif eos=='birch_murnaghan':
+    elif eos == 'birch_murnaghan':
         return birch_murnaghan
     else:
         return vinet
@@ -84,11 +84,10 @@ def get_eos(eos):
 
 def fit_to_eos(volumes, fe, eos):
     fit = EOSFit(volumes, fe, eos)
-    try:
-        fit.fit([fe[len(fe) // 2], 1.0, 4.0, volumes[len(volumes) // 2]])
-    except:
-        pass
+    fit.fit([fe[len(fe) // 2], 1.0, 4.0, volumes[len(volumes) // 2]])
+
     return fit.parameters
+
 
 class EOSFit(object):
     """

@@ -314,7 +314,7 @@ def print_settings(settings,
         print("  Primitive matrix (Auto):")
         for v in primitive_matrix:
             print("    %s" % v)
-    elif settings.get_primitive_matrix() is not None:
+    elif primitive_matrix is not None:
         print("  Primitive matrix:")
         for v in primitive_matrix:
             print("    %s" % v)
@@ -442,8 +442,9 @@ if type(cell_info) is str:
     if log_level > 0:
         print_error()
     sys.exit(1)
-(unitcell, supercell_matrix, primitive_matrix, is_primitive_axes_auto,
- unitcell_filename, optional_structure_info, interface_mode) = cell_info
+(unitcell, supercell_matrix, primitive_matrix,
+ unitcell_filename, optional_structure_info, interface_mode,
+ has_read_phonopy_yaml) = cell_info
 
 # Set magnetic moments
 magmoms = settings.get_magnetic_moments()
@@ -457,9 +458,9 @@ if magmoms is not None:
             print_error()
         sys.exit(1)
 
-    if is_primitive_axes_auto == 'auto':
+    if primitive_matrix == 'auto':
         error_text = ("'PRIMITIVE_AXES = auto', 'BAND = auto', or no DIM "
-                      "setting can not be used with MAGMOM.")
+                      "setting is not allowed with MAGMOM.")
         print_error_message(error_text)
         if log_level > 0:
             print_error()
@@ -520,63 +521,6 @@ else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
     num_satom = phonon.supercell.get_number_of_atoms()
     p2s_map = phonon.primitive.p2s_map
 
-    if settings.get_read_force_constants():
-        if settings.get_is_hdf5() or settings.get_readfc_format() == 'hdf5':
-            try:
-                import h5py
-            except ImportError:
-                print_error_message("You need to install python-h5py.")
-                if log_level > 0:
-                    print_error()
-                sys.exit(1)
-
-            file_exists("force_constants.hdf5", log_level)
-            fc = read_force_constants_hdf5(filename="force_constants.hdf5",
-                                           p2s_map=p2s_map)
-            fc_filename = "force_constants.hdf5"
-        else:
-            file_exists("FORCE_CONSTANTS", log_level)
-            fc = parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS",
-                                       p2s_map=p2s_map)
-            fc_filename = "FORCE_CONSTANTS"
-
-        if log_level > 0:
-            print("Force constants are read from %s." % fc_filename)
-
-        if fc.shape[1] != num_satom:
-            error_text = ("Number of atoms in supercell is not consistent "
-                          "with the matrix shape of\nforce constants read "
-                          "from ")
-            if (settings.get_is_hdf5() or
-                settings.get_readfc_format() == 'hdf5'):
-                error_text += "force_constants.hdf5.\n"
-            else:
-                error_text += "FORCE_CONSTANTS.\n"
-            error_text += ("Please carefully check DIM, FORCE_CONSTANTS, "
-                           "and %s.") % unitcell_filename
-            print_error_message(error_text)
-            if log_level > 0:
-                print_error()
-            sys.exit(1)
-
-    else:
-        file_exists("FORCE_SETS", log_level)
-        force_sets = parse_FORCE_SETS(natom=num_satom)
-        if 'natom' in force_sets:
-            natom = force_sets['natom']
-        else:
-            natom = force_sets['forces'].shape[1]
-        if natom != num_satom:
-            error_text = "Number of atoms in supercell is not consistent with "
-            error_text += "the data in FORCE_SETS.\n"
-            error_text += ("Please carefully check DIM, FORCE_SETS,"
-                           " and %s") % unitcell_filename
-            print_error_message(error_text)
-            if log_level > 0:
-                print_error()
-            sys.exit(1)
-
-
 supercell = phonon.supercell
 primitive = phonon.primitive
 
@@ -590,9 +534,10 @@ if log_level > 0:
     import phonopy.structure.spglib as spglib
     print("Spglib version %d.%d.%d" % spglib.get_version())
     print_settings(settings,
-                   is_primitive_axes_auto,
+                   (type(primitive_matrix) is str and
+                    primitive_matrix == 'auto'),
                    is_band_auto,
-                   primitive_matrix,
+                   phonon.primitive_matrix,
                    supercell_matrix,
                    optional_structure_info[0],
                    interface_mode)
@@ -654,45 +599,87 @@ if run_mode == 'displacements':
 ########################################
 # Preparations for phonon calculations #
 ########################################
-# Non-analytical term correction (LO-TO splitting)
-if settings.get_is_nac():
-    file_exists("BORN", log_level)
-    with open("BORN") as f_born:
-        nac_params = get_born_parameters(f_born,
-                                         primitive,
-                                         phonon.get_primitive_symmetry())
-    if not nac_params:
-        error_text = "BORN file could not be read correctly."
+if settings.get_read_force_constants():
+    if settings.get_is_hdf5() or settings.get_readfc_format() == 'hdf5':
+        try:
+            import h5py
+        except ImportError:
+            print_error_message("You need to install python-h5py.")
+            if log_level > 0:
+                print_error()
+            sys.exit(1)
+
+        file_exists("force_constants.hdf5", log_level)
+        fc = read_force_constants_hdf5(filename="force_constants.hdf5",
+                                       p2s_map=p2s_map)
+        fc_filename = "force_constants.hdf5"
+    else:
+        file_exists("FORCE_CONSTANTS", log_level)
+        fc = parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS",
+                                   p2s_map=p2s_map)
+        fc_filename = "FORCE_CONSTANTS"
+
+    if log_level > 0:
+        print("Force constants are read from %s." % fc_filename)
+
+    if fc.shape[1] != num_satom:
+        error_text = ("Number of atoms in supercell is not consistent "
+                      "with the matrix shape of\nforce constants read "
+                      "from ")
+        if (settings.get_is_hdf5() or
+            settings.get_readfc_format() == 'hdf5'):
+            error_text += "force_constants.hdf5.\n"
+        else:
+            error_text += "FORCE_CONSTANTS.\n"
+        error_text += ("Please carefully check DIM, FORCE_CONSTANTS, "
+                       "and %s.") % unitcell_filename
         print_error_message(error_text)
         if log_level > 0:
             print_error()
         sys.exit(1)
-    if nac_params['factor'] is None:
-        nac_params['factor'] = physical_units['nac_factor']
-    if settings.get_nac_method() is not None:
-        nac_params['method'] = settings.get_nac_method()
-    phonon.set_nac_params(nac_params=nac_params)
 
-    if log_level > 1:
-        print("-" * 27 + " Dielectric constant " + "-" * 28)
-        for v in nac_params['dielectric']:
-            print("         %12.7f %12.7f %12.7f" % tuple(v))
-        print("-" * 26 + " Born effective charges " + "-" * 26)
-        symbols = primitive.get_chemical_symbols()
-        for i, (z, s) in enumerate(zip(nac_params['born'], symbols)):
-            for j, v in enumerate(z):
-                if j == 0:
-                    text = "%5d %-2s" % (i + 1, s)
-                else:
-                    text = "        "
-                print("%s %12.7f %12.7f %12.7f" % ((text,) + tuple(v)))
-        print("-" * 76)
+    phonon.force_constants = fc
+else:
+    def read_force_sets_from_phonopy_yaml(unitcell_filename, log_level):
+        ph_yaml = PhonopyYaml()
+        ph_yaml.read(unitcell_filename)
+        if (ph_yaml.dataset is not None and
+            ('forces' in ph_yaml.dataset or
+             'forces' in ph_yaml.dataset['first_atoms'][0])):
+            if log_level:
+                print("Forces and displacements are read from \"%s\"."
+                      % unitcell_filename)
+            return ph_yaml.dataset
+        else:
+            return None
 
-# Force constants
-if settings.get_read_force_constants():
-    phonon.set_force_constants(fc)
-elif os.path.exists("FORCE_SETS"):
-    phonon.set_displacement_dataset(force_sets)
+    force_sets = None
+    if has_read_phonopy_yaml:
+        force_sets = read_force_sets_from_phonopy_yaml(unitcell_filename,
+                                                       log_level)
+
+    if force_sets is None:
+        file_exists("FORCE_SETS", log_level)
+        force_sets = parse_FORCE_SETS(natom=num_satom)
+        if log_level:
+            print("Forces and displacements are read from \"%s\"."
+                  % "FORCE_SETS")
+
+    if 'natom' in force_sets:
+        natom = force_sets['natom']
+    else:
+        natom = force_sets['forces'].shape[1]
+    if natom != num_satom:
+        error_text = "Number of atoms in supercell is not consistent with "
+        error_text += "the data in FORCE_SETS.\n"
+        error_text += ("Please carefully check DIM, FORCE_SETS,"
+                       " and %s") % unitcell_filename
+        print_error_message(error_text)
+        if log_level > 0:
+            print_error()
+        sys.exit(1)
+
+    phonon.dataset = force_sets
     if log_level > 0:
         if settings.get_use_alm():
             print("Computing force constants by ALM...")
@@ -731,7 +718,6 @@ if settings.get_fc_symmetry():
 
 # Write FORCE_CONSTANTS
 if settings.get_write_force_constants():
-    p2s_map = primitive.get_primitive_to_supercell_map()
     if settings.get_is_hdf5() or settings.get_writefc_format() == 'hdf5':
         write_force_constants_to_hdf5(phonon.get_force_constants(),
                                       p2s_map=p2s_map)
@@ -745,6 +731,65 @@ if settings.get_write_force_constants():
 # Show the rotational invariance condition (just show!)
 if settings.get_is_rotational_invariance():
     phonon.get_rotational_condition_of_fc()
+
+# Non-analytical term correction (LO-TO splitting)
+if settings.get_is_nac() or has_read_phonopy_yaml:
+    def read_nac_params_from_phonopy_yaml(unitcell_filename, log_level):
+        ph_yaml = PhonopyYaml()
+        ph_yaml.read(unitcell_filename)
+        if ph_yaml.nac_params is not None:
+            if log_level:
+                print("NAC parameters are read from \"%s\"."
+                      % unitcell_filename)
+            return ph_yaml.nac_params
+        else:
+            return None
+
+    def read_BORN(phonon, log_level):
+        with open("BORN") as f:
+            nac_params = get_born_parameters(
+                f, phonon.primitive, phonon.get_primitive_symmetry())
+            if log_level:
+                print("NAC parameters are read from \"%s\"." % "BORN")
+            return nac_params
+
+    if has_read_phonopy_yaml:
+        nac_params = read_nac_params_from_phonopy_yaml(unitcell_filename,
+                                                       log_level)
+        if nac_params is None and file_exists("BORN", log_level, is_any=True):
+            nac_params = read_BORN(phonon, log_level)
+    elif file_exists("BORN", log_level):
+        nac_params = read_BORN(phonon, log_level)
+        if not nac_params:
+            error_text = "BORN file could not be read correctly."
+            print_error_message(error_text)
+            if log_level > 0:
+                print_error()
+            sys.exit(1)
+    else:
+        nac_params = None  # This would not happen though.
+
+    if nac_params is not None:
+        if nac_params['factor'] is None:
+            nac_params['factor'] = physical_units['nac_factor']
+        if settings.get_nac_method() is not None:
+            nac_params['method'] = settings.get_nac_method()
+        phonon.nac_params = nac_params
+
+        if log_level > 1:
+            print("-" * 27 + " Dielectric constant " + "-" * 28)
+            for v in nac_params['dielectric']:
+                print("         %12.7f %12.7f %12.7f" % tuple(v))
+            print("-" * 26 + " Born effective charges " + "-" * 26)
+            symbols = primitive.get_chemical_symbols()
+            for i, (z, s) in enumerate(zip(nac_params['born'], symbols)):
+                for j, v in enumerate(z):
+                    if j == 0:
+                        text = "%5d %-2s" % (i + 1, s)
+                    else:
+                        text = "        "
+                    print("%s %12.7f %12.7f %12.7f" % ((text,) + tuple(v)))
+            print("-" * 76)
 
 # Atomic species without mass case
 symbols_with_no_mass = []

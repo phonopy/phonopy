@@ -439,6 +439,9 @@ int spa_search_spacegroup_with_symmetry(const Symmetry *symmetry,
                                                symmetry,
                                                symprec,
                                                -1.0);
+  cel_free_cell(primitive);
+  primitive = NULL;
+
   if (spacegroup != NULL) {
     hall_number = spacegroup->hall_number;
     free(spacegroup);

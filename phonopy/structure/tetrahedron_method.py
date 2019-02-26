@@ -49,19 +49,22 @@ parallelepiped_vertices = np.array([[0, 0, 0],
                                     [0, 1, 1],
                                     [1, 1, 1]], dtype='intc', order='C')
 
+
 def get_neighboring_grid_points(grid_point,
                                 relative_grid_address,
                                 mesh,
                                 bz_grid_address,
                                 bz_map):
-    relative_grid_points = np.zeros(len(relative_grid_address), dtype='intc')
+    relative_grid_points = np.zeros(len(relative_grid_address),
+                                    dtype=bz_map.dtype)
     phonoc.neighboring_grid_points(relative_grid_points,
-                                grid_point,
-                                relative_grid_address,
-                                mesh,
-                                bz_grid_address,
-                                bz_map)
+                                   grid_point,
+                                   relative_grid_address,
+                                   mesh,
+                                   bz_grid_address,
+                                   bz_map)
     return relative_grid_points
+
 
 def get_tetrahedra_relative_grid_address(microzone_lattice):
     """Returns relative (differences of) grid addresses from the central
@@ -81,11 +84,13 @@ def get_tetrahedra_relative_grid_address(microzone_lattice):
 
     return relative_grid_address
 
+
 def get_all_tetrahedra_relative_grid_address():
     relative_grid_address = np.zeros((4, 24, 4, 3), dtype='intc')
     phonoc.all_tetrahedra_relative_grid_address(relative_grid_address)
 
     return relative_grid_address
+
 
 def get_tetrahedra_integration_weight(omegas,
                                       tetrahedra_omegas,
@@ -118,6 +123,7 @@ def get_tetrahedra_integration_weight(omegas,
             np.array(tetrahedra_omegas, dtype='double', order='C'),
             function)
         return integration_weights
+
 
 class TetrahedronMethod(object):
     def __init__(self,

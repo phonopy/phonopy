@@ -345,43 +345,13 @@ size_t kpt_get_dense_stabilized_reciprocal_mesh(int grid_address[][3],
   return num_ir;
 }
 
-void kpt_get_grid_points_by_rotations(int rot_grid_points[],
-                                      const int address_orig[3],
-                                      const MatINT * rot_reciprocal,
-                                      const int mesh[3],
-                                      const int is_shift[3])
-{
-  int i;
-  size_t *dense_rot_grid_points;
-
-  if ((dense_rot_grid_points =
-       (size_t*)malloc(sizeof(size_t) * rot_reciprocal->size)) == NULL) {
-    warning_print("spglib: Memory of unique_rot could not be allocated.");
-    goto err;
-  }
-
-  kpt_get_dense_grid_points_by_rotations(dense_rot_grid_points,
-                                         address_orig,
-                                         rot_reciprocal,
-                                         mesh,
-                                         is_shift);
-
-  for (i = 0; i < rot_reciprocal->size; i++) {
-    rot_grid_points[i] = dense_rot_grid_points[i];
-  }
-
-  free(dense_rot_grid_points);
-  dense_rot_grid_points = NULL;
-
-err:
-  ;
-}
-
-void kpt_get_dense_grid_points_by_rotations(size_t rot_grid_points[],
-                                            const int address_orig[3],
-                                            const MatINT * rot_reciprocal,
-                                            const int mesh[3],
-                                            const int is_shift[3])
+void
+kpt_get_dense_grid_points_by_rotations(size_t rot_grid_points[],
+                                       const int address_orig[3],
+                                       SPGCONST int (*rot_reciprocal)[3][3],
+                                       const int num_rot,
+                                       const int mesh[3],
+                                       const int is_shift[3])
 {
   int i;
   int address_double_orig[3], address_double[3];
@@ -389,71 +359,22 @@ void kpt_get_dense_grid_points_by_rotations(size_t rot_grid_points[],
   for (i = 0; i < 3; i++) {
     address_double_orig[i] = address_orig[i] * 2 + is_shift[i];
   }
-  for (i = 0; i < rot_reciprocal->size; i++) {
+  for (i = 0; i < num_rot; i++) {
     mat_multiply_matrix_vector_i3(address_double,
-                                  rot_reciprocal->mat[i],
+                                  rot_reciprocal[i],
                                   address_double_orig);
     rot_grid_points[i] = kgd_get_dense_grid_point_double_mesh(address_double, mesh);
   }
 }
 
-void kpt_get_BZ_grid_points_by_rotations(int rot_grid_points[],
-                                         const int address_orig[3],
-                                         const MatINT * rot_reciprocal,
-                                         const int mesh[3],
-                                         const int is_shift[3],
-                                         const int bz_map[])
-{
-  int i, num_bz_map;
-  size_t *dense_rot_grid_points, *dense_bz_map;
-
-  if ((dense_rot_grid_points =
-       (size_t*)malloc(sizeof(size_t) * rot_reciprocal->size)) == NULL) {
-    warning_print("spglib: Memory of unique_rot could not be allocated.");
-    goto err;
-  }
-
-  num_bz_map = mesh[0] * mesh[1] * mesh[2] * 8;
-
-  if ((dense_bz_map =
-       (size_t*)malloc(sizeof(size_t) * num_bz_map)) == NULL) {
-    warning_print("spglib: Memory of unique_rot could not be allocated.");
-    free(dense_rot_grid_points);
-    dense_rot_grid_points = NULL;
-    goto err;
-  }
-
-  for (i = 0; i < num_bz_map; i++) {
-    dense_bz_map[i] = bz_map[i];
-  }
-
-  kpt_get_dense_BZ_grid_points_by_rotations(dense_rot_grid_points,
-                                            address_orig,
-                                            rot_reciprocal,
-                                            mesh,
-                                            is_shift,
-                                            dense_bz_map);
-
-  free(dense_bz_map);
-  dense_bz_map = NULL;
-
-  for (i = 0; i < rot_reciprocal->size; i++) {
-    rot_grid_points[i] = dense_rot_grid_points[i];
-  }
-
-  free(dense_rot_grid_points);
-  dense_rot_grid_points = NULL;
-
-err:
-  ;
-}
-
-void kpt_get_dense_BZ_grid_points_by_rotations(size_t rot_grid_points[],
-                                               const int address_orig[3],
-                                               const MatINT * rot_reciprocal,
-                                               const int mesh[3],
-                                               const int is_shift[3],
-                                               const size_t bz_map[])
+void
+kpt_get_dense_BZ_grid_points_by_rotations(size_t rot_grid_points[],
+                                          const int address_orig[3],
+                                          SPGCONST int (*rot_reciprocal)[3][3],
+                                          const int num_rot,
+                                          const int mesh[3],
+                                          const int is_shift[3],
+                                          const size_t bz_map[])
 {
   int i;
   int address_double_orig[3], address_double[3], bzmesh[3];
@@ -462,9 +383,9 @@ void kpt_get_dense_BZ_grid_points_by_rotations(size_t rot_grid_points[],
     bzmesh[i] = mesh[i] * 2;
     address_double_orig[i] = address_orig[i] * 2 + is_shift[i];
   }
-  for (i = 0; i < rot_reciprocal->size; i++) {
+  for (i = 0; i < num_rot; i++) {
     mat_multiply_matrix_vector_i3(address_double,
-                                  rot_reciprocal->mat[i],
+                                  rot_reciprocal[i],
                                   address_double_orig);
     rot_grid_points[i] =
       bz_map[kgd_get_dense_grid_point_double_mesh(address_double, bzmesh)];
@@ -795,7 +716,8 @@ get_dense_ir_reciprocal_mesh_distortion(int grid_address[][3],
         }
       }
       if (indivisible) {continue;}
-      grid_point_rot = kgd_get_grid_point_double_mesh(address_double_rot, mesh);
+      grid_point_rot =
+        kgd_get_dense_grid_point_double_mesh(address_double_rot, mesh);
       if (grid_point_rot < ir_mapping_table[i]) {
 #ifdef _OPENMP
         ir_mapping_table[i] = grid_point_rot;

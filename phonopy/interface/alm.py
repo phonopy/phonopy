@@ -61,7 +61,7 @@ def get_fc2(supercell,
     try:
         from alm import ALM
     except ImportError:
-        raise ModuleNotFoundError("ALM python module was not found.")
+        raise ImportError("ALM python module was not found.")
 
     sys.stdout.flush()
     with ALM(lattice, positions, numbers) as alm:
@@ -73,35 +73,31 @@ def get_fc2(supercell,
         alm.define(1)
         alm.set_displacement_and_force(disps, forces)
         alm.optimize()
-        if (atom_list == p2s_map).all():
+        p2s_map_alm = alm.getmap_primitive_to_supercell()[0]
+
+        if ((atom_list == p2s_map).all() and
+            len(p2s_map_alm) == len(p2s_map) and
+            (p2s_map_alm == p2s_map).all()):
             fc2 = np.zeros((len(p2s_map), natom, 3, 3),
                            dtype='double', order='C')
             for fc, indices in zip(*alm.get_fc(1, mode='origin')):
                 v1, v2 = indices // 3
                 c1, c2 = indices % 3
                 fc2[p2p_map[v1], v2, c1, c2] = fc
-        elif atom_list is None or (atom_list == np.range(natom)):
-            fc2 = np.zeros((natom, natom, 3, 3), dtype='double', order='C')
+        else:
+            if atom_list is None:
+                fc2 = np.zeros((natom, natom, 3, 3), dtype='double', order='C')
+                _atom_list = np.arange(natom, dtype=int)
+            else:
+                fc2 = np.zeros(
+                    (len(atom_list), natom, 3, 3), dtype='double', order='C')
+                _atom_list = np.array(atom_list, dtype=int)
             for fc, indices in zip(*alm.get_fc(1, mode='all')):
                 v1, v2 = indices // 3
-                c1, c2 = indices % 3
-                fc2[v1, v2, c1, c2] = fc
-        else:  # This case would not happen.
-            fc2 = np.zeros((natom, natom, 3, 3), dtype='double', order='C')
-            for fc, indices in zip(*alm.get_fc(1, mode='origin')):
-                v1, v2 = indices // 3
-                c1, c2 = indices % 3
-                fc2[v1, v2, c1, c2] = fc
-            N = natom // primitive.get_number_of_atoms()
-            rotations = np.array([np.eye(3, dtype='intc'), ] * N,
-                                 dtype='intc', order='C')
-            distribute_force_constants(fc2,
-                                       p2s_map,
-                                       lattice,
-                                       rotations,
-                                       primitive.atomic_permutations,
-                                       atom_list=atom_list)
-            fc2 = np.array(fc2[atom_list], dtype='double', order='C')
+                idx = np.where(_atom_list == v1)[0]
+                if len(idx) > 0:
+                    c1, c2 = indices % 3
+                    fc2[idx[0], v2, c1, c2] = fc
 
     if log_level:
         print("--------------------------------"

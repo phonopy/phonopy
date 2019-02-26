@@ -40,7 +40,8 @@ from phonopy.version import __version__
 from phonopy.interface import PhonopyYaml
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
-from phonopy.structure.cells import get_supercell, get_primitive
+from phonopy.structure.cells import (get_supercell, get_primitive,
+                                     guess_primitive_matrix)
 from phonopy.harmonic.displacement import (get_least_displacements,
                                            directions_to_displacement_dataset)
 from phonopy.harmonic.force_constants import (
@@ -86,19 +87,24 @@ class Phonopy(object):
                  group_velocity_delta_q=None,
                  symprec=1e-5,
                  is_symmetry=True,
+                 calculator=None,
                  use_lapack_solver=False,
                  log_level=0):
         self._symprec = symprec
         self._factor = factor
         self._frequency_scale_factor = frequency_scale_factor
         self._is_symmetry = is_symmetry
+        self._calculator = calculator
         self._use_lapack_solver = use_lapack_solver
         self._log_level = log_level
 
         # Create supercell and primitive cell
         self._unitcell = PhonopyAtoms(atoms=unitcell)
         self._supercell_matrix = supercell_matrix
-        self._primitive_matrix = primitive_matrix
+        if type(primitive_matrix) is str and primitive_matrix == 'auto':
+            self._primitive_matrix = self._guess_primitive_matrix()
+        else:
+            self._primitive_matrix = primitive_matrix
         self._supercell = None
         self._primitive = None
         self._build_supercell()
@@ -543,10 +549,8 @@ class Phonopy(object):
                     raise RuntimeError(msg)
 
         self._force_constants = force_constants
-        self._set_dynamical_matrix()
-        # DynamialMatrix instance transforms force constants in correct
-        # type of numpy array.
-        self._force_constants = self._dynamical_matrix.force_constants
+        if self._primitive.get_masses() is not None:
+            self._set_dynamical_matrix()
 
     def set_force_constants(self, force_constants, show_drift=True):
         self.force_constants = force_constants
@@ -560,7 +564,8 @@ class Phonopy(object):
                                self._primitive,
                                cutoff_radius,
                                symprec=self._symprec)
-        self._set_dynamical_matrix()
+        if self._primitive.get_masses() is not None:
+            self._set_dynamical_matrix()
 
     def generate_displacements(self,
                                distance=0.01,
@@ -611,7 +616,8 @@ class Phonopy(object):
             show_drift_force_constants(self._force_constants,
                                        primitive=self._primitive)
 
-        self._set_dynamical_matrix()
+        if self._primitive.get_masses() is not None:
+            self._set_dynamical_matrix()
 
     def symmetrize_force_constants(self, level=1, show_drift=True):
         if self._force_constants.shape[0] == self._force_constants.shape[1]:
@@ -626,7 +632,8 @@ class Phonopy(object):
                                        primitive=self._primitive,
                                        values_only=True)
 
-        self._set_dynamical_matrix()
+        if self._primitive.get_masses() is not None:
+            self._set_dynamical_matrix()
 
     def symmetrize_force_constants_by_space_group(self):
         set_tensor_symmetry_PJ(self._force_constants,
@@ -634,7 +641,8 @@ class Phonopy(object):
                                self._supercell.get_scaled_positions(),
                                self._symmetry)
 
-        self._set_dynamical_matrix()
+        if self._primitive.get_masses() is not None:
+            self._set_dynamical_matrix()
 
     #####################
     # Phonon properties #
@@ -1707,8 +1715,8 @@ class Phonopy(object):
                       "Use Phonopy.plot_projected_dos (lowercase on DOS).",
                       DeprecationWarning)
 
-        return self.plot_partial_dos(pdos_indices=pdos_indices,
-                                     legend=legend)
+        return self.plot_projected_dos(pdos_indices=pdos_indices,
+                                       legend=legend)
 
     def plot_projected_dos(self, pdos_indices=None, legend=None):
         """Plot projected DOS
@@ -2502,14 +2510,14 @@ class Phonopy(object):
         return self._random_displacements.u
 
     def save(self,
-             filename="phonopy-params.yaml",
+             filename="phonopy_params.yaml",
              settings=None):
         """Save parameters in Phonopy instants into file.
 
         Parameters
         ----------
         filename: str, optional
-            File name. Default is "phonopy-params.yaml"
+            File name. Default is "phonopy_params.yaml"
         settings: dict, optional
             It is described which parameters are written out. Only
             the settings expected to be updated from the following
@@ -2522,7 +2530,8 @@ class Phonopy(object):
                  'dielectric_constant': True}
 
         """
-        phpy_yaml = PhonopyYaml(settings=settings)
+        phpy_yaml = PhonopyYaml(calculator=self._calculator,
+                                settings=settings)
         phpy_yaml.set_phonon_info(self)
         with open(filename, 'w') as w:
             w.write(str(phpy_yaml))
@@ -2584,6 +2593,9 @@ class Phonopy(object):
             self._dynamical_matrix_decimals,
             symprec=self._symprec,
             log_level=self._log_level)
+        # DynamialMatrix instance transforms force constants in correct
+        # type of numpy array.
+        self._force_constants = self._dynamical_matrix.force_constants
 
         if self._group_velocity is not None:
             self._set_group_velocity()
@@ -2672,3 +2684,6 @@ class Phonopy(object):
             msg = ("Creating primitive cell is failed. "
                    "PRIMITIVE_AXIS may be incorrectly specified.")
             raise RuntimeError(msg)
+
+    def _guess_primitive_matrix(self):
+        return guess_primitive_matrix(self._unitcell, symprec=self._symprec)
