@@ -6,26 +6,40 @@ Change Log
 Feb-26-2019: Version 2.1
 ---------------------------
 * Spglib update to v1.12.1.
-* Accepts ``phonopy.yaml`` type file as an input crystal structure
-  by ``-c`` option. This also invokes semi-automatic phonopy run, which
-  means:
+* (Experimental) ``phonopy`` command accepts ``phonopy.yaml`` type
+  file as an input crystal structure by ``-c`` option. When ``DIM``
+  and any structure file are not given, ``phonopy_disp.yaml``
+  (primary) or ``phonopy.yaml`` (secondary) is searched in the current
+  directory. Then ``phonopy.yaml`` type file is used as the input,
+  semi-automatic phonopy mode is invocked, which means:
 
-  (1) Set ``PRIMITIVE_AXES = AUTO``
-  (2) ``supercell_matrix`` (``DIM``) is read if it exists in it.
+  (1) ``supercell_matrix`` in the ``phonopy.yaml`` type file
+      is used if it exists.
+  (2) ``primitive_matrix`` in the ``phonopy.yaml`` type file
+      is used if it exists. Otherwise, set ``PRIMITIVE_AXES = AUTO``
+      when ``PRIMITIVE_AXES`` is not given.
   (3) NAC params are read (``NAC = .TRUE.``) if NAC params are
-      contained in it (primary) or if ``BORN`` file exists
-      (secondary).
-  (4) Forces and displacements are read from it if those exist in it
-      instead of reading ``FORCE_SETS``.
+      contained (primary) in the ``phonopy.yaml`` type file or if
+      ``BORN`` file exists in the current directory (secondary).
+  (4) Forces and displacements are read from the ``phonopy.yaml`` type
+      file if those exist instead of reading ``FORCE_SETS`` in the
+      current directory.
+  (5) Calculator name (such as ``qe``) is read if it is contained in
+      the ``phonopy.yaml`` type file.
 
-  A possible usage is ``% phonopy -c phonon.yaml --band auto --mesh
-  100 -p``. By this, phonon band structure and DOS are easily drawn
-  for PhononDB at Kyoto-U
-  (http://phonondb.mtl.kyoto-u.ac.jp/ph20180417/index.html) raw data.
-  If ``phonopy_params.yaml`` is created using API of
-  ``phonopy.save()`` (:ref:`phonopy_save_parameters`), phonopy's
-  essential data may be easily passed to other people only by this
-  file.
+  Possible usages are:
+
+  - For PhononDB at Kyoto-U
+    (http://phonondb.mtl.kyoto-u.ac.jp/ph20180417/index.html) raw
+    data, phonons are easily calculated, e.g., by ``%
+    phonopy -c phonon.yaml --band auto --mesh 100 -p``.
+  - If ``phonopy_params.yaml`` is created using API of
+    ``phonopy.save()`` (:ref:`phonopy_save_parameters`), phonopy's
+    essential data may be easily passed to other people only by this
+    file.
+  - ``phonopy_disp.yaml`` is used instead of calculator option
+    and input structure file. For example ``--qe -c
+    NaCl.in`` is replaced by ``-c phonopy_disp.yaml``.
 
 Jan-16-2019: Version 2.0
 ---------------------------
