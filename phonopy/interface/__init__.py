@@ -112,47 +112,19 @@ def read_crystal_structure(filename=None,
                            interface_mode=None,
                            chemical_symbols=None,
                            command_name="phonopy"):
+    if interface_mode == 'phonopy_yaml':
+        return _read_phonopy_yaml(filename, command_name)
+
     if filename is None:
         cell_filename = get_default_cell_filename(interface_mode)
+        if not os.path.isfile(cell_filename):
+            return None, (cell_filename, "(default file name)")
     else:
         cell_filename = filename
+        if not os.path.isfile(cell_filename):
+            return None, (cell_filename,)
 
-    if interface_mode != "phonopy_yaml":
-        if cell_filename is not None and not os.path.isfile(cell_filename):
-            if filename is None:
-                return None, (cell_filename, "(default file name)")
-            else:
-                return None, (cell_filename,)
-    else:
-        cell_filename = None
-        for fname in (filename,
-                      "%s_disp.yaml" % command_name,
-                      "%s.yaml" % command_name):
-            if fname and os.path.isfile(fname):
-                cell_filename = fname
-                break
-        if cell_filename is None:
-            return None, ("%s_disp.yaml" % command_name,
-                          "%s.yaml" % command_name, "")
-
-    if interface_mode == 'phonopy_yaml':
-        phpy = PhonopyYaml()
-        try:
-            phpy.read(cell_filename)
-            cell = phpy.unitcell
-            calculator = None
-            if command_name in phpy.yaml:
-                if 'calculator' in phpy.yaml[command_name]:
-                    calculator = phpy.yaml[command_name]['calculator']
-            if ('supercell_matrix' in phpy.yaml and
-                phpy.yaml['supercell_matrix'] is not None):
-                tmat = phpy.supercell_matrix
-            else:
-                tmat = np.eye(3, dtype='intc')
-            return cell, (cell_filename, calculator, tmat)
-        except TypeError:
-            return None, (cell_filename, None, None)
-    elif interface_mode is None or interface_mode == 'vasp':
+    if interface_mode is None or interface_mode == 'vasp':
         from phonopy.interface.vasp import read_vasp
         if chemical_symbols is None:
             unitcell = read_vasp(cell_filename)
@@ -194,9 +166,7 @@ def read_crystal_structure(filename=None,
 
 
 def get_default_cell_filename(interface_mode):
-    if interface_mode == 'phonopy_yaml':
-        return "phonopy_disp.yaml"
-    elif interface_mode is None or interface_mode == 'vasp':
+    if interface_mode is None or interface_mode == 'vasp':
         return "POSCAR"
     elif interface_mode in ('abinit', 'qe'):
         return "unitcell.in"
@@ -446,6 +416,36 @@ def get_force_sets(interface_mode,
                                      verbose=verbose)
 
     return force_sets
+
+
+def _read_phonopy_yaml(filename, command_name):
+    cell_filename = None
+    for fname in (filename,
+                  "%s_disp.yaml" % command_name,
+                  "%s.yaml" % command_name):
+        if fname and os.path.isfile(fname):
+            cell_filename = fname
+            break
+    if cell_filename is None:
+        return None, ("%s_disp.yaml" % command_name,
+                      "%s.yaml" % command_name, "")
+
+    phpy = PhonopyYaml()
+    try:
+        phpy.read(cell_filename)
+        cell = phpy.unitcell
+        calculator = None
+        if command_name in phpy.yaml:
+            if 'calculator' in phpy.yaml[command_name]:
+                calculator = phpy.yaml[command_name]['calculator']
+        if ('supercell_matrix' in phpy.yaml and
+            phpy.yaml['supercell_matrix'] is not None):
+            tmat = phpy.supercell_matrix
+        else:
+            tmat = np.eye(3, dtype='intc')
+        return cell, (cell_filename, calculator, tmat)
+    except TypeError:
+        return None, (cell_filename, None, None)
 
 
 def _check_number_of_files(num_displacements,

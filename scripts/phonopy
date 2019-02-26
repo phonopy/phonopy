@@ -656,50 +656,63 @@ if run_mode == 'displacements':
 # Preparations for phonon calculations #
 ########################################
 # Non-analytical term correction (LO-TO splitting)
-if settings.get_is_nac():
-    nac_params = None
-    if has_read_phonopy_yaml:
+if settings.get_is_nac() or has_read_phonopy_yaml:
+    def read_nac_params_from_phonopy_yaml(unitcell_filename, log_level):
         ph_yaml = PhonopyYaml()
         ph_yaml.read(unitcell_filename)
         if ph_yaml.nac_params is not None:
-            nac_params = ph_yaml.nac_params
             if log_level:
                 print("NAC parameters are read from \"%s\"."
                       % unitcell_filename)
-    if nac_params is None and file_exists("BORN", log_level):
-        with open("BORN") as f_born:
-            nac_params = get_born_parameters(f_born,
-                                             primitive,
-                                             phonon.get_primitive_symmetry())
+            return ph_yaml.nac_params
+        else:
+            return None
+
+    def read_BORN(phonon, log_level):
+        with open("BORN") as f:
+            nac_params = get_born_parameters(
+                f, phonon.primitive, phonon.get_primitive_symmetry())
             if log_level:
                 print("NAC parameters are read from \"%s\"." % "BORN")
+            return nac_params
 
-    if not nac_params:
-        error_text = "BORN file could not be read correctly."
-        print_error_message(error_text)
-        if log_level > 0:
-            print_error()
-        sys.exit(1)
-    if nac_params['factor'] is None:
-        nac_params['factor'] = physical_units['nac_factor']
-    if settings.get_nac_method() is not None:
-        nac_params['method'] = settings.get_nac_method()
-    phonon.set_nac_params(nac_params=nac_params)
+    if has_read_phonopy_yaml:
+        nac_params = read_nac_params_from_phonopy_yaml(unitcell_filename,
+                                                       log_level)
+        if nac_params is None and file_exists("BORN", log_level, is_any=True):
+            nac_params = read_BORN(phonon, log_level)
+    elif file_exists("BORN", log_level):
+        nac_params = read_BORN(phonon, log_level)
+        if not nac_params:
+            error_text = "BORN file could not be read correctly."
+            print_error_message(error_text)
+            if log_level > 0:
+                print_error()
+            sys.exit(1)
+    else:
+        nac_params = None  # This would not happen though.
 
-    if log_level > 1:
-        print("-" * 27 + " Dielectric constant " + "-" * 28)
-        for v in nac_params['dielectric']:
-            print("         %12.7f %12.7f %12.7f" % tuple(v))
-        print("-" * 26 + " Born effective charges " + "-" * 26)
-        symbols = primitive.get_chemical_symbols()
-        for i, (z, s) in enumerate(zip(nac_params['born'], symbols)):
-            for j, v in enumerate(z):
-                if j == 0:
-                    text = "%5d %-2s" % (i + 1, s)
-                else:
-                    text = "        "
-                print("%s %12.7f %12.7f %12.7f" % ((text,) + tuple(v)))
-        print("-" * 76)
+    if nac_params is not None:
+        if nac_params['factor'] is None:
+            nac_params['factor'] = physical_units['nac_factor']
+        if settings.get_nac_method() is not None:
+            nac_params['method'] = settings.get_nac_method()
+        phonon.set_nac_params(nac_params=nac_params)
+
+        if log_level > 1:
+            print("-" * 27 + " Dielectric constant " + "-" * 28)
+            for v in nac_params['dielectric']:
+                print("         %12.7f %12.7f %12.7f" % tuple(v))
+            print("-" * 26 + " Born effective charges " + "-" * 26)
+            symbols = primitive.get_chemical_symbols()
+            for i, (z, s) in enumerate(zip(nac_params['born'], symbols)):
+                for j, v in enumerate(z):
+                    if j == 0:
+                        text = "%5d %-2s" % (i + 1, s)
+                    else:
+                        text = "        "
+                    print("%s %12.7f %12.7f %12.7f" % ((text,) + tuple(v)))
+            print("-" * 76)
 
 # Force constants
 if settings.get_read_force_constants():
