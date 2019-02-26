@@ -3,6 +3,30 @@
 Change Log
 ==========
 
+Feb-26-2019: Version 2.1
+---------------------------
+* Spglib update to v1.12.1.
+* Accepts ``phonopy.yaml`` type file as an input crystal structure
+  by ``-c`` option. This also invokes semi-automatic phonopy run, which
+  means:
+
+  (1) Set ``PRIMITIVE_AXES = AUTO``
+  (2) ``supercell_matrix`` (``DIM``) is read if it exists in it.
+  (3) NAC params are read (``NAC = .TRUE.``) if NAC params are
+      contained in it (primary) or if ``BORN`` file exists
+      (secondary).
+  (4) Forces and displacements are read from it if those exist in it
+      instead of reading ``FORCE_SETS``.
+
+  A possible usage is ``% phonopy -c phonon.yaml --band auto --mesh
+  100 -p``. By this, phonon band structure and DOS are easily drawn
+  for PhononDB at Kyoto-U
+  (http://phonondb.mtl.kyoto-u.ac.jp/ph20180417/index.html) raw data.
+  If ``phonopy_params.yaml`` is created using API of
+  ``phonopy.save()`` (:ref:`phonopy_save_parameters`), phonopy's
+  essential data may be easily passed to other people only by this
+  file.
+
 Jan-16-2019: Version 2.0
 ---------------------------
 
