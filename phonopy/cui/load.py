@@ -193,6 +193,7 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
                      frequency_scale_factor=frequency_scale_factor,
                      symprec=symprec,
                      is_symmetry=is_symmetry,
+                     calculator=calculator,
                      log_level=log_level)
     load_helper.set_nac_params(phonon,
                                _nac_params,

@@ -34,6 +34,7 @@
 
 import numpy as np
 from phonopy.interface import read_crystal_structure
+from phonopy.interface.vasp import read_vasp
 from phonopy.structure.cells import guess_primitive_matrix
 
 
@@ -45,14 +46,15 @@ def collect_cell_info(supercell_matrix=None,
                       enforce_primitive_matrix_auto=False,
                       command_name="phonopy",
                       symprec=1e-5):
-    if supercell_matrix is None or enforce_primitive_matrix_auto:
-        is_primitive_axes_auto = True
-    else:
-        is_primitive_axes_auto = (type(primitive_matrix) is str and
-                                  primitive_matrix == 'auto')
-
     if supercell_matrix is None:
         _interface_mode = "phonopy_yaml"
+    elif interface_mode is None:
+        try:
+            read_vasp(cell_filename)
+        except (ValueError, TypeError):
+            # TypeError occurs when cell_filename is None.
+            # ValueError occurs in parsing POSCAR like file.
+            _interface_mode = "phonopy_yaml"
     else:
         _interface_mode = interface_mode
 
@@ -65,24 +67,36 @@ def collect_cell_info(supercell_matrix=None,
 
     if _interface_mode == 'phonopy_yaml' and unitcell is not None:
         # interface_mode and supercell_matrix are overwritten.
-        interface_mode_out = optional_structure_info[1]
-        _supercell_matrix = optional_structure_info[2]
+        if optional_structure_info[1] is None:
+            interface_mode_out = interface_mode
+        else:
+            interface_mode_out = optional_structure_info[1]
+        if optional_structure_info[2] is None:
+            _supercell_matrix = supercell_matrix
+        else:
+            _supercell_matrix = optional_structure_info[2]
+        if primitive_matrix is not None:
+            _primitive_matrix = primitive_matrix
+        elif optional_structure_info[3] is not None:
+            _primitive_matrix = optional_structure_info[3]
+        else:
+            _primitive_matrix = 'auto'
         has_read_phonopy_yaml = True
     else:
         interface_mode_out = _interface_mode
         _supercell_matrix = supercell_matrix
+        _primitive_matrix = primitive_matrix
         has_read_phonopy_yaml = False
 
-    if _supercell_matrix is None and is_primitive_axes_auto:
+    if enforce_primitive_matrix_auto:
+        _primitive_matrix = 'auto'
+
+    if _supercell_matrix is None and _primitive_matrix == 'auto':
         supercell_matrix_out = np.eye(3, dtype='intc')
     else:
         supercell_matrix_out = _supercell_matrix
 
-    if is_primitive_axes_auto and unitcell is not None:
-        primitive_matrix_out = guess_primitive_matrix(unitcell,
-                                                      symprec=symprec)
-    else:
-        primitive_matrix_out = primitive_matrix
+    primitive_matrix_out = _primitive_matrix
 
     if unitcell is None:
         fname_list = optional_structure_info
@@ -92,7 +106,7 @@ def collect_cell_info(supercell_matrix=None,
         elif len(fname_list) == 2:
             msg = "Crystal structure file of \"%s\" %s" % fname_list
             msg_list = ["%s was not found." % msg, ]
-        elif len(fname_list) == 3:
+        elif len(fname_list) == 4:
             msg_list = []
             if cell_filename is None:
                 msg = ("\"%s\" or \"%s\" should exist in the current directory"
@@ -113,6 +127,5 @@ def collect_cell_info(supercell_matrix=None,
         return "Lattice vectors have to follow the right-hand rule."
 
     return (unitcell, supercell_matrix_out, primitive_matrix_out,
-            is_primitive_axes_auto, unitcell_filename,
-            optional_structure_info, interface_mode_out,
+            unitcell_filename, optional_structure_info, interface_mode_out,
             has_read_phonopy_yaml)

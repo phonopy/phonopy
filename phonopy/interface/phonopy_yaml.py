@@ -87,6 +87,7 @@ class PhonopyYaml(object):
         self._s2p_map = None
         self._u2p_map = None
         self._nac_params = None
+        self._frequency_unit_conversion_factor = None
         self._version = None
 
         self._command_name = "phonopy"
@@ -116,6 +117,7 @@ class PhonopyYaml(object):
         s2u_map = self.supercell.s2u_map
         self._u2p_map = [u2u_map[i] for i in (s2u_map[self._s2p_map])[u2s_map]]
         self._nac_params = phonopy.nac_params
+        self._frequency_unit_conversion_factor = phonopy.unit_conversion_factor
 
         if self._command_name == "phonopy":
             self._force_constants = phonopy.force_constants
@@ -138,6 +140,9 @@ class PhonopyYaml(object):
         lines.append("  version: %s" % self._version)
         if self._calculator:
             lines.append("  calculator: %s" % self._calculator)
+        if self._frequency_unit_conversion_factor:
+            lines.append("  frequency_unit_conversion_factor: %f" %
+                         self._frequency_unit_conversion_factor)
         if self._nac_params:
             lines.append("  nac_unit_conversion_factor: %f" % nac_factor)
         if self._configuration is not None:

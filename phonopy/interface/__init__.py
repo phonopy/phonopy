@@ -440,12 +440,18 @@ def _read_phonopy_yaml(filename, command_name):
                 calculator = phpy.yaml[command_name]['calculator']
         if ('supercell_matrix' in phpy.yaml and
             phpy.yaml['supercell_matrix'] is not None):
-            tmat = phpy.supercell_matrix
+            smat = phpy.supercell_matrix
         else:
-            tmat = np.eye(3, dtype='intc')
-        return cell, (cell_filename, calculator, tmat)
+            smat = None
+        if ('primitive_matrix' in phpy.yaml and
+            phpy.yaml['primitive_matrix'] is not None):
+            pmat = phpy.primitive_matrix
+        else:
+            pmat = None
+
+        return cell, (cell_filename, calculator, smat, pmat)
     except TypeError:
-        return None, (cell_filename, None, None)
+        return None, (cell_filename, None, None, None)
 
 
 def _check_number_of_files(num_displacements,

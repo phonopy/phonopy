@@ -314,7 +314,7 @@ def print_settings(settings,
         print("  Primitive matrix (Auto):")
         for v in primitive_matrix:
             print("    %s" % v)
-    elif settings.get_primitive_matrix() is not None:
+    elif primitive_matrix is not None:
         print("  Primitive matrix:")
         for v in primitive_matrix:
             print("    %s" % v)
@@ -442,7 +442,7 @@ if type(cell_info) is str:
     if log_level > 0:
         print_error()
     sys.exit(1)
-(unitcell, supercell_matrix, primitive_matrix, is_primitive_axes_auto,
+(unitcell, supercell_matrix, primitive_matrix,
  unitcell_filename, optional_structure_info, interface_mode,
  has_read_phonopy_yaml) = cell_info
 
@@ -458,9 +458,9 @@ if magmoms is not None:
             print_error()
         sys.exit(1)
 
-    if is_primitive_axes_auto == 'auto':
+    if primitive_matrix == 'auto':
         error_text = ("'PRIMITIVE_AXES = auto', 'BAND = auto', or no DIM "
-                      "setting can not be used with MAGMOM.")
+                      "setting is not allowed with MAGMOM.")
         print_error_message(error_text)
         if log_level > 0:
             print_error()
@@ -534,9 +534,10 @@ if log_level > 0:
     import phonopy.structure.spglib as spglib
     print("Spglib version %d.%d.%d" % spglib.get_version())
     print_settings(settings,
-                   is_primitive_axes_auto,
+                   (type(primitive_matrix) is str and
+                    primitive_matrix == 'auto'),
                    is_band_auto,
-                   primitive_matrix,
+                   phonon.primitive_matrix,
                    supercell_matrix,
                    optional_structure_info[0],
                    interface_mode)
@@ -652,9 +653,11 @@ else:
         else:
             return None
 
+    force_sets = None
     if has_read_phonopy_yaml:
         force_sets = read_force_sets_from_phonopy_yaml(unitcell_filename,
                                                        log_level)
+
     if force_sets is None:
         file_exists("FORCE_SETS", log_level)
         force_sets = parse_FORCE_SETS(natom=num_satom)

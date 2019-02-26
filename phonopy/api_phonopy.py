@@ -87,12 +87,14 @@ class Phonopy(object):
                  group_velocity_delta_q=None,
                  symprec=1e-5,
                  is_symmetry=True,
+                 calculator=None,
                  use_lapack_solver=False,
                  log_level=0):
         self._symprec = symprec
         self._factor = factor
         self._frequency_scale_factor = frequency_scale_factor
         self._is_symmetry = is_symmetry
+        self._calculator = calculator
         self._use_lapack_solver = use_lapack_solver
         self._log_level = log_level
 
@@ -2528,7 +2530,8 @@ class Phonopy(object):
                  'dielectric_constant': True}
 
         """
-        phpy_yaml = PhonopyYaml(settings=settings)
+        phpy_yaml = PhonopyYaml(calculator=self._calculator,
+                                settings=settings)
         phpy_yaml.set_phonon_info(self)
         with open(filename, 'w') as w:
             w.write(str(phpy_yaml))
