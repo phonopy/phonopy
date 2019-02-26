@@ -35,7 +35,6 @@
 import numpy as np
 from phonopy.interface import read_crystal_structure
 from phonopy.interface.vasp import read_vasp
-from phonopy.structure.cells import guess_primitive_matrix
 
 
 def collect_cell_info(supercell_matrix=None,
@@ -66,7 +65,6 @@ def collect_cell_info(supercell_matrix=None,
     unitcell_filename = optional_structure_info[0]
 
     if _interface_mode == 'phonopy_yaml' and unitcell is not None:
-        # interface_mode and supercell_matrix are overwritten.
         if optional_structure_info[1] is None:
             interface_mode_out = interface_mode
         else:
