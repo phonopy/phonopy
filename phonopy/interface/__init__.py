@@ -428,7 +428,7 @@ def _read_phonopy_yaml(filename, command_name):
             break
     if cell_filename is None:
         return None, ("%s_disp.yaml" % command_name,
-                      "%s.yaml" % command_name, "")
+                      "%s.yaml" % command_name, "", "")
 
     phpy = PhonopyYaml()
     try:

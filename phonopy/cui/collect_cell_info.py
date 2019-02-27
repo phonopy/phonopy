@@ -50,6 +50,7 @@ def collect_cell_info(supercell_matrix=None,
     elif interface_mode is None:
         try:
             read_vasp(cell_filename)
+            _interface_mode = None
         except (ValueError, TypeError):
             # TypeError occurs when cell_filename is None.
             # ValueError occurs in parsing POSCAR like file.
@@ -108,7 +109,7 @@ def collect_cell_info(supercell_matrix=None,
             msg_list = []
             if cell_filename is None:
                 msg = ("\"%s\" or \"%s\" should exist in the current directory"
-                       % fname_list[:-1])
+                       % fname_list[:2])
                 msg_list.append(msg)
                 msg = "to run without setting supercell matrix (DIM or --dim)."
                 msg_list.append(msg)
