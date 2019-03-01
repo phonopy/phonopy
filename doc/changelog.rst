@@ -3,6 +3,10 @@
 Change Log
 ==========
 
+Feb-27-2019: Version 2.1.1
+---------------------------
+* User interface bug fix release.
+
 Feb-26-2019: Version 2.1
 ---------------------------
 * Spglib update to v1.12.1.

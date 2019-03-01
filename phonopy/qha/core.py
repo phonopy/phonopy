@@ -212,6 +212,10 @@ class QHA(object):
 
     def plot(self, thin_number=10, volume_temp_exp=None):
         import matplotlib.pyplot as plt
+
+        plt.rcParams['pdf.fonttype'] = 42
+        plt.rcParams['font.family'] = 'serif'
+
         fig, axs = plt.subplots(1, 3, figsize=(7, 3.5))
         axs[0].xaxis.set_ticks_position('both')
         axs[0].yaxis.set_ticks_position('both')
