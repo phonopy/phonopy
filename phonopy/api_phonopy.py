@@ -1867,6 +1867,8 @@ class Phonopy(object):
 
     def plot_thermal_properties(self):
         import matplotlib.pyplot as plt
+        plt.rcParams['pdf.fonttype'] = 42
+        plt.rcParams['font.family'] = 'serif'
 
         fig, ax = plt.subplots()
         ax.xaxis.set_ticks_position('both')

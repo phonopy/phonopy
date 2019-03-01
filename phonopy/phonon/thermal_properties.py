@@ -234,17 +234,17 @@ class ThermalProperties(ThermalPropertiesBase):
         condition = np.logical_not(t_array < 0)
         self._temperatures = np.extract(condition, t_array)
 
-    def plot(self, pyplot):
+    def plot(self, plt):
         temps, fe, entropy, cv = self._thermal_properties
 
-        pyplot.plot(temps, fe, 'r-')
-        pyplot.plot(temps, entropy, 'b-')
-        pyplot.plot(temps, cv, 'g-')
-        pyplot.legend(('Free energy [kJ/mol]', 'Entropy [J/K/mol]',
-                       r'C$_\mathrm{V}$ [J/K/mol]'),
-                      loc='best')
-        pyplot.grid(True)
-        pyplot.xlabel('Temperature [K]')
+        plt.plot(temps, fe, 'r-')
+        plt.plot(temps, entropy, 'b-')
+        plt.plot(temps, cv, 'g-')
+        plt.legend(('Free energy [kJ/mol]', 'Entropy [J/K/mol]',
+                    r'C$_\mathrm{V}$ [J/K/mol]'),
+                   loc='best')
+        plt.grid(True)
+        plt.xlabel('Temperature [K]')
 
     def run(self, t_step=None, t_max=None, t_min=None):
         import warnings
