@@ -74,9 +74,14 @@ tags:
 * ``--writefc-format`` (``WRITEFC_FORMAT``)
 * ``--xyz-projection`` (``XYZ_PROJECTION = .TRUE.``)
 
-When both of command-line option and setting tag for the same purpose
-are set simultaneously, the command-line options overide the setting
-tags.
+When both of equivalent command-line option and setting tag are set
+simultaneously, the command-line option supersedes the setting tag.
+The configuration file is recommended to place at the first position for
+the mixed use of setting tags and command-line options, i.e.,
+
+::
+
+   phonopy setting.conf [command-line-options]
 
 .. _force_calculators:
 

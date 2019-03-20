@@ -7,8 +7,17 @@ Setting tags
    :depth: 2
    :local:
 
-Most of the setting tags have corresponding command-line options
+Most of the setting tags have respective command-line options
 (:ref:`command_options`).
+When both of equivalent command-line option and setting tag are set
+simultaneously, the command-line option supersedes the setting tag.
+The configuration file is recommended to place at the first position for
+the mixed use of setting tags and command-line options, i.e.,
+
+::
+
+   phonopy setting.conf [command-line-options]
+
 
 For specifying real and reciprocal points, fractional values
 (e.g. ``1/3``) are accepted. However fractional values must not
@@ -532,6 +541,14 @@ The atom indices :math:`j` are specified by
 These numbers are those in the primitive cell.  ``,`` separates the
 atom sets. In this example, atom 1 and 2 are summarized as one curve
 and atom 3, 4, 5, and, 6 are summarized as another curve.
+
+``PDOS = AUTO`` is supported To group symmetrically equivalent atoms
+automatically.
+
+::
+
+   PDOS = AUTO
+
 
 ``EIGENVECTORS = .TRUE.`` and ``MESH_SYMMETRY = .FALSE.`` are
 automatically set, therefore the calculation takes much more time than
