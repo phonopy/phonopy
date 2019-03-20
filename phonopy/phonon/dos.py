@@ -38,6 +38,12 @@ from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
 
+def get_pdos_indices(symmetry):
+    mapping = symmetry.get_map_atoms()
+    return [list(np.where(mapping == i)[0])
+            for i in symmetry.get_independent_atoms()]
+
+
 def write_total_dos(frequency_points,
                     total_dos,
                     comment=None,
