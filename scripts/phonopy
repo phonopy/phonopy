@@ -57,6 +57,7 @@ from phonopy.interface import (create_FORCE_SETS, get_default_physical_units,
 from phonopy.interface.vasp import create_FORCE_CONSTANTS
 from phonopy.phonon.band_structure import (get_band_qpoints,
                                            get_band_qpoints_by_seekpath)
+from phonopy.phonon.dos import get_pdos_indices
 from phonopy.phonon.mesh import length2mesh
 
 phonopy_version = __version__
@@ -1087,19 +1088,20 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
 
             if args.is_graph_plot:
                 pdos_indices = settings.get_pdos_indices()
-                if not pdos_indices:
-                    num_atom = primitive.get_number_of_atoms()
-                    pdos_indices = [np.arange(num_atom) * 3 + i
-                                    for i in range(3)]
-
-            if args.is_graph_plot and run_mode != 'band_mesh':
-                plot = phonon.plot_projected_dos(
-                    pdos_indices=pdos_indices,
-                    legend=([np.array(x) + 1 for x in pdos_indices]))
-                if args.is_graph_save:
-                    plot.savefig('partial_dos.pdf')
+                if pdos_indices == 'auto':
+                    pdos_indices = get_pdos_indices(phonon.primitive_symmetry)
+                    legend = [primitive.get_chemical_symbols()[x[0]]
+                              for x in pdos_indices]
                 else:
-                    plot.show()
+                    legend = [np.array(x) + 1 for x in pdos_indices]
+                if run_mode != 'band_mesh':
+                    plot = phonon.plot_projected_dos(
+                        pdos_indices=pdos_indices,
+                        legend=legend)
+                    if args.is_graph_save:
+                        plot.savefig('partial_dos.pdf')
+                    else:
+                        plot.show()
 
         # Total DOS
         elif (args.is_graph_plot or settings.get_is_dos_mode()):
