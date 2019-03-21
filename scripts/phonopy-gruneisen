@@ -131,6 +131,7 @@ def get_options():
     parser.set_defaults(
         abinit_mode=False,
         band_paths=None,
+        band_points=51,
         cell_filename=None,
         color_scheme=None,
         crystal_mode=False,
@@ -141,16 +142,16 @@ def get_options():
         is_hdf5=False,
         is_nac=False,
         is_mesh_symmetry=True,
-        plot_graph=False,
-        reads_force_constants=False,
-        band_points=51,
         marker='o',
         markersize=None,
+        plot_graph=False,
         primitive_axes=None,
         qe_mode=False,
+        reads_force_constants=False,
         sampling_mesh=None,
         save_graph=False,
         siesta_mode=False,
+        delta_strain=None,
         supercell_dimension=None,
         symprec=1e-5,
         title=None,
@@ -234,6 +235,9 @@ def get_options():
     parser.add_argument(
         "--siesta", dest="siesta_mode", action="store_true",
         help="Invoke Siesta mode")
+    parser.add_argument(
+        "--delta-strain", dest="delta_strain", type=float,
+        help="Delta strain instead of using delta-V/V")
     parser.add_argument(
         "-t", "--title", dest="title",
         help="Title of plot")
@@ -372,7 +376,8 @@ def main(args):
 
     gruneisen = PhonopyGruneisen(phonons[0],  # equilibrium
                                  phonons[1],  # plus
-                                 phonons[2])  # minus
+                                 phonons[2],  # minus
+                                 delta_strain=args.delta_strain)
 
     if args.plot_graph:
         if args.save_graph:

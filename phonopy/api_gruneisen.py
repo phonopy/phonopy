@@ -36,14 +36,17 @@ from phonopy.gruneisen import GruneisenMesh
 from phonopy.gruneisen import GruneisenBandStructure
 from phonopy.gruneisen import GruneisenThermalProperties
 
+
 class PhonopyGruneisen(object):
     def __init__(self,
                  phonon,
                  phonon_plus,
-                 phonon_minus):
+                 phonon_minus,
+                 delta_strain=None):
         self._phonon = phonon
         self._phonon_plus = phonon_plus
         self._phonon_minus = phonon_minus
+        self._delta_strain = delta_strain
 
         self._mesh = None
         self._band_structure = None
@@ -70,6 +73,7 @@ class PhonopyGruneisen(object):
             self._phonon_plus.get_dynamical_matrix(),
             self._phonon_minus.get_dynamical_matrix(),
             mesh,
+            delta_strain=self._delta_strain,
             shift=shift,
             is_time_reversal=is_time_reversal,
             is_gamma_center=is_gamma_center,
@@ -118,6 +122,7 @@ class PhonopyGruneisen(object):
             self._phonon.get_dynamical_matrix(),
             self._phonon_plus.get_dynamical_matrix(),
             self._phonon_minus.get_dynamical_matrix(),
+            delta_strain=self._delta_strain,
             factor=self._phonon.get_unit_conversion_factor())
 
     def get_band_structure(self):

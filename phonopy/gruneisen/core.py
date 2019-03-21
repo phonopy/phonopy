@@ -36,19 +36,26 @@ import numpy as np
 from phonopy.phonon.band_structure import estimate_band_connection
 from phonopy.phonon.degeneracy import rotate_eigenvectors
 
+
 class GruneisenBase(object):
     def __init__(self,
                  dynmat,
                  dynmat_plus,
                  dynmat_minus,
+                 delta_strain=None,
                  qpoints=None,
                  is_band_connection=False):
         self._dynmat = dynmat
         self._dynmat_plus = dynmat_plus
         self._dynmat_minus = dynmat_minus
-        self._volume = dynmat.get_primitive().get_volume()
-        self._volume_plus = dynmat_plus.get_primitive().get_volume()
-        self._volume_minus = dynmat_minus.get_primitive().get_volume()
+        if delta_strain is None:
+            volume = dynmat.get_primitive().get_volume()
+            volume_plus = dynmat_plus.get_primitive().get_volume()
+            volume_minus = dynmat_minus.get_primitive().get_volume()
+            dV = volume_plus - volume_minus
+            self._delta_strain = dV / volume
+        else:
+            self._delta_strain = delta_strain
         self._is_band_connection = is_band_connection
         self._qpoints = qpoints
 
@@ -57,7 +64,6 @@ class GruneisenBase(object):
         self._eigenvalues = None
         if qpoints is not None:
             self._set_gruneisen()
-
 
     def set_qpoints(self, qpoints):
         self._qpoints = qpoints
@@ -76,14 +82,12 @@ class GruneisenBase(object):
         return self._eigenvectors
 
     def _set_gruneisen(self):
-        dV = self._volume_plus - self._volume_minus
-
         if self._is_band_connection:
             self._q_direction = self._qpoints[0] - self._qpoints[-1]
             band_order = range(self._dynmat.get_dimension())
             prev_eigvecs = None
 
-        edDe = [] # <e|dD|e>
+        edDe = []  # <e|dD|e>
         eigvals = []
         eigvecs = []
         for i, q in enumerate(self._qpoints):
@@ -119,8 +123,7 @@ class GruneisenBase(object):
         itemsize = self._eigenvalues.itemsize
         self._eigenvectors = np.array(eigvecs,
                                       dtype=("c%d" % (itemsize * 2)), order='C')
-        self._gruneisen = -edDe / dV / self._eigenvalues * self._volume / 2
-
+        self._gruneisen = -edDe / self._delta_strain / self._eigenvalues / 2
 
     def _get_dD(self, q, d_a, d_b):
         if (self._is_band_connection and d_a.is_nac() and d_b.is_nac()):

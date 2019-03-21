@@ -36,20 +36,21 @@ import numpy as np
 from .core import GruneisenBase
 from phonopy.units import VaspToTHz
 
+
 class GruneisenBandStructure(GruneisenBase):
     def __init__(self,
                  paths,
                  dynmat,
                  dynmat_plus,
                  dynmat_minus,
+                 delta_strain=None,
                  factor=VaspToTHz):
-
         GruneisenBase.__init__(self,
                                dynmat,
                                dynmat_plus,
                                dynmat_minus,
+                               delta_strain=delta_strain,
                                is_band_connection=True)
-
         primitive = dynmat.get_primitive()
         rec_lattice = np.linalg.inv(primitive.get_cell())
         distance_shift = 0.0

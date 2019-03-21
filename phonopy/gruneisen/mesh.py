@@ -38,12 +38,14 @@ from phonopy.structure.grid_points import get_qpoints
 from phonopy.phonon.thermal_properties import mode_cv
 from phonopy.units import THzToEv, VaspToTHz
 
+
 class GruneisenMesh(GruneisenBase):
     def __init__(self,
                  dynmat,
                  dynmat_plus,
                  dynmat_minus,
                  mesh,
+                 delta_strain=None,
                  shift=None,
                  is_time_reversal=True,
                  is_gamma_center=False,
@@ -53,7 +55,8 @@ class GruneisenMesh(GruneisenBase):
         GruneisenBase.__init__(self,
                                dynmat,
                                dynmat_plus,
-                               dynmat_minus)
+                               dynmat_minus,
+                               delta_strain=delta_strain)
         self._mesh = np.array(mesh, dtype='intc')
         self._factor = factor
         primitive = dynmat.get_primitive()
