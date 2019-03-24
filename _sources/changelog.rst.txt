@@ -3,6 +3,10 @@
 Change Log
 ==========
 
+Mar-24-2019: Version 2.1.2
+---------------------------
+* ``PDOS = AUTO`` (``--pdos="auto"``) was implemented.
+
 Feb-27-2019: Version 2.1.1
 ---------------------------
 * User interface bug fix release.
