@@ -34,13 +34,13 @@
 
 import sys
 import numpy as np
-from phonopy.harmonic.force_constants import distribute_force_constants
 
 
 def get_fc2(supercell,
             primitive,
             disp_dataset,
             atom_list=None,
+            alm_options=None,
             log_level=0):
     lattice = supercell.get_cell().T
     positions = supercell.get_scaled_positions()
@@ -73,37 +73,50 @@ def get_fc2(supercell,
         alm.define(1)
         alm.set_displacement_and_force(disps, forces)
         alm.optimize()
-        p2s_map_alm = alm.getmap_primitive_to_supercell()[0]
-
-        if ((atom_list == p2s_map).all() and
-            len(p2s_map_alm) == len(p2s_map) and
-            (p2s_map_alm == p2s_map).all()):
-            fc2 = np.zeros((len(p2s_map), natom, 3, 3),
-                           dtype='double', order='C')
-            for fc, indices in zip(*alm.get_fc(1, mode='origin')):
-                v1, v2 = indices // 3
-                c1, c2 = indices % 3
-                fc2[p2p_map[v1], v2, c1, c2] = fc
-        else:
-            if atom_list is None:
-                fc2 = np.zeros((natom, natom, 3, 3), dtype='double', order='C')
-                _atom_list = np.arange(natom, dtype=int)
-            else:
-                fc2 = np.zeros(
-                    (len(atom_list), natom, 3, 3), dtype='double', order='C')
-                _atom_list = np.array(atom_list, dtype=int)
-            for fc, indices in zip(*alm.get_fc(1, mode='all')):
-                v1, v2 = indices // 3
-                idx = np.where(_atom_list == v1)[0]
-                if len(idx) > 0:
-                    c1, c2 = indices % 3
-                    fc2[idx[0], v2, c1, c2] = fc
+        fc2 = extract_fc2_from_alm(alm,
+                                   natom,
+                                   atom_list=atom_list,
+                                   p2s_map=p2s_map,
+                                   p2p_map=p2p_map)
 
     if log_level:
         print("--------------------------------"
               " ALM FC2 end "
               "-------------------------------")
 
+    return fc2
+
+
+def extract_fc2_from_alm(alm,
+                         natom,
+                         atom_list=None,
+                         p2s_map=None,
+                         p2p_map=None):
+    p2s_map_alm = alm.getmap_primitive_to_supercell()[0]
+    if (atom_list is not None and
+        (atom_list == p2s_map).all() and
+        len(p2s_map_alm) == len(p2s_map) and
+        (p2s_map_alm == p2s_map).all()):
+        fc2 = np.zeros((len(p2s_map), natom, 3, 3),
+                       dtype='double', order='C')
+        for fc, indices in zip(*alm.get_fc(1, mode='origin')):
+            v1, v2 = indices // 3
+            c1, c2 = indices % 3
+            fc2[p2p_map[v1], v2, c1, c2] = fc
+    else:
+        if atom_list is None:
+            fc2 = np.zeros((natom, natom, 3, 3), dtype='double', order='C')
+            _atom_list = np.arange(natom, dtype=int)
+        else:
+            fc2 = np.zeros(
+                (len(atom_list), natom, 3, 3), dtype='double', order='C')
+            _atom_list = np.array(atom_list, dtype=int)
+        for fc, indices in zip(*alm.get_fc(1, mode='all')):
+            v1, v2 = indices // 3
+            idx = np.where(_atom_list == v1)[0]
+            if len(idx) > 0:
+                c1, c2 = indices % 3
+                fc2[idx[0], v2, c1, c2] = fc
     return fc2
 
 

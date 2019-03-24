@@ -1711,10 +1711,13 @@ class PhonopyConfParser(ConfParser):
 
             # DOS
             if conf_key == 'pdos':
-                vals = []
-                for index_set in confs['pdos'].split(','):
-                    vals.append([int(x) - 1 for x in index_set.split()])
-                self.set_parameter('pdos', vals)
+                if confs['pdos'].strip().lower() == 'auto':
+                    self.set_parameter('pdos', 'auto')
+                else:
+                    vals = []
+                    for index_set in confs['pdos'].split(','):
+                        vals.append([int(x) - 1 for x in index_set.split()])
+                    self.set_parameter('pdos', vals)
 
             if conf_key == 'xyz_projection':
                 if confs['xyz_projection'].lower() == '.true.':

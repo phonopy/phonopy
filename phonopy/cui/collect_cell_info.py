@@ -107,15 +107,19 @@ def collect_cell_info(supercell_matrix=None,
             msg_list = ["%s was not found." % msg, ]
         elif len(fname_list) == 4:
             msg_list = []
-            if cell_filename is None:
-                msg = ("\"%s\" or \"%s\" should exist in the current directory"
-                       % fname_list[:2])
-                msg_list.append(msg)
-                msg = "to run without setting supercell matrix (DIM or --dim)."
-                msg_list.append(msg)
-            else:
-                msg_list.append("Supercell matrix (DIM or --dim) may be "
-                                "forgotten to be specified.")
+            if supercell_matrix is None:
+                if cell_filename is None:
+                    msg = ["Supercell matrix (DIM or --dim) is not specified. "
+                           "To run phonopy without explicitly setting "
+                           "supercell matrix, \"%s\" or \"%s\" "
+                           "must exist " % fname_list[:2],
+                           "in the current directory."]
+                    msg_list += msg
+                else:
+                    msg_list.append("Supercell matrix (DIM or --dim) may be "
+                                    "forgotten to be specified.")
+            elif cell_filename is None:
+                msg_list = ["Any crystal structure file was not found.", ""]
         return "\n".join(msg_list)
 
     if supercell_matrix_out is None:
