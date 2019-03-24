@@ -110,8 +110,8 @@ def collect_cell_info(supercell_matrix=None,
             if supercell_matrix is None:
                 if cell_filename is None:
                     msg = ["Supercell matrix (DIM or --dim) is not specified. "
-                           "Running phonopy without ",
-                           "specifying supercell matrix, \"%s\" or \"%s\" "
+                           "To run phonopy without explicitly setting "
+                           "supercell matrix, \"%s\" or \"%s\" "
                            "must exist " % fname_list[:2],
                            "in the current directory."]
                     msg_list += msg
