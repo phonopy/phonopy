@@ -64,10 +64,10 @@ plot.
 
 .. _gruneisen_calculators:
 
-Abinit, Quantum ESPRESSO, Wien2k, and CRYSTAL interfaces
+Abinit, Quantum ESPRESSO, Wien2k, CRYSTAL, and TURBOMOLE interfaces
 ----------------------------------------------------------
 
-``--abinit``, ``--qe``, ``--wien2k``, or ``--crystal`` options can be
+``--abinit``, ``--qe``, ``--wien2k``, ``--crystal``, or ``--turbomole`` options can be
 specified for corresponding calculators and the crystal structure file
 format should be different from that of the VASP format. An Abinit
 example is as follows::
@@ -80,7 +80,7 @@ example is as follows::
 Command options
 ----------------
 
-If one of ``--abinit``, ``--qe``, ``--wien2k``, or ``--crystal``
+If one of ``--abinit``, ``--qe``, ``--wien2k``, ``--crystal``, or ``--turbomole``
 options is specified, the interface mode is changed to it. The unit
 conversion factor to THz is appropriately selected and its crystal
 structure file format is accepted. If none of them is specified, as

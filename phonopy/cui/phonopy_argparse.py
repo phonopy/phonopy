@@ -157,6 +157,7 @@ def get_parser():
         tmax=None,
         tmin=None,
         tstep=None,
+        turbomooe_mode=False,
         use_alm=False,
         vasp_mode=False,
         verbose=False,
@@ -469,6 +470,9 @@ def get_parser():
     parser.add_argument(
         "--tolerance", dest="symprec", type=float,
         help="Symmetry tolerance to search")
+    parser.add_argument(
+        "--turbomole", dest="turbomole_mode", action="store_true",
+        help="Invoke TURBOMOLE mode")
     parser.add_argument(
         "-v", "--verbose", dest="verbose", action="store_true",
         help="Detailed information is shown.")
