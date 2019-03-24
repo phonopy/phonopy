@@ -284,7 +284,8 @@ def get_FORCE_CONSTANTS_lines(force_constants, p2s_map=None):
 
 def write_force_constants_to_hdf5(force_constants,
                                   filename='force_constants.hdf5',
-                                  p2s_map=None):
+                                  p2s_map=None,
+                                  compression=None):
     """Write force constants in hdf5 format.
 
     Parameters
@@ -299,6 +300,10 @@ def write_force_constants_to_hdf5(force_constants,
         Primitive atom indices in supercell index system
         shape=(n_patom,)
         dtype=intc
+    compression : str or int, optional
+        h5py's lossless compression filters (e.g., "gzip", "lzf").
+        See the detail at docstring of h5py.Group.create_dataset. Default is
+        None.
 
     """
 
@@ -308,7 +313,8 @@ def write_force_constants_to_hdf5(force_constants,
         raise ModuleNotFoundError("You need to install python-h5py.")
 
     with h5py.File(filename, 'w') as w:
-        w.create_dataset('force_constants', data=force_constants)
+        w.create_dataset('force_constants', data=force_constants,
+                         compression=compression)
         if p2s_map is not None:
             w.create_dataset('p2s_map', data=p2s_map)
 
