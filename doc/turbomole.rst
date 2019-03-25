@@ -18,10 +18,8 @@ The workflow for a TURBOMOLE-Phonopy calculation is outlined here using the
 Si example found in ``example/Si-TURBOMOLE``.
 
 In this example, the TURBOMOLE input files are ``control`` and ``coord``.
-This is the default for the TURBOMOLE interface, so, the ``-c control``
+This is the default for the TURBOMOLE interface and therefore the ``-c control``
 parameter is not needed.
-
-The Si crystal structure is defined with the conventional unit cell (eight atoms).
 
 1) Create supercells with :ref:`turbomole_mode` option::
 

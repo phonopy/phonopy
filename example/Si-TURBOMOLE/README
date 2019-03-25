@@ -20,7 +20,8 @@ PRIMITIVE_AXES is defined in band.conf to create the phonon dispersions for the 
    pqsingtol  1.0d-7
 
 2) Run the supercell input with TURBOMOLE
-   Here the directory "supercell-001" contains data pre-calculated with TURBOMOLE 7.3.
+   Here the directory "supercell-001" contains data pre-calculated with 
+   TURBOMOLE 7.3 at the PBE/SVP level of theory.
 
 3) Collect forces:
    phonopy --turbomole -f supercell-*
