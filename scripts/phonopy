@@ -496,6 +496,7 @@ run_mode = settings.get_run_mode()
 if run_mode == 'displacements':
     phonon = Phonopy(unitcell,
                      supercell_matrix,
+                     primitive_matrix=primitive_matrix,
                      symprec=args.symprec,
                      is_symmetry=settings.get_is_symmetry(),
                      log_level=log_level)

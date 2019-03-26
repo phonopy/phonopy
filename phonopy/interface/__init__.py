@@ -33,7 +33,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import numpy as np
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.file_IO import parse_disp_yaml, write_FORCE_SETS
 

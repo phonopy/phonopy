@@ -33,7 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.interface import read_crystal_structure
+from phonopy.interface import read_crystal_structure, get_default_cell_filename
 from phonopy.interface.vasp import read_vasp
 
 
@@ -49,7 +49,10 @@ def collect_cell_info(supercell_matrix=None,
         _interface_mode = "phonopy_yaml"
     elif interface_mode is None:
         try:
-            read_vasp(cell_filename)
+            if cell_filename is None:
+                read_vasp(get_default_cell_filename('vasp'))
+            else:
+                read_vasp(cell_filename)
             _interface_mode = None
         except (ValueError, TypeError):
             # TypeError occurs when cell_filename is None.
