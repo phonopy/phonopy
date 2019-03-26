@@ -165,26 +165,44 @@ class TurbomoleIn:
         while l < len(lines):
             line = lines[l]
             # Look for lattice vectors
-            # Currently supports only atomic units, $lattice angs does not work
+            # Only supports atomic units, $lattice angs not supported
             if '$lattice' in line:
                 # 0.00000000000   5.17898186576   5.17898186576
                 for lattvec in lines[l+1:l+4]:
                     lattvecs.append([float(x) for x in lattvec.split()])
                 l += 4
-            # Look for Cartesian coordinates    
-            # Currently supports only file=coordinate-file, not coordinates directly in control file
-            #$coord    file=coord
-            # Include one space to avoid catching $coordinateupdate
-            elif '$coord ' in line:
-                coordfile = lines[l].split('=')[1].strip()
-                f_coord = open(coordfile)
-                for coordline in f_coord:
-                    atom = coordline.split()
-                    if len(atom) == 4:
-                        coords.append([float(x) for x in atom[0:3]])
-                        aspecies.append(atom[3].title()) # Convert si to Si, c to C, etc.
-                f_coord.close()
-                l += 1
+            # Look for Cartesian coordinates. They can be in another file or embedded in control:
+            #1) $coord    file=coord
+            #2) $coord
+            #      2.58949092075      2.58949092075      2.58949092075      si
+            elif '$coord' in line:
+                if line.strip() == '$coord':
+                    # Embdedded coordinates.
+                    l += 1
+                    while l < len(lines):
+                        atom = lines[l].split()
+                        if len(atom) == 4:
+                            coords.append([float(x) for x in atom[0:3]])
+                            aspecies.append(atom[3].title()) # Convert si to Si, c to C, etc.
+                            l += 1
+                        else:
+                            # End of $coord, go back to the main while loop to interpret the current line
+                            break
+                elif line.find('file=') > 6:
+                    # Cross-reference to another file
+                    coordfile = line.split('=')[1].strip()
+                    f_coord = open(coordfile)
+                    for coordline in f_coord:
+                        # 2.58949092075      2.58949092075      2.58949092075      si
+                        atom = coordline.split()
+                        if len(atom) == 4:
+                            coords.append([float(x) for x in atom[0:3]])
+                            aspecies.append(atom[3].title()) # Convert si to Si, c to C, etc.
+                    f_coord.close()
+                    l += 1
+                else:
+                    # $coordinateupdate or invalid $coord line
+                    l += 1
             else:
                 l += 1
 
