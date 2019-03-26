@@ -355,7 +355,7 @@ class Phonopy(object):
         if self._mesh is None:
             return None
         else:
-            return self._mesh.mesh_number
+            return self._mesh.mesh_numbers
 
     @property
     def qpoints(self):
@@ -1037,7 +1037,13 @@ class Phonopy(object):
                 mesh_nums = mesh
                 _is_gamma_center = is_gamma_center
         else:
-            mesh_nums = length2mesh(mesh, self._primitive.get_cell())
+            if self._primitive_symmetry is not None:
+                rots = self._primitive_symmetry.get_pointgroup_operations()
+                mesh_nums = length2mesh(mesh,
+                                        self._primitive.get_cell(),
+                                        rotations=rots)
+            else:
+                mesh_nums = length2mesh(mesh, self._primitive.get_cell())
             _is_gamma_center = True
         if mesh_nums is None:
             msg = "mesh has inappropriate type."
