@@ -89,9 +89,9 @@ Choice of force calculator
 ---------------------------
 
 Currently interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT,
-Elk, SIESTA, and CRYSTAL are prepared. These interfaces are invoked
+Elk, SIESTA, CRYSTAL, and TURBOMOLE are prepared. These interfaces are invoked
 with ``--vasp``, ``--wienk2``, ``--qe``, ``--abinit``, ``--elk``,
-``--siesta``, and ``--crystal`` options, respectively, and nothing is
+``--siesta``, ``--crystal``, and ``--turbomole`` options, respectively. When no interface is
 specified, ``--vasp`` is selected as the default interface.
 
 The details about these interfaces are found at :ref:`calculator_interfaces`.
@@ -188,6 +188,19 @@ input file that contains the unit cell crystal structure, e.g.,
 
    % phonopy --crystal -c crystal.o band.conf
 
+.. _turbomole_mode:
+
+``--turbomole``
+~~~~~~~~~~~~~
+
+TURBOMOLE mode is invoked with this option. Usually this option is used
+with ``--cell`` (``-c``) option or ``CELL_FILENAME`` tag to read a TURBOMOLE
+input file that contains the unit cell crystal structure, e.g.,
+
+::
+
+   % phonopy --turbomole -c control band.conf
+
 .. _vasp_mode:
 
 ``--vasp``
@@ -217,12 +230,13 @@ Unit cell crystal structure file is specified with this tag.
 Without specifying this tag, default file name is searched in current
 directory. The default file names for the calculators are as follows::
 
-   VASP    | POSCAR
-   WIEN2k  | case.struct
-   ABINIT  | unitcell.in
-   PWscf   | unitcell.in
-   Elk     | elk.in
-   CRYSTAL | crystal.o
+   VASP      | POSCAR
+   WIEN2k    | case.struct
+   ABINIT    | unitcell.in
+   PWscf     | unitcell.in
+   Elk       | elk.in
+   CRYSTAL   | crystal.o
+   TURBOMOLE | control
 
 Create ``FORCE_SETS``
 ----------------------
@@ -332,12 +346,24 @@ files.
 CRYSTAL interface
 ^^^^^^^^^^^^^^^^^
 
-``FORCE_SETS`` file is created from ``disp.yaml`` and CRYSTAL output
+``FORCE_SETS`` file is created from ``phonopy-disp.yaml`` and CRYSTAL output
 files.
 
 ::
 
    % phonopy --crystal -f supercell-001.o supercell-002.o  ...
+
+.. _turbomole_force_sets_option:
+
+TURBOMOLE interface
+^^^^^^^^^^^^^^^^^
+
+``FORCE_SETS`` file is created from ``phonopy-disp.yaml`` and TURBOMOLE output
+files.
+
+::
+
+   % phonopy --turbomole -f supercell-001 supercell-002  ...
 
 .. _fz_force_sets_option:
 

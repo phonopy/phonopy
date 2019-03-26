@@ -903,18 +903,11 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                 plot.show()
 
     if run_mode == 'mesh' or run_mode == 'band_mesh':
-        mesh = settings.get_mesh_numbers()
+        mesh_numbers = settings.get_mesh_numbers()
         mesh_shift = settings.get_mesh_shift()
         t_symmetry = settings.get_time_reversal_symmetry()
         q_symmetry = settings.get_is_mesh_symmetry()
         is_gamma_center = settings.get_is_gamma_center()
-
-        if type(mesh) is float:
-            is_gamma_center = True
-            mesh_numbers = length2mesh(mesh, primitive.get_cell())
-            print("Mesh numbers: %s" % mesh_numbers)
-        else:
-            mesh_numbers = np.array(mesh)
 
         if (settings.get_is_thermal_displacements() or
             settings.get_is_thermal_displacement_matrices()):
@@ -933,6 +926,8 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                              with_eigenvectors=settings.get_is_eigenvectors(),
                              is_gamma_center=is_gamma_center,
                              use_iter_mesh=True)
+            if log_level > 0:
+                print("Mesh numbers: %s" % phonon.mesh_numbers)
         else:
             phonon.init_mesh(
                 mesh=mesh_numbers,
@@ -943,10 +938,12 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                 with_group_velocities=settings.get_is_group_velocity(),
                 is_gamma_center=is_gamma_center)
             if log_level > 0:
+                print("Mesh numbers: %s" % phonon.mesh_numbers)
                 weights = phonon.mesh.weights
                 if q_symmetry:
                     print("Number of irreducible q-points on sampling mesh: "
-                          "%d/%d" % (weights.shape[0], np.prod(mesh_numbers)))
+                          "%d/%d" % (weights.shape[0],
+                                     np.prod(phonon.mesh_numbers)))
                 else:
                     print("Number of q-points on sampling mesh: %d" %
                           weights.shape[0])
