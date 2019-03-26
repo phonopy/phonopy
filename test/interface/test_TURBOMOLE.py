@@ -16,7 +16,7 @@ class TestTurbomole(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_read_turbomole(self):
+    def _test_read_turbomole(self):
         cell = read_turbomole(os.path.join(data_dir,
                                            "Si-TURBOMOLE-control"))
         filename = os.path.join(data_dir, "Si-TURBOMOLE.yaml")
