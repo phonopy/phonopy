@@ -19,7 +19,7 @@ DFTB+ phonon band structures are created as follows:
 
    % phonopy -d --dim="4 4 4" --dftb+
 
-   This example builds 2 x 2 x 2 supercell files. The undistorted supercell is
+   This example builds 4 x 4 x 4 supercell files. The undistorted supercell is
    stored in ``geo.genS``, while the required displacements are stored in files
    matching the pattern ``geo.genS-*``. Note that you have to increase the
    supercell dimension until you reach convergence of the band structure.
