@@ -14,8 +14,8 @@ DFTB+ phonon band structures are created as follows:
    ``CalculateForces = Yes`` in its analysis block, and write the tagged results
    by enabling ``WriteResultsTag = Yes`` in its options.
 
-2) Generate the the required set of structures and the ``disp.yaml`` file by
-   issuing the command ::
+2) Generate the the required set of structures and the ``phonopy_disp.yaml``
+   file by issuing the command ::
 
    % phonopy -d --dim="4 4 4" --dftb+
 
@@ -25,7 +25,7 @@ DFTB+ phonon band structures are created as follows:
    supercell dimension until you reach convergence of the band structure.
 
 2) For each each ``geo.genS-*`` structure perform a DFTB+ calculations,
-   retaining the resulting ``detailed.out`` file.
+   retaining the resulting ``results.tag`` file.
 
 3) Create the ``FORCE_SETS`` file with the command ::
 
