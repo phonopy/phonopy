@@ -32,9 +32,9 @@ DFTB+ phonon band structures are created as follows:
      % phonopy -f disp-*/results.tag --dftb+  ...
 
    Where the location of all of the ``results.tag`` files is given on the
-   command line. To run this command, the ``disp.yaml`` file has to be located
-   in the current directory, because the atomic displacements are written into
-   the FORCE_SETS file.
+   command line. To run this command, the ``phonopy_disp.yaml`` file has to be
+   located in the current directory, because the atomic displacements are
+   written into the FORCE_SETS file.
 
 4) Create a ``band.conf`` file to specify the path in the Brillouin zone you are
    interested in (see the phonopy documentation). Then post-process the phonopy
