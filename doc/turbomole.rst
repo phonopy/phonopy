@@ -1,4 +1,4 @@
-.. _crystal_interface:
+.. _turbomole_interface:
 
 TURBOMOLE & phonopy calculation
 =========================================
