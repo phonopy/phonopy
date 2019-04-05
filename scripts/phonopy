@@ -338,6 +338,16 @@ if args.quiet or args.is_check_symmetry:
 if args.loglevel is not None:
     log_level = args.loglevel
 
+# HDF5 compression filter
+try:
+    compression = int(args.hdf5_compression)
+except ValueError:  # str
+    compression = args.hdf5_compression
+    if compression.lower() == "none":
+        compression = None
+except TypeError:  # None
+    compression = args.hdf5_compression
+
 if args.is_graph_save:
     import matplotlib
     matplotlib.use('Agg')
@@ -504,13 +514,15 @@ if run_mode == 'displacements':
 else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
     # Overwrite frequency unit conversion factor
     if settings.get_frequency_conversion_factor() is not None:
-        physical_units['factor'] = settings.get_frequency_conversion_factor()
+        freq_factor = settings.get_frequency_conversion_factor()
+    else:
+        freq_factor = physical_units['factor']
 
     phonon = Phonopy(
         unitcell,
         supercell_matrix,
         primitive_matrix=primitive_matrix,
-        factor=physical_units['factor'],
+        factor=freq_factor,
         frequency_scale_factor=settings.get_frequency_scale_factor(),
         dynamical_matrix_decimals=settings.get_dm_decimals(),
         force_constants_decimals=settings.get_fc_decimals(),
@@ -624,7 +636,7 @@ if settings.get_read_force_constants():
         fc_filename = "FORCE_CONSTANTS"
 
     if log_level > 0:
-        print("Force constants are read from %s." % fc_filename)
+        print("Force constants are read from \"%s\"." % fc_filename)
 
     if fc.shape[1] != num_satom:
         error_text = ("Number of atoms in supercell is not consistent "
@@ -723,8 +735,11 @@ if settings.get_fc_symmetry():
 # Write FORCE_CONSTANTS
 if settings.get_write_force_constants():
     if settings.get_is_hdf5() or settings.get_writefc_format() == 'hdf5':
+        fc_unit = physical_units['force_constants_unit']
         write_force_constants_to_hdf5(phonon.get_force_constants(),
-                                      p2s_map=p2s_map)
+                                      p2s_map=p2s_map,
+                                      physical_unit=fc_unit,
+                                      compression=compression)
         if log_level > 0:
             print("Force constants are written into \"force_constants.hdf5\".")
     else:
