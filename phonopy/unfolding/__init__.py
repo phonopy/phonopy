@@ -49,8 +49,8 @@ class Unfolding(object):
         self._ideal_positions = ideal_positions
         self._atom_mapping = atom_mapping
         self._qpoints = qpoints
-        self._symprec = self._phonon.get_symmetry().get_symmetry_tolerance()
-        
+        self._symprec = self._phonon.symmetry.get_symmetry_tolerance()
+
         self._trans_s = None
         self._trans_p = None
         self._comm_points = None
@@ -130,11 +130,10 @@ class Unfolding(object):
         self._index_set = index_set
 
     def _solve_phonon(self):
-        if (self._phonon.set_qpoints_phonon(self._qpoints, is_eigenvectors=True)):
-            self._freqs, self._eigvecs = self._phonon.get_qpoints_phonon()
-        else:
-            print("Solving phonon failed.")
-            return False
+        self._phonon.run_qpoints(self._qpoints, with_eigenvectors=True)
+        qpt = self._phonon.get_qpoints_dict()
+        self._freqs = qpt['frequencies']
+        self._eigvecs = qpt['eigenvectors']
 
     def _get_unfolding_weight(self):
         eigvecs = self._eigvecs[self._q_index]
