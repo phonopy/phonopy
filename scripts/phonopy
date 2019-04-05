@@ -38,12 +38,13 @@ import sys
 import os
 import numpy as np
 from phonopy import Phonopy, __version__
-from phonopy.file_IO import (read_force_constants_hdf5, parse_FORCE_CONSTANTS,
+from phonopy.file_IO import (parse_FORCE_CONSTANTS,
                              parse_FORCE_SETS, write_disp_yaml,
                              get_born_parameters, write_FORCE_CONSTANTS,
                              write_force_constants_to_hdf5, parse_QPOINTS,
                              parse_disp_yaml)
 from phonopy.cui.collect_cell_info import collect_cell_info
+from phonopy.cui.load_helper import read_force_constants_from_hdf5
 from phonopy.cui.settings import PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.cui.phonopy_argparse import (get_parser,
@@ -612,8 +613,9 @@ if settings.get_read_force_constants():
             sys.exit(1)
 
         file_exists("force_constants.hdf5", log_level)
-        fc = read_force_constants_hdf5(filename="force_constants.hdf5",
-                                       p2s_map=p2s_map)
+        fc = read_force_constants_from_hdf5(filename="force_constants.hdf5",
+                                            p2s_map=p2s_map,
+                                            calculator=interface_mode)
         fc_filename = "force_constants.hdf5"
     else:
         file_exists("FORCE_CONSTANTS", log_level)
@@ -711,7 +713,7 @@ if settings.get_fc_spg_symmetry():
                           filename='FORCE_CONSTANTS_SPG')
     if log_level > 0:
         print("Symmetrized force constants are written into "
-              "FORCE_CONSTANTS_SPG.")
+              "\"FORCE_CONSTANTS_SPG\".")
 
 # Imporse translational invariance and index permulation symmetry to
 # force constants
@@ -724,11 +726,11 @@ if settings.get_write_force_constants():
         write_force_constants_to_hdf5(phonon.get_force_constants(),
                                       p2s_map=p2s_map)
         if log_level > 0:
-            print("Force constants are written into force_constants.hdf5.")
+            print("Force constants are written into \"force_constants.hdf5\".")
     else:
         write_FORCE_CONSTANTS(phonon.get_force_constants(), p2s_map=p2s_map)
         if log_level > 0:
-            print("Force constants are written into FORCE_CONSTANTS.")
+            print("Force constants are written into \"FORCE_CONSTANTS\".")
 
 # Show the rotational invariance condition (just show!)
 if settings.get_is_rotational_invariance():

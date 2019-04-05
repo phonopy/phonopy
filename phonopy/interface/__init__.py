@@ -218,7 +218,8 @@ def get_default_supercell_filename(interface_mode):
 
 
 def get_default_displacement_distance(interface_mode):
-    if interface_mode in ('wien2k', 'abinit', 'elk', 'qe', 'siesta', 'cp2k', 'turbomole'):
+    if interface_mode in ('wien2k', 'abinit', 'elk', 'qe', 'siesta', 'cp2k',
+                          'turbomole'):
         displacement_distance = 0.02
     elif interface_mode == 'crystal':
         displacement_distance = 0.01
@@ -227,7 +228,7 @@ def get_default_displacement_distance(interface_mode):
     return displacement_distance
 
 
-def get_default_physical_units(interface_mode):
+def get_default_physical_units(interface_mode=None):
     """Return physical units used for calculators
 
     Physical units: energy,  distance,  atomic mass, force
@@ -435,6 +436,26 @@ def get_force_sets(interface_mode,
                                      verbose=verbose)
 
     return force_sets
+
+
+def get_force_constant_conversion_factor(unit, interface_mode):
+    from phonopy.units import Bohr, Rydberg, Hartree
+
+    units = get_default_physical_units(interface_mode)
+    default_unit = units['force_constants_unit']
+    factor_to_eVperA2 = {'eV/Angstrom^2': 1,
+                         'eV/Angstrom.au': 1 / Bohr,
+                         'Ry/au^2': Rydberg / Bohr ** 2,
+                         'mRy/au^2': Rydberg / Bohr ** 2 / 1000,
+                         'hartree/au^2': Hartree / Bohr ** 2}
+    if default_unit not in factor_to_eVperA2:
+        msg = "Force constant conversion for %s unit is not implemented."
+        raise NotImplementedError(msg)
+    if default_unit != unit:
+        factor = factor_to_eVperA2[unit] / factor_to_eVperA2[default_unit]
+        return factor
+    else:
+        return 1.0
 
 
 def _read_phonopy_yaml(filename, command_name):
