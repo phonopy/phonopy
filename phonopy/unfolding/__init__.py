@@ -34,19 +34,54 @@
 
 import numpy as np
 from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_supercell
 
+
 class Unfolding(object):
+    """
+
+    Implementation of an unfolding method by
+    P. B. Allen et al., Phys. Rev. B 87, 085322 (2013)
+
+    T(r_i) in this implementation is defined as
+
+        T(r_i) f(x) = f(x - r_i).
+
+    The sign is opposite from that written in the Allen's paper.
+    Bloch wave is defined in the same way for phase convention
+
+        Psi_k(x + r) = exp(ikr) Psi_k(x).
+
+    By these, sign of phase in Eq.(3) (Eq.(7) as well) is opposite.
+
+
+    """
+
     def __init__(self,
                  phonon,
                  supercell_matrix,
                  ideal_positions,
                  atom_mapping,
                  qpoints):
+        """
+
+        Parameters
+        ----------
+        phonon : Phonopy
+            Phonopy object made with supercell as the primitive cell.
+        supercell_matrix : array_like
+            Matrix that represents the primitive translation enforced within
+            the supercell. This works like an inverse primitive matrix.
+            shape=(3, 3), dtype='intc'
+        ideal_positions : array_like
+            shape=(3, 3), dtype='intc'
+
+        """
+
         self._phonon = phonon
         self._supercell_matrix = np.array(supercell_matrix, dtype='intc')
-        self._ideal_positions = ideal_positions
+        self._ideal_positions = np.array(ideal_positions, dtype='double')
         self._atom_mapping = atom_mapping
         self._qpoints = qpoints
         self._symprec = self._phonon.symmetry.get_symmetry_tolerance()
@@ -108,25 +143,46 @@ class Unfolding(object):
         return self._freqs
 
     def _set_translations(self):
-        pcell = Atoms(numbers=[1],
-                      scaled_positions=[[0, 0, 0]],
-                      cell=np.diag([1, 1, 1]),
-                      pbc=True)
+        """Set primitive translations in supercell
+
+        _trans_s
+            Translations with respect to supercell basis vectors
+        _trans_p
+            Translations with respect to primitive cell basis vectors
+        _N
+            Number of the translations = det(supercel_matrix)
+
+        """
+
+        pcell = PhonopyAtoms(numbers=[1],
+                             scaled_positions=[[0, 0, 0]],
+                             cell=np.diag([1, 1, 1]),
+                             pbc=True)
         smat = self._supercell_matrix
         self._trans_s = get_supercell(pcell, smat).get_scaled_positions()
         self._trans_p = np.dot(self._trans_s, self._supercell_matrix.T)
         self._N = len(self._trans_s)
 
     def _set_shifted_index_set(self):
-        index_set = np.zeros((self._N, len(self._ideal_positions) * 3),
+        """T(r_i) in Eq.(3) is given as permutation of atom indices.
+
+        _index_set : ndarray
+            For each translation (shift), atomic indices of the positions
+            (_ideal_positions - shift) are searched and stored.
+            shape=(num_trans, num_sites), dtype='intc'
+
+        """
+
+        index_set = np.zeros((self._N, len(self._ideal_positions)),
                              dtype='intc')
+        lattice = self._phonon.supercell.get_cell()
         for i, shift in enumerate(self._trans_s):
             for j, p in enumerate(self._ideal_positions - shift):
                 diff = self._ideal_positions - p
                 diff -= np.rint(diff)
-                k = np.nonzero((np.abs(diff) < self._symprec).all(axis=1))[0][0]
-                l = self._atom_mapping[k]
-                index_set[i, j * 3:(j + 1) * 3] = np.arange(l * 3, (l + 1) * 3)
+                dist = np.sqrt((np.dot(diff, lattice) ** 2).sum(axis=1))
+                k = np.where(dist < self._symprec)[0][0]
+                index_set[i, j] = self._atom_mapping[k]
         self._index_set = index_set
 
     def _solve_phonon(self):
@@ -136,26 +192,29 @@ class Unfolding(object):
         self._eigvecs = qpt['eigenvectors']
 
     def _get_unfolding_weight(self):
+        """Calculate Eq. (7)
+
+        K -> _qpoints[_q_index]
+        G -> _comm_points
+        j -> Outer loop
+        J -> Axis=1 of _eigvecs
+
+        """
+
         eigvecs = self._eigvecs[self._q_index]
         dtype = "c%d" % (np.dtype('double').itemsize * 2)
         weights = np.zeros((eigvecs.shape[0], self._N), dtype=dtype)
-        for shift, indices in zip(self._trans_p, self._index_set):
-            dot_eigs = np.einsum(
-                'ij,ij->j', eigvecs.conj(), eigvecs[indices, :])
-            for i, G in enumerate(self._comm_points):
-                phase = np.exp(2j * np.pi * np.dot(G, shift))
-                weights[:, i] += dot_eigs * phase
-        weights /= self._N
 
-        # # Strainghtforward norm calculation (equivalent speed)
-        # for i, G in enumerate(self._comm_points):
-        #     eigvecs_shifted = np.zeros_like(eigvecs)
-        #     for shift, indices in zip(self._trans_p, self._index_set):
-        #         phase = np.exp(2j * np.pi * np.dot(G, shift))
-        #         eigvecs_shifted += eigvecs[indices, :] * phase
-        #     weights[:, i] = np.einsum(
-        #             'ij,ij->j', eigvecs_shifted.conj(), eigvecs_shifted)
-        # weights /= self._N**2
+        # Loop over r_j in Eq.(7)
+        for shift, indices in zip(self._trans_p, self._index_set):
+            eig_indices = (
+                np.c_[indices * 3, indices * 3 + 1, indices * 3 + 2]).ravel()
+            # Braket in Eq. (7). Results are given for bands (J).
+            dot_eigs = (eigvecs.conj() * eigvecs[eig_indices, :]).sum(axis=0)
+            # Phase in Eq. (7)
+            phases = np.exp(2j * np.pi * np.dot(self._comm_points, shift))
+            weights += np.outer(dot_eigs, phases)
+        weights /= self._N
 
         if (weights.imag > 1e-5).any():
             print("Phonopy warning: Encountered imaginary values.")
