@@ -1250,9 +1250,6 @@ elif run_mode == 'modulation':
         delta_q = None
     derivative_order = mod_setting['order']
 
-    print(dimension)
-    print(phonon_modes)
-
     phonon.set_modulations(dimension,
                            phonon_modes,
                            delta_q=delta_q,
