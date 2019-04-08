@@ -127,7 +127,7 @@ class Unfolding(object):
         self._set_index_set()
         self._solve_phonon()
         self._weights = np.zeros(
-            (len(self._eigvecs), self._eigvecs[0].shape[0], self._N),
+            (self._eigvecs.shape[0], self._eigvecs.shape[2], self._N),
             dtype='double')
 
     def get_translations(self):
@@ -159,8 +159,7 @@ class Unfolding(object):
 
         pcell = PhonopyAtoms(numbers=[1],
                              scaled_positions=[[0, 0, 0]],
-                             cell=np.diag([1, 1, 1]),
-                             pbc=True)
+                             cell=np.diag([1, 1, 1]))
         smat = self._supercell_matrix
         self._trans_s = get_supercell(pcell, smat).get_scaled_positions()
         self._trans_p = np.dot(self._trans_s, self._supercell_matrix.T)
@@ -179,7 +178,7 @@ class Unfolding(object):
         """
 
         lattice = self._phonon.supercell.get_cell()
-        natom = self._phonon.supercell.get_number_of_atoms()
+        natom = len(self._ideal_positions)
         index_set = np.zeros((self._N, natom), dtype='intc')
         for i, shift in enumerate(self._trans_s):
             for j, p in enumerate(self._ideal_positions - shift):
@@ -189,9 +188,10 @@ class Unfolding(object):
 
                 # k is index in _ideal_positions.
                 k = np.where(dist < self._symprec)[0][0]
-
                 # _atom_mapping from _ideal_positions to eigenvectors.
-                if self._atom_mapping[k] is not None:
+                if self._atom_mapping[k] is None:
+                    index_set[i, j] = -1
+                else:
                     index_set[i, j] = self._atom_mapping[k]
 
         self._index_set = index_set
@@ -200,7 +200,14 @@ class Unfolding(object):
         self._phonon.run_qpoints(self._qpoints, with_eigenvectors=True)
         qpt = self._phonon.get_qpoints_dict()
         self._freqs = qpt['frequencies']
-        self._eigvecs = qpt['eigenvectors']
+        eigvecs = qpt['eigenvectors']
+        if None in self._atom_mapping:
+            shape = list(eigvecs.shape)
+            shape[1] += 3
+            self._eigvecs = np.zeros(tuple(shape), dtype=eigvecs.dtype)
+            self._eigvecs[:, :-3, :] = eigvecs
+        else:
+            self._eigvecs = eigvecs
 
     def _get_unfolding_weight(self):
         """Calculate Eq. (7)
@@ -214,7 +221,7 @@ class Unfolding(object):
 
         eigvecs = self._eigvecs[self._q_index]
         dtype = "c%d" % (np.dtype('double').itemsize * 2)
-        weights = np.zeros((eigvecs.shape[0], self._N), dtype=dtype)
+        weights = np.zeros((eigvecs.shape[1], self._N), dtype=dtype)
 
         # Loop over r_j in Eq.(7)
         for shift, indices in zip(self._trans_p, self._index_set):
@@ -227,7 +234,9 @@ class Unfolding(object):
             weights += np.outer(dot_eigs, phases)
         weights /= self._N
 
-        if (weights.imag > 1e-5).any():
-            print("Phonopy warning: Encountered imaginary values.")
+        # if (weights.imag > 1e-5).any():
+        #     print("Phonopy warning: Encountered imaginary values.")
 
-        return weights.real
+        # return weights.real
+
+        return np.abs(weights)
