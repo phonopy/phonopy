@@ -76,6 +76,9 @@ class Unfolding(object):
             shape=(3, 3), dtype='intc'
         ideal_positions : array_like
             shape=(3, 3), dtype='intc'
+        atom_mapping : list
+            Atomic index mapping from ideal_positions to supercell atoms in
+            phonon. None is used for Vacancies.
 
         """
 
@@ -121,7 +124,7 @@ class Unfolding(object):
     def prepare(self):
         self._comm_points = get_commensurate_points(self._supercell_matrix)
         self._set_translations()
-        self._set_shifted_index_set()
+        self._set_index_set()
         self._solve_phonon()
         self._weights = np.zeros(
             (len(self._eigvecs), self._eigvecs[0].shape[0], self._N),
@@ -163,26 +166,34 @@ class Unfolding(object):
         self._trans_p = np.dot(self._trans_s, self._supercell_matrix.T)
         self._N = len(self._trans_s)
 
-    def _set_shifted_index_set(self):
+    def _set_index_set(self):
         """T(r_i) in Eq.(3) is given as permutation of atom indices.
 
         _index_set : ndarray
             For each translation (shift), atomic indices of the positions
-            (_ideal_positions - shift) are searched and stored.
+            (_ideal_positions - shift) are searched and stored. The indices
+            are used to select eigenvectors, by which T(r_i)|KJ> is
+            represented.
             shape=(num_trans, num_sites), dtype='intc'
 
         """
 
-        index_set = np.zeros((self._N, len(self._ideal_positions)),
-                             dtype='intc')
         lattice = self._phonon.supercell.get_cell()
+        natom = self._phonon.supercell.get_number_of_atoms()
+        index_set = np.zeros((self._N, natom), dtype='intc')
         for i, shift in enumerate(self._trans_s):
             for j, p in enumerate(self._ideal_positions - shift):
                 diff = self._ideal_positions - p
                 diff -= np.rint(diff)
                 dist = np.sqrt((np.dot(diff, lattice) ** 2).sum(axis=1))
+
+                # k is index in _ideal_positions.
                 k = np.where(dist < self._symprec)[0][0]
-                index_set[i, j] = self._atom_mapping[k]
+
+                # _atom_mapping from _ideal_positions to eigenvectors.
+                if self._atom_mapping[k] is not None:
+                    index_set[i, j] = self._atom_mapping[k]
+
         self._index_set = index_set
 
     def _solve_phonon(self):
@@ -196,8 +207,8 @@ class Unfolding(object):
 
         K -> _qpoints[_q_index]
         G -> _comm_points
-        j -> Outer loop
-        J -> Axis=1 of _eigvecs
+        j -> Primitive translations in supercell (_trans_p)
+        J -> Band indices of supercell phonon modes (axis=1 or eigvecs)
 
         """
 
@@ -210,7 +221,7 @@ class Unfolding(object):
             eig_indices = (
                 np.c_[indices * 3, indices * 3 + 1, indices * 3 + 2]).ravel()
             # Braket in Eq. (7). Results are given for bands (J).
-            dot_eigs = (eigvecs.conj() * eigvecs[eig_indices, :]).sum(axis=0)
+            dot_eigs = (eigvecs.conj() * eigvecs[eig_indices]).sum(axis=0)
             # Phase in Eq. (7)
             phases = np.exp(2j * np.pi * np.dot(self._comm_points, shift))
             weights += np.outer(dot_eigs, phases)
