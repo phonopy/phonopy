@@ -201,6 +201,7 @@ class Unfolding(object):
         qpt = self._phonon.get_qpoints_dict()
         self._freqs = qpt['frequencies']
         eigvecs = qpt['eigenvectors']
+
         if None in self._atom_mapping:
             shape = list(eigvecs.shape)
             shape[1] += 3
@@ -212,10 +213,13 @@ class Unfolding(object):
     def _get_unfolding_weight(self):
         """Calculate Eq. (7)
 
-        K -> _qpoints[_q_index]
-        G -> _comm_points
+        K -> _qpoints[_q_index] (in SBZ)
+        G -> _comm_points (in PBZ)
         j -> Primitive translations in supercell (_trans_p)
         J -> Band indices of supercell phonon modes (axis=1 or eigvecs)
+
+        The phase factor corresponding to K is not included in eigvecs
+        with our choice of dynamical matrix.
 
         """
 
@@ -224,19 +228,29 @@ class Unfolding(object):
         weights = np.zeros((eigvecs.shape[1], self._N), dtype=dtype)
 
         # Loop over r_j in Eq.(7)
-        for shift, indices in zip(self._trans_p, self._index_set):
-            eig_indices = (
-                np.c_[indices * 3, indices * 3 + 1, indices * 3 + 2]).ravel()
-            # Braket in Eq. (7). Results are given for bands (J).
-            dot_eigs = (eigvecs.conj() * eigvecs[eig_indices]).sum(axis=0)
-            # Phase in Eq. (7)
-            phases = np.exp(2j * np.pi * np.dot(self._comm_points, shift))
-            weights += np.outer(dot_eigs, phases)
-        weights /= self._N
+        # for shift, indices in zip(self._trans_p, self._index_set):
+        #     eig_indices = (
+        #         np.c_[indices * 3, indices * 3 + 1, indices * 3 + 2]).ravel()
+        #     # Braket in Eq. (7). Results are given for bands (J).
+        #     dot_eigs = (eigvecs.conj() * eigvecs[eig_indices]).sum(axis=0)
+        #     # Phase in Eq. (7)
+        #     phases = np.exp(2j * np.pi * np.dot(self._comm_points, shift))
+        #     weights += np.outer(dot_eigs, phases)
+        # weights /= self._N
 
-        # if (weights.imag > 1e-5).any():
-        #     print("Phonopy warning: Encountered imaginary values.")
+        for i, G in enumerate(self._comm_points):
+            e = np.zeros(eigvecs.shape[:2], dtype=dtype)
+            for shift, indices in zip(self._trans_p, self._index_set):
+                eig_indices = (
+                    np.c_[indices * 3, indices * 3 + 1, indices * 3 + 2]).ravel()
+                phase = np.exp(2j * np.pi * np.dot(G, shift))
+                e += eigvecs[eig_indices, :] * phase
+            e /= self._N
+            weights[:, i] = (e.conj() * e).sum(axis=0)
 
-        # return weights.real
+        if (weights.imag > 1e-5).any():
+            print("Phonopy warning: Encountered imaginary values.")
 
-        return np.abs(weights)
+        return weights.real
+
+        # return np.abs(weights)
