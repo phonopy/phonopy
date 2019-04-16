@@ -88,7 +88,12 @@ class Unfolding(object):
         self._phonon = phonon
         self._supercell_matrix = np.array(supercell_matrix, dtype='intc')
         self._ideal_positions = np.array(ideal_positions, dtype='double')
-        self._atom_mapping = atom_mapping
+        self._atom_mapping = np.zeros(len(atom_mapping), dtype=int)
+        for i, idx in enumerate(atom_mapping):
+            if idx is None:
+                self._atom_mapping[i] = -1
+            else:
+                self._atom_mapping[i] = idx
         self._qpoints_p = qpoints
         self._qpoints_s = self._get_qpoints_in_SBZ()
         self._symprec = self._phonon.symmetry.get_symmetry_tolerance()
@@ -187,22 +192,16 @@ class Unfolding(object):
 
         lattice = self._phonon.supercell.get_cell()
         natom = len(self._ideal_positions)
-        index_set = np.zeros((self._N, natom), dtype='intc')
+        index_map_inv = np.zeros((self._N, natom), dtype='intc')
         for i, shift in enumerate(self._trans_s):
-            for j, p in enumerate(self._ideal_positions - shift):
+            for j, p in enumerate(self._ideal_positions - shift):  # minus r_i
                 diff = self._ideal_positions - p
                 diff -= np.rint(diff)
                 dist = np.sqrt((np.dot(diff, lattice) ** 2).sum(axis=1))
-
                 # k is index in _ideal_positions.
                 k = np.where(dist < self._symprec)[0][0]
-                # _atom_mapping from _ideal_positions to eigenvectors.
-                if self._atom_mapping[k] is None:
-                    index_set[i, j] = -1
-                else:
-                    index_set[i, j] = self._atom_mapping[k]
-
-        self._index_set = index_set
+                index_map_inv[i, j] = k
+        self._index_map_inv = index_map_inv
 
     def _solve_phonon(self):
         self._phonon.run_qpoints(self._qpoints_s, with_eigenvectors=True)
@@ -216,7 +215,7 @@ class Unfolding(object):
             phases = np.exp(2j * np.dot(pos, q))
             eigvecs[i] = np.multiply(eigvecs[i].T, np.repeat(phases, 3)).T
 
-        if None in self._atom_mapping:
+        if -1 in self._atom_mapping:
             shape = list(eigvecs.shape)
             shape[1] += 3
             self._eigvecs = np.zeros(tuple(shape), dtype=eigvecs.dtype)
@@ -256,13 +255,27 @@ class Unfolding(object):
                 break
 
         e = np.zeros(eigvecs.shape[:2], dtype=dtype)
-        for shift, indices in zip(self._trans_p, self._index_set):
+        phases = np.exp(2j * np.pi * np.dot(self._trans_p, G))
+        for phase, indices in zip(
+                phases, self._atom_mapping[self._index_map_inv]):
             eig_indices = (
                 np.c_[indices * 3, indices * 3 + 1, indices * 3 + 2]).ravel()
-            phase = np.exp(2j * np.pi * np.dot(G, shift))
             e += eigvecs[eig_indices, :] * phase
         e /= self._N
         weights[:] = (e.conj() * e).sum(axis=0)
+
+        # e = np.zeros(eigvecs.shape[:2], dtype=dtype)
+        # phases = np.exp(2j * np.pi * np.dot(self._trans_p, G))
+        # indices = self._atom_mapping
+        # eig_indices_r = (
+        #     np.c_[indices * 3, indices * 3 + 1, indices * 3 + 2]).ravel()
+        # for phase, indices in zip(
+        #         phases, self._atom_mapping[self._index_map_inv]):
+        #     eig_indices_l = (
+        #         np.c_[indices * 3, indices * 3 + 1, indices * 3 + 2]).ravel()
+        #     e += eigvecs[eig_indices_l, :] * eigvecs[eig_indices_r, :].conj() * phase
+        # e /= self._N
+        # weights[:] = e.sum(axis=0)
 
         if (weights.imag > 1e-5).any():
             print("Phonopy warning: Encountered imaginary values.")
