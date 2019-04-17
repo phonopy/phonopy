@@ -61,8 +61,8 @@ class _Atoms(object):
                  cell=None,
                  pbc=None):
         # cell and positions
-        self.cell = None
-        self.scaled_positions = None
+        self._cell = None
+        self._scaled_positions = None
         self._set_cell_and_positions(cell,
                                      positions=positions,
                                      scaled_positions=scaled_positions)
@@ -71,9 +71,9 @@ class _Atoms(object):
         self.symbols = symbols
 
         # Atomic numbers
-        self.numbers = None
+        self._numbers = None
         if numbers is not None:
-            self.numbers = np.array(numbers, dtype='intc')
+            self._numbers = np.array(numbers, dtype='intc')
 
         # masses
         self.masses = None
@@ -84,7 +84,7 @@ class _Atoms(object):
         self._set_magnetic_moments(magmoms)
 
         # numbers and symbols
-        if self.numbers is not None: # number --> symbol
+        if self._numbers is not None: # number --> symbol
             self._numbers_to_symbols()
         elif self.symbols is not None: # symbol --> number
             self._symbols_to_numbers()
@@ -100,21 +100,21 @@ class _Atoms(object):
         self._check()
 
     def get_cell(self):
-        return self.cell.copy()
+        return self._cell.copy()
 
     def set_positions(self, cart_positions):
         self._set_positions(cart_positions)
         self._check()
 
     def get_positions(self):
-        return np.dot(self.scaled_positions, self.cell)
+        return np.dot(self._scaled_positions, self._cell)
 
     def set_scaled_positions(self, scaled_positions):
         self._set_scaled_positions(scaled_positions)
         self._check()
 
     def get_scaled_positions(self):
-        return self.scaled_positions.copy()
+        return self._scaled_positions.copy()
 
     def set_masses(self, masses):
         self._set_masses(masses)
@@ -146,7 +146,7 @@ class _Atoms(object):
         return self.symbols[:]
 
     def get_number_of_atoms(self):
-        return len(self.scaled_positions)
+        return len(self._scaled_positions)
 
     def set_atomic_numbers(self, number):
         self.number = number
@@ -155,22 +155,22 @@ class _Atoms(object):
         self._symbols_to_masses()
 
     def get_atomic_numbers(self):
-        return self.numbers.copy()
+        return self._numbers.copy()
 
     def get_volume(self):
-        return np.linalg.det(self.cell)
+        return np.linalg.det(self._cell)
 
     def _set_cell(self, cell):
-        self.cell = np.array(cell, dtype='double', order='C')
+        self._cell = np.array(cell, dtype='double', order='C')
 
     def _set_positions(self, cart_positions):
-        self.scaled_positions = np.array(
-            np.dot(cart_positions, np.linalg.inv(self.cell)),
+        self._scaled_positions = np.array(
+            np.dot(cart_positions, np.linalg.inv(self._cell)),
             dtype='double', order='C')
 
     def _set_scaled_positions(self, scaled_positions):
-        self.scaled_positions = np.array(scaled_positions,
-                                         dtype='double', order='C')
+        self._scaled_positions = np.array(scaled_positions,
+                                          dtype='double', order='C')
 
     def _set_masses(self, masses):
         if masses is None:
@@ -195,10 +195,10 @@ class _Atoms(object):
             self._set_scaled_positions(scaled_positions)
 
     def _numbers_to_symbols(self):
-        self.symbols = [atom_data[n][1] for n in self.numbers]
+        self.symbols = [atom_data[n][1] for n in self._numbers]
 
     def _symbols_to_numbers(self):
-        self.numbers = np.array(
+        self._numbers = np.array(
             [symbol_map[s] for s in self.symbols], dtype='intc')
 
     def _symbols_to_masses(self):
@@ -209,22 +209,23 @@ class _Atoms(object):
             self.masses = np.array(masses, dtype='double')
 
     def _check(self):
-        if self.cell is None:
+        if self._cell is None:
             raise RuntimeError('cell is not set.')
-        if self.scaled_positions is None:
+        if self._scaled_positions is None:
             raise RuntimeError('scaled_positions (positions) is not set.')
-        if self.numbers is None:
+        if self._numbers is None:
             raise RuntimeError('numbers is not set.')
-        if len(self.numbers) != len(self.scaled_positions):
+        if len(self._numbers) != len(self._scaled_positions):
             raise RuntimeError('len(numbers) != len(scaled_positions).')
-        if len(self.numbers) != len(self.symbols):
+        if len(self._numbers) != len(self.symbols):
             raise RuntimeError('len(numbers) != len(symbols).')
         if self.masses is not None:
-            if len(self.numbers) != len(self.masses):
+            if len(self._numbers) != len(self.masses):
                 raise RuntimeError('len(numbers) != len(masses).')
         if self.magmoms is not None:
-            if len(self.numbers) != len(self.magmoms):
+            if len(self._numbers) != len(self.magmoms):
                 raise RuntimeError('len(numbers) != len(magmoms).')
+
 
 class PhonopyAtoms(_Atoms):
     def __init__(self,
@@ -260,9 +261,21 @@ class PhonopyAtoms(_Atoms):
                             cell=cell,
                             pbc=True)
 
+    @property
+    def cell(self):
+        return self._cell.copy()
+
+    @property
+    def scaled_positions(self):
+        return self._scaled_positions.copy()
+
+    @property
+    def numbers(self):
+        return self._numbers.copy()
+
     def copy(self):
-        return PhonopyAtoms(cell=self.cell,
-                            scaled_positions=self.scaled_positions,
+        return PhonopyAtoms(cell=self._cell,
+                            scaled_positions=self._scaled_positions,
                             masses=self.masses,
                             magmoms=self.magmoms,
                             symbols=self.symbols,
@@ -270,9 +283,9 @@ class PhonopyAtoms(_Atoms):
 
     def totuple(self):
         if self.magmoms is None:
-            return (self.cell, self.scaled_positions, self.numbers)
+            return (self._cell, self._scaled_positions, self._numbers)
         else:
-            return (self.cell, self.scaled_positions, self.numbers,
+            return (self._cell, self._scaled_positions, self._numbers,
                     self.magmoms)
 
     def to_tuple(self):
@@ -283,7 +296,7 @@ class PhonopyAtoms(_Atoms):
 
     def get_yaml_lines(self):
         lines = ["lattice:"]
-        for v, a in zip(self.cell, ('a', 'b', 'c')):
+        for v, a in zip(self._cell, ('a', 'b', 'c')):
             lines.append("- [ %21.15f, %21.15f, %21.15f ] # %s" %
                          (v[0], v[1], v[2], a))
         lines.append("points:")
@@ -292,7 +305,7 @@ class PhonopyAtoms(_Atoms):
         else:
             masses = self.masses
         for i, (s, v, m) in enumerate(
-                zip(self.symbols, self.scaled_positions, masses)):
+                zip(self.symbols, self._scaled_positions, masses)):
             lines.append("- symbol: %-2s # %d" % (s, i + 1))
             lines.append("  coordinates: [ %18.15f, %18.15f, %18.15f ]" %
                          tuple(v))

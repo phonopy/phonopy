@@ -1,0 +1,12 @@
+$periodic 3
+$lattice
+   10.357962933   0.0000000000   0.0000000000   
+   0.0000000000   10.357962933   0.0000000000   
+   0.0000000000   0.0000000000   10.357962933
+$coord    file=coord 
+$kpoints
+  nkpoints 6 6 6
+$riper
+  pqmatdiag on
+  pqsingtol  1.0d-7
+$end

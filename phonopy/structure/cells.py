@@ -1203,3 +1203,101 @@ def guess_primitive_matrix(unitcell, symprec=1e-5):
     centring = dataset['international'][0]
     pmat = get_primitive_matrix_by_centring(centring)
     return np.dot(np.linalg.inv(tmat), pmat)
+
+
+def estimate_supercell_matrix(spglib_dataset,
+                              max_num_atoms=120):
+    """Estimate supercell matrix from conventional cell
+
+    Diagonal supercell matrix is estimated from basis vector lengths
+    and maximum number of atoms to be accepted. Supercell is assumed
+    to be made from the standardized cell and to be closest to sphere
+    under keeping lattice symmetry. For triclinic, monoclinic, and
+    orthorhombic cells, multiplicities for a, b, c are not constrained
+    by symmetry. For tetragonal and hexagonal cells, multiplicities
+    for a and b are chosen to be the same, and for cubic cell, those
+    of a, b, c are the same.
+
+    Parameters
+    ----------
+    spglib_dataset : tuple
+        Spglib symmetry dataset
+    max_num_atoms : int, optional
+        Maximum number of atoms in created supercell to be tolerated.
+
+    Returns
+    -------
+    list of three integer numbers
+        Multiplicities for a, b, c basis vectors, respectively.
+
+    """
+
+    spg_num = spglib_dataset['number']
+    num_atoms = len(spglib_dataset['std_types'])
+    lengths = _get_lattice_parameters(spglib_dataset['std_lattice'])
+
+    if spg_num <= 74:  # Triclinic, monoclinic, and orthorhombic
+        multi = _get_multiplicity_abc(num_atoms, lengths, max_num_atoms)
+    elif spg_num <= 194:  # Tetragonal and hexagonal
+        multi = _get_multiplicity_ac(num_atoms, lengths, max_num_atoms)
+    else:  # Cubic
+        multi = _get_multiplicity_a(num_atoms, lengths, max_num_atoms)
+
+    return multi
+
+
+def _get_lattice_parameters(lattice):
+    """Return basis vector lengths
+
+    Parameters
+    ----------
+    lattice : array_like
+        Basis vectors given as column vectors
+        shape=(3, 3), dtype='double'
+
+    Returns
+    -------
+    ndarray, shape=(3,), dtype='double'
+
+    """
+
+    return np.array(np.sqrt(np.dot(lattice.T, lattice).diagonal()),
+                    dtype='double')
+
+
+def _get_multiplicity_abc(num_atoms, lengths, max_num_atoms, max_iter=20):
+    multi = [1, 1, 1]
+
+    for i in range(max_iter):
+        l_super = np.multiply(multi, lengths)
+        min_index = np.argmin(l_super)
+        multi[min_index] += 1
+        if num_atoms * np.prod(multi) > max_num_atoms:
+            multi[min_index] -= 1
+
+    return multi
+
+
+def _get_multiplicity_ac(num_atoms, lengths, max_num_atoms, max_iter=20):
+    multi = [1, 1]
+    a = lengths[0]
+    c = lengths[2]
+
+    for i in range(max_iter):
+        l_super = np.multiply(multi, [a, c])
+        min_index = np.argmin(l_super)
+        multi[min_index] += 1
+        if num_atoms * multi[0] ** 2 * multi[1] > max_num_atoms:
+            multi[min_index] -= 1
+
+    return [multi[0], multi[0], multi[1]]
+
+
+def _get_multiplicity_a(num_atoms, lengths, max_num_atoms, max_iter=20):
+    multi = 1
+    for i in range(max_iter):
+        multi += 1
+        if num_atoms * multi ** 3 > max_num_atoms:
+            multi -= 1
+
+    return [multi, multi, multi]

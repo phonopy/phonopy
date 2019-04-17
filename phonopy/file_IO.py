@@ -285,6 +285,7 @@ def get_FORCE_CONSTANTS_lines(force_constants, p2s_map=None):
 def write_force_constants_to_hdf5(force_constants,
                                   filename='force_constants.hdf5',
                                   p2s_map=None,
+                                  physical_unit=None,
                                   compression=None):
     """Write force constants in hdf5 format.
 
@@ -300,6 +301,8 @@ def write_force_constants_to_hdf5(force_constants,
         Primitive atom indices in supercell index system
         shape=(n_patom,)
         dtype=intc
+    physical_unit : str, optional
+        Physical unit used for force contants. Default is None.
     compression : str or int, optional
         h5py's lossless compression filters (e.g., "gzip", "lzf").
         See the detail at docstring of h5py.Group.create_dataset. Default is
@@ -317,6 +320,10 @@ def write_force_constants_to_hdf5(force_constants,
                          compression=compression)
         if p2s_map is not None:
             w.create_dataset('p2s_map', data=p2s_map)
+        if physical_unit is not None:
+            dset = w.create_dataset('physical_unit', (1,),
+                                    dtype='S%d' % len(physical_unit))
+            dset[0] = np.string_(physical_unit)
 
 
 def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS",
@@ -343,6 +350,19 @@ def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS",
         check_force_constants_indices(idx, idx1, p2s_map, filename)
 
         return force_constants
+
+
+def read_physical_unit_in_force_constants_hdf5(
+        filename="force_constants.hdf5"):
+    try:
+        import h5py
+    except ImportError:
+        raise ModuleNotFoundError("You need to install python-h5py.")
+
+    with h5py.File(filename, 'r') as f:
+        if 'physical_unit' in f:
+            return f['physical_unit'][0].decode('utf-8')
+    return None
 
 
 def read_force_constants_hdf5(filename="force_constants.hdf5",

@@ -33,7 +33,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import numpy as np
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.file_IO import parse_disp_yaml, write_FORCE_SETS
 
@@ -48,7 +47,7 @@ def get_interface_mode(args):
     """
 
     calculator_list = ['wien2k', 'abinit', 'qe', 'elk', 'siesta', 'cp2k',
-                       'crystal', 'vasp', 'dftbp']
+                       'crystal', 'vasp', 'dftbp', 'turbomole']
     for calculator in calculator_list:
         mode = "%s_mode" % calculator
         if mode in args and args.__dict__[mode]:
@@ -105,6 +104,9 @@ def write_supercells_with_displacements(interface_mode,
                                             template_file="TEMPLATE")
     elif interface_mode == 'dftbp':
         from phonopy.interface.dftbp import write_supercells_with_displacements
+        write_supercells_with_displacements(supercell, cells_with_disps)
+    elif interface_mode == 'turbomole':
+        from phonopy.interface.turbomole import write_supercells_with_displacements
         write_supercells_with_displacements(supercell, cells_with_disps)
 
 
@@ -163,6 +165,10 @@ def read_crystal_structure(filename=None,
         from phonopy.interface.dftbp import read_dftbp
         unitcell = read_dftbp(cell_filename)
         return unitcell, (cell_filename,)
+    elif interface_mode == 'turbomole':
+        from phonopy.interface.turbomole import read_turbomole
+        unitcell = read_turbomole(cell_filename)
+        return unitcell, (cell_filename,)
 
 
 def get_default_cell_filename(interface_mode):
@@ -182,6 +188,8 @@ def get_default_cell_filename(interface_mode):
         return "crystal.o"
     elif interface_mode == 'dftbp':
         return "geo.gen"
+    elif interface_mode == 'turbomole':
+        return "control"
     else:
         return None
 
@@ -203,12 +211,15 @@ def get_default_supercell_filename(interface_mode):
         return None  # supercell.ext can not be parsed by crystal interface.
     elif interface_mode == 'dftbp':
         return "geo.genS"
+    elif interface_mode == 'turbomole':
+        return None  # TURBOMOLE interface generates directories with inputs
     else:
         return None
 
 
 def get_default_displacement_distance(interface_mode):
-    if interface_mode in ('wien2k', 'abinit', 'elk', 'qe', 'siesta', 'cp2k'):
+    if interface_mode in ('wien2k', 'abinit', 'elk', 'qe', 'siesta', 'cp2k',
+                          'turbomole'):
         displacement_distance = 0.02
     elif interface_mode == 'crystal':
         displacement_distance = 0.01
@@ -217,7 +228,7 @@ def get_default_displacement_distance(interface_mode):
     return displacement_distance
 
 
-def get_default_physical_units(interface_mode):
+def get_default_physical_units(interface_mode=None):
     """Return physical units used for calculators
 
     Physical units: energy,  distance,  atomic mass, force
@@ -229,12 +240,13 @@ def get_default_physical_units(interface_mode):
     siesta        : eV,      au,        AMU,         eV/Angstroem
     CRYSTAL       : eV,      Angstrom,  AMU,         eV/Angstroem
     DFTB+         : hartree, au,        AMU          hartree/au
+    TURBOMOLE     : hartree, au,        AMU,         hartree/au
 
     """
 
     from phonopy.units import (Wien2kToTHz, AbinitToTHz, PwscfToTHz, ElkToTHz,
                                SiestaToTHz, VaspToTHz, CP2KToTHz, CrystalToTHz,
-                               DftbpToTHz, Hartree, Bohr)
+                               DftbpToTHz, TurbomoleToTHz, Hartree, Bohr)
 
     units = {'factor': None,
              'nac_factor': None,
@@ -296,13 +308,19 @@ def get_default_physical_units(interface_mode):
         units['distance_to_A'] = Bohr
         units['force_constants_unit'] = 'hartree/au^2'
         units['length_unit'] = 'au'
+    elif interface_mode == 'turbomole':
+        units['factor'] = TurbomoleToTHz
+        units['nac_factor'] = 1.0
+        units['distance_to_A'] = Bohr
+        units['force_constants_unit'] = 'hartree/au^2'
+        units['length_unit'] = 'au'
 
     return units
 
 
 def create_FORCE_SETS(interface_mode,
                       force_filenames,
-                      symprec=1e-5,
+                      symmetry_tolerance=None,
                       is_wien2k_p1=False,
                       force_sets_zero_mode=False,
                       disp_filename='disp.yaml',
@@ -325,7 +343,7 @@ def create_FORCE_SETS(interface_mode,
                   "other files." % force_filenames[0])
 
     if interface_mode in (None, 'vasp', 'abinit', 'elk', 'qe', 'siesta',
-                          'cp2k', 'crystal', 'dftbp'):
+                          'cp2k', 'crystal', 'dftbp', 'turbomole'):
         disp_dataset = parse_disp_yaml(filename=disp_filename)
         num_atoms = disp_dataset['natom']
         num_displacements = len(disp_dataset['first_atoms'])
@@ -358,7 +376,7 @@ def create_FORCE_SETS(interface_mode,
                 force_filenames,
                 supercell,
                 is_distribute=(not is_wien2k_p1),
-                symprec=symprec,
+                symmetry_tolerance=symmetry_tolerance,
                 verbose=(log_level > 0))
     else:
         force_sets = []
@@ -408,6 +426,8 @@ def get_force_sets(interface_mode,
         from phonopy.interface.crystal import parse_set_of_forces
     elif interface_mode == 'dftbp':
         from phonopy.interface.dftbp import parse_set_of_forces
+    elif interface_mode == 'turbomole':
+        from phonopy.interface.turbomole import parse_set_of_forces
     else:
         return []
 
@@ -416,6 +436,26 @@ def get_force_sets(interface_mode,
                                      verbose=verbose)
 
     return force_sets
+
+
+def get_force_constant_conversion_factor(unit, interface_mode):
+    from phonopy.units import Bohr, Rydberg, Hartree
+
+    units = get_default_physical_units(interface_mode)
+    default_unit = units['force_constants_unit']
+    factor_to_eVperA2 = {'eV/Angstrom^2': 1,
+                         'eV/Angstrom.au': 1 / Bohr,
+                         'Ry/au^2': Rydberg / Bohr ** 2,
+                         'mRy/au^2': Rydberg / Bohr ** 2 / 1000,
+                         'hartree/au^2': Hartree / Bohr ** 2}
+    if default_unit not in factor_to_eVperA2:
+        msg = "Force constant conversion for %s unit is not implemented."
+        raise NotImplementedError(msg)
+    if default_unit != unit:
+        factor = factor_to_eVperA2[unit] / factor_to_eVperA2[default_unit]
+        return factor
+    else:
+        return 1.0
 
 
 def _read_phonopy_yaml(filename, command_name):

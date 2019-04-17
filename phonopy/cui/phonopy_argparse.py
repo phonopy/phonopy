@@ -98,7 +98,7 @@ def get_parser():
         fpitch=None,
         frequency_scale_factor=None,
         gv_delta_q=None,
-        # hdf5_compression=None,
+        hdf5_compression="gzip",
         is_band_connection=False,
         is_band_const_interval=False,
         is_check_symmetry=False,
@@ -153,10 +153,11 @@ def get_parser():
         show_irreps=False,
         sigma=None,
         supercell_dimension=None,
-        symprec=1e-5,
+        symmetry_tolerance=None,
         tmax=None,
         tmin=None,
         tstep=None,
+        turbomooe_mode=False,
         use_alm=False,
         vasp_mode=False,
         verbose=False,
@@ -302,9 +303,9 @@ def get_parser():
     parser.add_argument(
         "--hdf5", dest="is_hdf5", action="store_true",
         help="Use hdf5 for force constants")
-    # parser.add_argument(
-    #     "--hdf5-compression", dest="hdf5_compression",
-    #     help="hdf5 compression filter")
+    parser.add_argument(
+        "--hdf5-compression", dest="hdf5_compression",
+        help="hdf5 compression filter")
     parser.add_argument(
         "--irreps", "--irreps-qpoint", nargs='+', dest="irreps_qpoint",
         help="A q-point where characters of irreps are calculated")
@@ -467,8 +468,11 @@ def get_parser():
         "--tstep", dest="tstep", type=float,
         help="Calculated temperature step")
     parser.add_argument(
-        "--tolerance", dest="symprec", type=float,
+        "--tolerance", dest="symmetry_tolerance", type=float,
         help="Symmetry tolerance to search")
+    parser.add_argument(
+        "--turbomole", dest="turbomole_mode", action="store_true",
+        help="Invoke TURBOMOLE mode")
     parser.add_argument(
         "-v", "--verbose", dest="verbose", action="store_true",
         help="Detailed information is shown.")

@@ -206,6 +206,7 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
             dataset=_dataset,
             force_constants_filename=force_constants_filename,
             force_sets_filename=force_sets_filename,
+            calculator=calculator,
             use_alm=use_alm)
     else:
         phonon.force_constants = _fc

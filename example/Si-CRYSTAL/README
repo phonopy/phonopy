@@ -9,7 +9,8 @@ for the CRYSTAL interface, so, the -c crystal.o parameter is not needed
    or with the help of a template (see TEMPLATE)
 
 2) Run the supercell input with CRYSTAL
-   Here supercell-001.o has been pre-calculated with CRYSTAL17.
+   Here supercell-001.o has been pre-calculated with CRYSTAL17 at the
+   DFT-PBE0/SVP level of theory.
 
 3) Collect forces:
    phonopy --crystal -f supercell-*o

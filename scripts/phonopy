@@ -38,12 +38,13 @@ import sys
 import os
 import numpy as np
 from phonopy import Phonopy, __version__
-from phonopy.file_IO import (read_force_constants_hdf5, parse_FORCE_CONSTANTS,
+from phonopy.file_IO import (parse_FORCE_CONSTANTS,
                              parse_FORCE_SETS, write_disp_yaml,
                              get_born_parameters, write_FORCE_CONSTANTS,
                              write_force_constants_to_hdf5, parse_QPOINTS,
                              parse_disp_yaml)
 from phonopy.cui.collect_cell_info import collect_cell_info
+from phonopy.cui.load_helper import read_force_constants_from_hdf5
 from phonopy.cui.settings import PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.cui.phonopy_argparse import (get_parser,
@@ -58,7 +59,6 @@ from phonopy.interface.vasp import create_FORCE_CONSTANTS
 from phonopy.phonon.band_structure import (get_band_qpoints,
                                            get_band_qpoints_by_seekpath)
 from phonopy.phonon.dos import get_pdos_indices
-from phonopy.phonon.mesh import length2mesh
 
 phonopy_version = __version__
 
@@ -269,6 +269,9 @@ def print_settings(settings,
         print("  Force constants symmetrization: on")
     if settings.get_lapack_solver():
         print("  Use Lapack solver via Lapacke: on")
+    if settings.get_symmetry_tolerance() is not None:
+        print("  Symmetry tolerance: %5.2e"
+              % settings.get_symmetry_tolerance())
     if run_mode == 'mesh' or run_mode == 'band_mesh':
         mesh = settings.get_mesh_numbers()
         if type(mesh) is float:
@@ -337,6 +340,16 @@ if args.quiet or args.is_check_symmetry:
 if args.loglevel is not None:
     log_level = args.loglevel
 
+# HDF5 compression filter
+try:
+    compression = int(args.hdf5_compression)
+except ValueError:  # str
+    compression = args.hdf5_compression
+    if compression.lower() == "none":
+        compression = None
+except TypeError:  # None
+    compression = args.hdf5_compression
+
 if args.is_graph_save:
     import matplotlib
     matplotlib.use('Agg')
@@ -392,7 +405,7 @@ if args.force_sets or args.force_sets_zero:
     error_num = create_FORCE_SETS(
         interface_mode,
         filenames,
-        args.symprec,
+        symmetry_tolerance=args.symmetry_tolerance,
         is_wien2k_p1=args.is_wien2k_p1,
         force_sets_zero_mode=force_sets_zero_mode,
         disp_filename=disp_filename,
@@ -426,6 +439,10 @@ else:
 
 is_band_auto = (type(settings.get_band_paths()) is str and
                 settings.get_band_paths() == 'auto')
+if settings.get_symmetry_tolerance() is None:
+    symprec = 1e-5
+else:
+    symprec = settings.get_symmetry_tolerance()
 
 ##################################################
 # Set calculator interface and crystal structure #
@@ -437,7 +454,7 @@ cell_info = collect_cell_info(
     cell_filename=settings.get_cell_filename(),
     chemical_symbols=settings.get_chemical_symbols(),
     enforce_primitive_matrix_auto=is_band_auto,
-    symprec=args.symprec)
+    symprec=symprec)
 if type(cell_info) is str:
     print_error_message(cell_info)
     if log_level > 0:
@@ -480,7 +497,7 @@ if args.is_check_symmetry:
         primitive_matrix = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
     check_symmetry(unitcell,
                    primitive_axis=primitive_matrix,
-                   symprec=args.symprec,
+                   symprec=symprec,
                    distance_to_A=physical_units['distance_to_A'],
                    phonopy_version=phonopy_version)
     if log_level > 0:
@@ -496,24 +513,27 @@ run_mode = settings.get_run_mode()
 if run_mode == 'displacements':
     phonon = Phonopy(unitcell,
                      supercell_matrix,
-                     symprec=args.symprec,
+                     primitive_matrix=primitive_matrix,
+                     symprec=symprec,
                      is_symmetry=settings.get_is_symmetry(),
                      log_level=log_level)
 else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
     # Overwrite frequency unit conversion factor
     if settings.get_frequency_conversion_factor() is not None:
-        physical_units['factor'] = settings.get_frequency_conversion_factor()
+        freq_factor = settings.get_frequency_conversion_factor()
+    else:
+        freq_factor = physical_units['factor']
 
     phonon = Phonopy(
         unitcell,
         supercell_matrix,
         primitive_matrix=primitive_matrix,
-        factor=physical_units['factor'],
+        factor=freq_factor,
         frequency_scale_factor=settings.get_frequency_scale_factor(),
         dynamical_matrix_decimals=settings.get_dm_decimals(),
         force_constants_decimals=settings.get_fc_decimals(),
         group_velocity_delta_q=settings.get_group_velocity_delta_q(),
-        symprec=args.symprec,
+        symprec=symprec,
         is_symmetry=settings.get_is_symmetry(),
         use_lapack_solver=settings.get_lapack_solver(),
         log_level=log_level)
@@ -611,8 +631,9 @@ if settings.get_read_force_constants():
             sys.exit(1)
 
         file_exists("force_constants.hdf5", log_level)
-        fc = read_force_constants_hdf5(filename="force_constants.hdf5",
-                                       p2s_map=p2s_map)
+        fc = read_force_constants_from_hdf5(filename="force_constants.hdf5",
+                                            p2s_map=p2s_map,
+                                            calculator=interface_mode)
         fc_filename = "force_constants.hdf5"
     else:
         file_exists("FORCE_CONSTANTS", log_level)
@@ -621,7 +642,7 @@ if settings.get_read_force_constants():
         fc_filename = "FORCE_CONSTANTS"
 
     if log_level > 0:
-        print("Force constants are read from %s." % fc_filename)
+        print("Force constants are read from \"%s\"." % fc_filename)
 
     if fc.shape[1] != num_satom:
         error_text = ("Number of atoms in supercell is not consistent "
@@ -710,7 +731,7 @@ if settings.get_fc_spg_symmetry():
                           filename='FORCE_CONSTANTS_SPG')
     if log_level > 0:
         print("Symmetrized force constants are written into "
-              "FORCE_CONSTANTS_SPG.")
+              "\"FORCE_CONSTANTS_SPG\".")
 
 # Imporse translational invariance and index permulation symmetry to
 # force constants
@@ -720,14 +741,17 @@ if settings.get_fc_symmetry():
 # Write FORCE_CONSTANTS
 if settings.get_write_force_constants():
     if settings.get_is_hdf5() or settings.get_writefc_format() == 'hdf5':
+        fc_unit = physical_units['force_constants_unit']
         write_force_constants_to_hdf5(phonon.get_force_constants(),
-                                      p2s_map=p2s_map)
+                                      p2s_map=p2s_map,
+                                      physical_unit=fc_unit,
+                                      compression=compression)
         if log_level > 0:
-            print("Force constants are written into force_constants.hdf5.")
+            print("Force constants are written into \"force_constants.hdf5\".")
     else:
         write_FORCE_CONSTANTS(phonon.get_force_constants(), p2s_map=p2s_map)
         if log_level > 0:
-            print("Force constants are written into FORCE_CONSTANTS.")
+            print("Force constants are written into \"FORCE_CONSTANTS\".")
 
 # Show the rotational invariance condition (just show!)
 if settings.get_is_rotational_invariance():
@@ -903,18 +927,11 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                 plot.show()
 
     if run_mode == 'mesh' or run_mode == 'band_mesh':
-        mesh = settings.get_mesh_numbers()
+        mesh_numbers = settings.get_mesh_numbers()
         mesh_shift = settings.get_mesh_shift()
         t_symmetry = settings.get_time_reversal_symmetry()
         q_symmetry = settings.get_is_mesh_symmetry()
         is_gamma_center = settings.get_is_gamma_center()
-
-        if type(mesh) is float:
-            is_gamma_center = True
-            mesh_numbers = length2mesh(mesh, primitive.get_cell())
-            print("Mesh numbers: %s" % mesh_numbers)
-        else:
-            mesh_numbers = np.array(mesh)
 
         if (settings.get_is_thermal_displacements() or
             settings.get_is_thermal_displacement_matrices()):
@@ -933,6 +950,8 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                              with_eigenvectors=settings.get_is_eigenvectors(),
                              is_gamma_center=is_gamma_center,
                              use_iter_mesh=True)
+            if log_level > 0:
+                print("Mesh numbers: %s" % phonon.mesh_numbers)
         else:
             phonon.init_mesh(
                 mesh=mesh_numbers,
@@ -943,10 +962,12 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                 with_group_velocities=settings.get_is_group_velocity(),
                 is_gamma_center=is_gamma_center)
             if log_level > 0:
+                print("Mesh numbers: %s" % phonon.mesh_numbers)
                 weights = phonon.mesh.weights
                 if q_symmetry:
                     print("Number of irreducible q-points on sampling mesh: "
-                          "%d/%d" % (weights.shape[0], np.prod(mesh_numbers)))
+                          "%d/%d" % (weights.shape[0],
+                                     np.prod(phonon.mesh_numbers)))
                 else:
                     print("Number of q-points on sampling mesh: %d" %
                           weights.shape[0])
@@ -1234,9 +1255,6 @@ elif run_mode == 'modulation':
     else:
         delta_q = None
     derivative_order = mod_setting['order']
-
-    print(dimension)
-    print(phonon_modes)
 
     phonon.set_modulations(dimension,
                            phonon_modes,

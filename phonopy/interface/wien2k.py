@@ -45,8 +45,13 @@ def parse_set_of_forces(disps,
                         forces_filenames,
                         supercell,
                         is_distribute=True,
-                        symprec=1e-5,
+                        symmetry_tolerance=None,
                         verbose=True):
+    if symmetry_tolerance is None:
+        symprec = 1e-5
+    else:
+        symprec = symmetry_tolerance
+
     num_atoms = supercell.get_number_of_atoms()
     lattice = supercell.get_cell()
     is_parsed = True
