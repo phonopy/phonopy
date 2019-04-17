@@ -64,7 +64,6 @@ class TestUnfolding(unittest.TestCase):
     def _prepare_unfolding(self, qpoints, unfolding_supercell_matrix):
         supercell = get_supercell(self._cell, np.diag([2, 2, 2]))
         phonon = self._get_phonon(supercell)
-        self._set_nac_params(phonon)
         mapping = range(supercell.get_number_of_atoms())
         self._unfolding = Unfolding(phonon,
                                     unfolding_supercell_matrix,
@@ -109,15 +108,11 @@ class TestUnfolding(unittest.TestCase):
             w.write("\n".join(lines))
 
     def _get_phonon(self, cell):
-        phonon = Phonopy(cell,
-                         np.diag([1, 1, 1]))
+        phonon = Phonopy(cell, np.diag([1, 1, 1]))
         force_sets = parse_FORCE_SETS(
             filename=os.path.join(data_dir, "FORCE_SETS"))
-        phonon.set_displacement_dataset(force_sets)
+        phonon.dataset = force_sets
         phonon.produce_force_constants()
-        return phonon
-
-    def _set_nac_params(self, phonon):
         supercell = phonon.get_supercell()
         born_elems = {'Na': [[1.08703, 0, 0],
                              [0, 1.08703, 0],
@@ -134,6 +129,7 @@ class TestUnfolding(unittest.TestCase):
         phonon.set_nac_params({'born': born,
                                'factor': factors,
                                'dielectric': epsilon})
+        return phonon
 
     def _binning(self, data):
         x = []

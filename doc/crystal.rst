@@ -45,7 +45,7 @@ parameter is not needed
    interface creates a .d12 input file and an .ext structure file. The files
    ``supercell.d12/.ext`` contain the perfect supercell. The files
    ``supercell-xxx.d12/.ext`` (``xxx`` are numbers) contain the supercells
-   with displacements. File ``disp.yaml`` is also generated, containing information
+   with displacements. File ``phonopy-disp.yaml`` is also generated, containing information
    about the supercell and the displacements.
 
    In the case of the Si example, files ``supercell-001.d12`` and
@@ -84,7 +84,7 @@ parameter is not needed
    ``supercell-xxx.d12`` files have to be given in the above command.
    To run this command, ``disp.yaml`` has to be located in the current
    directory because the information on atomic displacements stored in
-   ``disp.yaml`` are used to generate ``FORCE_SETS``. See some more
+   ``phonopy-disp.yaml`` are used to generate ``FORCE_SETS``. See some more
    detail at :ref:`crystal_force_sets_option`.
 
 4) Now, Phonopy post-prcessing commands can be run. ``FORCE_SETS`` is

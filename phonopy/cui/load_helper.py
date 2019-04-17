@@ -34,10 +34,12 @@
 
 import os
 import numpy as np
-from phonopy.interface import read_crystal_structure
+from phonopy.interface import (read_crystal_structure,
+                               get_force_constant_conversion_factor)
 from phonopy.structure.cells import get_primitive_matrix_by_centring
 from phonopy.file_IO import (parse_BORN, parse_FORCE_SETS,
                              read_force_constants_hdf5,
+                             read_physical_unit_in_force_constants_hdf5,
                              parse_FORCE_CONSTANTS)
 from phonopy.structure.atoms import PhonopyAtoms
 
@@ -104,6 +106,7 @@ def set_force_constants(
         dataset=None,
         force_constants_filename=None,
         force_sets_filename=None,
+        calculator=None,
         use_alm=False):
     natom = phonon.supercell.get_number_of_atoms()
 
@@ -114,8 +117,10 @@ def set_force_constants(
         dot_split = force_constants_filename.split('.')
         p2s_map = phonon.primitive.get_primitive_to_supercell_map()
         if len(dot_split) > 1 and dot_split[-1] == 'hdf5':
-            fc = read_force_constants_hdf5(filename=force_constants_filename,
-                                           p2s_map=p2s_map)
+            fc = read_force_constants_from_hdf5(
+                filename=force_constants_filename,
+                p2s_map=p2s_map,
+                calculator=calculator)
         else:
             fc = parse_FORCE_CONSTANTS(filename=force_constants_filename,
                                        p2s_map=p2s_map)
@@ -131,6 +136,19 @@ def set_force_constants(
         phonon.produce_force_constants(
             calculate_full_force_constants=False,
             use_alm=use_alm)
+
+
+def read_force_constants_from_hdf5(filename='force_constants.hdf5',
+                                   p2s_map=None,
+                                   calculator=None):
+    fc = read_force_constants_hdf5(filename=filename, p2s_map=p2s_map)
+    fc_unit = read_physical_unit_in_force_constants_hdf5(
+        filename=filename)
+    if fc_unit is None:
+        return fc
+    else:
+        factor = get_force_constant_conversion_factor(fc_unit, calculator)
+        return fc * factor
 
 
 def _get_supercell_matrix(smat):

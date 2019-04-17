@@ -1,0 +1,81 @@
+$title supercell-001
+$symmetry c1
+$coord    file=coord
+$periodic 3
+$lattice
+ 31.07388880  0.00000000  0.00000000
+  0.00000000 31.07388880  0.00000000
+  0.00000000  0.00000000 31.07388880
+$kpoints
+  nkpoints 2 2 2
+$riper
+  pqmatdiag on
+  pqsingtol  1.0d-7
+  sigma      0.002
+$operating system unix
+$atoms
+si 1-216                                                                       \
+   basis =si cry-SVP                                                           \
+   jbas  =si universal
+$basis    file=basis
+$optimize
+ internal   on
+ redundant  on
+ cartesian  off
+ global     off
+ basis      off
+$rundimensions
+   dim(fock,dens)=8428644
+   natoms=216
+   nshell=1728
+   nbf(CAO)=4104
+   dim(trafo[SAO<-->AO/CAO])=4536
+   rhfshells=1
+   nbf(AO)=3888
+$scfmo    file=mos
+$closed shells
+ a       1-1512                                 ( 2 )
+$thize     0.10000000E-04
+$thime        5
+$scfdump
+$scfintunit
+ unit=30       size=0        file=twoint
+$maxcor    500 MiB  per_core
+$drvopt
+   cartesian  on
+   basis      off
+   global     off
+   hessian    on
+   dipole     on
+   nuclear polarizability
+$interconversion  off
+   qconv=1.d-7
+   maxiter=25
+$coordinateupdate
+   dqmax=0.3
+   interpolate  on
+   statistics    5
+$forceupdate
+   ahlrichs numgeo=0  mingeo=3 maxgeo=4 modus=<g|dq> dynamic fail=0.3
+   threig=0.005  reseig=0.005  thrbig=3.0  scale=1.00  damping=0.0
+$forceinit on
+   diag=default
+$energy    file=energy
+$grad    file=gradient
+$forceapprox    file=forceapprox
+$dft
+   functional pbe
+   gridsize   m4
+$scfconv   10
+$ricore        0
+$rij
+$jbas    file=auxbasis
+$marij
+$last step     riper
+$scfdiis
+  errvec=sFDs
+$scfdamp start=1.500 step=0.100 min=0.100
+$scforbitalshift automatic 0.2
+$scfiterlimit 200
+$last SCF energy change = -62488.082
+$end

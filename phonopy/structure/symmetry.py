@@ -92,8 +92,12 @@ class Symmetry(object):
     def get_Wyckoff_letters(self):
         return self._wyckoff_letters
 
-    def get_dataset(self):
+    @property
+    def dataset(self):
         return self._dataset
+
+    def get_dataset(self):
+        return self.dataset
 
     def get_independent_atoms(self):
         return self._independent_atoms

@@ -1,0 +1,38 @@
+Si phonon dispersions with TURBOMOLE
+
+The crystal structure in TURBOMOLE format is defined by files "control" and "coord". 
+This is the default file name scheme for the TURBOMOLE interface and therefore 
+the parameter "-c control" is not needed
+
+The Si crystal structure is defined with the conventional unit cell (eight atoms).
+3x3x3 supercells of the conventional cell are used for the phonon dispersion calculations.
+PRIMITIVE_AXES is defined in band.conf to create the phonon dispersions for the primitive cell.
+
+1) Create displaced supercells:
+   phonopy --turbomole --dim="3 3 3" -d
+
+   The displaced supercells are created in subdirectories "supercell-NNN". 
+   Complete TURBOMOLE inputs need to be prepared manually in the subdirectories.
+   Please pay special attention on the k-point mesh.
+   Use tight SCF convergence criteria such as $scfconv 10
+   The following settings in the $riper data group may help convergence:
+   pqmatdiag on
+   pqsingtol  1.0d-7
+
+2) Run the supercell input with TURBOMOLE
+   Here the directory "supercell-001" contains data pre-calculated with 
+   TURBOMOLE 7.3 at the PBE/SVP level of theory.
+
+3) Collect forces:
+   phonopy --turbomole -f supercell-*
+
+4) Calculate phonon dispersion data into band.yaml and create band.pdf in THz units:
+   phonopy --turbomole --dim="3 3 3" -p -s band.conf
+
+   Plot the phonon dispersion in cm^{-1} units:
+   (factor = TurbomoleToTHz * THzToCm = 154.10794 * 33.356410)
+   phonopy --turbomole --dim="3 3 3" -p -s --factor=5140.48763 band.conf
+
+   Create a formatted plot (here band.yaml is in cm^{-1) units):
+   phonopy-bandplot --fmin=0 --line --ylabel="Frequency (cm\$^{-1}\$)" --band-labels "`grep BAND_LABELS band.conf | cut -d= -f2-`" -o dispersion.pdf
+
