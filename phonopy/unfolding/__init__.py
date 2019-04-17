@@ -88,70 +88,73 @@ class Unfolding(object):
         self._phonon = phonon
         self._supercell_matrix = np.array(supercell_matrix, dtype='intc')
         self._ideal_positions = np.array(ideal_positions, dtype='double')
-        self._atom_mapping = np.zeros(len(atom_mapping), dtype=int)
-        for i, idx in enumerate(atom_mapping):
-            if idx is None:
-                self._atom_mapping[i] = -1
-            else:
-                self._atom_mapping[i] = idx
-        self._qpoints_p = qpoints
-        self._qpoints_s = self._get_qpoints_in_SBZ()
+        self._qpoints_p = qpoints  # in PBZ
+        self._qpoints_s = self._get_qpoints_in_SBZ()  # in SBZ
         self._symprec = self._phonon.symmetry.get_symmetry_tolerance()
 
-        self._trans_s = None
-        self._trans_p = None
-        self._comm_points = None
-        self._index_set = None
-        self._freqs = None
-        self._eigvecs = None
-        self._N = None
+        self._frequencies = None
+        self._eigvecs = None  # This may have anormal array shape.
+        self._unfolding_weights = None
+        self._q_count = None  # As counter for iterator
 
-        self._weights = None
-        self._q_index = None
+        # Commensurate q-vectors in PBZ
+        self._comm_points = get_commensurate_points(self._supercell_matrix)
+
+        self._trans_s = None  # in SC (see docstring in _set_translations)
+        self._trans_p = None  # in PC (see docstring in _set_translations)
+        self._N = None
+        self._set_translations()
+
+        self._atom_mapping = None
+        self._index_map_inv = None
+        self._set_index_map(atom_mapping)
 
     def __iter__(self):
         return self
 
     def run(self, verbose=False):
         self.prepare()
-        self._q_index = 0
         for x in self:
             if verbose:
-                print(self._q_index)
+                print(self._q_count)
 
     def __next__(self):
-        if self._q_index == len(self._eigvecs):
+        if self._q_count == len(self._eigvecs):
             raise StopIteration
-        else:
-            self._weights[self._q_index] = self._get_unfolding_weight()
-            self._q_index += 1
-            return self._weights[self._q_index - 1]
+
+        self._unfolding_weights[self._q_count] = self._get_unfolding_weights()
+        self._q_count += 1
+        return self._unfolding_weights[self._q_count - 1]
 
     def next(self):
         return self.__next__()
 
     def prepare(self):
-        self._comm_points = get_commensurate_points(self._supercell_matrix)
-        self._set_translations()
-        self._set_index_set()
+        self._q_count = 0
         self._solve_phonon()
-        self._weights = np.zeros(
+        self._unfolding_weights = np.zeros(
             (self._eigvecs.shape[0], self._eigvecs.shape[2]), dtype='double')
 
-    def get_translations(self):
-        return self._trans_s
-
-    def get_commensurate_points(self):
+    @property
+    def commensurate_points(self):
         return self._comm_points
 
-    def get_shifted_index_set(self):
-        return self._index_set
+    def get_commensurate_points(self):
+        return self.commensurate_points
+
+    @property
+    def unfolding_weights(self):
+        return self._unfolding_weights
 
     def get_unfolding_weights(self):
-        return self._weights
+        return self.unfolding_weights
+
+    @property
+    def frequencies(self):
+        return self._frequencies
 
     def get_frequencies(self):
-        return self._freqs
+        return self.frequencies
 
     def _get_qpoints_in_SBZ(self):
         qpoints = np.dot(self._qpoints_p, self._supercell_matrix)
@@ -178,7 +181,7 @@ class Unfolding(object):
         self._trans_p = np.dot(self._trans_s, self._supercell_matrix.T)
         self._N = len(self._trans_s)
 
-    def _set_index_set(self):
+    def _set_index_map(self, atom_mapping):
         """T(r_i) in Eq.(3) is given as permutation of atom indices.
 
         _index_set : ndarray
@@ -203,10 +206,17 @@ class Unfolding(object):
                 index_map_inv[i, j] = k
         self._index_map_inv = index_map_inv
 
+        self._atom_mapping = np.zeros(len(atom_mapping), dtype='int')
+        for i, idx in enumerate(atom_mapping):
+            if idx is None:
+                self._atom_mapping[i] = -1
+            else:
+                self._atom_mapping[i] = idx
+
     def _solve_phonon(self):
         self._phonon.run_qpoints(self._qpoints_s, with_eigenvectors=True)
         qpt = self._phonon.get_qpoints_dict()
-        self._freqs = qpt['frequencies']
+        self._frequencies = qpt['frequencies']
         eigvecs = qpt['eigenvectors']
         pos = self._phonon.supercell.get_scaled_positions()
 
@@ -223,7 +233,7 @@ class Unfolding(object):
         else:
             self._eigvecs = eigvecs
 
-    def _get_unfolding_weight(self):
+    def _get_unfolding_weights(self):
         """Calculate Eq. (7)
 
         k = K + G + g
@@ -240,11 +250,11 @@ class Unfolding(object):
 
         """
 
-        eigvecs = self._eigvecs[self._q_index]
+        eigvecs = self._eigvecs[self._q_count]
         dtype = "c%d" % (np.dtype('double').itemsize * 2)
         weights = np.zeros(eigvecs.shape[1], dtype=dtype)
-        q_p = self._qpoints_p[self._q_index]  # k
-        q_s = self._qpoints_s[self._q_index]  # K
+        q_p = self._qpoints_p[self._q_count]  # k
+        q_s = self._qpoints_s[self._q_count]  # K
         diff = q_p - np.dot(q_s, np.linalg.inv(self._supercell_matrix))
 
         # Search G points corresponding to k = G + K
