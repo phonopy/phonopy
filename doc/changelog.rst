@@ -3,6 +3,10 @@
 Change Log
 ==========
 
+Apr-17-2019: Version 2.1.3
+---------------------------
+* TURBOMOLE interface is provided by Antti Karttunen (``--turbomole``).
+
 Mar-24-2019: Version 2.1.2
 ---------------------------
 * ``PDOS = AUTO`` (``--pdos="auto"``) was implemented.

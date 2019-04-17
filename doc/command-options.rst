@@ -68,6 +68,7 @@ tags:
 * ``--thm``, ``--tetrahedron-method`` (``TETRAHEDRON``)
 * ``--tmin`` (``TMIN``)
 * ``--tmax`` (``TMAX``)
+* ``--tolerance`` (``SYMMETRY_TOLERANCE``)
 * ``--tstep`` (``TSTEP``)
 * ``--writedm`` (``WRITEDM = .TRUE.``)
 * ``--writefc`` (``WRITE_FORCE_CONSTANTS = .TRUE.``)
@@ -191,7 +192,7 @@ input file that contains the unit cell crystal structure, e.g.,
 .. _turbomole_mode:
 
 ``--turbomole``
-~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
 
 TURBOMOLE mode is invoked with this option. Usually this option is used
 with ``--cell`` (``-c``) option or ``CELL_FILENAME`` tag to read a TURBOMOLE
@@ -356,7 +357,7 @@ files.
 .. _turbomole_force_sets_option:
 
 TURBOMOLE interface
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 
 ``FORCE_SETS`` file is created from ``phonopy-disp.yaml`` and TURBOMOLE output
 files.
@@ -457,18 +458,6 @@ No log is shown.
 Crystal symmetry
 -----------------
 
-.. _tolerance_option:
-
-``--tolerance``
-~~~~~~~~~~~~~~~
-
-The specified value is used as allowed tolerance to find symmetry of
-crystal structure. The default value is 1e-5.
-
-::
-
-   % phonopy --tolerance=1e-3
-
 .. _symmetry_option:
 
 ``--symmetry``
@@ -484,3 +473,7 @@ printed out and phonopy stops without going to phonon analysis.
 This tag can be used together with the ``--cell`` (``-c``),
 ``--abinit``, ``--qe``, ``--elk``, ``--wien2k``, ``--siesta``,
 ``--crystal`` or ``--primitive-axes`` option.
+
+After running this, ``BPOSCAR`` and ``PPOSCAR`` files are written,
+which are the symmetrized conventional unit cell and primitive cell,
+respectively, in the VASP style format.
