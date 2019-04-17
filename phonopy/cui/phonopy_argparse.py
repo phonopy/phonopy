@@ -153,7 +153,7 @@ def get_parser():
         show_irreps=False,
         sigma=None,
         supercell_dimension=None,
-        symprec=1e-5,
+        symmetry_tolerance=None,
         tmax=None,
         tmin=None,
         tstep=None,
@@ -468,7 +468,7 @@ def get_parser():
         "--tstep", dest="tstep", type=float,
         help="Calculated temperature step")
     parser.add_argument(
-        "--tolerance", dest="symprec", type=float,
+        "--tolerance", dest="symmetry_tolerance", type=float,
         help="Symmetry tolerance to search")
     parser.add_argument(
         "--turbomole", dest="turbomole_mode", action="store_true",

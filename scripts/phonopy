@@ -59,7 +59,6 @@ from phonopy.interface.vasp import create_FORCE_CONSTANTS
 from phonopy.phonon.band_structure import (get_band_qpoints,
                                            get_band_qpoints_by_seekpath)
 from phonopy.phonon.dos import get_pdos_indices
-from phonopy.phonon.mesh import length2mesh
 
 phonopy_version = __version__
 
@@ -270,6 +269,9 @@ def print_settings(settings,
         print("  Force constants symmetrization: on")
     if settings.get_lapack_solver():
         print("  Use Lapack solver via Lapacke: on")
+    if settings.get_symmetry_tolerance() is not None:
+        print("  Symmetry tolerance: %5.2e"
+              % settings.get_symmetry_tolerance())
     if run_mode == 'mesh' or run_mode == 'band_mesh':
         mesh = settings.get_mesh_numbers()
         if type(mesh) is float:
@@ -403,7 +405,7 @@ if args.force_sets or args.force_sets_zero:
     error_num = create_FORCE_SETS(
         interface_mode,
         filenames,
-        args.symprec,
+        symmetry_tolerance=args.symmetry_tolerance,
         is_wien2k_p1=args.is_wien2k_p1,
         force_sets_zero_mode=force_sets_zero_mode,
         disp_filename=disp_filename,
@@ -437,6 +439,10 @@ else:
 
 is_band_auto = (type(settings.get_band_paths()) is str and
                 settings.get_band_paths() == 'auto')
+if settings.get_symmetry_tolerance() is None:
+    symprec = 1e-5
+else:
+    symprec = settings.get_symmetry_tolerance()
 
 ##################################################
 # Set calculator interface and crystal structure #
@@ -448,7 +454,7 @@ cell_info = collect_cell_info(
     cell_filename=settings.get_cell_filename(),
     chemical_symbols=settings.get_chemical_symbols(),
     enforce_primitive_matrix_auto=is_band_auto,
-    symprec=args.symprec)
+    symprec=symprec)
 if type(cell_info) is str:
     print_error_message(cell_info)
     if log_level > 0:
@@ -491,7 +497,7 @@ if args.is_check_symmetry:
         primitive_matrix = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
     check_symmetry(unitcell,
                    primitive_axis=primitive_matrix,
-                   symprec=args.symprec,
+                   symprec=symprec,
                    distance_to_A=physical_units['distance_to_A'],
                    phonopy_version=phonopy_version)
     if log_level > 0:
@@ -508,7 +514,7 @@ if run_mode == 'displacements':
     phonon = Phonopy(unitcell,
                      supercell_matrix,
                      primitive_matrix=primitive_matrix,
-                     symprec=args.symprec,
+                     symprec=symprec,
                      is_symmetry=settings.get_is_symmetry(),
                      log_level=log_level)
 else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
@@ -527,7 +533,7 @@ else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
         dynamical_matrix_decimals=settings.get_dm_decimals(),
         force_constants_decimals=settings.get_fc_decimals(),
         group_velocity_delta_q=settings.get_group_velocity_delta_q(),
-        symprec=args.symprec,
+        symprec=symprec,
         is_symmetry=settings.get_is_symmetry(),
         use_lapack_solver=settings.get_lapack_solver(),
         log_level=log_level)

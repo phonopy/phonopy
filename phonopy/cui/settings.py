@@ -82,6 +82,7 @@ class Settings(object):
         self._read_qpoints = False
         self._sigma = None
         self._supercell_matrix = None
+        self._symmetry_tolerance = None
         self._tmax = 1000
         self._tmin = 0
         self._tstep = 10
@@ -308,6 +309,12 @@ class Settings(object):
 
     def get_supercell_matrix(self):
         return self._supercell_matrix
+
+    def set_symmetry_tolerance(self, symmetry_tolerance):
+        self._symmetry_tolerance = symmetry_tolerance
+
+    def get_symmetry_tolerance(self):
+        return self._symmetry_tolerance
 
     def set_temperature_step(self, tstep):
         self._tstep = tstep
@@ -557,6 +564,11 @@ class ConfParser(object):
                 else:
                     self._confs['sigma'] = self._args.sigma
 
+        if 'symmetry_tolerance' in arg_list:
+            if self._args.symmetry_tolerance:
+                symtol = self._args.symmetry_tolerance
+                self._confs['symmetry_tolerance'] = symtol
+
         if 'tmax' in arg_list:
             if self._args.tmax:
                 self._confs['tmax'] = self._args.tmax
@@ -801,6 +813,10 @@ class ConfParser(object):
                 if confs['tetrahedron'].lower() == '.true.':
                     self.set_parameter('is_tetrahedron_method', True)
 
+            if conf_key == 'symmetry_tolerance':
+                val = float(confs['symmetry_tolerance'])
+                self.set_parameter('symmetry_tolerance', val)
+
             if conf_key == 'tmin':
                 val = float(confs['tmin'])
                 self.set_parameter('tmin', val)
@@ -960,6 +976,10 @@ class ConfParser(object):
         # Smearing width
         if 'sigma' in params:
             self._settings.set_sigma(params['sigma'])
+
+        # Symmetry tolerance
+        if 'symmetry_tolerance' in params:
+            self._settings.set_symmetry_tolerance(params['symmetry_tolerance'])
 
         # Supercell size
         if 'supercell_matrix' in params:

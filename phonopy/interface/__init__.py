@@ -320,7 +320,7 @@ def get_default_physical_units(interface_mode=None):
 
 def create_FORCE_SETS(interface_mode,
                       force_filenames,
-                      symprec=1e-5,
+                      symmetry_tolerance=None,
                       is_wien2k_p1=False,
                       force_sets_zero_mode=False,
                       disp_filename='disp.yaml',
@@ -376,7 +376,7 @@ def create_FORCE_SETS(interface_mode,
                 force_filenames,
                 supercell,
                 is_distribute=(not is_wien2k_p1),
-                symprec=symprec,
+                symmetry_tolerance=symmetry_tolerance,
                 verbose=(log_level > 0))
     else:
         force_sets = []
