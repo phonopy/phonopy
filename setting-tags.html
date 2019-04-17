@@ -4,14 +4,15 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Setting tags &#8212; Phonopy v.2.1.2</title>
+    <title>Setting tags &#8212; Phonopy v.2.1.3</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
@@ -164,6 +165,7 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#symmetry">Symmetry</a><ul>
+<li><a class="reference internal" href="#symmetry-tolerance"><code class="docutils literal notranslate"><span class="pre">SYMMETRY_TOLERANCE</span></code></a></li>
 <li><a class="reference internal" href="#symmetry-tag"><code class="docutils literal notranslate"><span class="pre">SYMMETRY</span></code></a></li>
 <li><a class="reference internal" href="#mesh-symmetry"><code class="docutils literal notranslate"><span class="pre">MESH_SYMMETRY</span></code></a></li>
 <li><a class="reference internal" href="#fc-symmetry"><code class="docutils literal notranslate"><span class="pre">FC_SYMMETRY</span></code></a></li>
@@ -330,37 +332,38 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#symmetry" id="id58">Symmetry</a><ul>
-<li><a class="reference internal" href="#symmetry-tag" id="id59"><code class="docutils literal notranslate"><span class="pre">SYMMETRY</span></code></a></li>
-<li><a class="reference internal" href="#mesh-symmetry" id="id60"><code class="docutils literal notranslate"><span class="pre">MESH_SYMMETRY</span></code></a></li>
-<li><a class="reference internal" href="#fc-symmetry" id="id61"><code class="docutils literal notranslate"><span class="pre">FC_SYMMETRY</span></code></a></li>
+<li><a class="reference internal" href="#symmetry-tolerance" id="id59"><code class="docutils literal notranslate"><span class="pre">SYMMETRY_TOLERANCE</span></code></a></li>
+<li><a class="reference internal" href="#symmetry-tag" id="id60"><code class="docutils literal notranslate"><span class="pre">SYMMETRY</span></code></a></li>
+<li><a class="reference internal" href="#mesh-symmetry" id="id61"><code class="docutils literal notranslate"><span class="pre">MESH_SYMMETRY</span></code></a></li>
+<li><a class="reference internal" href="#fc-symmetry" id="id62"><code class="docutils literal notranslate"><span class="pre">FC_SYMMETRY</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#force-constants" id="id62">Force constants</a><ul>
-<li><a class="reference internal" href="#id5" id="id63"><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a></li>
-<li><a class="reference internal" href="#full-force-constants" id="id64"><code class="docutils literal notranslate"><span class="pre">FULL_FORCE_CONSTANTS</span></code></a></li>
-<li><a class="reference internal" href="#read-force-constants" id="id65"><code class="docutils literal notranslate"><span class="pre">READ_FORCE_CONSTANTS</span></code></a></li>
-<li><a class="reference internal" href="#write-force-constants" id="id66"><code class="docutils literal notranslate"><span class="pre">WRITE_FORCE_CONSTANTS</span></code></a></li>
+<li><a class="reference internal" href="#force-constants" id="id63">Force constants</a><ul>
+<li><a class="reference internal" href="#id5" id="id64"><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a></li>
+<li><a class="reference internal" href="#full-force-constants" id="id65"><code class="docutils literal notranslate"><span class="pre">FULL_FORCE_CONSTANTS</span></code></a></li>
+<li><a class="reference internal" href="#read-force-constants" id="id66"><code class="docutils literal notranslate"><span class="pre">READ_FORCE_CONSTANTS</span></code></a></li>
+<li><a class="reference internal" href="#write-force-constants" id="id67"><code class="docutils literal notranslate"><span class="pre">WRITE_FORCE_CONSTANTS</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#create-animation-file" id="id67">Create animation file</a><ul>
-<li><a class="reference internal" href="#anime-type" id="id68"><code class="docutils literal notranslate"><span class="pre">ANIME_TYPE</span></code></a></li>
-<li><a class="reference internal" href="#anime" id="id69"><code class="docutils literal notranslate"><span class="pre">ANIME</span></code></a></li>
+<li><a class="reference internal" href="#create-animation-file" id="id68">Create animation file</a><ul>
+<li><a class="reference internal" href="#anime-type" id="id69"><code class="docutils literal notranslate"><span class="pre">ANIME_TYPE</span></code></a></li>
+<li><a class="reference internal" href="#anime" id="id70"><code class="docutils literal notranslate"><span class="pre">ANIME</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#create-modulated-structure" id="id70">Create modulated structure</a><ul>
-<li><a class="reference internal" href="#modulation" id="id71"><code class="docutils literal notranslate"><span class="pre">MODULATION</span></code></a></li>
+<li><a class="reference internal" href="#create-modulated-structure" id="id71">Create modulated structure</a><ul>
+<li><a class="reference internal" href="#modulation" id="id72"><code class="docutils literal notranslate"><span class="pre">MODULATION</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#characters-of-irreducible-representations" id="id72">Characters of irreducible representations</a><ul>
-<li><a class="reference internal" href="#irreps" id="id73"><code class="docutils literal notranslate"><span class="pre">IRREPS</span></code></a></li>
-<li><a class="reference internal" href="#show-irreps" id="id74"><code class="docutils literal notranslate"><span class="pre">SHOW_IRREPS</span></code></a></li>
-<li><a class="reference internal" href="#little-cogroup" id="id75"><code class="docutils literal notranslate"><span class="pre">LITTLE_COGROUP</span></code></a></li>
+<li><a class="reference internal" href="#characters-of-irreducible-representations" id="id73">Characters of irreducible representations</a><ul>
+<li><a class="reference internal" href="#irreps" id="id74"><code class="docutils literal notranslate"><span class="pre">IRREPS</span></code></a></li>
+<li><a class="reference internal" href="#show-irreps" id="id75"><code class="docutils literal notranslate"><span class="pre">SHOW_IRREPS</span></code></a></li>
+<li><a class="reference internal" href="#little-cogroup" id="id76"><code class="docutils literal notranslate"><span class="pre">LITTLE_COGROUP</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#input-output-file-control" id="id76">Input/Output file control</a><ul>
-<li><a class="reference internal" href="#fc-format-readfc-format-writefc-format" id="id77"><code class="docutils literal notranslate"><span class="pre">FC_FORMAT</span></code>,  <code class="docutils literal notranslate"><span class="pre">READFC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">WRITEFC_FORMAT</span></code></a></li>
-<li><a class="reference internal" href="#band-format-mesh-format-qpoints-format" id="id78"><code class="docutils literal notranslate"><span class="pre">BAND_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">MESH_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code></a></li>
-<li><a class="reference internal" href="#hdf5" id="id79"><code class="docutils literal notranslate"><span class="pre">HDF5</span></code></a></li>
+<li><a class="reference internal" href="#input-output-file-control" id="id77">Input/Output file control</a><ul>
+<li><a class="reference internal" href="#fc-format-readfc-format-writefc-format" id="id78"><code class="docutils literal notranslate"><span class="pre">FC_FORMAT</span></code>,  <code class="docutils literal notranslate"><span class="pre">READFC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">WRITEFC_FORMAT</span></code></a></li>
+<li><a class="reference internal" href="#band-format-mesh-format-qpoints-format" id="id79"><code class="docutils literal notranslate"><span class="pre">BAND_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">MESH_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code></a></li>
+<li><a class="reference internal" href="#hdf5" id="id80"><code class="docutils literal notranslate"><span class="pre">HDF5</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -549,8 +552,8 @@ post process of phonon calculation.</p>
 <span id="displacement-distance-tag"></span><h3><a class="toc-backref" href="#id17"><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE</span></code></a><a class="headerlink" href="#displacement-distance" title="Permalink to this headline">¶</a></h3>
 <p>Finite atomic displacement distance is set as specified value when
 creating supercells with displacements. The default displacement
-amplitude is 0.01 Angstrom, but when the <code class="docutils literal notranslate"><span class="pre">wien2k</span></code> or
-<code class="docutils literal notranslate"><span class="pre">abinit</span></code> option is specified, the default value is 0.02 Bohr.</p>
+amplitude is 0.01 Angstrom, but when the <code class="docutils literal notranslate"><span class="pre">wien2k</span></code>, <code class="docutils literal notranslate"><span class="pre">abinit</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">turbomole</span></code> option is specified, the default value is 0.02 Bohr.</p>
 </div>
 <div class="section" id="diag">
 <h3><a class="toc-backref" href="#id18"><code class="docutils literal notranslate"><span class="pre">DIAG</span></code></a><a class="headerlink" href="#diag" title="Permalink to this headline">¶</a></h3>
@@ -1122,12 +1125,23 @@ difference method.</p>
 </div>
 <div class="section" id="symmetry">
 <h2><a class="toc-backref" href="#id58">Symmetry</a><a class="headerlink" href="#symmetry" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="symmetry-tolerance">
+<span id="tolerance-tag"></span><h3><a class="toc-backref" href="#id59"><code class="docutils literal notranslate"><span class="pre">SYMMETRY_TOLERANCE</span></code></a><a class="headerlink" href="#symmetry-tolerance" title="Permalink to this headline">¶</a></h3>
+<p>This is used to set geometric tolerance to find symmetry of
+crystal structure. The default value is 1e-5. In general, it is not a
+good idea to loosen the tolerance. It is recommended to symmetrize
+crystal structure before starting phonon calculation, e.g., using
+<a class="reference internal" href="command-options.html#symmetry-option"><span class="std std-ref">--symmetry</span></a> option.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">SYMMETRY_TOLERANCE</span> <span class="o">=</span> <span class="mf">1e-3</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="symmetry-tag">
-<span id="id4"></span><h3><a class="toc-backref" href="#id59"><code class="docutils literal notranslate"><span class="pre">SYMMETRY</span></code></a><a class="headerlink" href="#symmetry-tag" title="Permalink to this headline">¶</a></h3>
+<span id="id4"></span><h3><a class="toc-backref" href="#id60"><code class="docutils literal notranslate"><span class="pre">SYMMETRY</span></code></a><a class="headerlink" href="#symmetry-tag" title="Permalink to this headline">¶</a></h3>
 <p>P1 symmetry is enforced to the input unit cell by setting <code class="docutils literal notranslate"><span class="pre">SYMMETRY</span> <span class="pre">=</span> <span class="pre">.FALSE</span></code>.</p>
 </div>
 <div class="section" id="mesh-symmetry">
-<span id="nomeshsym-tag"></span><h3><a class="toc-backref" href="#id60"><code class="docutils literal notranslate"><span class="pre">MESH_SYMMETRY</span></code></a><a class="headerlink" href="#mesh-symmetry" title="Permalink to this headline">¶</a></h3>
+<span id="nomeshsym-tag"></span><h3><a class="toc-backref" href="#id61"><code class="docutils literal notranslate"><span class="pre">MESH_SYMMETRY</span></code></a><a class="headerlink" href="#mesh-symmetry" title="Permalink to this headline">¶</a></h3>
 <p>Symmetry search on the reciprocal sampling mesh is disabled by setting
 <code class="docutils literal notranslate"><span class="pre">MESH_SYMMETRY</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>. In some case such as hexagonal systems or
 primitive cells of cubic systems having F and I-centrings, the results
@@ -1141,7 +1155,7 @@ site-symmetry group and time revesal symmetry. Generally the
 difference becomes smaller when increasing the sampling mesh numbers.</p>
 </div>
 <div class="section" id="fc-symmetry">
-<span id="fc-symmetry-tag"></span><h3><a class="toc-backref" href="#id61"><code class="docutils literal notranslate"><span class="pre">FC_SYMMETRY</span></code></a><a class="headerlink" href="#fc-symmetry" title="Permalink to this headline">¶</a></h3>
+<span id="fc-symmetry-tag"></span><h3><a class="toc-backref" href="#id62"><code class="docutils literal notranslate"><span class="pre">FC_SYMMETRY</span></code></a><a class="headerlink" href="#fc-symmetry" title="Permalink to this headline">¶</a></h3>
 <p><strong>Changed at v1.12.3</strong></p>
 <p>Previously this tag required a number for the iteration. From version
 1.12.3, the way of symmetrization for translation invariance is
@@ -1170,9 +1184,9 @@ use <code class="docutils literal notranslate"><span class="pre">FC_SYMMETRY</sp
 </div>
 </div>
 <div class="section" id="force-constants">
-<span id="force-constants-tag"></span><h2><a class="toc-backref" href="#id62">Force constants</a><a class="headerlink" href="#force-constants" title="Permalink to this headline">¶</a></h2>
+<span id="force-constants-tag"></span><h2><a class="toc-backref" href="#id63">Force constants</a><a class="headerlink" href="#force-constants" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="id5">
-<h3><a class="toc-backref" href="#id63"><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id64"><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">FORCE_CONSTANTS</span> <span class="o">=</span> <span class="n">READ</span>
 </pre></div>
 </div>
@@ -1185,7 +1199,7 @@ and <code class="docutils literal notranslate"><span class="pre">.FALSE.</span><
 <a class="reference internal" href="input-files.html#file-force-constants"><span class="std std-ref">here</span></a>.</p>
 </div>
 <div class="section" id="full-force-constants">
-<span id="full-force-constants-tag"></span><h3><a class="toc-backref" href="#id64"><code class="docutils literal notranslate"><span class="pre">FULL_FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#full-force-constants" title="Permalink to this headline">¶</a></h3>
+<span id="full-force-constants-tag"></span><h3><a class="toc-backref" href="#id65"><code class="docutils literal notranslate"><span class="pre">FULL_FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#full-force-constants" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">FULL_FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> is used to compute full supercell
 constants matrix. The default setting is <code class="docutils literal notranslate"><span class="pre">.FALSE.</span></code>. By <code class="docutils literal notranslate"><span class="pre">.TRUE.</span></code> or
 <code class="docutils literal notranslate"><span class="pre">.FALSE.</span></code>, the array shape becomes <code class="docutils literal notranslate"><span class="pre">(n_patom,</span> <span class="pre">n_satom,</span> <span class="pre">3,</span> <span class="pre">3)</span></code> or
@@ -1193,20 +1207,20 @@ constants matrix. The default setting is <code class="docutils literal notransla
 <a class="reference internal" href="input-files.html#file-force-constants"><span class="std std-ref">FORCE_CONSTANTS and force_constants.hdf5</span></a>.</p>
 </div>
 <div class="section" id="read-force-constants">
-<h3><a class="toc-backref" href="#id65"><code class="docutils literal notranslate"><span class="pre">READ_FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#read-force-constants" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id66"><code class="docutils literal notranslate"><span class="pre">READ_FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#read-force-constants" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">READ_FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span> <span class="pre">=</span>
 <span class="pre">READ</span></code>.</p>
 </div>
 <div class="section" id="write-force-constants">
-<h3><a class="toc-backref" href="#id66"><code class="docutils literal notranslate"><span class="pre">WRITE_FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#write-force-constants" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id67"><code class="docutils literal notranslate"><span class="pre">WRITE_FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#write-force-constants" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">WRITE_FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span> <span class="pre">=</span>
 <span class="pre">WRITE</span></code>.</p>
 </div>
 </div>
 <div class="section" id="create-animation-file">
-<span id="animation-tag"></span><h2><a class="toc-backref" href="#id67">Create animation file</a><a class="headerlink" href="#create-animation-file" title="Permalink to this headline">¶</a></h2>
+<span id="animation-tag"></span><h2><a class="toc-backref" href="#id68">Create animation file</a><a class="headerlink" href="#create-animation-file" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="anime-type">
-<h3><a class="toc-backref" href="#id68"><code class="docutils literal notranslate"><span class="pre">ANIME_TYPE</span></code></a><a class="headerlink" href="#anime-type" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id69"><code class="docutils literal notranslate"><span class="pre">ANIME_TYPE</span></code></a><a class="headerlink" href="#anime-type" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ANIME_TYPE</span> <span class="o">=</span> <span class="n">JMOL</span>
 </pre></div>
 </div>
@@ -1219,7 +1233,7 @@ animation images are created such as <code class="docutils literal notranslate">
 <p>There are several parameters to be set in the <code class="docutils literal notranslate"><span class="pre">ANIME</span></code> tag.</p>
 </div>
 <div class="section" id="anime">
-<h3><a class="toc-backref" href="#id69"><code class="docutils literal notranslate"><span class="pre">ANIME</span></code></a><a class="headerlink" href="#anime" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id70"><code class="docutils literal notranslate"><span class="pre">ANIME</span></code></a><a class="headerlink" href="#anime" title="Permalink to this headline">¶</a></h3>
 <p><strong>The format of ``ANIME`` tag was modified after ver. 0.9.3.3.</strong></p>
 <div class="section" id="for-v-sim">
 <h4>For v_sim<a class="headerlink" href="#for-v-sim" title="Permalink to this headline">¶</a></h4>
@@ -1263,9 +1277,9 @@ however dummy values, e.g. 0, are required.</p>
 </div>
 </div>
 <div class="section" id="create-modulated-structure">
-<span id="modulation-tag"></span><h2><a class="toc-backref" href="#id70">Create modulated structure</a><a class="headerlink" href="#create-modulated-structure" title="Permalink to this headline">¶</a></h2>
+<span id="modulation-tag"></span><h2><a class="toc-backref" href="#id71">Create modulated structure</a><a class="headerlink" href="#create-modulated-structure" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="modulation">
-<h3><a class="toc-backref" href="#id71"><code class="docutils literal notranslate"><span class="pre">MODULATION</span></code></a><a class="headerlink" href="#modulation" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id72"><code class="docutils literal notranslate"><span class="pre">MODULATION</span></code></a><a class="headerlink" href="#modulation" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">MODULATION</span></code> tag is used to create a crystal structure with
 displacements along normal modes at q-point in the specified supercell
 dimension.</p>
@@ -1322,9 +1336,9 @@ vector is shown in <code class="docutils literal notranslate"><span class="pre">
 </div>
 </div>
 <div class="section" id="characters-of-irreducible-representations">
-<span id="irreducible-representation-related-tags"></span><h2><a class="toc-backref" href="#id72">Characters of irreducible representations</a><a class="headerlink" href="#characters-of-irreducible-representations" title="Permalink to this headline">¶</a></h2>
+<span id="irreducible-representation-related-tags"></span><h2><a class="toc-backref" href="#id73">Characters of irreducible representations</a><a class="headerlink" href="#characters-of-irreducible-representations" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="irreps">
-<span id="irreps-tag"></span><h3><a class="toc-backref" href="#id73"><code class="docutils literal notranslate"><span class="pre">IRREPS</span></code></a><a class="headerlink" href="#irreps" title="Permalink to this headline">¶</a></h3>
+<span id="irreps-tag"></span><h3><a class="toc-backref" href="#id74"><code class="docutils literal notranslate"><span class="pre">IRREPS</span></code></a><a class="headerlink" href="#irreps" title="Permalink to this headline">¶</a></h3>
 <p>Characters of irreducible representations (IRs) of phonon modes are
 shown. For this calculation, a primitive cell has to be used. If the
 input unit cell is a non-primitive cell, it has to be transformed to a
@@ -1341,7 +1355,7 @@ the fourth value in the frequency unit that the user specified.</p>
 the symbols of the IRs and the rotation operations are shown.</p>
 </div>
 <div class="section" id="show-irreps">
-<h3><a class="toc-backref" href="#id74"><code class="docutils literal notranslate"><span class="pre">SHOW_IRREPS</span></code></a><a class="headerlink" href="#show-irreps" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id75"><code class="docutils literal notranslate"><span class="pre">SHOW_IRREPS</span></code></a><a class="headerlink" href="#show-irreps" title="Permalink to this headline">¶</a></h3>
 <p>Irreducible representations are shown along with character table.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">IRREPS</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">0</span>
 <span class="n">SHOW_IRREPS</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
@@ -1349,7 +1363,7 @@ the symbols of the IRs and the rotation operations are shown.</p>
 </div>
 </div>
 <div class="section" id="little-cogroup">
-<h3><a class="toc-backref" href="#id75"><code class="docutils literal notranslate"><span class="pre">LITTLE_COGROUP</span></code></a><a class="headerlink" href="#little-cogroup" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id76"><code class="docutils literal notranslate"><span class="pre">LITTLE_COGROUP</span></code></a><a class="headerlink" href="#little-cogroup" title="Permalink to this headline">¶</a></h3>
 <p>Show irreps of little co-group (point-group of wavevector) instead of
 little group.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">IRREPS</span> <span class="o">=</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span><span class="o">/</span><span class="mi">8</span>
@@ -1359,9 +1373,9 @@ little group.</p>
 </div>
 </div>
 <div class="section" id="input-output-file-control">
-<h2><a class="toc-backref" href="#id76">Input/Output file control</a><a class="headerlink" href="#input-output-file-control" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id77">Input/Output file control</a><a class="headerlink" href="#input-output-file-control" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="fc-format-readfc-format-writefc-format">
-<span id="fc-format-tag"></span><h3><a class="toc-backref" href="#id77"><code class="docutils literal notranslate"><span class="pre">FC_FORMAT</span></code>,  <code class="docutils literal notranslate"><span class="pre">READFC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">WRITEFC_FORMAT</span></code></a><a class="headerlink" href="#fc-format-readfc-format-writefc-format" title="Permalink to this headline">¶</a></h3>
+<span id="fc-format-tag"></span><h3><a class="toc-backref" href="#id78"><code class="docutils literal notranslate"><span class="pre">FC_FORMAT</span></code>,  <code class="docutils literal notranslate"><span class="pre">READFC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">WRITEFC_FORMAT</span></code></a><a class="headerlink" href="#fc-format-readfc-format-writefc-format" title="Permalink to this headline">¶</a></h3>
 <p>There are two file-formats to store force constants. Currently
 <a class="reference internal" href="input-files.html#file-force-constants"><span class="std std-ref">text style</span></a> (<code class="docutils literal notranslate"><span class="pre">TEXT</span></code>) and hdf5 (<code class="docutils literal notranslate"><span class="pre">HDF5</span></code>)
 formats are supported. The default file format is the <a class="reference internal" href="input-files.html#file-force-constants"><span class="std std-ref">text
@@ -1383,7 +1397,7 @@ convert force constants format is possible:</p>
 </div>
 </div>
 <div class="section" id="band-format-mesh-format-qpoints-format">
-<span id="band-format-tag"></span><h3><a class="toc-backref" href="#id78"><code class="docutils literal notranslate"><span class="pre">BAND_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">MESH_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code></a><a class="headerlink" href="#band-format-mesh-format-qpoints-format" title="Permalink to this headline">¶</a></h3>
+<span id="band-format-tag"></span><h3><a class="toc-backref" href="#id79"><code class="docutils literal notranslate"><span class="pre">BAND_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">MESH_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code></a><a class="headerlink" href="#band-format-mesh-format-qpoints-format" title="Permalink to this headline">¶</a></h3>
 <p>There are two file-formats to write the results of band structure,
 mesh, and q-points calculations. Currently YAML (<code class="docutils literal notranslate"><span class="pre">YAML</span></code>) and hdf5
 (<code class="docutils literal notranslate"><span class="pre">HDF5</span></code>) formats are supported. The default file format is the YAML
@@ -1399,7 +1413,7 @@ format. The file format is changed as follows:</p>
 </div>
 </div>
 <div class="section" id="hdf5">
-<span id="hdf5-tag"></span><h3><a class="toc-backref" href="#id79"><code class="docutils literal notranslate"><span class="pre">HDF5</span></code></a><a class="headerlink" href="#hdf5" title="Permalink to this headline">¶</a></h3>
+<span id="hdf5-tag"></span><h3><a class="toc-backref" href="#id80"><code class="docutils literal notranslate"><span class="pre">HDF5</span></code></a><a class="headerlink" href="#hdf5" title="Permalink to this headline">¶</a></h3>
 <p>The following output files are written in hdf5 format instead of their
 original formats (in parenthesis) by <code class="docutils literal notranslate"><span class="pre">HDF5</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>.  In addition,
 <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code> is read with this tag.</p>
@@ -1465,7 +1479,7 @@ calculation results are written into <code class="docutils literal notranslate">
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>

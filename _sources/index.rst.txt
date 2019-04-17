@@ -58,6 +58,7 @@ The following features of phonopy are highlighted:
   :ref:`WIEN2k <wien2k_interface>`,
   :ref:`CRYSTAL <crystal_interface>`,
   :ref:`DFTB+ <dftbp_interface>`,
+  :ref:`TURBOMOLE <turbomole_interface>`,
   :ref:`LAMMPS (external) <external_tools_phonolammps>`
 - :ref:`Phonopy API for Python <phonopy_module>`
 

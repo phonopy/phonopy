@@ -4,21 +4,22 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>DFTB+ &amp; phonopy calculation &#8212; Phonopy v.2.1.2</title>
+    <title>DFTB+ &amp; phonopy calculation &#8212; Phonopy v.2.1.3</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="VASP-DFPT &amp; phonopy calculation" href="vasp-dfpt.html" />
+    <link rel="next" title="TURBOMOLE &amp; phonopy calculation" href="turbomole.html" />
     <link rel="prev" title="CRYSTAL &amp; phonopy calculation" href="crystal.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -107,7 +108,7 @@
     </a>
   </li>
   <li>
-    <a href="vasp-dfpt.html" title="Next Chapter: VASP-DFPT & phonopy calculation"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">VASP-DFPT & p... &raquo;</span>
+    <a href="turbomole.html" title="Next Chapter: TURBOMOLE & phonopy calculation"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">TURBOMOLE & p... &raquo;</span>
     </a>
   </li>
               
@@ -147,12 +148,12 @@ single-point energy and force calculation for a structure which is named
 <code class="docutils literal notranslate"><span class="pre">CalculateForces</span> <span class="pre">=</span> <span class="pre">Yes</span></code> in its analysis block, and write the tagged results
 by enabling <code class="docutils literal notranslate"><span class="pre">WriteResultsTag</span> <span class="pre">=</span> <span class="pre">Yes</span></code> in its options.</p>
 </li>
-<li><p class="first">Generate the the required set of structures and the <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> file by
-issuing the command</p>
+<li><p class="first">Generate the the required set of structures and the <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>
+file by issuing the command</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;4 4 4&quot;</span> <span class="o">--</span><span class="n">dftb</span><span class="o">+</span>
 </pre></div>
 </div>
-<p>This example builds 2 x 2 x 2 supercell files. The undistorted supercell is
+<p>This example builds 4 x 4 x 4 supercell files. The undistorted supercell is
 stored in <code class="docutils literal notranslate"><span class="pre">geo.genS</span></code>, while the required displacements are stored in files
 matching the pattern <code class="docutils literal notranslate"><span class="pre">geo.genS-*</span></code>. Note that you have to increase the
 supercell dimension until you reach convergence of the band structure.</p>
@@ -160,16 +161,16 @@ supercell dimension until you reach convergence of the band structure.</p>
 </ol>
 <ol class="arabic" start="2">
 <li><p class="first">For each each <code class="docutils literal notranslate"><span class="pre">geo.genS-*</span></code> structure perform a DFTB+ calculations,
-retaining the resulting <code class="docutils literal notranslate"><span class="pre">detailed.out</span></code> file.</p>
+retaining the resulting <code class="docutils literal notranslate"><span class="pre">results.tag</span></code> file.</p>
 </li>
 <li><p class="first">Create the <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file with the command</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-*/</span><span class="n">results</span><span class="o">.</span><span class="n">tag</span> <span class="o">--</span><span class="n">dftb</span><span class="o">+</span>  <span class="o">...</span>
 </pre></div>
 </div>
 <p>Where the location of all of the <code class="docutils literal notranslate"><span class="pre">results.tag</span></code> files is given on the
-command line. To run this command, the <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> file has to be located
-in the current directory, because the atomic displacements are written into
-the FORCE_SETS file.</p>
+command line. To run this command, the <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> file has to be
+located in the current directory, because the atomic displacements are
+written into the FORCE_SETS file.</p>
 </li>
 <li><p class="first">Create a <code class="docutils literal notranslate"><span class="pre">band.conf</span></code> file to specify the path in the Brillouin zone you are
 interested in (see the phonopy documentation). Then post-process the phonopy
@@ -209,7 +210,7 @@ the supercell repeat on the command line</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
     </p>
   </div>
 </footer>
