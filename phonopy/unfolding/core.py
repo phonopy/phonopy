@@ -112,16 +112,17 @@ class Unfolding(object):
     def __iter__(self):
         return self
 
-    def run(self, verbose=False):
+    def run(self):
         self.prepare()
         for x in self:
-            if verbose:
-                print(self._q_count)
+            pass
 
     def __next__(self):
-        if self._q_count == len(self._eigvecs):
+        if self._q_count == len(self._qpoints_s):
+            self._eigvecs = None
             raise StopIteration
 
+        self._solve_phonon()
         self._unfolding_weights[self._q_count] = self._get_unfolding_weights()
         self._q_count += 1
         return self._unfolding_weights[self._q_count - 1]
@@ -131,9 +132,10 @@ class Unfolding(object):
 
     def prepare(self):
         self._q_count = 0
-        self._solve_phonon()
         self._unfolding_weights = np.zeros(
-            (self._eigvecs.shape[0], self._eigvecs.shape[2]), dtype='double')
+            (len(self._qpoints_s),
+             self._phonon.supercell.get_number_of_atoms() * 3), dtype='double')
+        self._frequencies = np.zeros_like(self._unfolding_weights)
 
     @property
     def commensurate_points(self):
@@ -214,22 +216,17 @@ class Unfolding(object):
                 self._atom_mapping[i] = idx
 
     def _solve_phonon(self):
-        self._phonon.run_qpoints(self._qpoints_s, with_eigenvectors=True)
+        self._phonon.run_qpoints(self._qpoints_s[self._q_count],
+                                 with_eigenvectors=True)
         qpt = self._phonon.get_qpoints_dict()
-        self._frequencies = qpt['frequencies']
-        eigvecs = qpt['eigenvectors']
-        pos = self._phonon.supercell.get_scaled_positions()
-
-        # To make eigvecs for D-type dynamical matrix (unnecessary)
-        for i, q in enumerate(self._qpoints_s):
-            phases = np.exp(2j * np.dot(pos, q))
-            eigvecs[i] = np.multiply(eigvecs[i].T, np.repeat(phases, 3)).T
+        self._frequencies[self._q_count] = qpt['frequencies'][0]
+        eigvecs = qpt['eigenvectors'][0]
 
         if -1 in self._atom_mapping:
             shape = list(eigvecs.shape)
-            shape[1] += 3
+            shape[0] += 3
             self._eigvecs = np.zeros(tuple(shape), dtype=eigvecs.dtype)
-            self._eigvecs[:, :-3, :] = eigvecs
+            self._eigvecs[:-3, :] = eigvecs
         else:
             self._eigvecs = eigvecs
 
@@ -250,9 +247,8 @@ class Unfolding(object):
 
         """
 
-        eigvecs = self._eigvecs[self._q_count]
+        eigvecs = self._eigvecs
         dtype = "c%d" % (np.dtype('double').itemsize * 2)
-        weights = np.zeros(eigvecs.shape[1], dtype=dtype)
         q_p = self._qpoints_p[self._q_count]  # k
         q_s = self._qpoints_s[self._q_count]  # K
         diff = q_p - np.dot(q_s, np.linalg.inv(self._supercell_matrix))
@@ -264,18 +260,18 @@ class Unfolding(object):
             if (np.abs(d) < 1e-5).all():
                 break
 
-        e = np.zeros(eigvecs.shape[:2], dtype=dtype)
+        e = np.zeros((len(self._atom_mapping) * 3, eigvecs.shape[1]),
+                     dtype=dtype)
         phases = np.exp(2j * np.pi * np.dot(self._trans_p, G))
+
         for phase, indices in zip(
                 phases, self._atom_mapping[self._index_map_inv]):
             eig_indices = (
                 np.c_[indices * 3, indices * 3 + 1, indices * 3 + 2]).ravel()
             e += eigvecs[eig_indices, :] * phase
         e /= self._N
-        weights[:] = (e.conj() * e).sum(axis=0)
+        weights = (e.conj() * e).sum(axis=0)
 
-        # e = np.zeros(eigvecs.shape[:2], dtype=dtype)
-        # phases = np.exp(2j * np.pi * np.dot(self._trans_p, G))
         # indices = self._atom_mapping
         # eig_indices_r = (
         #     np.c_[indices * 3, indices * 3 + 1, indices * 3 + 2]).ravel()
@@ -285,11 +281,9 @@ class Unfolding(object):
         #         np.c_[indices * 3, indices * 3 + 1, indices * 3 + 2]).ravel()
         #     e += eigvecs[eig_indices_l, :] * eigvecs[eig_indices_r, :].conj() * phase
         # e /= self._N
-        # weights[:] = e.sum(axis=0)
+        # weights = e.sum(axis=0)
 
         if (weights.imag > 1e-5).any():
             print("Phonopy warning: Encountered imaginary values.")
-
-        # assert (np.abs(weights.real.sum(axis=1) - 1) < 1e-5).all()
 
         return weights.real
