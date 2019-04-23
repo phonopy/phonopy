@@ -264,7 +264,8 @@ class Unfolding(object):
             if (np.abs(d) < 1e-5).all():
                 break
 
-        e = np.zeros(eigvecs.shape[:2], dtype=dtype)
+        e = np.zeros((len(self._atom_mapping) * 3, eigvecs.shape[1]),
+                     dtype=dtype)
         phases = np.exp(2j * np.pi * np.dot(self._trans_p, G))
         for phase, indices in zip(
                 phases, self._atom_mapping[self._index_map_inv]):
