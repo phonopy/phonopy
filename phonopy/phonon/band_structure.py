@@ -203,15 +203,15 @@ def _get_labels(pairs_of_symbols):
 
     for i, l in enumerate(labels):
         if 'GAMMA' in l:
-            labels[i] = "$" + l.replace("GAMMA", "\Gamma") + "$"
+            labels[i] = "$" + l.replace("GAMMA", r"\Gamma") + "$"
         elif 'SIGMA' in l:
-            labels[i] = "$" + l.replace("SIGMA", "\Sigma") + "$"
+            labels[i] = "$" + l.replace("SIGMA", r"\Sigma") + "$"
         elif 'DELTA' in l:
-            labels[i] = "$" + l.replace("DELTA", "\Delta") + "$"
+            labels[i] = "$" + l.replace("DELTA", r"\Delta") + "$"
         elif 'LAMBDA' in l:
-            labels[i] = "$" + l.replace("LAMBDA", "\Lambda") + "$"
+            labels[i] = "$" + l.replace("LAMBDA", r"\Lambda") + "$"
         else:
-            labels[i] = "$\mathrm{%s}$" % l
+            labels[i] = r"$\mathrm{%s}$" % l
 
     return labels, path_connections
 
