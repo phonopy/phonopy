@@ -108,6 +108,8 @@ def write_supercells_with_displacements(interface_mode,
     elif interface_mode == 'turbomole':
         from phonopy.interface.turbomole import write_supercells_with_displacements
         write_supercells_with_displacements(supercell, cells_with_disps)
+    else:
+        raise RuntimeError("No calculator interface was found.")
 
 
 def read_crystal_structure(filename=None,
