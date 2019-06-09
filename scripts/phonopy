@@ -1027,7 +1027,7 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                     plot.show()
 
         # Thermal displacements
-        elif settings.get_is_thermal_displacements():
+        if settings.get_is_thermal_displacements():
             p_direction = settings.get_projection_direction()
             if log_level > 0 and p_direction is not None:
                 c_direction = np.dot(p_direction, primitive.get_cell())
@@ -1059,7 +1059,7 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                     plot.show()
 
         # Thermal displacement matrices
-        elif settings.get_is_thermal_displacement_matrices():
+        if settings.get_is_thermal_displacement_matrices():
             if log_level > 0:
                 print("Calculating thermal displacement matrices...")
             tprop_range = settings.get_thermal_property_range()
@@ -1083,7 +1083,7 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                 phonon.write_thermal_displacement_matrix_to_cif(0)
 
         # Projected DOS
-        elif settings.get_pdos_indices() is not None:
+        if settings.get_pdos_indices() is not None:
             p_direction = settings.get_projection_direction()
             if (log_level > 0 and
                 p_direction is not None and
@@ -1125,7 +1125,7 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                         plot.show()
 
         # Total DOS
-        elif (args.is_graph_plot or settings.get_is_dos_mode()):
+        if (args.is_graph_plot or settings.get_is_dos_mode()):
             phonon.run_total_dos(
                 sigma=settings.get_sigma(),
                 freq_min=settings.get_min_frequency(),
@@ -1150,7 +1150,7 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                 else:
                     plot.show()
 
-        elif settings.get_is_moment():
+        if settings.get_is_moment():
             freq_min = settings.get_min_frequency()
             freq_max = settings.get_max_frequency()
             if log_level > 0:
