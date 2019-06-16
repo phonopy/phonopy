@@ -335,10 +335,11 @@ class PhonopyYaml(object):
             self.force_constants = np.array(fc, dtype='double', order='C')
         elif 'displacements' in self.yaml:
             disp = self.yaml['displacements'][0]
-            if type(disp) is dict and 'forces' in disp:
-                    self.dataset = self._parse_force_sets_type1()
-            elif type(disp) is list and 'forces' in disp[0]:
-                self.dataset = self._parse_force_sets_type2()
+            if type(disp) is dict:
+                self.dataset = self._parse_force_sets_type1()
+            elif type(disp) is list:
+                if 'forces' in disp[0]:
+                    self.dataset = self._parse_force_sets_type2()
         if 'supercell_matrix' in self.yaml:
             self.supercell_matrix = np.array(self.yaml['supercell_matrix'],
                                              dtype='intc', order='C')
@@ -412,14 +413,21 @@ class PhonopyYaml(object):
             return None
 
     def _parse_force_sets_type1(self):
-        natom = len(self.yaml['displacements'][0]['forces'])
-        dataset = {'natom': natom}
+        with_forces = False
+        if 'forces' in self.yaml['displacements'][0]:
+            with_forces = True
+            dataset = {'natom': len(self.yaml['displacements'][0]['forces'])}
+        elif self.supercell is not None:
+            dataset = {'natom': self.supercell.get_number_of_atoms()}
+
         first_atoms = []
         for d in self.yaml['displacements']:
-            first_atoms.append({
+            data = {
                 'number': d['atom'] - 1,
-                'displacement': np.array(d['displacement'], dtype='double'),
-                'forces': np.array(d['forces'], dtype='double', order='C')})
+                'displacement': np.array(d['displacement'], dtype='double')}
+            if with_forces:
+                data['forces'] = np.array(d['forces'], dtype='double', order='C')
+            first_atoms.append(data)
         dataset['first_atoms'] = first_atoms
         return dataset
 

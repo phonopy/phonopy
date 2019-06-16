@@ -133,9 +133,12 @@ def set_force_constants(
 
     if _dataset:
         phonon.set_displacement_dataset(_dataset)
-        phonon.produce_force_constants(
-            calculate_full_force_constants=False,
-            use_alm=use_alm)
+        try:
+            phonon.produce_force_constants(
+                calculate_full_force_constants=False,
+                use_alm=use_alm)
+        except RuntimeError:
+            pass
 
 
 def read_force_constants_from_hdf5(filename='force_constants.hdf5',
