@@ -65,7 +65,7 @@ plot.
 .. _gruneisen_calculators:
 
 Abinit, Quantum ESPRESSO, Wien2k, CRYSTAL, and TURBOMOLE interfaces
-----------------------------------------------------------
+-------------------------------------------------------------------
 
 ``--abinit``, ``--qe``, ``--wien2k``, ``--crystal``, or ``--turbomole`` options can be
 specified for corresponding calculators and the crystal structure file

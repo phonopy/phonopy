@@ -3,6 +3,11 @@
 Change Log
 ==========
 
+Jun-19-2019: Version 2.1.4
+---------------------------
+* `Bug fix <https://github.com/atztogo/phonopy/pull/96>`_ of
+  ``Cp-temperature_polyfit.dat`` calculation in QHA (by ``@ezanardi``).
+
 Apr-17-2019: Version 2.1.3
 ---------------------------
 * TURBOMOLE interface is provided by Antti Karttunen (``--turbomole``).
