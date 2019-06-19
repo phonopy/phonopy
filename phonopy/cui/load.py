@@ -32,6 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import numpy as np
 from phonopy.api_phonopy import Phonopy
 from phonopy.interface import get_default_physical_units, PhonopyYaml
 import phonopy.cui.load_helper as load_helper
@@ -168,7 +169,7 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         cell = phpy_yaml.unitcell
         smat = phpy_yaml.supercell_matrix
         if smat is None:
-            raise RuntimeError("%s could not be parsed.")
+            smat = np.eye(3, dtype='intc', order='C')
         if primitive_matrix is 'auto':
             pmat = 'auto'
         else:

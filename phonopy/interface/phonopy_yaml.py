@@ -419,6 +419,8 @@ class PhonopyYaml(object):
             dataset = {'natom': len(self.yaml['displacements'][0]['forces'])}
         elif self.supercell is not None:
             dataset = {'natom': self.supercell.get_number_of_atoms()}
+        elif 'natom' in self.yaml:
+            dataset = {'natom': self.yaml['natom']}
 
         first_atoms = []
         for d in self.yaml['displacements']:
@@ -429,6 +431,7 @@ class PhonopyYaml(object):
                 data['forces'] = np.array(d['forces'], dtype='double', order='C')
             first_atoms.append(data)
         dataset['first_atoms'] = first_atoms
+
         return dataset
 
     def _parse_force_sets_type2(self):
