@@ -265,9 +265,21 @@ class PhonopyAtoms(_Atoms):
     def cell(self):
         return self._cell.copy()
 
+    @cell.setter
+    def cell(self, cell):
+        _cell = np.array(cell, dtype='double')
+        if _cell.shape == (3, 3):
+            self._cell = cell
+        else:
+            raise TypeError("Array shape of cell is not 3x3.")
+
     @property
     def scaled_positions(self):
         return self._scaled_positions.copy()
+
+    @scaled_positions.setter
+    def scaled_positions(self, scaled_positions):
+        self._scaled_positions = scaled_positions
 
     @property
     def numbers(self):

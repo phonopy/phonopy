@@ -39,7 +39,7 @@ from phonopy.file_IO import (iter_collect_forces,
                              write_force_constants_to_hdf5,
                              write_FORCE_CONSTANTS)
 from phonopy.interface.vasp import (get_scaled_positions_lines, check_forces,
-                                    get_drift_forces)
+                                    get_drift_forces, write_magnetic_moments)
 from phonopy.units import Bohr
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.atoms import symbol_map
@@ -160,6 +160,8 @@ def write_supercells_with_displacements(supercell,
             write_pwscf(filename,
                         cell,
                         pp_filenames)
+
+    write_magnetic_moments(supercell, sort_by_elements=False)
 
 
 def get_pwscf_structure(cell, pp_filenames=None):

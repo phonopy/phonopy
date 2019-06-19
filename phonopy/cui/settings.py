@@ -2052,7 +2052,6 @@ class PhonopyConfParser(ConfParser):
         if 'pdos' in params:
             self._settings.set_pdos_indices(params['pdos'])
             self._settings.set_is_eigenvectors(True)
-            self._settings.set_is_dos_mode(True)
             self._settings.set_is_mesh_symmetry(False)
 
         if ('projection_direction' in params and
@@ -2060,7 +2059,6 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_projection_direction(
                 params['projection_direction'])
             self._settings.set_is_eigenvectors(True)
-            self._settings.set_is_dos_mode(True)
             self._settings.set_is_mesh_symmetry(False)
 
         # Thermal properties

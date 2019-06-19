@@ -848,7 +848,7 @@ class QHA(object):
                 msg = ("Failed to fit equilibrium volumes vs T to "
                        "polynomial of degree 2.")
                 raise RuntimeError(msg)
-            dvdt = parameters[0] * t + parameters[1]
+            dvdt = parameters[0] * 2 * t + parameters[1]
 
             cp.append(cv_p + t * dvdt * dsdv_t)
             dsdv.append(dsdv_t)

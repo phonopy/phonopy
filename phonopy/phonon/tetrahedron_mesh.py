@@ -223,7 +223,7 @@ class TetrahedronMesh(object):
         else:
             self._frequency_points = np.array(frequency_points, dtype='double')
 
-        num_band = self._cell.get_number_of_atoms() * 3
+        num_band = self._frequencies.shape[1]
         num_freqs = len(self._frequency_points)
         self._integration_weights = np.zeros((num_freqs, num_band),
                                              dtype='double')

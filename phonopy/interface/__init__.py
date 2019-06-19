@@ -33,6 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import os
+import numpy as np
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.file_IO import parse_disp_yaml, write_FORCE_SETS
 
@@ -108,6 +109,8 @@ def write_supercells_with_displacements(interface_mode,
     elif interface_mode == 'turbomole':
         from phonopy.interface.turbomole import write_supercells_with_displacements
         write_supercells_with_displacements(supercell, cells_with_disps)
+    else:
+        raise RuntimeError("No calculator interface was found.")
 
 
 def read_crystal_structure(filename=None,
@@ -456,6 +459,24 @@ def get_force_constant_conversion_factor(unit, interface_mode):
         return factor
     else:
         return 1.0
+
+
+def convert_dataset_to_type2(dataset):
+    if 'first_atoms' in dataset:
+        natom = dataset['natom']
+        disps = np.zeros((len(dataset['first_atoms']), natom, 3),
+                         dtype='double', order='C')
+        forces = np.zeros_like(disps)
+        for i, disp1 in enumerate(dataset['first_atoms']):
+            disps[i, disp1['number']] = disp1['displacement']
+            if 'forces' in disp1:
+                forces[i] = disp1['forces']
+
+        dset_type2 = {'displacements': disps}
+        if 'forces' in dataset['first_atoms'][0]:
+            dset_type2['forces'] = forces
+
+        return dset_type2
 
 
 def _read_phonopy_yaml(filename, command_name):

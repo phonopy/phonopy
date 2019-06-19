@@ -3,7 +3,9 @@ import unittest
 import numpy as np
 import time
 
-from phonopy.structure.symmetry import Symmetry
+from phonopy.structure.symmetry import (Symmetry, symmetrize_borns_and_epsilon,
+                                        _get_supercell_and_primitive,
+                                        _get_mapping_between_cells)
 from phonopy.structure.cells import get_supercell
 from phonopy.interface.phonopy_yaml import read_cell_yaml
 import os
@@ -70,7 +72,86 @@ class TestSymmetry(unittest.TestCase):
         self.assertFalse(len_sym_nonspin == len_sym_brokenspin)
 
 
+class TestSymmetrizeBornsAndEpsilon(unittest.TestCase):
+    def setUp(self):
+        self.pmat = [[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]]
+        self.smat = np.eye(3, dtype='int') * 2
+        self.cell = read_cell_yaml(os.path.join(data_dir, "..", "NaCl.yaml"))
+        self.scell, self.pcell = _get_supercell_and_primitive(
+            self.cell,
+            primitive_matrix=self.pmat,
+            supercell_matrix=self.smat)
+        self.idx = [self.scell.u2u_map[i]
+                    for i in self.scell.s2u_map[self.pcell.p2s_map]]
+        self.epsilon = np.array([[2.43533967, 0, 0],
+                                 [0, 2.43533967, 0],
+                                 [0, 0, 2.43533967]])
+        self.borns = np.array([[[1.08875538, 0, 0],
+                                [0, 1.08875538, 0],
+                                [0, 0, 1.08875538]],
+                               [[1.08875538, 0, 0],
+                                [0, 1.08875538, 0],
+                                [0, 0, 1.08875538]],
+                               [[1.08875538, 0, 0],
+                                [0, 1.08875538, 0],
+                                [0, 0, 1.08875538]],
+                               [[1.08875538, 0, 0],
+                                [0, 1.08875538, 0],
+                                [0, 0, 1.08875538]],
+                               [[-1.08875538, 0, 0],
+                                [0, -1.08875538, 0],
+                                [0, 0, -1.08875538]],
+                               [[-1.08875538, 0, 0],
+                                [0, -1.08875538, 0],
+                                [0, 0, -1.08875538]],
+                               [[-1.08875538, 0, 0],
+                                [0, -1.08875538, 0],
+                                [0, 0, -1.08875538]],
+                               [[-1.08875538, 0, 0],
+                                [0, -1.08875538, 0],
+                                [0, 0, -1.08875538]]])
+
+    def tearDown(self):
+        pass
+
+    def test_only_symmetrize(self):
+        borns, epsilon = symmetrize_borns_and_epsilon(
+            self.borns,
+            self.epsilon,
+            self.cell)
+        np.testing.assert_allclose(borns, self.borns)
+        np.testing.assert_allclose(epsilon, self.epsilon)
+        # primitive_matrix=[[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]])
+
+    def test_with_pmat_and_smat(self):
+        borns, epsilon = symmetrize_borns_and_epsilon(
+            self.borns,
+            self.epsilon,
+            self.cell,
+            primitive_matrix=self.pmat,
+            supercell_matrix=self.smat)
+        np.testing.assert_allclose(borns, self.borns[self.idx])
+        np.testing.assert_allclose(epsilon, self.epsilon)
+
+    def test_with_pcell(self):
+        idx2 = _get_mapping_between_cells(self.pcell, self.pcell)
+
+        np.testing.assert_array_equal(
+            idx2, np.arange(self.pcell.get_number_of_atoms()))
+
+        borns, epsilon = symmetrize_borns_and_epsilon(
+            self.borns,
+            self.epsilon,
+            self.cell,
+            primitive=self.pcell)
+        np.testing.assert_allclose(borns, self.borns[self.idx][idx2])
+        np.testing.assert_allclose(epsilon, self.epsilon)
+
+
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestSymmetry)
+    unittest.TextTestRunner(verbosity=2).run(suite)
+    suite = unittest.TestLoader().loadTestsFromTestCase(
+        TestSymmetrizeBornsAndEpsilon)
     unittest.TextTestRunner(verbosity=2).run(suite)
     # unittest.main()

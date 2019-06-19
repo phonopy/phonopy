@@ -2497,7 +2497,7 @@ class Phonopy(object):
                 self._dynamic_structure_factor.dynamic_structure_factors)
 
     def run_random_displacements(self,
-                                 T,
+                                 temperature,
                                  number_of_snapshots=1,
                                  seed=None,
                                  cutoff_frequency=None):
@@ -2506,12 +2506,12 @@ class Phonopy(object):
             cutoff_frequency=cutoff_frequency,
             factor=self._factor)
         self._random_displacements.run(
-            T,
+            temperature,
             number_of_snapshots=number_of_snapshots,
             seed=seed)
 
     def get_random_displacements(self):
-        if self._random_displacements is not None:
+        if self._random_displacements is None:
             msg = ("run_random_displacements has to be done.")
             raise RuntimeError(msg)
 

@@ -279,23 +279,24 @@ def write_supercells_with_displacements(supercell,
                        cell,
                        direct=True)
 
-    _write_magnetic_moments(supercell)
+    write_magnetic_moments(supercell, sort_by_elements=True)
 
 
-def _write_magnetic_moments(cell):
+def write_magnetic_moments(cell, sort_by_elements=False):
     magmoms = cell.get_magnetic_moments()
     if magmoms is not None:
-        w = open("MAGMOM", 'w')
-        (num_atoms,
-         symbols,
-         scaled_positions,
-         sort_list) = sort_positions_by_symbols(cell.get_chemical_symbols(),
-                                                cell.get_scaled_positions())
-        w.write(" MAGMOM = ")
-        for i in sort_list:
-            w.write("%f " % magmoms[i])
-        w.write("\n")
-        w.close()
+        if sort_by_elements:
+            (_, _, _, sort_list) = sort_positions_by_symbols(
+                cell.get_chemical_symbols(), cell.get_scaled_positions())
+        else:
+            sort_list = range(cell.get_number_of_atoms())
+
+        with open("MAGMOM", 'w') as w:
+            w.write(" MAGMOM = ")
+            for i in sort_list:
+                w.write("%f " % magmoms[i])
+            w.write("\n")
+            w.close()
 
 
 def get_scaled_positions_lines(scaled_positions):

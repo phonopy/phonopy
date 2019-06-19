@@ -403,6 +403,7 @@ def symmetrize_borns_and_epsilon(borns,
                                  epsilon,
                                  ucell,
                                  primitive_matrix=None,
+                                 primitive=None,
                                  supercell_matrix=None,
                                  symprec=1e-5,
                                  is_symmetry=True):
@@ -426,6 +427,12 @@ def symmetrize_borns_and_epsilon(borns,
         are returned.
         shape=(3, 3)
         dtype='double'
+    primitive : PhonopyAtoms
+        This is an alternative of giving primitive_matrix (Mp). Mp is given as
+            Mp = (a_u, b_u, c_u)^-1 * (a_p, b_p, c_p).
+        In addition, the order of atoms is alined to those of atoms in this
+        primitive cell for Born effective charges. No rigid rotation of
+        crystal structure is assumed.
     supercell_matrix: array_like, optional
         Supercell matrix. This is used to select Born effective charges in
         **primitive cell**. Supercell matrix is needed because primitive
@@ -476,16 +483,45 @@ def symmetrize_borns_and_epsilon(borns,
         import warnings
         warnings.warn("\n".join(lines))
 
-    if primitive_matrix is None:
+    if primitive_matrix is None and primitive is None:
         return borns_, epsilon_
     else:
+        if primitive is not None:
+            pmat = np.dot(np.linalg.inv(ucell.cell.T), primitive.cell.T)
+        else:
+            pmat = primitive_matrix
+
         scell, pcell = _get_supercell_and_primitive(
             ucell,
-            primitive_matrix=primitive_matrix,
+            primitive_matrix=pmat,
             supercell_matrix=supercell_matrix,
             symprec=symprec)
+
         idx = [scell.u2u_map[i] for i in scell.s2u_map[pcell.p2s_map]]
-        return borns_[idx], epsilon_
+        borns_in_prim = borns_[idx].copy()
+
+        if primitive is None:
+            return borns_in_prim, epsilon_
+        else:
+            idx2 = _get_mapping_between_cells(pcell, primitive)
+            return borns_in_prim[idx2].copy(), epsilon_
+
+
+def _get_mapping_between_cells(cell_from, cell_to, symprec=1e-5):
+    indices = []
+    lattice = cell_from.cell
+    pos_from = cell_from.scaled_positions
+    for i, p_to in enumerate(cell_to.scaled_positions):
+        diff = pos_from - p_to
+        diff -= np.rint(diff)
+        dist = np.sqrt(np.sum(np.dot(diff, lattice) ** 2, axis=1))
+        ids = np.nonzero(dist < symprec)[0]
+        if len(ids) == 1:
+            indices.append(ids[0])
+        else:
+            msg = "Index matching didn't go well."
+            raise RuntimeError(msg)
+    return indices
 
 
 def _symmetrize_2nd_rank_tensor(tensor, symmetry_operations, lattice):

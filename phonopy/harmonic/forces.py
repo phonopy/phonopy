@@ -34,16 +34,18 @@
 
 import numpy as np
 
+
 class Forces(object):
     """
-    forces: Forces on atoms in a supercell with a displacement in Cartesian coordinate
-      [ [ F_1x, F_1y, F_1z ], 
-        [ F_2x, F_2y, F_2z ], 
+    forces: Forces on atoms in a supercell with a displacement in Cartesian
+    coordinate
+      [ [ F_1x, F_1y, F_1z ],
+        [ F_2x, F_2y, F_2z ],
         ... ]
     displacement: An atomic displacement in Cartesian coordiante
       [ d_x, d_y, d_z ]
     """
-    
+
     def __init__(self, atom_number, displacement, forces,
                  is_translational_invariance=False):
         self.atom_number = atom_number
@@ -62,6 +64,5 @@ class Forces(object):
         return self.forces
 
     def set_translational_invariance(self):
-        self.forces = (self.forces - 
+        self.forces = (self.forces -
                        np.sum(self.forces, axis=0) / self.forces.shape[0])
-        

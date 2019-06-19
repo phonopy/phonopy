@@ -144,6 +144,7 @@ def get_options():
         is_mesh_symmetry=True,
         marker='o',
         markersize=None,
+        masses=None,
         plot_graph=False,
         primitive_axes=None,
         qe_mode=False,
@@ -203,6 +204,9 @@ def get_options():
     parser.add_argument(
         "--markersize", dest="markersize", type=float,
         help="Markersize for plot in points (matplotlib)")
+    parser.add_argument(
+        "--mass", dest="masses",
+        help="Same as MASS tag")
     parser.add_argument(
         "--mp", "--mesh", dest="sampling_mesh",
         help="Sampling mesh")
@@ -379,6 +383,11 @@ def main(args):
                                 interface_mode=interface_mode,
                                 symprec=args.symprec)
             phonons.append(phonon)
+
+    if args.masses:
+        masses = [float(v) for v in args.masses.split()]
+        for ph in phonons:
+            ph.set_masses(masses)
 
     gruneisen = PhonopyGruneisen(phonons[0],  # equilibrium
                                  phonons[1],  # plus
