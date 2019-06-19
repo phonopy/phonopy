@@ -509,7 +509,7 @@ if args.is_check_symmetry:
 # Phonopy initialization #
 ##########################
 run_mode = settings.get_run_mode()
-if 'band' in run_mode and is_pdos_auto:
+if run_mode is not None and 'band' in run_mode and is_pdos_auto:
     run_mode = 'band_mesh'
 
 # Prepare phonopy object
@@ -933,7 +933,7 @@ elif (run_mode == 'band' or
             else:
                 plot.show()
 
-    if run_mode == 'mesh' or run_mode == 'band_mesh':
+    if run_mode == 'mesh' or run_mode == 'band_mesh' or is_pdos_auto:
         mesh_numbers = settings.get_mesh_numbers()
         if mesh_numbers is None:
             mesh_numbers = 50.0
