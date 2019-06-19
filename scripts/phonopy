@@ -439,6 +439,7 @@ else:
 
 is_band_auto = (type(settings.get_band_paths()) is str and
                 settings.get_band_paths() == 'auto')
+is_pdos_auto = (settings.get_pdos_indices() == 'auto')
 if settings.get_symmetry_tolerance() is None:
     symprec = 1e-5
 else:
@@ -508,6 +509,8 @@ if args.is_check_symmetry:
 # Phonopy initialization #
 ##########################
 run_mode = settings.get_run_mode()
+if run_mode is not None and 'band' in run_mode and is_pdos_auto:
+    run_mode = 'band_mesh'
 
 # Prepare phonopy object
 if run_mode == 'displacements':
@@ -865,7 +868,11 @@ if run_mode == 'qpoints':
         phonon.write_yaml_qpoints_phonon()
 
 # Band structure and mesh sampling
-elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
+
+elif (run_mode == 'band' or
+      run_mode == 'mesh' or
+      run_mode == 'band_mesh' or
+      is_pdos_auto):
     if run_mode == 'band' or run_mode == 'band_mesh':
         if settings.get_band_points() is None:
             npoints = 51
@@ -926,8 +933,10 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
             else:
                 plot.show()
 
-    if run_mode == 'mesh' or run_mode == 'band_mesh':
+    if run_mode == 'mesh' or run_mode == 'band_mesh' or is_pdos_auto:
         mesh_numbers = settings.get_mesh_numbers()
+        if mesh_numbers is None:
+            mesh_numbers = 50.0
         mesh_shift = settings.get_mesh_shift()
         t_symmetry = settings.get_time_reversal_symmetry()
         q_symmetry = settings.get_is_mesh_symmetry()
@@ -1027,7 +1036,7 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                     plot.show()
 
         # Thermal displacements
-        elif settings.get_is_thermal_displacements():
+        if settings.get_is_thermal_displacements():
             p_direction = settings.get_projection_direction()
             if log_level > 0 and p_direction is not None:
                 c_direction = np.dot(p_direction, primitive.get_cell())
@@ -1059,7 +1068,7 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                     plot.show()
 
         # Thermal displacement matrices
-        elif settings.get_is_thermal_displacement_matrices():
+        if settings.get_is_thermal_displacement_matrices():
             if log_level > 0:
                 print("Calculating thermal displacement matrices...")
             tprop_range = settings.get_thermal_property_range()
@@ -1083,7 +1092,7 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                 phonon.write_thermal_displacement_matrix_to_cif(0)
 
         # Projected DOS
-        elif settings.get_pdos_indices() is not None:
+        if settings.get_pdos_indices() is not None:
             p_direction = settings.get_projection_direction()
             if (log_level > 0 and
                 p_direction is not None and
@@ -1109,7 +1118,7 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
 
             if args.is_graph_plot:
                 pdos_indices = settings.get_pdos_indices()
-                if pdos_indices == 'auto':
+                if is_pdos_auto:
                     pdos_indices = get_pdos_indices(phonon.primitive_symmetry)
                     legend = [primitive.get_chemical_symbols()[x[0]]
                               for x in pdos_indices]
@@ -1125,7 +1134,8 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                         plot.show()
 
         # Total DOS
-        elif (args.is_graph_plot or settings.get_is_dos_mode()):
+        if ((args.is_graph_plot or settings.get_is_dos_mode()) and
+            not is_pdos_auto):
             phonon.run_total_dos(
                 sigma=settings.get_sigma(),
                 freq_min=settings.get_min_frequency(),
@@ -1150,7 +1160,7 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                 else:
                     plot.show()
 
-        elif settings.get_is_moment():
+        if settings.get_is_moment():
             freq_min = settings.get_min_frequency()
             freq_max = settings.get_max_frequency()
             if log_level > 0:

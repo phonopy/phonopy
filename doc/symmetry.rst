@@ -26,7 +26,7 @@ the user's choice. The default value is ``1e-5``.
 Often we know the space group type of our crystal. Therefore it is
 recommended to check whether the space group type of the input unit
 cell is the correct one or not with very tight value such as
-``--tolerance=1e-8`` using :ref:`tolerance_option` option. If an input
+``--tolerance=1e-8`` (:ref:`tolerance_tag`). If an input
 unit cell structure is naively distorted for which the distortion is
 about the same order of the chosen tolerance, inconsistency in
 symmetry handling may occur and it can result in a crash of the
