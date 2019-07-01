@@ -919,7 +919,8 @@ elif (run_mode == 'band' or
         if interface_mode is None:
             comment = None
         else:
-            comment = {'calculator': interface_mode}
+            comment = {'calculator': interface_mode,
+                       'length_unit': physical_units['length_unit']}
 
         if settings.get_is_hdf5() or settings.get_band_format() == 'hdf5':
             phonon.write_hdf5_band_structure(comment=comment)
