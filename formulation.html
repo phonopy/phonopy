@@ -553,7 +553,7 @@ the implementation, central difference is employed, and <span class="math notran
 q_\alpha\)</span> and <span class="math notranslate nohighlight">\(-\Delta q_\alpha\)</span> are taken to calculate group
 velocity, where <span class="math notranslate nohighlight">\(\alpha\)</span> is the Cartesian index in reciprocal
 space. <span class="math notranslate nohighlight">\(\Delta q_\alpha\)</span> is specified in the unit of reciprocal
-space distance (<span class="math notranslate nohighlight">\(\mathrm{\AA}^{-1}\)</span> for the default case) by
+space distance (<span class="math notranslate nohighlight">\(\text{Angstrom}^{-1}\)</span> for the default case) by
 <code class="docutils literal notranslate"><span class="pre">--gv_delta_q</span></code> option or <code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span></code> tag.</p>
 </div>
 </div>
@@ -562,12 +562,12 @@ space distance (<span class="math notranslate nohighlight">\(\mathrm{\AA}^{-1}\)
 <p>Phonopy calculates phonon frequencies based on input values from
 users. In the default case, the physical units of distance, atomic
 mass, force, and force constants are supposed to be
-<span class="math notranslate nohighlight">\(\text{\AA}\)</span>, <span class="math notranslate nohighlight">\(\text{AMU}\)</span>, <span class="math notranslate nohighlight">\(\text{eV/\AA}\)</span>, and
-<span class="math notranslate nohighlight">\(\text{eV/\AA}^2\)</span>, respectively, and the physical unit of the
+<span class="math notranslate nohighlight">\(\text{Angstrom}\)</span>, <span class="math notranslate nohighlight">\(\text{AMU}\)</span>, <span class="math notranslate nohighlight">\(\text{eV/Angstrom}\)</span>, and
+<span class="math notranslate nohighlight">\(\text{eV/Angstrom}^2\)</span>, respectively, and the physical unit of the
 phonon frequency is converted to THz. This conversion is made as
 follows:</p>
 <p>Internally phonon frequency has the physical unit of
-<span class="math notranslate nohighlight">\(\sqrt{\text{eV/}(\text{\AA}^2\cdot \text{AMU})}\)</span> in angular
+<span class="math notranslate nohighlight">\(\sqrt{\text{eV/}(\text{Angstrom}^2\cdot \text{AMU})}\)</span> in angular
 frequency. To convert this unit to THz (not angular frequency), the
 calculation of <code class="docutils literal notranslate"><span class="pre">sqrt(EV/AMU)/Angstrom/(2*pi)/1e12</span></code> is made. <code class="docutils literal notranslate"><span class="pre">EV</span></code>,
 <code class="docutils literal notranslate"><span class="pre">AMU</span></code>, <code class="docutils literal notranslate"><span class="pre">Angstrom</span></code> are the values to convert them to those in the
@@ -588,9 +588,9 @@ constants:</p>
 {\sum_{\alpha\beta}q_{\alpha}\epsilon_{\alpha\beta}^{\infty} q_{\beta}}.\]</div>
 <p>is <span class="math notranslate nohighlight">\([\text{hartree}/\text{bohr}^2]\)</span>. In the default case for the
 VASP interface, internally <span class="math notranslate nohighlight">\(\Omega_0\)</span> is given in
-<span class="math notranslate nohighlight">\(\text{\AA}^3\)</span>. In total, the necessary unit conversion is
+<span class="math notranslate nohighlight">\(\text{Angstrom}^3\)</span>. In total, the necessary unit conversion is
 <span class="math notranslate nohighlight">\((\text{hartree} \rightarrow \text{eV}) \times (\text{bohr}
-\rightarrow \text{\AA})=14.4\)</span>. In the default case of the Wien2k
+\rightarrow \text{Angstrom})=14.4\)</span>. In the default case of the Wien2k
 interface, the conversion factor is <span class="math notranslate nohighlight">\((\text{hartree}
 \rightarrow \text{mRy})=2000\)</span>. For the other interfaces, the
 conversion factors are similarly calculated following the unit
