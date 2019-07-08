@@ -45,5 +45,5 @@ the implementation, central difference is employed, and :math:`+\Delta
 q_\alpha` and :math:`-\Delta q_\alpha` are taken to calculate group
 velocity, where :math:`\alpha` is the Cartesian index in reciprocal
 space. :math:`\Delta q_\alpha` is specified in the unit of reciprocal
-space distance (:math:`\mathrm{\AA}^{-1}` for the default case) by
+space distance (:math:`\text{Angstrom}^{-1}` for the default case) by
 ``--gv_delta_q`` option or ``GV_DELTA_Q`` tag.
