@@ -98,55 +98,75 @@ def _get_FORCE_SETS_lines_type2(dataset):
 
 def parse_FORCE_SETS(natom=None,
                      is_translational_invariance=False,
-                     filename="FORCE_SETS"):
+                     filename="FORCE_SETS",
+                     to_type2=False):
+    """
+
+    to_type2 : bool
+        dataset of type2 is returned when True.
+
+    """
+
     with open(filename, 'r') as f:
-        return _get_set_of_forces(
+        return _get_dataset(
             f,
             natom=natom,
-            is_translational_invariance=is_translational_invariance)
+            is_translational_invariance=is_translational_invariance,
+            to_type2=to_type2)
 
 
 def parse_FORCE_SETS_from_strings(strings,
                                   natom=None,
-                                  is_translational_invariance=False):
-    return _get_set_of_forces(
+                                  is_translational_invariance=False,
+                                  to_type2=False):
+    return _get_dataset(
         StringIO(strings),
         natom=natom,
-        is_translational_invariance=is_translational_invariance)
+        is_translational_invariance=is_translational_invariance,
+        to_type2=to_type2)
 
 
-def _get_set_of_forces(f, natom=None, is_translational_invariance=False):
+def collect_disps_and_forces(disp_dataset):
+    if 'first_atoms' in disp_dataset:
+        natom = disp_dataset['natom']
+        disps = np.zeros((len(disp_dataset['first_atoms']), natom, 3),
+                         dtype='double', order='C')
+        forces = np.zeros_like(disps)
+        for i, disp1 in enumerate(disp_dataset['first_atoms']):
+            if 'forces' in disp1:
+                disps[i, disp1['number']] = disp1['displacement']
+                forces[i] = disp1['forces']
+            else:
+                return [], []
+        return disps, forces
+    elif 'forces' in disp_dataset and 'displacements' in disp_dataset:
+        return disp_dataset['displacements'], disp_dataset['forces']
+
+
+def _get_dataset(f,
+                 natom=None,
+                 is_translational_invariance=False,
+                 to_type2=False):
     first_line_ary = _get_line_ignore_blank(f).split()
     f.seek(0)
     if len(first_line_ary) == 1:
         if natom is None or int(first_line_ary[0]) == natom:
-            return _get_set_of_forces_type1(f, is_translational_invariance)
+            dataset = _get_dataset_type1(f, is_translational_invariance)
         else:
             msg = "Number of forces is not consistent with supercell setting."
             raise RuntimeError(msg)
+
+        if to_type2:
+            d, f = collect_disps_and_forces(dataset)
+            return {'displacements': d, 'forces': f}
+        else:
+            return dataset
+
     elif len(first_line_ary) == 6:
-        return _get_set_of_forces_type2(f, natom)
+        return _get_dataset_type2(f, natom)
 
 
-def _get_set_of_forces_type2(f, natom):
-    data = np.loadtxt(f, dtype='double')
-    if data.shape[1] != 6 or (natom and data.shape[0] % natom != 0):
-        msg = "Data shape of forces and displacements is incorrect."
-        raise RuntimeError(msg)
-    if natom:
-        data = data.reshape(-1, natom, 6)
-        displacements = data[:, :, :3]
-        forces = data[:, :, 3:]
-    else:
-        displacements = data[:, :3]
-        forces = data[:, 3:]
-    dataset = {'displacements':
-               np.array(displacements, dtype='double', order='C'),
-               'forces': np.array(forces, dtype='double', order='C')}
-    return dataset
-
-
-def _get_set_of_forces_type1(f, is_translational_invariance):
+def _get_dataset_type1(f, is_translational_invariance):
     set_of_forces = []
     num_atom = int(_get_line_ignore_blank(f))
     num_displacements = int(_get_line_ignore_blank(f))
@@ -173,6 +193,24 @@ def _get_set_of_forces_type1(f, is_translational_invariance):
     dataset = {'natom': num_atom,
                'first_atoms': set_of_forces}
 
+    return dataset
+
+
+def _get_dataset_type2(f, natom):
+    data = np.loadtxt(f, dtype='double')
+    if data.shape[1] != 6 or (natom and data.shape[0] % natom != 0):
+        msg = "Data shape of forces and displacements is incorrect."
+        raise RuntimeError(msg)
+    if natom:
+        data = data.reshape(-1, natom, 6)
+        displacements = data[:, :, :3]
+        forces = data[:, :, 3:]
+    else:
+        displacements = data[:, :3]
+        forces = data[:, 3:]
+    dataset = {'displacements':
+               np.array(displacements, dtype='double', order='C'),
+               'forces': np.array(forces, dtype='double', order='C')}
     return dataset
 
 
