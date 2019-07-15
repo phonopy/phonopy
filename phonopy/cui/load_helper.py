@@ -136,7 +136,7 @@ def set_force_constants(
         try:
             phonon.produce_force_constants(
                 calculate_full_force_constants=False,
-                use_alm=(use_alm or 'forces' in dataset))
+                use_alm=(use_alm or 'forces' in phonon.dataset))
         except RuntimeError:
             pass
 
