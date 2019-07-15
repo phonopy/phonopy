@@ -338,7 +338,7 @@ class PhonopyYaml(object):
             if type(disp) is dict:
                 self.dataset = self._parse_force_sets_type1()
             elif type(disp) is list:
-                if 'forces' in disp[0]:
+                if 'force' in disp[0]:
                     self.dataset = self._parse_force_sets_type2()
         if 'supercell_matrix' in self.yaml:
             self.supercell_matrix = np.array(self.yaml['supercell_matrix'],
