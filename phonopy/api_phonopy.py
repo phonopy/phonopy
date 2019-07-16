@@ -484,6 +484,8 @@ class Phonopy(object):
                 if dataset['displacements'].ndim in (1, 2):
                     d = dataset['displacements'].reshape((-1, natom, 3))
                     dataset['displacements'] = d
+
+        if 'forces' in dataset:
             if type(dataset['forces']) is np.ndarray:
                 if dataset['forces'].ndim in (1, 2):
                     f = dataset['forces'].reshape((-1, natom, 3))

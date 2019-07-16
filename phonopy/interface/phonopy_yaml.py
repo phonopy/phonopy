@@ -335,10 +335,10 @@ class PhonopyYaml(object):
             self.force_constants = np.array(fc, dtype='double', order='C')
         elif 'displacements' in self.yaml:
             disp = self.yaml['displacements'][0]
-            if type(disp) is dict:
+            if type(disp) is dict:  # type1
                 self.dataset = self._parse_force_sets_type1()
-            elif type(disp) is list:
-                if 'forces' in disp[0]:
+            elif type(disp) is list:  # type2
+                if 'displacement' in disp[0]:
                     self.dataset = self._parse_force_sets_type2()
         if 'supercell_matrix' in self.yaml:
             self.supercell_matrix = np.array(self.yaml['supercell_matrix'],
@@ -437,10 +437,18 @@ class PhonopyYaml(object):
     def _parse_force_sets_type2(self):
         nsets = len(self.yaml['displacements'])
         natom = len(self.yaml['displacements'][0])
-        forces = np.zeros((nsets, natom, 3), dtype='double', order='C')
+        if 'forces' in self.yaml['displacements'][0]:
+            with_forces = True
+            forces = np.zeros((nsets, natom, 3), dtype='double', order='C')
+        else:
+            with_forces = False
         displacements = np.zeros((nsets, natom, 3), dtype='double', order='C')
         for i, dfset in enumerate(self.yaml['displacements']):
             for j, df in enumerate(dfset):
-                forces[i, j] = df['force']
+                if with_forces:
+                    forces[i, j] = df['force']
                 displacements[i, j] = df['displacement']
-        return {'forces': forces, 'displacements': displacements}
+        if with_forces:
+            return {'forces': forces, 'displacements': displacements}
+        else:
+            return {'displacements': displacements}

@@ -179,7 +179,7 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         else:
             _nac_params = None
         _dataset = phpy_yaml.dataset
-        _fc =  phpy_yaml.force_constants
+        _fc = phpy_yaml.force_constants
 
     # units keywords: factor, nac_factor, distance_to_A
     units = get_default_physical_units(calculator)
