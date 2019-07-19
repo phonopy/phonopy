@@ -470,13 +470,14 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
         except KeyError:
             raise
 
-        for first_atoms in displacements:
-            first_atoms['atom'] -= 1
-            atom1 = first_atoms['atom']
-            disp1 = first_atoms['displacement']
-            new_first_atoms.append({'number': atom1,
-                                    'displacement': disp1})
-        new_dataset['first_atoms'] = new_first_atoms
+        if type(displacements[0]) is dict:
+            for first_atoms in displacements:
+                first_atoms['atom'] -= 1
+                atom1 = first_atoms['atom']
+                disp1 = first_atoms['displacement']
+                new_first_atoms.append({'number': atom1,
+                                        'displacement': disp1})
+            new_dataset['first_atoms'] = new_first_atoms
 
         if return_cell:
             cell = get_cell_from_disp_yaml(dataset)

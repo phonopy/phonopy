@@ -44,7 +44,6 @@ except ImportError:
     from yaml import Loader
 
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
-from phonopy.file_IO import get_disp_yaml_lines
 
 
 def read_cell_yaml(filename, cell_type='unitcell'):
@@ -121,7 +120,6 @@ class PhonopyYaml(object):
 
         if self._command_name == "phonopy":
             self._force_constants = phonopy.force_constants
-            self._displacements = phonopy.displacements
             self._dataset = phonopy.dataset
 
     def get_yaml_lines(self):
@@ -243,7 +241,7 @@ class PhonopyYaml(object):
                 lines.append("")
 
         if self._settings['force_sets']:
-            lines += self._force_sets_yaml_lines()
+            lines += self._displacements_yaml_lines(with_forces=True)
         elif self._settings['displacements']:
             lines += self._displacements_yaml_lines()
 
@@ -252,43 +250,46 @@ class PhonopyYaml(object):
 
         return lines
 
-    def _displacements_yaml_lines(self):
-        lines = get_disp_yaml_lines(self._displacements, self.supercell)
-        lines.append("")
-        return lines
-
-    def _force_sets_yaml_lines(self):
+    def _displacements_yaml_lines(self, with_forces=False):
         if 'first_atoms' in self._dataset:
-            return self._force_sets_yaml_lines_type1()
-        elif 'displacements'  in self._dataset:
-            return self._force_sets_yaml_lines_type2()
+            return self._displacements_yaml_lines_type1(
+                with_forces=with_forces)
+        elif 'displacements' in self._dataset:
+            return self._displacements_yaml_lines_type2(
+                with_forces=with_forces)
         else:
             return []
 
-    def _force_sets_yaml_lines_type1(self):
+    def _displacements_yaml_lines_type1(self, with_forces=False):
         lines = ["displacements:", ]
         for i, d in enumerate(self._dataset['first_atoms']):
             lines.append("- atom: %4d" % (d['number'] + 1))
             lines.append("  displacement:")
             lines.append("    [ %20.16f,%20.16f,%20.16f ]"
                          % tuple(d['displacement']))
-            if 'forces' in d:
+            if with_forces and 'forces' in d:
                 lines.append("  forces:")
                 for f in d['forces']:
                     lines.append("  - [ %20.16f,%20.16f,%20.16f ]" % tuple(f))
         lines.append("")
         return lines
 
-    def _force_sets_yaml_lines_type2(self):
-        lines = ["displacements:", ]
-        for i, (dset, fset) in enumerate(zip(self._dataset['displacements'],
-                                             self._dataset['forces'])):
+    def _displacements_yaml_lines_type2(self, with_forces=False):
+        if 'random_seed' in self._dataset:
+            lines = ["random_seed: %d" % self._dataset['random_seed'],
+                     "displacements:"]
+        else:
+            lines = ["displacements:", ]
+        for i, dset in enumerate(self._dataset['displacements']):
             lines.append("- # %4d" % (i + 1))
-            for j, (d, f) in enumerate(zip(dset, fset)):
+            for j, d in enumerate(dset):
                 lines.append("  - displacement: # %d" % (j + 1))
                 lines.append("      [ %20.16f,%20.16f,%20.16f ]" % tuple(d))
-                lines.append("    force:")
-                lines.append("      [ %20.16f,%20.16f,%20.16f ]" % tuple(f))
+                if with_forces and 'forces' in self._dataset:
+                    f = self._dataset['forces'][i][j]
+                    lines.append("    force:")
+                    lines.append("      [ %20.16f,%20.16f,%20.16f ]"
+                                 % tuple(f))
         lines.append("")
         return lines
 

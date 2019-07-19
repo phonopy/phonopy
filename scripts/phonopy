@@ -257,6 +257,11 @@ def print_settings(settings,
                 print("  Plus Minus displacement: only one direction")
         if not settings.get_is_diagonal_displacement():
             print("  Diagonal displacement: off")
+        if settings.get_num_random_displacements():
+            print("  Number of supercells with random displacements: %d"
+                  % settings.get_num_random_displacements())
+            if settings.get_random_seed() is not None:
+                print("  Random seed: %d" % settings.get_random_seed())
 
     print("Settings:")
     if settings.get_is_nac():
@@ -589,7 +594,9 @@ if run_mode == 'displacements':
         distance=displacement_distance,
         is_plusminus=settings.get_is_plusminus_displacement(),
         is_diagonal=settings.get_is_diagonal_displacement(),
-        is_trigonal=settings.get_is_trigonal_displacement())
+        is_trigonal=settings.get_is_trigonal_displacement(),
+        num_random_displacements=settings.get_num_random_displacements(),
+        random_seed=settings.get_random_seed())
     displacements = phonon.get_displacements()
 
     # From phonopy v1.15.0, displacements are written into phonopy_disp.yaml.
@@ -670,7 +677,8 @@ else:
         ph_yaml.read(unitcell_filename)
         if (ph_yaml.dataset is not None and
             ('forces' in ph_yaml.dataset or
-             'forces' in ph_yaml.dataset['first_atoms'][0])):
+             ('first_atoms' in ph_yaml.dataset and
+              'forces' in ph_yaml.dataset['first_atoms'][0]))):
             if log_level:
                 print("Forces and displacements are read from \"%s\"."
                       % unitcell_filename)

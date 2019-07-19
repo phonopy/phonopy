@@ -345,11 +345,29 @@ def create_FORCE_SETS(interface_mode,
             print("Forces in %s are subtracted from forces in all "
                   "other files." % force_filenames[0])
 
+    if disp_filename == 'disp.yaml':
+        disp_dataset, supercell = parse_disp_yaml(filename=disp_filename,
+                                                  return_cell=True)
+    else:
+        phpy = PhonopyYaml()
+        phpy.read(disp_filename)
+        supercell = phpy.supercell
+        disp_dataset = phpy.dataset
+
     if interface_mode in (None, 'vasp', 'abinit', 'elk', 'qe', 'siesta',
                           'cp2k', 'crystal', 'dftbp', 'turbomole'):
-        disp_dataset = parse_disp_yaml(filename=disp_filename)
-        num_atoms = disp_dataset['natom']
-        num_displacements = len(disp_dataset['first_atoms'])
+        if 'natom' in disp_dataset:  # type-1 dataset
+            num_atoms = disp_dataset['natom']
+            num_displacements = len(disp_dataset['first_atoms'])
+            dataset_type = 1
+        elif 'displacements' in disp_dataset:  # type-2 dataset
+            num_atoms = disp_dataset['displacements'].shape[1]
+            num_displacements = disp_dataset['displacements'].shape[0]
+            dataset_type = 2
+        else:
+            raise RuntimeError("Number of atoms could not be retrieved from %s"
+                               % disp_filename)
+
         if force_sets_zero_mode:
             num_displacements += 1
         force_sets = get_force_sets(interface_mode,
@@ -361,8 +379,6 @@ def create_FORCE_SETS(interface_mode,
                                     verbose=(log_level > 0))
 
     elif interface_mode == 'wien2k':
-        disp_dataset, supercell = parse_disp_yaml(filename=disp_filename,
-                                                  return_cell=True)
         from phonopy.interface.wien2k import parse_set_of_forces
         num_displacements = len(disp_dataset['first_atoms'])
         if force_sets_zero_mode:
@@ -387,8 +403,15 @@ def create_FORCE_SETS(interface_mode,
     if force_sets:
         if force_sets_zero_mode:
             force_sets = _subtract_residual_forces(force_sets)
-        for forces, disp in zip(force_sets, disp_dataset['first_atoms']):
-            disp['forces'] = forces
+        if dataset_type == 1:
+            for forces, disp in zip(force_sets, disp_dataset['first_atoms']):
+                disp['forces'] = forces
+        elif dataset_type == 2:
+            disp_dataset['forces'] = np.array(force_sets,
+                                              dtype='double', order='C')
+        else:
+            raise RuntimeError("FORCE_SETS could not be created.")
+
         write_FORCE_SETS(disp_dataset, filename=force_sets_filename)
 
     if log_level > 0:

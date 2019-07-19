@@ -139,6 +139,7 @@ def get_parser():
         moment_order=None,
         nac_method=None,
         nac_q_direction=None,
+        num_random_displacemen=None,
         pdos=None,
         pretend_real=False,
         primitive_axes=None,
@@ -147,6 +148,7 @@ def get_parser():
         qpoints=None,
         qpoints_format=None,
         quiet=False,
+        random_seed=None,
         read_fc_format=None,
         read_force_constants=False,
         read_qpoints=False,
@@ -368,6 +370,9 @@ def get_parser():
         "--nosym", dest="is_nosym", action="store_true",
         help="Symmetry is not imposed.")
     parser.add_argument(
+        "--nrand", dest="num_random_displacements",
+        type=int, help="Number of supercells with random displacements")
+    parser.add_argument(
         "-p", "--plot", dest="is_graph_plot", action="store_true",
         help="Plot data")
     parser.add_argument(
@@ -416,6 +421,9 @@ def get_parser():
     parser.add_argument(
         "--readfc-format", dest="readfc_format",
         help="Force constants input file-format")
+    parser.add_argument(
+        "--random-seed", dest="random_seed",
+        type=int, help="Random seed by a 32 bit unsigned integer")
     parser.add_argument(
         "--read-qpoints", dest="read_qpoints", action="store_true",
         help="Read QPOITNS")
