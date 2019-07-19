@@ -230,11 +230,3 @@ class RandomDisplacements(object):
                         ij.append(i)
                     break
         return ii, ij
-
-
-def get_random_directions(num_atoms):
-    """Returns random directions in sphere with radius 1"""
-
-    xy = np.random.randn(3, num_atoms)
-    r = np.sqrt((xy ** 2).sum(axis=0))
-    return (xy / r).T
