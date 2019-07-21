@@ -460,8 +460,8 @@ Pointgroup ptg_get_pointgroup(const int pointgroup_number)
 
   pointgroup.number = pointgroup_number;
   pointgroup_type = pointgroup_data[pointgroup_number];
-  strcpy(pointgroup.symbol, pointgroup_type.symbol);
-  strcpy(pointgroup.schoenflies, pointgroup_type.schoenflies);
+  memcpy(pointgroup.symbol, pointgroup_type.symbol, 6);
+  memcpy(pointgroup.schoenflies, pointgroup_type.schoenflies, 4);
   for (i = 0; i < 5; i++) {
     if (pointgroup.symbol[i] == ' ') {pointgroup.symbol[i] = '\0';}
   }

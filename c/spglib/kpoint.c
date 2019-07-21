@@ -683,7 +683,11 @@ get_dense_ir_reciprocal_mesh_distortion(int grid_address[][3],
 {
   size_t i, grid_point_rot;
   int j, k, indivisible;
-  int address_double[3], address_double_rot[3], divisor[3];
+  int address_double[3], address_double_rot[3];
+  long long_address_double[3], long_address_double_rot[3], divisor[3];
+
+  /* divisor, long_address_double, and long_address_double_rot have */
+  /* long integer type to treat dense mesh. */
 
   kgd_get_all_grid_addresses(grid_address, mesh);
 
@@ -691,24 +695,30 @@ get_dense_ir_reciprocal_mesh_distortion(int grid_address[][3],
     divisor[j] = mesh[(j + 1) % 3] * mesh[(j + 2) % 3];
   }
 
-#pragma omp parallel for private(j, k, grid_point_rot, address_double, address_double_rot)
+#pragma omp parallel for private(j, k, grid_point_rot, address_double, address_double_rot, long_address_double, long_address_double_rot)
   for (i = 0; i < mesh[0] * mesh[1] * (size_t)(mesh[2]); i++) {
     kgd_get_grid_address_double_mesh(address_double,
                                      grid_address[i],
                                      mesh,
                                      is_shift);
     for (j = 0; j < 3; j++) {
-      address_double[j] *= divisor[j];
+      long_address_double[j] = address_double[j] * divisor[j];
     }
     ir_mapping_table[i] = i;
     for (j = 0; j < rot_reciprocal->size; j++) {
-      mat_multiply_matrix_vector_i3(address_double_rot,
-                                    rot_reciprocal->mat[j],
-                                    address_double);
+
+      /* Equivalent to mat_multiply_matrix_vector_i3 except for data type */
       for (k = 0; k < 3; k++) {
-        indivisible = address_double_rot[k] % divisor[k];
+        long_address_double_rot[k] =
+          rot_reciprocal->mat[j][k][0] * long_address_double[0] +
+          rot_reciprocal->mat[j][k][1] * long_address_double[1] +
+          rot_reciprocal->mat[j][k][2] * long_address_double[2];
+      }
+
+      for (k = 0; k < 3; k++) {
+        indivisible = long_address_double_rot[k] % divisor[k];
         if (indivisible) {break;}
-        address_double_rot[k] /= divisor[k];
+        address_double_rot[k] = long_address_double_rot[k] / divisor[k];
         if ((address_double_rot[k] % 2 != 0 && is_shift[k] == 0) ||
             (address_double_rot[k] % 2 == 0 && is_shift[k] == 1)) {
           indivisible = 1;
@@ -855,24 +865,38 @@ static int check_mesh_symmetry(const int mesh[3],
                                const int is_shift[3],
                                const MatINT *rot_reciprocal)
 {
-  int i;
+  int i, j, k, sum;
   int eq[3];
 
   eq[0] = 0; /* a=b */
   eq[1] = 0; /* b=c */
   eq[2] = 0; /* c=a */
 
+  /* Check 3 and 6 fold rotations and non-convensional choice of unit cells */
+  for (i = 0; i < rot_reciprocal->size; i++) {
+    sum = 0;
+    for (j = 0; j < 3; j++) {
+      for (k = 0; k < 3; k++) {
+        sum += abs(rot_reciprocal->mat[i][j][k]);
+      }
+    }
+    if (sum > 3) {
+      return 0;
+    }
+  }
+
   for (i = 0; i < rot_reciprocal->size; i++) {
     if (rot_reciprocal->mat[i][0][0] == 0 &&
         rot_reciprocal->mat[i][1][0] == 1 &&
         rot_reciprocal->mat[i][2][0] == 0) {eq[0] = 1;}
     if (rot_reciprocal->mat[i][0][0] == 0 &&
+        rot_reciprocal->mat[i][1][0] == 1 &&
+        rot_reciprocal->mat[i][2][0] == 0) {eq[1] = 1;}
+    if (rot_reciprocal->mat[i][0][0] == 0 &&
         rot_reciprocal->mat[i][1][0] == 0 &&
         rot_reciprocal->mat[i][2][0] == 1) {eq[2] = 1;}
-    if (rot_reciprocal->mat[i][0][1] == 0 &&
-        rot_reciprocal->mat[i][1][1] == 0 &&
-        rot_reciprocal->mat[i][2][1] == 1) {eq[1] = 1;}
   }
+
 
   return (((eq[0] && mesh[0] == mesh[1] && is_shift[0] == is_shift[1]) || (!eq[0])) &&
           ((eq[1] && mesh[1] == mesh[2] && is_shift[1] == is_shift[2]) || (!eq[1])) &&

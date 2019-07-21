@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "cell.h"
 #include "delaunay.h"
 #include "hall_symbol.h"
@@ -170,36 +171,36 @@ static Centering change_of_centering_monocli[36] = {
   B_FACE,
   A_FACE,
   C_FACE,
-  BASE,
-  BASE,
-  BASE,
-  BASE,
-  BASE,
-  BASE,
   A_FACE,
   C_FACE,
   C_FACE,
   A_FACE,
   B_FACE,
   B_FACE,
+  BODY,
+  BODY,
+  BODY,
+  BODY,
+  BODY,
+  BODY,
   C_FACE, /* second turn */
   A_FACE,
   B_FACE,
   B_FACE,
   A_FACE,
   C_FACE,
-  BASE,
-  BASE,
-  BASE,
-  BASE,
-  BASE,
-  BASE,
   A_FACE,
   C_FACE,
   C_FACE,
   A_FACE,
   B_FACE,
-  B_FACE};
+  B_FACE,
+  BODY,
+  BODY,
+  BODY,
+  BODY,
+  BODY,
+  BODY};
 
 static int change_of_unique_axis_monocli[36] = {
   1, 1, 0, 2, 2, 0, 1, 1, 0, 2, 2, 0, 1, 1, 0, 2, 2, 0,
@@ -231,6 +232,28 @@ static Centering change_of_centering_ortho[6] = {C_FACE,
                                                  B_FACE,
                                                  A_FACE};
 static int change_of_unique_axis_ortho[6] = {2, 1, 0, 2, 1, 0};
+
+/* n_l : the index of L(g) in N_\epsilon(g) of SPG No.16-74 */
+/* See ITA: Affine normalizer or highest symmetry Euclidean normalizer */
+/* Previous implementation below was not correct for 67, 68, 73, 74, */
+/* Cmma, Ccca, Ibca, Imma */
+/* 6 / ((Number of hall symbols of each spg-type) / x) */
+/* where x=1 and x=2 with without and with centring. */
+/* 6, 2, 2, 6, 2, */
+/* 2, 6, 6, 6, 2, 1, 2, 1, 1, 1, */
+/* 1, 2, 1, 2, 2, 1, 2, 1, 1, 1, */
+/* 1, 2, 2, 2, 2, 1, 6, 6, 2, 2, */
+/* 1, 1, 1, 1, 2, 2, 1, 2, 2, 1, */
+/* 3, 1, 1, 1, 2, 2, 1, 1, 6, 6, */
+/* 6, 2, 3, 1 */
+static int num_axis_choices_ortho[59] = {
+  6, 2, 2, 6, 2,  /* 16-20 */
+  2, 6, 6, 6, 2, 1, 2, 1, 1, 1,  /* 21-30 */
+  1, 2, 1, 2, 2, 1, 2, 1, 1, 1,  /* 31-40 */
+  1, 2, 2, 2, 2, 1, 6, 6, 2, 2,  /* 41-50 */
+  1, 1, 1, 1, 2, 2, 1, 2, 2, 1,  /* 51-60 */
+  3, 1, 1, 1, 2, 2, 2, 2, 6, 6,  /* 61-70 */
+  6, 2, 6, 2};  /* 71-74 */
 
 static double hR_to_hP[3][3] = {{ 1, 0, 1 },
                                 {-1, 1, 1 },
@@ -350,7 +373,7 @@ static int match_hall_symbol_db(double origin_shift[3],
 static int match_hall_symbol_db_monocli(double origin_shift[3],
                                         double lattice[3][3],
                                         const int hall_number,
-                                        const int num_hall_types,
+                                        const int space_group_number,
                                         const Centering centering,
                                         const Symmetry *symmetry,
                                         const double symprec);
@@ -662,13 +685,13 @@ static Spacegroup * get_spacegroup(const int hall_number,
     spacegroup->number = spacegroup_type.number;
     spacegroup->hall_number = hall_number;
     spacegroup->pointgroup_number = spacegroup_type.pointgroup_number;
-    strcpy(spacegroup->schoenflies, spacegroup_type.schoenflies);
-    strcpy(spacegroup->hall_symbol, spacegroup_type.hall_symbol);
-    strcpy(spacegroup->international, spacegroup_type.international);
-    strcpy(spacegroup->international_long, spacegroup_type.international_full);
-    strcpy(spacegroup->international_short,
-           spacegroup_type.international_short);
-    strcpy(spacegroup->choice, spacegroup_type.choice);
+    memcpy(spacegroup->schoenflies, spacegroup_type.schoenflies, 7);
+    memcpy(spacegroup->hall_symbol, spacegroup_type.hall_symbol, 17);
+    memcpy(spacegroup->international, spacegroup_type.international, 32);
+    memcpy(spacegroup->international_long, spacegroup_type.international_full, 20);
+    memcpy(spacegroup->international_short,
+           spacegroup_type.international_short, 11);
+    memcpy(spacegroup->choice, spacegroup_type.choice, 6);
   }
 
   return spacegroup;
@@ -953,22 +976,14 @@ static int match_hall_symbol_db(double origin_shift[3],
     if (match_hall_symbol_db_monocli(origin_shift,
                                      lattice,
                                      hall_number,
-                                     num_hall_types,
+                                     spacegroup_type.number,
                                      centering,
                                      symmetry,
                                      symprec)) {return 1;}
     break;
 
   case ORTHO:
-    if (spacegroup_type.number == 48 ||
-        spacegroup_type.number == 50 ||
-        spacegroup_type.number == 59 ||
-        spacegroup_type.number == 68 ||
-        spacegroup_type.number == 70) { /* uncount origin shift */
-      num_hall_types /= 2;
-    }
-
-    if (num_hall_types == 1) {
+    if (num_axis_choices_ortho[spacegroup_type.number - 16] == 6) {
       if (match_hall_symbol_db_ortho(origin_shift,
                                      lattice,
                                      hall_number,
@@ -979,7 +994,7 @@ static int match_hall_symbol_db(double origin_shift[3],
       break;
     }
 
-    if (num_hall_types == 2) {
+    if (num_axis_choices_ortho[spacegroup_type.number - 16] == 3) {
       if (match_hall_symbol_db_ortho(origin_shift,
                                      lattice,
                                      hall_number,
@@ -990,7 +1005,7 @@ static int match_hall_symbol_db(double origin_shift[3],
       break;
     }
 
-    if (num_hall_types == 3) {
+    if (num_axis_choices_ortho[spacegroup_type.number - 16] == 2) {
       mat_copy_matrix_d3(changed_lattice, lattice);
       if (! match_hall_symbol_db_ortho
           (origin_shift,
@@ -1025,7 +1040,7 @@ static int match_hall_symbol_db(double origin_shift[3],
       break;
     }
 
-    if (num_hall_types == 6) {
+    if (num_axis_choices_ortho[spacegroup_type.number - 16] == 1) {
       if (match_hall_symbol_db_ortho(origin_shift,
                                      lattice,
                                      hall_number,
@@ -1131,20 +1146,40 @@ static int match_hall_symbol_db(double origin_shift[3],
 static int match_hall_symbol_db_monocli(double origin_shift[3],
                                         double lattice[3][3],
                                         const int hall_number,
-                                        const int num_hall_types,
+                                        const int space_group_number,
                                         const Centering centering,
                                         const Symmetry *symmetry,
                                         const double symprec)
 {
-  int i, j, k, l, is_found;
-  double vec[2][3], norms[3];
+  int i, j, k, l, check_norms, i_shortest, is_found_any;
+  int is_found[36];
+  double shortest_norm_sum, norm_sum;
+  double vec[2][3], norms_squared[36][2];
+  double changed_lattice[36][3][3], tmp_origin_shift[36][3];
   Centering changed_centering;
   Symmetry * changed_symmetry;
-  double changed_lattice[3][3];
 
   changed_symmetry = NULL;
 
+  /* E. Parthe and L. M. Gelato */
+  /* "The best unit cell for monoclinic structure..." (1983) */
+  if (space_group_number == 3 ||
+      space_group_number == 4 ||
+      space_group_number == 6 ||
+      space_group_number == 10 ||
+      space_group_number == 11) {
+    /* |a| < |c| for unique axis b. (This is as written in the paper 1983.) */
+    /* |a| < |b| for unique axis c. (This is spgilb definition.) */
+    /* |b| < |c| for unique axis a. (This is spgilb definition.) */
+    check_norms = 1;
+  } else {
+    check_norms = 0;
+  }
+
+  /* Exhaustive search */
   for (i = 0; i < 36; i++) {
+    is_found[i] = 0;
+
     /* centring type should be P or C */
     if (centering == C_FACE) {
       changed_centering = change_of_centering_monocli[i];
@@ -1152,16 +1187,20 @@ static int match_hall_symbol_db_monocli(double origin_shift[3],
       changed_centering = centering;
     }
 
-    mat_multiply_matrix_d3(changed_lattice,
+    mat_multiply_matrix_d3(changed_lattice[i],
                            lattice,
                            change_of_basis_monocli[i]);
 
     /* Make non-acute and length preference */
+    /* norms_squared[0] and norms_squared[1] are the two unique axes */
+    /* among a,b,c. */
     l = 0;
     for (j = 0; j < 3; j++) {
       if (j == change_of_unique_axis_monocli[i]) {continue;}
-      for (k = 0; k < 3; k++) {vec[l][k] = changed_lattice[k][j];}
-      norms[l] = mat_norm_squared_d3(vec[l]);
+      for (k = 0; k < 3; k++) {
+        vec[l][k] = changed_lattice[i][k][j];
+      }
+      norms_squared[i][l] = mat_norm_squared_d3(vec[l]);
       l++;
     }
 
@@ -1172,11 +1211,11 @@ static int match_hall_symbol_db_monocli(double origin_shift[3],
       continue;
     }
 
-    /* Choose |a| < |b| < |c| if there are freedom. */
-    if (num_hall_types == 3) {
-      if (norms[0] > norms[1] + ZERO_PREC) {continue;}
+    /* Choose |a| < |b| < |c| among two non-principles axes */
+    /* if there are freedom. */
+    if (check_norms) {
+      if (norms_squared[i][0] > norms_squared[i][1] + ZERO_PREC) {continue;}
     }
-
 
     if ((changed_symmetry =
          get_conventional_symmetry(change_of_basis_monocli[i],
@@ -1185,19 +1224,45 @@ static int match_hall_symbol_db_monocli(double origin_shift[3],
       goto err;
     }
 
-    is_found = hal_match_hall_symbol_db(origin_shift,
-                                        changed_lattice,
-                                        hall_number,
-                                        changed_centering,
-                                        changed_symmetry,
-                                        symprec);
+    is_found[i] = hal_match_hall_symbol_db(tmp_origin_shift[i],
+                                           changed_lattice[i],
+                                           hall_number,
+                                           changed_centering,
+                                           changed_symmetry,
+                                           symprec);
     sym_free_symmetry(changed_symmetry);
     changed_symmetry = NULL;
-    if (is_found) {
-      mat_copy_matrix_d3(lattice, changed_lattice);
-      return 1;
+  }
+
+  /* Find shortest non-unique axes */
+  is_found_any = 0;
+  for (i = 0; i < 36; i++) {
+    if (is_found[i]) {
+      i_shortest = i;
+      shortest_norm_sum = sqrt(norms_squared[i][0]) + sqrt(norms_squared[i][1]);
+      is_found_any = 1;
+      break;
     }
   }
+
+  if (! is_found_any) {
+    goto err;
+  }
+
+  for (i = 0; i < 36; i++) {
+    if (is_found[i]) {
+      norm_sum = sqrt(norms_squared[i][0]) + sqrt(norms_squared[i][1]);
+      if (shortest_norm_sum > norm_sum + ZERO_PREC) {
+        i_shortest = i;
+        shortest_norm_sum = sqrt(norms_squared[i][0]) + sqrt(norms_squared[i][1]);
+      }
+    }
+  }
+
+  mat_copy_vector_d3(origin_shift, tmp_origin_shift[i_shortest]);
+  mat_copy_matrix_d3(lattice, changed_lattice[i_shortest]);
+  return 1;
+
 
  err:
   return 0;
@@ -1513,7 +1578,7 @@ static int get_centering_shifts(double shift[3][3],
 
   if (centering != PRIMITIVE) {
     if (centering != FACE && centering != R_CENTER) {
-      for (i = 0; i < 3; i++) { shift[0][i] = 0.5; } /* BASE */
+      for (i = 0; i < 3; i++) { shift[0][i] = 0.5; } /* BODY */
       if (centering == A_FACE) { shift[0][0] = 0; }
       if (centering == B_FACE) { shift[0][1] = 0; }
       if (centering == C_FACE) { shift[0][2] = 0; }
