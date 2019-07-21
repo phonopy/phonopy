@@ -65,9 +65,9 @@ class PhonopyYaml(object):
                  calculator=None,
                  physical_units=None,
                  settings=None):
-        self._configuration = configuration
-        self._calculator = calculator
-        self._physical_units = physical_units
+        self.configuration = configuration
+        self.calculator = calculator
+        self.physical_units = physical_units
 
         self.unitcell = None
         self.primitive = None
@@ -79,24 +79,20 @@ class PhonopyYaml(object):
         self.nac_params = None
         self.force_constants = None
 
-        self._supercell_matrix = None
-        self._symmetry = None  # symmetry of supercell
-        self._primitive_matrix = None
-        self._force_constants = None
-        self._s2p_map = None
-        self._u2p_map = None
-        self._nac_params = None
-        self._frequency_unit_conversion_factor = None
-        self._version = None
+        self.symmetry = None  # symmetry of supercell
+        self.s2p_map = None
+        self.u2p_map = None
+        self.frequency_unit_conversion_factor = None
+        self.version = None
 
-        self._command_name = "phonopy"
-        self._settings = {'force_sets': True,
-                          'displacements': True,
-                          'force_constants': False,
-                          'born_effective_charge': True,
-                          'dielectric_constant': True}
+        self.command_name = "phonopy"
+        self.settings = {'force_sets': True,
+                         'displacements': True,
+                         'force_constants': False,
+                         'born_effective_charge': True,
+                         'dielectric_constant': True}
         if type(settings) is dict:
-            self._settings.update(settings)
+            self.settings.update(settings)
 
     def read(self, filename):
         with open(filename) as infile:
@@ -106,21 +102,21 @@ class PhonopyYaml(object):
         self.unitcell = phonopy.unitcell
         self.primitive = phonopy.primitive
         self.supercell = phonopy.supercell
-        self._version = phonopy.version
-        self._supercell_matrix = phonopy.supercell_matrix
-        self._symmetry = phonopy.symmetry
-        self._primitive_matrix = phonopy.primitive_matrix
-        self._s2p_map = self.primitive.s2p_map
+        self.version = phonopy.version
+        self.supercell_matrix = phonopy.supercell_matrix
+        self.symmetry = phonopy.symmetry
+        self.primitive_matrix = phonopy.primitive_matrix
+        self.s2p_map = self.primitive.s2p_map
         u2s_map = self.supercell.u2s_map
         u2u_map = self.supercell.u2u_map
         s2u_map = self.supercell.s2u_map
-        self._u2p_map = [u2u_map[i] for i in (s2u_map[self._s2p_map])[u2s_map]]
-        self._nac_params = phonopy.nac_params
-        self._frequency_unit_conversion_factor = phonopy.unit_conversion_factor
+        self.u2p_map = [u2u_map[i] for i in (s2u_map[self.s2p_map])[u2s_map]]
+        self.nac_params = phonopy.nac_params
+        self.frequency_unit_conversion_factor = phonopy.unit_conversion_factor
 
-        if self._command_name == "phonopy":
-            self._force_constants = phonopy.force_constants
-            self._dataset = phonopy.dataset
+        if self.command_name == "phonopy":
+            self.force_constants = phonopy.force_constants
+            self.dataset = phonopy.dataset
 
     def get_yaml_lines(self):
         lines = []
@@ -129,24 +125,24 @@ class PhonopyYaml(object):
             symbols = None
         else:
             symbols = self.primitive.get_chemical_symbols()
-        if self._nac_params is not None:
-            born = self._nac_params['born']
-            nac_factor = self._nac_params['factor']
-            dielectric = self._nac_params['dielectric']
+        if self.nac_params is not None:
+            born = self.nac_params['born']
+            nac_factor = self.nac_params['factor']
+            dielectric = self.nac_params['dielectric']
 
-        lines.append("%s:" % self._command_name)
-        lines.append("  version: %s" % self._version)
-        if self._calculator:
-            lines.append("  calculator: %s" % self._calculator)
-        if self._frequency_unit_conversion_factor:
+        lines.append("%s:" % self.command_name)
+        lines.append("  version: %s" % self.version)
+        if self.calculator:
+            lines.append("  calculator: %s" % self.calculator)
+        if self.frequency_unit_conversion_factor:
             lines.append("  frequency_unit_conversion_factor: %f" %
-                         self._frequency_unit_conversion_factor)
-        if self._nac_params:
+                         self.frequency_unit_conversion_factor)
+        if self.nac_params:
             lines.append("  nac_unit_conversion_factor: %f" % nac_factor)
-        if self._configuration is not None:
+        if self.configuration is not None:
             lines.append("  configuration:")
-            for key in self._configuration:
-                val = self._configuration[key]
+            for key in self.configuration:
+                val = self.configuration[key]
                 if type(val) is str:
                     val = val.replace('\\', '\\\\')
                 lines.append("    %s: \"%s\"" % (key, val))
@@ -154,37 +150,38 @@ class PhonopyYaml(object):
 
         lines.append("physical_unit:")
         lines.append("  atomic_mass: \"AMU\"")
-        units = self._physical_units
+        units = self.physical_units
         if units is not None:
             if units['length_unit'] is not None:
                 lines.append("  length: \"%s\"" % units['length_unit'])
-            if (self._command_name == "phonopy" and
+            if (self.command_name == "phonopy" and
                 units['force_constants_unit'] is not None):
                 lines.append("  force_constants: \"%s\"" %
                              units['force_constants_unit'])
         lines.append("")
 
-        if self._supercell_matrix is not None:
+        if self.supercell_matrix is not None:
             lines.append("supercell_matrix:")
-            for v in self._supercell_matrix:
+            for v in self.supercell_matrix:
                 lines.append("- [ %3d, %3d, %3d ]" % tuple(v))
             lines.append("")
 
-        if self._symmetry.get_dataset() is not None:
+        if (self.symmetry is not None and
+            self.symmetry.get_dataset() is not None):
             lines.append("space_group:")
             lines.append("  type: \"%s\"" %
-                         self._symmetry.get_dataset()['international'])
+                         self.symmetry.get_dataset()['international'])
             lines.append("  number: %d" %
-                         self._symmetry.get_dataset()['number'])
-            hall_symbol = self._symmetry.get_dataset()['hall']
+                         self.symmetry.get_dataset()['number'])
+            hall_symbol = self.symmetry.get_dataset()['hall']
             if "\"" in hall_symbol:
                 hall_symbol = hall_symbol.replace("\"", "\\\"")
             lines.append("  Hall_symbol: \"%s\"" % hall_symbol)
             lines.append("")
 
-        if self._primitive_matrix is not None:
+        if self.primitive_matrix is not None:
             lines.append("primitive_matrix:")
-            for v in self._primitive_matrix:
+            for v in self.primitive_matrix:
                 lines.append("- [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
             lines.append("")
 
@@ -204,9 +201,9 @@ class PhonopyYaml(object):
             count = 0
             for line in self.unitcell.get_yaml_lines():
                 lines.append("  " + line)
-                if self._u2p_map is not None and "mass" in line:
+                if self.u2p_map is not None and "mass" in line:
                     lines.append("    reduced_to: %d" %
-                                 (self._u2p_map[count] + 1))
+                                 (self.u2p_map[count] + 1))
                     count += 1
             lines.append("")
 
@@ -215,14 +212,14 @@ class PhonopyYaml(object):
             count = 0
             for line in self.supercell.get_yaml_lines():
                 lines.append("  " + line)
-                if self._s2p_map is not None and "mass" in line:
+                if self.s2p_map is not None and "mass" in line:
                     lines.append("    reduced_to: %d" %
-                                 (self._s2p_map[count] + 1))
+                                 (self.s2p_map[count] + 1))
                     count += 1
             lines.append("")
 
-        if self._nac_params is not None:
-            if self._settings['born_effective_charge']:
+        if self.nac_params is not None:
+            if self.settings['born_effective_charge']:
                 lines.append("born_effective_charge:")
                 for i, z in enumerate(born):
                     text = "- # %d" % (i + 1)
@@ -234,27 +231,27 @@ class PhonopyYaml(object):
                                      tuple(v))
                 lines.append("")
 
-            if self._settings['dielectric_constant']:
+            if self.settings['dielectric_constant']:
                 lines.append("dielectric_constant:")
                 for v in dielectric:
                     lines.append("  - [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
                 lines.append("")
 
-        if self._settings['force_sets']:
+        if self.settings['force_sets']:
             lines += self._displacements_yaml_lines(with_forces=True)
-        elif self._settings['displacements']:
+        elif self.settings['displacements']:
             lines += self._displacements_yaml_lines()
 
-        if self._settings['force_constants']:
-            lines += self._force_constants_yaml_lines()
+        if self.settings['force_constants']:
+            lines += self.force_constants_yaml_lines()
 
         return lines
 
     def _displacements_yaml_lines(self, with_forces=False):
-        if 'first_atoms' in self._dataset:
+        if 'first_atoms' in self.dataset:
             return self._displacements_yaml_lines_type1(
                 with_forces=with_forces)
-        elif 'displacements' in self._dataset:
+        elif 'displacements' in self.dataset:
             return self._displacements_yaml_lines_type2(
                 with_forces=with_forces)
         else:
@@ -262,7 +259,7 @@ class PhonopyYaml(object):
 
     def _displacements_yaml_lines_type1(self, with_forces=False):
         lines = ["displacements:", ]
-        for i, d in enumerate(self._dataset['first_atoms']):
+        for i, d in enumerate(self.dataset['first_atoms']):
             lines.append("- atom: %4d" % (d['number'] + 1))
             lines.append("  displacement:")
             lines.append("    [ %20.16f,%20.16f,%20.16f ]"
@@ -275,18 +272,18 @@ class PhonopyYaml(object):
         return lines
 
     def _displacements_yaml_lines_type2(self, with_forces=False):
-        if 'random_seed' in self._dataset:
-            lines = ["random_seed: %d" % self._dataset['random_seed'],
+        if 'random_seed' in self.dataset:
+            lines = ["random_seed: %d" % self.dataset['random_seed'],
                      "displacements:"]
         else:
             lines = ["displacements:", ]
-        for i, dset in enumerate(self._dataset['displacements']):
+        for i, dset in enumerate(self.dataset['displacements']):
             lines.append("- # %4d" % (i + 1))
             for j, d in enumerate(dset):
                 lines.append("  - displacement: # %d" % (j + 1))
                 lines.append("      [ %20.16f,%20.16f,%20.16f ]" % tuple(d))
-                if with_forces and 'forces' in self._dataset:
-                    f = self._dataset['forces'][i][j]
+                if with_forces and 'forces' in self.dataset:
+                    f = self.dataset['forces'][i][j]
                     lines.append("    force:")
                     lines.append("      [ %20.16f,%20.16f,%20.16f ]"
                                  % tuple(f))
@@ -294,10 +291,10 @@ class PhonopyYaml(object):
         return lines
 
     def _force_constants_yaml_lines(self):
-        if self._force_constants is None:
+        if self.force_constants is None:
             return []
 
-        shape = self._force_constants.shape[:2]
+        shape = self.force_constants.shape[:2]
         lines = ["force_constants:", ]
         if shape[0] == shape[1]:
             lines.append("  format: \"full\"")
@@ -307,7 +304,7 @@ class PhonopyYaml(object):
         lines.append("  elements:")
         for (i, j) in list(np.ndindex(shape)):
             lines.append("  - # (%d, %d)" % (i + 1, j + 1))
-            for v in self._force_constants[i, j]:
+            for v in self.force_constants[i, j]:
                 lines.append("    - [ %21.15f, %21.15f, %21.15f ]" % tuple(v))
         return lines
 
@@ -317,7 +314,7 @@ class PhonopyYaml(object):
     def _load(self, fp):
         self.yaml = yaml.load(fp, Loader=Loader)
         if type(self.yaml) is str:
-            msg = "Could not open %s's yaml file." % self._command_name
+            msg = "Could not open %s's yaml file." % self.command_name
             raise TypeError(msg)
 
         if 'unit_cell' in self.yaml:
@@ -347,19 +344,19 @@ class PhonopyYaml(object):
         if 'primitive_matrix' in self.yaml:
             self.primitive_matrix = np.array(self.yaml['primitive_matrix'],
                                              dtype='double', order='C')
-        _nac_params = {}
+        nac_params = {}
         if 'born_effective_charge' in self.yaml:
-            _nac_params['born'] = np.array(self.yaml['born_effective_charge'],
+            nac_params['born'] = np.array(self.yaml['born_effective_charge'],
                                            dtype='double', order='C')
         if 'dielectric_constant' in self.yaml:
-            _nac_params['dielectric'] = np.array(
+            nac_params['dielectric'] = np.array(
                 self.yaml['dielectric_constant'], dtype='double', order='C')
-        if (self._command_name in self.yaml and
-            'nac_unit_conversion_factor' in self.yaml[self._command_name]):
-            _nac_params['factor'] = self.yaml[self._command_name][
+        if (self.command_name in self.yaml and
+            'nac_unit_conversion_factor' in self.yaml[self.command_name]):
+            nac_params['factor'] = self.yaml[self.command_name][
                 'nac_unit_conversion_factor']
-        if 'born' in _nac_params and 'dielectric' in _nac_params:
-            self.nac_params = _nac_params
+        if 'born' in nac_params and 'dielectric' in nac_params:
+            self.nac_params = nac_params
 
     def _parse_cell(self, cell_yaml):
         lattice = None
