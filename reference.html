@@ -2,9 +2,8 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>References &#8212; Phonopy v.2.1.4</title>
+    <meta charset="utf-8" />
+    <title>References &#8212; Phonopy v.2.2.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -168,8 +167,8 @@ forces of atoms in supercells using Moore–Penrose pseudoinverse. This
 procedure may considered as a variant of <a class="reference internal" href="#reference-plk"><span class="std std-ref">Parlinski-Li-Kawazoe method</span></a>. Some of
 the details are found in the appendix of the following paper:</p>
 <ul class="simple">
-<li>L. Chaput, A. Togo, I. Tanaka, and G. Hug, Phys. Rev. B, 84,
-094302 (2011)</li>
+<li><p>L. Chaput, A. Togo, I. Tanaka, and G. Hug, Phys. Rev. B, 84,
+094302 (2011)</p></li>
 </ul>
 </div>
 <div class="section" id="parlinski-li-kawazoe-method">
@@ -183,7 +182,7 @@ pseudoinverse is easy to handle arbitrary number of displacements
 amplitudes and directions, and can rely on the exisiting library,
 e.g., LAPACK.</p>
 <ul class="simple">
-<li>K. Parlinski, Z. Q. Li, and Y. Kawazoe, Phys. Rev. Lett. 78, 4063 (1997)</li>
+<li><p>K. Parlinski, Z. Q. Li, and Y. Kawazoe, Phys. Rev. Lett. 78, 4063 (1997)</p></li>
 </ul>
 </div>
 <div class="section" id="thermal-expansion-using-quasi-harmonic-approximation">
@@ -200,7 +199,7 @@ are underestimated (overestimated). However the value of some ratio
 like thermal expansion coefficient is often very well estimated. An
 example is shown in the following paper:</p>
 <ul class="simple">
-<li>A. Togo, L. Chaput, I. Tanaka, G. Hug, Phys. Rev. B, 81, 174301-1-6 (2010)</li>
+<li><p>A. Togo, L. Chaput, I. Tanaka, G. Hug, Phys. Rev. B, 81, 174301-1-6 (2010)</p></li>
 </ul>
 </div>
 <div class="section" id="non-analytical-term-correction">
@@ -210,17 +209,17 @@ generated macroscopic field changes force constants near
 <span class="math notranslate nohighlight">\(\Gamma\)</span> point. This contribution is included through
 non-analytical term correction.</p>
 <ul class="simple">
-<li>R. M. Pick, M. H. Cohen, and R. M. Martin, Phys. Rev. B 1, 910, (1970)</li>
+<li><p>R. M. Pick, M. H. Cohen, and R. M. Martin, Phys. Rev. B 1, 910, (1970)</p></li>
 </ul>
 </div>
 <div class="section" id="correction-by-dipole-dipole-interaction">
 <span id="reference-dp-dp-nac"></span><h3>Correction by dipole-dipole interaction<a class="headerlink" href="#correction-by-dipole-dipole-interaction" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
-<li>P. Giannozzi, S. Degironcoli, P. Pavone, and S. Baroni,
-Phys. Rev. B 43, 7231 (1991)</li>
-<li>X. Gonze, J.-C. Charlier, D.C. Allan, and M.P. Teter
-Phys. Rev. B 50, 13035(R) (1994)</li>
-<li>X. Gonze, and C. Lee, Phys. Rev. B 55, 10355 (1997)</li>
+<li><p>P. Giannozzi, S. Degironcoli, P. Pavone, and S. Baroni,
+Phys. Rev. B 43, 7231 (1991)</p></li>
+<li><p>X. Gonze, J.-C. Charlier, D.C. Allan, and M.P. Teter
+Phys. Rev. B 50, 13035(R) (1994)</p></li>
+<li><p>X. Gonze, and C. Lee, Phys. Rev. B 55, 10355 (1997)</p></li>
 </ol>
 <p>Currently phonopy implements the method by Gonze <em>et al.</em> written in the
 above two papers (2 and 3) as the default method.</p>
@@ -231,13 +230,13 @@ above two papers (2 and 3) as the default method.</p>
 <span class="math notranslate nohighlight">\(\mathbf{q}\rightarrow \mathbf{0}\)</span> with the correction by Pick
 <em>et al.</em> and other commensurate points.</p>
 <ul class="simple">
-<li>Y. Wang , J. J. Wang , W. Y. Wang , Z. G. Mei , S. L. Shang , L. Q. Chen and
-Z K Liu, J. Phys.: Condens. Matter. 22, 202201 (2010)</li>
+<li><p>Y. Wang , J. J. Wang , W. Y. Wang , Z. G. Mei , S. L. Shang , L. Q. Chen and
+Z K Liu, J. Phys.: Condens. Matter. 22, 202201 (2010)</p></li>
 </ul>
 <p>The first derivative of this expression, which is for example used for
 group velocity calclation, is described in the following paper:</p>
 <ul class="simple">
-<li>Atsushi Togo, Laurent Chaput, and Isao Tanaka, Phys. Rev. B, 91, 094306-1-31 (2015)</li>
+<li><p>Atsushi Togo, Laurent Chaput, and Isao Tanaka, Phys. Rev. B, 91, 094306-1-31 (2015)</p></li>
 </ul>
 </div>
 </div>
@@ -251,7 +250,7 @@ implementation of the Parlinsk-Li-Kawazoe method.</p>
 <div class="section" id="small-displacement-method">
 <h3>Small displacement method<a class="headerlink" href="#small-displacement-method" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li>Dario Alfè, Computer Physics Communications, 180, 2622 (2009)</li>
+<li><p>Dario Alfè, Computer Physics Communications, 180, 2622 (2009)</p></li>
 </ul>
 <p><a class="reference external" href="http://www.homepages.ucl.ac.uk/~ucfbdxa/phon/">PHON</a> is based on the
 small displacement method.</p>
@@ -259,7 +258,7 @@ small displacement method.</p>
 <div class="section" id="dfpt">
 <span id="reference-dfpt"></span><h3>DFPT<a class="headerlink" href="#dfpt" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li>Xavier Gonze and Changyol Lee, Phys. Rev. B 55, 10355 (1997)</li>
+<li><p>Xavier Gonze and Changyol Lee, Phys. Rev. B 55, 10355 (1997)</p></li>
 </ul>
 <p>Currently there are several many implementations such as <a class="reference external" href="http://www.abinit.org/">Abinit</a>, <a class="reference external" href="http://www.quantum-espresso.org/">Quantum espresso</a>, <a class="reference external" href="http://elk.sourceforge.net/">Elk</a>, etc.  VASP can calculate force constants
 using DFPT however only at Gamma-point.</p>
@@ -268,9 +267,9 @@ using DFPT however only at Gamma-point.</p>
 <div class="section" id="for-the-study-of-basics">
 <h2>For the study of basics<a class="headerlink" href="#for-the-study-of-basics" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>Introduction to Lattice Dynamics, Martin. T. Dove, Cambridge
-university press</li>
-<li>Thermodynamics of Crystals, Duane C. Wallace, Dover Publications</li>
+<li><p>Introduction to Lattice Dynamics, Martin. T. Dove, Cambridge
+university press</p></li>
+<li><p>Thermodynamics of Crystals, Duane C. Wallace, Dover Publications</p></li>
 </ul>
 </div>
 </div>
@@ -295,7 +294,7 @@ university press</li>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.<br/>
     </p>
   </div>
 </footer>

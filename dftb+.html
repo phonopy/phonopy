@@ -2,9 +2,8 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>DFTB+ &amp; phonopy calculation &#8212; Phonopy v.2.1.4</title>
+    <meta charset="utf-8" />
+    <title>DFTB+ &amp; phonopy calculation &#8212; Phonopy v.2.2.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -142,13 +141,12 @@
 <h2>How to run<a class="headerlink" href="#how-to-run" title="Permalink to this headline">¶</a></h2>
 <p>DFTB+ phonon band structures are created as follows:</p>
 <ol class="arabic">
-<li><p class="first">Create a DFTB+ input file dftb_in.hsd that is set up to perform a
+<li><p>Create a DFTB+ input file dftb_in.hsd that is set up to perform a
 single-point energy and force calculation for a structure which is named
 <code class="docutils literal notranslate"><span class="pre">geo.gen</span></code>. The dftb_in.hsd file should turn on force evaluation by setting
 <code class="docutils literal notranslate"><span class="pre">CalculateForces</span> <span class="pre">=</span> <span class="pre">Yes</span></code> in its analysis block, and write the tagged results
-by enabling <code class="docutils literal notranslate"><span class="pre">WriteResultsTag</span> <span class="pre">=</span> <span class="pre">Yes</span></code> in its options.</p>
-</li>
-<li><p class="first">Generate the the required set of structures and the <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>
+by enabling <code class="docutils literal notranslate"><span class="pre">WriteResultsTag</span> <span class="pre">=</span> <span class="pre">Yes</span></code> in its options.</p></li>
+<li><p>Generate the the required set of structures and the <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>
 file by issuing the command</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;4 4 4&quot;</span> <span class="o">--</span><span class="n">dftb</span><span class="o">+</span>
 </pre></div>
@@ -160,10 +158,9 @@ supercell dimension until you reach convergence of the band structure.</p>
 </li>
 </ol>
 <ol class="arabic" start="2">
-<li><p class="first">For each each <code class="docutils literal notranslate"><span class="pre">geo.genS-*</span></code> structure perform a DFTB+ calculations,
-retaining the resulting <code class="docutils literal notranslate"><span class="pre">results.tag</span></code> file.</p>
-</li>
-<li><p class="first">Create the <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file with the command</p>
+<li><p>For each each <code class="docutils literal notranslate"><span class="pre">geo.genS-*</span></code> structure perform a DFTB+ calculations,
+retaining the resulting <code class="docutils literal notranslate"><span class="pre">results.tag</span></code> file.</p></li>
+<li><p>Create the <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file with the command</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-*/</span><span class="n">results</span><span class="o">.</span><span class="n">tag</span> <span class="o">--</span><span class="n">dftb</span><span class="o">+</span>  <span class="o">...</span>
 </pre></div>
 </div>
@@ -172,7 +169,7 @@ command line. To run this command, the <code class="docutils literal notranslate
 located in the current directory, because the atomic displacements are
 written into the FORCE_SETS file.</p>
 </li>
-<li><p class="first">Create a <code class="docutils literal notranslate"><span class="pre">band.conf</span></code> file to specify the path in the Brillouin zone you are
+<li><p>Create a <code class="docutils literal notranslate"><span class="pre">band.conf</span></code> file to specify the path in the Brillouin zone you are
 interested in (see the phonopy documentation). Then post-process the phonopy
 data, either in the settings file (DIM) or by providing the dimensions of the
 the supercell repeat on the command line</p>
@@ -180,7 +177,7 @@ the supercell repeat on the command line</p>
 </pre></div>
 </div>
 </li>
-<li><p class="first">Create a band structure in gnuplot format</p>
+<li><p>Create a band structure in gnuplot format</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">bandplot</span> <span class="o">--</span><span class="n">gnuplot</span> <span class="n">band</span><span class="o">.</span><span class="n">yaml</span> <span class="o">&gt;</span> <span class="n">band</span><span class="o">.</span><span class="n">dat</span>
 </pre></div>
 </div>
@@ -210,7 +207,7 @@ the supercell repeat on the command line</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.<br/>
     </p>
   </div>
 </footer>

@@ -2,9 +2,8 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Installation &#8212; Phonopy v.2.1.4</title>
+    <meta charset="utf-8" />
+    <title>Installation &#8212; Phonopy v.2.2.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -161,26 +160,30 @@
 <span id="install"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><a class="reference internal" href="#using-conda" id="id1">Using conda</a><ul>
-<li><a class="reference internal" href="#minimum-steps-to-install-and-use-phonopy-via-conda" id="id2">Minimum steps to install and use phonopy via conda</a></li>
+<li><p><a class="reference internal" href="#using-conda" id="id1">Using conda</a></p>
+<ul>
+<li><p><a class="reference internal" href="#minimum-steps-to-install-and-use-phonopy-via-conda" id="id2">Minimum steps to install and use phonopy via conda</a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#using-pip" id="id3">Using pip</a></li>
-<li><a class="reference internal" href="#from-source-code" id="id4">From source code</a><ul>
-<li><a class="reference internal" href="#system-requirement" id="id5">System requirement</a><ul>
-<li><a class="reference internal" href="#by-ubuntu-package-manager" id="id6">By Ubuntu package manager</a></li>
-<li><a class="reference internal" href="#by-conda" id="id7">By conda</a></li>
+<li><p><a class="reference internal" href="#using-pip" id="id3">Using pip</a></p></li>
+<li><p><a class="reference internal" href="#from-source-code" id="id4">From source code</a></p>
+<ul>
+<li><p><a class="reference internal" href="#system-requirement" id="id5">System requirement</a></p>
+<ul>
+<li><p><a class="reference internal" href="#by-ubuntu-package-manager" id="id6">By Ubuntu package manager</a></p></li>
+<li><p><a class="reference internal" href="#by-conda" id="id7">By conda</a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#building-using-setup-py" id="id8">Building using setup.py</a></li>
+<li><p><a class="reference internal" href="#building-using-setup-py" id="id8">Building using setup.py</a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#multithreading-support" id="id9">Multithreading support</a></li>
-<li><a class="reference internal" href="#using-phonopy-on-mac-os-x" id="id10">Using phonopy on Mac OS X</a></li>
-<li><a class="reference internal" href="#trouble-shooting" id="id11">Trouble shooting</a><ul>
-<li><a class="reference internal" href="#remove-previous-phonopy-installations" id="id12">Remove previous phonopy installations</a></li>
-<li><a class="reference internal" href="#set-correct-environment-variables-path-and-pythonpath" id="id13">Set correct environment variables <code class="docutils literal notranslate"><span class="pre">PATH</span></code> and <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code></a></li>
-<li><a class="reference internal" href="#error-in-plotting-on-display" id="id14">Error in plotting on display</a></li>
+<li><p><a class="reference internal" href="#multithreading-support" id="id9">Multithreading support</a></p></li>
+<li><p><a class="reference internal" href="#using-phonopy-on-mac-os-x" id="id10">Using phonopy on Mac OS X</a></p></li>
+<li><p><a class="reference internal" href="#trouble-shooting" id="id11">Trouble shooting</a></p>
+<ul>
+<li><p><a class="reference internal" href="#remove-previous-phonopy-installations" id="id12">Remove previous phonopy installations</a></p></li>
+<li><p><a class="reference internal" href="#set-correct-environment-variables-path-and-pythonpath" id="id13">Set correct environment variables <code class="docutils literal notranslate"><span class="pre">PATH</span></code> and <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code></a></p></li>
+<li><p><a class="reference internal" href="#error-in-plotting-on-display" id="id14">Error in plotting on display</a></p></li>
 </ul>
 </li>
 </ul>
@@ -271,11 +274,11 @@ and also find some more information at <a class="reference internal" href="#inst
 Windows users should use conda packages as well.</p>
 <p>Prepare the following Python libraries:</p>
 <ul class="simple">
-<li>Python and its header files</li>
-<li>numpy</li>
-<li>matplotlib</li>
-<li>python-yaml (pyyaml)</li>
-<li>python-h5py (h5py)</li>
+<li><p>Python and its header files</p></li>
+<li><p>numpy</p></li>
+<li><p>matplotlib</p></li>
+<li><p>python-yaml (pyyaml)</p></li>
+<li><p>python-h5py (h5py)</p></li>
 </ul>
 <div class="section" id="by-ubuntu-package-manager">
 <h4><a class="toc-backref" href="#id6">By Ubuntu package manager</a><a class="headerlink" href="#by-ubuntu-package-manager" title="Permalink to this headline">¶</a></h4>
@@ -308,7 +311,7 @@ special compiler or special options, phonopy is built using
 setup.py. In this case, manual modification of <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> may be
 needed.</p>
 <ol class="arabic">
-<li><p class="first">Download the source code at</p>
+<li><p>Download the source code at</p>
 <p><a class="reference external" href="https://pypi.python.org/pypi/phonopy">https://pypi.python.org/pypi/phonopy</a></p>
 <p>and extract it:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">tar</span> <span class="n">xvfz</span> <span class="n">phonopy</span><span class="o">-</span><span class="mf">1.11</span><span class="o">.</span><span class="mf">12.31</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span>
@@ -321,7 +324,7 @@ needed.</p>
 </pre></div>
 </div>
 </li>
-<li><p class="first">Set up C-libraries for python C-API and python codes. This can be
+<li><p>Set up C-libraries for python C-API and python codes. This can be
 done as follows:</p>
 <p>Run <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> script:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span> <span class="o">--</span><span class="n">user</span>
@@ -331,7 +334,7 @@ done as follows:</p>
 installed. Those locations can be <code class="docutils literal notranslate"><span class="pre">~/.local/bin</span></code> and
 <code class="docutils literal notranslate"><span class="pre">~/.local/lib</span></code> directories, respectively.</p>
 </li>
-<li><p class="first">Assuming the installation location is those shown in the step 2,
+<li><p>Assuming the installation location is those shown in the step 2,
 set <code class="docutils literal notranslate"><span class="pre">$PATH</span></code> and <code class="docutils literal notranslate"><span class="pre">$PYTHONPATH</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>export PYTHONPATH=~/.local/lib:$PYTHONPATH
 export PATH=~/.local/bin:$PATH
@@ -352,7 +355,7 @@ other script for the other shells.</p>
 <span id="install-trouble-shooting"></span><h2><a class="toc-backref" href="#id9">Multithreading support</a><a class="headerlink" href="#multithreading-support" title="Permalink to this headline">¶</a></h2>
 <p>Two kinds of multithreadings can be used in phonopy.</p>
 <ol class="arabic">
-<li><p class="first">Multithreaded BLAS linked numpy</p>
+<li><p>Multithreaded BLAS linked numpy</p>
 <p>Phonopy uses numpy to run singular value decomposition in the
 calculation of force constants and diagonalizaion of dynamical
 matrices. For these, numpy internally calls the LAPACK
@@ -360,7 +363,7 @@ routines. Therefore if a user installs a numpy that is linked with
 multithreaded BLAS, these parts are multithreaded. For example, MKL
 linked numpy is easily installed using conda.</p>
 </li>
-<li><p class="first">OpenMP support in phonopy and spglib</p>
+<li><p>OpenMP support in phonopy and spglib</p>
 <p>OpenMP are applied in the symmetry finding of spglib and the
 distribution of symmetry reduced force constants elements to full
 force constants elements in phonopy. When a chosen supercell is
@@ -379,13 +382,13 @@ currently only gcc is supported.</p>
 tested with MacPorts version 2.4.1 and Homebrew 1.3.6. In the
 following case, gcc-7 is used as the default C-compiler.</p>
 <ol class="arabic">
-<li><p class="first">Install necessary python libraries by conda (see the detail about
+<li><p>Install necessary python libraries by conda (see the detail about
 conda, e.g., <a class="reference external" href="https://conda.io/miniconda.html">https://conda.io/miniconda.html</a>):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">conda</span> <span class="n">install</span> <span class="n">numpy</span> <span class="n">scipy</span> <span class="n">h5py</span> <span class="n">pyyaml</span> <span class="n">matplotlib</span>
 </pre></div>
 </div>
 </li>
-<li><p class="first">Install gcc</p>
+<li><p>Install gcc</p>
 <p>Using Homebrew. This is normally easier than using MacPorts. See
 how to install homebrew <a class="reference external" href="https://brew.sh/">https://brew.sh/</a> and follow the
 installation instruction. Then:</p>
@@ -401,7 +404,7 @@ and follow the installation instruction. Then:</p>
 </li>
 </ol>
 <ol class="arabic" start="4">
-<li><p class="first">Install phonopy following <a class="reference internal" href="#install-setup-py"><span class="std std-ref">Building using setup.py</span></a>.</p>
+<li><p>Install phonopy following <a class="reference internal" href="#install-setup-py"><span class="std std-ref">Building using setup.py</span></a>.</p>
 <p>Before running setup.py, the environment variable of <code class="docutils literal notranslate"><span class="pre">CC=gcc-7</span></code>
 (Homebrew) or <code class="docutils literal notranslate"><span class="pre">CC=gcc</span></code> (MacPorts) must be set so that installed
 gcc is used as the C-compiler instead of build-in clang for compiling
@@ -429,11 +432,10 @@ the phonopy C-extension module.</p>
 installed phonopy. In this case, it is recommended to uninstall all
 the older phonopy packages by</p>
 <ol class="arabic">
-<li><p class="first">Running <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">uninstall</span> <span class="pre">phonopy</span></code> as many times as no phonopy
+<li><p>Running <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">uninstall</span> <span class="pre">phonopy</span></code> as many times as no phonopy
 packages will be found. Error message may be shown, but don’t mind
-it. Similarly do <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">uninstall</span> <span class="pre">phonopy</span></code>.</p>
-</li>
-<li><p class="first">There may still exist litter of phonopy packages. So it is also
+it. Similarly do <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">uninstall</span> <span class="pre">phonopy</span></code>.</p></li>
+<li><p>There may still exist litter of phonopy packages. So it is also
 recommend to remove them if it is found, e.g.:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">rm</span> <span class="o">-</span><span class="n">fr</span> <span class="o">~/.</span><span class="n">local</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">python</span><span class="o">*/</span><span class="n">site</span><span class="o">-</span><span class="n">packages</span><span class="o">/</span><span class="n">phonopy</span><span class="o">*</span>
 </pre></div>
@@ -499,7 +501,7 @@ messages when ploting:</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.<br/>
     </p>
   </div>
 </footer>

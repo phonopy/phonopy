@@ -2,9 +2,8 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Quantum ESPRESSO (QE) &amp; phonopy calculation &#8212; Phonopy v.2.1.4</title>
+    <meta charset="utf-8" />
+    <title>Quantum ESPRESSO (QE) &amp; phonopy calculation &#8212; Phonopy v.2.2.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -155,13 +154,15 @@ system. But the document here explains how to calculate phonons using
 phonopy, i.e., using the finite displacement and supercell approach.</p>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><a class="reference internal" href="#supported-pwscf-tags" id="id1">Supported Pwscf tags</a></li>
-<li><a class="reference internal" href="#how-to-run" id="id2">How to run</a><ul>
-<li><a class="reference internal" href="#non-analytical-term-correction-optional" id="id3">Non-analytical term correction (Optional)</a></li>
+<li><p><a class="reference internal" href="#supported-pwscf-tags" id="id1">Supported Pwscf tags</a></p></li>
+<li><p><a class="reference internal" href="#how-to-run" id="id2">How to run</a></p>
+<ul>
+<li><p><a class="reference internal" href="#non-analytical-term-correction-optional" id="id3">Non-analytical term correction (Optional)</a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#using-q2r-x-to-create-phonopy-force-constants-file" id="id4">Using <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code> to create phonopy force constants file</a><ul>
-<li><a class="reference internal" href="#non-analytical-term-correction" id="id5">Non-analytical term correction</a></li>
+<li><p><a class="reference internal" href="#using-q2r-x-to-create-phonopy-force-constants-file" id="id4">Using <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code> to create phonopy force constants file</a></p>
+<ul>
+<li><p><a class="reference internal" href="#non-analytical-term-correction" id="id5">Non-analytical term correction</a></p></li>
 </ul>
 </li>
 </ul>
@@ -180,7 +181,7 @@ More tags may be supported on request.</p>
 <p>The procedure of Pwscf-phonopy calculation is shown below using the
 NaCl example found in <code class="docutils literal notranslate"><span class="pre">example/NaCl-pwscf</span></code> directory.</p>
 <ol class="arabic">
-<li><p class="first">Read a Pwscf input file and create supercells with
+<li><p>Read a Pwscf input file and create supercells with
 <a class="reference internal" href="command-options.html#qe-mode"><span class="std std-ref">--qe</span></a> option:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span>
 </pre></div>
@@ -194,7 +195,7 @@ only relevant to crystal structures are given. <code class="docutils literal not
 also generated, which contains information about supercell and
 displacements.</p>
 </li>
-<li><p class="first">To make Pwscf input files, necessary setting information is added to
+<li><p>To make Pwscf input files, necessary setting information is added to
 <code class="docutils literal notranslate"><span class="pre">supercell-xxx.in</span></code> files, e.g., by:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>% for i in {001,002};do cat header.in supercell-$i.in &gt;| NaCl-$i.in; done
 </pre></div>
@@ -213,7 +214,7 @@ atoms, e.g., as follows:</p>
 </pre></div>
 </div>
 </li>
-<li><p class="first">To create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>, that is used by phonopy,
+<li><p>To create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>, that is used by phonopy,
 the following phonopy command is executed:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">-</span><span class="n">f</span> <span class="n">NaCl</span><span class="o">-</span><span class="mf">001.</span><span class="n">out</span> <span class="n">NaCl</span><span class="o">-</span><span class="mf">002.</span><span class="n">out</span>
 </pre></div>
@@ -227,7 +228,7 @@ displacements stored in <code class="docutils literal notranslate"><span class="
 <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>. See some more detail at
 <a class="reference internal" href="command-options.html#qe-force-sets-option"><span class="std std-ref">Quantum ESPRESSO interface</span></a>.</p>
 </li>
-<li><p class="first">Now post-process of phonopy is ready to run. The unit cell file
+<li><p>Now post-process of phonopy is ready to run. The unit cell file
 used in the step 1 has to be specified but <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> is
 automatically read. Examples of post-process are shown below.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
@@ -475,7 +476,7 @@ text.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.<br/>
     </p>
   </div>
 </footer>

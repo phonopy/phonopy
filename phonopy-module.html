@@ -2,9 +2,8 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Phonopy API for Python &#8212; Phonopy v.2.1.4</title>
+    <meta charset="utf-8" />
+    <title>Phonopy API for Python &#8212; Phonopy v.2.2.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -184,39 +183,44 @@
 <span id="phonopy-module"></span><h1>Phonopy API for Python<a class="headerlink" href="#phonopy-api-for-python" title="Permalink to this headline">¶</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><a class="reference internal" href="#import-modules" id="id3">Import modules</a></li>
-<li><a class="reference internal" href="#work-flow" id="id4">Work flow</a><ul>
-<li><a class="reference internal" href="#pre-process" id="id5">Pre-process</a></li>
-<li><a class="reference internal" href="#post-process" id="id6">Post process</a></li>
+<li><p><a class="reference internal" href="#import-modules" id="id3">Import modules</a></p></li>
+<li><p><a class="reference internal" href="#work-flow" id="id4">Work flow</a></p>
+<ul>
+<li><p><a class="reference internal" href="#pre-process" id="id5">Pre-process</a></p></li>
+<li><p><a class="reference internal" href="#post-process" id="id6">Post process</a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#phonon-calculation" id="id7">Phonon calculation</a><ul>
-<li><a class="reference internal" href="#save-parameters-phonopy-save" id="id8">Save parameters (<code class="docutils literal notranslate"><span class="pre">phonopy.save</span></code>)</a></li>
-<li><a class="reference internal" href="#shortcut-to-load-input-files-phonopy-load" id="id9">Shortcut to load input files (<code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code>)</a></li>
-<li><a class="reference internal" href="#band-structure" id="id10">Band structure</a></li>
-<li><a class="reference internal" href="#mesh-sampling" id="id11">Mesh sampling</a></li>
-<li><a class="reference internal" href="#dos-and-pdos" id="id12">DOS and PDOS</a></li>
-<li><a class="reference internal" href="#thermal-properties" id="id13">Thermal properties</a></li>
-<li><a class="reference internal" href="#non-analytical-term-correction" id="id14">Non-analytical term correction</a></li>
+<li><p><a class="reference internal" href="#phonon-calculation" id="id7">Phonon calculation</a></p>
+<ul>
+<li><p><a class="reference internal" href="#save-parameters-phonopy-save" id="id8">Save parameters (<code class="docutils literal notranslate"><span class="pre">phonopy.save</span></code>)</a></p></li>
+<li><p><a class="reference internal" href="#shortcut-to-load-input-files-phonopy-load" id="id9">Shortcut to load input files (<code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code>)</a></p></li>
+<li><p><a class="reference internal" href="#band-structure" id="id10">Band structure</a></p></li>
+<li><p><a class="reference internal" href="#mesh-sampling" id="id11">Mesh sampling</a></p></li>
+<li><p><a class="reference internal" href="#dos-and-pdos" id="id12">DOS and PDOS</a></p></li>
+<li><p><a class="reference internal" href="#thermal-properties" id="id13">Thermal properties</a></p></li>
+<li><p><a class="reference internal" href="#non-analytical-term-correction" id="id14">Non-analytical term correction</a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#data-structure" id="id15">Data structure</a><ul>
-<li><a class="reference internal" href="#eigenvectors" id="id16">Eigenvectors</a></li>
+<li><p><a class="reference internal" href="#data-structure" id="id15">Data structure</a></p>
+<ul>
+<li><p><a class="reference internal" href="#eigenvectors" id="id16">Eigenvectors</a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#phonopyatoms-class" id="id17"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class</a><ul>
-<li><a class="reference internal" href="#initialization" id="id18">Initialization</a></li>
-<li><a class="reference internal" href="#variables" id="id19">Variables</a></li>
-<li><a class="reference internal" href="#methods" id="id20">Methods</a></li>
+<li><p><a class="reference internal" href="#phonopyatoms-class" id="id17"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class</a></p>
+<ul>
+<li><p><a class="reference internal" href="#initialization" id="id18">Initialization</a></p></li>
+<li><p><a class="reference internal" href="#variables" id="id19">Variables</a></p></li>
+<li><p><a class="reference internal" href="#methods" id="id20">Methods</a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#definitions-of-variables" id="id21">Definitions of variables</a><ul>
-<li><a class="reference internal" href="#primitive-matrix" id="id22">Primitive matrix</a></li>
-<li><a class="reference internal" href="#supercell-matrix" id="id23">Supercell matrix</a></li>
-<li><a class="reference internal" href="#symmetry-search-tolerance" id="id24">Symmetry search tolerance</a></li>
+<li><p><a class="reference internal" href="#definitions-of-variables" id="id21">Definitions of variables</a></p>
+<ul>
+<li><p><a class="reference internal" href="#primitive-matrix" id="id22">Primitive matrix</a></p></li>
+<li><p><a class="reference internal" href="#supercell-matrix" id="id23">Supercell matrix</a></p></li>
+<li><p><a class="reference internal" href="#symmetry-search-tolerance" id="id24">Symmetry search tolerance</a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#getting-parameters-for-non-analytical-term-correction" id="id25">Getting parameters for non-analytical term correction</a></li>
+<li><p><a class="reference internal" href="#getting-parameters-for-non-analytical-term-correction" id="id25">Getting parameters for non-analytical term correction</a></p></li>
 </ul>
 </div>
 <p><strong>This is under development. Configurations may alter.</strong> Requests or
@@ -656,9 +660,9 @@ follow the convention of LAPACK, which can be shown at
 <p>At least three arguments have to be given at the initialization, which
 are</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">cell</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">positions</span></code> or <code class="docutils literal notranslate"><span class="pre">scaled_positions</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">symbols</span></code> or <code class="docutils literal notranslate"><span class="pre">numbers</span></code></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cell</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">positions</span></code> or <code class="docutils literal notranslate"><span class="pre">scaled_positions</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">symbols</span></code> or <code class="docutils literal notranslate"><span class="pre">numbers</span></code></p></li>
 </ul>
 </div>
 <div class="section" id="variables">
@@ -856,7 +860,7 @@ dielectric constant were calculated using VASP code by the unit cell.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.<br/>
     </p>
   </div>
 </footer>

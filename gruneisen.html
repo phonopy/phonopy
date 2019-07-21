@@ -2,9 +2,8 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Calculation of mode Grüneisen parameters &#8212; Phonopy v.2.1.4</title>
+    <meta charset="utf-8" />
+    <title>Calculation of mode Grüneisen parameters &#8212; Phonopy v.2.2.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -143,10 +142,10 @@
 <span id="phonopy-gruneisen"></span><h1>Calculation of mode Grüneisen parameters<a class="headerlink" href="#calculation-of-mode-gruneisen-parameters" title="Permalink to this headline">¶</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><a class="reference internal" href="#how-to-run" id="id1">How to run</a></li>
-<li><a class="reference internal" href="#abinit-quantum-espresso-wien2k-crystal-and-turbomole-interfaces" id="id2">Abinit, Quantum ESPRESSO, Wien2k, CRYSTAL, and TURBOMOLE interfaces</a></li>
-<li><a class="reference internal" href="#command-options" id="id3">Command options</a></li>
-<li><a class="reference internal" href="#method-to-calculate-mode-gruneisen-parameters" id="id4">Method to calculate mode Grüneisen parameters</a></li>
+<li><p><a class="reference internal" href="#how-to-run" id="id1">How to run</a></p></li>
+<li><p><a class="reference internal" href="#abinit-quantum-espresso-wien2k-crystal-and-turbomole-interfaces" id="id2">Abinit, Quantum ESPRESSO, Wien2k, CRYSTAL, and TURBOMOLE interfaces</a></p></li>
+<li><p><a class="reference internal" href="#command-options" id="id3">Command options</a></p></li>
+<li><p><a class="reference internal" href="#method-to-calculate-mode-gruneisen-parameters" id="id4">Method to calculate mode Grüneisen parameters</a></p></li>
 </ul>
 </div>
 <div class="section" id="how-to-run">
@@ -206,19 +205,19 @@ the VASP interface mode is invoked as the default interface.</p>
 <p>The following command options can be used for all interface
 modes. They work similarly to those for <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> script.</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">--dim</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">--mp</span></code>, <code class="docutils literal notranslate"><span class="pre">--mesh</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">--band</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">--pa</span></code>, <code class="docutils literal notranslate"><span class="pre">--primitive_axis</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">--readfc</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">--band_points</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">--nac</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">--factor</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">--nomeshsym</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">-p</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">-c</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">-s</span></code>, <code class="docutils literal notranslate"><span class="pre">--save</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">-o</span></code></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--dim</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--mp</span></code>, <code class="docutils literal notranslate"><span class="pre">--mesh</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--band</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--pa</span></code>, <code class="docutils literal notranslate"><span class="pre">--primitive_axis</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--readfc</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--band_points</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--nac</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--factor</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--nomeshsym</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-p</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-c</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-s</span></code>, <code class="docutils literal notranslate"><span class="pre">--save</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-o</span></code></p></li>
 </ul>
 <p>The <code class="docutils literal notranslate"><span class="pre">--color</span></code> option (<code class="docutils literal notranslate"><span class="pre">RB</span></code>, <code class="docutils literal notranslate"><span class="pre">RG</span></code>, <code class="docutils literal notranslate"><span class="pre">RGB</span></code>) is used to gradually
 change the marker colors with respect to band indices. For the
@@ -272,7 +271,7 @@ than <span class="math notranslate nohighlight">\(V\)</span>.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.<br/>
     </p>
   </div>
 </footer>

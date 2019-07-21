@@ -2,9 +2,8 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>TURBOMOLE &amp; phonopy calculation &#8212; Phonopy v.2.1.4</title>
+    <meta charset="utf-8" />
+    <title>TURBOMOLE &amp; phonopy calculation &#8212; Phonopy v.2.2.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -154,7 +153,7 @@ Si example found in <code class="docutils literal notranslate"><span class="pre"
 This is the default for the TURBOMOLE interface and therefore the <code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">control</span></code>
 parameter is not needed.</p>
 <ol class="arabic">
-<li><p class="first">Create supercells with <a class="reference internal" href="command-options.html#turbomole-mode"><span class="std std-ref">--turbomole</span></a> option:</p>
+<li><p>Create supercells with <a class="reference internal" href="command-options.html#turbomole-mode"><span class="std std-ref">--turbomole</span></a> option:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">turbomole</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;3 3 3&quot;</span> <span class="o">-</span><span class="n">d</span>
 </pre></div>
 </div>
@@ -167,7 +166,7 @@ File <code class="docutils literal notranslate"><span class="pre">phonopy-disp.y
 supercell and the displacements.</p>
 <p>In the case of the Si example, subdirectory <code class="docutils literal notranslate"><span class="pre">supercell-001</span></code> will be created.</p>
 </li>
-<li><p class="first">Complete TURBOMOLE inputs need to be prepared manually in the subdirectories.</p>
+<li><p>Complete TURBOMOLE inputs need to be prepared manually in the subdirectories.</p>
 <p>Note that supercells with displacements must not be relaxed, because the
 atomic forces induced by a small atomic displacement are what we need for
 phonon calculation. To get accurate forces, $scfconv should be at least 10.
@@ -181,7 +180,7 @@ atoms, e.g., as follows:</p>
 </pre></div>
 </div>
 </li>
-<li><p class="first">To create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file required by Phonopy,
+<li><p>To create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file required by Phonopy,
 the following command is executed:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">turbomole</span> <span class="o">-</span><span class="n">f</span> <span class="n">supercell</span><span class="o">-*</span>
 </pre></div>
@@ -193,7 +192,7 @@ directory because the information on atomic displacements stored in
 this file are used to generate <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>. See some more
 detail at <a class="reference internal" href="command-options.html#turbomole-force-sets-option"><span class="std std-ref">TURBOMOLE interface</span></a>.</p>
 </li>
-<li><p class="first">Now, Phonopy post-prcessing commands can be run. <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> is
+<li><p>Now, Phonopy post-prcessing commands can be run. <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> is
 automatically read in. Note that here PRIMITIVE_AXES is defined in
 band.conf to create the phonon dispersions for the primitive cell.</p>
 <p>Create phonon dispersion plot with:</p>
@@ -269,7 +268,7 @@ for examples, see <a class="reference internal" href="examples.html#examples-lin
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.<br/>
     </p>
   </div>
 </footer>

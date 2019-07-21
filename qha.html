@@ -2,9 +2,8 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Quasi harmonic approximation &#8212; Phonopy v.2.1.4</title>
+    <meta charset="utf-8" />
+    <title>Quasi harmonic approximation &#8212; Phonopy v.2.2.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -156,12 +155,13 @@
 <span id="phonopy-qha"></span><h1>Quasi harmonic approximation<a class="headerlink" href="#quasi-harmonic-approximation" title="Permalink to this headline">¶</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><a class="reference internal" href="#usage-of-phonopy-qha" id="id1">Usage of <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code></a><ul>
-<li><a class="reference internal" href="#options" id="id2">Options</a></li>
-<li><a class="reference internal" href="#output-files" id="id3">Output files</a></li>
+<li><p><a class="reference internal" href="#usage-of-phonopy-qha" id="id1">Usage of <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code></a></p>
+<ul>
+<li><p><a class="reference internal" href="#options" id="id2">Options</a></p></li>
+<li><p><a class="reference internal" href="#output-files" id="id3">Output files</a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#thermal-properties-in-t-p-space-calculated-under-qha" id="id4">Thermal properties in (<em>T</em>, <em>p</em>) space calculated under QHA</a></li>
+<li><p><a class="reference internal" href="#thermal-properties-in-t-p-space-calculated-under-qha" id="id4">Thermal properties in (<em>T</em>, <em>p</em>) space calculated under QHA</a></p></li>
 </ul>
 </div>
 <div class="section" id="usage-of-phonopy-qha">
@@ -177,7 +177,7 @@ follows.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonopy</span><span class="o">-</span><span class="n">qha</span> <span class="o">-</span><span class="n">p</span> <span class="n">e</span><span class="o">-</span><span class="n">v</span><span class="o">.</span><span class="n">dat</span> <span class="n">thermal_properties</span><span class="o">.</span><span class="n">yaml</span><span class="o">-</span><span class="p">{</span><span class="o">-</span><span class="p">{</span><span class="mf">5.</span><span class="o">.</span><span class="mi">1</span><span class="p">},{</span><span class="mf">0.</span><span class="o">.</span><span class="mi">5</span><span class="p">}}</span>
 </pre></div>
 </div>
-<div class="figure">
+<div class="figure align-default">
 <img alt="_images/Si-QHA.png" src="_images/Si-QHA.png" />
 </div>
 <p>Without plots:</p>
@@ -285,7 +285,7 @@ included with this option. This is used such as:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">qha</span> <span class="o">-</span><span class="n">p</span> <span class="o">--</span><span class="n">tmax</span><span class="o">=</span><span class="mi">1300</span> <span class="o">--</span><span class="n">efe</span> <span class="n">fe</span><span class="o">-</span><span class="n">v</span><span class="o">.</span><span class="n">dat</span> <span class="n">e</span><span class="o">-</span><span class="n">v</span><span class="o">.</span><span class="n">dat</span> <span class="n">thermal_properties</span><span class="o">.</span><span class="n">yaml</span><span class="o">-</span><span class="p">{</span><span class="mf">00.</span><span class="o">.</span><span class="mi">10</span><span class="p">}</span>
 </pre></div>
 </div>
-<div class="figure">
+<div class="figure align-default">
 <img alt="_images/Cu-QHA.png" src="_images/Cu-QHA.png" />
 </div>
 <p>The temperature dependent energies are stored in <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code>. The
@@ -342,12 +342,12 @@ respectively. The unit of eV for Helmholtz and Gibbs energies, J/K/mol
 for <span class="math notranslate nohighlight">\(C_V\)</span> and entropy, GPa for for bulk modulus and pressure
 are used.</p>
 <ul class="simple">
-<li>Bulk modulus <span class="math notranslate nohighlight">\(B_T\)</span> (GPa) vs <span class="math notranslate nohighlight">\(T\)</span> (<code class="docutils literal notranslate"><span class="pre">bulk_modulus-temperature.*</span></code>)</li>
-<li>Gibbs free energy <span class="math notranslate nohighlight">\(G\)</span> (eV) vs <span class="math notranslate nohighlight">\(T\)</span> (<code class="docutils literal notranslate"><span class="pre">gibbs-temperature.*</span></code>)</li>
-<li>Heat capacity at constant pressure <span class="math notranslate nohighlight">\(C_p\)</span> (J/K/mol) vs
+<li><p>Bulk modulus <span class="math notranslate nohighlight">\(B_T\)</span> (GPa) vs <span class="math notranslate nohighlight">\(T\)</span> (<code class="docutils literal notranslate"><span class="pre">bulk_modulus-temperature.*</span></code>)</p></li>
+<li><p>Gibbs free energy <span class="math notranslate nohighlight">\(G\)</span> (eV) vs <span class="math notranslate nohighlight">\(T\)</span> (<code class="docutils literal notranslate"><span class="pre">gibbs-temperature.*</span></code>)</p></li>
+<li><p>Heat capacity at constant pressure <span class="math notranslate nohighlight">\(C_p\)</span> (J/K/mol) vs
 <span class="math notranslate nohighlight">\(T\)</span> computed by <span class="math notranslate nohighlight">\(-T\frac{\partial^2 G}{\partial T^2}\)</span>
-from three <span class="math notranslate nohighlight">\(G(T)\)</span> points (<code class="docutils literal notranslate"><span class="pre">Cp-temperature.*</span></code>)</li>
-<li>Heat capacity at constant puressure <span class="math notranslate nohighlight">\(C_p\)</span> (J/K/mol) vs
+from three <span class="math notranslate nohighlight">\(G(T)\)</span> points (<code class="docutils literal notranslate"><span class="pre">Cp-temperature.*</span></code>)</p></li>
+<li><p>Heat capacity at constant puressure <span class="math notranslate nohighlight">\(C_p\)</span> (J/K/mol) vs
 <span class="math notranslate nohighlight">\(T\)</span> computed by polynomial fittings of <span class="math notranslate nohighlight">\(C_V(V)\)</span>
 (<code class="docutils literal notranslate"><span class="pre">Cv-volume.dat</span></code>) and <span class="math notranslate nohighlight">\(S(V)\)</span> (<code class="docutils literal notranslate"><span class="pre">entropy-volume.dat</span></code>) for
 <span class="math notranslate nohighlight">\(\partial S/\partial V\)</span> (<code class="docutils literal notranslate"><span class="pre">dsdv-temperature.dat</span></code>) and
@@ -355,16 +355,16 @@ numerical differentiation of <span class="math notranslate nohighlight">\(\parti
 Eq.(5) of PRB <strong>81</strong>, 174301 by Togo <em>et al.</em>
 (<code class="docutils literal notranslate"><span class="pre">Cp-temperature_polyfit.*</span></code>).
 This may give smoother <span class="math notranslate nohighlight">\(C_p\)</span> than that from
-<span class="math notranslate nohighlight">\(-T\frac{\partial^2 G}{\partial T^2}\)</span>.</li>
-<li>Volumetric thermal expansion coefficient <span class="math notranslate nohighlight">\(\beta\)</span> vs <span class="math notranslate nohighlight">\(T\)</span>
-computed by numerical differentiation (<code class="docutils literal notranslate"><span class="pre">thermal_expansion.*</span></code>)</li>
-<li>Volume vs <span class="math notranslate nohighlight">\(T\)</span> (<code class="docutils literal notranslate"><span class="pre">volume-temperature.*</span></code>)</li>
-<li>Thermodynamics Grüneisen parameter <span class="math notranslate nohighlight">\(\gamma = V\beta B_T/C_V\)</span>
-(no unit) vs <span class="math notranslate nohighlight">\(T\)</span> (<code class="docutils literal notranslate"><span class="pre">gruneisen-temperature.dat</span></code>)</li>
-<li>Helmholtz free energy (eV) vs volume
+<span class="math notranslate nohighlight">\(-T\frac{\partial^2 G}{\partial T^2}\)</span>.</p></li>
+<li><p>Volumetric thermal expansion coefficient <span class="math notranslate nohighlight">\(\beta\)</span> vs <span class="math notranslate nohighlight">\(T\)</span>
+computed by numerical differentiation (<code class="docutils literal notranslate"><span class="pre">thermal_expansion.*</span></code>)</p></li>
+<li><p>Volume vs <span class="math notranslate nohighlight">\(T\)</span> (<code class="docutils literal notranslate"><span class="pre">volume-temperature.*</span></code>)</p></li>
+<li><p>Thermodynamics Grüneisen parameter <span class="math notranslate nohighlight">\(\gamma = V\beta B_T/C_V\)</span>
+(no unit) vs <span class="math notranslate nohighlight">\(T\)</span> (<code class="docutils literal notranslate"><span class="pre">gruneisen-temperature.dat</span></code>)</p></li>
+<li><p>Helmholtz free energy (eV) vs volume
 (<code class="docutils literal notranslate"><span class="pre">helmholtz-volume.*</span></code>). When <code class="docutils literal notranslate"><span class="pre">--pressure</span></code> option is specified,
 energy offset of <span class="math notranslate nohighlight">\(pV\)</span> is added. See also the following section
-(<a class="reference internal" href="#theory-of-qha"><span class="std std-ref">Thermal properties in (T, p) space calculated under QHA</span></a>).</li>
+(<a class="reference internal" href="#theory-of-qha"><span class="std std-ref">Thermal properties in (T, p) space calculated under QHA</span></a>).</p></li>
 </ul>
 </div>
 </div>
@@ -417,7 +417,7 @@ thermal properties at constant pressure.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.<br/>
     </p>
   </div>
 </footer>

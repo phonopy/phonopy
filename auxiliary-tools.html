@@ -2,9 +2,8 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Auxiliary tools &#8212; Phonopy v.2.1.4</title>
+    <meta charset="utf-8" />
+    <title>Auxiliary tools &#8212; Phonopy v.2.2.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -157,20 +156,22 @@
 directory as well as <code class="docutils literal notranslate"><span class="pre">phonopy</span></code>.</p>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><a class="reference internal" href="#phonopy-bandplot" id="id2"><code class="docutils literal notranslate"><span class="pre">phonopy-bandplot</span></code></a></li>
-<li><a class="reference internal" href="#phonopy-pdosplot" id="id3"><code class="docutils literal notranslate"><span class="pre">phonopy-pdosplot</span></code></a></li>
-<li><a class="reference internal" href="#phonopy-propplot" id="id4"><code class="docutils literal notranslate"><span class="pre">phonopy-propplot</span></code></a></li>
-<li><a class="reference internal" href="#phonopy-dispmanager" id="id5"><code class="docutils literal notranslate"><span class="pre">phonopy-dispmanager</span></code></a><ul>
-<li><a class="reference internal" href="#a-amplitude-s-o-overwite" id="id6"><code class="docutils literal notranslate"><span class="pre">-a</span></code>, <code class="docutils literal notranslate"><span class="pre">--amplitude</span></code>, <code class="docutils literal notranslate"><span class="pre">-s</span></code>, <code class="docutils literal notranslate"><span class="pre">-o</span></code>, <code class="docutils literal notranslate"><span class="pre">--overwite</span></code></a></li>
-<li><a class="reference internal" href="#w" id="id7"><code class="docutils literal notranslate"><span class="pre">-w</span></code></a></li>
-<li><a class="reference internal" href="#compatibility" id="id8"><code class="docutils literal notranslate"><span class="pre">--compatibility</span></code></a></li>
+<li><p><a class="reference internal" href="#phonopy-bandplot" id="id2"><code class="docutils literal notranslate"><span class="pre">phonopy-bandplot</span></code></a></p></li>
+<li><p><a class="reference internal" href="#phonopy-pdosplot" id="id3"><code class="docutils literal notranslate"><span class="pre">phonopy-pdosplot</span></code></a></p></li>
+<li><p><a class="reference internal" href="#phonopy-propplot" id="id4"><code class="docutils literal notranslate"><span class="pre">phonopy-propplot</span></code></a></p></li>
+<li><p><a class="reference internal" href="#phonopy-dispmanager" id="id5"><code class="docutils literal notranslate"><span class="pre">phonopy-dispmanager</span></code></a></p>
+<ul>
+<li><p><a class="reference internal" href="#a-amplitude-s-o-overwite" id="id6"><code class="docutils literal notranslate"><span class="pre">-a</span></code>, <code class="docutils literal notranslate"><span class="pre">--amplitude</span></code>, <code class="docutils literal notranslate"><span class="pre">-s</span></code>, <code class="docutils literal notranslate"><span class="pre">-o</span></code>, <code class="docutils literal notranslate"><span class="pre">--overwite</span></code></a></p></li>
+<li><p><a class="reference internal" href="#w" id="id7"><code class="docutils literal notranslate"><span class="pre">-w</span></code></a></p></li>
+<li><p><a class="reference internal" href="#compatibility" id="id8"><code class="docutils literal notranslate"><span class="pre">--compatibility</span></code></a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#phonopy-vasp-born" id="id9"><code class="docutils literal notranslate"><span class="pre">phonopy-vasp-born</span></code></a><ul>
-<li><a class="reference internal" href="#pa-primitive-axes" id="id10"><code class="docutils literal notranslate"><span class="pre">--pa</span></code>, <code class="docutils literal notranslate"><span class="pre">--primitive-axes</span></code></a></li>
-<li><a class="reference internal" href="#dim" id="id11"><code class="docutils literal notranslate"><span class="pre">--dim</span></code></a></li>
-<li><a class="reference internal" href="#nost" id="id12"><code class="docutils literal notranslate"><span class="pre">--nost</span></code></a></li>
-<li><a class="reference internal" href="#outcar" id="id13"><code class="docutils literal notranslate"><span class="pre">--outcar</span></code></a></li>
+<li><p><a class="reference internal" href="#phonopy-vasp-born" id="id9"><code class="docutils literal notranslate"><span class="pre">phonopy-vasp-born</span></code></a></p>
+<ul>
+<li><p><a class="reference internal" href="#pa-primitive-axes" id="id10"><code class="docutils literal notranslate"><span class="pre">--pa</span></code>, <code class="docutils literal notranslate"><span class="pre">--primitive-axes</span></code></a></p></li>
+<li><p><a class="reference internal" href="#dim" id="id11"><code class="docutils literal notranslate"><span class="pre">--dim</span></code></a></p></li>
+<li><p><a class="reference internal" href="#nost" id="id12"><code class="docutils literal notranslate"><span class="pre">--nost</span></code></a></p></li>
+<li><p><a class="reference internal" href="#outcar" id="id13"><code class="docutils literal notranslate"><span class="pre">--outcar</span></code></a></p></li>
 </ul>
 </li>
 </ul>
@@ -316,7 +317,7 @@ read. <code class="docutils literal notranslate"><span class="pre">POSCAR</span>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.<br/>
     </p>
   </div>
 </footer>

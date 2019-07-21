@@ -2,9 +2,8 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Setting tags &#8212; Phonopy v.2.1.4</title>
+    <meta charset="utf-8" />
+    <title>Setting tags &#8212; Phonopy v.2.2.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -259,111 +258,127 @@
 <span id="id1"></span><h1>Setting tags<a class="headerlink" href="#setting-tags" title="Permalink to this headline">¶</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><a class="reference internal" href="#basic-tags" id="id6">Basic tags</a><ul>
-<li><a class="reference internal" href="#dim" id="id7"><code class="docutils literal notranslate"><span class="pre">DIM</span></code></a></li>
-<li><a class="reference internal" href="#primitive-axes-or-primitive-axis" id="id8"><code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code> or <code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXIS</span></code></a></li>
-<li><a class="reference internal" href="#atom-name" id="id9"><code class="docutils literal notranslate"><span class="pre">ATOM_NAME</span></code></a></li>
-<li><a class="reference internal" href="#eigenvectors" id="id10"><code class="docutils literal notranslate"><span class="pre">EIGENVECTORS</span></code></a></li>
-<li><a class="reference internal" href="#mass" id="id11"><code class="docutils literal notranslate"><span class="pre">MASS</span></code></a></li>
-<li><a class="reference internal" href="#magmom" id="id12"><code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code></a></li>
-<li><a class="reference internal" href="#cell-filename" id="id13"><code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code></a></li>
-<li><a class="reference internal" href="#frequency-conversion-factor" id="id14"><code class="docutils literal notranslate"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code></a></li>
+<li><p><a class="reference internal" href="#basic-tags" id="id6">Basic tags</a></p>
+<ul>
+<li><p><a class="reference internal" href="#dim" id="id7"><code class="docutils literal notranslate"><span class="pre">DIM</span></code></a></p></li>
+<li><p><a class="reference internal" href="#primitive-axes-or-primitive-axis" id="id8"><code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code> or <code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXIS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#atom-name" id="id9"><code class="docutils literal notranslate"><span class="pre">ATOM_NAME</span></code></a></p></li>
+<li><p><a class="reference internal" href="#eigenvectors" id="id10"><code class="docutils literal notranslate"><span class="pre">EIGENVECTORS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#mass" id="id11"><code class="docutils literal notranslate"><span class="pre">MASS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#magmom" id="id12"><code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code></a></p></li>
+<li><p><a class="reference internal" href="#cell-filename" id="id13"><code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code></a></p></li>
+<li><p><a class="reference internal" href="#frequency-conversion-factor" id="id14"><code class="docutils literal notranslate"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code></a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#displacement-creation-tags" id="id15">Displacement creation tags</a><ul>
-<li><a class="reference internal" href="#create-displacements" id="id16"><code class="docutils literal notranslate"><span class="pre">CREATE_DISPLACEMENTS</span></code></a></li>
-<li><a class="reference internal" href="#displacement-distance" id="id17"><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE</span></code></a></li>
-<li><a class="reference internal" href="#diag" id="id18"><code class="docutils literal notranslate"><span class="pre">DIAG</span></code></a></li>
-<li><a class="reference internal" href="#pm" id="id19"><code class="docutils literal notranslate"><span class="pre">PM</span></code></a></li>
+<li><p><a class="reference internal" href="#displacement-creation-tags" id="id15">Displacement creation tags</a></p>
+<ul>
+<li><p><a class="reference internal" href="#create-displacements" id="id16"><code class="docutils literal notranslate"><span class="pre">CREATE_DISPLACEMENTS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#displacement-distance" id="id17"><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE</span></code></a></p></li>
+<li><p><a class="reference internal" href="#diag" id="id18"><code class="docutils literal notranslate"><span class="pre">DIAG</span></code></a></p></li>
+<li><p><a class="reference internal" href="#pm" id="id19"><code class="docutils literal notranslate"><span class="pre">PM</span></code></a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#band-structure-tags" id="id20">Band structure tags</a><ul>
-<li><a class="reference internal" href="#band-and-band-points" id="id21"><code class="docutils literal notranslate"><span class="pre">BAND</span></code> and <code class="docutils literal notranslate"><span class="pre">BAND_POINTS</span></code></a></li>
-<li><a class="reference internal" href="#band-labels" id="id22"><code class="docutils literal notranslate"><span class="pre">BAND_LABELS</span></code></a></li>
-<li><a class="reference internal" href="#band-connection" id="id23"><code class="docutils literal notranslate"><span class="pre">BAND_CONNECTION</span></code></a></li>
+<li><p><a class="reference internal" href="#band-structure-tags" id="id20">Band structure tags</a></p>
+<ul>
+<li><p><a class="reference internal" href="#band-and-band-points" id="id21"><code class="docutils literal notranslate"><span class="pre">BAND</span></code> and <code class="docutils literal notranslate"><span class="pre">BAND_POINTS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#band-labels" id="id22"><code class="docutils literal notranslate"><span class="pre">BAND_LABELS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#band-connection" id="id23"><code class="docutils literal notranslate"><span class="pre">BAND_CONNECTION</span></code></a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#mesh-sampling-tags" id="id24">Mesh sampling tags</a><ul>
-<li><a class="reference internal" href="#mesh-mp-or-mesh-numbers" id="id25"><code class="docutils literal notranslate"><span class="pre">MESH</span></code>, <code class="docutils literal notranslate"><span class="pre">MP</span></code>, or <code class="docutils literal notranslate"><span class="pre">MESH_NUMBERS</span></code></a></li>
-<li><a class="reference internal" href="#mp-shift" id="id26"><code class="docutils literal notranslate"><span class="pre">MP_SHIFT</span></code></a></li>
-<li><a class="reference internal" href="#gamma-center" id="id27"><code class="docutils literal notranslate"><span class="pre">GAMMA_CENTER</span></code></a></li>
-<li><a class="reference internal" href="#write-mesh" id="id28"><code class="docutils literal notranslate"><span class="pre">WRITE_MESH</span></code></a></li>
+<li><p><a class="reference internal" href="#mesh-sampling-tags" id="id24">Mesh sampling tags</a></p>
+<ul>
+<li><p><a class="reference internal" href="#mesh-mp-or-mesh-numbers" id="id25"><code class="docutils literal notranslate"><span class="pre">MESH</span></code>, <code class="docutils literal notranslate"><span class="pre">MP</span></code>, or <code class="docutils literal notranslate"><span class="pre">MESH_NUMBERS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#mp-shift" id="id26"><code class="docutils literal notranslate"><span class="pre">MP_SHIFT</span></code></a></p></li>
+<li><p><a class="reference internal" href="#gamma-center" id="id27"><code class="docutils literal notranslate"><span class="pre">GAMMA_CENTER</span></code></a></p></li>
+<li><p><a class="reference internal" href="#write-mesh" id="id28"><code class="docutils literal notranslate"><span class="pre">WRITE_MESH</span></code></a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#phonon-density-of-states-dos-tags" id="id29">Phonon density of states (DOS) tags</a><ul>
-<li><a class="reference internal" href="#dos" id="id30"><code class="docutils literal notranslate"><span class="pre">DOS</span></code></a></li>
-<li><a class="reference internal" href="#dos-range" id="id31"><code class="docutils literal notranslate"><span class="pre">DOS_RANGE</span></code></a></li>
-<li><a class="reference internal" href="#fmin-fmax-and-fpitch" id="id32"><code class="docutils literal notranslate"><span class="pre">FMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">FMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">FPITCH</span></code></a></li>
-<li><a class="reference internal" href="#pdos" id="id33"><code class="docutils literal notranslate"><span class="pre">PDOS</span></code></a></li>
-<li><a class="reference internal" href="#projection-direction" id="id34"><code class="docutils literal notranslate"><span class="pre">PROJECTION_DIRECTION</span></code></a></li>
-<li><a class="reference internal" href="#xyz-projection" id="id35"><code class="docutils literal notranslate"><span class="pre">XYZ_PROJECTION</span></code></a></li>
-<li><a class="reference internal" href="#sigma" id="id36"><code class="docutils literal notranslate"><span class="pre">SIGMA</span></code></a></li>
-<li><a class="reference internal" href="#tetrahedron" id="id37"><code class="docutils literal notranslate"><span class="pre">TETRAHEDRON</span></code></a></li>
-<li><a class="reference internal" href="#debye-model" id="id38"><code class="docutils literal notranslate"><span class="pre">DEBYE_MODEL</span></code></a></li>
-<li><a class="reference internal" href="#momemt-and-moment-order" id="id39"><code class="docutils literal notranslate"><span class="pre">MOMEMT</span></code> and <code class="docutils literal notranslate"><span class="pre">MOMENT_ORDER</span></code></a></li>
+<li><p><a class="reference internal" href="#phonon-density-of-states-dos-tags" id="id29">Phonon density of states (DOS) tags</a></p>
+<ul>
+<li><p><a class="reference internal" href="#dos" id="id30"><code class="docutils literal notranslate"><span class="pre">DOS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#dos-range" id="id31"><code class="docutils literal notranslate"><span class="pre">DOS_RANGE</span></code></a></p></li>
+<li><p><a class="reference internal" href="#fmin-fmax-and-fpitch" id="id32"><code class="docutils literal notranslate"><span class="pre">FMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">FMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">FPITCH</span></code></a></p></li>
+<li><p><a class="reference internal" href="#pdos" id="id33"><code class="docutils literal notranslate"><span class="pre">PDOS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#projection-direction" id="id34"><code class="docutils literal notranslate"><span class="pre">PROJECTION_DIRECTION</span></code></a></p></li>
+<li><p><a class="reference internal" href="#xyz-projection" id="id35"><code class="docutils literal notranslate"><span class="pre">XYZ_PROJECTION</span></code></a></p></li>
+<li><p><a class="reference internal" href="#sigma" id="id36"><code class="docutils literal notranslate"><span class="pre">SIGMA</span></code></a></p></li>
+<li><p><a class="reference internal" href="#tetrahedron" id="id37"><code class="docutils literal notranslate"><span class="pre">TETRAHEDRON</span></code></a></p></li>
+<li><p><a class="reference internal" href="#debye-model" id="id38"><code class="docutils literal notranslate"><span class="pre">DEBYE_MODEL</span></code></a></p></li>
+<li><p><a class="reference internal" href="#momemt-and-moment-order" id="id39"><code class="docutils literal notranslate"><span class="pre">MOMEMT</span></code> and <code class="docutils literal notranslate"><span class="pre">MOMENT_ORDER</span></code></a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#thermal-properties-related-tags" id="id40">Thermal properties related tags</a><ul>
-<li><a class="reference internal" href="#tprop-tmin-tmax-and-tstep" id="id41"><code class="docutils literal notranslate"><span class="pre">TPROP</span></code>, <code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code></a></li>
-<li><a class="reference internal" href="#pretend-real" id="id42"><code class="docutils literal notranslate"><span class="pre">PRETEND_REAL</span></code></a></li>
-<li><a class="reference internal" href="#cutoff-frequency" id="id43"><code class="docutils literal notranslate"><span class="pre">CUTOFF_FREQUENCY</span></code></a></li>
+<li><p><a class="reference internal" href="#thermal-properties-related-tags" id="id40">Thermal properties related tags</a></p>
+<ul>
+<li><p><a class="reference internal" href="#tprop-tmin-tmax-and-tstep" id="id41"><code class="docutils literal notranslate"><span class="pre">TPROP</span></code>, <code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code></a></p></li>
+<li><p><a class="reference internal" href="#pretend-real" id="id42"><code class="docutils literal notranslate"><span class="pre">PRETEND_REAL</span></code></a></p></li>
+<li><p><a class="reference internal" href="#cutoff-frequency" id="id43"><code class="docutils literal notranslate"><span class="pre">CUTOFF_FREQUENCY</span></code></a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#thermal-displacements" id="id44">Thermal displacements</a><ul>
-<li><a class="reference internal" href="#tdisp-tmax-tmin-and-tstep" id="id45"><code class="docutils literal notranslate"><span class="pre">TDISP</span></code>, <code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, <code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, and <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code></a></li>
-<li><a class="reference internal" href="#tdispmat-tmax-tmin-and-tstep" id="id46"><code class="docutils literal notranslate"><span class="pre">TDISPMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, <code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, and <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code></a></li>
-<li><a class="reference internal" href="#tdispmat-cif" id="id47"><code class="docutils literal notranslate"><span class="pre">TDISPMAT_CIF</span></code></a></li>
+<li><p><a class="reference internal" href="#thermal-displacements" id="id44">Thermal displacements</a></p>
+<ul>
+<li><p><a class="reference internal" href="#tdisp-tmax-tmin-and-tstep" id="id45"><code class="docutils literal notranslate"><span class="pre">TDISP</span></code>, <code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, <code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, and <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code></a></p></li>
+<li><p><a class="reference internal" href="#tdispmat-tmax-tmin-and-tstep" id="id46"><code class="docutils literal notranslate"><span class="pre">TDISPMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, <code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, and <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code></a></p></li>
+<li><p><a class="reference internal" href="#tdispmat-cif" id="id47"><code class="docutils literal notranslate"><span class="pre">TDISPMAT_CIF</span></code></a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#specific-q-points" id="id48">Specific q-points</a><ul>
-<li><a class="reference internal" href="#qpoints" id="id49"><code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code></a></li>
-<li><a class="reference internal" href="#writedm" id="id50"><code class="docutils literal notranslate"><span class="pre">WRITEDM</span></code></a></li>
+<li><p><a class="reference internal" href="#specific-q-points" id="id48">Specific q-points</a></p>
+<ul>
+<li><p><a class="reference internal" href="#qpoints" id="id49"><code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#writedm" id="id50"><code class="docutils literal notranslate"><span class="pre">WRITEDM</span></code></a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#non-analytical-term-correction" id="id51">Non-analytical term correction</a><ul>
-<li><a class="reference internal" href="#nac" id="id52"><code class="docutils literal notranslate"><span class="pre">NAC</span></code></a></li>
-<li><a class="reference internal" href="#nac-method" id="id53"><code class="docutils literal notranslate"><span class="pre">NAC_METHOD</span></code></a></li>
-<li><a class="reference internal" href="#q-direction" id="id54"><code class="docutils literal notranslate"><span class="pre">Q_DIRECTION</span></code></a></li>
+<li><p><a class="reference internal" href="#non-analytical-term-correction" id="id51">Non-analytical term correction</a></p>
+<ul>
+<li><p><a class="reference internal" href="#nac" id="id52"><code class="docutils literal notranslate"><span class="pre">NAC</span></code></a></p></li>
+<li><p><a class="reference internal" href="#nac-method" id="id53"><code class="docutils literal notranslate"><span class="pre">NAC_METHOD</span></code></a></p></li>
+<li><p><a class="reference internal" href="#q-direction" id="id54"><code class="docutils literal notranslate"><span class="pre">Q_DIRECTION</span></code></a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#group-velocity" id="id55">Group velocity</a><ul>
-<li><a class="reference internal" href="#id3" id="id56"><code class="docutils literal notranslate"><span class="pre">GROUP_VELOCITY</span></code></a></li>
-<li><a class="reference internal" href="#gv-delta-q" id="id57"><code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span></code></a></li>
+<li><p><a class="reference internal" href="#group-velocity" id="id55">Group velocity</a></p>
+<ul>
+<li><p><a class="reference internal" href="#id3" id="id56"><code class="docutils literal notranslate"><span class="pre">GROUP_VELOCITY</span></code></a></p></li>
+<li><p><a class="reference internal" href="#gv-delta-q" id="id57"><code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span></code></a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#symmetry" id="id58">Symmetry</a><ul>
-<li><a class="reference internal" href="#symmetry-tolerance" id="id59"><code class="docutils literal notranslate"><span class="pre">SYMMETRY_TOLERANCE</span></code></a></li>
-<li><a class="reference internal" href="#symmetry-tag" id="id60"><code class="docutils literal notranslate"><span class="pre">SYMMETRY</span></code></a></li>
-<li><a class="reference internal" href="#mesh-symmetry" id="id61"><code class="docutils literal notranslate"><span class="pre">MESH_SYMMETRY</span></code></a></li>
-<li><a class="reference internal" href="#fc-symmetry" id="id62"><code class="docutils literal notranslate"><span class="pre">FC_SYMMETRY</span></code></a></li>
+<li><p><a class="reference internal" href="#symmetry" id="id58">Symmetry</a></p>
+<ul>
+<li><p><a class="reference internal" href="#symmetry-tolerance" id="id59"><code class="docutils literal notranslate"><span class="pre">SYMMETRY_TOLERANCE</span></code></a></p></li>
+<li><p><a class="reference internal" href="#symmetry-tag" id="id60"><code class="docutils literal notranslate"><span class="pre">SYMMETRY</span></code></a></p></li>
+<li><p><a class="reference internal" href="#mesh-symmetry" id="id61"><code class="docutils literal notranslate"><span class="pre">MESH_SYMMETRY</span></code></a></p></li>
+<li><p><a class="reference internal" href="#fc-symmetry" id="id62"><code class="docutils literal notranslate"><span class="pre">FC_SYMMETRY</span></code></a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#force-constants" id="id63">Force constants</a><ul>
-<li><a class="reference internal" href="#id5" id="id64"><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a></li>
-<li><a class="reference internal" href="#full-force-constants" id="id65"><code class="docutils literal notranslate"><span class="pre">FULL_FORCE_CONSTANTS</span></code></a></li>
-<li><a class="reference internal" href="#read-force-constants" id="id66"><code class="docutils literal notranslate"><span class="pre">READ_FORCE_CONSTANTS</span></code></a></li>
-<li><a class="reference internal" href="#write-force-constants" id="id67"><code class="docutils literal notranslate"><span class="pre">WRITE_FORCE_CONSTANTS</span></code></a></li>
+<li><p><a class="reference internal" href="#force-constants" id="id63">Force constants</a></p>
+<ul>
+<li><p><a class="reference internal" href="#id5" id="id64"><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#full-force-constants" id="id65"><code class="docutils literal notranslate"><span class="pre">FULL_FORCE_CONSTANTS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#read-force-constants" id="id66"><code class="docutils literal notranslate"><span class="pre">READ_FORCE_CONSTANTS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#write-force-constants" id="id67"><code class="docutils literal notranslate"><span class="pre">WRITE_FORCE_CONSTANTS</span></code></a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#create-animation-file" id="id68">Create animation file</a><ul>
-<li><a class="reference internal" href="#anime-type" id="id69"><code class="docutils literal notranslate"><span class="pre">ANIME_TYPE</span></code></a></li>
-<li><a class="reference internal" href="#anime" id="id70"><code class="docutils literal notranslate"><span class="pre">ANIME</span></code></a></li>
+<li><p><a class="reference internal" href="#create-animation-file" id="id68">Create animation file</a></p>
+<ul>
+<li><p><a class="reference internal" href="#anime-type" id="id69"><code class="docutils literal notranslate"><span class="pre">ANIME_TYPE</span></code></a></p></li>
+<li><p><a class="reference internal" href="#anime" id="id70"><code class="docutils literal notranslate"><span class="pre">ANIME</span></code></a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#create-modulated-structure" id="id71">Create modulated structure</a><ul>
-<li><a class="reference internal" href="#modulation" id="id72"><code class="docutils literal notranslate"><span class="pre">MODULATION</span></code></a></li>
+<li><p><a class="reference internal" href="#create-modulated-structure" id="id71">Create modulated structure</a></p>
+<ul>
+<li><p><a class="reference internal" href="#modulation" id="id72"><code class="docutils literal notranslate"><span class="pre">MODULATION</span></code></a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#characters-of-irreducible-representations" id="id73">Characters of irreducible representations</a><ul>
-<li><a class="reference internal" href="#irreps" id="id74"><code class="docutils literal notranslate"><span class="pre">IRREPS</span></code></a></li>
-<li><a class="reference internal" href="#show-irreps" id="id75"><code class="docutils literal notranslate"><span class="pre">SHOW_IRREPS</span></code></a></li>
-<li><a class="reference internal" href="#little-cogroup" id="id76"><code class="docutils literal notranslate"><span class="pre">LITTLE_COGROUP</span></code></a></li>
+<li><p><a class="reference internal" href="#characters-of-irreducible-representations" id="id73">Characters of irreducible representations</a></p>
+<ul>
+<li><p><a class="reference internal" href="#irreps" id="id74"><code class="docutils literal notranslate"><span class="pre">IRREPS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#show-irreps" id="id75"><code class="docutils literal notranslate"><span class="pre">SHOW_IRREPS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#little-cogroup" id="id76"><code class="docutils literal notranslate"><span class="pre">LITTLE_COGROUP</span></code></a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#input-output-file-control" id="id77">Input/Output file control</a><ul>
-<li><a class="reference internal" href="#fc-format-readfc-format-writefc-format" id="id78"><code class="docutils literal notranslate"><span class="pre">FC_FORMAT</span></code>,  <code class="docutils literal notranslate"><span class="pre">READFC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">WRITEFC_FORMAT</span></code></a></li>
-<li><a class="reference internal" href="#band-format-mesh-format-qpoints-format" id="id79"><code class="docutils literal notranslate"><span class="pre">BAND_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">MESH_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code></a></li>
-<li><a class="reference internal" href="#hdf5" id="id80"><code class="docutils literal notranslate"><span class="pre">HDF5</span></code></a></li>
+<li><p><a class="reference internal" href="#input-output-file-control" id="id77">Input/Output file control</a></p>
+<ul>
+<li><p><a class="reference internal" href="#fc-format-readfc-format-writefc-format" id="id78"><code class="docutils literal notranslate"><span class="pre">FC_FORMAT</span></code>,  <code class="docutils literal notranslate"><span class="pre">READFC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">WRITEFC_FORMAT</span></code></a></p></li>
+<li><p><a class="reference internal" href="#band-format-mesh-format-qpoints-format" id="id79"><code class="docutils literal notranslate"><span class="pre">BAND_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">MESH_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code></a></p></li>
+<li><p><a class="reference internal" href="#hdf5" id="id80"><code class="docutils literal notranslate"><span class="pre">HDF5</span></code></a></p></li>
 </ul>
 </li>
 </ul>
@@ -1259,17 +1274,17 @@ are generated according to the <code class="docutils literal notranslate"><span 
 </div>
 <p>The values are as follows from left:</p>
 <ol class="arabic simple">
-<li>Band index given by ascending order in phonon frequency.</li>
-<li>Magnitude to be multiplied. In the harmonic phonon calculation,
+<li><p>Band index given by ascending order in phonon frequency.</p></li>
+<li><p>Magnitude to be multiplied. In the harmonic phonon calculation,
 there is no amplitude information obtained directly. The relative
 amplitude among atoms in primitive cell can be obtained from
 eigenvectors with the constraint of the norm or the eigenvectors
 equals one, i.e., number of atoms in the primitive is large, the
 displacements become small. Therefore this has to be adjusted to
-make the animation good looking.</li>
-<li>Number of images in one phonon period.</li>
-<li>(4-6) Shift of atomic points in reduced coordinate in real space. These
-values can be omitted and the default values are <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">0</span> <span class="pre">0</span></code>.</li>
+make the animation good looking.</p></li>
+<li><p>Number of images in one phonon period.</p></li>
+<li><p>(4-6) Shift of atomic points in reduced coordinate in real space. These
+values can be omitted and the default values are <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">0</span> <span class="pre">0</span></code>.</p></li>
 </ol>
 <p>For <code class="docutils literal notranslate"><span class="pre">anime.xyz_jmol</span></code>, the first and third values are not used,
 however dummy values, e.g. 0, are required.</p>
@@ -1418,10 +1433,10 @@ format. The file format is changed as follows:</p>
 original formats (in parenthesis) by <code class="docutils literal notranslate"><span class="pre">HDF5</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>.  In addition,
 <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code> is read with this tag.</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code> (<code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code>)</li>
-<li><code class="docutils literal notranslate"><span class="pre">mesh.hdf5</span></code> (<code class="docutils literal notranslate"><span class="pre">mesh.yaml</span></code>)</li>
-<li><code class="docutils literal notranslate"><span class="pre">band.hdf5</span></code> (<code class="docutils literal notranslate"><span class="pre">band.yaml</span></code>)</li>
-<li><code class="docutils literal notranslate"><span class="pre">qpoints.hdf5</span></code> (<code class="docutils literal notranslate"><span class="pre">qpoints.yaml</span></code>)</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code> (<code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mesh.hdf5</span></code> (<code class="docutils literal notranslate"><span class="pre">mesh.yaml</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">band.hdf5</span></code> (<code class="docutils literal notranslate"><span class="pre">band.yaml</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">qpoints.hdf5</span></code> (<code class="docutils literal notranslate"><span class="pre">qpoints.yaml</span></code>)</p></li>
 </ul>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">HDF5</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
@@ -1479,7 +1494,7 @@ calculation results are written into <code class="docutils literal notranslate">
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.<br/>
     </p>
   </div>
 </footer>

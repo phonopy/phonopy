@@ -2,9 +2,8 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Elk &amp; phonopy calculation &#8212; Phonopy v.2.1.4</title>
+    <meta charset="utf-8" />
+    <title>Elk &amp; phonopy calculation &#8212; Phonopy v.2.2.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -151,7 +150,7 @@ More tags may be supported on request.</p>
 <h2>How to run<a class="headerlink" href="#how-to-run" title="Permalink to this headline">¶</a></h2>
 <p>A procedure of Elk-phonopy calculation is as follows:</p>
 <ol class="arabic">
-<li><p class="first">Read an Elk input file and create supercells with
+<li><p>Read an Elk input file and create supercells with
 <a class="reference internal" href="command-options.html#elk-mode"><span class="std std-ref">--elk</span></a> option:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">elk</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">-</span><span class="n">c</span> <span class="n">elk</span><span class="o">-</span><span class="n">unitcell</span><span class="o">.</span><span class="ow">in</span>
 </pre></div>
@@ -166,14 +165,13 @@ information on displacements. Perhaps the supercell files of
 <code class="docutils literal notranslate"><span class="pre">elk.in</span></code>, respectively, then Elk calculations are executed in
 these directories.</p>
 </li>
-<li><p class="first">Calculate forces on atoms in the supercells with
+<li><p>Calculate forces on atoms in the supercells with
 displacements. Calculation specification tags have to be added to
 each <code class="docutils literal notranslate"><span class="pre">elk.in</span></code> file. Crystal structure is not allowed to
 relaxed in the force calculations, because atomic forces induced by
 a small atomic displacement are what we need for phonon
-calculation.</p>
-</li>
-<li><p class="first">Create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> by</p>
+calculation.</p></li>
+<li><p>Create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> by</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">elk</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">INFO</span><span class="o">.</span><span class="n">OUT</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">INFO</span><span class="o">.</span><span class="n">OUT</span>  <span class="o">...</span>
 </pre></div>
 </div>
@@ -183,7 +181,7 @@ FORCE_SETS file. See some more detail at
 <a class="reference internal" href="command-options.html#elk-force-sets-option"><span class="std std-ref">Elk interface</span></a>. An example is found in
 <code class="docutils literal notranslate"><span class="pre">example/Si-elk</span></code>.</p>
 </li>
-<li><p class="first">Run post-process of phonopy with the Elk input file for the
+<li><p>Run post-process of phonopy with the Elk input file for the
 unit cell used in the step 1:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">elk</span> <span class="o">-</span><span class="n">c</span> <span class="n">elk</span><span class="o">-</span><span class="n">unitcell</span><span class="o">.</span><span class="ow">in</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
@@ -217,7 +215,7 @@ unit cell used in the step 1:</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.<br/>
     </p>
   </div>
 </footer>

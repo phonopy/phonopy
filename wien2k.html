@@ -2,9 +2,8 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Wien2k &amp; phonopy calculation &#8212; Phonopy v.2.1.4</title>
+    <meta charset="utf-8" />
+    <title>Wien2k &amp; phonopy calculation &#8212; Phonopy v.2.2.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -142,7 +141,7 @@
 <h2>How to run<a class="headerlink" href="#how-to-run" title="Permalink to this headline">¶</a></h2>
 <p>The Wien2k-phonopy calculation works as follows:</p>
 <ol class="arabic">
-<li><p class="first">Read a Wien2k struct file with the P lattice format and create
+<li><p>Read a Wien2k struct file with the P lattice format and create
 supercells with the Wien2k struct format of P lattice using
 <code class="docutils literal notranslate"><span class="pre">--wien2k</span></code> option (<a class="reference internal" href="command-options.html#wien2k-mode"><span class="std std-ref">--wien2k</span></a>):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">wien2k</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">-</span><span class="n">c</span> <span class="n">case</span><span class="o">.</span><span class="n">struct</span>
@@ -155,21 +154,19 @@ respectively. Perhaps these are renamed to <code class="docutils literal notrans
 stored in <code class="docutils literal notranslate"><span class="pre">case-xxx</span></code> directories, then to be calculated using
 Wien2k.</p>
 </li>
-<li><p class="first">Calculate forces on atoms in the supercells with displacements. It
+<li><p>Calculate forces on atoms in the supercells with displacements. It
 is necessary to use <code class="docutils literal notranslate"><span class="pre">case.struct_nn</span></code> file when running
 <code class="docutils literal notranslate"><span class="pre">init_lapw</span></code>. Note that <code class="docutils literal notranslate"><span class="pre">case.struct_sgroup</span></code> file can’t be used
 with phonopy. In the Wien2k calculations, the force convergence
 option of <code class="docutils literal notranslate"><span class="pre">-fc</span></code> has to be specified to obtain <code class="docutils literal notranslate"><span class="pre">total</span> <span class="pre">forces</span></code>. A
 first attempt of the force convergence criterion may be 0.1
 (mRy/a.u.). It is recommended to try more strict convergence
-criteria with saving one by one using <code class="docutils literal notranslate"><span class="pre">save_lapw</span></code>.</p>
-</li>
-<li><p class="first">Create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code></p>
+criteria with saving one by one using <code class="docutils literal notranslate"><span class="pre">save_lapw</span></code>.</p></li>
+<li><p>Create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code></p>
 <ul>
-<li><p class="first">Use <code class="docutils literal notranslate"><span class="pre">scf2forces</span></code> that is found at
-<a class="reference external" href="http://www.wien2k.at/reg_user/unsupported/">http://www.wien2k.at/reg_user/unsupported/</a>.</p>
-</li>
-<li><p class="first">Or try experimetal support of <code class="docutils literal notranslate"><span class="pre">-f</span></code> option:</p>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">scf2forces</span></code> that is found at
+<a class="reference external" href="http://www.wien2k.at/reg_user/unsupported/">http://www.wien2k.at/reg_user/unsupported/</a>.</p></li>
+<li><p>Or try experimetal support of <code class="docutils literal notranslate"><span class="pre">-f</span></code> option:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">wien2k</span> <span class="o">-</span><span class="n">f</span> <span class="n">case</span><span class="o">-</span><span class="mf">001.</span><span class="n">scf</span> <span class="n">case</span><span class="o">-</span><span class="mf">002.</span><span class="n">scf</span> <span class="o">...</span>
 </pre></div>
 </div>
@@ -191,7 +188,7 @@ case. An example is found in <code class="docutils literal notranslate"><span cl
 </li>
 </ul>
 </li>
-<li><p class="first">Run post-process of phonopy with the Wien2k unit cell struct file
+<li><p>Run post-process of phonopy with the Wien2k unit cell struct file
 used in the step 1:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">wien2k</span> <span class="o">-</span><span class="n">c</span> <span class="n">case</span><span class="o">.</span><span class="n">struct</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="p">[</span><span class="n">other</span><span class="o">-</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="p">[</span><span class="n">setting</span><span class="o">-</span><span class="n">file</span><span class="p">]</span>
 </pre></div>
@@ -225,7 +222,7 @@ be done using <code class="docutils literal notranslate"><span class="pre">super
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.<br/>
     </p>
   </div>
 </footer>

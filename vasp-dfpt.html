@@ -2,9 +2,8 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>VASP-DFPT &amp; phonopy calculation &#8212; Phonopy v.2.1.4</title>
+    <meta charset="utf-8" />
+    <title>VASP-DFPT &amp; phonopy calculation &#8212; Phonopy v.2.2.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -143,7 +142,7 @@
 <p>VASP can calculate force constants in real space using DFPT. The
 procedure to calculate phonon properties may be as follows:</p>
 <ol class="arabic">
-<li><p class="first">Prepare unit cell structure named, e.g., <code class="docutils literal notranslate"><span class="pre">POSCAR-unitcell</span></code>. The
+<li><p>Prepare unit cell structure named, e.g., <code class="docutils literal notranslate"><span class="pre">POSCAR-unitcell</span></code>. The
 following structure is a conventional unit cell of NaCl.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Na</span> <span class="n">Cl</span>
    <span class="mf">1.00000000000000</span>
@@ -163,19 +162,19 @@ following structure is a conventional unit cell of NaCl.</p>
 </pre></div>
 </div>
 </li>
-<li><p class="first">Prepare a perfect supercell structure from <code class="docutils literal notranslate"><span class="pre">POSCAR-unitcell</span></code>,
+<li><p>Prepare a perfect supercell structure from <code class="docutils literal notranslate"><span class="pre">POSCAR-unitcell</span></code>,
 e.g.,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">-</span><span class="n">c</span> <span class="n">POSCAR</span><span class="o">-</span><span class="n">unitcell</span>
 </pre></div>
 </div>
 </li>
-<li><p class="first">Rename <code class="docutils literal notranslate"><span class="pre">SPOSCAR</span></code> created in (2) to
+<li><p>Rename <code class="docutils literal notranslate"><span class="pre">SPOSCAR</span></code> created in (2) to
 <code class="docutils literal notranslate"><span class="pre">POSCAR</span></code> (<code class="docutils literal notranslate"><span class="pre">POSCAR-{number}</span></code> and <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> files will never be used.)</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">mv</span> <span class="n">SPOSCAR</span> <span class="n">POSCAR</span>
 </pre></div>
 </div>
 </li>
-<li><p class="first">Calculate force constants of the perfect supercell by running VASP
+<li><p>Calculate force constants of the perfect supercell by running VASP
 with <code class="docutils literal notranslate"><span class="pre">IBRION</span> <span class="pre">=</span> <span class="pre">8</span></code> and <code class="docutils literal notranslate"><span class="pre">NSW</span> <span class="pre">=</span> <span class="pre">1</span></code>. An example of <code class="docutils literal notranslate"><span class="pre">INCAR</span></code> for
 insulator may be such like (<strong>just an example!</strong>):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">PREC</span> <span class="o">=</span> <span class="n">Accurate</span>
@@ -191,13 +190,13 @@ insulator may be such like (<strong>just an example!</strong>):</p>
 </pre></div>
 </div>
 </li>
-<li><p class="first">After finishing the VASP calculation, confirm <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>
+<li><p>After finishing the VASP calculation, confirm <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code>
 contains <code class="docutils literal notranslate"><span class="pre">hessian</span></code> elements, and then create <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">fc</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span>
 </pre></div>
 </div>
 </li>
-<li><p class="first">Run phonopy with the original unit cell <code class="docutils literal notranslate"><span class="pre">POSCAR-unitcell</span></code> and
+<li><p>Run phonopy with the original unit cell <code class="docutils literal notranslate"><span class="pre">POSCAR-unitcell</span></code> and
 setting tag <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">READ</span></code> or <code class="docutils literal notranslate"><span class="pre">--readfc</span></code> option,
 e.g., as found in <code class="docutils literal notranslate"><span class="pre">example/NaCl-VASPdfpt</span></code></p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">-</span><span class="n">c</span> <span class="n">POSCAR</span><span class="o">-</span><span class="n">unitcell</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
@@ -252,7 +251,7 @@ e.g., as found in <code class="docutils literal notranslate"><span class="pre">e
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.<br/>
     </p>
   </div>
 </footer>

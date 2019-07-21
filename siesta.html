@@ -2,9 +2,8 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Siesta &amp; phonopy calculation &#8212; Phonopy v.2.1.4</title>
+    <meta charset="utf-8" />
+    <title>Siesta &amp; phonopy calculation &#8212; Phonopy v.2.2.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -152,7 +151,7 @@ More tags may be supported on request.</p>
 <h2>How to run<a class="headerlink" href="#how-to-run" title="Permalink to this headline">¶</a></h2>
 <p>The procedure of a Siesta-phonopy calculation is the following:</p>
 <ol class="arabic">
-<li><p class="first">Read a Siesta input file and create supercells with
+<li><p>Read a Siesta input file and create supercells with
 <a class="reference internal" href="command-options.html#siesta-mode"><span class="std std-ref">--siesta</span></a> option:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">siesta</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">-</span><span class="n">c</span> <span class="n">Si</span><span class="o">.</span><span class="n">fdf</span>
 </pre></div>
@@ -166,13 +165,12 @@ information on displacements. Perhaps the supercell files are
 stored in <code class="docutils literal notranslate"><span class="pre">disp-xxx</span></code> directories, then Siesta calculations are
 executed in these directories.</p>
 </li>
-<li><p class="first">Calculate forces on atoms in the supercells with
+<li><p>Calculate forces on atoms in the supercells with
 displacements. Calculation specification tags have to be added to
 <code class="docutils literal notranslate"><span class="pre">supercell-xxx.in</span></code> files. Crystal structure is not allowed to relax
 in the force calculations, because atomic forces induced by a small
-atomic displacement are what we need for the phonon calculation.</p>
-</li>
-<li><p class="first">Create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> by</p>
+atomic displacement are what we need for the phonon calculation.</p></li>
+<li><p>Create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> by</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">siesta</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">Si</span><span class="o">.</span><span class="n">FA</span> <span class="o">...</span>
 </pre></div>
 </div>
@@ -182,7 +180,7 @@ located in the current directory because the atomic displacements are
 written into the FORCE_SETS file. An example is found in
 <code class="docutils literal notranslate"><span class="pre">example/Si-siesta</span></code>.</p>
 </li>
-<li><p class="first">Run post-process of phonopy with the Siesta input file for the
+<li><p>Run post-process of phonopy with the Siesta input file for the
 unit cell used in the step 1:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">siesta</span> <span class="o">-</span><span class="n">c</span> <span class="n">Si</span><span class="o">.</span><span class="n">fdf</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
@@ -216,7 +214,7 @@ unit cell used in the step 1:</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.<br/>
     </p>
   </div>
 </footer>

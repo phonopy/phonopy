@@ -2,9 +2,8 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Input files &#8212; Phonopy v.2.1.4</title>
+    <meta charset="utf-8" />
+    <title>Input files &#8212; Phonopy v.2.2.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -164,29 +163,34 @@
 <h1>Input files<a class="headerlink" href="#input-files" title="Permalink to this headline">¶</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><a class="reference internal" href="#setting-file" id="id4">Setting file</a></li>
-<li><a class="reference internal" href="#structure-file-poscar" id="id5">Structure file (<code class="docutils literal notranslate"><span class="pre">POSCAR</span></code>)</a><ul>
-<li><a class="reference internal" href="#example-of-rutile-type-silicon-oxide-crystal-structure-1" id="id6">Example of rutile-type silicon oxide crystal structure (1)</a></li>
-<li><a class="reference internal" href="#example-of-rutile-type-silicon-oxide-crystal-structure-2" id="id7">Example of rutile-type silicon oxide crystal structure (2)</a></li>
+<li><p><a class="reference internal" href="#setting-file" id="id4">Setting file</a></p></li>
+<li><p><a class="reference internal" href="#structure-file-poscar" id="id5">Structure file (<code class="docutils literal notranslate"><span class="pre">POSCAR</span></code>)</a></p>
+<ul>
+<li><p><a class="reference internal" href="#example-of-rutile-type-silicon-oxide-crystal-structure-1" id="id6">Example of rutile-type silicon oxide crystal structure (1)</a></p></li>
+<li><p><a class="reference internal" href="#example-of-rutile-type-silicon-oxide-crystal-structure-2" id="id7">Example of rutile-type silicon oxide crystal structure (2)</a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#force-file-force-sets" id="id8">Force file (<code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>)</a><ul>
-<li><a class="reference internal" href="#example" id="id9">Example</a></li>
+<li><p><a class="reference internal" href="#force-file-force-sets" id="id8">Force file (<code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>)</a></p>
+<ul>
+<li><p><a class="reference internal" href="#example" id="id9">Example</a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#force-constants-and-force-constants-hdf5" id="id10"><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> and <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code></a><ul>
-<li><a class="reference internal" href="#format-of-force-constants" id="id11">Format of <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a></li>
-<li><a class="reference internal" href="#id1" id="id12">Example</a></li>
-<li><a class="reference internal" href="#format-of-force-constants-hdf5" id="id13">Format of <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code></a></li>
+<li><p><a class="reference internal" href="#force-constants-and-force-constants-hdf5" id="id10"><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> and <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code></a></p>
+<ul>
+<li><p><a class="reference internal" href="#format-of-force-constants" id="id11">Format of <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a></p></li>
+<li><p><a class="reference internal" href="#id1" id="id12">Example</a></p></li>
+<li><p><a class="reference internal" href="#format-of-force-constants-hdf5" id="id13">Format of <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code></a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#qpoints-optional" id="id14"><code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code> (optional)</a><ul>
-<li><a class="reference internal" href="#id2" id="id15">Example</a></li>
+<li><p><a class="reference internal" href="#qpoints-optional" id="id14"><code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code> (optional)</a></p>
+<ul>
+<li><p><a class="reference internal" href="#id2" id="id15">Example</a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#born-optional" id="id16"><code class="docutils literal notranslate"><span class="pre">BORN</span></code> (optional)</a><ul>
-<li><a class="reference internal" href="#format" id="id17">Format</a></li>
-<li><a class="reference internal" href="#id3" id="id18">Example</a></li>
+<li><p><a class="reference internal" href="#born-optional" id="id16"><code class="docutils literal notranslate"><span class="pre">BORN</span></code> (optional)</a></p>
+<ul>
+<li><p><a class="reference internal" href="#format" id="id17">Format</a></p></li>
+<li><p><a class="reference internal" href="#id3" id="id18">Example</a></p></li>
 </ul>
 </li>
 </ul>
@@ -312,8 +316,8 @@ use <code class="docutils literal notranslate"><span class="pre">q2r.x</span></c
 instraction shown at <a class="reference internal" href="qe.html#qe-q2r"><span class="std std-ref">Using q2r.x to create phonopy force constants file</span></a></p>
 <p>Force constants are stored in either array shape of</p>
 <ul class="simple">
-<li>Compact format: <code class="docutils literal notranslate"><span class="pre">(n_patom,</span> <span class="pre">n_satom,</span> <span class="pre">3,</span> <span class="pre">3)</span></code></li>
-<li>Full format: <code class="docutils literal notranslate"><span class="pre">(n_satom,</span> <span class="pre">n_satom,</span> <span class="pre">3,</span> <span class="pre">3)</span></code></li>
+<li><p>Compact format: <code class="docutils literal notranslate"><span class="pre">(n_patom,</span> <span class="pre">n_satom,</span> <span class="pre">3,</span> <span class="pre">3)</span></code></p></li>
+<li><p>Full format: <code class="docutils literal notranslate"><span class="pre">(n_satom,</span> <span class="pre">n_satom,</span> <span class="pre">3,</span> <span class="pre">3)</span></code></p></li>
 </ul>
 <p>where <code class="docutils literal notranslate"><span class="pre">n_satom</span></code> and <code class="docutils literal notranslate"><span class="pre">n_patom</span></code> are the numbers of atoms in
 supercell and primitive cell, respectively.</p>
@@ -544,7 +548,7 @@ file.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.<br/>
     </p>
   </div>
 </footer>

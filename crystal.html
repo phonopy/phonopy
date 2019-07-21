@@ -2,9 +2,8 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>CRYSTAL &amp; phonopy calculation &#8212; Phonopy v.2.1.4</title>
+    <meta charset="utf-8" />
+    <title>CRYSTAL &amp; phonopy calculation &#8212; Phonopy v.2.2.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -169,7 +168,7 @@ Si example found in <code class="docutils literal notranslate"><span class="pre"
 This is the default for the CRYSTAL interface, so, the <code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">crystal.o</span></code>
 parameter is not needed</p>
 <ol class="arabic">
-<li><p class="first">Create supercells with <a class="reference internal" href="command-options.html#crystal-mode"><span class="std std-ref">--crystal</span></a> option:</p>
+<li><p>Create supercells with <a class="reference internal" href="command-options.html#crystal-mode"><span class="std std-ref">--crystal</span></a> option:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;4 4 4&quot;</span>
 </pre></div>
 </div>
@@ -182,16 +181,16 @@ about the supercell and the displacements.</p>
 <p>In the case of the Si example, files <code class="docutils literal notranslate"><span class="pre">supercell-001.d12</span></code> and
 <code class="docutils literal notranslate"><span class="pre">supercell-001.ext</span></code> will be created.</p>
 </li>
-<li><p class="first">To make valid CRYSTAL input files, there are two possible options:</p>
+<li><p>To make valid CRYSTAL input files, there are two possible options:</p>
 <ol class="loweralpha simple">
-<li>Manually: modify the generated supercell-xxx.d12 files by replacing
+<li><p>Manually: modify the generated supercell-xxx.d12 files by replacing
 the line <code class="docutils literal notranslate"><span class="pre">Insert</span> <span class="pre">basis</span> <span class="pre">sets</span> <span class="pre">and</span> <span class="pre">parameters</span> <span class="pre">here</span></code> with the
-basis set and computational parameters.</li>
-<li>Recommended option: before generating the supercells, include a file named
+basis set and computational parameters.</p></li>
+<li><p>Recommended option: before generating the supercells, include a file named
 <code class="docutils literal notranslate"><span class="pre">TEMPLATE</span></code> in the current directory. This file should contain the
 basis sets and computational parameters for CRYSTAL (see the Si example).
 When phonopy finds this file, it automatically generates complete
-CRYSTAL input files in the step 1</li>
+CRYSTAL input files in the step 1</p></li>
 </ol>
 <p>Note that supercells with displacements must not be relaxed in the
 force calculations, because atomic forces induced by a small atomic
@@ -204,7 +203,7 @@ atoms, e.g., as follows:</p>
 </pre></div>
 </div>
 </li>
-<li><p class="first">To create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file required by phonopy,
+<li><p>To create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file required by phonopy,
 the following command is executed:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">-</span><span class="n">f</span> <span class="n">supercell</span><span class="o">-</span><span class="mf">001.</span><span class="n">o</span>
 </pre></div>
@@ -217,7 +216,7 @@ directory because the information on atomic displacements stored in
 <code class="docutils literal notranslate"><span class="pre">phonopy-disp.yaml</span></code> are used to generate <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>. See some more
 detail at <a class="reference internal" href="command-options.html#crystal-force-sets-option"><span class="std std-ref">CRYSTAL interface</span></a>.</p>
 </li>
-<li><p class="first">Now, Phonopy post-prcessing commands can be run. <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> is
+<li><p>Now, Phonopy post-prcessing commands can be run. <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> is
 automatically read in. Create phonon dispersion plot with:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;4 4 4&quot;</span> <span class="o">-</span><span class="n">p</span> <span class="o">-</span><span class="n">s</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
         <span class="n">_</span>
@@ -278,7 +277,7 @@ the structure optimization has converged to a true local minimum.
 (see the FREQCALC-INTENS-INTCPHF block in the beginning of <code class="docutils literal notranslate"><span class="pre">crystal.o</span></code>)</p>
 <p>The workflow is very similar to the Si example below:</p>
 <ol class="arabic">
-<li><p class="first">Create displaced supercells:</p>
+<li><p>Create displaced supercells:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;4 4 4&quot;</span> <span class="o">-</span><span class="n">d</span>
 </pre></div>
 </div>
@@ -295,7 +294,7 @@ but have the necessary data from some other source, you can create
 the <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file manually following the <code class="docutils literal notranslate"><span class="pre">BORN</span></code> format
 (<a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a>).</p>
 </li>
-<li><p class="first">Create <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file with <code class="docutils literal notranslate"><span class="pre">phonopy-crystal-born</span></code> script:</p>
+<li><p>Create <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file with <code class="docutils literal notranslate"><span class="pre">phonopy-crystal-born</span></code> script:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonopy</span><span class="o">-</span><span class="n">crystal</span><span class="o">-</span><span class="n">born</span> <span class="o">&gt;</span> <span class="n">BORN</span>
 </pre></div>
 </div>
@@ -312,14 +311,13 @@ The <code class="docutils literal notranslate"><span class="pre">BORN</span></co
 the necessary data from some other source, you can create the <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file
 manually following the <code class="docutils literal notranslate"><span class="pre">BORN</span></code> format (<a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a>).</p>
 </li>
-<li><p class="first">Run the supercell inputs with CRYSTAL as in the Si example above.</p>
-</li>
-<li><p class="first">Collect forces:</p>
+<li><p>Run the supercell inputs with CRYSTAL as in the Si example above.</p></li>
+<li><p>Collect forces:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">-</span><span class="n">f</span> <span class="n">supercell</span><span class="o">-*</span><span class="n">o</span>
 </pre></div>
 </div>
 </li>
-<li><p class="first">Calculate phonon dispersion data into band.yaml and save band.pdf,
+<li><p>Calculate phonon dispersion data into band.yaml and save band.pdf,
 using non-analytical correction <code class="docutils literal notranslate"><span class="pre">--nac</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;4 4 4&quot;</span> <span class="o">-</span><span class="n">p</span> <span class="o">-</span><span class="n">s</span> <span class="o">--</span><span class="n">nac</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
@@ -351,7 +349,7 @@ using non-analytical correction <code class="docutils literal notranslate"><span
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.<br/>
     </p>
   </div>
 </footer>

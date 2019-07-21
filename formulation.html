@@ -2,9 +2,8 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Formulations &#8212; Phonopy v.2.1.4</title>
+    <meta charset="utf-8" />
+    <title>Formulations &#8212; Phonopy v.2.2.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -170,35 +169,39 @@
 <span id="id1"></span><h1>Formulations<a class="headerlink" href="#formulations" title="Permalink to this headline">¶</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><a class="reference internal" href="#second-order-force-constants" id="id5">Second-order force constants</a></li>
-<li><a class="reference internal" href="#modified-parlinski-li-kawazoe-method" id="id6">Modified Parlinski-Li-Kawazoe method</a></li>
-<li><a class="reference internal" href="#dynamical-matrix" id="id7">Dynamical matrix</a></li>
-<li><a class="reference internal" href="#non-analytical-term-correction" id="id8">Non-analytical term correction</a></li>
-<li><a class="reference internal" href="#thermodynamic-properties" id="id9">Thermodynamic properties</a><ul>
-<li><a class="reference internal" href="#phonon-number" id="id10">Phonon number</a></li>
-<li><a class="reference internal" href="#harmonic-phonon-energy" id="id11">Harmonic phonon energy</a></li>
-<li><a class="reference internal" href="#constant-volume-heat-capacity" id="id12">Constant volume heat capacity</a></li>
-<li><a class="reference internal" href="#partition-function" id="id13">Partition function</a></li>
-<li><a class="reference internal" href="#helmholtz-free-energy" id="id14">Helmholtz free energy</a></li>
-<li><a class="reference internal" href="#entropy" id="id15">Entropy</a></li>
+<li><p><a class="reference internal" href="#second-order-force-constants" id="id5">Second-order force constants</a></p></li>
+<li><p><a class="reference internal" href="#modified-parlinski-li-kawazoe-method" id="id6">Modified Parlinski-Li-Kawazoe method</a></p></li>
+<li><p><a class="reference internal" href="#dynamical-matrix" id="id7">Dynamical matrix</a></p></li>
+<li><p><a class="reference internal" href="#non-analytical-term-correction" id="id8">Non-analytical term correction</a></p></li>
+<li><p><a class="reference internal" href="#thermodynamic-properties" id="id9">Thermodynamic properties</a></p>
+<ul>
+<li><p><a class="reference internal" href="#phonon-number" id="id10">Phonon number</a></p></li>
+<li><p><a class="reference internal" href="#harmonic-phonon-energy" id="id11">Harmonic phonon energy</a></p></li>
+<li><p><a class="reference internal" href="#constant-volume-heat-capacity" id="id12">Constant volume heat capacity</a></p></li>
+<li><p><a class="reference internal" href="#partition-function" id="id13">Partition function</a></p></li>
+<li><p><a class="reference internal" href="#helmholtz-free-energy" id="id14">Helmholtz free energy</a></p></li>
+<li><p><a class="reference internal" href="#entropy" id="id15">Entropy</a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#thermal-displacement" id="id16">Thermal displacement</a><ul>
-<li><a class="reference internal" href="#mean-square-displacement" id="id17">Mean square displacement</a></li>
-<li><a class="reference internal" href="#mean-square-displacement-matrix" id="id18">Mean square displacement matrix</a></li>
-<li><a class="reference internal" href="#projection-to-an-arbitrary-axis" id="id19">Projection to an arbitrary axis</a></li>
-<li><a class="reference internal" href="#mean-square-displacement-matrix-in-cif-format" id="id20">Mean square displacement matrix in cif format</a></li>
+<li><p><a class="reference internal" href="#thermal-displacement" id="id16">Thermal displacement</a></p>
+<ul>
+<li><p><a class="reference internal" href="#mean-square-displacement" id="id17">Mean square displacement</a></p></li>
+<li><p><a class="reference internal" href="#mean-square-displacement-matrix" id="id18">Mean square displacement matrix</a></p></li>
+<li><p><a class="reference internal" href="#projection-to-an-arbitrary-axis" id="id19">Projection to an arbitrary axis</a></p></li>
+<li><p><a class="reference internal" href="#mean-square-displacement-matrix-in-cif-format" id="id20">Mean square displacement matrix in cif format</a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#group-velocity" id="id21">Group velocity</a><ul>
-<li><a class="reference internal" href="#method" id="id22">Method</a></li>
-<li><a class="reference internal" href="#finite-difference-method" id="id23">Finite difference method</a></li>
+<li><p><a class="reference internal" href="#group-velocity" id="id21">Group velocity</a></p>
+<ul>
+<li><p><a class="reference internal" href="#method" id="id22">Method</a></p></li>
+<li><p><a class="reference internal" href="#finite-difference-method" id="id23">Finite difference method</a></p></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#physical-unit-conversion" id="id24">Physical unit conversion</a></li>
-<li><a class="reference internal" href="#crystal-structure" id="id25">Crystal structure</a><ul>
-<li><a class="reference internal" href="#coordinates-in-direct-and-reciprocal-spaces" id="id26">Coordinates in direct and reciprocal spaces</a></li>
-<li><a class="reference internal" href="#commensurate-points" id="id27">Commensurate points</a></li>
+<li><p><a class="reference internal" href="#physical-unit-conversion" id="id24">Physical unit conversion</a></p></li>
+<li><p><a class="reference internal" href="#crystal-structure" id="id25">Crystal structure</a></p>
+<ul>
+<li><p><a class="reference internal" href="#coordinates-in-direct-and-reciprocal-spaces" id="id26">Coordinates in direct and reciprocal spaces</a></p></li>
+<li><p><a class="reference internal" href="#commensurate-points" id="id27">Commensurate points</a></p></li>
 </ul>
 </li>
 </ul>
@@ -724,7 +727,7 @@ the elements of <span class="math notranslate nohighlight">\(\boldsymbol{P}^{\ma
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.<br/>
     </p>
   </div>
 </footer>
