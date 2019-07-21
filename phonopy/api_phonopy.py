@@ -43,7 +43,8 @@ from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
 from phonopy.structure.cells import (get_supercell, get_primitive,
                                      guess_primitive_matrix)
 from phonopy.harmonic.displacement import (get_least_displacements,
-                                           directions_to_displacement_dataset)
+                                           directions_to_displacement_dataset,
+                                           get_random_displacements_dataset)
 from phonopy.harmonic.force_constants import (
     get_fc2,
     symmetrize_force_constants,
@@ -467,8 +468,7 @@ class Phonopy(object):
                     'forces': forces on atoms in supercell},
                    {...}, ...]}
             Type 2. All atomic displacements in each supercell:
-                {'natom': number of atoms in supercell,
-                 'displacements': ndarray, dtype='double', order='C',
+                {'displacements': ndarray, dtype='double', order='C',
                                   shape=(supercells, natom, 3)
                  'forces': ndarray, dtype='double',, order='C',
                                   shape=(supercells, natom, 3)}
@@ -484,6 +484,8 @@ class Phonopy(object):
                 if dataset['displacements'].ndim in (1, 2):
                     d = dataset['displacements'].reshape((-1, natom, 3))
                     dataset['displacements'] = d
+
+        if 'forces' in dataset:
             if type(dataset['forces']) is np.ndarray:
                 if dataset['forces'].ndim in (1, 2):
                     f = dataset['forces'].reshape((-1, natom, 3))
@@ -571,19 +573,28 @@ class Phonopy(object):
                                distance=0.01,
                                is_plusminus='auto',
                                is_diagonal=True,
-                               is_trigonal=False):
+                               is_trigonal=False,
+                               num_random_displacements=None,
+                               random_seed=None):
         """Generate displacement dataset"""
-        displacement_directions = get_least_displacements(
-            self._symmetry,
-            is_plusminus=is_plusminus,
-            is_diagonal=is_diagonal,
-            is_trigonal=is_trigonal,
-            log_level=self._log_level)
-        displacement_dataset = directions_to_displacement_dataset(
-            displacement_directions,
-            distance,
-            self._supercell)
-        self.set_displacement_dataset(displacement_dataset)
+        if np.issubdtype(type(num_random_displacements), np.integer):
+            displacement_dataset = get_random_displacements_dataset(
+                num_random_displacements,
+                distance,
+                self._supercell.get_number_of_atoms(),
+                random_seed=random_seed)
+        else:
+            displacement_directions = get_least_displacements(
+                self._symmetry,
+                is_plusminus=is_plusminus,
+                is_diagonal=is_diagonal,
+                is_trigonal=is_trigonal,
+                log_level=self._log_level)
+            displacement_dataset = directions_to_displacement_dataset(
+                displacement_directions,
+                distance,
+                self._supercell)
+        self.dataset = displacement_dataset
 
     def produce_force_constants(self,
                                 forces=None,
@@ -2655,10 +2666,20 @@ class Phonopy(object):
                                         self._symprec)
 
     def _build_supercells_with_displacements(self):
+        all_positions = []
+        if 'first_atoms' in self._displacement_dataset:  # type-1
+            for disp in self._displacement_dataset['first_atoms']:
+                positions = self._supercell.get_positions()
+                positions[disp['number']] += disp['displacement']
+                all_positions.append(positions)
+        elif 'displacements' in self._displacement_dataset:
+            for disp in self._displacement_dataset['displacements']:
+                all_positions.append(self._supercell.positions + disp)
+        else:
+            raise RuntimeError("displacement_dataset is not set.")
+
         supercells = []
-        for disp in self._displacement_dataset['first_atoms']:
-            positions = self._supercell.get_positions()
-            positions[disp['number']] += disp['displacement']
+        for positions in all_positions:
             supercells.append(PhonopyAtoms(
                     numbers=self._supercell.get_atomic_numbers(),
                     masses=self._supercell.get_masses(),
@@ -2666,7 +2687,6 @@ class Phonopy(object):
                     positions=positions,
                     cell=self._supercell.get_cell(),
                     pbc=True))
-
         self._supercells_with_displacements = supercells
 
     def _build_primitive_cell(self):

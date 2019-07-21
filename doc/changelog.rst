@@ -3,6 +3,11 @@
 Change Log
 ==========
 
+Jul-21-2019: Version 2.2.0
+---------------------------
+* Collection of minor updates.
+* Spglib update to v1.13.0.
+
 Jun-19-2019: Version 2.1.4
 ---------------------------
 * `Bug fix <https://github.com/atztogo/phonopy/pull/96>`_ of

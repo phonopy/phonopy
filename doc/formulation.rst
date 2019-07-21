@@ -312,13 +312,13 @@ Physical unit conversion
 Phonopy calculates phonon frequencies based on input values from
 users. In the default case, the physical units of distance, atomic
 mass, force, and force constants are supposed to be
-:math:`\text{\AA}`, :math:`\text{AMU}`, :math:`\text{eV/\AA}`, and
-:math:`\text{eV/\AA}^2`, respectively, and the physical unit of the
+:math:`\text{Angstrom}`, :math:`\text{AMU}`, :math:`\text{eV/Angstrom}`, and
+:math:`\text{eV/Angstrom}^2`, respectively, and the physical unit of the
 phonon frequency is converted to THz. This conversion is made as
 follows:
 
 Internally phonon frequency has the physical unit of
-:math:`\sqrt{\text{eV/}(\text{\AA}^2\cdot \text{AMU})}` in angular
+:math:`\sqrt{\text{eV/}(\text{Angstrom}^2\cdot \text{AMU})}` in angular
 frequency. To convert this unit to THz (not angular frequency), the
 calculation of ``sqrt(EV/AMU)/Angstrom/(2*pi)/1e12`` is made. ``EV``,
 ``AMU``, ``Angstrom`` are the values to convert them to those in the
@@ -344,9 +344,9 @@ constants:
 
 is :math:`[\text{hartree}/\text{bohr}^2]`. In the default case for the
 VASP interface, internally :math:`\Omega_0` is given in
-:math:`\text{\AA}^3`. In total, the necessary unit conversion is
+:math:`\text{Angstrom}^3`. In total, the necessary unit conversion is
 :math:`(\text{hartree} \rightarrow \text{eV}) \times (\text{bohr}
-\rightarrow \text{\AA})=14.4`. In the default case of the Wien2k
+\rightarrow \text{Angstrom})=14.4`. In the default case of the Wien2k
 interface, the conversion factor is :math:`(\text{hartree}
 \rightarrow \text{mRy})=2000`. For the other interfaces, the
 conversion factors are similarly calculated following the unit

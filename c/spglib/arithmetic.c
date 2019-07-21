@@ -150,7 +150,7 @@ int arth_get_symbol(char symbol[7], const int spgroup_number)
   }
 
   arth_number = arithmetic_crystal_classes[spgroup_number];
-  strcpy(symbol, arithmetic_crystal_class_symbols[arth_number]);
+  memcpy(symbol, arithmetic_crystal_class_symbols[arth_number], 7);
   for (i = 0; i < 6; i++) {
     if (symbol[i] == ' ') {symbol[i] = '\0';}
   }

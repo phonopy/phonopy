@@ -627,7 +627,7 @@ int spg_get_pointgroup(char symbol[6],
     return 0;
   }
 
-  strcpy(symbol, pointgroup.symbol);
+  memcpy(symbol, pointgroup.symbol, 6);
 
   spglib_error_code = SPGLIB_SUCCESS;
   return pointgroup.number;
@@ -688,18 +688,18 @@ SpglibSpacegroupType spg_get_spacegroup_type(const int hall_number)
   if (0 < hall_number && hall_number < 531) {
     spgtype = spgdb_get_spacegroup_type(hall_number);
     spglibtype.number = spgtype.number;
-    strcpy(spglibtype.schoenflies, spgtype.schoenflies);
-    strcpy(spglibtype.hall_symbol, spgtype.hall_symbol);
-    strcpy(spglibtype.choice, spgtype.choice);
-    strcpy(spglibtype.international, spgtype.international);
-    strcpy(spglibtype.international_full, spgtype.international_full);
-    strcpy(spglibtype.international_short, spgtype.international_short);
+    memcpy(spglibtype.schoenflies, spgtype.schoenflies, 7);
+    memcpy(spglibtype.hall_symbol, spgtype.hall_symbol, 17);
+    memcpy(spglibtype.choice, spgtype.choice, 6);
+    memcpy(spglibtype.international, spgtype.international, 32);
+    memcpy(spglibtype.international_full, spgtype.international_full, 20);
+    memcpy(spglibtype.international_short, spgtype.international_short, 11);
     pointgroup = ptg_get_pointgroup(spgtype.pointgroup_number);
-    strcpy(spglibtype.pointgroup_international, pointgroup.symbol);
-    strcpy(spglibtype.pointgroup_schoenflies, pointgroup.schoenflies);
+    memcpy(spglibtype.pointgroup_international, pointgroup.symbol, 6);
+    memcpy(spglibtype.pointgroup_schoenflies, pointgroup.schoenflies, 4);
     arth_number = arth_get_symbol(arth_symbol, spgtype.number);
     spglibtype.arithmetic_crystal_class_number = arth_number;
-    strcpy(spglibtype.arithmetic_crystal_class_symbol, arth_symbol);
+    memcpy(spglibtype.arithmetic_crystal_class_symbol, arth_symbol, 7);
     spglib_error_code = SPGLIB_SUCCESS;
   } else {
     spglib_error_code = SPGERR_SPACEGROUP_SEARCH_FAILED;
@@ -1019,6 +1019,21 @@ void spg_get_dense_BZ_grid_points_by_rotations(size_t rot_grid_points[],
                                             bz_map);
 }
 
+int spg_relocate_BZ_grid_address(int bz_grid_address[][3],
+                                 int bz_map[],
+                                 SPGCONST int grid_address[][3],
+                                 const int mesh[3],
+                                 SPGCONST double rec_lattice[3][3],
+                                 const int is_shift[3])
+{
+  return kpt_relocate_BZ_grid_address(bz_grid_address,
+                                      bz_map,
+                                      grid_address,
+                                      mesh,
+                                      rec_lattice,
+                                      is_shift);
+}
+
 size_t spg_relocate_dense_BZ_grid_address(int bz_grid_address[][3],
                                           size_t bz_map[],
                                           SPGCONST int grid_address[][3],
@@ -1207,9 +1222,9 @@ static int set_dataset(SpglibDataset * dataset,
   dataset->n_atoms = cell->size;
   dataset->spacegroup_number = spacegroup->number;
   dataset->hall_number = spacegroup->hall_number;
-  strcpy(dataset->international_symbol, spacegroup->international_short);
-  strcpy(dataset->hall_symbol, spacegroup->hall_symbol);
-  strcpy(dataset->choice, spacegroup->choice);
+  memcpy(dataset->international_symbol, spacegroup->international_short, 11);
+  memcpy(dataset->hall_symbol, spacegroup->hall_symbol, 17);
+  memcpy(dataset->choice, spacegroup->choice, 6);
   mat_inverse_matrix_d3(inv_lat, spacegroup->bravais_lattice, 0);
   mat_multiply_matrix_d3(dataset->transformation_matrix,
                          inv_lat, cell->lattice);
@@ -1317,7 +1332,7 @@ static int set_dataset(SpglibDataset * dataset,
 
   /* dataset->pointgroup_number = spacegroup->pointgroup_number; */
   pointgroup = ptg_get_pointgroup(spacegroup->pointgroup_number);
-  strcpy(dataset->pointgroup_symbol, pointgroup.symbol);
+  memcpy(dataset->pointgroup_symbol, pointgroup.symbol, 6);
 
   return 1;
 
@@ -1882,7 +1897,8 @@ static int get_international(char symbol[11],
 
   if (dataset->spacegroup_number > 0) {
     number = dataset->spacegroup_number;
-    strcpy(symbol, dataset->international_symbol);
+    memcpy(symbol, dataset->international_symbol, 11);
+
     spg_free_dataset(dataset);
     dataset = NULL;
   } else {
@@ -1926,7 +1942,7 @@ static int get_schoenflies(char symbol[7],
   if (dataset->spacegroup_number > 0) {
     number = dataset->spacegroup_number;
     spgtype = spg_get_spacegroup_type(dataset->hall_number);
-    strcpy(symbol, spgtype.schoenflies);
+    memcpy(symbol, spgtype.schoenflies, 7);
     spg_free_dataset(dataset);
     dataset = NULL;
   } else {

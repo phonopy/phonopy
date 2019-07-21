@@ -1068,9 +1068,11 @@ class PhonopySettings(Settings):
         self._mesh_format = 'yaml'
         self._modulation = None
         self._moment_order = None
+        self._num_random_displacements = None
         self._pdos_indices = None
         self._pretend_real = False
         self._projection_direction = None
+        self._random_seed = None
         self._qpoints_format = 'yaml'
         self._read_force_constants = False
         self._readfc_format = 'text'
@@ -1288,6 +1290,12 @@ class PhonopySettings(Settings):
     def get_moment_order(self):
         return self._moment_order
 
+    def set_num_random_displacements(self, num_random_displacements):
+        self._num_random_displacements = num_random_displacements
+
+    def get_num_random_displacements(self):
+        return self._num_random_displacements
+
     def set_pdos_indices(self, indices):
         self._pdos_indices = indices
 
@@ -1311,6 +1319,12 @@ class PhonopySettings(Settings):
 
     def get_qpoints_format(self):
         return self._qpoints_format
+
+    def set_random_seed(self, random_seed):
+        self._random_seed = random_seed
+
+    def get_random_seed(self):
+        return self._random_seed
 
     def set_read_force_constants(self, read_force_constants):
         self._read_force_constants = read_force_constants
@@ -1588,6 +1602,18 @@ class PhonopyConfParser(ConfParser):
             if self._args.moment_order:
                 self._confs['moment_order'] = self._args.moment_order
 
+        if 'num_random_displacements' in arg_list:
+            nrand = self._args.num_random_displacements
+            if nrand:
+                self._confs['num_random_displacements'] = nrand
+
+        if 'random_seed' in arg_list:
+            if self._args.random_seed:
+                seed = self._args.random_seed
+                if (np.issubdtype(type(seed), np.integer) and
+                    seed >= 0 and seed < 2 ** 32):
+                    self._confs['random_seed'] = seed
+
         # Overwrite
         if 'is_check_symmetry' in arg_list:
             if self._args.is_check_symmetry:
@@ -1825,6 +1851,14 @@ class PhonopyConfParser(ConfParser):
 
             if conf_key == 'moment_order':
                 self.set_parameter('moment_order', int(confs['moment_order']))
+
+            # Number of supercells with random displacements
+            if conf_key == 'num_random_displacements':
+                self.set_parameter('num_random_displacements',
+                                   int(confs['num_random_displacements']))
+
+            if conf_key == 'random_seed':
+                self.set_parameter('random_seed', int(confs['random_seed']))
 
             # Use Lapack solver via Lapacke
             if conf_key == 'lapack_solver':
@@ -2135,6 +2169,14 @@ class PhonopyConfParser(ConfParser):
         if self._settings.get_is_moment():
             if 'moment_order' in params:
                 self._settings.set_moment_order(params['moment_order'])
+
+        # Number of supercells with random displacements
+        if 'num_random_displacements' in params:
+            self._settings.set_num_random_displacements(
+                params['num_random_displacements'])
+
+        if 'random_seed' in params:
+            self._settings.set_random_seed(params['random_seed'])
 
         # Use Lapack solver via Lapacke
         if 'lapack_solver' in params:
