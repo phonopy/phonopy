@@ -226,6 +226,39 @@ def determinant(a, b, c):
     return det
 
 
+def get_random_displacements_dataset(num_supercells,
+                                     distance,
+                                     num_atoms,
+                                     random_seed=None):
+    if (np.issubdtype(type(random_seed), np.integer) and
+        random_seed >= 0 and random_seed < 2 ** 32):
+        seed = random_seed
+    else:
+        seed = None
+
+    disps = get_random_directions(num_atoms * num_supercells,
+                                  random_seed=random_seed) * distance
+    supercell_disps = np.array(disps.reshape(num_supercells, num_atoms, 3),
+                               dtype='double', order='C')
+    dataset = {'displacements': supercell_disps}
+
+    if seed is not None:
+        dataset['random_seed'] = seed
+    return dataset
+
+
+def get_random_directions(num_atoms, random_seed=None):
+    """Returns random directions in sphere with radius 1"""
+
+    if (np.issubdtype(type(random_seed), np.integer) and
+        random_seed >= 0 and random_seed < 2 ** 32):
+        np.random.seed(random_seed)
+
+    xy = np.random.randn(3, num_atoms)
+    r = np.sqrt((xy ** 2).sum(axis=0))
+    return (xy / r).T
+
+
 def print_displacements(symmetry,
                         directions=directions_diag):
     displacements = get_least_displacements(symmetry, directions)

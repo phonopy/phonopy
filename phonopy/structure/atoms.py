@@ -274,6 +274,10 @@ class PhonopyAtoms(_Atoms):
             raise TypeError("Array shape of cell is not 3x3.")
 
     @property
+    def positions(self):
+        return self.get_positions()
+
+    @property
     def scaled_positions(self):
         return self._scaled_positions.copy()
 

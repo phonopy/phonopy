@@ -78,8 +78,8 @@ extern "C" {
   each translation is:
   [ t_a, t_b, t_c ]
 
-  symprec: Tolerance of atomic positions (in fractional coordinate)
-  in finding symmetry operations
+  symprec: Distance tolerance in Cartesian coordinates to find crystal
+           symmetry.
 
   ------------------------------------------------------------------
 
@@ -501,6 +501,12 @@ extern "C" {
 /* bz_map is used to recover grid point index expanded to include BZ */
 /* surface from grid address. The grid point indices are mapped to */
 /* (mesh[0] * 2) x (mesh[1] * 2) x (mesh[2] * 2) space (bz_map). */
+  int spg_relocate_BZ_grid_address(int bz_grid_address[][3],
+                                   int bz_map[],
+                                   SPGCONST int grid_address[][3],
+                                   const int mesh[3],
+                                   SPGCONST double rec_lattice[3][3],
+                                   const int is_shift[3]);
   size_t spg_relocate_dense_BZ_grid_address(int bz_grid_address[][3],
                                             size_t bz_map[],
                                             SPGCONST int grid_address[][3],

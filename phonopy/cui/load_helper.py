@@ -132,11 +132,11 @@ def set_force_constants(
         _dataset = parse_FORCE_SETS(natom=natom)
 
     if _dataset:
-        phonon.set_displacement_dataset(_dataset)
+        phonon.dataset = _dataset
         try:
             phonon.produce_force_constants(
                 calculate_full_force_constants=False,
-                use_alm=use_alm)
+                use_alm=(use_alm or 'forces' in phonon.dataset))
         except RuntimeError:
             pass
 

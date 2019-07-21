@@ -39,7 +39,7 @@ from phonopy.units import VaspToTHz, THzToEv, Kb, Hbar, AMU, EV, Angstrom, THz
 
 
 class RandomDisplacements(object):
-    """Generate Random displacements by Canonical ensenmble.
+    """Generate random displacements by Canonical ensenmble.
 
     Attributes
     ----------
@@ -59,16 +59,13 @@ class RandomDisplacements(object):
 
         Parameters
         ----------
-        supercell_matrix : array_like
-            Supercell matrix.
-            shape=(3, 3)
-            dtype='intc'
-        cutoff_frequency : float, optional
-            Above this cutoff frequency in THz, it is decided if each phonon
-            mode is included or not. Default is None but effectively 0.01 THz.
-        factor : float, optional
-            Unit conversion factor of phonon frequency to THz. Default is that
-            for the VASP unit system.
+        dynamical_matrix : DynamicalMatrix
+            Dynamical matrix class instance.
+        cutoff_frequency : float
+            Lowest phonon frequency below which frequency the phonon mode is
+            treated specially.
+        factor : float
+            Phonon frequency unit conversion factor
 
         """
 
