@@ -196,6 +196,10 @@ def _get_dataset_type1(f, is_translational_invariance):
     return dataset
 
 
+def get_dataset_type2(f, natom):
+    return _get_dataset_type2(f, natom)
+
+
 def _get_dataset_type2(f, natom):
     data = np.loadtxt(f, dtype='double')
     if data.shape[1] != 6 or (natom and data.shape[0] % natom != 0):
