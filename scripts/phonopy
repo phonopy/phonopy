@@ -257,9 +257,9 @@ def print_settings(settings,
                 print("  Plus Minus displacement: only one direction")
         if not settings.get_is_diagonal_displacement():
             print("  Diagonal displacement: off")
-        if settings.get_num_random_displacements():
+        if settings.get_random_displacements():
             print("  Number of supercells with random displacements: %d"
-                  % settings.get_num_random_displacements())
+                  % settings.get_random_displacements())
             if settings.get_random_seed() is not None:
                 print("  Random seed: %d" % settings.get_random_seed())
 
@@ -595,7 +595,7 @@ if run_mode == 'displacements':
         is_plusminus=settings.get_is_plusminus_displacement(),
         is_diagonal=settings.get_is_diagonal_displacement(),
         is_trigonal=settings.get_is_trigonal_displacement(),
-        num_random_displacements=settings.get_num_random_displacements(),
+        num_random_displacements=settings.get_random_displacements(),
         random_seed=settings.get_random_seed())
     displacements = phonon.get_displacements()
 

@@ -139,7 +139,6 @@ def get_parser():
         moment_order=None,
         nac_method=None,
         nac_q_direction=None,
-        num_random_displacemen=None,
         pdos=None,
         pretend_real=False,
         primitive_axes=None,
@@ -148,6 +147,7 @@ def get_parser():
         qpoints=None,
         qpoints_format=None,
         quiet=False,
+        random_displacemen=None,
         random_seed=None,
         read_fc_format=None,
         read_force_constants=False,
@@ -165,8 +165,8 @@ def get_parser():
         verbose=False,
         wien2k_mode=False,
         write_dynamical_matrices=False,
-        write_force_constants=False,
         write_fc_format=None,
+        write_force_constants=False,
         write_mesh=True)
 
     parser.add_argument(
@@ -364,14 +364,15 @@ def get_parser():
         "--nomeshsym", dest="is_nomeshsym", action="store_true",
         help="Symmetry is not imposed for mesh sampling.")
     parser.add_argument(
-        "--nowritemesh", dest="write_mesh", action="store_false",
-        help="Do not write mesh.yaml or mesh.hdf5")
-    parser.add_argument(
         "--nosym", dest="is_nosym", action="store_true",
         help="Symmetry is not imposed.")
     parser.add_argument(
-        "--nrand", dest="num_random_displacements",
-        type=int, help="Number of supercells with random displacements")
+        "--nothm", "--no-tetrahedron-method", dest="is_tetrahedron_method",
+        action="store_false",
+        help="Do not use tetrahedron method for DOS/PDOS")
+    parser.add_argument(
+        "--nowritemesh", dest="write_mesh", action="store_false",
+        help="Do not write mesh.yaml or mesh.hdf5")
     parser.add_argument(
         "-p", "--plot", dest="is_graph_plot", action="store_true",
         help="Plot data")
@@ -416,14 +417,17 @@ def get_parser():
         "-q", "--quiet", dest="quiet", action="store_true",
         help="Print out smallest information")
     parser.add_argument(
+        "--random-seed", dest="random_seed",
+        type=int, help="Random seed by a 32 bit unsigned integer")
+    parser.add_argument(
+        "--rd", "--random-displacements", dest="random_displacements",
+        type=int, help="Number of supercells with random displacements")
+    parser.add_argument(
         "--readfc", dest="read_force_constants", action="store_true",
         help="Read FORCE_CONSTANTS")
     parser.add_argument(
         "--readfc-format", dest="readfc_format",
         help="Force constants input file-format")
-    parser.add_argument(
-        "--random-seed", dest="random_seed",
-        type=int, help="Random seed by a 32 bit unsigned integer")
     parser.add_argument(
         "--read-qpoints", dest="read_qpoints", action="store_true",
         help="Read QPOITNS")
@@ -460,24 +464,20 @@ def get_parser():
         dest="thermal_displacement_matrices_cif", type=float,
         help="Write cif with aniso_U for which temperature is specified")
     parser.add_argument(
-        "--nothm", "--no-tetrahedron-method", dest="is_tetrahedron_method",
-        action="store_false",
-        help="Do not use tetrahedron method for DOS/PDOS")
-    parser.add_argument(
         "--tmax", dest="tmax", type=float,
         help="Maximum calculated temperature")
     parser.add_argument(
         "--tmin", dest="tmin", type=float,
         help="Minimum calculated temperature")
     parser.add_argument(
+        "--tolerance", dest="symmetry_tolerance", type=float,
+        help="Symmetry tolerance to search")
+    parser.add_argument(
         "--trigonal", dest="is_trigonal_displacements", action="store_true",
         help="Set displacements of all trigonal axes ")
     parser.add_argument(
         "--tstep", dest="tstep", type=float,
         help="Calculated temperature step")
-    parser.add_argument(
-        "--tolerance", dest="symmetry_tolerance", type=float,
-        help="Symmetry tolerance to search")
     parser.add_argument(
         "--turbomole", dest="turbomole_mode", action="store_true",
         help="Invoke TURBOMOLE mode")

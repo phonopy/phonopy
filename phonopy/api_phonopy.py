@@ -40,28 +40,28 @@ from phonopy.version import __version__
 from phonopy.interface import PhonopyYaml
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
-from phonopy.structure.cells import (get_supercell, get_primitive,
-                                     guess_primitive_matrix)
-from phonopy.harmonic.displacement import (get_least_displacements,
-                                           directions_to_displacement_dataset,
-                                           get_random_displacements_dataset)
+from phonopy.structure.cells import (
+    get_supercell, get_primitive, guess_primitive_matrix)
+from phonopy.harmonic.displacement import (
+    get_least_displacements, directions_to_displacement_dataset,
+    get_random_displacements_dataset, get_displacements_and_forces)
 from phonopy.harmonic.force_constants import (
-    get_fc2,
     symmetrize_force_constants,
     symmetrize_compact_force_constants,
     show_drift_force_constants,
     cutoff_force_constants,
     set_tensor_symmetry_PJ)
-from phonopy.interface.alm import get_fc2 as get_alm_fc2
+from phonopy.harmonic.force_constants import get_fc2 as get_phonopy_fc2
+from phonopy.interface.fc_calculator import get_fc2
 from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
-from phonopy.phonon.band_structure import (BandStructure,
-                                           get_band_qpoints_by_seekpath)
+from phonopy.phonon.band_structure import (
+    BandStructure, get_band_qpoints_by_seekpath)
 from phonopy.phonon.thermal_properties import ThermalProperties
 from phonopy.phonon.mesh import Mesh, IterMesh, length2mesh
 from phonopy.units import VaspToTHz
 from phonopy.phonon.dos import TotalDos, PartialDos
-from phonopy.phonon.thermal_displacement import (ThermalDisplacements,
-                                                 ThermalDisplacementMatrices)
+from phonopy.phonon.thermal_displacement import (
+    ThermalDisplacements, ThermalDisplacementMatrices)
 from phonopy.phonon.random_displacements import RandomDisplacements
 from phonopy.phonon.animation import Animation
 from phonopy.phonon.modulation import Modulation
@@ -2564,10 +2564,14 @@ class Phonopy(object):
                                          decimals=None):
         if self._displacement_dataset is not None:
             if use_alm:
-                self._force_constants = get_alm_fc2(
+                disps, forces = get_displacements_and_forces(
+                    self._displacement_dataset)
+                self._force_constants = get_fc2(
                     self._supercell,
                     self._primitive,
-                    self._displacement_dataset,
+                    disps,
+                    forces,
+                    interface_mode='alm',
                     atom_list=distributed_atom_list,
                     log_level=self._log_level)
             else:
@@ -2575,7 +2579,7 @@ class Phonopy(object):
                     msg = ("This data format of displacement_dataset is not "
                            "supported unless use_alm=True.")
                     raise RuntimeError(msg)
-                self._force_constants = get_fc2(
+                self._force_constants = get_phonopy_fc2(
                     self._supercell,
                     self._symmetry,
                     self._displacement_dataset,

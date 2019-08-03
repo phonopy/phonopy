@@ -259,6 +259,23 @@ def get_random_directions(num_atoms, random_seed=None):
     return (xy / r).T
 
 
+def get_displacements_and_forces(disp_dataset):
+    if 'first_atoms' in disp_dataset:
+        natom = disp_dataset['natom']
+        disps = np.zeros((len(disp_dataset['first_atoms']), natom, 3),
+                         dtype='double', order='C')
+        forces = np.zeros_like(disps)
+        for i, disp1 in enumerate(disp_dataset['first_atoms']):
+            if 'forces' in disp1:
+                disps[i, disp1['number']] = disp1['displacement']
+                forces[i] = disp1['forces']
+            else:
+                return [], []
+        return disps, forces
+    elif 'forces' in disp_dataset and 'displacements' in disp_dataset:
+        return disp_dataset['displacements'], disp_dataset['forces']
+
+
 def print_displacements(symmetry,
                         directions=directions_diag):
     displacements = get_least_displacements(symmetry, directions)

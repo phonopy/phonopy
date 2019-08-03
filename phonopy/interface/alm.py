@@ -34,12 +34,12 @@
 
 import sys
 import numpy as np
-from phonopy.file_IO import collect_disps_and_forces
 
 
 def get_fc2(supercell,
             primitive,
-            disp_dataset,
+            displacements,
+            forces,
             atom_list=None,
             alm_options=None,
             log_level=0):
@@ -47,7 +47,6 @@ def get_fc2(supercell,
     positions = supercell.get_scaled_positions()
     numbers = supercell.get_atomic_numbers()
     natom = len(numbers)
-    disps, forces = collect_disps_and_forces(disp_dataset)
     p2s_map = primitive.p2s_map
     p2p_map = primitive.p2p_map
 
@@ -72,7 +71,7 @@ def get_fc2(supercell,
             log_level_alm = 0
         alm.set_verbosity(log_level_alm)
         alm.define(1)
-        alm.set_displacement_and_force(disps, forces)
+        alm.set_displacement_and_force(displacements, forces)
         alm.optimize()
         fc2 = extract_fc2_from_alm(alm,
                                    natom,
