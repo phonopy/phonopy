@@ -39,7 +39,7 @@ def get_fc2(supercell,
             primitive,
             displacements,
             forces,
-            interface_mode=None,
+            fc_calculator=None,
             atom_list=None,
             fc_options=None,
             log_level=0):
@@ -54,25 +54,25 @@ def get_fc2(supercell,
         Supercell
     primitive : Primitive
         Primitive cell
-    interface_mode : str
-        Currently only 'alm' is supported. Default is None, meaning invoking
-        'alm'.
     displacements : array_like
         Displacements of atoms in supercell.
         shape=(num_snapshots, num_atoms, 3), dtype='double', order='C'
     forces : array_like
         Forces of atoms in supercell.
         shape=(num_snapshots, num_atoms, 3), dtype='double', order='C'
-    atom_list : array_like of int or None
+    fc_calculator : str, optional
+        Currently only 'alm' is supported. Default is None, meaning invoking
+        'alm'.
+    atom_list : array_like of int or None, optional
         List of supercell atomic indices that represent the first indices of
         force constant matrix. The default is None, which means all atoms in
         supercell. Two shapes of force constant matrix are readable in phonopy,
         atom_list == [all atomic indices in supercell] (full) or atom_list ==
         [all atoms in primitive cell in supercell atomic indices] (compact).
         The later is the same as primitive.p2s_map.
-    fc_options : str
+    fc_options : str, optional
         This is arbitrary string.
-    log_level : integer or bool
+    log_level : integer or bool, optional
         Verbosity level. False or 0 means quiet. True or 1 means normal level
         of log to stdout. 2 gives verbose mode.
 
@@ -84,7 +84,7 @@ def get_fc2(supercell,
 
     """
 
-    if interface_mode == 'alm' or interface_mode is None:
+    if fc_calculator == 'alm' or fc_calculator is None:
         return get_fc2_alm(supercell,
                            primitive,
                            displacements,

@@ -107,7 +107,7 @@ def set_force_constants(
         force_constants_filename=None,
         force_sets_filename=None,
         calculator=None,
-        use_alm=False):
+        fc_calculator=None):
     natom = phonon.supercell.get_number_of_atoms()
 
     _dataset = None
@@ -136,7 +136,7 @@ def set_force_constants(
         try:
             phonon.produce_force_constants(
                 calculate_full_force_constants=False,
-                use_alm=(use_alm or 'forces' in phonon.dataset))
+                fc_calculator=fc_calculator)
         except RuntimeError:
             pass
 

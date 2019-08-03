@@ -51,7 +51,7 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
          born_filename=None,
          force_sets_filename=None,
          force_constants_filename=None,
-         use_alm=False,
+         fc_calculator=None,
          factor=None,
          frequency_scale_factor=None,
          symprec=1e-5,
@@ -132,8 +132,8 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         Default is None.
         The priority for force constants is
         force_constants_filename > force_sets_filename > 'FORCE_SETS'.
-    use_alm : bool, optional
-        Default is False.
+    fc_calculator : str, optional
+        Force constants calculator. Currently only 'alm'. Default is None.
     factor : float, optional
         Phonon frequency unit conversion factor. Unless specified, default
         unit conversion factor for each calculator is used.
@@ -208,7 +208,7 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
             force_constants_filename=force_constants_filename,
             force_sets_filename=force_sets_filename,
             calculator=calculator,
-            use_alm=use_alm)
+            fc_calculator=fc_calculator)
     else:
         phonon.force_constants = _fc
     return phonon
