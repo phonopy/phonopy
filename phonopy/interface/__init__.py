@@ -31,13 +31,3 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-
-from phonopy.interface.calculator import (
-    get_interface_mode, write_supercells_with_displacements,
-    read_crystal_structure, get_default_cell_filename,
-    get_default_supercell_filename, get_default_displacement_distance,
-    get_default_physical_units, create_FORCE_SETS,
-    get_force_sets, get_force_constant_conversion_factor,
-    convert_dataset_to_type2)
-from phonopy.interface.fc_calculator import get_fc2
-from phonopy.interface.phonopy_yaml import PhonopyYaml

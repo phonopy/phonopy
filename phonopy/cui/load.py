@@ -34,7 +34,8 @@
 
 import numpy as np
 from phonopy.api_phonopy import Phonopy
-from phonopy.interface import get_default_physical_units, PhonopyYaml
+from phonopy.interface.phonopy_yaml import PhonopyYaml
+from phonopy.interface.calculator import get_default_physical_units
 import phonopy.cui.load_helper as load_helper
 
 

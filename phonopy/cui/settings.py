@@ -54,6 +54,7 @@ class Settings(object):
         self._cutoff_frequency = None
         self._displacement_distance = None
         self._dm_decimals = None
+        self._fc_calculator = None
         self._fc_decimals = None
         self._fc_symmetry = False
         self._fpitch = None
@@ -86,7 +87,6 @@ class Settings(object):
         self._tmax = 1000
         self._tmin = 0
         self._tstep = 10
-        self._use_alm = False
 
     def set_band_paths(self, band_paths):
         self._band_paths = band_paths
@@ -135,6 +135,12 @@ class Settings(object):
 
     def get_displacement_distance(self):
         return self._displacement_distance
+
+    def set_fc_calculator(self, fc_calculator):
+        self._fc_calculator = fc_calculator
+
+    def get_fc_calculator(self):
+        return self._fc_calculator
 
     def set_fc_symmetry(self, fc_symmetry):
         self._fc_symmetry = fc_symmetry
@@ -328,12 +334,6 @@ class Settings(object):
     def get_time_reversal_symmetry(self):
         return self._is_time_reversal_symmetry
 
-    def set_use_alm(self, use_alm):
-        self._use_alm = use_alm
-
-    def get_use_alm(self):
-        return self._use_alm
-
 
 # Parse phonopy setting filen
 class ConfParser(object):
@@ -418,6 +418,10 @@ class ConfParser(object):
             if self._args.dynamical_matrix_decimals:
                 self._confs['dm_decimals'] = \
                     self._args.dynamical_matrix_decimals
+
+        if 'fc_calculator' in arg_list:
+            if self._args.fc_calculator:
+                self._confs['fc_calculator'] = self._args.fc_calculator
 
         if 'fc_symmetry' in arg_list:
             if self._args.fc_symmetry:
@@ -583,7 +587,7 @@ class ConfParser(object):
 
         if 'use_alm' in arg_list:
             if self._args.use_alm:
-                self._confs['alm'] = '.true.'
+                self._confs['fc_calculator'] = 'alm'
 
     def parse_conf(self):
         confs = self._confs
@@ -701,6 +705,9 @@ class ConfParser(object):
                     self.set_parameter('is_rotational', False)
                 elif confs['rotational'].lower() == '.true.':
                     self.set_parameter('is_rotational', True)
+
+            if conf_key == 'fc_calculator':
+                self.set_parameter('fc_calculator', confs['fc_calculator'])
 
             if conf_key == 'fc_symmetry':
                 if confs['fc_symmetry'].lower() == '.false.':
@@ -872,6 +879,10 @@ class ConfParser(object):
         # Decimals of values of dynamical matrxi
         if 'dm_decimals' in params:
             self._settings.set_dm_decimals(int(params['dm_decimals']))
+
+        # Force constants calculator
+        if 'fc_calculator' in params:
+            self._settings.set_fc_calculator(params['fc_calculator'])
 
         # Decimals of values of force constants
         if 'fc_decimals' in params:

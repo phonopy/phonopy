@@ -32,9 +32,13 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from phonopy.interface.alm import get_fc2 as get_fc2_alm
+# Each key has to be lowercase. {fc_calculator: name, ...}
+# name is supporsed to be str and used for text output to stdout.
+fc_calculator_names = {'alm': 'ALM', }
 
 
+# get_fc2 is called from
+# phonopy.api_phonopy.Phonopy._run_force_constants_from_forces.
 def get_fc2(supercell,
             primitive,
             displacements,
@@ -65,11 +69,13 @@ def get_fc2(supercell,
         'alm'.
     atom_list : array_like of int or None, optional
         List of supercell atomic indices that represent the first indices of
-        force constant matrix. The default is None, which means all atoms in
-        supercell. Two shapes of force constant matrix are readable in phonopy,
-        atom_list == [all atomic indices in supercell] (full) or atom_list ==
-        [all atoms in primitive cell in supercell atomic indices] (compact).
-        The later is the same as primitive.p2s_map.
+        force constant matrix. The default is None, which means
+        all atoms in supercell represented by np.arange(num_atoms).
+        Two shapes of force constant matrix (called 'full' and 'compact') are
+        readable in phonopy, see Returns section below.
+        full: atom_list == (0, 1, 2, ..., num_atoms -1) or None,
+        compact : atom_list == primitive.p2s_map, i.e.,
+        [all atoms in primitive cell in the atomic indices of supercell].
     fc_options : str, optional
         This is arbitrary string.
     log_level : integer or bool, optional
@@ -85,10 +91,11 @@ def get_fc2(supercell,
     """
 
     if fc_calculator == 'alm' or fc_calculator is None:
-        return get_fc2_alm(supercell,
-                           primitive,
-                           displacements,
-                           forces,
-                           atom_list=atom_list,
-                           alm_options=fc_options,
-                           log_level=log_level)
+        from phonopy.interface.alm import get_fc2
+        return get_fc2(supercell,
+                       primitive,
+                       displacements,
+                       forces,
+                       atom_list=atom_list,
+                       alm_options=fc_options,
+                       log_level=log_level)

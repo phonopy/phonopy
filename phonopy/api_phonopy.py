@@ -37,7 +37,7 @@ import warnings
 import textwrap
 import numpy as np
 from phonopy.version import __version__
-from phonopy.interface import PhonopyYaml
+from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
 from phonopy.structure.cells import (
@@ -46,10 +46,8 @@ from phonopy.harmonic.displacement import (
     get_least_displacements, directions_to_displacement_dataset,
     get_random_displacements_dataset, get_displacements_and_forces)
 from phonopy.harmonic.force_constants import (
-    symmetrize_force_constants,
-    symmetrize_compact_force_constants,
-    show_drift_force_constants,
-    cutoff_force_constants,
+    symmetrize_force_constants, symmetrize_compact_force_constants,
+    show_drift_force_constants, cutoff_force_constants,
     set_tensor_symmetry_PJ)
 from phonopy.harmonic.force_constants import get_fc2 as get_phonopy_fc2
 from phonopy.interface.fc_calculator import get_fc2

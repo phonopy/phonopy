@@ -34,13 +34,12 @@
 
 import os
 import numpy as np
-from phonopy.interface import (read_crystal_structure,
-                               get_force_constant_conversion_factor)
+from phonopy.interface.calculator import (
+    read_crystal_structure, get_force_constant_conversion_factor)
 from phonopy.structure.cells import get_primitive_matrix_by_centring
-from phonopy.file_IO import (parse_BORN, parse_FORCE_SETS,
-                             read_force_constants_hdf5,
-                             read_physical_unit_in_force_constants_hdf5,
-                             parse_FORCE_CONSTANTS)
+from phonopy.file_IO import (
+    parse_BORN, parse_FORCE_SETS, parse_FORCE_CONSTANTS,
+    read_force_constants_hdf5, read_physical_unit_in_force_constants_hdf5)
 from phonopy.structure.atoms import PhonopyAtoms
 
 

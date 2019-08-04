@@ -490,24 +490,6 @@ def get_force_constant_conversion_factor(unit, interface_mode):
         return 1.0
 
 
-def convert_dataset_to_type2(dataset):
-    if 'first_atoms' in dataset:
-        natom = dataset['natom']
-        disps = np.zeros((len(dataset['first_atoms']), natom, 3),
-                         dtype='double', order='C')
-        forces = np.zeros_like(disps)
-        for i, disp1 in enumerate(dataset['first_atoms']):
-            disps[i, disp1['number']] = disp1['displacement']
-            if 'forces' in disp1:
-                forces[i] = disp1['forces']
-
-        dset_type2 = {'displacements': disps}
-        if 'forces' in dataset['first_atoms'][0]:
-            dset_type2['forces'] = forces
-
-        return dset_type2
-
-
 def _read_phonopy_yaml(filename, command_name):
     cell_filename = None
     for fname in (filename,
