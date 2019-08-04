@@ -34,7 +34,7 @@
 
 # Each key has to be lowercase. {fc_calculator: name, ...}
 # name is supporsed to be str and used for text output to stdout.
-fc_calculator_names = {'alm': 'ALM', }
+fc_calculator_names = {'alm': 'ALM', 'hiphive': 'hiPhive'}
 
 
 # get_fc2 is called from
@@ -44,8 +44,8 @@ def get_fc2(supercell,
             displacements,
             forces,
             fc_calculator=None,
-            atom_list=None,
             fc_options=None,
+            atom_list=None,
             log_level=0):
     """Supercell 2nd order force constants (fc2) are calculated.
 
@@ -67,6 +67,8 @@ def get_fc2(supercell,
     fc_calculator : str, optional
         Currently only 'alm' is supported. Default is None, meaning invoking
         'alm'.
+    fc_options : str, optional
+        This is arbitrary string.
     atom_list : array_like of int or None, optional
         List of supercell atomic indices that represent the first indices of
         force constant matrix. The default is None, which means
@@ -76,8 +78,6 @@ def get_fc2(supercell,
         full: atom_list == (0, 1, 2, ..., num_atoms -1) or None,
         compact : atom_list == primitive.p2s_map, i.e.,
         [all atoms in primitive cell in the atomic indices of supercell].
-    fc_options : str, optional
-        This is arbitrary string.
     log_level : integer or bool, optional
         Verbosity level. False or 0 means quiet. True or 1 means normal level
         of log to stdout. 2 gives verbose mode.
@@ -97,5 +97,14 @@ def get_fc2(supercell,
                        displacements,
                        forces,
                        atom_list=atom_list,
-                       alm_options=fc_options,
+                       options=fc_options,
+                       log_level=log_level)
+    if fc_calculator == 'hiphive':
+        from phonopy.interface.hiphive import get_fc2
+        return get_fc2(supercell,
+                       primitive,
+                       displacements,
+                       forces,
+                       atom_list=atom_list,
+                       options=fc_options,
                        log_level=log_level)

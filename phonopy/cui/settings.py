@@ -55,6 +55,7 @@ class Settings(object):
         self._displacement_distance = None
         self._dm_decimals = None
         self._fc_calculator = None
+        self._fc_calculator_options = None
         self._fc_decimals = None
         self._fc_symmetry = False
         self._fpitch = None
@@ -141,6 +142,12 @@ class Settings(object):
 
     def get_fc_calculator(self):
         return self._fc_calculator
+
+    def set_fc_calculator_options(self, fc_calculator_options):
+        self._fc_calculator_options = fc_calculator_options
+
+    def get_fc_calculator_options(self):
+        return self._fc_calculator_options
 
     def set_fc_symmetry(self, fc_symmetry):
         self._fc_symmetry = fc_symmetry
@@ -423,6 +430,11 @@ class ConfParser(object):
             if self._args.fc_calculator:
                 self._confs['fc_calculator'] = self._args.fc_calculator
 
+        if 'fc_calculator_options' in arg_list:
+            fc_calc_opt = self._args.fc_calculator_options
+            if fc_calc_opt:
+                self._confs['fc_calculator_options'] = fc_calc_opt
+
         if 'fc_symmetry' in arg_list:
             if self._args.fc_symmetry:
                 self._confs['fc_symmetry'] = '.true.'
@@ -589,6 +601,10 @@ class ConfParser(object):
             if self._args.use_alm:
                 self._confs['fc_calculator'] = 'alm'
 
+        if 'use_hiphive' in arg_list:
+            if self._args.use_hiphive:
+                self._confs['fc_calculator'] = 'hiphive'
+
     def parse_conf(self):
         confs = self._confs
 
@@ -708,6 +724,10 @@ class ConfParser(object):
 
             if conf_key == 'fc_calculator':
                 self.set_parameter('fc_calculator', confs['fc_calculator'])
+
+            if conf_key == 'fc_calculator_options':
+                self.set_parameter('fc_calculator_options',
+                                   confs['fc_calculator_options'])
 
             if conf_key == 'fc_symmetry':
                 if confs['fc_symmetry'].lower() == '.false.':
@@ -883,6 +903,11 @@ class ConfParser(object):
         # Force constants calculator
         if 'fc_calculator' in params:
             self._settings.set_fc_calculator(params['fc_calculator'])
+
+        # Force constants calculator options as str
+        if 'fc_calculator_options' in params:
+            self._settings.set_fc_calculator_options(
+                params['fc_calculator_options'])
 
         # Decimals of values of force constants
         if 'fc_decimals' in params:

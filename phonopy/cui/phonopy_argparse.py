@@ -84,6 +84,7 @@ def get_parser():
         siesta_mode=False,
         cp2k_mode=False,
         dftbp_mode=False,
+        fc_calculator_options=None,
         fc_symmetry=None,
         fc_format=None,
         fc_spg_symmetry=False,
@@ -161,6 +162,7 @@ def get_parser():
         tstep=None,
         turbomooe_mode=False,
         use_alm=False,
+        use_hiphive=False,
         vasp_mode=False,
         verbose=False,
         wien2k_mode=False,
@@ -255,6 +257,11 @@ def get_parser():
         help=("Create FORCE_CONSTANTS from vaspurn.xml. "
               "vasprun.xml has to be passed as argument."))
     parser.add_argument(
+        "--fc-calc-opt", "--fc-calculator-options",
+        dest="fc_calculator_options",
+        help=("Options for force constants calculator as comma separated "
+              "string with the style of key = values"))
+    parser.add_argument(
         "--fc-decimals", dest="force_constants_decimals", type=int,
         help="Decimals of values of force constants")
     parser.add_argument(
@@ -308,6 +315,9 @@ def get_parser():
     parser.add_argument(
         "--hdf5-compression", dest="hdf5_compression",
         help="hdf5 compression filter")
+    parser.add_argument(
+        "--hiphive", dest="use_hiphive", action="store_true",
+        help="Use hiPhive for generating force constants")
     parser.add_argument(
         "--irreps", "--irreps-qpoint", nargs='+', dest="irreps_qpoint",
         help="A q-point where characters of irreps are calculated")

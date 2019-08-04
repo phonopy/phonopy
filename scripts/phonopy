@@ -718,6 +718,10 @@ else:
         if settings.get_fc_calculator().lower() in fc_calculator_names:
             fc_calculator = settings.get_fc_calculator().lower()
 
+    fc_calculator_options = None
+    if settings.get_fc_calculator_options() is not None:
+        fc_calculator_options = settings.get_fc_calculator_options()
+
     phonon.dataset = force_sets
     if log_level > 0:
         if fc_calculator is not None:
@@ -728,10 +732,15 @@ else:
 
     if settings.get_fc_spg_symmetry() or settings.get_is_full_fc():
         # Need to calculate full force constant tensors
-        phonon.produce_force_constants(fc_calculator=fc_calculator)
+        phonon.produce_force_constants(
+            fc_calculator=fc_calculator,
+            fc_calculator_options=fc_calculator_options)
     else:  # Only force constants between atoms in primitive cell and supercell
-        phonon.produce_force_constants(calculate_full_force_constants=False,
-                                       fc_calculator=fc_calculator)
+        phonon.produce_force_constants(
+            calculate_full_force_constants=False,
+            fc_calculator=fc_calculator,
+            fc_calculator_options=fc_calculator_options)
+
 
 # Impose cutoff radius on force constants
 cutoff_radius = settings.get_cutoff_radius()

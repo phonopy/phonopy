@@ -640,6 +640,7 @@ class Phonopy(object):
                                 forces=None,
                                 calculate_full_force_constants=True,
                                 fc_calculator=None,
+                                fc_calculator_options=None,
                                 show_drift=True):
         if forces is not None:
             self.set_forces(forces)
@@ -655,12 +656,14 @@ class Phonopy(object):
         if calculate_full_force_constants:
             self._run_force_constants_from_forces(
                 fc_calculator=fc_calculator,
+                fc_calculator_options=fc_calculator_options,
                 decimals=self._force_constants_decimals)
         else:
             p2s_map = self._primitive.get_primitive_to_supercell_map()
             self._run_force_constants_from_forces(
                 distributed_atom_list=p2s_map,
                 fc_calculator=fc_calculator,
+                fc_calculator_options=fc_calculator_options,
                 decimals=self._force_constants_decimals)
 
         if show_drift and self._log_level:
@@ -2601,6 +2604,7 @@ class Phonopy(object):
     def _run_force_constants_from_forces(self,
                                          distributed_atom_list=None,
                                          fc_calculator=None,
+                                         fc_calculator_options=None,
                                          decimals=None):
         if self._displacement_dataset is not None:
             if fc_calculator is not None:
@@ -2612,6 +2616,7 @@ class Phonopy(object):
                     disps,
                     forces,
                     fc_calculator=fc_calculator,
+                    fc_options=fc_calculator_options,
                     atom_list=distributed_atom_list,
                     log_level=self._log_level)
             else:

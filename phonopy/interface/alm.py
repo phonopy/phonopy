@@ -41,7 +41,7 @@ def get_fc2(supercell,
             displacements,
             forces,
             atom_list=None,
-            alm_options=None,
+            options=None,
             log_level=0):
     lattice = supercell.get_cell().T
     positions = supercell.get_scaled_positions()
