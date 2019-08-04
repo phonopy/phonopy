@@ -38,12 +38,11 @@ import sys
 import numpy as np
 from phonopy import Phonopy
 from phonopy import PhonopyGruneisen
-from phonopy.interface import (read_crystal_structure,
-                               get_default_cell_filename,
-                               get_default_physical_units)
+from phonopy.interface.calculator import (
+    read_crystal_structure, get_default_cell_filename,
+    get_default_physical_units)
 from phonopy.file_IO import (parse_FORCE_SETS, parse_BORN,
                              parse_FORCE_CONSTANTS, read_force_constants_hdf5)
-from phonopy.structure.cells import guess_primitive_matrix
 
 
 def fracval(frac):

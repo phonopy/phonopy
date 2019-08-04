@@ -126,23 +126,6 @@ def parse_FORCE_SETS_from_strings(strings,
         to_type2=to_type2)
 
 
-def collect_disps_and_forces(disp_dataset):
-    if 'first_atoms' in disp_dataset:
-        natom = disp_dataset['natom']
-        disps = np.zeros((len(disp_dataset['first_atoms']), natom, 3),
-                         dtype='double', order='C')
-        forces = np.zeros_like(disps)
-        for i, disp1 in enumerate(disp_dataset['first_atoms']):
-            if 'forces' in disp1:
-                disps[i, disp1['number']] = disp1['displacement']
-                forces[i] = disp1['forces']
-            else:
-                return [], []
-        return disps, forces
-    elif 'forces' in disp_dataset and 'displacements' in disp_dataset:
-        return disp_dataset['displacements'], disp_dataset['forces']
-
-
 def _get_dataset(f,
                  natom=None,
                  is_translational_invariance=False,
@@ -157,8 +140,10 @@ def _get_dataset(f,
             raise RuntimeError(msg)
 
         if to_type2:
-            d, f = collect_disps_and_forces(dataset)
-            return {'displacements': d, 'forces': f}
+            from phonopy.harmonic.displacement import (
+                get_displacements_and_forces)
+            disps, forces = get_displacements_and_forces(dataset)
+            return {'displacements': disps, 'forces': forces}
         else:
             return dataset
 

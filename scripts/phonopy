@@ -38,26 +38,26 @@ import sys
 import os
 import numpy as np
 from phonopy import Phonopy, __version__
-from phonopy.file_IO import (parse_FORCE_CONSTANTS,
-                             parse_FORCE_SETS, write_disp_yaml,
-                             get_born_parameters, write_FORCE_CONSTANTS,
-                             write_force_constants_to_hdf5, parse_QPOINTS,
-                             parse_disp_yaml)
+from phonopy.file_IO import (
+    parse_FORCE_CONSTANTS, parse_FORCE_SETS, get_born_parameters,
+    write_FORCE_CONSTANTS, write_force_constants_to_hdf5, parse_QPOINTS,
+    parse_disp_yaml)
 from phonopy.cui.collect_cell_info import collect_cell_info
 from phonopy.cui.load_helper import read_force_constants_from_hdf5
 from phonopy.cui.settings import PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
-from phonopy.cui.phonopy_argparse import (get_parser,
-                                          show_deprecated_option_warnings)
+from phonopy.cui.phonopy_argparse import (
+    get_parser, show_deprecated_option_warnings)
 from phonopy.structure.cells import (print_cell, determinant)
 from phonopy.structure.atoms import atom_data, symbol_map
-from phonopy.interface import (create_FORCE_SETS, get_default_physical_units,
-                               get_default_displacement_distance,
-                               write_supercells_with_displacements,
-                               PhonopyYaml, get_interface_mode)
+from phonopy.interface.phonopy_yaml import PhonopyYaml
+from phonopy.interface.calculator import (
+    get_interface_mode, write_supercells_with_displacements,
+    get_default_displacement_distance, get_default_physical_units,
+    create_FORCE_SETS)
 from phonopy.interface.vasp import create_FORCE_CONSTANTS
-from phonopy.phonon.band_structure import (get_band_qpoints,
-                                           get_band_qpoints_by_seekpath)
+from phonopy.phonon.band_structure import (
+    get_band_qpoints, get_band_qpoints_by_seekpath)
 from phonopy.phonon.dos import get_pdos_indices
 
 phonopy_version = __version__
@@ -257,9 +257,9 @@ def print_settings(settings,
                 print("  Plus Minus displacement: only one direction")
         if not settings.get_is_diagonal_displacement():
             print("  Diagonal displacement: off")
-        if settings.get_num_random_displacements():
+        if settings.get_random_displacements():
             print("  Number of supercells with random displacements: %d"
-                  % settings.get_num_random_displacements())
+                  % settings.get_random_displacements())
             if settings.get_random_seed() is not None:
                 print("  Random seed: %d" % settings.get_random_seed())
 
@@ -595,7 +595,7 @@ if run_mode == 'displacements':
         is_plusminus=settings.get_is_plusminus_displacement(),
         is_diagonal=settings.get_is_diagonal_displacement(),
         is_trigonal=settings.get_is_trigonal_displacement(),
-        num_random_displacements=settings.get_num_random_displacements(),
+        num_random_displacements=settings.get_random_displacements(),
         random_seed=settings.get_random_seed())
     displacements = phonon.get_displacements()
 
@@ -712,19 +712,26 @@ else:
             print_error()
         sys.exit(1)
 
+    fc_calculator = None
+    if settings.get_fc_calculator() is not None:
+        from phonopy.interface.fc_calculator import fc_calculator_names
+        if settings.get_fc_calculator().lower() in fc_calculator_names:
+            fc_calculator = settings.get_fc_calculator().lower()
+
     phonon.dataset = force_sets
     if log_level > 0:
-        if settings.get_use_alm():
-            print("Computing force constants by ALM...")
+        if fc_calculator is not None:
+            print("Computing force constants by %s..."
+                  % fc_calculator_names[fc_calculator])
         else:
             print("Computing force constants...")
 
     if settings.get_fc_spg_symmetry() or settings.get_is_full_fc():
         # Need to calculate full force constant tensors
-        phonon.produce_force_constants(use_alm=settings.get_use_alm())
+        phonon.produce_force_constants(fc_calculator=fc_calculator)
     else:  # Only force constants between atoms in primitive cell and supercell
         phonon.produce_force_constants(calculate_full_force_constants=False,
-                                       use_alm=settings.get_use_alm())
+                                       fc_calculator=fc_calculator)
 
 # Impose cutoff radius on force constants
 cutoff_radius = settings.get_cutoff_radius()
