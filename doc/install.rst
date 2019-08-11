@@ -39,7 +39,7 @@ environment).
 
 ::
 
-   % conda create -n phonopy python=3
+   % conda create -n phonopy -c conda-forge python=3
    % conda activate phonopy
    % conda install -c conda-forge phonopy h5py
 
