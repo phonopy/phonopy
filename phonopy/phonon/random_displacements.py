@@ -41,6 +41,16 @@ from phonopy.units import VaspToTHz, THzToEv, Kb, Hbar, AMU, EV, Angstrom, THz
 class RandomDisplacements(object):
     """Generate random displacements by Canonical ensenmble.
 
+    Note
+    ----
+    Phonon frequencies are used to calculate phonon occupation number,
+    for which phonon frequencies have to be given in THz. Therefore unit
+    conversion factor has to be specified at the initialization.
+
+    Imaginary phonon modes are treated so as to have their absolute phonon
+    frequencies |omega| and phonon modes having |omega| < cutoff_frequency
+    are ignored.
+
     Attributes
     ----------
     u : ndarray
@@ -62,8 +72,9 @@ class RandomDisplacements(object):
         dynamical_matrix : DynamicalMatrix
             Dynamical matrix class instance.
         cutoff_frequency : float
-            Lowest phonon frequency below which frequency the phonon mode is
-            treated specially.
+            Lowest phonon frequency below which frequency the phonon mode
+            is treated specially. See _get_sigma. Default is None, which
+            means 0.01.
         factor : float
             Phonon frequency unit conversion factor to THz
 
@@ -186,7 +197,7 @@ class RandomDisplacements(object):
 
         return u * np.sqrt(2)
 
-    def _get_sigma(self, eigvals, T, mode=2):
+    def _get_sigma(self, eigvals, T, mode=1):
         if mode == 0:  # Ignore modes having negative eigenvalues
             idx = np.where(eigvals * self._factor ** 2
                            > self._cutoff_frequency ** 2)[0]
