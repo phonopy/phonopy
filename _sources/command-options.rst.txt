@@ -13,6 +13,7 @@ are replaced by those with dashes ``-``. Those tag names are unchanged.
 Some of command-line options are equivalent to respective setting
 tags:
 
+* ``--alm`` (``FC_CALCULATOR = ALM``)
 * ``--amplitude`` (``DISPLACEMENT_DISTANCE``)
 * ``--anime`` (``ANIME``)
 * ``--band`` (``BAND``)
