@@ -329,6 +329,40 @@ def print_settings(settings,
             print("    %s" % v)
 
 
+def write_displacements_files(phonon,
+                              phonopy_conf,
+                              log_level,
+                              interface_mode,
+                              optional_structure_info):
+    # From phonopy v1.15.0, displacements are written into phonopy_disp.yaml.
+    # write_disp_yaml(displacements, supercell)
+
+    # Write supercells with displacements
+    cells_with_disps = phonon.get_supercells_with_displacements()
+    N = abs(determinant(phonon.supercell_matrix))
+    write_supercells_with_displacements(interface_mode,
+                                        phonon.supercell,
+                                        cells_with_disps,
+                                        N,
+                                        optional_structure_info)
+
+    if log_level > 0:
+        print("\"phonopy_disp.yaml\" and supercells have been created.")
+        print('')
+        print("NOTE:")
+        print("  Displacements information is written into "
+              "\"phonopy_disp.yaml\" from v1.15.0.")
+        print("  \"disp.yaml\" is still supported to read, but will be "
+              "deprecated.")
+
+    finalize_phonopy(log_level,
+                     phonopy_conf,
+                     phonon,
+                     interface_mode,
+                     write_displacements=True,
+                     filename="phonopy_disp.yaml")
+
+
 #################
 # Option parser #
 #################
@@ -518,7 +552,7 @@ if run_mode is not None and 'band' in run_mode and is_pdos_auto:
     run_mode = 'band_mesh'
 
 # Prepare phonopy object
-if run_mode == 'displacements':
+if run_mode == 'displacements' and settings.get_temperatures() is None:
     phonon = Phonopy(unitcell,
                      supercell_matrix,
                      primitive_matrix=primitive_matrix,
@@ -583,7 +617,7 @@ if log_level > 0:
 #################################
 # Create displacements and exit #
 #################################
-if run_mode == 'displacements':
+if run_mode == 'displacements' and settings.get_temperatures() is None:
     if settings.get_displacement_distance() is None:
         displacement_distance = get_default_displacement_distance(
             interface_mode)
@@ -595,37 +629,14 @@ if run_mode == 'displacements':
         is_plusminus=settings.get_is_plusminus_displacement(),
         is_diagonal=settings.get_is_diagonal_displacement(),
         is_trigonal=settings.get_is_trigonal_displacement(),
-        num_random_displacements=settings.get_random_displacements(),
+        number_of_snapshots=settings.get_random_displacements(),
         random_seed=settings.get_random_seed())
-    displacements = phonon.get_displacements()
 
-    # From phonopy v1.15.0, displacements are written into phonopy_disp.yaml.
-    # write_disp_yaml(displacements, supercell)
-
-    # Write supercells with displacements
-    cells_with_disps = phonon.get_supercells_with_displacements()
-    N = abs(determinant(phonon.supercell_matrix))
-    write_supercells_with_displacements(interface_mode,
-                                        supercell,
-                                        cells_with_disps,
-                                        N,
-                                        optional_structure_info)
-
-    if log_level > 0:
-        print("\"phonopy_disp.yaml\" and supercells have been created.")
-        print('')
-        print("NOTE:")
-        print("  Displacements information is written into "
-              "\"phonopy_disp.yaml\" from v1.15.0.")
-        print("  \"disp.yaml\" is still supported to read, but will be "
-              "deprecated.")
-
-    finalize_phonopy(log_level,
-                     phonopy_conf,
-                     phonon,
-                     interface_mode,
-                     write_displacements=True,
-                     filename="phonopy_disp.yaml")
+    write_displacements_files(phonon,
+                              phonopy_conf,
+                              log_level,
+                              interface_mode,
+                              optional_structure_info)
 
 ########################################
 # Preparations for phonon calculations #
@@ -1309,6 +1320,17 @@ elif run_mode == 'irreps':
         phonon.show_irreps(show_irreps)
         phonon.write_yaml_irreps(show_irreps)
 
+elif (run_mode == 'displacements' and
+      settings.get_random_displacements() is not None):
+    phonon.generate_displacements(
+        number_of_snapshots=settings.get_random_displacements(),
+        random_seed=settings.get_random_seed(),
+        temperature=settings.get_temperatures()[0])
+    write_displacements_files(phonon,
+                              phonopy_conf,
+                              log_level,
+                              interface_mode,
+                              optional_structure_info)
 else:
     print("-" * 76)
     print(" One of the following run modes may be specified for phonon "

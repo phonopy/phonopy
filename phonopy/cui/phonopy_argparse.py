@@ -157,6 +157,7 @@ def get_parser():
         sigma=None,
         supercell_dimension=None,
         symmetry_tolerance=None,
+        temperature=None,
         tmax=None,
         tmin=None,
         tstep=None,
@@ -473,6 +474,9 @@ def get_parser():
         metavar='TEMPERATURE',
         dest="thermal_displacement_matrices_cif", type=float,
         help="Write cif with aniso_U for which temperature is specified")
+    parser.add_argument(
+        "--temperature", dest="temperature", type=float,
+        metavar='TEMPERATURE', help="A temperature point")
     parser.add_argument(
         "--tmax", dest="tmax", type=float,
         help="Maximum calculated temperature")

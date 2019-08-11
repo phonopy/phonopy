@@ -85,6 +85,7 @@ class Settings(object):
         self._sigma = None
         self._supercell_matrix = None
         self._symmetry_tolerance = None
+        self._temperatures = None
         self._tmax = 1000
         self._tmin = 0
         self._tstep = 10
@@ -328,6 +329,12 @@ class Settings(object):
 
     def get_symmetry_tolerance(self):
         return self._symmetry_tolerance
+
+    def set_temperatures(self, temperatures):
+        self._temperatures = temperatures
+
+    def get_temperatures(self):
+        return self._temperatures
 
     def set_temperature_step(self, tstep):
         self._tstep = tstep
@@ -584,6 +591,14 @@ class ConfParser(object):
             if self._args.symmetry_tolerance:
                 symtol = self._args.symmetry_tolerance
                 self._confs['symmetry_tolerance'] = symtol
+
+        if 'temperature' in self._args:
+            if self._args.temperature is not None:
+                self._confs['temperature'] = self._args.temperature
+
+        if 'temperatures' in self._args:
+            if self._args.temperatures is not None:
+                self._confs['temperatures'] = " ".join(self._args.temperatures)
 
         if 'tmax' in arg_list:
             if self._args.tmax:
@@ -844,6 +859,18 @@ class ConfParser(object):
                 val = float(confs['symmetry_tolerance'])
                 self.set_parameter('symmetry_tolerance', val)
 
+            # For multiple T values.
+            if conf_key == 'temperatures':
+                vals = [fracval(x) for x in confs['temperatures'].split()]
+                if len(vals) < 1:
+                    self.setting_error("Temperatures are incorrectly set.")
+                else:
+                    self.set_parameter('temperatures', vals)
+
+            # For single T value.
+            if conf_key == 'temperature':
+                self.set_parameter('temperatures', [confs['temperature'], ])
+
             if conf_key == 'tmin':
                 val = float(confs['tmin'])
                 self.set_parameter('tmin', val)
@@ -1021,7 +1048,9 @@ class ConfParser(object):
         if 'supercell_matrix' in params:
             self._settings.set_supercell_matrix(params['supercell_matrix'])
 
-        # Temerature range
+        # Temperatures or temerature range
+        if 'temperatures' in params:
+            self._settings.set_temperatures(params['temperatures'])
         if 'tmax' in params:
             self._settings.set_max_temperature(params['tmax'])
         if 'tmin' in params:
