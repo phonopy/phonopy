@@ -2634,7 +2634,7 @@ class Phonopy(object):
                     disps,
                     forces,
                     fc_calculator=fc_calculator,
-                    fc_options=fc_calculator_options,
+                    fc_calculator_options=fc_calculator_options,
                     atom_list=distributed_atom_list,
                     log_level=self._log_level)
             else:

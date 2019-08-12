@@ -44,7 +44,7 @@ def get_fc2(supercell,
             displacements,
             forces,
             fc_calculator=None,
-            fc_options=None,
+            fc_calculator_options=None,
             atom_list=None,
             log_level=0):
     """Supercell 2nd order force constants (fc2) are calculated.
@@ -67,7 +67,7 @@ def get_fc2(supercell,
     fc_calculator : str, optional
         Currently only 'alm' is supported. Default is None, meaning invoking
         'alm'.
-    fc_options : str, optional
+    fc_calculator_options : str, optional
         This is arbitrary string.
     atom_list : array_like of int or None, optional
         List of supercell atomic indices that represent the first indices of
@@ -97,7 +97,7 @@ def get_fc2(supercell,
                        displacements,
                        forces,
                        atom_list=atom_list,
-                       options=fc_options,
+                       options=fc_calculator_options,
                        log_level=log_level)
     if fc_calculator == 'hiphive':
         from phonopy.interface.hiphive import get_fc2
@@ -106,5 +106,5 @@ def get_fc2(supercell,
                        displacements,
                        forces,
                        atom_list=atom_list,
-                       options=fc_options,
+                       options=fc_calculator_options,
                        log_level=log_level)
