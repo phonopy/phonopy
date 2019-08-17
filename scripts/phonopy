@@ -167,19 +167,19 @@ def finalize_phonopy(log_level,
                      interface_mode,
                      write_displacements=False,
                      filename="phonopy.yaml"):
+    units = get_default_physical_units(interface_mode)
+    phpy_yaml = PhonopyYaml(configuration=phonopy_conf.get_configures(),
+                            calculator=interface_mode,
+                            physical_units=units,
+                            settings={
+                                'force_sets': False,
+                                'born_effective_charge': False,
+                                'dielectric_constant': False,
+                                'displacements': write_displacements})
+    phpy_yaml.set_phonon_info(phonon)
+    with open(filename, 'w') as w:
+        w.write(str(phpy_yaml))
     if log_level > 0:
-        units = get_default_physical_units(interface_mode)
-        phpy_yaml = PhonopyYaml(configuration=phonopy_conf.get_configures(),
-                                calculator=interface_mode,
-                                physical_units=units,
-                                settings={
-                                    'force_sets': False,
-                                    'born_effective_charge': False,
-                                    'dielectric_constant': False,
-                                    'displacements': write_displacements})
-        phpy_yaml.set_phonon_info(phonon)
-        with open(filename, 'w') as w:
-            w.write(str(phpy_yaml))
         print_end()
     sys.exit(0)
 
