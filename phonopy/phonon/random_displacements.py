@@ -125,7 +125,7 @@ class RandomDisplacements(object):
         # The aim is to produce force constants from modified frequencies.
         self._force_constants = None
 
-    def run(self, T, number_of_snapshots=1, random_seed=None):
+    def run(self, T, number_of_snapshots=1, random_seed=None, randn=None):
         """
 
         Parameters
@@ -137,14 +137,23 @@ class RandomDisplacements(object):
         random_seed : int or None, optional
             Random seed passed to np.random.seed. Default is None. Integer
             number has to be positive.
+        randn : tuple
+            (randn_ii, randn_ij).
+            Used for testing purpose for the fixed random numbers of
+            np.random.normal that can depends on system.
 
         """
 
         np.random.seed(seed=random_seed)
 
         N = len(self._comm_points)
-        u_ii = self._solve_ii(T, number_of_snapshots)
-        u_ij = self._solve_ij(T, number_of_snapshots)
+
+        if randn is None:
+            u_ii = self._solve_ii(T, number_of_snapshots)
+            u_ij = self._solve_ij(T, number_of_snapshots)
+        else:
+            u_ii = self._solve_ii(T, number_of_snapshots, randn=randn[0])
+            u_ij = self._solve_ij(T, number_of_snapshots, randn=randn[1])
         mass = self._dynmat.supercell.masses.reshape(-1, 1)
         u = np.array((u_ii + u_ij) / np.sqrt(mass * N),
                      dtype='double', order='C')
@@ -213,46 +222,64 @@ class RandomDisplacements(object):
             self._phase_ij.append(
                 np.exp(2j * np.pi * np.dot(pos, q)).reshape(-1, 1))
 
-    def _solve_ii(self, T, number_of_snapshots):
+    def _solve_ii(self, T, number_of_snapshots, randn=None):
+        """
+
+        randn parameter is used for the test.
+
+        """
         natom = self._dynmat.supercell.get_number_of_atoms()
         u = np.zeros((number_of_snapshots, natom, 3), dtype='double')
 
-        for eigvals, eigvecs, phase in zip(
-                self._eigvals_ii, self._eigvecs_ii, self._phase_ii):
-            sigma = self._get_sigma(eigvals, T)
-            dist_func = np.random.randn(
-                number_of_snapshots, len(eigvals)) * sigma
-            u_red = np.dot(dist_func, eigvecs.T).reshape(
+        shape = (len(self._eigvals_ii), number_of_snapshots,
+                 len(self._eigvals_ii[0]))
+        if randn is None:
+            _randn = np.random.normal(size=shape)
+        else:
+            _randn = randn
+        sigmas = self._get_sigma(self._eigvals_ii, T)
+        for dist_func, sigma, eigvecs, phase in zip(
+                _randn, sigmas, self._eigvecs_ii, self._phase_ii):
+            u_red = np.dot(dist_func * sigma, eigvecs.T).reshape(
                 number_of_snapshots, -1, 3)[:, self._s2pp, :]
             u += u_red * phase
 
         return u
 
-    def _solve_ij(self, T, number_of_snapshots):
+    def _solve_ij(self, T, number_of_snapshots, randn=None):
+        """
+
+        randn parameter is used for the test.
+
+        """
         natom = self._dynmat.supercell.get_number_of_atoms()
         u = np.zeros((number_of_snapshots, natom, 3), dtype='double')
-
-        for eigvals, eigvecs, phase in zip(
-                self._eigvals_ij, self._eigvecs_ij, self._phase_ij):
-            sigma = self._get_sigma(eigvals, T)
-            dist_func = sigma * np.random.randn(
-                2, number_of_snapshots, len(eigvals))
-            u_red = np.dot(dist_func, eigvecs.T).reshape(
+        shape = (len(self._eigvals_ij), 2, number_of_snapshots,
+                 len(self._eigvals_ij[0]))
+        if randn is None:
+            _randn = np.random.normal(size=shape)
+        else:
+            _randn = randn
+        sigmas = self._get_sigma(self._eigvals_ij, T)
+        for dist_func, sigma, eigvecs, phase in zip(
+                _randn, sigmas, self._eigvecs_ij, self._phase_ij):
+            u_red = np.dot(dist_func * sigma, eigvecs.T).reshape(
                 2, number_of_snapshots, -1, 3)[:, :, self._s2pp, :]
             u += (u_red[0] * phase).real
             u -= (u_red[1] * phase).imag
 
         return u * np.sqrt(2)
 
-    def _get_sigma(self, eigvals, T):
-        idx = np.where(abs(eigvals) * self._factor ** 2
-                       > self._cutoff_frequency ** 2)[0]
-        freqs = np.sqrt(abs(eigvals[idx])) * self._factor
-        n = 1.0 / (np.exp(freqs * THzToEv / (Kb * T)) - 1)
-        sigma2 = self._unit_conversion / freqs * (0.5 + n)
-        sigma = np.zeros(len(eigvals), dtype='double')
-        sigma[idx] = np.sqrt(sigma2)
-
+    def _get_sigma(self, eigvals, T):  # max 2D
+        freqs = np.sqrt(np.abs(eigvals)) * self._factor
+        conditions = freqs > self._cutoff_frequency
+        freqs = np.where(conditions, freqs, 1)
+        n = np.where(conditions,
+                     1.0 / (np.exp(freqs * THzToEv / (Kb * T)) - 1),
+                     0)
+        sigma = np.where(conditions,
+                         np.sqrt(self._unit_conversion / freqs * (0.5 + n)),
+                         0)
         return sigma
 
     def _categorize_points(self):

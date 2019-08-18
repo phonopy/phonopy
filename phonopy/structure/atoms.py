@@ -293,6 +293,10 @@ class PhonopyAtoms(_Atoms):
     def masses(self):
         return self._masses.copy()
 
+    @property
+    def volume(self):
+        return self.get_volume()
+
     def copy(self):
         return PhonopyAtoms(cell=self._cell,
                             scaled_positions=self._scaled_positions,
