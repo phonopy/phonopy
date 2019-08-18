@@ -21,7 +21,17 @@ before_install:
     - echo $TRAVIS_TAG
 
 install:
-    - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy h5py pyyaml matplotlib setuptools setuptools_scm
+    - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then
+        conda init bash;
+        source $(conda info --root)/etc/profile.d/conda.sh;
+      fi
+    - conda create --yes -n travis -c conda-forge python=$TRAVIS_PYTHON_VERSION
+    - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+        source activate travis;
+      else
+        conda activate travis;
+      fi
+    - conda install --yes -c conda-forge gcc_linux-64 gxx_linux-64 matplotlib pyyaml scipy numpy h5py setuptools_scm
     - pwd
     - ./get_nanoversion.sh
     - cat __nanoversion__.txt

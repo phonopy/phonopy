@@ -110,20 +110,6 @@ randn_ij_str_2 = """ 0.1088634678  0.5078095905 -0.8622273465  1.2494697427 -0.0
 -0.7044181997 -0.5913751211  0.7369951690  0.4358672525  1.7759935855  0.5130743788"""
 
 
-class RandomDisplacementsTest(RandomDisplacements):
-    def test(self, T):
-        np.random.seed(seed=100)
-        N = len(self._comm_points)
-
-        u_ii = self._solve_ii(T, 1, randn=randn_ii)
-        u_ij = self._solve_ij(T, 1, randn=randn_ij)
-        mass = self._dynmat.supercell.masses.reshape(-1, 1)
-        u = np.array((u_ii + u_ij) / np.sqrt(mass * N),
-                     dtype='double', order='C')
-
-        self.u = u
-
-
 class TestRandomDisplacements(unittest.TestCase):
     def setUp(self):
         pass
@@ -162,10 +148,10 @@ class TestRandomDisplacements(unittest.TestCase):
         """
 
         phonon = self._get_phonon_NaCl()
-        rd = RandomDisplacementsTest(phonon.supercell,
-                                     phonon.primitive,
-                                     phonon.force_constants,
-                                     cutoff_frequency=0.01)
+        rd = RandomDisplacements(phonon.supercell,
+                                 phonon.primitive,
+                                 phonon.force_constants,
+                                 cutoff_frequency=0.01)
         num_band = phonon.primitive.get_number_of_atoms() * 3
         N = int(np.rint(phonon.supercell.volume / phonon.primitive.volume))
         N_ij = N - len(rd.qpoints)
