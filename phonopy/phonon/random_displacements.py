@@ -33,8 +33,9 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.harmonic.dynmat_to_fc import get_commensurate_points_in_integers
-from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
+from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
+from phonopy.harmonic.dynmat_to_fc import (
+    get_commensurate_points_in_integers, DynmatToForceConstants)
 from phonopy.units import VaspToTHz, THzToEv, Kb, Hbar, AMU, EV, Angstrom, THz
 
 
@@ -62,15 +63,22 @@ class RandomDisplacements(object):
     """
 
     def __init__(self,
-                 dynamical_matrix,
+                 supercell,
+                 primitive,
+                 force_constants,
                  cutoff_frequency=None,
                  factor=VaspToTHz):
         """
 
         Parameters
         ----------
-        dynamical_matrix : DynamicalMatrix
-            Dynamical matrix class instance.
+        supercell : Supercell
+            Supercell.
+        primitive : Primitive
+            Primitive cell
+        force_constants : array_like
+            Force constants matrix. See the details at docstring of
+            DynamialMatrix.
         cutoff_frequency : float
             Lowest phonon frequency below which frequency the phonon mode
             is treated specially. See _get_sigma. Default is None, which
@@ -80,7 +88,9 @@ class RandomDisplacements(object):
 
         """
 
-        self._dynmat = dynamical_matrix
+        # Dynamical matrix without NAC because of commensurate points only
+        self._dynmat = get_dynamical_matrix(
+            force_constants, supercell, primitive)
         if cutoff_frequency is None or cutoff_frequency < 0:
             self._cutoff_frequency = 0.01
         else:
@@ -92,15 +102,15 @@ class RandomDisplacements(object):
         self._unit_conversion = (Hbar * EV / AMU / THz
                                  / (2 * np.pi) / Angstrom ** 2)
 
-        slat = self._dynmat.supercell.get_cell()
-        self._rec_lat = np.linalg.inv(self._dynmat.primitive.get_cell())
+        slat = supercell.cell
+        self._rec_lat = np.linalg.inv(primitive.cell)
         smat = np.rint(np.dot(slat, self._rec_lat).T).astype(int)
         self._comm_points = get_commensurate_points_in_integers(smat)
         self._ii, self._ij = self._categorize_points()
         assert len(self._ii) + len(self._ij) * 2 == len(self._comm_points)
 
-        s2p = self._dynmat.primitive.s2p_map
-        p2p = self._dynmat.primitive.p2p_map
+        s2p = primitive.s2p_map
+        p2p = primitive.p2p_map
         self._s2pp = [p2p[i] for i in s2p]
 
         self._eigvals_ii = []
@@ -110,6 +120,10 @@ class RandomDisplacements(object):
         self._eigvecs_ij = []
         self._phase_ij = []
         self._prepare()
+
+        # This is set when running run_d2f.
+        # The aim is to produce force constants from modified frequencies.
+        self._force_constants = None
 
     def run(self, T, number_of_snapshots=1, random_seed=None):
         """
@@ -131,20 +145,57 @@ class RandomDisplacements(object):
         N = len(self._comm_points)
         u_ii = self._solve_ii(T, number_of_snapshots)
         u_ij = self._solve_ij(T, number_of_snapshots)
-        mass = self._dynmat.supercell.get_masses().reshape(-1, 1)
+        mass = self._dynmat.supercell.masses.reshape(-1, 1)
         u = np.array((u_ii + u_ij) / np.sqrt(mass * N),
                      dtype='double', order='C')
         self.u = u
 
-    def _prepare(self):
-        pos = self._dynmat.supercell.get_scaled_positions()
-        N = len(self._comm_points)
+    @property
+    def frequencies(self):
+        eigvals = np.vstack((self._eigvals_ii, self._eigvals_ij))
+        freqs = np.sqrt(np.abs(eigvals)) * np.sign(eigvals) * self._factor
+        return np.array(freqs, dtype='double', order='C')
 
-        qpoints_ii = get_qpoints_in_Brillouin_zone(
-            self._rec_lat,
-            self._comm_points[self._ii] / float(N),
-            only_unique=True)
-        for q in qpoints_ii:
+    @frequencies.setter
+    def frequencies(self, freqs):
+        eigvals = (freqs / self._factor) ** 2
+        if len(eigvals) != len(self._eigvals_ii) + len(self._eigvals_ij):
+            raise RuntimeError("Dimension of frequencies is wrong.")
+
+        self._eigvals_ii = eigvals[:len(self._eigvals_ii)]
+        self._eigvals_ij = eigvals[len(self._eigvals_ii):]
+
+    @property
+    def qpoints(self):
+        N = len(self._comm_points)
+        return self._comm_points[self._ii + self._ij] / float(N)
+
+    @property
+    def force_constants(self):
+        return self._force_constants
+
+    def run_d2f(self):
+        eigvals = np.vstack(
+            (self._eigvals_ii, self._eigvals_ij, self._eigvals_ij))
+        eigvecs = np.vstack(
+            (self._eigvecs_ii, self._eigvecs_ij, self._eigvecs_ij))
+        eigvecs[-len(self._ij):] = eigvecs[-len(self._ij):].conj()
+        N = len(self._comm_points)
+        qpoints = self._comm_points[self._ii + self._ij + self._ij] / float(N)
+        qpoints[-len(self._ij):] = -qpoints[-len(self._ij):]
+        d2f = DynmatToForceConstants(
+            self._dynmat.primitive,
+            self._dynmat.supercell,
+            eigenvalues=eigvals,
+            eigenvectors=eigvecs,
+            commensurate_points=qpoints)
+        d2f.run()
+        self._force_constants = d2f.force_constants
+
+    def _prepare(self):
+        pos = self._dynmat.supercell.scaled_positions
+        N = len(self._comm_points)
+        for q in self._comm_points[self._ii] / float(N):
             self._dynmat.set_dynamical_matrix(q)
             dm = self._dynmat.dynamical_matrix
             eigvals, eigvecs = np.linalg.eigh(dm.real)
@@ -153,11 +204,7 @@ class RandomDisplacements(object):
             self._phase_ii.append(
                 np.cos(2 * np.pi * np.dot(pos, q)).reshape(-1, 1))
 
-        qpoints_ij = get_qpoints_in_Brillouin_zone(
-            self._rec_lat,
-            self._comm_points[self._ij] / float(N),
-            only_unique=True)
-        for q in qpoints_ij:
+        for q in self._comm_points[self._ij] / float(N):
             self._dynmat.set_dynamical_matrix(q)
             dm = self._dynmat.dynamical_matrix
             eigvals, eigvecs = np.linalg.eigh(dm)
@@ -197,34 +244,14 @@ class RandomDisplacements(object):
 
         return u * np.sqrt(2)
 
-    def _get_sigma(self, eigvals, T, mode=1):
-        if mode == 0:  # Ignore modes having negative eigenvalues
-            idx = np.where(eigvals * self._factor ** 2
-                           > self._cutoff_frequency ** 2)[0]
-            freqs = np.sqrt(eigvals[idx]) * self._factor
-            n = 1.0 / (np.exp(freqs * THzToEv / (Kb * T)) - 1)
-            sigma2 = self._unit_conversion / freqs * (0.5 + n)
-            sigma = np.zeros(len(eigvals), dtype='double')
-            sigma[idx] = np.sqrt(sigma2)
-        elif mode == 1:  # Use absolute frequencies
-            idx = np.where(abs(eigvals) * self._factor ** 2
-                           > self._cutoff_frequency ** 2)[0]
-            freqs = np.sqrt(abs(eigvals[idx])) * self._factor
-            n = 1.0 / (np.exp(freqs * THzToEv / (Kb * T)) - 1)
-            sigma2 = self._unit_conversion / freqs * (0.5 + n)
-            sigma = np.zeros(len(eigvals), dtype='double')
-            sigma[idx] = np.sqrt(sigma2)
-        elif mode == 2:  # Raise to lowest positive absolute value
-            idx = np.where(eigvals * self._factor ** 2
-                           > self._cutoff_frequency ** 2)[0]
-            idx_n = np.where(eigvals * self._factor ** 2
-                             < -self._cutoff_frequency ** 2)[0]
-            freqs = np.sqrt(eigvals[idx]) * self._factor
-            n = 1.0 / (np.exp(freqs * THzToEv / (Kb * T)) - 1)
-            sigma2 = self._unit_conversion / freqs * (0.5 + n)
-            sigma = np.zeros(len(eigvals), dtype='double')
-            sigma[idx] = np.sqrt(sigma2)
-            sigma[idx_n] = sigma[idx[np.argmin(freqs)]]
+    def _get_sigma(self, eigvals, T):
+        idx = np.where(abs(eigvals) * self._factor ** 2
+                       > self._cutoff_frequency ** 2)[0]
+        freqs = np.sqrt(abs(eigvals[idx])) * self._factor
+        n = 1.0 / (np.exp(freqs * THzToEv / (Kb * T)) - 1)
+        sigma2 = self._unit_conversion / freqs * (0.5 + n)
+        sigma = np.zeros(len(eigvals), dtype='double')
+        sigma[idx] = np.sqrt(sigma2)
 
         return sigma
 

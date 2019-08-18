@@ -370,6 +370,10 @@ class Phonopy(object):
         return self._mesh
 
     @property
+    def random_displacements(self):
+        return self._random_displacements
+
+    @property
     def dynamic_structure_factor(self):
         return self._dynamic_structure_factor
 
@@ -2581,7 +2585,9 @@ class Phonopy(object):
                                  random_seed=None,
                                  cutoff_frequency=None):
         self._random_displacements = RandomDisplacements(
-            self._dynamical_matrix,
+            self._supercell,
+            self._primitive,
+            self._force_constants,
             cutoff_frequency=cutoff_frequency,
             factor=self._factor)
         self._random_displacements.run(

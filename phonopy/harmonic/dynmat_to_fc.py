@@ -46,8 +46,14 @@ def get_commensurate_points(supercell_matrix):  # wrt primitive cell
     ----------
     supercell_matrix : array_like
         Supercell matrix with respect to primitive cell basis vectors.
-        shape=(3, 3)
-        dtype=intc
+        shape=(3, 3), dtype=int
+
+    Returns
+    -------
+    commensurate_points : ndarray
+        Commensurate points corresponding to supercell matrix.
+        shape=(N, 3), dtype='double', order='C'
+        where N = det(supercell_matrix)
 
     """
 
@@ -57,7 +63,7 @@ def get_commensurate_points(supercell_matrix):  # wrt primitive cell
                                  cell=np.diag([1, 1, 1]),
                                  pbc=True)
     rec_supercell = get_supercell(rec_primitive, smat.T)
-    q_pos = rec_supercell.get_scaled_positions()
+    q_pos = rec_supercell.scaled_positions
     return np.array(np.where(q_pos > 1 - 1e-15, q_pos - 1, q_pos),
                     dtype='double', order='C')
 
@@ -98,18 +104,124 @@ def get_commensurate_points_in_integers(supercell_matrix):
 
 
 class DynmatToForceConstants(object):
+    """Transforms eigensolutions to force constants
+
+    This is the inverse transform of force constants to eigensolutions.
+    Eigenvalue-eigenvector pairs or frequency-eigenvector pairs of
+    dynamical matrices are transformed to force constants by this class.
+    Optionally, dynamical matrices (not the DynamicalMatrix class instance,
+    but the calculated matrices) can be used instead of above pairs.
+
+    The eigensolutions have to be those calculated at commensurate q-points
+    of supercell matrix. The commensurate q-points are obtained by the
+    attribute ``commensurate_points``. This set of commensurate points can be
+    also given by setter of it.
+
+    One supposed usage is::
+
+       d2f = DynmatToForceConstants(primitive, supercell)
+       comm_points = d2f.commensurate_points
+       ... calculated phonons at comm_points
+       d2f.create_dynamical_matrices(frequencies=frequencies,
+                                     eigenvectors=eigenvectors)
+       d2f.run()
+       fc = d2f.force_constants
+
+    Another usage may be with eigensolutions at commensurate q-points::
+
+       d2f = DynmatToForceConstants(primitive, supercell,
+                                    commensurate_points=comm_points,
+                                    eigenvalues=eigenvalues,
+                                    eigenvectors=eigenvectors)
+       d2f.run()
+       fc = d2f.force_constants
+
+
+    Attributes
+    ----------
+    force_constants : ndarray
+        Calculated force constants. Only getter. Array shape depends on
+        ``is_full_fc``.
+            True : shape=(supercell_atoms, supercell_atoms, 3, 3)
+            False : shape=(primitive_atoms, supercell_atoms, 3, 3)
+        Default is True.
+        dtype='double', order='C'.
+    commensurate_points : ndarray
+        Commensurate q-points of supercell matrix.
+        shape=(det(supercell_matrix), 3), dtype='double', order='C'.
+    dynamical_matrices : ndarray
+        shape=(det(supercell_matrix), num_band, num_band),
+        where num_band is 3 x number of atoms in primitive cell.
+        dtype='complex128', order='C'.
+
+    """
+
     def __init__(self,
                  primitive,
                  supercell,
                  frequencies=None,
+                 eigenvalues=None,
                  eigenvectors=None,
-                 is_full_fc=True,
-                 symprec=1e-5):
+                 dynamical_matrices=None,
+                 commensurate_points=None,
+                 is_full_fc=True):
+        """
+
+        Note
+        ----
+        When calculating force constants from eigensolutions,
+        eigher one of frequency-eigenvector pair or eigenvalu-eigenvector
+        can be used.
+
+        Parameters
+        ----------
+        supercell : Supercell
+            Supercell.
+        primitive : Primitive
+            Primitive cell
+        frequencies : ndarray
+            Phonon frequencies as the solution of dynamical matrices at
+            commensurate q-points.
+            shape=(det(supercell_matrix), num_band), dtype='double', order='C'
+            where ``num_band`` is 3 x number of atoms in primitive cell.
+        eigenvalues : ndarray
+            Phonon eigenvalues as the solution of dynamical matrices at
+            commensurate q-points.
+            shape=(det(supercell_matrix), num_band), dtype='double', order='C'
+            where ``num_band`` is 3 x number of atoms in primitive cell.
+        eigenvectors : ndarray
+            Phonon eigenvectors as the solution of dynamical matrices at
+            commensurate q-points.
+            shape=(det(supercell_matrix), num_band, num_band)
+            dtype='complex128', order='C'.
+            where ``num_band`` is 3 x number of atoms in primitive cell.
+        dynamical_matrices : ndarray
+            Dynamical matrices at commensurate q-points.
+            shape=(det(supercell_matrix), num_band, num_band)
+            dtype='complex128', order='C'.
+            where ``num_band`` is 3 x number of atoms in primitive cell.
+        commensurate_points : ndarray
+            Commensurate q-points corresponding to supercell_matrix. The order
+            has to be the same as those of frequencies or eigenvalues, and
+            eigenvectors. As the default behaviour, commensurate q-points are
+            generated when this is not given.
+            shape=(det(supercell_matrix), 3), dtype='double', order='C'
+        is_full_fc : bool
+            This controls the matrix shape of calculated force constants.
+            True and False give the full and compact force cosntants,
+            respectively. The default is True. See more details in Attributes
+            section of this class.
+
+        """
         self._primitive = primitive
         self._supercell = supercell
         supercell_matrix = np.linalg.inv(self._primitive.primitive_matrix)
         supercell_matrix = np.rint(supercell_matrix).astype('intc')
-        self._commensurate_points = get_commensurate_points(supercell_matrix)
+        if commensurate_points is None:
+            self._commensurate_points = get_commensurate_points(
+                supercell_matrix)
+        else:
+            self._commensurate_points = commensurate_points
         (self._shortest_vectors,
          self._multiplicity) = primitive.get_smallest_vectors()
         self._dynmat = None
@@ -124,39 +236,69 @@ class DynmatToForceConstants(object):
         itemsize = self._fc.itemsize
         self._dtype_complex = ("c%d" % (itemsize * 2))
 
-        if frequencies is not None and eigenvectors is not None:
-            self.set_dynamical_matrices(frequencies, eigenvectors)
+        if ((frequencies is not None or eigenvalues is not None)
+            and eigenvectors is not None):
+            self.create_dynamical_matrices(
+                frequencies=frequencies,
+                eigenvalues=eigenvalues,
+                eigenvectors=eigenvectors)
+        elif dynamical_matrices is not None:
+            self.dynamical_matrices = dynamical_matrices
 
     def run(self):
         self._inverse_transformation()
         # Full fc
         # self._distribute_force_constants()
 
-    def get_force_constants(self):
+    @property
+    def force_constants(self):
         return self._fc
 
-    def get_commensurate_points(self):
+    def get_force_constants(self):
+        return self.force_constants
+
+    @property
+    def commensurate_points(self):
         return self._commensurate_points
 
-    def get_dynamical_matrices(self):
+    def get_commensurate_points(self):
+        return self.commensurate_points
+
+    @commensurate_points.setter
+    def commensurate_points(self, comm_points):
+        self._commensurate_points = np.array(
+            comm_points, dtype='double', order='C')
+
+    @property
+    def dynamical_matrices(self):
         return self._dynmat
 
-    def set_dynamical_matrices(self,
-                               frequencies_at_qpoints=None,
-                               eigenvectors_at_qpoints=None,
-                               dynmat=None):
-        if dynmat is None:
-            dm = []
-            for frequencies, eigvecs in zip(frequencies_at_qpoints,
-                                            eigenvectors_at_qpoints):
-                eigvals = frequencies ** 2 * np.sign(frequencies)
-                dm.append(
-                    np.dot(np.dot(eigvecs, np.diag(eigvals)),
-                           eigvecs.T.conj()))
-        else:
-            dm = dynmat
+    def get_dynamical_matrices(self):
+        return self.dynamical_matrices
 
-        self._dynmat = np.array(dm, dtype=self._dtype_complex, order='C')
+    @dynamical_matrices.setter
+    def dynamical_matrices(self, dynmat):
+        self._dynmat = np.array(dynmat, dtype=self._dtype_complex, order='C')
+
+    def set_dynamical_matrices(self, dynmat):
+        self.dynamical_matrices = dynmat
+
+    def create_dynamical_matrices(self,
+                                  frequencies=None,
+                                  eigenvalues=None,
+                                  eigenvectors=None):
+        dm = []
+        if eigenvalues is not None:
+            for eigvals, eigvecs in zip(eigenvalues, eigenvectors):
+                dm.append(np.dot(np.dot(eigvecs, np.diag(eigvals)),
+                                 eigvecs.T.conj()))
+        else:
+            for freqs, eigvecs in zip(frequencies, eigenvectors):
+                eigvals = freqs ** 2 * np.sign(freqs)
+                dm.append(np.dot(np.dot(eigvecs, np.diag(eigvals)),
+                                 eigvecs.T.conj()))
+
+        self.dynamical_matrices = dm
 
     def _inverse_transformation(self):
         try:
@@ -173,12 +315,12 @@ class DynmatToForceConstants(object):
     def _c_inverse_transformation(self):
         import phonopy._phonopy as phonoc
 
-        s2p = self._primitive.get_supercell_to_primitive_map()
-        p2p = self._primitive.get_primitive_to_primitive_map()
+        s2p = self._primitive.s2p_map
+        p2p = self._primitive.p2p_map
         s2pp = np.array([p2p[i] for i in s2p], dtype='intc')
 
         if self._fc.shape[0] == self._fc.shape[1]:
-            fc_index_map = self._primitive.get_primitive_to_supercell_map()
+            fc_index_map = self._primitive.p2s_map
         else:
             fc_index_map = np.arange(self._fc.shape[0], dtype='intc')
 
@@ -187,17 +329,16 @@ class DynmatToForceConstants(object):
                                       self._commensurate_points,
                                       self._shortest_vectors,
                                       self._multiplicity,
-                                      self._primitive.get_masses(),
+                                      self._primitive.masses,
                                       s2pp,
                                       fc_index_map)
 
     def _py_inverse_transformation(self):
-        s2p = self._primitive.get_supercell_to_primitive_map()
-        p2s = self._primitive.get_primitive_to_supercell_map()
-        p2p = self._primitive.get_primitive_to_primitive_map()
+        s2p = self._primitive.s2p_map
+        p2s = self._primitive.p2s_map
+        p2p = self._primitive.p2p_map
 
-        fc = self._fc
-        m = self._primitive.get_masses()
+        m = self._primitive.masses
         N = (self._supercell.get_number_of_atoms() /
              self._primitive.get_number_of_atoms())
 
@@ -205,10 +346,10 @@ class DynmatToForceConstants(object):
             for s_j, p_j in enumerate([p2p[i] for i in s2p]):
                 coef = np.sqrt(m[p_i] * m[p_j]) / N
                 fc_elem = self._sum_q(p_i, s_j, p_j) * coef
-                if fc.shape[0] == fc.shape[1]:
-                    fc[s_i, s_j] = fc_elem
+                if self._fc.shape[0] == self._fc.shape[1]:
+                    self._fc[s_i, s_j] = fc_elem
                 else:
-                    fc[p_i, s_j] = fc_elem
+                    self._fc[p_i, s_j] = fc_elem
 
     def _sum_q(self, p_i, s_j, p_j):
         multi = self._multiplicity[s_j, p_i]

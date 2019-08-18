@@ -612,7 +612,8 @@ if log_level > 0:
     else:
         print("Use -v option to watch primitive cell, unit cell, "
               "and supercell structures.")
-    print('')
+    if log_level == 1:
+        print("")
 
 #################################
 # Create displacements and exit #
@@ -708,6 +709,9 @@ else:
         if log_level:
             print("Forces and displacements are read from \"%s\"."
                   % "FORCE_SETS")
+            if 'displacements' in force_sets:
+                print("%d snapshots were found in \"%s\"."
+                      % (len(force_sets['displacements']), "FORCE_SETS"))
 
     if 'natom' in force_sets:
         natom = force_sets['natom']
@@ -736,7 +740,7 @@ else:
     phonon.dataset = force_sets
     if log_level > 0:
         if fc_calculator is not None:
-            print("Computing force constants by %s..."
+            print("Force constants calculation by %s starts."
                   % fc_calculator_names[fc_calculator])
         else:
             print("Computing force constants...")
