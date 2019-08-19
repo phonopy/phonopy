@@ -139,6 +139,7 @@ class TestRandomDisplacements(unittest.TestCase):
 
         randn_ii and randn_ij were created by
 
+            np.random.seed(seed=100)
             randn_ii = np.random.normal(size=(N_ii, 1, num_band))
             randn_ij = np.random.normal(size=(N_ij, 2, 1, num_band)).
 

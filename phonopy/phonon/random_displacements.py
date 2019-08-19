@@ -59,6 +59,34 @@ class RandomDisplacements(object):
         harmonic oscillator. The unit of distance is Angstrom.
         shape=(number_of_snapshots, supercell_atoms, 3)
         dtype='double', order='C'
+    qpoints : ndarray
+        Commensurate q-points corresponding to the supercell matrix but not
+        all. Only half of the commensurate q-points that are not on the BZ
+        boundary and Gamma-points are only taken, because of the symmetry
+        of dynamical matrix: omega_q = omega_-q and e_q = e_-q^*.
+    frequencies : ndarray
+        Phonon frequencies at commensurate q-points as explained above
+        qpoints attribute. Both of getter and setter are implemented.
+        The aim of this is to modify random displacements by modifying
+        frequencies by users.
+        shape=(len(qpoints), num_band), dtype='double', order='C'
+        where num_band is 3 * number of atoms in primitive cell.
+    force_constants : ndarray
+        Force constants calculated from phonon frequencies and eigenvectors
+        at commensurate q-points as given above qpoints attribute. By this,
+        phonon can be calculated with modified phonon frequencies. To
+        calculate force constants, run_d2f has to be executed. For example,
+
+            rd = RandomDisplacements(supercell, primitive, force_constants)
+            freqs = rd.frequencies
+            ... modify freqs by users
+            rd.frequencies = freqs
+            rd.run(500)  # To get random displacements
+            rd.run_d2f()
+            fc = rd.force_constants  # To draw phonons with modified freqs
+
+        shape=(superell_atoms, supercell_atoms, 3, 3)
+        dtype='double', order='C'
 
     """
 
@@ -148,12 +176,20 @@ class RandomDisplacements(object):
 
         N = len(self._comm_points)
 
+        # This randn is used only for testing purpose.
         if randn is None:
-            u_ii = self._solve_ii(T, number_of_snapshots)
-            u_ij = self._solve_ij(T, number_of_snapshots)
+            randn_ii = None
+            randn_ij = None
         else:
-            u_ii = self._solve_ii(T, number_of_snapshots, randn=randn[0])
-            u_ij = self._solve_ij(T, number_of_snapshots, randn=randn[1])
+            randn_ii = randn[0]
+            randn_ij = randn[1]
+
+        u_ii = self._solve_ii(T, number_of_snapshots, randn=randn_ii)
+        if self._ij:
+            u_ij = self._solve_ij(T, number_of_snapshots, randn=randn_ij)
+        else:
+            u_ij = 0
+
         mass = self._dynmat.supercell.masses.reshape(-1, 1)
         u = np.array((u_ii + u_ij) / np.sqrt(mass * N),
                      dtype='double', order='C')
@@ -161,7 +197,10 @@ class RandomDisplacements(object):
 
     @property
     def frequencies(self):
-        eigvals = np.vstack((self._eigvals_ii, self._eigvals_ij))
+        if self._ij:
+            eigvals = np.vstack((self._eigvals_ii, self._eigvals_ij))
+        else:
+            eigvals = self._eigvals_ii
         freqs = np.sqrt(np.abs(eigvals)) * np.sign(eigvals) * self._factor
         return np.array(freqs, dtype='double', order='C')
 
@@ -184,14 +223,20 @@ class RandomDisplacements(object):
         return self._force_constants
 
     def run_d2f(self):
-        eigvals = np.vstack(
-            (self._eigvals_ii, self._eigvals_ij, self._eigvals_ij))
-        eigvecs = np.vstack(
-            (self._eigvecs_ii, self._eigvecs_ij, self._eigvecs_ij))
-        eigvecs[-len(self._ij):] = eigvecs[-len(self._ij):].conj()
         N = len(self._comm_points)
-        qpoints = self._comm_points[self._ii + self._ij + self._ij] / float(N)
-        qpoints[-len(self._ij):] = -qpoints[-len(self._ij):]
+        if self._ij:
+            eigvals = np.vstack(
+                (self._eigvals_ii, self._eigvals_ij, self._eigvals_ij))
+            eigvecs = np.vstack(
+                (self._eigvecs_ii, self._eigvecs_ij, self._eigvecs_ij))
+            eigvecs[-len(self._ij):] = eigvecs[-len(self._ij):].conj()
+            qpoints = self._comm_points[self._ii + self._ij * 2] / float(N)
+            qpoints[-len(self._ij):] = -qpoints[-len(self._ij):]
+        else:
+            eigvals = self._eigvals_ii
+            eigvecs = self._eigvecs_ii
+            qpoints = self._comm_points[self._ii] / float(N)
+
         d2f = DynmatToForceConstants(
             self._dynmat.primitive,
             self._dynmat.supercell,
@@ -213,14 +258,15 @@ class RandomDisplacements(object):
             self._phase_ii.append(
                 np.cos(2 * np.pi * np.dot(pos, q)).reshape(-1, 1))
 
-        for q in self._comm_points[self._ij] / float(N):
-            self._dynmat.set_dynamical_matrix(q)
-            dm = self._dynmat.dynamical_matrix
-            eigvals, eigvecs = np.linalg.eigh(dm)
-            self._eigvals_ij.append(eigvals)
-            self._eigvecs_ij.append(eigvecs)
-            self._phase_ij.append(
-                np.exp(2j * np.pi * np.dot(pos, q)).reshape(-1, 1))
+        if self._ij:
+            for q in self._comm_points[self._ij] / float(N):
+                self._dynmat.set_dynamical_matrix(q)
+                dm = self._dynmat.dynamical_matrix
+                eigvals, eigvecs = np.linalg.eigh(dm)
+                self._eigvals_ij.append(eigvals)
+                self._eigvecs_ij.append(eigvecs)
+                self._phase_ij.append(
+                    np.exp(2j * np.pi * np.dot(pos, q)).reshape(-1, 1))
 
     def _solve_ii(self, T, number_of_snapshots, randn=None):
         """
