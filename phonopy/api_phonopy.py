@@ -422,15 +422,18 @@ class Phonopy(object):
         self._search_primitive_symmetry()
         self._displacement_dataset = None
 
-    @dataset.setter
+    @property
+    def masses(self):
+        return self._primitive.masses
+
+    @masses.setter
     def masses(self, masses):
         p_masses = np.array(masses)
         self._primitive.set_masses(p_masses)
-        p2p_map = self._primitive.get_primitive_to_primitive_map()
-        s_masses = p_masses[[p2p_map[x] for x in
-                             self._primitive.get_supercell_to_primitive_map()]]
+        p2p_map = self._primitive.p2p_map
+        s_masses = p_masses[[p2p_map[x] for x in self._primitive.s2p_map]]
         self._supercell.set_masses(s_masses)
-        u2s_map = self._supercell.get_unitcell_to_supercell_map()
+        u2s_map = self._supercell.u2s_map
         u_masses = s_masses[u2s_map]
         self._unitcell.set_masses(u_masses)
         if self._force_constants is not None:
@@ -481,19 +484,15 @@ class Phonopy(object):
 
         """
 
-        if 'displacements' in dataset:
-            natom = self._supercell.get_number_of_atoms()
-            if type(dataset['displacements']) is np.ndarray:
-                if dataset['displacements'].ndim in (1, 2):
-                    d = dataset['displacements'].reshape((-1, natom, 3))
-                    dataset['displacements'] = d
+        if 'first_atoms' in dataset:
+            self._displacement_dataset = dataset
+        elif 'displacements' in dataset:
+            self.displacements = dataset['displacements']
+            if 'forces' in dataset:
+                self.forces = dataset['forces']
+        else:
+            raise RuntimeError("Data format of dataset is wrong.")
 
-        if 'forces' in dataset:
-            if type(dataset['forces']) is np.ndarray:
-                if dataset['forces'].ndim in (1, 2):
-                    f = dataset['forces'].reshape((-1, natom, 3))
-                    dataset['forces'] = f
-        self._displacement_dataset = dataset
         self._supercells_with_displacements = None
 
     def set_displacement_dataset(self, displacement_dataset):
@@ -522,8 +521,12 @@ class Phonopy(object):
             for disp, forces in zip(self._displacement_dataset['first_atoms'],
                                     sets_of_forces):
                 disp['forces'] = forces
-        elif 'forces' in self._displacement_dataset:
+        elif 'displacements' in self._displacement_dataset:
             forces = np.array(sets_of_forces, dtype='double', order='C')
+            natom = self._supercell.get_number_of_atoms()
+            if forces.ndim != 3 or forces.shape[1:] != (natom, 3):
+                raise RuntimeError("Array shape of input forces is incorrect.")
+
             self._displacement_dataset['forces'] = forces
 
     def set_forces(self, sets_of_forces):
