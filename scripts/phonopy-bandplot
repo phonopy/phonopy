@@ -36,6 +36,7 @@
 
 import sys
 import numpy as np
+from phonopy.phonon.band_structure import plot as band_plot
 
 try:
     import yaml
@@ -48,12 +49,12 @@ try:
 except ImportError:
     from yaml import Loader
 
-from phonopy.units import VaspToTHz
 
 def read_band_yaml(filename):
     data = yaml.load(open(filename), Loader=Loader)
     frequencies = []
     distances = []
+    qpoints = []
     labels = []
     for j, v in enumerate(data['phonon']):
         if 'label' in v:
@@ -61,12 +62,20 @@ def read_band_yaml(filename):
         else:
             labels.append(None)
         frequencies.append([f['frequency'] for f in v['band']])
+        qpoints.append(v['q-position'])
         distances.append(v['distance'])
+
+    if 'labels' in data:
+        labels = data['labels']
+    elif all(x is None for x in labels):
+        labels = []
 
     return (np.array(distances),
             np.array(frequencies),
+            np.array(qpoints),
             data['segment_nqpoint'],
             labels)
+
 
 def read_dos_dat(filename, pdos_indices=None, dos_factor=None):
     dos = []
@@ -95,6 +104,7 @@ def read_dos_dat(filename, pdos_indices=None, dos_factor=None):
 
     return frequencies, dos
 
+
 def get_options():
     # Parse options
     import argparse
@@ -109,6 +119,7 @@ def get_options():
                         f_max=None,
                         f_min=None,
                         is_gnuplot=False,
+                        is_legacy_plot=False,
                         is_points=False,
                         is_vertial_line=False,
                         output_filename=None,
@@ -151,6 +162,9 @@ def get_options():
         "--legend", dest="show_legend", action="store_true",
         help="Show legend")
     parser.add_argument(
+        "--legacy", dest="is_legacy_plot", action="store_true",
+        help="Plot in legacy style")
+    parser.add_argument(
         "--line", "-l", dest="is_vertial_line", action="store_true",
         help="Vertial line is drawn at between paths")
     parser.add_argument(
@@ -174,11 +188,8 @@ def get_options():
     args = parser.parse_args()
     return args
 
-def main(args):
-    if args.output_filename:
-        import matplotlib
-        matplotlib.use('Agg')
 
+def old_plot(args):
     if not args.is_gnuplot:
         import matplotlib.pyplot as plt
         if args.band_labels:
@@ -205,9 +216,6 @@ def main(args):
     if args.is_points:
         colors = [x + 'o' for x in colors]
 
-    count = 0
-
-
     if len(args.filenames) == 0:
         filenames = ['band.yaml']
     else:
@@ -225,17 +233,26 @@ def main(args):
     for i, filename in enumerate(filenames):
         (distances,
          frequencies,
+         qpoints,
          segment_nqpoint,
          labels) = read_band_yaml(filename)
 
-        end_points = [0,]
+        end_points = [0, ]
         for nq in segment_nqpoint:
             end_points.append(nq + end_points[-1])
         end_points[-1] -= 1
         segment_positions = distances[end_points]
 
-        if all(x is None for x in labels):
+        if not labels:
             labels_at_ends = None
+        elif type(labels[0]) is list:
+            labels_at_ends = [labels[0][0], ]
+            for j, pair in enumerate(labels[1:]):
+                if labels[j][1] != pair[0]:
+                    labels_at_ends.append("|".join([labels[j][1], pair[0]]))
+                else:
+                    labels_at_ends.append(pair[0])
+            labels_at_ends.append(labels[-1][1])
         else:
             labels_at_ends = [labels[n] for n in end_points]
 
@@ -264,17 +281,18 @@ def main(args):
                     curves.append(
                         plt.plot(distances[q:(q + nq)],
                                  frequencies[q:(q + nq)] * args.factor,
-                                 colors[i],
+                                 color=colors[i][0],
+                                 linestyle=colors[i][1:],
                                  label=filename)[0])
                 else:
                     plt.plot(distances[q:(q + nq)],
                              frequencies[q:(q + nq)] * args.factor,
-                             colors[i])
+                             color=colors[i][0],
+                             linestyle=colors[i][1:])
                 q += nq
 
         if args.is_gnuplot:
             print('')
-
 
     if not args.is_gnuplot:
         if args.xlabel is None:
@@ -366,11 +384,112 @@ def main(args):
         else:
             plt.show()
 
+
+def plot(args):
+    import matplotlib.pyplot as plt
+    from matplotlib import rc
+    rc('text', usetex=True)
+    from mpl_toolkits.axes_grid1 import ImageGrid
+
+    if len(args.filenames) == 0:
+        filenames = ['band.yaml', ]
+    else:
+        filenames = args.filenames
+
+    # if args.xlabel is None:
+    #     plt.xlabel('Wave vector')
+    # else:
+    #     plt.xlabel(args.xlabel)
+    # if args.ylabel is None:
+    #     plt.ylabel('Frequency')
+    # else:
+    #     plt.ylabel(args.ylabel)
+
+    # plt.xlim(distances[0], distances[-1])
+    if args.f_max is not None:
+        plt.ylim(top=args.f_max)
+    if args.f_min is not None:
+        plt.ylim(bottom=args.f_min)
+
+    (distances,
+     frequencies,
+     qpoints,
+     segment_nqpoints,
+     label_pairs) = read_band_yaml(filenames[0])
+
+    i = 0
+    freq_list = []
+    dist_list = []
+    qpt_list = []
+    for nq in segment_nqpoints:
+        freq_list.append(frequencies[i:(i + nq)])
+        dist_list.append(distances[i:(i + nq)])
+        qpt_list.append(qpoints[i:(i + nq)])
+        i += nq
+
+    if not label_pairs:
+        labels = None
+        path_connections = []
+        if len(qpt_list) > 1:
+            for i, qpts in enumerate(qpt_list[1:]):
+                if (np.abs(qpt_list[i][-1] - qpts[0]) < 1e-5).all():
+                    path_connections.append(True)
+                else:
+                    path_connections.append(False)
+        path_connections += [False, ]
+    else:
+        labels = []
+        path_connections = []
+        if len(label_pairs) > 1:
+            for i, pair in enumerate(label_pairs[1:]):
+                labels.append(label_pairs[i][0])
+                if label_pairs[i][1] != pair[0]:
+                    labels.append(label_pairs[i][1])
+                    path_connections.append(False)
+                else:
+                    path_connections.append(True)
+            if label_pairs[-2][1] != label_pairs[-1][1]:
+                labels += label_pairs[-1]
+            else:
+                labels.append(label_pairs[-1][1])
+        else:
+            labels += label_pairs[0]
+        path_connections += [False, ]
+
+    n = len([x for x in path_connections if not x])
+    fig = plt.figure()
+    axs = ImageGrid(fig, 111,  # similar to subplot(111)
+                    nrows_ncols=(1, n),
+                    axes_pad=0.11,
+                    add_all=True,
+                    label_mode="L")
+    band_plot(axs,
+              freq_list,
+              dist_list,
+              path_connections,
+              labels)
+    plt.show()
+
+
+def main(args):
+    if args.output_filename:
+        import matplotlib
+        matplotlib.use('Agg')
+
+    if (args.is_gnuplot or
+        args.is_legacy_plot or
+        args.dos):
+        old_plot(args)
+    else:
+        plot(args)
+
+
 def _plot_dos(d, f, dmax):
     pdos = []
     for f1, f2, d1, d2 in zip(f[:-1], f[1:], d[:-1], d[1:]):
         pdos += _cut_dos([f1, d1], [f2, d2], dmax)
     return np.transpose(pdos)
+
 
 def _cut_dos(p1, p2, dmax):
     """Cut DOS at dmax
@@ -414,6 +533,7 @@ def _cut_dos(p1, p2, dmax):
         return [[p1[0], dmax], [fi, dmax], p2]
     else:
         return [[p1[0], dmax], [p1[0], dmax]]
+
 
 if __name__ == "__main__":
     main(get_options())

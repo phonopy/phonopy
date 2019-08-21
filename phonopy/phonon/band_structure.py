@@ -165,6 +165,53 @@ def get_band_qpoints_by_seekpath(primitive, npoints, is_const_interval=False):
     return qpoints_of_paths, labels, path_connections
 
 
+def plot(axs, frequencies, distances, path_connections, labels):
+    max_freq = max([np.max(fq) for fq in frequencies])
+    max_dist = distances[-1][-1]
+    plot_xscale = max_freq / max_dist * 1.5
+    distances_scaled = [d * plot_xscale for d in distances]
+
+    # T T T F F -> [[0, 3], [4, 4]]
+    lefts = [0]
+    rights = []
+    for i, c in enumerate(path_connections):
+        if not c:
+            lefts.append(i + 1)
+            rights.append(i)
+    seg_indices = [list(range(l, r + 1)) for l, r in zip(lefts, rights)]
+    special_points = []
+    for indices in seg_indices:
+        pts = [distances_scaled[i][0] for i in indices]
+        pts.append(distances_scaled[indices[-1]][-1])
+        special_points.append(pts)
+
+    axs[0].set_ylabel('Frequency (THz)')
+    l_count = 0
+    for ax, spts in zip(axs, special_points):
+        ax.xaxis.set_ticks_position('both')
+        ax.yaxis.set_ticks_position('both')
+        ax.xaxis.set_tick_params(which='both', direction='in')
+        ax.yaxis.set_tick_params(which='both', direction='in')
+        ax.set_xlim(spts[0], spts[-1])
+        ax.set_xticks(spts)
+        if labels is None:
+            ax.set_xticklabels(['', ] * len(spts))
+        else:
+            ax.set_xticklabels(labels[l_count:(l_count + len(spts))])
+            l_count += len(spts)
+        ax.plot([spts[0], spts[-1]], [0, 0],
+                linestyle=':', linewidth=0.5, color='b')
+
+    count = 0
+    for d, f, c in zip(distances_scaled,
+                       frequencies,
+                       path_connections):
+        ax = axs[count]
+        ax.plot(d, f, 'r-', linewidth=1)
+        if not c:
+            count += 1
+
+
 def _get_npts(band_paths, npoints, rec_lattice):
     if rec_lattice is not None:
         path_lengths = []
@@ -410,50 +457,11 @@ class BandStructure(object):
             self._plot(ax)
 
     def _plot(self, axs):
-        max_freq = max([np.max(fq) for fq in self._frequencies])
-        max_dist = self._distances[-1][-1]
-        plot_xscale = max_freq / max_dist * 1.5
-        distances = [d * plot_xscale for d in self._distances]
-
-        # T T T F F -> [[0, 3], [4, 4]]
-        lefts = [0]
-        rights = []
-        for i, c in enumerate(self._path_connections):
-            if not c:
-                lefts.append(i + 1)
-                rights.append(i)
-        seg_indices = [list(range(l, r + 1)) for l, r in zip(lefts, rights)]
-        special_points = []
-        for indices in seg_indices:
-            pts = [distances[i][0] for i in indices]
-            pts.append(distances[indices[-1]][-1])
-            special_points.append(pts)
-
-        axs[0].set_ylabel('Frequency (THz)')
-        l_count = 0
-        for ax, spts in zip(axs, special_points):
-            ax.xaxis.set_ticks_position('both')
-            ax.yaxis.set_ticks_position('both')
-            ax.xaxis.set_tick_params(which='both', direction='in')
-            ax.yaxis.set_tick_params(which='both', direction='in')
-            ax.set_xlim(spts[0], spts[-1])
-            ax.set_xticks(spts)
-            if self._labels is None:
-                ax.set_xticklabels(['', ] * len(spts))
-            else:
-                ax.set_xticklabels(self._labels[l_count:(l_count + len(spts))])
-                l_count += len(spts)
-            ax.plot([spts[0], spts[-1]], [0, 0],
-                    linestyle=':', linewidth=0.5, color='b')
-
-        count = 0
-        for d, f, c in zip(distances,
-                           self._frequencies,
-                           self._path_connections):
-            ax = axs[count]
-            ax.plot(d, f, 'r-', linewidth=1)
-            if not c:
-                count += 1
+        plot(axs,
+             self._frequencies,
+             self._distances,
+             self._path_connections,
+             self._labels)
 
     def _plot_legacy(self, ax):
         ax.xaxis.set_ticks_position('both')
