@@ -3,6 +3,10 @@
 Change Log
 ==========
 
+Aug-29-2019: Version 2.3.1
+---------------------------
+* Fix alm wrapper to follow the lastet basis vector matrix form.
+
 Aug-29-2019: Version 2.3.0
 ---------------------------
 * New setting tag :ref:`fc_calculator_tag` was implemented. With this,
@@ -15,7 +19,8 @@ Aug-29-2019: Version 2.3.0
   :ref:`random_displacements_tag` and :ref:`random_seed_tag` were
   implemented to use with ALM.
 * For the external force constants calculator, new file format of
-  ``FORCE_SETS`` was introduced. See :ref:`file_forces_type_2`.
+  ``FORCE_SETS`` was introduced. See :ref:`file_forces_type_2`
+  ``FORCE_SETS`` format.
 
 Jul-21-2019: Version 2.2.0
 ---------------------------
