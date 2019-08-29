@@ -3,6 +3,20 @@
 Change Log
 ==========
 
+Aug-29-2019: Version 2.3.0
+---------------------------
+* New setting tag :ref:`fc_calculator_tag` was implemented. With this,
+  an external force constants calculator can be used. Currently only
+  ALM (``FC_CALCULATOR = alm`` or ``--alm`` option) is supported. By
+  using ALM, we can compute force constants with any number of
+  displacements in each supercell. Any number of supercells with
+  displacements can be also handled with it if ordinaly least square
+  fitting can be solved for force constants.
+  :ref:`random_displacements_tag` and :ref:`random_seed_tag` were
+  implemented to use with ALM.
+* For the external force constants calculator, new file format of
+  ``FORCE_SETS`` was introduced. See :ref:`file_forces_type_2`.
+
 Jul-21-2019: Version 2.2.0
 ---------------------------
 * Collection of minor updates.
