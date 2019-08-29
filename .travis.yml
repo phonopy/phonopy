@@ -5,6 +5,7 @@ dist: trusty
 python:
     - '2.7'
     - '3.6'
+    - '3.7'
 
 before_install:
     #- TRAVIS_PYTHON_VERSION=`python --version |& awk '{print $2}'|awk -F'.' '{print $1"."$2}'`
