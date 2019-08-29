@@ -83,6 +83,19 @@ Example of rutile-type silicon oxide crystal structure (2)
 Force file (``FORCE_SETS``)
 ----------------------------
 
+Two types of ``FORCE_SETS`` formats are supported.
+
+.. _file_forces_type_1:
+
+Type 1
+~~~~~~
+
+This format is the default format of phonopy and force constants can
+be calculated by built-in force constants calculator of phonopy by
+finite difference method, though external force constants calculator
+can be also used to obtain force constants with this format by the
+fitting approach.
+
 This file gives sets of forces in supercells with finite atomic
 displacements. Each supercell involves one displaced atom.  The first
 line is the number of atoms in supercell. The second line gives number
@@ -106,7 +119,7 @@ See also :ref:`vasp_force_sets_option` and
 :ref:`wien2k_force_sets_option` for VASP and Wien2k users.
 
 Example
-~~~~~~~
+^^^^^^^
 ::
 
    48
@@ -125,6 +138,43 @@ Example
       0.0013248100    0.0001984300   -0.0001203700
      -0.0001310200   -0.0007955600    0.0003889300
    ... (continue until all the forces for this displacement have written)
+
+.. _file_forces_type_2:
+
+Type 2
+~~~~~~~
+
+Equivalent to ``DFSET`` of `ALM code
+<https://alm.readthedocs.io/en/develop/format-dfset.html#format-of-dfset>`_.
+
+Each line has exactly 6 elements. The first three and second three
+elements give displacement and force of an atom in a supercell,
+respectively. One set with the number of lines of supercell atoms
+corresponds to one supercell calculation and the number of supercell
+calculations are concatenated as many as the user likes. This file is
+parsed to finally get displacements and forces to have the array
+shapes of ``displacements.shape = (num_supercells, num_atoms, 3)`` and
+``forces.shape = (num_supercells, num_atoms, 3)``.
+
+Force constants can be calculated by the fitting approach and this
+force constants calculation requires external force constants
+calculator such as `ALM
+<https://alm.readthedocs.io/en/develop/index.html>`_ (invoked by
+``--alm`` option). All the data are used for calculating force
+constants in the fitting (usually least square fitting) by the force
+constants calculator.
+
+Example
+^^^^^^^
+
+::
+
+     0.00834956     0.00506291     0.00215683    -0.01723508    -0.00418148    -0.00376513
+    -0.00494556     0.00866021    -0.00073630     0.00849148    -0.01091833    -0.00458456
+    -0.00403290    -0.00837741     0.00368169     0.00476247     0.00907379    -0.00210179
+    -0.00462319     0.00361350    -0.00809745     0.00996582    -0.00320343     0.01904460
+     0.00496785    -0.00596540    -0.00630352    -0.01882121    -0.00100787     0.01681980
+    ...
 
 .. _file_force_constants:
 

@@ -55,8 +55,7 @@ def get_dynamical_matrix(fc2,
             supercell,
             primitive,
             _fc2,
-            decimals=decimals,
-            symprec=symprec)
+            decimals=decimals)
     else:
         dm = DynamicalMatrixNAC(
             supercell,
@@ -109,12 +108,10 @@ class DynamicalMatrix(object):
                  supercell,
                  primitive,
                  force_constants,
-                 decimals=None,
-                 symprec=1e-5):
+                 decimals=None):
         self._scell = supercell
         self._pcell = primitive
         self._decimals = decimals
-        self._symprec = symprec
         self._dynamical_matrix = None
         self._force_constants = None
         self._set_force_constants(force_constants)
@@ -289,10 +286,10 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                                  supercell,
                                  primitive,
                                  force_constants,
-                                 decimals=decimals,
-                                 symprec=1e-5)
+                                 decimals=decimals)
 
         self._log_level = log_level
+        self._symprec = symprec
         self._method = None
 
         # For the method by Gonze et al.
@@ -490,20 +487,19 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         fc_shape = self._force_constants.shape
         d2f = DynmatToForceConstants(self._pcell,
                                      self._scell,
-                                     is_full_fc=(fc_shape[0] == fc_shape[1]),
-                                     symprec=self._symprec)
+                                     is_full_fc=(fc_shape[0] == fc_shape[1]))
         dynmat = []
-        num_q = len(d2f.get_commensurate_points())
-        for i, q_red in enumerate(d2f.get_commensurate_points()):
+        num_q = len(d2f.commensurate_points)
+        for i, q_red in enumerate(d2f.commensurate_points):
             if self._log_level > 2:
                 print("%d/%d %s" % (i + 1, num_q, q_red))
             self._set_dynamical_matrix(q_red)
             dm_dd = self._get_Gonze_dipole_dipole(q_red, None)
             self._dynamical_matrix -= dm_dd
             dynmat.append(self._dynamical_matrix)
-        d2f.set_dynamical_matrices(dynmat=dynmat)
+        d2f.dynamical_matrices = dynmat
         d2f.run()
-        self._Gonze_force_constants = d2f.get_force_constants()
+        self._Gonze_force_constants = d2f.force_constants
 
     def _get_Gonze_dipole_dipole(self, q_red, q_direction):
         rec_lat = np.linalg.inv(self._pcell.get_cell())  # column vectors

@@ -84,6 +84,7 @@ def get_parser():
         siesta_mode=False,
         cp2k_mode=False,
         dftbp_mode=False,
+        fc_calculator_options=None,
         fc_symmetry=None,
         fc_format=None,
         fc_spg_symmetry=False,
@@ -139,7 +140,6 @@ def get_parser():
         moment_order=None,
         nac_method=None,
         nac_q_direction=None,
-        num_random_displacemen=None,
         pdos=None,
         pretend_real=False,
         primitive_axes=None,
@@ -148,6 +148,7 @@ def get_parser():
         qpoints=None,
         qpoints_format=None,
         quiet=False,
+        random_displacemen=None,
         random_seed=None,
         read_fc_format=None,
         read_force_constants=False,
@@ -156,17 +157,19 @@ def get_parser():
         sigma=None,
         supercell_dimension=None,
         symmetry_tolerance=None,
+        temperature=None,
         tmax=None,
         tmin=None,
         tstep=None,
         turbomooe_mode=False,
         use_alm=False,
+        use_hiphive=False,
         vasp_mode=False,
         verbose=False,
         wien2k_mode=False,
         write_dynamical_matrices=False,
-        write_force_constants=False,
         write_fc_format=None,
+        write_force_constants=False,
         write_mesh=True)
 
     parser.add_argument(
@@ -255,6 +258,11 @@ def get_parser():
         help=("Create FORCE_CONSTANTS from vaspurn.xml. "
               "vasprun.xml has to be passed as argument."))
     parser.add_argument(
+        "--fc-calc-opt", "--fc-calculator-options",
+        dest="fc_calculator_options",
+        help=("Options for force constants calculator as comma separated "
+              "string with the style of key = values"))
+    parser.add_argument(
         "--fc-decimals", dest="force_constants_decimals", type=int,
         help="Decimals of values of force constants")
     parser.add_argument(
@@ -308,6 +316,9 @@ def get_parser():
     parser.add_argument(
         "--hdf5-compression", dest="hdf5_compression",
         help="hdf5 compression filter")
+    parser.add_argument(
+        "--hiphive", dest="use_hiphive", action="store_true",
+        help="Use hiPhive for generating force constants")
     parser.add_argument(
         "--irreps", "--irreps-qpoint", nargs='+', dest="irreps_qpoint",
         help="A q-point where characters of irreps are calculated")
@@ -364,14 +375,15 @@ def get_parser():
         "--nomeshsym", dest="is_nomeshsym", action="store_true",
         help="Symmetry is not imposed for mesh sampling.")
     parser.add_argument(
-        "--nowritemesh", dest="write_mesh", action="store_false",
-        help="Do not write mesh.yaml or mesh.hdf5")
-    parser.add_argument(
         "--nosym", dest="is_nosym", action="store_true",
         help="Symmetry is not imposed.")
     parser.add_argument(
-        "--nrand", dest="num_random_displacements",
-        type=int, help="Number of supercells with random displacements")
+        "--nothm", "--no-tetrahedron-method", dest="is_tetrahedron_method",
+        action="store_false",
+        help="Do not use tetrahedron method for DOS/PDOS")
+    parser.add_argument(
+        "--nowritemesh", dest="write_mesh", action="store_false",
+        help="Do not write mesh.yaml or mesh.hdf5")
     parser.add_argument(
         "-p", "--plot", dest="is_graph_plot", action="store_true",
         help="Plot data")
@@ -416,14 +428,17 @@ def get_parser():
         "-q", "--quiet", dest="quiet", action="store_true",
         help="Print out smallest information")
     parser.add_argument(
+        "--random-seed", dest="random_seed",
+        type=int, help="Random seed by a 32 bit unsigned integer")
+    parser.add_argument(
+        "--rd", "--random-displacements", dest="random_displacements",
+        type=int, help="Number of supercells with random displacements")
+    parser.add_argument(
         "--readfc", dest="read_force_constants", action="store_true",
         help="Read FORCE_CONSTANTS")
     parser.add_argument(
         "--readfc-format", dest="readfc_format",
         help="Force constants input file-format")
-    parser.add_argument(
-        "--random-seed", dest="random_seed",
-        type=int, help="Random seed by a 32 bit unsigned integer")
     parser.add_argument(
         "--read-qpoints", dest="read_qpoints", action="store_true",
         help="Read QPOITNS")
@@ -460,9 +475,8 @@ def get_parser():
         dest="thermal_displacement_matrices_cif", type=float,
         help="Write cif with aniso_U for which temperature is specified")
     parser.add_argument(
-        "--nothm", "--no-tetrahedron-method", dest="is_tetrahedron_method",
-        action="store_false",
-        help="Do not use tetrahedron method for DOS/PDOS")
+        "--temperature", dest="temperature", type=float,
+        metavar='TEMPERATURE', help="A temperature point")
     parser.add_argument(
         "--tmax", dest="tmax", type=float,
         help="Maximum calculated temperature")
@@ -470,14 +484,14 @@ def get_parser():
         "--tmin", dest="tmin", type=float,
         help="Minimum calculated temperature")
     parser.add_argument(
+        "--tolerance", dest="symmetry_tolerance", type=float,
+        help="Symmetry tolerance to search")
+    parser.add_argument(
         "--trigonal", dest="is_trigonal_displacements", action="store_true",
         help="Set displacements of all trigonal axes ")
     parser.add_argument(
         "--tstep", dest="tstep", type=float,
         help="Calculated temperature step")
-    parser.add_argument(
-        "--tolerance", dest="symmetry_tolerance", type=float,
-        help="Symmetry tolerance to search")
     parser.add_argument(
         "--turbomole", dest="turbomole_mode", action="store_true",
         help="Invoke TURBOMOLE mode")

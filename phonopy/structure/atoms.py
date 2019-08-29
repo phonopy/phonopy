@@ -76,7 +76,7 @@ class _Atoms(object):
             self._numbers = np.array(numbers, dtype='intc')
 
         # masses
-        self.masses = None
+        self._masses = None
         self._set_masses(masses)
 
         # (initial) magnetic moments
@@ -90,7 +90,7 @@ class _Atoms(object):
             self._symbols_to_numbers()
 
         # symbol --> mass
-        if self.symbols and (self.masses is None):
+        if self.symbols and (self._masses is None):
             self._symbols_to_masses()
 
         self._check()
@@ -121,10 +121,10 @@ class _Atoms(object):
         self._check()
 
     def get_masses(self):
-        if self.masses is None:
+        if self._masses is None:
             return None
         else:
-            return self.masses.copy()
+            return self._masses.copy()
 
     def set_magnetic_moments(self, magmoms):
         self._set_magnetic_moments(magmoms)
@@ -174,9 +174,9 @@ class _Atoms(object):
 
     def _set_masses(self, masses):
         if masses is None:
-            self.masses = None
+            self._masses = None
         else:
-            self.masses = np.array(masses, dtype='double')
+            self._masses = np.array(masses, dtype='double')
 
     def _set_magnetic_moments(self, magmoms):
         if magmoms is None:
@@ -204,9 +204,9 @@ class _Atoms(object):
     def _symbols_to_masses(self):
         masses = [atom_data[symbol_map[s]][3] for s in self.symbols]
         if None in masses:
-            self.masses = None
+            self._masses = None
         else:
-            self.masses = np.array(masses, dtype='double')
+            self._masses = np.array(masses, dtype='double')
 
     def _check(self):
         if self._cell is None:
@@ -219,8 +219,8 @@ class _Atoms(object):
             raise RuntimeError('len(numbers) != len(scaled_positions).')
         if len(self._numbers) != len(self.symbols):
             raise RuntimeError('len(numbers) != len(symbols).')
-        if self.masses is not None:
-            if len(self._numbers) != len(self.masses):
+        if self._masses is not None:
+            if len(self._numbers) != len(self._masses):
                 raise RuntimeError('len(numbers) != len(masses).')
         if self.magmoms is not None:
             if len(self._numbers) != len(self.magmoms):
@@ -289,10 +289,18 @@ class PhonopyAtoms(_Atoms):
     def numbers(self):
         return self._numbers.copy()
 
+    @property
+    def masses(self):
+        return self._masses.copy()
+
+    @property
+    def volume(self):
+        return self.get_volume()
+
     def copy(self):
         return PhonopyAtoms(cell=self._cell,
                             scaled_positions=self._scaled_positions,
-                            masses=self.masses,
+                            masses=self._masses,
                             magmoms=self.magmoms,
                             symbols=self.symbols,
                             pbc=True)
@@ -316,10 +324,10 @@ class PhonopyAtoms(_Atoms):
             lines.append("- [ %21.15f, %21.15f, %21.15f ] # %s" %
                          (v[0], v[1], v[2], a))
         lines.append("points:")
-        if self.masses is None:
+        if self._masses is None:
             masses = [None] * len(self.symbols)
         else:
-            masses = self.masses
+            masses = self._masses
         for i, (s, v, m) in enumerate(
                 zip(self.symbols, self._scaled_positions, masses)):
             lines.append("- symbol: %-2s # %d" % (s, i + 1))
