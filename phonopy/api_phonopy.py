@@ -37,31 +37,30 @@ import warnings
 import textwrap
 import numpy as np
 from phonopy.version import __version__
-from phonopy.interface import PhonopyYaml
+from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
-from phonopy.structure.cells import (get_supercell, get_primitive,
-                                     guess_primitive_matrix)
-from phonopy.harmonic.displacement import (get_least_displacements,
-                                           directions_to_displacement_dataset,
-                                           get_random_displacements_dataset)
+from phonopy.structure.cells import (
+    get_supercell, get_primitive, guess_primitive_matrix)
+from phonopy.harmonic.displacement import (
+    get_least_displacements, directions_to_displacement_dataset,
+    get_random_displacements_dataset, get_displacements_and_forces)
 from phonopy.harmonic.force_constants import (
-    get_fc2,
-    symmetrize_force_constants,
-    symmetrize_compact_force_constants,
-    show_drift_force_constants,
-    cutoff_force_constants,
+    symmetrize_force_constants, symmetrize_compact_force_constants,
+    show_drift_force_constants, cutoff_force_constants,
     set_tensor_symmetry_PJ)
-from phonopy.interface.alm import get_fc2 as get_alm_fc2
+from phonopy.harmonic.force_constants import get_fc2 as get_phonopy_fc2
+from phonopy.interface.calculator import get_default_physical_units
+from phonopy.interface.fc_calculator import get_fc2
 from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
-from phonopy.phonon.band_structure import (BandStructure,
-                                           get_band_qpoints_by_seekpath)
+from phonopy.phonon.band_structure import (
+    BandStructure, get_band_qpoints_by_seekpath)
 from phonopy.phonon.thermal_properties import ThermalProperties
 from phonopy.phonon.mesh import Mesh, IterMesh, length2mesh
 from phonopy.units import VaspToTHz
 from phonopy.phonon.dos import TotalDos, PartialDos
-from phonopy.phonon.thermal_displacement import (ThermalDisplacements,
-                                                 ThermalDisplacementMatrices)
+from phonopy.phonon.thermal_displacement import (
+    ThermalDisplacements, ThermalDisplacementMatrices)
 from phonopy.phonon.random_displacements import RandomDisplacements
 from phonopy.phonon.animation import Animation
 from phonopy.phonon.modulation import Modulation
@@ -371,6 +370,10 @@ class Phonopy(object):
         return self._mesh
 
     @property
+    def random_displacements(self):
+        return self._random_displacements
+
+    @property
     def dynamic_structure_factor(self):
         return self._dynamic_structure_factor
 
@@ -419,15 +422,18 @@ class Phonopy(object):
         self._search_primitive_symmetry()
         self._displacement_dataset = None
 
-    @dataset.setter
+    @property
+    def masses(self):
+        return self._primitive.masses
+
+    @masses.setter
     def masses(self, masses):
         p_masses = np.array(masses)
         self._primitive.set_masses(p_masses)
-        p2p_map = self._primitive.get_primitive_to_primitive_map()
-        s_masses = p_masses[[p2p_map[x] for x in
-                             self._primitive.get_supercell_to_primitive_map()]]
+        p2p_map = self._primitive.p2p_map
+        s_masses = p_masses[[p2p_map[x] for x in self._primitive.s2p_map]]
         self._supercell.set_masses(s_masses)
-        u2s_map = self._supercell.get_unitcell_to_supercell_map()
+        u2s_map = self._supercell.u2s_map
         u_masses = s_masses[u2s_map]
         self._unitcell.set_masses(u_masses)
         if self._force_constants is not None:
@@ -478,19 +484,15 @@ class Phonopy(object):
 
         """
 
-        if 'displacements' in dataset:
-            natom = self._supercell.get_number_of_atoms()
-            if type(dataset['displacements']) is np.ndarray:
-                if dataset['displacements'].ndim in (1, 2):
-                    d = dataset['displacements'].reshape((-1, natom, 3))
-                    dataset['displacements'] = d
+        if 'first_atoms' in dataset:
+            self._displacement_dataset = dataset
+        elif 'displacements' in dataset:
+            self.displacements = dataset['displacements']
+            if 'forces' in dataset:
+                self.forces = dataset['forces']
+        else:
+            raise RuntimeError("Data format of dataset is wrong.")
 
-        if 'forces' in dataset:
-            if type(dataset['forces']) is np.ndarray:
-                if dataset['forces'].ndim in (1, 2):
-                    f = dataset['forces'].reshape((-1, natom, 3))
-                    dataset['forces'] = f
-        self._displacement_dataset = dataset
         self._supercells_with_displacements = None
 
     def set_displacement_dataset(self, displacement_dataset):
@@ -519,8 +521,12 @@ class Phonopy(object):
             for disp, forces in zip(self._displacement_dataset['first_atoms'],
                                     sets_of_forces):
                 disp['forces'] = forces
-        elif 'forces' in self._displacement_dataset:
+        elif 'displacements' in self._displacement_dataset:
             forces = np.array(sets_of_forces, dtype='double', order='C')
+            natom = self._supercell.get_number_of_atoms()
+            if forces.ndim != 3 or forces.shape[1:] != (natom, 3):
+                raise RuntimeError("Array shape of input forces is incorrect.")
+
             self._displacement_dataset['forces'] = forces
 
     def set_forces(self, sets_of_forces):
@@ -574,15 +580,81 @@ class Phonopy(object):
                                is_plusminus='auto',
                                is_diagonal=True,
                                is_trigonal=False,
-                               num_random_displacements=None,
-                               random_seed=None):
-        """Generate displacement dataset"""
-        if np.issubdtype(type(num_random_displacements), np.integer):
-            displacement_dataset = get_random_displacements_dataset(
-                num_random_displacements,
-                distance,
-                self._supercell.get_number_of_atoms(),
-                random_seed=random_seed)
+                               number_of_snapshots=None,
+                               random_seed=None,
+                               temperature=None,
+                               cutoff_frequency=None):
+        """Generate displacement dataset
+
+        There are two modes, finite difference method with systematic
+        displacements and fitting approach between arbitrary displacements and
+        their forces. The default approach is the finite difference method that
+        is built-in phonopy. The fitting approach requires external force
+        constant calculator.
+
+        The random displacement supercells are created by setting positive
+        integer values 'number_of_snapshots' keyword argument. Unless
+        this is specified, systematic displacements are created for the finite
+        difference method as the default behaviour.
+
+        Parameters
+        ----------
+        distance : float, optional
+            Displacement distance. Unit is the same as that used for crystal
+            structure. Default is 0.01.
+        is_plusminus : 'auto', True, or False, optional
+            For each atom, displacement of one direction (False), both
+            direction, i.e., one directiona and its opposite direction
+            (True), and both direction if symmetry requires ('auto').
+            Default is 'auto'.
+        is_diagonal : bool, optional
+            Displacements are made only along basis vectors (False) and
+            can be made not being along basis vectors if the number of
+            displacements can be reduced by symmetry (True). Default is
+            True.
+        is_trigonal : bool, optional
+            Existing only testing purpose.
+        number_of_snapshots : int or None, optional
+            Number of snapshots of supercells with random displacements.
+            Random displacements are generated displacing all atoms in
+            random directions with a fixed displacement distance specified
+            by 'distance' parameter, i.e., all atoms in supercell are
+            displaced with the same displacement distance in direct space.
+        random_seed : 32bit unsigned int or None, optional
+            Random seed for random displacements generation.
+        temperature : float
+            With given temperature, random displacements at temperature is
+            generated by sampling probability distribution from canonical
+            ensemble of harmonic oscillators (harmonic phonons).
+        cutoff_frequency : float
+            In random displacements generation from canonical ensemble
+            of harmonic phonons, phonon occupation number is used to
+            determine the deviation of the distribution function.
+            To avoid too large deviation, this value is used to exclude
+            the phonon modes whose absolute frequency are smaller than
+            this value.
+
+        """
+
+        if (np.issubdtype(type(number_of_snapshots), np.integer) and
+            number_of_snapshots > 0):
+            if temperature is None:
+                displacement_dataset = get_random_displacements_dataset(
+                    number_of_snapshots,
+                    distance,
+                    self._supercell.get_number_of_atoms(),
+                    random_seed=random_seed)
+            else:
+                self.run_random_displacements(
+                    temperature,
+                    number_of_snapshots=number_of_snapshots,
+                    random_seed=random_seed,
+                    cutoff_frequency=cutoff_frequency)
+                units = get_default_physical_units(self._calculator)
+                d = np.array(
+                    self._random_displacements.u / units['distance_to_A'],
+                    dtype='double', order='C')
+                displacement_dataset = {'displacements': d}
         else:
             displacement_directions = get_least_displacements(
                 self._symmetry,
@@ -599,7 +671,8 @@ class Phonopy(object):
     def produce_force_constants(self,
                                 forces=None,
                                 calculate_full_force_constants=True,
-                                use_alm=False,
+                                fc_calculator=None,
+                                fc_calculator_options=None,
                                 show_drift=True):
         if forces is not None:
             self.set_forces(forces)
@@ -614,13 +687,15 @@ class Phonopy(object):
 
         if calculate_full_force_constants:
             self._run_force_constants_from_forces(
-                use_alm=use_alm,
+                fc_calculator=fc_calculator,
+                fc_calculator_options=fc_calculator_options,
                 decimals=self._force_constants_decimals)
         else:
             p2s_map = self._primitive.get_primitive_to_supercell_map()
             self._run_force_constants_from_forces(
                 distributed_atom_list=p2s_map,
-                use_alm=use_alm,
+                fc_calculator=fc_calculator,
+                fc_calculator_options=fc_calculator_options,
                 decimals=self._force_constants_decimals)
 
         if show_drift and self._log_level:
@@ -2226,17 +2301,17 @@ class Phonopy(object):
         Parameters
         ----------
         dimension : array_like
-           Supercell dimension with respect to the primitive cell.
-           dtype='intc', shape=(3, ), (3, 3), (9, )
+            Supercell dimension with respect to the primitive cell.
+            dtype='intc', shape=(3, ), (3, 3), (9, )
         phonon_modes : list of phonon mode settings
-           Each element of the outer list gives one phonon mode information:
+            Each element of the outer list gives one phonon mode information:
 
-               [q-point, band index (int), amplitude (float), phase (float)]
+                [q-point, band index (int), amplitude (float), phase (float)]
 
-           In each list of the phonon mode information, the first element is
-           a list that represents q-point in reduced coordinates. The second,
-           third, and fourth elements show the band index starting with 0,
-           amplitude, and phase factor, respectively.
+            In each list of the phonon mode information, the first element is
+            a list that represents q-point in reduced coordinates. The second,
+            third, and fourth elements show the band index starting with 0,
+            amplitude, and phase factor, respectively.
 
         """
         if self._dynamical_matrix is None:
@@ -2510,23 +2585,18 @@ class Phonopy(object):
     def run_random_displacements(self,
                                  temperature,
                                  number_of_snapshots=1,
-                                 seed=None,
+                                 random_seed=None,
                                  cutoff_frequency=None):
         self._random_displacements = RandomDisplacements(
-            self._dynamical_matrix,
+            self._supercell,
+            self._primitive,
+            self._force_constants,
             cutoff_frequency=cutoff_frequency,
             factor=self._factor)
         self._random_displacements.run(
             temperature,
             number_of_snapshots=number_of_snapshots,
-            seed=seed)
-
-    def get_random_displacements(self):
-        if self._random_displacements is None:
-            msg = ("run_random_displacements has to be done.")
-            raise RuntimeError(msg)
-
-        return self._random_displacements.u
+            random_seed=random_seed)
 
     def save(self,
              filename="phonopy_params.yaml",
@@ -2560,22 +2630,28 @@ class Phonopy(object):
     #################
     def _run_force_constants_from_forces(self,
                                          distributed_atom_list=None,
-                                         use_alm=False,
+                                         fc_calculator=None,
+                                         fc_calculator_options=None,
                                          decimals=None):
         if self._displacement_dataset is not None:
-            if use_alm:
-                self._force_constants = get_alm_fc2(
+            if fc_calculator is not None:
+                disps, forces = get_displacements_and_forces(
+                    self._displacement_dataset)
+                self._force_constants = get_fc2(
                     self._supercell,
                     self._primitive,
-                    self._displacement_dataset,
+                    disps,
+                    forces,
+                    fc_calculator=fc_calculator,
+                    fc_calculator_options=fc_calculator_options,
                     atom_list=distributed_atom_list,
                     log_level=self._log_level)
             else:
                 if 'displacements' in self._displacement_dataset:
                     msg = ("This data format of displacement_dataset is not "
-                           "supported unless use_alm=True.")
+                           "usable unless fc_calculator is set.")
                     raise RuntimeError(msg)
-                self._force_constants = get_fc2(
+                self._force_constants = get_phonopy_fc2(
                     self._supercell,
                     self._symmetry,
                     self._displacement_dataset,

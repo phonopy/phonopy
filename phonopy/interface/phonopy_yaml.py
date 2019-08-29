@@ -435,7 +435,7 @@ class PhonopyYaml(object):
     def _parse_force_sets_type2(self):
         nsets = len(self.yaml['displacements'])
         natom = len(self.yaml['displacements'][0])
-        if 'forces' in self.yaml['displacements'][0]:
+        if 'force' in self.yaml['displacements'][0][0]:
             with_forces = True
             forces = np.zeros((nsets, natom, 3), dtype='double', order='C')
         else:

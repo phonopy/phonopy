@@ -54,6 +54,8 @@ class Settings(object):
         self._cutoff_frequency = None
         self._displacement_distance = None
         self._dm_decimals = None
+        self._fc_calculator = None
+        self._fc_calculator_options = None
         self._fc_decimals = None
         self._fc_symmetry = False
         self._fpitch = None
@@ -83,10 +85,10 @@ class Settings(object):
         self._sigma = None
         self._supercell_matrix = None
         self._symmetry_tolerance = None
+        self._temperatures = None
         self._tmax = 1000
         self._tmin = 0
         self._tstep = 10
-        self._use_alm = False
 
     def set_band_paths(self, band_paths):
         self._band_paths = band_paths
@@ -135,6 +137,18 @@ class Settings(object):
 
     def get_displacement_distance(self):
         return self._displacement_distance
+
+    def set_fc_calculator(self, fc_calculator):
+        self._fc_calculator = fc_calculator
+
+    def get_fc_calculator(self):
+        return self._fc_calculator
+
+    def set_fc_calculator_options(self, fc_calculator_options):
+        self._fc_calculator_options = fc_calculator_options
+
+    def get_fc_calculator_options(self):
+        return self._fc_calculator_options
 
     def set_fc_symmetry(self, fc_symmetry):
         self._fc_symmetry = fc_symmetry
@@ -316,6 +330,12 @@ class Settings(object):
     def get_symmetry_tolerance(self):
         return self._symmetry_tolerance
 
+    def set_temperatures(self, temperatures):
+        self._temperatures = temperatures
+
+    def get_temperatures(self):
+        return self._temperatures
+
     def set_temperature_step(self, tstep):
         self._tstep = tstep
 
@@ -327,12 +347,6 @@ class Settings(object):
 
     def get_time_reversal_symmetry(self):
         return self._is_time_reversal_symmetry
-
-    def set_use_alm(self, use_alm):
-        self._use_alm = use_alm
-
-    def get_use_alm(self):
-        return self._use_alm
 
 
 # Parse phonopy setting filen
@@ -418,6 +432,15 @@ class ConfParser(object):
             if self._args.dynamical_matrix_decimals:
                 self._confs['dm_decimals'] = \
                     self._args.dynamical_matrix_decimals
+
+        if 'fc_calculator' in arg_list:
+            if self._args.fc_calculator:
+                self._confs['fc_calculator'] = self._args.fc_calculator
+
+        if 'fc_calculator_options' in arg_list:
+            fc_calc_opt = self._args.fc_calculator_options
+            if fc_calc_opt:
+                self._confs['fc_calculator_options'] = fc_calc_opt
 
         if 'fc_symmetry' in arg_list:
             if self._args.fc_symmetry:
@@ -569,6 +592,14 @@ class ConfParser(object):
                 symtol = self._args.symmetry_tolerance
                 self._confs['symmetry_tolerance'] = symtol
 
+        if 'temperature' in self._args:
+            if self._args.temperature is not None:
+                self._confs['temperature'] = self._args.temperature
+
+        if 'temperatures' in self._args:
+            if self._args.temperatures is not None:
+                self._confs['temperatures'] = " ".join(self._args.temperatures)
+
         if 'tmax' in arg_list:
             if self._args.tmax:
                 self._confs['tmax'] = self._args.tmax
@@ -583,7 +614,11 @@ class ConfParser(object):
 
         if 'use_alm' in arg_list:
             if self._args.use_alm:
-                self._confs['alm'] = '.true.'
+                self._confs['fc_calculator'] = 'alm'
+
+        if 'use_hiphive' in arg_list:
+            if self._args.use_hiphive:
+                self._confs['fc_calculator'] = 'hiphive'
 
     def parse_conf(self):
         confs = self._confs
@@ -702,6 +737,13 @@ class ConfParser(object):
                 elif confs['rotational'].lower() == '.true.':
                     self.set_parameter('is_rotational', True)
 
+            if conf_key == 'fc_calculator':
+                self.set_parameter('fc_calculator', confs['fc_calculator'])
+
+            if conf_key == 'fc_calculator_options':
+                self.set_parameter('fc_calculator_options',
+                                   confs['fc_calculator_options'])
+
             if conf_key == 'fc_symmetry':
                 if confs['fc_symmetry'].lower() == '.false.':
                     self.set_parameter('fc_symmetry', False)
@@ -817,6 +859,18 @@ class ConfParser(object):
                 val = float(confs['symmetry_tolerance'])
                 self.set_parameter('symmetry_tolerance', val)
 
+            # For multiple T values.
+            if conf_key == 'temperatures':
+                vals = [fracval(x) for x in confs['temperatures'].split()]
+                if len(vals) < 1:
+                    self.setting_error("Temperatures are incorrectly set.")
+                else:
+                    self.set_parameter('temperatures', vals)
+
+            # For single T value.
+            if conf_key == 'temperature':
+                self.set_parameter('temperatures', [confs['temperature'], ])
+
             if conf_key == 'tmin':
                 val = float(confs['tmin'])
                 self.set_parameter('tmin', val)
@@ -872,6 +926,15 @@ class ConfParser(object):
         # Decimals of values of dynamical matrxi
         if 'dm_decimals' in params:
             self._settings.set_dm_decimals(int(params['dm_decimals']))
+
+        # Force constants calculator
+        if 'fc_calculator' in params:
+            self._settings.set_fc_calculator(params['fc_calculator'])
+
+        # Force constants calculator options as str
+        if 'fc_calculator_options' in params:
+            self._settings.set_fc_calculator_options(
+                params['fc_calculator_options'])
 
         # Decimals of values of force constants
         if 'fc_decimals' in params:
@@ -985,7 +1048,9 @@ class ConfParser(object):
         if 'supercell_matrix' in params:
             self._settings.set_supercell_matrix(params['supercell_matrix'])
 
-        # Temerature range
+        # Temperatures or temerature range
+        if 'temperatures' in params:
+            self._settings.set_temperatures(params['temperatures'])
         if 'tmax' in params:
             self._settings.set_max_temperature(params['tmax'])
         if 'tmin' in params:
@@ -1068,7 +1133,7 @@ class PhonopySettings(Settings):
         self._mesh_format = 'yaml'
         self._modulation = None
         self._moment_order = None
-        self._num_random_displacements = None
+        self._random_displacements = None
         self._pdos_indices = None
         self._pretend_real = False
         self._projection_direction = None
@@ -1290,11 +1355,11 @@ class PhonopySettings(Settings):
     def get_moment_order(self):
         return self._moment_order
 
-    def set_num_random_displacements(self, num_random_displacements):
-        self._num_random_displacements = num_random_displacements
+    def set_random_displacements(self, random_displacements):
+        self._random_displacements = random_displacements
 
-    def get_num_random_displacements(self):
-        return self._num_random_displacements
+    def get_random_displacements(self):
+        return self._random_displacements
 
     def set_pdos_indices(self, indices):
         self._pdos_indices = indices
@@ -1602,10 +1667,10 @@ class PhonopyConfParser(ConfParser):
             if self._args.moment_order:
                 self._confs['moment_order'] = self._args.moment_order
 
-        if 'num_random_displacements' in arg_list:
-            nrand = self._args.num_random_displacements
+        if 'random_displacements' in arg_list:
+            nrand = self._args.random_displacements
             if nrand:
-                self._confs['num_random_displacements'] = nrand
+                self._confs['random_displacements'] = nrand
 
         if 'random_seed' in arg_list:
             if self._args.random_seed:
@@ -1853,9 +1918,9 @@ class PhonopyConfParser(ConfParser):
                 self.set_parameter('moment_order', int(confs['moment_order']))
 
             # Number of supercells with random displacements
-            if conf_key == 'num_random_displacements':
-                self.set_parameter('num_random_displacements',
-                                   int(confs['num_random_displacements']))
+            if conf_key == 'random_displacements':
+                self.set_parameter('random_displacements',
+                                   int(confs['random_displacements']))
 
             if conf_key == 'random_seed':
                 self.set_parameter('random_seed', int(confs['random_seed']))
@@ -2171,9 +2236,9 @@ class PhonopyConfParser(ConfParser):
                 self._settings.set_moment_order(params['moment_order'])
 
         # Number of supercells with random displacements
-        if 'num_random_displacements' in params:
-            self._settings.set_num_random_displacements(
-                params['num_random_displacements'])
+        if 'random_displacements' in params:
+            self._settings.set_random_displacements(
+                params['random_displacements'])
 
         if 'random_seed' in params:
             self._settings.set_random_seed(params['random_seed'])

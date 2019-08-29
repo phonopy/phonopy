@@ -34,13 +34,12 @@
 
 import os
 import numpy as np
-from phonopy.interface import (read_crystal_structure,
-                               get_force_constant_conversion_factor)
+from phonopy.interface.calculator import (
+    read_crystal_structure, get_force_constant_conversion_factor)
 from phonopy.structure.cells import get_primitive_matrix_by_centring
-from phonopy.file_IO import (parse_BORN, parse_FORCE_SETS,
-                             read_force_constants_hdf5,
-                             read_physical_unit_in_force_constants_hdf5,
-                             parse_FORCE_CONSTANTS)
+from phonopy.file_IO import (
+    parse_BORN, parse_FORCE_SETS, parse_FORCE_CONSTANTS,
+    read_force_constants_hdf5, read_physical_unit_in_force_constants_hdf5)
 from phonopy.structure.atoms import PhonopyAtoms
 
 
@@ -107,7 +106,7 @@ def set_force_constants(
         force_constants_filename=None,
         force_sets_filename=None,
         calculator=None,
-        use_alm=False):
+        fc_calculator=None):
     natom = phonon.supercell.get_number_of_atoms()
 
     _dataset = None
@@ -136,7 +135,7 @@ def set_force_constants(
         try:
             phonon.produce_force_constants(
                 calculate_full_force_constants=False,
-                use_alm=(use_alm or 'forces' in phonon.dataset))
+                fc_calculator=fc_calculator)
         except RuntimeError:
             pass
 
