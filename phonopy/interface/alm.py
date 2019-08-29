@@ -71,9 +71,9 @@ def run_alm(supercell,
             log_level=0):
     fcs = None  # This is returned.
 
-    lattice = supercell.get_cell().T
-    positions = supercell.get_scaled_positions()
-    numbers = supercell.get_atomic_numbers()
+    lattice = supercell.cell
+    positions = supercell.scaled_positions
+    numbers = supercell.numbers
     natom = len(numbers)
     p2s_map = primitive.p2s_map
     p2p_map = primitive.p2p_map
