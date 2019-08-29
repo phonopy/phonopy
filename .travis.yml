@@ -25,13 +25,14 @@ install:
         conda init bash;
         source $(conda info --root)/etc/profile.d/conda.sh;
       fi
-    - conda create --yes -n travis -c conda-forge python=$TRAVIS_PYTHON_VERSION
+    # - conda create --yes -n travis -c conda-forge python=$TRAVIS_PYTHON_VERSION
     # - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
     #     source activate travis;
     #   else
     #     conda activate travis;
     #   fi
-    - conda install --yes -c conda-forge gcc_linux-64 gxx_linux-64 matplotlib pyyaml scipy numpy h5py setuptools_scm
+    - conda install --yes -c conda-forge python=$TRAVIS_PYTHON_VERSION
+    - conda install --yes -c conda-forge gcc_linux-64 gxx_linux-64 matplotlib pyyaml scipy numpy h5py setuptools_scm conda-build
     - pwd
     - ./get_nanoversion.sh
     - cat __nanoversion__.txt
