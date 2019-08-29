@@ -85,6 +85,8 @@ Force file (``FORCE_SETS``)
 
 Two types of ``FORCE_SETS`` formats are supported.
 
+.. _file_forces_type_1:
+
 Type 1
 ~~~~~~
 
@@ -136,6 +138,8 @@ Example
       0.0013248100    0.0001984300   -0.0001203700
      -0.0001310200   -0.0007955600    0.0003889300
    ... (continue until all the forces for this displacement have written)
+
+.. _file_forces_type_2:
 
 Type 2
 ~~~~~~~
