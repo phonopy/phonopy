@@ -3,6 +3,15 @@
 Change Log
 ==========
 
+Sep-1-2019: Version 2.3.2
+---------------------------
+* It was forgotten to increment version number at v2.3.1. Now it is
+  made to be v2.3.2 just for incrementing the number.
+
+Aug-29-2019: Version 2.3.1
+---------------------------
+* Fix alm wrapper to follow the lastet basis vector matrix form.
+
 Aug-29-2019: Version 2.3.0
 ---------------------------
 * New setting tag :ref:`fc_calculator_tag` was implemented. With this,
