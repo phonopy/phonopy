@@ -487,6 +487,7 @@ class Phonopy(object):
         if 'first_atoms' in dataset:
             self._displacement_dataset = dataset
         elif 'displacements' in dataset:
+            self._displacement_dataset = {}
             self.displacements = dataset['displacements']
             if 'forces' in dataset:
                 self.forces = dataset['forces']
