@@ -288,7 +288,8 @@ class Phonopy(object):
         ----------
         displacemens : array_like
             Atomic displacements of all atoms of all supercells.
-            Only all displacements in each supercell case is supported.
+            Only all displacements in each supercell case (type-2) is
+            supported.
             shape=(supercells, natom, 3), dtype='double', order='C'
 
         """
@@ -2431,9 +2432,8 @@ class Phonopy(object):
         else:
             if is_projection:
                 if self._mesh.eigenvectors is None:
-                    msg = ("run_mesh has to be done with "
-                           "with_eigenvectors=True.")
-                    return RuntimeError(msg)
+                    return RuntimeError(
+                        "run_mesh has to be done with with_eigenvectors=True.")
                 self._moment = PhononMoment(
                     self._mesh.frequencies,
                     weights=self._mesh.weights,

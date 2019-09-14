@@ -36,6 +36,7 @@ import os
 import numpy as np
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.file_IO import parse_disp_yaml, write_FORCE_SETS
+from phonopy.harmonic.displacement import get_displacements_and_forces
 
 
 def get_interface_mode(args):
@@ -360,22 +361,22 @@ def create_FORCE_SETS(interface_mode,
         supercell = phpy.supercell
         disp_dataset = phpy.dataset
 
+    if 'natom' in disp_dataset:  # type-1 dataset
+        num_atoms = disp_dataset['natom']
+        num_displacements = len(disp_dataset['first_atoms'])
+        dataset_type = 1
+    elif 'displacements' in disp_dataset:  # type-2 dataset
+        num_atoms = disp_dataset['displacements'].shape[1]
+        num_displacements = disp_dataset['displacements'].shape[0]
+        dataset_type = 2
+    else:
+        raise RuntimeError("Number of atoms could not be retrieved from %s"
+                           % disp_filename)
+    if force_sets_zero_mode:
+        num_displacements += 1
+
     if interface_mode in (None, 'vasp', 'abinit', 'elk', 'qe', 'siesta',
                           'cp2k', 'crystal', 'dftbp', 'turbomole'):
-        if 'natom' in disp_dataset:  # type-1 dataset
-            num_atoms = disp_dataset['natom']
-            num_displacements = len(disp_dataset['first_atoms'])
-            dataset_type = 1
-        elif 'displacements' in disp_dataset:  # type-2 dataset
-            num_atoms = disp_dataset['displacements'].shape[1]
-            num_displacements = disp_dataset['displacements'].shape[0]
-            dataset_type = 2
-        else:
-            raise RuntimeError("Number of atoms could not be retrieved from %s"
-                               % disp_filename)
-
-        if force_sets_zero_mode:
-            num_displacements += 1
         force_sets = get_force_sets(interface_mode,
                                     num_atoms,
                                     num_displacements,
@@ -383,19 +384,14 @@ def create_FORCE_SETS(interface_mode,
                                     disp_filename=disp_filename,
                                     check_number_of_files=True,
                                     verbose=(log_level > 0))
-
     elif interface_mode == 'wien2k':
         from phonopy.interface.wien2k import parse_set_of_forces
-        num_displacements = len(disp_dataset['first_atoms'])
-        if force_sets_zero_mode:
-            num_displacements += 1
-        if _check_number_of_files(num_displacements,
-                                  force_filenames,
-                                  disp_filename):
+        if not _check_number_of_files(num_displacements,
+                                      force_filenames,
+                                      disp_filename):
             force_sets = []
         else:
-            disps = [[d['number'], d['displacement']]
-                     for d in disp_dataset['first_atoms']]
+            disps, _ = get_displacements_and_forces(disp_dataset)
             force_sets = parse_set_of_forces(
                 disps,
                 force_filenames,
@@ -437,9 +433,9 @@ def get_force_sets(interface_mode,
                    check_number_of_files=False,
                    verbose=True):
     if check_number_of_files:
-        if _check_number_of_files(num_displacements,
-                                  force_filenames,
-                                  disp_filename):
+        if not _check_number_of_files(num_displacements,
+                                      force_filenames,
+                                      disp_filename):
             return []
 
     if interface_mode is None or interface_mode == 'vasp':
@@ -535,9 +531,9 @@ def _check_number_of_files(num_displacements,
               len(force_filenames))
         print("the number of displacements (%d) in %s." %
               (num_displacements, disp_filename))
-        return 1
+        return False
     else:
-        return 0
+        return True
 
 
 def _subtract_residual_forces(force_sets):

@@ -301,8 +301,7 @@ def _distribute_forces(supercell, disp, forces, filename, symprec):
     natom = supercell.get_number_of_atoms()
     lattice = supercell.get_cell()
     symbols = supercell.get_chemical_symbols()
-    positions = supercell.get_positions()
-    positions[disp[0]] += disp[1]
+    positions = supercell.get_positions() + disp
     cell = Atoms(cell=lattice,
                  positions=positions,
                  symbols=symbols,
