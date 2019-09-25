@@ -93,12 +93,15 @@ def run_alm(supercell,
     if log_level == 1:
         print("Use -v option to watch detailed ALM log.")
 
-    cutoff_radii = -np.ones((maxorder, num_elems, num_elems), dtype='double')
+    shape = (maxorder, num_elems, num_elems)
+    cutoff_radii = -np.ones(shape, dtype='double')
     if alm_options['cutoff'] is not None:
         if len(alm_options['cutoff']) == 1:
             cutoff_radii[:] = alm_options['cutoff'][0]
+        elif np.prod(shape) == len(alm_options['cutoff']):
+            cutoff_radii[:] = np.reshape(alm_options['cutoff'], shape)
         else:
-            cutoff_radii[:] = alm_options['cutoff']
+            raise RuntimeError("Cutoff is not properly set.")
 
     _disps, _forces, df_msg = _slice_displacements_and_forces(
         displacements,
@@ -181,7 +184,7 @@ def _update_options(fc_calculator_options):
     fc_calculator_options : str
         This string should be written such as follows:
 
-            "solver = dense, cutoff_distance = 5"
+            "solver = dense, cutoff = 5"
 
         This string is parsed as collection of settings that are separated by
         comma ','. Each setting has the format of 'option = value'. The value

@@ -260,20 +260,47 @@ def get_random_directions(num_atoms, random_seed=None):
 
 
 def get_displacements_and_forces(disp_dataset):
+    """Returns displacements and forces of all atoms from displacement dataset
+
+    This is used to extract displacements and forces from displacement dataset.
+    This method is considered more-or-less as a converter when the input is in
+    type-1.
+
+    Parameters
+    ----------
+    disp_dataset : dict
+        Displacement dataset either in type-1 or type-2.
+
+    Returns
+    -------
+    displacements : ndarray
+        Displacements of all atoms in all supercells.
+        shape=(snapshots, supercell atoms, 3), dtype='double', order='C'
+    forces : ndarray or None
+        Forces of all atoms in all supercells.
+        shape=(snapshots, supercell atoms, 3), dtype='double', order='C'
+        None is returned when forces don't exist.
+
+    """
+
     if 'first_atoms' in disp_dataset:
         natom = disp_dataset['natom']
         disps = np.zeros((len(disp_dataset['first_atoms']), natom, 3),
                          dtype='double', order='C')
-        forces = np.zeros_like(disps)
+        forces = None
         for i, disp1 in enumerate(disp_dataset['first_atoms']):
+            disps[i, disp1['number']] = disp1['displacement']
             if 'forces' in disp1:
-                disps[i, disp1['number']] = disp1['displacement']
+                if forces is None:
+                    forces = np.zeros_like(disps)
                 forces[i] = disp1['forces']
-            else:
-                return [], []
         return disps, forces
-    elif 'forces' in disp_dataset and 'displacements' in disp_dataset:
-        return disp_dataset['displacements'], disp_dataset['forces']
+    elif 'displacements' in disp_dataset:
+        if 'forces' in disp_dataset:
+            forces = disp_dataset['forces']
+        else:
+            forces = None
+        return disp_dataset['displacements'], forces
 
 
 def print_displacements(symmetry,
