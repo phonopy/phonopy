@@ -101,7 +101,7 @@ deploy:
     secure: "NDepERc9hinMkLT9r7AqywiZJ7vtxCbrPTJO1abzD4SfW3k+y256XbJNqp/7zQNhi8xplVulOkffAOHXyPTEDiNOBWsF1EE13jSFK6kLjCHTXxZ+mMgO+xHwOaHOTqdZRjsEU4gU28aObVm9/GEl2O5xLWmv5ip6rMDQZTx6enCYdo6OzlTny2WvHIjBSj0FztrWmG7hrgIsjtspyJQk/qBNoOy/fnuQ62PX7pOr9nLlQMEd9XroIzRMbsbA+u9u9KsyONtNRNldJnK542SU36lO0v/aN0fqshIEP9FQWi7KI3L3xtrKqkdj8V4YfDY+s+XeoumuFoNU8GPL2M/Eg3iYGlhwMywKU9U1UrEpKmmVg60Tai/nzpGYQF/2oTH4Zg49mYsiFi7B2oGOhJV545j4zS3g9L4hVGRFzim7PZe5cjNgH+OCVtZxY11KJebygoVn7uTRxAtDq4T2ZFYxqtshzoV7uT/lEUkriXKDIbqJd4x6idH3T5rcdEebJGfnpuBjw+sslG9JIWjl1WMBPbHEhzZNH83YUxqjmg/qJw9BZmuSW7BVxgf+5MN/pBtB8YZMnTQ2tKRI/kTvUutvzABSc0AxdkLlsM7SzCh6WAqdkQb5Sch+FhAaiDupn/gp6CAudVoSWC9WhNsB0oGgHLTmwUKkhg01eniwj40SHII="
   on:
     repo: atztogo/phonopy
-    branch: travis-test
+    branch: rc
     tags: false
     condition: "$DOCKER_DEPLOY == manylinux1_x86_64 || $DOCKER_DEPLOY == manylinux1_i686 || $DOCKER_DEPLOY == manylinux2010_x86_64"
     # python: 2.7
