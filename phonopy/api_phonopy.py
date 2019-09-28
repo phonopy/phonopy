@@ -2668,9 +2668,8 @@ class Phonopy(object):
                 self._nac_params['dielectric'],
                 self._primitive,
                 symprec=self._symprec)
-            nac_params = {'born': borns,
-                          'dielectric': epsilon,
-                          'factor': self._nac_params['factor']}
+            nac_params = self._nac_params.copy()
+            nac_params.update({'born': borns, 'dielectric': epsilon})
         else:
             nac_params = self._nac_params
 

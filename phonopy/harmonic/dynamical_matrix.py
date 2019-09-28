@@ -340,6 +340,9 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             self._method = 'gonze'
         elif nac_params['method'] == 'wang':
             self._method = 'wang'
+            if self._log_level:
+                print("NAC by Wang et al., J. Phys. Condens. Matter 22, "
+                      "202201 (2010)")
         else:
             self._method = 'gonze'
 
