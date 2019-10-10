@@ -91,10 +91,10 @@ Choice of force calculator
 ---------------------------
 
 Currently interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT,
-Elk, SIESTA, CRYSTAL, and TURBOMOLE are prepared. These interfaces are invoked
+Elk, SIESTA, CRYSTAL, TURBOMOLE and CP2K are prepared. These interfaces are invoked
 with ``--vasp``, ``--wienk2``, ``--qe``, ``--abinit``, ``--elk``,
-``--siesta``, ``--crystal``, and ``--turbomole`` options, respectively. When no interface is
-specified, ``--vasp`` is selected as the default interface.
+``--siesta``, ``--crystal``, ``--turbomole`` and ``--cp2k`` options, respectively.
+When no interface is specified, ``--vasp`` is selected as the default interface.
 
 The details about these interfaces are found at :ref:`calculator_interfaces`.
 
@@ -203,6 +203,17 @@ input file that contains the unit cell crystal structure, e.g.,
 
    % phonopy --turbomole -c control band.conf
 
+.. _cp2k_mode:
+
+``--cp2k``
+~~~~~~~~~~~~~~~
+
+CP2K mode is invoked with this option. Usually this option is used
+with ``--cell`` (``-c``) option or ``CELL_FILENAME`` tag to read a CP2K
+input file that contains the unit cell crystal structure, e.g.,::
+
+   % phonopy --cp2k -c project.inp band.conf
+
 .. _vasp_mode:
 
 ``--vasp``
@@ -239,6 +250,7 @@ directory. The default file names for the calculators are as follows::
    Elk       | elk.in
    CRYSTAL   | crystal.o
    TURBOMOLE | control
+   CP2K      | unitcell.inp
 
 Create ``FORCE_SETS``
 ----------------------
@@ -366,6 +378,18 @@ files.
 ::
 
    % phonopy --turbomole -f supercell-001 supercell-002  ...
+
+.. _cp2k_force_sets_option:
+
+CP2K interface
+^^^^^^^^^^^^^^
+
+``FORCE_SETS`` file is created from ``phonopy_disp.yaml`` and CP2K output files, with::
+
+   % phonopy --cp2k -f supercell-001-forces-1_0.xyz supercell-002-forces-1_0.xyz  ...
+
+Please note: the files containing the forces can be prefixed with the ``PROJECT_NAME``
+as specified in the original CP2K input file.
 
 .. _fz_force_sets_option:
 

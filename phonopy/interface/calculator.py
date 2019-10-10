@@ -99,7 +99,9 @@ def write_supercells_with_displacements(interface_mode,
                                             optional_structure_info[1])
     elif interface_mode == 'cp2k':
         from phonopy.interface.cp2k import write_supercells_with_displacements
-        write_supercells_with_displacements(supercell, cells_with_disps)
+        write_supercells_with_displacements(supercell,
+                                            cells_with_disps,
+                                            optional_structure_info)
     elif interface_mode == 'crystal':
         from phonopy.interface.crystal import (
             write_supercells_with_displacements)
@@ -165,8 +167,8 @@ def read_crystal_structure(filename=None,
         return unitcell, (cell_filename, atypes)
     elif interface_mode == 'cp2k':
         from phonopy.interface.cp2k import read_cp2k
-        unitcell = read_cp2k(cell_filename)
-        return unitcell, (cell_filename,)
+        unitcell, config_tree = read_cp2k(cell_filename)
+        return unitcell, (cell_filename, config_tree)
     elif interface_mode == 'crystal':
         from phonopy.interface.crystal import read_crystal
         unitcell, conv_numbers = read_crystal(cell_filename)
@@ -216,7 +218,7 @@ def get_default_supercell_filename(interface_mode):
     elif interface_mode == 'siesta':
         return "supercell.fdf"
     elif interface_mode == 'cp2k':
-        return "supercell.inp"
+        return None # CP2K interface generates filenames based on original project name
     elif interface_mode == 'crystal':
         return None  # supercell.ext can not be parsed by crystal interface.
     elif interface_mode == 'dftbp':
@@ -228,12 +230,9 @@ def get_default_supercell_filename(interface_mode):
 
 
 def get_default_displacement_distance(interface_mode):
-    if interface_mode in ('wien2k', 'abinit', 'elk', 'qe', 'siesta', 'cp2k',
-                          'turbomole'):
+    if interface_mode in ('wien2k', 'abinit', 'elk', 'qe', 'siesta', 'turbomole'):
         displacement_distance = 0.02
-    elif interface_mode == 'crystal':
-        displacement_distance = 0.01
-    else:  # default or vasp
+    else:  # default or vasp, crystal, cp2k
         displacement_distance = 0.01
     return displacement_distance
 
@@ -251,6 +250,7 @@ def get_default_physical_units(interface_mode=None):
     CRYSTAL       : eV,      Angstrom,  AMU,         eV/Angstroem
     DFTB+         : hartree, au,        AMU          hartree/au
     TURBOMOLE     : hartree, au,        AMU,         hartree/au
+    CP2K          : hartree, Angstrom,  AMU,         hartree/au
 
     """
 
@@ -302,9 +302,9 @@ def get_default_physical_units(interface_mode=None):
         units['length_unit'] = 'au'
     elif interface_mode == 'cp2k':
         units['factor'] = CP2KToTHz
-        units['nac_factor'] = Hartree / Bohr  # in a.u.
-        units['distance_to_A'] = Bohr
-        units['force_constants_unit'] = 'hartree/au^2'
+        units['nac_factor'] = None  # not implemented
+        units['distance_to_A'] = 1.0
+        units['force_constants_unit'] = 'hartree/Angstrom.au'
         units['length_unit'] = 'Angstrom'
     elif interface_mode == 'crystal':
         units['factor'] = CrystalToTHz
@@ -475,7 +475,8 @@ def get_force_constant_conversion_factor(unit, interface_mode):
                          'eV/Angstrom.au': 1 / Bohr,
                          'Ry/au^2': Rydberg / Bohr ** 2,
                          'mRy/au^2': Rydberg / Bohr ** 2 / 1000,
-                         'hartree/au^2': Hartree / Bohr ** 2}
+                         'hartree/au^2': Hartree / Bohr ** 2,
+                         'hartree/Angstrom.au': Hartree / Bohr }
     if default_unit not in factor_to_eVperA2:
         msg = "Force constant conversion for %s unit is not implemented."
         raise NotImplementedError(msg)

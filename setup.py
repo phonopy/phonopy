@@ -182,6 +182,7 @@ if __name__ == '__main__':
               url='http://atztogo.github.io/phonopy/',
               packages=packages_phonopy,
               install_requires=['numpy', 'PyYAML', 'matplotlib', 'h5py'],
+              extras_require={'cp2k': ['cp2k-input-tools']},
               provides=['phonopy'],
               scripts=scripts_phonopy,
               ext_modules=ext_modules_phonopy,

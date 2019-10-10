@@ -63,6 +63,7 @@ before_install:
     fi;
     conda install --yes -c conda-forge python=$TRAVIS_PYTHON_VERSION;
     conda install --yes -c conda-forge gcc_linux-64 gxx_linux-64 matplotlib pyyaml scipy numpy h5py setuptools_scm conda-build pip;
+    [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]] && pip install cp2k-input-tools || true # cp2k-input-tools are not (yet) available through Anaconda, and only suppport py3
     pwd;
     ./get_nanoversion.sh;
     cat __nanoversion__.txt;
