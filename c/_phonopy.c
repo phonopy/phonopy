@@ -103,7 +103,8 @@ static void gsv_set_smallest_vectors(double (*smallest_vectors)[27][3],
                                      const int num_pos_to,
                                      PHPYCONST double (*pos_from)[3],
                                      const int num_pos_from,
-                                     PHPYCONST int lattice_points[27][3],
+                                     PHPYCONST int (*lattice_points)[3],
+                                     const int num_lattice_points,
                                      PHPYCONST double reduced_basis[3][3],
                                      PHPYCONST int trans_mat[3][3],
                                      const double symprec);
@@ -418,7 +419,7 @@ static PyObject * py_gsv_set_smallest_vectors(PyObject *self, PyObject *args)
   int (*lattice_points)[3];
   double (*reduced_basis)[3];
   int (*trans_mat)[3];
-  int num_pos_to, num_pos_from;
+  int num_pos_to, num_pos_from, num_lattice_points;
 
   if (!PyArg_ParseTuple(args, "OOOOOOOd",
                         &py_smallest_vectors,
@@ -439,6 +440,7 @@ static PyObject * py_gsv_set_smallest_vectors(PyObject *self, PyObject *args)
   num_pos_to = PyArray_DIMS(py_pos_to)[0];
   num_pos_from = PyArray_DIMS(py_pos_from)[0];
   lattice_points = (int(*)[3])PyArray_DATA(py_lattice_points);
+  num_lattice_points = PyArray_DIMS(py_lattice_points)[0];
   reduced_basis = (double(*)[3])PyArray_DATA(py_reduced_basis);
   trans_mat = (int(*)[3])PyArray_DATA(py_trans_mat);
 
@@ -450,6 +452,7 @@ static PyObject * py_gsv_set_smallest_vectors(PyObject *self, PyObject *args)
                            pos_from,
                            num_pos_from,
                            lattice_points,
+                           num_lattice_points,
                            reduced_basis,
                            trans_mat,
                            symprec);
@@ -1586,7 +1589,7 @@ static void gsv_copy_smallest_vectors(double (*shortest_vectors)[27][3],
   int count;
   double minimum;
   double (*vectors)[3];
-  double * lengths;
+  double *lengths;
 
   for (i = 0; i < num_lists; i++) {
     /* Look at a single list of 27 vectors. */
@@ -1622,18 +1625,23 @@ static void gsv_set_smallest_vectors(double (*smallest_vectors)[27][3],
                                      const int num_pos_to,
                                      PHPYCONST double (*pos_from)[3],
                                      const int num_pos_from,
-                                     PHPYCONST int lattice_points[27][3],
+                                     PHPYCONST int (*lattice_points)[3],
+                                     const int num_lattice_points,
                                      PHPYCONST double reduced_basis[3][3],
                                      PHPYCONST int trans_mat[3][3],
                                      const double symprec)
 {
   int i, j, k, l, count;
   double length_tmp, minimum, vec_xyz;
-  double length[27], vec[27][3];
+  double *length;
+  double (*vec)[3];
+
+  length = (double*)malloc(sizeof(double) * num_lattice_points);
+  vec = (double(*)[3])malloc(sizeof(double[3]) * num_lattice_points);
 
   for (i = 0; i < num_pos_to; i++) {
     for (j = 0; j < num_pos_from; j++) {
-      for (k = 0; k < 27; k++) {
+      for (k = 0; k < num_lattice_points; k++) {
         length[k] = 0;
         for (l = 0; l < 3; l++) {
           vec[k][l] = pos_to[i][l] - pos_from[j][l] + lattice_points[k][l];
@@ -1648,14 +1656,14 @@ static void gsv_set_smallest_vectors(double (*smallest_vectors)[27][3],
       }
 
       minimum = DBL_MAX;
-      for (k = 0; k < 27; k++) {
+      for (k = 0; k < num_lattice_points; k++) {
         if (length[k] < minimum) {
           minimum = length[k];
         }
       }
 
       count = 0;
-      for (k = 0; k < 27; k++) {
+      for (k = 0; k < num_lattice_points; k++) {
         if (length[k] - minimum < symprec) {
           for (l = 0; l < 3; l++) {
             /* Transform to supercell coordinates */
@@ -1667,9 +1675,20 @@ static void gsv_set_smallest_vectors(double (*smallest_vectors)[27][3],
           count++;
         }
       }
-      multiplicity[i * num_pos_from + j] = count;
+      if (count > 27) { /* should not be greater than 27 */
+        printf("Warning (gsv_set_smallest_vectors): ");
+        printf("number of shortest vectors is out of range,\n");
+        break;
+      } else {
+        multiplicity[i * num_pos_from + j] = count;
+      }
     }
   }
+
+  free(length);
+  length = NULL;
+  free(vec);
+  vec = NULL;
 }
 
 static void distribute_fc2(double (*fc2)[3][3], /* shape[n_pos][n_pos] */
