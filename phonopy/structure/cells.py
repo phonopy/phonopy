@@ -33,6 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+from distutils.version import StrictVersion
 import phonopy.structure.spglib as spg
 from phonopy.structure.atoms import PhonopyAtoms
 
@@ -547,7 +548,7 @@ def _trim_cell(relative_axes, cell, symprec):
 # Delaunay and Niggli reductions
 #
 def get_reduced_bases(lattice,
-                      method='delaunay',
+                      method='niggli',
                       tolerance=1e-5):
     """Search kinds of shortest basis vectors
 
@@ -642,8 +643,9 @@ def get_smallest_vectors(supercell_bases,
 
     """
 
+    reduced_cell_method = 'delaunay'
     reduced_bases = get_reduced_bases(supercell_bases,
-                                      method='delaunay',
+                                      method=reduced_cell_method,
                                       tolerance=symprec)
     trans_mat_float = np.dot(supercell_bases, np.linalg.inv(reduced_bases))
     trans_mat = np.rint(trans_mat_float).astype(int)
@@ -661,12 +663,28 @@ def get_smallest_vectors(supercell_bases,
     primitive_fracs = np.array(primitive_fracs, dtype='double', order='C')
 
     # For each vector, we will need to consider all nearby images in the
-    # reduced bases.
-    lattice_points = np.array([[i, j, k]
-                               for i in (-1, 0, 1)
-                               for j in (-1, 0, 1)
-                               for k in (-1, 0, 1)],
-                              dtype='intc', order='C')
+    # reduced bases. The lattice points at which supercell images are searched
+    # are composed by linear combinations of three vectors in
+    # (0, a, b, c, -a-b-c, -a, -b, -c, a+b+c). There are finally 65 lattice
+    # points. There is no proof that this is enough.
+    lattice_1D = (-1, 0, 1)
+    lattice_4D = np.array([[i, j, k, l]
+                           for i in lattice_1D
+                           for j in lattice_1D
+                           for k in lattice_1D
+                           for l in lattice_1D],
+                          dtype='intc', order='C')
+    bases = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [-1, -1, -1]]
+    lattice_points = np.dot(lattice_4D, bases)
+    if StrictVersion(np.__version__) >= StrictVersion('1.13.0'):
+        lattice_points = np.array(np.unique(lattice_points, axis=0),
+                                  dtype='intc', order='C')
+    else:
+        unique_indices = np.unique([
+            np.nonzero(np.abs(lattice_points - point).sum(axis=1) == 0)[0][0]
+            for point in lattice_points])
+        lattice_points = np.array(lattice_points[unique_indices],
+                                  dtype='intc', order='C')
 
     # Here's where things get interesting.
     # We want to avoid manually iterating over all possible pairings of
@@ -678,7 +696,7 @@ def get_smallest_vectors(supercell_bases,
     # real heavy lifting.
 
     shortest_vectors = np.zeros(
-        (len(supercell_fracs), len(primitive_fracs), 27, 3),
+        (len(supercell_fracs), len(primitive_fracs), len(lattice_points), 3),
         dtype='double', order='C')
     multiplicity = np.zeros((len(supercell_fracs), len(primitive_fracs)),
                             dtype='intc', order='C')
