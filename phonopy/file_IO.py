@@ -533,7 +533,13 @@ def get_cell_from_disp_yaml(dataset):
             data_key = None
             pos_key = None
 
-        positions = [x[pos_key] for x in dataset[data_key]]
+        try:
+            positions = [x[pos_key] for x in dataset[data_key]]
+        except KeyError:
+            msg = ("\"disp.yaml\" format is too old. "
+                   "Please re-create it as \"phonopy_disp.yaml\" to contain "
+                   "supercell crystal structure information.")
+            raise RuntimeError(msg)
         symbols = [x['symbol'] for x in dataset[data_key]]
         cell = PhonopyAtoms(cell=lattice,
                             scaled_positions=positions,

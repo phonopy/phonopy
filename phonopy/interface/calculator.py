@@ -345,16 +345,20 @@ def create_FORCE_SETS(interface_mode,
             print("NOTE:")
             print("  From phonopy v2.0, displacements are written into "
                   "\"phonopy_disp.yaml\".")
-            print("  \"disp.yaml\" is still supported for reading, but is "
-                  "deprecated.")
+            print("  \"disp.yaml\" is still supported for reading except for "
+                  "Wien2k interface, ")
+            print("  but is deprecated.")
             print('')
         if force_sets_zero_mode:
             print("Forces in %s are subtracted from forces in all "
                   "other files." % force_filenames[0])
 
     if disp_filename == 'disp.yaml':
-        disp_dataset, supercell = parse_disp_yaml(filename=disp_filename,
-                                                  return_cell=True)
+        if interface_mode == 'wein2k':
+            disp_dataset, supercell = parse_disp_yaml(filename=disp_filename,
+                                                      return_cell=True)
+        else:
+            disp_dataset = parse_disp_yaml(filename=disp_filename)
     else:
         phpy = PhonopyYaml()
         phpy.read(disp_filename)
