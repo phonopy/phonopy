@@ -643,7 +643,7 @@ def get_smallest_vectors(supercell_bases,
 
     """
 
-    reduced_cell_method = 'delaunay'
+    reduced_cell_method = 'niggli'
     reduced_bases = get_reduced_bases(supercell_bases,
                                       method=reduced_cell_method,
                                       tolerance=symprec)
@@ -686,15 +686,8 @@ def get_smallest_vectors(supercell_bases,
         lattice_points = np.array(lattice_points[unique_indices],
                                   dtype='intc', order='C')
 
-    # Here's where things get interesting.
-    # We want to avoid manually iterating over all possible pairings of
-    # supercell atoms and primitive atoms, because doing so creates a
-    # tight loop in larger structures that is difficult to optimize.
-    #
-    # Furthermore, it seems wise to call numpy.dot on as large of an array
-    # as possible, since numpy can shell out to BLAS to handle the
-    # real heavy lifting.
-
+    # This shortest_vectors is already used at many locations.
+    # Therefore the constant number 27 = 3*3*3 can not be easily changed.
     shortest_vectors = np.zeros(
         (len(supercell_fracs), len(primitive_fracs), 27, 3),
         dtype='double', order='C')
@@ -710,6 +703,22 @@ def get_smallest_vectors(supercell_bases,
         np.array(reduced_bases.T, dtype='double', order='C'),
         np.array(trans_mat_inv.T, dtype='intc', order='C'),
         symprec)
+
+    # Here's where things get interesting.
+    # We want to avoid manually iterating over all possible pairings of
+    # supercell atoms and primitive atoms, because doing so creates a
+    # tight loop in larger structures that is difficult to optimize.
+    #
+    # Furthermore, it seems wise to call numpy.dot on as large of an array
+    # as possible, since numpy can shell out to BLAS to handle the
+    # real heavy lifting.
+
+    # lattice_1D = (-1, 0, 1)
+    # lattice_points = np.array([[i, j, k]
+    #                            for i in lattice_1D
+    #                            for j in lattice_1D
+    #                            for k in lattice_1D],
+    #                           dtype='intc', order='C')
 
     # # For every atom in the supercell and every atom in the primitive cell,
     # # we want 27 images of the vector between them.
