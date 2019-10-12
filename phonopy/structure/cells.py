@@ -857,11 +857,25 @@ def _compute_permutation_c(positions_a,  # scaled positions
 
     try:
         import phonopy._phonopy as phonoc
-        is_found = phonoc.compute_permutation(permutation,
-                                              lattice,
-                                              positions_a,
-                                              positions_b,
-                                              symprec)
+        tolerance = symprec
+        for _ in range(20):
+            is_found = phonoc.compute_permutation(permutation,
+                                                  lattice,
+                                                  positions_a,
+                                                  positions_b,
+                                                  tolerance)
+            if is_found:
+                break
+            else:
+                tolerance *= 1.05
+
+        if tolerance / symprec > 1.5:
+            import warnings
+            msg = ("Crystal structure is distorted in a tricky way so that "
+                   "phonopy could not handle the crystal symmetry properly. "
+                   "It is recommended to symmetrize crystal structure well "
+                   "and then re-start phonon calculation from scratch.")
+            warnings.warn(msg)
 
         if not is_found:
             permutation_error()

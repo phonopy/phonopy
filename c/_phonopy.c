@@ -358,7 +358,11 @@ static PyObject * py_compute_permutation(PyObject *self, PyObject *args)
                                  num_pos,
                                  symprec);
 
-  return Py_BuildValue("i", is_found);
+  if (is_found) {
+    Py_RETURN_TRUE;
+  } else {
+    Py_RETURN_FALSE;
+  }
 }
 
 static PyObject * py_gsv_copy_smallest_vectors(PyObject *self, PyObject *args)
@@ -1563,7 +1567,6 @@ static int compute_permutation(int * rot_atom,
 
   for (i = 0; i < num_pos; i++) {
     if (rot_atom[i] < 0) {
-      printf("Encounter some problem in compute_permutation.\n");
       return 0;
     }
   }
