@@ -1243,7 +1243,8 @@ def guess_primitive_matrix(unitcell, symprec=1e-5):
     tmat = dataset['transformation_matrix']
     centring = dataset['international'][0]
     pmat = get_primitive_matrix_by_centring(centring)
-    return np.dot(np.linalg.inv(tmat), pmat)
+    return np.array(np.dot(np.linalg.inv(tmat), pmat),
+                    dtype='double', order='C')
 
 
 def estimate_supercell_matrix(spglib_dataset,
