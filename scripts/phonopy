@@ -169,7 +169,6 @@ def finalize_phonopy(log_level,
                      filename="phonopy.yaml"):
     units = get_default_physical_units(interface_mode)
     phpy_yaml = PhonopyYaml(configuration=phonopy_conf.get_configures(),
-                            calculator=interface_mode,
                             physical_units=units,
                             settings={
                                 'force_sets': False,
@@ -427,8 +426,6 @@ if args.force_sets or args.force_sets_zero:
             dataset = parse_disp_yaml(filename='phonopy_disp.yaml')
             if 'calculator' in dataset:
                 interface_mode = dataset['calculator']
-            else:
-                interface_mode = None
             disp_filename = 'phonopy_disp.yaml'
         except KeyError:
             file_exists('disp.yaml', log_level)
@@ -558,6 +555,7 @@ if run_mode == 'displacements' and settings.get_temperatures() is None:
                      primitive_matrix=primitive_matrix,
                      symprec=symprec,
                      is_symmetry=settings.get_is_symmetry(),
+                     calculator=interface_mode,
                      log_level=log_level)
 else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
     # Overwrite frequency unit conversion factor
@@ -577,6 +575,7 @@ else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
         group_velocity_delta_q=settings.get_group_velocity_delta_q(),
         symprec=symprec,
         is_symmetry=settings.get_is_symmetry(),
+        calculator=interface_mode,
         use_lapack_solver=settings.get_lapack_solver(),
         log_level=log_level)
 
