@@ -113,6 +113,7 @@ class PhonopyYaml(object):
         self.u2p_map = [u2u_map[i] for i in (s2u_map[self.s2p_map])[u2s_map]]
         self.nac_params = phonopy.nac_params
         self.frequency_unit_conversion_factor = phonopy.unit_conversion_factor
+        self.calculator = phonopy.calculator
 
         if self.command_name == "phonopy":
             self.force_constants = phonopy.force_constants
@@ -137,6 +138,9 @@ class PhonopyYaml(object):
         if self.frequency_unit_conversion_factor:
             lines.append("  frequency_unit_conversion_factor: %f" %
                          self.frequency_unit_conversion_factor)
+        if self.symmetry:
+            lines.append("  symmetry_tolerance: %.5e" %
+                         self.symmetry.get_symmetry_tolerance())
         if self.nac_params:
             lines.append("  nac_unit_conversion_factor: %f" % nac_factor)
         if self.configuration is not None:
