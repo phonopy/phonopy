@@ -61,7 +61,12 @@ def parse_set_of_forces(num_atoms,
     for filename in force_files:
         with io.open(filename, "rb") as fp:
             vasprun = Vasprun(fp, use_expat=use_expat)
-            force_sets.append(vasprun.read_forces())
+            try:
+                forces = vasprun.read_forces()
+            except RuntimeError:
+                raise RuntimeError("\'vasprun.xml\' No.%d can be broken. "
+                                   "Please check the content." % (count +1))
+            force_sets.append(forces)
             if verbose:
                 sys.stdout.write("%d " % (count + 1))
             count += 1
@@ -614,8 +619,10 @@ class Vasprun(object):
 
     def _parse_by_expat(self, fileptr):
         vasprun = VasprunxmlExpat(fileptr)
-        vasprun.parse()
-        return vasprun.get_forces()[-1]
+        if vasprun.parse():
+            return vasprun.get_forces()[-1]
+        else:
+            raise RuntimeError("vasprun.xml doesn't contain force information.")
 
     def _is_version528(self):
         for line in self._fileptr:
