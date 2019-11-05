@@ -35,12 +35,9 @@
 import os
 import numpy as np
 from phonopy.api_phonopy import Phonopy
-from phonopy.file_IO import (
-    parse_FORCE_SETS, parse_FORCE_CONSTANTS,
-    read_force_constants_hdf5, read_physical_unit_in_force_constants_hdf5)
+from phonopy.file_IO import parse_FORCE_SETS, parse_FORCE_CONSTANTS
 from phonopy.interface.phonopy_yaml import PhonopyYaml
-from phonopy.interface.calculator import (
-    get_default_physical_units, get_force_constant_conversion_factor)
+from phonopy.interface.calculator import get_default_physical_units
 import phonopy.cui.load_helper as load_helper
 
 
@@ -119,10 +116,12 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         Input unit cell filename. Default is None. The priority for cell is
         unitcell_filename > supercell_filename > unitcell > supercell.
     supercell_filename : str, optional
-        Input supercell filename. Default value of primitive_matrix is set to
-        'auto' (can be overwitten). supercell_matrix is ignored. Default is
-        None. The priority for cell is
-        unitcell_filename > supercell_filename > unitcell > supercell.
+        Input supercell filename. When this is specified, supercell_matrix is
+        ignored. Default is None. The priority for cell is
+        1. unitcell_filename (with supercell_matrix)
+        2. supercell_filename
+        3. unitcell (with supercell_matrix)
+        4. supercell.
     born_filename : str, optional
         Filename corresponding to 'BORN', a file contains non-analytical term
         correction parameters.
@@ -223,32 +222,6 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
     return phonon
 
 
-def read_force_constants_from_hdf5(filename='force_constants.hdf5',
-                                   p2s_map=None,
-                                   calculator=None):
-    """Convert force constants physical unit
-
-    Each calculator interface has own default force constants physical unit.
-    This method reads the physical unit of force constants if it exists and
-    if the read physical unit is different from the default one, the force
-    constants values are converted to have the default physical units.
-
-    Note
-    ----
-    This method is also used from phonopy script.
-
-    """
-
-    fc = read_force_constants_hdf5(filename=filename, p2s_map=p2s_map)
-    fc_unit = read_physical_unit_in_force_constants_hdf5(
-        filename=filename)
-    if fc_unit is None:
-        return fc
-    else:
-        factor = get_force_constant_conversion_factor(fc_unit, calculator)
-        return fc * factor
-
-
 def _set_force_constants(
         phonon,
         dataset=None,
@@ -263,9 +236,9 @@ def _set_force_constants(
         _dataset = dataset
     elif force_constants_filename is not None:
         dot_split = force_constants_filename.split('.')
-        p2s_map = phonon.primitive.get_primitive_to_supercell_map()
+        p2s_map = phonon.primitive.p2s_map
         if len(dot_split) > 1 and dot_split[-1] == 'hdf5':
-            fc = read_force_constants_from_hdf5(
+            fc = load_helper.read_force_constants_from_hdf5(
                 filename=force_constants_filename,
                 p2s_map=p2s_map,
                 calculator=calculator)

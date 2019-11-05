@@ -256,11 +256,13 @@ def get_default_physical_units(interface_mode=None):
 
     from phonopy.units import (Wien2kToTHz, AbinitToTHz, PwscfToTHz, ElkToTHz,
                                SiestaToTHz, VaspToTHz, CP2KToTHz, CrystalToTHz,
-                               DftbpToTHz, TurbomoleToTHz, Hartree, Bohr)
+                               DftbpToTHz, TurbomoleToTHz, Hartree, Bohr,
+                               Rydberg)
 
     units = {'factor': None,
              'nac_factor': None,
              'distance_to_A': None,
+             'force_to_eVperA': None,
              'force_constants_unit': None,
              'length_unit': None}
 
@@ -280,6 +282,7 @@ def get_default_physical_units(interface_mode=None):
         units['factor'] = PwscfToTHz
         units['nac_factor'] = 2.0
         units['distance_to_A'] = Bohr
+        units['force_to_eVperA'] = Rydberg / Bohr
         units['force_constants_unit'] = 'Ry/au^2'
         units['length_unit'] = 'au'
     elif interface_mode == 'wien2k':
@@ -322,6 +325,7 @@ def get_default_physical_units(interface_mode=None):
         units['factor'] = TurbomoleToTHz
         units['nac_factor'] = 1.0
         units['distance_to_A'] = Bohr
+        units['force_to_eVperA'] = Hartree / Bohr
         units['force_constants_unit'] = 'hartree/au^2'
         units['length_unit'] = 'au'
 

@@ -43,7 +43,7 @@ from phonopy.file_IO import (
     write_FORCE_CONSTANTS, write_force_constants_to_hdf5, parse_QPOINTS,
     parse_disp_yaml)
 from phonopy.cui.collect_cell_info import collect_cell_info
-from phonopy.cui.load import read_force_constants_from_hdf5
+from phonopy.cui.load_helper import read_force_constants_from_hdf5
 from phonopy.cui.settings import PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.cui.phonopy_argparse import (

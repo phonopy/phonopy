@@ -327,7 +327,7 @@ class Phonopy(object):
         Returns
         -------
         str
-            Force calculator name such as 'vasp', 'qe', etc.
+            Calculator name such as 'vasp', 'qe', etc.
 
         """
         return self._calculator
@@ -1623,7 +1623,7 @@ class Phonopy(object):
         nac_q_direction : array_like
             q=(0,0,0) is replaced by q=epsilon * nac_q_direction where epsilon
             is infinitsimal for non-analytical term correction. This is used,
-            e.g., to observe LO-TO splitting,
+            e.g., to observe LO-TO splitting.
 
         """
 
@@ -2791,9 +2791,9 @@ class Phonopy(object):
         with open(filename, 'w') as w:
             w.write(str(phpy_yaml))
 
-    #################
-    # Local methods #
-    #################
+    ###################
+    # private methods #
+    ###################
     def _run_force_constants_from_forces(self,
                                          distributed_atom_list=None,
                                          fc_calculator=None,

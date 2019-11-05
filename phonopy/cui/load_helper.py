@@ -36,8 +36,11 @@ import os
 import numpy as np
 from phonopy.interface.calculator import read_crystal_structure
 from phonopy.structure.cells import get_primitive_matrix_by_centring
-from phonopy.file_IO import parse_BORN
+from phonopy.file_IO import (
+    parse_BORN, read_force_constants_hdf5,
+    read_physical_unit_in_force_constants_hdf5)
 from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.interface.calculator import get_force_constant_conversion_factor
 
 
 def get_cell_settings(phonopy_yaml=None,
@@ -52,7 +55,7 @@ def get_cell_settings(phonopy_yaml=None,
     if unitcell_filename is not None:
         cell, filename = read_crystal_structure(
             filename=unitcell_filename, interface_mode=calculator)
-        smat = _get_supercell_matrix(supercell_matrix)
+        smat = get_supercell_matrix(supercell_matrix)
         pmat = primitive_matrix
     elif supercell_filename is not None:
         cell, filename = read_crystal_structure(
@@ -62,7 +65,7 @@ def get_cell_settings(phonopy_yaml=None,
             pmat = 'auto'
     elif unitcell is not None:
         cell = PhonopyAtoms(atoms=unitcell)
-        smat = _get_supercell_matrix(supercell_matrix)
+        smat = get_supercell_matrix(supercell_matrix)
         pmat = primitive_matrix
     elif supercell is not None:
         cell = PhonopyAtoms(atoms=supercell)
@@ -98,7 +101,33 @@ def get_nac_params(primitive, nac_params, born_filename, is_nac, nac_factor):
     return _nac_params
 
 
-def _get_supercell_matrix(smat):
+def read_force_constants_from_hdf5(filename='force_constants.hdf5',
+                                   p2s_map=None,
+                                   calculator=None):
+    """Convert force constants physical unit
+
+    Each calculator interface has own default force constants physical unit.
+    This method reads the physical unit of force constants if it exists and
+    if the read physical unit is different from the default one, the force
+    constants values are converted to have the default physical units.
+
+    Note
+    ----
+    This method is also used from phonopy script.
+
+    """
+
+    fc = read_force_constants_hdf5(filename=filename, p2s_map=p2s_map)
+    fc_unit = read_physical_unit_in_force_constants_hdf5(
+        filename=filename)
+    if fc_unit is None:
+        return fc
+    else:
+        factor = get_force_constant_conversion_factor(fc_unit, calculator)
+        return fc * factor
+
+
+def get_supercell_matrix(smat):
     if smat is None:
         _smat = np.eye(3, dtype='intc', order='C')
     elif len(np.ravel(smat)) == 3:
