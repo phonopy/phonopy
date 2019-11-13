@@ -1,5 +1,5 @@
 # vim: set fileencoding=utf-8 :
-# Copyright (C) 2017 Tiziano Müller
+# Copyright (C) 2017-2019 Tiziano Müller
 # All rights reserved.
 #
 # This file is part of phonopy.
@@ -33,124 +33,191 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+
 import sys
+from fractions import Fraction
+from os import path
 import numpy as np
 
-from phonopy.file_IO import collect_forces
+from phonopy.file_IO import iter_collect_forces
 from phonopy.interface.vasp import (check_forces, get_drift_forces)
 from phonopy.structure.atoms import (PhonopyAtoms, symbol_map)
-from phonopy.units import Bohr
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
-    hook = '# Atom   Kind   Element'
-
     force_sets = []
 
     for i, filename in enumerate(forces_filenames):
         if verbose:
             sys.stdout.write("%d. " % (i + 1))
 
-        with open(filename) as fhandle:
-            cp2k_forces = collect_forces(fhandle, num_atoms, hook, [3, 4, 5])
-            if check_forces(cp2k_forces, num_atoms, filename, verbose=verbose):
-                drift_force = get_drift_forces(cp2k_forces,
-                                               filename=filename,
-                                               verbose=verbose)
-                force_sets.append(np.array(cp2k_forces) - drift_force)
-            else:
-                return []  # if one file is invalid, the whole thing is broken
+        forces = iter_collect_forces(filename, num_atoms, '# Atom   Kind   Element', [3, 4, 5])
+
+        if not check_forces(forces, num_atoms, filename, verbose=verbose):
+            return []  # if one file is invalid, the whole thing is broken
+
+        drift_force = get_drift_forces(forces, filename=filename, verbose=verbose)
+        force_sets.append(np.array(forces) - drift_force)
 
     return force_sets
 
 
 def read_cp2k(filename):
-    from cp2k_tools.parser import CP2KInputParser
+    from cp2k_input_tools.parser import CP2KInputParser
 
     with open(filename) as fhandle:
         parser = CP2KInputParser()
-        cp2k_in = parser.parse(fhandle)
+        tree = parser.parse(fhandle)
 
-    cp2k_cell = cp2k_in['force_eval']['subsys']['cell']
-    cp2k_coord = cp2k_in['force_eval']['subsys']['coord']
+    try:
+        subsys = tree['+force_eval'][0]['+subsys']
+        cp2k_cell = subsys['+cell']
+    except IndexError:
+        raise RuntimeError("could not find a FORCE_EVAL/SUBSYS/CELL section in the given CP2K input file")
 
-    if 'abc' in cp2k_cell:
-        unit = '[angstrom]'  # CP2K default unit
-        unit_cell = np.eye(3)
-        if isinstance(cp2k_cell['abc'][0], str):
-            unit = cp2k_cell['abc'][0]
-            unit_cell *= cp2k_cell['abc'][1:]
+    if len(tree['+force_eval']) > 1:
+        raise NotImplementedError("the given CP2K input file contains multiple FORCE_EVAL sections, which is not (yet) supported")
+
+    # CP2K can get its cell information in two ways:
+    # - A, B, C: cell vectors
+    # - ABC: scaling of cell vectors, ALPHA_BETA_GAMMA: angles between the cell vectors
+    # We'll parse either of them, but only write A, B, C
+    if 'a' in cp2k_cell:
+        # unit vectors given
+        unit_cell = np.array([
+            cp2k_cell['a'],
+            cp2k_cell['b'],
+            cp2k_cell['c'],
+            ])
+    elif 'abc' in cp2k_cell:
+        # length of unit vectors given
+        if 'alpha_beta_gamma' in cp2k_cell:
+            # if we also have the angles, construct the cell
+
+            alpha, beta, gamma = cp2k_cell.pop('alpha_beta_gamma')
+
+            cos_alpha = np.cos(alpha)
+            cos_beta = np.cos(beta)
+            cos_gamma = np.cos(gamma)
+            sin_gamma = np.sin(gamma)
+
+            unit_cell = np.array([
+                [1., 0., 0.],
+                [cos_gamma, sin_gamma, 0.],
+                [
+                    cos_beta,
+                    (cos_alpha-cos_gamma*cos_beta)/sin_gamma,
+                    np.sqrt(1.-cos_beta**2-((cos_alpha-cos_gamma*cos_beta)/sin_gamma)**2),
+                ],
+            ])
         else:
-            unit_cell *= cp2k_cell['abc']
+            unit_cell = np.eye(3)
 
-        if unit == '[angstrom]':
-            unit_cell /= Bohr  # phonopy expects the lattice to be in Bohr
-        else:
-            raise NotImplementedError("unit scaling for other units than angstrom not yet implemented")
+        a, b, c = cp2k_cell.pop('abc')  # remove them from the tree since we pass it along
+
+        unit_cell[0,:] *= a
+        unit_cell[1,:] *= b
+        unit_cell[2,:] *= c
+
+    if '+cell_ref' in cp2k_cell:
+        print("WARNING: the &CELL_REF section must be manually adjusted")
+
+    cp2k_coord = subsys['+coord']
+
+    numbers = []
+    positions = []
+
+    for coordline in cp2k_coord['*']:
+        # coordinates are a series of strings according to the CP2K schema
+        fields = coordline.split()
+        numbers += [symbol_map[fields[0]]]
+        # positions can also be fractions
+        positions += [[float(Fraction(f)) for f in fields[1:4]]]
+
+    if cp2k_coord.get('scaled', False):  # the keyword can be unavailable, true or false
+        return (PhonopyAtoms(numbers=numbers, cell=unit_cell, scaled_positions=positions), tree)
     else:
-        raise NotImplementedError("unit cell can only be specified via ABC")
-
-    # the keyword can be unavailable, true, false or None, with unavailable=false, None=true
-    scaled_coords = cp2k_coord.get('scaled', False) is not False
-
-    if not scaled_coords:
-        raise NotImplementedError("only scaled coordinates are currently supported")
-
-
-    numbers = [symbol_map[e[0]] for e in cp2k_coord['*']]
-    positions = [e[1:] for e in cp2k_coord['*']]
-
-    return PhonopyAtoms(numbers=numbers, cell=unit_cell, scaled_positions=positions)
-
-
-def write_cp2k(filename, cell):
-    with open(filename, 'w') as fhandle:
-        fhandle.write(get_cp2k_structure(cell))
+        return (PhonopyAtoms(numbers=numbers, cell=unit_cell, positions=positions), tree)
 
 
 def write_supercells_with_displacements(supercell,
                                         cells_with_displacements,
+                                        optional_structure_info,
                                         pre_filename="supercell",
                                         width=3):
 
-    write_cp2k("supercell.inp", supercell)
+    orig_fname, tree = optional_structure_info
+
+    fbase, fext = path.splitext(orig_fname)
+    pbase = tree["+global"]["project_name"]
+
+    supercell_ref_name = "{}-supercell{}".format(fbase, fext)
+    with open(supercell_ref_name, 'w') as fhandle:
+        fhandle.write("""\
+# Generated by Phonopy, based on {fname}
+# Original configuration with the generated supercell for comparison
+""".format(fname=orig_fname))
+        write_cp2k(fhandle, "{}-supercell".format(pbase), supercell, tree)
 
     for i, cell in enumerate(cells_with_displacements):
-        filename = "{pre_filename}-{0:0{width}}.inp".format(
+        suffix = "{pre_filename}-{0:0{width}}".format(
             i + 1,
             pre_filename=pre_filename,
             width=width)
-        write_cp2k(filename, cell)
+
+        with open("{}-{}{}".format(fbase, suffix, fext), 'w') as fhandle:
+            fhandle.write("""\
+# Generated by Phonopy, based on {fname}
+# Merged configuration with displacements
+""".format(fname=orig_fname))
+            write_cp2k(fhandle, "{}-{}".format(pbase, suffix), cell, tree)
 
 
-def get_cp2k_structure(atoms):
-    """Convert the atoms structure to a CP2K input file skeleton string"""
+def write_cp2k(fhandle, project_name, atoms, tree):
+    """Merge the new the atoms structure with the configuration tree to a new CP2K input file
 
-    from cp2k_tools.generator import dict2cp2k
+    :param fhandle: open file handle to which the routine will write to
+    :param project_name: the project name to use (CP2K uses that as prefix for generated files)i
+    :param atoms: the Atoms objects to use
+    :param tree: the configuration tree as returned from CP2KInputParser
+    """
 
-    # CP2K's default unit is angstrom, convert it, but still declare it explictly:
-    cp2k_cell = {sym: ('[angstrom]',) + tuple(coords) for sym, coords in zip(('a', 'b', 'c'), atoms.get_cell()*Bohr)}
-    cp2k_cell['periodic'] = 'XYZ'  # anything else does not make much sense
-    cp2k_coord = {
-        'scaled': True,
-        '*': [[sym] + list(coord) for sym, coord in zip(atoms.get_chemical_symbols(), atoms.get_scaled_positions())],
-        }
+    from cp2k_input_tools.generator import CP2KInputGenerator
+    generator = CP2KInputGenerator()
 
-    return dict2cp2k(
-        {
-            'global': {
-                'run_type': 'ENERGY_FORCE',
-                },
-            'force_eval': {
-                'subsys': {
-                    'cell': cp2k_cell,
-                    'coord': cp2k_coord,
-                    },
-                'print': {
-                    'forces': {
-                        'filename': 'forces',
-                        },
-                    },
-                },
+    tree['+global']['run_type'] = 'ENERGY_FORCE'
+    tree['+global']['project_name'] = project_name
+
+    force_eval = tree['+force_eval'][0]
+    subsys = force_eval['+subsys']
+
+    # if the original input contained scaled positions, continue with scaled positions
+    if subsys['+coord'].get('scaled', False):
+        cp2k_coord = {
+            'scaled': True,
+            '*': ["{sym} {x} {y} {z}".format(sym=sym, x=coord[0], y=coord[1], z=coord[2])
+                  for sym, coord in zip(atoms.get_chemical_symbols(), atoms.get_scaled_positions())],
             }
-        )
+    # ... otherwise use absolute positions
+    else:
+        cp2k_coord = {
+            '*': ["{sym} {x} {y} {z}".format(sym=sym, x=coord[0], y=coord[1], z=coord[2])
+                  for sym, coord in zip(atoms.get_chemical_symbols(), atoms.get_positions())],
+            }
+
+    subsys['+cell']['a'] = list(atoms.get_cell()[0])
+    subsys['+cell']['b'] = list(atoms.get_cell()[1])
+    subsys['+cell']['c'] = list(atoms.get_cell()[2])
+    subsys['+cell']['periodic'] = 'XYZ'  # anything else does not make much sense
+
+    subsys['+coord'] = cp2k_coord  # overwriting the coordinates
+
+    if not '+print' in force_eval:
+        force_eval['+print'] = {}
+    if not '+forces' in force_eval['+print']:
+        force_eval['+print']['+forces'] = {}
+    force_eval['+print']['+forces']['filename'] = "forces"  # uses the project name as base with 'forces' as suffix
+
+    for line in generator.line_iter(tree):
+        fhandle.write("{line}\n".format(line=line))

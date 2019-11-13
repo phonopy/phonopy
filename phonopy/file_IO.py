@@ -53,15 +53,17 @@ def get_FORCE_SETS_lines(dataset, forces=None):
     """Generate FORCE_SETS string
 
     See the format of dataset in the docstring of
-    Phonopy.set_displacement_dataset. Optionally for the type-1 (traditional)
-    format, forces can be given. In this case, sets of forces are
-    unnecessary to be stored in the dataset.
+    Phonopy.set_displacement_dataset. Optionally, sets of forces of supercells
+    can be given. In this case, these forces are unnecessary to be stored
+    in the dataset.
 
     """
 
     if 'first_atoms' in dataset:
         return _get_FORCE_SETS_lines_type1(dataset, forces=forces)
-    elif 'forces' in dataset:
+    elif 'displacements' in dataset:
+        if forces is not None:
+           dataset['forces'] = forces
         return _get_FORCE_SETS_lines_type2(dataset)
 
 
@@ -533,7 +535,13 @@ def get_cell_from_disp_yaml(dataset):
             data_key = None
             pos_key = None
 
-        positions = [x[pos_key] for x in dataset[data_key]]
+        try:
+            positions = [x[pos_key] for x in dataset[data_key]]
+        except KeyError:
+            msg = ("\"disp.yaml\" format is too old. "
+                   "Please re-create it as \"phonopy_disp.yaml\" to contain "
+                   "supercell crystal structure information.")
+            raise RuntimeError(msg)
         symbols = [x['symbol'] for x in dataset[data_key]]
         cell = PhonopyAtoms(cell=lattice,
                             scaled_positions=positions,

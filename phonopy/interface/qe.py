@@ -113,7 +113,7 @@ def read_pwscf(filename):
                 if n not in positive_numbers:
                     positive_numbers.append(n)
 
-        available_numbers = range(1, 119)
+        available_numbers = list(range(1, 119))
         for pn in positive_numbers:
             available_numbers.remove(pn)
 

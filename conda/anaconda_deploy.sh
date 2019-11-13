@@ -14,4 +14,4 @@ conda install anaconda-client --yes
 conda build conda --no-anaconda-upload
 TRG=`conda build conda --output |sed -e 's/--/-*-/'`
 echo "Uploading: $TRG"
-anaconda --token $TKN upload --label $LBL $TRG
+anaconda --token $TKN upload --skip-existing --label $LBL $TRG

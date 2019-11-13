@@ -32,8 +32,10 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import os
 import numpy as np
 from phonopy.api_phonopy import Phonopy
+from phonopy.file_IO import parse_FORCE_SETS, parse_FORCE_CONSTANTS
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.calculator import get_default_physical_units
 import phonopy.cui.load_helper as load_helper
@@ -114,10 +116,12 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         Input unit cell filename. Default is None. The priority for cell is
         unitcell_filename > supercell_filename > unitcell > supercell.
     supercell_filename : str, optional
-        Input supercell filename. Default value of primitive_matrix is set to
-        'auto' (can be overwitten). supercell_matrix is ignored. Default is
-        None. The priority for cell is
-        unitcell_filename > supercell_filename > unitcell > supercell.
+        Input supercell filename. When this is specified, supercell_matrix is
+        ignored. Default is None. The priority for cell is
+        1. unitcell_filename (with supercell_matrix)
+        2. supercell_filename
+        3. unitcell (with supercell_matrix)
+        4. supercell.
     born_filename : str, optional
         Filename corresponding to 'BORN', a file contains non-analytical term
         correction parameters.
@@ -171,7 +175,7 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         smat = phpy_yaml.supercell_matrix
         if smat is None:
             smat = np.eye(3, dtype='intc', order='C')
-        if primitive_matrix is 'auto':
+        if primitive_matrix == 'auto':
             pmat = 'auto'
         else:
             pmat = phpy_yaml.primitive_matrix
@@ -197,13 +201,16 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
                      is_symmetry=is_symmetry,
                      calculator=calculator,
                      log_level=log_level)
-    load_helper.set_nac_params(phonon,
-                               _nac_params,
-                               born_filename,
-                               is_nac,
-                               units['nac_factor'])
+    _nac_params = load_helper.get_nac_params(phonon.primitive,
+                                             _nac_params,
+                                             born_filename,
+                                             is_nac,
+                                             units['nac_factor'])
+    if _nac_params is not None:
+        phonon.nac_params = _nac_params
+
     if _fc is None:
-        load_helper.set_force_constants(
+        _set_force_constants(
             phonon,
             dataset=_dataset,
             force_constants_filename=force_constants_filename,
@@ -213,3 +220,43 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
     else:
         phonon.force_constants = _fc
     return phonon
+
+
+def _set_force_constants(
+        phonon,
+        dataset=None,
+        force_constants_filename=None,
+        force_sets_filename=None,
+        calculator=None,
+        fc_calculator=None):
+    natom = phonon.supercell.get_number_of_atoms()
+
+    _dataset = None
+    if dataset is not None:
+        _dataset = dataset
+    elif force_constants_filename is not None:
+        dot_split = force_constants_filename.split('.')
+        p2s_map = phonon.primitive.p2s_map
+        if len(dot_split) > 1 and dot_split[-1] == 'hdf5':
+            fc = load_helper.read_force_constants_from_hdf5(
+                filename=force_constants_filename,
+                p2s_map=p2s_map,
+                calculator=calculator)
+        else:
+            fc = parse_FORCE_CONSTANTS(filename=force_constants_filename,
+                                       p2s_map=p2s_map)
+        phonon.set_force_constants(fc)
+    elif force_sets_filename is not None:
+        _dataset = parse_FORCE_SETS(natom=natom,
+                                    filename=force_sets_filename)
+    elif os.path.isfile("FORCE_SETS"):
+        _dataset = parse_FORCE_SETS(natom=natom)
+
+    if _dataset:
+        phonon.dataset = _dataset
+        try:
+            phonon.produce_force_constants(
+                calculate_full_force_constants=False,
+                fc_calculator=fc_calculator)
+        except RuntimeError:
+            pass
