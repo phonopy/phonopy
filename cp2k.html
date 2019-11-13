@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>CP2K &amp; phonopy calculation &#8212; Phonopy v.2.4.0</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="VASP-DFPT &amp; phonopy calculation" href="vasp-dfpt.html" />
+    <link rel="prev" title="TURBOMOLE &amp; phonopy calculation" href="turbomole.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Phonopy</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.4</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="documentation.html">Documentation</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">CP2K &amp; phonopy calculation</a><ul>
+<li><a class="reference internal" href="#supported-cp2k-configuration-options">Supported CP2K configuration options</a></li>
+<li><a class="reference internal" href="#how-to-run">How to run</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="turbomole.html" title="Previous Chapter: TURBOMOLE & phonopy calculation"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; TURBOMOLE & p...</span>
+    </a>
+  </li>
+  <li>
+    <a href="vasp-dfpt.html" title="Next Chapter: VASP-DFPT & phonopy calculation"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">VASP-DFPT & p... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <div class="section" id="cp2k-phonopy-calculation">
+<span id="cp2k-interface"></span><h1>CP2K &amp; phonopy calculation<a class="headerlink" href="#cp2k-phonopy-calculation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="supported-cp2k-configuration-options">
+<h2>Supported CP2K configuration options<a class="headerlink" href="#supported-cp2k-configuration-options" title="Permalink to this headline">¶</a></h2>
+<p>All CP2K input file features like unit prefixes  (<code class="docutils literal notranslate"><span class="pre">[rad]</span></code> or <code class="docutils literal notranslate"><span class="pre">[Bohr]</span></code>) or preprocessor variables are supported,
+except for the functionality to load cell information or coordinates from external/referenced files (CIF, XYZ).</p>
+<p>The cell information has to be provided using one of the following options.</p>
+<p>Either by specifying the <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">B</span></code> and <code class="docutils literal notranslate"><span class="pre">C</span></code> cell vectors directly:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&amp;</span><span class="n">FORCE_EVAL</span>
+   <span class="o">&amp;</span><span class="n">SUBSYS</span>
+      <span class="o">&amp;</span><span class="n">CELL</span>
+         <span class="n">A</span> <span class="mf">11.452705822048308</span> <span class="mf">0.0</span> <span class="mf">0.0</span>
+         <span class="n">B</span> <span class="mf">0.0</span> <span class="mf">11.452705822048308</span> <span class="mf">0.0</span>
+         <span class="n">C</span> <span class="mf">0.0</span> <span class="mf">0.0</span> <span class="mf">11.452705822048308</span>
+         <span class="n">PERIODIC</span> <span class="n">XYZ</span>
+      <span class="o">&amp;</span><span class="n">END</span> <span class="n">CELL</span>
+   <span class="o">&amp;</span><span class="n">END</span> <span class="n">SUBSYS</span>
+<span class="o">&amp;</span><span class="n">END</span> <span class="n">FORCE_EVAL</span>
+</pre></div>
+</div>
+<p>or by using the <code class="docutils literal notranslate"><span class="pre">ABC</span></code> scalings and <code class="docutils literal notranslate"><span class="pre">ALPHA_BETA_GAMMA</span></code> angles (the latter is optional, the cell is assumed to be orthorombic if no angles are specified):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>&amp;FORCE_EVAL
+   &amp;SUBSYS
+      &amp;CELL
+         ALPHA_BETA_GAMMA 11.452705822048308 11.452705822048308 11.452705822048308
+         ! ALPHA_BETA_GAMMA 90. 90. 90
+         PERIODIC XYZ
+      &amp;END CELL
+   &amp;END SUBSYS
+&amp;END FORCE_EVAL
+</pre></div>
+</div>
+<p>The coordinates have to be specified in a coordinate section and can be either specified as scaled coordinates
+(in cell vector coordinates) or as absolute coordinates (Angstrom if not otherwise specified):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&amp;</span><span class="n">FORCE_EVAL</span>
+   <span class="o">&amp;</span><span class="n">SUBSYS</span>
+      <span class="o">&amp;</span><span class="n">COORD</span>
+         <span class="n">SCALED</span>
+         <span class="n">Na</span>  <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span>
+         <span class="n">Na</span>  <span class="mi">0</span>  <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>
+         <span class="n">Na</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>  <span class="mi">0</span>  <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>
+         <span class="n">Na</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>  <span class="mi">0</span>
+         <span class="n">Cl</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>
+         <span class="n">Cl</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>  <span class="mi">0</span>   <span class="mi">0</span>
+         <span class="n">Cl</span>  <span class="mi">0</span>  <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>  <span class="mi">0</span>
+         <span class="n">Cl</span>  <span class="mi">0</span>   <span class="mi">0</span>  <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>
+      <span class="o">&amp;</span><span class="n">END</span> <span class="n">COORD</span>
+   <span class="o">&amp;</span><span class="n">END</span> <span class="n">SUBSYS</span>
+<span class="o">&amp;</span><span class="n">END</span> <span class="n">FORCE_EVAL</span>
+</pre></div>
+</div>
+<p>Please note:</p>
+<ul class="simple">
+<li><p>The cell information in the generated (supercell) configuration files will always be using the <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">B</span></code>, <code class="docutils literal notranslate"><span class="pre">C</span></code> configuration options.</p></li>
+<li><p>All other configuration options will be forwarded to the generated supercell configurations and all preprocessor options will be resolved prior to it.</p></li>
+<li><p>Multiple <code class="docutils literal notranslate"><span class="pre">&amp;FORCE_EVAL</span></code> sections are not allowed.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">&amp;CELL_REF</span></code> section and the <code class="docutils literal notranslate"><span class="pre">MULTIPLE_UNIT_CELL</span></code> will not be read or modified but simply forwarded to the generated configurations.</p></li>
+</ul>
+</div>
+<div class="section" id="how-to-run">
+<h2>How to run<a class="headerlink" href="#how-to-run" title="Permalink to this headline">¶</a></h2>
+<p>A procedure of CP2K-phonopy calculation is as follows:</p>
+<ol class="arabic">
+<li><p>Read a CP2K input file and create supercells with the <a class="reference internal" href="command-options.html#cp2k-mode"><span class="std std-ref">--cp2k</span></a> option:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">cp2k</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="n">inp</span>
+</pre></div>
+</div>
+<p>In this example, 2x2x2 supercells are created. <code class="docutils literal notranslate"><span class="pre">NaCl-supercell.inp</span></code> and
+<code class="docutils literal notranslate"><span class="pre">NaCl-supercell-xxx.inp</span></code> (<code class="docutils literal notranslate"><span class="pre">xxx</span></code> are numbers) give the perfect
+supercell and supercells with displacements, respectively.
+Almost all other options will be copied from the original input <code class="docutils literal notranslate"><span class="pre">NaCl.inp</span></code>, except for the following:</p>
+<ul class="simple">
+<li><p>the <code class="docutils literal notranslate"><span class="pre">PROJECT_NAME</span></code> will be suffixed to avoid name clashes of output files</p></li>
+<li><p>additional <code class="docutils literal notranslate"><span class="pre">&amp;PRINT</span></code> sections will be added to generate separate output files containing the forces</p></li>
+<li><p>the <code class="docutils literal notranslate"><span class="pre">RUN_TYPE</span></code> is set to <code class="docutils literal notranslate"><span class="pre">ENERGY_FORCE</span></code></p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> will also be created containing the Phonopy configuration.</p>
+</li>
+<li><p>Calculate forces on atoms in the supercells with displacements.</p>
+<p>In this example there are two supercells with displacements to run.
+Using <code class="docutils literal notranslate"><span class="pre">mpirun</span></code> and an MPI-enabled <code class="docutils literal notranslate"><span class="pre">CP2K</span></code> this would simply be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">mpirun</span> <span class="o">-</span><span class="n">np</span> <span class="mi">16</span> <span class="n">cp2k</span><span class="o">.</span><span class="n">popt</span> <span class="n">NaCl</span><span class="o">-</span><span class="n">supercell</span><span class="o">-</span><span class="mf">001.</span><span class="n">inp</span>
+<span class="o">%</span> <span class="n">mpirun</span> <span class="o">-</span><span class="n">np</span> <span class="mi">16</span> <span class="n">cp2k</span><span class="o">.</span><span class="n">popt</span> <span class="n">NaCl</span><span class="o">-</span><span class="n">supercell</span><span class="o">-</span><span class="mf">002.</span><span class="n">inp</span>
+</pre></div>
+</div>
+<p>Please do not change any options in the <code class="docutils literal notranslate"><span class="pre">NaCl-supercell-002.inp</span></code> which would
+require a re-relaxation of the cell parameters/structure.
+Also do not relax the generated supercells with displacements,
+because atomic forces induced by a small atomic displacement are
+what is need for phonon calculation.</p>
+</li>
+<li><p>Create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> by running:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">cp2k</span> <span class="o">-</span><span class="n">f</span> <span class="n">NaCl</span><span class="o">-</span><span class="n">supercell</span><span class="o">-</span><span class="mi">001</span><span class="o">-</span><span class="n">forces</span><span class="o">-</span><span class="mf">1_0.</span><span class="n">xyz</span> <span class="n">NaCl</span><span class="o">-</span><span class="n">supercell</span><span class="o">-</span><span class="mi">002</span><span class="o">-</span><span class="n">forces</span><span class="o">-</span><span class="mf">1_0.</span><span class="n">xyz</span>  <span class="o">...</span>
+</pre></div>
+</div>
+<p>To run this command, <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> has to be located in the current
+directory. More information about the configuration options can be found in <a class="reference internal" href="command-options.html#cp2k-force-sets-option"><span class="std std-ref">CP2K interface</span></a>.
+The example outputs are located in <code class="docutils literal notranslate"><span class="pre">example/NaCl-CP2K</span></code>.</p>
+</li>
+<li><p>Run post-process of phonopy with the original CP2K main input file for the
+unit cell used in step 1:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">cp2k</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="n">inp</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+</pre></div>
+</div>
+<p>or:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">cp2k</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="n">inp</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="p">[</span><span class="n">other</span><span class="o">-</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="p">[</span><span class="n">setting</span><span class="o">-</span><span class="n">file</span><span class="p">]</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/cp2k.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2009, Atsushi Togo.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
