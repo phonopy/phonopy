@@ -33,6 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+from distutils.version import StrictVersion
 import phonopy.structure.spglib as spg
 from phonopy.structure.atoms import PhonopyAtoms
 
@@ -547,7 +548,7 @@ def _trim_cell(relative_axes, cell, symprec):
 # Delaunay and Niggli reductions
 #
 def get_reduced_bases(lattice,
-                      method='delaunay',
+                      method='niggli',
                       tolerance=1e-5):
     """Search kinds of shortest basis vectors
 
@@ -578,11 +579,11 @@ def get_reduced_bases(lattice,
 
 
 def _get_smallest_vectors(supercell, primitive, symprec=1e-5):
-    p2s_map = primitive.get_primitive_to_supercell_map()
-    supercell_pos = supercell.get_scaled_positions()
+    p2s_map = primitive.p2s_map
+    supercell_pos = supercell.scaled_positions
     primitive_pos = supercell_pos[p2s_map]
-    supercell_bases = supercell.get_cell()
-    primitive_bases = primitive.get_cell()
+    supercell_bases = supercell.cell
+    primitive_bases = primitive.cell
     svecs, multi = get_smallest_vectors(
         supercell_bases, supercell_pos, primitive_pos, symprec=symprec)
     trans_mat_float = np.dot(supercell_bases, np.linalg.inv(primitive_bases))
@@ -642,8 +643,9 @@ def get_smallest_vectors(supercell_bases,
 
     """
 
+    reduced_cell_method = 'niggli'
     reduced_bases = get_reduced_bases(supercell_bases,
-                                      method='delaunay',
+                                      method=reduced_cell_method,
                                       tolerance=symprec)
     trans_mat_float = np.dot(supercell_bases, np.linalg.inv(reduced_bases))
     trans_mat = np.rint(trans_mat_float).astype(int)
@@ -661,22 +663,31 @@ def get_smallest_vectors(supercell_bases,
     primitive_fracs = np.array(primitive_fracs, dtype='double', order='C')
 
     # For each vector, we will need to consider all nearby images in the
-    # reduced bases.
-    lattice_points = np.array([[i, j, k]
-                               for i in (-1, 0, 1)
-                               for j in (-1, 0, 1)
-                               for k in (-1, 0, 1)],
-                              dtype='intc', order='C')
+    # reduced bases. The lattice points at which supercell images are searched
+    # are composed by linear combinations of three vectors in
+    # (0, a, b, c, -a-b-c, -a, -b, -c, a+b+c). There are finally 65 lattice
+    # points. There is no proof that this is enough.
+    lattice_1D = (-1, 0, 1)
+    lattice_4D = np.array([[i, j, k, l]
+                           for i in lattice_1D
+                           for j in lattice_1D
+                           for k in lattice_1D
+                           for l in lattice_1D],
+                          dtype='intc', order='C')
+    bases = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [-1, -1, -1]]
+    lattice_points = np.dot(lattice_4D, bases)
+    if StrictVersion(np.__version__) >= StrictVersion('1.13.0'):
+        lattice_points = np.array(np.unique(lattice_points, axis=0),
+                                  dtype='intc', order='C')
+    else:
+        unique_indices = np.unique([
+            np.nonzero(np.abs(lattice_points - point).sum(axis=1) == 0)[0][0]
+            for point in lattice_points])
+        lattice_points = np.array(lattice_points[unique_indices],
+                                  dtype='intc', order='C')
 
-    # Here's where things get interesting.
-    # We want to avoid manually iterating over all possible pairings of
-    # supercell atoms and primitive atoms, because doing so creates a
-    # tight loop in larger structures that is difficult to optimize.
-    #
-    # Furthermore, it seems wise to call numpy.dot on as large of an array
-    # as possible, since numpy can shell out to BLAS to handle the
-    # real heavy lifting.
-
+    # This shortest_vectors is already used at many locations.
+    # Therefore the constant number 27 = 3*3*3 can not be easily changed.
     shortest_vectors = np.zeros(
         (len(supercell_fracs), len(primitive_fracs), 27, 3),
         dtype='double', order='C')
@@ -692,6 +703,22 @@ def get_smallest_vectors(supercell_bases,
         np.array(reduced_bases.T, dtype='double', order='C'),
         np.array(trans_mat_inv.T, dtype='intc', order='C'),
         symprec)
+
+    # Here's where things get interesting.
+    # We want to avoid manually iterating over all possible pairings of
+    # supercell atoms and primitive atoms, because doing so creates a
+    # tight loop in larger structures that is difficult to optimize.
+    #
+    # Furthermore, it seems wise to call numpy.dot on as large of an array
+    # as possible, since numpy can shell out to BLAS to handle the
+    # real heavy lifting.
+
+    # lattice_1D = (-1, 0, 1)
+    # lattice_points = np.array([[i, j, k]
+    #                            for i in lattice_1D
+    #                            for j in lattice_1D
+    #                            for k in lattice_1D],
+    #                           dtype='intc', order='C')
 
     # # For every atom in the supercell and every atom in the primitive cell,
     # # we want 27 images of the vector between them.
@@ -830,11 +857,25 @@ def _compute_permutation_c(positions_a,  # scaled positions
 
     try:
         import phonopy._phonopy as phonoc
-        is_found = phonoc.compute_permutation(permutation,
-                                              lattice,
-                                              positions_a,
-                                              positions_b,
-                                              symprec)
+        tolerance = symprec
+        for _ in range(20):
+            is_found = phonoc.compute_permutation(permutation,
+                                                  lattice,
+                                                  positions_a,
+                                                  positions_b,
+                                                  tolerance)
+            if is_found:
+                break
+            else:
+                tolerance *= 1.05
+
+        if tolerance / symprec > 1.5:
+            import warnings
+            msg = ("Crystal structure is distorted in a tricky way so that "
+                   "phonopy could not handle the crystal symmetry properly. "
+                   "It is recommended to symmetrize crystal structure well "
+                   "and then re-start phonon calculation from scratch.")
+            warnings.warn(msg)
 
         if not is_found:
             permutation_error()
@@ -1202,7 +1243,8 @@ def guess_primitive_matrix(unitcell, symprec=1e-5):
     tmat = dataset['transformation_matrix']
     centring = dataset['international'][0]
     pmat = get_primitive_matrix_by_centring(centring)
-    return np.dot(np.linalg.inv(tmat), pmat)
+    return np.array(np.dot(np.linalg.inv(tmat), pmat),
+                    dtype='double', order='C')
 
 
 def estimate_supercell_matrix(spglib_dataset,

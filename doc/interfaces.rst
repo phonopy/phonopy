@@ -25,6 +25,7 @@ Physical unit systems used for the calculators are as follows::
    Elk       | au (bohr)  AMU           hartree/au    hartree/au^2
    CRYSTAL   | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
    TURBOMOLE | au (bohr)  AMU           hartree/au    hartree/au^2
+   CP2K      | Angstrom   AMU           hartree/au    hartree/Angstrom.au
 
 For these sets of physical properties, phonon frequency is calculated
 in THz.
@@ -47,6 +48,7 @@ used as shown below::
    CRYSTAL   | crystal.o
    DFTB+     | geo.gen
    TURBOMOLE | control
+   CP2K      | unitcell.inp
 
 Default displacement distances
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -66,6 +68,7 @@ shown below::
    CRYSTAL   | 0.01 Angstrom
    DFTB+     | 0.01 au (bohr)
    TURBOMOLE | 0.02 au (bohr)
+   CP2K      | 0.01 Angstrom
 
 .. _frequency_default_value_interfaces:
 
@@ -83,6 +86,7 @@ Default unit conversion factor of phonon frequency to THz
    CRYSTAL   | 15.633302
    DFTB+     | 154.10794
    TURBOMOLE | 154.10794
+   CP2K      | 112.10516
 
 .. _nac_default_value_interfaces:
 
@@ -100,6 +104,7 @@ Default unit conversion factor for non-analytical term correction
    CRYSTAL   | 14.399652
    DFTB+     | 14.399652
    TURBOMOLE | 1
+   CP2K      | None (N/A)
 
 
 .. _tutorials_for_calculators:
@@ -124,6 +129,7 @@ Short tutorials for force calculators are found in the following pages.
    crystal
    dftb+
    turbomole
+   cp2k
 
 VASP DFPT force constants
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^

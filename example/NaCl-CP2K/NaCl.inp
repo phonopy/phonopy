@@ -1,0 +1,154 @@
+@SET LATTICE 5.6412353936447603
+
+! whether to do kpoints or not
+! without kpoints it will be significantly faster,
+! but some crossings in the band structure will be missing
+@SET WITH_KP yes
+
+! set the following to yes to do a cell optimization instead of energy/force calculation
+! do NOT enable this when using this input file as template for phonopy!
+@SET DO_CELLOPT no
+
+&GLOBAL
+@IF $DO_CELLOPT == yes
+   PROJECT NaCl-cellopt
+   RUN_TYPE CELL_OPT
+@ENDIF
+@IF $DO_CELLOPT == no
+   PROJECT NaCl
+   RUN_TYPE ENERGY_FORCE
+@ENDIF
+   PRINT_LEVEL MEDIUM
+&END GLOBAL
+
+&FORCE_EVAL
+   METHOD Quickstep
+   &DFT
+      BASIS_SET_FILE_NAME BASIS_pob  ! this is shipped with CP2K 7.0+
+      POTENTIAL_FILE_NAME ALL_POTENTIALS
+
+      &QS
+         EPS_DEFAULT 1e-12
+
+         ! We are using GAPW instead of the default GPW to prevent numerical
+         ! noise due to the finite grid size in the integration schemes in CP2K
+         ! together with the small displacements used to determine the forces.
+         ! Alternatively one could increase the CUTOFF to >5000 (depends on basis set)
+         ! to ensure that the higher exponents in the basis sets are well represented on the grid.
+         METHOD GAPW
+      &END QS
+
+      &POISSON
+         PERIODIC XYZ
+      &END POISSON
+
+      &SCF
+         EPS_SCF 1e-07
+         MAX_SCF 80
+         SCF_GUESS ATOMIC
+         &DIAGONALIZATION
+
+         &END DIAGONALIZATION
+      &END SCF
+
+@IF $WITH_KP == yes
+      &KPOINTS
+         SCHEME MONKHORST-PACK 8 8 8
+         FULL_GRID .FALSE.
+         SYMMETRY .FALSE.
+      &END KPOINTS
+@ENDIF
+
+      &XC
+         &XC_FUNCTIONAL PBE
+         &END XC_FUNCTIONAL
+      &END XC
+
+      &MGRID
+         REL_CUTOFF 80
+         CUTOFF 800
+         NGRIDS 6
+      &END MGRID
+   &END DFT
+
+   &SUBSYS
+      &CELL
+         A ${LATTICE} 0 0
+         B 0 ${LATTICE} 0
+         C 0 0 ${LATTICE}
+         PERIODIC XYZ
+      &END CELL
+      &COORD
+         SCALED .TRUE.
+         Na  0.000000    0.000000    0.000000
+         Na  0.000000    0.500000    0.500000
+         Na  0.500000    0.000000    0.500000
+         Na  0.500000    0.500000    0.000000
+         Cl  0.500000    0.500000    0.500000
+         Cl  0.500000    0.000000    0.000000
+         Cl  0.000000    0.500000    0.000000
+         Cl  0.000000    0.000000    0.500000
+      &END COORD
+      &KIND Na
+         ELEMENT Na
+         BASIS_SET pob-TZVP  ! use an AE basis optimized for solids, any other (matching the pseudo) will work too, though
+         POTENTIAL ALL  ! one could also use a pseudopotentials (non-AE)
+
+         ! while not strictly required, this should make the initial guess more accurate (Na+ Cl-)
+         &BS
+            &ALPHA
+               N 3
+               L 0
+               NEL -2
+            &END ALPHA
+            &BETA
+               N 3
+               L 0
+               NEL -2
+            &END BETA
+         &END BS
+      &END KIND
+      &KIND Cl
+         ELEMENT Cl
+         BASIS_SET pob-TZVP
+         POTENTIAL ALL
+
+         &BS
+            &ALPHA
+               N 3
+               L 1
+               NEL 2
+            &END ALPHA
+            &BETA
+               N 3
+               L 1
+               NEL 2
+            &END BETA
+         &END BS
+      &END KIND
+   &END SUBSYS
+
+   STRESS_TENSOR ANALYTICAL
+
+@IF $DO_CELLOPT == no
+   &PRINT
+      &STRESS_TENSOR
+         ADD_LAST NUMERIC
+         FILENAME stress_tensor
+      &END STRESS_TENSOR
+      &FORCES
+         ADD_LAST NUMERIC
+         FILENAME forces
+      &END FORCES
+   &END PRINT
+@ENDIF
+&END FORCE_EVAL
+
+@IF $DO_CELLOPT == yes
+&MOTION
+   &CELL_OPT
+      KEEP_ANGLES .TRUE.
+      MAX_FORCE 1.0E-10
+   &END CELL_OPT
+&END MOTION
+@ENDIF

@@ -169,7 +169,6 @@ def finalize_phonopy(log_level,
                      filename="phonopy.yaml"):
     units = get_default_physical_units(interface_mode)
     phpy_yaml = PhonopyYaml(configuration=phonopy_conf.get_configures(),
-                            calculator=interface_mode,
                             physical_units=units,
                             settings={
                                 'force_sets': False,
@@ -427,8 +426,6 @@ if args.force_sets or args.force_sets_zero:
             dataset = parse_disp_yaml(filename='phonopy_disp.yaml')
             if 'calculator' in dataset:
                 interface_mode = dataset['calculator']
-            else:
-                interface_mode = None
             disp_filename = 'phonopy_disp.yaml'
         except KeyError:
             file_exists('disp.yaml', log_level)
@@ -558,6 +555,7 @@ if run_mode == 'displacements' and settings.get_temperatures() is None:
                      primitive_matrix=primitive_matrix,
                      symprec=symprec,
                      is_symmetry=settings.get_is_symmetry(),
+                     calculator=interface_mode,
                      log_level=log_level)
 else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
     # Overwrite frequency unit conversion factor
@@ -577,6 +575,7 @@ else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
         group_velocity_delta_q=settings.get_group_velocity_delta_q(),
         symprec=symprec,
         is_symmetry=settings.get_is_symmetry(),
+        calculator=interface_mode,
         use_lapack_solver=settings.get_lapack_solver(),
         log_level=log_level)
 
@@ -639,9 +638,9 @@ if run_mode == 'displacements' and settings.get_temperatures() is None:
                               interface_mode,
                               optional_structure_info)
 
-########################################
-# Preparations for phonon calculations #
-########################################
+###################
+# Force constants #
+###################
 if settings.get_read_force_constants():
     if settings.get_is_hdf5() or settings.get_readfc_format() == 'hdf5':
         try:
@@ -799,7 +798,9 @@ if settings.get_write_force_constants():
 if settings.get_is_rotational_invariance():
     phonon.get_rotational_condition_of_fc()
 
-# Non-analytical term correction (LO-TO splitting)
+##################################
+# Non-analytical term correction #
+##################################
 if settings.get_is_nac() or has_read_phonopy_yaml:
     def read_nac_params_from_phonopy_yaml(unitcell_filename, log_level):
         ph_yaml = PhonopyYaml()
@@ -858,6 +859,9 @@ if settings.get_is_nac() or has_read_phonopy_yaml:
                     print("%s %12.7f %12.7f %12.7f" % ((text,) + tuple(v)))
             print("-" * 76)
 
+########
+# Misc #
+########
 # Atomic species without mass case
 symbols_with_no_mass = []
 if primitive.get_masses() is None:
@@ -878,7 +882,9 @@ if len(symbols_with_no_mass) > 0:
 # Phonon calculations #
 #######################
 
+#
 # QPOINTS mode
+#
 if run_mode == 'qpoints':
     if settings.get_read_qpoints():
         q_points = parse_QPOINTS()
@@ -906,8 +912,9 @@ if run_mode == 'qpoints':
     else:
         phonon.write_yaml_qpoints_phonon()
 
+#
 # Band structure and mesh sampling
-
+#
 elif (run_mode == 'band' or
       run_mode == 'mesh' or
       run_mode == 'band_mesh' or
@@ -1264,8 +1271,9 @@ elif (run_mode == 'band' or
         else:
             plot.show()
 
-
+#
 # Animation
+#
 elif run_mode == 'anime':
     anime_type = settings.get_anime_type()
     if anime_type == "v_sim":
@@ -1295,7 +1303,9 @@ elif run_mode == 'anime':
                 print("band index: %d" % band_index)
                 print("Number of images: %d" % division)
 
+#
 # Modulation
+#
 elif run_mode == 'modulation':
     mod_setting = settings.get_modulation()
     phonon_modes = mod_setting['modulations']
@@ -1314,7 +1324,9 @@ elif run_mode == 'modulation':
     phonon.write_modulations()
     phonon.write_yaml_modulations()
 
+#
 # Ir-representation
+#
 elif run_mode == 'irreps':
     if phonon.set_irreps(settings.get_irreps_q_point(),
                          is_little_cogroup=settings.get_is_little_cogroup(),
@@ -1324,6 +1336,9 @@ elif run_mode == 'irreps':
         phonon.show_irreps(show_irreps)
         phonon.write_yaml_irreps(show_irreps)
 
+#
+# Random displacements at finite temperature
+#
 elif (run_mode == 'displacements' and
       settings.get_random_displacements() is not None):
     phonon.generate_displacements(

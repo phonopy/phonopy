@@ -75,6 +75,8 @@ from phonopy.spectrum.dynamic_structure_factor import DynamicStructureFactor
 
 
 class Phonopy(object):
+    """Phonopy class"""
+
     def __init__(self,
                  unitcell,
                  supercell_matrix,
@@ -100,11 +102,15 @@ class Phonopy(object):
 
         # Create supercell and primitive cell
         self._unitcell = PhonopyAtoms(atoms=unitcell)
-        self._supercell_matrix = supercell_matrix
+        self._supercell_matrix = np.array(supercell_matrix,
+                                          dtype='intc', order='C')
         if type(primitive_matrix) is str and primitive_matrix == 'auto':
             self._primitive_matrix = self._guess_primitive_matrix()
+        elif primitive_matrix is not None:
+            self._primitive_matrix = np.array(primitive_matrix,
+                                              dtype='double', order='c')
         else:
-            self._primitive_matrix = primitive_matrix
+            self._primitive_matrix = None
         self._supercell = None
         self._primitive = None
         self._build_supercell()
@@ -169,6 +175,15 @@ class Phonopy(object):
 
     @property
     def version(self):
+        """Return phonopy release version number
+
+        Returns
+        -------
+        str
+            Phonopy release version number
+
+        """
+
         return __version__
 
     def get_version(self):
@@ -176,6 +191,14 @@ class Phonopy(object):
 
     @property
     def primitive(self):
+        """Return primitive cell
+
+        Returns
+        -------
+        Primitive
+            Primitive cell.
+
+        """
         return self._primitive
 
     def get_primitive(self):
@@ -183,6 +206,14 @@ class Phonopy(object):
 
     @property
     def unitcell(self):
+        """Return unit cell
+
+        Returns
+        -------
+        PhonopyAtoms
+            Unit cell.
+
+        """
         return self._unitcell
 
     def get_unitcell(self):
@@ -190,6 +221,14 @@ class Phonopy(object):
 
     @property
     def supercell(self):
+        """Return supercell
+
+        Returns
+        -------
+        Supercell
+            Supercell.
+
+        """
         return self._supercell
 
     def get_supercell(self):
@@ -197,7 +236,15 @@ class Phonopy(object):
 
     @property
     def symmetry(self):
-        """return symmetry of supercell"""
+        """Return symmetry of supercell
+
+        Returns
+        -------
+        Symmetry
+            Symmetry of supercell.
+
+        """
+
         return self._symmetry
 
     def get_symmetry(self):
@@ -205,15 +252,32 @@ class Phonopy(object):
 
     @property
     def primitive_symmetry(self):
-        """return symmetry of primitive cell"""
+        """Return symmetry of primitive cell
+
+        Returns
+        -------
+        Symmetry
+            Symmetry of primitive cell.
+
+        """
+
         return self._primitive_symmetry
 
     def get_primitive_symmetry(self):
-        """return symmetry of primitive cell"""
         return self.primitive_symmetry
 
     @property
     def supercell_matrix(self):
+        """Return transformation matrix to supercell cell from unit cell
+
+        Returns
+        -------
+        ndarray
+            Supercell matrix with respect to unit cell.
+            shape=(3, 3), dtype='intc', order='C'
+
+        """
+
         return self._supercell_matrix
 
     def get_supercell_matrix(self):
@@ -221,6 +285,15 @@ class Phonopy(object):
 
     @property
     def primitive_matrix(self):
+        """Return transformation matrix to primitive cell from unit cell
+
+        Returns
+        -------
+        ndarray
+            Primitive matrix with respect to unit cell.
+            shape=(3, 3), dtype='double', order='C'
+
+        """
         return self._primitive_matrix
 
     def get_primitive_matrix(self):
@@ -228,17 +301,69 @@ class Phonopy(object):
 
     @property
     def unit_conversion_factor(self):
+        """Return phonn frequency unit conversion factor.
+
+        Returns
+        -------
+        float
+            Phonon frequency unit conversion factor. This factor
+            converts sqrt(<force>/<distance>/<AMU>)/2pi/1e12 to the
+            other favorite phonon frequency unit. Normally this factor
+            is recommended to be that converts to THz (ordinary
+            frequency) to calculate a variety of phonon properties
+            that assumes that input phonon frequencies have THz unit.
+
+        """
+
         return self._factor
 
     def get_unit_conversion_factor(self):
         return self.unit_conversion_factor
 
     @property
+    def calculator(self):
+        """Return calculator name
+
+        Returns
+        -------
+        str
+            Calculator name such as 'vasp', 'qe', etc.
+
+        """
+        return self._calculator
+
+    @property
     def dataset(self):
+        """Return displacement dataset
+
+        Dataset containing information of displacements in supercells.
+        This optionally contains forces in respective supercells.
+
+        Returns
+        -------
+        dict
+            The format can be either one of two types
+            Type 1. One atomic displacement in each supercell:
+                {'natom': number of atoms in supercell,
+                 'first_atoms': [
+                   {'number': atom index of displaced atom,
+                    'displacement': displacement in Cartesian coordinates,
+                    'forces': forces on atoms in supercell},
+                   {...}, ...]}
+            Type 2. All atomic displacements in each supercell:
+                {'displacements': ndarray, dtype='double', order='C',
+                                  shape=(supercells, natom, 3)
+                 'forces': ndarray, dtype='double',, order='C',
+                                  shape=(supercells, natom, 3)}
+
+        """
         return self.displacement_dataset
 
     @property
     def displacement_dataset(self):
+        warnings.warn("Phonopy.displacement_dataset is deprecated."
+                      "Use Phonopy.dataset.",
+                      DeprecationWarning)
         return self._displacement_dataset
 
     def get_displacement_dataset(self):
@@ -251,8 +376,7 @@ class Phonopy(object):
         Returns
         -------
         There are two types of displacement dataset. See the docstring
-        of set_displacement_dataset about types 1 and 2 for displacement
-        dataset format.
+        of dataset about types 1 and 2 for the displacement dataset formats.
 
         Type-1, List of list
             The internal list has 4 elements such as [32, 0.01, 0.0, 0.0]].
@@ -306,6 +430,20 @@ class Phonopy(object):
 
     @property
     def force_constants(self):
+        """Return force constants
+
+        Returns
+        -------
+        ndarray
+            Force constants matrix. There are two shapes:
+            full:
+                shape=(atoms in supercell, atoms in supercell, 3, 3)
+            compact:
+                shape=(atoms in primitive cell, atoms in supercell, 3, 3)
+            dtype='double', order='C'
+
+        """
+
         return self._force_constants
 
     def get_force_constants(self):
@@ -313,6 +451,17 @@ class Phonopy(object):
 
     @property
     def forces(self):
+        """Return forces of supercells
+
+        Returns
+        -------
+        ndarray
+            Forces of supercells.
+            shape=(supercells with displacements, atoms in supercell, 3)
+            dtype='double', order='C'
+
+        """
+
         if 'forces' in self._displacement_dataset:
             return self._displacement_dataset['forces']
         elif 'first_atoms' in self._displacement_dataset:
@@ -320,20 +469,37 @@ class Phonopy(object):
             for disp in self._displacement_dataset['first_atoms']:
                 if 'forces' in disp:
                     forces.append(disp['forces'])
-            return forces
+            return np.array(forces, dtype='double', order='C')
         else:
             return None
 
     @property
     def dynamical_matrix(self):
+        """Return DynamicalMatrix instance"""
+
         return self._dynamical_matrix
 
     def get_dynamical_matrix(self):
-        """Return DynamicalMatrix instance"""
         return self.dynamical_matrix
 
     @property
     def nac_params(self):
+        """Return parameters used for non-analytical term correction
+
+        Returns
+        -------
+        dict
+            Parameters used for non-analytical term correction
+            'born': ndarray
+                Born effective charges
+                shape=(primitive cell atoms, 3, 3), dtype='double', order='C'
+            'factor': float
+                Unit conversion factor
+            'dielectric': ndarray
+                Dielectric constant tensor
+                shape=(3, 3), dtype='double', order='C'
+
+        """
         return self._nac_params
 
     def get_nac_params(self):
@@ -465,7 +631,7 @@ class Phonopy(object):
 
         Parameters
         ----------
-        displacement_dataset : dict
+        dataset : dict
             There are two dict structures.
             Type 1. One atomic displacement in each supercell:
                 {'natom': number of atoms in supercell,
@@ -1457,7 +1623,7 @@ class Phonopy(object):
         nac_q_direction : array_like
             q=(0,0,0) is replaced by q=epsilon * nac_q_direction where epsilon
             is infinitsimal for non-analytical term correction. This is used,
-            e.g., to observe LO-TO splitting,
+            e.g., to observe LO-TO splitting.
 
         """
 
@@ -2620,15 +2786,14 @@ class Phonopy(object):
                  'dielectric_constant': True}
 
         """
-        phpy_yaml = PhonopyYaml(calculator=self._calculator,
-                                settings=settings)
+        phpy_yaml = PhonopyYaml(settings=settings)
         phpy_yaml.set_phonon_info(self)
         with open(filename, 'w') as w:
             w.write(str(phpy_yaml))
 
-    #################
-    # Local methods #
-    #################
+    ###################
+    # private methods #
+    ###################
     def _run_force_constants_from_forces(self,
                                          distributed_atom_list=None,
                                          fc_calculator=None,
@@ -2668,9 +2833,8 @@ class Phonopy(object):
                 self._nac_params['dielectric'],
                 self._primitive,
                 symprec=self._symprec)
-            nac_params = {'born': borns,
-                          'dielectric': epsilon,
-                          'factor': self._nac_params['factor']}
+            nac_params = self._nac_params.copy()
+            nac_params.update({'born': borns, 'dielectric': epsilon})
         else:
             nac_params = self._nac_params
 

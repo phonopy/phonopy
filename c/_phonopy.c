@@ -103,7 +103,8 @@ static void gsv_set_smallest_vectors(double (*smallest_vectors)[27][3],
                                      const int num_pos_to,
                                      PHPYCONST double (*pos_from)[3],
                                      const int num_pos_from,
-                                     PHPYCONST int lattice_points[27][3],
+                                     PHPYCONST int (*lattice_points)[3],
+                                     const int num_lattice_points,
                                      PHPYCONST double reduced_basis[3][3],
                                      PHPYCONST int trans_mat[3][3],
                                      const double symprec);
@@ -357,7 +358,11 @@ static PyObject * py_compute_permutation(PyObject *self, PyObject *args)
                                  num_pos,
                                  symprec);
 
-  return Py_BuildValue("i", is_found);
+  if (is_found) {
+    Py_RETURN_TRUE;
+  } else {
+    Py_RETURN_FALSE;
+  }
 }
 
 static PyObject * py_gsv_copy_smallest_vectors(PyObject *self, PyObject *args)
@@ -418,7 +423,7 @@ static PyObject * py_gsv_set_smallest_vectors(PyObject *self, PyObject *args)
   int (*lattice_points)[3];
   double (*reduced_basis)[3];
   int (*trans_mat)[3];
-  int num_pos_to, num_pos_from;
+  int num_pos_to, num_pos_from, num_lattice_points;
 
   if (!PyArg_ParseTuple(args, "OOOOOOOd",
                         &py_smallest_vectors,
@@ -439,9 +444,9 @@ static PyObject * py_gsv_set_smallest_vectors(PyObject *self, PyObject *args)
   num_pos_to = PyArray_DIMS(py_pos_to)[0];
   num_pos_from = PyArray_DIMS(py_pos_from)[0];
   lattice_points = (int(*)[3])PyArray_DATA(py_lattice_points);
+  num_lattice_points = PyArray_DIMS(py_lattice_points)[0];
   reduced_basis = (double(*)[3])PyArray_DATA(py_reduced_basis);
   trans_mat = (int(*)[3])PyArray_DATA(py_trans_mat);
-
 
   gsv_set_smallest_vectors(smallest_vectors,
                            multiplicity,
@@ -450,6 +455,7 @@ static PyObject * py_gsv_set_smallest_vectors(PyObject *self, PyObject *args)
                            pos_from,
                            num_pos_from,
                            lattice_points,
+                           num_lattice_points,
                            reduced_basis,
                            trans_mat,
                            symprec);
@@ -1292,16 +1298,14 @@ static PyObject * py_get_tetrahedra_frequenies(PyObject *self, PyObject *args)
 
   double* freq_tetras;
   size_t* grid_points;
-  int num_gp_in;
   int* mesh;
   int (*grid_address)[3];
   size_t* gp_ir_index;
   int (*relative_grid_address)[3];
   double* frequencies;
-  int num_band;
 
   int is_shift[3] = {0, 0, 0};
-  size_t i, j, k, gp;
+  size_t i, j, k, gp, num_gp_in, num_band;
   int g_addr[3];
   int address_double[3];
 
@@ -1318,13 +1322,13 @@ static PyObject * py_get_tetrahedra_frequenies(PyObject *self, PyObject *args)
 
   freq_tetras = (double*)PyArray_DATA(py_freq_tetras);
   grid_points = (size_t*)PyArray_DATA(py_grid_points);
-  num_gp_in = (int)PyArray_DIMS(py_grid_points)[0];
+  num_gp_in = PyArray_DIMS(py_grid_points)[0];
   mesh = (int*)PyArray_DATA(py_mesh);
   grid_address = (int(*)[3])PyArray_DATA(py_grid_address);
   gp_ir_index = (size_t*)PyArray_DATA(py_gp_ir_index);
   relative_grid_address = (int(*)[3])PyArray_DATA(py_relative_grid_address);
   frequencies = (double*)PyArray_DATA(py_frequencies);
-  num_band = (int)PyArray_DIMS(py_frequencies)[1];
+  num_band = PyArray_DIMS(py_frequencies)[1];
 
   for (i = 0; i < num_gp_in;  i++) {
 #pragma omp parallel for private(k, g_addr, gp, address_double)
@@ -1360,13 +1364,10 @@ static PyObject * py_tetrahedron_method_dos(PyObject *self, PyObject *args)
   double *dos;
   int* mesh;
   double* freq_points;
-  int num_freq_points;
   double* frequencies;
   double* coef;
   int (*grid_address)[3];
-  size_t num_gp, num_ir_gp;
-  int num_coef;
-  int num_band;
+  size_t num_gp, num_ir_gp, num_band, num_freq_points, num_coef;
   size_t *grid_mapping_table;
   int (*relative_grid_address)[4][3];
 
@@ -1400,12 +1401,12 @@ static PyObject * py_tetrahedron_method_dos(PyObject *self, PyObject *args)
   dos = (double*)PyArray_DATA(py_dos);
   mesh = (int*)PyArray_DATA(py_mesh);
   freq_points = (double*)PyArray_DATA(py_freq_points);
-  num_freq_points = (int)PyArray_DIMS(py_freq_points)[0];
+  num_freq_points = (size_t)PyArray_DIMS(py_freq_points)[0];
   frequencies = (double*)PyArray_DATA(py_frequencies);
   num_ir_gp = (size_t)PyArray_DIMS(py_frequencies)[0];
-  num_band = (int)PyArray_DIMS(py_frequencies)[1];
+  num_band = (size_t)PyArray_DIMS(py_frequencies)[1];
   coef = (double*)PyArray_DATA(py_coef);
-  num_coef = (int)PyArray_DIMS(py_coef)[1];
+  num_coef = (size_t)PyArray_DIMS(py_coef)[1];
   grid_address = (int(*)[3])PyArray_DATA(py_grid_address);
   num_gp = (size_t)PyArray_DIMS(py_grid_address)[0];
   grid_mapping_table = (size_t*)PyArray_DATA(py_grid_mapping_table);
@@ -1566,7 +1567,6 @@ static int compute_permutation(int * rot_atom,
 
   for (i = 0; i < num_pos; i++) {
     if (rot_atom[i] < 0) {
-      printf("Encounter some problem in compute_permutation.\n");
       return 0;
     }
   }
@@ -1586,7 +1586,7 @@ static void gsv_copy_smallest_vectors(double (*shortest_vectors)[27][3],
   int count;
   double minimum;
   double (*vectors)[3];
-  double * lengths;
+  double *lengths;
 
   for (i = 0; i < num_lists; i++) {
     /* Look at a single list of 27 vectors. */
@@ -1622,18 +1622,23 @@ static void gsv_set_smallest_vectors(double (*smallest_vectors)[27][3],
                                      const int num_pos_to,
                                      PHPYCONST double (*pos_from)[3],
                                      const int num_pos_from,
-                                     PHPYCONST int lattice_points[27][3],
+                                     PHPYCONST int (*lattice_points)[3],
+                                     const int num_lattice_points,
                                      PHPYCONST double reduced_basis[3][3],
                                      PHPYCONST int trans_mat[3][3],
                                      const double symprec)
 {
   int i, j, k, l, count;
   double length_tmp, minimum, vec_xyz;
-  double length[27], vec[27][3];
+  double *length;
+  double (*vec)[3];
+
+  length = (double*)malloc(sizeof(double) * num_lattice_points);
+  vec = (double(*)[3])malloc(sizeof(double[3]) * num_lattice_points);
 
   for (i = 0; i < num_pos_to; i++) {
     for (j = 0; j < num_pos_from; j++) {
-      for (k = 0; k < 27; k++) {
+      for (k = 0; k < num_lattice_points; k++) {
         length[k] = 0;
         for (l = 0; l < 3; l++) {
           vec[k][l] = pos_to[i][l] - pos_from[j][l] + lattice_points[k][l];
@@ -1648,14 +1653,14 @@ static void gsv_set_smallest_vectors(double (*smallest_vectors)[27][3],
       }
 
       minimum = DBL_MAX;
-      for (k = 0; k < 27; k++) {
+      for (k = 0; k < num_lattice_points; k++) {
         if (length[k] < minimum) {
           minimum = length[k];
         }
       }
 
       count = 0;
-      for (k = 0; k < 27; k++) {
+      for (k = 0; k < num_lattice_points; k++) {
         if (length[k] - minimum < symprec) {
           for (l = 0; l < 3; l++) {
             /* Transform to supercell coordinates */
@@ -1667,9 +1672,20 @@ static void gsv_set_smallest_vectors(double (*smallest_vectors)[27][3],
           count++;
         }
       }
-      multiplicity[i * num_pos_from + j] = count;
+      if (count > 27) { /* should not be greater than 27 */
+        printf("Warning (gsv_set_smallest_vectors): ");
+        printf("number of shortest vectors is out of range,\n");
+        break;
+      } else {
+        multiplicity[i * num_pos_from + j] = count;
+      }
     }
   }
+
+  free(length);
+  length = NULL;
+  free(vec);
+  vec = NULL;
 }
 
 static void distribute_fc2(double (*fc2)[3][3], /* shape[n_pos][n_pos] */

@@ -114,6 +114,11 @@ Prepare the following Python libraries:
 * python-yaml (pyyaml)
 * python-h5py (h5py)
 
+And optionally the following:
+
+* cp2k-input-tools, for the CP2K force calculator backend
+
+
 By Ubuntu package manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 

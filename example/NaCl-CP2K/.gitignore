@@ -1,0 +1,13 @@
+# ignore CP2K generated files
+*.stress_tensor
+*.out
+*.restart*
+*-RESTART*
+*.Hessian
+*cellopt*
+
+# ignore phonopy generated files
+*-supercell*.inp
+FORCE_SETS
+band.yaml
+phonopy.yaml

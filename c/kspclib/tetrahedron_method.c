@@ -403,7 +403,8 @@ thm_get_dense_neighboring_grid_points(size_t neighboring_grid_points[],
                                       const size_t bz_map[])
 {
   int bzmesh[3], address_double[3], bz_address_double[3];
-  size_t i, j, bz_gp, prod_bz_mesh;
+  int i;
+  size_t j, bz_gp, prod_bz_mesh;
 
   prod_bz_mesh = 1;
   for (i = 0; i < 3; i++) {
