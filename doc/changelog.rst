@@ -3,6 +3,11 @@
 Change Log
 ==========
 
+Nov-13-2019: Version 2.4.0
+--------------------------
+* CP2K interface is provided by Tiziano Müller.
+* Many minor bug fixes and updates.
+
 Sep-1-2019: Version 2.3.2
 ---------------------------
 * It was forgotten to increment version number at v2.3.1. Now it is
