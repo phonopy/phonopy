@@ -322,6 +322,24 @@ def get_parser():
     parser.add_argument(
         "--irreps", "--irreps-qpoint", nargs='+', dest="irreps_qpoint",
         help="A q-point where characters of irreps are calculated")
+    parser.add_argument(
+        "--include-fc", dest="include_fc", action="store_true",
+        help="Include force constants in final phonopy.yaml")
+    parser.add_argument(
+        "--include-fs", dest="include_fs", action="store_true",
+        help="Include force sets in final phonopy.yaml")
+    parser.add_argument(
+        "--include-bec", dest="include_bec", action="store_true",
+        help="Include born effective charge in final phonopy.yaml")
+    parser.add_argument(
+        "--include-eps", dest="include_eps", action="store_true",
+        help="Include dielectric tensor in final phonopy.yaml")
+    parser.add_argument(
+        "--include-disp", dest="include_disp", action="store_true",
+        help="Include displacements in final phonopy.yaml")
+    parser.add_argument(
+        "--include-all", dest="include_all", action="store_true",
+        help="Include all possible data in final phonopy.yaml")
     # parser.add_argument(
     #     "--lapack-solver", dest="lapack_solver", action="store_true",
     #     help=("Use Lapack via Lapacke for solving phonons. This "
