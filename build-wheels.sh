@@ -3,6 +3,7 @@ set -e -x
 
 # Install a system package required by our library
 # yum install -y numpy
+yum install -y hdf5-devel libfreetype6-dev
 
 # ls /opt/python
 
@@ -48,7 +49,7 @@ set -e -x
 
 # Compile wheels
 for PYBIN in /opt/python/*/bin; do
-    if  [[ ! $PYBIN == *"34"* ]]; then
+    if [[ ! $PYBIN == *"34"* ]] && [[ ! $PYBIN == *"27"* ]]; then
         "${PYBIN}/pip" install -r /io/dev-requirements.txt
         "${PYBIN}/pip" wheel /io/ -w wheelhouse/
     fi
@@ -61,7 +62,7 @@ done
 
 # Install packages and test
 for PYBIN in /opt/python/*/bin/; do
-    if  [[ ! $PYBIN == *"34"* ]]; then
+    if  [[ ! $PYBIN == *"34"* ]] && [[ ! $PYBIN == *"27"* ]]; then
         "${PYBIN}/pip" install phonopy --no-index -f /io/wheelhouse
         (cd "$HOME"; "${PYBIN}/nosetests" phonopy)
     fi
