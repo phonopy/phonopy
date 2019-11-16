@@ -3,7 +3,7 @@ set -e -x
 
 # Install a system package required by our library
 # yum install -y numpy
-yum install -y hdf5-devel libfreetype6-dev
+yum install -y hdf5 freetype
 
 # ls /opt/python
 
