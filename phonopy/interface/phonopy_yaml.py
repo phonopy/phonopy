@@ -247,7 +247,7 @@ class PhonopyYaml(object):
             lines += self._displacements_yaml_lines()
 
         if self.settings['force_constants']:
-            lines += self.force_constants_yaml_lines()
+            lines += self._force_constants_yaml_lines()
 
         return lines
 
