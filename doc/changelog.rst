@@ -3,6 +3,10 @@
 Change Log
 ==========
 
+Nov-16-2019: Version 2.4.1
+--------------------------
+* Fix a bug on Phonopy.save reported by PR#104
+
 Nov-13-2019: Version 2.4.0
 --------------------------
 * CP2K interface is provided by Tiziano Müller.
