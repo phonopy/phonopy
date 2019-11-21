@@ -298,14 +298,15 @@ file format is:</p>
 <span class="o">...</span>
 </pre></div>
 </div>
-<p>This file doesn’t contain the information about cell volumes that are
-obtained from <code class="docutils literal notranslate"><span class="pre">e-v.dat</span></code> file though the energy data in <code class="docutils literal notranslate"><span class="pre">e-v.dat</span></code>
-are not used. In <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code>, the lines starting with <code class="docutils literal notranslate"><span class="pre">#</span></code> are
-ignored. Rows and columns are the temperature and volume axes. The
-first column gives temperatures. The following columns give the
-temperature dependent energies.The temperature points are expected to
-be the same as those in <code class="docutils literal notranslate"><span class="pre">thermal_properties.yaml</span></code> at least up to the
-maximum temperature specified for <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code>.</p>
+<p>The first column gives temperatures in K and the following columns
+give electronic free energies in eV at temperatures and at unit
+(primitive) cell volumes. The lines starting with <code class="docutils literal notranslate"><span class="pre">#</span></code> are
+ignored. This file doesn’t contain the information about cell
+volumes. Instead, the volumes are obtained from <code class="docutils literal notranslate"><span class="pre">e-v.dat</span></code> file. The
+energies in <code class="docutils literal notranslate"><span class="pre">e-v.dat</span></code> are not used when <code class="docutils literal notranslate"><span class="pre">--efe</span></code> option is
+used. The temperature points are expected to be the same as those in
+<code class="docutils literal notranslate"><span class="pre">thermal_properties.yaml</span></code> at least up to the maximum temperature
+specified for <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code>.</p>
 <p>An example is given in <code class="docutils literal notranslate"><span class="pre">example/Cu-QHA</span></code>. The <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code> contains
 electronic free energy calculated following, e.g., Eqs. (11) and (12)
 in the paper by Wolverton and Zunger, Phys. Rev. B, <strong>52</strong>, 8813
