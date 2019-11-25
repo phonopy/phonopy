@@ -610,7 +610,7 @@ respect to *a*, *b*, *c* axes.
 ~~~~~~~~~~~~~~~~~~~
 
 PDOS is calculated using eigenvectors projected along x, y, and z
-Cartesian coordinates. The format of output file ``partial_dos.dat``
+Cartesian coordinates. The format of output file ``projected_dos.dat``
 becomes different when using this tag, where phonon-mode-frequency and
 x, y, and z components of PDOS are written out in the order::
 
