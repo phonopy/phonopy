@@ -108,8 +108,8 @@ class GroupVelocity(object):
             Default is None, which means no symmetrization.
         frequency_factor_to_THz : float
             Unit conversion factor to convert to THz. Default is VaspToTHz.
-        cutoff_frequency :
-
+        cutoff_frequency : float
+            Group velocity is set zero if phonon frequency is below this value.
 
         """
         self._dynmat = dynamical_matrix

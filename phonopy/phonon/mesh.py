@@ -409,7 +409,7 @@ class Mesh(MeshBase):
 
     def _set_group_velocities(self, group_velocity):
         group_velocity.run(self._qpoints)
-        self._group_velocities = group_velocity.get_group_velocity()
+        self._group_velocities = group_velocity.group_velocities
 
 
 class IterMesh(MeshBase):

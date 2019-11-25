@@ -670,7 +670,7 @@ class BandStructure(object):
 
         if self._group_velocity is not None:
             self._group_velocity.run(path)
-            gv = self._group_velocity.group_velocity
+            gv = self._group_velocity.group_velocities
 
         for i, q in enumerate(path):
             self._shift_point(q)

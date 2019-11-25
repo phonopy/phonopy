@@ -357,17 +357,17 @@ class Phonopy(object):
                                   shape=(supercells, natom, 3)}
 
         """
-        return self.displacement_dataset
+        return self._displacement_dataset
 
     @property
     def displacement_dataset(self):
         warnings.warn("Phonopy.displacement_dataset is deprecated."
                       "Use Phonopy.dataset.",
                       DeprecationWarning)
-        return self._displacement_dataset
+        return self.dataset
 
     def get_displacement_dataset(self):
-        return self.displacement_dataset
+        return self.dataset
 
     @property
     def displacements(self):
@@ -2577,7 +2577,7 @@ class Phonopy(object):
         if self._group_velocity is None:
             self._set_group_velocity()
         self._group_velocity.run([q_point])
-        return self._group_velocity.group_velocity[0]
+        return self._group_velocity.group_velocities[0]
 
     def get_group_velocities_on_bands(self):
         warnings.warn(
