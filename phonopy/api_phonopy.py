@@ -2576,8 +2576,8 @@ class Phonopy(object):
     def get_group_velocity_at_q(self, q_point):
         if self._group_velocity is None:
             self._set_group_velocity()
-        self._group_velocity.set_q_points([q_point])
-        return self._group_velocity.get_group_velocity()[0]
+        self._group_velocity.run([q_point])
+        return self._group_velocity.group_velocity[0]
 
     def get_group_velocities_on_bands(self):
         warnings.warn(

@@ -669,8 +669,8 @@ class BandStructure(object):
         gv_on_path = []
 
         if self._group_velocity is not None:
-            self._group_velocity.set_q_points(path)
-            gv = self._group_velocity.get_group_velocity()
+            self._group_velocity.run(path)
+            gv = self._group_velocity.group_velocity
 
         for i, q in enumerate(path):
             self._shift_point(q)

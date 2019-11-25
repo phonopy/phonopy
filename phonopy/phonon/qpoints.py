@@ -167,7 +167,7 @@ class QpointsPhonon(object):
 
     def _run(self):
         if self._group_velocity is not None:
-            self._group_velocity.set_q_points(
+            self._group_velocity.run(
                 self._qpoints, perturbation=self._nac_q_direction)
             self._group_velocities = self._group_velocity.get_group_velocity()
 
