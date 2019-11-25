@@ -19,16 +19,17 @@ run phonopy::
 
    phonopy -d --dim="2 2 3"
 
-You should find the files, ``SPOSCAR``, ``disp.yaml``, and
+You should find the files, ``SPOSCAR``, ``phonopy_disp.yaml``, and
 ``POSCAR-{number}`` as follows::
 
    % ls
-   disp.yaml  POSCAR  POSCAR-001  POSCAR-002  POSCAR-003  SPOSCAR
+   phonopy_disp.yaml  POSCAR  POSCAR-001  POSCAR-002  POSCAR-003  SPOSCAR
 
-``SPOSCAR`` is the perfect supercell structure, ``disp.yaml`` contains
-the information on displacements, and ``POSCAR-{number}`` are the
-supercells with atomic displacements. ``POSCAR-{number}`` corresponds
-to the different atomic displacements written in ``disp.yaml``.
+``SPOSCAR`` is the perfect supercell structure, ``phonopy_disp.yaml``
+contains the information on displacements, and ``POSCAR-{number}`` are
+the supercells with atomic displacements. ``POSCAR-{number}``
+corresponds to the different atomic displacements written in
+``phonopy_disp.yaml``.
 
 Calculation of sets of forces
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

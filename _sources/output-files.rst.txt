@@ -65,24 +65,24 @@ format. Since the matrix for each atom at a temperature is symmetric,
 only six elements of it, xx, yy, zz, yz, xz, xy, are written in this
 order.
 
-``total_dos.dat`` and ``partial_dos.dat``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``total_dos.dat`` and ``projected_dos.dat``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:ref:`Total DOS and partial dos <dos_related_tags>` are stored in the
+:ref:`Total and projected DOS <dos_related_tags>` are stored in the
 simple format, respectively.
 
-``total_dos.dat`` and ``partial_dos.dat`` are viewed using the
+``total_dos.dat`` and ``projected_dos.dat`` are viewed using the
 auxiliary tool ``phonopy-pdosplot`` (:ref:`pdosplot_tool`).
 
-File format of ``partial_dos.dat``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+File format of ``projected_dos.dat``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The first column is the phonon frequency. The following colums are the
 projected density of states for atoms in the primitive cell. In the
 :ref:`NaCl example <example_pdos>`, there are two atoms in the
 primitive cell, which are one Na and one Cl atoms. The order of atoms
 in the primitive cell is confirmed running phonopy with the ``-v``
-option. The ``partial_dos.dat`` of this example is starting with the
+option. The ``projected_dos.dat`` of this example is starting with the
 following lines::
 
    # Sigma = 0.063253

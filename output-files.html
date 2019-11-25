@@ -98,8 +98,8 @@
 <li><a class="reference internal" href="#thermal-properties-yaml"><code class="docutils literal notranslate"><span class="pre">thermal_properties.yaml</span></code></a></li>
 <li><a class="reference internal" href="#thermal-displacements-yaml"><code class="docutils literal notranslate"><span class="pre">thermal_displacements.yaml</span></code></a></li>
 <li><a class="reference internal" href="#thermal-displacement-matrices-yaml"><code class="docutils literal notranslate"><span class="pre">thermal_displacement_matrices.yaml</span></code></a></li>
-<li><a class="reference internal" href="#total-dos-dat-and-partial-dos-dat"><code class="docutils literal notranslate"><span class="pre">total_dos.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">partial_dos.dat</span></code></a><ul>
-<li><a class="reference internal" href="#file-format-of-partial-dos-dat">File format of <code class="docutils literal notranslate"><span class="pre">partial_dos.dat</span></code></a></li>
+<li><a class="reference internal" href="#total-dos-dat-and-projected-dos-dat"><code class="docutils literal notranslate"><span class="pre">total_dos.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">projected_dos.dat</span></code></a><ul>
+<li><a class="reference internal" href="#file-format-of-projected-dos-dat">File format of <code class="docutils literal notranslate"><span class="pre">projected_dos.dat</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#disp-yaml"><code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code></a></li>
@@ -172,7 +172,7 @@
 <li><p><a class="reference internal" href="#thermal-properties-yaml" id="id7"><code class="docutils literal notranslate"><span class="pre">thermal_properties.yaml</span></code></a></p></li>
 <li><p><a class="reference internal" href="#thermal-displacements-yaml" id="id8"><code class="docutils literal notranslate"><span class="pre">thermal_displacements.yaml</span></code></a></p></li>
 <li><p><a class="reference internal" href="#thermal-displacement-matrices-yaml" id="id9"><code class="docutils literal notranslate"><span class="pre">thermal_displacement_matrices.yaml</span></code></a></p></li>
-<li><p><a class="reference internal" href="#total-dos-dat-and-partial-dos-dat" id="id10"><code class="docutils literal notranslate"><span class="pre">total_dos.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">partial_dos.dat</span></code></a></p></li>
+<li><p><a class="reference internal" href="#total-dos-dat-and-projected-dos-dat" id="id10"><code class="docutils literal notranslate"><span class="pre">total_dos.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">projected_dos.dat</span></code></a></p></li>
 <li><p><a class="reference internal" href="#disp-yaml" id="id11"><code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code></a></p></li>
 <li><p><a class="reference internal" href="#phonopy-yaml-and-phonon-disp-yaml" id="id12"><code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">phonon_disp.yaml</span></code></a></p></li>
 <li><p><a class="reference internal" href="#hdf5-files" id="id13"><code class="docutils literal notranslate"><span class="pre">.hdf5</span></code> files</a></p></li>
@@ -233,20 +233,20 @@ format. Since the matrix for each atom at a temperature is symmetric,
 only six elements of it, xx, yy, zz, yz, xz, xy, are written in this
 order.</p>
 </div>
-<div class="section" id="total-dos-dat-and-partial-dos-dat">
-<h3><a class="toc-backref" href="#id10"><code class="docutils literal notranslate"><span class="pre">total_dos.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">partial_dos.dat</span></code></a><a class="headerlink" href="#total-dos-dat-and-partial-dos-dat" title="Permalink to this headline">¶</a></h3>
-<p><a class="reference internal" href="setting-tags.html#dos-related-tags"><span class="std std-ref">Total DOS and partial dos</span></a> are stored in the
+<div class="section" id="total-dos-dat-and-projected-dos-dat">
+<h3><a class="toc-backref" href="#id10"><code class="docutils literal notranslate"><span class="pre">total_dos.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">projected_dos.dat</span></code></a><a class="headerlink" href="#total-dos-dat-and-projected-dos-dat" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="setting-tags.html#dos-related-tags"><span class="std std-ref">Total and projected DOS</span></a> are stored in the
 simple format, respectively.</p>
-<p><code class="docutils literal notranslate"><span class="pre">total_dos.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">partial_dos.dat</span></code> are viewed using the
+<p><code class="docutils literal notranslate"><span class="pre">total_dos.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">projected_dos.dat</span></code> are viewed using the
 auxiliary tool <code class="docutils literal notranslate"><span class="pre">phonopy-pdosplot</span></code> (<a class="reference internal" href="auxiliary-tools.html#pdosplot-tool"><span class="std std-ref">phonopy-pdosplot</span></a>).</p>
-<div class="section" id="file-format-of-partial-dos-dat">
-<h4>File format of <code class="docutils literal notranslate"><span class="pre">partial_dos.dat</span></code><a class="headerlink" href="#file-format-of-partial-dos-dat" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="file-format-of-projected-dos-dat">
+<h4>File format of <code class="docutils literal notranslate"><span class="pre">projected_dos.dat</span></code><a class="headerlink" href="#file-format-of-projected-dos-dat" title="Permalink to this headline">¶</a></h4>
 <p>The first column is the phonon frequency. The following colums are the
 projected density of states for atoms in the primitive cell. In the
 <a class="reference internal" href="examples.html#example-pdos"><span class="std std-ref">NaCl example</span></a>, there are two atoms in the
 primitive cell, which are one Na and one Cl atoms. The order of atoms
 in the primitive cell is confirmed running phonopy with the <code class="docutils literal notranslate"><span class="pre">-v</span></code>
-option. The <code class="docutils literal notranslate"><span class="pre">partial_dos.dat</span></code> of this example is starting with the
+option. The <code class="docutils literal notranslate"><span class="pre">projected_dos.dat</span></code> of this example is starting with the
 following lines:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Sigma = 0.063253</span>
        <span class="o">-</span><span class="mf">0.6695362607</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>

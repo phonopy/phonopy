@@ -152,16 +152,17 @@ run phonopy:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonopy</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 3&quot;</span>
 </pre></div>
 </div>
-<p>You should find the files, <code class="docutils literal notranslate"><span class="pre">SPOSCAR</span></code>, <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code>, and
+<p>You should find the files, <code class="docutils literal notranslate"><span class="pre">SPOSCAR</span></code>, <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>, and
 <code class="docutils literal notranslate"><span class="pre">POSCAR-{number}</span></code> as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">ls</span>
-<span class="n">disp</span><span class="o">.</span><span class="n">yaml</span>  <span class="n">POSCAR</span>  <span class="n">POSCAR</span><span class="o">-</span><span class="mi">001</span>  <span class="n">POSCAR</span><span class="o">-</span><span class="mi">002</span>  <span class="n">POSCAR</span><span class="o">-</span><span class="mi">003</span>  <span class="n">SPOSCAR</span>
+<span class="n">phonopy_disp</span><span class="o">.</span><span class="n">yaml</span>  <span class="n">POSCAR</span>  <span class="n">POSCAR</span><span class="o">-</span><span class="mi">001</span>  <span class="n">POSCAR</span><span class="o">-</span><span class="mi">002</span>  <span class="n">POSCAR</span><span class="o">-</span><span class="mi">003</span>  <span class="n">SPOSCAR</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">SPOSCAR</span></code> is the perfect supercell structure, <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> contains
-the information on displacements, and <code class="docutils literal notranslate"><span class="pre">POSCAR-{number}</span></code> are the
-supercells with atomic displacements. <code class="docutils literal notranslate"><span class="pre">POSCAR-{number}</span></code> corresponds
-to the different atomic displacements written in <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">SPOSCAR</span></code> is the perfect supercell structure, <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>
+contains the information on displacements, and <code class="docutils literal notranslate"><span class="pre">POSCAR-{number}</span></code> are
+the supercells with atomic displacements. <code class="docutils literal notranslate"><span class="pre">POSCAR-{number}</span></code>
+corresponds to the different atomic displacements written in
+<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>.</p>
 </div>
 <div class="section" id="calculation-of-sets-of-forces">
 <h2>Calculation of sets of forces<a class="headerlink" href="#calculation-of-sets-of-forces" title="Permalink to this headline">¶</a></h2>
