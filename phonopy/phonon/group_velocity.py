@@ -135,7 +135,7 @@ class GroupVelocity(object):
         self._directions[0] /= np.linalg.norm(self._directions[0])
 
         self._q_points = None
-        self._group_velocity = None
+        self._group_velocities = None
         self._perturbation = None
 
     def run(self, q_points, perturbation=None):
@@ -159,7 +159,7 @@ class GroupVelocity(object):
         self._directions[0] /= np.linalg.norm(self._directions[0])
 
         gv = [self._calculate_group_velocity_at_q(q) for q in self._q_points]
-        self._group_velocity = np.array(gv, dtype='double', order='C')
+        self._group_velocities = np.array(gv, dtype='double', order='C')
 
     @property
     def q_length(self):
@@ -176,11 +176,11 @@ class GroupVelocity(object):
         self.q_length = q_length
 
     @property
-    def group_velocity(self):
-        return self._group_velocity
+    def group_velocities(self):
+        return self._group_velocities
 
     def get_group_velocity(self):
-        return self.group_velocity
+        return self.group_velocities
 
     def _calculate_group_velocity_at_q(self, q):
         self._dynmat.set_dynamical_matrix(q)
