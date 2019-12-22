@@ -63,7 +63,7 @@ before_install:
 # - conda install --yes -c conda-forge python=$TRAVIS_PYTHON_VERSION;
 # - conda install --yes -c conda-forge gcc_linux-64 gxx_linux-64 matplotlib pyyaml scipy numpy h5py setuptools_scm conda-build pip;
 - conda install --yes python=$TRAVIS_PYTHON_VERSION;
-- conda install --yes gcc_linux-64 gxx_linux-64 matplotlib pyyaml scipy numpy h5py setuptools_scm conda-build pip;
+- conda install --yes matplotlib pyyaml scipy numpy h5py setuptools_scm conda-build pip;
 - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then
     pip install cp2k-input-tools;
   fi;
