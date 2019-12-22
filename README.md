@@ -13,11 +13,11 @@ Usual phonopy questions should be sent to phonopy mailing list (https://sourcefo
 
 ## Development
 
-The development of phonopy is managed on the 'develop' branch of github phonopy repository.
+The development of phonopy is managed on the `develop` branch of github phonopy repository.
 
 * Github issues is the place to discuss about phonopy issues.
 * Github pull request is the place to request merging source code.
 
 ## Documentation
 
-Phonopy user documetation is written using python sphinx. The source files are stored in `doc` directory. Please see how to write the documentation at `doc/README.me`.
+Phonopy user documetation is written using python sphinx. The source files are stored in `doc` directory. Please see how to write the documentation at `doc/README.md`.
