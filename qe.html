@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Quantum ESPRESSO (QE) &amp; phonopy calculation &#8212; Phonopy v.2.4.1</title>
+    <title>Quantum ESPRESSO (QE) &amp; phonopy calculation &#8212; Phonopy v.2.4.2</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -370,7 +370,7 @@ symmetrized by the translational invariance condition using
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
 
 <span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">from</span> <span class="nn">phonopy.interface.qe</span> <span class="k">import</span> <span class="n">read_pwscf</span><span class="p">,</span> <span class="n">PH_Q2R</span>
+<span class="kn">from</span> <span class="nn">phonopy.interface.qe</span> <span class="kn">import</span> <span class="n">read_pwscf</span><span class="p">,</span> <span class="n">PH_Q2R</span>
 
 <span class="n">primcell_filename</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 <span class="n">q2r_filename</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
@@ -417,8 +417,8 @@ text.</p>
 
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">phonopy.structure.symmetry</span> <span class="k">import</span> <span class="n">elaborate_borns_and_epsilon</span>
-<span class="kn">from</span> <span class="nn">phonopy.interface.qe</span> <span class="k">import</span> <span class="n">read_pwscf</span><span class="p">,</span> <span class="n">PH_Q2R</span>
+<span class="kn">from</span> <span class="nn">phonopy.structure.symmetry</span> <span class="kn">import</span> <span class="n">elaborate_borns_and_epsilon</span>
+<span class="kn">from</span> <span class="nn">phonopy.interface.qe</span> <span class="kn">import</span> <span class="n">read_pwscf</span><span class="p">,</span> <span class="n">PH_Q2R</span>
 
 <span class="n">primcell_filename</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 <span class="n">q2r_filename</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
@@ -476,7 +476,7 @@ text.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.2.<br/>
     </p>
   </div>
 </footer>

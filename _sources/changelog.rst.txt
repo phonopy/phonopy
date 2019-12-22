@@ -3,6 +3,11 @@
 Change Log
 ==========
 
+Dec-22-2019: Version 2.4.2
+--------------------------
+* Collection of minor updates: adding docstrings, refactoring group
+  velocity code, and updating examples.
+
 Nov-16-2019: Version 2.4.1
 --------------------------
 * Fix a bug on Phonopy.save reported by PR#104

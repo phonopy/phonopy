@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Phonopy API for Python &#8212; Phonopy v.2.4.1</title>
+    <title>Phonopy API for Python &#8212; Phonopy v.2.4.2</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -228,13 +228,13 @@ suggestions are very welcome.</p>
 <div class="section" id="import-modules">
 <h2><a class="toc-backref" href="#id3">Import modules</a><a class="headerlink" href="#import-modules" title="Permalink to this headline">¶</a></h2>
 <p>After setting the phonopy python path, the phonopy module is imported by:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy</span> <span class="k">import</span> <span class="n">Phonopy</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy</span> <span class="kn">import</span> <span class="n">Phonopy</span>
 </pre></div>
 </div>
 <p>Crystal structure is defined by the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class. This class
 is originally made to be similar to the ASE’s <code class="docutils literal notranslate"><span class="pre">Atoms</span></code> class. The
 <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> module is imported by:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy.structure.atoms</span> <span class="k">import</span> <span class="n">PhonopyAtoms</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy.structure.atoms</span> <span class="kn">import</span> <span class="n">PhonopyAtoms</span>
 </pre></div>
 </div>
 </div>
@@ -254,8 +254,8 @@ argument. The supercells with displacements are obtained by
 <code class="docutils literal notranslate"><span class="pre">get_supercells_with_displacements()</span></code> method as a list of
 <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> objects.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">phonopy</span> <span class="k">import</span> <span class="n">Phonopy</span>
-<span class="kn">from</span> <span class="nn">phonopy.structure.atoms</span> <span class="k">import</span> <span class="n">PhonopyAtoms</span>
+<span class="kn">from</span> <span class="nn">phonopy</span> <span class="kn">import</span> <span class="n">Phonopy</span>
+<span class="kn">from</span> <span class="nn">phonopy.structure.atoms</span> <span class="kn">import</span> <span class="n">PhonopyAtoms</span>
 
 <span class="n">a</span> <span class="o">=</span> <span class="mf">5.404</span>
 <span class="n">unitcell</span> <span class="o">=</span> <span class="n">PhonopyAtoms</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Si&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span>
@@ -286,7 +286,7 @@ for VASP, <code class="docutils literal notranslate"><span class="pre">Wien2kToT
 <code class="docutils literal notranslate"><span class="pre">PwscfToTHz</span></code> for Pwscf, <code class="docutils literal notranslate"><span class="pre">ElkToTHz</span></code> for Elk, <code class="docutils literal notranslate"><span class="pre">SiestaToTHz</span></code> for
 Siesta, <code class="docutils literal notranslate"><span class="pre">CrystalToTHz</span></code> for CRYSTAL <code class="docutils literal notranslate"><span class="pre">VaspToTHz</span></code>, and <code class="docutils literal notranslate"><span class="pre">DftbpToTHz</span></code>
 for DFTB+ is the default value.  For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy.units</span> <span class="k">import</span> <span class="n">AbinitToTHz</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy.units</span> <span class="kn">import</span> <span class="n">AbinitToTHz</span>
 
 <span class="n">phonon</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span><span class="n">unitcell</span><span class="p">,</span>
                  <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]],</span>
@@ -459,7 +459,7 @@ by your unit conversion factor. In the case of VASP to transform to
 THz, the factor is 15.633302.</p>
 <p>In <code class="docutils literal notranslate"><span class="pre">example/NaCl</span></code>, the phonopy is executed from python script, e.g.,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">phonopy</span>
-<span class="kn">from</span> <span class="nn">phonopy.phonon.band_structure</span> <span class="k">import</span> <span class="n">get_band_qpoints_and_path_connections</span>
+<span class="kn">from</span> <span class="nn">phonopy.phonon.band_structure</span> <span class="kn">import</span> <span class="n">get_band_qpoints_and_path_connections</span>
 
 <span class="n">path</span> <span class="o">=</span> <span class="p">[[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.625</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.625</span><span class="p">]],</span>
         <span class="p">[[</span><span class="mf">0.375</span><span class="p">,</span> <span class="mf">0.375</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">]]]</span>
@@ -812,9 +812,9 @@ cell and primitive cell and that the Born effective charge and
 dielectric constant were calculated using VASP code by the unit cell.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">io</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">phonopy.units</span> <span class="k">import</span> <span class="n">Hartree</span><span class="p">,</span> <span class="n">Bohr</span>
-<span class="kn">from</span> <span class="nn">phonopy.structure.symmetry</span> <span class="k">import</span> <span class="n">symmetrize_borns_and_epsilon</span>
-<span class="kn">from</span> <span class="nn">phonopy.interface.vasp</span> <span class="k">import</span> <span class="n">VasprunxmlExpat</span>
+<span class="kn">from</span> <span class="nn">phonopy.units</span> <span class="kn">import</span> <span class="n">Hartree</span><span class="p">,</span> <span class="n">Bohr</span>
+<span class="kn">from</span> <span class="nn">phonopy.structure.symmetry</span> <span class="kn">import</span> <span class="n">symmetrize_borns_and_epsilon</span>
+<span class="kn">from</span> <span class="nn">phonopy.interface.vasp</span> <span class="kn">import</span> <span class="n">VasprunxmlExpat</span>
 
 <span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;vasprun.xml&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
     <span class="n">vasprun</span> <span class="o">=</span> <span class="n">VasprunxmlExpat</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
@@ -861,7 +861,7 @@ dielectric constant were calculated using VASP code by the unit cell.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.2.<br/>
     </p>
   </div>
 </footer>
