@@ -87,7 +87,7 @@ script:
 # test_random_displacements.py fails unknown reason on travis-CI.
 - if [[ "$DOCKER_DEPLOY" == "false" ]]; then
     if [[ "$TRAVIS_BRANCH" != "rc" && "$TRAVIS_BRANCH" != "master" ]]; then
-      rm test/phonon/test_random_displacements.py
+      rm test/phonon/test_random_displacements.py;
       python setup.py test;
     fi;
   fi
