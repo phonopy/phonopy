@@ -84,9 +84,9 @@ install:
 
 script:
 - pwd
+# test_random_displacements.py fails unknown reason on travis-CI.
 - if [[ "$DOCKER_DEPLOY" == "false" ]]; then
     if [[ "$TRAVIS_BRANCH" != "rc" && "$TRAVIS_BRANCH" != "master" ]]; then
-      # test_random_displacements.py fails unknown reason on travis-CI.
       rm test/phonon/test_random_displacements.py
       python setup.py test;
     fi;
