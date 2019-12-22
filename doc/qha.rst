@@ -162,14 +162,15 @@ file format is::
       20.0000     -17.27887453    -17.32228804    -17.34338499    -17.34482383    -17.32846353    -17.29676491    -17.25084547    -17.19265900    -17.12359399    -17.04470709    -16.95754774
    ...
 
-This file doesn't contain the information about cell volumes that are
-obtained from ``e-v.dat`` file though the energy data in ``e-v.dat``
-are not used. In ``fe-v.dat``, the lines starting with ``#`` are
-ignored. Rows and columns are the temperature and volume axes. The
-first column gives temperatures. The following columns give the
-temperature dependent energies.The temperature points are expected to
-be the same as those in ``thermal_properties.yaml`` at least up to the
-maximum temperature specified for ``phonopy-qha``.
+The first column gives temperatures in K and the following columns
+give electronic free energies in eV at temperatures and at unit
+(primitive) cell volumes. The lines starting with ``#`` are
+ignored. This file doesn't contain the information about cell
+volumes. Instead, the volumes are obtained from ``e-v.dat`` file. The
+energies in ``e-v.dat`` are not used when ``--efe`` option is
+used. The temperature points are expected to be the same as those in
+``thermal_properties.yaml`` at least up to the maximum temperature
+specified for ``phonopy-qha``.
 
 An example is given in ``example/Cu-QHA``. The ``fe-v.dat`` contains
 electronic free energy calculated following, e.g., Eqs. (11) and (12)

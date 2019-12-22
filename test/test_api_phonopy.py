@@ -37,7 +37,7 @@ class TestPhonopy(unittest.TestCase):
         self.assertTrue(id(phonon.nac_params) == id(phonon.get_nac_params()))
         self.assertTrue(id(phonon.supercells_with_displacements)
                         == id(phonon.get_supercells_with_displacements()))
-        self.assertTrue(id(phonon.displacement_dataset)
+        self.assertTrue(id(phonon.dataset)
                         == id(phonon.get_displacement_dataset()))
         phonon.run_mesh([11, 11, 11], with_eigenvectors=True)
         phonon.get_mesh_dict()

@@ -903,6 +903,13 @@ def _compute_permutation_c(positions_a,  # scaled positions
 # Other tiny tools
 #
 def get_angles(lattice):
+    """Returns angles between basis vectors
+
+    lattice : Array-like
+        (a, b, c)^T, i.e., basis vectors are given as row vectors.
+
+    """
+
     a, b, c = get_cell_parameters(lattice)
     alpha = np.arccos(np.vdot(lattice[1], lattice[2]) / b / c) / np.pi * 180
     beta = np.arccos(np.vdot(lattice[2], lattice[0]) / c / a) / np.pi * 180
@@ -911,11 +918,19 @@ def get_angles(lattice):
 
 
 def get_cell_parameters(lattice):
-    return np.sqrt(np.dot(lattice, lattice.transpose()).diagonal())
+    """Returns lenghts are basis vectors
+
+    lattice : Array-like
+        (a, b, c)^T, i.e., basis vectors are given as row vectors.
+
+    """
+
+    return np.sqrt(np.dot(lattice, np.transpose(lattice)).diagonal())
 
 
 def get_cell_matrix(a, b, c, alpha, beta, gamma):
-    # These follow 'matrix_lattice_init' in matrix.c of GDIS
+    """Return basis vectors as row vectors"""
+
     alpha *= np.pi / 180
     beta *= np.pi / 180
     gamma *= np.pi / 180

@@ -60,7 +60,7 @@ class TestPhonopyYaml(unittest.TestCase):
                                            [0.5, 0.5, 0]])
         filename = os.path.join(data_dir, "FORCE_SETS_NaCl")
         force_sets = parse_FORCE_SETS(filename=filename)
-        phonon.set_displacement_dataset(force_sets)
+        phonon.dataset = force_sets
         phonon.produce_force_constants()
         born_elems = {'Na': [[1.08703, 0, 0],
                              [0, 1.08703, 0],

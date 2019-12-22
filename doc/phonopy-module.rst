@@ -17,9 +17,9 @@ After setting the phonopy python path, the phonopy module is imported by::
 
    from phonopy import Phonopy
 
-Crystal structure is defined by the ``PhonopyAtoms`` class. This
-class is made to be similar to the ASE's ``Atoms``
-class. The ``PhonopyAtoms`` module is imported by::
+Crystal structure is defined by the ``PhonopyAtoms`` class. This class
+is originally made to be similar to the ASE's ``Atoms`` class. The
+``PhonopyAtoms`` module is imported by::
 
    from phonopy.structure.atoms import PhonopyAtoms
 
@@ -444,9 +444,9 @@ given in Cartesian coordinates.
               [0, 2.56544559, 0],
               [0, 0, 2.56544559]]
    factors = 14.400
-   phonon.set_nac_params({'born': born,
-                          'factor': factors,
-                          'dielectric': epsilon})
+   phonon.nac_params = {'born': born,
+                        'factor': factors,
+                        'dielectric': epsilon}
 
 
 Data structure
@@ -521,7 +521,7 @@ in ``atoms.py``.
 ``lattice_vectors``
 """""""""""""""""""
 
-Lattice vectors are given in the matrix form in Cartesian coordinates.
+Basis vectors are given in the matrix form in Cartesian coordinates.
 
 ::
 
@@ -591,7 +591,7 @@ Methods
 
 ::
 
-   set_cell(lattice_vectors)
+   set_cell(basis_vectors)
    get_cell()
    set_positions(positions)
    get_positions()
@@ -605,9 +605,10 @@ Methods
    get_atomic_numbers()
    get_volume()
 
-These methods are designed to be compatible to the ASE's ``Atoms``
-class. The arguments have to be set in the structures shown in
-:ref:`phonopy_Atoms_variables`.
+The arguments have to be set in the structures shown in
+:ref:`phonopy_Atoms_variables`. There are setters and getters
+of ``cell`` and ``scaled_positions``. There are getters of
+``positions``, ``numbers``, ``masses``, ``volume``.
 
 Definitions of variables
 -------------------------
