@@ -121,6 +121,17 @@ def main(args):
         print("Parameters: %f %f %f %f" % tuple(parameters))
         if args.is_graph_plot:
             bulk_modulus.plot_bulk_modulus().show()
+
+        # These lines commented out are to print E-V points on the curve fitted.
+        # def eos(v):
+        #     params = bulk_modulus._bulk_modulus.get_parameters()
+        #     _eos = bulk_modulus._bulk_modulus.get_eos()
+        #     return _eos(v, *params)
+
+        # print("E-V values")
+        # for v in volumes:
+        #     print(v, eos(v))
+
         sys.exit(0)
 
     ########################

@@ -46,22 +46,13 @@ def get_group_velocity(q,  # q-point
                        q_length=None,  # finite distance in q
                        symmetry=None,
                        frequency_factor_to_THz=VaspToTHz):
-    """
-    If frequencies and eigenvectors are supplied they are used
-    instead of calculating them at q-point (but not at q+dq and q-dq).
-
-    reciprocal lattice has to be given as
-    [[a_x, b_x, c_x],
-     [a_y, b_y, c_y],
-     [a_z, b_z, c_z]]
-    """
-
+    """Returns group velocity at a q-point."""
     gv = GroupVelocity(dynamical_matrix,
                        q_length=q_length,
                        symmetry=symmetry,
                        frequency_factor_to_THz=frequency_factor_to_THz)
-    gv.set_q_points([q])
-    return gv.get_group_velocity()[0]
+    gv.run([q])
+    return gv.group_velocity[0]
 
 
 def delta_dynamical_matrix(q,
@@ -75,16 +66,27 @@ def delta_dynamical_matrix(q,
 
 
 class GroupVelocity(object):
-    """
+    """Class to calculate group velocities of phonons
+
     d omega   ----
     ------- = \  / omega
     d q        \/q
 
-    Gradient of omega in reciprocal space.
+    Gradient of omega in reciprocal space, which is calculated here by
 
-             d D(q)
-    <e(q,nu)|------|e(q,nu)>
-              d q
+       1             d D(q)
+    ------- <e(q,nu)|------|e(q,nu)>
+    2 omega           d q
+
+    Attributes
+    ----------
+    group_velocity : ndarray
+        Group velocities at q-points.
+        shape=(q-points, 3), dtype='double', order='C'
+    q_length : float
+        Distance in reciprocal space used to calculate finite difference of
+        dynamcial matrix.
+
     """
 
     def __init__(self,
@@ -94,10 +96,21 @@ class GroupVelocity(object):
                  frequency_factor_to_THz=VaspToTHz,
                  cutoff_frequency=1e-4):
         """
-        q_points is a list of sets of q-point and q-direction:
-        [[q-point, q-direction], [q-point, q-direction], ...]
 
-        q_length is used such as D(q + q_length) - D(q - q_length).
+        dynamical_matrix : DynamicalMatrix or DynamicalMatrixNAC
+            Dynamical matrix class instance.
+        q_length : float
+            This is used such as D(q + q_length) - D(q - q_length) for
+            calculating finite difference of dynamical matrix.
+            Default is None, which gives 1e-5.
+        symmetry : Symmetry
+            This is used to symmetrize group velocity at each q-points.
+            Default is None, which means no symmetrization.
+        frequency_factor_to_THz : float
+            Unit conversion factor to convert to THz. Default is VaspToTHz.
+        cutoff_frequency : float
+            Group velocity is set zero if phonon frequency is below this value.
+
         """
         self._dynmat = dynamical_matrix
         primitive = dynamical_matrix.get_primitive()
@@ -122,40 +135,60 @@ class GroupVelocity(object):
         self._directions[0] /= np.linalg.norm(self._directions[0])
 
         self._q_points = None
-        self._group_velocity = None
+        self._group_velocities = None
         self._perturbation = None
 
-    def set_q_points(self, q_points, perturbation=None):
+    def run(self, q_points, perturbation=None):
+        """Group velocities are computed at q-points.
+
+        q_points : Array-like
+            List of q-points such as [[0, 0, 0], [0.1, 0.2, 0.3], ...].
+        perturbation : Array-like
+            Direction in fractional coordinates of reciprocal space.
+
+        """
+
         self._q_points = q_points
         self._perturbation = perturbation
         if perturbation is None:
+            # Give an random direction to break symmetry
             self._directions[0] = np.array([1, 2, 3])
         else:
             self._directions[0] = np.dot(
                 self._reciprocal_lattice, perturbation)
         self._directions[0] /= np.linalg.norm(self._directions[0])
-        self._set_group_velocity()
 
-    def set_q_length(self, q_length):
-        self._q_length = q_length
+        gv = [self._calculate_group_velocity_at_q(q) for q in self._q_points]
+        self._group_velocities = np.array(gv, dtype='double', order='C')
 
-    def get_q_length(self):
+    @property
+    def q_length(self):
         return self._q_length
 
+    def get_q_length(self):
+        return self.q_length
+
+    @q_length.setter
+    def q_length(self, q_length):
+        self._q_length = q_length
+
+    def set_q_length(self, q_length):
+        self.q_length = q_length
+
+    @property
+    def group_velocities(self):
+        return self._group_velocities
+
     def get_group_velocity(self):
-        return self._group_velocity
+        return self.group_velocities
 
-    def _set_group_velocity(self):
-        gv = [self._set_group_velocity_at_q(q) for q in self._q_points]
-        self._group_velocity = np.array(gv)
-
-    def _set_group_velocity_at_q(self, q):
+    def _calculate_group_velocity_at_q(self, q):
         self._dynmat.set_dynamical_matrix(q)
         dm = self._dynmat.get_dynamical_matrix()
         eigvals, eigvecs = np.linalg.eigh(dm)
         eigvals = eigvals.real
         freqs = np.sqrt(abs(eigvals)) * np.sign(eigvals) * self._factor
-        gv = np.zeros((len(freqs), 3), dtype='double')
+        gv = np.zeros((len(freqs), 3), dtype='double', order='C')
         deg_sets = degenerate_sets(freqs)
 
         ddms = self._get_dD(np.array(q))
@@ -171,11 +204,16 @@ class GroupVelocity(object):
                 gv[i, :] = 0
 
         if self._perturbation is None:
-            return self._symmetrize_group_velocity(gv, q)
+            if self._symmetry is None:
+                return gv
+            else:
+                return self._symmetrize_group_velocity(gv, q)
         else:
             return gv
 
     def _symmetrize_group_velocity(self, gv, q):
+        """Symmetrize obtained group velocities using site symmetries."""
+
         rotations = []
         for r in self._symmetry.get_reciprocal_operations():
             q_in_BZ = q - np.rint(q)
@@ -191,12 +229,16 @@ class GroupVelocity(object):
         return gv_sym / len(rotations)
 
     def _get_dD(self, q):
+        """Compute derivative or finite difference of dynamcial matrices"""
+
         if self._q_length is None:
             return self._get_dD_analytical(q)
         else:
             return self._get_dD_FD(q)
 
-    def _get_dD_FD(self, q): # finite difference
+    def _get_dD_FD(self, q):
+        """Compute finite difference of dynamcial matrices"""
+
         ddm = []
         for dqc in self._directions * self._q_length:
             dq = np.dot(self._reciprocal_lattice_inv, dqc)
@@ -205,6 +247,8 @@ class GroupVelocity(object):
         return np.array(ddm)
 
     def _get_dD_analytical(self, q):
+        """Compute derivative of dynamcial matrices"""
+
         self._ddm.run(q)
         ddm = self._ddm.get_derivative_of_dynamical_matrix()
         dtype = "c%d" % (np.dtype('double').itemsize * 2)
@@ -216,6 +260,19 @@ class GroupVelocity(object):
         return ddm_dirs
 
     def _perturb_D(self, ddms, eigsets):
+        """Treat degeneracy
+
+        Group velocities are calculated using analytical continuation using
+        specified directions (self._directions) in reciprocal space.
+
+        ddms : Array-like
+            List of delta (derivative or finite difference) of dynamical
+            matrices along several q-directions for perturbation.
+        eigsets : Array-like
+            List of phonon eigenvectors of degenerate bands.
+
+        """
+
         eigvals, eigvecs = np.linalg.eigh(
             np.dot(eigsets.T.conj(), np.dot(ddms[0], eigsets)))
 

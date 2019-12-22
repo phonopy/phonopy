@@ -901,11 +901,12 @@ if run_mode == 'qpoints':
         if log_level > 0:
             print_error()
         sys.exit(1)
-    phonon.set_qpoints_phonon(
+    phonon.run_qpoints(
         q_points,
-        nac_q_direction=settings.get_nac_q_direction(),
-        is_eigenvectors=settings.get_is_eigenvectors(),
-        write_dynamical_matrices=settings.get_write_dynamical_matrices())
+        with_eigenvectors=settings.get_is_eigenvectors(),
+        with_group_velocities=settings.get_is_group_velocity(),
+        with_dynamical_matrices=settings.get_write_dynamical_matrices(),
+        nac_q_direction=settings.get_nac_q_direction())
 
     if settings.get_is_hdf5() or settings.get_qpoints_format() == "hdf5":
         phonon.write_hdf5_qpoints_phonon()

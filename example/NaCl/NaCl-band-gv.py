@@ -1,8 +1,6 @@
 import numpy as np
-from phonopy import Phonopy
-from phonopy.interface.vasp import read_vasp
-from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
-import matplotlib.pyplot as plt
+import phonopy
+
 
 def append_band(bands, q_start, q_end):
     band = []
@@ -12,30 +10,26 @@ def append_band(bands, q_start, q_end):
                     (np.array(q_end) - np.array(q_start)) / (nq - 1) * i)
     bands.append(band)
 
-unitcell = read_vasp("POSCAR")
-phonon = Phonopy(unitcell,
-                 [[2, 0, 0],
-                  [0, 2, 0],
-                  [0, 0, 2]],
-                 primitive_matrix=[[0, 0.5, 0.5],
-                                   [0.5, 0, 0.5],
-                                   [0.5, 0.5, 0]])
 
-force_sets = parse_FORCE_SETS()
-phonon.set_displacement_dataset(force_sets)
-phonon.produce_force_constants()
-primitive = phonon.get_primitive()
-nac_params = parse_BORN(primitive, filename="BORN")
-phonon.set_nac_params(nac_params)
-phonon.set_group_velocity()
+phonon = phonopy.load(unitcell_filename="POSCAR",
+                      born_filename="BORN",
+                      force_sets_filename="FORCE_SETS",
+                      supercell_matrix=[[2, 0, 0],
+                                        [0, 2, 0],
+                                        [0, 0, 2]],
+                      primitive_matrix=[[0, 0.5, 0.5],
+                                        [0.5, 0, 0.5],
+                                        [0.5, 0.5, 0]])
+
 bands = []
 append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.0, 0.0])
 append_band(bands, [0.5, 0.0, 0.0], [0.5, 0.5, 0.0])
 append_band(bands, [0.5, 0.5, 0.0], [0.0, 0.0, 0.0])
 append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.5, 0.5])
-phonon.set_band_structure(bands)
-q_points, distances, frequencies, eigvecs = phonon.get_band_structure()
-group_velocities = phonon.get_group_velocities_on_bands()
+phonon.run_band_structure(bands, with_group_velocities=True)
+band_dict = phonon.get_band_structure_dict()
+frequencies = band_dict['frequencies']
+group_velocities = band_dict['group_velocities']
 print(len(frequencies))
 print(frequencies[0].shape)
 print(len(group_velocities))
