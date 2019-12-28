@@ -54,6 +54,7 @@ class Settings(object):
         self._cutoff_frequency = None
         self._displacement_distance = None
         self._dm_decimals = None
+        self._calculator = None
         self._fc_calculator = None
         self._fc_calculator_options = None
         self._fc_decimals = None
@@ -137,6 +138,12 @@ class Settings(object):
 
     def get_displacement_distance(self):
         return self._displacement_distance
+
+    def set_calculator(self, calculator):
+        self._calculator = calculator
+
+    def get_calculator(self):
+        return self._calculator
 
     def set_fc_calculator(self, fc_calculator):
         self._fc_calculator = fc_calculator
@@ -433,6 +440,10 @@ class ConfParser(object):
                 self._confs['dm_decimals'] = \
                     self._args.dynamical_matrix_decimals
 
+        if 'calculator' in arg_list:
+            if self._args.calculator:
+                self._confs['calculator'] = self._args.calculator
+
         if 'fc_calculator' in arg_list:
             if self._args.fc_calculator:
                 self._confs['fc_calculator'] = self._args.fc_calculator
@@ -612,6 +623,11 @@ class ConfParser(object):
             if self._args.tstep:
                 self._confs['tstep'] = self._args.tstep
 
+        from phonopy.interface.calculator import get_interface_mode
+        calculator = get_interface_mode(arg_list)
+        if calculator:
+            self._confs['calculator'] = calculator
+
         if 'use_alm' in arg_list:
             if self._args.use_alm:
                 self._confs['fc_calculator'] = 'alm'
@@ -736,6 +752,9 @@ class ConfParser(object):
                     self.set_parameter('is_rotational', False)
                 elif confs['rotational'].lower() == '.true.':
                     self.set_parameter('is_rotational', True)
+
+            if conf_key == 'calculator':
+                self.set_parameter('calculator', confs['calculator'])
 
             if conf_key == 'fc_calculator':
                 self.set_parameter('fc_calculator', confs['fc_calculator'])
@@ -926,6 +945,10 @@ class ConfParser(object):
         # Decimals of values of dynamical matrxi
         if 'dm_decimals' in params:
             self._settings.set_dm_decimals(int(params['dm_decimals']))
+
+        # Force calculator
+        if 'calculator' in params:
+            self._settings.set_calculator(params['calculator'])
 
         # Force constants calculator
         if 'fc_calculator' in params:

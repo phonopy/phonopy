@@ -408,7 +408,7 @@ if log_level > 0:
 ###########################
 # Create FORCE_SETS (-f or --force_sets)
 if args.force_sets or args.force_sets_zero:
-    interface_mode = get_interface_mode(args)
+    interface_mode = get_interface_mode(vars(args))
     if args.force_sets:
         filenames = args.force_sets
         force_sets_zero_mode = False
@@ -487,7 +487,7 @@ else:
 cell_info = collect_cell_info(
     supercell_matrix=settings.get_supercell_matrix(),
     primitive_matrix=settings.get_primitive_matrix(),
-    interface_mode=get_interface_mode(args),
+    interface_mode=settings.get_calculator(),
     cell_filename=settings.get_cell_filename(),
     chemical_symbols=settings.get_chemical_symbols(),
     enforce_primitive_matrix_auto=is_band_auto,

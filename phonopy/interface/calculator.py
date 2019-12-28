@@ -39,7 +39,7 @@ from phonopy.file_IO import parse_disp_yaml, write_FORCE_SETS
 from phonopy.harmonic.displacement import get_displacements_and_forces
 
 
-def get_interface_mode(args):
+def get_interface_mode(args_dict):
     """Return calculator name
 
     The calculator name is obtained from command option arguments where
@@ -52,7 +52,7 @@ def get_interface_mode(args):
                        'crystal', 'vasp', 'dftbp', 'turbomole']
     for calculator in calculator_list:
         mode = "%s_mode" % calculator
-        if mode in args and args.__dict__[mode]:
+        if mode in args_dict and args_dict[mode]:
             return calculator
     return None
 
@@ -65,11 +65,11 @@ def write_supercells_with_displacements(interface_mode,
     if interface_mode is None or interface_mode == 'vasp':
         from phonopy.interface.vasp import write_supercells_with_displacements
         write_supercells_with_displacements(supercell, cells_with_disps)
-    elif interface_mode is 'abinit':
+    elif interface_mode == 'abinit':
         from phonopy.interface.abinit import (
             write_supercells_with_displacements)
         write_supercells_with_displacements(supercell, cells_with_disps)
-    elif interface_mode is 'qe':
+    elif interface_mode == 'qe':
         from phonopy.interface.qe import write_supercells_with_displacements
         write_supercells_with_displacements(supercell,
                                             cells_with_disps,
@@ -218,7 +218,8 @@ def get_default_supercell_filename(interface_mode):
     elif interface_mode == 'siesta':
         return "supercell.fdf"
     elif interface_mode == 'cp2k':
-        return None # CP2K interface generates filenames based on original project name
+        # CP2K interface generates filenames based on original project name
+        return None
     elif interface_mode == 'crystal':
         return None  # supercell.ext can not be parsed by crystal interface.
     elif interface_mode == 'dftbp':
@@ -230,7 +231,8 @@ def get_default_supercell_filename(interface_mode):
 
 
 def get_default_displacement_distance(interface_mode):
-    if interface_mode in ('wien2k', 'abinit', 'elk', 'qe', 'siesta', 'turbomole'):
+    if interface_mode in ('wien2k', 'abinit', 'elk', 'qe', 'siesta',
+                          'turbomole'):
         displacement_distance = 0.02
     else:  # default or vasp, crystal, cp2k
         displacement_distance = 0.01
