@@ -475,9 +475,9 @@ when those files are not needed, e.g., in (P)DOS calculation,
 Phonon density of states (DOS) tags
 ------------------------------------
 
-Phonon density of states (DOS) is calcualted either with smearing
-method (default) or tetrahedron method. Phonons are calculated on a
-sampling mesh, therefore these tags must be used with
+Phonon density of states (DOS) is calcualted either with a linear
+tetrahedron method (default) or smearing method. Phonons are
+calculated on a sampling mesh, therefore these tags must be used with
 :ref:`mesh_sampling_tags`. The physical unit of horizontal axis is
 that of frequency that the user employs, e.g., THz, and that of
 vertical axis is {no. of states}/({unit cell} x {unit of the
@@ -630,8 +630,9 @@ of all projections to z composents of eigenvectors, respectively.
 ``SIGMA``
 ~~~~~~~~~
 
-This tag specifies the smearing width. The unit is same as that used
-for phonon frequency. The default value is the value given by the
+A smearing method is used instead of a linear tetrahedron method.
+This tag also specifies the smearing width. The unit is same as that
+used for phonon frequency. The default value is the value given by the
 difference of maximum and minimum frequencies divided by 100.
 
 ::
@@ -639,11 +640,6 @@ difference of maximum and minimum frequencies divided by 100.
    SIGMA = 0.1
 
 .. _debye_model_tag:
-
-``TETRAHEDRON``
-~~~~~~~~~~~~~~~~
-
-Tetrahedron method is used instead of smearing method.
 
 ``DEBYE_MODEL``
 ~~~~~~~~~~~~~~~~

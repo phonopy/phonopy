@@ -66,7 +66,6 @@ tags:
 * ``--td`` (``TDISP``)
 * ``--tdm`` (``TDISPMAT``)
 * ``--tdm-cif`` (``TDISPMAT_CIF``)
-* ``--thm``, ``--tetrahedron-method`` (``TETRAHEDRON``)
 * ``--tmin`` (``TMIN``)
 * ``--tmax`` (``TMAX``)
 * ``--tolerance`` (``SYMMETRY_TOLERANCE``)

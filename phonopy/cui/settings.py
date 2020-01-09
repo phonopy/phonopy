@@ -508,10 +508,6 @@ class ConfParser(object):
             if self._args.is_plusminus_displacements:
                 self._confs['pm'] = '.true.'
 
-        if 'is_tetrahedron_method' in arg_list:
-            if self._args.is_tetrahedron_method:
-                self._confs['tetrahedron'] = '.true.'
-
         if 'is_trigonal_displacements' in arg_list:
             if self._args.is_trigonal_displacements:
                 self._confs['trigonal'] = '.true.'

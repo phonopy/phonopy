@@ -121,7 +121,6 @@ def get_parser():
         is_nomeshsym=False,
         is_nosym=False,
         is_plusminus_displacements=False,
-        is_tetrahedron_method=True,
         is_thermal_displacements=False,
         is_thermal_displacement_matrices=False,
         is_thermal_displacement_matrices_cif=None,
@@ -377,10 +376,6 @@ def get_parser():
     parser.add_argument(
         "--nosym", dest="is_nosym", action="store_true",
         help="Symmetry is not imposed.")
-    parser.add_argument(
-        "--nothm", "--no-tetrahedron-method", dest="is_tetrahedron_method",
-        action="store_false",
-        help="Do not use tetrahedron method for DOS/PDOS")
     parser.add_argument(
         "--nowritemesh", dest="write_mesh", action="store_false",
         help="Do not write mesh.yaml or mesh.hdf5")
