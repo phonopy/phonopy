@@ -790,9 +790,14 @@ if settings.get_write_force_constants():
         if log_level > 0:
             print("Force constants are written into \"force_constants.hdf5\".")
     else:
-        write_FORCE_CONSTANTS(phonon.get_force_constants(), p2s_map=p2s_map)
+        fc = phonon.force_constants
+        write_FORCE_CONSTANTS(fc, p2s_map=p2s_map)
         if log_level > 0:
             print("Force constants are written into \"FORCE_CONSTANTS\".")
+            print("  Array shape of force constants is %s." % str(fc.shape))
+            if fc.shape[0] != fc.shape[1]:
+                print("  Use --full-fc option for full array of force "
+                      "constants.")
 
 # Show the rotational invariance condition (just show!)
 if settings.get_is_rotational_invariance():
@@ -929,7 +934,7 @@ elif (run_mode == 'band' or
 
         if is_band_auto:
             print("SeeK-path is used to generate band paths.")
-            print("About SeeK-path https://seekpath.readthedocs.io/ "
+            print("  About SeeK-path https://seekpath.readthedocs.io/ "
                   "(citation there-in)")
             is_legacy_plot = False
             bands, labels, path_connections = get_band_qpoints_by_seekpath(
