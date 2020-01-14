@@ -34,6 +34,7 @@
 
 import sys
 import numpy as np
+from collections import OrderedDict
 
 from phonopy.file_IO import (iter_collect_forces,
                              write_force_constants_to_hdf5,
@@ -200,16 +201,17 @@ def get_pwscf_structure(cell, pp_filenames=None):
 
 
 class PwscfIn(object):
-    _set_methods = {'ibrav':            '_set_ibrav',
-                    'celldm(1)':        '_set_celldm1',
-                    'nat':              '_set_nat',
-                    'ntyp':             '_set_ntyp',
-                    'atomic_species':   '_set_atom_types',
-                    'atomic_positions': '_set_positions',
-                    'cell_parameters':  '_set_lattice'}
+    _set_methods = OrderedDict(
+        [('ibrav', '_set_ibrav'),
+         ('celldm(1)', '_set_celldm1'),
+         ('nat', '_set_nat'),
+         ('ntyp', '_set_ntyp'),
+         ('atomic_species', '_set_atom_types'),
+         ('atomic_positions', '_set_positions'),
+         ('cell_parameters', '_set_lattice')])
 
     def __init__(self, lines):
-        self._tags = {tag_name: None for tag_name in self._set_methods}
+        self._tags = {}
         self._current_tag_name = None
         self._values = None
         self._collect(lines)
@@ -246,15 +248,16 @@ class PwscfIn(object):
         # Check if some necessary tag_names exist in elements keys.
         for tag_name in ['ibrav', 'nat', 'ntyp']:
             if tag_name not in elements:
-                raise RuntimeError("%s is not found in the input file."
-                                   % tag_name)
+                raise RuntimeError(
+                    "%s is not found in the input file." % tag_name)
 
         # Set values in self._tags[tag_name]
-        for tag_name in elements:
-            self._current_tag_name = elements[tag_name][0]
-            self._values = elements[tag_name][1:]
-            if tag_name in self._set_methods.keys():
-                getattr(self, self._set_methods[tag_name])()
+        for tag_name in self._set_methods:
+            if tag_name in elements:
+                self._current_tag_name = elements[tag_name][0]
+                self._values = elements[tag_name][1:]
+                if tag_name in self._set_methods.keys():
+                    getattr(self, self._set_methods[tag_name])()
 
     def _set_ibrav(self):
         ibrav = int(self._values[0])
