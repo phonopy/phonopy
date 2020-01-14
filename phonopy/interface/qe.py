@@ -291,7 +291,7 @@ class PwscfIn(object):
                 sys.exit(1)
             else:
                 factor = self._tags['celldm(1)']  # in Bohr
-        elif unit == 'angstrom':
+        elif 'angstrom' in unit:
             factor = 1.0 / Bohr
         else:
             factor = 1.0
@@ -305,7 +305,7 @@ class PwscfIn(object):
 
     def _set_positions(self):
         unit = self._values[0]
-        if unit != 'crystal':
+        if 'crystal' not in unit:
             print("Only ATOMIC_POSITIONS format with "
                   "crystal coordinates is supported.")
             sys.exit(1)
