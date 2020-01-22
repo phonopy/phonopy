@@ -36,7 +36,7 @@
 
 import sys
 import numpy as np
-from phonopy.phonon.band_structure import plot as band_plot
+from phonopy.phonon.band_structure import band_plot
 
 try:
     import yaml
@@ -391,32 +391,45 @@ def plot(args):
     rc('text', usetex=True)
     from mpl_toolkits.axes_grid1 import ImageGrid
 
-    if len(args.filenames) == 0:
-        filenames = ['band.yaml', ]
-    else:
-        filenames = args.filenames
-
-    # if args.xlabel is None:
-    #     plt.xlabel('Wave vector')
-    # else:
-    #     plt.xlabel(args.xlabel)
-    # if args.ylabel is None:
-    #     plt.ylabel('Frequency')
-    # else:
-    #     plt.ylabel(args.ylabel)
-
     # plt.xlim(distances[0], distances[-1])
     if args.f_max is not None:
         plt.ylim(top=args.f_max)
     if args.f_min is not None:
         plt.ylim(bottom=args.f_min)
 
-    (distances,
-     frequencies,
-     qpoints,
-     segment_nqpoints,
-     label_pairs) = read_band_yaml(filenames[0])
+    if len(args.filenames) == 0:
+        filenames = ['band.yaml', ]
+    else:
+        filenames = args.filenames
 
+    bands_data = [read_band_yaml(fname) for fname in filenames]
+    plots_data = [_arrange_band_data(*band_data) for band_data in bands_data]
+
+    (labels,
+     path_connections,
+     freq_list,
+     dist_list) = plots_data[0]
+
+    n = len([x for x in path_connections if not x])
+    fig = plt.figure()
+    axs = ImageGrid(fig, 111,  # similar to subplot(111)
+                    nrows_ncols=(1, n),
+                    axes_pad=0.11,
+                    add_all=True,
+                    label_mode="L")
+    band_plot(axs,
+              freq_list,
+              dist_list,
+              path_connections,
+              labels)
+    plt.show()
+
+
+def _arrange_band_data(distances,
+                       frequencies,
+                       qpoints,
+                       segment_nqpoints,
+                       label_pairs):
     i = 0
     freq_list = []
     dist_list = []
@@ -456,19 +469,7 @@ def plot(args):
             labels += label_pairs[0]
         path_connections += [False, ]
 
-    n = len([x for x in path_connections if not x])
-    fig = plt.figure()
-    axs = ImageGrid(fig, 111,  # similar to subplot(111)
-                    nrows_ncols=(1, n),
-                    axes_pad=0.11,
-                    add_all=True,
-                    label_mode="L")
-    band_plot(axs,
-              freq_list,
-              dist_list,
-              path_connections,
-              labels)
-    plt.show()
+    return labels, path_connections, freq_list, dist_list
 
 
 def main(args):
