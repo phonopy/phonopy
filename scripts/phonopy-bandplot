@@ -36,7 +36,7 @@
 
 import sys
 import numpy as np
-from phonopy.phonon.band_structure import band_plot
+from phonopy.phonon.band_structure import BandPlot
 
 try:
     import yaml
@@ -391,6 +391,9 @@ def plot(args):
     rc('text', usetex=True)
     from mpl_toolkits.axes_grid1 import ImageGrid
 
+    fmts = ['r-', 'b-', 'g-', 'c-', 'm-', 'y-', 'k-',
+            'r--', 'b--', 'g--', 'c--', 'm--', 'y--', 'k--']
+
     # plt.xlim(distances[0], distances[-1])
     if args.f_max is not None:
         plt.ylim(top=args.f_max)
@@ -405,10 +408,19 @@ def plot(args):
     bands_data = [read_band_yaml(fname) for fname in filenames]
     plots_data = [_arrange_band_data(*band_data) for band_data in bands_data]
 
-    (labels,
-     path_connections,
-     freq_list,
-     dist_list) = plots_data[0]
+    # (labels, path_connections, freq_list, dist_list) = plots_data[0]
+
+    all_path_connections = [data[1] for data in plots_data]
+    wrong_file_i = _find_wrong_path_connections(all_path_connections)
+    if wrong_file_i > 0:
+        raise RuntimeError("Band path of %s is inconsistent with %s."
+                           % (filenames[wrong_file_i], filenames[0]))
+
+    max_frequencies = [_get_max_frequency(data[2]) for data in plots_data]
+    max_i = np.argmax(max_frequencies)
+    path_connections = plots_data[max_i][1]
+    frequencies = plots_data[max_i][2]
+    distances = plots_data[max_i][3]
 
     n = len([x for x in path_connections if not x])
     fig = plt.figure()
@@ -417,12 +429,27 @@ def plot(args):
                     axes_pad=0.11,
                     add_all=True,
                     label_mode="L")
-    band_plot(axs,
-              freq_list,
-              dist_list,
-              path_connections,
-              labels)
+    band_plot = BandPlot(axs)
+    band_plot.set_xscale(frequencies, distances)
+
+    for i, ((l, p, f, d), fmt) in enumerate(zip(plots_data, fmts)):
+        if i == 0:
+            band_plot.plot(f, d, p, fmt=fmt, labels=l)
+        else:
+            band_plot.plot(f, d, p, fmt=fmt)
+
     plt.show()
+
+
+def _get_max_frequency(frequencies):
+    return max([np.max(fq) for fq in frequencies])
+
+
+def _find_wrong_path_connections(all_path_connections):
+    for i, path_connections in enumerate(all_path_connections):
+        if path_connections != all_path_connections[0]:
+            return i
+    return 0
 
 
 def _arrange_band_data(distances,
