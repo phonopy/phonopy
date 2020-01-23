@@ -183,7 +183,8 @@ class BandPlot(object):
     def __init__(self, axs):
         """
 
-        axs : Matplotlib axes
+        axs : Matplotlib axes of ImageGrid, optional
+            axs = ImageGrid(fig, 111, nrows_ncols=(1, n), ...)
 
         """
 
@@ -191,46 +192,35 @@ class BandPlot(object):
         self.xscale = None
         self._decorated = False
 
-    def set_xscale(self, frequencies, distances):
-        max_freq = max([np.max(fq) for fq in frequencies])
-        max_dist = distances[-1][-1]
-        self.xscale = max_freq / max_dist * 1.5
-
     def plot(self,
-             frequencies,
              distances,
+             frequencies,
              path_connections,
-             fmt='r-',
-             labels=None):
+             fmt='r-'):
         """Plot one band structure.
 
         If ``labels`` is given, decoration such as horizontal line at freq=0,
         x-label, y-label, and tics are set, which should be done only once.
 
-        frequencies : list of ndarray
-            Phonon frequencies.
-            See the detail in docstring of Phonopy.get_band_structure_dict.
         distances : list of ndarray
             Distances in reciprocal space.
+            See the detail in docstring of Phonopy.get_band_structure_dict.
+        frequencies : list of ndarray
+            Phonon frequencies.
             See the detail in docstring of Phonopy.get_band_structure_dict.
         path_connections : list of ndarray
             This describes band segments are connected or not.
             See the detail in docstring of Phonopy.run_band_structure.
         fmt : str, optional
             Matplotlib format strings. Default is 'r-'.
-        labels : List of str, optional
-            Labels of special points.
-            See the detail in docstring of Phonopy.run_band_structure.
 
         """
 
         if self.xscale is None:
-            self.set_xscale(frequencies, distances)
-        distances_scaled = [d * self.xscale for d in distances]
-        if labels is not None:
-            self.decorate(path_connections, distances_scaled, labels)
+            self.set_xscale_from_data(frequencies, distances)
 
         count = 0
+        distances_scaled = [d * self.xscale for d in distances]
         for d, f, c in zip(distances_scaled,
                            frequencies,
                            path_connections):
@@ -239,9 +229,29 @@ class BandPlot(object):
             if not c:
                 count += 1
 
-    def decorate(self, path_connections, distances_scaled, labels):
+    def set_xscale_from_data(self, frequencies, distances):
+        max_freq = max([np.max(fq) for fq in frequencies])
+        max_dist = distances[-1][-1]
+        self.xscale = max_freq / max_dist * 1.5
+
+    def decorate(self, labels, path_connections, frequencies, distances):
+        """
+
+        labels : List of str, optional
+            Labels of special points.
+            See the detail in docstring of Phonopy.run_band_structure.
+
+        """
+
         if self._decorated:
             raise RuntimeError("Already BandPlot instance is decorated.")
+        else:
+            self._decorated = True
+
+        if self.xscale is None:
+            self.set_xscale_from_data(frequencies, distances)
+
+        distances_scaled = [d * self.xscale for d in distances]
 
         # T T T F F -> [[0, 3], [4, 4]]
         lefts = [0]
@@ -277,7 +287,8 @@ class BandPlot(object):
 
 def band_plot(axs, frequencies, distances, path_connections, labels):
     bp = BandPlot(axs)
-    bp.plot(frequencies, distances, path_connections, labels=labels)
+    bp.decorate(labels, path_connections, frequencies, distances)
+    bp.plot(distances, frequencies, path_connections)
 
 
 def _get_npts(band_paths, npoints, rec_lattice):

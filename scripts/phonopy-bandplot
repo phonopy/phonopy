@@ -391,9 +391,6 @@ def plot(args):
     rc('text', usetex=True)
     from mpl_toolkits.axes_grid1 import ImageGrid
 
-    fmts = ['r-', 'b-', 'g-', 'c-', 'm-', 'y-', 'k-',
-            'r--', 'b--', 'g--', 'c--', 'm--', 'y--', 'k--']
-
     # plt.xlim(distances[0], distances[-1])
     if args.f_max is not None:
         plt.ylim(top=args.f_max)
@@ -408,20 +405,17 @@ def plot(args):
     bands_data = [read_band_yaml(fname) for fname in filenames]
     plots_data = [_arrange_band_data(*band_data) for band_data in bands_data]
 
-    # (labels, path_connections, freq_list, dist_list) = plots_data[0]
-
+    # Check consistency of input band structures
     all_path_connections = [data[1] for data in plots_data]
     wrong_file_i = _find_wrong_path_connections(all_path_connections)
     if wrong_file_i > 0:
         raise RuntimeError("Band path of %s is inconsistent with %s."
                            % (filenames[wrong_file_i], filenames[0]))
 
+    # Decoration of figure
     max_frequencies = [_get_max_frequency(data[2]) for data in plots_data]
-    max_i = np.argmax(max_frequencies)
-    path_connections = plots_data[max_i][1]
-    frequencies = plots_data[max_i][2]
-    distances = plots_data[max_i][3]
-
+    plot_data = plots_data[np.argmax(max_frequencies)]
+    _, path_connections, _, _ = plot_data
     n = len([x for x in path_connections if not x])
     fig = plt.figure()
     axs = ImageGrid(fig, 111,  # similar to subplot(111)
@@ -430,13 +424,13 @@ def plot(args):
                     add_all=True,
                     label_mode="L")
     band_plot = BandPlot(axs)
-    band_plot.set_xscale(frequencies, distances)
+    band_plot.decorate(*plot_data)
 
-    for i, ((l, p, f, d), fmt) in enumerate(zip(plots_data, fmts)):
-        if i == 0:
-            band_plot.plot(f, d, p, fmt=fmt, labels=l)
-        else:
-            band_plot.plot(f, d, p, fmt=fmt)
+    # Plot band structures
+    fmts = ['r-', 'b-', 'g-', 'c-', 'm-', 'y-', 'k-',
+            'r--', 'b--', 'g--', 'c--', 'm--', 'y--', 'k--']
+    for (l, p, f, d), fmt in zip(plots_data, fmts):
+        band_plot.plot(d, f, p, fmt=fmt)
 
     plt.show()
 
