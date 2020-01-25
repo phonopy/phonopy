@@ -37,12 +37,23 @@ from ase.atoms import Atoms
 from hiphive import ClusterSpace, StructureContainer, ForceConstantPotential
 from hiphive.fitting import Optimizer
 from hiphive.cutoffs import estimate_maximum_cutoff
+from hiphive.input_output.logging_tools import set_config
+set_config(level=30)
+
+
+def phonopy_atoms_to_ase(atoms_phonopy):
+    ase_atoms = Atoms(cell=atoms_phonopy.cell,
+                      scaled_positions=atoms_phonopy.scaled_positions,
+                      numbers=atoms_phonopy.numbers,
+                      pbc=True)
+    return ase_atoms
 
 
 def get_fc2(supercell,
             primitive,
             displacements,
             forces,
+            symprec,
             atom_list=None,
             options=None,
             log_level=0):
@@ -90,6 +101,7 @@ def run_hiphive(supercell,
                 displacements,
                 forces,
                 options,
+                symprec,
                 log_level):
     """Run hiphive
 
@@ -110,48 +122,61 @@ def run_hiphive(supercell,
 
     """
 
-    if options is None:
-        options_dict = {}
-    else:
-        options_dict = _decode_options(options)
+    ase_supercell = phonopy_atoms_to_ase(supercell)
+    ase_prim = phonopy_atoms_to_ase(primitive)
 
-    ase_supercell = Atoms(cell=supercell.cell,
-                          scaled_positions=supercell.scaled_positions,
-                          numbers=supercell.numbers,
-                          pbc=True)
+    # setup training structures
     structures = []
     for d, f in zip(displacements, forces):
         structure = ase_supercell.copy()
         structure.new_array('displacements', d)
         structure.new_array('forces', f)
-        structure.calc = None
         structures.append(structure)
 
+    # parse options
+    if options is None:
+        options_dict = {}
+    else:
+        options_dict = _decode_options(options)
+
+    # select cutoff
+    max_cutoff = estimate_maximum_cutoff(ase_supercell) - 1e-5
     if 'cutoff' in options_dict:
         cutoff = options_dict['cutoff']
+        if cutoff > max_cutoff:
+            raise ValueError('Cutoff {:.4f} is larger than maximum allowed '
+                             'cutoff, {:.4f}, for the given supercell.'
+                             '\nDecrease cutoff or provide larger supercells.'
+                             .format(cutoff, max_cutoff))
     else:
-        cutoff = estimate_maximum_cutoff(ase_supercell) - 1e-5
-    cutoffs = [cutoff, ]
-    cs = ClusterSpace(structures[0], cutoffs)
+        cutoff = max_cutoff
 
-    print(cs)
+    # setup ClusterSpace
+    cutoffs = [cutoff]
+    cs = ClusterSpace(ase_prim, cutoffs, symprec=symprec)
     cs.print_orbits()
 
     sc = StructureContainer(cs)
     for structure in structures:
         sc.add_structure(structure)
-    print(sc)
+    n_rows, n_cols = sc.data_shape
+    if n_rows < n_cols:
+        raise ValueError('Fitting problem is under-determined.'
+                         '\nProvide more structures or decrease cutoff.')
 
-    opt = Optimizer(sc.get_fit_data())
+    # Estimate error
+    opt = Optimizer(sc.get_fit_data(), train_size=0.75)
     opt.train()
     print(opt)
-
     print('RMSE train : {:.4f}'.format(opt.rmse_train))
     print('RMSE test  : {:.4f}'.format(opt.rmse_test))
 
-    fcp = ForceConstantPotential(cs, opt.parameters)
-    print(fcp)
+    # Final train
+    opt = Optimizer(sc.get_fit_data(), train_size=1.0)
+    opt.train()
 
+    # get force constants
+    fcp = ForceConstantPotential(cs, opt.parameters)
     fcs = fcp.get_force_constants(ase_supercell)
     fc2 = fcs.get_fc_array(order=2)
 
