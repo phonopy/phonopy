@@ -54,7 +54,6 @@ The following features of phonopy are highlighted:
   :ref:`Quantu ESPRESSO <qe_interface>`,
   :ref:`SIESTA <siesta_interface>`,
   :ref:`Elk <elk_interface>`,
-  :ref:`FHI-aims <FHI_aims_interface>`,
   :ref:`WIEN2k <wien2k_interface>`,
   :ref:`CRYSTAL <crystal_interface>`,
   :ref:`DFTB+ <dftbp_interface>`,
