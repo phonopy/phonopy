@@ -1369,6 +1369,11 @@ class PhonopySettings(Settings):
 
     def set_include_all(self, include_all):
         self._include_all = include_all
+        self._include_fc = True
+        self._include_fs = True
+        self._include_bec = True
+        self._include_eps = True
+        self._include_disp = True
 
     def get_include_all(self):
         return self._include_all
