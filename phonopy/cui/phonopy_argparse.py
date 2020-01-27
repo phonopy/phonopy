@@ -129,6 +129,12 @@ def get_parser():
         is_projected_thermal_properties=False,
         is_trigonal_displacements=False,
         is_wien2k_p1=False,
+        include_fc=False,
+        include_fs=False,
+        include_bec=False,
+        include_eps=False,
+        include_disp=False,
+        include_all=False,
         irreps_qpoint=None,
         lapack_solver=False,
         loglevel=None,
@@ -339,7 +345,7 @@ def get_parser():
         help="Include displacements in final phonopy.yaml")
     parser.add_argument(
         "--include-all", dest="include_all", action="store_true",
-        help="Include all possible data in final phonopy.yaml")
+        help="Include all output file data in final phonopy.yaml")
     # parser.add_argument(
     #     "--lapack-solver", dest="lapack_solver", action="store_true",
     #     help=("Use Lapack via Lapacke for solving phonons. This "
