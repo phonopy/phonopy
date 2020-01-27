@@ -460,7 +460,7 @@ class ConfParser(object):
             if freq_factor:
                 self._confs['frequency_conversion_factor'] = freq_factor
 
-        if 'frequency_scale_factor' in self._args:
+        if 'frequency_scale_factor' in arg_list:
             freq_scale = self._args.frequency_scale_factor
             if freq_scale is not None:
                 self._confs['frequency_scale_factor'] = freq_scale
@@ -592,11 +592,11 @@ class ConfParser(object):
                 symtol = self._args.symmetry_tolerance
                 self._confs['symmetry_tolerance'] = symtol
 
-        if 'temperature' in self._args:
+        if 'temperature' in arg_list:
             if self._args.temperature is not None:
                 self._confs['temperature'] = self._args.temperature
 
-        if 'temperatures' in self._args:
+        if 'temperatures' in arg_list:
             if self._args.temperatures is not None:
                 self._confs['temperatures'] = " ".join(self._args.temperatures)
 
@@ -1128,6 +1128,12 @@ class PhonopySettings(Settings):
         self._is_thermal_distances = False
         self._is_thermal_properties = False
         self._is_projected_thermal_properties = False
+        self._include_fc = False
+        self._include_fs = False
+        self._include_bec = False
+        self._include_eps = False
+        self._include_disp = False
+        self._include_all = False
         self._lapack_solver = False
         self._mesh_shift = None
         self._mesh_format = 'yaml'
@@ -1330,6 +1336,42 @@ class PhonopySettings(Settings):
 
     def get_is_thermal_properties(self):
         return self._is_thermal_properties
+
+    def set_include_force_constants(self, include_force_constants):
+        self._include_fc = include_force_constants
+
+    def get_include_force_constants(self):
+        return self._include_fc
+
+    def set_include_force_sets(self, include_force_sets):
+        self._include_fs = include_force_sets
+
+    def get_include_force_sets(self):
+        return self._include_fs
+
+    def set_include_born_effective_charge(self, include_born_effective_charge):
+        self._include_bec = include_born_effective_charge
+
+    def get_include_born_effective_charge(self):
+        return self._include_bec
+
+    def set_include_dielectric_constant(self, include_dielectric_constant):
+        self._include_eps = include_dielectric_constant
+
+    def get_include_dielectric_constant(self):
+        return self._include_eps
+
+    def set_include_displacements(self, include_displacements):
+        self._include_disp = include_displacements
+
+    def get_include_displacements(self):
+        return self._include_disp
+
+    def set_include_all(self, include_all):
+        self._include_all = include_all
+
+    def get_include_all(self):
+        return self._include_all
 
     def set_lapack_solver(self, lapack_solver):
         self._lapack_solver = lapack_solver
@@ -1689,6 +1731,31 @@ class PhonopyConfParser(ConfParser):
             if self._args.lapack_solver:
                 self._confs['lapack_solver'] = '.true.'
 
+        # Select yaml summary contents
+        if 'include_fc' in arg_list:
+            if self._args.include_fc:
+                self._confs['include_fc'] = '.true.'
+
+        if 'include_fs' in arg_list:
+            if self._args.include_fs:
+                self._confs['include_fs'] = '.true.'
+
+        if 'include_bec' in arg_list:
+            if self._args.include_bec:
+                self._confs['include_bec'] = '.true.'
+
+        if 'include_eps' in arg_list:
+            if self._args.include_eps:
+                self._confs['include_eps'] = '.true.'
+
+        if 'include_disp' in arg_list:
+            if self._args.include_disp:
+                self._confs['include_disp'] = '.true.'
+
+        if 'include_all' in arg_list:
+            if self._args.include_all:
+                self._confs['include_all'] = '.true.'
+
     def _parse_conf(self):
         self.parse_conf()
         confs = self._confs
@@ -1929,6 +1996,32 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'lapack_solver':
                 if confs['lapack_solver'].lower() == '.true.':
                     self.set_parameter('lapack_solver', True)
+
+            # Select yaml summary contents
+            if conf_key == 'include_fc':
+                if confs['include_fc'].lower() == '.true.':
+                    self.set_parameter('include_fc', True)
+
+            if conf_key == 'include_fs':
+                if confs['include_fs'].lower() == '.true.':
+                    self.set_parameter('include_fs', True)
+
+            if conf_key == 'include_bec':
+                if confs['include_bec'].lower() == '.true.':
+                    self.set_parameter('include_bec', True)
+
+            if conf_key == 'include_eps':
+                if confs['include_eps'].lower() == '.true.':
+                    self.set_parameter('include_eps', True)
+
+            if conf_key == 'include_disp':
+                if confs['include_disp'].lower() == '.true.':
+                    self.set_parameter('include_disp', True)
+
+            if conf_key == 'include_all':
+                if confs['include_all'].lower() == '.true.':
+                    self.set_parameter('include_all', True)
+
 
     def _parse_conf_modulation(self, conf_modulation):
         modulation = {}
@@ -2246,3 +2339,24 @@ class PhonopyConfParser(ConfParser):
         # Use Lapack solver via Lapacke
         if 'lapack_solver' in params:
             self._settings.set_lapack_solver(params['lapack_solver'])
+
+        # Select yaml summary contents
+        if 'include_fc' in params:
+            self._settings.set_include_force_constants(params['include_fc'])
+
+        if 'include_fs' in params:
+            self._settings.set_include_force_sets(params['include_fs'])
+
+        if 'include_bec' in params:
+            self._settings.set_include_born_effective_charge(params['include_bec'])
+
+        if 'include_eps' in params:
+            self._settings.set_include_dielectric_constant(params['include_eps'])
+
+        if 'include_disp' in params:
+            self._settings.set_include_displacements(params['include_disp'])
+
+        if 'include_all' in params:
+            self._settings.set_include_all(params['include_all'])
+
+
