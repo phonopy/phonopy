@@ -165,21 +165,22 @@ def finalize_phonopy(log_level,
                      phonopy_conf,
                      phonon,
                      interface_mode,
-                     write_fs=False,
-                     write_displacements=False,
-                     write_fc=False,
-                     write_epsilon=False,
-                     write_bec=False,
                      filename="phonopy.yaml"):
     units = get_default_physical_units(interface_mode)
+
+    settings = phonopy_conf.get_settings()
+
+    yaml_settings = {
+        'force_sets': settings.get_include_force_sets(),
+        'force_constants': settings.get_include_force_constants(),
+        'born_effective_charge': settings.get_include_born_effective_charge(),
+        'dielectric_constant': settings.get_include_dielectric_constant(),
+        'displacements': settings.get_include_displacements(),
+    }
+
     phpy_yaml = PhonopyYaml(configuration=phonopy_conf.get_configures(),
                             physical_units=units,
-                            settings={
-                                'force_sets': write_fs,
-                                'force_constants': write_fc,
-                                'born_effective_charge': write_bec,
-                                'dielectric_constant': write_epsilon,
-                                'displacements': write_displacements})
+                            settings=yaml_settings)
     phpy_yaml.set_phonon_info(phonon)
     with open(filename, 'w') as w:
         w.write(str(phpy_yaml))
@@ -359,11 +360,12 @@ def write_displacements_files(phonon,
         print("  \"disp.yaml\" is still supported to read, but will be "
               "deprecated.")
 
+    phonopy_conf.settings.set_include_displacements()
+
     finalize_phonopy(log_level,
                      phonopy_conf,
                      phonon,
                      interface_mode,
-                     write_displacements=True,
                      filename="phonopy_disp.yaml")
 
 
@@ -1374,27 +1376,4 @@ else:
 # Phonopy finalization #
 ########################
 
-if args.include_all:
-    include_fc = True
-    include_eps = True
-    include_bec = True
-    include_fs = True
-    include_disp = True
-else:
-    include_fc = args.include_fc
-    include_eps = args.include_eps
-    include_bec = args.include_bec
-    include_fs = args.include_fs
-    include_disp = args.include_disp
-
-finalize_phonopy(
-        log_level,
-        phonopy_conf,
-        phonon,
-        interface_mode,
-        write_fs=include_fs,
-        write_fc=include_fc,
-        write_bec=include_bec,
-        write_epsilon=include_eps,
-        write_displacements=include_disp
-)
+finalize_phonopy( log_level, phonopy_conf, phonon, interface_mode)
