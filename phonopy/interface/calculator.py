@@ -118,7 +118,7 @@ def write_supercells_with_displacements(interface_mode,
         from phonopy.interface.turbomole import (
             write_supercells_with_displacements)
         write_supercells_with_displacements(supercell, cells_with_disps)
-    elif interface_mode is 'aims':
+    elif interface_mode == 'aims':
         from phonopy.interface.aims import (
             write_supercells_with_displacements)
         write_supercells_with_displacements(supercell, cells_with_disps)
