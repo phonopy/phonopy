@@ -102,7 +102,6 @@
 <li><a class="reference internal" href="#tutorials-for-calculators">Tutorials for calculators</a><ul>
 <li><a class="reference internal" href="#force-calculators">Force calculators</a></li>
 <li><a class="reference internal" href="#vasp-dfpt-force-constants">VASP DFPT force constants</a></li>
-<li><a class="reference internal" href="#for-fhi-aims">For FHI-aims</a></li>
 </ul>
 </li>
 </ul>
@@ -151,7 +150,7 @@
   <div class="section" id="interfaces-to-calculators">
 <span id="calculator-interfaces"></span><h1>Interfaces to calculators<a class="headerlink" href="#interfaces-to-calculators" title="Permalink to this headline">¶</a></h1>
 <p>The interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT, Elk,
-SIESTA, CRYSTAL, and TURBOMOLE are built in to the usual phonopy command. See the
+SIESTA, CRYSTAL, DFTB+, TURBOMOLE, and FHI-AIMS are built in to the usual phonopy command. See the
 command options and how to invoke each of them at
 <a class="reference internal" href="command-options.html#force-calculators"><span class="std std-ref">Choice of force calculator</span></a>. <a class="reference internal" href="external-tools.html#external-tools-phonolammps"><span class="std std-ref">LAMMPS interface</span></a> is provided as an external tool by Abel
 Carreras.</p>
@@ -169,6 +168,7 @@ Carreras.</p>
 <span class="n">CRYSTAL</span>   <span class="o">|</span> <span class="n">Angstrom</span>   <span class="n">AMU</span>           <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span>   <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span><span class="o">^</span><span class="mi">2</span>
 <span class="n">TURBOMOLE</span> <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">hartree</span><span class="o">/</span><span class="n">au</span>    <span class="n">hartree</span><span class="o">/</span><span class="n">au</span><span class="o">^</span><span class="mi">2</span>
 <span class="n">CP2K</span>      <span class="o">|</span> <span class="n">Angstrom</span>   <span class="n">AMU</span>           <span class="n">hartree</span><span class="o">/</span><span class="n">au</span>    <span class="n">hartree</span><span class="o">/</span><span class="n">Angstrom</span><span class="o">.</span><span class="n">au</span>
+<span class="n">FHI</span><span class="o">-</span><span class="n">AIMS</span>  <span class="o">|</span> <span class="n">Angstrom</span>   <span class="n">AMU</span>           <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span>   <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span><span class="o">^</span><span class="mi">2</span>
 </pre></div>
 </div>
 <p>For these sets of physical properties, phonon frequency is calculated
@@ -190,6 +190,7 @@ used as shown below:</p>
 <span class="n">DFTB</span><span class="o">+</span>     <span class="o">|</span> <span class="n">geo</span><span class="o">.</span><span class="n">gen</span>
 <span class="n">TURBOMOLE</span> <span class="o">|</span> <span class="n">control</span>
 <span class="n">CP2K</span>      <span class="o">|</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">inp</span>
+<span class="n">FHI</span><span class="o">-</span><span class="n">AIMS</span>  <span class="o">|</span> <span class="n">geometry</span><span class="o">.</span><span class="ow">in</span>
 </pre></div>
 </div>
 </div>
@@ -210,6 +211,7 @@ shown below:</p>
 <span class="n">DFTB</span><span class="o">+</span>     <span class="o">|</span> <span class="mf">0.01</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
 <span class="n">TURBOMOLE</span> <span class="o">|</span> <span class="mf">0.02</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
 <span class="n">CP2K</span>      <span class="o">|</span> <span class="mf">0.01</span> <span class="n">Angstrom</span>
+<span class="n">FHI</span><span class="o">-</span><span class="n">AIMS</span>  <span class="o">|</span> <span class="mf">0.01</span> <span class="n">Angstrom</span>
 </pre></div>
 </div>
 </div>
@@ -225,6 +227,7 @@ shown below:</p>
 <span class="n">DFTB</span><span class="o">+</span>     <span class="o">|</span> <span class="mf">154.10794</span>
 <span class="n">TURBOMOLE</span> <span class="o">|</span> <span class="mf">154.10794</span>
 <span class="n">CP2K</span>      <span class="o">|</span> <span class="mf">112.10516</span>
+<span class="n">FHI</span><span class="o">-</span><span class="n">AIMS</span>  <span class="o">|</span> <span class="mf">15.633302</span>
 </pre></div>
 </div>
 </div>
@@ -240,6 +243,7 @@ shown below:</p>
 <span class="n">DFTB</span><span class="o">+</span>     <span class="o">|</span> <span class="mf">14.399652</span>
 <span class="n">TURBOMOLE</span> <span class="o">|</span> <span class="mi">1</span>
 <span class="n">CP2K</span>      <span class="o">|</span> <span class="kc">None</span> <span class="p">(</span><span class="n">N</span><span class="o">/</span><span class="n">A</span><span class="p">)</span>
+<span class="n">FHI</span><span class="o">-</span><span class="n">AIMS</span>  <span class="o">|</span> <span class="mf">14.399652</span>
 </pre></div>
 </div>
 </div>
@@ -261,6 +265,7 @@ shown below:</p>
 <li class="toctree-l1"><a class="reference internal" href="dftb+.html">DFTB+ &amp; phonopy calculation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="turbomole.html">TURBOMOLE &amp; phonopy calculation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cp2k.html">CP2K &amp; phonopy calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="aims.html">FHI-aims &amp; phonopy calculations</a></li>
 </ul>
 </div>
 </div>
@@ -272,17 +277,6 @@ creates <code class="docutils literal notranslate"><span class="pre">FORCE_CONST
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
-</ul>
-</div>
-</div>
-<div class="section" id="for-fhi-aims">
-<h3>For FHI-aims<a class="headerlink" href="#for-fhi-aims" title="Permalink to this headline">¶</a></h3>
-<p>For FHI-aims, there is a special command, <code class="docutils literal notranslate"><span class="pre">phonopy-FHI-aims</span></code>. This
-tool is maintained by FHI-aims community and questions may be sent to the
-FHI-aims mailing list.</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="FHI-aims.html">FHI-aims &amp; phonopy calculations</a></li>
 </ul>
 </div>
 </div>

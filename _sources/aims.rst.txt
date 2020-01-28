@@ -3,4 +3,4 @@
 FHI-aims & phonopy calculations
 ===============================
 
-Currently FHI-aims interface is not available.
+See `example/diamond-FHI-aims` in the `phonopy` source.
