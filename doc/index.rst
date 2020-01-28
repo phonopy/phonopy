@@ -59,6 +59,7 @@ The following features of phonopy are highlighted:
   :ref:`DFTB+ <dftbp_interface>`,
   :ref:`TURBOMOLE <turbomole_interface>`,
   :ref:`CP2K <cp2k_interface>`,
+  :ref:`FHI-aims <FHI_aims_interface>`,
   :ref:`LAMMPS (external) <external_tools_phonolammps>`
 - :ref:`Phonopy API for Python <phonopy_module>`
 
