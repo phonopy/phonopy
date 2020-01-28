@@ -68,6 +68,7 @@ def get_parser():
         description="Phonopy command-line-tool")
     parser.set_defaults(
         abinit_mode=False,
+        aims_mode=False,
         anime=None,
         band_format=None,
         band_indices=None,
@@ -175,6 +176,9 @@ def get_parser():
     parser.add_argument(
         "--abinit", dest="abinit_mode", action="store_true",
         help="Invoke Abinit mode")
+    parser.add_argument(
+        "--aims", dest="aims_mode", action="store_true",
+        help="Invoke FHI-aims mode")
     parser.add_argument(
         "--alm", dest="use_alm", action="store_true",
         help="Use ALM for generating force constants")

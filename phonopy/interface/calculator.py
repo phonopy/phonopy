@@ -49,7 +49,7 @@ def get_interface_mode(args):
     """
 
     calculator_list = ['wien2k', 'abinit', 'qe', 'elk', 'siesta', 'cp2k',
-                       'crystal', 'vasp', 'dftbp', 'turbomole']
+                       'crystal', 'vasp', 'dftbp', 'turbomole', 'aims']
     for calculator in calculator_list:
         mode = "%s_mode" % calculator
         if mode in args and args.__dict__[mode]:
@@ -118,6 +118,10 @@ def write_supercells_with_displacements(interface_mode,
         from phonopy.interface.turbomole import (
             write_supercells_with_displacements)
         write_supercells_with_displacements(supercell, cells_with_disps)
+    elif interface_mode is 'aims':
+        from phonopy.interface.aims import (
+            write_supercells_with_displacements)
+        write_supercells_with_displacements(supercell, cells_with_disps)
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -181,7 +185,10 @@ def read_crystal_structure(filename=None,
         from phonopy.interface.turbomole import read_turbomole
         unitcell = read_turbomole(cell_filename)
         return unitcell, (cell_filename,)
-
+    elif interface_mode == 'aims':
+        from phonopy.interface.aims import read_aims
+        unitcell = read_aims(cell_filename)
+        return unitcell, (cell_filename,)
 
 def get_default_cell_filename(interface_mode):
     if interface_mode is None or interface_mode == 'vasp':
@@ -202,6 +209,8 @@ def get_default_cell_filename(interface_mode):
         return "geo.gen"
     elif interface_mode == 'turbomole':
         return "control"
+    elif interface_mode == 'aims':
+        return "geometry.in"
     else:
         return None
 
@@ -225,6 +234,8 @@ def get_default_supercell_filename(interface_mode):
         return "geo.genS"
     elif interface_mode == 'turbomole':
         return None  # TURBOMOLE interface generates directories with inputs
+    elif interface_mode == 'aims':
+        return "geometry.in.supercell"
     else:
         return None
 
@@ -251,6 +262,7 @@ def get_default_physical_units(interface_mode=None):
     DFTB+         : hartree, au,        AMU          hartree/au
     TURBOMOLE     : hartree, au,        AMU,         hartree/au
     CP2K          : hartree, Angstrom,  AMU,         hartree/au
+    FHI-aims      : eV,      Angstrom,  AMU,         eV/Angstrom
 
     """
 
@@ -266,7 +278,7 @@ def get_default_physical_units(interface_mode=None):
              'force_constants_unit': None,
              'length_unit': None}
 
-    if interface_mode is None or interface_mode == 'vasp':
+    if interface_mode is None or interface_mode in ('vasp', 'aims'):
         units['factor'] = VaspToTHz
         units['nac_factor'] = Hartree * Bohr
         units['distance_to_A'] = 1.0
@@ -384,7 +396,7 @@ def create_FORCE_SETS(interface_mode,
         num_displacements += 1
 
     if interface_mode in (None, 'vasp', 'abinit', 'elk', 'qe', 'siesta',
-                          'cp2k', 'crystal', 'dftbp', 'turbomole'):
+                          'cp2k', 'crystal', 'dftbp', 'turbomole', 'aims'):
         force_sets = get_force_sets(interface_mode,
                                     num_atoms,
                                     num_displacements,
@@ -464,6 +476,8 @@ def get_force_sets(interface_mode,
         from phonopy.interface.dftbp import parse_set_of_forces
     elif interface_mode == 'turbomole':
         from phonopy.interface.turbomole import parse_set_of_forces
+    elif interface_mode == 'aims':
+        from phonopy.interface.aims import parse_set_of_forces
     else:
         return []
 
