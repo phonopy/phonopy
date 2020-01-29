@@ -360,7 +360,7 @@ files.
 CRYSTAL interface
 ^^^^^^^^^^^^^^^^^
 
-``FORCE_SETS`` file is created from ``phonopy-disp.yaml`` and CRYSTAL output
+``FORCE_SETS`` file is created from ``phonopy_disp.yaml`` and CRYSTAL output
 files.
 
 ::
@@ -372,7 +372,7 @@ files.
 TURBOMOLE interface
 ^^^^^^^^^^^^^^^^^^^^
 
-``FORCE_SETS`` file is created from ``phonopy-disp.yaml`` and TURBOMOLE output
+``FORCE_SETS`` file is created from ``phonopy_disp.yaml`` and TURBOMOLE output
 files.
 
 ::
