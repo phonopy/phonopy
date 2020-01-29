@@ -1557,7 +1557,7 @@ This is more convenient than keeping track of the ``BORN`` file created by the u
 ``displacements``
 ^^^^^^^^^^^^^^^
 
-The ``--include-eps`` flag or setting ``INCLUDE_EPS = .TRUE.`` will cause
+The ``--include-disp`` flag or setting ``INCLUDE_EPS = .TRUE.`` will cause
 displacements data (if available) to be written as an entry in the yaml summary file.
 
 This is set by default when the ``phonopy`` script is run in ``displacements`` mode.
@@ -1568,10 +1568,3 @@ This is set by default when the ``phonopy`` script is run in ``displacements`` m
 
 All available data covered by the other ``include`` flags can be written to the yaml
 summary file using the ``--include-all`` flag or by setting ``INCLUDE_ALL = .TRUE.``.
-
-
-
-
-
-
-

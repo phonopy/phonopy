@@ -2363,5 +2363,3 @@ class PhonopyConfParser(ConfParser):
 
         if 'include_all' in params:
             self._settings.set_include_all(params['include_all'])
-
-
