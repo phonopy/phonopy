@@ -1536,8 +1536,8 @@ file.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``--include-born`` flag or setting ``INCLUDE_BORN = .TRUE.`` will cause
-the born effective chargers and dielectric tensor (if available) to be 
-written as an entry in the yaml summary file. The matrix will only be written
+the born effective charges and dielectric tensor (if available) to be 
+written as an entry in the yaml summary file. The values will only be written
 if non-analytical term correction is set with the ``--nac`` flag or by 
 setting ``NAC = .TRUE.``.
 

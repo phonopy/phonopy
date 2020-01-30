@@ -1375,4 +1375,5 @@ else:
 ########################
 # Phonopy finalization #
 ########################
-finalize_phonopy(log_level, phonopy_conf, phonon, interface_mode)
+
+finalize_phonopy( log_level, phonopy_conf, phonon, interface_mode)
