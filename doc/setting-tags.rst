@@ -1532,24 +1532,14 @@ the force sets (if available) to be written as an entry in the yaml summary
 file.
 
 
-``dielectric constant``
-^^^^^^^^^^^^^^^
+``dielectric constant`` and ``born effective charge``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``--include-eps`` flag or setting ``INCLUDE_EPS = .TRUE.`` will cause
-the dielectric tensor (if available) to be written as an entry in the yaml summary 
-file. The matrix will only be written if non-analytical term correction is set 
-with the ``--nac`` flag or by setting ``NAC = .TRUE.``.
-
-This is more convenient than keeping track of the ``BORN`` file created by the user.
-
-
-``born effective charge``
-^^^^^^^^^^^^^^^
-
-The ``--include-bec`` flag or setting ``INCLUDE_BEC = .TRUE.`` will cause
-the born effective charges  (if available) to be written as an entry in the yaml
-summary file. The data will only be written if non-analytical term correction is set 
-with the ``--nac`` flag or by setting ``NAC = .TRUE.``.
+The ``--include-born`` flag or setting ``INCLUDE_BORN = .TRUE.`` will cause
+the born effective chargers and dielectric tensor (if available) to be 
+written as an entry in the yaml summary file. The matrix will only be written
+if non-analytical term correction is set with the ``--nac`` flag or by 
+setting ``NAC = .TRUE.``.
 
 This is more convenient than keeping track of the ``BORN`` file created by the user.
 
@@ -1557,7 +1547,7 @@ This is more convenient than keeping track of the ``BORN`` file created by the u
 ``displacements``
 ^^^^^^^^^^^^^^^
 
-The ``--include-disp`` flag or setting ``INCLUDE_EPS = .TRUE.`` will cause
+The ``--include-disp`` flag or setting ``INCLUDE_DISP = .TRUE.`` will cause
 displacements data (if available) to be written as an entry in the yaml summary file.
 
 This is set by default when the ``phonopy`` script is run in ``displacements`` mode.

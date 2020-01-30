@@ -1361,6 +1361,13 @@ class PhonopySettings(Settings):
     def get_include_dielectric_constant(self):
         return self._include_eps
 
+    def set_include_born(self, include_born):
+        self.set_include_dielectric_constant(include_born)
+        self.set_include_born_effective_charge(include_born)
+
+    def get_include_born(self, include_born):
+        return (self._include_eps and self._include_bec)
+
     def set_include_displacements(self, include_displacements):
         self._include_disp = include_displacements
 
@@ -1745,13 +1752,17 @@ class PhonopyConfParser(ConfParser):
             if self._args.include_fs:
                 self._confs['include_fs'] = '.true.'
 
-        if 'include_bec' in arg_list:
-            if self._args.include_bec:
-                self._confs['include_bec'] = '.true.'
+        #if 'include_bec' in arg_list:
+        #    if self._args.include_bec:
+        #        self._confs['include_bec'] = '.true.'
 
-        if 'include_eps' in arg_list:
-            if self._args.include_eps:
-                self._confs['include_eps'] = '.true.'
+        #if 'include_eps' in arg_list:
+        #    if self._args.include_eps:
+        #        self._confs['include_eps'] = '.true.'
+
+        if 'include_born' in arg_list:
+            if self._args.include_born:
+                self._confs['include_born'] = '.true.'
 
         if 'include_disp' in arg_list:
             if self._args.include_disp:
@@ -2011,13 +2022,17 @@ class PhonopyConfParser(ConfParser):
                 if confs['include_fs'].lower() == '.true.':
                     self.set_parameter('include_fs', True)
 
-            if conf_key == 'include_bec':
-                if confs['include_bec'].lower() == '.true.':
-                    self.set_parameter('include_bec', True)
+            #if conf_key == 'include_bec':
+            #    if confs['include_bec'].lower() == '.true.':
+            #        self.set_parameter('include_bec', True)
 
-            if conf_key == 'include_eps':
-                if confs['include_eps'].lower() == '.true.':
-                    self.set_parameter('include_eps', True)
+            #if conf_key == 'include_eps':
+            #    if confs['include_eps'].lower() == '.true.':
+            #        self.set_parameter('include_eps', True)
+
+            if conf_key == 'include_born':
+                if confs['include_born'].lower() == '.true.':
+                    self.set_parameter('include_born', True)
 
             if conf_key == 'include_disp':
                 if confs['include_disp'].lower() == '.true.':
@@ -2352,11 +2367,14 @@ class PhonopyConfParser(ConfParser):
         if 'include_fs' in params:
             self._settings.set_include_force_sets(params['include_fs'])
 
-        if 'include_bec' in params:
-            self._settings.set_include_born_effective_charge(params['include_bec'])
+        #if 'include_bec' in params:
+        #    self._settings.set_include_born_effective_charge(params['include_bec'])
 
-        if 'include_eps' in params:
-            self._settings.set_include_dielectric_constant(params['include_eps'])
+        #if 'include_eps' in params:
+        #    self._settings.set_include_dielectric_constant(params['include_eps'])
+
+        if 'include_born' in params:
+            self._settings.set_include_born(params['include_born'])
 
         if 'include_disp' in params:
             self._settings.set_include_displacements(params['include_disp'])

@@ -131,8 +131,7 @@ def get_parser():
         is_wien2k_p1=False,
         include_fc=False,
         include_fs=False,
-        include_bec=False,
-        include_eps=False,
+        include_born=False,
         include_disp=False,
         include_all=False,
         irreps_qpoint=None,
@@ -330,22 +329,25 @@ def get_parser():
         help="A q-point where characters of irreps are calculated")
     parser.add_argument(
         "--include-fc", dest="include_fc", action="store_true",
-        help="Include force constants in final phonopy.yaml")
+        help="Include force constants in phonopy.yaml")
     parser.add_argument(
         "--include-fs", dest="include_fs", action="store_true",
-        help="Include force sets in final phonopy.yaml")
+        help="Include force sets in phonopy.yaml")
+    #parser.add_argument(
+    #    "--include-bec", dest="include_bec", action="store_true",
+    #    help="Include born effective charge in phonopy.yaml")
+    #parser.add_argument(
+    #    "--include-eps", dest="include_eps", action="store_true",
+    #    help="Include dielectric tensor in phonopy.yaml")
     parser.add_argument(
-        "--include-bec", dest="include_bec", action="store_true",
-        help="Include born effective charge in final phonopy.yaml")
-    parser.add_argument(
-        "--include-eps", dest="include_eps", action="store_true",
-        help="Include dielectric tensor in final phonopy.yaml")
+        "--include-born", dest="include_born", action="store_true",
+        help="Include born effective charge and dielectric tensor in phonopy.yaml")
     parser.add_argument(
         "--include-disp", dest="include_disp", action="store_true",
-        help="Include displacements in final phonopy.yaml")
+        help="Include displacements in phonopy.yaml")
     parser.add_argument(
         "--include-all", dest="include_all", action="store_true",
-        help="Include all output file data in final phonopy.yaml")
+        help="Include all output file data in phonopy.yaml")
     # parser.add_argument(
     #     "--lapack-solver", dest="lapack_solver", action="store_true",
     #     help=("Use Lapack via Lapacke for solving phonons. This "
