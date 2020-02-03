@@ -30,7 +30,7 @@ parameter is not needed.
    interface creates a subdirectory with ``control`` and ``coord`` files.
    Files in ``supercell`` contain the perfect supercell. The files in 
    ``supercell-xxx`` (``xxx`` are numbers) contain the supercells with displacements.
-   File ``phonopy-disp.yaml`` is also generated, containing information about the
+   File ``phonopy_disp.yaml`` is also generated, containing information about the
    supercell and the displacements.
 
    In the case of the Si example, subdirectory ``supercell-001`` will be created.
@@ -57,7 +57,7 @@ parameter is not needed.
 
    Here ``supercell-*`` directories contain the TURBOMOLE output files 
    from the force calculations (only the file ``gradient`` is required). 
-   To run this command, ``phonopy-disp.yaml`` has to be located in the current
+   To run this command, ``phonopy_disp.yaml`` has to be located in the current
    directory because the information on atomic displacements stored in
    this file are used to generate ``FORCE_SETS``. See some more
    detail at :ref:`turbomole_force_sets_option`.
