@@ -168,7 +168,7 @@ def finalize_phonopy(log_level,
                      filename="phonopy.yaml"):
     units = get_default_physical_units(interface_mode)
 
-    settings = phonopy_conf.get_settings()
+    settings = phonopy_conf.settings
 
     yaml_settings = {
         'force_sets': settings.get_include_force_sets(),
@@ -178,7 +178,7 @@ def finalize_phonopy(log_level,
         'displacements': settings.get_include_displacements(),
     }
 
-    phpy_yaml = PhonopyYaml(configuration=phonopy_conf.get_configures(),
+    phpy_yaml = PhonopyYaml(configuration=phonopy_conf.confs,
                             physical_units=units,
                             settings=yaml_settings)
     phpy_yaml.set_phonon_info(phonon)
@@ -360,7 +360,7 @@ def write_displacements_files(phonon,
         print("  \"disp.yaml\" is still supported to read, but will be "
               "deprecated.")
 
-    phonopy_conf.settings.set_include_displacements()
+    phonopy_conf.settings.set_include_displacements(True)
 
     finalize_phonopy(log_level,
                      phonopy_conf,
@@ -475,10 +475,10 @@ if args.force_constants:
 if len(args.conf_file) > 0:
     file_exists(args.conf_file[0], log_level)
     phonopy_conf = PhonopyConfParser(filename=args.conf_file[0], args=args)
-    settings = phonopy_conf.get_settings()
+    settings = phonopy_conf.settings
 else:
     phonopy_conf = PhonopyConfParser(args=args)
-    settings = phonopy_conf.get_settings()
+    settings = phonopy_conf.settings
 
 is_band_auto = (type(settings.get_band_paths()) is str and
                 settings.get_band_paths() == 'auto')

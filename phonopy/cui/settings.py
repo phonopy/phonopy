@@ -364,11 +364,19 @@ class ConfParser(object):
         self._args = args
         self._filename = filename
 
-    def get_configures(self):
+    @property
+    def confs(self):
         return self._confs
 
-    def get_settings(self):
+    def get_configures(self):
+        return self.confs
+
+    @property
+    def settings(self):
         return self._settings
+
+    def get_settings(self):
+        return self.settings
 
     def setting_error(self, message):
         print(message)
