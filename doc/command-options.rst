@@ -39,6 +39,11 @@ tags:
 * ``--gv-delta-q`` (``GV_DELTA_Q``)
 * ``--hdf5`` (``HDF5 = .TRUE.``)
 * ``--irreps`` (``IRREPS``)
+* ``--include-fc`` (``INCLUDE_FC = .TRUE.``)
+* ``--include-fs`` (``INCLUDE_FS = .TRUE.``)
+* ``--include-born`` (``INCLUDE_BORN = .TRUE.``)
+* ``--include-disp`` (``INCLUDE_DISP = .TRUE.``)
+* ``--include-all`` (``INCLUDE_ALL = .TRUE.``)
 * ``--lcg``, ``--little_cogroup`` (``LITTLE_COGROUP``)
 * ``--modulation`` (``MODULATION``)
 * ``--moment`` (``MOMENT = .TRUE.``)
@@ -66,7 +71,6 @@ tags:
 * ``--td`` (``TDISP``)
 * ``--tdm`` (``TDISPMAT``)
 * ``--tdm-cif`` (``TDISPMAT_CIF``)
-* ``--thm``, ``--tetrahedron-method`` (``TETRAHEDRON``)
 * ``--tmin`` (``TMIN``)
 * ``--tmax`` (``TMAX``)
 * ``--tolerance`` (``SYMMETRY_TOLERANCE``)
@@ -360,7 +364,7 @@ files.
 CRYSTAL interface
 ^^^^^^^^^^^^^^^^^
 
-``FORCE_SETS`` file is created from ``phonopy-disp.yaml`` and CRYSTAL output
+``FORCE_SETS`` file is created from ``phonopy_disp.yaml`` and CRYSTAL output
 files.
 
 ::
@@ -372,7 +376,7 @@ files.
 TURBOMOLE interface
 ^^^^^^^^^^^^^^^^^^^^
 
-``FORCE_SETS`` file is created from ``phonopy-disp.yaml`` and TURBOMOLE output
+``FORCE_SETS`` file is created from ``phonopy_disp.yaml`` and TURBOMOLE output
 files.
 
 ::

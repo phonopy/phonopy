@@ -34,6 +34,18 @@ class TestPhonopyYaml(unittest.TestCase):
         phpy_yaml.set_phonon_info(phonopy)
         # print(phpy_yaml)
 
+    def test_write_phonopy_yaml_extra(self):
+        phonopy = self._get_phonon()
+
+        settings = {'force_sets': True,
+                         'displacements': True,
+                         'force_constants': True,
+                         'born_effective_charge': True,
+                         'dielectric_constant': True}
+
+        phpy_yaml = PhonopyYaml(calculator='vasp', settings=settings)
+        phpy_yaml.set_phonon_info(phonopy)
+
     def _compare(self, cell):
         cell_ref = read_vasp(os.path.join(data_dir, "..", "POSCAR_NaCl"))
         self.assertTrue(

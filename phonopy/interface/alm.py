@@ -91,7 +91,7 @@ def run_alm(supercell,
         print("ALM is developed at https://github.com/ttadano/ALM by T. "
               "Tadano.")
     if log_level == 1:
-        print("Use -v option to watch detailed ALM log.")
+        print("Increase log-level to watch detailed ALM log.")
 
     shape = (maxorder, num_elems, num_elems)
     cutoff_radii = -np.ones(shape, dtype='double')

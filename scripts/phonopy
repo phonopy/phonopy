@@ -165,16 +165,22 @@ def finalize_phonopy(log_level,
                      phonopy_conf,
                      phonon,
                      interface_mode,
-                     write_displacements=False,
                      filename="phonopy.yaml"):
     units = get_default_physical_units(interface_mode)
-    phpy_yaml = PhonopyYaml(configuration=phonopy_conf.get_configures(),
+
+    settings = phonopy_conf.settings
+
+    yaml_settings = {
+        'force_sets': settings.get_include_force_sets(),
+        'force_constants': settings.get_include_force_constants(),
+        'born_effective_charge': settings.get_include_born_effective_charge(),
+        'dielectric_constant': settings.get_include_dielectric_constant(),
+        'displacements': settings.get_include_displacements(),
+    }
+
+    phpy_yaml = PhonopyYaml(configuration=phonopy_conf.confs,
                             physical_units=units,
-                            settings={
-                                'force_sets': False,
-                                'born_effective_charge': False,
-                                'dielectric_constant': False,
-                                'displacements': write_displacements})
+                            settings=yaml_settings)
     phpy_yaml.set_phonon_info(phonon)
     with open(filename, 'w') as w:
         w.write(str(phpy_yaml))
@@ -354,11 +360,12 @@ def write_displacements_files(phonon,
         print("  \"disp.yaml\" is still supported to read, but will be "
               "deprecated.")
 
+    phonopy_conf.settings.set_include_displacements(True)
+
     finalize_phonopy(log_level,
                      phonopy_conf,
                      phonon,
                      interface_mode,
-                     write_displacements=True,
                      filename="phonopy_disp.yaml")
 
 
@@ -468,10 +475,10 @@ if args.force_constants:
 if len(args.conf_file) > 0:
     file_exists(args.conf_file[0], log_level)
     phonopy_conf = PhonopyConfParser(filename=args.conf_file[0], args=args)
-    settings = phonopy_conf.get_settings()
+    settings = phonopy_conf.settings
 else:
     phonopy_conf = PhonopyConfParser(args=args)
-    settings = phonopy_conf.get_settings()
+    settings = phonopy_conf.settings
 
 is_band_auto = (type(settings.get_band_paths()) is str and
                 settings.get_band_paths() == 'auto')
@@ -790,9 +797,14 @@ if settings.get_write_force_constants():
         if log_level > 0:
             print("Force constants are written into \"force_constants.hdf5\".")
     else:
-        write_FORCE_CONSTANTS(phonon.get_force_constants(), p2s_map=p2s_map)
+        fc = phonon.force_constants
+        write_FORCE_CONSTANTS(fc, p2s_map=p2s_map)
         if log_level > 0:
             print("Force constants are written into \"FORCE_CONSTANTS\".")
+            print("  Array shape of force constants is %s." % str(fc.shape))
+            if fc.shape[0] != fc.shape[1]:
+                print("  Use --full-fc option for full array of force "
+                      "constants.")
 
 # Show the rotational invariance condition (just show!)
 if settings.get_is_rotational_invariance():
@@ -929,7 +941,7 @@ elif (run_mode == 'band' or
 
         if is_band_auto:
             print("SeeK-path is used to generate band paths.")
-            print("About SeeK-path https://seekpath.readthedocs.io/ "
+            print("  About SeeK-path https://seekpath.readthedocs.io/ "
                   "(citation there-in)")
             is_legacy_plot = False
             bands, labels, path_connections = get_band_qpoints_by_seekpath(
@@ -1368,4 +1380,5 @@ else:
 ########################
 # Phonopy finalization #
 ########################
-finalize_phonopy(log_level, phonopy_conf, phonon, interface_mode)
+
+finalize_phonopy( log_level, phonopy_conf, phonon, interface_mode)

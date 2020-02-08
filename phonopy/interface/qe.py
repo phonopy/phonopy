@@ -34,6 +34,7 @@
 
 import sys
 import numpy as np
+from collections import OrderedDict
 
 from phonopy.file_IO import (iter_collect_forces,
                              write_force_constants_to_hdf5,
@@ -200,22 +201,18 @@ def get_pwscf_structure(cell, pp_filenames=None):
 
 
 class PwscfIn(object):
-    def __init__(self, lines):
-        self._set_methods = {'ibrav':            self._set_ibrav,
-                             'celldm(1)':        self._set_celldm1,
-                             'nat':              self._set_nat,
-                             'ntyp':             self._set_ntyp,
-                             'atomic_species':   self._set_atom_types,
-                             'atomic_positions': self._set_positions,
-                             'cell_parameters':  self._set_lattice}
-        self._tags = {'ibrav':            None,
-                      'celldm(1)':        None,
-                      'nat':              None,
-                      'ntyp':             None,
-                      'atomic_species':   None,
-                      'atomic_positions': None,
-                      'cell_parameters':  None}
+    _set_methods = OrderedDict(
+        [('ibrav', '_set_ibrav'),
+         ('celldm(1)', '_set_celldm1'),
+         ('nat', '_set_nat'),
+         ('ntyp', '_set_ntyp'),
+         ('atomic_species', '_set_atom_types'),
+         ('atomic_positions', '_set_positions'),
+         ('cell_parameters', '_set_lattice')])
 
+    def __init__(self, lines):
+        self._tags = {}
+        self._current_tag_name = None
         self._values = None
         self._collect(lines)
 
@@ -224,47 +221,49 @@ class PwscfIn(object):
 
     def _collect(self, lines):
         elements = {}
-        tag = None
-        for line_tmp in lines:
-            line = line_tmp.split('!')[0]
-            if ('atomic_positions' in line.lower() or
-                'cell_parameters' in line.lower()):
-                if len(line.split()) == 1:
-                    words = [line.lower().strip(), 'alat']
+        tag_name = None
+
+        for line in lines:
+            _line = line.split('!')[0]
+            if ('atomic_positions' in _line.lower() or
+                'cell_parameters' in _line.lower()):
+                if len(_line.split()) == 1:
+                    raise RuntimeError(
+                        "A unit has to be specified for %s." % _line.strip())
                 else:
-                    words = line.lower().split()[:2]
-            elif 'atomic_species' in line.lower():
-                words = line.lower().split()
-            else:
-                line_replaced = line.replace('=', ' ').replace(',', ' ')
+                    words = _line.split()[:2]
+            elif 'atomic_species' in _line.lower():
+                words = _line.split()
+            else:  # other tag names and values
+                line_replaced = _line.replace('=', ' ').replace(',', ' ')
                 words = line_replaced.split()
+
             for val in words:
-                if val.lower() in self._set_methods:
-                    tag = val.lower()
-                    elements[tag] = []
-                elif tag is not None:
-                    elements[tag].append(val)
+                if val.lower() in self._set_methods:  # tag name
+                    tag_name = val.lower()
+                    elements[tag_name] = [val, ]
+                elif tag_name is not None:  # Ensure some tag name is set.
+                    elements[tag_name].append(val)
 
-        for tag in ['ibrav', 'nat', 'ntyp']:
-            if tag not in elements:
-                print("%s is not found in the input file." % tag)
-                sys.exit(1)
+        # Check if some necessary tag_names exist in elements keys.
+        for tag_name in ['ibrav', 'nat', 'ntyp']:
+            if tag_name not in elements:
+                raise RuntimeError(
+                    "%s is not found in the input file." % tag_name)
 
-        for tag in elements:
-            self._values = elements[tag]
-            if tag in ['ibrav', 'nat', 'ntyp', 'celldm(1)']:
-                self._set_methods[tag]()
-
-        for tag in elements:
-            self._values = elements[tag]
-            if tag not in ['ibrav', 'nat', 'ntyp']:
-                self._set_methods[tag]()
+        # Set values in self._tags[tag_name]
+        for tag_name in self._set_methods:
+            if tag_name in elements:
+                self._current_tag_name = elements[tag_name][0]
+                self._values = elements[tag_name][1:]
+                if tag_name in self._set_methods.keys():
+                    getattr(self, self._set_methods[tag_name])()
 
     def _set_ibrav(self):
         ibrav = int(self._values[0])
         if ibrav != 0:
-            print("Only ibrav = 0 is supported.")
-            sys.exit(1)
+            raise RuntimeError("Only %s = 0 is supported."
+                               % self._current_tag_name)
 
         self._tags['ibrav'] = ibrav
 
@@ -280,41 +279,41 @@ class PwscfIn(object):
     def _set_lattice(self):
         """Calculate and set lattice parameters.
 
-        Invoked by CELL_PARAMETERS tag.
+        Invoked by CELL_PARAMETERS tag_name.
 
         """
 
-        unit = self._values[0]
+        unit = self._values[0].lower()
         if unit == 'alat':
             if not self._tags['celldm(1)']:
-                print("celldm(1) has to be specified when using alat.")
-                sys.exit(1)
+                raise RuntimeError(
+                    "celldm(1) has to be specified when using alat.")
             else:
                 factor = self._tags['celldm(1)']  # in Bohr
-        elif unit == 'angstrom':
+        elif 'angstrom' in unit:
             factor = 1.0 / Bohr
-        else:
+        elif 'bohr' in unit:
             factor = 1.0
+        else:
+            raise RuntimeError(
+                "As a unit, alat, angstrom, and bohr can be only used.")
 
         if len(self._values[1:]) < 9:
-            print("CELL_PARAMETERS is wrongly set.")
-            sys.exit(1)
+            raise RuntimeError("%s is wrongly set." % self._current_tag_name)
 
         lattice = np.reshape([float(x) for x in self._values[1:10]], (3, 3))
         self._tags['cell_parameters'] = lattice * factor
 
     def _set_positions(self):
-        unit = self._values[0]
-        if unit != 'crystal':
-            print("Only ATOMIC_POSITIONS format with "
-                  "crystal coordinates is supported.")
-            sys.exit(1)
+        unit = self._values[0].lower()
+        if 'crystal' not in unit:
+            raise RuntimeError("Only ATOMIC_POSITIONS format with "
+                               "crystal coordinates is supported.")
 
         natom = self._tags['nat']
         pos_vals = self._values[1:]
         if len(pos_vals) < natom * 4:
-            print("ATOMIC_POSITIONS is wrongly set.")
-            sys.exit(1)
+            raise RuntimeError("ATOMIC_POSITIONS is wrongly set.")
 
         positions = []
         for i in range(natom):
@@ -327,16 +326,14 @@ class PwscfIn(object):
     def _set_atom_types(self):
         num_types = self._tags['ntyp']
         if len(self._values) < num_types * 3:
-            print("ATOMIC_SPECIES is wrongly set.")
-            sys.exit(1)
+            raise RuntimeError("%s is wrongly set." % self._current_tag_name)
 
         species = []
 
         for i in range(num_types):
-            species.append(
-                [self._values[i * 3],
-                 float(self._values[i * 3 + 1]),
-                 self._values[i * 3 + 2]])
+            species.append([self._values[i * 3],
+                            float(self._values[i * 3 + 1]),
+                            self._values[i * 3 + 2]])
 
         self._tags['atomic_species'] = species
 

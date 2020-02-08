@@ -68,6 +68,7 @@ def get_parser():
         description="Phonopy command-line-tool")
     parser.set_defaults(
         abinit_mode=False,
+        aims_mode=False,
         anime=None,
         band_format=None,
         band_indices=None,
@@ -121,7 +122,6 @@ def get_parser():
         is_nomeshsym=False,
         is_nosym=False,
         is_plusminus_displacements=False,
-        is_tetrahedron_method=True,
         is_thermal_displacements=False,
         is_thermal_displacement_matrices=False,
         is_thermal_displacement_matrices_cif=None,
@@ -129,6 +129,11 @@ def get_parser():
         is_projected_thermal_properties=False,
         is_trigonal_displacements=False,
         is_wien2k_p1=False,
+        include_fc=False,
+        include_fs=False,
+        include_born=False,
+        include_disp=False,
+        include_all=False,
         irreps_qpoint=None,
         lapack_solver=False,
         loglevel=None,
@@ -175,6 +180,9 @@ def get_parser():
     parser.add_argument(
         "--abinit", dest="abinit_mode", action="store_true",
         help="Invoke Abinit mode")
+    parser.add_argument(
+        "--aims", dest="aims_mode", action="store_true",
+        help="Invoke FHI-aims mode")
     parser.add_argument(
         "--alm", dest="use_alm", action="store_true",
         help="Use ALM for generating force constants")
@@ -322,6 +330,27 @@ def get_parser():
     parser.add_argument(
         "--irreps", "--irreps-qpoint", nargs='+', dest="irreps_qpoint",
         help="A q-point where characters of irreps are calculated")
+    parser.add_argument(
+        "--include-fc", dest="include_fc", action="store_true",
+        help="Include force constants in phonopy.yaml")
+    parser.add_argument(
+        "--include-fs", dest="include_fs", action="store_true",
+        help="Include force sets in phonopy.yaml")
+    #parser.add_argument(
+    #    "--include-bec", dest="include_bec", action="store_true",
+    #    help="Include born effective charge in phonopy.yaml")
+    #parser.add_argument(
+    #    "--include-eps", dest="include_eps", action="store_true",
+    #    help="Include dielectric tensor in phonopy.yaml")
+    parser.add_argument(
+        "--include-born", dest="include_born", action="store_true",
+        help="Include born effective charge and dielectric tensor in phonopy.yaml")
+    parser.add_argument(
+        "--include-disp", dest="include_disp", action="store_true",
+        help="Include displacements in phonopy.yaml")
+    parser.add_argument(
+        "--include-all", dest="include_all", action="store_true",
+        help="Include all output file data in phonopy.yaml")
     # parser.add_argument(
     #     "--lapack-solver", dest="lapack_solver", action="store_true",
     #     help=("Use Lapack via Lapacke for solving phonons. This "
@@ -377,10 +406,6 @@ def get_parser():
     parser.add_argument(
         "--nosym", dest="is_nosym", action="store_true",
         help="Symmetry is not imposed.")
-    parser.add_argument(
-        "--nothm", "--no-tetrahedron-method", dest="is_tetrahedron_method",
-        action="store_false",
-        help="Do not use tetrahedron method for DOS/PDOS")
     parser.add_argument(
         "--nowritemesh", dest="write_mesh", action="store_false",
         help="Do not write mesh.yaml or mesh.hdf5")

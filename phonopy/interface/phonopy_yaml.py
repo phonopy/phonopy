@@ -241,10 +241,11 @@ class PhonopyYaml(object):
                     lines.append("  - [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
                 lines.append("")
 
+        if self.settings['displacements']:
+            lines += self._displacements_yaml_lines()
+
         if self.settings['force_sets']:
             lines += self._displacements_yaml_lines(with_forces=True)
-        elif self.settings['displacements']:
-            lines += self._displacements_yaml_lines()
 
         if self.settings['force_constants']:
             lines += self._force_constants_yaml_lines()

@@ -4,7 +4,7 @@ Interfaces to calculators
 ==========================
 
 The interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT, Elk,
-SIESTA, CRYSTAL, and TURBOMOLE are built in to the usual phonopy command. See the
+SIESTA, CRYSTAL, DFTB+, TURBOMOLE, and FHI-AIMS are built in to the usual phonopy command. See the
 command options and how to invoke each of them at
 :ref:`force_calculators`. :ref:`LAMMPS interface
 <external_tools_phonolammps>` is provided as an external tool by Abel
@@ -26,6 +26,7 @@ Physical unit systems used for the calculators are as follows::
    CRYSTAL   | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
    TURBOMOLE | au (bohr)  AMU           hartree/au    hartree/au^2
    CP2K      | Angstrom   AMU           hartree/au    hartree/Angstrom.au
+   FHI-AIMS  | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
 
 For these sets of physical properties, phonon frequency is calculated
 in THz.
@@ -49,6 +50,7 @@ used as shown below::
    DFTB+     | geo.gen
    TURBOMOLE | control
    CP2K      | unitcell.inp
+   FHI-AIMS  | geometry.in
 
 Default displacement distances
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -69,6 +71,7 @@ shown below::
    DFTB+     | 0.01 au (bohr)
    TURBOMOLE | 0.02 au (bohr)
    CP2K      | 0.01 Angstrom
+   FHI-AIMS  | 0.01 Angstrom
 
 .. _frequency_default_value_interfaces:
 
@@ -87,6 +90,7 @@ Default unit conversion factor of phonon frequency to THz
    DFTB+     | 154.10794
    TURBOMOLE | 154.10794
    CP2K      | 112.10516
+   FHI-AIMS  | 15.633302
 
 .. _nac_default_value_interfaces:
 
@@ -105,6 +109,7 @@ Default unit conversion factor for non-analytical term correction
    DFTB+     | 14.399652
    TURBOMOLE | 1
    CP2K      | None (N/A)
+   FHI-AIMS  | 14.399652
 
 
 .. _tutorials_for_calculators:
@@ -130,6 +135,7 @@ Short tutorials for force calculators are found in the following pages.
    dftb+
    turbomole
    cp2k
+   aims
 
 VASP DFPT force constants
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -142,15 +148,3 @@ creates ``FORCE_CONSTANTS`` file.
    :maxdepth: 1
 
    vasp-dfpt
-
-For FHI-aims
-^^^^^^^^^^^^^
-
-For FHI-aims, there is a special command, ``phonopy-FHI-aims``. This
-tool is maintained by FHI-aims community and questions may be sent to the
-FHI-aims mailing list.
-
-.. toctree::
-   :maxdepth: 1
-
-   FHI-aims
