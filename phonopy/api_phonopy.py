@@ -2811,7 +2811,8 @@ class Phonopy(object):
                     fc_calculator=fc_calculator,
                     fc_calculator_options=fc_calculator_options,
                     atom_list=distributed_atom_list,
-                    log_level=self._log_level)
+                    log_level=self._log_level,
+                    symprec=self._symprec)
             else:
                 if 'displacements' in self._displacement_dataset:
                     msg = ("This data format of displacement_dataset is not "

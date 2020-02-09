@@ -73,12 +73,13 @@ def get_fc2(supercell,
             ""]
         print("\n".join(msg))
 
-    fc2 = run_hiphive(supercell,
-                      primitive,
-                      displacements,
-                      forces,
-                      options,
-                      log_level)
+    fc2 = run_hiphive(supercell=supercell,
+                      primitive=primitive,
+                      displacements=displacements,
+                      forces=forces,
+                      options=options,
+                      symprec=symprec,
+                      log_level=log_level)
 
     p2s_map = primitive.p2s_map
     is_compact_fc = (atom_list is not None and
