@@ -196,7 +196,7 @@ class BandPlot(object):
              distances,
              frequencies,
              path_connections,
-             fmt='r-'):
+             fmt=None):
         """Plot one band structure.
 
         If ``labels`` is given, decoration such as horizontal line at freq=0,
@@ -212,9 +212,15 @@ class BandPlot(object):
             This describes band segments are connected or not.
             See the detail in docstring of Phonopy.run_band_structure.
         fmt : str, optional
-            Matplotlib format strings. Default is 'r-'.
+            Matplotlib format strings. Default is None, which is equivalent to
+            'r-'.
 
         """
+
+        if fmt is None:
+            _fmt = 'r-'
+        else:
+            _fmt = fmt
 
         if self.xscale is None:
             self.set_xscale_from_data(frequencies, distances)
@@ -225,7 +231,7 @@ class BandPlot(object):
                            frequencies,
                            path_connections):
             ax = self._axs[count]
-            ax.plot(d, f, fmt, linewidth=1)
+            ax.plot(d, f, _fmt, linewidth=1)
             if not c:
                 count += 1
 
@@ -285,10 +291,44 @@ class BandPlot(object):
                     linestyle=':', linewidth=0.5, color='b')
 
 
-def band_plot(axs, frequencies, distances, path_connections, labels):
+def band_plot(axs, frequencies, distances, path_connections, labels, fmt='r-'):
     bp = BandPlot(axs)
     bp.decorate(labels, path_connections, frequencies, distances)
-    bp.plot(distances, frequencies, path_connections)
+    bp.plot(distances, frequencies, path_connections, fmt=fmt)
+
+
+def _plot_legacy(ax,
+                 all_distances,
+                 all_frequencies,
+                 labels,
+                 special_points,
+                 is_band_connection):
+
+    ax.xaxis.set_ticks_position('both')
+    ax.yaxis.set_ticks_position('both')
+    ax.xaxis.set_tick_params(which='both', direction='in')
+    ax.yaxis.set_tick_params(which='both', direction='in')
+
+    for distances, frequencies in zip(all_distances,
+                                      all_frequencies):
+        for freqs in frequencies.T:
+            if is_band_connection:
+                ax.plot(distances, freqs, '-')
+            else:
+                ax.plot(distances, freqs, 'r-')
+
+    ax.set_ylabel('Frequency')
+    ax.set_xlabel('Wave vector')
+
+    if labels and len(labels) == len(special_points):
+        ax.set_xticks(special_points)
+        ax.set_xticklabels(labels)
+    else:
+        ax.set_xticks(special_points)
+        ax.set_xticklabels(['', ] * len(special_points))
+
+    ax.set_xlim(0, all_distances[-1][-1])
+    ax.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
 
 
 def _get_npts(band_paths, npoints, rec_lattice):
@@ -536,38 +576,24 @@ class BandStructure(object):
             self._plot(ax)
 
     def _plot(self, axs):
+        if self._is_band_connection:
+            fmt = '-'
+        else:
+            fmt = None
         band_plot(axs,
                   self._frequencies,
                   self._distances,
                   self._path_connections,
-                  self._labels)
+                  self._labels,
+                  fmt=fmt)
 
-    def _plot_legacy(self, ax):
-        ax.xaxis.set_ticks_position('both')
-        ax.yaxis.set_ticks_position('both')
-        ax.xaxis.set_tick_params(which='both', direction='in')
-        ax.yaxis.set_tick_params(which='both', direction='in')
-
-        for distances, frequencies in zip(self._distances,
-                                          self._frequencies):
-            for freqs in frequencies.T:
-                if self._is_band_connection:
-                    ax.plot(distances, freqs, '-')
-                else:
-                    ax.plot(distances, freqs, 'r-')
-
-        ax.set_ylabel('Frequency')
-        ax.set_xlabel('Wave vector')
-
-        if self._labels and len(self._labels) == len(self._special_points):
-            ax.set_xticks(self._special_points)
-            ax.set_xticklabels(self._labels)
-        else:
-            ax.set_xticks(self._special_points)
-            ax.set_xticklabels(['', ] * len(self._special_points))
-
-        ax.set_xlim(0, self._distance)
-        ax.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
+    def _plot_legacy(self, axs):
+        _plot_legacy(axs,
+                     self._distances,
+                     self._frequencies,
+                     self._labels,
+                     self._special_points,
+                     self._is_band_connection)
 
     def write_hdf5(self, comment=None, filename="band.hdf5"):
         import h5py
@@ -746,6 +772,7 @@ class BandStructure(object):
         eigvals_on_path = []
         eigvecs_on_path = []
         gv_on_path = []
+        prev_eigvecs = None
 
         if self._group_velocity is not None:
             self._group_velocity.run(path)
