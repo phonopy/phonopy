@@ -92,9 +92,13 @@
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Input files</a><ul>
 <li><a class="reference internal" href="#setting-file">Setting file</a></li>
-<li><a class="reference internal" href="#structure-file-poscar">Structure file (<code class="docutils literal notranslate"><span class="pre">POSCAR</span></code>)</a><ul>
-<li><a class="reference internal" href="#example-of-rutile-type-silicon-oxide-crystal-structure-1">Example of rutile-type silicon oxide crystal structure (1)</a></li>
-<li><a class="reference internal" href="#example-of-rutile-type-silicon-oxide-crystal-structure-2">Example of rutile-type silicon oxide crystal structure (2)</a></li>
+<li><a class="reference internal" href="#phonopy-yaml-and-phonopy-disp-yaml"><code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code></a></li>
+<li><a class="reference internal" href="#structure-file">Structure file</a><ul>
+<li><a class="reference internal" href="#vasp-poscar-like-format">VASP POSCAR like format</a><ul>
+<li><a class="reference internal" href="#example-of-rutile-type-silicon-oxide-crystal-structure-vasp-4-style">Example of rutile-type silicon oxide crystal structure (VASP 4 style)</a></li>
+<li><a class="reference internal" href="#example-of-rutile-type-silicon-oxide-crystal-structure-vasp-5-style">Example of rutile-type silicon oxide crystal structure (VASP 5 style)</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#force-file-force-sets">Force file (<code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>)</a><ul>
@@ -171,10 +175,10 @@
 <div class="contents local topic" id="contents">
 <ul class="simple">
 <li><p><a class="reference internal" href="#setting-file" id="id5">Setting file</a></p></li>
-<li><p><a class="reference internal" href="#structure-file-poscar" id="id6">Structure file (<code class="docutils literal notranslate"><span class="pre">POSCAR</span></code>)</a></p>
+<li><p><a class="reference internal" href="#phonopy-yaml-and-phonopy-disp-yaml" id="id6"><code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code></a></p></li>
+<li><p><a class="reference internal" href="#structure-file" id="id7">Structure file</a></p>
 <ul>
-<li><p><a class="reference internal" href="#example-of-rutile-type-silicon-oxide-crystal-structure-1" id="id7">Example of rutile-type silicon oxide crystal structure (1)</a></p></li>
-<li><p><a class="reference internal" href="#example-of-rutile-type-silicon-oxide-crystal-structure-2" id="id8">Example of rutile-type silicon oxide crystal structure (2)</a></p></li>
+<li><p><a class="reference internal" href="#vasp-poscar-like-format" id="id8">VASP POSCAR like format</a></p></li>
 </ul>
 </li>
 <li><p><a class="reference internal" href="#force-file-force-sets" id="id9">Force file (<code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>)</a></p>
@@ -213,22 +217,45 @@ e.g.,</p>
 </div>
 <p>where the filename is arbitrary.</p>
 </div>
-<div class="section" id="structure-file-poscar">
-<h2><a class="toc-backref" href="#id6">Structure file (<code class="docutils literal notranslate"><span class="pre">POSCAR</span></code>)</a><a class="headerlink" href="#structure-file-poscar" title="Permalink to this headline">¶</a></h2>
-<p>Crystal structure is written in VASP’s manner (for Wien2k interface,
-see <a class="reference internal" href="command-options.html#wien2k-mode"><span class="std std-ref">WIEN2k mode</span></a>). The format is
-simple. The first line is for your comment, where you can write
-anything you want. The second line is the ratio for lattice
-parameters. You can multiply by this number. The third to fifth lines
-give the lattice parameters, <em>a</em>, <em>b</em>, and <em>c</em> for the respective
-lines. The sixth line contains the number of atoms for each atomic
-species, which have to correspond to the atomic positions in the
-order. The seventh line should be written as <code class="docutils literal notranslate"><span class="pre">Direct</span></code>. This means
-that the atomic positions are represented in fractional (reduced)
-coordinates. When you write chemical symbols in the first line, they
-are read and those defined by the <code class="docutils literal notranslate"><span class="pre">ATOM_NAME</span></code> tag are overwritten.</p>
-<div class="section" id="example-of-rutile-type-silicon-oxide-crystal-structure-1">
-<span id="example-poscar1"></span><h3><a class="toc-backref" href="#id7">Example of rutile-type silicon oxide crystal structure (1)</a><a class="headerlink" href="#example-of-rutile-type-silicon-oxide-crystal-structure-1" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="phonopy-yaml-and-phonopy-disp-yaml">
+<h2><a class="toc-backref" href="#id6"><code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code></a><a class="headerlink" href="#phonopy-yaml-and-phonopy-disp-yaml" title="Permalink to this headline">¶</a></h2>
+<p>These are output files after the calculation or creating the
+displacements. These files contain the crystal structure information,
+primitive cell and supercell sizes, and also the calculator
+interface. Therefore with this file, users will not need to specify
+those crystal sturcutre related tags. This file format can be used
+with <a class="reference internal" href="setting-tags.html#cell-filename-tag"><span class="std std-ref">CELL_FILENAME</span></a> tag or <code class="docutils literal notranslate"><span class="pre">-c</span></code> option:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ phonopy -c phonopy_disp.yaml
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>, <code class="docutils literal notranslate"><span class="pre">BORN</span></code>, and <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> information can be
+also stored in <code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> as the output after running phonopy, e.g.,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ phonopy -c phonopy_disp.yaml --include-all --nac
+</pre></div>
+</div>
+</div>
+<div class="section" id="structure-file">
+<h2><a class="toc-backref" href="#id7">Structure file</a><a class="headerlink" href="#structure-file" title="Permalink to this headline">¶</a></h2>
+<p>Crystal structure is described by a file with specific format for each
+calculator, though the default crystal structure is written in VASP
+POSCAR format. See the detail of the calculator interfaces at
+<a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.</p>
+<div class="section" id="vasp-poscar-like-format">
+<h3><a class="toc-backref" href="#id8">VASP POSCAR like format</a><a class="headerlink" href="#vasp-poscar-like-format" title="Permalink to this headline">¶</a></h3>
+<p>In the following, the VASP POSCAR format that phonopy can parse is
+explained. The format is simple. The first line is for your comment,
+where you can write anything you want. The second line is the ratio
+for lattice parameters. You can multiply by this number. The third to
+fifth lines give the lattice parameters, <em>a</em>, <em>b</em>, and <em>c</em> for the
+respective lines. The sixth line contains the number of atoms for each
+atomic species, which have to correspond to the atomic positions in
+the order. The seventh line should be written as <code class="docutils literal notranslate"><span class="pre">Direct</span></code>. This
+means that the atomic positions are represented in fractional
+(reduced) coordinates. When you write chemical symbols in the first
+line, they are read and those defined by the <code class="docutils literal notranslate"><span class="pre">ATOM_NAME</span></code> tag are
+overwritten.</p>
+<div class="section" id="example-of-rutile-type-silicon-oxide-crystal-structure-vasp-4-style">
+<span id="example-poscar1"></span><h4>Example of rutile-type silicon oxide crystal structure (VASP 4 style)<a class="headerlink" href="#example-of-rutile-type-silicon-oxide-crystal-structure-vasp-4-style" title="Permalink to this headline">¶</a></h4>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Si</span> <span class="n">O</span>
    <span class="mf">1.00000000000000</span>
      <span class="mf">4.2266540199664249</span>    <span class="mf">0.0000000000000000</span>    <span class="mf">0.0000000000000000</span>
@@ -244,13 +271,13 @@ are read and those defined by the <code class="docutils literal notranslate"><sp
   <span class="mf">0.8067891334429594</span>  <span class="mf">0.1932108665570406</span>  <span class="mf">0.5000000000000000</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="example-of-rutile-type-silicon-oxide-crystal-structure-vasp-5-style">
+<h4>Example of rutile-type silicon oxide crystal structure (VASP 5 style)<a class="headerlink" href="#example-of-rutile-type-silicon-oxide-crystal-structure-vasp-5-style" title="Permalink to this headline">¶</a></h4>
 <p>The VASP 5.x style is also supported. Chemical symbols are inserted
 just before the line of the numbers of atoms. The chemical symbols in
 this line overwrite those defined by the <code class="docutils literal notranslate"><span class="pre">ATOM_NAME</span></code> tag and those
 defined by the first line of <code class="docutils literal notranslate"><span class="pre">POSCAR</span></code>.</p>
-</div>
-<div class="section" id="example-of-rutile-type-silicon-oxide-crystal-structure-2">
-<h3><a class="toc-backref" href="#id8">Example of rutile-type silicon oxide crystal structure (2)</a><a class="headerlink" href="#example-of-rutile-type-silicon-oxide-crystal-structure-2" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Stishovite</span>
    <span class="mf">1.00000000000000</span>
      <span class="mf">4.2266540199664249</span>    <span class="mf">0.0000000000000000</span>    <span class="mf">0.0000000000000000</span>
@@ -266,6 +293,7 @@ defined by the first line of <code class="docutils literal notranslate"><span cl
   <span class="mf">0.1932108665570406</span>  <span class="mf">0.8067891334429594</span>  <span class="mf">0.5000000000000000</span>
   <span class="mf">0.8067891334429594</span>  <span class="mf">0.1932108665570406</span>  <span class="mf">0.5000000000000000</span>
 </pre></div>
+</div>
 </div>
 </div>
 </div>
@@ -296,8 +324,6 @@ coordinates</strong>. The lines below, the atomic forces in <strong>Cartesian
 coordinates</strong> are written. Once all the forces for a supercell are
 written, the next set of forces are written. This routine is repeated
 until the forces of all the displacements have been written.</p>
-<p>See also <a class="reference internal" href="command-options.html#vasp-force-sets-option"><span class="std std-ref">VASP interface</span></a> and
-<a class="reference internal" href="command-options.html#wien2k-force-sets-option"><span class="std std-ref">WIEN2k interface</span></a> for VASP and Wien2k users.</p>
 <div class="section" id="example">
 <h4>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h4>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">48</span>
@@ -594,7 +620,7 @@ file.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.<br/>
     </p>
   </div>
 </footer>

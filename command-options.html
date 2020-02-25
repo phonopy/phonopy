@@ -266,6 +266,11 @@ tags:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">--gv-delta-q</span></code> (<code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--hdf5</span></code> (<code class="docutils literal notranslate"><span class="pre">HDF5</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--irreps</span></code> (<code class="docutils literal notranslate"><span class="pre">IRREPS</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--include-fc</span></code> (<code class="docutils literal notranslate"><span class="pre">INCLUDE_FC</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--include-fs</span></code> (<code class="docutils literal notranslate"><span class="pre">INCLUDE_FS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--include-born</span></code> (<code class="docutils literal notranslate"><span class="pre">INCLUDE_BORN</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--include-disp</span></code> (<code class="docutils literal notranslate"><span class="pre">INCLUDE_DISP</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--include-all</span></code> (<code class="docutils literal notranslate"><span class="pre">INCLUDE_ALL</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--lcg</span></code>, <code class="docutils literal notranslate"><span class="pre">--little_cogroup</span></code> (<code class="docutils literal notranslate"><span class="pre">LITTLE_COGROUP</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--modulation</span></code> (<code class="docutils literal notranslate"><span class="pre">MODULATION</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--moment</span></code> (<code class="docutils literal notranslate"><span class="pre">MOMENT</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</p></li>
@@ -503,7 +508,7 @@ files.</p>
 </div>
 <div class="section" id="crystal-interface">
 <span id="crystal-force-sets-option"></span><h4>CRYSTAL interface<a class="headerlink" href="#crystal-interface" title="Permalink to this headline">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy-disp.yaml</span></code> and CRYSTAL output
+<p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and CRYSTAL output
 files.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">-</span><span class="n">f</span> <span class="n">supercell</span><span class="o">-</span><span class="mf">001.</span><span class="n">o</span> <span class="n">supercell</span><span class="o">-</span><span class="mf">002.</span><span class="n">o</span>  <span class="o">...</span>
 </pre></div>
@@ -511,7 +516,7 @@ files.</p>
 </div>
 <div class="section" id="turbomole-interface">
 <span id="turbomole-force-sets-option"></span><h4>TURBOMOLE interface<a class="headerlink" href="#turbomole-interface" title="Permalink to this headline">¶</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy-disp.yaml</span></code> and TURBOMOLE output
+<p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and TURBOMOLE output
 files.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">turbomole</span> <span class="o">-</span><span class="n">f</span> <span class="n">supercell</span><span class="o">-</span><span class="mi">001</span> <span class="n">supercell</span><span class="o">-</span><span class="mi">002</span>  <span class="o">...</span>
 </pre></div>
@@ -634,7 +639,7 @@ respectively, in the VASP style format.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.<br/>
     </p>
   </div>
 </footer>
