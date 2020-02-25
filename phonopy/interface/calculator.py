@@ -33,6 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import os
+import yaml
 import numpy as np
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.file_IO import parse_disp_yaml, write_FORCE_SETS
@@ -63,22 +64,20 @@ def write_supercells_with_displacements(interface_mode,
                                         num_unitcells_in_supercell,
                                         optional_structure_info):
     if interface_mode is None or interface_mode == 'vasp':
-        from phonopy.interface.vasp import write_supercells_with_displacements
-        write_supercells_with_displacements(supercell, cells_with_disps)
+        import phonopy.interface.vasp as vasp
+        vasp.write_supercells_with_displacements(supercell, cells_with_disps)
     elif interface_mode == 'abinit':
-        from phonopy.interface.abinit import (
-            write_supercells_with_displacements)
-        write_supercells_with_displacements(supercell, cells_with_disps)
+        import phonopy.interface.abinit as abinit
+        abinit.write_supercells_with_displacements(supercell, cells_with_disps)
     elif interface_mode == 'qe':
-        from phonopy.interface.qe import write_supercells_with_displacements
-        write_supercells_with_displacements(supercell,
-                                            cells_with_disps,
-                                            optional_structure_info[1])
+        import phonopy.interface.qe as qe
+        qe.write_supercells_with_displacements(supercell,
+                                               cells_with_disps,
+                                               optional_structure_info[1])
     elif interface_mode == 'wien2k':
-        from phonopy.interface.wien2k import (
-            write_supercells_with_displacements)
+        import phonopy.interface.wien2k as wien2k
         unitcell_filename, npts, r0s, rmts = optional_structure_info
-        write_supercells_with_displacements(
+        wien2k.write_supercells_with_displacements(
             supercell,
             cells_with_disps,
             npts,
@@ -87,41 +86,37 @@ def write_supercells_with_displacements(interface_mode,
             num_unitcells_in_supercell,
             filename=unitcell_filename)
     elif interface_mode == 'elk':
-        from phonopy.interface.elk import write_supercells_with_displacements
-        write_supercells_with_displacements(supercell,
-                                            cells_with_disps,
-                                            optional_structure_info[1])
+        import phonopy.interface.elk as elk
+        elk.write_supercells_with_displacements(supercell,
+                                                cells_with_disps,
+                                                optional_structure_info[1])
     elif interface_mode == 'siesta':
-        from phonopy.interface.siesta import (
-            write_supercells_with_displacements)
-        write_supercells_with_displacements(supercell,
-                                            cells_with_disps,
-                                            optional_structure_info[1])
+        import phonopy.interface.siesta as siesta
+        siesta.write_supercells_with_displacements(supercell,
+                                                   cells_with_disps,
+                                                   optional_structure_info[1])
     elif interface_mode == 'cp2k':
-        from phonopy.interface.cp2k import write_supercells_with_displacements
-        write_supercells_with_displacements(supercell,
-                                            cells_with_disps,
-                                            optional_structure_info)
+        import phonopy.interface.cp2k as cp2k
+        cp2k.write_supercells_with_displacements(supercell,
+                                                 cells_with_disps,
+                                                 optional_structure_info)
     elif interface_mode == 'crystal':
-        from phonopy.interface.crystal import (
-            write_supercells_with_displacements)
-        write_supercells_with_displacements(supercell,
-                                            cells_with_disps,
-                                            optional_structure_info[1],
-                                            num_unitcells_in_supercell,
-                                            template_file="TEMPLATE")
+        import phonopy.interface.crystal as crystal
+        crystal.write_supercells_with_displacements(supercell,
+                                                    cells_with_disps,
+                                                    optional_structure_info[1],
+                                                    num_unitcells_in_supercell,
+                                                    template_file="TEMPLATE")
     elif interface_mode == 'dftbp':
-        from phonopy.interface.dftbp import (
-            write_supercells_with_displacements)
-        write_supercells_with_displacements(supercell, cells_with_disps)
+        import phonopy.interface.dftbp as dftbp
+        dftbp.write_supercells_with_displacements(supercell, cells_with_disps)
     elif interface_mode == 'turbomole':
-        from phonopy.interface.turbomole import (
-            write_supercells_with_displacements)
-        write_supercells_with_displacements(supercell, cells_with_disps)
+        import phonopy.interface.turbomole as turbomole
+        turbomole.write_supercells_with_displacements(supercell,
+                                                      cells_with_disps)
     elif interface_mode == 'aims':
-        from phonopy.interface.aims import (
-            write_supercells_with_displacements)
-        write_supercells_with_displacements(supercell, cells_with_disps)
+        import phonopy.interface.aims as aims
+        aims.write_supercells_with_displacements(supercell, cells_with_disps)
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -130,6 +125,19 @@ def read_crystal_structure(filename=None,
                            interface_mode=None,
                            chemical_symbols=None,
                            command_name="phonopy"):
+    """Returns crystal structure information
+
+    Returns
+    -------
+    tuple
+        (Unit cell in PhonopyAtoms, optional_structure_info in tuple)
+
+        The optional_structure_info is given by a tuple. The first element of
+        it is the unit cell file name for which the unit cell data are read,
+        and the rest is dependent on calculator interface.
+
+    """
+
     if interface_mode == 'phonopy_yaml':
         return _read_phonopy_yaml(filename, command_name)
 
@@ -189,6 +197,7 @@ def read_crystal_structure(filename=None,
         from phonopy.interface.aims import read_aims
         unitcell = read_aims(cell_filename)
         return unitcell, (cell_filename,)
+
 
 def get_default_cell_filename(interface_mode):
     if interface_mode is None or interface_mode == 'vasp':
@@ -500,7 +509,7 @@ def get_force_constant_conversion_factor(unit, interface_mode):
                          'Ry/au^2': Rydberg / Bohr ** 2,
                          'mRy/au^2': Rydberg / Bohr ** 2 / 1000,
                          'hartree/au^2': Hartree / Bohr ** 2,
-                         'hartree/Angstrom.au': Hartree / Bohr }
+                         'hartree/Angstrom.au': Hartree / Bohr}
     if default_unit not in factor_to_eVperA2:
         msg = "Force constant conversion for %s unit is not implemented."
         raise NotImplementedError(msg)
@@ -512,6 +521,23 @@ def get_force_constant_conversion_factor(unit, interface_mode):
 
 
 def _read_phonopy_yaml(filename, command_name):
+    cell_filename = _get_cell_filename(filename, command_name)
+    if cell_filename is None:
+        return None, (None, None)
+
+    phpy = PhonopyYaml()
+    try:
+        phpy.read(cell_filename)
+    except TypeError:  # yaml.load returns str: File format seems not YAML.
+        return None, (cell_filename, None)
+    except yaml.parser.ParserError:
+        return None, (cell_filename, None)
+
+    cell = phpy.unitcell
+    return cell, (cell_filename, phpy)
+
+
+def _get_cell_filename(filename, command_name):
     cell_filename = None
     for fname in (filename,
                   "%s_disp.yaml" % command_name,
@@ -519,32 +545,7 @@ def _read_phonopy_yaml(filename, command_name):
         if fname and os.path.isfile(fname):
             cell_filename = fname
             break
-    if cell_filename is None:
-        return None, ("%s_disp.yaml" % command_name,
-                      "%s.yaml" % command_name, "", "")
-
-    phpy = PhonopyYaml()
-    try:
-        phpy.read(cell_filename)
-        cell = phpy.unitcell
-        calculator = None
-        if command_name in phpy.yaml:
-            if 'calculator' in phpy.yaml[command_name]:
-                calculator = phpy.yaml[command_name]['calculator']
-        if ('supercell_matrix' in phpy.yaml and
-            phpy.yaml['supercell_matrix'] is not None):
-            smat = phpy.supercell_matrix
-        else:
-            smat = None
-        if ('primitive_matrix' in phpy.yaml and
-            phpy.yaml['primitive_matrix'] is not None):
-            pmat = phpy.primitive_matrix
-        else:
-            pmat = None
-
-        return cell, (cell_filename, calculator, smat, pmat)
-    except TypeError:
-        return None, (cell_filename, None, None, None)
+    return cell_filename
 
 
 def _check_number_of_files(num_displacements,

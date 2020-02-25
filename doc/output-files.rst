@@ -124,13 +124,7 @@ represent x, y, and z components::
           -0.2900198744        0.0000000123        0.0000000123        0.0000000123        0.0000000184        0.0000000184        0.0000000184
    ...
 
-``disp.yaml``
-^^^^^^^^^^^^^^^
-
-In phonopy version 2.0 or later, ``disp.yaml`` is
-obsolete and ``disp.yaml`` is replaced by ``phonopy_disp.yaml``.
-
-``phonopy.yaml`` and ``phonon_disp.yaml``
+``phonopy.yaml`` and ``phonopy_disp.yaml``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Phonopy configurations and crystal structures are stored in these

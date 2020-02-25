@@ -27,6 +27,8 @@ have space among characters (e.g. ``1 / 3``) are not allowed.
 Basic tags
 ----------
 
+.. _dimension_tag:
+
 ``DIM``
 ~~~~~~~~~~
 
@@ -194,14 +196,14 @@ to the number of atoms in unit cell) have to be explicitly written.
 
    MAGMOM = 1.0 1.0 -1.0 -1.0
 
-.. _dimension_tag:
+.. _cell_filename_tag:
 
 ``CELL_FILENAME``
 ~~~~~~~~~~~~~~~~~~
 
 ::
 
-   CELL_FILENAME = UPOSCAR
+   CELL_FILENAME = POSCAR-unitcell
 
 See :ref:`cell_filename_option`.
 
@@ -1496,7 +1498,7 @@ calculation results are written into ``band.hdf5`` but not into
 
 The following data may be optionally included in the summary yaml file
 called ``phonopy_disp.yaml``/``phonopy.yaml`` in addition to other file
-output settings. This happens at the end of the pre/post-process (after 
+output settings. This happens at the end of the pre/post-process (after
 running the ``phonopy`` script):
 
 * ``force constants``
@@ -1511,17 +1513,17 @@ readable convenient file format.
 
 
 ``force constants``
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 The ``--include-fc`` flag or setting ``INCLUDE_FC = .TRUE.`` will cause
 the force constants (if available) to be written as an entry in the
-yaml summary file. The written force constants will reflect the 
+yaml summary file. The written force constants will reflect the
 required/available format used during processing. So if ``--full-fc`` is
 set the entire matrix will be written.
 
 
 ``force sets``
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^
 
 The ``--include-fs`` flag or setting ``INCLUDE_FS = .TRUE.`` will cause
 the force sets (if available) to be written as an entry in the yaml summary
@@ -1529,19 +1531,19 @@ file.
 
 
 ``dielectric constant`` and ``born effective charge``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``--include-born`` flag or setting ``INCLUDE_BORN = .TRUE.`` will cause
-the born effective charges and dielectric tensor (if available) to be 
+the born effective charges and dielectric tensor (if available) to be
 written as an entry in the yaml summary file. The values will only be written
-if non-analytical term correction is set with the ``--nac`` flag or by 
+if non-analytical term correction is set with the ``--nac`` flag or by
 setting ``NAC = .TRUE.``.
 
 This is more convenient than keeping track of the ``BORN`` file created by the user.
 
 
 ``displacements``
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 
 The ``--include-disp`` flag or setting ``INCLUDE_DISP = .TRUE.`` will cause
 displacements data (if available) to be written as an entry in the yaml summary file.
@@ -1550,7 +1552,7 @@ This is set by default when the ``phonopy`` script is run in ``displacements`` m
 
 
 ``all``
-^^^^^^^^^^^^^^^
+^^^^^^^
 
 All available data covered by the other ``include`` flags can be written to the yaml
 summary file using the ``--include-all`` flag or by setting ``INCLUDE_ALL = .TRUE.``.
