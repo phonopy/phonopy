@@ -99,9 +99,12 @@ def collect_cell_info(supercell_matrix=None,
         return "\n".join(msg_list)
 
     # Succeeded!
+    if _interface_mode == 'phonopy_yaml':
+        phpy_yaml = optional_structure_info[1]
+    else:
+        phpy_yaml = None
     return (unitcell, supercell_matrix_out, primitive_matrix_out,
-            optional_structure_info, interface_mode_out,
-            interface_mode_out == 'phonopy_yaml')
+            optional_structure_info, interface_mode_out, phpy_yaml)
 
 
 def _fallback_to_phonopy_yaml(supercell_matrix,
@@ -109,10 +112,11 @@ def _fallback_to_phonopy_yaml(supercell_matrix,
                               cell_filename):
     """Find possibility to fallback to phonopy.yaml mode
 
-    When fallback happens.
+    Fallback happens in any of the following cases.
 
-    1. supercell_matrix is not given
-    2. parsing default VASP style crystal structure failed
+    1. Parsing crystal structure file in the VASP POSCAR-style failed
+    2. Default VASP POSCAR-style file is not found.
+    3. supercell_matrix is not given along with (1) or (2).
 
     Parameters
     ----------
@@ -145,6 +149,29 @@ def _fallback_to_phonopy_yaml(supercell_matrix,
 
 
 def _poscar_failed(cell_filename):
+    """Determine if fall back happens
+
+    1) read_vasp (parsing POSCAR-style file) is failed. --> fallback
+
+    ValueError is raised by read_vasp when the POSCAR-style format
+    is broken. By this way, we assume the input crystal structure
+    is not in the POSCAR-style format and is in the phonopy.yaml
+    type.
+
+    2) The file given by get_default_cell_filename('vasp') is not
+       found at the current directory.  --> fallback
+
+    This is the trigger to look for the phonopy.yaml type file.
+
+    3) The given file with cell_filename is not found.  --> not fallback
+
+    This case will not invoke phonopy.yaml mode and here nothing
+    is done, i.e., fallback_reason = None.
+    This error will be caught in the following part again be
+    handled properly (read_crystal_structure).
+
+    """
+
     fallback_reason = None
     try:
         if cell_filename is None:
@@ -152,17 +179,14 @@ def _poscar_failed(cell_filename):
         else:
             read_vasp(cell_filename)
     except ValueError:
-        # read_vasp parsing failed.
+        # (1) see above
         fallback_reason = "read_vasp parsing failed"
     except FileNotFoundError:
         if cell_filename is None:
+            # (2) see above
             fallback_reason = "default file not found"
         else:
-            # Given file with cell_filename not found.
-            #
-            # In this case, do nothing, i.e., fallback_reason = None.
-            # This error is handled in the following part
-            # (read_crystal_structure).
+            # (3) see above
             pass
     return fallback_reason
 

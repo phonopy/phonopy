@@ -238,14 +238,19 @@ class PhonopyYaml(object):
             if self.settings['dielectric_constant']:
                 lines.append("dielectric_constant:")
                 for v in dielectric:
-                    lines.append("  - [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
+                    lines.append(
+                        "  - [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
                 lines.append("")
 
-        if self.settings['displacements']:
-            lines += self._displacements_yaml_lines()
-
+        disp_yaml_lines = None
         if self.settings['force_sets']:
-            lines += self._displacements_yaml_lines(with_forces=True)
+            # if forces are not found, [] is returned.
+            disp_yaml_lines = self._displacements_yaml_lines(with_forces=True)
+            lines += disp_yaml_lines
+
+        if not disp_yaml_lines:  # To avoid writing twice 'displacements:'
+            if self.settings['displacements']:
+                lines += self._displacements_yaml_lines()
 
         if self.settings['force_constants']:
             lines += self._force_constants_yaml_lines()
@@ -336,7 +341,7 @@ class PhonopyYaml(object):
             shape = tuple(self.yaml['force_constants']['shape']) + (3, 3)
             fc = np.reshape(self.yaml['force_constants']['elements'], shape)
             self.force_constants = np.array(fc, dtype='double', order='C')
-        elif 'displacements' in self.yaml:
+        if 'displacements' in self.yaml:
             disp = self.yaml['displacements'][0]
             if type(disp) is dict:  # type1
                 self.dataset = self._parse_force_sets_type1()

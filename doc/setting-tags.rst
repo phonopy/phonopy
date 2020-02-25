@@ -1513,7 +1513,7 @@ readable convenient file format.
 
 
 ``force constants``
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 The ``--include-fc`` flag or setting ``INCLUDE_FC = .TRUE.`` will cause
 the force constants (if available) to be written as an entry in the
@@ -1523,7 +1523,7 @@ set the entire matrix will be written.
 
 
 ``force sets``
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^
 
 The ``--include-fs`` flag or setting ``INCLUDE_FS = .TRUE.`` will cause
 the force sets (if available) to be written as an entry in the yaml summary
@@ -1531,7 +1531,7 @@ file.
 
 
 ``dielectric constant`` and ``born effective charge``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``--include-born`` flag or setting ``INCLUDE_BORN = .TRUE.`` will cause
 the born effective charges and dielectric tensor (if available) to be
@@ -1543,7 +1543,7 @@ This is more convenient than keeping track of the ``BORN`` file created by the u
 
 
 ``displacements``
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 
 The ``--include-disp`` flag or setting ``INCLUDE_DISP = .TRUE.`` will cause
 displacements data (if available) to be written as an entry in the yaml summary file.
@@ -1552,7 +1552,7 @@ This is set by default when the ``phonopy`` script is run in ``displacements`` m
 
 
 ``all``
-^^^^^^^^^^^^^^^
+^^^^^^^
 
 All available data covered by the other ``include`` flags can be written to the yaml
 summary file using the ``--include-all`` flag or by setting ``INCLUDE_ALL = .TRUE.``.

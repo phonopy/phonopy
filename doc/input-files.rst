@@ -28,8 +28,6 @@ interface. Therefore with this file, users will not need to specify
 those crystal sturcutre related tags. This file format can be used
 with :ref:`cell_filename_tag` tag or ``-c`` option::
 
-::
-
    $ phonopy -c phonopy_disp.yaml
 
 ``FORCE_SETS``, ``BORN``, and ``FORCE_CONSTANTS`` information can be
@@ -144,9 +142,6 @@ coordinates**. The lines below, the atomic forces in **Cartesian
 coordinates** are written. Once all the forces for a supercell are
 written, the next set of forces are written. This routine is repeated
 until the forces of all the displacements have been written.
-
-See also :ref:`vasp_force_sets_option` and
-:ref:`wien2k_force_sets_option` for VASP and Wien2k users.
 
 Example
 ^^^^^^^

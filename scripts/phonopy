@@ -510,7 +510,7 @@ if type(cell_info) is str:
     sys.exit(1)
 (unitcell, supercell_matrix, primitive_matrix,
  optional_structure_info, interface_mode,
- has_read_phonopy_yaml) = cell_info
+ phpy_yaml) = cell_info
 unitcell_filename = optional_structure_info[0]
 
 # Set magnetic moments
@@ -695,34 +695,36 @@ if settings.get_read_force_constants():
 
     phonon.force_constants = fc
 else:
-    def read_force_sets_from_phonopy_yaml(unitcell_filename, log_level):
-        ph_yaml = PhonopyYaml()
-        ph_yaml.read(unitcell_filename)
-        if (ph_yaml.dataset is not None and
-            ('forces' in ph_yaml.dataset or
-             ('first_atoms' in ph_yaml.dataset and
-              'forces' in ph_yaml.dataset['first_atoms'][0]))):
-            if log_level:
-                print("Forces and displacements are read from \"%s\"."
-                      % unitcell_filename)
-            return ph_yaml.dataset
+    def read_force_sets_from_phonopy_yaml(phpy_yaml):
+        if (phpy_yaml.dataset is not None and
+            ('forces' in phpy_yaml.dataset or
+             ('first_atoms' in phpy_yaml.dataset and
+              'forces' in phpy_yaml.dataset['first_atoms'][0]))):
+            return phpy_yaml.dataset
         else:
             return None
 
     force_sets = None
-    if has_read_phonopy_yaml:
-        force_sets = read_force_sets_from_phonopy_yaml(unitcell_filename,
-                                                       log_level)
+
+    if phpy_yaml is not None:
+        force_sets = read_force_sets_from_phonopy_yaml(phpy_yaml)
+        if log_level:
+            if force_sets is None:
+                print("Forces and displacements were not found in \"%s\"."
+                      % unitcell_filename)
+            else:
+                print("Forces and displacements were read from \"%s\"."
+                      % unitcell_filename)
 
     if force_sets is None:
         file_exists("FORCE_SETS", log_level)
         force_sets = parse_FORCE_SETS(natom=num_satom)
         if log_level:
-            print("Forces and displacements are read from \"%s\"."
+            print("Forces and displacements were read from \"%s\"."
                   % "FORCE_SETS")
-            if 'displacements' in force_sets:
-                print("%d snapshots were found in \"%s\"."
-                      % (len(force_sets['displacements']), "FORCE_SETS"))
+
+    if log_level and force_sets is not None and 'displacements' in force_sets:
+        print("%d snapshots were found." % len(force_sets['displacements']))
 
     if 'natom' in force_sets:
         natom = force_sets['natom']
@@ -818,41 +820,39 @@ if settings.get_is_rotational_invariance():
 ##################################
 # Non-analytical term correction #
 ##################################
-if settings.get_is_nac() or has_read_phonopy_yaml:
-    def read_nac_params_from_phonopy_yaml(unitcell_filename, log_level):
-        ph_yaml = PhonopyYaml()
-        ph_yaml.read(unitcell_filename)
-        if ph_yaml.nac_params is not None:
-            if log_level:
-                print("NAC parameters are read from \"%s\"."
-                      % unitcell_filename)
-            return ph_yaml.nac_params
+if settings.get_is_nac() or phpy_yaml:
+    def read_nac_params_from_phonopy_yaml(phpy_yaml):
+        if phpy_yaml.nac_params is not None:
+            return phpy_yaml.nac_params
         else:
             return None
 
-    def read_BORN(phonon, log_level):
+    def read_BORN(phonon):
         with open("BORN") as f:
-            nac_params = get_born_parameters(
+            return get_born_parameters(
                 f, phonon.primitive, phonon.get_primitive_symmetry())
-            if log_level:
-                print("NAC parameters are read from \"%s\"." % "BORN")
-            return nac_params
 
-    if has_read_phonopy_yaml:
-        nac_params = read_nac_params_from_phonopy_yaml(unitcell_filename,
-                                                       log_level)
-        if nac_params is None and file_exists("BORN", log_level, is_any=True):
-            nac_params = read_BORN(phonon, log_level)
-    elif file_exists("BORN", log_level):
-        nac_params = read_BORN(phonon, log_level)
+    if phpy_yaml:
+        nac_params = read_nac_params_from_phonopy_yaml(phpy_yaml)
+        if log_level:
+            if nac_params is None:
+                print("NAC parameters were not found in \"%s\"."
+                      % unitcell_filename)
+            else:
+                print("NAC parameters were read from \"%s\"."
+                      % unitcell_filename)
+
+    if nac_params is None and file_exists("BORN", log_level):
+        nac_params = read_BORN(phonon)
+        if nac_params is not None and log_level:
+            print("NAC parameters were read from \"%s\"." % "BORN")
+
         if not nac_params:
             error_text = "BORN file could not be read correctly."
             print_error_message(error_text)
             if log_level > 0:
                 print_error()
             sys.exit(1)
-    else:
-        nac_params = None  # This would not happen though.
 
     if nac_params is not None:
         if nac_params['factor'] is None:
