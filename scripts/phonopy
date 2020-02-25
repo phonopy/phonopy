@@ -832,6 +832,8 @@ if settings.get_is_nac() or phpy_yaml:
             return get_born_parameters(
                 f, phonon.primitive, phonon.get_primitive_symmetry())
 
+    nac_params = None
+
     if phpy_yaml:
         nac_params = read_nac_params_from_phonopy_yaml(phpy_yaml)
         if log_level:
