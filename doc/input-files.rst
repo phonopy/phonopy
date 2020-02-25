@@ -18,26 +18,55 @@ e.g.,
 
 where the filename is arbitrary.
 
-Structure file (``POSCAR``)
-----------------------------
+``phonopy.yaml`` and ``phonopy_disp.yaml``
+------------------------------------------
 
-Crystal structure is written in VASP's manner (for Wien2k interface,
-see :ref:`WIEN2k mode <wien2k_mode>`). The format is
-simple. The first line is for your comment, where you can write
-anything you want. The second line is the ratio for lattice
-parameters. You can multiply by this number. The third to fifth lines
-give the lattice parameters, *a*, *b*, and *c* for the respective
-lines. The sixth line contains the number of atoms for each atomic
-species, which have to correspond to the atomic positions in the
-order. The seventh line should be written as ``Direct``. This means
-that the atomic positions are represented in fractional (reduced)
-coordinates. When you write chemical symbols in the first line, they
-are read and those defined by the ``ATOM_NAME`` tag are overwritten.
+These are output files after the calculation or creating the
+displacements. These files contain the crystal structure information,
+primitive cell and supercell sizes, and also the calculator
+interface. Therefore with this file, users will not need to specify
+those crystal sturcutre related tags. This file format can be used
+with :ref:`cell_filename_tag` tag or ``-c`` option::
+
+::
+
+   $ phonopy -c phonopy_disp.yaml
+
+``FORCE_SETS``, ``BORN``, and ``FORCE_CONSTANTS`` information can be
+also stored in ``phonopy.yaml`` as the output after running phonopy, e.g.,
+
+::
+
+   $ phonopy -c phonopy_disp.yaml --include-all --nac
+
+Structure file
+--------------
+
+Crystal structure is described by a file with specific format for each
+calculator, though the default crystal structure is written in VASP
+POSCAR format. See the detail of the calculator interfaces at
+:ref:`calculator_interfaces`.
+
+VASP POSCAR like format
+~~~~~~~~~~~~~~~~~~~~~~~
+
+In the following, the VASP POSCAR format that phonopy can parse is
+explained. The format is simple. The first line is for your comment,
+where you can write anything you want. The second line is the ratio
+for lattice parameters. You can multiply by this number. The third to
+fifth lines give the lattice parameters, *a*, *b*, and *c* for the
+respective lines. The sixth line contains the number of atoms for each
+atomic species, which have to correspond to the atomic positions in
+the order. The seventh line should be written as ``Direct``. This
+means that the atomic positions are represented in fractional
+(reduced) coordinates. When you write chemical symbols in the first
+line, they are read and those defined by the ``ATOM_NAME`` tag are
+overwritten.
 
 .. _example_POSCAR1:
 
-Example of rutile-type silicon oxide crystal structure (1)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Example of rutile-type silicon oxide crystal structure (VASP 4 style)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ::
 
    Si O
@@ -54,13 +83,14 @@ Example of rutile-type silicon oxide crystal structure (1)
      0.1932108665570406  0.8067891334429594  0.5000000000000000
      0.8067891334429594  0.1932108665570406  0.5000000000000000
 
+Example of rutile-type silicon oxide crystal structure (VASP 5 style)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 The VASP 5.x style is also supported. Chemical symbols are inserted
 just before the line of the numbers of atoms. The chemical symbols in
 this line overwrite those defined by the ``ATOM_NAME`` tag and those
 defined by the first line of ``POSCAR``.
 
-Example of rutile-type silicon oxide crystal structure (2)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ::
 
    Stishovite

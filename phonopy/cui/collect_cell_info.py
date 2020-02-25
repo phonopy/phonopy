@@ -46,12 +46,18 @@ def collect_cell_info(supercell_matrix=None,
                       enforce_primitive_matrix_auto=False,
                       command_name="phonopy",
                       symprec=1e-5):
-    # Check fallback to phonopy_yaml interface.
-    # If no fallback happens, fallback_reason is None.
-    _interface_mode, fallback_reason = _fallback_to_phonopy_yaml(
+    # In some cases, interface mode falls back to phonopy_yaml mode.
+    fallback_reason = _fallback_to_phonopy_yaml(
         supercell_matrix,
         interface_mode,
         cell_filename)
+
+    if fallback_reason:
+        _interface_mode = 'phonopy_yaml'
+    elif interface_mode is None:
+        _interface_mode = None
+    else:
+        _interface_mode = interface_mode.lower()
 
     unitcell, optional_structure_info = read_crystal_structure(
         filename=cell_filename,
@@ -59,29 +65,153 @@ def collect_cell_info(supercell_matrix=None,
         chemical_symbols=chemical_symbols,
         command_name=command_name)
 
-    unitcell_filename = optional_structure_info[0]
+    # Error check
+    if unitcell is None:
+        err_msg = _get_error_message(optional_structure_info,
+                                     interface_mode,
+                                     fallback_reason,
+                                     cell_filename,
+                                     command_name)
+        return err_msg
 
-    if _interface_mode == 'phonopy_yaml' and unitcell is not None:
-        if optional_structure_info[1] is None:
+    # Retrieve more information on cells
+    (interface_mode_out,
+     supercell_matrix_out,
+     primitive_matrix_out) = _collect_cells_info(
+         _interface_mode,
+         optional_structure_info,
+         command_name,
+         interface_mode,
+         supercell_matrix,
+         primitive_matrix,
+         enforce_primitive_matrix_auto)
+
+    # Another error check
+    msg_list = ["Crystal structure was read from \"%s\"."
+                % optional_structure_info[0], ]
+    if supercell_matrix_out is None:
+        msg_list.append(
+            "Supercell matrix (DIM or --dim) information was not found.")
+        return "\n".join(msg_list)
+
+    if np.linalg.det(unitcell.get_cell()) < 0.0:
+        msg_list.append("Lattice vectors have to follow the right-hand rule.")
+        return "\n".join(msg_list)
+
+    # Succeeded!
+    return (unitcell, supercell_matrix_out, primitive_matrix_out,
+            optional_structure_info, interface_mode_out,
+            interface_mode_out == 'phonopy_yaml')
+
+
+def _fallback_to_phonopy_yaml(supercell_matrix,
+                              interface_mode,
+                              cell_filename):
+    """Find possibility to fallback to phonopy.yaml mode
+
+    When fallback happens.
+
+    1. supercell_matrix is not given
+    2. parsing default VASP style crystal structure failed
+
+    Parameters
+    ----------
+    supercell_matrix : array_like or None
+        None is given when phonopy.yaml mode is expected.
+    interface_mode : str or None
+        None is the default mode, i.e., VASP like.
+    cell_filename : str or None
+        File name of VASP style crystal structure. None means the default
+        file name, "POSCAR".
+
+    Returns
+    -------
+    fallback_reason : str or None
+        This provides information how to handle after the fallback.
+        None means fallback to phonopy.yaml mode will not happen.
+
+    """
+
+    fallback_reason = None
+
+    if interface_mode is None:
+        fallback_reason = _poscar_failed(cell_filename)
+
+    if fallback_reason is not None:
+        if supercell_matrix is None:
+            fallback_reason = "no supercell matrix given"
+
+    return fallback_reason
+
+
+def _poscar_failed(cell_filename):
+    fallback_reason = None
+    try:
+        if cell_filename is None:
+            read_vasp(get_default_cell_filename('vasp'))
+        else:
+            read_vasp(cell_filename)
+    except ValueError:
+        # read_vasp parsing failed.
+        fallback_reason = "read_vasp parsing failed"
+    except FileNotFoundError:
+        if cell_filename is None:
+            fallback_reason = "default file not found"
+        else:
+            # Given file with cell_filename not found.
+            #
+            # In this case, do nothing, i.e., fallback_reason = None.
+            # This error is handled in the following part
+            # (read_crystal_structure).
+            pass
+    return fallback_reason
+
+
+def _collect_cells_info(_interface_mode,
+                        optional_structure_info,
+                        command_name,
+                        interface_mode,
+                        supercell_matrix,
+                        primitive_matrix,
+                        enforce_primitive_matrix_auto):
+    """This is a method just to wrap up and exclude dirty stuffs."""
+
+    if (_interface_mode == 'phonopy_yaml' and
+        optional_structure_info[1] is not None):
+        phpy = optional_structure_info[1]
+        calculator = None
+        if command_name in phpy.yaml:
+            if 'calculator' in phpy.yaml[command_name]:
+                calculator = phpy.yaml[command_name]['calculator']
+        if ('supercell_matrix' in phpy.yaml and
+            phpy.yaml['supercell_matrix'] is not None):
+            smat = phpy.supercell_matrix
+        else:
+            smat = None
+        if ('primitive_matrix' in phpy.yaml and
+            phpy.yaml['primitive_matrix'] is not None):
+            pmat = phpy.primitive_matrix
+        else:
+            pmat = None
+
+        if calculator is None:
             interface_mode_out = interface_mode
         else:
-            interface_mode_out = optional_structure_info[1]
-        if optional_structure_info[2] is None:
+            interface_mode_out = calculator
+        if smat is None:
             _supercell_matrix = supercell_matrix
         else:
-            _supercell_matrix = optional_structure_info[2]
+            _supercell_matrix = smat
         if primitive_matrix is not None:
             _primitive_matrix = primitive_matrix
-        elif optional_structure_info[3] is not None:
-            _primitive_matrix = optional_structure_info[3]
+        elif pmat is not None:
+            _primitive_matrix = pmat
         else:
             _primitive_matrix = 'auto'
-        has_read_phonopy_yaml = True
     else:
         interface_mode_out = _interface_mode
         _supercell_matrix = supercell_matrix
         _primitive_matrix = primitive_matrix
-        has_read_phonopy_yaml = False
 
     if enforce_primitive_matrix_auto:
         _primitive_matrix = 'auto'
@@ -93,84 +223,60 @@ def collect_cell_info(supercell_matrix=None,
 
     primitive_matrix_out = _primitive_matrix
 
-    if unitcell is None:
-        fname_list = optional_structure_info
-        if len(fname_list) == 1:
-            msg = "Crystal structure file of \"%s\"" % fname_list[0]
-            msg_list = ["%s was not found." % msg, ]
-        elif len(fname_list) == 2:
-            msg = "Crystal structure file of \"%s\" %s" % fname_list
-            msg_list = ["%s was not found." % msg, ]
-        elif len(fname_list) == 4:
-            msg_list = []
-            if fallback_reason == "no supercell matrix given":
-                if cell_filename is None:
-                    msg = ["Supercell matrix (DIM or --dim) is not specified. "
-                           "To run phonopy without",
-                           "explicitly setting supercell matrix, \"%s\" or \"%s\" "
-                           % fname_list[:2],
-                           "must exist in the current directory."]
-                    msg_list += msg
-                else:
-                    msg_list.append("Supercell matrix (DIM or --dim) may be "
-                                    "forgotten to be specified.")
-            elif fallback_reason == "default file not found":
-                msg_list = ["Any crystal structure file was not found.", ""]
-            elif fallback_reason == "read_vasp failed":
-                msg_list = []
+    return interface_mode_out, supercell_matrix_out, primitive_matrix_out
 
-                if cell_filename:
-                    msg_list.append(
-                        "Parsing crystal structure file of \"%s\" failed."
-                        % cell_filename)
-                else:
-                    msg_list.append(
-                        "Parsing crystal structure file failed.")
-                msg_list += [
-                    "Calculator interface may not be given correctly.", ""]
 
+def _get_error_message(optional_structure_info,
+                       interface_mode,
+                       fallback_reason,
+                       cell_filename,
+                       command_name):
+    final_cell_filename = optional_structure_info[0]
+
+    if fallback_reason is None:
+        msg_list = []
+        if cell_filename != final_cell_filename:
+            msg_list.append("Crystal structure file \"%s\" was not found."
+                            % cell_filename)
+        msg_list.append("Crystal structure file \"%s\" was not found."
+                        % final_cell_filename)
         return "\n".join(msg_list)
 
-    if supercell_matrix_out is None:
-        return "Supercell matrix (DIM or --dim) is not specified."
+    ####################################
+    # Must be phonopy_yaml mode below. #
+    ####################################
 
-    # Check unit cell
-    if np.linalg.det(unitcell.get_cell()) < 0.0:
-        return "Lattice vectors have to follow the right-hand rule."
+    msg_list = []
+    if fallback_reason in ["default file not found",
+                           "read_vasp parsing failed"]:
+        if cell_filename:
+            vasp_filename = cell_filename
+        else:
+            vasp_filename = get_default_cell_filename('vasp')
 
-    return (unitcell, supercell_matrix_out, primitive_matrix_out,
-            unitcell_filename, optional_structure_info, interface_mode_out,
-            has_read_phonopy_yaml)
+        if fallback_reason == "read_vasp parsing failed":
+            msg_list.append(
+                "Parsing crystal structure file of \"%s\" failed."
+                % vasp_filename)
+        else:
+            msg_list.append(
+                "Crystal structure file of \"%s\" was not found."
+                % vasp_filename)
 
+    elif fallback_reason == "no supercell matrix given":
+        msg_list.append("Supercell matrix (DIM or --dim) was not explicitly "
+                        "specified.")
 
-def _fallback_to_phonopy_yaml(supercell_matrix,
-                              interface_mode,
-                              cell_filename):
-    fallback_reason = None
-    if supercell_matrix is None:
-        fallback_reason = "no supercell matrix given"
-    elif interface_mode is None:
-        try:
-            if cell_filename is None:
-                read_vasp(get_default_cell_filename('vasp'))
-            else:
-                read_vasp(cell_filename)
-        except ValueError as e:
-            # read_vasp parsing failed.
-            fallback_reason = "read_vasp failed"
-        except FileNotFoundError as e:
-            if cell_filename is None:
-                fallback_reason = "default file not found"
-            else:
-                # Do nothing. If this is a problem, this is handled in the
-                # following part (read_crystal_structure).
-                pass
+    msg_list.append("By this reason, phonopy_yaml mode was invoked.")
 
-    if fallback_reason:
-        _interface_mode = 'phonopy_yaml'
-    elif interface_mode is None:
-        _interface_mode = None
-    else:
-        _interface_mode = interface_mode.lower()
+    if final_cell_filename is None:  # No phonopy*.yaml file was found.
+        msg_list.append("But \"%s\" and \"%s\" could not be found."
+                        % ("%s_disp.yaml" % command_name,
+                           "%s.yaml" % command_name))
+        return "\n".join(msg_list)
 
-    return _interface_mode, fallback_reason
+    phpy = optional_structure_info[1]
+    if phpy is None:  # Failed to parse phonopy*.yaml.
+        msg_list.append("But parsing \"%s\" failed." % final_cell_filename)
+
+    return "\n".join(msg_list)

@@ -216,12 +216,16 @@ def print_settings(settings,
                    is_band_auto,
                    primitive_matrix,
                    supercell_matrix,
-                   cell_filename,
+                   unitcell_filename,
                    interface_mode):
     run_mode = settings.get_run_mode()
     if interface_mode:
         print("Calculator interface: %s" % interface_mode)
-    print("Crystal structure was read from \"%s\"." % cell_filename)
+    if (settings.get_cell_filename() is not None and
+        settings.get_cell_filename() != unitcell_filename):
+        print("\"%s\" was not able to be used."
+              % settings.get_cell_filename())
+    print("Crystal structure was read from \"%s\"." % unitcell_filename)
     if is_band_auto and not is_primitive_axes_auto:
         print("Automatic band structure mode forced automatic choice "
               "of primitive axes.")
@@ -505,8 +509,9 @@ if type(cell_info) is str:
         print_error()
     sys.exit(1)
 (unitcell, supercell_matrix, primitive_matrix,
- unitcell_filename, optional_structure_info, interface_mode,
+ optional_structure_info, interface_mode,
  has_read_phonopy_yaml) = cell_info
+unitcell_filename = optional_structure_info[0]
 
 # Set magnetic moments
 magmoms = settings.get_magnetic_moments()
@@ -608,7 +613,7 @@ if log_level > 0:
                    is_band_auto,
                    phonon.primitive_matrix,
                    supercell_matrix,
-                   optional_structure_info[0],
+                   unitcell_filename,
                    interface_mode)
     if magmoms is None:
         print("Spacegroup: %s" %

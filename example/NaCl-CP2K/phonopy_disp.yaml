@@ -1,10 +1,12 @@
 phonopy:
-  version: 2.3.2
+  version: 2.4.2
   calculator: cp2k
   frequency_unit_conversion_factor: 15.633302
+  symmetry_tolerance: 1.00000e-05
   configuration:
     cell_filename: "NaCl.inp"
     dim: "2 2 2"
+    calculator: "cp2k"
     create_displacements: ".true."
 
 physical_unit:

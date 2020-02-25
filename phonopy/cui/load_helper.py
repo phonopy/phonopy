@@ -53,12 +53,12 @@ def get_cell_settings(phonopy_yaml=None,
                       calculator=None,
                       symprec=1e-5):
     if unitcell_filename is not None:
-        cell, filename = read_crystal_structure(
+        cell, optional_structure_info = read_crystal_structure(
             filename=unitcell_filename, interface_mode=calculator)
         smat = get_supercell_matrix(supercell_matrix)
         pmat = primitive_matrix
     elif supercell_filename is not None:
-        cell, filename = read_crystal_structure(
+        cell, optional_structure_info = read_crystal_structure(
             filename=supercell_filename, interface_mode=calculator)
         smat = np.eye(3, dtype='intc', order='C')
         if primitive_matrix is None or primitive_matrix == "auto":
@@ -76,6 +76,7 @@ def get_cell_settings(phonopy_yaml=None,
         raise RuntimeError("Cell has to be specified.")
 
     if cell is None:
+        filename = optional_structure_info[0]
         msg = "'%s' could not be found." % filename
         raise FileNotFoundError(msg)
 
