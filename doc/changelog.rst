@@ -3,6 +3,10 @@
 Change Log
 ==========
 
+Dec-22-2019: Version 2.5.0
+--------------------------
+* ``phonopy-dispmanager`` was removed.
+
 Dec-22-2019: Version 2.4.2
 --------------------------
 * Collection of minor updates: adding docstrings, refactoring group
@@ -805,7 +809,7 @@ Apr-18-2011: Version 0.9.4.2
   (:ref:`band_structure_related_tags`).
 
 * ``dispmanager``, an auxiliary tool for modifying ``disp.yaml``, is
-  developed (:ref:`dispmanager_tool`).
+  developed.
 
 * Symmetry finder update to spglib-1.0.3.1. Almost perfect casting to
   a Bravais lattice is achieved using ``--symmetry`` option.

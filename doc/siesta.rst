@@ -28,7 +28,7 @@ The procedure of a Siesta-phonopy calculation is the following:
    ``supercell-xxx.fdf`` (``xxx`` are numbers) give the perfect
    supercell and supercells with displacements, respectively. In these
    supercell files, lines only relevant to crystal structures are
-   generated. ``disp.yaml`` is also created. This file contains
+   generated. ``phonopy_disp.yaml`` is also created. This file contains
    information on displacements. Perhaps the supercell files are
    stored in ``disp-xxx`` directories, then Siesta calculations are
    executed in these directories.
@@ -42,11 +42,11 @@ The procedure of a Siesta-phonopy calculation is the following:
 3) Create ``FORCE_SETS`` by
 
    ::
-   
+
      % phonopy --siesta -f disp-001/Si.FA ...
 
    Here ``*.FA`` files are the forces files created by Siesta.
-   To run this command, ``disp.yaml`` has to be
+   To run this command, ``phonopy_disp.yaml`` has to be
    located in the current directory because the atomic displacements are
    written into the FORCE_SETS file. An example is found in
    ``example/Si-siesta``.
@@ -57,6 +57,5 @@ The procedure of a Siesta-phonopy calculation is the following:
    % phonopy --siesta -c Si.fdf -p band.conf
 
    or::
-   
-   % phonopy --siesta -c Si.fdf --dim="2 2 2" [other-OPTIONS] [setting-file]
 
+   % phonopy --siesta -c Si.fdf --dim="2 2 2" [other-OPTIONS] [setting-file]

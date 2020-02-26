@@ -73,59 +73,6 @@ plotted together.
 
 ..    tdplot -i '1 2 4 5, 3 6' -o 'td.pdf' thermal_displacements.yaml
 
-.. _dispmanager_tool:
-
-``phonopy-dispmanager``
--------------------------
-
-This is used for two purposes.
-
-The first argument is the displacement file (``disp.yaml`` type). The
-default file name is ``disp.yaml``.
-
-``-a``, ``--amplitude``, ``-s``, ``-o``, ``--overwite``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-``-o`` is used to specify the output file name of the new displacement
-file and ``--overwrite`` is used to overwrite the displacement file.
-
-``-a`` is specified with an atom index and a direction of displacement
-as a character string. The first value is the atom index and remaining
-three values are for direction. ``--amplitude`` is used with ``-a``
-and specify the displacement amplitude. An example is as follows:
-
-::
-
-   phonopy-dispmanager disp.yaml -o disp-new.yaml -a "33 1 1 0" --amplitude 0.05
-
-``disp-new.yaml`` is created from ``disp.yaml`` with a new
-displacement of the thirty-third atom (index 33) with the direction of
-(1,1,0) with the amplitude of 0.05. The direction is defined against
-lattice vectors. The amplitude unit is same as the lattice vectors.
-
-``-s`` is specified with displacement indices. For example when there
-are four dependent displacements and only the first and third
-displacements are needed, ``phonopy-dispmanager`` is used like
-
-::
-
-   phonopy-dispmanager disp.yaml -o disp-new.yaml -s "1 3"
-
-``-w``
-^^^^^^^
-
-The option is used to create supercells with displacements in
-``POSCAR`` format from a displacement file. ``DPOSCAR-xxx`` files are
-created.
-
-``--compatibility``
-^^^^^^^^^^^^^^^^^^^^
-
-The old style displacement file ``DISP`` is compared with
-``disp.yaml`` whether the directions of the displacements are
-equivalent or not.
-
-
 ``phonopy-vasp-born``
 ----------------------
 
