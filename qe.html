@@ -91,7 +91,7 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Quantum ESPRESSO (QE) &amp; phonopy calculation</a><ul>
-<li><a class="reference internal" href="#supported-pwscf-tags">Supported Pwscf tags</a></li>
+<li><a class="reference internal" href="#supported-qe-pw-tags">Supported QE-PW tags</a></li>
 <li><a class="reference internal" href="#how-to-run">How to run</a><ul>
 <li><a class="reference internal" href="#non-analytical-term-correction-optional">Non-analytical term correction (Optional)</a></li>
 </ul>
@@ -154,7 +154,7 @@ system. But the document here explains how to calculate phonons using
 phonopy, i.e., using the finite displacement and supercell approach.</p>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><p><a class="reference internal" href="#supported-pwscf-tags" id="id1">Supported Pwscf tags</a></p></li>
+<li><p><a class="reference internal" href="#supported-qe-pw-tags" id="id1">Supported QE-PW tags</a></p></li>
 <li><p><a class="reference internal" href="#how-to-run" id="id2">How to run</a></p>
 <ul>
 <li><p><a class="reference internal" href="#non-analytical-term-correction-optional" id="id3">Non-analytical term correction (Optional)</a></p></li>
@@ -167,9 +167,9 @@ phonopy, i.e., using the finite displacement and supercell approach.</p>
 </li>
 </ul>
 </div>
-<div class="section" id="supported-pwscf-tags">
-<h2><a class="toc-backref" href="#id1">Supported Pwscf tags</a><a class="headerlink" href="#supported-pwscf-tags" title="Permalink to this headline">¶</a></h2>
-<p>Currently Pwscf tags that phonopy can read are shown below.  Only
+<div class="section" id="supported-qe-pw-tags">
+<h2><a class="toc-backref" href="#id1">Supported QE-PW tags</a><a class="headerlink" href="#supported-qe-pw-tags" title="Permalink to this headline">¶</a></h2>
+<p>Currently QE-PW tags that phonopy can read are shown below.  Only
 <code class="docutils literal notranslate"><span class="pre">ibrav</span> <span class="pre">=</span> <span class="pre">0</span></code> type representation of crystal structure is supported.
 More tags may be supported on request.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">nat</span><span class="p">,</span> <span class="n">ntyp</span><span class="p">,</span> <span class="n">celldm</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">ATOMIC_SPECIES</span><span class="p">,</span> <span class="n">ATOMIC_POSITIONS</span><span class="p">,</span> <span class="n">CELL_PARAMETERS</span>
@@ -178,10 +178,10 @@ More tags may be supported on request.</p>
 </div>
 <div class="section" id="how-to-run">
 <h2><a class="toc-backref" href="#id2">How to run</a><a class="headerlink" href="#how-to-run" title="Permalink to this headline">¶</a></h2>
-<p>The procedure of Pwscf-phonopy calculation is shown below using the
-NaCl example found in <code class="docutils literal notranslate"><span class="pre">example/NaCl-pwscf</span></code> directory.</p>
+<p>The procedure of QE-phonopy calculation is shown below using the
+NaCl example found in <code class="docutils literal notranslate"><span class="pre">example/NaCl-QE</span></code> directory.</p>
 <ol class="arabic">
-<li><p>Read a Pwscf input file and create supercells with
+<li><p>Read a QE-PW input file and create supercells with
 <a class="reference internal" href="command-options.html#qe-mode"><span class="std std-ref">--qe</span></a> option:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span>
 </pre></div>
@@ -191,23 +191,23 @@ NaCl example found in <code class="docutils literal notranslate"><span class="pr
 supercell and supercells with displacements, respectively. In the
 case of the NaCl example, two files <code class="docutils literal notranslate"><span class="pre">supercell-001.in</span></code> and
 <code class="docutils literal notranslate"><span class="pre">supercell-002.in</span></code> are created. In these supercell files, lines
-only relevant to crystal structures are given. <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> is
-also generated, which contains information about supercell and
-displacements.</p>
+only relevant to crystal structures are
+given. <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> is also generated, which contains
+information about supercell and displacements.</p>
 </li>
-<li><p>To make Pwscf input files, necessary setting information is added to
+<li><p>To make QE-PW input files, necessary setting information is added to
 <code class="docutils literal notranslate"><span class="pre">supercell-xxx.in</span></code> files, e.g., by:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>% for i in {001,002};do cat header.in supercell-$i.in &gt;| NaCl-$i.in; done
 </pre></div>
 </div>
 <p>where <code class="docutils literal notranslate"><span class="pre">header.in</span></code> is specially made for this NaCl example and
-this file is found in <code class="docutils literal notranslate"><span class="pre">example/NaCl-pwscf</span></code> directory. This
+this file is found in <code class="docutils literal notranslate"><span class="pre">example/NaCl-QE</span></code> directory. This
 setting is of course dependent on systems and has to be written for
 each interested system. Note that supercells with displacements
 must not be relaxed in the force calculations, because atomic
 forces induced by a small atomic displacement are what we need for
 phonon calculation.</p>
-<p>Then Pwscf supercell calculations are executed to obtain force on
+<p>Then QE-PW supercell calculations are executed to obtain force on
 atoms, e.g., as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">mpirun</span> <span class="n">pw</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span><span class="n">i</span> <span class="n">NaCl</span><span class="o">-</span><span class="mf">001.</span><span class="ow">in</span> <span class="o">|&amp;</span> <span class="n">tee</span> <span class="n">NaCl</span><span class="o">-</span><span class="mf">001.</span><span class="n">out</span>
 <span class="o">%</span> <span class="n">mpirun</span> <span class="n">pw</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span><span class="n">i</span> <span class="n">NaCl</span><span class="o">-</span><span class="mf">002.</span><span class="ow">in</span> <span class="o">|&amp;</span> <span class="n">tee</span> <span class="n">NaCl</span><span class="o">-</span><span class="mf">002.</span><span class="n">out</span>
@@ -216,15 +216,15 @@ atoms, e.g., as follows:</p>
 </li>
 <li><p>To create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>, that is used by phonopy,
 the following phonopy command is executed:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">-</span><span class="n">f</span> <span class="n">NaCl</span><span class="o">-</span><span class="mf">001.</span><span class="n">out</span> <span class="n">NaCl</span><span class="o">-</span><span class="mf">002.</span><span class="n">out</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">NaCl</span><span class="o">-</span><span class="mf">001.</span><span class="n">out</span> <span class="n">NaCl</span><span class="o">-</span><span class="mf">002.</span><span class="n">out</span>
 </pre></div>
 </div>
 <p>Here <code class="docutils literal notranslate"><span class="pre">.out</span></code> files are the saved text files of standard outputs of the
-Pwscf calculations. If more supercells with displacements were
+QE-PW calculations. If more supercells with displacements were
 created in the step 1, all <code class="docutils literal notranslate"><span class="pre">.out</span></code> files are given in the above
-command. To run this command, <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> has to be located in
+command. To run this command, <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> has to be located in
 the current directory because the information on atomic
-displacements stored in <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> are used to generate
+displacements stored in <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> are used to generate
 <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>. See some more detail at
 <a class="reference internal" href="command-options.html#qe-force-sets-option"><span class="std std-ref">Quantum ESPRESSO interface</span></a>.</p>
 </li>
@@ -262,7 +262,7 @@ automatically read. Examples of post-process are shown below.</p>
 </pre></div>
 </div>
 <p><a class="reference internal" href="_images/NaCl-pwscf-band.png"><img alt="pwscf-band" src="_images/NaCl-pwscf-band.png" style="width: 50%;" /></a></p>
-<p><code class="docutils literal notranslate"><span class="pre">--qe</span> <span class="pre">-c</span> <span class="pre">NaCl.in</span></code> is specific for the Pwscf-phonopy
+<p><code class="docutils literal notranslate"><span class="pre">--qe</span> <span class="pre">-c</span> <span class="pre">NaCl.in</span></code> is specific for the QE-phonopy
 calculation but the other settings are totally common among calculator
 interfaces such as</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="p">[</span><span class="n">other</span><span class="o">-</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="p">[</span><span class="n">setting</span><span class="o">-</span><span class="n">file</span><span class="p">]</span>
@@ -278,7 +278,7 @@ for examples, see <a class="reference internal" href="examples.html#examples-lin
 <p>To activate non-analytical term correction, <a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a> is
 required. This file contains the information of Born effective charge
 and dielectric constant. These physical values are also obtained from
-the pwscf (<code class="docutils literal notranslate"><span class="pre">pw.x</span></code>) &amp; phonon (<code class="docutils literal notranslate"><span class="pre">ph.x</span></code>) codes in Quantum ESPRESSO
+the PW (<code class="docutils literal notranslate"><span class="pre">pw.x</span></code>) &amp; PH (<code class="docutils literal notranslate"><span class="pre">ph.x</span></code>) codes in Quantum ESPRESSO
 package. There are two steps. The first step is usual self-consistent
 field (SCF) calculation
 by and the second step is running its response function calculations

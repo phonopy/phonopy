@@ -159,7 +159,7 @@ supercells with <a class="reference internal" href="command-options.html#abinit-
 <code class="docutils literal notranslate"><span class="pre">supercell-xxx.in</span></code> (<code class="docutils literal notranslate"><span class="pre">xxx</span></code> are numbers) give the perfect
 supercell and supercells with displacements, respectively. In these
 supercell files, lines only related to crystal structures are
-generated. <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> is also created. This file contains
+generated. <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> is also created. This file contains
 information on displacements. Perhaps the supercell files are
 stored in <code class="docutils literal notranslate"><span class="pre">disp-xxx</span></code> directories, then Abinit calculations are
 executed in these directories.</p>
@@ -171,10 +171,10 @@ relaxed in the force calculations, because atomic forces induced by
 a small atomic displacement are what we need for phonon
 calculation.</p></li>
 <li><p>Create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> by</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">abinit</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">supercell</span><span class="o">-</span><span class="mf">001.</span><span class="n">out</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">supercell</span><span class="o">-</span><span class="mf">002.</span><span class="n">out</span>  <span class="o">...</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">supercell</span><span class="o">-</span><span class="mf">001.</span><span class="n">out</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">supercell</span><span class="o">-</span><span class="mf">002.</span><span class="n">out</span>  <span class="o">...</span>
 </pre></div>
 </div>
-<p>To run this command, <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> has to be located in the current
+<p>To run this command, <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> has to be located in the current
 directory because the atomic displacements are written into the
 FORCE_SETS file. See some more detail at
 <a class="reference internal" href="command-options.html#abinit-force-sets-option"><span class="std std-ref">ABINIT interface</span></a>. An example is found in

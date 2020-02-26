@@ -16,12 +16,12 @@ The CRYSTAL interface reads the unit cell from a CRYSTAL output file
 For optimization outputs, the final geometry in the file is read.
 
 If dielectric tensor and effective Born charges are available, they can be
-read with ``phonopy-crystal-born`` script. The script creates a BORN file for 
+read with ``phonopy-crystal-born`` script. The script creates a BORN file for
 :ref:`nac_tag`.
 
 The recommended strategy is to carry out a Gamma-point frequency calculation
-with INTENS and INTCPHF and use this as input to Phonopy. This produces all 
-required quantities and also confirms that the structure optimization has 
+with INTENS and INTCPHF and use this as input to Phonopy. This produces all
+required quantities and also confirms that the structure optimization has
 converged to a true local minimum.
 
 If ATOMSPIN keyword is present, magnetic moments are read from it. There
@@ -82,7 +82,7 @@ parameter is not needed
    Here ``.o`` files are the CRYSTAL output files from the force
    calculations. All ``.o`` files corresponding to the generated
    ``supercell-xxx.d12`` files have to be given in the above command.
-   To run this command, ``disp.yaml`` has to be located in the current
+   To run this command, ``phonopy_disp.yaml`` has to be located in the current
    directory because the information on atomic displacements stored in
    ``phonopy_disp.yaml`` are used to generate ``FORCE_SETS``. See some more
    detail at :ref:`crystal_force_sets_option`.
@@ -141,7 +141,7 @@ parameter is not needed
 Non-analytical term correction (Optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The workflow for a CRYSTAL-Phonopy calculation with :ref:`nac_tag` is outlined here 
+The workflow for a CRYSTAL-Phonopy calculation with :ref:`nac_tag` is outlined here
 using the NaCl example found in ``example/NaCl-CRYSTAL``.
 
 In this example, the CRYSTAL output file is ``crystal.o``.

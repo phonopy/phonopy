@@ -160,7 +160,7 @@ More tags may be supported on request.</p>
 <code class="docutils literal notranslate"><span class="pre">supercell-xxx.fdf</span></code> (<code class="docutils literal notranslate"><span class="pre">xxx</span></code> are numbers) give the perfect
 supercell and supercells with displacements, respectively. In these
 supercell files, lines only relevant to crystal structures are
-generated. <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> is also created. This file contains
+generated. <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> is also created. This file contains
 information on displacements. Perhaps the supercell files are
 stored in <code class="docutils literal notranslate"><span class="pre">disp-xxx</span></code> directories, then Siesta calculations are
 executed in these directories.</p>
@@ -175,7 +175,7 @@ atomic displacement are what we need for the phonon calculation.</p></li>
 </pre></div>
 </div>
 <p>Here <code class="docutils literal notranslate"><span class="pre">*.FA</span></code> files are the forces files created by Siesta.
-To run this command, <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> has to be
+To run this command, <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> has to be
 located in the current directory because the atomic displacements are
 written into the FORCE_SETS file. An example is found in
 <code class="docutils literal notranslate"><span class="pre">example/Si-siesta</span></code>.</p>

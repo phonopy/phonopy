@@ -159,7 +159,7 @@ More tags may be supported on request.</p>
 <code class="docutils literal notranslate"><span class="pre">supercell-xxx.in</span></code> (<code class="docutils literal notranslate"><span class="pre">xxx</span></code> are numbers) give the perfect
 supercell and supercells with displacements, respectively. In these
 supercell files, lines only relevant to crystal structures are
-generated. <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> is also created. This file contains
+generated. <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> is also created. This file contains
 information on displacements. Perhaps the supercell files of
 <code class="docutils literal notranslate"><span class="pre">supercell-xxx.in</span></code> are stored in <code class="docutils literal notranslate"><span class="pre">disp-xxx</span></code> directories as
 <code class="docutils literal notranslate"><span class="pre">elk.in</span></code>, respectively, then Elk calculations are executed in
@@ -172,10 +172,10 @@ relaxed in the force calculations, because atomic forces induced by
 a small atomic displacement are what we need for phonon
 calculation.</p></li>
 <li><p>Create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> by</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">elk</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">INFO</span><span class="o">.</span><span class="n">OUT</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">INFO</span><span class="o">.</span><span class="n">OUT</span>  <span class="o">...</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">INFO</span><span class="o">.</span><span class="n">OUT</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">INFO</span><span class="o">.</span><span class="n">OUT</span>  <span class="o">...</span>
 </pre></div>
 </div>
-<p>To run this command, <code class="docutils literal notranslate"><span class="pre">disp.yaml</span></code> has to be located in the current
+<p>To run this command, <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> has to be located in the current
 directory because the atomic displacements are written into the
 FORCE_SETS file. See some more detail at
 <a class="reference internal" href="command-options.html#elk-force-sets-option"><span class="std std-ref">Elk interface</span></a>. An example is found in
