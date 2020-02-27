@@ -5,7 +5,7 @@
 
 # Phonopy
 
-Phonon code. Phonopy user documetation is found at http://atztogo.github.io/phonopy/
+Phonon code. Phonopy user documetation is found at http://phonopy.github.io/phonopy/
 
 ## Mailing list for questions
 
