@@ -134,7 +134,6 @@ scripts_phonopy = ['scripts/phonopy',
                    'scripts/phonopy-crystal-born',
                    'scripts/phonopy-propplot',
                    'scripts/phonopy-tdplot',
-                   'scripts/phonopy-dispmanager',
                    'scripts/phonopy-gruneisen',
                    'scripts/phonopy-gruneisenplot',
                    'scripts/phonopy-pdosplot']
