@@ -3,8 +3,11 @@
 Change Log
 ==========
 
-Dec-22-2019: Version 2.5.0
+Feb-29-2019: Version 2.5.0
 --------------------------
+* New options, ``--include-*``, to write summary in
+  ``phonopy.yaml``. See :ref:`summary_tag`.
+* FHI-aims interface (``--aims``) was created by Florian Knoop.
 * ``phonopy-dispmanager`` was removed.
 
 Dec-22-2019: Version 2.4.2
