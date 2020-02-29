@@ -1,4 +1,3 @@
-
 Documentation
 ==============
 
@@ -7,15 +6,15 @@ Documentation
 
    install
    symmetry
-   Tutorial <procedure>
    workflow
    examples
    input-files
    output-files
    setting-tags
    command-options
-   qha
+   dynamic-structure-factor
    Mode Grüneisen parameters <gruneisen>
+   qha
    interfaces
    auxiliary-tools
    external-tools

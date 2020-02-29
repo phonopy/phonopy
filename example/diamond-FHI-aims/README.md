@@ -11,4 +11,4 @@ This is a minimal example on how to run `phonopy` with `FHI-aims` as the force c
 4) Calculate phonon dispersion data into band.yaml and save band.pdf:
    ```phonopy -p -s band.conf```
 
-Have fun and read the docs: [https://atztogo.github.io/phonopy/](https://atztogo.github.io/phonopy/) 
+Have fun and read the docs: [https://phonopy.github.io/phonopy/](https://phonopy.github.io/phonopy/)

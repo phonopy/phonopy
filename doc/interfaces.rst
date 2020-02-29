@@ -3,12 +3,47 @@
 Interfaces to calculators
 ==========================
 
+.. contents::
+   :depth: 3
+   :local:
+
 The interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT, Elk,
 SIESTA, CRYSTAL, DFTB+, TURBOMOLE, and FHI-AIMS are built in to the usual phonopy command. See the
 command options and how to invoke each of them at
 :ref:`force_calculators`. :ref:`LAMMPS interface
 <external_tools_phonolammps>` is provided as an external tool by Abel
 Carreras.
+
+.. _interfaces_to_force_calculators:
+
+List of force calculators
+-------------------------
+
+Short tutorials for the force calculators are found in the following
+pages.
+
+.. toctree::
+   :maxdepth: 1
+
+   vasp
+   wien2k
+   qe
+   abinit
+   siesta
+   elk
+   crystal
+   dftb+
+   turbomole
+   cp2k
+   aims
+
+The VASP DFPT
+interface reads ``vasprun.xml`` and creates ``FORCE_CONSTANTS`` file.
+
+.. toctree::
+   :maxdepth: 1
+
+   vasp-dfpt
 
 Physical unit system for calculator
 ------------------------------------
@@ -110,41 +145,3 @@ Default unit conversion factor for non-analytical term correction
    TURBOMOLE | 1
    CP2K      | None (N/A)
    FHI-AIMS  | 14.399652
-
-
-.. _tutorials_for_calculators:
-
-Tutorials for calculators
---------------------------
-
-Force calculators
-^^^^^^^^^^^^^^^^^^^
-
-Short tutorials for force calculators are found in the following pages.
-
-.. toctree::
-   :maxdepth: 1
-
-   vasp
-   wien2k
-   qe
-   abinit
-   siesta
-   elk
-   crystal
-   dftb+
-   turbomole
-   cp2k
-   aims
-
-VASP DFPT force constants
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Using VASP DFPT feature, force constants are directly
-calculated. Phonopy VASP DFPT interface reads ``vasprun.xml`` and
-creates ``FORCE_CONSTANTS`` file.
-
-.. toctree::
-   :maxdepth: 1
-
-   vasp-dfpt
