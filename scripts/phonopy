@@ -823,7 +823,7 @@ if settings.get_is_rotational_invariance():
 ##################################
 # Non-analytical term correction #
 ##################################
-if settings.get_is_nac() or phpy_yaml:
+if settings.get_is_nac():
     def read_nac_params_from_phonopy_yaml(phpy_yaml):
         if phpy_yaml.nac_params is not None:
             return phpy_yaml.nac_params
