@@ -368,6 +368,9 @@ class PhonopyYaml(object):
         if 'born' in nac_params and 'dielectric' in nac_params:
             self.nac_params = nac_params
 
+        if self.command_name in self.yaml:
+            self.calculator = self.yaml[self.command_name]['calculator']
+
     def _parse_cell(self, cell_yaml):
         lattice = None
         if 'lattice' in cell_yaml:

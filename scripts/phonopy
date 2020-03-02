@@ -40,9 +40,9 @@ import numpy as np
 from phonopy import Phonopy, __version__
 from phonopy.file_IO import (
     parse_FORCE_CONSTANTS, parse_FORCE_SETS, get_born_parameters,
-    write_FORCE_CONSTANTS, write_force_constants_to_hdf5, parse_QPOINTS,
-    parse_disp_yaml)
+    write_FORCE_CONSTANTS, write_force_constants_to_hdf5, parse_QPOINTS)
 from phonopy.cui.collect_cell_info import collect_cell_info
+from phonopy.cui.create_force_sets import create_FORCE_SETS
 from phonopy.cui.load_helper import read_force_constants_from_hdf5
 from phonopy.cui.settings import PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
@@ -53,8 +53,7 @@ from phonopy.structure.atoms import atom_data, symbol_map
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.calculator import (
     get_interface_mode, write_supercells_with_displacements,
-    get_default_displacement_distance, get_default_physical_units,
-    create_FORCE_SETS)
+    get_default_displacement_distance, get_default_physical_units)
 from phonopy.interface.vasp import create_FORCE_CONSTANTS
 from phonopy.phonon.band_structure import (
     get_band_qpoints, get_band_qpoints_by_seekpath)
@@ -360,12 +359,6 @@ def write_displacements_files(phonon,
 
     if log_level > 0:
         print("\"phonopy_disp.yaml\" and supercells have been created.")
-        print('')
-        print("NOTE:")
-        print("  Displacements information is written into "
-              "\"phonopy_disp.yaml\" from v1.15.0.")
-        print("  \"disp.yaml\" is still supported to read, but will be "
-              "deprecated.")
 
     phonopy_conf.settings.set_include_displacements(True)
 
@@ -374,6 +367,51 @@ def write_displacements_files(phonon,
                      phonon,
                      interface_mode,
                      filename="phonopy_disp.yaml")
+
+
+def create_FORCE_SETS_from_args(args, log_level):
+    interface_mode = get_interface_mode(vars(args))
+    if args.force_sets:
+        filenames = args.force_sets
+        force_sets_zero_mode = False
+    elif args.force_sets_zero:
+        filenames = args.force_sets_zero
+        force_sets_zero_mode = True
+    else:
+        print_error_message("Something wrong for parsing arguments.")
+        sys.exit(0)
+
+    disp_filenames = files_exist(['phonopy_disp.yaml', 'disp.yaml'],
+                                 log_level, is_any=True)
+    if disp_filenames[0] == 'phonopy_disp.yaml':
+        try:
+            phpy_yaml = PhonopyYaml()
+            phpy_yaml.read('phonopy_disp.yaml')
+            if phpy_yaml.calculator is not None:
+                interface_mode = phpy_yaml.calculator
+            disp_filename = 'phonopy_disp.yaml'
+        except KeyError:
+            file_exists('disp.yaml', log_level)
+            if log_level > 0:
+                print("\"phonopy_disp.yaml\" was found but wasn't used "
+                      "because of the old-style format.")
+            disp_filename = 'disp.yaml'
+    else:
+        disp_filename = disp_filenames[0]
+
+    files_exist(filenames, log_level)
+
+    error_num = create_FORCE_SETS(
+        interface_mode,
+        filenames,
+        symmetry_tolerance=args.symmetry_tolerance,
+        wien2k_P1_mode=args.is_wien2k_p1,  # For test only
+        force_sets_zero_mode=force_sets_zero_mode,
+        disp_filename=disp_filename,
+        log_level=log_level)
+    if log_level > 0:
+        print_end()
+    sys.exit(error_num)
 
 
 #################
@@ -413,6 +451,10 @@ if args.is_graph_save:
 if log_level > 0:
     print_phononpy()
     print_version(phonopy_version)
+    print("Python version %d.%d.%d" % sys.version_info[:3])
+    import phonopy.structure.spglib as spglib
+    print("Spglib version %d.%d.%d" % spglib.get_version())
+    print("")
 
     if deprecated:
         show_deprecated_option_warnings(deprecated)
@@ -422,47 +464,8 @@ if log_level > 0:
 ###########################
 # Create FORCE_SETS (-f or --force_sets)
 if args.force_sets or args.force_sets_zero:
-    interface_mode = get_interface_mode(vars(args))
-    if args.force_sets:
-        filenames = args.force_sets
-        force_sets_zero_mode = False
-    elif args.force_sets_zero:
-        filenames = args.force_sets_zero
-        force_sets_zero_mode = True
-    else:
-        print_error_message("Something wrong for parsing arguments.")
-        sys.exit(0)
+    create_FORCE_SETS_from_args(args, log_level)
 
-    disp_filenames = files_exist(['phonopy_disp.yaml', 'disp.yaml'],
-                                 log_level, is_any=True)
-    if disp_filenames[0] == 'phonopy_disp.yaml':
-        try:
-            dataset = parse_disp_yaml(filename='phonopy_disp.yaml')
-            if 'calculator' in dataset:
-                interface_mode = dataset['calculator']
-            disp_filename = 'phonopy_disp.yaml'
-        except KeyError:
-            file_exists('disp.yaml', log_level)
-            if log_level > 0:
-                print("\"phonopy_disp.yaml\" was found but wasn't used "
-                      "because of the old-style format.")
-            disp_filename = 'disp.yaml'
-    else:
-        disp_filename = disp_filenames[0]
-
-    files_exist(filenames, log_level)
-
-    error_num = create_FORCE_SETS(
-        interface_mode,
-        filenames,
-        symmetry_tolerance=args.symmetry_tolerance,
-        is_wien2k_p1=args.is_wien2k_p1,
-        force_sets_zero_mode=force_sets_zero_mode,
-        disp_filename=disp_filename,
-        log_level=log_level)
-    if log_level > 0:
-        print_end()
-    sys.exit(error_num)
 
 # Create FORCE_CONSTANTS (--fc or --force_constants)
 if args.force_constants:
@@ -607,9 +610,6 @@ if settings.get_masses() is not None:
 
 # Show logs
 if log_level > 0:
-    print("Python version %d.%d.%d" % sys.version_info[:3])
-    import phonopy.structure.spglib as spglib
-    print("Spglib version %d.%d.%d" % spglib.get_version())
     print_settings(settings,
                    (type(primitive_matrix) is str and
                     primitive_matrix == 'auto'),
@@ -833,7 +833,7 @@ if settings.get_is_nac():
     def read_BORN(phonon):
         with open("BORN") as f:
             return get_born_parameters(
-                f, phonon.primitive, phonon.get_primitive_symmetry())
+                f, phonon.primitive, phonon.primitive_symmetry)
 
     nac_params = None
 

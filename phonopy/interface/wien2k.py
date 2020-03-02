@@ -44,7 +44,7 @@ from phonopy.harmonic.force_constants import similarity_transformation
 def parse_set_of_forces(disps,
                         forces_filenames,
                         supercell,
-                        is_distribute=True,
+                        wien2k_P1_mode=False,  # Only for the test
                         symmetry_tolerance=None,
                         verbose=True):
     if symmetry_tolerance is None:
@@ -63,7 +63,7 @@ def parse_set_of_forces(disps,
 
         # Parse wien2k case.scf file
         wien2k_forces = _get_forces_wien2k(filename, lattice)
-        if is_distribute:
+        if not wien2k_P1_mode:
             forces = _distribute_forces(
                 supercell,
                 disp,

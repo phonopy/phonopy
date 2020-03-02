@@ -530,7 +530,7 @@ def get_parser():
         "--wien2k", dest="wien2k_mode", action="store_true",
         help="Invoke Wien2k mode")
     parser.add_argument(
-        "--wien2k_p1", dest="is_wien2k_p1", action="store_true",
+        "--wien2k-p1", dest="is_wien2k_p1", action="store_true",
         help="Assume Wien2k structs with displacements are P1")
     parser.add_argument(
         "--writefc", dest="write_force_constants", action="store_true",

@@ -428,10 +428,16 @@ def check_force_constants_indices(shape, indices, p2s_map, filename):
             raise RuntimeError(text)
 
 
-#
-# disp.yaml
-#
 def parse_disp_yaml(filename="disp.yaml", return_cell=False):
+    """Read disp.yaml or phonopy_disp.yaml
+
+    This method was originally made for parsing disp.yaml. Later this
+    started to work for phonopy_disp.yaml, too. But now this method is not
+    allowed to read phonopy_disp.yaml because of existance of PhonopyYaml
+    class.
+
+    """
+
     try:
         import yaml
     except ImportError:
