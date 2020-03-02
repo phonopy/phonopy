@@ -96,9 +96,9 @@ def create_FORCE_SETS(interface_mode,
     if force_sets_zero_mode:
         num_displacements += 1
 
-    if not _check_number_of_files(num_displacements,
-                                  force_filenames,
-                                  disp_filename):
+    if not check_number_of_force_files(num_displacements,
+                                       force_filenames,
+                                       disp_filename):
         force_sets = []
     elif interface_mode == 'wien2k':
         force_sets = get_force_sets_wien2k(
@@ -141,15 +141,9 @@ def create_FORCE_SETS(interface_mode,
     return 0
 
 
-def _subtract_residual_forces(force_sets):
-    for i in range(1, len(force_sets)):
-        force_sets[i] -= force_sets[0]
-    return force_sets[1:]
-
-
-def _check_number_of_files(num_displacements,
-                           force_filenames,
-                           disp_filename):
+def check_number_of_force_files(num_displacements,
+                                force_filenames,
+                                disp_filename):
     if num_displacements != len(force_filenames):
         print('')
         print("Number of files to be read (%d) don't match to" %
@@ -159,3 +153,9 @@ def _check_number_of_files(num_displacements,
         return False
     else:
         return True
+
+
+def _subtract_residual_forces(force_sets):
+    for i in range(1, len(force_sets)):
+        force_sets[i] -= force_sets[0]
+    return force_sets[1:]
