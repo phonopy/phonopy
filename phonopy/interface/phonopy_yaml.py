@@ -368,7 +368,8 @@ class PhonopyYaml(object):
         if 'born' in nac_params and 'dielectric' in nac_params:
             self.nac_params = nac_params
 
-        if self.command_name in self.yaml:
+        if (self.command_name in self.yaml and
+            'calculator' in self.yaml[self.command_name]):
             self.calculator = self.yaml[self.command_name]['calculator']
 
     def _parse_cell(self, cell_yaml):
