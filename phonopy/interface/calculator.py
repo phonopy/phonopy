@@ -78,7 +78,7 @@ def get_interface_mode(args_dict):
 
     The calculator name is obtained from command option arguments where
     argparse is used. The argument attribute name has to be
-    "{calculator}_mode". Then this method returns {calculator}.
+    "{calculator}_mode". Then this method returns "{calculator}".
 
     """
 
@@ -263,6 +263,8 @@ def read_crystal_structure(filename=None,
         from phonopy.interface.aims import read_aims
         unitcell = read_aims(cell_filename)
         return unitcell, (cell_filename,)
+    else:
+        raise RuntimeError("No calculator interface was found.")
 
 
 def get_default_cell_filename(interface_mode):
