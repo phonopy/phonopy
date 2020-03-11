@@ -345,11 +345,16 @@ def write_displacements_files(phonon,
                               log_level,
                               interface_mode,
                               optional_structure_info):
-    # From phonopy v1.15.0, displacements are written into phonopy_disp.yaml.
-    # write_disp_yaml(displacements, supercell)
+    """Write supercells with displacements and displacement dataset
 
-    # Write supercells with displacements
-    cells_with_disps = phonon.get_supercells_with_displacements()
+    Note
+    ----
+    From phonopy v1.15.0, displacement dataset is written into
+    phonopy_disp.yaml.
+
+    """
+
+    cells_with_disps = phonon.supercells_with_displacements
     N = abs(determinant(phonon.supercell_matrix))
     write_supercells_with_displacements(interface_mode,
                                         phonon.supercell,
