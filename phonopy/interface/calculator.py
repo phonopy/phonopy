@@ -34,8 +34,42 @@
 
 import os
 import yaml
+import numpy as np
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.harmonic.displacement import get_displacements_and_forces
+
+calculator_info = {
+    'abinit': {'option': {'name': "--abinit",
+                          'help': "Invoke Abinit mode"}},
+    'aims': {'option': {'name': "--aims",
+                        'help': "Invoke FHI-aims mode"}},
+    'cp2k': {'option': {'name': "--cp2k",
+                        'help': "Invoke CP2K mode"}},
+    'crystal': {'option': {'name': "--crystal",
+                           'help': "Invoke CRYSTAL mode"}},
+    'dftbp': {'option': {'name': "--dftb+",
+                         'help': "Invoke dftb+ mode"}},
+    'elk': {'option': {'name': "--elk",
+                       'help': "Invoke elk mode"}},
+    'qe': {'option': {'name': "--qe",
+                      'help': "Invoke Quantum espresso (QE) mode"}},
+    'siesta': {'option': {'name': "--siesta",
+                          'help': "Invoke Siesta mode"}},
+    'turbomole': {'option': {'name': "--turbomole",
+                             'help': "Invoke TURBOMOLE mode"}},
+    'vasp': {'option': {'name': "--vasp",
+                        'help': "Invoke Vasp mode"}},
+    'wien2k': {'option': {'name': "--wien2k",
+                          'help': "Invoke Wien2k mode"}},
+}
+
+
+def add_arguments_of_calculators(parser):
+    for calculator in calculator_info:
+        option = calculator_info[calculator]['option']
+        parser.add_argument(
+            option['name'], dest="%s_mode" % calculator, action="store_true",
+            default=False, help=option['help'])
 
 
 def get_interface_mode(args_dict):
@@ -47,9 +81,7 @@ def get_interface_mode(args_dict):
 
     """
 
-    calculator_list = ['wien2k', 'abinit', 'qe', 'elk', 'siesta', 'cp2k',
-                       'crystal', 'vasp', 'dftbp', 'turbomole', 'aims']
-    for calculator in calculator_list:
+    for calculator in calculator_info:
         mode = "%s_mode" % calculator
         if mode in args_dict and args_dict[mode]:
             return calculator
@@ -60,61 +92,94 @@ def write_supercells_with_displacements(interface_mode,
                                         supercell,
                                         cells_with_disps,
                                         num_unitcells_in_supercell,
-                                        optional_structure_info):
+                                        optional_structure_info,
+                                        displacement_ids=None,
+                                        zfill_width=3):
+    if displacement_ids is None:
+        ids = np.arange(len(cells_with_disps), dtype=int) + 1
+    else:
+        ids = displacement_ids
+
     if interface_mode is None or interface_mode == 'vasp':
         import phonopy.interface.vasp as vasp
-        vasp.write_supercells_with_displacements(supercell, cells_with_disps)
+        vasp.write_supercells_with_displacements(supercell,
+                                                 cells_with_disps,
+                                                 ids,
+                                                 width=zfill_width)
     elif interface_mode == 'abinit':
         import phonopy.interface.abinit as abinit
-        abinit.write_supercells_with_displacements(supercell, cells_with_disps)
+        abinit.write_supercells_with_displacements(supercell,
+                                                   cells_with_disps,
+                                                   ids,
+                                                   width=zfill_width)
     elif interface_mode == 'qe':
         import phonopy.interface.qe as qe
         qe.write_supercells_with_displacements(supercell,
                                                cells_with_disps,
-                                               optional_structure_info[1])
+                                               ids,
+                                               optional_structure_info[1],
+                                               width=zfill_width)
     elif interface_mode == 'wien2k':
         import phonopy.interface.wien2k as wien2k
         unitcell_filename, npts, r0s, rmts = optional_structure_info
         wien2k.write_supercells_with_displacements(
             supercell,
             cells_with_disps,
+            ids,
             npts,
             r0s,
             rmts,
             num_unitcells_in_supercell,
-            filename=unitcell_filename)
+            pre_filename=unitcell_filename,
+            width=zfill_width)
     elif interface_mode == 'elk':
         import phonopy.interface.elk as elk
         elk.write_supercells_with_displacements(supercell,
                                                 cells_with_disps,
-                                                optional_structure_info[1])
+                                                ids,
+                                                optional_structure_info[1],
+                                                width=zfill_width)
     elif interface_mode == 'siesta':
         import phonopy.interface.siesta as siesta
         siesta.write_supercells_with_displacements(supercell,
                                                    cells_with_disps,
-                                                   optional_structure_info[1])
+                                                   ids,
+                                                   optional_structure_info[1],
+                                                   width=zfill_width)
     elif interface_mode == 'cp2k':
         import phonopy.interface.cp2k as cp2k
         cp2k.write_supercells_with_displacements(supercell,
                                                  cells_with_disps,
-                                                 optional_structure_info)
+                                                 ids,
+                                                 optional_structure_info,
+                                                 width=zfill_width)
     elif interface_mode == 'crystal':
         import phonopy.interface.crystal as crystal
         crystal.write_supercells_with_displacements(supercell,
                                                     cells_with_disps,
+                                                    ids,
                                                     optional_structure_info[1],
                                                     num_unitcells_in_supercell,
+                                                    width=zfill_width,
                                                     template_file="TEMPLATE")
     elif interface_mode == 'dftbp':
         import phonopy.interface.dftbp as dftbp
-        dftbp.write_supercells_with_displacements(supercell, cells_with_disps)
+        dftbp.write_supercells_with_displacements(supercell,
+                                                  cells_with_disps,
+                                                  ids,
+                                                  width=zfill_width)
     elif interface_mode == 'turbomole':
         import phonopy.interface.turbomole as turbomole
         turbomole.write_supercells_with_displacements(supercell,
-                                                      cells_with_disps)
+                                                      cells_with_disps,
+                                                      ids,
+                                                      width=zfill_width)
     elif interface_mode == 'aims':
         import phonopy.interface.aims as aims
-        aims.write_supercells_with_displacements(supercell, cells_with_disps)
+        aims.write_supercells_with_displacements(supercell,
+                                                 cells_with_disps,
+                                                 ids,
+                                                 width=zfill_width)
     else:
         raise RuntimeError("No calculator interface was found.")
 

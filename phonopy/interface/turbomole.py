@@ -132,17 +132,15 @@ def write_turbomole(filename, cell):
 
 def write_supercells_with_displacements(supercell,
                                         cells_with_displacements,
+                                        ids,
                                         pre_filename="supercell",
                                         width=3):
 
-    write_turbomole("supercell", supercell)
-    for i, cell in enumerate(cells_with_displacements):
-        if cell is not None:
-            filename = "{pre_filename}-{0:0{width}}".format(
-                       i + 1,
-                       pre_filename=pre_filename,
-                       width=width)
-            write_turbomole(filename, cell)
+    write_turbomole(pre_filename, supercell)
+    for i, cell in zip(ids, cells_with_displacements):
+        filename = "{pre_filename}-{0:0{width}}".format(
+                   i, pre_filename=pre_filename, width=width)
+        write_turbomole(filename, cell)
 
 
 class TurbomoleIn:

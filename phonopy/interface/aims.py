@@ -137,7 +137,7 @@ class Atoms_with_forces(Atoms):
 
 
 def read_aims_output(filename):
-    """ Read FHI-aims output and 
+    """ Read FHI-aims output and
         return geometry, energy and forces from last self-consistency iteration"""
 
     lines = open(filename, "r").readlines()
@@ -187,9 +187,11 @@ def read_aims_output(filename):
     return atoms
 
 
-def write_supercells_with_displacements(
-    supercell, cells_with_disps, filename="geometry.in"
-):
+def write_supercells_with_displacements(supercell,
+                                        cells_with_disps,
+                                        ids,
+                                        pre_filename="geometry.in",
+                                        width=3):
     """Writes perfect supercell and supercells with displacements
 
     Args:
@@ -199,11 +201,13 @@ def write_supercells_with_displacements(
     """
 
     # original cell
-    write_aims(filename + ".supercell", supercell)
+    write_aims(pre_filename + ".supercell", supercell)
 
     # displaced cells
-    for ii in range(len(cells_with_disps)):
-        write_aims(filename + "-{:03d}".format(ii + 1), cells_with_disps[ii])
+    for i, cell in zip(ids, cells_with_disps):
+        filename = "{pre_filename}-{0:0{width}}".format(
+            i, pre_filename=pre_filename, width=width)
+        write_aims(filename, cell)
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):

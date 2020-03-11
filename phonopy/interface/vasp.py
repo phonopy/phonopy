@@ -271,17 +271,14 @@ def write_vasp(filename, cell, direct=True):
 
 def write_supercells_with_displacements(supercell,
                                         cells_with_displacements,
+                                        ids,
                                         pre_filename="POSCAR",
                                         width=3):
-    write_vasp("SPOSCAR", supercell, direct=True)
-    for i, cell in enumerate(cells_with_displacements):
-        if cell is not None:
-            write_vasp("{pre_filename}-{0:0{width}}".format(
-                i + 1,
-                pre_filename=pre_filename,
-                width=width),
-                       cell,
-                       direct=True)
+    write_vasp("S%s" % pre_filename, supercell, direct=True)
+    for i, cell in zip(ids, cells_with_displacements):
+        filename = "{pre_filename}-{0:0{width}}".format(
+            i, pre_filename=pre_filename, width=width)
+        write_vasp(filename, cell, direct=True)
 
     write_magnetic_moments(supercell, sort_by_elements=True)
 
