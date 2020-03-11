@@ -203,33 +203,18 @@ def _collect_cells_info(_interface_mode,
     if (_interface_mode == 'phonopy_yaml' and
         optional_structure_info[1] is not None):
         phpy = optional_structure_info[1]
-        calculator = None
-        if command_name in phpy.yaml:
-            if 'calculator' in phpy.yaml[command_name]:
-                calculator = phpy.yaml[command_name]['calculator']
-        if ('supercell_matrix' in phpy.yaml and
-            phpy.yaml['supercell_matrix'] is not None):
-            smat = phpy.supercell_matrix
-        else:
-            smat = None
-        if ('primitive_matrix' in phpy.yaml and
-            phpy.yaml['primitive_matrix'] is not None):
-            pmat = phpy.primitive_matrix
-        else:
-            pmat = None
-
-        if calculator is None:
+        if phpy.calculator is None:
             interface_mode_out = interface_mode
         else:
-            interface_mode_out = calculator
-        if smat is None:
+            interface_mode_out = phpy.calculator
+        if phpy.supercell_matrix is None:
             _supercell_matrix = supercell_matrix
         else:
-            _supercell_matrix = smat
+            _supercell_matrix = phpy.supercell_matrix
         if primitive_matrix is not None:
             _primitive_matrix = primitive_matrix
-        elif pmat is not None:
-            _primitive_matrix = pmat
+        elif phpy.primitive_matrix is not None:
+            _primitive_matrix = phpy.primitive_matrix
         else:
             _primitive_matrix = 'auto'
     else:
