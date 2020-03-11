@@ -37,6 +37,7 @@ import yaml
 import numpy as np
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.harmonic.displacement import get_displacements_and_forces
+from phonopy.structure.cells import determinant
 
 calculator_info = {
     'abinit': {'option': {'name': "--abinit",
@@ -64,7 +65,7 @@ calculator_info = {
 }
 
 
-def add_arguments_of_calculators(parser):
+def add_arguments_of_calculators(parser, calculator_info):
     for calculator in calculator_info:
         option = calculator_info[calculator]['option']
         parser.add_argument(
@@ -91,95 +92,97 @@ def get_interface_mode(args_dict):
 def write_supercells_with_displacements(interface_mode,
                                         supercell,
                                         cells_with_disps,
-                                        num_unitcells_in_supercell,
                                         optional_structure_info,
                                         displacement_ids=None,
-                                        zfill_width=3):
+                                        zfill_width=3,
+                                        additional_info=None):
+    """Utility method to write out supercell structures with displacements
+
+    interface_mode : str
+        Calculator interface such as 'vasp', 'qe', ...
+    supercell : Supercell
+        Supercell.
+    cells_with_disps : list of PhonopyAtoms
+        Supercells with displacements.
+    optional_structure_info : tuple
+        Information returned by the method ``read_crystal_structure``.
+        See the docstring.
+    displacements_ids : array_like or None, optional
+        Integer 1d array with the length of cells_with_disps, containing
+        numbers to be assigned to the supercells with displacements.
+        Default is None, which gives [1, 2, 3, ...].
+    zfill_width : int, optional
+        Supercell numbers are filled by zeros from the left with the digits
+        as given, which results in 001, 002, ..., when zfill_width=3.
+    additional_info : dict or None, optional
+        Any information expected to be given to writers of calculators.
+        Default is None.
+
+    """
+
     if displacement_ids is None:
         ids = np.arange(len(cells_with_disps), dtype=int) + 1
     else:
         ids = displacement_ids
 
+    args = (supercell, cells_with_disps, ids)
+    kwargs = {'width': zfill_width}
+    if 'pre_filename' in additional_info:
+        kwargs['pre_filename'] = additional_info['pre_filename']
+
     if interface_mode is None or interface_mode == 'vasp':
         import phonopy.interface.vasp as vasp
-        vasp.write_supercells_with_displacements(supercell,
-                                                 cells_with_disps,
-                                                 ids,
-                                                 width=zfill_width)
+        vasp.write_supercells_with_displacements(*args, **kwargs)
     elif interface_mode == 'abinit':
         import phonopy.interface.abinit as abinit
-        abinit.write_supercells_with_displacements(supercell,
-                                                   cells_with_disps,
-                                                   ids,
-                                                   width=zfill_width)
+        abinit.write_supercells_with_displacements(*args, **kwargs)
     elif interface_mode == 'qe':
         import phonopy.interface.qe as qe
-        qe.write_supercells_with_displacements(supercell,
-                                               cells_with_disps,
-                                               ids,
-                                               optional_structure_info[1],
-                                               width=zfill_width)
+        pp_filenames = optional_structure_info[1]
+        qe_args = args + (pp_filenames, )
+        qe.write_supercells_with_displacements(*qe_args, **kwargs)
     elif interface_mode == 'wien2k':
         import phonopy.interface.wien2k as wien2k
         unitcell_filename, npts, r0s, rmts = optional_structure_info
-        wien2k.write_supercells_with_displacements(
-            supercell,
-            cells_with_disps,
-            ids,
-            npts,
-            r0s,
-            rmts,
-            num_unitcells_in_supercell,
-            pre_filename=unitcell_filename,
-            width=zfill_width)
+        N = abs(determinant(additional_info['supercell_matrix']))
+        w2k_args = args + (npts, r0s, rmts, N)
+        if 'pre_filename' not in kwargs:
+            kwargs['pre_filename'] = unitcell_filename
+        wien2k.write_supercells_with_displacements(*w2k_args, **kwargs)
     elif interface_mode == 'elk':
         import phonopy.interface.elk as elk
-        elk.write_supercells_with_displacements(supercell,
-                                                cells_with_disps,
-                                                ids,
-                                                optional_structure_info[1],
-                                                width=zfill_width)
+        sp_filenames = optional_structure_info[1]
+        elk_args = args + (sp_filenames, )
+        elk.write_supercells_with_displacements(*elk_args, **kwargs)
     elif interface_mode == 'siesta':
         import phonopy.interface.siesta as siesta
-        siesta.write_supercells_with_displacements(supercell,
-                                                   cells_with_disps,
-                                                   ids,
-                                                   optional_structure_info[1],
-                                                   width=zfill_width)
+        atypes = optional_structure_info[1]
+        sst_args = args + (atypes, )
+        siesta.write_supercells_with_displacements(*sst_args, **kwargs)
     elif interface_mode == 'cp2k':
         import phonopy.interface.cp2k as cp2k
-        cp2k.write_supercells_with_displacements(supercell,
-                                                 cells_with_disps,
-                                                 ids,
-                                                 optional_structure_info,
-                                                 width=zfill_width)
+        cp2k_args = args + (optional_structure_info, )
+        cp2k.write_supercells_with_displacements(*cp2k_args, **kwargs)
     elif interface_mode == 'crystal':
         import phonopy.interface.crystal as crystal
-        crystal.write_supercells_with_displacements(supercell,
-                                                    cells_with_disps,
-                                                    ids,
-                                                    optional_structure_info[1],
-                                                    num_unitcells_in_supercell,
-                                                    width=zfill_width,
-                                                    template_file="TEMPLATE")
+        if additional_info is None:
+            kwargs['template_file'] = "TEMPLATE"
+        else:
+            kwargs['template_file'] = additional_info.get('template_file',
+                                                          "TEMPLATE")
+        conv_numbers = optional_structure_info[1]
+        N = abs(determinant(additional_info['supercell_matrix']))
+        cst_args = args + (conv_numbers, N)
+        crystal.write_supercells_with_displacements(*cst_args, **kwargs)
     elif interface_mode == 'dftbp':
         import phonopy.interface.dftbp as dftbp
-        dftbp.write_supercells_with_displacements(supercell,
-                                                  cells_with_disps,
-                                                  ids,
-                                                  width=zfill_width)
+        dftbp.write_supercells_with_displacements(*args, **kwargs)
     elif interface_mode == 'turbomole':
         import phonopy.interface.turbomole as turbomole
-        turbomole.write_supercells_with_displacements(supercell,
-                                                      cells_with_disps,
-                                                      ids,
-                                                      width=zfill_width)
+        turbomole.write_supercells_with_displacements(*args, **kwargs)
     elif interface_mode == 'aims':
         import phonopy.interface.aims as aims
-        aims.write_supercells_with_displacements(supercell,
-                                                 cells_with_disps,
-                                                 ids,
-                                                 width=zfill_width)
+        aims.write_supercells_with_displacements(*args, **kwargs)
     else:
         raise RuntimeError("No calculator interface was found.")
 

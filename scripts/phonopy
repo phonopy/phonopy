@@ -355,12 +355,12 @@ def write_displacements_files(phonon,
     """
 
     cells_with_disps = phonon.supercells_with_displacements
-    N = abs(determinant(phonon.supercell_matrix))
+    additional_info = {'supercell_matrix': phonon.supercell_matrix}
     write_supercells_with_displacements(interface_mode,
                                         phonon.supercell,
                                         cells_with_disps,
-                                        N,
-                                        optional_structure_info)
+                                        optional_structure_info,
+                                        additional_info=additional_info)
 
     if log_level > 0:
         print("\"phonopy_disp.yaml\" and supercells have been created.")

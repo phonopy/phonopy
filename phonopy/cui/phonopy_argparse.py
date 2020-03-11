@@ -64,11 +64,12 @@ def show_deprecated_option_warnings(deprecated):
 def get_parser():
     deprecated = fix_deprecated_option_names(sys.argv)
     import argparse
-    from phonopy.interface.calculator import add_arguments_of_calculators
+    from phonopy.interface.calculator import (
+        add_arguments_of_calculators, calculator_info)
     parser = argparse.ArgumentParser(
         description="Phonopy command-line-tool")
 
-    add_arguments_of_calculators(parser)
+    add_arguments_of_calculators(parser, calculator_info)
 
     parser.add_argument(
         "--alm", dest="use_alm", action="store_true", default=False,
