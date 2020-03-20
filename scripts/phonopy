@@ -48,7 +48,7 @@ from phonopy.cui.settings import PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.cui.phonopy_argparse import (
     get_parser, show_deprecated_option_warnings)
-from phonopy.structure.cells import (print_cell, determinant)
+from phonopy.structure.cells import print_cell
 from phonopy.structure.atoms import atom_data, symbol_map
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.calculator import (
@@ -228,6 +228,8 @@ def print_settings(settings,
         print("\"%s\" was not able to be used."
               % settings.get_cell_filename())
     print("Crystal structure was read from \"%s\"." % unitcell_filename)
+    physical_units = get_default_physical_units(interface_mode)
+    print("Unit of length: %s" % physical_units['length_unit'])
     if is_band_auto and not is_primitive_axes_auto:
         print("Automatic band structure mode forced automatic choice "
               "of primitive axes.")
