@@ -66,7 +66,7 @@ typedef enum {
   R_CENTER,
 } Centering;
 
-Spacegroup * spa_search_spacegroup(const Cell * primitive,
+Spacegroup * spa_search_spacegroup(const Primitive * primitive,
                                    const int hall_number,
                                    const double symprec,
                                    const double angle_tolerance);
