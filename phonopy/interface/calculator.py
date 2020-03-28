@@ -90,6 +90,68 @@ def get_interface_mode(args_dict):
     return None
 
 
+def write_crystal_structure(filename,
+                            cell,
+                            interface_mode=None,
+                            optional_structure_info=None):
+    """Utility method to write out a crystal structure
+
+    filename : str, optional
+        File name to be used to write out the crystal structure.
+    cell : PhonopyAtoms
+        Crystal structure
+    interface_mode : str, optional
+        Calculator interface such as 'vasp', 'qe', ... Default is None,
+        that is equivalent to 'vasp'.
+    optional_structure_info : tuple, optional
+        Information returned by the method ``read_crystal_structure``.
+        See the docstring. Default is None.
+
+    """
+
+    if interface_mode is None or interface_mode == 'vasp':
+        import phonopy.interface.vasp as vasp
+        vasp.write_vasp(filename, cell)
+    elif interface_mode == 'abinit':
+        import phonopy.interface.abinit as abinit
+        abinit.write_abinit(filename, cell)
+    elif interface_mode == 'qe':
+        import phonopy.interface.qe as qe
+        pp_filenames = optional_structure_info[1]
+        qe.write_pwscf(filename, cell, pp_filenames)
+    elif interface_mode == 'wien2k':
+        import phonopy.interface.wien2k as wien2k
+        _, npts, r0s, rmts = optional_structure_info
+        wien2k.write_wein2k(filename, cell, npts, r0s, rmts)
+    elif interface_mode == 'elk':
+        import phonopy.interface.elk as elk
+        sp_filenames = optional_structure_info[1]
+        elk.write_elk(filename, cell, sp_filenames)
+    elif interface_mode == 'siesta':
+        import phonopy.interface.siesta as siesta
+        atypes = optional_structure_info[1]
+        siesta.write_siesta(filename, cell, atypes)
+    elif interface_mode == 'cp2k':
+        import phonopy.interface.cp2k as cp2k
+        _, tree = optional_structure_info
+        cp2k.write_cp2k_by_filename(filename, cell, tree)
+    elif interface_mode == 'crystal':
+        import phonopy.interface.crystal as crystal
+        conv_numbers = optional_structure_info[1]
+        crystal.write_crystal(filename, cell, conv_numbers)
+    elif interface_mode == 'dftbp':
+        import phonopy.interface.dftbp as dftbp
+        dftbp.write_dftbp(filename, cell)
+    elif interface_mode == 'turbomole':
+        import phonopy.interface.turbomole as turbomole
+        turbomole.write_turbomole(filename, cell)
+    elif interface_mode == 'aims':
+        import phonopy.interface.aims as aims
+        aims.write_aims(filename, cell)
+    else:
+        raise RuntimeError("No calculator interface was found.")
+
+
 def write_supercells_with_displacements(interface_mode,
                                         supercell,
                                         cells_with_disps,
