@@ -38,6 +38,7 @@ import numpy as np
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.harmonic.displacement import get_displacements_and_forces
 from phonopy.structure.cells import determinant
+from phonopy.interface.vasp import sort_positions_by_symbols
 
 calculator_info = {
     'abinit': {'option': {'name': "--abinit",
@@ -133,6 +134,7 @@ def write_supercells_with_displacements(interface_mode,
     if interface_mode is None or interface_mode == 'vasp':
         import phonopy.interface.vasp as vasp
         vasp.write_supercells_with_displacements(*args, **kwargs)
+        write_magnetic_moments(supercell, sort_by_elements=True)
     elif interface_mode == 'abinit':
         import phonopy.interface.abinit as abinit
         abinit.write_supercells_with_displacements(*args, **kwargs)
@@ -141,6 +143,7 @@ def write_supercells_with_displacements(interface_mode,
         pp_filenames = optional_structure_info[1]
         qe_args = args + (pp_filenames, )
         qe.write_supercells_with_displacements(*qe_args, **kwargs)
+        write_magnetic_moments(supercell, sort_by_elements=False)
     elif interface_mode == 'wien2k':
         import phonopy.interface.wien2k as wien2k
         unitcell_filename, npts, r0s, rmts = optional_structure_info
@@ -185,6 +188,23 @@ def write_supercells_with_displacements(interface_mode,
         aims.write_supercells_with_displacements(*args, **kwargs)
     else:
         raise RuntimeError("No calculator interface was found.")
+
+
+def write_magnetic_moments(cell, sort_by_elements=False):
+    magmoms = cell.magnetic_moments
+    if magmoms is not None:
+        if sort_by_elements:
+            (_, _, _, sort_list) = sort_positions_by_symbols(
+                cell.symbols, cell.scaled_positions)
+        else:
+            sort_list = range(cell.get_number_of_atoms())
+
+        with open("MAGMOM", 'w') as w:
+            w.write(" MAGMOM = ")
+            for i in sort_list:
+                w.write("%f " % magmoms[i])
+            w.write("\n")
+            w.close()
 
 
 def read_crystal_structure(filename=None,
