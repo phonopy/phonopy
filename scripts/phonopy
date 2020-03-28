@@ -555,13 +555,14 @@ physical_units = get_default_physical_units(interface_mode)
 # Check crystal symmetry and exit (--symmetry) #
 ################################################
 if args.is_check_symmetry:
-    if primitive_matrix == 'auto':
-        primitive_matrix = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
-    check_symmetry(unitcell,
-                   primitive_axis=primitive_matrix,
-                   symprec=symprec,
-                   distance_to_A=physical_units['distance_to_A'],
-                   phonopy_version=phonopy_version)
+    phonon = Phonopy(unitcell,
+                     np.eye(3, dtype=int),
+                     primitive_matrix=primitive_matrix,
+                     symprec=symprec,
+                     calculator=interface_mode,
+                     log_level=log_level)
+    check_symmetry(phonon, optional_structure_info)
+
     if log_level > 0:
         print_end()
     sys.exit(0)
