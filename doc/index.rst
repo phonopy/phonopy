@@ -48,18 +48,18 @@ The following features of phonopy are highlighted:
 - :ref:`Quasi-harmonic approximation <phonopy_qha>`: Thermal expansion, heat
   capacity at constant pressure (Cp)
 - :ref:`Interfaces to calculators <calculator_interfaces>`:
-  :ref:`VASP <tutorial>`,
+  :ref:`VASP <vasp_interface>`,
   :ref:`VASP DFPT <vasp_dfpt_interface>`,
   :ref:`ABINIT <abinit_interface>`,
   :ref:`Quantu ESPRESSO <qe_interface>`,
   :ref:`SIESTA <siesta_interface>`,
   :ref:`Elk <elk_interface>`,
-  :ref:`FHI-aims <FHI_aims_interface>`,
   :ref:`WIEN2k <wien2k_interface>`,
   :ref:`CRYSTAL <crystal_interface>`,
   :ref:`DFTB+ <dftbp_interface>`,
   :ref:`TURBOMOLE <turbomole_interface>`,
   :ref:`CP2K <cp2k_interface>`,
+  :ref:`FHI-aims <FHI_aims_interface>`,
   :ref:`LAMMPS (external) <external_tools_phonolammps>`
 - :ref:`Phonopy API for Python <phonopy_module>`
 
@@ -78,7 +78,6 @@ Documentation
 
    install
    symmetry
-   Tutorial <procedure>
    workflow
    examples
    input-files

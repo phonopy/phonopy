@@ -74,7 +74,7 @@ included in the energies, or equivalent effect is applied using
 
 Experimentally, temperature dependent energies are supported by
 ``--efe`` option. The usage is written at
-https://github.com/atztogo/phonopy/blob/develop/example/Cu-QHA/README.
+https://github.com/phonopy/phonopy/blob/develop/example/Cu-QHA/README.
 
 .. _phonopy_qha_options:
 

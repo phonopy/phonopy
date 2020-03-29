@@ -153,7 +153,6 @@ static void measure_rigid_rotation(double rotation[3][3],
                                    SPGCONST double std_lattice[3][3]);
 static void get_orthonormal_basis(double basis[3][3],
                                   SPGCONST double lattice[3][3]);
-
 static SPGCONST int identity[3][3] = {
   { 1, 0, 0},
   { 0, 1, 0},
@@ -1540,5 +1539,4 @@ static void get_orthonormal_basis(double basis[3][3],
   }
 
   mat_transpose_matrix_d3(basis, basis_T);
-
 }

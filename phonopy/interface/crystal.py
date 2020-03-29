@@ -144,6 +144,7 @@ def write_crystal(filename, cell, conv_numbers, template_file="TEMPLATE", write_
 
 def write_supercells_with_displacements(supercell,
                                         cells_with_displacements,
+                                        ids,
                                         conv_numbers,
                                         num_unitcells_in_supercell,
                                         pre_filename="supercell",
@@ -168,14 +169,11 @@ def write_supercells_with_displacements(supercell,
               "  Check the supercells very carefully, some spacegroups do not work (e.g. R-3m)\n" +
               "  Non-displaced supercell is always written without symmetry")
 
-    write_crystal("supercell", supercell, convnum_super, template_file, write_symmetry=False)
-    for i, cell in enumerate(cells_with_displacements):
-        if cell is not None:
-            filename = "{pre_filename}-{0:0{width}}".format(
-                       i + 1,
-                       pre_filename=pre_filename,
-                       width=width)
-            write_crystal(filename, cell, convnum_super, template_file, write_symmetry=use_symmetry)
+    write_crystal(pre_filename, supercell, convnum_super, template_file, write_symmetry=False)
+    for i, cell in zip(ids, cells_with_displacements):
+        filename = "{pre_filename}-{0:0{width}}".format(
+                   i, pre_filename=pre_filename, width=width)
+        write_crystal(filename, cell, convnum_super, template_file, write_symmetry=use_symmetry)
 
 def get_crystal_structure(cell, conv_numbers, write_symmetry=False):
     lattice = cell.get_cell()

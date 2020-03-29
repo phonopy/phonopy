@@ -206,23 +206,27 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
                                              born_filename,
                                              is_nac,
                                              units['nac_factor'])
+    if _dataset is not None:
+        phonon.dataset = _dataset
+
     if _nac_params is not None:
         phonon.nac_params = _nac_params
 
-    if _fc is None:
-        _set_force_constants(
+    if _fc is not None:
+        phonon.force_constants = _fc
+    else:
+        _compute_force_constants(
             phonon,
             dataset=_dataset,
             force_constants_filename=force_constants_filename,
             force_sets_filename=force_sets_filename,
             calculator=calculator,
             fc_calculator=fc_calculator)
-    else:
-        phonon.force_constants = _fc
+
     return phonon
 
 
-def _set_force_constants(
+def _compute_force_constants(
         phonon,
         dataset=None,
         force_constants_filename=None,
@@ -252,11 +256,15 @@ def _set_force_constants(
     elif os.path.isfile("FORCE_SETS"):
         _dataset = parse_FORCE_SETS(natom=natom)
 
-    if _dataset:
+    if _dataset is not None:
         phonon.dataset = _dataset
-        try:
-            phonon.produce_force_constants(
-                calculate_full_force_constants=False,
-                fc_calculator=fc_calculator)
-        except RuntimeError:
-            pass
+        _produce_force_constants(phonon, fc_calculator)
+
+
+def _produce_force_constants(phonon, fc_calculator):
+    try:
+        phonon.produce_force_constants(
+            calculate_full_force_constants=False,
+            fc_calculator=fc_calculator)
+    except RuntimeError:
+        pass

@@ -4,7 +4,7 @@ Command options
 ===============
 
 .. contents::
-   :depth: 2
+   :depth: 3
    :local:
 
 From phonopy v1.12.2, the command option names with underscores ``_``
@@ -39,6 +39,11 @@ tags:
 * ``--gv-delta-q`` (``GV_DELTA_Q``)
 * ``--hdf5`` (``HDF5 = .TRUE.``)
 * ``--irreps`` (``IRREPS``)
+* ``--include-fc`` (``INCLUDE_FC = .TRUE.``)
+* ``--include-fs`` (``INCLUDE_FS = .TRUE.``)
+* ``--include-born`` (``INCLUDE_BORN = .TRUE.``)
+* ``--include-disp`` (``INCLUDE_DISP = .TRUE.``)
+* ``--include-all`` (``INCLUDE_ALL = .TRUE.``)
 * ``--lcg``, ``--little_cogroup`` (``LITTLE_COGROUP``)
 * ``--modulation`` (``MODULATION``)
 * ``--moment`` (``MOMENT = .TRUE.``)
@@ -66,7 +71,6 @@ tags:
 * ``--td`` (``TDISP``)
 * ``--tdm`` (``TDISPMAT``)
 * ``--tdm-cif`` (``TDISPMAT_CIF``)
-* ``--thm``, ``--tetrahedron-method`` (``TETRAHEDRON``)
 * ``--tmin`` (``TMIN``)
 * ``--tmax`` (``TMAX``)
 * ``--tolerance`` (``SYMMETRY_TOLERANCE``)
@@ -265,12 +269,12 @@ Create ``FORCE_SETS``
 VASP interface
 ^^^^^^^^^^^^^^
 
-``FORCE_SETS`` file is created from ``disp.yaml``, which is an output
-file when creating supercells with displacements, and
-``vasprun.xml``'s, which are the VASP output files. ``disp.yaml`` in
-the current directory is automatically read. The order of
-displacements written in ``disp.yaml`` file has to correpond to that of
-``vasprun.xml`` files .
+``FORCE_SETS`` file is created from ``phonopy_disp.yaml``, which is an
+output file when creating supercells with displacements, and
+``vasprun.xml``'s, which are the VASP output
+files. ``phonopy_disp.yaml`` in the current directory is automatically
+read. The order of displacements written in ``phonopy_disp.yaml`` file
+has to correpond to that of ``vasprun.xml`` files .
 
 ::
 
@@ -285,21 +289,19 @@ Attention:
   expansions are useful, e.g., ``disp-*/vasprun.xml``, or
   ``disp-{001..128}/vasprun.xml`` (for zsh, and recent bash).
 
-
-
 .. _abinit_force_sets_option:
 
 ABINIT interface
 ^^^^^^^^^^^^^^^^
 
-``FORCE_SETS`` file is created from ``disp.yaml`` and ABINIT output
-files (``*.out``). In the reading of forces in ABINIT output files,
-forces in eV/Angstrom are read. The unit conversion factor is
+``FORCE_SETS`` file is created from ``phonopy_disp.yaml`` and ABINIT
+output files (``*.out``). In the reading of forces in ABINIT output
+files, forces in eV/Angstrom are read. The unit conversion factor is
 determined with this unit.
 
 ::
 
-   % phonopy --abinit -f disp-001/supercell.out disp-002/supercell.out  ...
+   % phonopy -f disp-001/supercell.out disp-002/supercell.out  ...
 
 
 .. _qe_force_sets_option:
@@ -307,12 +309,12 @@ determined with this unit.
 Quantum ESPRESSO interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``FORCE_SETS`` file is created from ``disp.yaml`` and PWscf output
-files.
+``FORCE_SETS`` file is created from ``phonopy_disp.yaml`` and QE-PW
+output files.
 
 ::
 
-   % phonopy --qe -f disp-001/supercell.out disp-002/supercell.out  ...
+   % phonopy -f disp-001/supercell.out disp-002/supercell.out  ...
 
 Here ``*.out`` files are the saved texts of standard outputs of PWscf
 calculations.
@@ -327,17 +329,16 @@ this, you can use the external tool called ``scf2forces`` to generate
 ``FORCE_SETS``. ``scf2forces`` is found at
 http://www.wien2k.at/reg_user/unsupported/.
 
-
-``FORCE_SETS`` file is created from ``disp.yaml``, which is an output
-file when creating supercell with displacements, and
+``FORCE_SETS`` file is created from ``phonopy_disp.yaml``, which is an
+output file when creating supercell with displacements, and
 ``case.scf``'s, which are the WIEN2k output files. The order of
-displacements in ``disp.yaml`` file and the order of ``case.scf``'s
-have to be same. **For WIEN2k struct file, only negative atom index
-with the P lattice format is supported.**
+displacements in ``phonopy_disp.yaml`` file and the order of
+``case.scf``'s have to be same. **For WIEN2k struct file, only
+negative atom index with the P lattice format is supported.**
 
 ::
 
-   % phonopy --wien2k -f case_001/case_001.scf case_002/case_002.scf ...
+   % phonopy -f case_001/case_001.scf case_002/case_002.scf ...
 
 For more information, :ref:`wien2k_interface`.
 
@@ -346,38 +347,36 @@ For more information, :ref:`wien2k_interface`.
 Elk interface
 ^^^^^^^^^^^^^^^^
 
-
-
-``FORCE_SETS`` file is created from ``disp.yaml`` and Elk output
+``FORCE_SETS`` file is created from ``phonopy_disp.yaml`` and Elk output
 files.
 
 ::
 
-   % phonopy --elk -f disp-001/INFO.OUT disp-002/INFO.OUT  ...
+   % phonopy -f disp-001/INFO.OUT disp-002/INFO.OUT  ...
 
 .. _crystal_force_sets_option:
 
 CRYSTAL interface
 ^^^^^^^^^^^^^^^^^
 
-``FORCE_SETS`` file is created from ``phonopy-disp.yaml`` and CRYSTAL output
+``FORCE_SETS`` file is created from ``phonopy_disp.yaml`` and CRYSTAL output
 files.
 
 ::
 
-   % phonopy --crystal -f supercell-001.o supercell-002.o  ...
+   % phonopy -f supercell-001.o supercell-002.o  ...
 
 .. _turbomole_force_sets_option:
 
 TURBOMOLE interface
 ^^^^^^^^^^^^^^^^^^^^
 
-``FORCE_SETS`` file is created from ``phonopy-disp.yaml`` and TURBOMOLE output
+``FORCE_SETS`` file is created from ``phonopy_disp.yaml`` and TURBOMOLE output
 files.
 
 ::
 
-   % phonopy --turbomole -f supercell-001 supercell-002  ...
+   % phonopy -f supercell-001 supercell-002  ...
 
 .. _cp2k_force_sets_option:
 
@@ -386,7 +385,7 @@ CP2K interface
 
 ``FORCE_SETS`` file is created from ``phonopy_disp.yaml`` and CP2K output files, with::
 
-   % phonopy --cp2k -f supercell-001-forces-1_0.xyz supercell-002-forces-1_0.xyz  ...
+   % phonopy -f supercell-001-forces-1_0.xyz supercell-002-forces-1_0.xyz  ...
 
 Please note: the files containing the forces can be prefixed with the ``PROJECT_NAME``
 as specified in the original CP2K input file.

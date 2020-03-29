@@ -428,10 +428,16 @@ def check_force_constants_indices(shape, indices, p2s_map, filename):
             raise RuntimeError(text)
 
 
-#
-# disp.yaml
-#
 def parse_disp_yaml(filename="disp.yaml", return_cell=False):
+    """Read disp.yaml or phonopy_disp.yaml
+
+    This method was originally made for parsing disp.yaml. Later this
+    started to work for phonopy_disp.yaml, too. But now this method is not
+    allowed to read phonopy_disp.yaml because of existance of PhonopyYaml
+    class.
+
+    """
+
     try:
         import yaml
     except ImportError:
@@ -617,7 +623,7 @@ def get_born_parameters(f, primitive, prim_symmetry):
     line_arr = f.readline().split()
     if len(line_arr) < 1:
         print("BORN file format of line 1 is incorrect")
-        return False
+        return None
 
     factor = None
     G_cutoff = None
@@ -643,7 +649,7 @@ def get_born_parameters(f, primitive, prim_symmetry):
     line = f.readline().split()
     if not len(line) == 9:
         print("BORN file format of line 2 is incorrect")
-        return False
+        return None
     dielectric = np.reshape([float(x) for x in line], (3, 3))
 
     # Read Born effective charge
@@ -655,10 +661,10 @@ def get_born_parameters(f, primitive, prim_symmetry):
         line = f.readline().split()
         if len(line) == 0:
             print("Number of lines for Born effect charge is not enough.")
-            return False
+            return None
         if not len(line) == 9:
             print("BORN file format of line %d is incorrect" % (i + 3))
-            return False
+            return None
         borns[i] = np.reshape([float(x) for x in line], (3, 3))
 
     # Check that the number of atoms in the BORN file was correct
@@ -666,7 +672,7 @@ def get_born_parameters(f, primitive, prim_symmetry):
     if len(line) > 0:
         print("Too many atoms in the BORN file (it should only contain "
               "symmetry-independent atoms)")
-        return False
+        return None
 
     _expand_borns(borns, primitive, prim_symmetry)
     non_anal = {'born': borns,

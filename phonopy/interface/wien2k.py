@@ -44,7 +44,7 @@ from phonopy.harmonic.force_constants import similarity_transformation
 def parse_set_of_forces(disps,
                         forces_filenames,
                         supercell,
-                        is_distribute=True,
+                        wien2k_P1_mode=False,  # Only for the test
                         symmetry_tolerance=None,
                         verbose=True):
     if symmetry_tolerance is None:
@@ -63,7 +63,7 @@ def parse_set_of_forces(disps,
 
         # Parse wien2k case.scf file
         wien2k_forces = _get_forces_wien2k(filename, lattice)
-        if is_distribute:
+        if not wien2k_P1_mode:
             forces = _distribute_forces(
                 supercell,
                 disp,
@@ -163,9 +163,11 @@ def parse_wien2k_struct(filename):
 
 def write_supercells_with_displacements(supercell,
                                         cells_with_displacements,
+                                        ids,
                                         npts, r0s, rmts,
                                         num_unitcells_in_supercell,
-                                        filename="wien2k-"):
+                                        pre_filename="wien2k",
+                                        width=3):
     npts_super = []
     r0s_super = []
     rmts_super = []
@@ -175,17 +177,29 @@ def write_supercells_with_displacements(supercell,
             r0s_super.append(j)
             rmts_super.append(k)
 
-    w = open(filename.split('/')[-1]+"S", 'w')
-    w.write(_get_wien2k_struct(supercell, npts_super, r0s_super, rmts_super))
-    w.close()
-    for i, cell in enumerate(cells_with_displacements):
+    _pre_filename = pre_filename.split('/')[-1] + "S"
+    write_wein2k(_pre_filename,
+                 supercell,
+                 npts_super,
+                 r0s_super,
+                 rmts_super)
+
+    for i, cell in zip(ids, cells_with_displacements):
         symmetry = Symmetry(cell)
-        supercell_filename = filename.split('/')[-1]+"S-%03d" % (i + 1)
+        filename = "{pre_filename}-{0:0{width}}.in".format(
+            i, pre_filename=_pre_filename, width=width)
         print("Number of non-equivalent atoms in %s: %d" %
-              (supercell_filename, len(symmetry.get_independent_atoms())))
-        w = open(supercell_filename, 'w')
-        w.write(_get_wien2k_struct(cell, npts_super, r0s_super, rmts_super))
-        w.close()
+              (filename, len(symmetry.get_independent_atoms())))
+        write_wein2k(filename,
+                     cell,
+                     npts_super,
+                     r0s_super,
+                     rmts_super)
+
+
+def write_wein2k(filename, cell, npts, r0s, rmts):
+    with open(filename, 'w') as w:
+        w.write(_get_wien2k_struct(cell, npts, r0s, rmts))
 
 
 def _get_wien2k_struct(cell, npts, r0s, rmts):

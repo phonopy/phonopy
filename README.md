@@ -1,11 +1,11 @@
-[![Version Badge](https://anaconda.org/atztogo/phonopy/badges/version.svg)](https://anaconda.org/atztogo/phonopy)
-[![Downloads Badge](https://anaconda.org/atztogo/phonopy/badges/downloads.svg)](https://anaconda.org/atztogo/phonopy)
+[![Version Badge](https://anaconda.org/conda-forge/phonopy/badges/version.svg)](https://anaconda.org/conda-forge/phonopy)
+[![Downloads Badge](https://anaconda.org/conda-forge/phonopy/badges/downloads.svg)](https://anaconda.org/conda-forge/phonopy)
 [![PyPI](https://img.shields.io/pypi/dm/phonopy.svg?maxAge=2592000)](https://pypi.python.org/pypi/phonopy)
 [![Build Status](https://travis-ci.org/atztogo/phonopy.svg?branch=master)](https://travis-ci.org/atztogo/phonopy)
 
 # Phonopy
 
-Phonon code. Phonopy user documetation is found at http://atztogo.github.io/phonopy/
+Phonon code. Phonopy user documetation is found at http://phonopy.github.io/phonopy/
 
 ## Mailing list for questions
 

@@ -27,7 +27,7 @@ A procedure of Elk-phonopy calculation is as follows:
    ``supercell-xxx.in`` (``xxx`` are numbers) give the perfect
    supercell and supercells with displacements, respectively. In these
    supercell files, lines only relevant to crystal structures are
-   generated. ``disp.yaml`` is also created. This file contains
+   generated. ``phonopy_disp.yaml`` is also created. This file contains
    information on displacements. Perhaps the supercell files of
    ``supercell-xxx.in`` are stored in ``disp-xxx`` directories as
    ``elk.in``, respectively, then Elk calculations are executed in
@@ -43,10 +43,10 @@ A procedure of Elk-phonopy calculation is as follows:
 3) Create ``FORCE_SETS`` by
 
    ::
-   
-     % phonopy --elk -f disp-001/INFO.OUT disp-002/INFO.OUT  ...
 
-   To run this command, ``disp.yaml`` has to be located in the current
+     % phonopy -f disp-001/INFO.OUT disp-002/INFO.OUT  ...
+
+   To run this command, ``phonopy_disp.yaml`` has to be located in the current
    directory because the atomic displacements are written into the
    FORCE_SETS file. See some more detail at
    :ref:`elk_force_sets_option`. An example is found in
@@ -58,6 +58,5 @@ A procedure of Elk-phonopy calculation is as follows:
    % phonopy --elk -c elk-unitcell.in -p band.conf
 
    or::
-   
-   % phonopy --elk -c elk-unitcell.in --dim="2 2 2" [other-OPTIONS] [setting-file]
 
+   % phonopy --elk -c elk-unitcell.in --dim="2 2 2" [other-OPTIONS] [setting-file]

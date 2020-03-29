@@ -148,7 +148,7 @@ static DataContainer * get_spacegroup_and_primitive(const Cell * cell,
       debug_print_matrix_d3(container->primitive->cell->lattice);
 
       if ((container->spacegroup = spa_search_spacegroup(
-             container->primitive->cell,
+             container->primitive,
              hall_number,
              container->primitive->tolerance,
              container->primitive->angle_tolerance)) != NULL) {

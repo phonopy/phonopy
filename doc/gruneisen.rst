@@ -45,7 +45,7 @@ A calculation on a reciprocal mesh is made by
 
 ::
 
-   % phonopy-gruneisen orig plus minus --dim="2 2 2"  --pa="0 1/2 1/2 1/2 0 1/2 1/2 1/2 0" --mesh="20 20 20" -p -c POSCAR-unitcell --color="RB"
+   % phonopy-gruneisen orig plus minus --dim="2 2 2" --pa="0 1/2 1/2 1/2 0 1/2 1/2 1/2 0" --mesh="20 20 20" -p -c POSCAR-unitcell --color="RB"
 
 .. |i1| image:: Si-gruneisen-mesh.png
         :scale: 50
@@ -64,13 +64,13 @@ plot.
 
 .. _gruneisen_calculators:
 
-Abinit, Quantum ESPRESSO, Wien2k, CRYSTAL, and TURBOMOLE interfaces
--------------------------------------------------------------------
+Force calculator interfaces
+---------------------------
 
-``--abinit``, ``--qe``, ``--wien2k``, ``--crystal``, or ``--turbomole`` options can be
-specified for corresponding calculators and the crystal structure file
-format should be different from that of the VASP format. An Abinit
-example is as follows::
+Options of force calculator interfaces such as ``--abinit``, ``--qe``,
+... can be specified for corresponding calculators and the crystal
+structure file format should be different from that of the VASP
+format. An Abinit example is as follows::
 
    % phonopy-gruneisen orig plus minus --abinit --dim="2 2 2" --pa="0 1/2 1/2 1/2 0 1/2 1/2 1/2 0" --band="1/2 1/4 3/4 0 0 0 1/2 1/2 1/2 1/2 0.0 1/2" -p -c Si.in
 
@@ -80,11 +80,11 @@ example is as follows::
 Command options
 ----------------
 
-If one of ``--abinit``, ``--qe``, ``--wien2k``, ``--crystal``, or ``--turbomole``
-options is specified, the interface mode is changed to it. The unit
-conversion factor to THz is appropriately selected and its crystal
-structure file format is accepted. If none of them is specified, as
-the VASP interface mode is invoked as the default interface.
+If one of the force calculator options is specified, the interface
+mode is changed to it. The unit conversion factor to THz is
+appropriately selected and its crystal structure file format is
+accepted. If none of them is specified, as the VASP interface mode is
+invoked as the default interface.
 
 The following command options can be used for all interface
 modes. They work similarly to those for ``phonopy`` script.
@@ -103,6 +103,7 @@ modes. They work similarly to those for ``phonopy`` script.
 * ``-s``, ``--save``
 * ``-o``
 
+Currently ``--pa="auto"`` works but ``--band="auto"`` doesn't.
 The ``--color`` option (``RB``, ``RG``, ``RGB``) is used to gradually
 change the marker colors with respect to band indices. For the
 mesh-sampling plot, a few more options to control matplotlib

@@ -92,6 +92,7 @@ Primitive * prm_alloc_primitive(const int size)
   primitive->size = size;
   primitive->tolerance = 0;
   primitive->angle_tolerance = -1.0;
+  primitive->orig_lattice = NULL;
 
   if (size > 0) {
     if ((primitive->mapping_table = (int*) malloc(sizeof(int) * size)) == NULL) {
@@ -122,6 +123,12 @@ void prm_free_primitive(Primitive * primitive)
       cel_free_cell(primitive->cell);
       primitive->cell = NULL;
     }
+
+    if (primitive->orig_lattice != NULL) {
+      free(primitive->orig_lattice);
+      primitive->orig_lattice = NULL;
+    }
+
     free(primitive);
   }
 }
@@ -259,6 +266,12 @@ static Primitive * get_primitive(const Cell * cell,
  found:
   primitive->tolerance = tolerance;
   primitive->angle_tolerance = angle_tolerance;
+  if ((primitive->orig_lattice =
+       (double (*)[3]) malloc(sizeof(double[3]) * 3)) == NULL) {
+    warning_print("spglib: Memory could not be allocated.");
+    return NULL;
+  }
+  mat_copy_matrix_d3(primitive->orig_lattice, cell->lattice);
   mat_free_VecDBL(pure_trans);
   pure_trans = NULL;
   return primitive;

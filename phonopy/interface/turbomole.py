@@ -38,10 +38,7 @@ import numpy as np
 
 from phonopy.interface.vasp import check_forces, get_drift_forces
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
-from phonopy.structure.atoms import symbol_map
-from phonopy.structure.cells import get_cell_parameters, get_angles
-from phonopy.units import Hartree, Bohr
-from phonopy.structure.symmetry import Symmetry
+
 
 def parse_set_of_forces(num_atoms,
                         forces_filenames,
@@ -84,23 +81,25 @@ def parse_set_of_forces(num_atoms,
     else:
         return []
 
+
 def read_turbomole(filename):
     # filename is typically "control"
     f_turbomole = open(filename)
     turbomole_in = TurbomoleIn(f_turbomole.readlines())
     f_turbomole.close()
     tags = turbomole_in.get_tags()
-    cell = Atoms(cell=tags['lattice_vectors'], 
+    cell = Atoms(cell=tags['lattice_vectors'],
                  symbols=tags['atomic_species'],
                  positions=tags['coordinates'])
-    
+
     return cell
+
 
 def write_turbomole(filename, cell):
     # Write geometry in a new directory
     # Check if directory exists (directory supercell will already exist for phono3py)
     if not os.path.exists(filename):
-      os.mkdir(filename)
+        os.mkdir(filename)
 
     # Create control file
     lines = '$title ' + filename + '\n'
@@ -113,7 +112,7 @@ def write_turbomole(filename, cell):
     lines += '$lattice\n'
     lattice = cell.get_cell()
     for lattvec in lattice:
-      lines += ("%12.8f" * 3 + "\n") % tuple(lattvec)
+        lines += ("%12.8f" * 3 + "\n") % tuple(lattvec)
     lines += '$end\n'
     f_control = open(os.path.join(filename, 'control'), 'w')
     f_control.write(lines)
@@ -130,19 +129,19 @@ def write_turbomole(filename, cell):
     f_coord.write(lines)
     f_coord.close()
 
+
 def write_supercells_with_displacements(supercell,
                                         cells_with_displacements,
+                                        ids,
                                         pre_filename="supercell",
                                         width=3):
 
-    write_turbomole("supercell", supercell)
-    for i, cell in enumerate(cells_with_displacements):
-        if cell is not None:
-            filename = "{pre_filename}-{0:0{width}}".format(
-                       i + 1,
-                       pre_filename=pre_filename,
-                       width=width)
-            write_turbomole(filename, cell)
+    write_turbomole(pre_filename, supercell)
+    for i, cell in zip(ids, cells_with_displacements):
+        filename = "{pre_filename}-{0:0{width}}".format(
+                   i, pre_filename=pre_filename, width=width)
+        write_turbomole(filename, cell)
+
 
 class TurbomoleIn:
     def __init__(self, lines):
@@ -212,9 +211,9 @@ class TurbomoleIn:
             self._tags['coordinates'] = coords
         else:
             print("TURBOMOLE-interface: Error parsing TURBOMOLE output file")
-            
+
+
 if __name__ == '__main__':
-    import sys
     from phonopy.structure.symmetry import Symmetry
     cell = read_turbomole(sys.argv[1])
     symmetry = Symmetry(cell)

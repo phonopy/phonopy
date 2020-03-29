@@ -3,6 +3,19 @@
 Change Log
 ==========
 
+Mar-29-2020: Version 2.5.0
+--------------------------
+* New options, ``--include-*``, to write summary in
+  ``phonopy.yaml``. See :ref:`summary_tag`.
+* FHI-aims interface (``--aims``) was created by Florian Knoop.
+* ``phonopy-gruneisen`` and ``--symmetry`` option were updated to be
+  able to handle most of build-in calculator interfaces.
+* Update spglib version to v1.14.1.
+* ``phonopy-dispmanager`` was removed.
+* Let new force calculator interface be implemented easiler by
+  centralizing those interface related stuffs in
+  ``phonopy.interface.calculator``.
+
 Dec-22-2019: Version 2.4.2
 --------------------------
 * Collection of minor updates: adding docstrings, refactoring group
@@ -805,7 +818,7 @@ Apr-18-2011: Version 0.9.4.2
   (:ref:`band_structure_related_tags`).
 
 * ``dispmanager``, an auxiliary tool for modifying ``disp.yaml``, is
-  developed (:ref:`dispmanager_tool`).
+  developed.
 
 * Symmetry finder update to spglib-1.0.3.1. Almost perfect casting to
   a Bravais lattice is achieved using ``--symmetry`` option.
