@@ -109,10 +109,15 @@ def write_elk(filename, cell, sp_filenames):
 
 def write_supercells_with_displacements(supercell,
                                         cells_with_displacements,
-                                        sp_filenames):
-    write_elk("supercell.in", supercell, sp_filenames)
-    for i, cell in enumerate(cells_with_displacements):
-        write_elk("supercell-%03d.in" % (i + 1), cell, sp_filenames)
+                                        ids,
+                                        sp_filenames,
+                                        pre_filename="supercell",
+                                        width=3):
+    write_elk("%s.in" % pre_filename, supercell, sp_filenames)
+    for i, cell in zip(ids, cells_with_displacements):
+        filename = "{pre_filename}-{0:0{width}}.in".format(
+            i, pre_filename=pre_filename, width=width)
+        write_elk(filename, cell, sp_filenames)
 
 
 def get_elk_structure(cell, sp_filenames=None):

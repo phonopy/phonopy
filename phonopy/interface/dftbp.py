@@ -202,7 +202,11 @@ def write_dftbp(filename, atoms):
     outfile = open(filename, 'w')
     outfile.write(lines)
 
-def write_supercells_with_displacements(supercell, cells_with_disps, filename="geo.gen"):
+def write_supercells_with_displacements(supercell,
+                                        cells_with_disps,
+                                        ids,
+                                        pre_filename="geo.gen",
+                                        width=3):
     """Writes perfect supercell and supercells with displacements
 
     Args:
@@ -212,8 +216,10 @@ def write_supercells_with_displacements(supercell, cells_with_disps, filename="g
     """
 
     # original cell
-    write_dftbp(filename + "S", supercell)
+    write_dftbp(pre_filename + "S", supercell)
 
     # displaced cells
-    for ii in range(len(cells_with_disps)):
-        write_dftbp(filename + "S-{:03d}".format(ii+1), cells_with_disps[ii])
+    for i, cell in zip(ids, cells_with_disps):
+        filename = "{pre_filename}S-{0:0{width}}".format(
+            i, pre_filename=pre_filename, width=width)
+        write_dftbp(filename, cell)

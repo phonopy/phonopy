@@ -66,7 +66,7 @@ def delta_dynamical_matrix(q,
 
 
 class GroupVelocity(object):
-    """Class to calculate group velocities of phonons
+    r"""Class to calculate group velocities of phonons
 
     d omega   ----
     ------- = \  / omega

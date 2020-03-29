@@ -40,21 +40,20 @@ import numpy as np
 from phonopy import Phonopy, __version__
 from phonopy.file_IO import (
     parse_FORCE_CONSTANTS, parse_FORCE_SETS, get_born_parameters,
-    write_FORCE_CONSTANTS, write_force_constants_to_hdf5, parse_QPOINTS,
-    parse_disp_yaml)
+    write_FORCE_CONSTANTS, write_force_constants_to_hdf5, parse_QPOINTS)
 from phonopy.cui.collect_cell_info import collect_cell_info
+from phonopy.cui.create_force_sets import create_FORCE_SETS
 from phonopy.cui.load_helper import read_force_constants_from_hdf5
 from phonopy.cui.settings import PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.cui.phonopy_argparse import (
     get_parser, show_deprecated_option_warnings)
-from phonopy.structure.cells import (print_cell, determinant)
+from phonopy.structure.cells import print_cell
 from phonopy.structure.atoms import atom_data, symbol_map
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.calculator import (
     get_interface_mode, write_supercells_with_displacements,
-    get_default_displacement_distance, get_default_physical_units,
-    create_FORCE_SETS)
+    get_default_displacement_distance, get_default_physical_units)
 from phonopy.interface.vasp import create_FORCE_CONSTANTS
 from phonopy.phonon.band_structure import (
     get_band_qpoints, get_band_qpoints_by_seekpath)
@@ -165,20 +164,29 @@ def finalize_phonopy(log_level,
                      phonopy_conf,
                      phonon,
                      interface_mode,
-                     write_displacements=False,
                      filename="phonopy.yaml"):
     units = get_default_physical_units(interface_mode)
-    phpy_yaml = PhonopyYaml(configuration=phonopy_conf.get_configures(),
+
+    settings = phonopy_conf.settings
+
+    yaml_settings = {
+        'force_sets': settings.get_include_force_sets(),
+        'force_constants': settings.get_include_force_constants(),
+        'born_effective_charge': settings.get_include_born_effective_charge(),
+        'dielectric_constant': settings.get_include_dielectric_constant(),
+        'displacements': settings.get_include_displacements(),
+    }
+
+    phpy_yaml = PhonopyYaml(configuration=phonopy_conf.confs,
                             physical_units=units,
-                            settings={
-                                'force_sets': False,
-                                'born_effective_charge': False,
-                                'dielectric_constant': False,
-                                'displacements': write_displacements})
+                            settings=yaml_settings)
     phpy_yaml.set_phonon_info(phonon)
     with open(filename, 'w') as w:
         w.write(str(phpy_yaml))
+
     if log_level > 0:
+        print("")
+        print("Summary of calculation was written in \"%s\"." % filename)
         print_end()
     sys.exit(0)
 
@@ -210,12 +218,18 @@ def print_settings(settings,
                    is_band_auto,
                    primitive_matrix,
                    supercell_matrix,
-                   cell_filename,
+                   unitcell_filename,
                    interface_mode):
     run_mode = settings.get_run_mode()
     if interface_mode:
         print("Calculator interface: %s" % interface_mode)
-    print("Crystal structure was read from \"%s\"." % cell_filename)
+    if (settings.get_cell_filename() is not None and
+        settings.get_cell_filename() != unitcell_filename):
+        print("\"%s\" was not able to be used."
+              % settings.get_cell_filename())
+    print("Crystal structure was read from \"%s\"." % unitcell_filename)
+    physical_units = get_default_physical_units(interface_mode)
+    print("Unit of length: %s" % physical_units['length_unit'])
     if is_band_auto and not is_primitive_axes_auto:
         print("Automatic band structure mode forced automatic choice "
               "of primitive axes.")
@@ -333,33 +347,78 @@ def write_displacements_files(phonon,
                               log_level,
                               interface_mode,
                               optional_structure_info):
-    # From phonopy v1.15.0, displacements are written into phonopy_disp.yaml.
-    # write_disp_yaml(displacements, supercell)
+    """Write supercells with displacements and displacement dataset
 
-    # Write supercells with displacements
-    cells_with_disps = phonon.get_supercells_with_displacements()
-    N = abs(determinant(phonon.supercell_matrix))
+    Note
+    ----
+    From phonopy v1.15.0, displacement dataset is written into
+    phonopy_disp.yaml.
+
+    """
+
+    cells_with_disps = phonon.supercells_with_displacements
+    additional_info = {'supercell_matrix': phonon.supercell_matrix}
     write_supercells_with_displacements(interface_mode,
                                         phonon.supercell,
                                         cells_with_disps,
-                                        N,
-                                        optional_structure_info)
+                                        optional_structure_info,
+                                        additional_info=additional_info)
 
     if log_level > 0:
         print("\"phonopy_disp.yaml\" and supercells have been created.")
-        print('')
-        print("NOTE:")
-        print("  Displacements information is written into "
-              "\"phonopy_disp.yaml\" from v1.15.0.")
-        print("  \"disp.yaml\" is still supported to read, but will be "
-              "deprecated.")
+
+    phonopy_conf.settings.set_include_displacements(True)
 
     finalize_phonopy(log_level,
                      phonopy_conf,
                      phonon,
                      interface_mode,
-                     write_displacements=True,
                      filename="phonopy_disp.yaml")
+
+
+def create_FORCE_SETS_from_args(args, log_level):
+    interface_mode = get_interface_mode(vars(args))
+    if args.force_sets:
+        filenames = args.force_sets
+        force_sets_zero_mode = False
+    elif args.force_sets_zero:
+        filenames = args.force_sets_zero
+        force_sets_zero_mode = True
+    else:
+        print_error_message("Something wrong for parsing arguments.")
+        sys.exit(0)
+
+    disp_filenames = files_exist(['phonopy_disp.yaml', 'disp.yaml'],
+                                 log_level, is_any=True)
+    if disp_filenames[0] == 'phonopy_disp.yaml':
+        try:
+            phpy_yaml = PhonopyYaml()
+            phpy_yaml.read('phonopy_disp.yaml')
+            if phpy_yaml.calculator is not None:
+                interface_mode = phpy_yaml.calculator
+            disp_filename = 'phonopy_disp.yaml'
+        except KeyError:
+            file_exists('disp.yaml', log_level)
+            if log_level > 0:
+                print("\"phonopy_disp.yaml\" was found but wasn't used "
+                      "because of the old-style format.")
+            disp_filename = 'disp.yaml'
+    else:
+        disp_filename = disp_filenames[0]
+
+    files_exist(filenames, log_level)
+
+    error_num = create_FORCE_SETS(
+        interface_mode,
+        filenames,
+        symmetry_tolerance=args.symmetry_tolerance,
+        wien2k_P1_mode=args.is_wien2k_p1,  # For test only
+        force_sets_zero_mode=force_sets_zero_mode,
+        disp_filename=disp_filename,
+        log_level=log_level)
+    if log_level > 0:
+        print_end()
+    sys.exit(error_num)
 
 
 #################
@@ -399,6 +458,10 @@ if args.is_graph_save:
 if log_level > 0:
     print_phononpy()
     print_version(phonopy_version)
+    print("Python version %d.%d.%d" % sys.version_info[:3])
+    import phonopy.structure.spglib as spglib
+    print("Spglib version %d.%d.%d" % spglib.get_version())
+    print("")
 
     if deprecated:
         show_deprecated_option_warnings(deprecated)
@@ -408,47 +471,8 @@ if log_level > 0:
 ###########################
 # Create FORCE_SETS (-f or --force_sets)
 if args.force_sets or args.force_sets_zero:
-    interface_mode = get_interface_mode(args)
-    if args.force_sets:
-        filenames = args.force_sets
-        force_sets_zero_mode = False
-    elif args.force_sets_zero:
-        filenames = args.force_sets_zero
-        force_sets_zero_mode = True
-    else:
-        print_error_message("Something wrong for parsing arguments.")
-        sys.exit(0)
+    create_FORCE_SETS_from_args(args, log_level)
 
-    disp_filenames = files_exist(['phonopy_disp.yaml', 'disp.yaml'],
-                                 log_level, is_any=True)
-    if disp_filenames[0] == 'phonopy_disp.yaml':
-        try:
-            dataset = parse_disp_yaml(filename='phonopy_disp.yaml')
-            if 'calculator' in dataset:
-                interface_mode = dataset['calculator']
-            disp_filename = 'phonopy_disp.yaml'
-        except KeyError:
-            file_exists('disp.yaml', log_level)
-            if log_level > 0:
-                print("\"phonopy_disp.yaml\" was found but wasn't used "
-                      "because of the old-style format.")
-            disp_filename = 'disp.yaml'
-    else:
-        disp_filename = disp_filenames[0]
-
-    files_exist(filenames, log_level)
-
-    error_num = create_FORCE_SETS(
-        interface_mode,
-        filenames,
-        symmetry_tolerance=args.symmetry_tolerance,
-        is_wien2k_p1=args.is_wien2k_p1,
-        force_sets_zero_mode=force_sets_zero_mode,
-        disp_filename=disp_filename,
-        log_level=log_level)
-    if log_level > 0:
-        print_end()
-    sys.exit(error_num)
 
 # Create FORCE_CONSTANTS (--fc or --force_constants)
 if args.force_constants:
@@ -468,10 +492,10 @@ if args.force_constants:
 if len(args.conf_file) > 0:
     file_exists(args.conf_file[0], log_level)
     phonopy_conf = PhonopyConfParser(filename=args.conf_file[0], args=args)
-    settings = phonopy_conf.get_settings()
+    settings = phonopy_conf.settings
 else:
     phonopy_conf = PhonopyConfParser(args=args)
-    settings = phonopy_conf.get_settings()
+    settings = phonopy_conf.settings
 
 is_band_auto = (type(settings.get_band_paths()) is str and
                 settings.get_band_paths() == 'auto')
@@ -487,7 +511,7 @@ else:
 cell_info = collect_cell_info(
     supercell_matrix=settings.get_supercell_matrix(),
     primitive_matrix=settings.get_primitive_matrix(),
-    interface_mode=get_interface_mode(args),
+    interface_mode=settings.get_calculator(),
     cell_filename=settings.get_cell_filename(),
     chemical_symbols=settings.get_chemical_symbols(),
     enforce_primitive_matrix_auto=is_band_auto,
@@ -498,8 +522,9 @@ if type(cell_info) is str:
         print_error()
     sys.exit(1)
 (unitcell, supercell_matrix, primitive_matrix,
- unitcell_filename, optional_structure_info, interface_mode,
- has_read_phonopy_yaml) = cell_info
+ optional_structure_info, interface_mode,
+ phpy_yaml) = cell_info
+unitcell_filename = optional_structure_info[0]
 
 # Set magnetic moments
 magmoms = settings.get_magnetic_moments()
@@ -530,13 +555,14 @@ physical_units = get_default_physical_units(interface_mode)
 # Check crystal symmetry and exit (--symmetry) #
 ################################################
 if args.is_check_symmetry:
-    if primitive_matrix == 'auto':
-        primitive_matrix = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
-    check_symmetry(unitcell,
-                   primitive_axis=primitive_matrix,
-                   symprec=symprec,
-                   distance_to_A=physical_units['distance_to_A'],
-                   phonopy_version=phonopy_version)
+    phonon = Phonopy(unitcell,
+                     np.eye(3, dtype=int),
+                     primitive_matrix=primitive_matrix,
+                     symprec=symprec,
+                     calculator=interface_mode,
+                     log_level=log_level)
+    check_symmetry(phonon, optional_structure_info)
+
     if log_level > 0:
         print_end()
     sys.exit(0)
@@ -592,16 +618,13 @@ if settings.get_masses() is not None:
 
 # Show logs
 if log_level > 0:
-    print("Python version %d.%d.%d" % sys.version_info[:3])
-    import phonopy.structure.spglib as spglib
-    print("Spglib version %d.%d.%d" % spglib.get_version())
     print_settings(settings,
                    (type(primitive_matrix) is str and
                     primitive_matrix == 'auto'),
                    is_band_auto,
                    phonon.primitive_matrix,
                    supercell_matrix,
-                   optional_structure_info[0],
+                   unitcell_filename,
                    interface_mode)
     if magmoms is None:
         print("Spacegroup: %s" %
@@ -683,34 +706,36 @@ if settings.get_read_force_constants():
 
     phonon.force_constants = fc
 else:
-    def read_force_sets_from_phonopy_yaml(unitcell_filename, log_level):
-        ph_yaml = PhonopyYaml()
-        ph_yaml.read(unitcell_filename)
-        if (ph_yaml.dataset is not None and
-            ('forces' in ph_yaml.dataset or
-             ('first_atoms' in ph_yaml.dataset and
-              'forces' in ph_yaml.dataset['first_atoms'][0]))):
-            if log_level:
-                print("Forces and displacements are read from \"%s\"."
-                      % unitcell_filename)
-            return ph_yaml.dataset
+    def read_force_sets_from_phonopy_yaml(phpy_yaml):
+        if (phpy_yaml.dataset is not None and
+            ('forces' in phpy_yaml.dataset or
+             ('first_atoms' in phpy_yaml.dataset and
+              'forces' in phpy_yaml.dataset['first_atoms'][0]))):
+            return phpy_yaml.dataset
         else:
             return None
 
     force_sets = None
-    if has_read_phonopy_yaml:
-        force_sets = read_force_sets_from_phonopy_yaml(unitcell_filename,
-                                                       log_level)
+
+    if phpy_yaml is not None:
+        force_sets = read_force_sets_from_phonopy_yaml(phpy_yaml)
+        if log_level:
+            if force_sets is None:
+                print("Forces and displacements were not found in \"%s\"."
+                      % unitcell_filename)
+            else:
+                print("Forces and displacements were read from \"%s\"."
+                      % unitcell_filename)
 
     if force_sets is None:
         file_exists("FORCE_SETS", log_level)
         force_sets = parse_FORCE_SETS(natom=num_satom)
         if log_level:
-            print("Forces and displacements are read from \"%s\"."
+            print("Forces and displacements were read from \"%s\"."
                   % "FORCE_SETS")
-            if 'displacements' in force_sets:
-                print("%d snapshots were found in \"%s\"."
-                      % (len(force_sets['displacements']), "FORCE_SETS"))
+
+    if log_level and force_sets is not None and 'displacements' in force_sets:
+        print("%d snapshots were found." % len(force_sets['displacements']))
 
     if 'natom' in force_sets:
         natom = force_sets['natom']
@@ -790,9 +815,14 @@ if settings.get_write_force_constants():
         if log_level > 0:
             print("Force constants are written into \"force_constants.hdf5\".")
     else:
-        write_FORCE_CONSTANTS(phonon.get_force_constants(), p2s_map=p2s_map)
+        fc = phonon.force_constants
+        write_FORCE_CONSTANTS(fc, p2s_map=p2s_map)
         if log_level > 0:
             print("Force constants are written into \"FORCE_CONSTANTS\".")
+            print("  Array shape of force constants is %s." % str(fc.shape))
+            if fc.shape[0] != fc.shape[1]:
+                print("  Use --full-fc option for full array of force "
+                      "constants.")
 
 # Show the rotational invariance condition (just show!)
 if settings.get_is_rotational_invariance():
@@ -801,41 +831,41 @@ if settings.get_is_rotational_invariance():
 ##################################
 # Non-analytical term correction #
 ##################################
-if settings.get_is_nac() or has_read_phonopy_yaml:
-    def read_nac_params_from_phonopy_yaml(unitcell_filename, log_level):
-        ph_yaml = PhonopyYaml()
-        ph_yaml.read(unitcell_filename)
-        if ph_yaml.nac_params is not None:
-            if log_level:
-                print("NAC parameters are read from \"%s\"."
-                      % unitcell_filename)
-            return ph_yaml.nac_params
+if settings.get_is_nac():
+    def read_nac_params_from_phonopy_yaml(phpy_yaml):
+        if phpy_yaml.nac_params is not None:
+            return phpy_yaml.nac_params
         else:
             return None
 
-    def read_BORN(phonon, log_level):
+    def read_BORN(phonon):
         with open("BORN") as f:
-            nac_params = get_born_parameters(
-                f, phonon.primitive, phonon.get_primitive_symmetry())
-            if log_level:
-                print("NAC parameters are read from \"%s\"." % "BORN")
-            return nac_params
+            return get_born_parameters(
+                f, phonon.primitive, phonon.primitive_symmetry)
 
-    if has_read_phonopy_yaml:
-        nac_params = read_nac_params_from_phonopy_yaml(unitcell_filename,
-                                                       log_level)
-        if nac_params is None and file_exists("BORN", log_level, is_any=True):
-            nac_params = read_BORN(phonon, log_level)
-    elif file_exists("BORN", log_level):
-        nac_params = read_BORN(phonon, log_level)
+    nac_params = None
+
+    if phpy_yaml:
+        nac_params = read_nac_params_from_phonopy_yaml(phpy_yaml)
+        if log_level:
+            if nac_params is None:
+                print("NAC parameters were not found in \"%s\"."
+                      % unitcell_filename)
+            else:
+                print("NAC parameters were read from \"%s\"."
+                      % unitcell_filename)
+
+    if nac_params is None and file_exists("BORN", log_level):
+        nac_params = read_BORN(phonon)
+        if nac_params is not None and log_level:
+            print("NAC parameters were read from \"%s\"." % "BORN")
+
         if not nac_params:
             error_text = "BORN file could not be read correctly."
             print_error_message(error_text)
             if log_level > 0:
                 print_error()
             sys.exit(1)
-    else:
-        nac_params = None  # This would not happen though.
 
     if nac_params is not None:
         if nac_params['factor'] is None:
@@ -929,7 +959,7 @@ elif (run_mode == 'band' or
 
         if is_band_auto:
             print("SeeK-path is used to generate band paths.")
-            print("About SeeK-path https://seekpath.readthedocs.io/ "
+            print("  About SeeK-path https://seekpath.readthedocs.io/ "
                   "(citation there-in)")
             is_legacy_plot = False
             bands, labels, path_connections = get_band_qpoints_by_seekpath(
@@ -1368,4 +1398,5 @@ else:
 ########################
 # Phonopy finalization #
 ########################
-finalize_phonopy(log_level, phonopy_conf, phonon, interface_mode)
+
+finalize_phonopy( log_level, phonopy_conf, phonon, interface_mode)

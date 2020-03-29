@@ -391,7 +391,7 @@ static PyObject * py_get_dataset(PyObject *self, PyObject *args)
   PyList_SetItem(array, n, PYUNICODE_FROMSTRING(dataset->pointgroup_symbol));
   n++;
 
-  assert(n != len_list);
+  assert(n == len_list);
 
   spg_free_dataset(dataset);
 

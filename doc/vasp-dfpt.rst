@@ -38,8 +38,9 @@ procedure to calculate phonon properties may be as follows:
 
       % phonopy -d --dim="2 2 2" -c POSCAR-unitcell
 
-3) Rename ``SPOSCAR`` created in (2) to
-   ``POSCAR`` (``POSCAR-{number}`` and ``disp.yaml`` files will never be used.)
+3) Rename ``SPOSCAR`` created in (2) to ``POSCAR``
+   (``POSCAR-{number}`` and ``phonopy_disp.yaml`` files will never be
+   used.)
 
    ::
 

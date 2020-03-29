@@ -165,7 +165,7 @@ needed.
 
    The other option is using git to clone the phonopy repository from github::
 
-     % git clone https://github.com/atztogo/phonopy.git
+     % git clone https://github.com/phonopy/phonopy.git
      % cd phonopy
 
 2. Set up C-libraries for python C-API and python codes. This can be

@@ -8,7 +8,7 @@ Pre-process
 
 The input stureture of ``POSCAR`` (:ref:`this <example_POSCAR1>`) is
 used as an example here. Most files are found at `SiO2-HP example
-<https://github.com/atztogo/phonopy/tree/master/example/SiO2-HP/>`_.
+<https://github.com/phonopy/phonopy/tree/master/example/SiO2-HP/>`_.
 
 In the pre-process, supercell structures with (or without)
 displacements are created from a unit cell fully consiering crystal

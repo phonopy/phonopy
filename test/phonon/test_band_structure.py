@@ -32,12 +32,25 @@ class TestBandStructure(unittest.TestCase):
         phonon.set_nac_params(nac_params)
         return phonon
 
-    def testBand(self):
+    def test_band(self):
+        self._test_band()
+
+    def test_with_group_velocities(self):
+        self._test_band(with_group_velocities=True)
+
+    def test_is_band_connection(self):
+        self._test_band(is_band_connection=True)
+
+    def _test_band(self,
+                   with_group_velocities=False,
+                   is_band_connection=False):
         band_paths = [[[0, 0, 0], [0.5, 0.5, 0.5]],
                       [[0.5, 0.5, 0], [0, 0, 0], [0.5, 0.25, 0.75]]]
         qpoints = get_band_qpoints(band_paths, npoints=11)
         phonon = self._get_phonon()
-        phonon.run_band_structure(qpoints, with_group_velocities=True)
+        phonon.run_band_structure(qpoints,
+                                  with_group_velocities=with_group_velocities,
+                                  is_band_connection=is_band_connection)
         band_structure = phonon.band_structure
         phonon.get_band_structure_dict()
 

@@ -27,7 +27,7 @@ A procedure of Abinit-phonopy calculation is as follows:
    ``supercell-xxx.in`` (``xxx`` are numbers) give the perfect
    supercell and supercells with displacements, respectively. In these
    supercell files, lines only related to crystal structures are
-   generated. ``disp.yaml`` is also created. This file contains
+   generated. ``phonopy_disp.yaml`` is also created. This file contains
    information on displacements. Perhaps the supercell files are
    stored in ``disp-xxx`` directories, then Abinit calculations are
    executed in these directories.
@@ -43,9 +43,9 @@ A procedure of Abinit-phonopy calculation is as follows:
 
    ::
 
-     % phonopy --abinit -f disp-001/supercell-001.out disp-002/supercell-002.out  ...
+     % phonopy -f disp-001/supercell-001.out disp-002/supercell-002.out  ...
 
-   To run this command, ``disp.yaml`` has to be located in the current
+   To run this command, ``phonopy_disp.yaml`` has to be located in the current
    directory because the atomic displacements are written into the
    FORCE_SETS file. See some more detail at
    :ref:`abinit_force_sets_option`. An example is found in

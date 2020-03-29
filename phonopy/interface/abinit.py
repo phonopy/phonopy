@@ -102,14 +102,13 @@ def write_abinit(filename, cell):
 
 def write_supercells_with_displacements(supercell,
                                         cells_with_displacements,
+                                        ids,
                                         pre_filename="supercell",
                                         width=3):
-    write_abinit("supercell.in", supercell)
-    for i, cell in enumerate(cells_with_displacements):
+    write_abinit("%s.in" % pre_filename, supercell)
+    for i, cell in zip(ids, cells_with_displacements):
         filename = "{pre_filename}-{0:0{width}}.in".format(
-            i + 1,
-            pre_filename=pre_filename,
-            width=width)
+            i, pre_filename=pre_filename, width=width)
         write_abinit(filename, cell)
 
 

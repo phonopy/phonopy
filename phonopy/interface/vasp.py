@@ -65,7 +65,7 @@ def parse_set_of_forces(num_atoms,
                 forces = vasprun.read_forces()
             except RuntimeError:
                 raise RuntimeError("\'vasprun.xml\' No.%d can be broken. "
-                                   "Please check the content." % (count +1))
+                                   "Please check the content." % (count + 1))
             force_sets.append(forces)
             if verbose:
                 sys.stdout.write("%d " % (count + 1))
@@ -234,7 +234,7 @@ def _expand_symbols(num_atoms, symbols=None):
             is_symbols = False
         else:
             for s in symbols:
-                if not s in symbol_map:
+                if s not in symbol_map:
                     is_symbols = False
                     break
 
@@ -272,36 +272,14 @@ def write_vasp(filename, cell, direct=True):
 
 def write_supercells_with_displacements(supercell,
                                         cells_with_displacements,
+                                        ids,
                                         pre_filename="POSCAR",
                                         width=3):
-    write_vasp("SPOSCAR", supercell, direct=True)
-    for i, cell in enumerate(cells_with_displacements):
-        if cell is not None:
-            write_vasp("{pre_filename}-{0:0{width}}".format(
-                i + 1,
-                pre_filename=pre_filename,
-                width=width),
-                       cell,
-                       direct=True)
-
-    write_magnetic_moments(supercell, sort_by_elements=True)
-
-
-def write_magnetic_moments(cell, sort_by_elements=False):
-    magmoms = cell.get_magnetic_moments()
-    if magmoms is not None:
-        if sort_by_elements:
-            (_, _, _, sort_list) = sort_positions_by_symbols(
-                cell.get_chemical_symbols(), cell.get_scaled_positions())
-        else:
-            sort_list = range(cell.get_number_of_atoms())
-
-        with open("MAGMOM", 'w') as w:
-            w.write(" MAGMOM = ")
-            for i in sort_list:
-                w.write("%f " % magmoms[i])
-            w.write("\n")
-            w.close()
+    write_vasp("S%s" % pre_filename, supercell, direct=True)
+    for i, cell in zip(ids, cells_with_displacements):
+        filename = "{pre_filename}-{0:0{width}}".format(
+            i, pre_filename=pre_filename, width=width)
+        write_vasp(filename, cell, direct=True)
 
 
 def get_scaled_positions_lines(scaled_positions):

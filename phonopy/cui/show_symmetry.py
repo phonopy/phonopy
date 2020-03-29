@@ -34,46 +34,46 @@
 
 import numpy as np
 import phonopy.structure.spglib as spg
-from phonopy.structure.symmetry import Symmetry, find_primitive, get_pointgroup
-from phonopy.structure.cells import get_primitive
-from phonopy.interface.vasp import write_vasp
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.symmetry import get_pointgroup
+from phonopy.interface.calculator import (
+    write_crystal_structure, get_default_cell_filename)
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import guess_primitive_matrix, get_primitive
 
 
-def check_symmetry(input_cell,
-                   primitive_axis=None,
-                   symprec=1e-5,
-                   distance_to_A=1.0,
-                   phonopy_version=None):
-    if primitive_axis is None:
-        cell = get_primitive(input_cell, np.eye(3), symprec=symprec)
-    else:
-        cell = get_primitive(input_cell, primitive_axis, symprec=symprec)
-    lattice = cell.get_cell() * distance_to_A
-    cell.set_cell(lattice)
+def check_symmetry(phonon, optional_structure_info):
+    # Assumed that supercell is unit cell.
+    print(_get_symmetry_yaml(phonon.supercell,
+                             phonon.symmetry,
+                             phonon.version))
 
-    symmetry = Symmetry(cell, symprec)
-    print(_get_symmetry_yaml(cell, symmetry, phonopy_version))
-
-    if input_cell.get_magnetic_moments() is None:
-        primitive = find_primitive(cell, symprec)
-        if primitive is not None:
-            print("# Primitive cell was found. It is written into PPOSCAR.")
-            write_vasp('PPOSCAR', primitive)
-
-            # Overwrite symmetry and cell
-            symmetry = Symmetry(primitive, symprec)
-            cell = primitive
-
+    if phonon.unitcell.magnetic_moments is None:
+        base_fname = get_default_cell_filename(phonon.calculator)
+        symprec = phonon.symmetry.get_symmetry_tolerance()
         (bravais_lattice,
          bravais_pos,
-         bravais_numbers) = spg.refine_cell(cell, symprec)
-        bravais = Atoms(numbers=bravais_numbers,
-                        scaled_positions=bravais_pos,
-                        cell=bravais_lattice,
-                        pbc=True)
-        print("# Bravais lattice is written into BPOSCAR.")
-        write_vasp('BPOSCAR', bravais)
+         bravais_numbers) = spg.refine_cell(phonon.unitcell, symprec)
+        bravais = PhonopyAtoms(numbers=bravais_numbers,
+                               scaled_positions=bravais_pos,
+                               cell=bravais_lattice)
+        filename = 'B' + base_fname
+        print("# Symmetrized conventional unit cell is written into %s."
+              % filename)
+        trans_mat = guess_primitive_matrix(bravais, symprec=symprec)
+        primitive = get_primitive(bravais, trans_mat, symprec=symprec)
+        write_crystal_structure(
+            filename,
+            bravais,
+            interface_mode=phonon.calculator,
+            optional_structure_info=optional_structure_info)
+
+        filename = 'P' + base_fname
+        print("# Symmetrized primitive is written into %s." % filename)
+        write_crystal_structure(
+            filename,
+            primitive,
+            interface_mode=phonon.calculator,
+            optional_structure_info=optional_structure_info)
 
 
 def _get_symmetry_yaml(cell, symmetry, phonopy_version=None):
@@ -84,22 +84,22 @@ def _get_symmetry_yaml(cell, symmetry, phonopy_version=None):
     independent_atoms = symmetry.get_independent_atoms()
     wyckoffs = symmetry.get_Wyckoff_letters()
 
-    yaml = []
+    lines = []
 
     if phonopy_version is not None:
-        yaml.append("phonopy_version: '%s'" % phonopy_version)
+        lines.append("phonopy_version: '%s'" % phonopy_version)
 
     if cell.get_magnetic_moments() is None:
         spg_symbol, spg_number = symmetry.get_international_table().split()
         spg_number = int(spg_number.replace('(', '').replace(')', ''))
-        yaml.append("space_group_type: '%s'" % spg_symbol)
-        yaml.append("space_group_number: %d" % spg_number)
-        yaml.append("point_group_type: '%s'" % symmetry.get_pointgroup())
-    yaml.append("space_group_operations:")
+        lines.append("space_group_type: '%s'" % spg_symbol)
+        lines.append("space_group_number: %d" % spg_number)
+        lines.append("point_group_type: '%s'" % symmetry.get_pointgroup())
+    lines.append("space_group_operations:")
     for i, (r, t) in enumerate(zip(rotations, translations)):
-        yaml.append("- rotation: # %d" % (i + 1))
+        lines.append("- rotation: # %d" % (i + 1))
         for vec in r:
-            yaml.append("  - [%2d, %2d ,%2d]" % tuple(vec))
+            lines.append("  - [%2d, %2d ,%2d]" % tuple(vec))
         line = "  translation: ["
         for j, x in enumerate(t):
             if abs(x - np.rint(x)) < 1e-5:
@@ -110,27 +110,27 @@ def _get_symmetry_yaml(cell, symmetry, phonopy_version=None):
                 line += ", "
             else:
                 line += " ]"
-                yaml.append(line)
-    yaml.append("atom_mapping:")
+                lines.append(line)
+    lines.append("atom_mapping:")
     for i, atom_num in enumerate(atom_sets):
-        yaml.append("  %d: %d" % (i + 1, atom_num + 1))
-    yaml.append("site_symmetries:")
+        lines.append("  %d: %d" % (i + 1, atom_num + 1))
+    lines.append("site_symmetries:")
     for i in independent_atoms:
         sitesym = symmetry.get_site_symmetry(i)
-        yaml.append("- atom: %d" % (i + 1))
+        lines.append("- atom: %d" % (i + 1))
 
         if cell.get_magnetic_moments() is None:
-            yaml.append("  Wyckoff: '%s'" % wyckoffs[i])
+            lines.append("  Wyckoff: '%s'" % wyckoffs[i])
         site_pointgroup = get_pointgroup(sitesym)
-        yaml.append("  site_point_group: '%s'" % site_pointgroup[0])
-        yaml.append("  orientation:")
+        lines.append("  site_point_group: '%s'" % site_pointgroup[0])
+        lines.append("  orientation:")
         for v in site_pointgroup[1]:
-            yaml.append("  - [%2d, %2d, %2d]" % tuple(v))
+            lines.append("  - [%2d, %2d, %2d]" % tuple(v))
 
-        yaml.append("  rotations:")
+        lines.append("  rotations:")
         for j, r in enumerate(sitesym):
-            yaml.append("  - # %d" % (j + 1))
+            lines.append("  - # %d" % (j + 1))
             for vec in r:
-                yaml.append("    - [%2d, %2d, %2d]" % tuple(vec))
+                lines.append("    - [%2d, %2d, %2d]" % tuple(vec))
 
-    return "\n".join(yaml)
+    return "\n".join(lines)

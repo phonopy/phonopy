@@ -27,6 +27,8 @@ have space among characters (e.g. ``1 / 3``) are not allowed.
 Basic tags
 ----------
 
+.. _dimension_tag:
+
 ``DIM``
 ~~~~~~~~~~
 
@@ -194,14 +196,14 @@ to the number of atoms in unit cell) have to be explicitly written.
 
    MAGMOM = 1.0 1.0 -1.0 -1.0
 
-.. _dimension_tag:
+.. _cell_filename_tag:
 
 ``CELL_FILENAME``
 ~~~~~~~~~~~~~~~~~~
 
 ::
 
-   CELL_FILENAME = UPOSCAR
+   CELL_FILENAME = POSCAR-unitcell
 
 See :ref:`cell_filename_option`.
 
@@ -475,9 +477,9 @@ when those files are not needed, e.g., in (P)DOS calculation,
 Phonon density of states (DOS) tags
 ------------------------------------
 
-Phonon density of states (DOS) is calcualted either with smearing
-method (default) or tetrahedron method. Phonons are calculated on a
-sampling mesh, therefore these tags must be used with
+Phonon density of states (DOS) is calcualted either with a linear
+tetrahedron method (default) or smearing method. Phonons are
+calculated on a sampling mesh, therefore these tags must be used with
 :ref:`mesh_sampling_tags`. The physical unit of horizontal axis is
 that of frequency that the user employs, e.g., THz, and that of
 vertical axis is {no. of states}/({unit cell} x {unit of the
@@ -630,8 +632,9 @@ of all projections to z composents of eigenvectors, respectively.
 ``SIGMA``
 ~~~~~~~~~
 
-This tag specifies the smearing width. The unit is same as that used
-for phonon frequency. The default value is the value given by the
+A smearing method is used instead of a linear tetrahedron method.
+This tag also specifies the smearing width. The unit is same as that
+used for phonon frequency. The default value is the value given by the
 difference of maximum and minimum frequencies divided by 100.
 
 ::
@@ -639,11 +642,6 @@ difference of maximum and minimum frequencies divided by 100.
    SIGMA = 0.1
 
 .. _debye_model_tag:
-
-``TETRAHEDRON``
-~~~~~~~~~~~~~~~~
-
-Tetrahedron method is used instead of smearing method.
 
 ``DEBYE_MODEL``
 ~~~~~~~~~~~~~~~~
@@ -1491,3 +1489,70 @@ set of q-points with including eigenvector or dynamical matrix output.
 In the band structure calculations (:ref:`band_structure_related_tags`),
 calculation results are written into ``band.hdf5`` but not into
 ``band.yaml``.
+
+
+.. _summary_tag:
+
+``summary``
+~~~~~~~~~~~
+
+The following data may be optionally included in the summary yaml file
+called ``phonopy_disp.yaml``/``phonopy.yaml`` in addition to other file
+output settings. This happens at the end of the pre/post-process (after
+running the ``phonopy`` script):
+
+* ``force constants``
+* ``force sets``
+* ``dielectric constant``
+* ``born effective charge``
+* ``displacements``
+* ``[all]``
+
+Including all relevant data in a single output file allows for a human
+readable convenient file format.
+
+
+``force constants``
+^^^^^^^^^^^^^^^^^^^
+
+The ``--include-fc`` flag or setting ``INCLUDE_FC = .TRUE.`` will cause
+the force constants (if available) to be written as an entry in the
+yaml summary file. The written force constants will reflect the
+required/available format used during processing. So if ``--full-fc`` is
+set the entire matrix will be written.
+
+
+``force sets``
+^^^^^^^^^^^^^^
+
+The ``--include-fs`` flag or setting ``INCLUDE_FS = .TRUE.`` will cause
+the force sets (if available) to be written as an entry in the yaml summary
+file.
+
+
+``dielectric constant`` and ``born effective charge``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``--include-born`` flag or setting ``INCLUDE_BORN = .TRUE.`` will cause
+the born effective charges and dielectric tensor (if available) to be
+written as an entry in the yaml summary file. The values will only be written
+if non-analytical term correction is set with the ``--nac`` flag or by
+setting ``NAC = .TRUE.``.
+
+This is more convenient than keeping track of the ``BORN`` file created by the user.
+
+
+``displacements``
+^^^^^^^^^^^^^^^^^
+
+The ``--include-disp`` flag or setting ``INCLUDE_DISP = .TRUE.`` will cause
+displacements data (if available) to be written as an entry in the yaml summary file.
+
+This is set by default when the ``phonopy`` script is run in ``displacements`` mode.
+
+
+``all``
+^^^^^^^
+
+All available data covered by the other ``include`` flags can be written to the yaml
+summary file using the ``--include-all`` flag or by setting ``INCLUDE_ALL = .TRUE.``.

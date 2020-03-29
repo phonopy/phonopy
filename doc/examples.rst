@@ -1,20 +1,26 @@
 .. _examples_link:
 
 Examples
-===============
-
-Example files are found at
-https://github.com/atztogo/phonopy/tree/master/example. The same are
-found in the example directory of the phonopy package downloaded at
-https://github.com/atztogo/phonopy/archive/master.zip. The followings
-show how some of those examples work. Note that sometimes the
-followings are outdated than the examples in the phonopy package. So
-the results or displace outputs can be different.
-
+========
 
 .. contents::
    :depth: 2
    :local:
+
+Phonopy supports various external force calculators (mainly for
+abinitio codes). The examples below are given for the default system
+that is equivalent to VASP style. Most of usage is universal among the
+force calculators. So it is also useful for non-VASP users to see the
+examples below. The list of the force calculators and the links to
+their specific usages are shown at :ref:`calculator_interfaces`.
+
+Example files are found at
+https://github.com/phonopy/phonopy/tree/master/example. The same are
+found in the example directory of the phonopy package downloaded at
+https://github.com/phonopy/phonopy/archive/master.zip. The followings
+show how some of those examples work. Note that sometimes the
+followings are outdated than the examples in the phonopy package. So
+the results or displace outputs can be different.
 
 
 Si
@@ -22,9 +28,6 @@ Si
 
 ``FORCE_SETS`` file creation for VASP
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-For the other calculators such as PWscf, ABINIT, etc, the way to
-create ``FORCE_SETS`` is found following :ref:`calculator_interfaces`.
 
 ::
 
