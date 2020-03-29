@@ -321,7 +321,7 @@ NaCl example
 ^^^^^^^^^^^^^
 
 NaCl example is found at
-https://github.com/atztogo/phonopy/tree/master/example/NaCl-QE-q2r.
+https://github.com/phonopy/phonopy/tree/master/example/NaCl-QE-q2r.
 
 ::
 

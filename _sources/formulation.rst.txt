@@ -324,7 +324,7 @@ calculation of ``sqrt(EV/AMU)/Angstrom/(2*pi)/1e12`` is made. ``EV``,
 ``AMU``, ``Angstrom`` are the values to convert them to those in the
 SI base unit, i.e., to Joule, kg, and metre, respectively. These values
 implemented in phonopy are found at `a phonopy github page
-<https://github.com/atztogo/phonopy/blob/master/phonopy/units.py>`_. This
+<https://github.com/phonopy/phonopy/blob/master/phonopy/units.py>`_. This
 unit conversion factor can be manually specified. See
 :ref:`frequency_conversion_factor_tag`.
 

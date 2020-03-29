@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Examples &#8212; Phonopy v.2.4.2</title>
+    <title>Examples &#8212; Phonopy v.2.5.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -38,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.4</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.5</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -56,7 +56,6 @@
       aria-labelledby="dLabelGlobalToc"><ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
-<li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
@@ -152,13 +151,6 @@
       
   <div class="section" id="examples">
 <span id="examples-link"></span><h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
-<p>Example files are found at
-<a class="reference external" href="https://github.com/atztogo/phonopy/tree/master/example">https://github.com/atztogo/phonopy/tree/master/example</a>. The same are
-found in the example directory of the phonopy package downloaded at
-<a class="reference external" href="https://github.com/atztogo/phonopy/archive/master.zip">https://github.com/atztogo/phonopy/archive/master.zip</a>. The followings
-show how some of those examples work. Note that sometimes the
-followings are outdated than the examples in the phonopy package. So
-the results or displace outputs can be different.</p>
 <div class="contents local topic" id="contents">
 <ul class="simple">
 <li><p><a class="reference internal" href="#si" id="id1">Si</a></p>
@@ -181,12 +173,23 @@ the results or displace outputs can be different.</p>
 <li><p><a class="reference internal" href="#si-gruneisen" id="id12">Si-gruneisen</a></p></li>
 </ul>
 </div>
+<p>Phonopy supports various external force calculators (mainly for
+abinitio codes). The examples below are given for the default system
+that is equivalent to VASP style. Most of usage is universal among the
+force calculators. So it is also useful for non-VASP users to see the
+examples below. The list of the force calculators and the links to
+their specific usages are shown at <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.</p>
+<p>Example files are found at
+<a class="reference external" href="https://github.com/phonopy/phonopy/tree/master/example">https://github.com/phonopy/phonopy/tree/master/example</a>. The same are
+found in the example directory of the phonopy package downloaded at
+<a class="reference external" href="https://github.com/phonopy/phonopy/archive/master.zip">https://github.com/phonopy/phonopy/archive/master.zip</a>. The followings
+show how some of those examples work. Note that sometimes the
+followings are outdated than the examples in the phonopy package. So
+the results or displace outputs can be different.</p>
 <div class="section" id="si">
 <h2><a class="toc-backref" href="#id1">Si</a><a class="headerlink" href="#si" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="force-sets-file-creation-for-vasp">
 <h3><a class="toc-backref" href="#id2"><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file creation for VASP</a><a class="headerlink" href="#force-sets-file-creation-for-vasp" title="Permalink to this headline">¶</a></h3>
-<p>For the other calculators such as PWscf, ABINIT, etc, the way to
-create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> is found following <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span>
         <span class="n">_</span>
   <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>

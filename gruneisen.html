@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Calculation of mode Grüneisen parameters &#8212; Phonopy v.2.4.2</title>
+    <title>Calculation of mode Grüneisen parameters &#8212; Phonopy v.2.5.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -38,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.4</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.5</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -56,7 +56,6 @@
       aria-labelledby="dLabelGlobalToc"><ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
-<li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
@@ -92,7 +91,7 @@
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Calculation of mode Grüneisen parameters</a><ul>
 <li><a class="reference internal" href="#how-to-run">How to run</a></li>
-<li><a class="reference internal" href="#abinit-quantum-espresso-wien2k-crystal-and-turbomole-interfaces">Abinit, Quantum ESPRESSO, Wien2k, CRYSTAL, and TURBOMOLE interfaces</a></li>
+<li><a class="reference internal" href="#force-calculator-interfaces">Force calculator interfaces</a></li>
 <li><a class="reference internal" href="#command-options">Command options</a></li>
 <li><a class="reference internal" href="#method-to-calculate-mode-gruneisen-parameters">Method to calculate mode Grüneisen parameters</a></li>
 </ul>
@@ -143,7 +142,7 @@
 <div class="contents local topic" id="contents">
 <ul class="simple">
 <li><p><a class="reference internal" href="#how-to-run" id="id1">How to run</a></p></li>
-<li><p><a class="reference internal" href="#abinit-quantum-espresso-wien2k-crystal-and-turbomole-interfaces" id="id2">Abinit, Quantum ESPRESSO, Wien2k, CRYSTAL, and TURBOMOLE interfaces</a></p></li>
+<li><p><a class="reference internal" href="#force-calculator-interfaces" id="id2">Force calculator interfaces</a></p></li>
 <li><p><a class="reference internal" href="#command-options" id="id3">Command options</a></p></li>
 <li><p><a class="reference internal" href="#method-to-calculate-mode-gruneisen-parameters" id="id4">Method to calculate mode Grüneisen parameters</a></p></li>
 </ul>
@@ -172,7 +171,7 @@ correctly. Therefore the phonon frequencies may not be ordered in
 <code class="docutils literal notranslate"><span class="pre">gruneisen.yaml</span></code>. In the plot (<code class="docutils literal notranslate"><span class="pre">-p</span></code> option), the colors of phonon
 bands correspond to those of mode Grüneinen parameters.</p>
 <p>A calculation on a reciprocal mesh is made by</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">gruneisen</span> <span class="n">orig</span> <span class="n">plus</span> <span class="n">minus</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span>  <span class="o">--</span><span class="n">pa</span><span class="o">=</span><span class="s2">&quot;0 1/2 1/2 1/2 0 1/2 1/2 1/2 0&quot;</span> <span class="o">--</span><span class="n">mesh</span><span class="o">=</span><span class="s2">&quot;20 20 20&quot;</span> <span class="o">-</span><span class="n">p</span> <span class="o">-</span><span class="n">c</span> <span class="n">POSCAR</span><span class="o">-</span><span class="n">unitcell</span> <span class="o">--</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;RB&quot;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">gruneisen</span> <span class="n">orig</span> <span class="n">plus</span> <span class="n">minus</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">--</span><span class="n">pa</span><span class="o">=</span><span class="s2">&quot;0 1/2 1/2 1/2 0 1/2 1/2 1/2 0&quot;</span> <span class="o">--</span><span class="n">mesh</span><span class="o">=</span><span class="s2">&quot;20 20 20&quot;</span> <span class="o">-</span><span class="n">p</span> <span class="o">-</span><span class="n">c</span> <span class="n">POSCAR</span><span class="o">-</span><span class="n">unitcell</span> <span class="o">--</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;RB&quot;</span>
 </pre></div>
 </div>
 <p><a class="reference internal" href="_images/Si-gruneisen-mesh.png"><img alt="i1" src="_images/Si-gruneisen-mesh.png" style="width: 406.0px; height: 306.0px;" /></a></p>
@@ -185,23 +184,23 @@ avoids showing the values on the plot. Instead the values at the
 neighboring <strong>q</strong>-points of <span class="math notranslate nohighlight">\(\Gamma\)</span>-point are used for the
 plot.</p>
 </div>
-<div class="section" id="abinit-quantum-espresso-wien2k-crystal-and-turbomole-interfaces">
-<span id="gruneisen-calculators"></span><h2><a class="toc-backref" href="#id2">Abinit, Quantum ESPRESSO, Wien2k, CRYSTAL, and TURBOMOLE interfaces</a><a class="headerlink" href="#abinit-quantum-espresso-wien2k-crystal-and-turbomole-interfaces" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">--abinit</span></code>, <code class="docutils literal notranslate"><span class="pre">--qe</span></code>, <code class="docutils literal notranslate"><span class="pre">--wien2k</span></code>, <code class="docutils literal notranslate"><span class="pre">--crystal</span></code>, or <code class="docutils literal notranslate"><span class="pre">--turbomole</span></code> options can be
-specified for corresponding calculators and the crystal structure file
-format should be different from that of the VASP format. An Abinit
-example is as follows:</p>
+<div class="section" id="force-calculator-interfaces">
+<span id="gruneisen-calculators"></span><h2><a class="toc-backref" href="#id2">Force calculator interfaces</a><a class="headerlink" href="#force-calculator-interfaces" title="Permalink to this headline">¶</a></h2>
+<p>Options of force calculator interfaces such as <code class="docutils literal notranslate"><span class="pre">--abinit</span></code>, <code class="docutils literal notranslate"><span class="pre">--qe</span></code>,
+… can be specified for corresponding calculators and the crystal
+structure file format should be different from that of the VASP
+format. An Abinit example is as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">gruneisen</span> <span class="n">orig</span> <span class="n">plus</span> <span class="n">minus</span> <span class="o">--</span><span class="n">abinit</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">--</span><span class="n">pa</span><span class="o">=</span><span class="s2">&quot;0 1/2 1/2 1/2 0 1/2 1/2 1/2 0&quot;</span> <span class="o">--</span><span class="n">band</span><span class="o">=</span><span class="s2">&quot;1/2 1/4 3/4 0 0 0 1/2 1/2 1/2 1/2 0.0 1/2&quot;</span> <span class="o">-</span><span class="n">p</span> <span class="o">-</span><span class="n">c</span> <span class="n">Si</span><span class="o">.</span><span class="ow">in</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="command-options">
 <span id="gruneisen-command-options"></span><h2><a class="toc-backref" href="#id3">Command options</a><a class="headerlink" href="#command-options" title="Permalink to this headline">¶</a></h2>
-<p>If one of <code class="docutils literal notranslate"><span class="pre">--abinit</span></code>, <code class="docutils literal notranslate"><span class="pre">--qe</span></code>, <code class="docutils literal notranslate"><span class="pre">--wien2k</span></code>, <code class="docutils literal notranslate"><span class="pre">--crystal</span></code>, or <code class="docutils literal notranslate"><span class="pre">--turbomole</span></code>
-options is specified, the interface mode is changed to it. The unit
-conversion factor to THz is appropriately selected and its crystal
-structure file format is accepted. If none of them is specified, as
-the VASP interface mode is invoked as the default interface.</p>
+<p>If one of the force calculator options is specified, the interface
+mode is changed to it. The unit conversion factor to THz is
+appropriately selected and its crystal structure file format is
+accepted. If none of them is specified, as the VASP interface mode is
+invoked as the default interface.</p>
 <p>The following command options can be used for all interface
 modes. They work similarly to those for <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> script.</p>
 <ul class="simple">
@@ -219,7 +218,8 @@ modes. They work similarly to those for <code class="docutils literal notranslat
 <li><p><code class="docutils literal notranslate"><span class="pre">-s</span></code>, <code class="docutils literal notranslate"><span class="pre">--save</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">-o</span></code></p></li>
 </ul>
-<p>The <code class="docutils literal notranslate"><span class="pre">--color</span></code> option (<code class="docutils literal notranslate"><span class="pre">RB</span></code>, <code class="docutils literal notranslate"><span class="pre">RG</span></code>, <code class="docutils literal notranslate"><span class="pre">RGB</span></code>) is used to gradually
+<p>Currently <code class="docutils literal notranslate"><span class="pre">--pa=&quot;auto&quot;</span></code> works but <code class="docutils literal notranslate"><span class="pre">--band=&quot;auto&quot;</span></code> doesn’t.
+The <code class="docutils literal notranslate"><span class="pre">--color</span></code> option (<code class="docutils literal notranslate"><span class="pre">RB</span></code>, <code class="docutils literal notranslate"><span class="pre">RG</span></code>, <code class="docutils literal notranslate"><span class="pre">RGB</span></code>) is used to gradually
 change the marker colors with respect to band indices. For the
 mesh-sampling plot, a few more options to control matplotlib
 parameters are prepared.</p>

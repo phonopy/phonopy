@@ -48,7 +48,7 @@ The following features of phonopy are highlighted:
 - :ref:`Quasi-harmonic approximation <phonopy_qha>`: Thermal expansion, heat
   capacity at constant pressure (Cp)
 - :ref:`Interfaces to calculators <calculator_interfaces>`:
-  :ref:`VASP <tutorial>`,
+  :ref:`VASP <vasp_interface>`,
   :ref:`VASP DFPT <vasp_dfpt_interface>`,
   :ref:`ABINIT <abinit_interface>`,
   :ref:`Quantu ESPRESSO <qe_interface>`,
@@ -78,7 +78,6 @@ Documentation
 
    install
    symmetry
-   Tutorial <procedure>
    workflow
    examples
    input-files

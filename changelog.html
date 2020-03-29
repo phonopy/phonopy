@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Change Log &#8212; Phonopy v.2.4.2</title>
+    <title>Change Log &#8212; Phonopy v.2.5.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -38,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.4</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.5</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -56,7 +56,6 @@
       aria-labelledby="dLabelGlobalToc"><ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
-<li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
@@ -91,7 +90,7 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Change Log</a><ul>
-<li><a class="reference internal" href="#dec-22-2019-version-2-5-0">Dec-22-2019: Version 2.5.0</a></li>
+<li><a class="reference internal" href="#mar-29-2020-version-2-5-0">Mar-29-2020: Version 2.5.0</a></li>
 <li><a class="reference internal" href="#dec-22-2019-version-2-4-2">Dec-22-2019: Version 2.4.2</a></li>
 <li><a class="reference internal" href="#nov-16-2019-version-2-4-1">Nov-16-2019: Version 2.4.1</a></li>
 <li><a class="reference internal" href="#nov-13-2019-version-2-4-0">Nov-13-2019: Version 2.4.0</a></li>
@@ -238,10 +237,19 @@
       
   <div class="section" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="dec-22-2019-version-2-5-0">
-<h2>Dec-22-2019: Version 2.5.0<a class="headerlink" href="#dec-22-2019-version-2-5-0" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="mar-29-2020-version-2-5-0">
+<h2>Mar-29-2020: Version 2.5.0<a class="headerlink" href="#mar-29-2020-version-2-5-0" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
+<li><p>New options, <code class="docutils literal notranslate"><span class="pre">--include-*</span></code>, to write summary in
+<code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code>. See <a class="reference internal" href="setting-tags.html#summary-tag"><span class="std std-ref">summary</span></a>.</p></li>
+<li><p>FHI-aims interface (<code class="docutils literal notranslate"><span class="pre">--aims</span></code>) was created by Florian Knoop.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phonopy-gruneisen</span></code> and <code class="docutils literal notranslate"><span class="pre">--symmetry</span></code> option were updated to be
+able to handle most of build-in calculator interfaces.</p></li>
+<li><p>Update spglib version to v1.14.1.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">phonopy-dispmanager</span></code> was removed.</p></li>
+<li><p>Let new force calculator interface be implemented easiler by
+centralizing those interface related stuffs in
+<code class="docutils literal notranslate"><span class="pre">phonopy.interface.calculator</span></code>.</p></li>
 </ul>
 </div>
 <div class="section" id="dec-22-2019-version-2-4-2">
@@ -726,7 +734,7 @@ tag. See <a class="reference internal" href="command-options.html#force-calculat
 <a class="reference internal" href="abinit.html#abinit-interface"><span class="std std-ref">Abinit &amp; phonopy calculation</span></a>, and <a class="reference internal" href="qe.html#qe-interface"><span class="std std-ref">Quantum ESPRESSO (QE) &amp; phonopy calculation</span></a>.</p></li>
 <li><p>For the <code class="docutils literal notranslate"><span class="pre">gruneisen</span></code> command, <code class="docutils literal notranslate"><span class="pre">--factor</span></code>, <code class="docutils literal notranslate"><span class="pre">--nomeshsym</span></code>,
 <code class="docutils literal notranslate"><span class="pre">--wien2k</span></code>, <code class="docutils literal notranslate"><span class="pre">--abinit</span></code>, and <code class="docutils literal notranslate"><span class="pre">--pwscf</span></code> options are
-implemented. See <a class="reference internal" href="gruneisen.html#gruneisen-calculators"><span class="std std-ref">Abinit, Quantum ESPRESSO, Wien2k, CRYSTAL, and TURBOMOLE interfaces</span></a> and
+implemented. See <a class="reference internal" href="gruneisen.html#gruneisen-calculators"><span class="std std-ref">Force calculator interfaces</span></a> and
 <a class="reference internal" href="gruneisen.html#gruneisen-command-options"><span class="std std-ref">Command options</span></a>.</p></li>
 <li><p>In phonopy-API, timing to call Phonopy._set_dynamical_matrix is
 changed to reduce the number of calls of this function. This may
