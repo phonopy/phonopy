@@ -6,12 +6,12 @@
     <title>Setting tags &#8212; Phonopy v.2.5.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="How to watch animation" href="animation.html" />
@@ -916,6 +916,7 @@ this computation, therefore it is not a good idea to set negative
 </div>
 <div class="section" id="thermal-properties-related-tags">
 <span id="thermal-properties-tag"></span><h2><a class="toc-backref" href="#id42">Thermal properties related tags</a><a class="headerlink" href="#thermal-properties-related-tags" title="Permalink to this headline">¶</a></h2>
+<p>See <a class="reference internal" href="#cutoff-frequency-tags"><span class="std std-ref">CUTOFF_FREQUENCY</span></a> on the treatment of the imaginary modes.</p>
 <div class="section" id="tprop-tmin-tmax-and-tstep">
 <h3><a class="toc-backref" href="#id43"><code class="docutils literal notranslate"><span class="pre">TPROP</span></code>, <code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code></a><a class="headerlink" href="#tprop-tmin-tmax-and-tstep" title="Permalink to this headline">¶</a></h3>
 <p>Thermal properties, free energy, heat capacity, and entropy, are
@@ -959,9 +960,22 @@ branches obtained.</p>
 </div>
 </div>
 <div class="section" id="cutoff-frequency">
-<h3><a class="toc-backref" href="#id45"><code class="docutils literal notranslate"><span class="pre">CUTOFF_FREQUENCY</span></code></a><a class="headerlink" href="#cutoff-frequency" title="Permalink to this headline">¶</a></h3>
-<p>Frequencies lower than this cutoff frequency are not used to calculate
-thermal properties.</p>
+<span id="cutoff-frequency-tags"></span><h3><a class="toc-backref" href="#id45"><code class="docutils literal notranslate"><span class="pre">CUTOFF_FREQUENCY</span></code></a><a class="headerlink" href="#cutoff-frequency" title="Permalink to this headline">¶</a></h3>
+<p>This is given by a real value and the default value is 0. This tag
+works as follows.</p>
+<p>Phonon thermal properties are computed as sum over phonon modes. See
+<a class="reference internal" href="formulation.html#thermal-properties-expressions"><span class="std std-ref">Thermodynamic properties</span></a>. When we treat imaginary
+frequences as negative values by
+<span class="math notranslate nohighlight">\(\text{sgn}(\nu^2) |\nu| \rightarrow \nu_\text{phonopy}\)</span>, all
+phonon modes with <span class="math notranslate nohighlight">\(\nu_\text{phonopy}\)</span> smaller than
+this <code class="docutils literal notranslate"><span class="pre">CUTOFF_FREQUENCY</span></code> are simply excluded in the summation.</p>
+<p>In the <code class="docutils literal notranslate"><span class="pre">thermal_properties.yaml</span></code>, the total number of calculated
+phonon modes and the number of phonon modes
+included for the thermal property calculation are shown as
+<code class="docutils literal notranslate"><span class="pre">num_modes:</span></code> and <code class="docutils literal notranslate"><span class="pre">num_integrated_modes:</span></code>, respectively.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CUTOFF_FREQUENCY</span> <span class="o">=</span> <span class="mf">0.1</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="thermal-displacements">
@@ -1603,7 +1617,7 @@ summary file using the <code class="docutils literal notranslate"><span class="p
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.0.<br/>
     </p>
   </div>
 </footer>
