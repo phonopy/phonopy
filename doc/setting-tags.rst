@@ -705,6 +705,8 @@ this computation, therefore it is not a good idea to set negative
 Thermal properties related tags
 --------------------------------
 
+See :ref:`cutoff_frequency_tags` on the treatment of the imaginary modes.
+
 ``TPROP``, ``TMIN``, ``TMAX``, and ``TSTEP``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -756,11 +758,29 @@ branches obtained.
    TPROP = .TRUE.
    PRETEND_REAL = .TRUE.
 
+.. _cutoff_frequency_tags:
+
 ``CUTOFF_FREQUENCY``
 ~~~~~~~~~~~~~~~~~~~~~
 
-Frequencies lower than this cutoff frequency are not used to calculate
-thermal properties.
+This is given by a real value and the default value is 0. This tag
+works as follows.
+
+Phonon thermal properties are computed as sum over phonon modes. See
+:ref:`thermal_properties_expressions`. When we treat imaginary
+frequences as negative values by
+:math:`\text{sgn}(\nu^2) |\nu| \rightarrow \nu_\text{phonopy}`, all
+phonon modes with :math:`\nu_\text{phonopy}` smaller than
+this ``CUTOFF_FREQUENCY`` are simply excluded in the summation.
+
+In the ``thermal_properties.yaml``, the total number of calculated
+phonon modes and the number of phonon modes
+included for the thermal property calculation are shown as
+``num_modes:`` and ``num_integrated_modes:``, respectively.
+
+::
+
+   CUTOFF_FREQUENCY = 0.1
 
 .. _thermal_atomic_displacements_tags:
 
