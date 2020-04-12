@@ -940,7 +940,8 @@ class Phonopy(object):
         Returns
         -------
         frequencies: ndarray
-            Phonon frequencies.
+            Phonon frequencies. Imaginary frequenies are represented by
+            negative real numbers.
             shape=(bands, ), dtype='double'
 
         """
@@ -974,10 +975,11 @@ class Phonopy(object):
         (frequencies, eigenvectors)
 
         frequencies: ndarray
-            Phonon frequencies
+            Phonon frequencies. Imaginary frequenies are represented by
+            negative real numbers.
             shape=(bands, ), dtype='double', order='C'
         eigenvectors: ndarray
-            Phonon eigenvectors
+            Phonon eigenvectors.
             shape=(bands, bands), dtype='complex', order='C'
 
         """
@@ -1084,7 +1086,7 @@ class Phonopy(object):
                                 is_legacy_plot=is_legacy_plot)
 
     def get_band_structure_dict(self):
-        """Returns calclated band structures
+        """Returns calculated band structures
 
         Returns
         -------
@@ -1104,7 +1106,8 @@ class Phonopy(object):
                 Distances in reciprocal space along paths.
                 shape=(q-points,), dtype='double'
             frequencies[i]: ndarray
-                Phonon frequencies
+                Phonon frequencies. Imaginary frequenies are represented by
+                negative real numbers.
                 shape=(q-points, bands), dtype='double'
             eigenvectors[i]: ndarray
                 Phonon eigenvectors. None if eigenvectors are not stored.
@@ -1129,7 +1132,7 @@ class Phonopy(object):
         return retdict
 
     def get_band_structure(self):
-        """Returns calclated band structures
+        """Returns calculated band structures
 
         Returns
         -------
@@ -1147,7 +1150,8 @@ class Phonopy(object):
             Distances in reciprocal space along paths.
             shape=(q-points,), dtype='double'
         frequencies[i]: ndarray
-            Phonon frequencies
+            Phonon frequencies. Imaginary frequenies are represented by
+            negative real numbers.
             shape=(q-points, bands), dtype='double'
         eigenvectors[i]: ndarray
             Phonon eigenvectors. None if eigenvectors are not stored.
@@ -1180,6 +1184,31 @@ class Phonopy(object):
                             plot=False,
                             write_yaml=False,
                             filename="band.yaml"):
+        """Convenient method to calculate/draw band structure
+
+        Parameters
+        ----------
+
+        See docstring of ``run_band_structure`` for the parameters of
+        ``with_eigenvectors`` (default is False) and ``with_group_velocities``
+        (default is False).
+
+        npoints : int, optional
+            Number of q-points in each segment of band struture paths.
+            The number includes end points. Default is 101.
+        plot : Bool, optional
+            With setting True, band structure is plotted using matplotlib and
+            the matplotlib module (plt) is returned. To watch the result,
+            usually ``show()`` has to be called. Default is False.
+        write_yaml : Bool
+            With setting True, ``band.yaml`` like file is written out. The
+            file name can be specified with the ``filename`` parameter.
+            Default is False.
+        filename : str, optional
+            File name used to write ``band.yaml`` like file. Default is
+            ``band.yaml``.
+
+        """
         bands, labels, path_connections = get_band_qpoints_by_seekpath(
             self._primitive, npoints, is_const_interval=True)
         self.run_band_structure(bands,
@@ -1666,12 +1695,37 @@ class Phonopy(object):
             nac_q_direction=nac_q_direction)
 
     def get_qpoints_dict(self):
+        """Returns calculated phonons at q-points
+
+        Returns
+        -------
+        dict
+            keys: frequencies, eigenvectors, and dynamical_matrices
+
+            frequencies : ndarray
+                Phonon frequencies. Imaginary frequenies are represented by
+                negative real numbers.
+                shape=(qpoints, bands), dtype='double'
+            eigenvectors : ndarray
+                Phonon eigenvectors. None if eigenvectors are not stored.
+                shape=(qpoints, bands, bands), dtype='complex'
+            group_velocities : ndarray
+                Phonon group velocities. None if group velocities are not
+                calculated.
+                shape=(qpoints, bands, 3), dtype='double'
+            dynamical_matrices : ndarray
+                Dynamical matrices at q-points.
+                shape=(qpoints, bands, bands), dtype='double'
+
+        """
+
         if self._qpoints is None:
             msg = ("run_qpoints has to be done.")
             raise RuntimeError(msg)
 
         return {'frequencies': self._qpoints.frequencies,
                 'eigenvectors': self._qpoints.eigenvectors,
+                'group_velocities': self._qpoints.group_velocities,
                 'dynamical_matrices': self._qpoints.dynamical_matrices}
 
     def get_qpoints_phonon(self):
@@ -1914,6 +1968,31 @@ class Phonopy(object):
                            legend=None,
                            write_dat=False,
                            filename="projected_dos.dat"):
+        """Convenient method to calculate/draw projected density of states
+
+        Parameters
+        ----------
+
+        See docstring of ``init_mesh`` for the parameters of ``mesh``
+        (default is 100.0), ``is_time_reversal`` (default is True),
+        and ``is_gamma_center`` (default is False).
+        See docstring of ``plot_projected_dos`` for the parameters
+        ``pdos_indices`` and ``legend``.
+
+        plot : Bool, optional
+            With setting True, PDOS is plotted using matplotlib and
+            the matplotlib module (plt) is returned. To watch the result,
+            usually ``show()`` has to be called. Default is False.
+        write_dat : Bool
+            With setting True, ``projected_dos.dat`` like file is written out.
+            The  file name can be specified with the ``filename`` parameter.
+            Default is False.
+        filename : str, optional
+            File name used to write ``projected_dos.dat`` like file. Default
+            is ``projected_dos.dat``.
+
+        """
+
         self.run_mesh(mesh=mesh,
                       is_time_reversal=is_time_reversal,
                       is_mesh_symmetry=False,
