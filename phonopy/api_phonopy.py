@@ -175,10 +175,8 @@ class Phonopy(object):
 
     @property
     def version(self):
-        """Return phonopy release version number
+        """Phonopy release version number
 
-        Returns
-        -------
         str
             Phonopy release version number
 
@@ -191,10 +189,8 @@ class Phonopy(object):
 
     @property
     def primitive(self):
-        """Return primitive cell
+        """Primitive cell
 
-        Returns
-        -------
         Primitive
             Primitive cell.
 
@@ -206,10 +202,8 @@ class Phonopy(object):
 
     @property
     def unitcell(self):
-        """Return unit cell
+        """Unit cell
 
-        Returns
-        -------
         PhonopyAtoms
             Unit cell.
 
@@ -221,10 +215,8 @@ class Phonopy(object):
 
     @property
     def supercell(self):
-        """Return supercell
+        """Supercell
 
-        Returns
-        -------
         Supercell
             Supercell.
 
@@ -236,10 +228,8 @@ class Phonopy(object):
 
     @property
     def symmetry(self):
-        """Return symmetry of supercell
+        """Symmetry of supercell
 
-        Returns
-        -------
         Symmetry
             Symmetry of supercell.
 
@@ -252,10 +242,8 @@ class Phonopy(object):
 
     @property
     def primitive_symmetry(self):
-        """Return symmetry of primitive cell
+        """Symmetry of primitive cell
 
-        Returns
-        -------
         Symmetry
             Symmetry of primitive cell.
 
@@ -268,10 +256,8 @@ class Phonopy(object):
 
     @property
     def supercell_matrix(self):
-        """Return transformation matrix to supercell cell from unit cell
+        """Transformation matrix to supercell cell from unit cell
 
-        Returns
-        -------
         ndarray
             Supercell matrix with respect to unit cell.
             shape=(3, 3), dtype='intc', order='C'
@@ -285,10 +271,8 @@ class Phonopy(object):
 
     @property
     def primitive_matrix(self):
-        """Return transformation matrix to primitive cell from unit cell
+        """Transformation matrix to primitive cell from unit cell
 
-        Returns
-        -------
         ndarray
             Primitive matrix with respect to unit cell.
             shape=(3, 3), dtype='double', order='C'
@@ -301,10 +285,8 @@ class Phonopy(object):
 
     @property
     def unit_conversion_factor(self):
-        """Return phonn frequency unit conversion factor.
+        """Phonon frequency unit conversion factor.
 
-        Returns
-        -------
         float
             Phonon frequency unit conversion factor. This factor
             converts sqrt(<force>/<distance>/<AMU>)/2pi/1e12 to the
@@ -322,10 +304,8 @@ class Phonopy(object):
 
     @property
     def calculator(self):
-        """Return calculator name
+        """Calculator name
 
-        Returns
-        -------
         str
             Calculator name such as 'vasp', 'qe', etc.
 
@@ -334,15 +314,14 @@ class Phonopy(object):
 
     @property
     def dataset(self):
-        """Return displacement dataset
+        """Dataset to store displacements and forces
 
         Dataset containing information of displacements in supercells.
-        This optionally contains forces in respective supercells.
+        This optionally contains forces of respective supercells.
 
-        Returns
-        -------
-        dict
+        dataset : dict
             The format can be either one of two types
+
             Type 1. One atomic displacement in each supercell:
                 {'natom': number of atoms in supercell,
                  'first_atoms': [
@@ -350,13 +329,23 @@ class Phonopy(object):
                     'displacement': displacement in Cartesian coordinates,
                     'forces': forces on atoms in supercell},
                    {...}, ...]}
+            Elements of the list accessed by 'first_atoms' corresponds to each
+            displaced supercell. Each displaced supercell contains only one
+            displacement. dict['first_atoms']['forces'] gives atomic forces in
+            each displaced supercell.
+
             Type 2. All atomic displacements in each supercell:
                 {'displacements': ndarray, dtype='double', order='C',
                                   shape=(supercells, natom, 3)
                  'forces': ndarray, dtype='double',, order='C',
                                   shape=(supercells, natom, 3)}
 
+            To set in type 2, displacements and forces can be given by numpy
+            array with different shape but that can be reshaped to
+            (supercells, natom, 3).
+
         """
+
         return self._displacement_dataset
 
     @property
@@ -371,12 +360,12 @@ class Phonopy(object):
 
     @property
     def displacements(self):
-        """Return displacements
+        """Displacements in supercells
 
-        Returns
-        -------
         There are two types of displacement dataset. See the docstring
         of dataset about types 1 and 2 for the displacement dataset formats.
+        Displacements set returned depends on either type-1 or type-2 as
+        follows:
 
         Type-1, List of list
             The internal list has 4 elements such as [32, 0.01, 0.0, 0.0]].
@@ -388,6 +377,15 @@ class Phonopy(object):
             coordinates.
             shape=(supercells, natom, 3)
             dtype='double'
+
+
+        To set displacements set, only type-2 datast case is allowed.
+
+        displacemens : array_like
+            Atomic displacements of all atoms of all supercells.
+            Only all displacements in each supercell case (type-2) is
+            supported.
+            shape=(supercells, natom, 3), dtype='double', order='C'
 
         """
 
@@ -406,18 +404,6 @@ class Phonopy(object):
 
     @displacements.setter
     def displacements(self, displacements):
-        """Set displacemens
-
-        Parameters
-        ----------
-        displacemens : array_like
-            Atomic displacements of all atoms of all supercells.
-            Only all displacements in each supercell case (type-2) is
-            supported.
-            shape=(supercells, natom, 3), dtype='double', order='C'
-
-        """
-
         disp = np.array(displacements, dtype='double', order='C')
         if (disp.ndim != 3 or
             disp.shape[1:] != (self._supercell.get_number_of_atoms(), 3)):
@@ -430,17 +416,24 @@ class Phonopy(object):
 
     @property
     def force_constants(self):
-        """Return force constants
+        """Supercell force constants
 
-        Returns
-        -------
-        ndarray
-            Force constants matrix. There are two shapes:
+        Force constants matrix.
+
+        ndarray to get
+            There are two shapes:
             full:
                 shape=(atoms in supercell, atoms in supercell, 3, 3)
             compact:
                 shape=(atoms in primitive cell, atoms in supercell, 3, 3)
             dtype='double', order='C'
+
+        array_like to set
+            If this is given in own condiguous ndarray with order='C' and
+            dtype='double', internal copy of data is avoided. Therefore
+            some computational resources are saved.
+            shape=(atoms in supercell, atoms in supercell, 3, 3),
+            dtype='double'
 
         """
 
@@ -451,14 +444,19 @@ class Phonopy(object):
 
     @property
     def forces(self):
-        """Return forces of supercells
+        """Set of forces of supercells
 
-        Returns
-        -------
-        ndarray
-            Forces of supercells.
+        ndarray to get and array_like to set
+            A set of atomic forces in displaced supercells. The order of
+            displaced supercells has to match with that in displacement
+            dataset.
             shape=(supercells with displacements, atoms in supercell, 3)
             dtype='double', order='C'
+
+            [[[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # first supercell
+             [[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # second supercell
+             ...
+            ]
 
         """
 
@@ -475,7 +473,12 @@ class Phonopy(object):
 
     @property
     def dynamical_matrix(self):
-        """Return DynamicalMatrix instance"""
+        """DynamicalMatrix instance
+
+        This is not dynamical matrices but the instance of DynamicalMatrix
+        class.
+
+        """
 
         return self._dynamical_matrix
 
@@ -484,10 +487,8 @@ class Phonopy(object):
 
     @property
     def nac_params(self):
-        """Return parameters used for non-analytical term correction
+        """Parameters for non-analytical term correction
 
-        Returns
-        -------
         dict
             Parameters used for non-analytical term correction
             'born': ndarray
@@ -620,37 +621,6 @@ class Phonopy(object):
 
     @dataset.setter
     def dataset(self, dataset):
-        """Set dataset having displacements and optionally forces
-
-        Note
-        ----
-        Elements of the list accessed by 'first_atoms' corresponds to each
-        displaced supercell. Each displaced supercell contains only one
-        displacement. dict['first_atoms']['forces'] gives atomic forces in
-        each displaced supercell.
-
-        Parameters
-        ----------
-        dataset : dict
-            There are two dict structures.
-            Type 1. One atomic displacement in each supercell:
-                {'natom': number of atoms in supercell,
-                 'first_atoms': [
-                   {'number': atom index of displaced atom,
-                    'displacement': displacement in Cartesian coordinates,
-                    'forces': forces on atoms in supercell},
-                   {...}, ...]}
-            Type 2. All atomic displacements in each supercell:
-                {'displacements': ndarray, dtype='double', order='C',
-                                  shape=(supercells, natom, 3)
-                 'forces': ndarray, dtype='double',, order='C',
-                                  shape=(supercells, natom, 3)}
-            In type 2, displacements and forces can be given by numpy array
-            with different shape but that can be reshaped to
-            (supercells, natom, 3).
-
-        """
-
         if 'first_atoms' in dataset:
             self._displacement_dataset = dataset
         elif 'displacements' in dataset:
@@ -668,23 +638,6 @@ class Phonopy(object):
 
     @forces.setter
     def forces(self, sets_of_forces):
-        """Set forces in displacement dataset.
-
-        Parameters
-        ----------
-        sets_of_forces : array_like
-            A set of atomic forces in displaced supercells. The order of
-            displaced supercells has to match with that in displacement
-            dataset.
-            shape=(displaced supercells, atoms in supercell, 3), dtype='double'
-
-            [[[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # first supercell
-             [[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # second supercell
-             ...
-            ]
-
-        """
-
         if 'first_atoms' in self._displacement_dataset:
             for disp, forces in zip(self._displacement_dataset['first_atoms'],
                                     sets_of_forces):
@@ -702,19 +655,6 @@ class Phonopy(object):
 
     @force_constants.setter
     def force_constants(self, force_constants):
-        """Set force constants
-
-        Parameters
-        ----------
-        force_constants : array_like
-            Force constants matrix. If this is given in own condiguous ndarray
-            with order='C' and dtype='double', internal copy of data is
-            avoided. Therefore some computational resources are saved.
-            shape=(atoms in supercell, atoms in supercell, 3, 3),
-            dtype='double'
-
-        """
-
         if type(force_constants) is np.ndarray:
             fc_shape = force_constants.shape
             if fc_shape[0] != fc_shape[1]:
@@ -842,8 +782,34 @@ class Phonopy(object):
                                 fc_calculator=None,
                                 fc_calculator_options=None,
                                 show_drift=True):
+        """Compute supercell force constants from forces-displacements dataset.
+
+        Supercell force constants are computed from forces and displacements.
+        As the default behaviour, those stored in dataset are used. But
+        with setting ``forces``, this set of forces and the set of
+        displacements stored in the dataset are used for the computation.
+
+        Parameters
+        ----------
+        forces : array_like, optional
+            See docstring of Phonopy.forces. Default is None.
+        calculate_full_force_constants : Bool, optional
+            With setting True, full force constants matrix is stored.
+            With setting False, compact force constants matrix is stored.
+            For more detail, see docstring of Phonopy.force_constants.
+            Default is True.
+        fc_calculator : str, optional
+        fc_calculator_options : str, optional
+            External force constants calculator is used. Currently,
+            'alm' is supported. See more detail at the docstring of
+            phonopy.interface.fc_calculator.get_fc2. Default is None.
+        show_drift : Bool, optional
+            With setting
+
+        """
+
         if forces is not None:
-            self.set_forces(forces)
+            self.forces = forces
 
         # A primitive check if 'forces' key is in displacement_dataset.
         if 'first_atoms' in self._displacement_dataset:
@@ -1189,7 +1155,7 @@ class Phonopy(object):
         Parameters
         ----------
 
-        See docstring of ``run_band_structure`` for the parameters of
+        See docstring of ``Phonopy.run_band_structure`` for the parameters of
         ``with_eigenvectors`` (default is False) and ``with_group_velocities``
         (default is False).
 
@@ -1374,7 +1340,7 @@ class Phonopy(object):
                  is_gamma_center=False):
         """Run mesh sampling phonon calculation.
 
-        See the parameter details in Phonopy.init_mesh().
+        See the parameter details in Phonopy.init_mesh.
 
         """
 
@@ -1973,10 +1939,10 @@ class Phonopy(object):
         Parameters
         ----------
 
-        See docstring of ``init_mesh`` for the parameters of ``mesh``
+        See docstring of ``Phonopy.init_mesh`` for the parameters of ``mesh``
         (default is 100.0), ``is_time_reversal`` (default is True),
         and ``is_gamma_center`` (default is False).
-        See docstring of ``plot_projected_dos`` for the parameters
+        See docstring of ``Phonopy.plot_projected_dos`` for the parameters
         ``pdos_indices`` and ``legend``.
 
         plot : Bool, optional
