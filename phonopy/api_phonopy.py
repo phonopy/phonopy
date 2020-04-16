@@ -40,6 +40,7 @@ from phonopy.version import __version__
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
+from phonopy.structure.grid_points import length2mesh
 from phonopy.structure.cells import (
     get_supercell, get_primitive, guess_primitive_matrix)
 from phonopy.harmonic.displacement import (
@@ -56,7 +57,7 @@ from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
 from phonopy.phonon.band_structure import (
     BandStructure, get_band_qpoints_by_seekpath)
 from phonopy.phonon.thermal_properties import ThermalProperties
-from phonopy.phonon.mesh import Mesh, IterMesh, length2mesh
+from phonopy.phonon.mesh import Mesh, IterMesh
 from phonopy.units import VaspToTHz
 from phonopy.phonon.dos import TotalDos, PartialDos
 from phonopy.phonon.thermal_displacement import (
@@ -102,8 +103,7 @@ class Phonopy(object):
 
         # Create supercell and primitive cell
         self._unitcell = PhonopyAtoms(atoms=unitcell)
-        self._supercell_matrix = np.array(supercell_matrix,
-                                          dtype='intc', order='C')
+        self._supercell_matrix = self._shape_supercell_matrix(supercell_matrix)
         if type(primitive_matrix) is str and primitive_matrix == 'auto':
             self._primitive_matrix = self._guess_primitive_matrix()
         elif primitive_matrix is not None:
@@ -3002,3 +3002,15 @@ class Phonopy(object):
 
     def _guess_primitive_matrix(self):
         return guess_primitive_matrix(self._unitcell, symprec=self._symprec)
+
+    def _shape_supercell_matrix(self, smat):
+        if smat is None:
+            _smat = np.eye(3, dtype='intc', order='C')
+        elif len(np.ravel(smat)) == 3:
+            _smat = np.diag(smat)
+        elif len(np.ravel(smat)) == 9:
+            _smat = np.reshape(smat, (3, 3))
+        else:
+            msg = "supercell_matrix shape has to be (3,) or (3, 3)"
+            raise RuntimeError(msg)
+        return _smat
