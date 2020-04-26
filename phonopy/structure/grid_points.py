@@ -121,6 +121,11 @@ class GridPoints(object):
        Mesh numbers along a, b, c axes.
        dtype='intc'
        shape=(3,)
+    reciprocal_lattice: array_like
+        Basis vectors in reciprocal space. a*, b*, c* are given in column
+        vectors.
+        dtype='double'
+        shape=(3, 3)
     qpoints: ndarray
        q-points in reduced coordinates of reciprocal lattice
        dtype='double'
@@ -134,7 +139,7 @@ class GridPoints(object):
        dtype='intc'
        shape=(prod(mesh_numbers), 3)
     ir_grid_points: ndarray
-        Indices of irreducibple grid points in grid_address.
+        Indices of irreducible grid points in grid_address.
         dtype='uintp', shape=(ir-grid points,)
     grid_mapping_table: ndarray
         Index mapping table from all grid points to ir-grid points.
@@ -185,7 +190,8 @@ class GridPoints(object):
             inversion symmetry is always included.
         fit_in_BZ: bool, optional, default True
         rotations: array_like, default None (only unitary operation)
-            Rotation matrices in real space.
+            Rotation matrices in direct space. For each rotation matrix R,
+            a point in crystallographic coordinates, x, is sent as x' = Rx.
             dtype='intc'
             shape=(rotations, 3, 3)
         is_mesh_symmetry: bool, optional, default True
@@ -216,6 +222,14 @@ class GridPoints(object):
             self._fit_qpoints_in_BZ()
         else:
             self._set_grid_points()
+
+    @property
+    def mesh_numbers(self):
+        return self._mesh
+
+    @property
+    def reciprocal_lattice(self):
+        return self._rec_lat
 
     @property
     def grid_address(self):
