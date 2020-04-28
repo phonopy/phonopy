@@ -283,8 +283,17 @@ def _get_error_message(optional_structure_info,
                     % _phonopy_yaml_cls.command_name)
 
     if final_cell_filename is None:  # No phonopy*.yaml file was found.
-        msg_list.append("But \"%s\" and \"%s\" could not be found."
-                        % _phonopy_yaml_cls.default_filenames)
+        filenames = ["\"%s\"" % name
+                     for name in _phonopy_yaml_cls.default_filenames]
+        if len(filenames) == 1:
+            text = filenames[0]
+        elif len(filenames) == 2:
+            text = " and ".join(filenames)
+        else:
+            tail = " and ".join(filenames[-2:])
+            head = ", ".join(filenames[:-2])
+            text = head + ", " + tail
+        msg_list.append("But %s could not be found." % text)
         return "\n".join(msg_list)
 
     phpy = optional_structure_info[1]
