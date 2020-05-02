@@ -158,7 +158,7 @@ if __name__ == '__main__':
                     break
             except ValueError:
                 nanoversion = 0
-            if nanoversion:
+            if nanoversion != 0:
                 version_nums.append(nanoversion)
     elif git_num:
         version_nums.append(git_num)
