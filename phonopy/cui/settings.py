@@ -2069,7 +2069,6 @@ class PhonopyConfParser(ConfParser):
                 if confs['include_all'].lower() == '.true.':
                     self.set_parameter('include_all', True)
 
-
     def _parse_conf_modulation(self, conf_modulation):
         modulation = {}
         modulation['dimension'] = [1, 1, 1]

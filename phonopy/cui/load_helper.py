@@ -55,7 +55,7 @@ def get_cell_settings(phonopy_yaml=None,
     if unitcell_filename is not None:
         cell, optional_structure_info = read_crystal_structure(
             filename=unitcell_filename, interface_mode=calculator)
-        smat = get_supercell_matrix(supercell_matrix)
+        smat = supercell_matrix
         pmat = primitive_matrix
     elif supercell_filename is not None:
         cell, optional_structure_info = read_crystal_structure(
@@ -65,7 +65,7 @@ def get_cell_settings(phonopy_yaml=None,
             pmat = 'auto'
     elif unitcell is not None:
         cell = PhonopyAtoms(atoms=unitcell)
-        smat = get_supercell_matrix(supercell_matrix)
+        smat = supercell_matrix
         pmat = primitive_matrix
     elif supercell is not None:
         cell = PhonopyAtoms(atoms=supercell)
@@ -126,19 +126,6 @@ def read_force_constants_from_hdf5(filename='force_constants.hdf5',
     else:
         factor = get_force_constant_conversion_factor(fc_unit, calculator)
         return fc * factor
-
-
-def get_supercell_matrix(smat):
-    if smat is None:
-        _smat = np.eye(3, dtype='intc', order='C')
-    elif len(np.ravel(smat)) == 3:
-        _smat = np.diag(smat)
-    elif len(np.ravel(smat)) == 9:
-        _smat = np.reshape(smat, (3, 3))
-    else:
-        msg = "supercell_matrix shape has to be (3,) or (3, 3)"
-        raise RuntimeError(msg)
-    return _smat
 
 
 def _get_primitive_matrix(pmat, unitcell, symprec):

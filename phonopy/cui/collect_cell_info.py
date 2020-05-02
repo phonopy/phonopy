@@ -36,6 +36,7 @@ import numpy as np
 from phonopy.interface.calculator import (
     read_crystal_structure, get_default_cell_filename)
 from phonopy.interface.vasp import read_vasp
+from phonopy.interface.phonopy_yaml import PhonopyYaml
 
 
 def collect_cell_info(supercell_matrix=None,
@@ -44,7 +45,7 @@ def collect_cell_info(supercell_matrix=None,
                       cell_filename=None,
                       chemical_symbols=None,
                       enforce_primitive_matrix_auto=False,
-                      command_name="phonopy",
+                      phonopy_yaml_cls=None,
                       symprec=1e-5):
     # In some cases, interface mode falls back to phonopy_yaml mode.
     fallback_reason = _fallback_to_phonopy_yaml(
@@ -63,7 +64,7 @@ def collect_cell_info(supercell_matrix=None,
         filename=cell_filename,
         interface_mode=_interface_mode,
         chemical_symbols=chemical_symbols,
-        command_name=command_name)
+        phonopy_yaml_cls=phonopy_yaml_cls)
 
     # Error check
     if unitcell is None:
@@ -71,7 +72,7 @@ def collect_cell_info(supercell_matrix=None,
                                      interface_mode,
                                      fallback_reason,
                                      cell_filename,
-                                     command_name)
+                                     phonopy_yaml_cls)
         return err_msg
 
     # Retrieve more information on cells
@@ -80,7 +81,6 @@ def collect_cell_info(supercell_matrix=None,
      primitive_matrix_out) = _collect_cells_info(
          _interface_mode,
          optional_structure_info,
-         command_name,
          interface_mode,
          supercell_matrix,
          primitive_matrix,
@@ -193,7 +193,6 @@ def _poscar_failed(cell_filename):
 
 def _collect_cells_info(_interface_mode,
                         optional_structure_info,
-                        command_name,
                         interface_mode,
                         supercell_matrix,
                         primitive_matrix,
@@ -239,8 +238,12 @@ def _get_error_message(optional_structure_info,
                        interface_mode,
                        fallback_reason,
                        cell_filename,
-                       command_name):
+                       phonopy_yaml_cls):
     final_cell_filename = optional_structure_info[0]
+    if phonopy_yaml_cls is None:
+        _phonopy_yaml_cls = PhonopyYaml
+    else:
+        _phonopy_yaml_cls = phonopy_yaml_cls
 
     if fallback_reason is None:
         msg_list = []
@@ -276,12 +279,21 @@ def _get_error_message(optional_structure_info,
         msg_list.append("Supercell matrix (DIM or --dim) was not explicitly "
                         "specified.")
 
-    msg_list.append("By this reason, phonopy_yaml mode was invoked.")
+    msg_list.append("By this reason, %s_yaml mode was invoked."
+                    % _phonopy_yaml_cls.command_name)
 
     if final_cell_filename is None:  # No phonopy*.yaml file was found.
-        msg_list.append("But \"%s\" and \"%s\" could not be found."
-                        % ("%s_disp.yaml" % command_name,
-                           "%s.yaml" % command_name))
+        filenames = ["\"%s\"" % name
+                     for name in _phonopy_yaml_cls.default_filenames]
+        if len(filenames) == 1:
+            text = filenames[0]
+        elif len(filenames) == 2:
+            text = " and ".join(filenames)
+        else:
+            tail = " and ".join(filenames[-2:])
+            head = ", ".join(filenames[:-2])
+            text = head + ", " + tail
+        msg_list.append("But %s could not be found." % text)
         return "\n".join(msg_list)
 
     phpy = optional_structure_info[1]

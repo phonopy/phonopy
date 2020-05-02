@@ -41,16 +41,20 @@ class QpointsPhonon(object):
 
     Attributes
     ----------
-    frequencies: ndarray
-        Phonon frequencies at ir-grid points. Imaginary frequenies are
-        represented by negative real numbers.
-        dtype='double'
-        shape=(qpoints, bands)
-    eigenvectors: ndarray
-        Phonon eigenvectors at ir-grid points. See the data structure at
-        np.linalg.eigh.
-        dtype='complex128'
-        shape=(qpoints, bands, bands)
+    frequencies : ndarray
+        Phonon frequencies. Imaginary frequenies are represented by
+        negative real numbers.
+        shape=(qpoints, bands), dtype='double'
+    eigenvectors : ndarray
+        Phonon eigenvectors. None if eigenvectors are not stored.
+        shape=(qpoints, bands, bands), dtype='complex'
+    group_velocities : ndarray
+        Phonon group velocities. None if group velocities are not
+        calculated.
+        shape=(qpoints, bands, 3), dtype='double'
+    dynamical_matrices : ndarray
+        Dynamical matrices at q-points.
+        shape=(qpoints, bands, bands), dtype='double'
 
     """
 

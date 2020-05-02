@@ -48,12 +48,13 @@ try:
 except ImportError:
     from yaml import Loader
 
+
 def print_band(data):
     distance = 0
     text = "#%-9s %-10s %-10s    " % ("    q_a", "    q_b", "    q_c")
     text += "%-12s    " % "   Distance"
     text += "%-12s %-12s     ..." % ("   Gruneisen", "   Frequency")
-    lines = [text,]
+    lines = [text, ]
 
     for path in data['path']:
         for q in path['phonon']:
@@ -67,11 +68,12 @@ def print_band(data):
 
     print("\n".join(lines))
 
+
 def print_mesh(data):
     text = "#%-9s %-10s %-10s  " % ("    q_a", "    q_b", "    q_c")
     text += "%-12s  " % "Multiplicity"
     text += "%-12s %-12s     ..." % ("   Gruneisen", "   Frequency")
-    lines = [text,]
+    lines = [text, ]
 
     for qpt in data['phonon']:
         text = "%10.7f %10.7f %10.7f  " % (tuple(qpt['q-position']))
@@ -81,6 +83,7 @@ def print_mesh(data):
         lines.append(text)
 
     print("\n".join(lines))
+
 
 def plot_band(data, is_fg, g_max, g_min):
     import matplotlib.pyplot as plt
@@ -98,17 +101,14 @@ def plot_band(data, is_fg, g_max, g_min):
         distance += path['phonon'][-1]['distance']
 
     if is_fg:
-        ax1 = plt.subplot(3, 1, 1)
-        plt.plot(d, g, '-')
-        ax2 = plt.subplot(3, 1, 2)
-        plt.plot(d, np.array(g) * np.array(f), '-')
-        ax3 = plt.subplot(3, 1, 3)
-        plt.plot(d, f, '-')
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1)
+        ax1.plot(d, g, '-')
+        ax2.plot(d, np.array(g) * np.array(f), '-')
+        ax3.plot(d, f, '-')
     else:
-        ax1 = plt.subplot(2, 1, 1)
-        plt.plot(d, g, '-')
-        ax2 = plt.subplot(2, 1, 2)
-        plt.plot(d, f, '-')
+        fig, (ax1, ax2) = plt.subplots(2, 1)
+        ax1.plot(d, g, '-')
+        ax2.plot(d, f, '-')
 
     if g_max is not None:
         ax1.set_ylim(ymax=g_max)
@@ -116,6 +116,7 @@ def plot_band(data, is_fg, g_max, g_min):
         ax1.set_ylim(ymin=g_min)
 
     return plt
+
 
 def plot_yaml_mesh(data, is_fg, cutoff_frequency=None):
     x = []
@@ -126,10 +127,12 @@ def plot_yaml_mesh(data, is_fg, cutoff_frequency=None):
 
     return plot_mesh(x, y, is_fg, cutoff_frequency=cutoff_frequency)
 
+
 def plot_hdf5_mesh(data, is_fg, cutoff_frequency=None):
     x = data['frequency']
     y = data['gruneisen'][:]
     return plot_mesh(x, y, is_fg, cutoff_frequency=cutoff_frequency)
+
 
 def plot_mesh(x, y, is_fg, cutoff_frequency=None):
     import matplotlib.pyplot as plt
@@ -144,6 +147,7 @@ def plot_mesh(x, y, is_fg, cutoff_frequency=None):
             plt.plot(freqs, g, 'o')
 
     return plt
+
 
 def get_options():
     # Parse options
@@ -200,6 +204,7 @@ def get_options():
     args = parser.parse_args()
     return args
 
+
 def main(args):
     if args.is_hdf5:
         try:
@@ -212,7 +217,8 @@ def main(args):
             filename = "gruneisen.hdf5"
         else:
             filename = args.filename[0]
-        data = h5py.File(filename)
+        with h5py.File(filename, 'r') as f:
+            data = {key: f[key][:] for key in list(f)}
     else:
         if len(args.filename) == 0:
             filename = "gruneisen.yaml"
@@ -228,7 +234,7 @@ def main(args):
     if args.output_filename:
         pdffile = args.output_filename
     else:
-       pdffile = "gruneisenplot.pdf"
+        pdffile = "gruneisenplot.pdf"
 
     if 'path' in data:
         if args.is_gnuplot:
@@ -271,6 +277,7 @@ def main(args):
             plt.savefig(pdffile)
         else:
             plt.show()
+
 
 if __name__ == "__main__":
     main(get_options())
