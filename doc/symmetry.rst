@@ -40,7 +40,7 @@ The detailed space group information is obtained by
 :ref:`symmetry_option` option. As a result of using this option and
 the chosen tolerance value, ``BPOSCAR`` file is obtained. This is a
 standardized conventional unit cell (see
-https://atztogo.github.io/spglib/definition.html#conventions-of-standardized-unit-cell),
+https://spglib.github.io/spglib/definition.html#conventions-of-standardized-unit-cell),
 and its distortion against the crystal symmetry is very small. It is
 recommended to used this structure as the starting point of phonopy
 calculation.

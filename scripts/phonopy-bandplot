@@ -50,8 +50,19 @@ except ImportError:
     from yaml import Loader
 
 
-def read_band_yaml(filename):
-    data = yaml.load(open(filename), Loader=Loader)
+def read_band_yaml(filename, is_lzma=False):
+    if is_lzma:
+        try:
+            import lzma
+        except ImportError:
+            raise("Reading a lzma compressed file is not supported "
+                  "by this python version.")
+        with lzma.open(filename) as f:
+            data = yaml.load(f, Loader=Loader)
+    else:
+        with open(filename, 'r') as f:
+            data = yaml.load(f, Loader=Loader)
+
     frequencies = []
     distances = []
     qpoints = []
@@ -120,6 +131,7 @@ def get_options():
                         f_min=None,
                         is_gnuplot=False,
                         is_legacy_plot=False,
+                        is_lzma=False,
                         is_points=False,
                         is_vertial_line=False,
                         output_filename=None,
@@ -167,6 +179,9 @@ def get_options():
     parser.add_argument(
         "--line", "-l", dest="is_vertial_line", action="store_true",
         help="Vertial line is drawn at between paths")
+    parser.add_argument(
+        "--lzma", "--xz", dest="is_lzma", action="store_true",
+        help="Read input file as compressed by lzma (xz)")
     parser.add_argument(
         "-o", "--output", dest="output_filename", action="store",
         help="Output filename of PDF plot")
@@ -235,7 +250,7 @@ def old_plot(args):
          frequencies,
          qpoints,
          segment_nqpoint,
-         labels) = read_band_yaml(filename)
+         labels) = read_band_yaml(filename, is_lzma=args.is_lzma)
 
         end_points = [0, ]
         for nq in segment_nqpoint:
@@ -402,7 +417,8 @@ def plot(args):
     else:
         filenames = args.filenames
 
-    bands_data = [read_band_yaml(fname) for fname in filenames]
+    bands_data = [read_band_yaml(fname, is_lzma=args.is_lzma)
+                  for fname in filenames]
     plots_data = [_arrange_band_data(*band_data) for band_data in bands_data]
 
     # Check consistency of input band structures

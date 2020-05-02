@@ -780,7 +780,6 @@ else:
             fc_calculator=fc_calculator,
             fc_calculator_options=fc_calculator_options)
 
-
 # Impose cutoff radius on force constants
 cutoff_radius = settings.get_cutoff_radius()
 if cutoff_radius:
@@ -827,6 +826,9 @@ if settings.get_write_force_constants():
 # Show the rotational invariance condition (just show!)
 if settings.get_is_rotational_invariance():
     phonon.get_rotational_condition_of_fc()
+
+if log_level > 0:
+    print("")
 
 ##################################
 # Non-analytical term correction #
@@ -1346,6 +1348,34 @@ elif run_mode == 'modulation':
     else:
         delta_q = None
     derivative_order = mod_setting['order']
+    num_band = primitive.get_number_of_atoms() * 3
+
+    if log_level > 0:
+        if len(phonon_modes) == 1:
+            print("Modulated structure with %s multiplicity was created."
+                  % dimension)
+        else:
+            print("Modulated structures with %s multiplicity were created."
+                  % dimension)
+
+    error_indices = []
+    for i, ph_mode in enumerate(phonon_modes):
+        if ph_mode[1] < 0 or ph_mode[1] >= num_band:
+            error_indices.append(i)
+        if log_level > 0:
+            text = ("%d: q%s, band index=%d, amplitude=%f"
+                    % (i + 1, ph_mode[0], ph_mode[1] + 1, ph_mode[2]))
+            if len(ph_mode) > 3:
+                text += ", phase=%f" % ph_mode[3]
+            print(text)
+
+    if error_indices:
+        if log_level > 0:
+            lines = ["Band index of modulation %d is out of range." % (i + 1)
+                     for i in error_indices]
+            print_error_message('\n'.join(lines))
+        print_error()
+        sys.exit(1)
 
     phonon.set_modulations(dimension,
                            phonon_modes,

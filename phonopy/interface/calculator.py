@@ -272,7 +272,7 @@ def write_magnetic_moments(cell, sort_by_elements=False):
 def read_crystal_structure(filename=None,
                            interface_mode=None,
                            chemical_symbols=None,
-                           command_name="phonopy"):
+                           phonopy_yaml_cls=None):
     """Returns crystal structure information
 
     Returns
@@ -287,7 +287,10 @@ def read_crystal_structure(filename=None,
     """
 
     if interface_mode == 'phonopy_yaml':
-        return _read_phonopy_yaml(filename, command_name)
+        if phonopy_yaml_cls is None:
+            return _read_phonopy_yaml(filename, PhonopyYaml)
+        else:
+            return _read_phonopy_yaml(filename, phonopy_yaml_cls)
 
     if filename is None:
         cell_filename = get_default_cell_filename(interface_mode)
@@ -582,12 +585,12 @@ def get_force_constant_conversion_factor(unit, interface_mode):
         return 1.0
 
 
-def _read_phonopy_yaml(filename, command_name):
-    cell_filename = _get_cell_filename(filename, command_name)
+def _read_phonopy_yaml(filename, phonopy_yaml_cls):
+    cell_filename = _get_cell_filename(filename, phonopy_yaml_cls)
     if cell_filename is None:
         return None, (None, None)
 
-    phpy = PhonopyYaml()
+    phpy = phonopy_yaml_cls()
     try:
         phpy.read(cell_filename)
     except TypeError:  # yaml.load returns str: File format seems not YAML.
@@ -599,11 +602,9 @@ def _read_phonopy_yaml(filename, command_name):
     return cell, (cell_filename, phpy)
 
 
-def _get_cell_filename(filename, command_name):
+def _get_cell_filename(filename, phonopy_yaml_cls):
     cell_filename = None
-    for fname in (filename,
-                  "%s_disp.yaml" % command_name,
-                  "%s.yaml" % command_name):
+    for fname in ((filename, ) + phonopy_yaml_cls.default_filenames):
         if fname and os.path.isfile(fname):
             cell_filename = fname
             break

@@ -87,7 +87,7 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         dtype=float
         When 'F', 'I', 'A', 'C', or 'R' is given instead of a 3x3 matrix,
         the primitive matrix defined at
-        https://atztogo.github.io/spglib/definition.html
+        https://spglib.github.io/spglib/definition.html
         is used.
     is_nac : bool, optional
         If True, look for 'BORN' file. If False, NAS is turned off.

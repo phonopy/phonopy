@@ -3,6 +3,10 @@
 Change Log
 ==========
 
+May-2-2020: Version 2.6.0
+-------------------------
+* Collection of minor fixes and internal updates
+
 Mar-29-2020: Version 2.5.0
 --------------------------
 * New options, ``--include-*``, to write summary in

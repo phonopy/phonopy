@@ -102,6 +102,8 @@ class PhonopyYaml(object):
     """
 
     command_name = "phonopy"
+    default_filenames = ("phonopy_disp.yaml",
+                         "phonopy.yaml")
 
     def __init__(self,
                  configuration=None,

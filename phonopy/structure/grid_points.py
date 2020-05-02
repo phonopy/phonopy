@@ -39,6 +39,48 @@ from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
 from phonopy.structure.symmetry import get_lattice_vector_equivalence
 
 
+def length2mesh(length, lattice, rotations=None):
+    """Convert length to mesh for q-point sampling
+
+    This conversion for each reciprocal axis follows VASP convention by
+        N = max(1, int(l * |a|^* + 0.5))
+    'int' means rounding down, not rounding to nearest integer.
+
+    Parameters
+    ----------
+    length : float
+        Length having the unit of direct space length.
+    lattice : array_like
+        Basis vectors of primitive cell in row vectors.
+        dtype='double', shape=(3, 3)
+    rotations: array_like, optional
+        Rotation matrices in real space. When given, mesh numbers that are
+        symmetrically reasonable are returned. Default is None.
+        dtype='intc', shape=(rotations, 3, 3)
+
+    Returns
+    -------
+    array_like
+        dtype=int, shape=(3,)
+
+    """
+
+    rec_lattice = np.linalg.inv(lattice)
+    rec_lat_lengths = np.sqrt(np.diagonal(np.dot(rec_lattice.T, rec_lattice)))
+    mesh_numbers = np.rint(rec_lat_lengths * length).astype(int)
+
+    if rotations is not None:
+        reclat_equiv = get_lattice_vector_equivalence(
+            [r.T for r in np.array(rotations)])
+        m = mesh_numbers
+        mesh_equiv = [m[1] == m[2], m[2] == m[0], m[0] == m[1]]
+        for i, pair in enumerate(([1, 2], [2, 0], [0, 1])):
+            if reclat_equiv[i] and not mesh_equiv:
+                m[pair] = max(m[pair])
+
+    return np.maximum(mesh_numbers, [1, 1, 1])
+
+
 def get_qpoints(mesh_numbers,
                 reciprocal_lattice,  # column vectors
                 q_mesh_shift=None,  # Monkhorst-Pack style grid shift
@@ -79,6 +121,11 @@ class GridPoints(object):
        Mesh numbers along a, b, c axes.
        dtype='intc'
        shape=(3,)
+    reciprocal_lattice: array_like
+        Basis vectors in reciprocal space. a*, b*, c* are given in column
+        vectors.
+        dtype='double'
+        shape=(3, 3)
     qpoints: ndarray
        q-points in reduced coordinates of reciprocal lattice
        dtype='double'
@@ -92,7 +139,7 @@ class GridPoints(object):
        dtype='intc'
        shape=(prod(mesh_numbers), 3)
     ir_grid_points: ndarray
-        Indices of irreducibple grid points in grid_address.
+        Indices of irreducible grid points in grid_address.
         dtype='uintp', shape=(ir-grid points,)
     grid_mapping_table: ndarray
         Index mapping table from all grid points to ir-grid points.
@@ -143,7 +190,8 @@ class GridPoints(object):
             inversion symmetry is always included.
         fit_in_BZ: bool, optional, default True
         rotations: array_like, default None (only unitary operation)
-            Rotation matrices in real space.
+            Rotation matrices in direct space. For each rotation matrix R,
+            a point in crystallographic coordinates, x, is sent as x' = Rx.
             dtype='intc'
             shape=(rotations, 3, 3)
         is_mesh_symmetry: bool, optional, default True
@@ -174,6 +222,14 @@ class GridPoints(object):
             self._fit_qpoints_in_BZ()
         else:
             self._set_grid_points()
+
+    @property
+    def mesh_numbers(self):
+        return self._mesh
+
+    @property
+    def reciprocal_lattice(self):
+        return self._rec_lat
 
     @property
     def grid_address(self):
