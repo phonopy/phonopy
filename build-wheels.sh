@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e -x
 
-yum install -y hdf5 freetype-devel pkg-config libpng-devel
+yum install -y hdf5 freetype freetype-devel pkgconfig libpng-devel
 
 for PYBIN in /opt/python/*/bin; do
     if [[ $PYBIN == *"27"* ]] || [[ $PYBIN == *"35"* ]] || [[ $PYBIN == *"36"* ]] || [[ $PYBIN == *"37"* ]]; then
