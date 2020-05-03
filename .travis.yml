@@ -68,6 +68,8 @@ before_install:
 - pwd;
 - ./get_nanoversion.sh;
 - cat __nanoversion__.txt;
+- python setup.py sdist;
+- ls dist;
 
 install:
 - pwd
@@ -76,9 +78,8 @@ install:
       docker pull $DOCKER_IMAGE;
       docker run --rm -e PLAT=$PLAT -v `pwd`:/io $DOCKER_IMAGE $PRE_CMD /io/build-wheels.sh;
       ls wheelhouse/;
-      mkdir dist;
+      mkdir -p dist;
       cp wheelhouse/phonopy* dist/;
-      python setup.py sdist;
       ls dist/;
     fi;
   fi
