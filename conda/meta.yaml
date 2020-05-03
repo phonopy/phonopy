@@ -32,7 +32,6 @@ requirements:
     - pyyaml
     - h5py
     - setuptools
-    - setuptools_scm
 
   run:
     - python
