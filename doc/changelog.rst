@@ -5,7 +5,7 @@ Change Log
 
 May-3-2020: Version 2.6.1
 -------------------------
-* Release for pypi and conda packaging
+* Release for pypi and conda (atztogo channel) packagings
 
 May-2-2020: Version 2.6.0
 -------------------------
