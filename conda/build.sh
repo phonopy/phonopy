@@ -1,5 +1,7 @@
 #!/bin/bash
 
+git checkout $GIT_BRANCH
+
 ./get_nanoversion.sh
 
 $PYTHON setup.py install
