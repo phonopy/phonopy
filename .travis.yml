@@ -78,7 +78,7 @@ install:
       ls wheelhouse/;
       mkdir dist;
       cp wheelhouse/phonopy* dist/;
-      python setup.py sdist
+      python setup.py sdist;
       ls dist/;
     fi;
   fi
