@@ -151,15 +151,16 @@ if __name__ == '__main__':
 
     # # To deploy to pypi/conda by travis-CI
     if os.path.isfile("__nanoversion__.txt"):
+        nanoversion = 0
         with open('__nanoversion__.txt') as nv:
             try:
                 for line in nv:
                     nanoversion = int(line.strip())
                     break
             except ValueError:
-                nanoversion = 0
-            if nanoversion != 0:
-                version_nums.append(nanoversion)
+                pass
+        if nanoversion != 0:
+            version_nums.append(nanoversion)
     elif git_num:
         version_nums.append(git_num)
 
