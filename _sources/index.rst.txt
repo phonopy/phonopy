@@ -11,7 +11,7 @@ Welcome to phonopy
 harmonic and quasi-harmonic levels.
 
 **Phono3py** is another open source package for phonon-phonon interaction and lattice thermal
-conductivity calculations. See the documentation at http://atztogo.github.io/phono3py/
+conductivity calculations. See the documentation at http://phonopy.github.io/phono3py/
 
 **Phonon database**: A collection of first principles phonon
 calculations is available as open data at
@@ -64,8 +64,9 @@ The following features of phonopy are highlighted:
 - :ref:`Phonopy API for Python <phonopy_module>`
 
 
-A presentation in pdf for introduction to phonopy is downloaded `***here***
-<https://sf.net/projects/phonopy/files/phonopy.pdf/download>`_.
+..
+   A presentation in pdf for introduction to phonopy is downloaded `***here***
+   <https://sf.net/projects/phonopy/files/phonopy.pdf/download>`_.
 
 |i0| |i1| |i2| |i3|
 
