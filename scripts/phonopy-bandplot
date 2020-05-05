@@ -204,6 +204,12 @@ def get_options():
     return args
 
 
+def savefig(plt, file, fonttype=42, family='serif'):
+    plt.rcParams['pdf.fonttype'] = fonttype
+    plt.rcParams['font.family'] = family
+    plt.savefig(file)
+
+
 def old_plot(args):
     if not args.is_gnuplot:
         import matplotlib.pyplot as plt
@@ -393,9 +399,7 @@ def old_plot(args):
                 plt.xlim(left=args.dos_min)
 
         if args.output_filename is not None:
-            plt.rcParams['pdf.fonttype'] = 42
-            plt.rcParams['font.family'] = 'serif'
-            plt.savefig(args.output_filename)
+            savefig(plt, args.output_filename)
         else:
             plt.show()
 
@@ -448,7 +452,10 @@ def plot(args):
     for (l, p, f, d), fmt in zip(plots_data, fmts):
         band_plot.plot(d, f, p, fmt=fmt)
 
-    plt.show()
+    if args.output_filename is not None:
+        savefig(plt, args.output_filename)
+    else:
+        plt.show()
 
 
 def _get_max_frequency(frequencies):
