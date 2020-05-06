@@ -39,6 +39,22 @@ except ImportError:
     from io import StringIO
 import numpy as np
 
+try:
+    import yaml
+except ImportError:
+    raise ModuleNotFoundError("You need to install python-yaml.")
+
+try:
+    from yaml import CLoader as Loader
+except ImportError:
+    from yaml import Loader
+
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.cui.settings import fracval
+from phonopy.structure.dataset import get_displacements_and_forces
+from phonopy.structure.symmetry import Symmetry, elaborate_borns_and_epsilon
+from phonopy.harmonic.force_constants import similarity_transformation
+
 
 #
 # FORCE_SETS
@@ -142,8 +158,6 @@ def _get_dataset(f,
             raise RuntimeError(msg)
 
         if to_type2:
-            from phonopy.harmonic.displacement import (
-                get_displacements_and_forces)
             disps, forces = get_displacements_and_forces(dataset)
             return {'displacements': disps, 'forces': forces}
         else:
@@ -438,16 +452,6 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
 
     """
 
-    try:
-        import yaml
-    except ImportError:
-        raise ModuleNotFoundError("You need to install python-yaml.")
-
-    try:
-        from yaml import CLoader as Loader
-    except ImportError:
-        from yaml import Loader
-
     with open(filename) as f:
         new_dataset = {}
         dataset = yaml.load(f, Loader=Loader)
@@ -527,8 +531,6 @@ def parse_DISP(filename='DISP'):
 # Parse supercell in disp.yaml
 #
 def get_cell_from_disp_yaml(dataset):
-    from phonopy.structure.atoms import PhonopyAtoms
-
     if 'lattice' in dataset:
         lattice = dataset['lattice']
         if 'points' in dataset:
@@ -562,8 +564,6 @@ def get_cell_from_disp_yaml(dataset):
 # QPOINTS
 #
 def parse_QPOINTS(filename="QPOINTS"):
-    from phonopy.cui.settings import fracval
-
     with open(filename, 'r') as f:
         num_qpoints = int(f.readline().strip())
         qpoints = []
@@ -586,7 +586,6 @@ def get_BORN_lines(unitcell, borns, epsilon,
                    primitive_matrix=None,
                    supercell_matrix=None,
                    symprec=1e-5):
-    from phonopy.structure.symmetry import elaborate_borns_and_epsilon
     borns, epsilon, atom_indices = elaborate_borns_and_epsilon(
         unitcell, borns, epsilon, symmetrize_tensors=True,
         primitive_matrix=primitive_matrix,
@@ -614,7 +613,6 @@ def parse_BORN_from_strings(strings, primitive,
 
 
 def _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry):
-    from phonopy.structure.symmetry import Symmetry
     symmetry = Symmetry(primitive, symprec=symprec, is_symmetry=is_symmetry)
     return get_born_parameters(f, primitive, symmetry)
 
@@ -687,8 +685,6 @@ def get_born_parameters(f, primitive, prim_symmetry):
 
 
 def _expand_borns(borns, primitive, prim_symmetry):
-    from phonopy.harmonic.force_constants import similarity_transformation
-
     # Expand Born effective charges to all atoms in the primitive cell
     rotations = prim_symmetry.get_symmetry_operations()['rotations']
     map_operations = prim_symmetry.get_map_operations()
@@ -707,12 +703,6 @@ def _expand_borns(borns, primitive, prim_symmetry):
 # e-v.dat, thermal_properties.yaml
 #
 def read_thermal_properties_yaml(filenames):
-    import yaml
-    try:
-        from yaml import CLoader as Loader
-    except ImportError:
-        from yaml import Loader
-
     thermal_properties = []
     num_modes = []
     num_integrated_modes = []

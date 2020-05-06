@@ -43,9 +43,10 @@ from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
 from phonopy.structure.grid_points import length2mesh
 from phonopy.structure.cells import (
     get_supercell, get_primitive, guess_primitive_matrix)
+from phonopy.structure.dataset import get_displacements_and_forces
 from phonopy.harmonic.displacement import (
     get_least_displacements, directions_to_displacement_dataset,
-    get_random_displacements_dataset, get_displacements_and_forces)
+    get_random_displacements_dataset)
 from phonopy.harmonic.force_constants import (
     symmetrize_force_constants, symmetrize_compact_force_constants,
     show_drift_force_constants, cutoff_force_constants,

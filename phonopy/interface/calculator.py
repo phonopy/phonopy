@@ -36,7 +36,7 @@ import os
 import yaml
 import numpy as np
 from phonopy.interface.phonopy_yaml import PhonopyYaml
-from phonopy.harmonic.displacement import get_displacements_and_forces
+from phonopy.structure.dataset import get_displacements_and_forces
 from phonopy.structure.cells import determinant
 from phonopy.interface.vasp import sort_positions_by_symbols
 
