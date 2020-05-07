@@ -62,13 +62,45 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
          log_level=0):
     """Create Phonopy instance from parameters and/or input files.
 
-    When unitcell and unitcell_filename are not given, file name that is
-    default for the chosen calculator is looked for in the current directory
-    as the default behaviour.
+    phonopy_yaml-like file is parsed unless crystal structure information
+    is given by unitcell_filename, supercell_filename, unitcell
+    (PhonopyAtoms-like), or supercell (PhonopyAtoms-like).
+    Even when phonopy_yaml-like file is parse, parameters except for
+    crystal structure can be overwritten.
 
-    When force_sets_filename and force_constants_filename are not given,
-    'FORCE_SETS' is looked for in the current directory as the default
-    behaviour.
+    Phonopy default files of 'FORCE_SETS' and 'BORN' are parsed when they
+    are found in current directory and those data are not yet provided by
+    other means.
+
+    Crystal structure
+    -----------------
+    Means to provide crystal structure(s) and their priority:
+        1. unitcell_filename (with supercell_matrix)
+        2. supercell_filename
+        3. unitcell (with supercell_matrix)
+        4. supercell.
+        5. phonopy_yaml
+
+    Force sets or force constants
+    -----------------------------------------
+    Optional. Means to provide information to generate force constants
+    and their priority:
+        1. force_constants_filename
+        2. force_sets_filename
+        3. phonopy_yaml if force constants are found in phonoy_yaml.
+        4. phonopy_yaml if forces are found in phonoy_yaml.dataset.
+        5. 'FORCE_SETS' is searched in current directory.
+    When both of 3 and 4 are satisfied but not others, force constants and
+    dataset are stored in Phonopy instance, but force constants are not
+    produced from dataset.
+
+    Parameters for non-analytical term correctiion (NAC)
+    ----------------------------------------------------
+    Optional. Means to provide NAC parameters and their priority:
+        1. born_filename
+        2. nac_params
+        3. phonopy_yaml.nac_params if existed and is_nac=True.
+        4. 'BORN' is searched in current directory when is_nac=True.
 
     Parameters
     ----------
@@ -91,19 +123,16 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         is used.
     is_nac : bool, optional
         If True, look for 'BORN' file. If False, NAS is turned off.
-        The priority for NAC is nac_params > born_filename > is_nac ('BORN').
         Default is True.
     calculator : str, optional.
         Calculator used for computing forces. This is used to switch the set
         of physical units. Default is None, which is equivalent to "vasp".
     unitcell : PhonopyAtoms, optional
-        Input unit cell. Default is None. The priority for cell is
-        unitcell_filename > supercell_filename > unitcell > supercell.
+        Input unit cell. Default is None.
     supercell : PhonopyAtoms, optional
         Input supercell cell. Default value of primitive_matrix is set to
         'auto' (can be overwitten). supercell_matrix is ignored. Default is
-        None. The priority for cell is
-        unitcell_filename > supercell_filename > unitcell > supercell.
+        None.
     nac_params : dict, optional
         Parameters required for non-analytical term correction. Default is
         None. The priority for NAC is nac_params > born_filename > is_nac.
@@ -113,30 +142,20 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
                        (array_like, shape=(3, 3), dtype=float),
          'factor': unit conversion facotr (float)}
     unitcell_filename : str, optional
-        Input unit cell filename. Default is None. The priority for cell is
-        unitcell_filename > supercell_filename > unitcell > supercell.
+        Input unit cell filename. Default is None.
     supercell_filename : str, optional
         Input supercell filename. When this is specified, supercell_matrix is
-        ignored. Default is None. The priority for cell is
-        1. unitcell_filename (with supercell_matrix)
-        2. supercell_filename
-        3. unitcell (with supercell_matrix)
-        4. supercell.
+        ignored. Default is None.
     born_filename : str, optional
         Filename corresponding to 'BORN', a file contains non-analytical term
         correction parameters.
-        The priority for NAC is nac_params > born_filename > is_nac ('BORN').
     force_sets_filename : str, optional
         Filename of a file corresponding to 'FORCE_SETS', a file contains sets
         of forces and displacements. Default is None.
-        The priority for force constants is
-        force_constants_filename > force_sets_filename > 'FORCE_SETS'.
     force_constants_filename : str, optional
         Filename of a file corresponding to 'FORCE_CONSTANTS' or
-        'force_constants.hdf5', a file contains force constants.
-        Default is None.
-        The priority for force constants is
-        force_constants_filename > force_sets_filename > 'FORCE_SETS'.
+        'force_constants.hdf5', a file contains force constants. Default is
+        None.
     fc_calculator : str, optional
         Force constants calculator. Currently only 'alm'. Default is None.
     factor : float, optional
@@ -155,7 +174,10 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
 
     """
 
-    if phonopy_yaml is None:
+    if (supercell is not None or
+        supercell_filename is not None or
+        unitcell is not None or
+        unitcell_filename is not None):
         cell, smat, pmat = load_helper.get_cell_settings(
             supercell_matrix=supercell_matrix,
             primitive_matrix=primitive_matrix,
@@ -164,11 +186,12 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
             unitcell_filename=unitcell_filename,
             supercell_filename=supercell_filename,
             calculator=calculator,
-            symprec=symprec)
+            symprec=symprec,
+            log_level=log_level)
         _nac_params = nac_params
         _dataset = None
         _fc = None
-    else:
+    elif phonopy_yaml is not None:
         phpy_yaml = PhonopyYaml()
         phpy_yaml.read(phonopy_yaml)
         cell = phpy_yaml.unitcell
@@ -179,12 +202,18 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
             pmat = 'auto'
         else:
             pmat = phpy_yaml.primitive_matrix
-        if is_nac:
+        if nac_params is not None:
+            _nac_params = nac_params
+        elif is_nac:
             _nac_params = phpy_yaml.nac_params
         else:
             _nac_params = None
         _dataset = phpy_yaml.dataset
         _fc = phpy_yaml.force_constants
+    else:
+        msg = ("Cell information could not found. "
+               "Phonopy instance loading failed.")
+        raise RuntimeError(msg)
 
     # units keywords: factor, nac_factor, distance_to_A
     units = get_default_physical_units(calculator)
@@ -201,63 +230,78 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
                      is_symmetry=is_symmetry,
                      calculator=calculator,
                      log_level=log_level)
-    _nac_params = load_helper.get_nac_params(phonon.primitive,
-                                             _nac_params,
-                                             born_filename,
-                                             is_nac,
-                                             units['nac_factor'])
-    if _dataset is not None:
-        phonon.dataset = _dataset
 
-    if _nac_params is not None:
-        phonon.nac_params = _nac_params
+    # NAC params
+    if (born_filename is not None or nac_params is not None or
+        is_nac and os.path.isfile("BORN")):
+        phonon.nac_params = load_helper.get_nac_params(phonon.primitive,
+                                                       _nac_params,
+                                                       born_filename,
+                                                       is_nac,
+                                                       units['nac_factor'],
+                                                       log_level=log_level)
 
-    if _fc is not None:
-        phonon.force_constants = _fc
-    else:
-        _compute_force_constants(
-            phonon,
-            dataset=_dataset,
-            force_constants_filename=force_constants_filename,
-            force_sets_filename=force_sets_filename,
-            calculator=calculator,
-            fc_calculator=fc_calculator)
+    # Displacements, forces, and force constants
+    _set_dataset_and_force_constants(
+        phonon,
+        _dataset,
+        _fc,
+        force_constants_filename=force_constants_filename,
+        force_sets_filename=force_sets_filename,
+        calculator=calculator,
+        fc_calculator=fc_calculator,
+        log_level=log_level)
 
     return phonon
 
 
-def _compute_force_constants(
+def _set_dataset_and_force_constants(
         phonon,
-        dataset=None,
+        dataset,
+        fc,  # From phonopy_yaml
         force_constants_filename=None,
         force_sets_filename=None,
         calculator=None,
-        fc_calculator=None):
+        fc_calculator=None,
+        log_level=0):
     natom = phonon.supercell.get_number_of_atoms()
 
-    _dataset = None
+    # dataset and fc are those obtained from phonopy_yaml unless None.
     if dataset is not None:
-        _dataset = dataset
-    elif force_constants_filename is not None:
+        phonon.dataset = dataset
+    if fc is not None:
+        phonon.force_constants = fc
+
+    _dataset = None
+    if force_constants_filename is not None:
         dot_split = force_constants_filename.split('.')
         p2s_map = phonon.primitive.p2s_map
         if len(dot_split) > 1 and dot_split[-1] == 'hdf5':
-            fc = load_helper.read_force_constants_from_hdf5(
+            _fc = load_helper.read_force_constants_from_hdf5(
                 filename=force_constants_filename,
                 p2s_map=p2s_map,
                 calculator=calculator)
         else:
-            fc = parse_FORCE_CONSTANTS(filename=force_constants_filename,
-                                       p2s_map=p2s_map)
-        phonon.set_force_constants(fc)
+            _fc = parse_FORCE_CONSTANTS(filename=force_constants_filename,
+                                        p2s_map=p2s_map)
+        phonon.force_constants = _fc
+        if log_level > 0:
+            print("Force constants were read from \"%s\"."
+                  % force_constants_filename)
     elif force_sets_filename is not None:
-        _dataset = parse_FORCE_SETS(natom=natom,
-                                    filename=force_sets_filename)
-    elif os.path.isfile("FORCE_SETS"):
-        _dataset = parse_FORCE_SETS(natom=natom)
+        _dataset = parse_FORCE_SETS(natom=natom, filename=force_sets_filename)
+        if log_level > 0:
+            print("Force sets were read from \"%s\"." % force_sets_filename)
+    elif phonon.forces is None:  # forces can exist from phonopy_yaml.
+        if os.path.isfile("FORCE_SETS"):
+            _dataset = parse_FORCE_SETS(natom=natom)
+            if log_level > 0:
+                print("Force sets were read from \"FORCE_SETS\".")
 
-    if _dataset is not None:
-        phonon.dataset = _dataset
+    if phonon.force_constants is None:
+        # Overwrite dataset
+        if _dataset is not None:
+            phonon.dataset = _dataset
         _produce_force_constants(phonon, fc_calculator)
 
 

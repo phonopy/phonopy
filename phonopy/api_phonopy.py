@@ -472,7 +472,10 @@ class Phonopy(object):
             for disp in self._displacement_dataset['first_atoms']:
                 if 'forces' in disp:
                     forces.append(disp['forces'])
-            return np.array(forces, dtype='double', order='C')
+            if forces:
+                return np.array(forces, dtype='double', order='C')
+            else:
+                None
         else:
             return None
 

@@ -51,18 +51,26 @@ def get_cell_settings(phonopy_yaml=None,
                       unitcell_filename=None,
                       supercell_filename=None,
                       calculator=None,
-                      symprec=1e-5):
+                      symprec=1e-5,
+                      log_level=0):
+    optional_structure_info = None
     if unitcell_filename is not None:
         cell, optional_structure_info = read_crystal_structure(
             filename=unitcell_filename, interface_mode=calculator)
         smat = supercell_matrix
         pmat = primitive_matrix
+        if log_level > 0:
+            print("Unit cell structure was read from \"%s\"."
+                  % optional_structure_info[0])
     elif supercell_filename is not None:
         cell, optional_structure_info = read_crystal_structure(
             filename=supercell_filename, interface_mode=calculator)
         smat = np.eye(3, dtype='intc', order='C')
         if primitive_matrix is None or primitive_matrix == "auto":
             pmat = 'auto'
+        if log_level > 0:
+            print("Supercell structure was read from \"%s\"."
+                  % optional_structure_info[0])
     elif unitcell is not None:
         cell = PhonopyAtoms(atoms=unitcell)
         smat = supercell_matrix
@@ -75,7 +83,7 @@ def get_cell_settings(phonopy_yaml=None,
     else:
         raise RuntimeError("Cell has to be specified.")
 
-    if cell is None:
+    if optional_structure_info is not None and cell is None:
         filename = optional_structure_info[0]
         msg = "'%s' could not be found." % filename
         raise FileNotFoundError(msg)
@@ -85,19 +93,25 @@ def get_cell_settings(phonopy_yaml=None,
     return cell, smat, pmat
 
 
-def get_nac_params(primitive, nac_params, born_filename, is_nac, nac_factor):
-    _nac_params = None
-    if nac_params is not None:
-        _nac_params = nac_params
-    elif born_filename is not None:
+def get_nac_params(primitive, nac_params, born_filename, is_nac,
+                   nac_factor, log_level=0):
+    if born_filename is not None:
         _nac_params = parse_BORN(primitive, filename=born_filename)
+        if log_level > 0:
+            print("NAC params were read from \"%s\"." % born_filename)
+    elif nac_params is not None:  # nac_params input or phonopy_yaml.nac_params
+        _nac_params = nac_params
     elif is_nac is True:
         if os.path.isfile("BORN"):
             _nac_params = parse_BORN(primitive, filename="BORN")
+            if log_level > 0:
+                print("NAC params were read from \"BORN\".")
+        else:
+            msg = "Although is_nac=True is given, \"BORN\" could not be found."
+            raise FileNotFoundError(msg)
 
-    if _nac_params is not None:
-        if _nac_params['factor'] is None:
-            _nac_params['factor'] = nac_factor
+    if _nac_params['factor'] is None:
+        _nac_params['factor'] = nac_factor
 
     return _nac_params
 
