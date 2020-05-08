@@ -62,10 +62,10 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
          log_level=0):
     """Create Phonopy instance from parameters and/or input files.
 
-    phonopy_yaml-like file is parsed unless crystal structure information
+    "phonopy_yaml"-like file is parsed unless crystal structure information
     is given by unitcell_filename, supercell_filename, unitcell
     (PhonopyAtoms-like), or supercell (PhonopyAtoms-like).
-    Even when phonopy_yaml-like file is parse, parameters except for
+    Even when "phonopy_yaml"-like file is parse, parameters except for
     crystal structure can be overwritten.
 
     Phonopy default files of 'FORCE_SETS' and 'BORN' are parsed when they
@@ -82,7 +82,7 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         5. phonopy_yaml
 
     Force sets or force constants
-    -----------------------------------------
+    -----------------------------
     Optional. Means to provide information to generate force constants
     and their priority:
         1. force_constants_filename
@@ -130,12 +130,12 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
     unitcell : PhonopyAtoms, optional
         Input unit cell. Default is None.
     supercell : PhonopyAtoms, optional
-        Input supercell cell. Default value of primitive_matrix is set to
-        'auto' (can be overwitten). supercell_matrix is ignored. Default is
+        Input supercell. With given, default value of primitive_matrix is set
+        to 'auto' (can be overwitten). supercell_matrix is ignored. Default is
         None.
     nac_params : dict, optional
         Parameters required for non-analytical term correction. Default is
-        None. The priority for NAC is nac_params > born_filename > is_nac.
+        None.
         {'born': Born effective charges
                  (array_like, shape=(primitive cell atoms, 3, 3), dtype=float),
          'dielectric': Dielectric constant matrix
