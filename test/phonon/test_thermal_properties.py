@@ -51,7 +51,8 @@ class TestThermalProperties(unittest.TestCase):
             unitcell_filename=os.path.join(data_dir, "..", "POSCAR_NaCl"),
             force_sets_filename=os.path.join(data_dir, "..",
                                              "FORCE_SETS_NaCl"),
-            born_filename=os.path.join(data_dir, "..", "BORN_NaCl"))
+            born_filename=os.path.join(data_dir, "..", "BORN_NaCl"),
+            symmetrize_fc=False)
         return phonon
 
 
