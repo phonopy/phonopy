@@ -92,10 +92,9 @@ class GruneisenBase(object):
         eigvecs = []
         for i, q in enumerate(self._qpoints):
             if self._is_band_connection and self._dynmat.is_nac():
-                self._dynmat.set_dynamical_matrix(
-                    q, q_direction=self._q_direction)
+                self._dynmat.run(q, q_direction=self._q_direction)
             else:
-                self._dynmat.set_dynamical_matrix(q)
+                self._dynmat.run(q)
 
             dm = self._dynmat.get_dynamical_matrix()
             evals, evecs = np.linalg.eigh(dm)
@@ -127,11 +126,11 @@ class GruneisenBase(object):
 
     def _get_dD(self, q, d_a, d_b):
         if (self._is_band_connection and d_a.is_nac() and d_b.is_nac()):
-            d_a.set_dynamical_matrix(q, q_direction=self._q_direction)
-            d_b.set_dynamical_matrix(q, q_direction=self._q_direction)
+            d_a.run(q, q_direction=self._q_direction)
+            d_b.run(q, q_direction=self._q_direction)
         else:
-            d_a.set_dynamical_matrix(q)
-            d_b.set_dynamical_matrix(q)
+            d_a.run(q)
+            d_b.run(q)
         dm_a = d_a.get_dynamical_matrix()
         dm_b = d_b.get_dynamical_matrix()
         return (dm_b - dm_a)

@@ -413,8 +413,9 @@ class BandStructure(object):
     eigenvectors: list of ndarray
         Phonon eigenvectors. See the data structure at np.linalg.eigh.
         Each ndarray corresponding to each q-path has
-            dtype='complex128'
+            dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
             shape=(qpoints, bands, bands)
+            order='C'
     group_velocities: list of ndarray
         Phonon group velocities.
         Each ndarray corresponding to each q-path has
@@ -786,11 +787,10 @@ class BandStructure(object):
                 q_direction = None
                 if (np.abs(q) < 0.0001).all():  # For Gamma point
                     q_direction = path[0] - path[-1]
-                self._dynamical_matrix.set_dynamical_matrix(
-                    q, q_direction=q_direction)
+                self._dynamical_matrix.run(q, q_direction=q_direction)
             else:
-                self._dynamical_matrix.set_dynamical_matrix(q)
-            dm = self._dynamical_matrix.get_dynamical_matrix()
+                self._dynamical_matrix.run(q)
+            dm = self._dynamical_matrix.dynamical_matrix
 
             if self._with_eigenvectors:
                 eigvals, eigvecs = np.linalg.eigh(dm)

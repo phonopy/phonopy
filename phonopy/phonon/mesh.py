@@ -174,12 +174,13 @@ class Mesh(MeshBase):
     eigenvectors: ndarray
         Phonon eigenvectors at ir-grid points. See the data structure at
         np.linalg.eigh.
-        dtype='complex128'
         shape=(ir-grid points, bands, bands)
+        dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
+        order='C'
     group_velocities: ndarray
         Phonon group velocities at ir-grid points.
-        dtype='double'
         shape=(ir-grid points, bands, 3)
+        dtype='double'
     More attributes from MeshBase should be watched.
 
     """
@@ -353,8 +354,8 @@ class Mesh(MeshBase):
                                    lapack_zheev_uplo='L')
         else:
             for i, q in enumerate(self._qpoints):
-                self._dynamical_matrix.set_dynamical_matrix(q)
-                dm = self._dynamical_matrix.get_dynamical_matrix()
+                self._dynamical_matrix.run(q)
+                dm = self._dynamical_matrix.dynamical_matrix
                 if self._with_eigenvectors:
                     eigvals, self._eigenvectors[i] = np.linalg.eigh(dm)
                     eigenvalues = eigvals.real
@@ -415,8 +416,8 @@ class IterMesh(MeshBase):
             raise StopIteration
         else:
             q = self._qpoints[self._q_count]
-            self._dynamical_matrix.set_dynamical_matrix(q)
-            dm = self._dynamical_matrix.get_dynamical_matrix()
+            self._dynamical_matrix.run(q)
+            dm = self._dynamical_matrix.dynamical_matrix
             if self._with_eigenvectors:
                 eigvals, eigenvectors = np.linalg.eigh(dm)
                 eigenvalues = eigvals.real

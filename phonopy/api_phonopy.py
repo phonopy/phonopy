@@ -899,7 +899,9 @@ class Phonopy(object):
         -------
         dynamical_matrix: ndarray
             Dynamical matrix.
-            shape=(bands, bands), dtype='complex'
+            shape=(bands, bands)
+            dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
+            order='C'
 
         """
 
@@ -908,7 +910,7 @@ class Phonopy(object):
             msg = ("Dynamical matrix has not yet built.")
             raise RuntimeError(msg)
 
-        self._dynamical_matrix.set_dynamical_matrix(q)
+        self._dynamical_matrix.run(q)
         return self._dynamical_matrix.get_dynamical_matrix()
 
     def get_frequencies(self, q):
@@ -933,7 +935,7 @@ class Phonopy(object):
             msg = ("Dynamical matrix has not yet built.")
             raise RuntimeError(msg)
 
-        self._dynamical_matrix.set_dynamical_matrix(q)
+        self._dynamical_matrix.run(q)
         dm = self._dynamical_matrix.get_dynamical_matrix()
         frequencies = []
         for eig in np.linalg.eigvalsh(dm).real:
@@ -963,7 +965,9 @@ class Phonopy(object):
             shape=(bands, ), dtype='double', order='C'
         eigenvectors: ndarray
             Phonon eigenvectors.
-            shape=(bands, bands), dtype='complex', order='C'
+            shape=(bands, bands)
+            dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
+            order='C'
 
         """
         self._set_dynamical_matrix()
@@ -971,7 +975,7 @@ class Phonopy(object):
             msg = ("Dynamical matrix has not yet built.")
             raise RuntimeError(msg)
 
-        self._dynamical_matrix.set_dynamical_matrix(q)
+        self._dynamical_matrix.run(q)
         dm = self._dynamical_matrix.get_dynamical_matrix()
         frequencies = []
         eigvals, eigenvectors = np.linalg.eigh(dm)
@@ -1094,7 +1098,9 @@ class Phonopy(object):
                 shape=(q-points, bands), dtype='double'
             eigenvectors[i]: ndarray
                 Phonon eigenvectors. None if eigenvectors are not stored.
-                shape=(q-points, bands, bands), dtype='complex'
+                shape=(q-points, bands, bands)
+                dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
+                order='C'
             group_velocities[i]: ndarray
                 Phonon group velocities. None if group velocities are not
                 calculated.
@@ -1138,7 +1144,9 @@ class Phonopy(object):
             shape=(q-points, bands), dtype='double'
         eigenvectors[i]: ndarray
             Phonon eigenvectors. None if eigenvectors are not stored.
-            shape=(q-points, bands, bands), dtype='complex'
+            shape=(q-points, bands, bands)
+            dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
+            order='C'
         group_velocities[i]: ndarray
             Phonon group velocities. None if group velocities are not
             calculated.
@@ -1461,8 +1469,9 @@ class Phonopy(object):
             eigenvectors: ndarray
                 Phonon eigenvectors at ir-grid points. See the data structure
                 at np.linalg.eigh.
-                dtype='complex'
                 shape=(ir-grid points, bands, bands)
+                dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
+                order='C'
             group_velocities: ndarray
                 Phonon group velocities at ir-grid points.
                 dtype='double'
@@ -1691,7 +1700,9 @@ class Phonopy(object):
                 shape=(qpoints, bands), dtype='double'
             eigenvectors : ndarray
                 Phonon eigenvectors. None if eigenvectors are not stored.
-                shape=(qpoints, bands, bands), dtype='complex'
+                shape=(qpoints, bands, bands)
+                dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
+                order='C'
             group_velocities : ndarray
                 Phonon group velocities. None if group velocities are not
                 calculated.

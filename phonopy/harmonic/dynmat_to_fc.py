@@ -152,7 +152,8 @@ class DynmatToForceConstants(object):
     dynamical_matrices : ndarray
         shape=(det(supercell_matrix), num_band, num_band),
         where num_band is 3 x number of atoms in primitive cell.
-        dtype='complex128', order='C'.
+        dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
+        order='C'.
 
     """
 
@@ -193,12 +194,14 @@ class DynmatToForceConstants(object):
             Phonon eigenvectors as the solution of dynamical matrices at
             commensurate q-points.
             shape=(det(supercell_matrix), num_band, num_band)
-            dtype='complex128', order='C'.
+            dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
+            order='C'.
             where ``num_band`` is 3 x number of atoms in primitive cell.
         dynamical_matrices : ndarray
             Dynamical matrices at commensurate q-points.
             shape=(det(supercell_matrix), num_band, num_band)
-            dtype='complex128', order='C'.
+            dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
+            order='C'.
             where ``num_band`` is 3 x number of atoms in primitive cell.
         commensurate_points : ndarray
             Commensurate q-points corresponding to supercell_matrix. The order
@@ -233,8 +236,7 @@ class DynmatToForceConstants(object):
             fc_shape = (n_p, n_s, 3, 3)
         self._fc = np.zeros(fc_shape, dtype='double', order='C')
 
-        itemsize = self._fc.itemsize
-        self._dtype_complex = ("c%d" % (itemsize * 2))
+        self._dtype_complex = ("c%d" % (np.dtype('double').itemsize * 2))
 
         if ((frequencies is not None or eigenvalues is not None)
             and eigenvectors is not None):

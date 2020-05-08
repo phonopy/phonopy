@@ -58,10 +58,10 @@ def get_group_velocity(q,  # q-point
 def delta_dynamical_matrix(q,
                            delta_q,
                            dynmat):
-    dynmat.set_dynamical_matrix(q - delta_q)
-    dm1 = dynmat.get_dynamical_matrix()
-    dynmat.set_dynamical_matrix(q + delta_q)
-    dm2 = dynmat.get_dynamical_matrix()
+    dynmat.run(q - delta_q)
+    dm1 = dynmat.dynamical_matrix
+    dynmat.run(q + delta_q)
+    dm2 = dynmat.dynamical_matrix
     return dm2 - dm1
 
 
@@ -183,8 +183,8 @@ class GroupVelocity(object):
         return self.group_velocities
 
     def _calculate_group_velocity_at_q(self, q):
-        self._dynmat.set_dynamical_matrix(q)
-        dm = self._dynmat.get_dynamical_matrix()
+        self._dynmat.run(q)
+        dm = self._dynmat.dynamical_matrix
         eigvals, eigvecs = np.linalg.eigh(dm)
         eigvals = eigvals.real
         freqs = np.sqrt(abs(eigvals)) * np.sign(eigvals) * self._factor

@@ -57,8 +57,10 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
          fc_calculator=None,
          factor=None,
          frequency_scale_factor=None,
-         symprec=1e-5,
          is_symmetry=True,
+         symmetrize_fc=True,
+         is_compact_fc=True,
+         symprec=1e-5,
          log_level=0):
     """Create Phonopy instance from parameters and/or input files.
 
@@ -164,11 +166,20 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
     frequency_scale_factor : float, optional
         Factor multiplied to calculated phonon frequency. Default is None,
         i.e., effectively 1.
-    symprec : float, optional
-        Tolerance used to find crystal symmetry. Default is 1e-5.
     is_symmetry : bool, optional
         Setting False, crystal symmetry except for lattice translation is not
         considered. Default is True.
+    symmetrize_fc : bool, optional
+        Setting False, force constants are not symmetrized when creating
+        force constants from displacements and forces. Default is True.
+    is_compact_fc : bool
+        Force constants are stored in the array whose shape is
+            True: (primitive, supecell, 3, 3)
+            False: (supercell, supecell, 3, 3)
+        where 'supercell' and 'primitive' indicate number of atoms in these
+        cells. Default is True.
+    symprec : float, optional
+        Tolerance used to find crystal symmetry. Default is 1e-5.
     log_level : int, optional
         Verbosity control. Default is 0.
 

@@ -250,7 +250,7 @@ class RandomDisplacements(object):
         pos = self._dynmat.supercell.scaled_positions
         N = len(self._comm_points)
         for q in self._comm_points[self._ii] / float(N):
-            self._dynmat.set_dynamical_matrix(q)
+            self._dynmat.run(q)
             dm = self._dynmat.dynamical_matrix
             eigvals, eigvecs = np.linalg.eigh(dm.real)
             self._eigvals_ii.append(eigvals)
@@ -260,7 +260,7 @@ class RandomDisplacements(object):
 
         if self._ij:
             for q in self._comm_points[self._ij] / float(N):
-                self._dynmat.set_dynamical_matrix(q)
+                self._dynmat.run(q)
                 dm = self._dynmat.dynamical_matrix
                 eigvals, eigvecs = np.linalg.eigh(dm)
                 self._eigvals_ij.append(eigvals)

@@ -33,6 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
+import warnings
 from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
 import numpy as np
 
@@ -99,7 +100,7 @@ class DynamicalMatrix(object):
         shape=(primitive atoms, supercell atoms, 3, 3) for compact array
     dynatmical_matrix: ndarray
         Dynamical matrix at specified q.
-        dtype='complex128'
+        dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
         shape=(primitive atoms * 3, primitive atoms * 3)
 
     """
@@ -116,8 +117,7 @@ class DynamicalMatrix(object):
         self._force_constants = None
         self._set_force_constants(force_constants)
 
-        itemsize = self._force_constants.itemsize
-        self._dtype_complex = ("c%d" % (itemsize * 2))
+        self._dtype_complex = ("c%d" % (np.dtype('double').itemsize * 2))
 
         self._p2s_map = primitive.get_primitive_to_supercell_map()
         self._s2p_map = primitive.get_supercell_to_primitive_map()
@@ -165,6 +165,14 @@ class DynamicalMatrix(object):
 
     @property
     def dynamical_matrix(self):
+        """Dynamcial matrix calculated at q
+
+        ndarray
+            shape=(natom * 3, natom *3)
+            dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
+
+        """
+
         dm = self._dynamical_matrix
 
         if self._dynamical_matrix is None:
@@ -178,10 +186,24 @@ class DynamicalMatrix(object):
     def get_dynamical_matrix(self):
         return self.dynamical_matrix
 
-    def set_dynamical_matrix(self, q):
-        self._set_dynamical_matrix(q)
+    def run(self, q):
+        """Calculate dynamical matrix at q
 
-    def _set_dynamical_matrix(self, q):
+        q : array_like
+            q-point in fractional coordinates without 2pi.
+            shape=(3,), dtype='double'
+
+        """
+
+        self._run(q)
+
+    def set_dynamical_matrix(self, q):
+        warnings.warn("DynamicalMatrix.set_dynamical_matrix is deprecated."
+                      "Use DynamicalMatrix.run.",
+                      DeprecationWarning)
+        self.run(q)
+
+    def _run(self, q):
         try:
             import phonopy._phonopy as phonoc
             self._set_c_dynamical_matrix(q)
@@ -206,9 +228,8 @@ class DynamicalMatrix(object):
         mass = self._pcell.get_masses()
         multiplicity = self._multiplicity
         size_prim = len(mass)
-        itemsize = self._force_constants.itemsize
         dm = np.zeros((size_prim * 3, size_prim * 3),
-                      dtype=("c%d" % (itemsize * 2)))
+                      dtype=self._dtype_complex)
 
         if fc.shape[0] == fc.shape[1]:  # full FC
             phonoc.dynamical_matrix(dm.view(dtype='double'),
@@ -307,19 +328,36 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         if nac_params is not None:
             self.set_nac_params(nac_params)
 
-    def get_born_effective_charges(self):
+    @property
+    def born(self):
         return self._born
 
-    def get_nac_factor(self):
+    def get_born_effective_charges(self):
+        return self.born
+
+    @property
+    def nac_factor(self):
         return self._unit_conversion * 4.0 * np.pi / self._pcell.get_volume()
 
-    def get_dielectric_constant(self):
+    def get_nac_factor(self):
+        return self.nac_factor
+
+    @property
+    def dielectric_constant(self):
         return self._dielectric
 
-    def get_nac_method(self):
+    def get_dielectric_constant(self):
+        return self.dielectric_constant
+
+    @property
+    def nac_method(self):
         return self._method
 
-    def get_Gonze_nac_dataset(self):
+    def get_nac_method(self):
+        return self.nac_method
+
+    @property
+    def Gonze_nac_dataset(self):
         if self._method == 'gonze':
             return (self._Gonze_force_constants,
                     self._dd_q0,
@@ -328,6 +366,9 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                     self._Lambda)
         else:
             return None
+
+    def get_Gonze_nac_dataset(self):
+        return self.Gonze_nac_dataset
 
     def set_nac_params(self, nac_params):
         self._born = np.array(nac_params['born'], dtype='double', order='C')
@@ -379,23 +420,41 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         self._set_Gonze_force_constants()
         self._Gonze_count = 0
 
-    def set_dynamical_matrix(self, q_red, q_direction=None):
+    def run(self, q, q_direction=None):
+        """Calculate dynamical matrix at q
+
+        q : array_like
+            q-point in fractional coordinates without 2pi.
+            shape=(3,), dtype='double'
+        q_direction : array_like
+            q-point direction from Gamma-point in fractional coordinates
+            without 2pi. Only the direction is used, i.e.,
+            (q_direction / |q_direction|) is computed and used.
+            shape=(3,), dtype='double'
+
+        """
         rec_lat = np.linalg.inv(self._pcell.get_cell())  # column vectors
         if q_direction is None:
-            q_norm = np.linalg.norm(np.dot(q_red, rec_lat.T))
+            q_norm = np.linalg.norm(np.dot(q, rec_lat.T))
         else:
             q_norm = np.linalg.norm(np.dot(q_direction, rec_lat.T))
 
         if q_norm < self._symprec:
-            self._set_dynamical_matrix(q_red)
+            self._run(q)
             return False
 
         if self._method == 'wang':
-            self._set_Wang_dynamical_matrix(q_red, q_direction)
+            self._set_Wang_dynamical_matrix(q, q_direction)
         else:
             if self._Gonze_force_constants is None:
                 self.make_Gonze_nac_dataset(self._log_level)
-            self._set_Gonze_dynamical_matrix(q_red, q_direction)
+            self._set_Gonze_dynamical_matrix(q, q_direction)
+
+    def set_dynamical_matrix(self, q, q_direction=None):
+        warnings.warn("DynamicalMatrixNAC.set_dynamical_matrix is deprecated."
+                      "Use DynamicalMatrixNAC.run.",
+                      DeprecationWarning)
+        self.run(q, q_direction=q_direction)
 
     def _set_Wang_dynamical_matrix(self, q_red, q_direction):
         # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
@@ -417,7 +476,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             fc_backup = self._force_constants.copy()
             nac_q = self._get_charge_sum(num_atom, q, self._born) * constant
             self._set_py_Wang_force_constants(self._force_constants, nac_q)
-            self._set_dynamical_matrix(q_red)
+            self._run(q_red)
             self._force_constants = fc_backup
 
     def _set_c_Wang_dynamical_matrix(self, q_red, q, factor):
@@ -428,9 +487,8 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         mass = self._pcell.get_masses()
         multiplicity = self._multiplicity
         size_prim = len(mass)
-        itemsize = fc.itemsize
         dm = np.zeros((size_prim * 3, size_prim * 3),
-                      dtype=("c%d" % (itemsize * 2)))
+                      dtype=self._dtype_complex)
 
         if fc.shape[0] == fc.shape[1]:  # full fc
             phonoc.nac_dynamical_matrix(dm.view(dtype='double'),
@@ -481,7 +539,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         self._Gonze_count += 1
         fc = self._force_constants
         self._force_constants = self._Gonze_force_constants
-        self._set_dynamical_matrix(q_red)
+        self._run(q_red)
         self._force_constants = fc
         dm_dd = self._get_Gonze_dipole_dipole(q_red, q_direction)
         self._dynamical_matrix += dm_dd
@@ -496,7 +554,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         for i, q_red in enumerate(d2f.commensurate_points):
             if self._log_level > 2:
                 print("%d/%d %s" % (i + 1, num_q, q_red))
-            self._set_dynamical_matrix(q_red)
+            self._run(q_red)
             dm_dd = self._get_Gonze_dipole_dipole(q_red, None)
             self._dynamical_matrix -= dm_dd
             dynmat.append(self._dynamical_matrix)

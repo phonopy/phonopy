@@ -209,9 +209,8 @@ class QpointsPhonon(object):
         if (self._dynamical_matrix.is_nac() and
             self._nac_q_direction is not None and
             (np.abs(q) < 1e-5).all()):
-            self._dynamical_matrix.set_dynamical_matrix(
-                q,
-                q_direction=self._nac_q_direction)
+            self._dynamical_matrix.run(
+                q, q_direction=self._nac_q_direction)
         else:
-            self._dynamical_matrix.set_dynamical_matrix(q)
-        return self._dynamical_matrix.get_dynamical_matrix()
+            self._dynamical_matrix.run(q)
+        return self._dynamical_matrix.dynamical_matrix
