@@ -393,6 +393,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             else:
                 self._G_cutoff = (3 * self._num_G_points / (4 * np.pi) /
                                   self._pcell.get_volume()) ** (1.0 / 3)
+            self._G_list = self._get_G_list(self._G_cutoff)
             if 'Lambda' in nac_params:
                 self._Lambda = nac_params['Lambda']
             else:
@@ -400,15 +401,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                 GeG = self._G_cutoff ** 2 * np.trace(self._dielectric) / 3
                 self._Lambda = np.sqrt(- GeG / 4 / np.log(exp_cutoff))
 
-    def make_Gonze_nac_dataset(self, verbose=False):
-        self._G_list = self._get_G_list(self._G_cutoff)
-        if verbose:
-            print("NAC by Gonze et al., PRB 50, 13035(R) (1994), "
-                  "PRB 55, 10355 (1997):")
-            print("  G-cutoff distance: %5.2f" % self._G_cutoff)
-            print("  Number of G-points: %d" % len(self._G_list))
-            print("  Lambda: %6.2f" % self._Lambda)
-
+    def make_Gonze_nac_dataset(self):
         try:
             import phonopy._phonopy as phonoc
             self._set_c_dipole_dipole_q0()
@@ -419,6 +412,14 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
         self._set_Gonze_force_constants()
         self._Gonze_count = 0
+
+    def show_Gonze_nac_message(self):
+        print("Use NAC by Gonze et al (no real space sum in current "
+              "implementation)")
+        print("  PRB 50, 13035(R) (1994), PRB 55, 10355 (1997)")
+        print("  G-cutoff distance: %4.2f, Number of G-points: %d, "
+              "Lambda: %4.2f"
+              % (self._G_cutoff, len(self._G_list), self._Lambda))
 
     def run(self, q, q_direction=None):
         """Calculate dynamical matrix at q
@@ -447,7 +448,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             self._set_Wang_dynamical_matrix(q, q_direction)
         else:
             if self._Gonze_force_constants is None:
-                self.make_Gonze_nac_dataset(self._log_level)
+                self.make_Gonze_nac_dataset()
             self._set_Gonze_dynamical_matrix(q, q_direction)
 
     def set_dynamical_matrix(self, q, q_direction=None):

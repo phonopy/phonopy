@@ -875,6 +875,11 @@ if settings.get_is_nac():
         if settings.get_nac_method() is not None:
             nac_params['method'] = settings.get_nac_method()
         phonon.nac_params = nac_params
+        if log_level > 0:
+            dm = phonon.dynamical_matrix
+            if (dm.is_nac() and dm.nac_method == 'gonze'):
+                dm.show_Gonze_nac_message()
+            print("")
 
         if log_level > 1:
             print("-" * 27 + " Dielectric constant " + "-" * 28)

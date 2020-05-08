@@ -2888,8 +2888,8 @@ class Phonopy(object):
                     symprec=self._symprec)
             else:
                 if 'displacements' in self._displacement_dataset:
-                    msg = ("This data format of displacement_dataset is not "
-                           "usable unless fc_calculator is set.")
+                    msg = ("fc_calculator has to be set to produce force "
+                           "constans from this dataset.")
                     raise RuntimeError(msg)
                 self._force_constants = get_phonopy_fc2(
                     self._supercell,
