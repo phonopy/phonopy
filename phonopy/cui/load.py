@@ -57,6 +57,7 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
          fc_calculator=None,
          factor=None,
          frequency_scale_factor=None,
+         produce_fc=True,
          is_symmetry=True,
          symmetrize_fc=True,
          is_compact_fc=True,
@@ -166,6 +167,9 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
     frequency_scale_factor : float, optional
         Factor multiplied to calculated phonon frequency. Default is None,
         i.e., effectively 1.
+    produce_fc : bool, optional
+        Setting False, force constants are not calculated from displacements
+        and forces. Default is True.
     is_symmetry : bool, optional
         Setting False, crystal symmetry except for lattice translation is not
         considered. Default is True.
@@ -173,7 +177,7 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         Setting False, force constants are not symmetrized when creating
         force constants from displacements and forces. Default is True.
     is_compact_fc : bool
-        Force constants are stored in the array whose shape is
+        Force constants are produced in the array whose shape is
             True: (primitive, supecell, 3, 3)
             False: (supercell, supecell, 3, 3)
         where 'supercell' and 'primitive' indicate number of atoms in these
@@ -261,6 +265,9 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         force_sets_filename=force_sets_filename,
         calculator=calculator,
         fc_calculator=fc_calculator,
+        produce_fc=produce_fc,
+        symmetrize_fc=symmetrize_fc,
+        is_compact_fc=is_compact_fc,
         log_level=log_level)
 
     return phonon
@@ -274,6 +281,9 @@ def _set_dataset_and_force_constants(
         force_sets_filename=None,
         calculator=None,
         fc_calculator=None,
+        produce_fc=True,
+        symmetrize_fc=True,
+        is_compact_fc=True,
         log_level=0):
     natom = phonon.supercell.get_number_of_atoms()
 
@@ -296,30 +306,44 @@ def _set_dataset_and_force_constants(
             _fc = parse_FORCE_CONSTANTS(filename=force_constants_filename,
                                         p2s_map=p2s_map)
         phonon.force_constants = _fc
-        if log_level > 0:
+        if log_level:
             print("Force constants were read from \"%s\"."
                   % force_constants_filename)
     elif force_sets_filename is not None:
         _dataset = parse_FORCE_SETS(natom=natom, filename=force_sets_filename)
-        if log_level > 0:
+        if log_level:
             print("Force sets were read from \"%s\"." % force_sets_filename)
     elif phonon.forces is None:  # forces can exist from phonopy_yaml.
         if os.path.isfile("FORCE_SETS"):
             _dataset = parse_FORCE_SETS(natom=natom)
-            if log_level > 0:
+            if log_level:
                 print("Force sets were read from \"FORCE_SETS\".")
 
     if phonon.force_constants is None:
         # Overwrite dataset
         if _dataset is not None:
             phonon.dataset = _dataset
-        _produce_force_constants(phonon, fc_calculator)
+        if produce_fc:
+            _produce_force_constants(phonon,
+                                     fc_calculator,
+                                     symmetrize_fc,
+                                     is_compact_fc,
+                                     log_level)
 
 
-def _produce_force_constants(phonon, fc_calculator):
+def _produce_force_constants(phonon,
+                             fc_calculator,
+                             symmetrize_fc,
+                             is_compact_fc,
+                             log_level):
     try:
         phonon.produce_force_constants(
-            calculate_full_force_constants=False,
+            calculate_full_force_constants=(not is_compact_fc),
             fc_calculator=fc_calculator)
     except RuntimeError:
         pass
+
+    if symmetrize_fc:
+        phonon.symmetrize_force_constants(show_drift=(log_level > 0))
+        if log_level:
+            print("Force constants were symmetrized.")
