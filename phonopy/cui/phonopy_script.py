@@ -681,6 +681,524 @@ def store_nac_params(phonon,
                 print("-" * 76)
 
 
+def run(phonon,
+        settings,
+        is_graph_plot,
+        is_graph_save,
+        is_legend,
+        log_level):
+    interface_mode = phonon.calculator
+    physical_units = get_default_physical_units(interface_mode)
+    run_mode = settings.get_run_mode()
+    is_band_auto = (type(settings.get_band_paths()) is str and
+                    settings.get_band_paths() == 'auto')
+    is_pdos_auto = (settings.get_pdos_indices() == 'auto')
+
+    #
+    # QPOINTS mode
+    #
+    if run_mode == 'qpoints':
+        if settings.get_read_qpoints():
+            q_points = parse_QPOINTS()
+            if log_level:
+                print("Frequencies at q-points given by QPOINTS:")
+        elif settings.get_qpoints():
+            q_points = settings.get_qpoints()
+            if log_level:
+                print("Q-points that will be calculated at:")
+                for q in q_points:
+                    print("    %s" % q)
+        else:
+            print_error_message("Q-points are not properly specified.")
+            if log_level:
+                print_error()
+            sys.exit(1)
+        phonon.run_qpoints(
+            q_points,
+            with_eigenvectors=settings.get_is_eigenvectors(),
+            with_group_velocities=settings.get_is_group_velocity(),
+            with_dynamical_matrices=settings.get_write_dynamical_matrices(),
+            nac_q_direction=settings.get_nac_q_direction())
+
+        if settings.get_is_hdf5() or settings.get_qpoints_format() == "hdf5":
+            phonon.write_hdf5_qpoints_phonon()
+        else:
+            phonon.write_yaml_qpoints_phonon()
+
+    #
+    # Band structure
+    #
+    if run_mode == 'band' or run_mode == 'band_mesh':
+        if settings.get_band_points() is None:
+            npoints = 51
+        else:
+            npoints = settings.get_band_points()
+        band_paths = settings.get_band_paths()
+
+        if is_band_auto:
+            print("SeeK-path is used to generate band paths.")
+            print("  About SeeK-path https://seekpath.readthedocs.io/ "
+                  "(citation there-in)")
+            is_legacy_plot = False
+            bands, labels, path_connections = get_band_qpoints_by_seekpath(
+                phonon.primitive, npoints,
+                is_const_interval=settings.get_is_band_const_interval())
+        else:
+            is_legacy_plot = settings.get_is_legacy_plot()
+            if settings.get_is_band_const_interval():
+                reclat = np.linalg.inv(phonon.primitive.cell)
+                bands = get_band_qpoints(band_paths, npoints=npoints,
+                                         rec_lattice=reclat)
+            else:
+                bands = get_band_qpoints(band_paths, npoints=npoints)
+            path_connections = []
+            for paths in band_paths:
+                path_connections += [True, ] * (len(paths) - 2)
+                path_connections.append(False)
+            labels = settings.get_band_labels()
+
+        if log_level:
+            print("Reciprocal space paths in reduced coordinates:")
+            for band in bands:
+                print("[%6.3f %6.3f %6.3f] --> [%6.3f %6.3f %6.3f]" %
+                      (tuple(band[0]) + tuple(band[-1])))
+
+        phonon.run_band_structure(
+            bands,
+            with_eigenvectors=settings.get_is_eigenvectors(),
+            with_group_velocities=settings.get_is_group_velocity(),
+            is_band_connection=settings.get_is_band_connection(),
+            path_connections=path_connections,
+            labels=labels,
+            is_legacy_plot=is_legacy_plot)
+        if interface_mode is None:
+            comment = None
+        else:
+            comment = {'calculator': interface_mode,
+                       'length_unit': physical_units['length_unit']}
+
+        if settings.get_is_hdf5() or settings.get_band_format() == 'hdf5':
+            phonon.write_hdf5_band_structure(comment=comment)
+        else:
+            phonon.write_yaml_band_structure(comment=comment)
+
+        if is_graph_plot and run_mode != 'band_mesh':
+            plot = phonon.plot_band_structure()
+            if is_graph_save:
+                plot.savefig('band.pdf')
+            else:
+                plot.show()
+
+    #
+    # mesh sampling
+    #
+    if run_mode == 'mesh' or run_mode == 'band_mesh':
+        mesh_numbers = settings.get_mesh_numbers()
+        if mesh_numbers is None:
+            mesh_numbers = 50.0
+        mesh_shift = settings.get_mesh_shift()
+        t_symmetry = settings.get_time_reversal_symmetry()
+        q_symmetry = settings.get_is_mesh_symmetry()
+        is_gamma_center = settings.get_is_gamma_center()
+
+        if (settings.get_is_thermal_displacements() or
+            settings.get_is_thermal_displacement_matrices()):
+            if settings.get_cutoff_frequency() is not None:
+                if log_level:
+                    print_error_message(
+                        "Use FMIN (--fmin) instead of CUTOFF_FREQUENCY "
+                        "(--cutoff-freq).")
+                    print_error()
+                sys.exit(1)
+
+            phonon.init_mesh(mesh=mesh_numbers,
+                             shift=mesh_shift,
+                             is_time_reversal=t_symmetry,
+                             is_mesh_symmetry=q_symmetry,
+                             with_eigenvectors=settings.get_is_eigenvectors(),
+                             is_gamma_center=is_gamma_center,
+                             use_iter_mesh=True)
+            if log_level:
+                print("Mesh numbers: %s" % phonon.mesh_numbers)
+        else:
+            phonon.init_mesh(
+                mesh=mesh_numbers,
+                shift=mesh_shift,
+                is_time_reversal=t_symmetry,
+                is_mesh_symmetry=q_symmetry,
+                with_eigenvectors=settings.get_is_eigenvectors(),
+                with_group_velocities=settings.get_is_group_velocity(),
+                is_gamma_center=is_gamma_center)
+            if log_level:
+                print("Mesh numbers: %s" % phonon.mesh_numbers)
+                weights = phonon.mesh.weights
+                if q_symmetry:
+                    print(
+                        "Number of irreducible q-points on sampling mesh: "
+                        "%d/%d" % (weights.shape[0],
+                                   np.prod(phonon.mesh_numbers)))
+                else:
+                    print("Number of q-points on sampling mesh: %d" %
+                          weights.shape[0])
+                print("Calculating phonons on sampling mesh...")
+
+            phonon.mesh.run()
+
+            if settings.get_write_mesh():
+                if (settings.get_is_hdf5() or
+                    settings.get_mesh_format() == 'hdf5'):
+                    phonon.write_hdf5_mesh()
+                else:
+                    phonon.write_yaml_mesh()
+
+            # Thermal property
+            if settings.get_is_thermal_properties():
+
+                if log_level:
+                    if settings.get_is_projected_thermal_properties():
+                        print("Calculating projected thermal properties...")
+                    else:
+                        print("Calculating thermal properties...")
+                tprop_range = settings.get_thermal_property_range()
+                tstep = tprop_range['step']
+                tmax = tprop_range['max']
+                tmin = tprop_range['min']
+                phonon.run_thermal_properties(
+                    t_min=tmin,
+                    t_max=tmax,
+                    t_step=tstep,
+                    is_projection=settings.get_is_projected_thermal_properties(),
+                    band_indices=settings.get_band_indices(),
+                    cutoff_frequency=settings.get_cutoff_frequency(),
+                    pretend_real=settings.get_pretend_real())
+                phonon.write_yaml_thermal_properties()
+
+                if log_level:
+                    print("#%11s %15s%15s%15s%15s" % ('T [K]',
+                                                      'F [kJ/mol]',
+                                                      'S [J/K/mol]',
+                                                      'C_v [J/K/mol]',
+                                                      'E [kJ/mol]'))
+                    tp = phonon.get_thermal_properties_dict()
+                    temps = tp['temperatures']
+                    fe = tp['free_energy']
+                    entropy = tp['entropy']
+                    heat_capacity = tp['heat_capacity']
+                    for T, F, S, CV in zip(temps, fe, entropy, heat_capacity):
+                        print(("%12.3f " + "%15.7f" * 4) %
+                              (T, F, S, CV, F + T * S / 1000))
+
+                if is_graph_plot:
+                    plot = phonon.plot_thermal_properties()
+                    if is_graph_save:
+                        plot.savefig('thermal_properties.pdf')
+                    else:
+                        plot.show()
+
+        #
+        # Thermal displacements
+        #
+        if (settings.get_is_thermal_displacements() and
+            run_mode in ('mesh', 'band_mesh')):
+            p_direction = settings.get_projection_direction()
+            if log_level and p_direction is not None:
+                c_direction = np.dot(p_direction, phonon.primitive.cell)
+                c_direction /= np.linalg.norm(c_direction)
+                print("Projection direction: [%6.3f %6.3f %6.3f] "
+                      "(fractional)" % tuple(p_direction))
+                print("                      [%6.3f %6.3f %6.3f] "
+                      "(Cartesian)" % tuple(c_direction))
+            if log_level:
+                print("Calculating thermal displacements...")
+            tprop_range = settings.get_thermal_property_range()
+            tstep = tprop_range['step']
+            tmax = tprop_range['max']
+            tmin = tprop_range['min']
+            phonon.run_thermal_displacements(
+                t_min=tmin,
+                t_max=tmax,
+                t_step=tstep,
+                direction=p_direction,
+                freq_min=settings.get_min_frequency(),
+                freq_max=settings.get_max_frequency())
+            phonon.write_yaml_thermal_displacements()
+
+            if is_graph_plot:
+                plot = phonon.plot_thermal_displacements(is_legend)
+                if is_graph_save:
+                    plot.savefig('thermal_displacement.pdf')
+                else:
+                    plot.show()
+
+        #
+        # Thermal displacement matrices
+        #
+        if (settings.get_is_thermal_displacement_matrices() and
+            run_mode in ('mesh', 'band_mesh')):
+            if log_level:
+                print("Calculating thermal displacement matrices...")
+            tprop_range = settings.get_thermal_property_range()
+            t_step = tprop_range['step']
+            t_max = tprop_range['max']
+            t_min = tprop_range['min']
+            t_cif = settings.get_thermal_displacement_matrix_temperature()
+            if t_cif is None:
+                temperatures = None
+            else:
+                temperatures = [t_cif, ]
+            phonon.run_thermal_displacement_matrices(
+                t_step=t_step,
+                t_max=t_max,
+                t_min=t_min,
+                temperatures=temperatures,
+                freq_min=settings.get_min_frequency(),
+                freq_max=settings.get_max_frequency())
+            phonon.write_yaml_thermal_displacement_matrices()
+            if t_cif is not None:
+                phonon.write_thermal_displacement_matrix_to_cif(0)
+
+        #
+        # Projected DOS
+        #
+        if (settings.get_pdos_indices() is not None and
+            run_mode in ('mesh', 'band_mesh')):
+            p_direction = settings.get_projection_direction()
+            if (log_level and
+                p_direction is not None and
+                not settings.get_xyz_projection()):
+                c_direction = np.dot(p_direction, phonon.primitive.cell)
+                c_direction /= np.linalg.norm(c_direction)
+                print("Projection direction: [%6.3f %6.3f %6.3f] "
+                      "(fractional)" % tuple(p_direction))
+                print("                      [%6.3f %6.3f %6.3f] "
+                      "(Cartesian)" % tuple(c_direction))
+            if log_level:
+                print("Calculating projected DOS...")
+
+            phonon.run_projected_dos(
+                sigma=settings.get_sigma(),
+                freq_min=settings.get_min_frequency(),
+                freq_max=settings.get_max_frequency(),
+                freq_pitch=settings.get_frequency_pitch(),
+                use_tetrahedron_method=settings.get_is_tetrahedron_method(),
+                direction=p_direction,
+                xyz_projection=settings.get_xyz_projection())
+            phonon.write_projected_dos()
+
+            if is_graph_plot:
+                pdos_indices = settings.get_pdos_indices()
+                if is_pdos_auto:
+                    pdos_indices = get_pdos_indices(
+                        phonon.primitive_symmetry)
+                    legend = [phonon.primitive.symbols[x[0]]
+                              for x in pdos_indices]
+                else:
+                    legend = [np.array(x) + 1 for x in pdos_indices]
+                if run_mode != 'band_mesh':
+                    plot = phonon.plot_projected_dos(
+                        pdos_indices=pdos_indices,
+                        legend=legend)
+                    if is_graph_save:
+                        plot.savefig('partial_dos.pdf')
+                    else:
+                        plot.show()
+
+        #
+        # Total DOS
+        #
+        if ((is_graph_plot or settings.get_is_dos_mode()) and
+            not is_pdos_auto and
+            run_mode in ('mesh', 'band_mesh')):
+            phonon.run_total_dos(
+                sigma=settings.get_sigma(),
+                freq_min=settings.get_min_frequency(),
+                freq_max=settings.get_max_frequency(),
+                freq_pitch=settings.get_frequency_pitch(),
+                use_tetrahedron_method=settings.get_is_tetrahedron_method())
+
+            if log_level:
+                print("Calculating DOS...")
+
+            if settings.get_fits_Debye_model():
+                phonon.set_Debye_frequency()
+                if log_level:
+                    debye_freq = phonon.get_Debye_frequency()
+                    print("Debye frequency: %10.5f" % debye_freq)
+            phonon.write_total_dos()
+
+            if is_graph_plot and run_mode != 'band_mesh':
+                plot = phonon.plot_total_dos()
+                if is_graph_save:
+                    plot.savefig('total_dos.pdf')
+                else:
+                    plot.show()
+
+        #
+        # Momemt
+        #
+        if (settings.get_is_moment() and
+            run_mode in ('mesh', 'band_mesh')):
+            freq_min = settings.get_min_frequency()
+            freq_max = settings.get_max_frequency()
+            if log_level:
+                text = "Calculating moment of phonon states distribution"
+                if freq_min is None and freq_max is None:
+                    text += "..."
+                elif freq_min is None and freq_max is not None:
+                    text += "\nbelow frequency %.3f..." % freq_max
+                elif freq_min is not None and freq_max is None:
+                    text += "\nabove frequency %.3f..." % freq_min
+                elif freq_min is not None and freq_max is not None:
+                    text += ("\nbetween frequencies %.3f and %.3f..." %
+                             (freq_min, freq_max))
+            print(text)
+            print('')
+            print("Order|   Total   |   Projected to atoms")
+            if settings.get_moment_order() is not None:
+                phonon.run_moment(order=settings.get_moment_order(),
+                                  freq_min=freq_min,
+                                  freq_max=freq_max,
+                                  is_projection=False)
+                total_moment = phonon.get_moment()
+                phonon.run_moment(order=settings.get_moment_order(),
+                                  freq_min=freq_min,
+                                  freq_max=freq_max,
+                                  is_projection=True)
+                text = " %3d |%10.5f | " % (settings.get_moment_order(),
+                                            total_moment)
+                for m in phonon.get_moment():
+                    text += "%10.5f " % m
+                print(text)
+            else:
+                for i in range(3):
+                    phonon.run_moment(order=i,
+                                      freq_min=freq_min,
+                                      freq_max=freq_max,
+                                      is_projection=False)
+                    total_moment = phonon.get_moment()
+                    phonon.run_moment(order=i,
+                                      freq_min=freq_min,
+                                      freq_max=freq_max,
+                                      is_projection=True)
+                    text = " %3d |%10.5f | " % (i, total_moment)
+                    for m in phonon.get_moment():
+                        text += "%10.5f " % m
+                    print(text)
+
+        #
+        # Band structure and DOS are plotted simultaneously.
+        #
+        if (run_mode == 'band_mesh' and
+            is_graph_plot and
+            not settings.get_is_thermal_properties() and
+            not settings.get_is_thermal_displacements() and
+            not settings.get_is_thermal_displacement_matrices() and
+            not settings.get_is_thermal_distances()):
+            if settings.get_pdos_indices() is not None:
+                plot = phonon.plot_band_structure_and_dos(
+                    pdos_indices=pdos_indices)
+            else:
+                plot = phonon.plot_band_structure_and_dos()
+            if is_graph_save:
+                plot.savefig('band_dos.pdf')
+            else:
+                plot.show()
+
+    #
+    # Animation
+    #
+    if run_mode == 'anime':
+        anime_type = settings.get_anime_type()
+        if anime_type == "v_sim":
+            q_point = settings.get_anime_qpoint()
+            amplitude = settings.get_anime_amplitude()
+            phonon.write_animation(q_point=q_point,
+                                   anime_type='v_sim',
+                                   amplitude=amplitude)
+            if log_level:
+                print("Animation type: v_sim")
+                print("q-point: [%6.3f %6.3f %6.3f]" % tuple(q_point))
+        else:
+            amplitude = settings.get_anime_amplitude()
+            band_index = settings.get_anime_band_index()
+            division = settings.get_anime_division()
+            shift = settings.get_anime_shift()
+            phonon.write_animation(anime_type=anime_type,
+                                   band_index=band_index,
+                                   amplitude=amplitude,
+                                   num_div=division,
+                                   shift=shift)
+
+            if log_level:
+                print("Animation type: %s" % anime_type)
+                print("amplitude: %f" % amplitude)
+                if anime_type != "jmol":
+                    print("band index: %d" % band_index)
+                    print("Number of images: %d" % division)
+
+    #
+    # Modulation
+    #
+    if run_mode == 'modulation':
+        mod_setting = settings.get_modulation()
+        phonon_modes = mod_setting['modulations']
+        dimension = mod_setting['dimension']
+        if 'delta_q' in mod_setting:
+            delta_q = mod_setting['delta_q']
+        else:
+            delta_q = None
+        derivative_order = mod_setting['order']
+        num_band = phonon.primitive.get_number_of_atoms() * 3
+
+        if log_level:
+            if len(phonon_modes) == 1:
+                print("Modulated structure with %s multiplicity was created."
+                      % dimension)
+            else:
+                print("Modulated structures with %s multiplicity were created."
+                      % dimension)
+
+        error_indices = []
+        for i, ph_mode in enumerate(phonon_modes):
+            if ph_mode[1] < 0 or ph_mode[1] >= num_band:
+                error_indices.append(i)
+            if log_level:
+                text = ("%d: q%s, band index=%d, amplitude=%f"
+                        % (i + 1, ph_mode[0], ph_mode[1] + 1, ph_mode[2]))
+                if len(ph_mode) > 3:
+                    text += ", phase=%f" % ph_mode[3]
+                print(text)
+
+        if error_indices:
+            if log_level:
+                lines = ["Band index of modulation %d is out of range."
+                         % (i + 1) for i in error_indices]
+                print_error_message('\n'.join(lines))
+            print_error()
+            sys.exit(1)
+
+        phonon.set_modulations(dimension,
+                               phonon_modes,
+                               delta_q=delta_q,
+                               derivative_order=derivative_order,
+                               nac_q_direction=settings.get_nac_q_direction())
+        phonon.write_modulations()
+        phonon.write_yaml_modulations()
+
+    #
+    # Ir-representation
+    #
+    if run_mode == 'irreps':
+        if phonon.set_irreps(
+                settings.get_irreps_q_point(),
+                is_little_cogroup=settings.get_is_little_cogroup(),
+                nac_q_direction=settings.get_nac_q_direction(),
+                degeneracy_tolerance=settings.get_irreps_tolerance()):
+            show_irreps = settings.get_show_irreps()
+            phonon.show_irreps(show_irreps)
+            phonon.write_yaml_irreps(show_irreps)
+
+
 def main(**argparse_control):
     #################
     # Option parser #
@@ -768,7 +1286,6 @@ def main(**argparse_control):
 
     is_band_auto = (type(settings.get_band_paths()) is str and
                     settings.get_band_paths() == 'auto')
-    is_pdos_auto = (settings.get_pdos_indices() == 'auto')
     if settings.get_symmetry_tolerance() is None:
         symprec = 1e-5
     else:
@@ -815,11 +1332,6 @@ def main(**argparse_control):
                 print_error()
             sys.exit(1)
 
-    ######################
-    # Set physical units #
-    ######################
-    physical_units = get_default_physical_units(interface_mode)
-
     ################################################
     # Check crystal symmetry and exit (--symmetry) #
     ################################################
@@ -840,8 +1352,6 @@ def main(**argparse_control):
     # Phonopy initialization #
     ##########################
     run_mode = settings.get_run_mode()
-    if run_mode is not None and 'band' in run_mode and is_pdos_auto:
-        run_mode = 'band_mesh'
 
     # Prepare phonopy object
     if run_mode == 'displacements' and settings.get_temperatures() is None:
@@ -857,6 +1367,7 @@ def main(**argparse_control):
         if settings.get_frequency_conversion_factor() is not None:
             freq_factor = settings.get_frequency_conversion_factor()
         else:
+            physical_units = get_default_physical_units(interface_mode)
             freq_factor = physical_units['factor']
 
         phonon = Phonopy(
@@ -963,501 +1474,11 @@ def main(**argparse_control):
             print_end()
         sys.exit(1)
 
-    #######################
-    # Phonon calculations #
-    #######################
-
-    #
-    # QPOINTS mode
-    #
-    if run_mode == 'qpoints':
-        if settings.get_read_qpoints():
-            q_points = parse_QPOINTS()
-            if log_level:
-                print("Frequencies at q-points given by QPOINTS:")
-        elif settings.get_qpoints():
-            q_points = settings.get_qpoints()
-            if log_level:
-                print("Q-points that will be calculated at:")
-                for q in q_points:
-                    print("    %s" % q)
-        else:
-            print_error_message("Q-points are not properly specified.")
-            if log_level:
-                print_error()
-            sys.exit(1)
-        phonon.run_qpoints(
-            q_points,
-            with_eigenvectors=settings.get_is_eigenvectors(),
-            with_group_velocities=settings.get_is_group_velocity(),
-            with_dynamical_matrices=settings.get_write_dynamical_matrices(),
-            nac_q_direction=settings.get_nac_q_direction())
-
-        if settings.get_is_hdf5() or settings.get_qpoints_format() == "hdf5":
-            phonon.write_hdf5_qpoints_phonon()
-        else:
-            phonon.write_yaml_qpoints_phonon()
-
-    #
-    # Band structure and mesh sampling
-    #
-    elif (run_mode == 'band' or
-          run_mode == 'mesh' or
-          run_mode == 'band_mesh' or
-          is_pdos_auto):
-        if run_mode == 'band' or run_mode == 'band_mesh':
-            if settings.get_band_points() is None:
-                npoints = 51
-            else:
-                npoints = settings.get_band_points()
-            band_paths = settings.get_band_paths()
-
-            if is_band_auto:
-                print("SeeK-path is used to generate band paths.")
-                print("  About SeeK-path https://seekpath.readthedocs.io/ "
-                      "(citation there-in)")
-                is_legacy_plot = False
-                bands, labels, path_connections = get_band_qpoints_by_seekpath(
-                    phonon.primitive, npoints,
-                    is_const_interval=settings.get_is_band_const_interval())
-            else:
-                is_legacy_plot = settings.get_is_legacy_plot()
-                if settings.get_is_band_const_interval():
-                    reclat = np.linalg.inv(phonon.primitive.cell)
-                    bands = get_band_qpoints(band_paths, npoints=npoints,
-                                             rec_lattice=reclat)
-                else:
-                    bands = get_band_qpoints(band_paths, npoints=npoints)
-                path_connections = []
-                for paths in band_paths:
-                    path_connections += [True, ] * (len(paths) - 2)
-                    path_connections.append(False)
-                labels = settings.get_band_labels()
-
-            if log_level:
-                print("Reciprocal space paths in reduced coordinates:")
-                for band in bands:
-                    print("[%6.3f %6.3f %6.3f] --> [%6.3f %6.3f %6.3f]" %
-                          (tuple(band[0]) + tuple(band[-1])))
-
-            phonon.run_band_structure(
-                bands,
-                with_eigenvectors=settings.get_is_eigenvectors(),
-                with_group_velocities=settings.get_is_group_velocity(),
-                is_band_connection=settings.get_is_band_connection(),
-                path_connections=path_connections,
-                labels=labels,
-                is_legacy_plot=is_legacy_plot)
-            if interface_mode is None:
-                comment = None
-            else:
-                comment = {'calculator': interface_mode,
-                           'length_unit': physical_units['length_unit']}
-
-            if settings.get_is_hdf5() or settings.get_band_format() == 'hdf5':
-                phonon.write_hdf5_band_structure(comment=comment)
-            else:
-                phonon.write_yaml_band_structure(comment=comment)
-
-            if args.is_graph_plot and run_mode != 'band_mesh':
-                plot = phonon.plot_band_structure()
-                if args.is_graph_save:
-                    plot.savefig('band.pdf')
-                else:
-                    plot.show()
-
-        if run_mode == 'mesh' or run_mode == 'band_mesh' or is_pdos_auto:
-            mesh_numbers = settings.get_mesh_numbers()
-            if mesh_numbers is None:
-                mesh_numbers = 50.0
-            mesh_shift = settings.get_mesh_shift()
-            t_symmetry = settings.get_time_reversal_symmetry()
-            q_symmetry = settings.get_is_mesh_symmetry()
-            is_gamma_center = settings.get_is_gamma_center()
-
-            if (settings.get_is_thermal_displacements() or
-                settings.get_is_thermal_displacement_matrices()):
-                if settings.get_cutoff_frequency() is not None:
-                    if log_level:
-                        print_error_message(
-                            "Use FMIN (--fmin) instead of CUTOFF_FREQUENCY "
-                            "(--cutoff-freq).")
-                        print_error()
-                    sys.exit(1)
-
-                phonon.init_mesh(mesh=mesh_numbers,
-                                 shift=mesh_shift,
-                                 is_time_reversal=t_symmetry,
-                                 is_mesh_symmetry=q_symmetry,
-                                 with_eigenvectors=settings.get_is_eigenvectors(),
-                                 is_gamma_center=is_gamma_center,
-                                 use_iter_mesh=True)
-                if log_level:
-                    print("Mesh numbers: %s" % phonon.mesh_numbers)
-            else:
-                phonon.init_mesh(
-                    mesh=mesh_numbers,
-                    shift=mesh_shift,
-                    is_time_reversal=t_symmetry,
-                    is_mesh_symmetry=q_symmetry,
-                    with_eigenvectors=settings.get_is_eigenvectors(),
-                    with_group_velocities=settings.get_is_group_velocity(),
-                    is_gamma_center=is_gamma_center)
-                if log_level:
-                    print("Mesh numbers: %s" % phonon.mesh_numbers)
-                    weights = phonon.mesh.weights
-                    if q_symmetry:
-                        print(
-                            "Number of irreducible q-points on sampling mesh: "
-                            "%d/%d" % (weights.shape[0],
-                                       np.prod(phonon.mesh_numbers)))
-                    else:
-                        print("Number of q-points on sampling mesh: %d" %
-                              weights.shape[0])
-                    print("Calculating phonons on sampling mesh...")
-
-                phonon.mesh.run()
-
-                if settings.get_write_mesh():
-                    if (settings.get_is_hdf5() or
-                        settings.get_mesh_format() == 'hdf5'):
-                        phonon.write_hdf5_mesh()
-                    else:
-                        phonon.write_yaml_mesh()
-
-            # Thermal property
-            if settings.get_is_thermal_properties():
-
-                if log_level:
-                    if settings.get_is_projected_thermal_properties():
-                        print("Calculating projected thermal properties...")
-                    else:
-                        print("Calculating thermal properties...")
-                tprop_range = settings.get_thermal_property_range()
-                tstep = tprop_range['step']
-                tmax = tprop_range['max']
-                tmin = tprop_range['min']
-                phonon.run_thermal_properties(
-                    t_min=tmin,
-                    t_max=tmax,
-                    t_step=tstep,
-                    is_projection=settings.get_is_projected_thermal_properties(),
-                    band_indices=settings.get_band_indices(),
-                    cutoff_frequency=settings.get_cutoff_frequency(),
-                    pretend_real=settings.get_pretend_real())
-                phonon.write_yaml_thermal_properties()
-
-                if log_level:
-                    print("#%11s %15s%15s%15s%15s" % ('T [K]',
-                                                      'F [kJ/mol]',
-                                                      'S [J/K/mol]',
-                                                      'C_v [J/K/mol]',
-                                                      'E [kJ/mol]'))
-                    tp = phonon.get_thermal_properties_dict()
-                    temps = tp['temperatures']
-                    fe = tp['free_energy']
-                    entropy = tp['entropy']
-                    heat_capacity = tp['heat_capacity']
-                    for T, F, S, CV in zip(temps, fe, entropy, heat_capacity):
-                        print(("%12.3f " + "%15.7f" * 4) %
-                              (T, F, S, CV, F + T * S / 1000))
-
-                if args.is_graph_plot:
-                    plot = phonon.plot_thermal_properties()
-                    if args.is_graph_save:
-                        plot.savefig('thermal_properties.pdf')
-                    else:
-                        plot.show()
-
-            # Thermal displacements
-            if settings.get_is_thermal_displacements():
-                p_direction = settings.get_projection_direction()
-                if log_level and p_direction is not None:
-                    c_direction = np.dot(p_direction, phonon.primitive.cell)
-                    c_direction /= np.linalg.norm(c_direction)
-                    print("Projection direction: [%6.3f %6.3f %6.3f] "
-                          "(fractional)" % tuple(p_direction))
-                    print("                      [%6.3f %6.3f %6.3f] "
-                          "(Cartesian)" % tuple(c_direction))
-                if log_level:
-                    print("Calculating thermal displacements...")
-                tprop_range = settings.get_thermal_property_range()
-                tstep = tprop_range['step']
-                tmax = tprop_range['max']
-                tmin = tprop_range['min']
-                phonon.run_thermal_displacements(
-                    t_min=tmin,
-                    t_max=tmax,
-                    t_step=tstep,
-                    direction=p_direction,
-                    freq_min=settings.get_min_frequency(),
-                    freq_max=settings.get_max_frequency())
-                phonon.write_yaml_thermal_displacements()
-
-                if args.is_graph_plot:
-                    plot = phonon.plot_thermal_displacements(args.is_legend)
-                    if args.is_graph_save:
-                        plot.savefig('thermal_displacement.pdf')
-                    else:
-                        plot.show()
-
-            # Thermal displacement matrices
-            if settings.get_is_thermal_displacement_matrices():
-                if log_level:
-                    print("Calculating thermal displacement matrices...")
-                tprop_range = settings.get_thermal_property_range()
-                t_step = tprop_range['step']
-                t_max = tprop_range['max']
-                t_min = tprop_range['min']
-                t_cif = settings.get_thermal_displacement_matrix_temperature()
-                if t_cif is None:
-                    temperatures = None
-                else:
-                    temperatures = [t_cif, ]
-                phonon.run_thermal_displacement_matrices(
-                    t_step=t_step,
-                    t_max=t_max,
-                    t_min=t_min,
-                    temperatures=temperatures,
-                    freq_min=settings.get_min_frequency(),
-                    freq_max=settings.get_max_frequency())
-                phonon.write_yaml_thermal_displacement_matrices()
-                if t_cif is not None:
-                    phonon.write_thermal_displacement_matrix_to_cif(0)
-
-            # Projected DOS
-            if settings.get_pdos_indices() is not None:
-                p_direction = settings.get_projection_direction()
-                if (log_level and
-                    p_direction is not None and
-                    not settings.get_xyz_projection()):
-                    c_direction = np.dot(p_direction, phonon.primitive.cell)
-                    c_direction /= np.linalg.norm(c_direction)
-                    print("Projection direction: [%6.3f %6.3f %6.3f] "
-                          "(fractional)" % tuple(p_direction))
-                    print("                      [%6.3f %6.3f %6.3f] "
-                          "(Cartesian)" % tuple(c_direction))
-                if log_level:
-                    print("Calculating projected DOS...")
-
-                phonon.run_projected_dos(
-                    sigma=settings.get_sigma(),
-                    freq_min=settings.get_min_frequency(),
-                    freq_max=settings.get_max_frequency(),
-                    freq_pitch=settings.get_frequency_pitch(),
-                    use_tetrahedron_method=settings.get_is_tetrahedron_method(),
-                    direction=p_direction,
-                    xyz_projection=settings.get_xyz_projection())
-                phonon.write_projected_dos()
-
-                if args.is_graph_plot:
-                    pdos_indices = settings.get_pdos_indices()
-                    if is_pdos_auto:
-                        pdos_indices = get_pdos_indices(
-                            phonon.primitive_symmetry)
-                        legend = [phonon.primitive.symbols[x[0]]
-                                  for x in pdos_indices]
-                    else:
-                        legend = [np.array(x) + 1 for x in pdos_indices]
-                    if run_mode != 'band_mesh':
-                        plot = phonon.plot_projected_dos(
-                            pdos_indices=pdos_indices,
-                            legend=legend)
-                        if args.is_graph_save:
-                            plot.savefig('partial_dos.pdf')
-                        else:
-                            plot.show()
-
-            # Total DOS
-            if ((args.is_graph_plot or settings.get_is_dos_mode()) and
-                not is_pdos_auto):
-                phonon.run_total_dos(
-                    sigma=settings.get_sigma(),
-                    freq_min=settings.get_min_frequency(),
-                    freq_max=settings.get_max_frequency(),
-                    freq_pitch=settings.get_frequency_pitch(),
-                    use_tetrahedron_method=settings.get_is_tetrahedron_method())
-
-                if log_level:
-                    print("Calculating DOS...")
-
-                if settings.get_fits_Debye_model():
-                    phonon.set_Debye_frequency()
-                    if log_level:
-                        debye_freq = phonon.get_Debye_frequency()
-                        print("Debye frequency: %10.5f" % debye_freq)
-                phonon.write_total_dos()
-
-                if args.is_graph_plot and run_mode != 'band_mesh':
-                    plot = phonon.plot_total_dos()
-                    if args.is_graph_save:
-                        plot.savefig('total_dos.pdf')
-                    else:
-                        plot.show()
-
-            if settings.get_is_moment():
-                freq_min = settings.get_min_frequency()
-                freq_max = settings.get_max_frequency()
-                if log_level:
-                    text = "Calculating moment of phonon states distribution"
-                    if freq_min is None and freq_max is None:
-                        text += "..."
-                    elif freq_min is None and freq_max is not None:
-                        text += "\nbelow frequency %.3f..." % freq_max
-                    elif freq_min is not None and freq_max is None:
-                        text += "\nabove frequency %.3f..." % freq_min
-                    elif freq_min is not None and freq_max is not None:
-                        text += ("\nbetween frequencies %.3f and %.3f..." %
-                                 (freq_min, freq_max))
-                print(text)
-                print('')
-                print("Order|   Total   |   Projected to atoms")
-                if settings.get_moment_order() is not None:
-                    phonon.run_moment(order=settings.get_moment_order(),
-                                      freq_min=freq_min,
-                                      freq_max=freq_max,
-                                      is_projection=False)
-                    total_moment = phonon.get_moment()
-                    phonon.run_moment(order=settings.get_moment_order(),
-                                      freq_min=freq_min,
-                                      freq_max=freq_max,
-                                      is_projection=True)
-                    text = " %3d |%10.5f | " % (settings.get_moment_order(),
-                                                total_moment)
-                    for m in phonon.get_moment():
-                        text += "%10.5f " % m
-                    print(text)
-                else:
-                    for i in range(3):
-                        phonon.run_moment(order=i,
-                                          freq_min=freq_min,
-                                          freq_max=freq_max,
-                                          is_projection=False)
-                        total_moment = phonon.get_moment()
-                        phonon.run_moment(order=i,
-                                          freq_min=freq_min,
-                                          freq_max=freq_max,
-                                          is_projection=True)
-                        text = " %3d |%10.5f | " % (i, total_moment)
-                        for m in phonon.get_moment():
-                            text += "%10.5f " % m
-                        print(text)
-
-        if (run_mode == 'band_mesh' and
-            args.is_graph_plot and
-            not settings.get_is_thermal_properties() and
-            not settings.get_is_thermal_displacements() and
-            not settings.get_is_thermal_displacement_matrices() and
-            not settings.get_is_thermal_distances()):
-            if settings.get_pdos_indices() is not None:
-                plot = phonon.plot_band_structure_and_dos(
-                    pdos_indices=pdos_indices)
-            else:
-                plot = phonon.plot_band_structure_and_dos()
-            if args.is_graph_save:
-                plot.savefig('band_dos.pdf')
-            else:
-                plot.show()
-
-    #
-    # Animation
-    #
-    elif run_mode == 'anime':
-        anime_type = settings.get_anime_type()
-        if anime_type == "v_sim":
-            q_point = settings.get_anime_qpoint()
-            amplitude = settings.get_anime_amplitude()
-            phonon.write_animation(q_point=q_point,
-                                   anime_type='v_sim',
-                                   amplitude=amplitude)
-            if log_level:
-                print("Animation type: v_sim")
-                print("q-point: [%6.3f %6.3f %6.3f]" % tuple(q_point))
-        else:
-            amplitude = settings.get_anime_amplitude()
-            band_index = settings.get_anime_band_index()
-            division = settings.get_anime_division()
-            shift = settings.get_anime_shift()
-            phonon.write_animation(anime_type=anime_type,
-                                   band_index=band_index,
-                                   amplitude=amplitude,
-                                   num_div=division,
-                                   shift=shift)
-
-            if log_level:
-                print("Animation type: %s" % anime_type)
-                print("amplitude: %f" % amplitude)
-                if anime_type != "jmol":
-                    print("band index: %d" % band_index)
-                    print("Number of images: %d" % division)
-
-    #
-    # Modulation
-    #
-    elif run_mode == 'modulation':
-        mod_setting = settings.get_modulation()
-        phonon_modes = mod_setting['modulations']
-        dimension = mod_setting['dimension']
-        if 'delta_q' in mod_setting:
-            delta_q = mod_setting['delta_q']
-        else:
-            delta_q = None
-        derivative_order = mod_setting['order']
-        num_band = phonon.primitive.get_number_of_atoms() * 3
-
-        if log_level:
-            if len(phonon_modes) == 1:
-                print("Modulated structure with %s multiplicity was created."
-                      % dimension)
-            else:
-                print("Modulated structures with %s multiplicity were created."
-                      % dimension)
-
-        error_indices = []
-        for i, ph_mode in enumerate(phonon_modes):
-            if ph_mode[1] < 0 or ph_mode[1] >= num_band:
-                error_indices.append(i)
-            if log_level:
-                text = ("%d: q%s, band index=%d, amplitude=%f"
-                        % (i + 1, ph_mode[0], ph_mode[1] + 1, ph_mode[2]))
-                if len(ph_mode) > 3:
-                    text += ", phase=%f" % ph_mode[3]
-                print(text)
-
-        if error_indices:
-            if log_level:
-                lines = ["Band index of modulation %d is out of range."
-                         % (i + 1) for i in error_indices]
-                print_error_message('\n'.join(lines))
-            print_error()
-            sys.exit(1)
-
-        phonon.set_modulations(dimension,
-                               phonon_modes,
-                               delta_q=delta_q,
-                               derivative_order=derivative_order,
-                               nac_q_direction=settings.get_nac_q_direction())
-        phonon.write_modulations()
-        phonon.write_yaml_modulations()
-
-    #
-    # Ir-representation
-    #
-    elif run_mode == 'irreps':
-        if phonon.set_irreps(
-                settings.get_irreps_q_point(),
-                is_little_cogroup=settings.get_is_little_cogroup(),
-                nac_q_direction=settings.get_nac_q_direction(),
-                degeneracy_tolerance=settings.get_irreps_tolerance()):
-            show_irreps = settings.get_show_irreps()
-            phonon.show_irreps(show_irreps)
-            phonon.write_yaml_irreps(show_irreps)
-
-    #
-    # Random displacements at finite temperature
-    #
-    elif (run_mode == 'displacements' and
-          settings.get_random_displacements() is not None):
+    ##############################################################
+    # Create random displacements at finite temperature and exit #
+    ##############################################################
+    if (run_mode == 'displacements' and
+        settings.get_random_displacements() is not None):
         phonon.generate_displacements(
             number_of_snapshots=settings.get_random_displacements(),
             random_seed=settings.get_random_seed(),
@@ -1466,19 +1487,31 @@ def main(**argparse_control):
                                             phonopy_conf,
                                             log_level,
                                             optional_structure_info)
-    else:
+
+    #######################
+    # Phonon calculations #
+    #######################
+    if run_mode not in ('band', 'mesh', 'band_mesh', 'anime', 'modulation',
+                        'irreps', 'qpoints'):
         print("-" * 76)
         print(" One of the following run modes may be specified for phonon "
               "calculations.")
-        for mode in ['Mesh sampling (MP, --mesh)',
+        for mode in ['Mesh sampling (MESH, --mesh)',
                      'Q-points (QPOINTS, --qpoints)',
                      'Band structure (BAND, --band)',
                      'Animation (ANIME, --anime)',
                      'Modulation (MODULATION, --modulation)',
                      'Characters of Irreps (IRREPS, --irreps)',
-                     'Create displacements (-d)']:
+                     'Create displacements (CREATE_DISPLACEMENTS, -d)']:
             print(" - %s" % mode)
         print("-" * 76)
+
+    run(phonon,
+        settings,
+        args.is_graph_plot,
+        args.is_graph_save,
+        args.is_legend,
+        log_level)
 
     ########################
     # Phonopy finalization #

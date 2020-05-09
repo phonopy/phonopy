@@ -2165,18 +2165,10 @@ class PhonopyConfParser(ConfParser):
         if 'cutoff_radius' in params:
             self._settings.set_cutoff_radius(params['cutoff_radius'])
 
-        # band & mesh mode
-        # This has to come before 'mesh_numbers' and 'band_paths'
-        if 'mesh_numbers' in params and 'band_paths' in params:
-            self._settings.set_run_mode('band_mesh')
-
         # Mesh
         if 'mesh_numbers' in params:
-            if self._settings.get_run_mode() != 'band_mesh':
-                self._settings.set_run_mode('mesh')
+            self._settings.set_run_mode('mesh')
             self._settings.set_mesh_numbers(params['mesh_numbers'])
-        if (self._settings.get_run_mode() == 'mesh' or
-            self._settings.get_run_mode() == 'band_mesh'):
             if 'mp_shift' in params:
                 self._settings.set_mesh_shift(params['mp_shift'])
             if 'is_time_reversal_symmetry' in params:
@@ -2193,10 +2185,7 @@ class PhonopyConfParser(ConfParser):
 
         # band mode
         if 'band_paths' in params:
-            if self._settings.get_run_mode() != 'band_mesh':
-                self._settings.set_run_mode('band')
-        if (self._settings.get_run_mode() == 'band' or
-            self._settings.get_run_mode() == 'band_mesh'):
+            self._settings.set_run_mode('band')
             if 'band_format' in params:
                 self._settings.set_band_format(params['band_format'])
             if 'band_labels' in params:
@@ -2407,3 +2396,11 @@ class PhonopyConfParser(ConfParser):
 
         if 'include_all' in params:
             self._settings.set_include_all(params['include_all'])
+
+        # This has to come last in this method to overwrite run_mode.
+        if 'mesh_numbers' in params and 'band_paths' in params:
+            self._settings.set_run_mode('band_mesh')
+        elif ('pdos' in params and
+              params['pdos'] == 'auto' and
+              'band_paths' in params):
+            self._settings.set_run_mode('band_mesh')
