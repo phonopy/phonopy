@@ -61,7 +61,9 @@ def show_deprecated_option_warnings(deprecated):
     print("")
 
 
-def get_parser():
+def get_parser(symmetrize_fc=False,
+               is_nac=False,
+               load_phonopy_yaml=False):
     deprecated = fix_deprecated_option_names(sys.argv)
     import argparse
     from phonopy.interface.calculator import (
@@ -105,9 +107,10 @@ def get_parser():
         "--bi", "--band-indices", nargs='+', dest="band_indices", default=None,
         help=("Band indices to be included to calcualte thermal "
               "properties"))
-    parser.add_argument(
-        "-c", "--cell", dest="cell_filename", metavar="FILE", default=None,
-        help="Read unit cell")
+    if not load_phonopy_yaml:
+        parser.add_argument(
+            "-c", "--cell", dest="cell_filename", metavar="FILE", default=None,
+            help="Read unit cell")
     parser.add_argument(
         "--cutoff-freq", "--cutoff-frequency", dest="cutoff_frequency",
         type=float, default=None,
@@ -161,9 +164,10 @@ def get_parser():
         "--fc-spg-symmetry", dest="fc_spg_symmetry", action="store_true",
         default=False,
         help="Enforce space group symmetry to force constants")
-    parser.add_argument(
-        "--fc-symmetry", dest="fc_symmetry", action="store_true", default=None,
-        help="Symmetrize force constants")
+    if not symmetrize_fc:
+        parser.add_argument(
+            "--fc-symmetry", dest="fc_symmetry", action="store_true",
+            default=False, help="Symmetrize force constants")
     parser.add_argument(
         "--fits-debye-model", dest="fits_debye_model", action="store_true",
         default=False,
@@ -284,18 +288,27 @@ def get_parser():
     parser.add_argument(
         "--moment-order", dest="moment_order", default=None,
         type=int, help="Order of moment of phonon states distribution")
-    parser.add_argument(
-        "--nac", dest="is_nac", action="store_true", default=False,
-        help="Non-analytical term correction")
+    if not is_nac:
+        parser.add_argument(
+            "--nac", dest="is_nac", action="store_true", default=False,
+            help="Non-analytical term correction")
     parser.add_argument(
         "--nac-method", dest="nac_method", default=None,
         help="Non-analytical term correction method: Gonze (default) or Wang")
     parser.add_argument(
         "--nodiag", dest="is_nodiag", action="store_true", default=False,
         help="Set displacements parallel to axes")
+    if symmetrize_fc:
+        parser.add_argument(
+            "--nofcsym", dest="fc_symmetry", action="store_false",
+            default=True, help="Do not symmetrize force constants")
     parser.add_argument(
         "--nomeshsym", dest="is_nomeshsym", action="store_true", default=False,
         help="Symmetry is not imposed for mesh sampling.")
+    if is_nac:
+        parser.add_argument(
+            "--nonac", dest="is_nac", action="store_false", default=True,
+            help="Non-analytical term correction")
     parser.add_argument(
         "--nosym", dest="is_nosym", action="store_true", default=False,
         help="Symmetry is not imposed.")
@@ -438,8 +451,11 @@ def get_parser():
     parser.add_argument(
         "--xyz-projection", dest="xyz_projection", action="store_true",
         help="Project PDOS x, y, z directions in Cartesian coordinates")
-    parser.add_argument(
-        "conf_file", nargs='*',
-        help="Phonopy configure file")
+    if load_phonopy_yaml:
+        parser.add_argument(
+            "filename", nargs='*', help="phonopy.yaml like file")
+    else:
+        parser.add_argument(
+            "filename", nargs='*', help="Phonopy configure file")
 
     return parser, deprecated

@@ -1333,7 +1333,7 @@ class Phonopy(object):
         if use_iter_mesh:
             self._mesh = IterMesh(
                 self._dynamical_matrix,
-                mesh,
+                mesh_nums,
                 shift=shift,
                 is_time_reversal=is_time_reversal,
                 is_mesh_symmetry=is_mesh_symmetry,

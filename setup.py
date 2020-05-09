@@ -127,6 +127,7 @@ packages_phonopy = ['phonopy',
                     'phonopy.structure',
                     'phonopy.unfolding']
 scripts_phonopy = ['scripts/phonopy',
+                   'scripts/phonopy-load',
                    'scripts/phonopy-qha',
                    'scripts/phonopy-bandplot',
                    'scripts/phonopy-vasp-born',

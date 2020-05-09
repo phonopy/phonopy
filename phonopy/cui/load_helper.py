@@ -59,7 +59,7 @@ def get_cell_settings(phonopy_yaml=None,
             filename=unitcell_filename, interface_mode=calculator)
         smat = supercell_matrix
         pmat = primitive_matrix
-        if log_level > 0:
+        if log_level:
             print("Unit cell structure was read from \"%s\"."
                   % optional_structure_info[0])
     elif supercell_filename is not None:
@@ -68,7 +68,7 @@ def get_cell_settings(phonopy_yaml=None,
         smat = np.eye(3, dtype='intc', order='C')
         if primitive_matrix is None or primitive_matrix == "auto":
             pmat = 'auto'
-        if log_level > 0:
+        if log_level:
             print("Supercell structure was read from \"%s\"."
                   % optional_structure_info[0])
     elif unitcell is not None:
@@ -93,24 +93,26 @@ def get_cell_settings(phonopy_yaml=None,
     return cell, smat, pmat
 
 
-def get_nac_params(primitive, nac_params, born_filename, is_nac,
-                   nac_factor, log_level=0):
+def get_nac_params(primitive=None,
+                   nac_params=None,
+                   born_filename=None,
+                   is_nac=True,
+                   nac_factor=None,
+                   log_level=0):
     if born_filename is not None:
         _nac_params = parse_BORN(primitive, filename=born_filename)
-        if log_level > 0:
+        if log_level:
             print("NAC params were read from \"%s\"." % born_filename)
     elif nac_params is not None:  # nac_params input or phonopy_yaml.nac_params
         _nac_params = nac_params
-    elif is_nac is True:
-        if os.path.isfile("BORN"):
-            _nac_params = parse_BORN(primitive, filename="BORN")
-            if log_level > 0:
-                print("NAC params were read from \"BORN\".")
-        else:
-            msg = "Although is_nac=True is given, \"BORN\" could not be found."
-            raise FileNotFoundError(msg)
+    elif is_nac and os.path.isfile("BORN"):
+        _nac_params = parse_BORN(primitive, filename="BORN")
+        if log_level:
+            print("NAC params were read from \"BORN\".")
+    else:
+        _nac_params = None
 
-    if _nac_params['factor'] is None:
+    if _nac_params is not None and _nac_params['factor'] is None:
         _nac_params['factor'] = nac_factor
 
     return _nac_params

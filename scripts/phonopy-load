@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (C) 2011 Atsushi Togo
+# Copyright (C) 2010 Atsushi Togo
 # All rights reserved.
 #
 # This file is part of phonopy.
@@ -37,7 +37,7 @@
 from phonopy.cui.phonopy_script import main
 
 if __name__ == '__main__':
-    argparse_control = {'symmetrize_fc': False,
-                        'is_nac': False,
-                        'load_phonopy_yaml': False}
+    argparse_control = {'symmetrize_fc': True,
+                        'is_nac': True,
+                        'load_phonopy_yaml': True}
     main(**argparse_control)

@@ -34,8 +34,7 @@
 
 import numpy as np
 from phonopy.units import VaspToTHz
-from phonopy.structure.grid_points import GridPoints, length2mesh
-from phonopy.structure.symmetry import get_lattice_vector_equivalence
+from phonopy.structure.grid_points import GridPoints
 
 
 class MeshBase(object):

@@ -203,6 +203,7 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
             calculator=calculator,
             symprec=symprec,
             log_level=log_level)
+        _calculator = calculator
         _nac_params = nac_params
         _dataset = None
         _fc = None
@@ -225,13 +226,20 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
             _nac_params = None
         _dataset = phpy_yaml.dataset
         _fc = phpy_yaml.force_constants
+        if calculator is None:
+            _calculator = phpy_yaml.calculator
+        else:
+            _calculator = calculator
     else:
         msg = ("Cell information could not found. "
                "Phonopy instance loading failed.")
         raise RuntimeError(msg)
 
+    if log_level and _calculator is not None:
+        print("Set \"%s\" mode." % _calculator)
+
     # units keywords: factor, nac_factor, distance_to_A
-    units = get_default_physical_units(calculator)
+    units = get_default_physical_units(_calculator)
     if factor is None:
         _factor = units['factor']
     else:
@@ -243,18 +251,20 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
                      frequency_scale_factor=frequency_scale_factor,
                      symprec=symprec,
                      is_symmetry=is_symmetry,
-                     calculator=calculator,
+                     calculator=_calculator,
                      log_level=log_level)
 
     # NAC params
-    if (born_filename is not None or nac_params is not None or
-        is_nac and os.path.isfile("BORN")):
-        phonon.nac_params = load_helper.get_nac_params(phonon.primitive,
-                                                       _nac_params,
-                                                       born_filename,
-                                                       is_nac,
-                                                       units['nac_factor'],
-                                                       log_level=log_level)
+    if born_filename is not None or _nac_params is not None or is_nac:
+        ret_nac_params = load_helper.get_nac_params(
+            primitive=phonon.primitive,
+            nac_params=_nac_params,
+            born_filename=born_filename,
+            is_nac=is_nac,
+            nac_factor=units['nac_factor'],
+            log_level=log_level)
+        if ret_nac_params is not None:
+            phonon.nac_params = ret_nac_params
 
     # Displacements, forces, and force constants
     _set_dataset_and_force_constants(
@@ -263,7 +273,7 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         _fc,
         force_constants_filename=force_constants_filename,
         force_sets_filename=force_sets_filename,
-        calculator=calculator,
+        calculator=_calculator,
         fc_calculator=fc_calculator,
         produce_fc=produce_fc,
         symmetrize_fc=symmetrize_fc,
