@@ -323,7 +323,8 @@ def _set_dataset_and_force_constants(
         _dataset = parse_FORCE_SETS(natom=natom, filename=force_sets_filename)
         if log_level:
             print("Force sets were read from \"%s\"." % force_sets_filename)
-    elif phonon.forces is None:  # forces can exist from phonopy_yaml.
+    elif phonon.forces is None and phonon.force_constants is None:
+        # unless provided these from phonopy_yaml.
         if os.path.isfile("FORCE_SETS"):
             _dataset = parse_FORCE_SETS(natom=natom)
             if log_level:

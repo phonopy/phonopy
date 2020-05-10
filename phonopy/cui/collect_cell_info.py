@@ -46,7 +46,8 @@ def collect_cell_info(supercell_matrix=None,
                       chemical_symbols=None,
                       enforce_primitive_matrix_auto=False,
                       phonopy_yaml_cls=None,
-                      symprec=1e-5):
+                      symprec=1e-5,
+                      return_dict=False):
     # In some cases, interface mode falls back to phonopy_yaml mode.
     fallback_reason = _fallback_to_phonopy_yaml(
         supercell_matrix,
@@ -103,8 +104,17 @@ def collect_cell_info(supercell_matrix=None,
         phpy_yaml = optional_structure_info[1]
     else:
         phpy_yaml = None
-    return (unitcell, supercell_matrix_out, primitive_matrix_out,
-            optional_structure_info, interface_mode_out, phpy_yaml)
+
+    if return_dict:
+        return {'unitcell': unitcell,
+                'supercell_matrix': supercell_matrix_out,
+                'primitive_matrix': primitive_matrix_out,
+                'optional_structure_info': optional_structure_info,
+                'interface_mode': interface_mode_out,
+                'phonopy_yaml': phpy_yaml}
+    else:
+        return (unitcell, supercell_matrix_out, primitive_matrix_out,
+                optional_structure_info, interface_mode_out, phpy_yaml)
 
 
 def _fallback_to_phonopy_yaml(supercell_matrix,
