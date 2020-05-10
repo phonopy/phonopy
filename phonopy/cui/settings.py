@@ -63,6 +63,7 @@ class Settings(object):
         self._frequency_conversion_factor = None
         self._frequency_scale_factor = None
         self._gv_delta_q = None
+        self._hdf5_compression = 'gzip'
         self._is_band_const_interval = False
         self._is_diagonal_displacement = True
         self._is_eigenvectors = False
@@ -187,17 +188,17 @@ class Settings(object):
     def get_frequency_scale_factor(self):
         return self._frequency_scale_factor
 
-    def set_num_frequency_points(self, num_frequency_points):
-        self._num_frequency_points = num_frequency_points
-
-    def get_num_frequency_points(self):
-        return self._num_frequency_points
-
     def set_group_velocity_delta_q(self, gv_delta_q):
         self._gv_delta_q = gv_delta_q
 
     def get_group_velocity_delta_q(self):
         return self._gv_delta_q
+
+    def set_hdf5_compression(self, hdf5_compression):
+        self._hdf5_compression = hdf5_compression
+
+    def get_hdf5_compression(self):
+        return self._hdf5_compression
 
     def set_is_band_const_interval(self, is_band_const_interval):
         self._is_band_const_interval = is_band_const_interval
@@ -300,6 +301,12 @@ class Settings(object):
 
     def get_nac_q_direction(self):
         return self._nac_q_direction
+
+    def set_num_frequency_points(self, num_frequency_points):
+        self._num_frequency_points = num_frequency_points
+
+    def get_num_frequency_points(self):
+        return self._num_frequency_points
 
     def set_primitive_matrix(self, primitive_matrix):
         self._primitive_matrix = primitive_matrix
@@ -487,6 +494,10 @@ class ConfParser(object):
         if 'gv_delta_q' in arg_list:
             if self._args.gv_delta_q:
                 self._confs['gv_delta_q'] = self._args.gv_delta_q
+
+        if 'hdf5_compression' in arg_list:
+            if self._args.hdf5_compression:
+                self._confs['hdf5_compression'] = self._args.hdf5_compression
 
         if 'is_band_const_interval' in arg_list:
             if self._args.is_band_const_interval:
@@ -915,6 +926,15 @@ class ConfParser(object):
                 if confs['alm'].lower() == '.true.':
                     self.set_parameter('alm', True)
 
+            # Compression option for writing int hdf5
+            if conf_key == 'hdf5_compression':
+                if (type(confs['hdf5_compression']) is str and
+                    confs['hdf5_compression'].lower() == 'none'):
+                    self.set_parameter('hdf5_compression', None)
+                else:
+                    self.set_parameter('hdf5_compression',
+                                       confs['hdf5_compression'])
+
     def set_parameter(self, key, val):
         self._parameters[key] = val
 
@@ -1115,6 +1135,10 @@ class ConfParser(object):
         # Use ALM to generating force constants
         if 'alm' in params:
             self._settings.set_use_alm(params['alm'])
+
+        # Compression option for writing int hdf5
+        if 'hdf5_compression' in params:
+            self._settings.set_hdf5_compression(params['hdf5_compression'])
 
 
 #
