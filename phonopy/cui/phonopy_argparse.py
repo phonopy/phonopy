@@ -212,8 +212,8 @@ def get_parser(symmetrize_fc=False,
         "--hdf5", dest="is_hdf5", action="store_true", default=False,
         help="Use hdf5 for force constants")
     parser.add_argument(
-        "--hdf5-compression", dest="hdf5_compression", default="gzip",
-        help="hdf5 compression filter")
+        "--hdf5-compression", dest="hdf5_compression", default=None,
+        help="hdf5 compression filter (default: gzip)")
     parser.add_argument(
         "--hiphive", dest="use_hiphive", action="store_true", default=False,
         help="Use hiPhive for generating force constants")

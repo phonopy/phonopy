@@ -32,10 +32,8 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import os
 import numpy as np
 from phonopy.api_phonopy import Phonopy
-from phonopy.file_IO import parse_FORCE_SETS, parse_FORCE_CONSTANTS
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.calculator import get_default_physical_units
 import phonopy.cui.load_helper as load_helper
@@ -267,13 +265,12 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
             phonon.nac_params = ret_nac_params
 
     # Displacements, forces, and force constants
-    _set_dataset_and_force_constants(
+    load_helper.set_dataset_and_force_constants(
         phonon,
         _dataset,
         _fc,
         force_constants_filename=force_constants_filename,
         force_sets_filename=force_sets_filename,
-        calculator=_calculator,
         fc_calculator=fc_calculator,
         produce_fc=produce_fc,
         symmetrize_fc=symmetrize_fc,
@@ -281,80 +278,3 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         log_level=log_level)
 
     return phonon
-
-
-def _set_dataset_and_force_constants(
-        phonon,
-        dataset,
-        fc,  # From phonopy_yaml
-        force_constants_filename=None,
-        force_sets_filename=None,
-        calculator=None,
-        fc_calculator=None,
-        produce_fc=True,
-        symmetrize_fc=True,
-        is_compact_fc=True,
-        log_level=0):
-    natom = phonon.supercell.get_number_of_atoms()
-
-    # dataset and fc are those obtained from phonopy_yaml unless None.
-    if dataset is not None:
-        phonon.dataset = dataset
-    if fc is not None:
-        phonon.force_constants = fc
-
-    _dataset = None
-    if force_constants_filename is not None:
-        dot_split = force_constants_filename.split('.')
-        p2s_map = phonon.primitive.p2s_map
-        if len(dot_split) > 1 and dot_split[-1] == 'hdf5':
-            _fc = load_helper.read_force_constants_from_hdf5(
-                filename=force_constants_filename,
-                p2s_map=p2s_map,
-                calculator=calculator)
-        else:
-            _fc = parse_FORCE_CONSTANTS(filename=force_constants_filename,
-                                        p2s_map=p2s_map)
-        phonon.force_constants = _fc
-        if log_level:
-            print("Force constants were read from \"%s\"."
-                  % force_constants_filename)
-    elif force_sets_filename is not None:
-        _dataset = parse_FORCE_SETS(natom=natom, filename=force_sets_filename)
-        if log_level:
-            print("Force sets were read from \"%s\"." % force_sets_filename)
-    elif phonon.forces is None and phonon.force_constants is None:
-        # unless provided these from phonopy_yaml.
-        if os.path.isfile("FORCE_SETS"):
-            _dataset = parse_FORCE_SETS(natom=natom)
-            if log_level:
-                print("Force sets were read from \"FORCE_SETS\".")
-
-    if phonon.force_constants is None:
-        # Overwrite dataset
-        if _dataset is not None:
-            phonon.dataset = _dataset
-        if produce_fc:
-            _produce_force_constants(phonon,
-                                     fc_calculator,
-                                     symmetrize_fc,
-                                     is_compact_fc,
-                                     log_level)
-
-
-def _produce_force_constants(phonon,
-                             fc_calculator,
-                             symmetrize_fc,
-                             is_compact_fc,
-                             log_level):
-    try:
-        phonon.produce_force_constants(
-            calculate_full_force_constants=(not is_compact_fc),
-            fc_calculator=fc_calculator)
-    except RuntimeError:
-        pass
-
-    if symmetrize_fc:
-        phonon.symmetrize_force_constants(show_drift=(log_level > 0))
-        if log_level:
-            print("Force constants were symmetrized.")

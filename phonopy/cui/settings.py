@@ -928,12 +928,16 @@ class ConfParser(object):
 
             # Compression option for writing int hdf5
             if conf_key == 'hdf5_compression':
-                if (type(confs['hdf5_compression']) is str and
-                    confs['hdf5_compression'].lower() == 'none'):
-                    self.set_parameter('hdf5_compression', None)
-                else:
-                    self.set_parameter('hdf5_compression',
-                                       confs['hdf5_compression'])
+                hdf5_compression = confs['hdf5_compression']
+                try:
+                    compression = int(hdf5_compression)
+                except ValueError:  # str
+                    compression = hdf5_compression
+                    if compression.lower() == "none":
+                        compression = None
+                except TypeError:  # None (this will not happen)
+                    compression = hdf5_compression
+                self.set_parameter('hdf5_compression', compression)
 
     def set_parameter(self, key, val):
         self._parameters[key] = val
@@ -2421,10 +2425,14 @@ class PhonopyConfParser(ConfParser):
         if 'include_all' in params:
             self._settings.set_include_all(params['include_all'])
 
+        # ***********************************************************
         # This has to come last in this method to overwrite run_mode.
+        # ***********************************************************
+        if 'pdos' in params and params['pdos'] == 'auto':
+            if 'band_paths' in params:
+                self._settings.set_run_mode('band_mesh')
+            else:
+                self._settings.set_run_mode('mesh')
+
         if 'mesh_numbers' in params and 'band_paths' in params:
-            self._settings.set_run_mode('band_mesh')
-        elif ('pdos' in params and
-              params['pdos'] == 'auto' and
-              'band_paths' in params):
             self._settings.set_run_mode('band_mesh')

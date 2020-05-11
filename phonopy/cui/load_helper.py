@@ -38,7 +38,8 @@ from phonopy.interface.calculator import read_crystal_structure
 from phonopy.structure.cells import get_primitive_matrix_by_centring
 from phonopy.file_IO import (
     parse_BORN, read_force_constants_hdf5,
-    read_physical_unit_in_force_constants_hdf5)
+    read_physical_unit_in_force_constants_hdf5,
+    parse_FORCE_SETS, parse_FORCE_CONSTANTS)
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.interface.calculator import get_force_constant_conversion_factor
 
@@ -144,6 +145,66 @@ def read_force_constants_from_hdf5(filename='force_constants.hdf5',
         return fc * factor
 
 
+def set_dataset_and_force_constants(
+        phonon,
+        dataset,
+        fc,  # From phonopy_yaml
+        force_constants_filename=None,
+        force_sets_filename=None,
+        fc_calculator=None,
+        fc_calculator_options=None,
+        produce_fc=True,
+        symmetrize_fc=True,
+        is_compact_fc=True,
+        log_level=0):
+    natom = phonon.supercell.get_number_of_atoms()
+
+    # dataset and fc are those obtained from phonopy_yaml unless None.
+    if dataset is not None:
+        phonon.dataset = dataset
+    if fc is not None:
+        phonon.force_constants = fc
+
+    _dataset = None
+    if force_constants_filename is not None:
+        dot_split = force_constants_filename.split('.')
+        p2s_map = phonon.primitive.p2s_map
+        if len(dot_split) > 1 and dot_split[-1] == 'hdf5':
+            _fc = read_force_constants_from_hdf5(
+                filename=force_constants_filename,
+                p2s_map=p2s_map,
+                calculator=phonon.calculator)
+        else:
+            _fc = parse_FORCE_CONSTANTS(filename=force_constants_filename,
+                                        p2s_map=p2s_map)
+        phonon.force_constants = _fc
+        if log_level:
+            print("Force constants were read from \"%s\"."
+                  % force_constants_filename)
+    elif force_sets_filename is not None:
+        _dataset = parse_FORCE_SETS(natom=natom, filename=force_sets_filename)
+        if log_level:
+            print("Force sets were read from \"%s\"." % force_sets_filename)
+    elif phonon.forces is None and phonon.force_constants is None:
+        # unless provided these from phonopy_yaml.
+        if os.path.isfile("FORCE_SETS"):
+            _dataset = parse_FORCE_SETS(natom=natom)
+            if log_level:
+                print("Force sets were read from \"FORCE_SETS\".")
+
+    if phonon.force_constants is None:
+        # Overwrite dataset
+        if _dataset is not None:
+            phonon.dataset = _dataset
+        if produce_fc:
+            _produce_force_constants(phonon,
+                                     fc_calculator,
+                                     fc_calculator_options,
+                                     symmetrize_fc,
+                                     is_compact_fc,
+                                     log_level)
+
+
 def _get_primitive_matrix(pmat, unitcell, symprec):
     if type(pmat) is str and pmat in ('F', 'I', 'A', 'C', 'R', 'auto'):
         if pmat == 'auto':
@@ -168,3 +229,23 @@ def _get_primitive_matrix(pmat, unitcell, symprec):
         raise RuntimeError(msg)
 
     return _pmat
+
+
+def _produce_force_constants(phonon,
+                             fc_calculator,
+                             fc_calculator_options,
+                             symmetrize_fc,
+                             is_compact_fc,
+                             log_level):
+    try:
+        phonon.produce_force_constants(
+            calculate_full_force_constants=(not is_compact_fc),
+            fc_calculator=fc_calculator,
+            fc_calculator_options=fc_calculator_options)
+    except RuntimeError:
+        pass
+
+    if symmetrize_fc:
+        phonon.symmetrize_force_constants(show_drift=(log_level > 0))
+        if log_level:
+            print("Force constants were symmetrized.")
