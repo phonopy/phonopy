@@ -62,6 +62,7 @@ class Settings(object):
         'displacement_distance': None,
         'dm_decimals': None,
         'calculator': None,
+        'create_displacements': False,
         'fc_calculator': None,
         'fc_calculator_options': None,
         'fc_decimals': None,
@@ -134,6 +135,12 @@ class Settings(object):
 
     def get_chemical_symbols(self):
         return self._v['chemical_symbols']
+
+    def set_create_displacements(self, val):
+        self._v['create_displacements'] = val
+
+    def get_create_displacements(self):
+        return self._v['create_displacements']
 
     def set_cutoff_frequency(self, val):
         self._v['cutoff_frequency'] = val
@@ -520,6 +527,10 @@ class ConfParser(object):
             if self._args.is_band_const_interval:
                 self._confs['band_const_interval'] = '.true.'
 
+        if 'is_displacement' in arg_list:
+            if self._args.is_displacement:
+                self._confs['create_displacements'] = '.true.'
+
         if 'is_eigenvectors' in arg_list:
             if self._args.is_eigenvectors:
                 self._confs['eigenvectors'] = '.true.'
@@ -684,6 +695,12 @@ class ConfParser(object):
 
             if conf_key == 'cell_filename':
                 self.set_parameter('cell_filename', confs['cell_filename'])
+
+            if conf_key == 'create_displacements':
+                if confs['create_displacements'].lower() == '.true.':
+                    self.set_parameter('create_displacements', True)
+                elif confs['create_displacements'].lower() == '.false.':
+                    self.set_parameter('create_displacements', False)
 
             if conf_key == 'dim':
                 matrix = [int(x) for x in confs['dim'].split()]
@@ -977,6 +994,11 @@ class ConfParser(object):
         # Filename of input unit cell
         if 'cell_filename' in params:
             self._settings.set_cell_filename(params['cell_filename'])
+
+        # Is getting least displacements?
+        if 'create_displacements' in params:
+            self._settings.set_create_displacements(
+                params['create_displacements'])
 
         # Cutoff frequency
         if 'cutoff_frequency' in params:
@@ -1618,10 +1640,6 @@ class PhonopyConfParser(ConfParser):
             if self._args.band_labels is not None:
                 self._confs['band_labels'] = " ".join(self._args.band_labels)
 
-        if 'is_displacement' in arg_list:
-            if self._args.is_displacement:
-                self._confs['create_displacements'] = '.true.'
-
         if 'is_gamma_center' in arg_list:
             if self._args.is_gamma_center:
                 self._confs['gamma_center'] = '.true.'
@@ -1824,16 +1842,10 @@ class PhonopyConfParser(ConfParser):
                 self._confs['include_all'] = '.true.'
 
     def _parse_conf(self):
-        self.parse_conf()
+        ConfParser.parse_conf(self)
         confs = self._confs
 
         for conf_key in confs.keys():
-            if conf_key == 'create_displacements':
-                if confs['create_displacements'].lower() == '.true.':
-                    self.set_parameter('create_displacements', True)
-                elif confs['create_displacements'].lower() == '.false.':
-                    self.set_parameter('create_displacements', False)
-
             if conf_key == 'band_format':
                 self.set_parameter('band_format', confs['band_format'].lower())
 
@@ -2207,11 +2219,6 @@ class PhonopyConfParser(ConfParser):
     def _set_settings(self):
         self.set_settings()
         params = self._parameters
-
-        # Is getting least displacements?
-        if 'create_displacements' in params:
-            if params['create_displacements']:
-                self._settings.set_run_mode('displacements')
 
         # Is force constants written or read?
         if 'force_constants' in params:

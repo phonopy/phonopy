@@ -252,15 +252,14 @@ def print_settings(settings,
             print("QPOINTS mode (dynamical matrices written out)")
         else:
             print("QPOINTS mode")
-    if (run_mode == 'band' or
-        run_mode == 'mesh' or
-        run_mode == 'qpoints') and settings.get_is_group_velocity():
+    if ((run_mode == 'band' or run_mode == 'mesh' or run_mode == 'qpoints') and
+        settings.get_is_group_velocity()):
         gv_delta_q = settings.get_group_velocity_delta_q()
         if gv_delta_q is not None:
             print("  With group velocity calculation (dq=%3.1e)" % gv_delta_q)
         else:
             print('')
-    if run_mode == 'displacements':
+    if settings.get_create_displacements():
         print("Displacements creation mode")
         if not settings.get_is_plusminus_displacement() == 'auto':
             if settings.get_is_plusminus_displacement():
@@ -1386,7 +1385,7 @@ def show_symmetry_info_then_exit(cell_info, symprec):
 
 def init_phonopy(settings, cell_info, symprec, log_level):
     # Prepare phonopy object
-    if (settings.get_run_mode() == 'displacements' and
+    if (settings.get_create_displacements() and
         settings.get_temperatures() is None):
         phonon = Phonopy(cell_info['unitcell'],
                          cell_info['supercell_matrix'],
@@ -1507,7 +1506,7 @@ def main(**argparse_control):
     #########################################################
     # Create constant amplitude displacements and then exit #
     #########################################################
-    if (settings.get_run_mode() == 'displacements' and
+    if (settings.get_create_displacements() and
         settings.get_temperatures() is None):
         if settings.get_displacement_distance() is None:
             displacement_distance = get_default_displacement_distance(
@@ -1551,7 +1550,7 @@ def main(**argparse_control):
     ###################################################################
     # Create random displacements at finite temperature and then exit #
     ###################################################################
-    if (settings.get_run_mode() == 'displacements' and
+    if (settings.get_create_displacements() and
         settings.get_temperatures() is not None):
         phonon.generate_displacements(
             number_of_snapshots=settings.get_random_displacements(),
