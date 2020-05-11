@@ -165,37 +165,39 @@ def set_dataset_and_force_constants(
     if fc is not None:
         phonon.force_constants = fc
 
+    _fc = None
     _dataset = None
     if force_constants_filename is not None:
-        dot_split = force_constants_filename.split('.')
-        p2s_map = phonon.primitive.p2s_map
-        if len(dot_split) > 1 and dot_split[-1] == 'hdf5':
-            _fc = read_force_constants_from_hdf5(
-                filename=force_constants_filename,
-                p2s_map=p2s_map,
-                calculator=phonon.calculator)
-        else:
-            _fc = parse_FORCE_CONSTANTS(filename=force_constants_filename,
-                                        p2s_map=p2s_map)
+        _fc = _read_force_constants_file(phonon, force_constants_filename)
+        _force_constants_filename = force_constants_filename
+    elif force_sets_filename is not None:
+        _dataset = parse_FORCE_SETS(natom=natom, filename=force_sets_filename)
+        _force_sets_filename = force_sets_filename
+    elif phonon.forces is None and phonon.force_constants is None:
+        # unless provided these from phonopy_yaml.
+        if os.path.isfile("FORCE_CONSTANTS"):
+            _fc = _read_force_constants_file(phonon, "FORCE_CONSTANTS")
+            _force_constants_filename = "FORCE_CONSTANTS"
+        elif os.path.isfile("force_constants.hdf5"):
+            _fc = _read_force_constants_file(phonon, "force_constants.hdf5")
+            _force_constants_filename = "force_constants.hdf5"
+        elif os.path.isfile("FORCE_SETS"):
+            _dataset = parse_FORCE_SETS(natom=natom)
+            _force_sets_filename = "FORCE_SETS"
+
+    if _fc is not None:
         phonon.force_constants = _fc
         if log_level:
             print("Force constants were read from \"%s\"."
-                  % force_constants_filename)
-    elif force_sets_filename is not None:
-        _dataset = parse_FORCE_SETS(natom=natom, filename=force_sets_filename)
-        if log_level:
-            print("Force sets were read from \"%s\"." % force_sets_filename)
-    elif phonon.forces is None and phonon.force_constants is None:
-        # unless provided these from phonopy_yaml.
-        if os.path.isfile("FORCE_SETS"):
-            _dataset = parse_FORCE_SETS(natom=natom)
-            if log_level:
-                print("Force sets were read from \"FORCE_SETS\".")
+                  % _force_constants_filename)
 
     if phonon.force_constants is None:
         # Overwrite dataset
         if _dataset is not None:
             phonon.dataset = _dataset
+            if log_level:
+                print("Force sets were read from \"%s\"."
+                      % _force_sets_filename)
         if produce_fc:
             _produce_force_constants(phonon,
                                      fc_calculator,
@@ -203,6 +205,20 @@ def set_dataset_and_force_constants(
                                      symmetrize_fc,
                                      is_compact_fc,
                                      log_level)
+
+
+def _read_force_constants_file(phonon, force_constants_filename):
+    dot_split = force_constants_filename.split('.')
+    p2s_map = phonon.primitive.p2s_map
+    if len(dot_split) > 1 and dot_split[-1] == 'hdf5':
+        _fc = read_force_constants_from_hdf5(
+            filename=force_constants_filename,
+            p2s_map=p2s_map,
+            calculator=phonon.calculator)
+    else:
+        _fc = parse_FORCE_CONSTANTS(filename=force_constants_filename,
+                                    p2s_map=p2s_map)
+    return _fc
 
 
 def _get_primitive_matrix(pmat, unitcell, symprec):

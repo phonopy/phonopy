@@ -90,7 +90,9 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         2. force_sets_filename
         3. phonopy_yaml if force constants are found in phonoy_yaml.
         4. phonopy_yaml if forces are found in phonoy_yaml.dataset.
-        5. 'FORCE_SETS' is searched in current directory.
+        5. 'FORCE_CONSTANTS' is searched in current directory.
+        6. 'force_constants.hdf5' is searched in current directory.
+        7. 'FORCE_SETS' is searched in current directory.
     When both of 3 and 4 are satisfied but not others, force constants and
     dataset are stored in Phonopy instance, but force constants are not
     produced from dataset.
