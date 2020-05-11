@@ -61,15 +61,20 @@ def show_deprecated_option_warnings(deprecated):
     print("")
 
 
-def get_parser(symmetrize_fc=False,
+def get_parser(fc_symmetry=False,
                is_nac=False,
                load_phonopy_yaml=False):
     deprecated = fix_deprecated_option_names(sys.argv)
     import argparse
     from phonopy.interface.calculator import (
         add_arguments_of_calculators, calculator_info)
-    parser = argparse.ArgumentParser(
-        description="Phonopy command-line-tool")
+    try:
+        parser = argparse.ArgumentParser(
+            description="Phonopy command-line-tool",
+            allow_abbrev=False)  # allow_abbrev requires >= python 3.5
+    except TypeError:
+        parser = argparse.ArgumentParser(
+            description="Phonopy command-line-tool")
 
     add_arguments_of_calculators(parser, calculator_info)
 
@@ -164,9 +169,10 @@ def get_parser(symmetrize_fc=False,
         "--fc-spg-symmetry", dest="fc_spg_symmetry", action="store_true",
         default=False,
         help="Enforce space group symmetry to force constants")
-    if not symmetrize_fc:
+    if not fc_symmetry:
         parser.add_argument(
-            "--fc-symmetry", dest="fc_symmetry", action="store_true",
+            "--fc-symmetry", "--sym-fc",
+            dest="fc_symmetry", action="store_true",
             default=False, help="Symmetrize force constants")
     parser.add_argument(
         "--fits-debye-model", dest="fits_debye_model", action="store_true",
@@ -298,9 +304,10 @@ def get_parser(symmetrize_fc=False,
     parser.add_argument(
         "--nodiag", dest="is_nodiag", action="store_true", default=False,
         help="Set displacements parallel to axes")
-    if symmetrize_fc:
+    if fc_symmetry:
         parser.add_argument(
-            "--nofcsym", dest="fc_symmetry", action="store_false",
+            "--no-fc-symmetry", "--no-sym-fc",
+            dest="fc_symmetry", action="store_false",
             default=True, help="Do not symmetrize force constants")
     parser.add_argument(
         "--nomeshsym", dest="is_nomeshsym", action="store_true", default=False,

@@ -301,7 +301,7 @@ def print_settings(settings,
         mesh = settings.get_mesh_numbers()
         if type(mesh) is float:
             print("  Length for sampling mesh: %.1f" % mesh)
-        else:
+        elif mesh is not None:
             print("  Sampling mesh: %s" % np.array(mesh))
         if settings.get_is_thermal_properties():
             cutoff_freq = settings.get_cutoff_frequency()
@@ -880,14 +880,13 @@ def run(phonon, settings, plot_conf, log_level):
                     print("Calculating projected thermal properties...")
                 else:
                     print("Calculating thermal properties...")
-            tprop_range = settings.get_thermal_property_range()
-            tstep = tprop_range['step']
-            tmax = tprop_range['max']
-            tmin = tprop_range['min']
+            t_step = settings.get_temperature_step()
+            t_max = settings.get_max_temperature()
+            t_min = settings.get_min_temperature()
             phonon.run_thermal_properties(
-                t_min=tmin,
-                t_max=tmax,
-                t_step=tstep,
+                t_min=t_min,
+                t_max=t_max,
+                t_step=t_step,
                 is_projection=settings.get_is_projected_thermal_properties(),
                 band_indices=settings.get_band_indices(),
                 cutoff_frequency=settings.get_cutoff_frequency(),
@@ -931,14 +930,13 @@ def run(phonon, settings, plot_conf, log_level):
                       "(Cartesian)" % tuple(c_direction))
             if log_level:
                 print("Calculating thermal displacements...")
-            tprop_range = settings.get_thermal_property_range()
-            tstep = tprop_range['step']
-            tmax = tprop_range['max']
-            tmin = tprop_range['min']
+            t_step = settings.get_temperature_step()
+            t_max = settings.get_max_temperature()
+            t_min = settings.get_min_temperature()
             phonon.run_thermal_displacements(
-                t_min=tmin,
-                t_max=tmax,
-                t_step=tstep,
+                t_min=t_min,
+                t_max=t_max,
+                t_step=t_step,
                 direction=p_direction,
                 freq_min=settings.get_min_frequency(),
                 freq_max=settings.get_max_frequency())
@@ -959,10 +957,9 @@ def run(phonon, settings, plot_conf, log_level):
               run_mode in ('mesh', 'band_mesh')):
             if log_level:
                 print("Calculating thermal displacement matrices...")
-            tprop_range = settings.get_thermal_property_range()
-            t_step = tprop_range['step']
-            t_max = tprop_range['max']
-            t_min = tprop_range['min']
+            t_step = settings.get_temperature_step()
+            t_max = settings.get_max_temperature()
+            t_min = settings.get_min_temperature()
             t_cif = settings.get_thermal_displacement_matrix_temperature()
             if t_cif is None:
                 temperatures = None
@@ -1058,8 +1055,7 @@ def run(phonon, settings, plot_conf, log_level):
         #
         # Momemt
         #
-        elif (settings.get_is_moment() and
-            run_mode in ('mesh', 'band_mesh')):
+        elif (settings.get_is_moment() and run_mode in ('mesh', 'band_mesh')):
             freq_min = settings.get_min_frequency()
             freq_max = settings.get_max_frequency()
             if log_level:
@@ -1278,12 +1274,14 @@ def create_phonopy_files_then_exit(args, log_level):
         sys.exit(error_num)
 
 
-def read_phonopy_settings(args, load_phonopy_yaml, log_level):
+def read_phonopy_settings(args, argparse_control, log_level):
     """Read phonopy settings"""
+
     if len(args.filename) > 0:
         file_exists(args.filename[0], log_level)
-        if load_phonopy_yaml:
-            phonopy_conf_parser = PhonopyConfParser(args=args)
+        if argparse_control.get('load_phonopy_yaml', False):
+            phonopy_conf_parser = PhonopyConfParser(
+                args=args, default_settings=argparse_control)
             cell_filename = args.filename[0]
         else:
             phonopy_conf_parser = PhonopyConfParser(filename=args.filename[0],
@@ -1293,7 +1291,7 @@ def read_phonopy_settings(args, load_phonopy_yaml, log_level):
         phonopy_conf_parser = PhonopyConfParser(args=args)
         cell_filename = phonopy_conf_parser.settings.get_cell_filename()
 
-    confs = phonopy_conf_parser.confs
+    confs = phonopy_conf_parser.confs.copy()
     settings = phonopy_conf_parser.settings
 
     return settings, confs, cell_filename
@@ -1457,7 +1455,7 @@ def main(**argparse_control):
     create_phonopy_files_then_exit(args, log_level)
 
     settings, confs, cell_filename = read_phonopy_settings(
-        args, load_phonopy_yaml, log_level)
+        args, argparse_control, log_level)
 
     run_symmetry_info = args.is_check_symmetry
 

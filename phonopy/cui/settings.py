@@ -482,8 +482,12 @@ class ConfParser(object):
                 self._confs['fc_calculator_options'] = fc_calc_opt
 
         if 'fc_symmetry' in arg_list:
-            if self._args.fc_symmetry:
-                self._confs['fc_symmetry'] = '.true.'
+            if self._settings.get_fc_symmetry():
+                if not self._args.fc_symmetry:
+                    self._confs['fc_symmetry'] = '.false.'
+            else:
+                if self._args.fc_symmetry:
+                    self._confs['fc_symmetry'] = '.true.'
 
         if 'force_constants_decimals' in arg_list:
             if self._args.force_constants_decimals:
@@ -521,8 +525,12 @@ class ConfParser(object):
                 self._confs['eigenvectors'] = '.true.'
 
         if 'is_nac' in arg_list:
-            if self._args.is_nac:
-                self._confs['nac'] = '.true.'
+            if self._settings.get_is_nac():  # Check default settings
+                if not self._args.is_nac:
+                    self._confs['nac'] = '.false.'
+            else:
+                if self._args.is_nac:
+                    self._confs['nac'] = '.true.'
 
         if 'is_nodiag' in arg_list:
             if self._args.is_nodiag:
@@ -1576,13 +1584,13 @@ class PhonopySettings(Settings):
 
 
 class PhonopyConfParser(ConfParser):
-    def __init__(self, filename=None, args=None):
+    def __init__(self, filename=None, args=None, default_settings=None):
         # This is fragile implementation.
         # Remember that options have to be activated only
         # when it changes the default value, i.e.,
         # _read_options has to be written in this way.
 
-        self._settings = PhonopySettings()
+        self._settings = PhonopySettings(default=default_settings)
         confs = {}
         if filename is not None:
             ConfParser.__init__(self, filename=filename)
@@ -1600,7 +1608,7 @@ class PhonopyConfParser(ConfParser):
         self._confs = confs
 
     def _read_options(self):
-        self.read_options()  # store data in self._confs
+        ConfParser.read_options(self)  # store data in self._confs
         arg_list = vars(self._args)
         if 'band_format' in arg_list:
             if self._args.band_format:
@@ -1823,6 +1831,8 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'create_displacements':
                 if confs['create_displacements'].lower() == '.true.':
                     self.set_parameter('create_displacements', True)
+                elif confs['create_displacements'].lower() == '.false.':
+                    self.set_parameter('create_displacements', False)
 
             if conf_key == 'band_format':
                 self.set_parameter('band_format', confs['band_format'].lower())
@@ -1834,10 +1844,14 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'band_connection':
                 if confs['band_connection'].lower() == '.true.':
                     self.set_parameter('band_connection', True)
+                elif confs['band_connection'].lower() == '.false.':
+                    self.set_parameter('band_connection', False)
 
             if conf_key == 'legacy_plot':
                 if confs['legacy_plot'].lower() == '.true.':
                     self.set_parameter('legacy_plot', True)
+                elif confs['legacy_plot'].lower() == '.false.':
+                    self.set_parameter('legacy_plot', False)
 
             if conf_key == 'force_constants':
                 self.set_parameter('force_constants',
@@ -1846,14 +1860,20 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'read_force_constants':
                 if confs['read_force_constants'].lower() == '.true.':
                     self.set_parameter('read_force_constants', True)
+                elif confs['read_force_constants'].lower() == '.false.':
+                    self.set_parameter('read_force_constants', False)
 
             if conf_key == 'write_force_constants':
                 if confs['write_force_constants'].lower() == '.true.':
                     self.set_parameter('write_force_constants', True)
+                elif confs['write_force_constants'].lower() == '.false.':
+                    self.set_parameter('write_force_constants', False)
 
             if conf_key == 'full_force_constants':
                 if confs['full_force_constants'].lower() == '.true.':
                     self.set_parameter('is_full_fc', True)
+                elif confs['full_force_constants'].lower() == '.false.':
+                    self.set_parameter('is_full_fc', False)
 
             if conf_key == 'cutoff_radius':
                 val = float(confs['cutoff_radius'])
@@ -1862,14 +1882,20 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'writedm':
                 if confs['writedm'].lower() == '.true.':
                     self.set_parameter('write_dynamical_matrices', True)
+                elif confs['writedm'].lower() == '.false.':
+                    self.set_parameter('write_dynamical_matrices', False)
 
             if conf_key == 'write_mesh':
-                if confs['write_mesh'].lower() == '.false.':
+                if confs['write_mesh'].lower() == '.true.':
+                    self.set_parameter('write_mesh', True)
+                elif confs['write_mesh'].lower() == '.false.':
                     self.set_parameter('write_mesh', False)
 
             if conf_key == 'hdf5':
                 if confs['hdf5'].lower() == '.true.':
                     self.set_parameter('hdf5', True)
+                elif confs['hdf5'].lower() == '.false.':
+                    self.set_parameter('hdf5', False)
 
             if conf_key == 'mp_shift':
                 vals = [fracval(x) for x in confs['mp_shift'].split()]
@@ -1885,16 +1911,22 @@ class PhonopyConfParser(ConfParser):
                                    confs['qpoints_format'].lower())
 
             if conf_key == 'time_reversal_symmetry':
-                if confs['time_reversal_symmetry'].lower() == '.false.':
+                if confs['time_reversal_symmetry'].lower() == '.true.':
+                    self.set_parameter('is_time_reversal_symmetry', True)
+                elif confs['time_reversal_symmetry'].lower() == '.false.':
                     self.set_parameter('is_time_reversal_symmetry', False)
 
             if conf_key == 'gamma_center':
                 if confs['gamma_center'].lower() == '.true.':
                     self.set_parameter('is_gamma_center', True)
+                elif confs['gamma_center'].lower() == '.false.':
+                    self.set_parameter('is_gamma_center', False)
 
             if conf_key == 'fc_spg_symmetry':
                 if confs['fc_spg_symmetry'].lower() == '.true.':
                     self.set_parameter('fc_spg_symmetry', True)
+                elif confs['fc_spg_symmetry'].lower() == '.false.':
+                    self.set_parameter('fc_spg_symmetry', False)
 
             if conf_key == 'readfc_format':
                 self.set_parameter('readfc_format',
@@ -1941,10 +1973,14 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'show_irreps':
                 if confs['show_irreps'].lower() == '.true.':
                     self.set_parameter('show_irreps', True)
+                elif confs['show_irreps'].lower() == '.false.':
+                    self.set_parameter('show_irreps', False)
 
             if conf_key == 'little_cogroup':
                 if confs['little_cogroup'].lower() == '.true.':
                     self.set_parameter('little_cogroup', True)
+                elif confs['little_cogroup'].lower() == '.false.':
+                    self.set_parameter('little_cogroup', False)
 
             # DOS
             if conf_key == 'pdos':
@@ -1959,14 +1995,20 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'xyz_projection':
                 if confs['xyz_projection'].lower() == '.true.':
                     self.set_parameter('xyz_projection', True)
+                elif confs['xyz_projection'].lower() == '.false.':
+                    self.set_parameter('xyz_projection', False)
 
             if conf_key == 'dos':
                 if confs['dos'].lower() == '.true.':
                     self.set_parameter('dos', True)
+                elif confs['dos'].lower() == '.false.':
+                    self.set_parameter('dos', False)
 
             if conf_key == 'debye_model':
                 if confs['debye_model'].lower() == '.true.':
                     self.set_parameter('fits_debye_model', True)
+                elif confs['debye_model'].lower() == '.false.':
+                    self.set_parameter('fits_debye_model', False)
 
             if conf_key == 'dos_range':
                 vals = [float(x) for x in confs['dos_range'].split()]
@@ -1982,26 +2024,36 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'tprop':
                 if confs['tprop'].lower() == '.true.':
                     self.set_parameter('tprop', True)
+                if confs['tprop'].lower() == '.false.':
+                    self.set_parameter('tprop', False)
 
             # Projected thermal properties
             if conf_key == 'ptprop':
                 if confs['ptprop'].lower() == '.true.':
                     self.set_parameter('ptprop', True)
+                elif confs['ptprop'].lower() == '.false.':
+                    self.set_parameter('ptprop', False)
 
             # Use imaginary frequency as real for thermal property calculation
             if conf_key == 'pretend_real':
                 if confs['pretend_real'].lower() == '.true.':
                     self.set_parameter('pretend_real', True)
+                elif confs['pretend_real'].lower() == '.false.':
+                    self.set_parameter('pretend_real', False)
 
             # Thermal displacement
             if conf_key == 'tdisp':
                 if confs['tdisp'].lower() == '.true.':
                     self.set_parameter('tdisp', True)
+                elif confs['tdisp'].lower() == '.false.':
+                    self.set_parameter('tdisp', False)
 
             # Thermal displacement matrices
             if conf_key == 'tdispmat':
                 if confs['tdispmat'].lower() == '.true.':
                     self.set_parameter('tdispmat', True)
+                elif confs['tdispmat'].lower() == '.false.':
+                    self.set_parameter('tdispmat', False)
 
             # Write thermal displacement matrices to cif file,
             # for which the temperature to execute is stored.
@@ -2034,11 +2086,15 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'group_velocity':
                 if confs['group_velocity'].lower() == '.true.':
                     self.set_parameter('is_group_velocity', True)
+                elif confs['group_velocity'].lower() == '.false.':
+                    self.set_parameter('is_group_velocity', False)
 
             # Moment of phonon states distribution
             if conf_key == 'moment':
                 if confs['moment'].lower() == '.true.':
                     self.set_parameter('moment', True)
+                elif confs['moment'].lower() == '.false.':
+                    self.set_parameter('moment', False)
 
             if conf_key == 'moment_order':
                 self.set_parameter('moment_order', int(confs['moment_order']))
@@ -2055,15 +2111,21 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'lapack_solver':
                 if confs['lapack_solver'].lower() == '.true.':
                     self.set_parameter('lapack_solver', True)
+                elif confs['lapack_solver'].lower() == '.false.':
+                    self.set_parameter('lapack_solver', False)
 
             # Select yaml summary contents
             if conf_key == 'include_fc':
                 if confs['include_fc'].lower() == '.true.':
                     self.set_parameter('include_fc', True)
+                elif confs['include_fc'].lower() == '.false.':
+                    self.set_parameter('include_fc', False)
 
             if conf_key == 'include_fs':
                 if confs['include_fs'].lower() == '.true.':
                     self.set_parameter('include_fs', True)
+                elif confs['include_fs'].lower() == '.false.':
+                    self.set_parameter('include_fs', False)
 
             #if conf_key == 'include_bec':
             #    if confs['include_bec'].lower() == '.true.':
@@ -2076,14 +2138,20 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'include_born':
                 if confs['include_born'].lower() == '.true.':
                     self.set_parameter('include_born', True)
+                elif confs['include_born'].lower() == '.false.':
+                    self.set_parameter('include_born', False)
 
             if conf_key == 'include_disp':
                 if confs['include_disp'].lower() == '.true.':
                     self.set_parameter('include_disp', True)
+                elif confs['include_disp'].lower() == '.false.':
+                    self.set_parameter('include_disp', False)
 
             if conf_key == 'include_all':
                 if confs['include_all'].lower() == '.true.':
                     self.set_parameter('include_all', True)
+                elif confs['include_all'].lower() == '.false.':
+                    self.set_parameter('include_all', False)
 
     def _parse_conf_modulation(self, conf_modulation):
         modulation = {}
@@ -2188,14 +2256,12 @@ class PhonopyConfParser(ConfParser):
             if 'mp_shift' in params:
                 self._settings.set_mesh_shift(params['mp_shift'])
             if 'is_time_reversal_symmetry' in params:
-                if not params['is_time_reversal_symmetry']:
-                    self._settings.set_time_reversal_symmetry(False)
+                self._settings.set_time_reversal_symmetry(
+                    params['is_time_reversal_symmetry'])
             if 'is_mesh_symmetry' in params:
-                if not params['is_mesh_symmetry']:
-                    self._settings.set_is_mesh_symmetry(False)
+                self._settings.set_is_mesh_symmetry(params['is_mesh_symmetry'])
             if 'is_gamma_center' in params:
-                if params['is_gamma_center']:
-                    self._settings.set_is_gamma_center(True)
+                self._settings.set_is_gamma_center(params['is_gamma_center'])
             if 'mesh_format' in params:
                 self._settings.set_mesh_format(params['mesh_format'])
 
@@ -2220,8 +2286,8 @@ class PhonopyConfParser(ConfParser):
 
         # Whether write out dynamical matrices or not
         if 'write_dynamical_matrices' in params:
-            if params['write_dynamical_matrices']:
-                self._settings.set_write_dynamical_matrices(True)
+            self._settings.set_write_dynamical_matrices(
+                params['write_dynamical_matrices'])
 
         # Whether write out mesh.yaml or mesh.hdf5
         if 'write_mesh' in params:
@@ -2414,13 +2480,11 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_include_displacements(params['include_disp'])
 
         if 'include_all' in params:
-            self._settings.set_include_force_constants(params['include_fc'])
-            self._settings.set_include_force_sets(params['include_fs'])
-            self._settings.set_include_dielectric_constant(
-                params['include_born'])
-            self._settings.set_include_born_effective_charge(
-                params['include_born'])
-            self._settings.set_include_displacements(params['include_disp'])
+            self._settings.set_include_force_constants(True)
+            self._settings.set_include_force_sets(True)
+            self._settings.set_include_dielectric_constant(True)
+            self._settings.set_include_born_effective_charge(True)
+            self._settings.set_include_displacements(True)
 
         # ***********************************************************
         # This has to come last in this method to overwrite run_mode.

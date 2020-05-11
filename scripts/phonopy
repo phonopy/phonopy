@@ -37,7 +37,7 @@
 from phonopy.cui.phonopy_script import main
 
 if __name__ == '__main__':
-    argparse_control = {'symmetrize_fc': False,
+    argparse_control = {'fc_symmetry': False,
                         'is_nac': False,
                         'load_phonopy_yaml': False}
     main(**argparse_control)
