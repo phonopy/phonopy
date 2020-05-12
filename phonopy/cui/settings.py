@@ -67,10 +67,10 @@ class Settings(object):
         'fc_calculator_options': None,
         'fc_decimals': None,
         'fc_symmetry': False,
-        'fpitch': None,
+        'frequency_pitch': None,
         'frequency_conversion_factor': None,
         'frequency_scale_factor': None,
-        'gv_delta_q': None,
+        'group_velocity_delta_q': None,
         'hdf5_compression': 'gzip',
         'is_band_const_interval': False,
         'is_diagonal_displacement': True,
@@ -105,6 +105,9 @@ class Settings(object):
         self._v = Settings._default.copy()
         if default is not None:
             self._v.update(default)
+
+    def __getattr__(self, attr):
+        return self._v[attr]
 
     def set_band_paths(self, val):
         self._v['band_paths'] = val
@@ -197,10 +200,10 @@ class Settings(object):
         return self._v['frequency_conversion_factor']
 
     def set_frequency_pitch(self, val):
-        self._v['fpitch'] = val
+        self._v['frequency_pitch'] = val
 
     def get_frequency_pitch(self):
-        return self._v['fpitch']
+        return self._v['frequency_pitch']
 
     def set_frequency_scale_factor(self, val):
         self._v['frequency_scale_factor'] = val
@@ -209,10 +212,10 @@ class Settings(object):
         return self._v['frequency_scale_factor']
 
     def set_group_velocity_delta_q(self, val):
-        self._v['gv_delta_q'] = val
+        self._v['group_velocity_delta_q'] = val
 
     def get_group_velocity_delta_q(self):
-        return self._v['gv_delta_q']
+        return self._v['group_velocity_delta_q']
 
     def set_hdf5_compression(self, val):
         self._v['hdf5_compression'] = val

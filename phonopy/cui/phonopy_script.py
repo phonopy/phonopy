@@ -639,10 +639,14 @@ def store_nac_params(phonon,
                      settings,
                      phpy_yaml,
                      unitcell_filename,
-                     load_phonopy_yaml,
-                     log_level):
-    physical_units = get_default_physical_units(phonon.calculator)
-    primitive = phonon.primitive
+                     log_level,
+                     nac_factor=None,
+                     load_phonopy_yaml=False):
+    if nac_factor is None:
+        physical_units = get_default_physical_units(phonon.calculator)
+        _nac_factor = physical_units['nac_factor']
+    else:
+        _nac_factor = nac_factor
 
     if settings.get_is_nac():
         def read_BORN(phonon):
@@ -681,22 +685,23 @@ def store_nac_params(phonon,
 
         if nac_params is not None:
             if nac_params['factor'] is None:
-                nac_params['factor'] = physical_units['nac_factor']
+                nac_params['factor'] = _nac_factor
             if settings.get_nac_method() is not None:
                 nac_params['method'] = settings.get_nac_method()
             phonon.nac_params = nac_params
             if log_level:
                 dm = phonon.dynamical_matrix
-                if (dm.is_nac() and dm.nac_method == 'gonze'):
-                    dm.show_Gonze_nac_message()
-                print("")
+                if dm is not None:
+                    if dm.is_nac() and dm.nac_method == 'gonze':
+                        dm.show_Gonze_nac_message()
+                    print("")
 
             if log_level > 1:
                 print("-" * 27 + " Dielectric constant " + "-" * 28)
                 for v in nac_params['dielectric']:
                     print("         %12.7f %12.7f %12.7f" % tuple(v))
                 print("-" * 26 + " Born effective charges " + "-" * 26)
-                symbols = primitive.get_chemical_symbols()
+                symbols = phonon.primitive.symbols
                 for i, (z, s) in enumerate(zip(nac_params['born'], symbols)):
                     for j, v in enumerate(z):
                         if j == 0:
@@ -1544,8 +1549,8 @@ def main(**argparse_control):
                      settings,
                      cell_info['phonopy_yaml'],
                      unitcell_filename,
-                     load_phonopy_yaml,
-                     log_level)
+                     log_level,
+                     load_phonopy_yaml=load_phonopy_yaml)
 
     ###################################################################
     # Create random displacements at finite temperature and then exit #

@@ -123,8 +123,12 @@ class Symmetry(object):
                                        translations,
                                        self._symprec)
 
-    def get_symmetry_tolerance(self):
+    @property
+    def tolerance(self):
         return self._symprec
+
+    def get_symmetry_tolerance(self):
+        return self.tolerance
 
     def get_reciprocal_operations(self):
         """
