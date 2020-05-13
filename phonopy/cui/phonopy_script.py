@@ -50,7 +50,7 @@ from phonopy.phonon.dos import get_pdos_indices
 from phonopy.file_IO import (
     parse_FORCE_CONSTANTS, parse_FORCE_SETS,
     write_FORCE_CONSTANTS, write_force_constants_to_hdf5,
-    get_born_parameters, parse_QPOINTS)
+    get_born_parameters, parse_QPOINTS, is_file_phonopy_yaml)
 from phonopy.cui.create_force_sets import create_FORCE_SETS
 from phonopy.cui.load_helper import (
     read_force_constants_from_hdf5, get_nac_params,
@@ -432,7 +432,7 @@ def produce_force_constants(phonon,
                             phpy_yaml,
                             unitcell_filename,
                             log_level):
-    num_satom = phonon.supercell.get_number_of_atoms()
+    num_satom = len(phonon.supercell)
     p2s_map = phonon.primitive.p2s_map
 
     if settings.get_read_force_constants():
@@ -1170,7 +1170,7 @@ def run(phonon, settings, plot_conf, log_level):
         else:
             delta_q = None
         derivative_order = mod_setting['order']
-        num_band = phonon.primitive.get_number_of_atoms() * 3
+        num_band = len(phonon.primitive) * 3
 
         if log_level:
             if len(phonon_modes) == 1:
@@ -1281,9 +1281,18 @@ def create_phonopy_files_then_exit(args, log_level):
 def read_phonopy_settings(args, argparse_control, log_level):
     """Read phonopy settings"""
 
+    load_phonopy_yaml = argparse_control.get('load_phonopy_yaml', False)
+
     if len(args.filename) > 0:
         file_exists(args.filename[0], log_level)
-        if argparse_control.get('load_phonopy_yaml', False):
+        if load_phonopy_yaml:
+            if log_level:
+                print("Entring phonopy-load mode. "
+                      "Phonopy works similar to phonopy.load.")
+                print("")
+        load_phonopy_yaml = (load_phonopy_yaml or
+                             is_file_phonopy_yaml(args.filename[0]))
+        if load_phonopy_yaml:
             phonopy_conf_parser = PhonopyConfParser(
                 args=args, default_settings=argparse_control)
             cell_filename = args.filename[0]
@@ -1354,7 +1363,7 @@ def get_cell_info(settings, cell_filename, symprec, log_level):
     magmoms = settings.get_magnetic_moments()
     if magmoms is not None:
         unitcell = cell_info['unitcell']
-        if len(magmoms) == unitcell.get_number_of_atoms():
+        if len(magmoms) == len(unitcell):
             unitcell.magnetic_moments = magmoms
         else:
             error_text = "Invalid MAGMOM setting"

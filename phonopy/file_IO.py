@@ -696,6 +696,21 @@ def _expand_borns(borns, primitive, prim_symmetry):
 
 
 #
+# phonopy.yaml
+#
+def is_file_phonopy_yaml(filename, keyword='phonopy'):
+    with open(filename, 'r') as f:
+        try:
+            data = yaml.load(f, Loader=Loader)
+            if keyword in data:
+                return True
+            else:
+                return False
+        except yaml.YAMLError:
+            return False
+
+
+#
 # e-v.dat, thermal_properties.yaml
 #
 def read_thermal_properties_yaml(filenames):
