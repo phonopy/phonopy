@@ -101,7 +101,7 @@ class BulkModulus(object):
 
 class QHA(object):
     def __init__(self,
-                 volumes,              # Angstrom^3
+                 volumes,              # angstrom^3
                  electronic_energies,  # eV
                  temperatures,
                  cv,                   # J/K/mol

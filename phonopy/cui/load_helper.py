@@ -37,9 +37,8 @@ import numpy as np
 from phonopy.interface.calculator import read_crystal_structure
 from phonopy.structure.cells import get_primitive_matrix_by_centring
 from phonopy.file_IO import (
-    parse_BORN, read_force_constants_hdf5,
-    read_physical_unit_in_force_constants_hdf5,
-    parse_FORCE_SETS, parse_FORCE_CONSTANTS)
+    parse_BORN, read_force_constants_hdf5, parse_FORCE_SETS,
+    parse_FORCE_CONSTANTS)
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.interface.calculator import get_force_constant_conversion_factor
 
@@ -125,9 +124,9 @@ def read_force_constants_from_hdf5(filename='force_constants.hdf5',
     """Convert force constants physical unit
 
     Each calculator interface has own default force constants physical unit.
-    This method reads the physical unit of force constants if it exists and
-    if the read physical unit is different from the default one, the force
-    constants values are converted to have the default physical units.
+    This method reads 'physical_unit' in force constants hdf5 file and
+    if this is different from the one for 'calculator', the force constants
+    are converted to have the physical unit of the calculator.
 
     Note
     ----
@@ -135,9 +134,9 @@ def read_force_constants_from_hdf5(filename='force_constants.hdf5',
 
     """
 
-    fc = read_force_constants_hdf5(filename=filename, p2s_map=p2s_map)
-    fc_unit = read_physical_unit_in_force_constants_hdf5(
-        filename=filename)
+    fc, fc_unit = read_force_constants_hdf5(filename=filename,
+                                            p2s_map=p2s_map,
+                                            return_physical_unit=True)
     if fc_unit is None:
         return fc
     else:

@@ -395,21 +395,9 @@ def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS",
         return force_constants
 
 
-def read_physical_unit_in_force_constants_hdf5(
-        filename="force_constants.hdf5"):
-    try:
-        import h5py
-    except ImportError:
-        raise ModuleNotFoundError("You need to install python-h5py.")
-
-    with h5py.File(filename, 'r') as f:
-        if 'physical_unit' in f:
-            return f['physical_unit'][0].decode('utf-8')
-    return None
-
-
 def read_force_constants_hdf5(filename="force_constants.hdf5",
-                              p2s_map=None):
+                              p2s_map=None,
+                              return_physical_unit=False):
     try:
         import h5py
     except ImportError:
@@ -431,7 +419,15 @@ def read_force_constants_hdf5(filename="force_constants.hdf5",
                                           p2s_map_in_file,
                                           p2s_map,
                                           filename)
-        return fc
+
+        if return_physical_unit:
+            if 'physical_unit' in f:
+                physical_unit = f['physical_unit'][0].decode('utf-8')
+            else:
+                physical_unit = None
+            return fc, physical_unit
+        else:
+            return fc
 
 
 def check_force_constants_indices(shape, indices, p2s_map, filename):

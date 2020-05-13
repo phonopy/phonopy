@@ -40,7 +40,7 @@ from phonopy.structure.grid_points import get_qpoints
 
 class Velocity(object):
     def __init__(self,
-                 lattice=None, # column vectors, in Angstrom
+                 lattice=None, # column vectors, in angstrom
                  positions=None, # fractional coordinates
                  timestep=None): # in femtosecond
 
@@ -201,4 +201,3 @@ class AutoCorrelation(object):
 
     def get_number_of_elements(self):
         return self._n_elements
-

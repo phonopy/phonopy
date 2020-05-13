@@ -415,18 +415,21 @@ def get_default_displacement_distance(interface_mode):
 def get_default_physical_units(interface_mode=None):
     """Return physical units used for calculators
 
-    Physical units: energy,  distance,  atomic mass, force
-    vasp          : eV,      Angstrom,  AMU,         eV/Angstrom
-    wien2k        : Ry,      au(=borh), AMU,         mRy/au
-    abinit        : hartree, au,        AMU,         eV/Angstrom
-    elk           : hartree, au,        AMU,         hartree/au
-    qe            : Ry,      au,        AMU,         Ry/au
-    siesta        : eV,      au,        AMU,         eV/Angstroem
-    CRYSTAL       : eV,      Angstrom,  AMU,         eV/Angstroem
-    DFTB+         : hartree, au,        AMU          hartree/au
-    TURBOMOLE     : hartree, au,        AMU,         hartree/au
-    CP2K          : hartree, Angstrom,  AMU,         hartree/au
-    FHI-aims      : eV,      Angstrom,  AMU,         eV/Angstrom
+    Physical units: energy,  distance,  atomic mass, force,        force constants
+    vasp          : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
+    wien2k        : Ry,      au(=borh), AMU,         mRy/au,       mRy/au^2
+    abinit        : hartree, au,        AMU,         eV/angstrom,  eV/angstrom.au
+    elk           : hartree, au,        AMU,         hartree/au,   hartree/au^2
+    qe            : Ry,      au,        AMU,         Ry/au,        Ry/au^2
+    siesta        : eV,      au,        AMU,         eV/Angstroem, eV/angstrom.au
+    CRYSTAL       : eV,      angstrom,  AMU,         eV/Angstroem, eV/angstrom^2
+    DFTB+         : hartree, au,        AMU          hartree/au,   hartree/au^2
+    TURBOMOLE     : hartree, au,        AMU,         hartree/au,   hartree/au^2
+    CP2K          : hartree, angstrom,  AMU,         hartree/au,   hartree/angstrom.au
+    FHI-aims      : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
+
+    units['force_constants_unit'] is used in
+    the 'get_force_constant_conversion_factor' method.
 
     """
 
@@ -446,13 +449,13 @@ def get_default_physical_units(interface_mode=None):
         units['factor'] = VaspToTHz
         units['nac_factor'] = Hartree * Bohr
         units['distance_to_A'] = 1.0
-        units['force_constants_unit'] = 'eV/Angstrom^2'
-        units['length_unit'] = 'Angstrom'
+        units['force_constants_unit'] = 'eV/angstrom^2'
+        units['length_unit'] = 'angstrom'
     elif interface_mode == 'abinit':
         units['factor'] = AbinitToTHz
         units['nac_factor'] = Hartree / Bohr
         units['distance_to_A'] = Bohr
-        units['force_constants_unit'] = 'eV/Angstrom.au'
+        units['force_constants_unit'] = 'eV/angstrom.au'
         units['length_unit'] = 'au'
     elif interface_mode == 'qe':
         units['factor'] = PwscfToTHz
@@ -477,20 +480,20 @@ def get_default_physical_units(interface_mode=None):
         units['factor'] = SiestaToTHz
         units['nac_factor'] = Hartree / Bohr
         units['distance_to_A'] = Bohr
-        units['force_constants_unit'] = 'eV/Angstrom.au'
+        units['force_constants_unit'] = 'eV/angstrom.au'
         units['length_unit'] = 'au'
     elif interface_mode == 'cp2k':
         units['factor'] = CP2KToTHz
         units['nac_factor'] = None  # not implemented
         units['distance_to_A'] = 1.0
-        units['force_constants_unit'] = 'hartree/Angstrom.au'
-        units['length_unit'] = 'Angstrom'
+        units['force_constants_unit'] = 'hartree/angstrom.au'
+        units['length_unit'] = 'angstrom'
     elif interface_mode == 'crystal':
         units['factor'] = CrystalToTHz
         units['nac_factor'] = Hartree * Bohr
         units['distance_to_A'] = 1.0
-        units['force_constants_unit'] = 'eV/Angstrom^2'
-        units['length_unit'] = 'Angstrom'
+        units['force_constants_unit'] = 'eV/angstrom^2'
+        units['length_unit'] = 'angstrom'
     elif interface_mode == 'dftbp':
         units['factor'] = DftbpToTHz
         units['nac_factor'] = Hartree * Bohr
@@ -567,19 +570,20 @@ def get_force_sets_wien2k(num_displacements,
 def get_force_constant_conversion_factor(unit, interface_mode):
     from phonopy.units import Bohr, Rydberg, Hartree
 
-    units = get_default_physical_units(interface_mode)
-    default_unit = units['force_constants_unit']
-    factor_to_eVperA2 = {'eV/Angstrom^2': 1,
-                         'eV/Angstrom.au': 1 / Bohr,
+    _unit = unit.replace('Angstrom', 'angstrom')  # backward compatibility
+    interface_default_units = get_default_physical_units(interface_mode)
+    default_unit = interface_default_units['force_constants_unit']
+    factor_to_eVperA2 = {'eV/angstrom^2': 1,
+                         'eV/angstrom.au': 1 / Bohr,
                          'Ry/au^2': Rydberg / Bohr ** 2,
                          'mRy/au^2': Rydberg / Bohr ** 2 / 1000,
                          'hartree/au^2': Hartree / Bohr ** 2,
-                         'hartree/Angstrom.au': Hartree / Bohr}
+                         'hartree/angstrom.au': Hartree / Bohr}
     if default_unit not in factor_to_eVperA2:
         msg = "Force constant conversion for %s unit is not implemented."
         raise NotImplementedError(msg)
-    if default_unit != unit:
-        factor = factor_to_eVperA2[unit] / factor_to_eVperA2[default_unit]
+    if default_unit != _unit:
+        factor = factor_to_eVperA2[_unit] / factor_to_eVperA2[default_unit]
         return factor
     else:
         return 1.0
