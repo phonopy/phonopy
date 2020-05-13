@@ -301,14 +301,14 @@ def get_parser(fc_symmetry=False,
     parser.add_argument(
         "--nac-method", dest="nac_method", default=None,
         help="Non-analytical term correction method: Gonze (default) or Wang")
-    parser.add_argument(
-        "--nodiag", dest="is_nodiag", action="store_true", default=False,
-        help="Set displacements parallel to axes")
     if fc_symmetry:
         parser.add_argument(
             "--no-fc-symmetry", "--no-sym-fc",
             dest="fc_symmetry", action="store_false",
             default=True, help="Do not symmetrize force constants")
+    parser.add_argument(
+        "--nodiag", dest="is_nodiag", action="store_true", default=False,
+        help="Set displacements parallel to axes")
     parser.add_argument(
         "--nomeshsym", dest="is_nomeshsym", action="store_true", default=False,
         help="Symmetry is not imposed for mesh sampling.")

@@ -53,6 +53,7 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
          force_sets_filename=None,
          force_constants_filename=None,
          fc_calculator=None,
+         fc_calculator_options=None,
          factor=None,
          frequency_scale_factor=None,
          produce_fc=True,
@@ -161,6 +162,11 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         None.
     fc_calculator : str, optional
         Force constants calculator. Currently only 'alm'. Default is None.
+    fc_calculator_options : str, optional
+        Optional parameters that are passed to the external fc-calculator.
+        This is given as one text string. How to parse this depends on the
+        fc-calculator. For alm, each parameter is splitted by comma ',',
+        and each set of key and value pair is written in 'key = value'.
     factor : float, optional
         Phonon frequency unit conversion factor. Unless specified, default
         unit conversion factor for each calculator is used.
@@ -274,6 +280,7 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         force_constants_filename=force_constants_filename,
         force_sets_filename=force_sets_filename,
         fc_calculator=fc_calculator,
+        fc_calculator_options=fc_calculator_options,
         produce_fc=produce_fc,
         symmetrize_fc=symmetrize_fc,
         is_compact_fc=is_compact_fc,

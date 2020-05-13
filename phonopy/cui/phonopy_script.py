@@ -72,11 +72,11 @@ def print_phonopy():
  |_|                            |_|    |___/""")
 
 
-def print_version(version):
+def print_version(version, package_name="phonopy"):
     try:
         version_text = ('%s' % version).rjust(44)
         import pkg_resources
-        dist = pkg_resources.get_distribution("phonopy")
+        dist = pkg_resources.get_distribution(package_name)
         if dist.has_version():
             ver = dist.version.split('.')
             if len(ver) > 3:
@@ -1244,6 +1244,8 @@ def start_phonopy(**argparse_control):
     if log_level:
         print_phonopy()
         print_version(__version__)
+        if argparse_control.get('load_phonopy_yaml', False):
+            print("Running in phonopy.load mode.")
         print("Python version %d.%d.%d" % sys.version_info[:3])
         import phonopy.structure.spglib as spglib
         print("Spglib version %d.%d.%d" % spglib.get_version())
@@ -1286,23 +1288,20 @@ def read_phonopy_settings(args, argparse_control, log_level):
     if len(args.filename) > 0:
         file_exists(args.filename[0], log_level)
         if load_phonopy_yaml:
-            if log_level:
-                print("Entring phonopy-load mode. "
-                      "Phonopy works similar to phonopy.load.")
-                print("")
-        load_phonopy_yaml = (load_phonopy_yaml or
-                             is_file_phonopy_yaml(args.filename[0]))
-        if load_phonopy_yaml:
             phonopy_conf_parser = PhonopyConfParser(
                 args=args, default_settings=argparse_control)
             cell_filename = args.filename[0]
         else:
-            phonopy_conf_parser = PhonopyConfParser(filename=args.filename[0],
-                                                    args=args)
-            cell_filename = phonopy_conf_parser.settings.get_cell_filename()
+            if is_file_phonopy_yaml(args.filename[0]):
+                phonopy_conf_parser = PhonopyConfParser(args=args)
+                cell_filename = args.filename[0]
+            else:
+                phonopy_conf_parser = PhonopyConfParser(
+                    filename=args.filename[0], args=args)
+                cell_filename = phonopy_conf_parser.settings.cell_filename
     else:
         phonopy_conf_parser = PhonopyConfParser(args=args)
-        cell_filename = phonopy_conf_parser.settings.get_cell_filename()
+        cell_filename = phonopy_conf_parser.settings.cell_filename
 
     confs = phonopy_conf_parser.confs.copy()
     settings = phonopy_conf_parser.settings
