@@ -1289,10 +1289,7 @@ def guess_primitive_matrix(unitcell, symprec=1e-5):
         msg = "Can not be used with the unit cell having magnetic moments."
         raise RuntimeError(msg)
 
-    lattice = unitcell.get_cell()
-    cell = (lattice,
-            unitcell.get_scaled_positions(),
-            unitcell.get_atomic_numbers())
+    cell = (unitcell.cell, unitcell.scaled_positions, unitcell.numbers)
     dataset = spg.get_symmetry_dataset(cell, symprec=1e-5)
     tmat = dataset['transformation_matrix']
     centring = dataset['international'][0]
