@@ -75,10 +75,13 @@ class PhonopyYaml(object):
         Set of physical units used in this phonon calculation.
     unitcell : PhonopyAtoms
         Unit cell.
-    primitive : Primitive
-        Primitive cell.
-    supercell : Supercell
-        Supercell.
+    primitive : PhonopyAtoms
+        Primitive cell. The instance of Primitive class is necessary has to
+        be created from the instance of Supercell class with
+        np.dot(np.linalg.inv(supercell_matrix), primitive_matrix).
+    supercell : PhonopyAtoms
+        Supercell. The instance of Supercell class is necessary has to be
+        created from unitcell with supercel_matrix.
     dataset
     supercell_matrix
     primitive_matrix
@@ -235,7 +238,7 @@ class PhonopyYaml(object):
             self.primitive_matrix, "primitive_matrix")
         lines += self._supercell_matrix_yaml_lines(
             self.supercell_matrix, "supercell_matrix")
-        lines += self._primitive_yaml_lines(self.primitive, "primitive")
+        lines += self._primitive_yaml_lines(self.primitive, "primitive_cell")
         lines += self._unitcell_yaml_lines()
         lines += self._supercell_yaml_lines()
         return lines
@@ -405,6 +408,22 @@ class PhonopyYaml(object):
             msg = "Could not open %s's yaml file." % self.command_name
             raise TypeError(msg)
 
+        self._parse_transformation_matrices()
+        self._parse_all_cells()
+        self._parse_force_constants()
+        self._parse_dataset()
+        self._parse_nac_params()
+        self._parse_calculator()
+
+    def _parse_transformation_matrices(self):
+        if 'supercell_matrix' in self._yaml:
+            self.supercell_matrix = np.array(self._yaml['supercell_matrix'],
+                                             dtype='intc', order='C')
+        if 'primitive_matrix' in self._yaml:
+            self.primitive_matrix = np.array(self._yaml['primitive_matrix'],
+                                             dtype='double', order='C')
+
+    def _parse_all_cells(self):
         if 'unit_cell' in self._yaml:
             self.unitcell = self._parse_cell(self._yaml['unit_cell'])
         if 'primitive_cell' in self._yaml:
@@ -415,40 +434,6 @@ class PhonopyYaml(object):
             if ('lattice' in self._yaml and
                 ('points' in self._yaml or 'atoms' in self._yaml)):
                 self.unitcell = self._parse_cell(self._yaml)
-        if 'force_constants' in self._yaml:
-            shape = tuple(self._yaml['force_constants']['shape']) + (3, 3)
-            fc = np.reshape(self._yaml['force_constants']['elements'], shape)
-            self.force_constants = np.array(fc, dtype='double', order='C')
-        if 'displacements' in self._yaml:
-            disp = self._yaml['displacements'][0]
-            if type(disp) is dict:  # type1
-                self.dataset = self._parse_force_sets_type1()
-            elif type(disp) is list:  # type2
-                if 'displacement' in disp[0]:
-                    self.dataset = self._parse_force_sets_type2()
-        if 'supercell_matrix' in self._yaml:
-            self.supercell_matrix = np.array(self._yaml['supercell_matrix'],
-                                             dtype='intc', order='C')
-        if 'primitive_matrix' in self._yaml:
-            self.primitive_matrix = np.array(self._yaml['primitive_matrix'],
-                                             dtype='double', order='C')
-        nac_params = {}
-        if 'born_effective_charge' in self._yaml:
-            nac_params['born'] = np.array(self._yaml['born_effective_charge'],
-                                          dtype='double', order='C')
-        if 'dielectric_constant' in self._yaml:
-            nac_params['dielectric'] = np.array(
-                self._yaml['dielectric_constant'], dtype='double', order='C')
-        if (self.command_name in self._yaml and
-            'nac_unit_conversion_factor' in self._yaml[self.command_name]):
-            nac_params['factor'] = self._yaml[self.command_name][
-                'nac_unit_conversion_factor']
-        if 'born' in nac_params and 'dielectric' in nac_params:
-            self.nac_params = nac_params
-
-        if (self.command_name in self._yaml and
-            'calculator' in self._yaml[self.command_name]):
-            self.calculator = self._yaml[self.command_name]['calculator']
 
     def _parse_cell(self, cell_yaml):
         lattice = None
@@ -502,15 +487,42 @@ class PhonopyYaml(object):
         else:
             return None
 
-    def _parse_force_sets_type1(self):
+    def _parse_force_constants(self):
+        if 'force_constants' in self._yaml:
+            shape = tuple(self._yaml['force_constants']['shape']) + (3, 3)
+            fc = np.reshape(self._yaml['force_constants']['elements'], shape)
+            self.force_constants = np.array(fc, dtype='double', order='C')
+
+    def _parse_dataset(self):
+        self.dataset = self._get_dataset(self.supercell)
+
+    def _get_dataset(self, supercell):
+        dataset = None
+        if 'displacements' in self._yaml:
+            if supercell is not None:
+                natom = len(supercell)
+            else:
+                natom = None
+            disp = self._yaml['displacements'][0]
+            if type(disp) is dict:  # type1
+                dataset = self._parse_force_sets_type1(natom=natom)
+            elif type(disp) is list:  # type2
+                if 'displacement' in disp[0]:
+                    dataset = self._parse_force_sets_type2()
+        return dataset
+
+    def _parse_force_sets_type1(self, natom=None):
         with_forces = False
         if 'forces' in self._yaml['displacements'][0]:
             with_forces = True
             dataset = {'natom': len(self._yaml['displacements'][0]['forces'])}
-        elif self.supercell is not None:
-            dataset = {'natom': len(self.supercell)}
+        elif natom is not None:
+            dataset = {'natom': natom}
         elif 'natom' in self._yaml:
             dataset = {'natom': self._yaml['natom']}
+        else:
+            raise RuntimeError(
+                "Number of atoms in supercell could not be found.")
 
         first_atoms = []
         for d in self._yaml['displacements']:
@@ -543,3 +555,23 @@ class PhonopyYaml(object):
             return {'forces': forces, 'displacements': displacements}
         else:
             return {'displacements': displacements}
+
+    def _parse_nac_params(self):
+        nac_params = {}
+        if 'born_effective_charge' in self._yaml:
+            nac_params['born'] = np.array(self._yaml['born_effective_charge'],
+                                          dtype='double', order='C')
+        if 'dielectric_constant' in self._yaml:
+            nac_params['dielectric'] = np.array(
+                self._yaml['dielectric_constant'], dtype='double', order='C')
+        if (self.command_name in self._yaml and
+            'nac_unit_conversion_factor' in self._yaml[self.command_name]):
+            nac_params['factor'] = self._yaml[self.command_name][
+                'nac_unit_conversion_factor']
+        if 'born' in nac_params and 'dielectric' in nac_params:
+            self.nac_params = nac_params
+
+    def _parse_calculator(self):
+        if (self.command_name in self._yaml and
+            'calculator' in self._yaml[self.command_name]):
+            self.calculator = self._yaml[self.command_name]['calculator']
