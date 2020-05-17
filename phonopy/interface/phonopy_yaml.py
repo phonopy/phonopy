@@ -92,8 +92,10 @@ class PhonopyYaml(object):
     u2p_map
     frequency_unit_conversion_factor
     version
-    command_name
+    yaml_filename
     settings
+    command_name
+    default_filenames
 
     Methods
     -------
@@ -131,6 +133,7 @@ class PhonopyYaml(object):
         self.u2p_map = None
         self.frequency_unit_conversion_factor = None
         self.version = None
+        self.yaml_filename = None
 
         self.settings = {'force_sets': True,
                          'displacements': True,
@@ -146,6 +149,7 @@ class PhonopyYaml(object):
         return "\n".join(self.get_yaml_lines())
 
     def read(self, filename):
+        self.yaml_filename = filename
         with open(filename) as infile:
             self._load(infile)
 
@@ -285,8 +289,9 @@ class PhonopyYaml(object):
     def _supercell_yaml_lines(self):
         lines = []
         if self.supercell is not None:
+            s2p_map = getattr(self.primitive, 's2p_map', None)
             lines += self._cell_yaml_lines(
-                self.supercell, "supercell", self.primitive.s2p_map)
+                self.supercell, "supercell", s2p_map)
             lines.append("")
         return lines
 
