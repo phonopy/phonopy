@@ -60,10 +60,21 @@ def read_cell_yaml(filename, cell_type='unitcell'):
 
 
 class PhonopyYaml(object):
-    """PhonopyYaml is a container of phonopy setting.
+    """PhonopyYaml is a container of phonopy setting
 
     This contains the writer (__str__) and reader (read) of phonopy.yaml type
     file.
+
+    Methods
+    -------
+    __str__
+        Return string of phonopy.yaml.
+    get_yaml_lines
+        Return a list of string lines of phonopy.yaml.
+    read
+        Read specific properties written in phonopy.yaml.
+    set_phonon_info
+        Copy specific properties in Phonopy instance to self.
 
     Attributes
     ----------
@@ -97,18 +108,16 @@ class PhonopyYaml(object):
     command_name
     default_filenames
 
-    Methods
-    -------
-    __str__
-    read
-    set_phonon_info
-    get_yaml_lines
-
     """
 
     command_name = "phonopy"
     default_filenames = ("phonopy_disp.yaml",
                          "phonopy.yaml")
+    default_settings = {'force_sets': True,
+                        'displacements': True,
+                        'force_constants': False,
+                        'born_effective_charge': True,
+                        'dielectric_constant': True}
 
     def __init__(self,
                  configuration=None,
@@ -135,11 +144,7 @@ class PhonopyYaml(object):
         self.version = None
         self.yaml_filename = None
 
-        self.settings = {'force_sets': True,
-                         'displacements': True,
-                         'force_constants': False,
-                         'born_effective_charge': True,
-                         'dielectric_constant': True}
+        self.settings = self.default_settings.copy()
         if type(settings) is dict:
             self.settings.update(settings)
 
