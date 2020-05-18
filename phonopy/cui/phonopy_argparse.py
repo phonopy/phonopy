@@ -142,14 +142,15 @@ def get_parser(fc_symmetry=False,
         action="store_true", default=False,
         help="Output eigenvectors")
     parser.add_argument(
-        "-f", "--force-sets", nargs='+', dest="force_sets", default=None,
+        "-f", "--force-sets", nargs='+', dest="create_force_sets",
+        default=None,
         help="Create FORCE_SETS")
     parser.add_argument(
         "--factor", dest="frequency_conversion_factor", type=float,
         default=None,
         help="Frequency unit conversion factor")
     parser.add_argument(
-        "--fc", "--force-constants", nargs=1, dest="force_constants",
+        "--fc", "--force-constants", nargs=1, dest="create_force_constants",
         default=None,
         help=("Create FORCE_CONSTANTS from vaspurn.xml. "
               "vasprun.xml has to be passed as argument."))
@@ -188,7 +189,7 @@ def get_parser(fc_symmetry=False,
         "--full-fc", dest="is_full_fc", action="store_true", default=False,
         help="Calculate full supercell force constants matrix")
     parser.add_argument(
-        "--fz", "--force-sets-zero", nargs='+', dest="force_sets_zero",
+        "--fz", "--force-sets-zero", nargs='+', dest="create_force_sets_zero",
         default=None,
         help=("Create FORCE_SETS. disp.yaml in the current directory and "
               "vapsrun.xml's for VASP or case.scf(m) for Wien2k as arguments "
