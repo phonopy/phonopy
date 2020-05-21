@@ -42,7 +42,8 @@ from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
 from phonopy.structure.grid_points import length2mesh
 from phonopy.structure.cells import (
-    get_supercell, get_primitive, guess_primitive_matrix)
+    get_supercell, get_primitive, guess_primitive_matrix,
+    shape_supercell_matrix)
 from phonopy.structure.dataset import get_displacements_and_forces
 from phonopy.harmonic.displacement import (
     get_least_displacements, directions_to_displacement_dataset,
@@ -3032,13 +3033,4 @@ class Phonopy(object):
         return guess_primitive_matrix(self._unitcell, symprec=self._symprec)
 
     def _shape_supercell_matrix(self, smat):
-        if smat is None:
-            _smat = np.eye(3, dtype='intc', order='C')
-        elif len(np.ravel(smat)) == 3:
-            _smat = np.diag(smat)
-        elif len(np.ravel(smat)) == 9:
-            _smat = np.reshape(smat, (3, 3))
-        else:
-            msg = "supercell_matrix shape has to be (3,) or (3, 3)"
-            raise RuntimeError(msg)
-        return _smat
+        return shape_supercell_matrix(smat)

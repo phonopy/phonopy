@@ -1298,6 +1298,19 @@ def guess_primitive_matrix(unitcell, symprec=1e-5):
                     dtype='double', order='C')
 
 
+def shape_supercell_matrix(smat):
+    if smat is None:
+        _smat = np.eye(3, dtype='intc', order='C')
+    elif len(np.ravel(smat)) == 3:
+        _smat = np.diag(smat)
+    elif len(np.ravel(smat)) == 9:
+        _smat = np.reshape(smat, (3, 3))
+    else:
+        msg = "supercell_matrix shape has to be (3,) or (3, 3)"
+        raise RuntimeError(msg)
+    return _smat
+
+
 def estimate_supercell_matrix(spglib_dataset,
                               max_num_atoms=120):
     """Estimate supercell matrix from conventional cell
