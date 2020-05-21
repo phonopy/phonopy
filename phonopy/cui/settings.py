@@ -244,7 +244,7 @@ class Settings(object):
     def set_temperature_step(self, val):
         self._v['temperature_step'] = val
 
-    def set_time_reversal_symmetry(self, val):
+    def set_is_time_reversal_symmetry(self, val):
         self._v['is_time_reversal_symmetry'] = val
 
 
@@ -2011,7 +2011,7 @@ class PhonopyConfParser(ConfParser):
             if 'mp_shift' in params:
                 self._settings.set_mesh_shift(params['mp_shift'])
             if 'is_time_reversal_symmetry' in params:
-                self._settings.set_time_reversal_symmetry(
+                self._settings.set_is_time_reversal_symmetry(
                     params['is_time_reversal_symmetry'])
             if 'is_mesh_symmetry' in params:
                 self._settings.set_is_mesh_symmetry(params['is_mesh_symmetry'])
