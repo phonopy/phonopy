@@ -395,13 +395,14 @@ def create_FORCE_SETS_from_settings(settings, symprec, log_level):
 
     disp_filenames = files_exist(
         ['phonopy_disp.yaml', 'disp.yaml'], log_level, is_any=True)
+    interface_mode = settings.calculator
 
     if disp_filenames[0] == 'phonopy_disp.yaml':
         try:
             phpy_yaml = PhonopyYaml()
             phpy_yaml.read('phonopy_disp.yaml')
             if phpy_yaml.calculator is not None:
-                interface_mode = phpy_yaml.calculator
+                interface_mode = phpy_yaml.calculator  # overwrite
             disp_filename = 'phonopy_disp.yaml'
         except KeyError:
             file_exists('disp.yaml', log_level)
@@ -411,7 +412,6 @@ def create_FORCE_SETS_from_settings(settings, symprec, log_level):
             disp_filename = 'disp.yaml'
     else:
         disp_filename = disp_filenames[0]
-        interface_mode = settings.calculator
 
     files_exist(filenames, log_level)
 
@@ -489,7 +489,7 @@ def produce_force_constants(phonon,
             force_sets = read_force_sets_from_phonopy_yaml(phpy_yaml)
             if log_level:
                 if force_sets is None:
-                    print("Forces and displacements were not found in \"%s\"."
+                    print("Force sets were not found in \"%s\"."
                           % unitcell_filename)
                 else:
                     print("Forces and displacements were read from \"%s\"."
@@ -816,7 +816,7 @@ def run(phonon, settings, plot_conf, log_level):
         if mesh_numbers is None:
             mesh_numbers = 50.0
         mesh_shift = settings.mesh_shift
-        t_symmetry = settings.time_reversal_symmetry
+        t_symmetry = settings.is_time_reversal_symmetry
         q_symmetry = settings.is_mesh_symmetry
         is_gamma_center = settings.is_gamma_center
 
