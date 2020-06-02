@@ -46,6 +46,7 @@ def create_FORCE_SETS(interface_mode,
                       force_sets_zero_mode=False,
                       disp_filename='disp.yaml',
                       force_sets_filename='FORCE_SETS',
+                      write_forcesets_yaml=False,
                       log_level=0):
     """Create FORCE_SETS from phonopy_disp.yaml and calculator output files.
 
@@ -77,10 +78,10 @@ def create_FORCE_SETS(interface_mode,
         else:
             disp_dataset = parse_disp_yaml(filename=disp_filename)
     else:
-        ph_yaml = PhonopyYaml()
-        ph_yaml.read(disp_filename)
-        supercell = ph_yaml.supercell
-        disp_dataset = ph_yaml.dataset
+        phpy_yaml = PhonopyYaml()
+        phpy_yaml.read(disp_filename)
+        supercell = phpy_yaml.supercell
+        disp_dataset = phpy_yaml.dataset
 
     if 'natom' in disp_dataset:  # type-1 dataset
         num_atoms = disp_dataset['natom']
@@ -132,10 +133,18 @@ def create_FORCE_SETS(interface_mode,
 
         write_FORCE_SETS(disp_dataset, filename=force_sets_filename)
 
-    if log_level > 0:
-        if force_sets:
-            print("%s has been created." % force_sets_filename)
-        else:
+        if log_level > 0:
+            print("\"%s\" has been created." % force_sets_filename)
+
+        if disp_filename != 'disp.yaml' and write_forcesets_yaml:
+            phpy_yaml.dataset = disp_dataset
+            with open("phonopy_force_sets.yaml", 'w') as w:
+                w.write(str(phpy_yaml))
+            if log_level > 0:
+                print("\"%s\" has been created." % "phonopy_force_sets.yaml")
+
+    else:
+        if log_level > 0:
             print("%s could not be created." % force_sets_filename)
 
 

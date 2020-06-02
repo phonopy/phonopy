@@ -34,6 +34,7 @@
 
 import numpy as np
 
+
 def get_displacements_and_forces(disp_dataset):
     """Returns displacements and forces of all atoms from displacement dataset
 
@@ -76,3 +77,21 @@ def get_displacements_and_forces(disp_dataset):
         else:
             forces = None
         return disp_dataset['displacements'], forces
+
+
+def forces_in_dataset(dataset):
+    """Check if forces in displacement dataset"""
+
+    if dataset is None:
+        return False
+
+    if 'first_atoms' in dataset:  # type-1
+        for d in dataset['first_atoms']:
+            if 'forces' not in d:
+                return False
+        return True
+
+    if 'forces' in dataset:  # type-2
+        return True
+
+    raise RuntimeError("dataset is wrongly made.")

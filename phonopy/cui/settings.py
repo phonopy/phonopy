@@ -1103,8 +1103,7 @@ class PhonopySettings(Settings):
         'is_projected_thermal_properties': False,
         'include_force_constants': False,
         'include_force_sets': False,
-        'include_born_effective_charge': False,
-        'include_dielectric_constant': False,
+        'include_nac_params': False,
         'include_displacements': False,
         'lapack_solver': False,
         'mesh_shift': None,
@@ -1120,6 +1119,7 @@ class PhonopySettings(Settings):
         'read_force_constants': False,
         'readfc_format': 'text',
         'run_mode': None,
+        'save_params': False,
         'show_irreps': False,
         'thermal_atom_pairs': None,
         'thermal_displacement_matrix_temperatue': None,
@@ -1241,11 +1241,8 @@ class PhonopySettings(Settings):
     def set_include_force_sets(self, val):
         self._v['include_force_sets'] = val
 
-    def set_include_born_effective_charge(self, val):
-        self._v['include_born_effective_charge'] = val
-
-    def set_include_dielectric_constant(self, val):
-        self._v['include_dielectric_constant'] = val
+    def set_include_nac_params(self, val):
+        self._v['include_nac_params'] = val
 
     def set_include_displacements(self, val):
         self._v['include_displacements'] = val
@@ -1294,6 +1291,9 @@ class PhonopySettings(Settings):
 
     def set_thermal_displacement_matrix_temperature(self, val):
         self._v['thermal_displacement_matrix_temperatue'] = val
+
+    def set_save_params(self, val):
+        self._v['save_params'] = val
 
     def set_show_irreps(self, val):
         self._v['show_irreps'] = val
@@ -1474,6 +1474,10 @@ class PhonopyConfParser(ConfParser):
             if self._args.irreps_qpoint is not None:
                 self._confs['irreps'] = " ".join(self._args.irreps_qpoint)
 
+        if 'save_params' in arg_list:
+            if self._args.save_params:
+                self._confs['save_params'] = '.true.'
+
         if 'show_irreps' in arg_list:
             if self._args.show_irreps:
                 self._confs['show_irreps'] = '.true.'
@@ -1545,17 +1549,13 @@ class PhonopyConfParser(ConfParser):
             if self._args.include_fs:
                 self._confs['include_fs'] = '.true.'
 
-        #if 'include_bec' in arg_list:
-        #    if self._args.include_bec:
-        #        self._confs['include_bec'] = '.true.'
-
-        #if 'include_eps' in arg_list:
-        #    if self._args.include_eps:
-        #        self._confs['include_eps'] = '.true.'
-
-        if 'include_born' in arg_list:
-            if self._args.include_born:
-                self._confs['include_born'] = '.true.'
+        if 'include_nac_params' in arg_list:
+            if self._settings.include_nac_params:
+                if not self._args.include_nac_params:
+                    self._confs['include_nac_params'] = '.false.'
+            else:
+                if self._args.include_nac_params:
+                    self._confs['include_nac_params'] = '.true.'
 
         if 'include_disp' in arg_list:
             if self._args.include_disp:
@@ -1863,6 +1863,12 @@ class PhonopyConfParser(ConfParser):
                     self.set_parameter('lapack_solver', False)
 
             # Select yaml summary contents
+            if conf_key == 'save_params':
+                if confs['save_params'].lower() == '.true.':
+                    self.set_parameter('save_params', True)
+                elif confs['save_params'].lower() == '.false.':
+                    self.set_parameter('save_params', False)
+
             if conf_key == 'include_fc':
                 if confs['include_fc'].lower() == '.true.':
                     self.set_parameter('include_fc', True)
@@ -1875,19 +1881,11 @@ class PhonopyConfParser(ConfParser):
                 elif confs['include_fs'].lower() == '.false.':
                     self.set_parameter('include_fs', False)
 
-            #if conf_key == 'include_bec':
-            #    if confs['include_bec'].lower() == '.true.':
-            #        self.set_parameter('include_bec', True)
-
-            #if conf_key == 'include_eps':
-            #    if confs['include_eps'].lower() == '.true.':
-            #        self.set_parameter('include_eps', True)
-
-            if conf_key == 'include_born':
-                if confs['include_born'].lower() == '.true.':
-                    self.set_parameter('include_born', True)
-                elif confs['include_born'].lower() == '.false.':
-                    self.set_parameter('include_born', False)
+            if conf_key in ('include_born', 'include_nac_params'):
+                if confs[conf_key].lower() == '.true.':
+                    self.set_parameter('include_nac_params', True)
+                elif confs[conf_key].lower() == '.false.':
+                    self.set_parameter('include_nac_params', False)
 
             if conf_key == 'include_disp':
                 if confs['include_disp'].lower() == '.true.':
@@ -2213,23 +2211,17 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_lapack_solver(params['lapack_solver'])
 
         # Select yaml summary contents
+        if 'save_params' in params:
+            self._settings.set_save_params(params['save_params'])
+
         if 'include_fc' in params:
             self._settings.set_include_force_constants(params['include_fc'])
 
         if 'include_fs' in params:
             self._settings.set_include_force_sets(params['include_fs'])
 
-        #if 'include_bec' in params:
-        #    self._settings.set_include_born_effective_charge(params['include_bec'])
-
-        #if 'include_eps' in params:
-        #    self._settings.set_include_dielectric_constant(params['include_eps'])
-
-        if 'include_born' in params:
-            self._settings.set_include_dielectric_constant(
-                params['include_born'])
-            self._settings.set_include_born_effective_charge(
-                params['include_born'])
+        if 'include_nac_params' in params:
+            self._settings.set_include_nac_params(params['include_nac_params'])
 
         if 'include_disp' in params:
             self._settings.set_include_displacements(params['include_disp'])
@@ -2237,8 +2229,7 @@ class PhonopyConfParser(ConfParser):
         if 'include_all' in params:
             self._settings.set_include_force_constants(True)
             self._settings.set_include_force_sets(True)
-            self._settings.set_include_dielectric_constant(True)
-            self._settings.set_include_born_effective_charge(True)
+            self._settings.set_include_nac_params(True)
             self._settings.set_include_displacements(True)
 
         # ***********************************************************

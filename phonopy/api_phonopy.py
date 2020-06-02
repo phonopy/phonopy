@@ -44,7 +44,8 @@ from phonopy.structure.grid_points import length2mesh
 from phonopy.structure.cells import (
     get_supercell, get_primitive, guess_primitive_matrix,
     shape_supercell_matrix)
-from phonopy.structure.dataset import get_displacements_and_forces
+from phonopy.structure.dataset import (
+    get_displacements_and_forces, forces_in_dataset)
 from phonopy.harmonic.displacement import (
     get_least_displacements, directions_to_displacement_dataset,
     get_random_displacements_dataset)
@@ -639,7 +640,9 @@ class Phonopy(object):
 
     @dataset.setter
     def dataset(self, dataset):
-        if 'first_atoms' in dataset:
+        if dataset is None:
+            self._displacement_dataset = None
+        elif 'first_atoms' in dataset:
             self._displacement_dataset = dataset
         elif 'displacements' in dataset:
             self._displacement_dataset = {}
@@ -2842,25 +2845,35 @@ class Phonopy(object):
     def save(self,
              filename="phonopy_params.yaml",
              settings=None):
-        """Save parameters in Phonopy instants into file.
+        """Save phonopy parameters into file.
 
         Parameters
         ----------
         filename: str, optional
             File name. Default is "phonopy_params.yaml"
         settings: dict, optional
-            It is described which parameters are written out. Only
-            the settings expected to be updated from the following
-            default settings are needed to be set in the dictionary.
-            The possible parameters and their default settings are:
+
+            It is described which parameters are written out. Only the
+            settings expected to be updated from the following default
+            settings are needed to be set in the dictionary.  The
+            possible parameters and their default settings are:
                 {'force_sets': True,
                  'displacements': True,
                  'force_constants': False,
                  'born_effective_charge': True,
                  'dielectric_constant': True}
+            This default settings are updated by {'force_constants': True}
+            when dataset is None and force_constants is not None.
 
         """
+
         phpy_yaml = PhonopyYaml(settings=settings)
+        if (not forces_in_dataset(self.dataset) and
+            self.force_constants is not None):
+            phpy_yaml.settings.update(
+                {'force_sets': False,
+                 'displacements': False,
+                 'force_constants': True})
         phpy_yaml.set_phonon_info(self)
         with open(filename, 'w') as w:
             w.write(str(phpy_yaml))

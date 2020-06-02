@@ -63,6 +63,7 @@ def show_deprecated_option_warnings(deprecated):
 
 def get_parser(fc_symmetry=False,
                is_nac=False,
+               include_born=False,
                load_phonopy_yaml=False):
     deprecated = fix_deprecated_option_names(sys.argv)
     import argparse
@@ -141,6 +142,12 @@ def get_parser(fc_symmetry=False,
         "--eigvecs", "--eigenvectors", dest="is_eigenvectors",
         action="store_true", default=False,
         help="Output eigenvectors")
+    if load_phonopy_yaml:
+        parser.add_argument(
+            "--exclude-born", "--exclude-nac-params",
+            dest="include_nac_params", action="store_false", default=True,
+            help=("Exclude born effective charge and dielectric tensor in "
+                  "phonopy.yaml"))
     parser.add_argument(
         "-f", "--force-sets", nargs='+', dest="create_force_sets",
         default=None,
@@ -240,11 +247,13 @@ def get_parser(fc_symmetry=False,
     # parser.add_argument(
     #     "--include-eps", dest="include_eps", action="store_true",
     #     help="Include dielectric tensor in phonopy.yaml")
-    parser.add_argument(
-        "--include-born", dest="include_born", action="store_true",
-        default=False,
-        help=("Include born effective charge and dielectric tensor in "
-              "phonopy.yaml"))
+    if not load_phonopy_yaml:
+        parser.add_argument(
+            "--include-born", "--include-nac-params",
+            dest="include_nac_params", action="store_true",
+            default=False,
+            help=("Include born effective charge and dielectric tensor in "
+                  "phonopy.yaml"))
     parser.add_argument(
         "--include-disp", dest="include_disp", action="store_true",
         default=False,
@@ -389,6 +398,10 @@ def get_parser(fc_symmetry=False,
         "-s", "--save", dest="is_graph_save", action="store_true",
         default=False,
         help="Save plot data in pdf")
+    parser.add_argument(
+        "--sp", "--save-params", dest="save_params", action="store_true",
+        default=False,
+        help="Save parameters that can run phonopy in phonopy_params.yaml.")
     parser.add_argument(
         "--show-irreps", dest="show_irreps", action="store_true",
         default=False,

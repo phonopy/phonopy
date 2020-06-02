@@ -38,10 +38,11 @@ import numpy as np
 from phonopy import Phonopy, __version__
 from phonopy.structure.cells import print_cell
 from phonopy.structure.atoms import atom_data, symbol_map
+from phonopy.structure.dataset import forces_in_dataset
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.fc_calculator import fc_calculator_names
 from phonopy.interface.calculator import (
-    get_interface_mode, write_supercells_with_displacements,
+    write_supercells_with_displacements,
     get_default_physical_units, get_default_displacement_distance)
 from phonopy.interface.vasp import create_FORCE_CONSTANTS
 from phonopy.phonon.band_structure import (
@@ -167,24 +168,41 @@ def finalize_phonopy(log_level,
                      filename="phonopy.yaml"):
     units = get_default_physical_units(phonon.calculator)
 
-    yaml_settings = {
-        'force_sets': settings.include_force_sets,
-        'force_constants': settings.include_force_constants,
-        'born_effective_charge': settings.include_born_effective_charge,
-        'dielectric_constant': settings.include_dielectric_constant,
-        'displacements': settings.include_displacements,
-    }
+    if settings.save_params:
+        exists_fc_only = (not forces_in_dataset(phonon.dataset) and
+                          phonon.force_constants is not None)
+        yaml_settings = {
+            'displacements': not exists_fc_only,
+            'force_sets': not exists_fc_only,
+            'force_constants': exists_fc_only,
+            'born_effective_charge': True,
+            'dielectric_constant': True
+        }
+        _filename = "phonopy_params.yaml"
+    else:
+        yaml_settings = {
+            'force_sets': settings.include_force_sets,
+            'force_constants': settings.include_force_constants,
+            'born_effective_charge': settings.include_nac_params,
+            'dielectric_constant': settings.include_nac_params,
+            'displacements': settings.include_displacements
+        }
+        _filename = filename
 
     phpy_yaml = PhonopyYaml(configuration=confs,
                             physical_units=units,
                             settings=yaml_settings)
     phpy_yaml.set_phonon_info(phonon)
-    with open(filename, 'w') as w:
+    with open(_filename, 'w') as w:
         w.write(str(phpy_yaml))
 
     if log_level > 0:
         print("")
-        print("Summary of calculation was written in \"%s\"." % filename)
+        if settings.save_params:
+            print("Summary of calculation and parameters were written "
+                  "in \"%s\"." % _filename)
+        else:
+            print("Summary of calculation was written in \"%s\"." % _filename)
         print_end()
     sys.exit(0)
 
