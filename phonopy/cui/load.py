@@ -118,11 +118,10 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         dtype=int
     primitive_matrix : array_like or str, optional
         Primitive matrix multiplied to input cell basis vectors. Default is
-        the identity matrix.
-        shape=(3, 3)
-        dtype=float
+        None, which is equivalent to 'auto'.
+        For array_like, shape=(3, 3), dtype=float.
         When 'F', 'I', 'A', 'C', or 'R' is given instead of a 3x3 matrix,
-        the primitive matrix defined at
+        the primitive matrix for the character found at
         https://spglib.github.io/spglib/definition.html
         is used.
     is_nac : bool, optional

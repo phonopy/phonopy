@@ -54,11 +54,15 @@ def get_cell_settings(phonopy_yaml=None,
                       symprec=1e-5,
                       log_level=0):
     optional_structure_info = None
+    if primitive_matrix is None or primitive_matrix == "auto":
+        pmat = 'auto'
+    else:
+        pmat = primitive_matrix
+
     if unitcell_filename is not None:
         cell, optional_structure_info = read_crystal_structure(
             filename=unitcell_filename, interface_mode=calculator)
         smat = supercell_matrix
-        pmat = primitive_matrix
         if log_level:
             print("Unit cell structure was read from \"%s\"."
                   % optional_structure_info[0])
@@ -66,20 +70,15 @@ def get_cell_settings(phonopy_yaml=None,
         cell, optional_structure_info = read_crystal_structure(
             filename=supercell_filename, interface_mode=calculator)
         smat = np.eye(3, dtype='intc', order='C')
-        if primitive_matrix is None or primitive_matrix == "auto":
-            pmat = 'auto'
         if log_level:
             print("Supercell structure was read from \"%s\"."
                   % optional_structure_info[0])
     elif unitcell is not None:
         cell = PhonopyAtoms(atoms=unitcell)
         smat = supercell_matrix
-        pmat = primitive_matrix
     elif supercell is not None:
         cell = PhonopyAtoms(atoms=supercell)
         smat = np.eye(3, dtype='intc', order='C')
-        if primitive_matrix is None or primitive_matrix == "auto":
-            pmat = 'auto'
     else:
         raise RuntimeError("Cell has to be specified.")
 
