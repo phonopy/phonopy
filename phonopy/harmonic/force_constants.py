@@ -81,13 +81,12 @@ def get_fc2(supercell,
     """
 
     if atom_list is None:
-        fc_dim0 = supercell.get_number_of_atoms()
+        fc_dim0 = len(supercell)
     else:
         fc_dim0 = len(atom_list)
 
-    force_constants = np.zeros((fc_dim0,
-                                supercell.get_number_of_atoms(),
-                                3, 3), dtype='double', order='C')
+    force_constants = np.zeros((fc_dim0, len(supercell), 3, 3),
+                               dtype='double', order='C')
 
     # Fill force_constants[ displaced_atoms, all_atoms_in_supercell ]
     atom_list_done = _get_force_constants_disps(
@@ -98,7 +97,7 @@ def get_fc2(supercell,
         atom_list=atom_list)
 
     rotations = symmetry.get_symmetry_operations()['rotations']
-    lattice = np.array(supercell.get_cell().T, dtype='double', order='C')
+    lattice = np.array(supercell.cell.T, dtype='double', order='C')
     permutations = symmetry.get_atomic_permutations()
     distribute_force_constants(force_constants,
                                atom_list_done,
@@ -551,9 +550,9 @@ def show_drift_force_constants(force_constants,
                 maxval2 = val2
                 jk2 = [j, k]
     else:
-        s2p_map = primitive.get_supercell_to_primitive_map()
-        p2s_map = primitive.get_primitive_to_supercell_map()
-        p2p_map = primitive.get_primitive_to_primitive_map()
+        s2p_map = primitive.s2p_map
+        p2s_map = primitive.p2s_map
+        p2p_map = primitive.p2p_map
         permutations = primitive.get_atomic_permutations()
         s2pp_map, nsym_list = get_nsym_list_and_s2pp(s2p_map,
                                                      p2p_map,

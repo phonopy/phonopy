@@ -111,7 +111,8 @@ class PhonopyYaml(object):
     """
 
     command_name = "phonopy"
-    default_filenames = ("phonopy_disp.yaml",
+    default_filenames = ("phonopy_params.yaml",
+                         "phonopy_disp.yaml",
                          "phonopy.yaml")
     default_settings = {'force_sets': True,
                         'displacements': True,

@@ -868,7 +868,7 @@ class Phonopy(object):
                                                self._primitive,
                                                level=level)
         if show_drift and self._log_level:
-            sys.stdout.write("Max drift after symmetrization: ")
+            sys.stdout.write("Max drift after symmetrization by translation: ")
             show_drift_force_constants(self._force_constants,
                                        primitive=self._primitive,
                                        values_only=True)
@@ -876,11 +876,17 @@ class Phonopy(object):
         if self._primitive.get_masses() is not None:
             self._set_dynamical_matrix()
 
-    def symmetrize_force_constants_by_space_group(self):
+    def symmetrize_force_constants_by_space_group(self, show_drift=True):
         set_tensor_symmetry_PJ(self._force_constants,
-                               self._supercell.get_cell().T,
-                               self._supercell.get_scaled_positions(),
+                               self._supercell.cell.T,
+                               self._supercell.scaled_positions,
                                self._symmetry)
+
+        if show_drift and self._log_level:
+            sys.stdout.write("Max drift after symmetrization by space group: ")
+            show_drift_force_constants(self._force_constants,
+                                       primitive=self._primitive,
+                                       values_only=True)
 
         if self._primitive.get_masses() is not None:
             self._set_dynamical_matrix()

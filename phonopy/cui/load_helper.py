@@ -156,7 +156,7 @@ def set_dataset_and_force_constants(
         symmetrize_fc=True,
         is_compact_fc=True,
         log_level=0):
-    natom = phonon.supercell.get_number_of_atoms()
+    natom = len(phonon.supercell)
 
     # dataset and fc are those obtained from phonopy_yaml unless None.
     if dataset is not None:

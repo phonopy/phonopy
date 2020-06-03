@@ -36,6 +36,7 @@ import sys
 import os
 import numpy as np
 from phonopy import Phonopy, __version__
+from phonopy.harmonic.force_constants import distribute_force_constants
 from phonopy.structure.cells import print_cell
 from phonopy.structure.atoms import atom_data, symbol_map
 from phonopy.structure.dataset import forces_in_dataset
@@ -449,6 +450,7 @@ def produce_force_constants(phonon,
                             log_level):
     num_satom = len(phonon.supercell)
     p2s_map = phonon.primitive.p2s_map
+    is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
 
     if settings.read_force_constants:
         if settings.is_hdf5 or settings.readfc_format == 'hdf5':
@@ -489,6 +491,10 @@ def produce_force_constants(phonon,
             if log_level:
                 print_error()
             sys.exit(1)
+
+        # Compact fc is expanded to full fc when full fc is required.
+        if is_full_fc and fc.shape[0] != fc.shape[1]:
+            fc = compact_fc_to_full_fc(phonon, fc, log_level=log_level)
 
         phonon.force_constants = fc
     else:
@@ -551,7 +557,7 @@ def produce_force_constants(phonon,
             else:
                 print("Computing force constants...")
 
-        if settings.fc_spg_symmetry or settings.is_full_fc:
+        if is_full_fc:
             # Need to calculate full force constant tensors
             phonon.produce_force_constants(
                 fc_calculator=fc_calculator,
@@ -565,6 +571,28 @@ def produce_force_constants(phonon,
                 fc_calculator_options=fc_calculator_options)
 
 
+def compact_fc_to_full_fc(phonon, compact_fc, log_level=0):
+    fc = np.zeros((compact_fc.shape[1], compact_fc.shape[1], 3, 3),
+                  dtype='double', order='C')
+    p2s_map = phonon.primitive.p2s_map
+    for p_i, s_i in enumerate(p2s_map):
+        fc[s_i] = compact_fc[p_i]
+    symmetry = phonon.symmetry
+    rotations = symmetry.get_symmetry_operations()['rotations']
+    lattice = np.array(phonon.supercell.cell.T,
+                       dtype='double', order='C')
+    permutations = symmetry.get_atomic_permutations()
+    distribute_force_constants(fc,
+                               p2s_map,
+                               lattice,
+                               rotations,
+                               permutations)
+    if log_level:
+        print("Force constants were expanded to full format.")
+
+    return fc
+
+
 def store_force_constants(phonon,
                           settings,
                           phpy_yaml,
@@ -575,19 +603,50 @@ def store_force_constants(phonon,
     p2s_map = phonon.primitive.p2s_map
 
     if load_phonopy_yaml:
-        (fc_calculator,
-         fc_calculator_options) = get_fc_calculator_params(settings)
-        is_full_fc = (settings.fc_spg_symmetry or
-                      settings.is_full_fc)
-        set_dataset_and_force_constants(
-            phonon,
-            phpy_yaml.dataset,
-            phpy_yaml.force_constants,
-            fc_calculator=fc_calculator,
-            produce_fc=True,
-            symmetrize_fc=False,
-            is_compact_fc=(not is_full_fc),
-            log_level=log_level)
+        is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
+        if phpy_yaml.force_constants is not None:
+            if log_level:
+                print("Force constants were read from \"%s\"."
+                      % unitcell_filename)
+
+            fc = phpy_yaml.force_constants
+
+            if fc.shape[1] != len(phonon.supercell):
+                error_text = ("Number of atoms in supercell is not consistent "
+                              "with the matrix shape of\nforce constants read "
+                              "from %s." % unitcell_filename)
+                print_error_message(error_text)
+                if log_level:
+                    print_error()
+                sys.exit(1)
+
+            # Compact fc is expanded to full fc when full fc is required.
+            if is_full_fc and fc.shape[0] != fc.shape[1]:
+                fc = compact_fc_to_full_fc(phonon, fc, log_level=log_level)
+
+            phonon.set_force_constants(fc, show_drift=(log_level > 0))
+
+        if phpy_yaml.dataset is not None:
+            if log_level:
+                text = "Force sets were read from \"%s\"" % unitcell_filename
+                if phpy_yaml.force_constants is not None:
+                    text += " but not to be used."
+                else:
+                    text += "."
+                print(text)
+            if phpy_yaml.force_constants is None:
+                (fc_calculator,
+                 fc_calculator_options) = get_fc_calculator_params(settings)
+                set_dataset_and_force_constants(
+                    phonon,
+                    phpy_yaml.dataset,
+                    None,
+                    fc_calculator=fc_calculator,
+                    produce_fc=True,
+                    symmetrize_fc=False,
+                    is_compact_fc=(not is_full_fc),
+                    log_level=log_level)
+
     else:
         produce_force_constants(phonon,
                                 settings,
@@ -603,15 +662,15 @@ def store_force_constants(phonon,
     # Enforce space group symmetry to force constants
     if settings.fc_spg_symmetry:
         if log_level:
-            print('')
             print("Force constants are symmetrized by space group operations.")
             print("This may take some time...")
         phonon.symmetrize_force_constants_by_space_group()
-        write_FORCE_CONSTANTS(phonon.get_force_constants(),
-                              filename='FORCE_CONSTANTS_SPG')
-        if log_level:
-            print("Symmetrized force constants are written into "
-                  "\"FORCE_CONSTANTS_SPG\".")
+        if not load_phonopy_yaml:
+            write_FORCE_CONSTANTS(phonon.get_force_constants(),
+                                  filename='FORCE_CONSTANTS_SPG')
+            if log_level:
+                print("Symmetrized force constants are written into "
+                      "\"FORCE_CONSTANTS_SPG\".")
 
     # Imporse translational invariance and index permulation symmetry to
     # force constants
@@ -674,6 +733,9 @@ def store_nac_params(phonon,
             nac_params = get_nac_params(primitive=phonon.primitive,
                                         nac_params=phpy_yaml.nac_params,
                                         log_level=log_level)
+            if nac_params and log_level:
+                print("NAC parameters were read from \"%s\"."
+                      % unitcell_filename)
         else:
             if phpy_yaml:
                 nac_params = phpy_yaml.nac_params
