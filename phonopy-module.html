@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
     <title>Phonopy API for Python &#8212; Phonopy v.2.6.1</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Formulations" href="formulation.html" />
@@ -125,7 +125,7 @@
 <li><a class="reference internal" href="#masses"><code class="docutils literal notranslate"><span class="pre">masses</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#methods">Methods</a></li>
+<li><a class="reference internal" href="#methods-and-attributes">Methods and attributes</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#definitions-of-variables">Definitions of variables</a><ul>
@@ -135,6 +135,7 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#getting-parameters-for-non-analytical-term-correction">Getting parameters for non-analytical term correction</a></li>
+<li><a class="reference internal" href="#phonondb-at-kyoto-university">PhononDB at Kyoto university</a></li>
 </ul>
 </li>
 </ul>
@@ -209,7 +210,7 @@
 <ul>
 <li><p><a class="reference internal" href="#initialization" id="id18">Initialization</a></p></li>
 <li><p><a class="reference internal" href="#variables" id="id19">Variables</a></p></li>
-<li><p><a class="reference internal" href="#methods" id="id20">Methods</a></p></li>
+<li><p><a class="reference internal" href="#methods-and-attributes" id="id20">Methods and attributes</a></p></li>
 </ul>
 </li>
 <li><p><a class="reference internal" href="#definitions-of-variables" id="id21">Definitions of variables</a></p>
@@ -220,6 +221,7 @@
 </ul>
 </li>
 <li><p><a class="reference internal" href="#getting-parameters-for-non-analytical-term-correction" id="id25">Getting parameters for non-analytical term correction</a></p></li>
+<li><p><a class="reference internal" href="#phonondb-at-kyoto-university" id="id26">PhononDB at Kyoto university</a></p></li>
 </ul>
 </div>
 <p><strong>This is under development. Configurations may alter.</strong> Requests or
@@ -230,12 +232,24 @@ suggestions are very welcome.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy</span> <span class="kn">import</span> <span class="n">Phonopy</span>
 </pre></div>
 </div>
-<p>Crystal structure is defined by the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class. This class
-is originally made to be similar to the ASE’s <code class="docutils literal notranslate"><span class="pre">Atoms</span></code> class. The
+<p>Crystal structure is defined by the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class. The
 <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> module is imported by:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy.structure.atoms</span> <span class="kn">import</span> <span class="n">PhonopyAtoms</span>
 </pre></div>
 </div>
+<p>The instance of <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> can be made by reading a crystal
+structure in a variety of calculator formats found at <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy.interface.calculator</span> <span class="kn">import</span> <span class="n">read_crystal_structure</span>
+<span class="n">unitcell</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="s2">&quot;POSCAR-unitcell&quot;</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s1">&#39;vasp&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For VASP format, the keyward argument of <code class="docutils literal notranslate"><span class="pre">interface_mode</span></code> can be
+omitted. For QE,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">unitcell</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_crystal_structure</span><span class="p">(</span><span class="s2">&quot;NaCl.in&quot;</span><span class="p">,</span> <span class="n">interface_mode</span><span class="o">=</span><span class="s1">&#39;qe&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">read_crystal_structure</span></code> returns a tuple and the first element is
+the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> instance.</p>
 </div>
 <div class="section" id="work-flow">
 <h2><a class="toc-backref" href="#id4">Work flow</a><a class="headerlink" href="#work-flow" title="Permalink to this headline">¶</a></h2>
@@ -382,9 +396,9 @@ that can be seen by (e.g., in ipython)</p>
 </pre></div>
 </div>
 <p>Examples of how to use <code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code> are listed below.</p>
-<p><code class="docutils literal notranslate"><span class="pre">phonopy-params.yaml</span></code> may contain all information needed to prepare
+<p><code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code> may contain all information needed to prepare
 phonon calculation:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;phonopy-params.yaml&quot;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;phonopy_params.yaml&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>More detailed configuration can be given as follows:</p>
@@ -412,7 +426,10 @@ primitive matrix:</p>
 of NaCl is easily plotted by</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="kn">import</span> <span class="nn">phonopy</span>
 
-<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">supercell_filename</span><span class="o">=</span><span class="s2">&quot;SPOSCAR&quot;</span><span class="p">)</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">supercell_filename</span><span class="o">=</span><span class="s2">&quot;SPOSCAR&quot;</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">Supercell</span> <span class="n">structure</span> <span class="n">was</span> <span class="n">read</span> <span class="kn">from</span> <span class="s2">&quot;SPOSCAR&quot;</span><span class="o">.</span>
+<span class="n">NAC</span> <span class="n">params</span> <span class="n">were</span> <span class="n">read</span> <span class="kn">from</span> <span class="s2">&quot;BORN&quot;</span><span class="o">.</span>
+<span class="n">Force</span> <span class="n">constants</span> <span class="n">were</span> <span class="n">read</span> <span class="kn">from</span> <span class="s2">&quot;FORCE_CONSTANTS&quot;</span><span class="o">.</span>
 
 <span class="n">In</span> <span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="nb">print</span><span class="p">(</span><span class="n">ph</span><span class="o">.</span><span class="n">primitive</span><span class="p">)</span>
 <span class="n">lattice</span><span class="p">:</span>
@@ -427,16 +444,19 @@ of NaCl is easily plotted by</p>
   <span class="n">coordinates</span><span class="p">:</span> <span class="p">[</span>  <span class="mf">0.500000000000000</span><span class="p">,</span>  <span class="mf">0.500000000000000</span><span class="p">,</span>  <span class="mf">0.500000000000000</span> <span class="p">]</span>
   <span class="n">mass</span><span class="p">:</span> <span class="mf">35.453000</span>
 
-<span class="n">In</span> <span class="p">[</span><span class="mi">4</span><span class="p">]:</span> <span class="nb">print</span><span class="p">(</span><span class="n">ph</span><span class="o">.</span><span class="n">nac_params</span><span class="p">)</span>
-<span class="p">{</span><span class="s1">&#39;born&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([[[</span> <span class="mf">1.08703</span><span class="p">,</span>  <span class="mf">0.</span>     <span class="p">,</span>  <span class="mf">0.</span>     <span class="p">],</span>
-        <span class="p">[</span> <span class="mf">0.</span>     <span class="p">,</span>  <span class="mf">1.08703</span><span class="p">,</span>  <span class="mf">0.</span>     <span class="p">],</span>
-        <span class="p">[</span> <span class="mf">0.</span>     <span class="p">,</span>  <span class="mf">0.</span>     <span class="p">,</span>  <span class="mf">1.08703</span><span class="p">]],</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">4</span><span class="p">]:</span> <span class="n">ph</span><span class="o">.</span><span class="n">nac_params</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">4</span><span class="p">]:</span>
+<span class="p">{</span><span class="s1">&#39;born&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([[[</span> <span class="mf">1.08703000e+00</span><span class="p">,</span> <span class="o">-</span><span class="mf">5.17677526e-34</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.06309751e-33</span><span class="p">],</span>
+         <span class="p">[</span><span class="o">-</span><span class="mf">5.45419984e-34</span><span class="p">,</span>  <span class="mf">1.08703000e+00</span><span class="p">,</span>  <span class="mf">1.06309751e-33</span><span class="p">],</span>
+         <span class="p">[</span> <span class="mf">0.00000000e+00</span><span class="p">,</span>  <span class="mf">3.08148791e-33</span><span class="p">,</span>  <span class="mf">1.08703000e+00</span><span class="p">]],</span>
 
-       <span class="p">[[</span><span class="o">-</span><span class="mf">1.08672</span><span class="p">,</span>  <span class="mf">0.</span>     <span class="p">,</span>  <span class="mf">0.</span>     <span class="p">],</span>
-        <span class="p">[</span> <span class="mf">0.</span>     <span class="p">,</span> <span class="o">-</span><span class="mf">1.08672</span><span class="p">,</span>  <span class="mf">0.</span>     <span class="p">],</span>
-        <span class="p">[</span> <span class="mf">0.</span>     <span class="p">,</span>  <span class="mf">0.</span>     <span class="p">,</span> <span class="o">-</span><span class="mf">1.08672</span><span class="p">]]]),</span> <span class="s1">&#39;factor&#39;</span><span class="p">:</span> <span class="mf">14.4</span><span class="p">,</span> <span class="s1">&#39;dielectric&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([[</span><span class="mf">2.43533967</span><span class="p">,</span> <span class="mf">0.</span>        <span class="p">,</span> <span class="mf">0.</span>        <span class="p">],</span>
-       <span class="p">[</span><span class="mf">0.</span>        <span class="p">,</span> <span class="mf">2.43533967</span><span class="p">,</span> <span class="mf">0.</span>        <span class="p">],</span>
-       <span class="p">[</span><span class="mf">0.</span>        <span class="p">,</span> <span class="mf">0.</span>        <span class="p">,</span> <span class="mf">2.43533967</span><span class="p">]])}</span>
+        <span class="p">[[</span><span class="o">-</span><span class="mf">1.08672000e+00</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.93244455e-35</span><span class="p">,</span>  <span class="mf">5.15939995e-34</span><span class="p">],</span>
+         <span class="p">[</span> <span class="mf">5.45264441e-34</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.08672000e+00</span><span class="p">,</span> <span class="o">-</span><span class="mf">5.15939995e-34</span><span class="p">],</span>
+         <span class="p">[</span> <span class="mf">0.00000000e+00</span><span class="p">,</span>  <span class="mf">0.00000000e+00</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.08672000e+00</span><span class="p">]]]),</span>
+ <span class="s1">&#39;factor&#39;</span><span class="p">:</span> <span class="mf">14.4</span><span class="p">,</span>
+ <span class="s1">&#39;dielectric&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([[</span><span class="mf">2.43533967</span><span class="p">,</span> <span class="mf">0.</span>        <span class="p">,</span> <span class="mf">0.</span>        <span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.</span>        <span class="p">,</span> <span class="mf">2.43533967</span><span class="p">,</span> <span class="mf">0.</span>        <span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.</span>        <span class="p">,</span> <span class="mf">0.</span>        <span class="p">,</span> <span class="mf">2.43533967</span><span class="p">]])}</span>
 
 <span class="n">In</span> <span class="p">[</span><span class="mi">5</span><span class="p">]:</span> <span class="n">ph</span><span class="o">.</span><span class="n">auto_band_structure</span><span class="p">(</span><span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
@@ -667,7 +687,7 @@ are</p>
 <div class="section" id="variables">
 <span id="phonopy-atoms-variables"></span><h3><a class="toc-backref" href="#id19">Variables</a><a class="headerlink" href="#variables" title="Permalink to this headline">¶</a></h3>
 <p>The following variables are implemented in the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class
-in <code class="docutils literal notranslate"><span class="pre">atoms.py</span></code>.</p>
+in <code class="docutils literal notranslate"><span class="pre">phonopy/structure/atoms.py</span></code>.</p>
 <div class="section" id="lattice-vectors">
 <span id="phonopy-atoms-cell"></span><h4><code class="docutils literal notranslate"><span class="pre">lattice_vectors</span></code><a class="headerlink" href="#lattice-vectors" title="Permalink to this headline">¶</a></h4>
 <p>Basis vectors are given in the matrix form in Cartesian coordinates.</p>
@@ -720,8 +740,8 @@ in <code class="docutils literal notranslate"><span class="pre">atoms.py</span><
 <p>for the ZnO unit cell.</p>
 </div>
 </div>
-<div class="section" id="methods">
-<h3><a class="toc-backref" href="#id20">Methods</a><a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="methods-and-attributes">
+<h3><a class="toc-backref" href="#id20">Methods and attributes</a><a class="headerlink" href="#methods-and-attributes" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">set_cell</span><span class="p">(</span><span class="n">basis_vectors</span><span class="p">)</span>
 <span class="n">get_cell</span><span class="p">()</span>
 <span class="n">set_positions</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
@@ -732,15 +752,21 @@ in <code class="docutils literal notranslate"><span class="pre">atoms.py</span><
 <span class="n">get_masses</span><span class="p">()</span>
 <span class="n">set_chemical_symbols</span><span class="p">(</span><span class="n">symbols</span><span class="p">)</span>
 <span class="n">get_chemical_symbols</span><span class="p">()</span>
-<span class="n">get_number_of_atoms</span><span class="p">()</span>
+<span class="n">get_magnetic_moments</span><span class="p">()</span>
+<span class="n">set_magnetic_moments</span><span class="p">(</span><span class="n">magmoms</span><span class="p">)</span>
 <span class="n">get_atomic_numbers</span><span class="p">()</span>
+<span class="n">set_atomic_numbers</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span>
 <span class="n">get_volume</span><span class="p">()</span>
+<span class="n">get_number_of_atoms</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>The arguments have to be set in the structures shown in
-<a class="reference internal" href="#phonopy-atoms-variables"><span class="std std-ref">Variables</span></a>. There are setters and getters
-of <code class="docutils literal notranslate"><span class="pre">cell</span></code> and <code class="docutils literal notranslate"><span class="pre">scaled_positions</span></code>. There are getters of
-<code class="docutils literal notranslate"><span class="pre">positions</span></code>, <code class="docutils literal notranslate"><span class="pre">numbers</span></code>, <code class="docutils literal notranslate"><span class="pre">masses</span></code>, <code class="docutils literal notranslate"><span class="pre">volume</span></code>.</p>
+<a class="reference internal" href="#phonopy-atoms-variables"><span class="std std-ref">Variables</span></a>. There are the respective attributes
+<code class="docutils literal notranslate"><span class="pre">cell</span></code>, <code class="docutils literal notranslate"><span class="pre">positions</span></code>, <code class="docutils literal notranslate"><span class="pre">scaled_positions</span></code>, <code class="docutils literal notranslate"><span class="pre">masses</span></code>, <code class="docutils literal notranslate"><span class="pre">magnetic_moments</span></code>,
+<code class="docutils literal notranslate"><span class="pre">symbols</span></code>, <code class="docutils literal notranslate"><span class="pre">numbers</span></code>, and <code class="docutils literal notranslate"><span class="pre">volume</span></code>. <code class="docutils literal notranslate"><span class="pre">unitcell.get_number_of_atoms()</span></code>
+is equivalent to <code class="docutils literal notranslate"><span class="pre">len(unitcell)</span></code>. The instance can be deep-copied by
+<code class="docutils literal notranslate"><span class="pre">unitcell.copy()</span></code>. <code class="docutils literal notranslate"><span class="pre">print(unitcell)</span></code> shows human-readable crystal structure
+in Yaml format.</p>
 </div>
 </div>
 <div class="section" id="definitions-of-variables">
@@ -838,6 +864,31 @@ dielectric constant were calculated using VASP code by the unit cell.</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="phonondb-at-kyoto-university">
+<h2><a class="toc-backref" href="#id26">PhononDB at Kyoto university</a><a class="headerlink" href="#phonondb-at-kyoto-university" title="Permalink to this headline">¶</a></h2>
+<p>The phonon calculation database at
+<a class="reference external" href="http://phonondb.mtl.kyoto-u.ac.jp/ph20180417/index.html">http://phonondb.mtl.kyoto-u.ac.jp/ph20180417/index.html</a> can be easily
+used from phonopy-API. Downloading the raw data, e.g.,
+<code class="docutils literal notranslate"><span class="pre">mp-361-20180417.tar.lzma</span></code> and expand it. In the directory
+<code class="docutils literal notranslate"><span class="pre">mp-361-20180417</span></code>,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">ipython</span>
+</pre></div>
+</div>
+<p>The data is loaded by</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="kn">import</span> <span class="nn">phonopy</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;phonon.yaml&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For example, the band structure is plotted by</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="n">ph</span><span class="o">.</span><span class="n">auto_band_structure</span><span class="p">(</span><span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>and similarly for PDOS</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">4</span><span class="p">]:</span> <span class="n">ph</span><span class="o">.</span><span class="n">auto_projected_dos</span><span class="p">(</span><span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
 </div>
 
 
@@ -860,7 +911,7 @@ dielectric constant were calculated using VASP code by the unit cell.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.<br/>
     </p>
   </div>
 </footer>

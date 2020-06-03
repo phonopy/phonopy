@@ -17,11 +17,28 @@ After setting the phonopy python path, the phonopy module is imported by::
 
    from phonopy import Phonopy
 
-Crystal structure is defined by the ``PhonopyAtoms`` class. This class
-is originally made to be similar to the ASE's ``Atoms`` class. The
+Crystal structure is defined by the ``PhonopyAtoms`` class. The
 ``PhonopyAtoms`` module is imported by::
 
    from phonopy.structure.atoms import PhonopyAtoms
+
+The instance of ``PhonopyAtoms`` can be made by reading a crystal
+structure in a variety of calculator formats found at :ref:`calculator_interfaces`.
+
+::
+
+   from phonopy.interface.calculator import read_crystal_structure
+   unitcell, _ = read_crystal_structure("POSCAR-unitcell", interface_mode='vasp')
+
+For VASP format, the keyward argument of ``interface_mode`` can be
+omitted. For QE,
+
+::
+
+   unitcell, _ = read_crystal_structure("NaCl.in", interface_mode='qe')
+
+Note that ``read_crystal_structure`` returns a tuple and the first element is
+the ``PhonopyAtoms`` instance.
 
 Work flow
 ----------
@@ -189,10 +206,10 @@ that can be seen by (e.g., in ipython)
 
 Examples of how to use ``phonopy.load`` are listed below.
 
-``phonopy-params.yaml`` may contain all information needed to prepare
+``phonopy_params.yaml`` may contain all information needed to prepare
 phonon calculation::
 
-   phonon = phonopy.load("phonopy-params.yaml")
+   phonon = phonopy.load("phonopy_params.yaml")
 
 More detailed configuration can be given as follows::
 
@@ -222,7 +239,10 @@ of NaCl is easily plotted by
 
    In [1]: import phonopy
 
-   In [2]: ph = phonopy.load(supercell_filename="SPOSCAR")
+   In [2]: ph = phonopy.load(supercell_filename="SPOSCAR", log_level=1)
+   Supercell structure was read from "SPOSCAR".
+   NAC params were read from "BORN".
+   Force constants were read from "FORCE_CONSTANTS".
 
    In [3]: print(ph.primitive)
    lattice:
@@ -237,16 +257,19 @@ of NaCl is easily plotted by
      coordinates: [  0.500000000000000,  0.500000000000000,  0.500000000000000 ]
      mass: 35.453000
 
-   In [4]: print(ph.nac_params)
-   {'born': array([[[ 1.08703,  0.     ,  0.     ],
-           [ 0.     ,  1.08703,  0.     ],
-           [ 0.     ,  0.     ,  1.08703]],
+   In [4]: ph.nac_params
+   Out[4]:
+   {'born': array([[[ 1.08703000e+00, -5.17677526e-34, -1.06309751e-33],
+            [-5.45419984e-34,  1.08703000e+00,  1.06309751e-33],
+            [ 0.00000000e+00,  3.08148791e-33,  1.08703000e+00]],
 
-          [[-1.08672,  0.     ,  0.     ],
-           [ 0.     , -1.08672,  0.     ],
-           [ 0.     ,  0.     , -1.08672]]]), 'factor': 14.4, 'dielectric': array([[2.43533967, 0.        , 0.        ],
-          [0.        , 2.43533967, 0.        ],
-          [0.        , 0.        , 2.43533967]])}
+           [[-1.08672000e+00, -2.93244455e-35,  5.15939995e-34],
+            [ 5.45264441e-34, -1.08672000e+00, -5.15939995e-34],
+            [ 0.00000000e+00,  0.00000000e+00, -1.08672000e+00]]]),
+    'factor': 14.4,
+    'dielectric': array([[2.43533967, 0.        , 0.        ],
+           [0.        , 2.43533967, 0.        ],
+           [0.        , 0.        , 2.43533967]])}
 
    In [5]: ph.auto_band_structure(plot=True).show()
 
@@ -514,7 +537,7 @@ Variables
 ^^^^^^^^^^
 
 The following variables are implemented in the ``PhonopyAtoms`` class
-in ``atoms.py``.
+in ``phonopy/structure/atoms.py``.
 
 .. _phonopy_Atoms_cell:
 
@@ -586,8 +609,8 @@ Atomic masses, e.g.,
 
 for the ZnO unit cell.
 
-Methods
-^^^^^^^^
+Methods and attributes
+^^^^^^^^^^^^^^^^^^^^^^
 
 ::
 
@@ -601,14 +624,20 @@ Methods
    get_masses()
    set_chemical_symbols(symbols)
    get_chemical_symbols()
-   get_number_of_atoms()
+   get_magnetic_moments()
+   set_magnetic_moments(magmoms)
    get_atomic_numbers()
+   set_atomic_numbers(numbers)
    get_volume()
+   get_number_of_atoms()
 
 The arguments have to be set in the structures shown in
-:ref:`phonopy_Atoms_variables`. There are setters and getters
-of ``cell`` and ``scaled_positions``. There are getters of
-``positions``, ``numbers``, ``masses``, ``volume``.
+:ref:`phonopy_Atoms_variables`. There are the respective attributes
+``cell``, ``positions``, ``scaled_positions``, ``masses``, ``magnetic_moments``,
+``symbols``, ``numbers``, and ``volume``. ``unitcell.get_number_of_atoms()``
+is equivalent to ``len(unitcell)``. The instance can be deep-copied by
+``unitcell.copy()``. ``print(unitcell)`` shows human-readable crystal structure
+in Yaml format.
 
 Definitions of variables
 -------------------------
@@ -726,3 +755,35 @@ dielectric constant were calculated using VASP code by the unit cell.
     nac_params = {'born': borns_,
                   'factor': Hartree * Bohr,
                   'dielectric': epsilon_}
+
+PhononDB at Kyoto university
+----------------------------
+
+The phonon calculation database at
+http://phonondb.mtl.kyoto-u.ac.jp/ph20180417/index.html can be easily
+used from phonopy-API. Downloading the raw data, e.g.,
+``mp-361-20180417.tar.lzma`` and expand it. In the directory
+``mp-361-20180417``,
+
+::
+
+   % ipython
+
+The data is loaded by
+
+::
+
+   In [1]: import phonopy
+
+   In [2]: ph = phonopy.load("phonon.yaml")
+
+For example, the band structure is plotted by
+::
+
+   In [3]: ph.auto_band_structure(plot=True).show()
+
+and similarly for PDOS
+
+::
+
+   In [4]: ph.auto_projected_dos(plot=True).show()
