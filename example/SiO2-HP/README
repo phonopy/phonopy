@@ -2,9 +2,7 @@ SiO2 high pressure phase of Stishovite. The unit cell was relaxed using VASP wit
 
 % phonopy -p --nac band.conf
 
-Small imaginary acoustic mode may appear due to the shortage of supercell size. FORCE_SETS file can be re-created by
-
-% phonopy -f vasprun.xml-00{1..3}
+Small imaginary acoustic mode may appear due to the shortage of supercell size..
 
 An animation file for the v_sim viewer is created by
 
