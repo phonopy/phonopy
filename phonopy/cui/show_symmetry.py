@@ -42,17 +42,17 @@ from phonopy.structure.cells import guess_primitive_matrix, get_primitive
 
 
 def check_symmetry(phonon, optional_structure_info):
-    # Assumed that supercell is unit cell.
-    print(_get_symmetry_yaml(phonon.supercell,
-                             phonon.symmetry,
+    # Assumed that primitive cell is the cell that user is interested in.
+    print(_get_symmetry_yaml(phonon.primitive,
+                             phonon.primitive_symmetry,
                              phonon.version))
 
     if phonon.unitcell.magnetic_moments is None:
         base_fname = get_default_cell_filename(phonon.calculator)
-        symprec = phonon.symmetry.get_symmetry_tolerance()
+        symprec = phonon.primitive_symmetry.get_symmetry_tolerance()
         (bravais_lattice,
          bravais_pos,
-         bravais_numbers) = spg.refine_cell(phonon.unitcell, symprec)
+         bravais_numbers) = spg.refine_cell(phonon.primitive, symprec)
         bravais = PhonopyAtoms(numbers=bravais_numbers,
                                scaled_positions=bravais_pos,
                                cell=bravais_lattice)
