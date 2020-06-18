@@ -83,7 +83,7 @@ class Phonopy(object):
 
     def __init__(self,
                  unitcell,
-                 supercell_matrix,
+                 supercell_matrix=None,
                  primitive_matrix=None,
                  nac_params=None,
                  factor=VaspToTHz,
@@ -2876,10 +2876,9 @@ class Phonopy(object):
         phpy_yaml = PhonopyYaml(settings=settings)
         if (not forces_in_dataset(self.dataset) and
             self.force_constants is not None):
-            phpy_yaml.settings.update(
-                {'force_sets': False,
-                 'displacements': False,
-                 'force_constants': True})
+            phpy_yaml.settings.update({'force_sets': False,
+                                       'displacements': False,
+                                       'force_constants': True})
         phpy_yaml.set_phonon_info(self)
         with open(filename, 'w') as w:
             w.write(str(phpy_yaml))
