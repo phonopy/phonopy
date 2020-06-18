@@ -196,7 +196,8 @@ class BandPlot(object):
              distances,
              frequencies,
              path_connections,
-             fmt=None):
+             fmt=None,
+             label=None):
         """Plot one band structure.
 
         If ``labels`` is given, decoration such as horizontal line at freq=0,
@@ -214,6 +215,8 @@ class BandPlot(object):
         fmt : str, optional
             Matplotlib format strings. Default is None, which is equivalent to
             'r-'.
+        label : str, optional
+            Label attached to band structure.
 
         """
 
@@ -227,11 +230,16 @@ class BandPlot(object):
 
         count = 0
         distances_scaled = [d * self.xscale for d in distances]
-        for d, f, c in zip(distances_scaled,
-                           frequencies,
-                           path_connections):
+        for i, (d, f, c) in enumerate(zip(distances_scaled,
+                                          frequencies,
+                                          path_connections)):
             ax = self._axs[count]
-            ax.plot(d, f, _fmt, linewidth=1)
+            if i == 0 and label is not None:
+                curves = ax.plot(d, f, _fmt, linewidth=1)
+                curves[0].set_label(label)
+                ax.legend()
+            else:
+                ax.plot(d, f, _fmt, linewidth=1)
             if not c:
                 count += 1
 

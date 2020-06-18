@@ -449,8 +449,11 @@ def plot(args):
     # Plot band structures
     fmts = ['r-', 'b-', 'g-', 'c-', 'm-', 'y-', 'k-',
             'r--', 'b--', 'g--', 'c--', 'm--', 'y--', 'k--']
-    for (l, p, f, d), fmt in zip(plots_data, fmts):
-        band_plot.plot(d, f, p, fmt=fmt)
+    for (l, p, f, d), fmt, label in zip(plots_data, fmts, filenames):
+        if args.show_legend:
+            band_plot.plot(d, f, p, fmt=fmt, label=label)
+        else:
+            band_plot.plot(d, f, p, fmt=fmt)
 
     if args.output_filename is not None:
         savefig(plt, args.output_filename)
