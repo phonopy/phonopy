@@ -1252,8 +1252,24 @@ class Phonopy(object):
 
     def write_yaml_band_structure(self,
                                   comment=None,
-                                  filename="band.yaml",
+                                  filename=None,
                                   compression=None):
+        """Write band structure in yaml
+
+        Parameters
+        ----------
+        comment : str
+            Data structure dumped in YAML and the dumped YAML text is put
+            at the beggining of the file.
+        filename : str
+            Default filename is 'band.yaml' when compression=None.
+            With compression, an extention of filename is added such as
+            'band.yaml.xz'.
+        compression : None, 'gzip', or 'lzma'
+            None gives usual text file. 'gzip and 'lzma' compresse yaml
+            text in respective compression methods.
+
+        """
         self._band_structure.write_yaml(comment=comment,
                                         filename=filename,
                                         compression=compression)

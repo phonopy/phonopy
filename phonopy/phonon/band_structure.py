@@ -634,13 +634,20 @@ class BandStructure(object):
 
     def write_yaml(self,
                    comment=None,
-                   filename="band.yaml",
+                   filename=None,
                    compression=None):
+        if filename is not None:
+            _filename = filename
+
         if compression is None:
-            with open(filename, 'w') as w:
+            if filename is None:
+                _filename = "band.yaml"
+            with open(_filename, 'w') as w:
                 self._write_yaml(w, comment)
         elif compression == 'gzip':
-            with gzip.open(filename + ".gz", 'wb') as w:
+            if filename is None:
+                _filename = "band.yaml.gz"
+            with gzip.open(_filename + ".gz", 'wb') as w:
                 self._write_yaml(w, comment, is_binary=True)
         elif compression == 'lzma':
             try:
@@ -648,7 +655,9 @@ class BandStructure(object):
             except ImportError:
                 raise("Reading a lzma compressed file is not supported "
                       "by this python version.")
-            with lzma.open(filename + ".xz", 'w') as w:
+            if filename is None:
+                _filename = "band.yaml.xz"
+            with lzma.open(_filename + ".xz", 'w') as w:
                 self._write_yaml(w, comment, is_binary=True)
 
     def _write_yaml(self, w, comment, is_binary=False):
