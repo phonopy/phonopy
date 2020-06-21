@@ -33,11 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-try:
-    import yaml
-except ImportError:
-    raise ImportError("You need to install python-yaml.")
-
+import yaml
 try:
     from yaml import CLoader as Loader
 except ImportError:

@@ -1252,8 +1252,11 @@ class Phonopy(object):
 
     def write_yaml_band_structure(self,
                                   comment=None,
-                                  filename="band.yaml"):
-        self._band_structure.write_yaml(comment=comment, filename=filename)
+                                  filename="band.yaml",
+                                  compression=None):
+        self._band_structure.write_yaml(comment=comment,
+                                        filename=filename,
+                                        compression=compression)
 
     def init_mesh(self,
                   mesh=100.0,

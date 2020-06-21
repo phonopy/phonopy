@@ -39,11 +39,7 @@ except ImportError:
     from io import StringIO
 import numpy as np
 
-try:
-    import yaml
-except ImportError:
-    raise ModuleNotFoundError("You need to install python-yaml.")
-
+import yaml
 try:
     from yaml import CLoader as Loader
 except ImportError:
