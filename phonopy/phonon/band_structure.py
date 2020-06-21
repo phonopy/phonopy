@@ -647,7 +647,7 @@ class BandStructure(object):
         elif compression == 'gzip':
             if filename is None:
                 _filename = "band.yaml.gz"
-            with gzip.open(_filename + ".gz", 'wb') as w:
+            with gzip.open(_filename, 'wb') as w:
                 self._write_yaml(w, comment, is_binary=True)
         elif compression == 'lzma':
             try:
@@ -657,7 +657,7 @@ class BandStructure(object):
                       "by this python version.")
             if filename is None:
                 _filename = "band.yaml.xz"
-            with lzma.open(_filename + ".xz", 'w') as w:
+            with lzma.open(_filename, 'w') as w:
                 self._write_yaml(w, comment, is_binary=True)
 
     def _write_yaml(self, w, comment, is_binary=False):
