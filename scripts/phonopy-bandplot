@@ -34,6 +34,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import os
 import sys
 import numpy as np
 from phonopy.phonon.band_structure import BandPlot
@@ -50,14 +51,19 @@ except ImportError:
     from yaml import Loader
 
 
-def read_band_yaml(filename, is_lzma=False):
-    if is_lzma:
+def read_band_yaml(filename):
+    _, ext = os.path.splitext(filename)
+    if ext == '.xz' or ext == '.lzma':
         try:
             import lzma
         except ImportError:
             raise("Reading a lzma compressed file is not supported "
                   "by this python version.")
         with lzma.open(filename) as f:
+            data = yaml.load(f, Loader=Loader)
+    elif ext == '.gz':
+        import gzip
+        with gzip.open(filename) as f:
             data = yaml.load(f, Loader=Loader)
     else:
         with open(filename, 'r') as f:
@@ -131,7 +137,6 @@ def get_options():
                         f_min=None,
                         is_gnuplot=False,
                         is_legacy_plot=False,
-                        is_lzma=False,
                         is_points=False,
                         is_vertial_line=False,
                         output_filename=None,
@@ -179,9 +184,6 @@ def get_options():
     parser.add_argument(
         "--line", "-l", dest="is_vertial_line", action="store_true",
         help="Vertial line is drawn at between paths")
-    parser.add_argument(
-        "--lzma", "--xz", dest="is_lzma", action="store_true",
-        help="Read input file as compressed by lzma (xz)")
     parser.add_argument(
         "-o", "--output", dest="output_filename", action="store",
         help="Output filename of PDF plot")
@@ -256,7 +258,7 @@ def old_plot(args):
          frequencies,
          qpoints,
          segment_nqpoint,
-         labels) = read_band_yaml(filename, is_lzma=args.is_lzma)
+         labels) = read_band_yaml(filename)
 
         end_points = [0, ]
         for nq in segment_nqpoint:
@@ -421,8 +423,7 @@ def plot(args):
     else:
         filenames = args.filenames
 
-    bands_data = [read_band_yaml(fname, is_lzma=args.is_lzma)
-                  for fname in filenames]
+    bands_data = [read_band_yaml(fname) for fname in filenames]
     plots_data = [_arrange_band_data(*band_data) for band_data in bands_data]
 
     # Check consistency of input band structures
