@@ -68,6 +68,7 @@ ElkToTHz = sqrt(Hartree*EV/AMU)/(Bohr*1e-10)/(2*pi)/1e12  # [THz] 154.10794
 SiestaToTHz = sqrt(EV/(AMU*Bohr))/Angstrom/(2*pi)/1e12  # [THz] 21.49068
 CP2KToTHz = sqrt(Hartree*EV/(AMU*Bohr))/Angstrom/(2*pi)/1e12  # CP2K uses a.u. for forces but Angstrom for distances
 CrystalToTHz = VaspToTHz
+CastepToTHz = VaspToTHz
 DftbpToTHz = sqrt(Hartree*EV/AMU)/(Bohr*1e-10)/(2*pi)/1e12 # [THz] 154.10794344
 dftbpToBohr = 0.188972598857892E+01
 TurbomoleToTHz = ElkToTHz # Turbomole uses atomic units (Hartree/Bohr)
