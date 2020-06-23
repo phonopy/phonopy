@@ -63,6 +63,8 @@ calculator_info = {
                         'help': "Invoke Vasp mode"}},
     'wien2k': {'option': {'name': "--wien2k",
                           'help': "Invoke Wien2k mode"}},
+    'castep': {'option': {'name': "--castep",
+                           'help': "Invoke CASTEP mode"}},
 }
 
 
@@ -148,6 +150,10 @@ def write_crystal_structure(filename,
     elif interface_mode == 'aims':
         import phonopy.interface.aims as aims
         aims.write_aims(filename, cell)
+    elif interface_mode == 'castep':
+        import phonopy.interface.castep as castep
+        castep.write_castep(filename, cell)
+
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -248,6 +254,9 @@ def write_supercells_with_displacements(interface_mode,
     elif interface_mode == 'aims':
         import phonopy.interface.aims as aims
         aims.write_supercells_with_displacements(*args, **kwargs)
+    elif interface_mode == 'castep':
+        import phonopy.interface.castep as castep
+        castep.write_supercells_with_displacements(*args, **kwargs)
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -348,6 +357,10 @@ def read_crystal_structure(filename=None,
         from phonopy.interface.aims import read_aims
         unitcell = read_aims(cell_filename)
         return unitcell, (cell_filename,)
+    elif interface_mode == 'castep':
+        from phonopy.interface.castep import read_castep
+        unitcell = read_castep(cell_filename)
+        return unitcell, (cell_filename,)
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -373,6 +386,8 @@ def get_default_cell_filename(interface_mode):
         return "control"
     elif interface_mode == 'aims':
         return "geometry.in"
+    elif interface_mode in ('castep'):
+        return "unitcell.cell"
     else:
         return None
 
@@ -399,6 +414,8 @@ def get_default_supercell_filename(interface_mode):
         return None  # TURBOMOLE interface generates directories with inputs
     elif interface_mode == 'aims':
         return "geometry.in.supercell"
+    elif interface_mode in ('castep'):
+        return "supercell.cell"
     else:
         return None
 
@@ -427,6 +444,7 @@ def get_default_physical_units(interface_mode=None):
     TURBOMOLE     : hartree, au,        AMU,         hartree/au,   hartree/au^2
     CP2K          : hartree, angstrom,  AMU,         hartree/au,   hartree/angstrom.au
     FHI-aims      : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
+    castep        : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
 
     units['force_constants_unit'] is used in
     the 'get_force_constant_conversion_factor' method.
@@ -435,7 +453,7 @@ def get_default_physical_units(interface_mode=None):
 
     from phonopy.units import (Wien2kToTHz, AbinitToTHz, PwscfToTHz, ElkToTHz,
                                SiestaToTHz, VaspToTHz, CP2KToTHz, CrystalToTHz,
-                               DftbpToTHz, TurbomoleToTHz, Hartree, Bohr,
+                               DftbpToTHz, TurbomoleToTHz, CastepToTHz, Hartree, Bohr,
                                Rydberg)
 
     units = {'factor': None,
@@ -507,6 +525,12 @@ def get_default_physical_units(interface_mode=None):
         units['force_to_eVperA'] = Hartree / Bohr
         units['force_constants_unit'] = 'hartree/au^2'
         units['length_unit'] = 'au'
+    elif interface_mode == 'castep':
+        units['factor'] = CastepToTHz
+        units['nac_factor'] = Hartree * Bohr
+        units['distance_to_A'] = 1.0
+        units['force_constants_unit'] = 'eV/angstrom^2'
+        units['length_unit'] = 'angstrom'
 
     return units
 
@@ -537,6 +561,9 @@ def get_force_sets(interface_mode,
         from phonopy.interface.turbomole import parse_set_of_forces
     elif interface_mode == 'aims':
         from phonopy.interface.aims import parse_set_of_forces
+    elif interface_mode == 'castep':
+        from phonopy.interface.castep import parse_set_of_forces
+
     else:
         return []
 

@@ -591,8 +591,8 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         #         C[i, :, j, :] *= phase_factor[j] / np.sqrt(mass[i] * mass[j])
 
         # Mass weighted
-        mass = self._pcell.get_masses()
-        num_atom = self._pcell.get_number_of_atoms()
+        mass = self._pcell.masses
+        num_atom = len(self._pcell)
         for i in range(num_atom):
             for j in range(num_atom):
                 C[i, :, j, :] *= 1.0 / np.sqrt(mass[i] * mass[j])
@@ -602,11 +602,21 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         return C_dd
 
     def _get_c_dipole_dipole(self, q_cart, q_dir_cart):
+        """Eq.(71) on the right hand side
+
+        This is subtracted from supercell force constants to create
+        short-range force constants. Only once at commensurate points.
+
+        This is added to interpolated short range force constants
+        to create full force constants. Called many times.
+
+        """
+
         import phonopy._phonopy as phonoc
 
-        pos = self._pcell.get_positions()
+        pos = self._pcell.positions
         num_atom = len(pos)
-        volume = self._pcell.get_volume()
+        volume = self._pcell.volume
         dd = np.zeros((num_atom, 3, num_atom, 3),
                       dtype=self._dtype_complex, order='C')
 
@@ -624,6 +634,12 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         return dd
 
     def _set_c_dipole_dipole_q0(self):
+        """Eq.(71) second term on the right hand side
+
+        Computed only once.
+
+        """
+
         import phonopy._phonopy as phonoc
 
         pos = self._pcell.get_positions()
