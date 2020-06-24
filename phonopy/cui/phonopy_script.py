@@ -769,8 +769,8 @@ def store_nac_params(phonon,
             if log_level:
                 dm = phonon.dynamical_matrix
                 if dm is not None:
-                    if dm.is_nac() and dm.nac_method == 'gonze':
-                        dm.show_Gonze_nac_message()
+                    if dm.is_nac():
+                        dm.show_nac_message()
                     print("")
 
             if log_level > 1:
