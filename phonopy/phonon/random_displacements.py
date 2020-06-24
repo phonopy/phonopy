@@ -39,6 +39,14 @@ from phonopy.harmonic.dynmat_to_fc import (
 from phonopy.units import VaspToTHz, THzToEv, Kb, Hbar, AMU, EV, Angstrom, THz
 
 
+def bose_einstein_dist(x, t):
+    return 1.0 / (np.exp(THzToEv * x / (Kb * t)) - 1)
+
+
+def boltzmann_dist(x, t):
+    return np.exp(- THzToEv * x / (Kb * t))
+
+
 class RandomDisplacements(object):
     """Generate random displacements by Canonical ensenmble.
 
@@ -94,6 +102,7 @@ class RandomDisplacements(object):
                  supercell,
                  primitive,
                  force_constants,
+                 dist_func=None,
                  cutoff_frequency=None,
                  factor=VaspToTHz):
         """
@@ -107,6 +116,11 @@ class RandomDisplacements(object):
         force_constants : array_like
             Force constants matrix. See the details at docstring of
             DynamialMatrix.
+        dist_func : str or None
+            Phonon occupation function. Default is None, which corresponds
+            to 'bose_einstein'. There are two choices:
+                 'bose_einstein' : Bose-Einstein distribution
+                 'boltzmann' : Boltzmann distribution
         cutoff_frequency : float
             Lowest phonon frequency below which frequency the phonon mode
             is treated specially. See _get_sigma. Default is None, which
@@ -127,8 +141,18 @@ class RandomDisplacements(object):
         self._T = None
         self.u = None
 
+        if dist_func is None or dist_func == 'bose_einstein':
+            self._dist_func = 'bose_einstein'
+        elif dist_func == 'boltzmann':
+            self._dist_func = 'boltzmann'
+        else:
+            raise RuntimeError(
+                "Either 'bose_einstein' or 'boltzmann' is required.")
+
         self._unit_conversion = (Hbar * EV / AMU / THz
                                  / (2 * np.pi) / Angstrom ** 2)
+        self._unit_conversion_classical = (
+            Kb * EV / AMU / (THz * (2 * np.pi)) ** 2 / Angstrom ** 2)
 
         slat = supercell.cell
         self._rec_lat = np.linalg.inv(primitive.cell)
@@ -284,9 +308,9 @@ class RandomDisplacements(object):
         else:
             _randn = randn
         sigmas = self._get_sigma(self._eigvals_ii, T)
-        for dist_func, sigma, eigvecs, phase in zip(
+        for norm_dist, sigma, eigvecs, phase in zip(
                 _randn, sigmas, self._eigvecs_ii, self._phase_ii):
-            u_red = np.dot(dist_func * sigma, eigvecs.T).reshape(
+            u_red = np.dot(norm_dist * sigma, eigvecs.T).reshape(
                 number_of_snapshots, -1, 3)[:, self._s2pp, :]
             u += u_red * phase
 
@@ -307,25 +331,31 @@ class RandomDisplacements(object):
         else:
             _randn = randn
         sigmas = self._get_sigma(self._eigvals_ij, T)
-        for dist_func, sigma, eigvecs, phase in zip(
+        for norm_dist, sigma, eigvecs, phase in zip(
                 _randn, sigmas, self._eigvecs_ij, self._phase_ij):
-            u_red = np.dot(dist_func * sigma, eigvecs.T).reshape(
+            u_red = np.dot(norm_dist * sigma, eigvecs.T).reshape(
                 2, number_of_snapshots, -1, 3)[:, :, self._s2pp, :]
             u += (u_red[0] * phase).real
             u -= (u_red[1] * phase).imag
 
         return u * np.sqrt(2)
 
-    def _get_sigma(self, eigvals, T):  # max 2D
+    def _get_sigma(self, eigvals, T):
+        """Returns sigma in sqrt(AMU).Angstrom unit"""
         freqs = np.sqrt(np.abs(eigvals)) * self._factor
         conditions = freqs > self._cutoff_frequency
         freqs = np.where(conditions, freqs, 1)
-        n = np.where(conditions,
-                     1.0 / (np.exp(freqs * THzToEv / (Kb * T)) - 1),
-                     0)
-        sigma = np.where(conditions,
-                         np.sqrt(self._unit_conversion / freqs * (0.5 + n)),
-                         0)
+        if self._dist_func == 'boltzmann':
+            sigma = np.where(
+                conditions,
+                np.sqrt(T * self._unit_conversion_classical) / freqs,
+                0)
+        else:
+            n = np.where(conditions, bose_einstein_dist(freqs, T), 0)
+            sigma = np.where(
+                conditions,
+                np.sqrt(self._unit_conversion / freqs * (0.5 + n)),
+                0)
         return sigma
 
     def _categorize_points(self):
