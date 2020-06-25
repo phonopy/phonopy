@@ -2855,11 +2855,31 @@ class Phonopy(object):
                                  temperature,
                                  number_of_snapshots=1,
                                  random_seed=None,
+                                 dist_func=None,
                                  cutoff_frequency=None):
+        """Generate random displacements from phonon structure
+
+        Some more details are written at generate_displacements.
+
+        temperature : float
+            Temperature.
+        number_of_snapshots : int
+            Number of snapshots with random displacements created.
+        random_seed : 32bit unsigned int
+            Random seed.
+        dist_func : str
+            Distribution function either 'bose_einstein' or 'boltzmann'.
+        cutoff_frequency : float
+            Phonon frequency in THz below that phonons are ignored
+            to generate random displacements.
+
+        """
+
         self._random_displacements = RandomDisplacements(
             self._supercell,
             self._primitive,
             self._force_constants,
+            dist_func=dist_func,
             cutoff_frequency=cutoff_frequency,
             factor=self._factor)
         self._random_displacements.run(

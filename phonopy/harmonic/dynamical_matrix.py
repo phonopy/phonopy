@@ -58,7 +58,16 @@ def get_dynamical_matrix(fc2,
             _fc2,
             decimals=decimals)
     else:
-        dm = DynamicalMatrixNAC(
+        if 'method' not in nac_params:
+            method = 'gonze'
+        else:
+            method = nac_params['method']
+
+        if method == 'wang':
+            DM_cls = DynamicalMatrixWang
+        else:
+            DM_cls = DynamicalMatrixGL
+        dm = DM_cls(
             supercell,
             primitive,
             _fc2,
@@ -105,6 +114,9 @@ class DynamicalMatrix(object):
 
     """
 
+    # Non analytical term correction
+    _nac = False
+
     def __init__(self,
                  supercell,
                  primitive,
@@ -127,8 +139,6 @@ class DynamicalMatrix(object):
             dtype='intc')
         (self._smallest_vectors,
          self._multiplicity) = primitive.get_smallest_vectors()
-        # Non analytical term correction
-        self._nac = False
 
     def is_nac(self):
         return self._nac
@@ -290,43 +300,43 @@ class DynamicalMatrix(object):
         self._dynamical_matrix = (dm + dm.conj().transpose()) / 2
 
 
-# Non analytical term correction (NAC)
-# Call this when NAC is required instead of DynamicalMatrix
 class DynamicalMatrixNAC(DynamicalMatrix):
+    _nac = True
+
     def __init__(self,
                  supercell,
                  primitive,
                  force_constants,
-                 nac_params=None,
-                 num_G_points=None,  # For Gonze NAC
-                 decimals=None,
-                 symprec=1e-5,
-                 log_level=0):
+                 decimals=None):
+        super(DynamicalMatrix, self).__init__(supercell,
+                                              primitive,
+                                              force_constants,
+                                              decimals=decimals)
 
-        DynamicalMatrix.__init__(self,
-                                 supercell,
-                                 primitive,
-                                 force_constants,
-                                 decimals=decimals)
+    def run(self, q, q_direction=None):
+        """Calculate dynamical matrix at q
 
-        self._log_level = log_level
-        self._symprec = symprec
-        self._method = None
+        q : array_like
+            q-point in fractional coordinates without 2pi.
+            shape=(3,), dtype='double'
+        q_direction : array_like
+            q-point direction from Gamma-point in fractional coordinates
+            without 2pi. Only the direction is used, i.e.,
+            (q_direction / |q_direction|) is computed and used.
+            shape=(3,), dtype='double'
 
-        # For the method by Gonze et al.
-        self._Gonze_force_constants = None
-        if num_G_points is None:
-            self._num_G_points = 300
+        """
+        rec_lat = np.linalg.inv(self._pcell.get_cell())  # column vectors
+        if q_direction is None:
+            q_norm = np.linalg.norm(np.dot(q, rec_lat.T))
         else:
-            self._num_G_points = num_G_points
-        self._G_list = None
-        self._G_cutoff = None
-        self._Lambda = None  # 4*Lambda**2 is stored.
-        self._dd_q0 = None
+            q_norm = np.linalg.norm(np.dot(q_direction, rec_lat.T))
 
-        self._nac = True
-        if nac_params is not None:
-            self.set_nac_params(nac_params)
+        if q_norm < self._symprec:
+            self._run(q)
+            return False
+
+        self._set_dynamical_matrix(q, q_direction)
 
     @property
     def born(self):
@@ -356,50 +366,94 @@ class DynamicalMatrixNAC(DynamicalMatrix):
     def get_nac_method(self):
         return self.nac_method
 
+    def set_dynamical_matrix(self, q, q_direction=None):
+        warnings.warn("DynamicalMatrixNAC.set_dynamical_matrix is deprecated."
+                      "Use DynamicalMatrixNAC.run.",
+                      DeprecationWarning)
+        self.run(q, q_direction=q_direction)
+
+    def _set_basic_nac_params(self, nac_params):
+        self._born = np.array(nac_params['born'], dtype='double', order='C')
+        self._unit_conversion = nac_params['factor']
+        self._dielectric = np.array(nac_params['dielectric'],
+                                    dtype='double', order='C')
+
+    def _get_charge_sum(self, num_atom, q, born):
+        nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype='double', order='C')
+        A = np.dot(q, born)
+        for i in range(num_atom):
+            for j in range(num_atom):
+                nac_q[i, j] = np.outer(A[i], A[j])
+        return nac_q
+
+    def _get_constant_factor(self, q, dielectric, volume, unit_conversion):
+        return (unit_conversion * 4.0 * np.pi / volume /
+                np.dot(q.T, np.dot(dielectric, q)))
+
+
+class DynamicalMatrixGL(DynamicalMatrixNAC):
+    """Non analytical term correction (NAC) by Gonze and Lee"""
+
+    _method = 'gonze'
+
+    def __init__(self,
+                 supercell,
+                 primitive,
+                 force_constants,
+                 nac_params=None,
+                 num_G_points=None,  # For Gonze NAC
+                 decimals=None,
+                 symprec=1e-5,
+                 log_level=0):
+
+        super(DynamicalMatrixNAC, self).__init__(
+            supercell,
+            primitive,
+            force_constants,
+            decimals=decimals)
+
+        self._log_level = log_level
+        self._symprec = symprec
+
+        # For the method by Gonze et al.
+        self._Gonze_force_constants = None
+        if num_G_points is None:
+            self._num_G_points = 300
+        else:
+            self._num_G_points = num_G_points
+        self._G_list = None
+        self._G_cutoff = None
+        self._Lambda = None  # 4*Lambda**2 is stored.
+        self._dd_q0 = None
+
+        if nac_params is not None:
+            self.set_nac_params(nac_params)
+
     @property
     def Gonze_nac_dataset(self):
-        if self._method == 'gonze':
-            return (self._Gonze_force_constants,
-                    self._dd_q0,
-                    self._G_cutoff,
-                    self._G_list,
-                    self._Lambda)
-        else:
-            return None
+        return (self._Gonze_force_constants,
+                self._dd_q0,
+                self._G_cutoff,
+                self._G_list,
+                self._Lambda)
 
     def get_Gonze_nac_dataset(self):
         return self.Gonze_nac_dataset
 
     def set_nac_params(self, nac_params):
-        self._born = np.array(nac_params['born'], dtype='double', order='C')
-        self._unit_conversion = nac_params['factor']
-        self._dielectric = np.array(nac_params['dielectric'],
-                                    dtype='double', order='C')
-        if 'method' not in nac_params:
-            self._method = 'gonze'
-        elif nac_params['method'] == 'gonze':
-            self._method = 'gonze'
-        elif nac_params['method'] == 'wang':
-            self._method = 'wang'
-            if self._log_level:
-                print("NAC by Wang et al., J. Phys. Condens. Matter 22, "
-                      "202201 (2010)")
+        self._set_basic_nac_params(nac_params)
+        if 'G_cutoff' in nac_params:
+            self._G_cutoff = nac_params['G_cutoff']
         else:
-            self._method = 'gonze'
-
-        if self._method == 'gonze':
-            if 'G_cutoff' in nac_params:
-                self._G_cutoff = nac_params['G_cutoff']
-            else:
-                self._G_cutoff = (3 * self._num_G_points / (4 * np.pi) /
-                                  self._pcell.get_volume()) ** (1.0 / 3)
-            self._G_list = self._get_G_list(self._G_cutoff)
-            if 'Lambda' in nac_params:
-                self._Lambda = nac_params['Lambda']
-            else:
-                exp_cutoff = 1e-10
-                GeG = self._G_cutoff ** 2 * np.trace(self._dielectric) / 3
-                self._Lambda = np.sqrt(- GeG / 4 / np.log(exp_cutoff))
+            self._G_cutoff = (3 * self._num_G_points / (4 * np.pi) /
+                              self._pcell.get_volume()) ** (1.0 / 3)
+        self._G_list = self._get_G_list(self._G_cutoff)
+        if 'Lambda' in nac_params:
+            self._Lambda = nac_params['Lambda']
+        else:
+            exp_cutoff = 1e-10
+            GeG = self._G_cutoff ** 2 * np.trace(self._dielectric) / 3
+            self._Lambda = np.sqrt(- GeG / 4 / np.log(exp_cutoff))
 
     def make_Gonze_nac_dataset(self):
         try:
@@ -413,128 +467,25 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         self._set_Gonze_force_constants()
         self._Gonze_count = 0
 
-    def show_Gonze_nac_message(self):
-        print("Use NAC by Gonze et al (no real space sum in current "
+    def show_nac_message(self):
+        print("Use NAC by Gonze et al. (no real space sum in current "
               "implementation)")
         print("  PRB 50, 13035(R) (1994), PRB 55, 10355 (1997)")
         print("  G-cutoff distance: %4.2f, Number of G-points: %d, "
               "Lambda: %4.2f"
               % (self._G_cutoff, len(self._G_list), self._Lambda))
 
-    def run(self, q, q_direction=None):
-        """Calculate dynamical matrix at q
-
-        q : array_like
-            q-point in fractional coordinates without 2pi.
-            shape=(3,), dtype='double'
-        q_direction : array_like
-            q-point direction from Gamma-point in fractional coordinates
-            without 2pi. Only the direction is used, i.e.,
-            (q_direction / |q_direction|) is computed and used.
-            shape=(3,), dtype='double'
-
-        """
-        rec_lat = np.linalg.inv(self._pcell.get_cell())  # column vectors
-        if q_direction is None:
-            q_norm = np.linalg.norm(np.dot(q, rec_lat.T))
-        else:
-            q_norm = np.linalg.norm(np.dot(q_direction, rec_lat.T))
-
-        if q_norm < self._symprec:
-            self._run(q)
-            return False
-
-        if self._method == 'wang':
-            self._set_Wang_dynamical_matrix(q, q_direction)
-        else:
-            if self._Gonze_force_constants is None:
-                self.make_Gonze_nac_dataset()
-            self._set_Gonze_dynamical_matrix(q, q_direction)
-
-    def set_dynamical_matrix(self, q, q_direction=None):
-        warnings.warn("DynamicalMatrixNAC.set_dynamical_matrix is deprecated."
-                      "Use DynamicalMatrixNAC.run.",
+    def show_Gonze_nac_message(self):
+        warnings.warn("DynamicalMatrixGL.show_Gonze_nac_message is deprecated."
+                      "Use DynamicalMatrixGL.show_nac_message instead.",
                       DeprecationWarning)
-        self.run(q, q_direction=q_direction)
 
-    def _set_Wang_dynamical_matrix(self, q_red, q_direction):
-        # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
-        rec_lat = np.linalg.inv(self._pcell.get_cell())  # column vectors
-        if q_direction is None:
-            q = np.dot(q_red, rec_lat.T)
-        else:
-            q = np.dot(q_direction, rec_lat.T)
+        self.show_nac_message()
 
-        constant = self._get_constant_factor(q,
-                                             self._dielectric,
-                                             self._pcell.get_volume(),
-                                             self._unit_conversion)
-        try:
-            import phonopy._phonopy as phonoc
-            self._set_c_Wang_dynamical_matrix(q_red, q, constant)
-        except ImportError:
-            num_atom = self._pcell.get_number_of_atoms()
-            fc_backup = self._force_constants.copy()
-            nac_q = self._get_charge_sum(num_atom, q, self._born) * constant
-            self._set_py_Wang_force_constants(self._force_constants, nac_q)
-            self._run(q_red)
-            self._force_constants = fc_backup
+    def _set_dynamical_matrix(self, q_red, q_direction):
+        if self._Gonze_force_constants is None:
+            self.make_Gonze_nac_dataset()
 
-    def _set_c_Wang_dynamical_matrix(self, q_red, q, factor):
-        import phonopy._phonopy as phonoc
-
-        fc = self._force_constants
-        vectors = self._smallest_vectors
-        mass = self._pcell.get_masses()
-        multiplicity = self._multiplicity
-        size_prim = len(mass)
-        dm = np.zeros((size_prim * 3, size_prim * 3),
-                      dtype=self._dtype_complex)
-
-        if fc.shape[0] == fc.shape[1]:  # full fc
-            phonoc.nac_dynamical_matrix(dm.view(dtype='double'),
-                                        fc,
-                                        np.array(q_red, dtype='double'),
-                                        vectors,
-                                        multiplicity,
-                                        mass,
-                                        self._s2p_map,
-                                        self._p2s_map,
-                                        np.array(q, dtype='double'),
-                                        self._born,
-                                        factor)
-        else:
-            phonoc.nac_dynamical_matrix(dm.view(dtype='double'),
-                                        fc,
-                                        np.array(q_red, dtype='double'),
-                                        vectors,
-                                        multiplicity,
-                                        mass,
-                                        self._s2pp_map,
-                                        np.arange(len(self._p2s_map),
-                                                  dtype='intc'),
-                                        np.array(q, dtype='double'),
-                                        self._born,
-                                        factor)
-
-        self._dynamical_matrix = dm
-
-    def _set_py_Wang_force_constants(self, fc, nac_q):
-        N = (self._scell.get_number_of_atoms() //
-             self._pcell.get_number_of_atoms())
-        for s1 in range(self._scell.get_number_of_atoms()):
-            # This if-statement is the trick.
-            # In contructing dynamical matrix in phonopy
-            # fc of left indices with s1 == self._s2p_map[ s1 ] are
-            # only used.
-            if s1 != self._s2p_map[s1]:
-                continue
-            p1 = self._s2pp_map[s1]
-            for s2 in range(self._scell.get_number_of_atoms()):
-                p2 = self._s2pp_map[s2]
-                fc[s1, s2] += nac_q[p1, p2] / N
-
-    def _set_Gonze_dynamical_matrix(self, q_red, q_direction):
         if self._log_level > 2:
             print("%d %s" % (self._Gonze_count + 1, q_red))
         self._Gonze_count += 1
@@ -725,14 +676,113 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         return np.array(G_vec_list[G_norm2 < G_cutoff ** 2],
                         dtype='double', order='C')
 
-    def _get_charge_sum(self, num_atom, q, born):
-        nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype='double', order='C')
-        A = np.dot(q, born)
-        for i in range(num_atom):
-            for j in range(num_atom):
-                nac_q[i, j] = np.outer(A[i], A[j])
-        return nac_q
 
-    def _get_constant_factor(self, q, dielectric, volume, unit_conversion):
-        return (unit_conversion * 4.0 * np.pi / volume /
-                np.dot(q.T, np.dot(dielectric, q)))
+class DynamicalMatrixWang(DynamicalMatrixNAC):
+    """Non analytical term correction (NAC) by Wang et al."""
+
+    _method = 'wang'
+
+    def __init__(self,
+                 supercell,
+                 primitive,
+                 force_constants,
+                 nac_params=None,
+                 decimals=None,
+                 symprec=1e-5,
+                 log_level=0):
+
+        super(DynamicalMatrixNAC, self).__init__(
+            supercell,
+            primitive,
+            force_constants,
+            decimals=decimals)
+
+        self._log_level = log_level
+        self._symprec = symprec
+        if nac_params is not None:
+            self.set_nac_params(nac_params)
+
+    def set_nac_params(self, nac_params):
+        self._set_basic_nac_params(nac_params)
+
+    def show_nac_message(self):
+        if self._log_level:
+            print("NAC by Wang et al., J. Phys. Condens. Matter 22, "
+                  "202201 (2010)")
+
+    def _set_dynamical_matrix(self, q_red, q_direction):
+        # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
+        rec_lat = np.linalg.inv(self._pcell.get_cell())  # column vectors
+        if q_direction is None:
+            q = np.dot(q_red, rec_lat.T)
+        else:
+            q = np.dot(q_direction, rec_lat.T)
+
+        constant = self._get_constant_factor(q,
+                                             self._dielectric,
+                                             self._pcell.get_volume(),
+                                             self._unit_conversion)
+        try:
+            import phonopy._phonopy as phonoc
+            self._set_c_Wang_dynamical_matrix(q_red, q, constant)
+        except ImportError:
+            num_atom = self._pcell.get_number_of_atoms()
+            fc_backup = self._force_constants.copy()
+            nac_q = self._get_charge_sum(num_atom, q, self._born) * constant
+            self._set_py_Wang_force_constants(self._force_constants, nac_q)
+            self._run(q_red)
+            self._force_constants = fc_backup
+
+    def _set_c_Wang_dynamical_matrix(self, q_red, q, factor):
+        import phonopy._phonopy as phonoc
+
+        fc = self._force_constants
+        vectors = self._smallest_vectors
+        mass = self._pcell.get_masses()
+        multiplicity = self._multiplicity
+        size_prim = len(mass)
+        dm = np.zeros((size_prim * 3, size_prim * 3),
+                      dtype=self._dtype_complex)
+
+        if fc.shape[0] == fc.shape[1]:  # full fc
+            phonoc.nac_dynamical_matrix(dm.view(dtype='double'),
+                                        fc,
+                                        np.array(q_red, dtype='double'),
+                                        vectors,
+                                        multiplicity,
+                                        mass,
+                                        self._s2p_map,
+                                        self._p2s_map,
+                                        np.array(q, dtype='double'),
+                                        self._born,
+                                        factor)
+        else:
+            phonoc.nac_dynamical_matrix(dm.view(dtype='double'),
+                                        fc,
+                                        np.array(q_red, dtype='double'),
+                                        vectors,
+                                        multiplicity,
+                                        mass,
+                                        self._s2pp_map,
+                                        np.arange(len(self._p2s_map),
+                                                  dtype='intc'),
+                                        np.array(q, dtype='double'),
+                                        self._born,
+                                        factor)
+
+        self._dynamical_matrix = dm
+
+    def _set_py_Wang_force_constants(self, fc, nac_q):
+        N = (self._scell.get_number_of_atoms() //
+             self._pcell.get_number_of_atoms())
+        for s1 in range(self._scell.get_number_of_atoms()):
+            # This if-statement is the trick.
+            # In contructing dynamical matrix in phonopy
+            # fc of left indices with s1 == self._s2p_map[ s1 ] are
+            # only used.
+            if s1 != self._s2p_map[s1]:
+                continue
+            p1 = self._s2pp_map[s1]
+            for s2 in range(self._scell.get_number_of_atoms()):
+                p2 = self._s2pp_map[s2]
+                fc[s1, s2] += nac_q[p1, p2] / N
