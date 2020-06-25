@@ -34,16 +34,18 @@
 
 import sys
 import numpy as np
-
-# Castep output contains blank lines surrounded by asterick wich should be ignored.
-# This is not implementes in collect forces
-#from phonopy.file_IO import collect_forces
 from phonopy.interface.vasp import (get_scaled_positions_lines, check_forces,
                                     get_drift_forces)
 from phonopy.units import Bohr
 from phonopy.cui.settings import fracval
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.symmetry import Symmetry
 
+# Castep output contains blank lines surrounded by astericks which should be ignored.
+# This is not implemented in collect_forces() function from file_IO module.
+# Below is the reimplementation of the collect_forces() function for Castep with
+# only one new variable skipafterhook. Setting this variable to zero (default value)
+# is equivalent to original collect_forces() function.
 def collect_forces_castep(f, num_atom, hook, force_pos, word=None, skipafterhook=0):
     for line in f:
         if hook in line:
@@ -105,10 +107,26 @@ def read_castep(filename):
     castep_in = CastepIn(f_castep.readlines())
     f_castep.close()
     tags = castep_in.get_tags()
-
+# 1st stage is to create Atoms object ignoring Spin polarization. General case.
     cell = Atoms(cell=tags['lattice_vectors'],
                  symbols=tags['atomic_species'],
                  scaled_positions=tags['coordinates'])
+# Analyse spin states and add data to Atoms instance "cell" if ones exist
+    magmoms = tags['magnetic_moments']
+    if magmoms is not None:
+        # Print out symmetry information for magnetic cases
+        # Original code from structure/symmetry.py
+        symmetry = Symmetry(cell, symprec=1e-5)
+        print("CASTEP-interface: Magnetic structure, number of operations without spin: %d" %
+              len(symmetry.get_symmetry_operations()['rotations']))
+        print("CASTEP-interface: Spacegroup without spin: %s" % symmetry.get_international_table())
+
+        cell.set_magnetic_moments(magmoms)
+        symmetry = Symmetry(cell, symprec=1e-5)
+        print("CASTEP-interface: Magnetic structure, number of operations with spin: %d" %
+              len(symmetry.get_symmetry_operations()['rotations']))
+        print("")
+
     return cell
 
 def write_castep(filename, cell):
@@ -133,17 +151,22 @@ def get_castep_structure(cell):
     lines += ((" % 20.16f" * 3 + "\n") * 3) % tuple(cell.get_cell().ravel())
     lines += '%ENDBLOCK LATTICE_CART\n\n'
     lines += '%BLOCK POSITIONS_FRAC\n'
+    magmoms = cell.get_magnetic_moments()
 
     for i in range(len(cell.get_chemical_symbols())):
         atpos="".join("% 12.10f " % ap for ap in cell.get_scaled_positions()[i])
-        lines += "".join("%2s %s\n" % (cell.get_chemical_symbols()[i], atpos))
+# Spin polarized case
+        if (magmoms is not None) and (magmoms[i] != 0.0):
+            lines += "".join("%2s %s  spin=% 5.2f\n" % (cell.get_chemical_symbols()[i], atpos, magmoms[i]))
+# No spin ordering
+        else:
+            lines += "".join("%2s %s\n" % (cell.get_chemical_symbols()[i], atpos))
     lines += '%ENDBLOCK POSITIONS_FRAC\n\n'
 
     return lines
 
 class CastepIn:
     def __init__(self, lines):
-        # conv_numbers = CRYSTAL conventional atomic number mapping: 'Ge' -> 32 or 'Ge' -> 232
         self._tags = {'lattice_vectors':  None,
                       'atomic_species':   None,
                       'coordinates':      None,
@@ -172,6 +195,7 @@ class CastepIn:
                     if ('ENDBLOCK' in lines[i].upper()):
                         break
                     if ('BOHR' in lines[i].upper()):
+                    # The lattice vector units is Bohr. Convertion needed.
                         units=0.529177211
                     elif (len(lines[i].split())>=3):
                         lattvecs.append([(float(lines[i].split()[j])*units) for j in range(3)])
@@ -187,12 +211,12 @@ class CastepIn:
                         aspecies.append(lines[i].split()[0])
                         coords.append([float(lines[i].split()[j]) for j in (1,2,3)])
                         # If there is magmetic spin
-                        if (len(lines[i].split())>4):
-                            magmoms.append(float(lines[i].split('spin')[1].split('=')[1]))
+                        if (len(lines[i].split())>4) and ('SPIN' in lines[i].upper()):
+                            magmoms.append(float(lines[i].upper().split('SPIN')[1].split('=')[1]))
                             isSpinPol=1
                         else:
-                            magmoms.append(-104.0) # Magic number. Such spin never exist.
-
+                            magmoms.append(0.0)
+# Set magnetic tags if the structure with magnetic order
         if (isSpinPol>0):
             self._tags['magnetic_moments'] = magmoms
 
