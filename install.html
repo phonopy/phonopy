@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
     <title>Installation &#8212; Phonopy v.2.6.1</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Crystal symmetry" href="symmetry.html" />
@@ -105,11 +105,11 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#multithreading-support">Multithreading support</a></li>
-<li><a class="reference internal" href="#using-phonopy-on-mac-os-x">Using phonopy on Mac OS X</a></li>
 <li><a class="reference internal" href="#trouble-shooting">Trouble shooting</a><ul>
 <li><a class="reference internal" href="#remove-previous-phonopy-installations">Remove previous phonopy installations</a></li>
 <li><a class="reference internal" href="#set-correct-environment-variables-path-and-pythonpath">Set correct environment variables <code class="docutils literal notranslate"><span class="pre">PATH</span></code> and <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code></a></li>
 <li><a class="reference internal" href="#error-in-plotting-on-display">Error in plotting on display</a></li>
+<li><a class="reference internal" href="#missing-intel-libraries-when-building-from-source-using-icc">Missing Intel libraries when building from source using icc</a></li>
 </ul>
 </li>
 </ul>
@@ -177,12 +177,12 @@
 </ul>
 </li>
 <li><p><a class="reference internal" href="#multithreading-support" id="id9">Multithreading support</a></p></li>
-<li><p><a class="reference internal" href="#using-phonopy-on-mac-os-x" id="id10">Using phonopy on Mac OS X</a></p></li>
-<li><p><a class="reference internal" href="#trouble-shooting" id="id11">Trouble shooting</a></p>
+<li><p><a class="reference internal" href="#trouble-shooting" id="id10">Trouble shooting</a></p>
 <ul>
-<li><p><a class="reference internal" href="#remove-previous-phonopy-installations" id="id12">Remove previous phonopy installations</a></p></li>
-<li><p><a class="reference internal" href="#set-correct-environment-variables-path-and-pythonpath" id="id13">Set correct environment variables <code class="docutils literal notranslate"><span class="pre">PATH</span></code> and <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code></a></p></li>
-<li><p><a class="reference internal" href="#error-in-plotting-on-display" id="id14">Error in plotting on display</a></p></li>
+<li><p><a class="reference internal" href="#remove-previous-phonopy-installations" id="id11">Remove previous phonopy installations</a></p></li>
+<li><p><a class="reference internal" href="#set-correct-environment-variables-path-and-pythonpath" id="id12">Set correct environment variables <code class="docutils literal notranslate"><span class="pre">PATH</span></code> and <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code></a></p></li>
+<li><p><a class="reference internal" href="#error-in-plotting-on-display" id="id13">Error in plotting on display</a></p></li>
+<li><p><a class="reference internal" href="#missing-intel-libraries-when-building-from-source-using-icc" id="id14">Missing Intel libraries when building from source using icc</a></p></li>
 </ul>
 </li>
 </ul>
@@ -222,16 +222,20 @@ environment).</p>
 <p>To use this phonopy, entering this environment is necessary like below.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">conda</span> <span class="n">activate</span> <span class="n">phonopy</span>
 <span class="p">(</span><span class="n">phonopy</span><span class="p">)</span> <span class="o">%</span> <span class="n">phonopy</span>
-        <span class="n">_</span>
   <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
  <span class="o">|</span> <span class="s1">&#39;_ \| &#39;</span><span class="n">_</span> \ <span class="o">/</span> <span class="n">_</span> \<span class="o">|</span> <span class="s1">&#39;_ \ / _ \ | &#39;</span><span class="n">_</span> \<span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span>
  <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">||</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
  <span class="o">|</span> <span class="o">.</span><span class="n">__</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">.</span><span class="n">__</span><span class="o">/</span> \<span class="n">__</span><span class="p">,</span> <span class="o">|</span>
  <span class="o">|</span><span class="n">_</span><span class="o">|</span>                            <span class="o">|</span><span class="n">_</span><span class="o">|</span>    <span class="o">|</span><span class="n">___</span><span class="o">/</span>
-                                 <span class="mf">1.13</span><span class="o">.</span><span class="mi">2</span><span class="o">-</span><span class="n">r107</span>
+                                       <span class="mf">2.7</span><span class="o">.</span><span class="mi">0</span>
+
+<span class="n">Python</span> <span class="n">version</span> <span class="mf">3.7</span><span class="o">.</span><span class="mi">6</span>
+<span class="n">Spglib</span> <span class="n">version</span> <span class="mf">1.14</span><span class="o">.</span><span class="mi">1</span>
 
 
-<span class="n">Crystal</span> <span class="n">structure</span> <span class="n">file</span> <span class="n">of</span> <span class="n">POSCAR</span> <span class="p">(</span><span class="n">default</span> <span class="n">file</span> <span class="n">name</span><span class="p">)</span> <span class="n">could</span> <span class="ow">not</span> <span class="n">be</span> <span class="n">found</span><span class="o">.</span>
+<span class="n">Supercell</span> <span class="n">matrix</span> <span class="p">(</span><span class="n">DIM</span> <span class="ow">or</span> <span class="o">--</span><span class="n">dim</span><span class="p">)</span> <span class="n">was</span> <span class="ow">not</span> <span class="n">explicitly</span> <span class="n">specified</span><span class="o">.</span>
+<span class="n">By</span> <span class="n">this</span> <span class="n">reason</span><span class="p">,</span> <span class="n">phonopy_yaml</span> <span class="n">mode</span> <span class="n">was</span> <span class="n">invoked</span><span class="o">.</span>
+<span class="n">But</span> <span class="s2">&quot;phonopy_params.yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;phonopy_disp.yaml&quot;</span> <span class="ow">and</span> <span class="s2">&quot;phonopy.yaml&quot;</span> <span class="n">could</span> <span class="ow">not</span> <span class="n">be</span> <span class="n">found</span><span class="o">.</span>
   <span class="n">___</span> <span class="n">_</span> <span class="n">__</span> <span class="n">_</span> <span class="n">__</span> <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>
  <span class="o">/</span> <span class="n">_</span> \ <span class="s1">&#39;__| &#39;</span><span class="n">__</span><span class="o">/</span> <span class="n">_</span> \<span class="o">|</span> <span class="s1">&#39;__|</span>
 <span class="o">|</span>  <span class="n">__</span><span class="o">/</span> <span class="o">|</span>  <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span>
@@ -244,9 +248,9 @@ environment).</p>
 <h2><a class="toc-backref" href="#id3">Using pip</a><a class="headerlink" href="#using-pip" title="Permalink to this headline">¶</a></h2>
 <p>Installation of phonopy via pip is not very recommended. <a class="reference internal" href="#install-conda"><span class="std std-ref">Using conda</span></a>
 as rewritten above is recommended.</p>
-<p>Phonopy pip wheel is not prepared. So before installing phonopy using
-pip, Python C-API compilation environment has to be prepared. Then
-phonopy is installed using pip by:</p>
+<p>Phonopy pip wheel is not prepared for most of the systems. So before
+installing phonopy using pip, Python C-API compilation environment has
+to be prepared. Then phonopy is installed using pip by:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">phonopy</span>
 </pre></div>
 </div>
@@ -268,8 +272,7 @@ e.g.,:</p>
 <p>The procedure to setup phonopy is explained in this section. It is
 supposed that phonopy is installed on the recent linux distribution
 like Ubuntu or Fedora with Python version 2.6 or later. Python version
-3.4 or later is expected to work. Mac OS X users may use conda packages
-and also find some more information at <a class="reference internal" href="#install-macosx"><span class="std std-ref">Using phonopy on Mac OS X</span></a>.
+3.4 or later is expected to work. Mac OS X users may use conda packages.
 Windows users should use conda packages as well.</p>
 <p>Prepare the following Python libraries:</p>
 <ul class="simple">
@@ -286,10 +289,7 @@ Windows users should use conda packages as well.</p>
 <div class="section" id="by-ubuntu-package-manager">
 <h4><a class="toc-backref" href="#id6">By Ubuntu package manager</a><a class="headerlink" href="#by-ubuntu-package-manager" title="Permalink to this headline">¶</a></h4>
 <p>The most recommended system is Ubuntu linux version 14.04 (64-bit) or
-later. If you have any installation problem that you may feel
-difficult to solve, please use a virtual machine environment such as
-VirtualBox and install Ubuntu linux on it.</p>
-<p>The python libraries are installed by:</p>
+later. The python libraries are installed by:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">python</span><span class="o">-</span><span class="n">dev</span> <span class="n">python</span><span class="o">-</span><span class="n">numpy</span>  <span class="n">python</span><span class="o">-</span><span class="n">matplotlib</span> <span class="n">python</span><span class="o">-</span><span class="n">yaml</span> <span class="n">python</span><span class="o">-</span><span class="n">h5py</span>
 </pre></div>
 </div>
@@ -379,58 +379,10 @@ currently only gcc is supported.</p>
 </li>
 </ol>
 </div>
-<div class="section" id="using-phonopy-on-mac-os-x">
-<span id="install-macosx"></span><h2><a class="toc-backref" href="#id10">Using phonopy on Mac OS X</a><a class="headerlink" href="#using-phonopy-on-mac-os-x" title="Permalink to this headline">¶</a></h2>
-<p>This is one way to install phonopy on Mac OS X. This procedure was
-tested with MacPorts version 2.4.1 and Homebrew 1.3.6. In the
-following case, gcc-7 is used as the default C-compiler.</p>
-<ol class="arabic">
-<li><p>Install necessary python libraries by conda (see the detail about
-conda, e.g., <a class="reference external" href="https://conda.io/miniconda.html">https://conda.io/miniconda.html</a>):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">conda</span> <span class="n">install</span> <span class="n">numpy</span> <span class="n">scipy</span> <span class="n">h5py</span> <span class="n">pyyaml</span> <span class="n">matplotlib</span>
-</pre></div>
-</div>
-</li>
-<li><p>Install gcc</p>
-<p>Using Homebrew. This is normally easier than using MacPorts. See
-how to install homebrew <a class="reference external" href="https://brew.sh/">https://brew.sh/</a> and follow the
-installation instruction. Then:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">brew</span> <span class="n">install</span> <span class="n">gcc</span>
-</pre></div>
-</div>
-<p>Using MacPorts, download MacPorts from <a class="reference external" href="http://www.macports.org/">http://www.macports.org/</a>
-and follow the installation instruction. Then:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">install</span> <span class="n">gcc7</span>
-<span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">select</span> <span class="o">--</span><span class="nb">set</span> <span class="n">gcc</span> <span class="n">mp</span><span class="o">-</span><span class="n">gcc7</span>
-</pre></div>
-</div>
-</li>
-</ol>
-<ol class="arabic" start="4">
-<li><p>Install phonopy following <a class="reference internal" href="#install-setup-py"><span class="std std-ref">Building using setup.py</span></a>.</p>
-<p>Before running setup.py, the environment variable of <code class="docutils literal notranslate"><span class="pre">CC=gcc-7</span></code>
-(Homebrew) or <code class="docutils literal notranslate"><span class="pre">CC=gcc</span></code> (MacPorts) must be set so that installed
-gcc is used as the C-compiler instead of build-in clang for compiling
-the phonopy C-extension module.</p>
-<p>For Homebrew:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">export</span> <span class="n">CC</span><span class="o">=</span><span class="n">gcc</span><span class="o">-</span><span class="mi">7</span>
-</pre></div>
-</div>
-<p>For MacPorts:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">export</span> <span class="n">CC</span><span class="o">=</span><span class="n">gcc</span> <span class="p">(</span><span class="n">MacPorts</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Then:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span> <span class="o">--</span><span class="n">user</span>
-</pre></div>
-</div>
-</li>
-</ol>
-</div>
 <div class="section" id="trouble-shooting">
-<h2><a class="toc-backref" href="#id11">Trouble shooting</a><a class="headerlink" href="#trouble-shooting" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id10">Trouble shooting</a><a class="headerlink" href="#trouble-shooting" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="remove-previous-phonopy-installations">
-<h3><a class="toc-backref" href="#id12">Remove previous phonopy installations</a><a class="headerlink" href="#remove-previous-phonopy-installations" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id11">Remove previous phonopy installations</a><a class="headerlink" href="#remove-previous-phonopy-installations" title="Permalink to this headline">¶</a></h3>
 <p>Sometimes previous installations of phonopy prevent from loading newly
 installed phonopy. In this case, it is recommended to uninstall all
 the older phonopy packages by</p>
@@ -447,7 +399,8 @@ recommend to remove them if it is found, e.g.:</p>
 </ol>
 </div>
 <div class="section" id="set-correct-environment-variables-path-and-pythonpath">
-<h3><a class="toc-backref" href="#id13">Set correct environment variables <code class="docutils literal notranslate"><span class="pre">PATH</span></code> and <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code></a><a class="headerlink" href="#set-correct-environment-variables-path-and-pythonpath" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id12">Set correct environment variables <code class="docutils literal notranslate"><span class="pre">PATH</span></code> and <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code></a><a class="headerlink" href="#set-correct-environment-variables-path-and-pythonpath" title="Permalink to this headline">¶</a></h3>
+<p>When using conda environment, this information is not applicable.</p>
 <p>In phonopy, <code class="docutils literal notranslate"><span class="pre">PATH</span></code> and <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code> play important roles. Of
 course the information about them can be easily found in internet
 (e.g. <a class="reference external" href="https://en.wikipedia.org/wiki/PATH_(variable">https://en.wikipedia.org/wiki/PATH_(variable</a>)), so you really
@@ -469,7 +422,7 @@ what you really need. Then logout from the current shell (terminal)
 and open new shell (terminal) to confirm that the modification is activated.</p>
 </div>
 <div class="section" id="error-in-plotting-on-display">
-<h3><a class="toc-backref" href="#id14">Error in plotting on display</a><a class="headerlink" href="#error-in-plotting-on-display" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id13">Error in plotting on display</a><a class="headerlink" href="#error-in-plotting-on-display" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">texlive-fonts-recommended</span></code> and <code class="docutils literal notranslate"><span class="pre">dviping</span></code> packages may be required
 to install on your system, if you see something like the following
 messages when ploting:</p>
@@ -480,6 +433,11 @@ messages when ploting:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>! LaTeX Error: File `type1cm.sty&#39; not found.
 </pre></div>
 </div>
+</div>
+<div class="section" id="missing-intel-libraries-when-building-from-source-using-icc">
+<h3><a class="toc-backref" href="#id14">Missing Intel libraries when building from source using icc</a><a class="headerlink" href="#missing-intel-libraries-when-building-from-source-using-icc" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">LDSHARED=&quot;icc</span> <span class="pre">-shared&quot;</span></code> may be of help. See this github issues,
+<a class="reference external" href="https://github.com/phonopy/phonopy/issues/123">https://github.com/phonopy/phonopy/issues/123</a>.</p>
 </div>
 </div>
 </div>
@@ -504,7 +462,7 @@ messages when ploting:</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.1.<br/>
     </p>
   </div>
 </footer>

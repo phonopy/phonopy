@@ -769,7 +769,7 @@ used from phonopy-API. Downloading the raw data, e.g.,
 
    % ipython
 
-The data is loaded by
+or we can use jupyter notebook. The data is loaded by
 
 ::
 
