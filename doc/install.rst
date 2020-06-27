@@ -53,21 +53,24 @@ To use this phonopy, entering this environment is necessary like below.
 
    % conda activate phonopy
    (phonopy) % phonopy
-           _
      _ __ | |__   ___  _ __   ___   _ __  _   _
     | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
     | |_) | | | | (_) | | | | (_) || |_) | |_| |
     | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
     |_|                            |_|    |___/
-                                    1.13.2-r107
+                                          2.7.0
+
+   Python version 3.7.6
+   Spglib version 1.14.1
 
 
-   Crystal structure file of POSCAR (default file name) could not be found.
+   Supercell matrix (DIM or --dim) was not explicitly specified.
+   By this reason, phonopy_yaml mode was invoked.
+   But "phonopy_params.yaml", "phonopy_disp.yaml" and "phonopy.yaml" could not be found.
      ___ _ __ _ __ ___  _ __
     / _ \ '__| '__/ _ \| '__|
    |  __/ |  | | | (_) | |
     \___|_|  |_|  \___/|_|
-
 
 Using pip
 ---------
@@ -75,9 +78,9 @@ Using pip
 Installation of phonopy via pip is not very recommended. :ref:`install_conda`
 as rewritten above is recommended.
 
-Phonopy pip wheel is not prepared. So before installing phonopy using
-pip, Python C-API compilation environment has to be prepared. Then
-phonopy is installed using pip by::
+Phonopy pip wheel is not prepared for most of the systems. So before
+installing phonopy using pip, Python C-API compilation environment has
+to be prepared. Then phonopy is installed using pip by::
 
    % pip install phonopy
 
@@ -102,8 +105,7 @@ System requirement
 The procedure to setup phonopy is explained in this section. It is
 supposed that phonopy is installed on the recent linux distribution
 like Ubuntu or Fedora with Python version 2.6 or later. Python version
-3.4 or later is expected to work. Mac OS X users may use conda packages
-and also find some more information at :ref:`install_MacOSX`.
+3.4 or later is expected to work. Mac OS X users may use conda packages.
 Windows users should use conda packages as well.
 
 Prepare the following Python libraries:
@@ -123,11 +125,7 @@ By Ubuntu package manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The most recommended system is Ubuntu linux version 14.04 (64-bit) or
-later. If you have any installation problem that you may feel
-difficult to solve, please use a virtual machine environment such as
-VirtualBox and install Ubuntu linux on it.
-
-The python libraries are installed by::
+later. The python libraries are installed by::
 
    % sudo apt-get install python-dev python-numpy  python-matplotlib python-yaml python-h5py
 
@@ -224,9 +222,6 @@ Two kinds of multithreadings can be used in phonopy.
    False`` must be changed to ``with_openmp = True``. For this,
    currently only gcc is supported.
 
-.. include:: MacOSX.inc
-
-
 Trouble shooting
 -----------------
 
@@ -248,6 +243,8 @@ the older phonopy packages by
 
 Set correct environment variables ``PATH`` and ``PYTHONPATH``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When using conda environment, this information is not applicable.
 
 In phonopy, ``PATH`` and ``PYTHONPATH`` play important roles. Of
 course the information about them can be easily found in internet
@@ -283,3 +280,10 @@ messages when ploting::
 or::
 
    ! LaTeX Error: File `type1cm.sty' not found.
+
+
+Missing Intel libraries when building from source using icc
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``LDSHARED="icc -shared"`` may be of help. See this github issues,
+https://github.com/phonopy/phonopy/issues/123.
