@@ -172,12 +172,12 @@ class DynmatToForceConstants(object):
         Note
         ----
         When calculating force constants from eigensolutions,
-        eigher one of frequency-eigenvector pair or eigenvalu-eigenvector
+        eigher one of frequency-eigenvector pair or eigenvalue-eigenvector
         can be used.
 
         Parameters
         ----------
-        supercell : Supercell
+        supercell : PhonopyAtoms
             Supercell.
         primitive : Primitive
             Primitive cell
@@ -250,8 +250,6 @@ class DynmatToForceConstants(object):
 
     def run(self):
         self._inverse_transformation()
-        # Full fc
-        # self._distribute_force_constants()
 
     @property
     def force_constants(self):

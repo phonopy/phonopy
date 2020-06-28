@@ -67,7 +67,7 @@ from phonopy.cui.phonopy_argparse import (
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phonopy():
-    print("""        _
+    print(r"""        _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
  | |_) | | | | (_) | | | | (_) || |_) | |_| |
@@ -99,7 +99,7 @@ def print_version(version, package_name="phonopy"):
 
 
 def print_end():
-    print("""                 _
+    print(r"""                 _
    ___ _ __   __| |
   / _ \ '_ \ / _` |
  |  __/ | | | (_| |
@@ -108,7 +108,7 @@ def print_end():
 
 
 def print_error():
-    print("""  ___ _ __ _ __ ___  _ __
+    print(r"""  ___ _ __ _ __ ___  _ __
  / _ \ '__| '__/ _ \| '__|
 |  __/ |  | | | (_) | |
  \___|_|  |_|  \___/|_|
