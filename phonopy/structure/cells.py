@@ -1058,8 +1058,11 @@ class SNF3x3(object):
 
         D = PAQ
 
-    The algorithm implemented refers
-    https://en.wikipedia.org/wiki/Smith_normal_form.
+    with abs(det(A)) = det(D), det(P) = 1, det(Q) = sgn(det(A)).
+
+    The algorithm is implemented following
+    https://en.wikipedia.org/wiki/Smith_normal_form,
+    but the diagonal elements don't follow the rule of it.
 
     Usage
     -----
@@ -1130,12 +1133,11 @@ class SNF3x3(object):
         return self._Q
 
     def _set_PQ(self):
-        if np.linalg.det(self._A) < 0:
-            for i in range(3):
-                if self._A[i, i] < 0:
-                    self._flip_sign_row(i)
-            self._Ps += self._L
-            self._L = []
+        for i in range(3):
+            if self._A[i, i] < 0:
+                self._flip_sign_row(i)
+        self._Ps += self._L
+        self._L = []
 
         P = np.eye(3, dtype='intc')
         for _P in self._Ps:
@@ -1179,6 +1181,8 @@ class SNF3x3(object):
         i = self._search_first_pivot()
         if i > 0:
             self._swap_rows(0, i)
+        if i < 0:
+            raise RuntimeError("Determinant is 0.")
 
         if self._A[1, 0] != 0:
             self._zero_first_column(1)
@@ -1186,8 +1190,8 @@ class SNF3x3(object):
             self._zero_first_column(2)
 
     def _zero_first_column(self, j):
-        if self._A[j, 0] < 0:
-            self._flip_sign_row(j)
+        # if self._A[j, 0] < 0:
+        #     self._flip_sign_row(j)
         A = self._A
         r, s, t = xgcd([A[0, 0], A[j, 0]])
         self._set_zero(0, j, A[0, 0], A[j, 0], r, s, t)
@@ -1197,6 +1201,7 @@ class SNF3x3(object):
         for i in range(3):  # column index
             if A[i, 0] != 0:
                 return i
+        return -1
 
     def _first_finalize(self):
         """Set zeros along the first colomn except for A[0, 0]
@@ -1251,8 +1256,8 @@ class SNF3x3(object):
             self._zero_second_column()
 
     def _zero_second_column(self):
-        if self._A[2, 1] < 0:
-            self._flip_sign_row(2)
+        # if self._A[2, 1] < 0:
+        #     self._flip_sign_row(2)
         A = self._A
         r, s, t = xgcd([A[1, 1], A[2, 1]])
         self._set_zero(1, 2, A[1, 1], A[2, 1], r, s, t)
@@ -1329,11 +1334,22 @@ class Xgcd(object):
             r0, r1, s0, s1, t0, t1 = self._step(r0, r1, s0, s1, t0, t1)
             if r1 == 0:
                 break
+
+        assert r0 == self._vals[0] * s0 + self._vals[1] * t0
+
         self._rst = np.array([r0, s0, t0], dtype='intc')
+
         return self._rst
 
     def _step(self, r0, r1, s0, s1, t0, t1):
         q, m = divmod(r0, r1)
+        if m < 0:
+            if r1 > 0:
+                m += r1
+                q -= 1
+            if r1 < 0:
+                m -= r1
+                q += 1
         r2 = m
         s2 = s0 - q * s1
         t2 = t0 - q * t1
