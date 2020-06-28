@@ -35,7 +35,8 @@
 import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_supercell
-from phonopy.harmonic.force_constants import distribute_force_constants
+from phonopy.harmonic.force_constants import (
+    distribute_force_constants_by_translations)
 from phonopy.structure.cells import SNF3x3
 
 
@@ -228,8 +229,8 @@ class DynmatToForceConstants(object):
         (self._shortest_vectors,
          self._multiplicity) = primitive.get_smallest_vectors()
         self._dynmat = None
-        n_s = self._supercell.get_number_of_atoms()
-        n_p = self._primitive.get_number_of_atoms()
+        n_s = len(self._supercell)
+        n_p = len(self._primitive)
         if is_full_fc:
             fc_shape = (n_s, n_s, 3, 3)
         else:
@@ -341,8 +342,7 @@ class DynmatToForceConstants(object):
         p2p = self._primitive.p2p_map
 
         m = self._primitive.masses
-        N = (self._supercell.get_number_of_atoms() /
-             self._primitive.get_number_of_atoms())
+        N = len(self._supercell) / len(self._primitive)
 
         for p_i, s_i in enumerate(p2s):
             for s_j, p_j in enumerate([p2p[i] for i in s2p]):
@@ -364,21 +364,3 @@ class DynmatToForceConstants(object):
                                   (p_i * 3):(p_i * 3 + 3),
                                   (p_j * 3):(p_j * 3 + 3)] * coef
         return sum_q.real
-
-
-def distribute_force_constants_by_translations(fc, primitive, supercell):
-    s2p = primitive.get_supercell_to_primitive_map()
-    p2s = primitive.get_primitive_to_supercell_map()
-    positions = supercell.get_scaled_positions()
-    lattice = supercell.get_cell().T
-    diff = positions - positions[p2s[0]]
-    trans = np.array(diff[np.where(s2p == p2s[0])[0]],
-                     dtype='double', order='C')
-    rotations = np.array([np.eye(3, dtype='intc')] * len(trans),
-                         dtype='intc', order='C')
-    permutations = primitive.get_atomic_permutations()
-    distribute_force_constants(fc,
-                               p2s,
-                               lattice,
-                               rotations,
-                               permutations)

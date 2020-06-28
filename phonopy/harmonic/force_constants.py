@@ -236,6 +236,30 @@ def distribute_force_constants(force_constants,
                           np.array(map_syms, dtype='intc'))
 
 
+def distribute_force_constants_by_translations(fc, primitive, supercell):
+    """Distribute compact fc data to full fc by pure translations
+
+    For example, the input fc has to be prepared in the following way
+    in advance:
+
+    fc = np.zeros((compact_fc.shape[1], compact_fc.shape[1], 3, 3),
+                  dtype='double', order='C')
+    fc[primitive.p2s_map] = compact_fc
+
+    """
+    s2p = primitive.s2p_map
+    p2s = primitive.p2s_map
+    positions = supercell.scaled_positions
+    lattice = supercell.cell.T
+    diff = positions - positions[p2s[0]]
+    trans = np.array(diff[np.where(s2p == p2s[0])[0]],
+                     dtype='double', order='C')
+    rotations = np.array([np.eye(3, dtype='intc')] * len(trans),
+                         dtype='intc', order='C')
+    permutations = primitive.get_atomic_permutations()
+    distribute_force_constants(fc, p2s, lattice, rotations, permutations)
+
+
 def solve_force_constants(force_constants,
                           disp_atom_number,
                           displacements,
