@@ -209,9 +209,9 @@ class Symmetry(object):
     def _set_map_atoms(self):
         rotations = self._symmetry_operations['rotations']
         translations = self._symmetry_operations['translations']
-        positions = self._cell.get_scaled_positions()
-        lattice = self._cell.get_cell()
-        map_atoms = np.arange(self._cell.get_number_of_atoms())
+        positions = self._cell.scaled_positions
+        lattice = self._cell.cell
+        map_atoms = np.arange(len(self._cell), dtype='intc')
         for i, p in enumerate(positions):
             is_found = False
             for j in range(i):
@@ -225,7 +225,7 @@ class Symmetry(object):
                         break
                 if is_found:
                     break
-        self._map_atoms = np.array(map_atoms, dtype='intc')
+        self._map_atoms = map_atoms
 
     def _set_independent_atoms(self):
         indep_atoms = []
@@ -253,8 +253,8 @@ class Symmetry(object):
 
     def _set_map_operations(self):
         ops = self._symmetry_operations
-        pos = self._cell.get_scaled_positions()
-        lattice = self._cell.get_cell()
+        pos = self._cell.scaled_positions
+        lattice = self._cell.cell
         map_operations = np.zeros(len(pos), dtype='intc')
 
         for i, eq_atom in enumerate(self._map_atoms):
@@ -273,16 +273,16 @@ class Symmetry(object):
         rotations = []
 
         if 'get_supercell_to_unitcell_map' in dir(self._cell):
-            s2u_map = self._cell.get_supercell_to_unitcell_map()
-            positions = self._cell.get_scaled_positions()
+            s2u_map = self._cell.s2u_map
+            positions = self._cell.scaled_positions
 
             for i, j in enumerate(s2u_map):
-                if j==0:
+                if j == 0:
                     ipos0 = i
                     break
 
             for i, p in zip(s2u_map, positions):
-                if i==0:
+                if i == 0:
                     trans = p - positions[ipos0]
                     trans -= np.floor(trans)
                     translations.append(trans)
@@ -292,13 +292,13 @@ class Symmetry(object):
         else:
             rotations.append(np.eye(3, dtype='intc'))
             translations.append(np.zeros(3, dtype='double'))
-            self._map_atoms = range(self._cell.get_number_of_atoms())
+            self._map_atoms = range(len(self._cell))
 
         self._symmetry_operations = {
             'rotations': np.array(rotations, dtype='intc'),
             'translations': np.array(translations, dtype='double')}
         self._international_table = 'P1 (1)'
-        self._wyckoff_letters = ['a'] * self._cell.get_number_of_atoms()
+        self._wyckoff_letters = ['a'] * len(self._cell)
 
 
 def find_primitive(cell, symprec=1e-5):

@@ -43,10 +43,6 @@ def bose_einstein_dist(x, t):
     return 1.0 / (np.exp(THzToEv * x / (Kb * t)) - 1)
 
 
-def boltzmann_dist(x, t):
-    return np.exp(- THzToEv * x / (Kb * t))
-
-
 class RandomDisplacements(object):
     """Generate random displacements by Canonical ensenmble.
 
@@ -117,10 +113,10 @@ class RandomDisplacements(object):
             Force constants matrix. See the details at docstring of
             DynamialMatrix.
         dist_func : str or None
-            Phonon occupation function. Default is None, which corresponds
-            to 'bose_einstein'. There are two choices:
-                 'bose_einstein' : Bose-Einstein distribution
-                 'boltzmann' : Boltzmann distribution
+            Harmonic oscillator distribution function either by 'quantum'
+            or 'classical'. The starndard deviation of normal distribution
+            is determined following the choice. Default is None, corresponding
+            to 'quantum'.
         cutoff_frequency : float
             Lowest phonon frequency below which frequency the phonon mode
             is treated specially. See _get_sigma. Default is None, which
@@ -130,9 +126,6 @@ class RandomDisplacements(object):
 
         """
 
-        # Dynamical matrix without NAC because of commensurate points only
-        self._dynmat = get_dynamical_matrix(
-            force_constants, supercell, primitive)
         if cutoff_frequency is None or cutoff_frequency < 0:
             self._cutoff_frequency = 0.01
         else:
@@ -141,25 +134,24 @@ class RandomDisplacements(object):
         self._T = None
         self.u = None
 
-        if dist_func is None or dist_func == 'bose_einstein':
-            self._dist_func = 'bose_einstein'
-        elif dist_func == 'boltzmann':
-            self._dist_func = 'boltzmann'
+        if dist_func is None or dist_func == 'quantum':
+            self._dist_func = 'quantum'
+        elif dist_func == 'classical':
+            self._dist_func = 'classical'
         else:
             raise RuntimeError(
-                "Either 'bose_einstein' or 'boltzmann' is required.")
+                "Either 'quantum' or 'classical' is required.")
 
         self._unit_conversion = (Hbar * EV / AMU / THz
                                  / (2 * np.pi) / Angstrom ** 2)
         self._unit_conversion_classical = (
             Kb * EV / AMU / (THz * (2 * np.pi)) ** 2 / Angstrom ** 2)
 
-        slat = supercell.cell
-        self._rec_lat = np.linalg.inv(primitive.cell)
-        smat = np.rint(np.dot(slat, self._rec_lat).T).astype(int)
-        self._comm_points = get_commensurate_points_in_integers(smat)
-        self._ii, self._ij = self._categorize_points()
-        assert len(self._ii) + len(self._ij) * 2 == len(self._comm_points)
+        # Dynamical matrix without NAC because of commensurate points only
+        self._dynmat = get_dynamical_matrix(
+            force_constants, supercell, primitive)
+
+        self._setup_sampling_qpoints(supercell.cell, primitive.cell)
 
         s2p = primitive.s2p_map
         p2p = primitive.p2p_map
@@ -176,6 +168,12 @@ class RandomDisplacements(object):
         # This is set when running run_d2f.
         # The aim is to produce force constants from modified frequencies.
         self._force_constants = None
+
+    def _setup_sampling_qpoints(self, slat, plat):
+        smat = np.rint(np.dot(slat, np.linalg.inv(plat)).T).astype(int)
+        self._comm_points = get_commensurate_points_in_integers(smat)
+        self._ii, self._ij = self._categorize_points()
+        assert len(self._ii) + len(self._ij) * 2 == len(self._comm_points)
 
     def run(self, T, number_of_snapshots=1, random_seed=None, randn=None):
         """
@@ -298,7 +296,7 @@ class RandomDisplacements(object):
         randn parameter is used for the test.
 
         """
-        natom = self._dynmat.supercell.get_number_of_atoms()
+        natom = len(self._dynmat.supercell)
         u = np.zeros((number_of_snapshots, natom, 3), dtype='double')
 
         shape = (len(self._eigvals_ii), number_of_snapshots,
@@ -322,7 +320,7 @@ class RandomDisplacements(object):
         randn parameter is used for the test.
 
         """
-        natom = self._dynmat.supercell.get_number_of_atoms()
+        natom = len(self._dynmat.supercell)
         u = np.zeros((number_of_snapshots, natom, 3), dtype='double')
         shape = (len(self._eigvals_ij), 2, number_of_snapshots,
                  len(self._eigvals_ij[0]))
@@ -345,7 +343,7 @@ class RandomDisplacements(object):
         freqs = np.sqrt(np.abs(eigvals)) * self._factor
         conditions = freqs > self._cutoff_frequency
         freqs = np.where(conditions, freqs, 1)
-        if self._dist_func == 'boltzmann':
+        if self._dist_func == 'classical':
             sigma = np.where(
                 conditions,
                 np.sqrt(T * self._unit_conversion_classical) / freqs,

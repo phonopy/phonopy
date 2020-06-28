@@ -146,8 +146,12 @@ class DynamicalMatrix(object):
     def get_dimension(self):
         return self._pcell.get_number_of_atoms() * 3
 
-    def get_decimals(self):
+    @property
+    def decimals(self):
         return self._decimals
+
+    def get_decimals(self):
+        return self.decimals
 
     @property
     def supercell(self):
@@ -336,7 +340,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             self._run(q)
             return False
 
-        self._set_dynamical_matrix(q, q_direction)
+        self._compute_dynamical_matrix(q, q_direction)
 
     @property
     def born(self):
@@ -347,7 +351,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
     @property
     def nac_factor(self):
-        return self._unit_conversion * 4.0 * np.pi / self._pcell.get_volume()
+        return self._unit_conversion * 4.0 * np.pi / self._pcell.volume
 
     def get_nac_factor(self):
         return self.nac_factor
@@ -365,6 +369,14 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
     def get_nac_method(self):
         return self.nac_method
+
+    @property
+    def symprec(self):
+        return self._symprec
+
+    @property
+    def log_level(self):
+        return self._log_level
 
     def set_dynamical_matrix(self, q, q_direction=None):
         warnings.warn("DynamicalMatrixNAC.set_dynamical_matrix is deprecated."
@@ -482,7 +494,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
 
         self.show_nac_message()
 
-    def _set_dynamical_matrix(self, q_red, q_direction):
+    def _compute_dynamical_matrix(self, q_red, q_direction):
         if self._Gonze_force_constants is None:
             self.make_Gonze_nac_dataset()
 
@@ -710,7 +722,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
             print("NAC by Wang et al., J. Phys. Condens. Matter 22, "
                   "202201 (2010)")
 
-    def _set_dynamical_matrix(self, q_red, q_direction):
+    def _compute_dynamical_matrix(self, q_red, q_direction):
         # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
         rec_lat = np.linalg.inv(self._pcell.get_cell())  # column vectors
         if q_direction is None:

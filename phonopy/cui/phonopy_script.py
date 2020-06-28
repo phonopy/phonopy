@@ -36,7 +36,8 @@ import sys
 import os
 import numpy as np
 from phonopy import Phonopy, __version__
-from phonopy.harmonic.force_constants import distribute_force_constants
+from phonopy.harmonic.force_constants import (
+    distribute_force_constants_by_translations)
 from phonopy.structure.cells import print_cell
 from phonopy.structure.atoms import atom_data, symbol_map
 from phonopy.structure.dataset import forces_in_dataset
@@ -574,19 +575,9 @@ def produce_force_constants(phonon,
 def compact_fc_to_full_fc(phonon, compact_fc, log_level=0):
     fc = np.zeros((compact_fc.shape[1], compact_fc.shape[1], 3, 3),
                   dtype='double', order='C')
-    p2s_map = phonon.primitive.p2s_map
-    for p_i, s_i in enumerate(p2s_map):
-        fc[s_i] = compact_fc[p_i]
-    symmetry = phonon.symmetry
-    rotations = symmetry.get_symmetry_operations()['rotations']
-    lattice = np.array(phonon.supercell.cell.T,
-                       dtype='double', order='C')
-    permutations = symmetry.get_atomic_permutations()
-    distribute_force_constants(fc,
-                               p2s_map,
-                               lattice,
-                               rotations,
-                               permutations)
+    fc[phonon.primitive.p2s_map] = compact_fc
+    distribute_force_constants_by_translations(
+        fc, phonon.primitive, phonon.supercell)
     if log_level:
         print("Force constants were expanded to full format.")
 

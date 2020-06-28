@@ -2867,8 +2867,9 @@ class Phonopy(object):
             Number of snapshots with random displacements created.
         random_seed : 32bit unsigned int
             Random seed.
-        dist_func : str
-            Distribution function either 'bose_einstein' or 'boltzmann'.
+        dist_func : str, None
+            Harmonic oscillator distribution function either by 'quantum'
+            or 'classical'. Default is None, corresponding to 'quantum'.
         cutoff_frequency : float
             Phonon frequency in THz below that phonons are ignored
             to generate random displacements.
