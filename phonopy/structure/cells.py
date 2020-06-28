@@ -50,10 +50,10 @@ def get_primitive(supercell, primitive_frame, symprec=1e-5):
 
 
 def print_cell(cell, mapping=None, stars=None):
-    symbols = cell.get_chemical_symbols()
-    masses = cell.get_masses()
-    magmoms = cell.get_magnetic_moments()
-    lattice = cell.get_cell()
+    symbols = cell.symbols
+    masses = cell.masses
+    magmoms = cell.magnetic_moments
+    lattice = cell.cell
     print("Lattice vectors:")
     print("  a %20.15f %20.15f %20.15f" % tuple(lattice[0]))
     print("  b %20.15f %20.15f %20.15f" % tuple(lattice[1]))
@@ -70,7 +70,10 @@ def print_cell(cell, mapping=None, stars=None):
         if masses is not None:
             line += " %7.3f" % masses[i]
         if magmoms is not None:
-            line += "  %5.3f" % magmoms[i]
+            if magmoms.ndim == 1:
+                line += "  %5.3f" % magmoms[i]
+            else:
+                line += "  %s" % magmoms[i].ravel()
         if mapping is None:
             print(line)
         else:
@@ -78,10 +81,7 @@ def print_cell(cell, mapping=None, stars=None):
 
 
 class Supercell(PhonopyAtoms):
-    """Build supercell from supercell matrix and unit cell
-
-
-    """
+    """Build supercell from supercell matrix and unit cell"""
 
     def __init__(self,
                  unitcell,
@@ -183,14 +183,11 @@ class Supercell(PhonopyAtoms):
             trim_frame = np.eye(3)
 
         sur_cell, u2sur_map = self._get_simple_supercell(unitcell, multi, P)
-        trimmed_cell_ = _trim_cell(trim_frame, sur_cell, symprec)
-        if trimmed_cell_:
-            supercell, sur2s_map, mapping_table = trimmed_cell_
-        else:
-            return False
-
-        num_satom = supercell.get_number_of_atoms()
-        num_uatom = unitcell.get_number_of_atoms()
+        supercell, sur2s_map, mapping_table = _trim_cell(trim_frame,
+                                                         sur_cell,
+                                                         symprec=symprec)
+        num_satom = len(supercell)
+        num_uatom = len(unitcell)
         N = num_satom // num_uatom
 
         if N != determinant(self._supercell_matrix):
@@ -202,11 +199,11 @@ class Supercell(PhonopyAtoms):
         else:
             PhonopyAtoms.__init__(
                 self,
-                numbers=supercell.get_atomic_numbers(),
-                masses=supercell.get_masses(),
-                magmoms=supercell.get_magnetic_moments(),
-                scaled_positions=supercell.get_scaled_positions(),
-                cell=supercell.get_cell(),
+                numbers=supercell.numbers,
+                masses=supercell.masses,
+                magmoms=supercell.magnetic_moments,
+                scaled_positions=supercell.scaled_positions,
+                cell=supercell.cell,
                 pbc=True)
             self._u2s_map = np.arange(num_uatom) * N
             self._u2u_map = {j: i for i, j in enumerate(self._u2s_map)}
@@ -220,11 +217,11 @@ class Supercell(PhonopyAtoms):
 
         # Scaled positions within the frame, i.e., create a supercell that
         # is made simply to multiply the input cell.
-        positions = unitcell.get_scaled_positions()
-        numbers = unitcell.get_atomic_numbers()
-        masses = unitcell.get_masses()
-        magmoms = unitcell.get_magnetic_moments()
-        lattice = unitcell.get_cell()
+        positions = unitcell.scaled_positions
+        numbers = unitcell.numbers
+        masses = unitcell.masses
+        magmoms = unitcell.magnetic_moments
+        lattice = unitcell.cell
 
         # Index of a axis runs fastest for creating lattice points.
         # See numpy.meshgrid document for the complicated index order for 3D
@@ -336,7 +333,7 @@ class Primitive(PhonopyAtoms):
         primitive_matrix: list of list or ndarray
             Transformation matrix to transform supercell to primitive cell
             such as:
-               np.dot(primitive_matrix.T, supercell.get_cell())
+               np.dot(primitive_matrix.T, supercell.cell)
             shape=(3,3)
         symprec: float, optional
             Tolerance to find overlapping atoms in primitive cell. The default
@@ -344,8 +341,8 @@ class Primitive(PhonopyAtoms):
 
         """
 
-        self._primitive_matrix = np.array(primitive_matrix,
-                                          dtype='double', order='C')
+        self._primitive_matrix = np.array(
+            primitive_matrix, dtype='double', order='C')
         self._symprec = symprec
         self._p2s_map = None
         self._s2p_map = None
@@ -353,10 +350,7 @@ class Primitive(PhonopyAtoms):
         self._smallest_vectors = None
         self._multiplicity = None
         self._atomic_permutations = None
-        self._primitive_cell(supercell)
-        self._map_atomic_indices(supercell.get_scaled_positions())
-        self._set_smallest_vectors(supercell)
-        self._set_atomic_permutations(supercell)
+        self._run(supercell)
 
     @property
     def primitive_matrix(self):
@@ -396,23 +390,26 @@ class Primitive(PhonopyAtoms):
     def get_atomic_permutations(self):
         return self.atomic_permutations
 
-    def _primitive_cell(self, supercell):
-        trimmed_cell_ = _trim_cell(self._primitive_matrix,
-                                   supercell,
-                                   self._symprec)
-        if trimmed_cell_:
-            trimmed_cell, p2s_map, mapping_table = trimmed_cell_
-            PhonopyAtoms.__init__(
-                self,
-                numbers=trimmed_cell.get_atomic_numbers(),
-                masses=trimmed_cell.get_masses(),
-                magmoms=trimmed_cell.get_magnetic_moments(),
-                scaled_positions=trimmed_cell.get_scaled_positions(),
-                cell=trimmed_cell.get_cell(),
-                pbc=True)
-            self._p2s_map = np.array(p2s_map, dtype='intc')
-        else:
-            raise ValueError
+    def _run(self, supercell):
+        self._p2s_map = self._create_primitive_cell(supercell)
+        self._s2p_map, self._p2p_map = self._map_atomic_indices(
+            supercell.scaled_positions)
+        self._smallest_vectors, self._multiplicity = _get_smallest_vectors(
+            supercell, self, symprec=self._symprec)
+        self._atomic_permutations = self._get_atomic_permutations(supercell)
+
+    def _create_primitive_cell(self, supercell):
+        trimmed_cell, p2s_map, _ = _trim_cell(self._primitive_matrix,
+                                              supercell,
+                                              symprec=self._symprec)
+        super(PhonopyAtoms, self).__init__(
+            numbers=trimmed_cell.numbers,
+            masses=trimmed_cell.masses,
+            magmoms=trimmed_cell.magnetic_moments,
+            scaled_positions=trimmed_cell.scaled_positions,
+            cell=trimmed_cell.cell,
+            pbc=True)
+        return p2s_map
 
     def _map_atomic_indices(self, s_pos_orig):
         frac_pos = np.dot(s_pos_orig, np.linalg.inv(self._primitive_matrix).T)
@@ -420,128 +417,221 @@ class Primitive(PhonopyAtoms):
         p2s_positions = frac_pos[self._p2s_map]
         s2p_map = []
         for s_pos in frac_pos:
-
             # Compute distances from s_pos to all positions in _p2s_map.
             frac_diffs = p2s_positions - s_pos
             frac_diffs -= np.rint(frac_diffs)
-
             cart_diffs = np.dot(frac_diffs, self.cell)
             distances = np.sqrt((cart_diffs**2).sum(axis=1))
+            indices = np.where(distances < self._symprec)[0]
+            assert len(indices) == 1
+            s2p_map.append(self._p2s_map[indices[0]])
 
-            # Find the one distance that's short enough.
-            matches = (distances < self._symprec).tolist()
-            assert matches.count(True) == 1
-            index = matches.index(True)
+        s2p_map = np.array(s2p_map, dtype='intc')
+        p2p_map = dict([(j, i) for i, j in enumerate(self._p2s_map)])
 
-            s2p_map.append(self._p2s_map[index])
+        return s2p_map, p2p_map
 
-        self._s2p_map = np.array(s2p_map, dtype='intc')
-        self._p2p_map = dict([(j, i) for i, j in enumerate(self._p2s_map)])
-
-    def _set_smallest_vectors(self, supercell):
-        self._smallest_vectors, self._multiplicity = _get_smallest_vectors(
-            supercell, self, symprec=self._symprec)
-
-    def _set_atomic_permutations(self, supercell):
-        positions = supercell.get_scaled_positions()
+    def _get_atomic_permutations(self, supercell):
+        positions = supercell.scaled_positions
         diff = positions - positions[self._p2s_map[0]]
         trans = np.array(diff[np.where(self._s2p_map == self._p2s_map[0])[0]],
                          dtype='double', order='C')
         rotations = np.array([np.eye(3, dtype='intc')] * len(trans),
                              dtype='intc', order='C')
-        self._atomic_permutations = compute_all_sg_permutations(
+        atomic_permutations = compute_all_sg_permutations(
             positions,
             rotations,
             trans,
             np.array(supercell.get_cell().T, dtype='double', order='C'),
             self._symprec)
 
+        return atomic_permutations
 
-def _trim_cell(relative_axes, cell, symprec):
-    """Trim overlapping atoms
 
-    Parameters
+class TrimmedCell(PhonopyAtoms):
+
+    """Cell after trimming
+
+    Trimmed cell is self.
+
+    Attributes
     ----------
-    relative_axes: ndarray
-        Transformation matrix to transform supercell to a smaller cell such as:
-            trimmed_lattice = np.dot(relative_axes.T, cell.get_cell())
-        shape=(3,3)
-    cell: PhonopyAtoms
-        A supercell
-    symprec: float
-        Tolerance to find overlapping atoms in the trimmed cell
-
-    Returns
-    -------
-    tuple
-        trimmed_cell, extracted_atoms, mapping_table
+    extracted_atoms : ndarray
+        Indices of atomic indices of input cell that are in the trimmed
+        cell.
+        shape=(len(trimmed_cell), ), dtype='intc'
+    mapping_table : ndarray
+        The atomic indices of 'extracted_atom's of all atoms in the input
+        cell.
+        shape=(len(cell), ), dtype='intc'
 
     """
-    positions = cell.get_scaled_positions()
-    numbers = cell.get_atomic_numbers()
-    masses = cell.get_masses()
-    magmoms = cell.get_magnetic_moments()
-    lattice = cell.get_cell()
-    trimmed_lattice = np.dot(relative_axes.T, lattice)
+    def __init__(self,
+                 relative_axes,
+                 cell,
+                 positions_to_reorder=None,
+                 symprec=1e-5):
+        """
 
-    trimmed_positions = []
-    trimmed_numbers = []
-    if masses is None:
-        trimmed_masses = None
-    else:
-        trimmed_masses = []
-    if magmoms is None:
-        trimmed_magmoms = None
-    else:
-        trimmed_magmoms = []
-    extracted_atoms = []
+        Parameters
+        ----------
+        relative_axes: ndarray
+            Transformation matrix to transform supercell to a smaller cell
+            such as:
+                trimmed_lattice = np.dot(relative_axes.T, cell.cell)
+            shape=(3,3)
+        cell: PhonopyAtoms
+            Supercell.
+        positions_to_reorder : array_like
+            Expected positions after trimming. This is used to fix the order
+            of atoms in trimmed cell. This may be used to get the same
+            primitive cell generated from supercells having different shapes.
+        symprec: float, optional
+            Tolerance to find overlapping atoms in the trimmed cell.
+            Default is 1e-5.
 
-    positions_in_new_lattice = np.dot(positions,
-                                      np.linalg.inv(relative_axes).T)
-    positions_in_new_lattice -= np.floor(positions_in_new_lattice)
-    trimmed_positions = np.zeros_like(positions_in_new_lattice)
-    num_atom = 0
+        """
 
-    mapping_table = np.arange(len(positions), dtype='intc')
-    for i, pos in enumerate(positions_in_new_lattice):
-        is_overlap = False
-        if num_atom > 0:
-            diff = trimmed_positions[:num_atom] - pos
+        self._run(cell, relative_axes, positions_to_reorder, symprec)
+
+    @property
+    def mapping_table(self):
+        return self._mapping_table
+
+    @property
+    def extracted_atoms(self):
+        return self._extracted_atoms
+
+    def _run(self, cell, relative_axes, positions_to_reorder, symprec):
+        trimmed_lattice = np.dot(relative_axes.T, cell.cell)
+        positions_in_new_lattice = np.dot(cell.scaled_positions,
+                                          np.linalg.inv(relative_axes).T)
+        positions_in_new_lattice -= np.floor(positions_in_new_lattice)
+
+        (trimmed_positions,
+         trimmed_numbers,
+         trimmed_masses,
+         trimmed_magmoms,
+         extracted_atoms,
+         mapping_table) = self._extract(positions_in_new_lattice,
+                                        trimmed_lattice,
+                                        cell.numbers,
+                                        cell.masses,
+                                        cell.magnetic_moments,
+                                        symprec)
+
+        if positions_to_reorder is not None:
+            ids = self._get_reorder_indices(positions_to_reorder,
+                                            trimmed_positions,
+                                            trimmed_lattice,
+                                            symprec)
+            trimmed_positions = trimmed_positions[ids]
+            trimmed_numbers = trimmed_numbers[ids]
+            if trimmed_masses is not None:
+                trimmed_masses = trimmed_masses[ids]
+            if trimmed_magmoms is not None:
+                trimmed_magmoms = trimmed_magmoms[ids]
+            extracted_atoms = extracted_atoms[ids]
+
+        # scale is not always to become integer.
+        scale = 1.0 / np.linalg.det(relative_axes)
+        if len(cell) == int(np.rint(scale * len(trimmed_numbers))):
+            super(PhonopyAtoms, self).__init__(
+                numbers=trimmed_numbers,
+                masses=trimmed_masses,
+                magmoms=trimmed_magmoms,
+                scaled_positions=trimmed_positions,
+                cell=trimmed_lattice,
+                pbc=True)
+            self._extracted_atoms = np.array(extracted_atoms, dtype='intc')
+            self._mapping_table = mapping_table
+        else:
+            raise RuntimeError("Remapping of atoms by TrimmedCell failed.")
+
+    def _extract(self,
+                 positions_in_new_lattice,
+                 trimmed_lattice,
+                 numbers,
+                 masses,
+                 magmoms,
+                 symprec):
+        num_atoms = 0
+        extracted_atoms = []
+        mapping_table = np.arange(len(positions_in_new_lattice), dtype='intc')
+        trimmed_positions = np.zeros_like(positions_in_new_lattice)
+        trimmed_numbers = []
+        if masses is None:
+            trimmed_masses = None
+        else:
+            trimmed_masses = []
+        if magmoms is None:
+            trimmed_magmoms = None
+        else:
+            trimmed_magmoms = []
+
+        for i, pos in enumerate(positions_in_new_lattice):
+            found_overlap = False
+            if num_atoms > 0:
+                diff = trimmed_positions[:num_atoms] - pos
+                diff -= np.rint(diff)
+                # Older numpy doesn't support axis argument.
+                distances = np.sqrt(
+                    np.sum(np.dot(diff, trimmed_lattice) ** 2, axis=1))
+                overlap_indices = np.where(distances < symprec)[0]
+                if len(overlap_indices) > 0:
+                    assert len(overlap_indices) == 1
+                    found_overlap = True
+                    mapping_table[i] = extracted_atoms[overlap_indices[0]]
+
+            if not found_overlap:
+                trimmed_positions[num_atoms] = pos
+                num_atoms += 1
+                trimmed_numbers.append(numbers[i])
+                if masses is not None:
+                    trimmed_masses.append(masses[i])
+                if magmoms is not None:
+                    trimmed_magmoms.append(magmoms[i])
+                extracted_atoms.append(i)
+
+        if trimmed_masses is not None:
+            trimmed_masses = np.array(trimmed_masses, dtype='double')
+        if trimmed_magmoms is not None:
+            trimmed_magmoms = np.array(trimmed_magmoms,
+                                       dtype='double', order='C')
+
+        return (np.array(trimmed_positions[:num_atoms],
+                         dtype='double', order='C'),
+                np.array(trimmed_numbers, dtype='intc'),
+                trimmed_masses,
+                trimmed_magmoms,
+                np.array(extracted_atoms, dtype='intc'),
+                mapping_table)
+
+    def _get_reorder_indices(self,
+                             positions,
+                             trimmed_positions,
+                             trimmed_lattice,
+                             symprec):
+        """Optionally reorder trimmed cell by input primitive cell positions"""
+
+        reorder_indices = []
+        for pos in positions:
+            diff = trimmed_positions - pos
             diff -= np.rint(diff)
-            # Older numpy doesn't support axis argument.
-            # distances = np.linalg.norm(np.dot(diff, trimmed_lattice), axis=1)
-            # overlap_indices = np.where(distances < symprec)[0]
-            distances = np.sqrt(
-                np.sum(np.dot(diff, trimmed_lattice) ** 2, axis=1))
-            overlap_indices = np.where(distances < symprec)[0]
-            if len(overlap_indices) > 0:
-                assert len(overlap_indices) == 1
-                is_overlap = True
-                mapping_table[i] = extracted_atoms[overlap_indices[0]]
+            dist = np.sqrt(np.sum(np.dot(diff, trimmed_lattice) ** 2, axis=1))
+            overlap_indices = np.where(dist < symprec)[0]
+            assert len(overlap_indices) == 1
+            reorder_indices.append(overlap_indices[0])
+        return reorder_indices
 
-        if not is_overlap:
-            trimmed_positions[num_atom] = pos
-            num_atom += 1
-            trimmed_numbers.append(numbers[i])
-            if masses is not None:
-                trimmed_masses.append(masses[i])
-            if magmoms is not None:
-                trimmed_magmoms.append(magmoms[i])
-            extracted_atoms.append(i)
 
-    # scale is not always to become integer.
-    scale = 1.0 / np.linalg.det(relative_axes)
-    if len(numbers) == np.rint(scale * len(trimmed_numbers)):
-        trimmed_cell = PhonopyAtoms(
-            numbers=trimmed_numbers,
-            masses=trimmed_masses,
-            magmoms=trimmed_magmoms,
-            scaled_positions=trimmed_positions[:num_atom],
-            cell=trimmed_lattice,
-            pbc=True)
-        return trimmed_cell, extracted_atoms, mapping_table
-    else:
-        return False
+def _trim_cell(relative_axes, cell, symprec=1e-5):
+    """Trim overlapping atoms"""
+
+    tcell = TrimmedCell(relative_axes, cell, symprec=symprec)
+    return (PhonopyAtoms(atoms=tcell),
+            tcell.extracted_atoms,
+            tcell.mapping_table)
 
 
 #
@@ -1285,7 +1375,7 @@ def get_primitive_matrix_by_centring(centring):
 
 
 def guess_primitive_matrix(unitcell, symprec=1e-5):
-    if unitcell.get_magnetic_moments() is not None:
+    if unitcell.magnetic_moments is not None:
         msg = "Can not be used with the unit cell having magnetic moments."
         raise RuntimeError(msg)
 
