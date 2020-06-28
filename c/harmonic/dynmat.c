@@ -138,19 +138,19 @@ int dym_get_dynamical_matrix_at_q(double *dynamical_matrix,
   return 0;
 }
 
-void dym_get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real,imag)] */
-                           const double *dd_q0, /* [natom, 3, 3, (real,imag)] */
-                           PHPYCONST double (*G_list)[3], /* [num_G, 3] */
-                           const int num_G,
-                           const int num_patom,
-                           const double q_cart[3],
-                           const double *q_direction_cart, /* must be pointer */
-                           PHPYCONST double (*born)[3][3],
-                           PHPYCONST double dielectric[3][3],
-                           PHPYCONST double (*pos)[3], /* [num_patom, 3] */
-                           const double factor, /* 4pi/V*unit-conv */
-                           const double lambda,
-                           const double tolerance)
+void dym_get_recip_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real,imag)] */
+                                 const double *dd_q0, /* [natom, 3, 3, (real,imag)] */
+                                 PHPYCONST double (*G_list)[3], /* [num_G, 3] */
+                                 const int num_G,
+                                 const int num_patom,
+                                 const double q_cart[3],
+                                 const double *q_direction_cart, /* must be pointer */
+                                 PHPYCONST double (*born)[3][3],
+                                 PHPYCONST double dielectric[3][3],
+                                 PHPYCONST double (*pos)[3], /* [num_patom, 3] */
+                                 const double factor, /* 4pi/V*unit-conv */
+                                 const double lambda,
+                                 const double tolerance)
 {
   int i, k, l, adrs, adrs_sum;
   double *dd_tmp;
@@ -198,15 +198,15 @@ void dym_get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real,imag)] */
   dd_tmp = NULL;
 }
 
-void dym_get_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real,imag)] */
-                              PHPYCONST double (*G_list)[3], /* [num_G, 3] */
-                              const int num_G,
-                              const int num_patom,
-                              PHPYCONST double (*born)[3][3],
-                              PHPYCONST double dielectric[3][3],
-                              PHPYCONST double (*pos)[3], /* [num_patom, 3] */
-                              const double lambda,
-                              const double tolerance)
+void dym_get_recip_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real,imag)] */
+                                    PHPYCONST double (*G_list)[3], /* [num_G, 3] */
+                                    const int num_G,
+                                    const int num_patom,
+                                    PHPYCONST double (*born)[3][3],
+                                    PHPYCONST double dielectric[3][3],
+                                    PHPYCONST double (*pos)[3], /* [num_patom, 3] */
+                                    const double lambda,
+                                    const double tolerance)
 {
   int i, j, k, l, adrs_tmp, adrs, adrsT;
   double zero_vec[3];

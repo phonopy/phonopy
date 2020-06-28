@@ -55,8 +55,8 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args);
 static PyObject * py_transpose_compact_fc(PyObject *self, PyObject *args);
 static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args);
 static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args);
-static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args);
-static PyObject * py_get_dipole_dipole_q0(PyObject *self, PyObject *args);
+static PyObject * py_get_recip_dipole_dipole(PyObject *self, PyObject *args);
+static PyObject * py_get_recip_dipole_dipole_q0(PyObject *self, PyObject *args);
 static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args);
 static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2(PyObject *self, PyObject *args);
@@ -168,10 +168,10 @@ static PyMethodDef _phonopy_methods[] = {
    "Dynamical matrix"},
   {"nac_dynamical_matrix", py_get_nac_dynamical_matrix, METH_VARARGS,
    "NAC dynamical matrix"},
-  {"dipole_dipole", py_get_dipole_dipole, METH_VARARGS,
-   "Dipole-dipole interaction"},
-  {"dipole_dipole_q0", py_get_dipole_dipole_q0, METH_VARARGS,
-   "q=0 terms of Dipole-dipole interaction"},
+  {"recip_dipole_dipole", py_get_recip_dipole_dipole, METH_VARARGS,
+   "Reciprocal part of dipole-dipole interaction"},
+  {"recip_dipole_dipole_q0", py_get_recip_dipole_dipole_q0, METH_VARARGS,
+   "q=0 terms of reciprocal part of dipole-dipole interaction"},
   {"derivative_dynmat", py_get_derivative_dynmat, METH_VARARGS,
    "Q derivative of dynamical matrix"},
   {"thermal_properties", py_get_thermal_properties, METH_VARARGS,
@@ -783,7 +783,7 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
-static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args)
+static PyObject * py_get_recip_dipole_dipole(PyObject *self, PyObject *args)
 {
   PyArrayObject* py_dd;
   PyArrayObject* py_dd_q0;
@@ -837,24 +837,24 @@ static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args)
   num_G = PyArray_DIMS(py_G_list)[0];
   num_patom = PyArray_DIMS(py_positions)[0];
 
-  dym_get_dipole_dipole(dd, /* [natom, 3, natom, 3, (real, imag)] */
-                        dd_q0, /* [natom, 3, 3, (real, imag)] */
-                        G_list, /* [num_kvec, 3] */
-                        num_G,
-                        num_patom,
-                        q_vector,
-                        q_direction,
-                        born,
-                        dielectric,
-                        pos, /* [natom, 3] */
-                        factor, /* 4pi/V*unit-conv */
-                        lambda, /* 4 * Lambda^2 */
-                        tolerance);
+  dym_get_recip_dipole_dipole(dd, /* [natom, 3, natom, 3, (real, imag)] */
+                              dd_q0, /* [natom, 3, 3, (real, imag)] */
+                              G_list, /* [num_kvec, 3] */
+                              num_G,
+                              num_patom,
+                              q_vector,
+                              q_direction,
+                              born,
+                              dielectric,
+                              pos, /* [natom, 3] */
+                              factor, /* 4pi/V*unit-conv */
+                              lambda, /* 4 * Lambda^2 */
+                              tolerance);
 
   Py_RETURN_NONE;
 }
 
-static PyObject * py_get_dipole_dipole_q0(PyObject *self, PyObject *args)
+static PyObject * py_get_recip_dipole_dipole_q0(PyObject *self, PyObject *args)
 {
   PyArrayObject* py_dd_q0;
   PyArrayObject* py_G_list;
@@ -890,15 +890,15 @@ static PyObject * py_get_dipole_dipole_q0(PyObject *self, PyObject *args)
   num_G = PyArray_DIMS(py_G_list)[0];
   num_patom = PyArray_DIMS(py_positions)[0];
 
-  dym_get_dipole_dipole_q0(dd_q0, /* [natom, 3, 3, (real, imag)] */
-                           G_list, /* [num_kvec, 3] */
-                           num_G,
-                           num_patom,
-                           born,
-                           dielectric,
-                           pos, /* [natom, 3] */
-                           lambda, /* 4 * Lambda^2 */
-                           tolerance);
+  dym_get_recip_dipole_dipole_q0(dd_q0, /* [natom, 3, 3, (real, imag)] */
+                                 G_list, /* [num_kvec, 3] */
+                                 num_G,
+                                 num_patom,
+                                 born,
+                                 dielectric,
+                                 pos, /* [natom, 3] */
+                                 lambda, /* 4 * Lambda^2 */
+                                 tolerance);
 
   Py_RETURN_NONE;
 }

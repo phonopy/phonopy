@@ -131,9 +131,9 @@ class DynamicalMatrix(object):
 
         self._dtype_complex = ("c%d" % (np.dtype('double').itemsize * 2))
 
-        self._p2s_map = primitive.get_primitive_to_supercell_map()
-        self._s2p_map = primitive.get_supercell_to_primitive_map()
-        p2p_map = primitive.get_primitive_to_primitive_map()
+        self._p2s_map = primitive.p2s_map
+        self._s2p_map = primitive.s2p_map
+        p2p_map = primitive.p2p_map
         self._s2pp_map = np.array(
             [p2p_map[self._s2p_map[i]] for i in range(len(self._s2p_map))],
             dtype='intc')
@@ -144,7 +144,7 @@ class DynamicalMatrix(object):
         return self._nac
 
     def get_dimension(self):
-        return self._pcell.get_number_of_atoms() * 3
+        return len(self._pcell) * 3
 
     @property
     def decimals(self):
@@ -173,9 +173,6 @@ class DynamicalMatrix(object):
 
     def get_force_constants(self):
         return self.force_constants
-
-    def get_shortest_vectors(self):
-        return self._smallest_vectors, self._multiplicity
 
     @property
     def dynamical_matrix(self):
@@ -220,9 +217,9 @@ class DynamicalMatrix(object):
     def _run(self, q):
         try:
             import phonopy._phonopy as phonoc
-            self._set_c_dynamical_matrix(q)
+            self._run_c_dynamical_matrix(q)
         except ImportError:
-            self._set_py_dynamical_matrix(q)
+            self._run_py_dynamical_matrix(q)
 
     def _set_force_constants(self, fc):
         if (type(fc) is np.ndarray and
@@ -234,7 +231,7 @@ class DynamicalMatrix(object):
         else:
             self._force_constants = np.array(fc, dtype='double', order='C')
 
-    def _set_c_dynamical_matrix(self, q):
+    def _run_c_dynamical_matrix(self, q):
         import phonopy._phonopy as phonoc
 
         fc = self._force_constants
@@ -275,7 +272,7 @@ class DynamicalMatrix(object):
         #   dm = dm_double[:, :, 0] + 1j * dm_double[:, :, 1]
         self._dynamical_matrix = dm
 
-    def _set_py_dynamical_matrix(self, q):
+    def _run_py_dynamical_matrix(self, q):
         fc = self._force_constants
         vecs = self._smallest_vectors
         multiplicity = self._multiplicity
@@ -330,7 +327,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             shape=(3,), dtype='double'
 
         """
-        rec_lat = np.linalg.inv(self._pcell.get_cell())  # column vectors
+        rec_lat = np.linalg.inv(self._pcell.cell)  # column vectors
         if q_direction is None:
             q_norm = np.linalg.norm(np.dot(q, rec_lat.T))
         else:
@@ -458,7 +455,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             self._G_cutoff = nac_params['G_cutoff']
         else:
             self._G_cutoff = (3 * self._num_G_points / (4 * np.pi) /
-                              self._pcell.get_volume()) ** (1.0 / 3)
+                              self._pcell.volume) ** (1.0 / 3)
         self._G_list = self._get_G_list(self._G_cutoff)
         if 'Lambda' in nac_params:
             self._Lambda = nac_params['Lambda']
@@ -467,16 +464,18 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             GeG = self._G_cutoff ** 2 * np.trace(self._dielectric) / 3
             self._Lambda = np.sqrt(- GeG / 4 / np.log(exp_cutoff))
 
+        # self._H = self._get_H()
+
     def make_Gonze_nac_dataset(self):
         try:
             import phonopy._phonopy as phonoc
-            self._set_c_dipole_dipole_q0()
+            self._run_c_recip_dipole_dipole_q0()
         except ImportError:
             print("Python version of dipole-dipole calculation is not well "
                   "implemented.")
             sys.exit(1)
 
-        self._set_Gonze_force_constants()
+        self._run_Gonze_force_constants()
         self._Gonze_count = 0
 
     def show_nac_message(self):
@@ -508,7 +507,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         dm_dd = self._get_Gonze_dipole_dipole(q_red, q_direction)
         self._dynamical_matrix += dm_dd
 
-    def _set_Gonze_force_constants(self):
+    def _run_Gonze_force_constants(self):
         fc_shape = self._force_constants.shape
         d2f = DynmatToForceConstants(self._pcell,
                                      self._scell,
@@ -527,7 +526,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         self._Gonze_force_constants = d2f.force_constants
 
     def _get_Gonze_dipole_dipole(self, q_red, q_direction):
-        rec_lat = np.linalg.inv(self._pcell.get_cell())  # column vectors
+        rec_lat = np.linalg.inv(self._pcell.cell)  # column vectors
         q_cart = np.array(np.dot(q_red, rec_lat.T), dtype='double')
         if q_direction is None:
             q_dir_cart = None
@@ -537,35 +536,25 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
 
         try:
             import phonopy._phonopy as phonoc
-            C = self._get_c_dipole_dipole(q_cart, q_dir_cart)
+            C_recip = self._get_c_recip_dipole_dipole(q_cart, q_dir_cart)
         except ImportError:
             print("Python version of dipole-dipole calculation is not well "
                   "implemented.")
             sys.exit(1)
-
-        # D-type to C-type conversion and mass weighted
-        # mass = self._pcell.get_masses()
-        # num_atom = self._pcell.get_number_of_atoms()
-        # pos = self._pcell.get_positions()
-        # for i in range(num_atom):
-        #     dpos = pos - pos[i]
-        #     phase_factor = np.exp(2j * np.pi * np.dot(dpos, q))
-        #     for j in range(num_atom):
-        #         C[i, :, j, :] *= phase_factor[j] / np.sqrt(mass[i] * mass[j])
 
         # Mass weighted
         mass = self._pcell.masses
         num_atom = len(self._pcell)
         for i in range(num_atom):
             for j in range(num_atom):
-                C[i, :, j, :] *= 1.0 / np.sqrt(mass[i] * mass[j])
+                C_recip[i, :, j, :] *= 1.0 / np.sqrt(mass[i] * mass[j])
 
-        C_dd = C.reshape(num_atom * 3, num_atom * 3)
+        C_dd = C_recip.reshape(num_atom * 3, num_atom * 3)
 
         return C_dd
 
-    def _get_c_dipole_dipole(self, q_cart, q_dir_cart):
-        """Eq.(71) on the right hand side
+    def _get_c_recip_dipole_dipole(self, q_cart, q_dir_cart):
+        """Reciprocal part of Eq.(71) on the right hand side
 
         This is subtracted from supercell force constants to create
         short-range force constants. Only once at commensurate points.
@@ -583,21 +572,22 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         dd = np.zeros((num_atom, 3, num_atom, 3),
                       dtype=self._dtype_complex, order='C')
 
-        phonoc.dipole_dipole(dd.view(dtype='double'),
-                             self._dd_q0.view(dtype='double'),
-                             self._G_list,
-                             q_cart,
-                             q_dir_cart,
-                             self._born,
-                             self._dielectric,
-                             np.array(pos, dtype='double', order='C'),
-                             self._unit_conversion * 4.0 * np.pi / volume,
-                             self._Lambda,
-                             self._symprec)
+        phonoc.recip_dipole_dipole(
+            dd.view(dtype='double'),
+            self._dd_q0.view(dtype='double'),
+            self._G_list,
+            q_cart,
+            q_dir_cart,
+            self._born,
+            self._dielectric,
+            np.array(pos, dtype='double', order='C'),
+            self._unit_conversion * 4.0 * np.pi / volume,
+            self._Lambda,
+            self._symprec)
         return dd
 
-    def _set_c_dipole_dipole_q0(self):
-        """Eq.(71) second term on the right hand side
+    def _run_c_recip_dipole_dipole_q0(self):
+        """Reciprocal part of Eq.(71) second term on the right hand side
 
         Computed only once.
 
@@ -609,13 +599,14 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         self._dd_q0 = np.zeros((len(pos), 3, 3),
                                dtype=self._dtype_complex, order='C')
 
-        phonoc.dipole_dipole_q0(self._dd_q0.view(dtype='double'),
-                                self._G_list,
-                                self._born,
-                                self._dielectric,
-                                np.array(pos, dtype='double', order='C'),
-                                self._Lambda,
-                                self._symprec)
+        phonoc.recip_dipole_dipole_q0(
+            self._dd_q0.view(dtype='double'),
+            self._G_list,
+            self._born,
+            self._dielectric,
+            np.array(pos, dtype='double', order='C'),
+            self._Lambda,
+            self._symprec)
 
         # Limiting contribution
         # inv_eps = np.linalg.inv(self._dielectric)
@@ -625,9 +616,9 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         # self._dd_q0 -= coef
 
     def _get_py_dipole_dipole(self, K_list, q, q_dir_cart):
-        pos = self._pcell.get_positions()
-        num_atom = self._pcell.get_number_of_atoms()
-        volume = self._pcell.get_volume()
+        pos = self._pcell.positions
+        num_atom = len(self._pcell)
+        volume = self._pcell.volume
         C = np.zeros((num_atom, 3, num_atom, 3),
                      dtype=self._dtype_complex, order='C')
 
@@ -671,7 +662,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         return C
 
     def _get_G_list(self, G_cutoff, g_rad=100):
-        rec_lat = np.linalg.inv(self._pcell.get_cell())  # column vectors
+        rec_lat = np.linalg.inv(self._pcell.cell)  # column vectors
         # g_rad must be greater than 0 for broadcasting.
         n = g_rad * 2 + 1
         G = np.zeros((n ** 3, 3), dtype='double', order='C')
@@ -687,6 +678,40 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         G_norm2 = ((G_vec_list) ** 2).sum(axis=1)
         return np.array(G_vec_list[G_norm2 < G_cutoff ** 2],
                         dtype='double', order='C')
+
+    def _get_H(self):
+        lat = self._scell.cell
+        cart_vecs = np.dot(self._smallest_vectors, lat)
+        Delta = np.dot(cart_vecs, np.linalg.inv(self._dielectric).T)
+        D = np.sqrt(cart_vecs * Delta).sum(axis=3)
+        x = self._Lambda * Delta
+        y = self._Lambda * D
+        y2 = y ** 2
+        y3 = y ** 3
+        exp_y2 = np.exp(-y2)
+        eps_inv = np.linalg.inv(self._dielectric)
+
+        try:
+            from scipy.special import erfc
+            erfc_y = erfc(y)
+        except ImportError:
+            from math import erfc
+            erfc_y = np.zeros_like(y)
+            for i in np.ndindex(y.shape):
+                erfc_y[i] = erfc(y[i])
+
+        with np.errstate(divide='ignore', invalid='ignore'):
+            A = (3 * erfc_y / y3 + 2 / np.sqrt(np.pi)
+                 * exp_y2 * (3 / y2 + 2)) / y2
+            A[A == np.inf] = 0
+            A = np.nan_to_num(A)
+            B = erfc_y / y3 + 2 / np.sqrt(np.pi) * exp_y2 / y2
+            B[B == np.inf] = 0
+            B = np.nan_to_num(B)
+        H = np.zeros((3, 3) + y.shape, dtype='double', order='C')
+        for i, j in np.ndindex((3, 3)):
+            H[i, j] = x[:, :, :, i] * x[:, :, :, j] * A - eps_inv[i, j] * B
+        return H
 
 
 class DynamicalMatrixWang(DynamicalMatrixNAC):
@@ -724,7 +749,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
 
     def _compute_dynamical_matrix(self, q_red, q_direction):
         # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
-        rec_lat = np.linalg.inv(self._pcell.get_cell())  # column vectors
+        rec_lat = np.linalg.inv(self._pcell.cell)  # column vectors
         if q_direction is None:
             q = np.dot(q_red, rec_lat.T)
         else:
@@ -732,25 +757,25 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
 
         constant = self._get_constant_factor(q,
                                              self._dielectric,
-                                             self._pcell.get_volume(),
+                                             self._pcell.volume,
                                              self._unit_conversion)
         try:
             import phonopy._phonopy as phonoc
-            self._set_c_Wang_dynamical_matrix(q_red, q, constant)
+            self._run_c_Wang_dynamical_matrix(q_red, q, constant)
         except ImportError:
-            num_atom = self._pcell.get_number_of_atoms()
+            num_atom = len(self._pcell)
             fc_backup = self._force_constants.copy()
             nac_q = self._get_charge_sum(num_atom, q, self._born) * constant
-            self._set_py_Wang_force_constants(self._force_constants, nac_q)
+            self._run_py_Wang_force_constants(self._force_constants, nac_q)
             self._run(q_red)
             self._force_constants = fc_backup
 
-    def _set_c_Wang_dynamical_matrix(self, q_red, q, factor):
+    def _run_c_Wang_dynamical_matrix(self, q_red, q, factor):
         import phonopy._phonopy as phonoc
 
         fc = self._force_constants
         vectors = self._smallest_vectors
-        mass = self._pcell.get_masses()
+        mass = self._pcell.masses
         multiplicity = self._multiplicity
         size_prim = len(mass)
         dm = np.zeros((size_prim * 3, size_prim * 3),
@@ -784,10 +809,9 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
 
         self._dynamical_matrix = dm
 
-    def _set_py_Wang_force_constants(self, fc, nac_q):
-        N = (self._scell.get_number_of_atoms() //
-             self._pcell.get_number_of_atoms())
-        for s1 in range(self._scell.get_number_of_atoms()):
+    def _run_py_Wang_force_constants(self, fc, nac_q):
+        N = (len(self._scell) // len(self._pcell))
+        for s1 in range(len(self._scell)):
             # This if-statement is the trick.
             # In contructing dynamical matrix in phonopy
             # fc of left indices with s1 == self._s2p_map[ s1 ] are
@@ -795,6 +819,6 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
             if s1 != self._s2p_map[s1]:
                 continue
             p1 = self._s2pp_map[s1]
-            for s2 in range(self._scell.get_number_of_atoms()):
+            for s2 in range(len(self._scell)):
                 p2 = self._s2pp_map[s2]
                 fc[s1, s2] += nac_q[p1, p2] / N
