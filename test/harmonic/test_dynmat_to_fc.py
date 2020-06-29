@@ -4,11 +4,9 @@ import phonopy
 from phonopy import Phonopy
 import numpy as np
 from phonopy.units import VaspToTHz
-from phonopy.interface.phonopy_yaml import read_cell_yaml
 from phonopy.harmonic.dynmat_to_fc import (
-    get_commensurate_points, DynmatToForceConstants)
-from phonopy.structure.cells import get_supercell, get_primitive
-from phonopy.file_IO import write_FORCE_CONSTANTS
+    get_commensurate_points, get_commensurate_points_in_integers,
+    DynmatToForceConstants)
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -16,23 +14,31 @@ data_dir = os.path.dirname(os.path.abspath(__file__))
 class TestGetCommensuratePoints(unittest.TestCase):
 
     def setUp(self):
-        filename = os.path.join("..", "NaCl.yaml")
-        self._cell = read_cell_yaml(os.path.join(data_dir, filename))
+        self._smat = np.dot([[-1, 1, 1], [1, -1, 1], [1, 1, -1]], np.diag([2, 2, 2]))
+        self._comm_points = get_commensurate_points(self._smat)
 
     def tearDown(self):
         pass
 
     def test_get_commensurate_points(self):
-        smat = np.diag([2, 2, 2])
-        pmat = np.dot(np.linalg.inv(smat),
-                      [[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]])
-        supercell = get_supercell(self._cell, smat)
-        primitive = get_primitive(supercell, pmat)
-        supercell_matrix = np.linalg.inv(primitive.primitive_matrix)
-        supercell_matrix = np.rint(supercell_matrix).astype('intc')
-        comm_points = get_commensurate_points(supercell_matrix)
         # self._write(comm_points)
-        self._compare(comm_points)
+        self._compare(self._comm_points)
+
+    def test_get_commensurate_points_in_integers(self):
+        comm_points = get_commensurate_points_in_integers(self._smat)
+        comm_points = comm_points / np.linalg.det(self._smat)
+
+        all_indices = []
+        for cpt in comm_points:
+            diff = self._comm_points - cpt
+            diff -= np.rint(diff)
+            dist2 = (diff ** 2).sum(axis=1)
+            indices = np.where(dist2 < 1e-5)[0]
+            self.assertTrue(len(indices) == 1)
+            all_indices.append(indices[0])
+
+        all_indices.sort()
+        np.testing.assert_array_equal(all_indices, np.arange(len(comm_points)))
 
     def _compare(self, comm_points, filename="comm_points.dat"):
         with open(os.path.join(data_dir, filename)) as f:
@@ -133,4 +139,8 @@ class TestDynmatToForceConstants(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    suite = unittest.TestLoader().loadTestsFromTestCase(
+        TestGetCommensuratePoints)
+    suite = unittest.TestLoader().loadTestsFromTestCase(
+        TestDynmatToForceConstants)
+    unittest.TextTestRunner(verbosity=2).run(suite)
