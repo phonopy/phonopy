@@ -108,10 +108,10 @@ class DynmatToForceConstants(object):
     """Transforms eigensolutions to force constants
 
     This is the inverse transform of force constants to eigensolutions.
-    Eigenvalue-eigenvector pairs or frequency-eigenvector pairs of
-    dynamical matrices are transformed to force constants by this class.
-    Optionally, dynamical matrices (not the DynamicalMatrix class instance,
-    but the calculated matrices) can be used instead of above pairs.
+    Eigenvalue-eigenvector pairs of dynamical matrices are transformed to
+    force constants by this class. Optionally, dynamical matrices
+    (not the DynamicalMatrix class instance, but the calculated matrices)
+    can be used instead of above pairs.
 
     The eigensolutions have to be those calculated at commensurate q-points
     of supercell matrix. The commensurate q-points are obtained by the
@@ -123,10 +123,16 @@ class DynmatToForceConstants(object):
        d2f = DynmatToForceConstants(primitive, supercell)
        comm_points = d2f.commensurate_points
        ... calculated phonons at comm_points
-       d2f.create_dynamical_matrices(frequencies=frequencies,
+       d2f.create_dynamical_matrices(eigenvalues=eigenvalues,
                                      eigenvectors=eigenvectors)
        d2f.run()
        fc = d2f.force_constants
+
+    Here eigenvalues are squared phonon frequencies divided by frequency
+    unit conversion factor squared and for the imaginary modes, -1 has to
+    be multiplied, i.e.,
+
+       eigenvalues = (frequencies / factor) ** 2 * np.sign(frequencies).
 
     Another usage may be with eigensolutions at commensurate q-points::
 
@@ -161,7 +167,6 @@ class DynmatToForceConstants(object):
     def __init__(self,
                  primitive,
                  supercell,
-                 frequencies=None,
                  eigenvalues=None,
                  eigenvectors=None,
                  dynamical_matrices=None,
@@ -178,14 +183,9 @@ class DynmatToForceConstants(object):
         Parameters
         ----------
         supercell : PhonopyAtoms
-            Supercell.
+            Supercell, not necessarily being an instance of Supercell class.
         primitive : Primitive
             Primitive cell
-        frequencies : ndarray
-            Phonon frequencies as the solution of dynamical matrices at
-            commensurate q-points.
-            shape=(det(supercell_matrix), num_band), dtype='double', order='C'
-            where ``num_band`` is 3 x number of atoms in primitive cell.
         eigenvalues : ndarray
             Phonon eigenvalues as the solution of dynamical matrices at
             commensurate q-points.
@@ -239,10 +239,8 @@ class DynmatToForceConstants(object):
 
         self._dtype_complex = ("c%d" % (np.dtype('double').itemsize * 2))
 
-        if ((frequencies is not None or eigenvalues is not None)
-            and eigenvectors is not None):
+        if eigenvalues is not None and eigenvectors is not None:
             self.create_dynamical_matrices(
-                frequencies=frequencies,
                 eigenvalues=eigenvalues,
                 eigenvectors=eigenvectors)
         elif dynamical_matrices is not None:
@@ -284,20 +282,11 @@ class DynmatToForceConstants(object):
     def set_dynamical_matrices(self, dynmat):
         self.dynamical_matrices = dynmat
 
-    def create_dynamical_matrices(self,
-                                  frequencies=None,
-                                  eigenvalues=None,
-                                  eigenvectors=None):
+    def create_dynamical_matrices(self, eigenvalues=None, eigenvectors=None):
         dm = []
-        if eigenvalues is not None:
-            for eigvals, eigvecs in zip(eigenvalues, eigenvectors):
-                dm.append(np.dot(np.dot(eigvecs, np.diag(eigvals)),
-                                 eigvecs.T.conj()))
-        else:
-            for freqs, eigvecs in zip(frequencies, eigenvectors):
-                eigvals = freqs ** 2 * np.sign(freqs)
-                dm.append(np.dot(np.dot(eigvecs, np.diag(eigvals)),
-                                 eigvecs.T.conj()))
+        for eigvals, eigvecs in zip(eigenvalues, eigenvectors):
+            dm.append(np.dot(np.dot(eigvecs, np.diag(eigvals)),
+                             eigvecs.T.conj()))
 
         self.dynamical_matrices = dm
 
