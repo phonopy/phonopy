@@ -284,6 +284,22 @@ def read_crystal_structure(filename=None,
                            phonopy_yaml_cls=None):
     """Returns crystal structure information
 
+    Parameters
+    ----------
+    filename : str, optional
+        Filename that contains cell structure information. Default is None.
+        The predetermined filename for each interface_mode is used.
+    interface_mode : str, optional
+        This is used to recognize the file format. Default is None, which
+        is equivalent to 'vasp' mode.
+    chemical_symbols : list of str, optional
+        This is only used for 'vasp' mode. VASP POSCAR file format can be
+        written without chemical symbol information. With this option,
+        chemical symbols can be given.
+    phonopy_yaml_cls : PhonopyYaml, optional
+        This brings PhonopyYaml-like class dependent parameters. Here,
+        currently only the default filenames are provided by this.
+
     Returns
     -------
     tuple
