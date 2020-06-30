@@ -620,6 +620,24 @@ def get_nsym_list_and_s2pp(s2p_map,
     return s2pp, nsym_list
 
 
+def get_harmonic_potential_energy(force_constants, displacements):
+    if force_constants.shape[0] != force_constants.shape[1]:
+        raise RuntimeError("Full shape force constants are necessary.")
+
+    def _get_harm_pot(fc, d):
+        return np.dot(d, np.dot(fc, d)) / 2
+
+    n = force_constants.shape[0]
+    fc = np.swapaxes(force_constants, 1, 2).reshape(n * 3, n * 3)
+    if displacements.ndim == 3:
+        return [_get_harm_pot(fc, d.ravel()) for d in displacements]
+    elif displacements.ndim == 2:
+        d = displacements.ravel()
+        return _get_harm_pot(fc, d)
+    else:
+        raise RuntimeError("Array shape of displacements is wrong.")
+
+
 def _get_drift_per_index(force_constants):
     num_atom = force_constants.shape[0]
     maxval = 0
