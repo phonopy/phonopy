@@ -268,6 +268,8 @@ def _read_crystal_structure(filename=None, interface_mode=None):
     try:
         return read_crystal_structure(filename=filename,
                                       interface_mode=interface_mode)
+    except FileNotFoundError:
+        raise
     except:
         print("============================ phonopy.load ============================")
         print("  Reading crystal structure file failed in phonopy.load.")
