@@ -256,10 +256,9 @@ def _produce_force_constants(phonon,
             calculate_full_force_constants=(not is_compact_fc),
             fc_calculator=fc_calculator,
             fc_calculator_options=fc_calculator_options)
+        if symmetrize_fc:
+            phonon.symmetrize_force_constants(show_drift=(log_level > 0))
+            if log_level:
+                print("Force constants were symmetrized.")
     except RuntimeError:
         pass
-
-    if symmetrize_fc:
-        phonon.symmetrize_force_constants(show_drift=(log_level > 0))
-        if log_level:
-            print("Force constants were symmetrized.")
