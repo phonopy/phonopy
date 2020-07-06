@@ -60,7 +60,7 @@ def get_cell_settings(phonopy_yaml=None,
         pmat = primitive_matrix
 
     if unitcell_filename is not None:
-        cell, optional_structure_info = read_crystal_structure(
+        cell, optional_structure_info = _read_crystal_structure(
             filename=unitcell_filename, interface_mode=calculator)
         smat = supercell_matrix
         if log_level:
@@ -262,3 +262,15 @@ def _produce_force_constants(phonon,
                 print("Force constants were symmetrized.")
     except RuntimeError:
         pass
+
+
+def _read_crystal_structure(filename=None, interface_mode=None):
+    try:
+        return read_crystal_structure(filename=filename,
+                                      interface_mode=interface_mode)
+    except:
+        print("============================ phonopy.load ============================")
+        print("  Reading crystal structure file failed in phonopy.load.")
+        print("  Maybe phonopy.load(..., calculator='<calculator name>') expected?")
+        print("============================ phonopy.load ============================")
+        raise
