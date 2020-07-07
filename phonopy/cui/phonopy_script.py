@@ -1586,7 +1586,7 @@ def main(**argparse_control):
     #########################################################
     # Create constant amplitude displacements and then exit #
     #########################################################
-    if (settings.create_displacements and
+    if ((settings.create_displacements or settings.random_displacements) and
         settings.temperatures is None):
         if settings.displacement_distance is None:
             displacement_distance = get_default_displacement_distance(
@@ -1630,7 +1630,7 @@ def main(**argparse_control):
     ###################################################################
     # Create random displacements at finite temperature and then exit #
     ###################################################################
-    if settings.create_displacements and settings.temperatures is not None:
+    if settings.random_displacements and settings.temperatures is not None:
         phonon.generate_displacements(
             number_of_snapshots=settings.random_displacements,
             random_seed=settings.random_seed,
