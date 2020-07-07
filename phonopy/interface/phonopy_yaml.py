@@ -155,6 +155,22 @@ class PhonopyYaml(object):
         with open(filename) as infile:
             self._load(infile)
 
+    @property
+    def yaml_data(self):
+        return self._yaml
+
+    @yaml_data.setter
+    def yaml_data(self, yaml_data):
+        self._yaml = yaml_data
+
+    def parse(self):
+        self._parse_transformation_matrices()
+        self._parse_all_cells()
+        self._parse_force_constants()
+        self._parse_dataset()
+        self._parse_nac_params()
+        self._parse_calculator()
+
     def set_phonon_info(self, phonopy):
         self.unitcell = phonopy.unitcell
         self.primitive = phonopy.primitive
@@ -414,13 +430,7 @@ class PhonopyYaml(object):
         if type(self._yaml) is str:
             msg = "Could not open %s's yaml file." % self.command_name
             raise TypeError(msg)
-
-        self._parse_transformation_matrices()
-        self._parse_all_cells()
-        self._parse_force_constants()
-        self._parse_dataset()
-        self._parse_nac_params()
-        self._parse_calculator()
+        self.parse()
 
     def _parse_transformation_matrices(self):
         if 'supercell_matrix' in self._yaml:
