@@ -54,7 +54,8 @@ def get_cell_settings(phonopy_yaml=None,
                       symprec=1e-5,
                       log_level=0):
     optional_structure_info = None
-    if primitive_matrix is None or primitive_matrix == "auto":
+    if (primitive_matrix is None or
+        (type(primitive_matrix) is str and primitive_matrix == "auto")):
         pmat = 'auto'
     else:
         pmat = primitive_matrix

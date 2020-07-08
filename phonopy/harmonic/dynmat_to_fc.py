@@ -34,7 +34,7 @@
 
 import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import get_supercell
+from phonopy.structure.cells import get_supercell, get_primitive
 from phonopy.harmonic.force_constants import (
     distribute_force_constants_by_translations)
 from phonopy.structure.cells import SNF3x3
@@ -104,6 +104,34 @@ def get_commensurate_points_in_integers(supercell_matrix):
     return lattice_points
 
 
+def ph2fc(ph_orig, supercell_matrix):
+    """Transform force constants in Phonopy instance to other shape
+
+    For example, ph_orig.supercell_matrix is np.diag([2, 2, 2]) and
+    supercell_matrix is np.diag([4, 4, 4]), force constants having the
+    later shape are returned. This is considered useful when ph_orig
+    has non-analytical correction (NAC). The effect of this correction
+    is included in the returned force constants. Phonons before and after
+    this operation at commensurate points of the later supercell_matrix
+    should agree.
+
+    """
+
+    smat = supercell_matrix
+    scell = get_supercell(ph_orig.unitcell, smat)
+    pcell = get_primitive(
+        scell,
+        np.dot(np.linalg.inv(smat), ph_orig.primitive_matrix),
+        positions_to_reorder=ph_orig.primitive.scaled_positions)
+    d2f = DynmatToForceConstants(pcell, scell)
+    ph_orig.run_qpoints(d2f.commensurate_points,
+                        with_dynamical_matrices=True)
+    ph_dict = ph_orig.get_qpoints_dict()
+    d2f.dynamical_matrices = ph_dict['dynamical_matrices']
+    d2f.run()
+    return d2f.force_constants
+
+
 class DynmatToForceConstants(object):
     """Transforms eigensolutions to force constants
 
@@ -128,21 +156,15 @@ class DynmatToForceConstants(object):
        d2f.run()
        fc = d2f.force_constants
 
-    Here eigenvalues are squared phonon frequencies divided by frequency
-    unit conversion factor squared and for the imaginary modes, -1 has to
-    be multiplied, i.e.,
+    Instead of recreating dynamical matrices from eigensolutions,
+    dynamical matrices can be used directly as follows::
 
-       eigenvalues = (frequencies / factor) ** 2 * np.sign(frequencies).
-
-    Another usage may be with eigensolutions at commensurate q-points::
-
-       d2f = DynmatToForceConstants(primitive, supercell,
-                                    commensurate_points=comm_points,
-                                    eigenvalues=eigenvalues,
-                                    eigenvectors=eigenvectors)
+       d2f = DynmatToForceConstants(primitive, supercell)
+       comm_points = d2f.commensurate_points
+       ... calculated phonons at comm_points
+       d2f.dynamical_matrices = dynmat
        d2f.run()
        fc = d2f.force_constants
-
 
     Attributes
     ----------
@@ -174,12 +196,6 @@ class DynmatToForceConstants(object):
                  is_full_fc=True):
         """
 
-        Note
-        ----
-        When calculating force constants from eigensolutions,
-        eigher one of frequency-eigenvector pair or eigenvalue-eigenvector
-        can be used.
-
         Parameters
         ----------
         supercell : PhonopyAtoms
@@ -206,9 +222,9 @@ class DynmatToForceConstants(object):
             where ``num_band`` is 3 x number of atoms in primitive cell.
         commensurate_points : ndarray
             Commensurate q-points corresponding to supercell_matrix. The order
-            has to be the same as those of frequencies or eigenvalues, and
-            eigenvectors. As the default behaviour, commensurate q-points are
-            generated when this is not given.
+            has to be the same as those of eigenvalues and eigenvectors. As
+            the default behaviour, commensurate q-points are generated unless
+            they are given.
             shape=(det(supercell_matrix), 3), dtype='double', order='C'
         is_full_fc : bool
             This controls the matrix shape of calculated force constants.

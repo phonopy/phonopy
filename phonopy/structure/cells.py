@@ -45,8 +45,14 @@ def get_supercell(unitcell, supercell_matrix, is_old_style=True, symprec=1e-5):
                      symprec=symprec)
 
 
-def get_primitive(supercell, primitive_frame, symprec=1e-5):
-    return Primitive(supercell, primitive_frame, symprec=symprec)
+def get_primitive(supercell,
+                  primitive_frame,
+                  symprec=1e-5,
+                  positions_to_reorder=None):
+    return Primitive(supercell,
+                     primitive_frame,
+                     symprec=symprec,
+                     positions_to_reorder=positions_to_reorder)
 
 
 def print_cell(cell, mapping=None, stars=None):
@@ -323,21 +329,30 @@ class Primitive(PhonopyAtoms):
 
     """
 
-    def __init__(self, supercell, primitive_matrix, symprec=1e-5):
+    def __init__(self,
+                 supercell,
+                 primitive_matrix,
+                 symprec=1e-5,
+                 positions_to_reorder=None):
         """
 
         Parameters
         ----------
-        supercell: PhonopyAtoms
+        supercell : PhonopyAtoms
             Supercell
-        primitive_matrix: list of list or ndarray
+        primitive_matrix : list of list or ndarray
             Transformation matrix to transform supercell to primitive cell
             such as:
                np.dot(primitive_matrix.T, supercell.cell)
             shape=(3,3)
-        symprec: float, optional
+        symprec : float, optional
             Tolerance to find overlapping atoms in primitive cell. The default
             values is 1e-5.
+        positions_to_reorder : array_like
+            If atomic positions in a created primitive cell is known and
+            the order of atoms is expected to be sure, these positions with
+            the specific order is used after position matching between
+            this data and generated positions.
 
         """
 
@@ -350,7 +365,7 @@ class Primitive(PhonopyAtoms):
         self._smallest_vectors = None
         self._multiplicity = None
         self._atomic_permutations = None
-        self._run(supercell)
+        self._run(supercell, positions_to_reorder=positions_to_reorder)
 
     @property
     def primitive_matrix(self):
@@ -390,18 +405,21 @@ class Primitive(PhonopyAtoms):
     def get_atomic_permutations(self):
         return self.atomic_permutations
 
-    def _run(self, supercell):
-        self._p2s_map = self._create_primitive_cell(supercell)
+    def _run(self, supercell, positions_to_reorder=None):
+        self._p2s_map = self._create_primitive_cell(
+            supercell, positions_to_reorder=positions_to_reorder)
         self._s2p_map, self._p2p_map = self._map_atomic_indices(
             supercell.scaled_positions)
         self._smallest_vectors, self._multiplicity = _get_smallest_vectors(
             supercell, self, symprec=self._symprec)
         self._atomic_permutations = self._get_atomic_permutations(supercell)
 
-    def _create_primitive_cell(self, supercell):
-        trimmed_cell, p2s_map, _ = _trim_cell(self._primitive_matrix,
-                                              supercell,
-                                              symprec=self._symprec)
+    def _create_primitive_cell(self, supercell, positions_to_reorder=None):
+        trimmed_cell, p2s_map, _ = _trim_cell(
+            self._primitive_matrix,
+            supercell,
+            symprec=self._symprec,
+            positions_to_reorder=positions_to_reorder)
         super(PhonopyAtoms, self).__init__(
             numbers=trimmed_cell.numbers,
             masses=trimmed_cell.masses,
@@ -625,10 +643,13 @@ class TrimmedCell(PhonopyAtoms):
         return reorder_indices
 
 
-def _trim_cell(relative_axes, cell, symprec=1e-5):
+def _trim_cell(relative_axes, cell, symprec=1e-5, positions_to_reorder=None):
     """Trim overlapping atoms"""
 
-    tcell = TrimmedCell(relative_axes, cell, symprec=symprec)
+    tcell = TrimmedCell(relative_axes,
+                        cell,
+                        symprec=symprec,
+                        positions_to_reorder=positions_to_reorder)
     return (PhonopyAtoms(atoms=tcell),
             tcell.extracted_atoms,
             tcell.mapping_table)

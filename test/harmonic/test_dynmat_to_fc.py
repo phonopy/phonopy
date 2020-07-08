@@ -4,9 +4,10 @@ import phonopy
 from phonopy import Phonopy
 import numpy as np
 from phonopy.units import VaspToTHz
+from phonopy.structure.cells import get_supercell, get_primitive
 from phonopy.harmonic.dynmat_to_fc import (
     get_commensurate_points, get_commensurate_points_in_integers,
-    DynmatToForceConstants)
+    DynmatToForceConstants, ph2fc)
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -100,42 +101,30 @@ class TestDynmatToForceConstants(unittest.TestCase):
             np.testing.assert_allclose(ph.force_constants, d2f.force_constants,
                                        atol=1e-5)
 
-    def test_over_sampling(self):
-        """This test shows how to over-sample commensurate q-points.
-
-        When NAC is used, the dynamical matrices including NAC should be used.
-        The force constants created should be used with NAC again.
-
-        """
-
+    def test_ph2fc(self):
         ph = self.ph_nac
+        fc444 = ph2fc(ph, np.diag([4, 4, 4]))
+        self._phonons_allclose(ph, fc444)
+
+    def _phonons_allclose(self, ph, fc444):
         ph444 = Phonopy(ph.unitcell,
                         supercell_matrix=[4, 4, 4],
                         primitive_matrix=ph.primitive_matrix)
-        d2f = DynmatToForceConstants(ph444.primitive, ph444.supercell)
-        ph.run_qpoints(d2f.commensurate_points,
-                       with_dynamical_matrices=True)
-        ph_dict = ph.get_qpoints_dict()
-        d2f.dynamical_matrices = ph_dict['dynamical_matrices']
-        d2f.run()
-
-        ph444_nac = Phonopy(ph.unitcell,
-                            supercell_matrix=[4, 4, 4],
-                            primitive_matrix=ph.primitive_matrix,
-                            calculator='vasp')
-        ph444.force_constants = d2f.force_constants
-        ph444_nac.nac_params = ph.nac_params
-
-        smat = np.dot(np.linalg.inv(ph.primitive.primitive_matrix),
-                      ph.supercell_matrix)
-        smat = np.rint(smat).astype(int)
-        comm_points = get_commensurate_points(smat)
-
+        ph444.force_constants = fc444
+        ph444.nac_params = ph.nac_params
+        comm_points = self._get_comm_points(ph)
         ph.run_qpoints(comm_points)
         ph444.run_qpoints(comm_points)
         np.testing.assert_allclose(ph.get_qpoints_dict()['frequencies'],
                                    ph444.get_qpoints_dict()['frequencies'],
                                    atol=1e-5)
+
+    def _get_comm_points(self, ph):
+        smat = np.dot(np.linalg.inv(ph.primitive.primitive_matrix),
+                      ph.supercell_matrix)
+        smat = np.rint(smat).astype(int)
+        comm_points = get_commensurate_points(smat)
+        return comm_points
 
 
 if __name__ == '__main__':
