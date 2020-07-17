@@ -34,10 +34,10 @@
 
 import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import get_supercell, get_primitive
+from phonopy.structure.cells import (get_supercell, get_primitive,
+                                     shape_supercell_matrix, SNF3x3)
 from phonopy.harmonic.force_constants import (
     distribute_force_constants_by_translations)
-from phonopy.structure.cells import SNF3x3
 
 
 def get_commensurate_points(supercell_matrix):  # wrt primitive cell
@@ -117,7 +117,7 @@ def ph2fc(ph_orig, supercell_matrix):
 
     """
 
-    smat = supercell_matrix
+    smat = shape_supercell_matrix(supercell_matrix)
     scell = get_supercell(ph_orig.unitcell, smat)
     pcell = get_primitive(
         scell,
