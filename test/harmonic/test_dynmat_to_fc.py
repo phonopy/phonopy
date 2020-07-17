@@ -103,20 +103,20 @@ class TestDynmatToForceConstants(unittest.TestCase):
 
     def test_ph2fc(self):
         ph = self.ph_nac
-        fc444 = ph2fc(ph, np.diag([4, 4, 4]))
-        self._phonons_allclose(ph, fc444)
+        fc333 = ph2fc(ph, np.diag([3, 3, 3]))
+        self._phonons_allclose(ph, fc333)
 
-    def _phonons_allclose(self, ph, fc444):
-        ph444 = Phonopy(ph.unitcell,
-                        supercell_matrix=[4, 4, 4],
+    def _phonons_allclose(self, ph, fc333):
+        ph333 = Phonopy(ph.unitcell,
+                        supercell_matrix=[3, 3, 3],
                         primitive_matrix=ph.primitive_matrix)
-        ph444.force_constants = fc444
-        ph444.nac_params = ph.nac_params
+        ph333.force_constants = fc333
+        ph333.nac_params = ph.nac_params
         comm_points = self._get_comm_points(ph)
         ph.run_qpoints(comm_points)
-        ph444.run_qpoints(comm_points)
+        ph333.run_qpoints(comm_points)
         np.testing.assert_allclose(ph.get_qpoints_dict()['frequencies'],
-                                   ph444.get_qpoints_dict()['frequencies'],
+                                   ph333.get_qpoints_dict()['frequencies'],
                                    atol=1e-5)
 
     def _get_comm_points(self, ph):
