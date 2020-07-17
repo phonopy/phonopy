@@ -861,6 +861,9 @@ class Phonopy(object):
             self._set_dynamical_matrix()
 
     def symmetrize_force_constants(self, level=1, show_drift=True):
+        if self._force_constants is None:
+            raise RuntimeError("Force constants have not been produced yet.")
+
         if self._force_constants.shape[0] == self._force_constants.shape[1]:
             symmetrize_force_constants(self._force_constants, level=level)
         else:
@@ -2947,9 +2950,12 @@ class Phonopy(object):
                     symprec=self._symprec)
             else:
                 if 'displacements' in self._displacement_dataset:
-                    msg = ("fc_calculator has to be set to produce force "
-                           "constans from this dataset.")
-                    raise RuntimeError(msg)
+                    lines = [
+                        "Type-II dataset for displacements and forces was "
+                        "given. fc_calculator",
+                        "(external force constants calculator) is required "
+                        "to produce force constants."]
+                    raise RuntimeError("\n".join(lines))
                 self._force_constants = get_phonopy_fc2(
                     self._supercell,
                     self._symmetry,

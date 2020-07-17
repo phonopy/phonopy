@@ -629,16 +629,21 @@ def store_force_constants(phonon,
         if phpy_yaml.force_constants is None:
             (fc_calculator,
              fc_calculator_options) = get_fc_calculator_params(settings)
-            set_dataset_and_force_constants(
-                phonon,
-                phpy_yaml.dataset,
-                None,
-                fc_calculator=fc_calculator,
-                produce_fc=True,
-                symmetrize_fc=False,
-                is_compact_fc=(not is_full_fc),
-                log_level=log_level)
-
+            try:
+                set_dataset_and_force_constants(
+                    phonon,
+                    phpy_yaml.dataset,
+                    None,
+                    fc_calculator=fc_calculator,
+                    produce_fc=True,
+                    symmetrize_fc=False,
+                    is_compact_fc=(not is_full_fc),
+                    log_level=log_level)
+            except RuntimeError as e:
+                print_error_message(str(e))
+                if log_level:
+                    print_error()
+                sys.exit(1)
     else:
         produce_force_constants(phonon,
                                 settings,

@@ -252,17 +252,14 @@ def _produce_force_constants(phonon,
                              symmetrize_fc,
                              is_compact_fc,
                              log_level):
-    try:
-        phonon.produce_force_constants(
-            calculate_full_force_constants=(not is_compact_fc),
-            fc_calculator=fc_calculator,
-            fc_calculator_options=fc_calculator_options)
-        if symmetrize_fc:
-            phonon.symmetrize_force_constants(show_drift=(log_level > 0))
-            if log_level:
-                print("Force constants were symmetrized.")
-    except RuntimeError:
-        pass
+    phonon.produce_force_constants(
+        calculate_full_force_constants=(not is_compact_fc),
+        fc_calculator=fc_calculator,
+        fc_calculator_options=fc_calculator_options)
+    if symmetrize_fc:
+        phonon.symmetrize_force_constants(show_drift=(log_level > 0))
+        if log_level:
+            print("Force constants were symmetrized.")
 
 
 def _read_crystal_structure(filename=None, interface_mode=None):
