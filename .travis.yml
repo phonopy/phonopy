@@ -5,7 +5,6 @@
 matrix:
   include:
   - python: '3.6'
-    sudo: required
     services:
     - docker
     env: DOCKER_IMAGE=quay.io/pypa/manylinux1_x86_64
@@ -13,7 +12,6 @@ matrix:
          TRAVIS_PYTHON_VERSION='3.6'
          PLAT=manylinux1_x86_64
   - python: '3.6'
-    sudo: required
     services:
     - docker
     env: DOCKER_IMAGE=quay.io/pypa/manylinux1_i686
@@ -22,7 +20,6 @@ matrix:
          TRAVIS_PYTHON_VERSION='3.6'
          PLAT=manylinux1_i686
   - python: '3.6'
-    sudo: required
     services:
       - docker
     env: DOCKER_IMAGE=quay.io/pypa/manylinux2010_x86_64
@@ -30,15 +27,12 @@ matrix:
          TRAVIS_PYTHON_VERSION='3.6'
          PLAT=manylinux2010_x86_64
   - python: '2.7'
-    sudo: false
     env: DOCKER_DEPLOY=false
          TRAVIS_PYTHON_VERSION='2.7'
   - python: '3.6'
-    sudo: false
     env: DOCKER_DEPLOY=false
          TRAVIS_PYTHON_VERSION='3.6'
   - python: '3.7'
-    sudo: false
     env: DOCKER_DEPLOY=false
          TRAVIS_PYTHON_VERSION='3.7'
 
@@ -98,7 +92,6 @@ deploy:
 # testing pypi
 - provider: pypi
   server: https://test.pypi.org/legacy/
-  skip_cleanup: true
   skip_existing: true
   user: atztogo
   password:
@@ -111,7 +104,6 @@ deploy:
 
 # testing anaconda
 - provider: script
-  skip_cleanup: true
   script: conda/anaconda_deploy.sh rc $ANACONDA_TOKEN $TRAVIS_BRANCH
   on:
     repo: phonopy/phonopy
@@ -121,7 +113,6 @@ deploy:
 
 # production pypi
 - provider: pypi
-  skip_cleanup: true
   skip_existing: true
   user: atztogo
   password:
@@ -134,7 +125,6 @@ deploy:
 
 # production anaconda
 - provider: script
-  skip_cleanup: true
   script: conda/anaconda_deploy.sh main $ANACONDA_TOKEN $TRAVIS_BRANCH
   on:
     repo: phonopy/phonopy
