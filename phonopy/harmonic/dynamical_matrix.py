@@ -664,20 +664,19 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
     def _get_G_list(self, G_cutoff, g_rad=100):
         rec_lat = np.linalg.inv(self._pcell.cell)  # column vectors
         # g_rad must be greater than 0 for broadcasting.
+        G_vec_list = self._get_G_vec_list(g_rad, rec_lat)
+        G_norm2 = ((G_vec_list) ** 2).sum(axis=1)
+        return np.array(G_vec_list[G_norm2 < G_cutoff ** 2],
+                        dtype='double', order='C')
+
+    def _get_G_vec_list(self, g_rad, rec_lat):
         n = g_rad * 2 + 1
         G = np.zeros((n ** 3, 3), dtype='double', order='C')
         pts = np.arange(-g_rad, g_rad + 1)
         grid = np.meshgrid(pts, pts, pts)
         for i in range(3):
             G[:, i] = grid[i].ravel()
-        grid = None
-        del grid
-        G_vec_list = np.dot(G, rec_lat.T)
-        G = None
-        del G
-        G_norm2 = ((G_vec_list) ** 2).sum(axis=1)
-        return np.array(G_vec_list[G_norm2 < G_cutoff ** 2],
-                        dtype='double', order='C')
+        return np.dot(G, rec_lat.T)
 
     def _get_H(self):
         lat = self._scell.cell
