@@ -55,7 +55,7 @@ before_install:
     source $(conda info --root)/etc/profile.d/conda.sh;
   fi;
 - conda install --yes -c conda-forge python=$TRAVIS_PYTHON_VERSION;
-- conda install --yes -c conda-forge gcc_linux-64 gxx_linux-64 matplotlib pyyaml scipy numpy spglib h5py setuptools_scm conda-build pip;
+- conda install --yes -c conda-forge gcc_linux-64 gxx_linux-64 matplotlib pyyaml scipy numpy spglib h5py setuptools_scm conda-build pip pytest;
 - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then
     pip install cp2k-input-tools;
   fi;
@@ -86,7 +86,7 @@ script:
       rm test/phonon/test_random_displacements.py;
       python setup.py build;
       pip install -e .;
-      python -m unittest discover -b;
+      pytest -v;
     fi;
   fi
 
