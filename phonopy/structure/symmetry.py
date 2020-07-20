@@ -33,7 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-import phonopy.structure.spglib as spg
+import spglib
 from phonopy.structure.cells import (get_primitive, get_supercell,
                                      compute_all_sg_permutations)
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
@@ -189,8 +189,8 @@ class Symmetry(object):
         return np.array(site_symmetries, dtype='intc')
 
     def _set_symmetry_dataset(self):
-        self._dataset = spg.get_symmetry_dataset(self._cell.totuple(),
-                                                 self._symprec)
+        self._dataset = spglib.get_symmetry_dataset(self._cell.totuple(),
+                                                    self._symprec)
         self._symmetry_operations = {
             'rotations': self._dataset['rotations'],
             'translations': self._dataset['translations']}
@@ -201,8 +201,8 @@ class Symmetry(object):
         self._map_atoms = self._dataset['equivalent_atoms']
 
     def _set_symmetry_operations_with_magmoms(self):
-        self._symmetry_operations = spg.get_symmetry(self._cell.totuple(),
-                                                     symprec=self._symprec)
+        self._symmetry_operations = spglib.get_symmetry(self._cell.totuple(),
+                                                        symprec=self._symprec)
         self._map_atoms = self._symmetry_operations['equivalent_atoms']
         self._set_map_atoms()
 
@@ -307,7 +307,8 @@ def find_primitive(cell, symprec=1e-5):
     cell is found, an object of Atoms class of the primitive cell is
     returned. When not, None is returned.
     """
-    lattice, positions, numbers = spg.find_primitive(cell.totuple(), symprec)
+    lattice, positions, numbers = spglib.find_primitive(cell.totuple(),
+                                                        symprec)
     if lattice is None:
         return None
     else:
@@ -318,7 +319,7 @@ def find_primitive(cell, symprec=1e-5):
 
 
 def get_pointgroup(rotations):
-    ptg = spg.get_pointgroup(rotations)
+    ptg = spglib.get_pointgroup(rotations)
     return ptg[0].strip(), ptg[2]
 
 

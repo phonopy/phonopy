@@ -34,7 +34,7 @@
 
 import numpy as np
 from distutils.version import StrictVersion
-import phonopy.structure.spglib as spg
+import spglib
 from phonopy.structure.atoms import PhonopyAtoms
 
 
@@ -684,9 +684,9 @@ def get_reduced_bases(lattice,
     """
 
     if method == 'niggli':
-        return spg.niggli_reduce(lattice, eps=tolerance)
+        return spglib.niggli_reduce(lattice, eps=tolerance)
     else:
-        return spg.delaunay_reduce(lattice, eps=tolerance)
+        return spglib.delaunay_reduce(lattice, eps=tolerance)
 
 
 def _get_smallest_vectors(supercell, primitive, symprec=1e-5):
@@ -1417,7 +1417,7 @@ def guess_primitive_matrix(unitcell, symprec=1e-5):
         raise RuntimeError(msg)
 
     cell = (unitcell.cell, unitcell.scaled_positions, unitcell.numbers)
-    dataset = spg.get_symmetry_dataset(cell, symprec=1e-5)
+    dataset = spglib.get_symmetry_dataset(cell, symprec=1e-5)
     tmat = dataset['transformation_matrix']
     centring = dataset['international'][0]
     pmat = get_primitive_matrix_by_centring(centring)
