@@ -73,49 +73,7 @@ extension_phonopy = Extension(
     sources=sources_phonopy)
 
 
-#####################
-# _spglib extension #
-#####################
-if False:  # Always no openmp for spglib
-    extra_compile_args_spglib = ['-fopenmp', ]
-    if cc == 'gcc':
-        extra_link_args_spglib = ['-lgomp', ]
-    elif cc == 'clang':
-        extra_link_args_spglib = ['-lomp']
-    else:
-        extra_link_args_spglib = ['-lgomp', ]
-else:
-    extra_compile_args_spglib = []
-    extra_link_args_spglib = []
-
-extension_spglib = Extension(
-    'phonopy._spglib',
-    include_dirs=['c/spglib_h'] + include_dirs_numpy,
-    extra_compile_args=extra_compile_args_spglib,
-    extra_link_args=extra_link_args_spglib,
-    sources=['c/_spglib.c',
-             'c/spglib/arithmetic.c',
-             'c/spglib/cell.c',
-             'c/spglib/delaunay.c',
-             'c/spglib/determination.c',
-             'c/spglib/hall_symbol.c',
-             'c/spglib/kgrid.c',
-             'c/spglib/kpoint.c',
-             'c/spglib/mathfunc.c',
-             'c/spglib/niggli.c',
-             'c/spglib/overlap.c',
-             'c/spglib/pointgroup.c',
-             'c/spglib/primitive.c',
-             'c/spglib/refinement.c',
-             'c/spglib/sitesym_database.c',
-             'c/spglib/site_symmetry.c',
-             'c/spglib/spacegroup.c',
-             'c/spglib/spg_database.c',
-             'c/spglib/spglib.c',
-             'c/spglib/spin.c',
-             'c/spglib/symmetry.c'])
-
-ext_modules_phonopy = [extension_phonopy, extension_spglib]
+ext_modules_phonopy = [extension_phonopy, ]
 packages_phonopy = ['phonopy',
                     'phonopy.cui',
                     'phonopy.gruneisen',
@@ -181,13 +139,11 @@ if __name__ == '__main__':
               author_email='atz.togo@gmail.com',
               url='http://phonopy.github.io/phonopy/',
               packages=packages_phonopy,
-              install_requires=['numpy', 'PyYAML', 'matplotlib', 'h5py'],
+              install_requires=['numpy', 'PyYAML', 'matplotlib', 'h5py', 'spglib'],
               extras_require={'cp2k': ['cp2k-input-tools']},
               provides=['phonopy'],
               scripts=scripts_phonopy,
-              ext_modules=ext_modules_phonopy,
-              test_suite='nose.collector',
-              tests_require=['nose'])
+              ext_modules=ext_modules_phonopy)
     else:
         setup(name='phonopy',
               version=version,
@@ -196,9 +152,7 @@ if __name__ == '__main__':
               author_email='atz.togo@gmail.com',
               url='http://phonopy.github.io/phonopy/',
               packages=packages_phonopy,
-              requires=['numpy', 'PyYAML', 'matplotlib', 'h5py'],
+              requires=['numpy', 'PyYAML', 'matplotlib', 'h5py', 'spglib'],
               provides=['phonopy'],
               scripts=scripts_phonopy,
-              ext_modules=ext_modules_phonopy,
-              test_suite='nose.collector',
-              tests_require=['nose'])
+              ext_modules=ext_modules_phonopy)

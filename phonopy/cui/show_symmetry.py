@@ -33,7 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-import phonopy.structure.spglib as spg
+import spglib
 from phonopy.structure.symmetry import get_pointgroup
 from phonopy.interface.calculator import (
     write_crystal_structure, get_default_cell_filename)
@@ -52,7 +52,7 @@ def check_symmetry(phonon, optional_structure_info):
         symprec = phonon.primitive_symmetry.get_symmetry_tolerance()
         (bravais_lattice,
          bravais_pos,
-         bravais_numbers) = spg.refine_cell(phonon.primitive, symprec)
+         bravais_numbers) = spglib.refine_cell(phonon.primitive, symprec)
         bravais = PhonopyAtoms(numbers=bravais_numbers,
                                scaled_positions=bravais_pos,
                                cell=bravais_lattice)

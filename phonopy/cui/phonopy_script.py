@@ -1319,7 +1319,7 @@ def start_phonopy(**argparse_control):
         if argparse_control.get('load_phonopy_yaml', False):
             print("Running in phonopy.load mode.")
         print("Python version %d.%d.%d" % sys.version_info[:3])
-        import phonopy.structure.spglib as spglib
+        import spglib
         print("Spglib version %d.%d.%d" % spglib.get_version())
         print("")
 

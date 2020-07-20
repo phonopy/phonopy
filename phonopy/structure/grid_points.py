@@ -33,8 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.structure.spglib import (get_stabilized_reciprocal_mesh,
-                                      relocate_BZ_grid_address)
+from spglib import get_stabilized_reciprocal_mesh, relocate_BZ_grid_address
 from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
 from phonopy.structure.symmetry import get_lattice_vector_equivalence
 
