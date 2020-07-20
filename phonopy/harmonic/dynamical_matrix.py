@@ -670,13 +670,11 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
                         dtype='double', order='C')
 
     def _get_G_vec_list(self, g_rad, rec_lat):
-        n = g_rad * 2 + 1
-        G = np.zeros((n ** 3, 3), dtype='double', order='C')
         pts = np.arange(-g_rad, g_rad + 1)
         grid = np.meshgrid(pts, pts, pts)
         for i in range(3):
-            G[:, i] = grid[i].ravel()
-        return np.dot(G, rec_lat.T)
+            grid[i] = grid[i].ravel()
+        return np.dot(rec_lat, grid).T
 
     def _get_H(self):
         lat = self._scell.cell
