@@ -101,7 +101,7 @@ class TestDynmatToForceConstants(unittest.TestCase):
             np.testing.assert_allclose(ph.force_constants, d2f.force_constants,
                                        atol=1e-5)
 
-    def test_ph2fc(self):
+    def _test_ph2fc(self):
         ph = self.ph_nac
         fc333 = ph2fc(ph, np.diag([3, 3, 3]))
         self._phonons_allclose(ph, fc333)
