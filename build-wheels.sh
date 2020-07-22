@@ -21,13 +21,13 @@ for PYBIN in /opt/python/*/bin; do
 done
 
 # Bundle external shared libraries into the wheels
-for whl in wheelhouse/*.whl; do
+for whl in wheelhouse/phonopy*.whl; do
     repair_wheel "$whl"
 done
 
 # Install packages and test
-for PYBIN in /opt/python/*/bin/; do
-    if [[ $PYBIN == *"36"* ]] || [[ $PYBIN == *"37"* ]] || [[ $PYBIN == *"38"* ]]; then
-        "${PYBIN}/pip" install phonopy --no-index -f /io/wheelhouse
-    fi
-done
+# for PYBIN in /opt/python/*/bin/; do
+#     if [[ $PYBIN == *"36"* ]] || [[ $PYBIN == *"37"* ]] || [[ $PYBIN == *"38"* ]]; then
+#         "${PYBIN}/pip" install phonopy --no-index -f /io/wheelhouse
+#     fi
+# done
