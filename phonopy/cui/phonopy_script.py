@@ -1336,27 +1336,42 @@ def read_phonopy_settings(args, argparse_control, log_level):
     """Read phonopy settings"""
 
     load_phonopy_yaml = argparse_control.get('load_phonopy_yaml', False)
+    conf_filename = None
 
-    if len(args.filename) > 0:
-        file_exists(args.filename[0], log_level)
-        if load_phonopy_yaml:
+    if load_phonopy_yaml:
+        if args.conf_filename:
+            conf_filename = args.conf_filename
+            phonopy_conf_parser = PhonopyConfParser(
+                filename=args.conf_filename, args=args,
+                default_settings=argparse_control)
+        else:
             phonopy_conf_parser = PhonopyConfParser(
                 args=args, default_settings=argparse_control)
+        if len(args.filename) > 0:
+            file_exists(args.filename[0], log_level)
             cell_filename = args.filename[0]
         else:
+            cell_filename = phonopy_conf_parser.settings.cell_filename
+    else:
+        if len(args.filename) > 0:
             if is_file_phonopy_yaml(args.filename[0]):
                 phonopy_conf_parser = PhonopyConfParser(args=args)
                 cell_filename = args.filename[0]
             else:
+                conf_filename = args.filename[0]
                 phonopy_conf_parser = PhonopyConfParser(
                     filename=args.filename[0], args=args)
                 cell_filename = phonopy_conf_parser.settings.cell_filename
-    else:
-        phonopy_conf_parser = PhonopyConfParser(args=args)
-        cell_filename = phonopy_conf_parser.settings.cell_filename
+        else:
+            phonopy_conf_parser = PhonopyConfParser(args=args)
+            cell_filename = phonopy_conf_parser.settings.cell_filename
 
     confs = phonopy_conf_parser.confs.copy()
     settings = phonopy_conf_parser.settings
+
+    if log_level > 0 and conf_filename is not None:
+        print("Phonopy configuration was read from \"%s\"." %
+              conf_filename)
 
     return settings, confs, cell_filename
 

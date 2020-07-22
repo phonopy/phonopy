@@ -28,19 +28,19 @@ requirements:
   build:
     - python
     - numpy
-    - matplotlib
-    - pyyaml
-    - h5py
     - setuptools
+    - pip
     - spglib
 
   run:
     - python
+    - pip
     - numpy
-    - matplotlib
+    - matplotlib-base
     - pyyaml
     - h5py
     - spglib
+    - scipy
 
 test:
   # Python imports

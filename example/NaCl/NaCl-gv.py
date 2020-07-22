@@ -2,7 +2,7 @@ import numpy as np
 import phonopy
 import matplotlib.pyplot as plt
 
-phonon = phonopy.load(unitcell_filename="POSCAR",
+phonon = phonopy.load(unitcell_filename="POSCAR-unitcell",
                       born_filename="BORN",
                       force_sets_filename="FORCE_SETS",
                       supercell_matrix=[[2, 0, 0],

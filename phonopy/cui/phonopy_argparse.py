@@ -117,6 +117,10 @@ def get_parser(fc_symmetry=False,
         parser.add_argument(
             "-c", "--cell", dest="cell_filename", metavar="FILE", default=None,
             help="Read unit cell")
+    if load_phonopy_yaml:
+        parser.add_argument(
+            "--config", dest="conf_filename", metavar="FILE", default=None,
+            help="Phonopy configuration file")
     parser.add_argument(
         "--cutoff-freq", "--cutoff-frequency", dest="cutoff_frequency",
         type=float, default=None,

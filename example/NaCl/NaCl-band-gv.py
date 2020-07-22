@@ -11,7 +11,7 @@ def append_band(bands, q_start, q_end):
     bands.append(band)
 
 
-phonon = phonopy.load(unitcell_filename="POSCAR",
+phonon = phonopy.load(unitcell_filename="POSCAR-unitcell",
                       born_filename="BORN",
                       force_sets_filename="FORCE_SETS",
                       supercell_matrix=[[2, 0, 0],

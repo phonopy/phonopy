@@ -1243,7 +1243,6 @@ class Phonopy(object):
             axs = ImageGrid(fig, 111,  # similar to subplot(111)
                             nrows_ncols=(1, n),
                             axes_pad=0.11,
-                            add_all=True,
                             label_mode="L")
         self._band_structure.plot(axs)
         return plt
@@ -1622,21 +1621,16 @@ class Phonopy(object):
             axs = ImageGrid(fig, 111,  # similar to subplot(111)
                             nrows_ncols=(1, n),
                             axes_pad=0.11,
-                            add_all=True,
                             label_mode="L")
             self._band_structure.plot(axs[:-1])
 
             if pdos_indices is None:
-                freqs = self._total_dos.frequency_points
-                dos = self._total_dos.dos
                 self._total_dos.plot(axs[-1],
                                      xlabel="",
                                      ylabel="",
                                      draw_grid=False,
                                      flip_xy=True)
             else:
-                freqs = self._pdos.frequency_points
-                dos = self._pdos.projected_dos
                 self._pdos.plot(axs[-1],
                                 indices=pdos_indices,
                                 xlabel="",
@@ -2507,10 +2501,7 @@ class Phonopy(object):
             else:
                 animation.write_v_sim(amplitude=amplitude_,
                                       factor=self._factor)
-        if (anime_type == 'arc' or
-            anime_type == 'xyz' or
-            anime_type == 'jmol' or
-            anime_type == 'poscar'):
+        if anime_type in ('arc', 'xyz', 'jmol', 'poscar'):
             if band_index is None or amplitude is None or num_div is None:
                 msg = ("Parameters are not correctly set for animation.")
                 raise RuntimeError(msg)
