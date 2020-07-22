@@ -45,315 +45,207 @@ def fracval(frac):
 
 
 class Settings(object):
-    def __init__(self):
-        self._band_indices = None
-        self._band_paths = None
-        self._band_points = None
-        self._cell_filename = None
-        self._chemical_symbols = None
-        self._cutoff_frequency = None
-        self._displacement_distance = None
-        self._dm_decimals = None
-        self._calculator = None
-        self._fc_calculator = None
-        self._fc_calculator_options = None
-        self._fc_decimals = None
-        self._fc_symmetry = False
-        self._fpitch = None
-        self._frequency_conversion_factor = None
-        self._frequency_scale_factor = None
-        self._gv_delta_q = None
-        self._is_band_const_interval = False
-        self._is_diagonal_displacement = True
-        self._is_eigenvectors = False
-        self._is_mesh_symmetry = True
-        self._is_nac = False
-        self._is_rotational_invariance = False
-        self._is_plusminus_displacement = 'auto'
-        self._is_symmetry = True
-        self._is_tetrahedron_method = True
-        self._is_time_reversal_symmetry = True
-        self._is_trigonal_displacement = False
-        self._magmoms = None
-        self._masses = None
-        self._mesh = None
-        self._nac_method = None
-        self._nac_q_direction = None
-        self._num_frequency_points = None
-        self._primitive_matrix = None
-        self._qpoints = None
-        self._read_qpoints = False
-        self._sigma = None
-        self._supercell_matrix = None
-        self._symmetry_tolerance = None
-        self._temperatures = None
-        self._tmax = 1000
-        self._tmin = 0
-        self._tstep = 10
-
-    def set_band_paths(self, band_paths):
-        self._band_paths = band_paths
-
-    def get_band_paths(self):
-        return self._band_paths
-
-    def set_band_points(self, band_points):
-        self._band_points = band_points
-
-    def get_band_points(self):
-        return self._band_points
-
-    def set_band_indices(self, band_indices):
-        self._band_indices = band_indices
-
-    def get_band_indices(self):
-        return self._band_indices
-
-    def set_cell_filename(self, cell_filename):
-        self._cell_filename = cell_filename
-
-    def get_cell_filename(self):
-        return self._cell_filename
-
-    def set_chemical_symbols(self, symbols):
-        self._chemical_symbols = symbols
+    """Phonopy settings container
+
+    This works almost like a dictionary.
+    Method names without 'set_' and 'get_' and keys of self._v have to be same.
+
+    """
+
+    _default = {
+        'band_indices': None,
+        'band_paths': None,
+        'band_points': None,
+        'cell_filename': None,
+        'chemical_symbols': None,
+        'cutoff_frequency': None,
+        'displacement_distance': None,
+        'dm_decimals': None,
+        'calculator': None,
+        'create_displacements': False,
+        'fc_calculator': None,
+        'fc_calculator_options': None,
+        'fc_decimals': None,
+        'fc_symmetry': False,
+        'frequency_pitch': None,
+        'frequency_conversion_factor': None,
+        'frequency_scale_factor': None,
+        'group_velocity_delta_q': None,
+        'hdf5_compression': 'gzip',
+        'is_band_const_interval': False,
+        'is_diagonal_displacement': True,
+        'is_eigenvectors': False,
+        'is_mesh_symmetry': True,
+        'is_nac': False,
+        'is_rotational_invariance': False,
+        'is_plusminus_displacement': 'auto',
+        'is_symmetry': True,
+        'is_tetrahedron_method': True,
+        'is_time_reversal_symmetry': True,
+        'is_trigonal_displacement': False,
+        'magnetic_moments': None,
+        'masses': None,
+        'mesh_numbers': None,
+        'nac_method': None,
+        'nac_q_direction': None,
+        'num_frequency_points': None,
+        'primitive_matrix': None,
+        'qpoints': None,
+        'read_qpoints': False,
+        'sigma': None,
+        'supercell_matrix': None,
+        'symmetry_tolerance': None,
+        'temperatures': None,
+        'max_temperature': 1000,
+        'min_temperature': 0,
+        'temperature_step': 10
+    }
+
+    def __init__(self, default=None):
+        self._v = Settings._default.copy()
+        if default is not None:
+            self._v.update(default)
+
+    def __getattr__(self, attr):
+        return self._v[attr]
+
+    def set_band_paths(self, val):
+        self._v['band_paths'] = val
+
+    def set_band_points(self, val):
+        self._v['band_points'] = val
+
+    def set_band_indices(self, val):
+        self._v['band_indices'] = val
+
+    def set_cell_filename(self, val):
+        self._v['cell_filename'] = val
+
+    def set_chemical_symbols(self, val):
+        self._v['chemical_symbols'] = val
+
+    def set_create_displacements(self, val):
+        self._v['create_displacements'] = val
+
+    def set_cutoff_frequency(self, val):
+        self._v['cutoff_frequency'] = val
 
-    def get_chemical_symbols(self):
-        return self._chemical_symbols
+    def set_dm_decimals(self, val):
+        self._v['dm_decimals'] = val
 
-    def set_cutoff_frequency(self, cutoff_frequency):
-        self._cutoff_frequency = cutoff_frequency
+    def set_displacement_distance(self, val):
+        self._v['displacement_distance'] = val
 
-    def get_cutoff_frequency(self):
-        return self._cutoff_frequency
+    def set_calculator(self, val):
+        self._v['calculator'] = val
 
-    def set_dm_decimals(self, decimals):
-        self._dm_decimals = decimals
+    def set_fc_calculator(self, val):
+        self._v['fc_calculator'] = val
 
-    def get_dm_decimals(self):
-        return self._dm_decimals
+    def set_fc_calculator_options(self, val):
+        self._v['fc_calculator_options'] = val
 
-    def set_displacement_distance(self, distance):
-        self._displacement_distance = distance
+    def set_fc_symmetry(self, val):
+        self._v['fc_symmetry'] = val
 
-    def get_displacement_distance(self):
-        return self._displacement_distance
+    def set_fc_decimals(self, val):
+        self._v['fc_decimals'] = val
 
-    def set_calculator(self, calculator):
-        self._calculator = calculator
+    def set_frequency_conversion_factor(self, val):
+        self._v['frequency_conversion_factor'] = val
 
-    def get_calculator(self):
-        return self._calculator
+    def set_frequency_pitch(self, val):
+        self._v['frequency_pitch'] = val
 
-    def set_fc_calculator(self, fc_calculator):
-        self._fc_calculator = fc_calculator
+    def set_frequency_scale_factor(self, val):
+        self._v['frequency_scale_factor'] = val
 
-    def get_fc_calculator(self):
-        return self._fc_calculator
+    def set_group_velocity_delta_q(self, val):
+        self._v['group_velocity_delta_q'] = val
 
-    def set_fc_calculator_options(self, fc_calculator_options):
-        self._fc_calculator_options = fc_calculator_options
+    def set_hdf5_compression(self, val):
+        self._v['hdf5_compression'] = val
 
-    def get_fc_calculator_options(self):
-        return self._fc_calculator_options
+    def set_is_band_const_interval(self, val):
+        self._v['is_band_const_interval'] = val
 
-    def set_fc_symmetry(self, fc_symmetry):
-        self._fc_symmetry = fc_symmetry
+    def set_is_diagonal_displacement(self, val):
+        self._v['is_diagonal_displacement'] = val
 
-    def get_fc_symmetry(self):
-        return self._fc_symmetry
+    def set_is_eigenvectors(self, val):
+        self._v['is_eigenvectors'] = val
 
-    def set_fc_decimals(self, decimals):
-        self._fc_decimals = decimals
+    def set_is_mesh_symmetry(self, val):
+        self._v['is_mesh_symmetry'] = val
 
-    def get_fc_decimals(self):
-        return self._fc_decimals
+    def set_is_nac(self, val):
+        self._v['is_nac'] = val
 
-    def set_frequency_conversion_factor(self, frequency_conversion_factor):
-        self._frequency_conversion_factor = frequency_conversion_factor
+    def set_is_plusminus_displacement(self, val):
+        self._v['is_plusminus_displacement'] = val
 
-    def get_frequency_conversion_factor(self):
-        return self._frequency_conversion_factor
+    def set_is_rotational_invariance(self, val):
+        self._v['is_rotational_invariance'] = val
 
-    def set_frequency_pitch(self, fpitch):
-        self._fpitch = fpitch
+    def set_is_tetrahedron_method(self, val):
+        self._v['is_tetrahedron_method'] = val
 
-    def get_frequency_pitch(self):
-        return self._fpitch
+    def set_is_trigonal_displacement(self, val):
+        self._v['is_trigonal_displacement'] = val
 
-    def set_frequency_scale_factor(self, frequency_scale_factor):
-        self._frequency_scale_factor = frequency_scale_factor
+    def set_is_symmetry(self, val):
+        self._v['is_symmetry'] = val
 
-    def get_frequency_scale_factor(self):
-        return self._frequency_scale_factor
+    def set_magnetic_moments(self, val):
+        self._v['magnetic_moments'] = val
 
-    def set_num_frequency_points(self, num_frequency_points):
-        self._num_frequency_points = num_frequency_points
+    def set_masses(self, val):
+        self._v['masses'] = val
 
-    def get_num_frequency_points(self):
-        return self._num_frequency_points
+    def set_max_temperature(self, val):
+        self._v['max_temperature'] = val
 
-    def set_group_velocity_delta_q(self, gv_delta_q):
-        self._gv_delta_q = gv_delta_q
+    def set_mesh_numbers(self, val):
+        self._v['mesh_numbers'] = val
 
-    def get_group_velocity_delta_q(self):
-        return self._gv_delta_q
+    def set_min_temperature(self, val):
+        self._v['min_temperature'] = val
 
-    def set_is_band_const_interval(self, is_band_const_interval):
-        self._is_band_const_interval = is_band_const_interval
+    def set_nac_method(self, val):
+        self._v['nac_method'] = val
 
-    def get_is_band_const_interval(self):
-        return self._is_band_const_interval
+    def set_nac_q_direction(self, val):
+        self._v['nac_q_direction'] = val
 
-    def set_is_diagonal_displacement(self, is_diag):
-        self._is_diagonal_displacement = is_diag
+    def set_num_frequency_points(self, val):
+        self._v['num_frequency_points'] = val
 
-    def get_is_diagonal_displacement(self):
-        return self._is_diagonal_displacement
+    def set_primitive_matrix(self, val):
+        self._v['primitive_matrix'] = val
 
-    def set_is_eigenvectors(self, is_eigenvectors):
-        self._is_eigenvectors = is_eigenvectors
+    def set_qpoints(self, val):
+        self._v['qpoints'] = val
 
-    def get_is_eigenvectors(self):
-        return self._is_eigenvectors
+    def set_read_qpoints(self, val):
+        self._v['read_qpoints'] = val
 
-    def set_is_mesh_symmetry(self, is_mesh_symmetry):
-        self._is_mesh_symmetry = is_mesh_symmetry
+    def set_sigma(self, val):
+        self._v['sigma'] = val
 
-    def get_is_mesh_symmetry(self):
-        return self._is_mesh_symmetry
+    def set_supercell_matrix(self, val):
+        self._v['supercell_matrix'] = val
 
-    def set_is_nac(self, is_nac):
-        self._is_nac = is_nac
+    def set_symmetry_tolerance(self, val):
+        self._v['symmetry_tolerance'] = val
 
-    def get_is_nac(self):
-        return self._is_nac
+    def set_temperatures(self, val):
+        self._v['temperatures'] = val
 
-    def set_is_plusminus_displacement(self, is_pm):
-        self._is_plusminus_displacement = is_pm
+    def set_temperature_step(self, val):
+        self._v['temperature_step'] = val
 
-    def get_is_plusminus_displacement(self):
-        return self._is_plusminus_displacement
-
-    def set_is_rotational_invariance(self, is_rotational_invariance):
-        self._is_rotational_invariance = is_rotational_invariance
-
-    def get_is_rotational_invariance(self):
-        return self._is_rotational_invariance
-
-    def set_is_tetrahedron_method(self, is_thm):
-        self._is_tetrahedron_method = is_thm
-
-    def get_is_tetrahedron_method(self):
-        return self._is_tetrahedron_method
-
-    def set_is_trigonal_displacement(self, is_trigonal):
-        self._is_trigonal_displacement = is_trigonal
-
-    def get_is_trigonal_displacement(self):
-        return self._is_trigonal_displacement
-
-    def set_is_symmetry(self, is_symmetry):
-        self._is_symmetry = is_symmetry
-
-    def get_is_symmetry(self):
-        return self._is_symmetry
-
-    def set_magnetic_moments(self, magmoms):
-        self._magmoms = magmoms
-
-    def get_magnetic_moments(self):
-        return self._magmoms
-
-    def set_masses(self, masses):
-        self._masses = masses
-
-    def get_masses(self):
-        return self._masses
-
-    def set_max_temperature(self, tmax):
-        self._tmax = tmax
-
-    def get_max_temperature(self):
-        return self._tmax
-
-    def set_mesh_numbers(self, mesh):
-        self._mesh = mesh
-
-    def get_mesh_numbers(self):
-        return self._mesh
-
-    def set_min_temperature(self, tmin):
-        self._tmin = tmin
-
-    def get_min_temperature(self):
-        return self._tmin
-
-    def set_nac_method(self, nac_method):
-        self._nac_method = nac_method
-
-    def get_nac_method(self):
-        return self._nac_method
-
-    def set_nac_q_direction(self, nac_q_direction):
-        self._nac_q_direction = nac_q_direction
-
-    def get_nac_q_direction(self):
-        return self._nac_q_direction
-
-    def set_primitive_matrix(self, primitive_matrix):
-        self._primitive_matrix = primitive_matrix
-
-    def get_primitive_matrix(self):
-        return self._primitive_matrix
-
-    def set_qpoints(self, qpoints):
-        self._qpoints = qpoints
-
-    def get_qpoints(self):
-        return self._qpoints
-
-    def set_read_qpoints(self, read_qpoints):
-        self._read_qpoints = read_qpoints
-
-    def get_read_qpoints(self):
-        return self._read_qpoints
-
-    def set_sigma(self, sigma):
-        self._sigma = sigma
-
-    def get_sigma(self):
-        return self._sigma
-
-    def set_supercell_matrix(self, matrix):
-        self._supercell_matrix = matrix
-
-    def get_supercell_matrix(self):
-        return self._supercell_matrix
-
-    def set_symmetry_tolerance(self, symmetry_tolerance):
-        self._symmetry_tolerance = symmetry_tolerance
-
-    def get_symmetry_tolerance(self):
-        return self._symmetry_tolerance
-
-    def set_temperatures(self, temperatures):
-        self._temperatures = temperatures
-
-    def get_temperatures(self):
-        return self._temperatures
-
-    def set_temperature_step(self, tstep):
-        self._tstep = tstep
-
-    def get_temperature_step(self):
-        return self._tstep
-
-    def set_time_reversal_symmetry(self, time_reversal_symmetry=True):
-        self._is_time_reversal_symmetry = time_reversal_symmetry
-
-    def get_time_reversal_symmetry(self):
-        return self._is_time_reversal_symmetry
+    def set_is_time_reversal_symmetry(self, val):
+        self._v['is_time_reversal_symmetry'] = val
 
 
 # Parse phonopy setting filen
@@ -462,8 +354,12 @@ class ConfParser(object):
                 self._confs['fc_calculator_options'] = fc_calc_opt
 
         if 'fc_symmetry' in arg_list:
-            if self._args.fc_symmetry:
-                self._confs['fc_symmetry'] = '.true.'
+            if self._settings.fc_symmetry:
+                if not self._args.fc_symmetry:
+                    self._confs['fc_symmetry'] = '.false.'
+            else:
+                if self._args.fc_symmetry:
+                    self._confs['fc_symmetry'] = '.true.'
 
         if 'force_constants_decimals' in arg_list:
             if self._args.force_constants_decimals:
@@ -488,17 +384,29 @@ class ConfParser(object):
             if self._args.gv_delta_q:
                 self._confs['gv_delta_q'] = self._args.gv_delta_q
 
+        if 'hdf5_compression' in arg_list:
+            if self._args.hdf5_compression:
+                self._confs['hdf5_compression'] = self._args.hdf5_compression
+
         if 'is_band_const_interval' in arg_list:
             if self._args.is_band_const_interval:
                 self._confs['band_const_interval'] = '.true.'
+
+        if 'is_displacement' in arg_list:
+            if self._args.is_displacement:
+                self._confs['create_displacements'] = '.true.'
 
         if 'is_eigenvectors' in arg_list:
             if self._args.is_eigenvectors:
                 self._confs['eigenvectors'] = '.true.'
 
         if 'is_nac' in arg_list:
-            if self._args.is_nac:
-                self._confs['nac'] = '.true.'
+            if self._settings.is_nac:  # Check default settings
+                if not self._args.is_nac:
+                    self._confs['nac'] = '.false.'
+            else:
+                if self._args.is_nac:
+                    self._confs['nac'] = '.true.'
 
         if 'is_nodiag' in arg_list:
             if self._args.is_nodiag:
@@ -652,6 +560,12 @@ class ConfParser(object):
 
             if conf_key == 'cell_filename':
                 self.set_parameter('cell_filename', confs['cell_filename'])
+
+            if conf_key == 'create_displacements':
+                if confs['create_displacements'].lower() == '.true.':
+                    self.set_parameter('create_displacements', True)
+                elif confs['create_displacements'].lower() == '.false.':
+                    self.set_parameter('create_displacements', False)
 
             if conf_key == 'dim':
                 matrix = [int(x) for x in confs['dim'].split()]
@@ -915,6 +829,19 @@ class ConfParser(object):
                 if confs['alm'].lower() == '.true.':
                     self.set_parameter('alm', True)
 
+            # Compression option for writing int hdf5
+            if conf_key == 'hdf5_compression':
+                hdf5_compression = confs['hdf5_compression']
+                try:
+                    compression = int(hdf5_compression)
+                except ValueError:  # str
+                    compression = hdf5_compression
+                    if compression.lower() == "none":
+                        compression = None
+                except TypeError:  # None (this will not happen)
+                    compression = hdf5_compression
+                self.set_parameter('hdf5_compression', compression)
+
     def set_parameter(self, key, val):
         self._parameters[key] = val
 
@@ -932,6 +859,11 @@ class ConfParser(object):
         # Filename of input unit cell
         if 'cell_filename' in params:
             self._settings.set_cell_filename(params['cell_filename'])
+
+        # Is getting least displacements?
+        if 'create_displacements' in params:
+            self._settings.set_create_displacements(
+                params['create_displacements'])
 
         # Cutoff frequency
         if 'cutoff_frequency' in params:
@@ -1116,457 +1048,280 @@ class ConfParser(object):
         if 'alm' in params:
             self._settings.set_use_alm(params['alm'])
 
+        # Compression option for writing int hdf5
+        if 'hdf5_compression' in params:
+            self._settings.set_hdf5_compression(params['hdf5_compression'])
+
 
 #
 # For phonopy
 #
 class PhonopySettings(Settings):
-    def __init__(self):
+    """Phonopy settings container
+
+    Basic part is stored in Settings and extended part is stored in this class.
+
+    This works almost like a dictionary.
+    Method names without 'set_' and 'get_' and keys of self._v have to be same.
+
+    """
+
+    _default = {
+        'anime_band_index': None,
+        'anime_amplitude': None,
+        'anime_division': None,
+        'anime_qpoint': None,
+        'anime_shift': None,
+        'anime_type': 'v_sim',
+        'band_format': 'yaml',
+        'band_labels': None,
+        'create_force_sets': None,
+        'create_force_sets_zero': None,
+        'create_force_constants': None,
+        'cutoff_radius': None,
+        'dos': None,
+        'fc_spg_symmetry': False,
+        'fits_Debye_model': False,
+        'max_frequency': None,
+        'min_frequency': None,
+        'irreps_q_point': None,
+        'irreps_tolerance': 1e-5,
+        'is_band_connection': False,
+        'is_dos_mode': False,
+        'is_full_fc': False,
+        'is_group_velocity': False,
+        'is_gamma_center': False,
+        'is_hdf5': False,
+        'is_legacy_plot': False,
+        'is_little_cogroup': False,
+        'is_moment': False,
+        'is_plusminus_displacement': 'auto',
+        'is_thermal_displacements': False,
+        'is_thermal_displacement_matrices': False,
+        'is_thermal_distances': False,
+        'is_thermal_properties': False,
+        'is_projected_thermal_properties': False,
+        'include_force_constants': False,
+        'include_force_sets': False,
+        'include_nac_params': False,
+        'include_displacements': False,
+        'lapack_solver': False,
+        'mesh_shift': None,
+        'mesh_format': 'yaml',
+        'modulation': None,
+        'moment_order': None,
+        'random_displacements': None,
+        'pdos_indices': None,
+        'pretend_real': False,
+        'projection_direction': None,
+        'random_seed': None,
+        'qpoints_format': 'yaml',
+        'read_force_constants': False,
+        'readfc_format': 'text',
+        'run_mode': None,
+        'save_params': False,
+        'show_irreps': False,
+        'thermal_atom_pairs': None,
+        'thermal_displacement_matrix_temperatue': None,
+        'write_dynamical_matrices': False,
+        'write_mesh': True,
+        'write_force_constants': False,
+        'writefc_format': 'text',
+        'xyz_projection': False
+    }
+
+    def __init__(self, default=None):
         Settings.__init__(self)
+        self._v.update(PhonopySettings._default.copy())
+        if default is not None:
+            self._v.update(default)
 
-        self._anime_band_index = None
-        self._anime_amplitude = None
-        self._anime_division = None
-        self._anime_qpoint = None
-        self._anime_shift = None
-        self._anime_type = 'v_sim'
-        self._band_format = 'yaml'
-        self._band_labels = None
-        self._band_connection = False
-        self._cutoff_radius = None
-        self._dos = None
-        self._fc_spg_symmetry = False
-        self._fits_Debye_model = False
-        self._fmax = None
-        self._fmin = None
-        self._irreps_q_point = None
-        self._irreps_tolerance = 1e-5
-        self._is_dos_mode = False
-        self._is_full_fc = False
-        self._is_group_velocity = False
-        self._is_gamma_center = False
-        self._is_hdf5 = False
-        self._is_legacy_plot = False
-        self._is_little_cogroup = False
-        self._is_moment = False
-        self._is_plusminus_displacement = 'auto'
-        self._is_thermal_displacements = False
-        self._is_thermal_displacement_matrices = False
-        self._is_thermal_distances = False
-        self._is_thermal_properties = False
-        self._is_projected_thermal_properties = False
-        self._include_fc = False
-        self._include_fs = False
-        self._include_bec = False
-        self._include_eps = False
-        self._include_disp = False
-        self._include_all = False
-        self._lapack_solver = False
-        self._mesh_shift = None
-        self._mesh_format = 'yaml'
-        self._modulation = None
-        self._moment_order = None
-        self._random_displacements = None
-        self._pdos_indices = None
-        self._pretend_real = False
-        self._projection_direction = None
-        self._random_seed = None
-        self._qpoints_format = 'yaml'
-        self._read_force_constants = False
-        self._readfc_format = 'text'
-        self._run_mode = None
-        self._show_irreps = False
-        self._thermal_atom_pairs = None
-        self._thermal_displacement_matrix_temperatue = None
-        self._write_dynamical_matrices = False
-        self._write_mesh = True
-        self._write_force_constants = False
-        self._writefc_format = 'text'
-        self._xyz_projection = False
-
-    def set_anime_band_index(self, band_index):
-        self._anime_band_index = band_index
-
-    def get_anime_band_index(self):
-        return self._anime_band_index
-
-    def set_anime_amplitude(self, amplitude):
-        self._anime_amplitude = amplitude
-
-    def get_anime_amplitude(self):
-        return self._anime_amplitude
-
-    def set_anime_division(self, division):
-        self._anime_division = division
-
-    def get_anime_division(self):
-        return self._anime_division
-
-    def set_anime_qpoint(self, qpoint):
-        self._anime_qpoint = qpoint
-
-    def get_anime_qpoint(self):
-        return self._anime_qpoint
-
-    def set_anime_shift(self, shift):
-        self._anime_shift = shift
-
-    def get_anime_shift(self):
-        return self._anime_shift
-
-    def set_anime_type(self, anime_type):
-        self._anime_type = anime_type
-
-    def get_anime_type(self):
-        return self._anime_type
-
-    def set_band_format(self, band_format):
-        self._band_format = band_format
-
-    def get_band_format(self):
-        return self._band_format
+    def set_anime_band_index(self, val):
+        self._v['anime_band_index'] = val
 
-    def set_band_labels(self, labels):
-        self._band_labels = labels
+    def set_anime_amplitude(self, val):
+        self._v['anime_amplitude'] = val
 
-    def get_band_labels(self):
-        return self._band_labels
+    def set_anime_division(self, val):
+        self._v['anime_division'] = val
 
-    def set_cutoff_radius(self, cutoff_radius):
-        self._cutoff_radius = cutoff_radius
+    def set_anime_qpoint(self, val):
+        self._v['anime_qpoint'] = val
 
-    def get_cutoff_radius(self):
-        return self._cutoff_radius
+    def set_anime_shift(self, val):
+        self._v['anime_shift'] = val
 
-    def set_fc_spg_symmetry(self, fc_spg_symmetry):
-        self._fc_spg_symmetry = fc_spg_symmetry
+    def set_anime_type(self, val):
+        self._v['anime_type'] = val
 
-    def get_fc_spg_symmetry(self):
-        return self._fc_spg_symmetry
+    def set_band_format(self, val):
+        self._v['band_format'] = val
 
-    def set_fits_Debye_model(self, fits_Debye_model):
-        self._fits_Debye_model = fits_Debye_model
+    def set_band_labels(self, val):
+        self._v['band_labels'] = val
 
-    def get_fits_Debye_model(self):
-        return self._fits_Debye_model
+    def set_create_force_sets(self, val):
+        self._v['create_force_sets'] = val
 
-    def set_max_frequency(self, fmax):
-        self._fmax = fmax
+    def set_create_force_sets_zero(self, val):
+        self._v['create_force_sets_zero'] = val
 
-    def get_max_frequency(self):
-        return self._fmax
+    def set_create_force_constants(self, val):
+        self._v['create_force_constants'] = val
 
-    def set_mesh_shift(self, mesh_shift):
-        self._mesh_shift = mesh_shift
+    def set_cutoff_radius(self, val):
+        self._v['cutoff_radius'] = val
 
-    def get_mesh_shift(self):
-        return self._mesh_shift
+    def set_fc_spg_symmetry(self, val):
+        self._v['fc_spg_symmetry'] = val
 
-    def set_min_frequency(self, fmin):
-        self._fmin = fmin
+    def set_fits_Debye_model(self, val):
+        self._v['fits_Debye_model'] = val
 
-    def get_min_frequency(self):
-        return self._fmin
+    def set_max_frequency(self, val):
+        self._v['max_frequency'] = val
 
-    def set_irreps_q_point(self, q_point):
-        self._irreps_q_point = q_point
+    def set_mesh_shift(self, val):
+        self._v['mesh_shift'] = val
 
-    def get_irreps_q_point(self):
-        return self._irreps_q_point
+    def set_min_frequency(self, val):
+        self._v['min_frequency'] = val
 
-    def set_irreps_tolerance(self, tolerance):
-        self._irreps_tolerance = tolerance
+    def set_irreps_q_point(self, val):
+        self._v['irreps_q_point'] = val
 
-    def get_irreps_tolerance(self):
-        return self._irreps_tolerance
+    def set_irreps_tolerance(self, val):
+        self._v['irreps_tolerance'] = val
 
-    def set_is_band_connection(self, band_connection):
-        self._band_connection = band_connection
+    def set_is_band_connection(self, val):
+        self._v['is_band_connection'] = val
 
-    def get_is_band_connection(self):
-        return self._band_connection
+    def set_is_dos_mode(self, val):
+        self._v['is_dos_mode'] = val
 
-    def set_is_dos_mode(self, is_dos_mode):
-        self._is_dos_mode = is_dos_mode
+    def set_is_full_fc(self, val):
+        self._v['is_full_fc'] = val
 
-    def get_is_dos_mode(self):
-        return self._is_dos_mode
+    def set_is_gamma_center(self, val):
+        self._v['is_gamma_center'] = val
 
-    def set_is_full_fc(self, is_full_fc):
-        self._is_full_fc = is_full_fc
+    def set_is_group_velocity(self, val):
+        self._v['is_group_velocity'] = val
 
-    def get_is_full_fc(self):
-        return self._is_full_fc
+    def set_is_hdf5(self, val):
+        self._v['is_hdf5'] = val
 
-    def set_is_gamma_center(self, is_gamma_center):
-        self._is_gamma_center = is_gamma_center
+    def set_is_legacy_plot(self, val):
+        self._v['is_legacy_plot'] = val
 
-    def get_is_gamma_center(self):
-        return self._is_gamma_center
+    def set_is_little_cogroup(self, val):
+        self._v['is_little_cogroup'] = val
 
-    def set_is_group_velocity(self, is_group_velocity):
-        self._is_group_velocity = is_group_velocity
+    def set_is_moment(self, val):
+        self._v['is_moment'] = val
 
-    def get_is_group_velocity(self):
-        return self._is_group_velocity
+    def set_is_projected_thermal_properties(self, val):
+        self._v['is_projected_thermal_properties'] = val
 
-    def set_is_hdf5(self, is_hdf5):
-        self._is_hdf5 = is_hdf5
+    def set_is_thermal_displacements(self, val):
+        self._v['is_thermal_displacements'] = val
 
-    def get_is_hdf5(self):
-        return self._is_hdf5
+    def set_is_thermal_displacement_matrices(self, val):
+        self._v['is_thermal_displacement_matrices'] = val
 
-    def set_is_legacy_plot(self, is_legacy_plot):
-        self._is_legacy_plot = is_legacy_plot
+    def set_is_thermal_distances(self, val):
+        self._v['is_thermal_distances'] = val
 
-    def get_is_legacy_plot(self):
-        return self._is_legacy_plot
+    def set_is_thermal_properties(self, val):
+        self._v['is_thermal_properties'] = val
 
-    def set_is_little_cogroup(self, is_little_cogroup):
-        self._is_little_cogroup = is_little_cogroup
+    def set_include_force_constants(self, val):
+        self._v['include_force_constants'] = val
 
-    def get_is_little_cogroup(self):
-        return self._is_little_cogroup
+    def set_include_force_sets(self, val):
+        self._v['include_force_sets'] = val
 
-    def set_is_moment(self, is_moment):
-        self._is_moment = is_moment
+    def set_include_nac_params(self, val):
+        self._v['include_nac_params'] = val
 
-    def get_is_moment(self):
-        return self._is_moment
+    def set_include_displacements(self, val):
+        self._v['include_displacements'] = val
 
-    def set_is_projected_thermal_properties(self, is_ptp):
-        self._is_projected_thermal_properties = is_ptp
+    def set_lapack_solver(self, val):
+        self._v['lapack_solver'] = val
 
-    def get_is_projected_thermal_properties(self):
-        return self._is_projected_thermal_properties
+    def set_mesh_format(self, val):
+        self._v['mesh_format'] = val
 
-    def set_is_thermal_displacements(self, is_thermal_displacements):
-        self._is_thermal_displacements = is_thermal_displacements
+    def set_modulation(self, val):
+        self._v['modulation'] = val
 
-    def get_is_thermal_displacements(self):
-        return self._is_thermal_displacements
+    def set_moment_order(self, val):
+        self._v['moment_order'] = val
 
-    def set_is_thermal_displacement_matrices(self, is_displacement_matrices):
-        self._is_thermal_displacement_matrices = is_displacement_matrices
+    def set_random_displacements(self, val):
+        self._v['random_displacements'] = val
 
-    def get_is_thermal_displacement_matrices(self):
-        return self._is_thermal_displacement_matrices
+    def set_pdos_indices(self, val):
+        self._v['pdos_indices'] = val
 
-    def set_is_thermal_distances(self, is_thermal_distances):
-        self._is_thermal_distances = is_thermal_distances
+    def set_pretend_real(self, val):
+        self._v['pretend_real'] = val
 
-    def get_is_thermal_distances(self):
-        return self._is_thermal_distances
+    def set_projection_direction(self, val):
+        self._v['projection_direction'] = val
 
-    def set_is_thermal_properties(self, is_thermal_properties):
-        self._is_thermal_properties = is_thermal_properties
+    def set_qpoints_format(self, val):
+        self._v['qpoints_format'] = val
 
-    def get_is_thermal_properties(self):
-        return self._is_thermal_properties
+    def set_random_seed(self, val):
+        self._v['random_seed'] = val
 
-    def set_include_force_constants(self, include_force_constants):
-        self._include_fc = include_force_constants
+    def set_read_force_constants(self, val):
+        self._v['read_force_constants'] = val
 
-    def get_include_force_constants(self):
-        return self._include_fc
+    def set_readfc_format(self, val):
+        self._v['readfc_format'] = val
 
-    def set_include_force_sets(self, include_force_sets):
-        self._include_fs = include_force_sets
+    def set_run_mode(self, val):
+        self._v['run_mode'] = val
 
-    def get_include_force_sets(self):
-        return self._include_fs
+    def set_thermal_atom_pairs(self, val):
+        self._v['thermal_atom_pairs'] = val
 
-    def set_include_born_effective_charge(self, include_born_effective_charge):
-        self._include_bec = include_born_effective_charge
+    def set_thermal_displacement_matrix_temperature(self, val):
+        self._v['thermal_displacement_matrix_temperatue'] = val
 
-    def get_include_born_effective_charge(self):
-        return self._include_bec
+    def set_save_params(self, val):
+        self._v['save_params'] = val
 
-    def set_include_dielectric_constant(self, include_dielectric_constant):
-        self._include_eps = include_dielectric_constant
+    def set_show_irreps(self, val):
+        self._v['show_irreps'] = val
 
-    def get_include_dielectric_constant(self):
-        return self._include_eps
+    def set_write_dynamical_matrices(self, val):
+        self._v['write_dynamical_matrices'] = val
 
-    def set_include_born(self, include_born):
-        self.set_include_dielectric_constant(include_born)
-        self.set_include_born_effective_charge(include_born)
+    def set_write_force_constants(self, val):
+        self._v['write_force_constants'] = val
 
-    def get_include_born(self, include_born):
-        return (self._include_eps and self._include_bec)
+    def set_write_mesh(self, val):
+        self._v['write_mesh'] = val
 
-    def set_include_displacements(self, include_displacements):
-        self._include_disp = include_displacements
+    def set_writefc_format(self, val):
+        self._v['writefc_format'] = val
 
-    def get_include_displacements(self):
-        return self._include_disp
-
-    def set_include_all(self, include_all):
-        self._include_all = include_all
-        self._include_fc = True
-        self._include_fs = True
-        self._include_bec = True
-        self._include_eps = True
-        self._include_disp = True
-
-    def get_include_all(self):
-        return self._include_all
-
-    def set_lapack_solver(self, lapack_solver):
-        self._lapack_solver = lapack_solver
-
-    def get_lapack_solver(self):
-        return self._lapack_solver
-
-    def set_mesh_format(self, mesh_format):
-        self._mesh_format = mesh_format
-
-    def get_mesh_format(self):
-        return self._mesh_format
-
-    def set_modulation(self, modulation):
-        self._modulation = modulation
-
-    def get_modulation(self):
-        return self._modulation
-
-    def set_moment_order(self, moment_order):
-        self._moment_order = moment_order
-
-    def get_moment_order(self):
-        return self._moment_order
-
-    def set_random_displacements(self, random_displacements):
-        self._random_displacements = random_displacements
-
-    def get_random_displacements(self):
-        return self._random_displacements
-
-    def set_pdos_indices(self, indices):
-        self._pdos_indices = indices
-
-    def get_pdos_indices(self):
-        return self._pdos_indices
-
-    def set_pretend_real(self, pretend_real):
-        self._pretend_real = pretend_real
-
-    def get_pretend_real(self):
-        return self._pretend_real
-
-    def set_projection_direction(self, direction):
-        self._projection_direction = direction
-
-    def get_projection_direction(self):
-        return self._projection_direction
-
-    def set_qpoints_format(self, qpoints_format):
-        self._qpoints_format = qpoints_format
-
-    def get_qpoints_format(self):
-        return self._qpoints_format
-
-    def set_random_seed(self, random_seed):
-        self._random_seed = random_seed
-
-    def get_random_seed(self):
-        return self._random_seed
-
-    def set_read_force_constants(self, read_force_constants):
-        self._read_force_constants = read_force_constants
-
-    def get_read_force_constants(self):
-        return self._read_force_constants
-
-    def set_readfc_format(self, readfc_format):
-        self._readfc_format = readfc_format
-
-    def get_readfc_format(self):
-        return self._readfc_format
-
-    def set_run_mode(self, run_mode):
-        modes = ['qpoints',
-                 'mesh',
-                 'band',
-                 'band_mesh',
-                 'anime',
-                 'modulation',
-                 'displacements',
-                 'irreps']
-        for mode in modes:
-            if run_mode.lower() == mode:
-                self._run_mode = run_mode
-
-    def get_run_mode(self):
-        return self._run_mode
-
-    def set_thermal_property_range(self, tmin, tmax, tstep):
-        self._tmax = tmax
-        self._tmin = tmin
-        self._tstep = tstep
-
-    def get_thermal_property_range(self):
-        return {'min':  self._tmin,
-                'max':  self._tmax,
-                'step': self._tstep}
-
-    def set_thermal_atom_pairs(self, atom_pairs):
-        self._thermal_atom_pairs = atom_pairs
-
-    def get_thermal_atom_pairs(self):
-        return self._thermal_atom_pairs
-
-    def set_thermal_displacement_matrix_temperature(self, t):
-        self._thermal_displacement_matrix_temperatue = t
-
-    def get_thermal_displacement_matrix_temperature(self):
-        return self._thermal_displacement_matrix_temperatue
-
-    def set_show_irreps(self, show_irreps):
-        self._show_irreps = show_irreps
-
-    def get_show_irreps(self):
-        return self._show_irreps
-
-    def set_write_dynamical_matrices(self, write_dynamical_matrices):
-        self._write_dynamical_matrices = write_dynamical_matrices
-
-    def get_write_dynamical_matrices(self):
-        return self._write_dynamical_matrices
-
-    def set_write_force_constants(self, write_force_constants):
-        self._write_force_constants = write_force_constants
-
-    def get_write_force_constants(self):
-        return self._write_force_constants
-
-    def set_write_mesh(self, write_mesh):
-        self._write_mesh = write_mesh
-
-    def get_write_mesh(self):
-        return self._write_mesh
-
-    def set_writefc_format(self, writefc_format):
-        self._writefc_format = writefc_format
-
-    def get_writefc_format(self):
-        return self._writefc_format
-
-    def set_xyz_projection(self, xyz_projection):
-        self._xyz_projection = xyz_projection
-
-    def get_xyz_projection(self):
-        return self._xyz_projection
+    def set_xyz_projection(self, val):
+        self._v['xyz_projection'] = val
 
 
 class PhonopyConfParser(ConfParser):
-    def __init__(self, filename=None, args=None):
+    def __init__(self, filename=None, args=None, default_settings=None):
         # This is fragile implementation.
         # Remember that options have to be activated only
         # when it changes the default value, i.e.,
         # _read_options has to be written in this way.
 
-        self._settings = PhonopySettings()
+        self._settings = PhonopySettings(default=default_settings)
         confs = {}
         if filename is not None:
             ConfParser.__init__(self, filename=filename)
@@ -1584,7 +1339,7 @@ class PhonopyConfParser(ConfParser):
         self._confs = confs
 
     def _read_options(self):
-        self.read_options()  # store data in self._confs
+        ConfParser.read_options(self)  # store data in self._confs
         arg_list = vars(self._args)
         if 'band_format' in arg_list:
             if self._args.band_format:
@@ -1594,13 +1349,24 @@ class PhonopyConfParser(ConfParser):
             if self._args.band_labels is not None:
                 self._confs['band_labels'] = " ".join(self._args.band_labels)
 
-        if 'is_displacement' in arg_list:
-            if self._args.is_displacement:
-                self._confs['create_displacements'] = '.true.'
-
         if 'is_gamma_center' in arg_list:
             if self._args.is_gamma_center:
                 self._confs['gamma_center'] = '.true.'
+
+        if 'create_force_sets' in arg_list:
+            if self._args.create_force_sets:
+                self._confs['create_force_sets'] = " ".join(
+                    self._args.create_force_sets)
+
+        if 'create_force_sets_zero' in arg_list:
+            if self._args.create_force_sets_zero:
+                self._confs['create_force_sets_zero'] = " ".join(
+                    self._args.create_force_sets_zero)
+
+        if 'create_force_constants' in arg_list:
+            if self._args.create_force_constants:
+                self._confs['create_force_constants'] = " ".join(
+                    self._args.create_force_constants)
 
         if 'is_dos_mode' in arg_list:
             if self._args.is_dos_mode:
@@ -1708,6 +1474,10 @@ class PhonopyConfParser(ConfParser):
             if self._args.irreps_qpoint is not None:
                 self._confs['irreps'] = " ".join(self._args.irreps_qpoint)
 
+        if 'save_params' in arg_list:
+            if self._args.save_params:
+                self._confs['save_params'] = '.true.'
+
         if 'show_irreps' in arg_list:
             if self._args.show_irreps:
                 self._confs['show_irreps'] = '.true.'
@@ -1779,17 +1549,13 @@ class PhonopyConfParser(ConfParser):
             if self._args.include_fs:
                 self._confs['include_fs'] = '.true.'
 
-        #if 'include_bec' in arg_list:
-        #    if self._args.include_bec:
-        #        self._confs['include_bec'] = '.true.'
-
-        #if 'include_eps' in arg_list:
-        #    if self._args.include_eps:
-        #        self._confs['include_eps'] = '.true.'
-
-        if 'include_born' in arg_list:
-            if self._args.include_born:
-                self._confs['include_born'] = '.true.'
+        if 'include_nac_params' in arg_list:
+            if self._settings.include_nac_params:
+                if not self._args.include_nac_params:
+                    self._confs['include_nac_params'] = '.false.'
+            else:
+                if self._args.include_nac_params:
+                    self._confs['include_nac_params'] = '.true.'
 
         if 'include_disp' in arg_list:
             if self._args.include_disp:
@@ -1800,14 +1566,10 @@ class PhonopyConfParser(ConfParser):
                 self._confs['include_all'] = '.true.'
 
     def _parse_conf(self):
-        self.parse_conf()
+        ConfParser.parse_conf(self)
         confs = self._confs
 
         for conf_key in confs.keys():
-            if conf_key == 'create_displacements':
-                if confs['create_displacements'].lower() == '.true.':
-                    self.set_parameter('create_displacements', True)
-
             if conf_key == 'band_format':
                 self.set_parameter('band_format', confs['band_format'].lower())
 
@@ -1818,10 +1580,26 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'band_connection':
                 if confs['band_connection'].lower() == '.true.':
                     self.set_parameter('band_connection', True)
+                elif confs['band_connection'].lower() == '.false.':
+                    self.set_parameter('band_connection', False)
 
             if conf_key == 'legacy_plot':
                 if confs['legacy_plot'].lower() == '.true.':
                     self.set_parameter('legacy_plot', True)
+                elif confs['legacy_plot'].lower() == '.false.':
+                    self.set_parameter('legacy_plot', False)
+
+            if conf_key == 'create_force_sets':
+                fnames = [v for v in confs['create_force_sets'].split()]
+                self.set_parameter('create_force_sets', fnames)
+
+            if conf_key == 'create_force_sets_zero':
+                fnames = [v for v in confs['create_force_sets_zero'].split()]
+                self.set_parameter('create_force_sets_zero', fnames)
+
+            if conf_key == 'create_force_constants':
+                fnames = [v for v in confs['create_force_constants'].split()]
+                self.set_parameter('create_force_constants', fnames[0])
 
             if conf_key == 'force_constants':
                 self.set_parameter('force_constants',
@@ -1830,14 +1608,20 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'read_force_constants':
                 if confs['read_force_constants'].lower() == '.true.':
                     self.set_parameter('read_force_constants', True)
+                elif confs['read_force_constants'].lower() == '.false.':
+                    self.set_parameter('read_force_constants', False)
 
             if conf_key == 'write_force_constants':
                 if confs['write_force_constants'].lower() == '.true.':
                     self.set_parameter('write_force_constants', True)
+                elif confs['write_force_constants'].lower() == '.false.':
+                    self.set_parameter('write_force_constants', False)
 
             if conf_key == 'full_force_constants':
                 if confs['full_force_constants'].lower() == '.true.':
                     self.set_parameter('is_full_fc', True)
+                elif confs['full_force_constants'].lower() == '.false.':
+                    self.set_parameter('is_full_fc', False)
 
             if conf_key == 'cutoff_radius':
                 val = float(confs['cutoff_radius'])
@@ -1846,14 +1630,20 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'writedm':
                 if confs['writedm'].lower() == '.true.':
                     self.set_parameter('write_dynamical_matrices', True)
+                elif confs['writedm'].lower() == '.false.':
+                    self.set_parameter('write_dynamical_matrices', False)
 
             if conf_key == 'write_mesh':
-                if confs['write_mesh'].lower() == '.false.':
+                if confs['write_mesh'].lower() == '.true.':
+                    self.set_parameter('write_mesh', True)
+                elif confs['write_mesh'].lower() == '.false.':
                     self.set_parameter('write_mesh', False)
 
             if conf_key == 'hdf5':
                 if confs['hdf5'].lower() == '.true.':
                     self.set_parameter('hdf5', True)
+                elif confs['hdf5'].lower() == '.false.':
+                    self.set_parameter('hdf5', False)
 
             if conf_key == 'mp_shift':
                 vals = [fracval(x) for x in confs['mp_shift'].split()]
@@ -1869,16 +1659,22 @@ class PhonopyConfParser(ConfParser):
                                    confs['qpoints_format'].lower())
 
             if conf_key == 'time_reversal_symmetry':
-                if confs['time_reversal_symmetry'].lower() == '.false.':
+                if confs['time_reversal_symmetry'].lower() == '.true.':
+                    self.set_parameter('is_time_reversal_symmetry', True)
+                elif confs['time_reversal_symmetry'].lower() == '.false.':
                     self.set_parameter('is_time_reversal_symmetry', False)
 
             if conf_key == 'gamma_center':
                 if confs['gamma_center'].lower() == '.true.':
                     self.set_parameter('is_gamma_center', True)
+                elif confs['gamma_center'].lower() == '.false.':
+                    self.set_parameter('is_gamma_center', False)
 
             if conf_key == 'fc_spg_symmetry':
                 if confs['fc_spg_symmetry'].lower() == '.true.':
                     self.set_parameter('fc_spg_symmetry', True)
+                elif confs['fc_spg_symmetry'].lower() == '.false.':
+                    self.set_parameter('fc_spg_symmetry', False)
 
             if conf_key == 'readfc_format':
                 self.set_parameter('readfc_format',
@@ -1925,10 +1721,14 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'show_irreps':
                 if confs['show_irreps'].lower() == '.true.':
                     self.set_parameter('show_irreps', True)
+                elif confs['show_irreps'].lower() == '.false.':
+                    self.set_parameter('show_irreps', False)
 
             if conf_key == 'little_cogroup':
                 if confs['little_cogroup'].lower() == '.true.':
                     self.set_parameter('little_cogroup', True)
+                elif confs['little_cogroup'].lower() == '.false.':
+                    self.set_parameter('little_cogroup', False)
 
             # DOS
             if conf_key == 'pdos':
@@ -1943,14 +1743,20 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'xyz_projection':
                 if confs['xyz_projection'].lower() == '.true.':
                     self.set_parameter('xyz_projection', True)
+                elif confs['xyz_projection'].lower() == '.false.':
+                    self.set_parameter('xyz_projection', False)
 
             if conf_key == 'dos':
                 if confs['dos'].lower() == '.true.':
                     self.set_parameter('dos', True)
+                elif confs['dos'].lower() == '.false.':
+                    self.set_parameter('dos', False)
 
             if conf_key == 'debye_model':
                 if confs['debye_model'].lower() == '.true.':
                     self.set_parameter('fits_debye_model', True)
+                elif confs['debye_model'].lower() == '.false.':
+                    self.set_parameter('fits_debye_model', False)
 
             if conf_key == 'dos_range':
                 vals = [float(x) for x in confs['dos_range'].split()]
@@ -1966,26 +1772,36 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'tprop':
                 if confs['tprop'].lower() == '.true.':
                     self.set_parameter('tprop', True)
+                if confs['tprop'].lower() == '.false.':
+                    self.set_parameter('tprop', False)
 
             # Projected thermal properties
             if conf_key == 'ptprop':
                 if confs['ptprop'].lower() == '.true.':
                     self.set_parameter('ptprop', True)
+                elif confs['ptprop'].lower() == '.false.':
+                    self.set_parameter('ptprop', False)
 
             # Use imaginary frequency as real for thermal property calculation
             if conf_key == 'pretend_real':
                 if confs['pretend_real'].lower() == '.true.':
                     self.set_parameter('pretend_real', True)
+                elif confs['pretend_real'].lower() == '.false.':
+                    self.set_parameter('pretend_real', False)
 
             # Thermal displacement
             if conf_key == 'tdisp':
                 if confs['tdisp'].lower() == '.true.':
                     self.set_parameter('tdisp', True)
+                elif confs['tdisp'].lower() == '.false.':
+                    self.set_parameter('tdisp', False)
 
             # Thermal displacement matrices
             if conf_key == 'tdispmat':
                 if confs['tdispmat'].lower() == '.true.':
                     self.set_parameter('tdispmat', True)
+                elif confs['tdispmat'].lower() == '.false.':
+                    self.set_parameter('tdispmat', False)
 
             # Write thermal displacement matrices to cif file,
             # for which the temperature to execute is stored.
@@ -2018,11 +1834,15 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'group_velocity':
                 if confs['group_velocity'].lower() == '.true.':
                     self.set_parameter('is_group_velocity', True)
+                elif confs['group_velocity'].lower() == '.false.':
+                    self.set_parameter('is_group_velocity', False)
 
             # Moment of phonon states distribution
             if conf_key == 'moment':
                 if confs['moment'].lower() == '.true.':
                     self.set_parameter('moment', True)
+                elif confs['moment'].lower() == '.false.':
+                    self.set_parameter('moment', False)
 
             if conf_key == 'moment_order':
                 self.set_parameter('moment_order', int(confs['moment_order']))
@@ -2039,35 +1859,45 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'lapack_solver':
                 if confs['lapack_solver'].lower() == '.true.':
                     self.set_parameter('lapack_solver', True)
+                elif confs['lapack_solver'].lower() == '.false.':
+                    self.set_parameter('lapack_solver', False)
 
             # Select yaml summary contents
+            if conf_key == 'save_params':
+                if confs['save_params'].lower() == '.true.':
+                    self.set_parameter('save_params', True)
+                elif confs['save_params'].lower() == '.false.':
+                    self.set_parameter('save_params', False)
+
             if conf_key == 'include_fc':
                 if confs['include_fc'].lower() == '.true.':
                     self.set_parameter('include_fc', True)
+                elif confs['include_fc'].lower() == '.false.':
+                    self.set_parameter('include_fc', False)
 
             if conf_key == 'include_fs':
                 if confs['include_fs'].lower() == '.true.':
                     self.set_parameter('include_fs', True)
+                elif confs['include_fs'].lower() == '.false.':
+                    self.set_parameter('include_fs', False)
 
-            #if conf_key == 'include_bec':
-            #    if confs['include_bec'].lower() == '.true.':
-            #        self.set_parameter('include_bec', True)
-
-            #if conf_key == 'include_eps':
-            #    if confs['include_eps'].lower() == '.true.':
-            #        self.set_parameter('include_eps', True)
-
-            if conf_key == 'include_born':
-                if confs['include_born'].lower() == '.true.':
-                    self.set_parameter('include_born', True)
+            if conf_key in ('include_born', 'include_nac_params'):
+                if confs[conf_key].lower() == '.true.':
+                    self.set_parameter('include_nac_params', True)
+                elif confs[conf_key].lower() == '.false.':
+                    self.set_parameter('include_nac_params', False)
 
             if conf_key == 'include_disp':
                 if confs['include_disp'].lower() == '.true.':
                     self.set_parameter('include_disp', True)
+                elif confs['include_disp'].lower() == '.false.':
+                    self.set_parameter('include_disp', False)
 
             if conf_key == 'include_all':
                 if confs['include_all'].lower() == '.true.':
                     self.set_parameter('include_all', True)
+                elif confs['include_all'].lower() == '.false.':
+                    self.set_parameter('include_all', False)
 
     def _parse_conf_modulation(self, conf_modulation):
         modulation = {}
@@ -2124,10 +1954,17 @@ class PhonopyConfParser(ConfParser):
         self.set_settings()
         params = self._parameters
 
-        # Is getting least displacements?
-        if 'create_displacements' in params:
-            if params['create_displacements']:
-                self._settings.set_run_mode('displacements')
+        # Create FORCE_SETS
+        if 'create_force_sets' in params:
+            self._settings.set_create_force_sets(params['create_force_sets'])
+
+        if 'create_force_sets_zero' in params:
+            self._settings.set_create_force_sets_zero(
+                params['create_force_sets_zero'])
+
+        if 'create_force_constants' in params:
+            self._settings.set_create_force_constants(
+                params['create_force_constants'])
 
         # Is force constants written or read?
         if 'force_constants' in params:
@@ -2165,38 +2002,25 @@ class PhonopyConfParser(ConfParser):
         if 'cutoff_radius' in params:
             self._settings.set_cutoff_radius(params['cutoff_radius'])
 
-        # band & mesh mode
-        # This has to come before 'mesh_numbers' and 'band_paths'
-        if 'mesh_numbers' in params and 'band_paths' in params:
-            self._settings.set_run_mode('band_mesh')
-
         # Mesh
         if 'mesh_numbers' in params:
-            if self._settings.get_run_mode() != 'band_mesh':
-                self._settings.set_run_mode('mesh')
+            self._settings.set_run_mode('mesh')
             self._settings.set_mesh_numbers(params['mesh_numbers'])
-        if (self._settings.get_run_mode() == 'mesh' or
-            self._settings.get_run_mode() == 'band_mesh'):
             if 'mp_shift' in params:
                 self._settings.set_mesh_shift(params['mp_shift'])
             if 'is_time_reversal_symmetry' in params:
-                if not params['is_time_reversal_symmetry']:
-                    self._settings.set_time_reversal_symmetry(False)
+                self._settings.set_is_time_reversal_symmetry(
+                    params['is_time_reversal_symmetry'])
             if 'is_mesh_symmetry' in params:
-                if not params['is_mesh_symmetry']:
-                    self._settings.set_is_mesh_symmetry(False)
+                self._settings.set_is_mesh_symmetry(params['is_mesh_symmetry'])
             if 'is_gamma_center' in params:
-                if params['is_gamma_center']:
-                    self._settings.set_is_gamma_center(True)
+                self._settings.set_is_gamma_center(params['is_gamma_center'])
             if 'mesh_format' in params:
                 self._settings.set_mesh_format(params['mesh_format'])
 
         # band mode
         if 'band_paths' in params:
-            if self._settings.get_run_mode() != 'band_mesh':
-                self._settings.set_run_mode('band')
-        if (self._settings.get_run_mode() == 'band' or
-            self._settings.get_run_mode() == 'band_mesh'):
+            self._settings.set_run_mode('band')
             if 'band_format' in params:
                 self._settings.set_band_format(params['band_format'])
             if 'band_labels' in params:
@@ -2209,14 +2033,14 @@ class PhonopyConfParser(ConfParser):
         # Q-points mode
         if 'qpoints' in params or 'read_qpoints' in params:
             self._settings.set_run_mode('qpoints')
-        if self._settings.get_run_mode() == 'qpoints':
+        if self._settings.run_mode == 'qpoints':
             if 'qpoints_format' in params:
                 self._settings.set_qpoints_format(params['qpoints_format'])
 
         # Whether write out dynamical matrices or not
         if 'write_dynamical_matrices' in params:
-            if params['write_dynamical_matrices']:
-                self._settings.set_write_dynamical_matrices(True)
+            self._settings.set_write_dynamical_matrices(
+                params['write_dynamical_matrices'])
 
         # Whether write out mesh.yaml or mesh.hdf5
         if 'write_mesh' in params:
@@ -2228,7 +2052,7 @@ class PhonopyConfParser(ConfParser):
 
         if 'anime' in params:
             self._settings.set_run_mode('anime')
-            anime_type = self._settings.get_anime_type()
+            anime_type = self._settings.anime_type
             if anime_type == 'v_sim':
                 qpoints = [fracval(x) for x in params['anime'][0:3]]
                 self._settings.set_anime_qpoint(qpoints)
@@ -2254,7 +2078,7 @@ class PhonopyConfParser(ConfParser):
                 params['irreps_qpoint'][:3])
             if len(params['irreps_qpoint']) == 4:
                 self._settings.set_irreps_tolerance(params['irreps_qpoint'][3])
-            if self._settings.get_run_mode() == 'irreps':
+            if self._settings.run_mode == 'irreps':
                 if 'show_irreps' in params:
                     self._settings.set_show_irreps(params['show_irreps'])
                 if 'little_cogroup' in params:
@@ -2284,7 +2108,7 @@ class PhonopyConfParser(ConfParser):
         if 'xyz_projection' in params:
             self._settings.set_xyz_projection(params['xyz_projection'])
             if ('pdos' not in params and
-                self._settings.get_pdos_indices() is None):
+                self._settings.pdos_indices is None):
                 self.set_parameter('pdos', [])
 
         if 'pdos' in params:
@@ -2293,7 +2117,7 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_is_mesh_symmetry(False)
 
         if ('projection_direction' in params and
-            not self._settings.get_xyz_projection()):
+            not self._settings.xyz_projection):
             self._settings.set_projection_direction(
                 params['projection_direction'])
             self._settings.set_is_eigenvectors(True)
@@ -2370,7 +2194,7 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_is_eigenvectors(True)
             self._settings.set_is_mesh_symmetry(False)
 
-        if self._settings.get_is_moment():
+        if self._settings.is_moment:
             if 'moment_order' in params:
                 self._settings.set_moment_order(params['moment_order'])
 
@@ -2387,23 +2211,35 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_lapack_solver(params['lapack_solver'])
 
         # Select yaml summary contents
+        if 'save_params' in params:
+            self._settings.set_save_params(params['save_params'])
+
         if 'include_fc' in params:
             self._settings.set_include_force_constants(params['include_fc'])
 
         if 'include_fs' in params:
             self._settings.set_include_force_sets(params['include_fs'])
 
-        #if 'include_bec' in params:
-        #    self._settings.set_include_born_effective_charge(params['include_bec'])
-
-        #if 'include_eps' in params:
-        #    self._settings.set_include_dielectric_constant(params['include_eps'])
-
-        if 'include_born' in params:
-            self._settings.set_include_born(params['include_born'])
+        if 'include_nac_params' in params:
+            self._settings.set_include_nac_params(params['include_nac_params'])
 
         if 'include_disp' in params:
             self._settings.set_include_displacements(params['include_disp'])
 
         if 'include_all' in params:
-            self._settings.set_include_all(params['include_all'])
+            self._settings.set_include_force_constants(True)
+            self._settings.set_include_force_sets(True)
+            self._settings.set_include_nac_params(True)
+            self._settings.set_include_displacements(True)
+
+        # ***********************************************************
+        # This has to come last in this method to overwrite run_mode.
+        # ***********************************************************
+        if 'pdos' in params and params['pdos'] == 'auto':
+            if 'band_paths' in params:
+                self._settings.set_run_mode('band_mesh')
+            else:
+                self._settings.set_run_mode('mesh')
+
+        if 'mesh_numbers' in params and 'band_paths' in params:
+            self._settings.set_run_mode('band_mesh')

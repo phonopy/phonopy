@@ -38,16 +38,17 @@ from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
 from phonopy.units import AMU, kb_J
 from phonopy.structure.grid_points import get_qpoints
 
+
 class Velocity(object):
     def __init__(self,
-                 lattice=None, # column vectors, in Angstrom
-                 positions=None, # fractional coordinates
-                 timestep=None): # in femtosecond
+                 lattice=None,  # column vectors, in angstrom
+                 positions=None,  # fractional coordinates
+                 timestep=None):  # in femtosecond
 
         self._lattice = lattice
         self._positions = positions
         self._timestep = timestep
-        self._velocities = None # in m/s [timestep, atom, 3]
+        self._velocities = None  # in m/s [timestep, atom, 3]
 
     def run(self, skip_steps=0):
         pos = self._positions
@@ -62,15 +63,15 @@ class Velocity(object):
     def get_timestep(self):
         return self._timestep
 
+
 class VelocityQpoints(object):
     def __init__(self,
                  supercell,
                  primitive,
-                 velocities, # in m/s either real or reciprocal
+                 velocities,  # in m/s either real or reciprocal
                  symmetry=None,
                  symprec=1e-5):
         if symmetry is not None:
-            symprec = symmetry.get_symmetry_tolerance()
             self._point_group_opts = symmetry.get_pointgroup_operations()
         else:
             self._point_group_opts = None
@@ -85,13 +86,9 @@ class VelocityQpoints(object):
         self._qpoints = None
         self._weights = None
 
-        self._velocities_q = None # [timestep, p_atom, qpoitns, 3]
+        self._velocities_q = None  # [timestep, p_atom, qpoitns, 3]
 
     def run(self):
-        num_s = self._supercell.get_number_of_atoms()
-        num_p = self._primitive.get_number_of_atoms()
-        N = num_s / num_p
-        v = self._velocities
         self._velocities_q = self._transform(self._qpoints)
 
     def get_velocities(self):
@@ -110,8 +107,8 @@ class VelocityQpoints(object):
         self._qpoints = qpoints
 
     def set_commensurate_points(self):
-        supercell_matrix = np.linalg.inv(self._primitive.get_primitive_matrix())
-        supercell_matrix = np.rint(supercell_matrix).astype('intc')
+        supercell_matrix = np.rint(
+            np.linalg.inv(self._primitive.primitive_matrix)).astype('intc')
         self.set_qpoints(get_commensurate_points(supercell_matrix))
 
     def get_qpoints(self):
@@ -120,11 +117,10 @@ class VelocityQpoints(object):
     def _transform(self, q):
         """ exp(i q.r(i)) v(i)"""
 
-        s2p = self._primitive.get_supercell_to_primitive_map()
-        p2s = self._primitive.get_primitive_to_supercell_map()
+        s2p = self._primitive.s2p_map
+        p2s = self._primitive.p2s_map
 
-        num_s = self._supercell.get_number_of_atoms()
-        num_p = self._primitive.get_number_of_atoms()
+        num_p = len(self._primitive)
         v = self._velocities
 
         q_array = np.reshape(q, (-1, 3))
@@ -147,9 +143,9 @@ class VelocityQpoints(object):
 
 class AutoCorrelation(object):
     def __init__(self,
-                 velocities, # in m/s
-                 masses=None, # in AMU
-                 temperature=None): # in K
+                 velocities,  # in m/s
+                 masses=None,  # in AMU
+                 temperature=None):  # in K
         self._velocities = velocities
         self._masses = masses
         self._temperature = temperature
@@ -201,4 +197,3 @@ class AutoCorrelation(object):
 
     def get_number_of_elements(self):
         return self._n_elements
-

@@ -1576,3 +1576,4 @@ This is set by default when the ``phonopy`` script is run in ``displacements`` m
 
 All available data covered by the other ``include`` flags can be written to the yaml
 summary file using the ``--include-all`` flag or by setting ``INCLUDE_ALL = .TRUE.``.
+Force constants are not stored when force sets are stored.

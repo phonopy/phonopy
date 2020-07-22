@@ -61,13 +61,21 @@ def show_deprecated_option_warnings(deprecated):
     print("")
 
 
-def get_parser():
+def get_parser(fc_symmetry=False,
+               is_nac=False,
+               include_born=False,
+               load_phonopy_yaml=False):
     deprecated = fix_deprecated_option_names(sys.argv)
     import argparse
     from phonopy.interface.calculator import (
         add_arguments_of_calculators, calculator_info)
-    parser = argparse.ArgumentParser(
-        description="Phonopy command-line-tool")
+    try:
+        parser = argparse.ArgumentParser(
+            description="Phonopy command-line-tool",
+            allow_abbrev=False)  # allow_abbrev requires >= python 3.5
+    except TypeError:
+        parser = argparse.ArgumentParser(
+            description="Phonopy command-line-tool")
 
     add_arguments_of_calculators(parser, calculator_info)
 
@@ -105,9 +113,14 @@ def get_parser():
         "--bi", "--band-indices", nargs='+', dest="band_indices", default=None,
         help=("Band indices to be included to calcualte thermal "
               "properties"))
-    parser.add_argument(
-        "-c", "--cell", dest="cell_filename", metavar="FILE", default=None,
-        help="Read unit cell")
+    if not load_phonopy_yaml:
+        parser.add_argument(
+            "-c", "--cell", dest="cell_filename", metavar="FILE", default=None,
+            help="Read unit cell")
+    if load_phonopy_yaml:
+        parser.add_argument(
+            "--config", dest="conf_filename", metavar="FILE", default=None,
+            help="Phonopy configuration file")
     parser.add_argument(
         "--cutoff-freq", "--cutoff-frequency", dest="cutoff_frequency",
         type=float, default=None,
@@ -133,15 +146,22 @@ def get_parser():
         "--eigvecs", "--eigenvectors", dest="is_eigenvectors",
         action="store_true", default=False,
         help="Output eigenvectors")
+    if load_phonopy_yaml:
+        parser.add_argument(
+            "--exclude-born", "--exclude-nac-params",
+            dest="include_nac_params", action="store_false", default=True,
+            help=("Exclude born effective charge and dielectric tensor in "
+                  "phonopy.yaml"))
     parser.add_argument(
-        "-f", "--force-sets", nargs='+', dest="force_sets", default=None,
+        "-f", "--force-sets", nargs='+', dest="create_force_sets",
+        default=None,
         help="Create FORCE_SETS")
     parser.add_argument(
         "--factor", dest="frequency_conversion_factor", type=float,
         default=None,
         help="Frequency unit conversion factor")
     parser.add_argument(
-        "--fc", "--force-constants", nargs=1, dest="force_constants",
+        "--fc", "--force-constants", nargs=1, dest="create_force_constants",
         default=None,
         help=("Create FORCE_CONSTANTS from vaspurn.xml. "
               "vasprun.xml has to be passed as argument."))
@@ -161,9 +181,11 @@ def get_parser():
         "--fc-spg-symmetry", dest="fc_spg_symmetry", action="store_true",
         default=False,
         help="Enforce space group symmetry to force constants")
-    parser.add_argument(
-        "--fc-symmetry", dest="fc_symmetry", action="store_true", default=None,
-        help="Symmetrize force constants")
+    if not fc_symmetry:
+        parser.add_argument(
+            "--fc-symmetry", "--sym-fc",
+            dest="fc_symmetry", action="store_true",
+            default=False, help="Symmetrize force constants")
     parser.add_argument(
         "--fits-debye-model", dest="fits_debye_model", action="store_true",
         default=False,
@@ -178,7 +200,7 @@ def get_parser():
         "--full-fc", dest="is_full_fc", action="store_true", default=False,
         help="Calculate full supercell force constants matrix")
     parser.add_argument(
-        "--fz", "--force-sets-zero", nargs='+', dest="force_sets_zero",
+        "--fz", "--force-sets-zero", nargs='+', dest="create_force_sets_zero",
         default=None,
         help=("Create FORCE_SETS. disp.yaml in the current directory and "
               "vapsrun.xml's for VASP or case.scf(m) for Wien2k as arguments "
@@ -208,8 +230,8 @@ def get_parser():
         "--hdf5", dest="is_hdf5", action="store_true", default=False,
         help="Use hdf5 for force constants")
     parser.add_argument(
-        "--hdf5-compression", dest="hdf5_compression", default="gzip",
-        help="hdf5 compression filter")
+        "--hdf5-compression", dest="hdf5_compression", default=None,
+        help="hdf5 compression filter (default: gzip)")
     parser.add_argument(
         "--hiphive", dest="use_hiphive", action="store_true", default=False,
         help="Use hiPhive for generating force constants")
@@ -229,11 +251,13 @@ def get_parser():
     # parser.add_argument(
     #     "--include-eps", dest="include_eps", action="store_true",
     #     help="Include dielectric tensor in phonopy.yaml")
-    parser.add_argument(
-        "--include-born", dest="include_born", action="store_true",
-        default=False,
-        help=("Include born effective charge and dielectric tensor in "
-              "phonopy.yaml"))
+    if not load_phonopy_yaml:
+        parser.add_argument(
+            "--include-born", "--include-nac-params",
+            dest="include_nac_params", action="store_true",
+            default=False,
+            help=("Include born effective charge and dielectric tensor in "
+                  "phonopy.yaml"))
     parser.add_argument(
         "--include-disp", dest="include_disp", action="store_true",
         default=False,
@@ -284,18 +308,28 @@ def get_parser():
     parser.add_argument(
         "--moment-order", dest="moment_order", default=None,
         type=int, help="Order of moment of phonon states distribution")
-    parser.add_argument(
-        "--nac", dest="is_nac", action="store_true", default=False,
-        help="Non-analytical term correction")
+    if not is_nac:
+        parser.add_argument(
+            "--nac", dest="is_nac", action="store_true", default=False,
+            help="Non-analytical term correction")
     parser.add_argument(
         "--nac-method", dest="nac_method", default=None,
         help="Non-analytical term correction method: Gonze (default) or Wang")
+    if fc_symmetry:
+        parser.add_argument(
+            "--no-fc-symmetry", "--no-sym-fc",
+            dest="fc_symmetry", action="store_false",
+            default=True, help="Do not symmetrize force constants")
     parser.add_argument(
         "--nodiag", dest="is_nodiag", action="store_true", default=False,
         help="Set displacements parallel to axes")
     parser.add_argument(
         "--nomeshsym", dest="is_nomeshsym", action="store_true", default=False,
         help="Symmetry is not imposed for mesh sampling.")
+    if is_nac:
+        parser.add_argument(
+            "--nonac", dest="is_nac", action="store_false", default=True,
+            help="Non-analytical term correction")
     parser.add_argument(
         "--nosym", dest="is_nosym", action="store_true", default=False,
         help="Symmetry is not imposed.")
@@ -369,6 +403,10 @@ def get_parser():
         default=False,
         help="Save plot data in pdf")
     parser.add_argument(
+        "--sp", "--save-params", dest="save_params", action="store_true",
+        default=False,
+        help="Save parameters that can run phonopy in phonopy_params.yaml.")
+    parser.add_argument(
         "--show-irreps", dest="show_irreps", action="store_true",
         default=False,
         help="Show IR-Reps along with characters")
@@ -438,8 +476,11 @@ def get_parser():
     parser.add_argument(
         "--xyz-projection", dest="xyz_projection", action="store_true",
         help="Project PDOS x, y, z directions in Cartesian coordinates")
-    parser.add_argument(
-        "conf_file", nargs='*',
-        help="Phonopy configure file")
+    if load_phonopy_yaml:
+        parser.add_argument(
+            "filename", nargs='*', help="phonopy.yaml like file")
+    else:
+        parser.add_argument(
+            "filename", nargs='*', help="Phonopy configure file")
 
     return parser, deprecated

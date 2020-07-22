@@ -1208,6 +1208,21 @@ class VasprunxmlExpat(object):
 # XDATCAR
 #
 def read_XDATCAR(filename="XDATCAR"):
+    """Read XDATCAR
+
+    Returns
+    -------
+    tuple of (lattice, positions)
+
+    lattice : ndarray
+        Basis vectors in row vectors.
+        shape=(3, 3), dtype='double', order='C'
+    positions : ndarry
+        Atomic points in crystallographic coordinates.
+        shape=(MD_steps, atoms, 3), dtype='double', order='C'
+
+    """
+
     lattice = None
     symbols = None
     numbers_of_atoms = None
@@ -1224,9 +1239,10 @@ def read_XDATCAR(filename="XDATCAR"):
             dtype='intc')
 
     if lattice is not None:
-        data = np.loadtxt(filename, skiprows=7, comments='D')
-        return (data.reshape((-1, numbers_of_atoms.sum(), 3)),
-                np.array(lattice, dtype='double', order='C'))
+        data = np.loadtxt(filename, skiprows=7, comments='D', dtype='double')
+        pos = data.reshape((-1, numbers_of_atoms.sum(), 3), order='C')
+        lat = np.array(lattice, dtype='double', order='C')
+        return lat, pos
     else:
         return None
 

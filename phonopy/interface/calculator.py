@@ -36,7 +36,7 @@ import os
 import yaml
 import numpy as np
 from phonopy.interface.phonopy_yaml import PhonopyYaml
-from phonopy.harmonic.displacement import get_displacements_and_forces
+from phonopy.structure.dataset import get_displacements_and_forces
 from phonopy.structure.cells import determinant
 from phonopy.interface.vasp import sort_positions_by_symbols
 
@@ -63,6 +63,8 @@ calculator_info = {
                         'help': "Invoke Vasp mode"}},
     'wien2k': {'option': {'name': "--wien2k",
                           'help': "Invoke Wien2k mode"}},
+    'castep': {'option': {'name': "--castep",
+                           'help': "Invoke CASTEP mode"}},
 }
 
 
@@ -148,6 +150,10 @@ def write_crystal_structure(filename,
     elif interface_mode == 'aims':
         import phonopy.interface.aims as aims
         aims.write_aims(filename, cell)
+    elif interface_mode == 'castep':
+        import phonopy.interface.castep as castep
+        castep.write_castep(filename, cell)
+
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -248,6 +254,9 @@ def write_supercells_with_displacements(interface_mode,
     elif interface_mode == 'aims':
         import phonopy.interface.aims as aims
         aims.write_supercells_with_displacements(*args, **kwargs)
+    elif interface_mode == 'castep':
+        import phonopy.interface.castep as castep
+        castep.write_supercells_with_displacements(*args, **kwargs)
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -274,6 +283,22 @@ def read_crystal_structure(filename=None,
                            chemical_symbols=None,
                            phonopy_yaml_cls=None):
     """Returns crystal structure information
+
+    Parameters
+    ----------
+    filename : str, optional
+        Filename that contains cell structure information. Default is None.
+        The predetermined filename for each interface_mode is used.
+    interface_mode : str, optional
+        This is used to recognize the file format. Default is None, which
+        is equivalent to 'vasp' mode.
+    chemical_symbols : list of str, optional
+        This is only used for 'vasp' mode. VASP POSCAR file format can be
+        written without chemical symbol information. With this option,
+        chemical symbols can be given.
+    phonopy_yaml_cls : PhonopyYaml, optional
+        This brings PhonopyYaml-like class dependent parameters. Here,
+        currently only the default filenames are provided by this.
 
     Returns
     -------
@@ -348,6 +373,10 @@ def read_crystal_structure(filename=None,
         from phonopy.interface.aims import read_aims
         unitcell = read_aims(cell_filename)
         return unitcell, (cell_filename,)
+    elif interface_mode == 'castep':
+        from phonopy.interface.castep import read_castep
+        unitcell = read_castep(cell_filename)
+        return unitcell, (cell_filename,)
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -373,6 +402,8 @@ def get_default_cell_filename(interface_mode):
         return "control"
     elif interface_mode == 'aims':
         return "geometry.in"
+    elif interface_mode in ('castep'):
+        return "unitcell.cell"
     else:
         return None
 
@@ -399,6 +430,8 @@ def get_default_supercell_filename(interface_mode):
         return None  # TURBOMOLE interface generates directories with inputs
     elif interface_mode == 'aims':
         return "geometry.in.supercell"
+    elif interface_mode in ('castep'):
+        return "supercell.cell"
     else:
         return None
 
@@ -415,24 +448,28 @@ def get_default_displacement_distance(interface_mode):
 def get_default_physical_units(interface_mode=None):
     """Return physical units used for calculators
 
-    Physical units: energy,  distance,  atomic mass, force
-    vasp          : eV,      Angstrom,  AMU,         eV/Angstrom
-    wien2k        : Ry,      au(=borh), AMU,         mRy/au
-    abinit        : hartree, au,        AMU,         eV/Angstrom
-    elk           : hartree, au,        AMU,         hartree/au
-    qe            : Ry,      au,        AMU,         Ry/au
-    siesta        : eV,      au,        AMU,         eV/Angstroem
-    CRYSTAL       : eV,      Angstrom,  AMU,         eV/Angstroem
-    DFTB+         : hartree, au,        AMU          hartree/au
-    TURBOMOLE     : hartree, au,        AMU,         hartree/au
-    CP2K          : hartree, Angstrom,  AMU,         hartree/au
-    FHI-aims      : eV,      Angstrom,  AMU,         eV/Angstrom
+    Physical units: energy,  distance,  atomic mass, force,        force constants
+    vasp          : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
+    wien2k        : Ry,      au(=borh), AMU,         mRy/au,       mRy/au^2
+    abinit        : hartree, au,        AMU,         eV/angstrom,  eV/angstrom.au
+    elk           : hartree, au,        AMU,         hartree/au,   hartree/au^2
+    qe            : Ry,      au,        AMU,         Ry/au,        Ry/au^2
+    siesta        : eV,      au,        AMU,         eV/Angstroem, eV/angstrom.au
+    CRYSTAL       : eV,      angstrom,  AMU,         eV/Angstroem, eV/angstrom^2
+    DFTB+         : hartree, au,        AMU          hartree/au,   hartree/au^2
+    TURBOMOLE     : hartree, au,        AMU,         hartree/au,   hartree/au^2
+    CP2K          : hartree, angstrom,  AMU,         hartree/au,   hartree/angstrom.au
+    FHI-aims      : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
+    castep        : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
+
+    units['force_constants_unit'] is used in
+    the 'get_force_constant_conversion_factor' method.
 
     """
 
     from phonopy.units import (Wien2kToTHz, AbinitToTHz, PwscfToTHz, ElkToTHz,
                                SiestaToTHz, VaspToTHz, CP2KToTHz, CrystalToTHz,
-                               DftbpToTHz, TurbomoleToTHz, Hartree, Bohr,
+                               DftbpToTHz, TurbomoleToTHz, CastepToTHz, Hartree, Bohr,
                                Rydberg)
 
     units = {'factor': None,
@@ -446,13 +483,13 @@ def get_default_physical_units(interface_mode=None):
         units['factor'] = VaspToTHz
         units['nac_factor'] = Hartree * Bohr
         units['distance_to_A'] = 1.0
-        units['force_constants_unit'] = 'eV/Angstrom^2'
-        units['length_unit'] = 'Angstrom'
+        units['force_constants_unit'] = 'eV/angstrom^2'
+        units['length_unit'] = 'angstrom'
     elif interface_mode == 'abinit':
         units['factor'] = AbinitToTHz
         units['nac_factor'] = Hartree / Bohr
         units['distance_to_A'] = Bohr
-        units['force_constants_unit'] = 'eV/Angstrom.au'
+        units['force_constants_unit'] = 'eV/angstrom.au'
         units['length_unit'] = 'au'
     elif interface_mode == 'qe':
         units['factor'] = PwscfToTHz
@@ -477,20 +514,20 @@ def get_default_physical_units(interface_mode=None):
         units['factor'] = SiestaToTHz
         units['nac_factor'] = Hartree / Bohr
         units['distance_to_A'] = Bohr
-        units['force_constants_unit'] = 'eV/Angstrom.au'
+        units['force_constants_unit'] = 'eV/angstrom.au'
         units['length_unit'] = 'au'
     elif interface_mode == 'cp2k':
         units['factor'] = CP2KToTHz
         units['nac_factor'] = None  # not implemented
         units['distance_to_A'] = 1.0
-        units['force_constants_unit'] = 'hartree/Angstrom.au'
-        units['length_unit'] = 'Angstrom'
+        units['force_constants_unit'] = 'hartree/angstrom.au'
+        units['length_unit'] = 'angstrom'
     elif interface_mode == 'crystal':
         units['factor'] = CrystalToTHz
         units['nac_factor'] = Hartree * Bohr
         units['distance_to_A'] = 1.0
-        units['force_constants_unit'] = 'eV/Angstrom^2'
-        units['length_unit'] = 'Angstrom'
+        units['force_constants_unit'] = 'eV/angstrom^2'
+        units['length_unit'] = 'angstrom'
     elif interface_mode == 'dftbp':
         units['factor'] = DftbpToTHz
         units['nac_factor'] = Hartree * Bohr
@@ -504,6 +541,12 @@ def get_default_physical_units(interface_mode=None):
         units['force_to_eVperA'] = Hartree / Bohr
         units['force_constants_unit'] = 'hartree/au^2'
         units['length_unit'] = 'au'
+    elif interface_mode == 'castep':
+        units['factor'] = CastepToTHz
+        units['nac_factor'] = Hartree * Bohr
+        units['distance_to_A'] = 1.0
+        units['force_constants_unit'] = 'eV/angstrom^2'
+        units['length_unit'] = 'angstrom'
 
     return units
 
@@ -534,6 +577,9 @@ def get_force_sets(interface_mode,
         from phonopy.interface.turbomole import parse_set_of_forces
     elif interface_mode == 'aims':
         from phonopy.interface.aims import parse_set_of_forces
+    elif interface_mode == 'castep':
+        from phonopy.interface.castep import parse_set_of_forces
+
     else:
         return []
 
@@ -567,19 +613,20 @@ def get_force_sets_wien2k(num_displacements,
 def get_force_constant_conversion_factor(unit, interface_mode):
     from phonopy.units import Bohr, Rydberg, Hartree
 
-    units = get_default_physical_units(interface_mode)
-    default_unit = units['force_constants_unit']
-    factor_to_eVperA2 = {'eV/Angstrom^2': 1,
-                         'eV/Angstrom.au': 1 / Bohr,
+    _unit = unit.replace('Angstrom', 'angstrom')  # backward compatibility
+    interface_default_units = get_default_physical_units(interface_mode)
+    default_unit = interface_default_units['force_constants_unit']
+    factor_to_eVperA2 = {'eV/angstrom^2': 1,
+                         'eV/angstrom.au': 1 / Bohr,
                          'Ry/au^2': Rydberg / Bohr ** 2,
                          'mRy/au^2': Rydberg / Bohr ** 2 / 1000,
                          'hartree/au^2': Hartree / Bohr ** 2,
-                         'hartree/Angstrom.au': Hartree / Bohr}
+                         'hartree/angstrom.au': Hartree / Bohr}
     if default_unit not in factor_to_eVperA2:
         msg = "Force constant conversion for %s unit is not implemented."
         raise NotImplementedError(msg)
-    if default_unit != unit:
-        factor = factor_to_eVperA2[unit] / factor_to_eVperA2[default_unit]
+    if default_unit != _unit:
+        factor = factor_to_eVperA2[_unit] / factor_to_eVperA2[default_unit]
         return factor
     else:
         return 1.0

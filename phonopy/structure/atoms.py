@@ -95,6 +95,9 @@ class _Atoms(object):
 
         self._check()
 
+    def __len__(self):
+        return len(self.numbers)
+
     def set_cell(self, cell):
         self._set_cell(cell)
         self._check()
@@ -146,7 +149,7 @@ class _Atoms(object):
         return self._symbols[:]
 
     def get_number_of_atoms(self):
-        return len(self._scaled_positions)
+        return len(self)
 
     def set_atomic_numbers(self, number):
         self.number = number

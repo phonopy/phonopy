@@ -17,7 +17,7 @@ class TestVelocity(unittest.TestCase):
         pass
 
     def test_Velocity(self):
-        positions, lattice = read_XDATCAR(os.path.join(data_dir, "XDATCAR"))
+        lattice, positions = read_XDATCAR(os.path.join(data_dir, "XDATCAR"))
         v = Velocity(positions=positions,
                      lattice=lattice,
                      timestep=2)

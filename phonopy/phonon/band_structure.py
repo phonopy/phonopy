@@ -32,7 +32,10 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import sys
 import warnings
+import gzip
+import yaml
 import numpy as np
 from phonopy.units import VaspToTHz
 
@@ -196,7 +199,8 @@ class BandPlot(object):
              distances,
              frequencies,
              path_connections,
-             fmt=None):
+             fmt=None,
+             label=None):
         """Plot one band structure.
 
         If ``labels`` is given, decoration such as horizontal line at freq=0,
@@ -214,6 +218,8 @@ class BandPlot(object):
         fmt : str, optional
             Matplotlib format strings. Default is None, which is equivalent to
             'r-'.
+        label : str, optional
+            Label attached to band structure.
 
         """
 
@@ -227,11 +233,16 @@ class BandPlot(object):
 
         count = 0
         distances_scaled = [d * self.xscale for d in distances]
-        for d, f, c in zip(distances_scaled,
-                           frequencies,
-                           path_connections):
+        for i, (d, f, c) in enumerate(zip(distances_scaled,
+                                          frequencies,
+                                          path_connections)):
             ax = self._axs[count]
-            ax.plot(d, f, _fmt, linewidth=1)
+            if i == 0 and label is not None:
+                curves = ax.plot(d, f, _fmt, linewidth=1)
+                curves[0].set_label(label)
+                ax.legend()
+            else:
+                ax.plot(d, f, _fmt, linewidth=1)
             if not c:
                 count += 1
 
@@ -413,8 +424,9 @@ class BandStructure(object):
     eigenvectors: list of ndarray
         Phonon eigenvectors. See the data structure at np.linalg.eigh.
         Each ndarray corresponding to each q-path has
-            dtype='complex128'
+            dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
             shape=(qpoints, bands, bands)
+            order='C'
     group_velocities: list of ndarray
         Phonon group velocities.
         Each ndarray corresponding to each q-path has
@@ -620,76 +632,98 @@ class BandStructure(object):
                 for i, l in enumerate(self._labels):
                     dset[i] = np.string_(l)
 
-    def write_yaml(self, comment=None, filename="band.yaml"):
-        with open(filename, 'w') as w:
-            natom = self._cell.get_number_of_atoms()
-            rec_lattice = np.linalg.inv(self._cell.get_cell())  # column vecs
-            smat = self._supercell.get_supercell_matrix()
-            pmat = self._cell.get_primitive_matrix()
-            tmat = np.rint(np.dot(np.linalg.inv(pmat), smat)).astype(int)
-            nq_paths = []
-            for qpoints in self._paths:
-                nq_paths.append(len(qpoints))
-            text = []
-            if comment is not None:
-                try:
-                    import yaml
-                    text.append(
-                        yaml.dump(comment, default_flow_style=False).rstrip())
-                except ImportError:
-                    print("You need to install python-yaml.")
-                    print("Additional comments were not written in %s." %
-                          filename)
-            text.append("nqpoint: %-7d" % np.sum(nq_paths))
-            text.append("npath: %-7d" % len(self._paths))
-            text.append("segment_nqpoint:")
-            text += ["- %d" % nq for nq in nq_paths]
-            if self._labels:
-                text.append("labels:")
-                if self._is_legacy_plot:
-                    for i in range(len(self._paths)):
-                        text.append("- [ \'%s\', \'%s\' ]" %
-                                    (self._labels[i], self._labels[i + 1]))
-                else:
-                    i = 0
-                    for c in self._path_connections:
-                        text.append("- [ \'%s\', \'%s\' ]" %
-                                    (self._labels[i], self._labels[i + 1]))
-                        if c:
-                            i += 1
-                        else:
-                            i += 2
-            text.append("reciprocal_lattice:")
-            for vec, axis in zip(rec_lattice.T, ('a*', 'b*', 'c*')):
-                text.append("- [ %12.8f, %12.8f, %12.8f ] # %2s" %
-                            (tuple(vec) + (axis,)))
-            text.append("natom: %-7d" % (natom))
-            text.append(str(self._cell))
-            text.append("supercell_matrix:")
-            for v in tmat:
-                text.append("- [ %4d, %4d, %4d ]" % tuple(v))
-            text.append('')
-            text.append("phonon:")
-            text.append('')
-            w.write("\n".join(text))
+    def write_yaml(self,
+                   comment=None,
+                   filename=None,
+                   compression=None):
+        if filename is not None:
+            _filename = filename
 
-            for i in range(len(self._paths)):
-                qpoints = self._paths[i]
-                distances = self._distances[i]
-                frequencies = self._frequencies[i]
-                if self._group_velocities is None:
-                    group_velocities = None
-                else:
-                    group_velocities = self._group_velocities[i]
-                if self._eigenvectors is None:
-                    eigenvectors = None
-                else:
-                    eigenvectors = self._eigenvectors[i]
-                w.write("\n".join(self._get_q_segment_yaml(qpoints,
-                                                           distances,
-                                                           frequencies,
-                                                           eigenvectors,
-                                                           group_velocities)))
+        if compression is None:
+            if filename is None:
+                _filename = "band.yaml"
+            with open(_filename, 'w') as w:
+                self._write_yaml(w, comment)
+        elif compression == 'gzip':
+            if filename is None:
+                _filename = "band.yaml.gz"
+            with gzip.open(_filename, 'wb') as w:
+                self._write_yaml(w, comment, is_binary=True)
+        elif compression == 'lzma':
+            try:
+                import lzma
+            except ImportError:
+                raise("Reading a lzma compressed file is not supported "
+                      "by this python version.")
+            if filename is None:
+                _filename = "band.yaml.xz"
+            with lzma.open(_filename, 'w') as w:
+                self._write_yaml(w, comment, is_binary=True)
+
+    def _write_yaml(self, w, comment, is_binary=False):
+        natom = len(self._cell)
+        rec_lattice = np.linalg.inv(self._cell.cell)  # column vecs
+        smat = self._supercell.get_supercell_matrix()
+        pmat = self._cell.get_primitive_matrix()
+        tmat = np.rint(np.dot(np.linalg.inv(pmat), smat)).astype(int)
+        nq_paths = []
+        for qpoints in self._paths:
+            nq_paths.append(len(qpoints))
+        text = []
+        if comment is not None:
+            text.append(yaml.dump(comment, default_flow_style=False).rstrip())
+        text.append("nqpoint: %-7d" % np.sum(nq_paths))
+        text.append("npath: %-7d" % len(self._paths))
+        text.append("segment_nqpoint:")
+        text += ["- %d" % nq for nq in nq_paths]
+        if self._labels:
+            text.append("labels:")
+            if self._is_legacy_plot:
+                for i in range(len(self._paths)):
+                    text.append("- [ \'%s\', \'%s\' ]" %
+                                (self._labels[i], self._labels[i + 1]))
+            else:
+                i = 0
+                for c in self._path_connections:
+                    text.append("- [ \'%s\', \'%s\' ]" %
+                                (self._labels[i], self._labels[i + 1]))
+                    if c:
+                        i += 1
+                    else:
+                        i += 2
+        text.append("reciprocal_lattice:")
+        for vec, axis in zip(rec_lattice.T, ('a*', 'b*', 'c*')):
+            text.append("- [ %12.8f, %12.8f, %12.8f ] # %2s" %
+                        (tuple(vec) + (axis,)))
+        text.append("natom: %-7d" % (natom))
+        text.append(str(self._cell))
+        text.append("supercell_matrix:")
+        for v in tmat:
+            text.append("- [ %4d, %4d, %4d ]" % tuple(v))
+        text.append('')
+        text.append("phonon:")
+        text.append('')
+        self._write_lines(w, text, is_binary)
+
+        for i in range(len(self._paths)):
+            qpoints = self._paths[i]
+            distances = self._distances[i]
+            frequencies = self._frequencies[i]
+            if self._group_velocities is None:
+                group_velocities = None
+            else:
+                group_velocities = self._group_velocities[i]
+            if self._eigenvectors is None:
+                eigenvectors = None
+            else:
+                eigenvectors = self._eigenvectors[i]
+
+            text = self._get_q_segment_yaml(qpoints,
+                                            distances,
+                                            frequencies,
+                                            eigenvectors,
+                                            group_velocities)
+            self._write_lines(w, text, is_binary)
 
     def _get_q_segment_yaml(self,
                             qpoints,
@@ -725,6 +759,16 @@ class BandStructure(object):
         text.append('')
 
         return text
+
+    def _write_lines(self, w, lines, is_binary):
+        text = "\n".join(lines)
+        if is_binary:
+            if sys.version_info < (3, 0):
+                w.write(bytes(text))
+            else:
+                w.write(bytes(text, 'utf8'))
+        else:
+            w.write(text)
 
     def _set_initial_point(self, qpoint):
         self._lastq = qpoint.copy()
@@ -786,11 +830,10 @@ class BandStructure(object):
                 q_direction = None
                 if (np.abs(q) < 0.0001).all():  # For Gamma point
                     q_direction = path[0] - path[-1]
-                self._dynamical_matrix.set_dynamical_matrix(
-                    q, q_direction=q_direction)
+                self._dynamical_matrix.run(q, q_direction=q_direction)
             else:
-                self._dynamical_matrix.set_dynamical_matrix(q)
-            dm = self._dynamical_matrix.get_dynamical_matrix()
+                self._dynamical_matrix.run(q)
+            dm = self._dynamical_matrix.dynamical_matrix
 
             if self._with_eigenvectors:
                 eigvals, eigvecs = np.linalg.eigh(dm)

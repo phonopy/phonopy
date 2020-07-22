@@ -39,6 +39,10 @@ from phonopy.harmonic.dynmat_to_fc import (
 from phonopy.units import VaspToTHz, THzToEv, Kb, Hbar, AMU, EV, Angstrom, THz
 
 
+def bose_einstein_dist(x, t):
+    return 1.0 / (np.exp(THzToEv * x / (Kb * t)) - 1)
+
+
 class RandomDisplacements(object):
     """Generate random displacements by Canonical ensenmble.
 
@@ -94,6 +98,7 @@ class RandomDisplacements(object):
                  supercell,
                  primitive,
                  force_constants,
+                 dist_func=None,
                  cutoff_frequency=None,
                  factor=VaspToTHz):
         """
@@ -107,6 +112,11 @@ class RandomDisplacements(object):
         force_constants : array_like
             Force constants matrix. See the details at docstring of
             DynamialMatrix.
+        dist_func : str or None
+            Harmonic oscillator distribution function either by 'quantum'
+            or 'classical'. The starndard deviation of normal distribution
+            is determined following the choice. Default is None, corresponding
+            to 'quantum'.
         cutoff_frequency : float
             Lowest phonon frequency below which frequency the phonon mode
             is treated specially. See _get_sigma. Default is None, which
@@ -116,9 +126,6 @@ class RandomDisplacements(object):
 
         """
 
-        # Dynamical matrix without NAC because of commensurate points only
-        self._dynmat = get_dynamical_matrix(
-            force_constants, supercell, primitive)
         if cutoff_frequency is None or cutoff_frequency < 0:
             self._cutoff_frequency = 0.01
         else:
@@ -127,15 +134,24 @@ class RandomDisplacements(object):
         self._T = None
         self.u = None
 
+        if dist_func is None or dist_func == 'quantum':
+            self._dist_func = 'quantum'
+        elif dist_func == 'classical':
+            self._dist_func = 'classical'
+        else:
+            raise RuntimeError(
+                "Either 'quantum' or 'classical' is required.")
+
         self._unit_conversion = (Hbar * EV / AMU / THz
                                  / (2 * np.pi) / Angstrom ** 2)
+        self._unit_conversion_classical = (
+            Kb * EV / AMU / (THz * (2 * np.pi)) ** 2 / Angstrom ** 2)
 
-        slat = supercell.cell
-        self._rec_lat = np.linalg.inv(primitive.cell)
-        smat = np.rint(np.dot(slat, self._rec_lat).T).astype(int)
-        self._comm_points = get_commensurate_points_in_integers(smat)
-        self._ii, self._ij = self._categorize_points()
-        assert len(self._ii) + len(self._ij) * 2 == len(self._comm_points)
+        # Dynamical matrix without NAC because of commensurate points only
+        self._dynmat = get_dynamical_matrix(
+            force_constants, supercell, primitive)
+
+        self._setup_sampling_qpoints(supercell.cell, primitive.cell)
 
         s2p = primitive.s2p_map
         p2p = primitive.p2p_map
@@ -152,6 +168,12 @@ class RandomDisplacements(object):
         # This is set when running run_d2f.
         # The aim is to produce force constants from modified frequencies.
         self._force_constants = None
+
+    def _setup_sampling_qpoints(self, slat, plat):
+        smat = np.rint(np.dot(slat, np.linalg.inv(plat)).T).astype(int)
+        self._comm_points = get_commensurate_points_in_integers(smat)
+        self._ii, self._ij = self._categorize_points()
+        assert len(self._ii) + len(self._ij) * 2 == len(self._comm_points)
 
     def run(self, T, number_of_snapshots=1, random_seed=None, randn=None):
         """
@@ -250,7 +272,7 @@ class RandomDisplacements(object):
         pos = self._dynmat.supercell.scaled_positions
         N = len(self._comm_points)
         for q in self._comm_points[self._ii] / float(N):
-            self._dynmat.set_dynamical_matrix(q)
+            self._dynmat.run(q)
             dm = self._dynmat.dynamical_matrix
             eigvals, eigvecs = np.linalg.eigh(dm.real)
             self._eigvals_ii.append(eigvals)
@@ -260,7 +282,7 @@ class RandomDisplacements(object):
 
         if self._ij:
             for q in self._comm_points[self._ij] / float(N):
-                self._dynmat.set_dynamical_matrix(q)
+                self._dynmat.run(q)
                 dm = self._dynmat.dynamical_matrix
                 eigvals, eigvecs = np.linalg.eigh(dm)
                 self._eigvals_ij.append(eigvals)
@@ -274,7 +296,7 @@ class RandomDisplacements(object):
         randn parameter is used for the test.
 
         """
-        natom = self._dynmat.supercell.get_number_of_atoms()
+        natom = len(self._dynmat.supercell)
         u = np.zeros((number_of_snapshots, natom, 3), dtype='double')
 
         shape = (len(self._eigvals_ii), number_of_snapshots,
@@ -284,9 +306,9 @@ class RandomDisplacements(object):
         else:
             _randn = randn
         sigmas = self._get_sigma(self._eigvals_ii, T)
-        for dist_func, sigma, eigvecs, phase in zip(
+        for norm_dist, sigma, eigvecs, phase in zip(
                 _randn, sigmas, self._eigvecs_ii, self._phase_ii):
-            u_red = np.dot(dist_func * sigma, eigvecs.T).reshape(
+            u_red = np.dot(norm_dist * sigma, eigvecs.T).reshape(
                 number_of_snapshots, -1, 3)[:, self._s2pp, :]
             u += u_red * phase
 
@@ -298,7 +320,7 @@ class RandomDisplacements(object):
         randn parameter is used for the test.
 
         """
-        natom = self._dynmat.supercell.get_number_of_atoms()
+        natom = len(self._dynmat.supercell)
         u = np.zeros((number_of_snapshots, natom, 3), dtype='double')
         shape = (len(self._eigvals_ij), 2, number_of_snapshots,
                  len(self._eigvals_ij[0]))
@@ -307,25 +329,31 @@ class RandomDisplacements(object):
         else:
             _randn = randn
         sigmas = self._get_sigma(self._eigvals_ij, T)
-        for dist_func, sigma, eigvecs, phase in zip(
+        for norm_dist, sigma, eigvecs, phase in zip(
                 _randn, sigmas, self._eigvecs_ij, self._phase_ij):
-            u_red = np.dot(dist_func * sigma, eigvecs.T).reshape(
+            u_red = np.dot(norm_dist * sigma, eigvecs.T).reshape(
                 2, number_of_snapshots, -1, 3)[:, :, self._s2pp, :]
             u += (u_red[0] * phase).real
             u -= (u_red[1] * phase).imag
 
         return u * np.sqrt(2)
 
-    def _get_sigma(self, eigvals, T):  # max 2D
+    def _get_sigma(self, eigvals, T):
+        """Returns sigma in sqrt(AMU).Angstrom unit"""
         freqs = np.sqrt(np.abs(eigvals)) * self._factor
         conditions = freqs > self._cutoff_frequency
         freqs = np.where(conditions, freqs, 1)
-        n = np.where(conditions,
-                     1.0 / (np.exp(freqs * THzToEv / (Kb * T)) - 1),
-                     0)
-        sigma = np.where(conditions,
-                         np.sqrt(self._unit_conversion / freqs * (0.5 + n)),
-                         0)
+        if self._dist_func == 'classical':
+            sigma = np.where(
+                conditions,
+                np.sqrt(T * self._unit_conversion_classical) / freqs,
+                0)
+        else:
+            n = np.where(conditions, bose_einstein_dist(freqs, T), 0)
+            sigma = np.where(
+                conditions,
+                np.sqrt(self._unit_conversion / freqs * (0.5 + n)),
+                0)
         return sigma
 
     def _categorize_points(self):

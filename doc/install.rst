@@ -3,6 +3,8 @@
 Installation
 =============
 
+**From phonopy v2.7.0, spglib has to be installed separately.**
+
 .. contents::
    :depth: 3
    :local:
@@ -18,7 +20,7 @@ system is set-up (see `details about conda setting up
 of phonopy is super easy for any of Linux, MacOSX, and Windows.
 To install::
 
-   % conda install -c conda-forge phonopy h5py
+   % conda install -c conda-forge phonopy
 
 This phonopy's conda package is prepared and maintained by
 Paweł T. Jochym at conda-forge channel (please be aware that this is
@@ -41,7 +43,7 @@ environment).
 
    % conda create -n phonopy -c conda-forge python=3
    % conda activate phonopy
-   % conda install -c conda-forge phonopy h5py
+   % conda install -c conda-forge phonopy
 
 To exit from this conda's environment::
 
@@ -53,43 +55,24 @@ To use this phonopy, entering this environment is necessary like below.
 
    % conda activate phonopy
    (phonopy) % phonopy
-           _
      _ __ | |__   ___  _ __   ___   _ __  _   _
     | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
     | |_) | | | | (_) | | | | (_) || |_) | |_| |
     | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
     |_|                            |_|    |___/
-                                    1.13.2-r107
+                                          2.7.0
+
+   Python version 3.7.6
+   Spglib version 1.14.1
 
 
-   Crystal structure file of POSCAR (default file name) could not be found.
+   Supercell matrix (DIM or --dim) was not explicitly specified.
+   By this reason, phonopy_yaml mode was invoked.
+   But "phonopy_params.yaml", "phonopy_disp.yaml" and "phonopy.yaml" could not be found.
      ___ _ __ _ __ ___  _ __
     / _ \ '__| '__/ _ \| '__|
    |  __/ |  | | | (_) | |
     \___|_|  |_|  \___/|_|
-
-
-Using pip
----------
-
-Installation of phonopy via pip is not very recommended. :ref:`install_conda`
-as rewritten above is recommended.
-
-Phonopy pip wheel is not prepared. So before installing phonopy using
-pip, Python C-API compilation environment has to be prepared. Then
-phonopy is installed using pip by::
-
-   % pip install phonopy
-
-If you see the error message like below in the installation process::
-
-   _phonopy.c:35:20: fatal error: Python.h: No such file or directory
-
-development tools for building python module are additionally
-necessary and are installed using OS's package management system,
-e.g.,::
-
-   sudo apt-get install python-dev
 
 .. _install_from_source:
 
@@ -101,10 +84,10 @@ System requirement
 
 The procedure to setup phonopy is explained in this section. It is
 supposed that phonopy is installed on the recent linux distribution
-like Ubuntu or Fedora with Python version 2.6 or later. Python version
-3.4 or later is expected to work. Mac OS X users may use conda packages
-and also find some more information at :ref:`install_MacOSX`.
-Windows users should use conda packages as well.
+like Ubuntu or Fedora with Python version 2.7 or later. Python version
+3.4 or later is expected to work. Mac OS X users may use conda
+(conda-forge channel) packages.  Windows users should use conda
+(conda-forge channel) packages as well.
 
 Prepare the following Python libraries:
 
@@ -118,31 +101,25 @@ And optionally the following:
 
 * cp2k-input-tools, for the CP2K force calculator backend
 
+Installing required packages by conda
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By Ubuntu package manager
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+The python libraries can be installed using conda. Conda packages are
+distributed in binary. Minimum setup of conda envrironment is done by
+miniconda, which is downloaded at https://conda.io/miniconda.html. It
+is strongly recommended to create conda's virtual environment by
+``conda create -n <venvname>`` as written above. The installation of
+necessary libraries is done as follows::
 
-The most recommended system is Ubuntu linux version 14.04 (64-bit) or
-later. If you have any installation problem that you may feel
-difficult to solve, please use a virtual machine environment such as
-VirtualBox and install Ubuntu linux on it.
+   % conda install -c conda-forge numpy scipy h5py pyyaml matplotlib-base spglib
 
-The python libraries are installed by::
+If you need a compiler, for usual 64-bit linux system::
 
-   % sudo apt-get install python-dev python-numpy  python-matplotlib python-yaml python-h5py
+   % conda install -c conda-forge gcc_linux-64
 
-``python-scipy`` is also required to use ``phonopy-qha`` or
-``DEBYE_MODEL`` tag.
+For macOS::
 
-By conda
-^^^^^^^^^
-
-The python libraries may be also installed using pip or
-conda. Conda packages are distributed in binary and recommended often
-more than pip. The installation of necessary libraries is done as
-follows::
-
-   % conda install numpy scipy h5py pyyaml matplotlib
+   % conda install -c conda-forge clang_osx-64
 
 .. _install_setup_py:
 
@@ -154,78 +131,22 @@ special compiler or special options, phonopy is built using
 setup.py. In this case, manual modification of ``setup.py`` may be
 needed.
 
-1. Download the source code at
+1. Get the source code from github
 
-   https://pypi.python.org/pypi/phonopy
+   ::
 
-   and extract it::
+      % git clone https://github.com/phonopy/phonopy.git
+      % cd phonopy
+      % git checkout master
 
-      % tar xvfz phonopy-1.11.12.31.tar.gz
-      % cd phonopy-1.11.12.31
+2. Run ``setup.py`` script
 
-   The other option is using git to clone the phonopy repository from github::
+   ::
 
-     % git clone https://github.com/phonopy/phonopy.git
-     % cd phonopy
-
-2. Set up C-libraries for python C-API and python codes. This can be
-   done as follows:
-
-   Run ``setup.py`` script::
-
-      % python setup.py install --user
-
-   Watching carefully where the phonopy commands and library are
-   installed. Those locations can be ``~/.local/bin`` and
-   ``~/.local/lib`` directories, respectively.
-
-3. Assuming the installation location is those shown in the step 2,
-   set ``$PATH`` and ``$PYTHONPATH``::
-
-      export PYTHONPATH=~/.local/lib:$PYTHONPATH
-      export PATH=~/.local/bin:$PATH
-
-   or if ``PYTHONPATH`` is not yet set in your system::
-
-      export PYTHONPATH=~/.local/lib
-      export PATH=~/.local/bin:$PATH
-
-   in your ``.bashrc`` (or maybe ``.bash_profile``), ``.zshenv``, or
-   other script for the other shells.
-
-
+      % python setup.py build
+      % pip install -e .
 
 .. _install_trouble_shooting:
-
-
-Multithreading support
------------------------
-
-Two kinds of multithreadings can be used in phonopy.
-
-1. Multithreaded BLAS linked numpy
-
-   Phonopy uses numpy to run singular value decomposition in the
-   calculation of force constants and diagonalizaion of dynamical
-   matrices. For these, numpy internally calls the LAPACK
-   routines. Therefore if a user installs a numpy that is linked with
-   multithreaded BLAS, these parts are multithreaded. For example, MKL
-   linked numpy is easily installed using conda.
-
-2. OpenMP support in phonopy and spglib
-
-   OpenMP are applied in the symmetry finding of spglib and the
-   distribution of symmetry reduced force constants elements to full
-   force constants elements in phonopy. When a chosen supercell is
-   very large and there are many cores on a computer, these parts may
-   work well to reduce the computational time. In the default phonopy
-   setting, this is not activated. To enable this, it is necessary to
-   build phonopy using modified ``setup.py`` in which ``with_openmp =
-   False`` must be changed to ``with_openmp = True``. For this,
-   currently only gcc is supported.
-
-.. include:: MacOSX.inc
-
 
 Trouble shooting
 -----------------
@@ -248,6 +169,8 @@ the older phonopy packages by
 
 Set correct environment variables ``PATH`` and ``PYTHONPATH``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When using conda environment, this information is not applicable.
 
 In phonopy, ``PATH`` and ``PYTHONPATH`` play important roles. Of
 course the information about them can be easily found in internet
@@ -283,3 +206,10 @@ messages when ploting::
 or::
 
    ! LaTeX Error: File `type1cm.sty' not found.
+
+
+Missing Intel libraries when building from source using icc
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``LDSHARED="icc -shared"`` may be of help. See this github issues,
+https://github.com/phonopy/phonopy/issues/123.

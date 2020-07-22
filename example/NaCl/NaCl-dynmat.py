@@ -10,7 +10,7 @@ phonon = phonopy.load(supercell_matrix=[[2, 0, 0],
                       primitive_matrix=[[0, 0.5, 0.5],
                                         [0.5, 0, 0.5],
                                         [0.5, 0.5, 0]],
-                      unitcell_filename="POSCAR",
+                      unitcell_filename="POSCAR-unitcell",
                       force_sets_filename="FORCE_SETS",
                       born_filename="BORN")
 

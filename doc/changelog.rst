@@ -3,9 +3,19 @@
 Change Log
 ==========
 
+July-22-2020: Version 2.7.0
+---------------------------
+* Spglib was removed from phonopy source code tree. Now phonopy
+  depends on spglib. So spglib has to be installed separately. But
+  for normal cases, it is handled by the package manager.
+* A new way of using phonopy from command line is proposed at
+  :ref:`phonopy_load_command`.
+* Slightly changed the behaviour of ``--include-all`` option to that
+  force constants are not stored when force sets are stored.
+
 May-3-2020: Version 2.6.1
 -------------------------
-* Release for pypi and conda (atztogo channel) packagings
+* Release for pypi and conda packaging
 
 May-2-2020: Version 2.6.0
 -------------------------

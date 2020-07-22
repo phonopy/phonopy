@@ -81,13 +81,12 @@ def get_fc2(supercell,
     """
 
     if atom_list is None:
-        fc_dim0 = supercell.get_number_of_atoms()
+        fc_dim0 = len(supercell)
     else:
         fc_dim0 = len(atom_list)
 
-    force_constants = np.zeros((fc_dim0,
-                                supercell.get_number_of_atoms(),
-                                3, 3), dtype='double', order='C')
+    force_constants = np.zeros((fc_dim0, len(supercell), 3, 3),
+                               dtype='double', order='C')
 
     # Fill force_constants[ displaced_atoms, all_atoms_in_supercell ]
     atom_list_done = _get_force_constants_disps(
@@ -98,7 +97,7 @@ def get_fc2(supercell,
         atom_list=atom_list)
 
     rotations = symmetry.get_symmetry_operations()['rotations']
-    lattice = np.array(supercell.get_cell().T, dtype='double', order='C')
+    lattice = np.array(supercell.cell.T, dtype='double', order='C')
     permutations = symmetry.get_atomic_permutations()
     distribute_force_constants(force_constants,
                                atom_list_done,
@@ -235,6 +234,30 @@ def distribute_force_constants(force_constants,
                           permutations,
                           np.array(map_atoms, dtype='intc'),
                           np.array(map_syms, dtype='intc'))
+
+
+def distribute_force_constants_by_translations(fc, primitive, supercell):
+    """Distribute compact fc data to full fc by pure translations
+
+    For example, the input fc has to be prepared in the following way
+    in advance:
+
+    fc = np.zeros((compact_fc.shape[1], compact_fc.shape[1], 3, 3),
+                  dtype='double', order='C')
+    fc[primitive.p2s_map] = compact_fc
+
+    """
+    s2p = primitive.s2p_map
+    p2s = primitive.p2s_map
+    positions = supercell.scaled_positions
+    lattice = supercell.cell.T
+    diff = positions - positions[p2s[0]]
+    trans = np.array(diff[np.where(s2p == p2s[0])[0]],
+                     dtype='double', order='C')
+    rotations = np.array([np.eye(3, dtype='intc')] * len(trans),
+                         dtype='intc', order='C')
+    permutations = primitive.get_atomic_permutations()
+    distribute_force_constants(fc, p2s, lattice, rotations, permutations)
 
 
 def solve_force_constants(force_constants,
@@ -551,9 +574,9 @@ def show_drift_force_constants(force_constants,
                 maxval2 = val2
                 jk2 = [j, k]
     else:
-        s2p_map = primitive.get_supercell_to_primitive_map()
-        p2s_map = primitive.get_primitive_to_supercell_map()
-        p2p_map = primitive.get_primitive_to_primitive_map()
+        s2p_map = primitive.s2p_map
+        p2s_map = primitive.p2s_map
+        p2p_map = primitive.p2p_map
         permutations = primitive.get_atomic_permutations()
         s2pp_map, nsym_list = get_nsym_list_and_s2pp(s2p_map,
                                                      p2p_map,
@@ -595,6 +618,24 @@ def get_nsym_list_and_s2pp(s2p_map,
     nsym_list = np.array([np.where(permutations[:, i] == target)[0][0]
                           for i, target in enumerate(s2p_map)], dtype='intc')
     return s2pp, nsym_list
+
+
+def get_harmonic_potential_energy(force_constants, displacements):
+    if force_constants.shape[0] != force_constants.shape[1]:
+        raise RuntimeError("Full shape force constants are necessary.")
+
+    def _get_harm_pot(fc, d):
+        return np.dot(d, np.dot(fc, d)) / 2
+
+    n = force_constants.shape[0]
+    fc = np.swapaxes(force_constants, 1, 2).reshape(n * 3, n * 3)
+    if displacements.ndim == 3:
+        return [_get_harm_pot(fc, d.ravel()) for d in displacements]
+    elif displacements.ndim == 2:
+        d = displacements.ravel()
+        return _get_harm_pot(fc, d)
+    else:
+        raise RuntimeError("Array shape of displacements is wrong.")
 
 
 def _get_drift_per_index(force_constants):

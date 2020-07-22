@@ -28,7 +28,7 @@ class TestDynamicalMatrix(unittest.TestCase):
         phonon.set_displacement_dataset(force_sets)
         phonon.produce_force_constants()
         dynmat = phonon.dynamical_matrix
-        dynmat.set_dynamical_matrix([0, 0, 0])
+        dynmat.run([0, 0, 0])
         self.assertTrue(id(dynmat.primitive)
                         == id(dynmat.get_primitive()))
         self.assertTrue(id(dynmat.supercell)

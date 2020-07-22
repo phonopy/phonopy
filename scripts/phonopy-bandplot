@@ -34,6 +34,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import os
 import sys
 import numpy as np
 from phonopy.phonon.band_structure import BandPlot
@@ -50,14 +51,19 @@ except ImportError:
     from yaml import Loader
 
 
-def read_band_yaml(filename, is_lzma=False):
-    if is_lzma:
+def read_band_yaml(filename):
+    _, ext = os.path.splitext(filename)
+    if ext == '.xz' or ext == '.lzma':
         try:
             import lzma
         except ImportError:
             raise("Reading a lzma compressed file is not supported "
                   "by this python version.")
         with lzma.open(filename) as f:
+            data = yaml.load(f, Loader=Loader)
+    elif ext == '.gz':
+        import gzip
+        with gzip.open(filename) as f:
             data = yaml.load(f, Loader=Loader)
     else:
         with open(filename, 'r') as f:
@@ -131,7 +137,6 @@ def get_options():
                         f_min=None,
                         is_gnuplot=False,
                         is_legacy_plot=False,
-                        is_lzma=False,
                         is_points=False,
                         is_vertial_line=False,
                         output_filename=None,
@@ -180,9 +185,6 @@ def get_options():
         "--line", "-l", dest="is_vertial_line", action="store_true",
         help="Vertial line is drawn at between paths")
     parser.add_argument(
-        "--lzma", "--xz", dest="is_lzma", action="store_true",
-        help="Read input file as compressed by lzma (xz)")
-    parser.add_argument(
         "-o", "--output", dest="output_filename", action="store",
         help="Output filename of PDF plot")
     parser.add_argument(
@@ -202,6 +204,12 @@ def get_options():
         help="Filenames of phonon band structure result (band.yaml)")
     args = parser.parse_args()
     return args
+
+
+def savefig(plt, file, fonttype=42, family='serif'):
+    plt.rcParams['pdf.fonttype'] = fonttype
+    plt.rcParams['font.family'] = family
+    plt.savefig(file)
 
 
 def old_plot(args):
@@ -250,7 +258,7 @@ def old_plot(args):
          frequencies,
          qpoints,
          segment_nqpoint,
-         labels) = read_band_yaml(filename, is_lzma=args.is_lzma)
+         labels) = read_band_yaml(filename)
 
         end_points = [0, ]
         for nq in segment_nqpoint:
@@ -393,9 +401,7 @@ def old_plot(args):
                 plt.xlim(left=args.dos_min)
 
         if args.output_filename is not None:
-            plt.rcParams['pdf.fonttype'] = 42
-            plt.rcParams['font.family'] = 'serif'
-            plt.savefig(args.output_filename)
+            savefig(plt, args.output_filename)
         else:
             plt.show()
 
@@ -417,8 +423,7 @@ def plot(args):
     else:
         filenames = args.filenames
 
-    bands_data = [read_band_yaml(fname, is_lzma=args.is_lzma)
-                  for fname in filenames]
+    bands_data = [read_band_yaml(fname) for fname in filenames]
     plots_data = [_arrange_band_data(*band_data) for band_data in bands_data]
 
     # Check consistency of input band structures
@@ -445,10 +450,16 @@ def plot(args):
     # Plot band structures
     fmts = ['r-', 'b-', 'g-', 'c-', 'm-', 'y-', 'k-',
             'r--', 'b--', 'g--', 'c--', 'm--', 'y--', 'k--']
-    for (l, p, f, d), fmt in zip(plots_data, fmts):
-        band_plot.plot(d, f, p, fmt=fmt)
+    for (l, p, f, d), fmt, label in zip(plots_data, fmts, filenames):
+        if args.show_legend:
+            band_plot.plot(d, f, p, fmt=fmt, label=label)
+        else:
+            band_plot.plot(d, f, p, fmt=fmt)
 
-    plt.show()
+    if args.output_filename is not None:
+        savefig(plt, args.output_filename)
+    else:
+        plt.show()
 
 
 def _get_max_frequency(frequencies):
