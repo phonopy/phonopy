@@ -21,7 +21,7 @@ for PYBIN in /opt/python/*/bin; do
 done
 
 # Bundle external shared libraries into the wheels
-for whl in wheelhouse/phonopy*.whl; do
+for whl in wheelhouse/*.whl; do
     repair_wheel "$whl"
 done
 
