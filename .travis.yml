@@ -11,21 +11,6 @@ matrix:
          DOCKER_DEPLOY='manylinux1_x86_64'
          TRAVIS_PYTHON_VERSION='3.6'
          PLAT=manylinux1_x86_64
-  - python: '3.6'
-    services:
-    - docker
-    env: DOCKER_IMAGE=quay.io/pypa/manylinux1_i686
-         PRE_CMD=linux32
-         DOCKER_DEPLOY='manylinux1_i686'
-         TRAVIS_PYTHON_VERSION='3.6'
-         PLAT=manylinux1_i686
-  - python: '3.6'
-    services:
-      - docker
-    env: DOCKER_IMAGE=quay.io/pypa/manylinux2010_x86_64
-         DOCKER_DEPLOY='manylinux2010_x86_64'
-         TRAVIS_PYTHON_VERSION='3.6'
-         PLAT=manylinux2010_x86_64
   - python: '2.7'
     env: DOCKER_DEPLOY=false
          TRAVIS_PYTHON_VERSION='2.7'

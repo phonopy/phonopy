@@ -14,7 +14,7 @@ yum install -y hdf5 freetype freetype-devel pkgconfig libpng-devel
 
 
 for PYBIN in /opt/python/*/bin; do
-    if  [[ $PYBIN == *"36"*"manylinux1"* ]] || [[ $PYBIN == *"37"*"manylinux1"* ]] || [[ $PYBIN == *"38"*"manylinux1"* ]]; then
+    if [[ $PYBIN == *"36"* ]] || [[ $PYBIN == *"37"* ]] || [[ $PYBIN == *"38"* ]]; then
         "${PYBIN}/pip" install -r /io/dev-requirements.txt
         "${PYBIN}/pip" wheel /io/ -w wheelhouse/
     fi
@@ -27,7 +27,7 @@ done
 
 # Install packages and test
 for PYBIN in /opt/python/*/bin/; do
-    if  [[ $PYBIN == *"36"*"manylinux1"* ]] || [[ $PYBIN == *"37"*"manylinux1"* ]] || [[ $PYBIN == *"38"*"manylinux1"* ]]; then
+    if [[ $PYBIN == *"36"* ]] || [[ $PYBIN == *"37"* ]] || [[ $PYBIN == *"38"* ]]; then
         "${PYBIN}/pip" install phonopy --no-index -f /io/wheelhouse
     fi
 done
