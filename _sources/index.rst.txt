@@ -92,6 +92,7 @@ Documentation
    auxiliary-tools
    external-tools
    phonopy-module
+   phonopy-load
    formulation
    citation
    reference

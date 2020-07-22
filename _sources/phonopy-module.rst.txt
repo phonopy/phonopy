@@ -191,6 +191,8 @@ written in the yaml file, the argument ``settings`` is set as follows::
    phonon.save(settings={'force_constants': True})
 
 
+.. _phonopy_load:
+
 Shortcut to load input files (``phonopy.load``)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

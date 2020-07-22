@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>phonopy-load command &#8212; Phonopy v.2.7.0</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Formulations" href="formulation.html" />
+    <link rel="prev" title="Phonopy API for Python" href="phonopy-module.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Phonopy</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.7</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">phonopy-load command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">Documentation</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">phonopy-load command</a><ul>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="phonopy-module.html" title="Previous Chapter: Phonopy API for Python"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Phonopy API f...</span>
+    </a>
+  </li>
+  <li>
+    <a href="formulation.html" title="Next Chapter: Formulations"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Formulations &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <div class="section" id="phonopy-load-command">
+<span id="id1"></span><h1>phonopy-load command<a class="headerlink" href="#phonopy-load-command" title="Permalink to this headline">¶</a></h1>
+<p>At phonopy v2.7.0, <code class="docutils literal notranslate"><span class="pre">phonopy-load</span></code> command is installed. This behaves
+similarly to <code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code> (<a class="reference internal" href="phonopy-module.html#phonopy-load"><span class="std std-ref">Shortcut to load input files (phonopy.load)</span></a>) in the phonopy
+python module. The main aim of introducing this command is to provide
+uniform usage over many different force calculators. Once
+<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> is created, the later operations will be the
+same using this command.</p>
+<p>The following default behaviours are changed from that of those
+of <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> command:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">phonopy_xxx.yaml</span></code> type file is always necessary by a way of (2)
+or (3).</p></li>
+<li><p>The first argument of the command is used to give a <code class="docutils literal notranslate"><span class="pre">phonopy_xxx.yaml</span></code>
+type file.</p></li>
+<li><p>The file names of <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code>, <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>,
+<code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> are the default file
+names and these files are searched in the current directory. The
+preference order is as given here.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-c</span></code> option (read crystal structure) does not exist.</p></li>
+<li><p>Use of dommand options is recommended, but phonopy configuration
+file can be read using <code class="docutils literal notranslate"><span class="pre">--config</span></code> option.</p></li>
+<li><p>If parameters for non-analytical term correction (NAC) are
+found, NAC is automatically enabled. This can be disabled by
+<code class="docutils literal notranslate"><span class="pre">--nonac</span></code> option.</p></li>
+<li><p>When force constants are calculated from displacements and forces
+dataset, force constants are automatically symmetrized. To disable
+this, <code class="docutils literal notranslate"><span class="pre">--no-sym-fc</span></code> option is used.</p></li>
+</ol>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>In the NaCl-qe example,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="o">--</span><span class="n">pa</span> <span class="n">auto</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span>
+<span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">NaCl</span><span class="o">-</span><span class="mi">00</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">}</span><span class="o">.</span><span class="n">out</span>
+</pre></div>
+</div>
+<p>With these commands, <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> are
+created. After this step, it is unnecessary to specify <code class="docutils literal notranslate"><span class="pre">--qe</span></code> option
+to run with <code class="docutils literal notranslate"><span class="pre">phonopy-load</span></code>. The following command works to draw band
+structure.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">load</span> <span class="o">--</span><span class="n">band</span> <span class="n">auto</span> <span class="o">-</span><span class="n">p</span>
+</pre></div>
+</div>
+<p>Data in <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> and <code class="docutils literal notranslate"><span class="pre">BORN</span></code> stored in
+<code class="docutils literal notranslate"><span class="pre">phonopy_xxx.yaml</span></code> file can be used as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">load</span> <span class="o">--</span><span class="n">include</span><span class="o">-</span><span class="nb">all</span>
+<span class="o">%</span> <span class="n">mkdir</span> <span class="n">test</span> <span class="o">&amp;&amp;</span> <span class="n">cd</span> <span class="n">test</span>
+<span class="o">%</span> <span class="n">mv</span> <span class="o">../</span><span class="n">phonopy</span><span class="o">.</span><span class="n">yaml</span> <span class="n">phonopy_data</span><span class="o">.</span><span class="n">yaml</span>
+<span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">load</span> <span class="n">phonopy_data</span><span class="o">.</span><span class="n">yaml</span> <span class="o">--</span><span class="n">band</span> <span class="n">auto</span> <span class="o">-</span><span class="n">p</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/phonopy-load.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2009, Atsushi Togo.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
