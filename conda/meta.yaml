@@ -27,11 +27,13 @@ build:
 requirements:
   build:
     - python
-    - numpy
-    - setuptools
     - pip
-    - spglib
+    - numpy
+    - matplotlib-base
+    - pyyaml
     - h5py
+    - spglib
+    - scipy
 
   run:
     - python
