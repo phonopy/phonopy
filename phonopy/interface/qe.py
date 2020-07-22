@@ -45,7 +45,7 @@ from phonopy.units import Bohr
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.atoms import symbol_map
 from phonopy.structure.cells import get_supercell, get_primitive
-from phonopy.harmonic.dynmat_to_fc import (
+from phonopy.harmonic.force_constants import (
     distribute_force_constants_by_translations)
 
 

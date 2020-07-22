@@ -1510,10 +1510,10 @@ class IrReps(object):
 
     def _set_eigenvectors(self, dm):
         if self._nac_q_direction is not None and (np.abs(self._q) < 1e-5).all():
-            dm.set_dynamical_matrix(self._q, q_direction=self._nac_q_direction)
+            dm.run(self._q, q_direction=self._nac_q_direction)
         else:
-            dm.set_dynamical_matrix(self._q)
-        eigvals, self._eigvecs = np.linalg.eigh(dm.get_dynamical_matrix())
+            dm.run(self._q)
+        eigvals, self._eigvecs = np.linalg.eigh(dm.dynamical_matrix)
         self._freqs = np.sqrt(abs(eigvals)) * np.sign(eigvals) * self._factor
 
     def _get_rotations_at_q(self):

@@ -60,10 +60,10 @@ def get_eigenvectors(q,
                      derivative_order=None,
                      nac_q_direction=None):
     if nac_q_direction is not None and (np.abs(q) < 1e-5).all():
-        dm.set_dynamical_matrix(q, q_direction=nac_q_direction)
+        dm.run(q, q_direction=nac_q_direction)
     else:
-        dm.set_dynamical_matrix(q)
-    eigvals, eigvecs = np.linalg.eigh(dm.get_dynamical_matrix())
+        dm.run(q)
+    eigvals, eigvecs = np.linalg.eigh(dm.dynamical_matrix)
     eigvals = eigvals.real
     if perturbation is None:
         return eigvals, eigvecs

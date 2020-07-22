@@ -2,3 +2,4 @@ numpy==1.16.5
 PyYAML==5.1.2
 matplotlib==2.2.4
 h5py==2.10.0
+spglib==1.15.1

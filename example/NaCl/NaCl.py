@@ -13,7 +13,7 @@ def append_band(bands, q_start, q_end):
 
 
 # NaCl crystal structure is read from POSCAR.
-unitcell = read_vasp("POSCAR")
+unitcell = read_vasp("POSCAR-unitcell")
 # This can be given via a PhonopyAtoms class as follows:
 # unitcell = PhonopyAtoms(symbols=(['Na'] * 4 + ['Cl'] * 4),
 #                         cell=(np.eye(3) * 5.6903014761756712),

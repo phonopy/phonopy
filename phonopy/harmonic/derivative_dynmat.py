@@ -44,15 +44,15 @@ class DerivativeOfDynamicalMatrix(object):
 
     def __init__(self, dynamical_matrix):
         self._dynmat = dynamical_matrix
-        (self._smallest_vectors,
-         self._multiplicity) = self._dynmat.get_shortest_vectors()
         self._force_constants = self._dynmat.force_constants
         self._scell = self._dynmat.supercell
         self._pcell = self._dynmat.primitive
+        (self._smallest_vectors,
+         self._multiplicity) = self._pcell.get_smallest_vectors()
 
-        self._p2s_map = self._pcell.get_primitive_to_supercell_map()
-        self._s2p_map = self._pcell.get_supercell_to_primitive_map()
-        p2p_map = self._pcell.get_primitive_to_primitive_map()
+        self._p2s_map = self._pcell.p2s_map
+        self._s2p_map = self._pcell.s2p_map
+        p2p_map = self._pcell.p2p_map
         self._s2pp_map = np.array(
             [p2p_map[self._s2p_map[i]] for i in range(len(self._s2p_map))],
             dtype='intc')

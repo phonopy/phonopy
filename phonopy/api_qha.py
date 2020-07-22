@@ -61,7 +61,7 @@ class PhonopyQHA(object):
         Parameters
         ----------
         volumes: array_like
-            Unit cell volumes (V) in Angstrom^3
+            Unit cell volumes (V) in angstrom^3
             dtype='double'
             shape=(volumes,)
         electronic_energies: array_like
