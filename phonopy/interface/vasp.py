@@ -38,6 +38,8 @@ try:
 except ImportError:
     from io import StringIO
 import io
+import xml.parsers.expat
+import xml.etree.cElementTree as etree
 import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.atoms import symbol_map, atom_data
@@ -60,15 +62,20 @@ def parse_set_of_forces(num_atoms,
 
     for filename in force_files:
         with io.open(filename, "rb") as fp:
+            if verbose:
+                sys.stdout.write("%d " % (count + 1))
             vasprun = Vasprun(fp, use_expat=use_expat)
             try:
                 forces = vasprun.read_forces()
             except RuntimeError:
-                raise RuntimeError("\'vasprun.xml\' No.%d can be broken. "
-                                   "Please check the content." % (count + 1))
+                raise RuntimeError(
+                    "Could not parse \"%s\". Please check the content." %
+                    filename)
+            except ValueError:
+                raise ValueError(
+                    "Could not parse \"%s\". Please check the content." %
+                    filename)
             force_sets.append(forces)
-            if verbose:
-                sys.stdout.write("%d " % (count + 1))
             count += 1
 
             if not check_forces(force_sets[-1], num_atoms, filename):
@@ -374,20 +381,21 @@ def get_born_vasprunxml(filename="vasprun.xml",
                         is_symmetry=True,
                         symmetrize_tensors=False,
                         symprec=1e-5):
-    import io
     with io.open(filename, "rb") as f:
         vasprun = VasprunxmlExpat(f)
-        if vasprun.parse():
-            epsilon = vasprun.epsilon
-            borns = vasprun.born
-            ucell = vasprun.cell
-        else:
-            return None
+        try:
+            vasprun.parse()
+        except xml.parsers.expat.ExpatError:
+            raise xml.parsers.expat.ExpatError(
+                "Could not parse \"%s\". Please check the content." % filename)
+        except ValueError:
+            raise ValueError(
+                "Could not parse \"%s\". Please check the content." % filename)
 
     return elaborate_borns_and_epsilon(
-        ucell,
-        borns,
-        epsilon,
+        vasprun.cell,
+        vasprun.born,
+        vasprun.epsilon,
         primitive_matrix=primitive_matrix,
         supercell_matrix=supercell_matrix,
         is_symmetry=is_symmetry,
@@ -578,16 +586,9 @@ class Vasprun(object):
             return self._parse_by_etree(self._fileptr, tag=tag)
 
     def _parse_by_etree(self, fileptr, tag=None):
-        try:
-            import xml.etree.cElementTree as etree
-            for event, elem in etree.iterparse(fileptr):
-                if tag is None or elem.tag == tag:
-                    yield event, elem
-        except ImportError:
-            print("Python 2.5 or later is needed.")
-            print("For creating FORCE_SETS file with Python 2.4, you can use "
-                  "phonopy 1.8.5.1 with python-lxml .")
-            sys.exit(1)
+        for event, elem in etree.iterparse(fileptr):
+            if tag is None or elem.tag == tag:
+                yield event, elem
 
     def _parse_expat_vasprun_xml(self):
         if self._is_version528():
@@ -597,10 +598,16 @@ class Vasprun(object):
 
     def _parse_by_expat(self, fileptr):
         vasprun = VasprunxmlExpat(fileptr)
-        if vasprun.parse():
-            return vasprun.get_forces()[-1]
-        else:
-            raise RuntimeError("vasprun.xml doesn't contain force information.")
+        try:
+            vasprun.parse()
+        except xml.parsers.expat.ExpatError:
+            raise
+        except ValueError:
+            raise
+        except Exception:
+            raise
+
+        return vasprun.get_forces()[-1]
 
     def _is_version528(self):
         for line in self._fileptr:
@@ -701,20 +708,8 @@ class VasprunxmlExpat(object):
         self.symbols = None
         self.NELECT = None
 
-    def parse(self, debug=False):
-        import xml.parsers.expat
-        if debug:
-            self._p.ParseFile(self._fileptr)
-            return True
-        else:
-            try:
-                self._p.ParseFile(self._fileptr)
-            except xml.parsers.expat.ExpatError:
-                return False
-            except Exception:
-                raise
-            else:
-                return True
+    def parse(self):
+        self._p.ParseFile(self._fileptr)
 
     @property
     def forces(self):
@@ -1129,50 +1124,64 @@ class VasprunxmlExpat(object):
                 self._is_c = False
 
     def _char_data(self, data):
+        def to_float(x):
+            try:
+                val = float(x)
+                return val
+            except ValueError:
+                raise
+
+        def to_int(x):
+            try:
+                val = int(x)
+                return val
+            except ValueError:
+                raise
+
         if self._is_v:
             if self._is_forces:
                 self._forces.append(
-                    [float(x) for x in data.split()])
+                    [to_float(x) for x in data.split()])
 
             if self._is_stress:
                 self._stress.append(
-                    [float(x) for x in data.split()])
+                    [to_float(x) for x in data.split()])
 
             if self._is_epsilon:
                 self._epsilon.append(
-                    [float(x) for x in data.split()])
+                    [to_float(x) for x in data.split()])
 
             if self._is_positions:
                 self._points.append(
-                    [float(x) for x in data.split()])
+                    [to_float(x) for x in data.split()])
 
             if self._is_basis:
                 self._lattice.append(
-                    [float(x) for x in data.split()])
+                    [to_float(x) for x in data.split()])
 
             if self._is_k_weights:
-                self._k_weights.append(float(data))
+                self._k_weights.append(to_float(data))
 
             if self._is_born:
                 self._born_atom.append(
-                    [float(x) for x in data.split()])
+                    [to_float(x) for x in data.split()])
 
             if self._is_generation:
                 if self._is_divisions:
-                    self._k_mesh = [int(x) for x in data.split()]
+                    self._k_mesh = [to_int(x) for x in data.split()]
 
         if self._is_i:
             if self._is_energy:
-                self._energies.append(float(data.strip()))
+                self._energies.append(to_float(data.strip()))
 
             if self._is_efermi:
-                self.efermi = float(data.strip())
+                self.efermi = to_float(data.strip())
 
             if self._is_NELECT:
-                self.NELECT = float(data.strip())
+                self.NELECT = to_float(data.strip())
 
             if self._is_volume:
-                self._all_volumes.append(float(data.strip()))
+                self._all_volumes.append(to_float(data.strip()))
 
         if self._is_c:
             if self._is_symbols:
@@ -1180,24 +1189,24 @@ class VasprunxmlExpat(object):
             if (self._field_val == 'pseudopotential' and
                 self._is_set and self._is_rc):
                 if len(self._ps_atom) == 0:
-                    self._ps_atom.append(int(data.strip()))
+                    self._ps_atom.append(to_int(data.strip()))
                 elif len(self._ps_atom) == 1:
                     self._ps_atom.append(data.strip())
                 elif len(self._ps_atom) == 2:
-                    self._ps_atom.append(float(data.strip()))
+                    self._ps_atom.append(to_float(data.strip()))
                 elif len(self._ps_atom) == 3:
-                    self._ps_atom.append(float(data.strip()))
+                    self._ps_atom.append(to_float(data.strip()))
                 elif len(self._ps_atom) == 4:
                     self._ps_atom.append(data.strip())
 
         if self._is_r:
             if self._is_projected and not self._is_proj_eig:
                 s, k, b = self._proj_state
-                vals = [float(x) for x in data.split()]
+                vals = [to_float(x) for x in data.split()]
                 self._projectors[s][k][b].append(vals)
             elif self._is_eigenvalues:
                 s, k = self._eig_state
-                vals = [float(x) for x in data.split()]
+                vals = [to_float(x) for x in data.split()]
                 self._eigenvalues[s][k].append(vals)
 
         if self._is_field_string:
