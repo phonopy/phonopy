@@ -1355,18 +1355,17 @@ class PhonopyConfParser(ConfParser):
 
         if 'create_force_sets' in arg_list:
             if self._args.create_force_sets:
-                self._confs['create_force_sets'] = " ".join(
-                    self._args.create_force_sets)
+                self._confs['create_force_sets'] = self._args.create_force_sets
 
         if 'create_force_sets_zero' in arg_list:
             if self._args.create_force_sets_zero:
-                self._confs['create_force_sets_zero'] = " ".join(
-                    self._args.create_force_sets_zero)
+                fc_sets_zero = self._args.create_force_sets_zero
+                self._confs['create_force_sets_zero'] = fc_sets_zero
 
         if 'create_force_constants' in arg_list:
-            if self._args.create_force_constants:
-                self._confs['create_force_constants'] = " ".join(
-                    self._args.create_force_constants)
+            if self._args.create_force_constants is not None:
+                fc_filename = self._args.create_force_constants
+                self._confs['create_force_constants'] = fc_filename
 
         if 'is_dos_mode' in arg_list:
             if self._args.is_dos_mode:
@@ -1574,7 +1573,7 @@ class PhonopyConfParser(ConfParser):
                 self.set_parameter('band_format', confs['band_format'].lower())
 
             if conf_key == 'band_labels':
-                labels = [x for x in confs['band_labels'].split()]
+                labels = confs['band_labels'].split()
                 self.set_parameter('band_labels', labels)
 
             if conf_key == 'band_connection':
@@ -1590,16 +1589,23 @@ class PhonopyConfParser(ConfParser):
                     self.set_parameter('legacy_plot', False)
 
             if conf_key == 'create_force_sets':
-                fnames = [v for v in confs['create_force_sets'].split()]
+                if type(confs['create_force_sets']) is str:
+                    fnames = confs['create_force_sets'].split()
+                else:
+                    fnames = confs['create_force_sets']
                 self.set_parameter('create_force_sets', fnames)
 
             if conf_key == 'create_force_sets_zero':
-                fnames = [v for v in confs['create_force_sets_zero'].split()]
+                if type(confs['create_force_sets_zero']) is str:
+                    fnames = confs['create_force_sets_zero'].split()
+                else:
+                    fnames = confs['create_force_sets_zero']
+
                 self.set_parameter('create_force_sets_zero', fnames)
 
             if conf_key == 'create_force_constants':
-                fnames = [v for v in confs['create_force_constants'].split()]
-                self.set_parameter('create_force_constants', fnames[0])
+                self.set_parameter('create_force_constants',
+                                   confs['create_force_constants'])
 
             if conf_key == 'force_constants':
                 self.set_parameter('force_constants',
