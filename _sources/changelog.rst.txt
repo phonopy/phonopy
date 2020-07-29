@@ -10,9 +10,6 @@ July-22-2020: Version 2.7.0
   for normal cases, it is handled by the package manager.
 * A new way of using phonopy from command line is proposed at
   :ref:`phonopy_load_command`.
-* Slightly changed the behaviour of ``--include-all`` option. Force
-  constants are not stored when force sets are stored.
-
 
 May-3-2020: Version 2.6.1
 -------------------------
