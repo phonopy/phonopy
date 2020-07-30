@@ -3,6 +3,10 @@
 Change Log
 ==========
 
+July-31-2020: Version 2.7.1
+---------------------------
+* Release for pypi and conda packaging
+
 July-22-2020: Version 2.7.0
 ---------------------------
 * Spglib was removed from phonopy source code tree. Now phonopy
@@ -10,6 +14,7 @@ July-22-2020: Version 2.7.0
   for normal cases, it is handled by the package manager.
 * A new way of using phonopy from command line is proposed at
   :ref:`phonopy_load_command`.
+* Castep interface was added by @ladyteam.
 
 May-3-2020: Version 2.6.1
 -------------------------
