@@ -284,7 +284,7 @@ class BandPlot(object):
             pts.append(distances_scaled[indices[-1]][-1])
             special_points.append(pts)
 
-        self._axs[0].set_ylabel('Frequency (THz)')
+        self._axs[0].set_ylabel('Frequency')
         l_count = 0
         for ax, spts in zip(self._axs, special_points):
             ax.xaxis.set_ticks_position('both')
