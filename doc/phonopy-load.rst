@@ -30,6 +30,12 @@ of ``phonopy`` command:
 7. When force constants are calculated from displacements and forces
    dataset, force constants are automatically symmetrized. To disable
    this, ``--no-sym-fc`` option is used.
+8. ``--save-params`` option is added. With this option,
+   ``phonopy_params.yaml`` that contains most of the information
+   to run phonopy, i.e., crystal structure, displacement-force
+   dataset, and non-analytical term correction parameters. When
+   displacement-force dataset didn't exist, force constants are
+   written.
 
 Examples
 --------
@@ -50,10 +56,14 @@ structure.
 
    % phonopy-load --band auto -p
 
-Data in ``FORCE_SETS`` and ``BORN`` stored in
-``phonopy_xxx.yaml`` file can be used as follows::
+Data in ``FORCE_SETS`` and ``BORN`` can be saved in
+``phonopy_params.yaml`` using ``--save-params`` option. Then phonons
+can be calculated only with this file as fillows::
 
-   % phonopy-load --include-all
+   % phonopy-load --save-params
    % mkdir test && cd test
-   % mv ../phonopy.yaml phonopy_data.yaml
-   % phonopy-load phonopy_data.yaml --band auto -p
+   % mv ../phonopy_params.yaml .
+   % phonopy-load --band auto -p
+
+In the last line, ``phonopy_params.yaml`` is read without specifying
+because this filename is researved name to be searched.
