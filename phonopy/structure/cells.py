@@ -86,6 +86,25 @@ def print_cell(cell, mapping=None, stars=None):
             print(line + " > %d" % (mapping[i] + 1))
 
 
+def isclose(a, b, rtol=1e-5, atol=1e-8):
+    if len(a) != len(b):
+        return False
+
+    if (a.numbers != b.numbers).any():
+        return False
+
+    if not np.allclose(a.cell, b.cell, rtol=rtol, atol=atol):
+        return False
+
+    diff = a.scaled_positions - b.scaled_positions
+    diff -= np.rint(diff)
+    dist = np.sqrt((np.dot(diff, a.cell) ** 2).sum(axis=1))
+    if (dist > atol).any():
+        return False
+
+    return True
+
+
 class Supercell(PhonopyAtoms):
     """Build supercell from supercell matrix and unit cell"""
 
