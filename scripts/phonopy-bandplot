@@ -459,7 +459,7 @@ def plot(args):
     for (l, p, f, d), fmt, label in zip(plots_data, fmts, filenames):
         if args.show_legend:
             band_plot.plot(d, np.array(f) * args.factor, p, fmt=fmt,
-                           label=label)
+                           label=_get_label_for_latex(label))
         else:
             band_plot.plot(d, np.array(f) * args.factor, p, fmt=fmt)
 
@@ -467,6 +467,10 @@ def plot(args):
         savefig(plt, args.output_filename)
     else:
         plt.show()
+
+
+def _get_label_for_latex(label):
+    return label.replace('_', '\_')
 
 
 def _get_max_frequency(frequencies):
