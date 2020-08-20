@@ -259,12 +259,10 @@ class RandomDisplacements(object):
             eigvecs = self._eigvecs_ii
             qpoints = self._comm_points[self._ii] / float(N)
 
-        d2f = DynmatToForceConstants(
-            self._dynmat.primitive,
-            self._dynmat.supercell,
-            eigenvalues=eigvals,
-            eigenvectors=eigvecs,
-            commensurate_points=qpoints)
+        d2f = DynmatToForceConstants(self._dynmat.primitive,
+                                     self._dynmat.supercell)
+        d2f.commensurate_points = qpoints
+        d2f.create_dynamical_matrices(eigvals, eigvecs)
         d2f.run()
         self._force_constants = d2f.force_constants
 

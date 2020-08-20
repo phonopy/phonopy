@@ -32,6 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
 import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (get_supercell, get_primitive,
@@ -202,30 +203,6 @@ class DynmatToForceConstants(object):
             Supercell, not necessarily being an instance of Supercell class.
         primitive : Primitive
             Primitive cell
-        eigenvalues : ndarray
-            Phonon eigenvalues as the solution of dynamical matrices at
-            commensurate q-points.
-            shape=(det(supercell_matrix), num_band), dtype='double', order='C'
-            where ``num_band`` is 3 x number of atoms in primitive cell.
-        eigenvectors : ndarray
-            Phonon eigenvectors as the solution of dynamical matrices at
-            commensurate q-points.
-            shape=(det(supercell_matrix), num_band, num_band)
-            dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
-            order='C'.
-            where ``num_band`` is 3 x number of atoms in primitive cell.
-        dynamical_matrices : ndarray
-            Dynamical matrices at commensurate q-points.
-            shape=(det(supercell_matrix), num_band, num_band)
-            dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
-            order='C'.
-            where ``num_band`` is 3 x number of atoms in primitive cell.
-        commensurate_points : ndarray
-            Commensurate q-points corresponding to supercell_matrix. The order
-            has to be the same as those of eigenvalues and eigenvectors. As
-            the default behaviour, commensurate q-points are generated unless
-            they are given.
-            shape=(det(supercell_matrix), 3), dtype='double', order='C'
         is_full_fc : bool
             This controls the matrix shape of calculated force constants.
             True and False give the full and compact force cosntants,
@@ -255,6 +232,19 @@ class DynmatToForceConstants(object):
 
         self._dtype_complex = ("c%d" % (np.dtype('double').itemsize * 2))
 
+        if dynamical_matrices is not None or commensurate_points is not None:
+            warnings.warn("Instanciation init parameters of dynamical_matrices"
+                          " and commensurate_points are deprecated. Use "
+                          "respecitve attributes.",
+                          DeprecationWarning)
+
+        if eigenvalues is not None or eigenvectors is not None:
+            warnings.warn("Instanciation init parameters of eigenvalues and "
+                          "eigenvectors are deprecated. Use "
+                          "create_dynamical_matrices method.",
+                          DeprecationWarning)
+
+
         if eigenvalues is not None and eigenvectors is not None:
             self.create_dynamical_matrices(
                 eigenvalues=eigenvalues,
@@ -270,13 +260,29 @@ class DynmatToForceConstants(object):
         return self._fc
 
     def get_force_constants(self):
+        warnings.warn("Use attribute, force_constants.", DeprecationWarning)
         return self.force_constants
 
     @property
     def commensurate_points(self):
+        """Commensurate points in supercell with respect to primitive cell
+
+        Returns for getter and Parameters for setter
+        --------------------------------------------
+        commensurate_points : ndarray (array_like for setter)
+            Commensurate q-points corresponding to supercell_matrix. The order
+            has to be the same as those of eigenvalues and eigenvectors. As
+            the default behaviour, commensurate q-points are generated unless
+            they are given.
+            shape=(det(supercell_matrix), 3), dtype='double', order='C'
+
+        """
+
         return self._commensurate_points
 
     def get_commensurate_points(self):
+        warnings.warn("Use attribute, commensurate_points.",
+                      DeprecationWarning)
         return self.commensurate_points
 
     @commensurate_points.setter
@@ -286,9 +292,22 @@ class DynmatToForceConstants(object):
 
     @property
     def dynamical_matrices(self):
+        """Numerical matrices of dynamical matrices
+
+        Returns for getter and Parameters for setter
+        --------------------------------------------
+        dynamical_matrices : ndarray (array_like for setter)
+            Dynamical matrices at commensurate q-points.
+            shape=(det(supercell_matrix), num_band, num_band)
+            dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
+            order='C'.
+            where ``num_band`` is 3 x number of atoms in primitive cell.
+
+        """
         return self._dynmat
 
     def get_dynamical_matrices(self):
+        warnings.warn("Use attribute, dynamical_matrix.", DeprecationWarning)
         return self.dynamical_matrices
 
     @dynamical_matrices.setter
@@ -296,14 +315,32 @@ class DynmatToForceConstants(object):
         self._dynmat = np.array(dynmat, dtype=self._dtype_complex, order='C')
 
     def set_dynamical_matrices(self, dynmat):
+        warnings.warn("Use attribute, dynamical_matrix.", DeprecationWarning)
         self.dynamical_matrices = dynmat
 
-    def create_dynamical_matrices(self, eigenvalues=None, eigenvectors=None):
+    def create_dynamical_matrices(self, eigenvalues, eigenvectors):
+        """Create dynamcial matrices from eigenvalues and eigenvectors pairs
+
+        Parameters
+        ----------
+        eigenvalues : ndarray
+            Phonon eigenvalues as the solution of dynamical matrices at
+            commensurate q-points.
+            shape=(det(supercell_matrix), num_band), dtype='double', order='C'
+            where ``num_band`` is 3 x number of atoms in primitive cell.
+        eigenvectors : ndarray
+            Phonon eigenvectors as the solution of dynamical matrices at
+            commensurate q-points.
+            shape=(det(supercell_matrix), num_band, num_band)
+            dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
+            order='C'.
+            where ``num_band`` is 3 x number of atoms in primitive cell.
+
+        """
         dm = []
         for eigvals, eigvecs in zip(eigenvalues, eigenvectors):
             dm.append(np.dot(np.dot(eigvecs, np.diag(eigvals)),
                              eigvecs.T.conj()))
-
         self.dynamical_matrices = dm
 
     def _inverse_transformation(self):
