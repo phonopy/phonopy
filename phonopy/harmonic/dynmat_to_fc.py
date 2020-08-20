@@ -105,6 +105,30 @@ def get_commensurate_points_in_integers(supercell_matrix):
     return lattice_points
 
 
+def categorize_commensurate_points(comm_points):
+    """Categorize integer commensurate points
+
+    Points are sorted by either q = -q + G or q != -q + G.
+
+    """
+
+    N = len(comm_points)
+    ii = []
+    ij = []
+    for i, p in enumerate(comm_points):
+        for j, _p in enumerate(comm_points):
+            if ((p + _p) % N == 0).all():
+                if i == j:
+                    ii.append(i)
+                elif i < j:
+                    ij.append(i)
+                break
+
+    assert len(ii) + len(ij) * 2 == len(comm_points)
+
+    return ii, ij
+
+
 def ph2fc(ph_orig, supercell_matrix):
     """Transform force constants in Phonopy instance to other shape
 
@@ -243,7 +267,6 @@ class DynmatToForceConstants(object):
                           "eigenvectors are deprecated. Use "
                           "create_dynamical_matrices method.",
                           DeprecationWarning)
-
 
         if eigenvalues is not None and eigenvectors is not None:
             self.create_dynamical_matrices(
