@@ -112,6 +112,18 @@ def get_fc2(supercell,
     return force_constants
 
 
+def compact_fc_to_full_fc(phonon, compact_fc, log_level=0):
+    fc = np.zeros((compact_fc.shape[1], compact_fc.shape[1], 3, 3),
+                  dtype='double', order='C')
+    fc[phonon.primitive.p2s_map] = compact_fc
+    distribute_force_constants_by_translations(
+        fc, phonon.primitive, phonon.supercell)
+    if log_level:
+        print("Force constants were expanded to full format.")
+
+    return fc
+
+
 def cutoff_force_constants(force_constants,
                            supercell,
                            primitive,

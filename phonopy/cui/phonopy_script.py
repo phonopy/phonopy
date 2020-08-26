@@ -37,7 +37,7 @@ import os
 import numpy as np
 from phonopy import Phonopy, __version__
 from phonopy.harmonic.force_constants import (
-    distribute_force_constants_by_translations)
+    distribute_force_constants_by_translations, compact_fc_to_full_fc)
 from phonopy.structure.cells import print_cell
 from phonopy.structure.cells import isclose as cells_isclose
 from phonopy.structure.atoms import atom_data, symbol_map
@@ -571,18 +571,6 @@ def produce_force_constants(phonon,
                 calculate_full_force_constants=False,
                 fc_calculator=fc_calculator,
                 fc_calculator_options=fc_calculator_options)
-
-
-def compact_fc_to_full_fc(phonon, compact_fc, log_level=0):
-    fc = np.zeros((compact_fc.shape[1], compact_fc.shape[1], 3, 3),
-                  dtype='double', order='C')
-    fc[phonon.primitive.p2s_map] = compact_fc
-    distribute_force_constants_by_translations(
-        fc, phonon.primitive, phonon.supercell)
-    if log_level:
-        print("Force constants were expanded to full format.")
-
-    return fc
 
 
 def store_force_constants(phonon,
