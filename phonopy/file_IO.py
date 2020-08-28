@@ -59,6 +59,7 @@ def write_FORCE_SETS(dataset, filename='FORCE_SETS'):
     lines = get_FORCE_SETS_lines(dataset)
     with open(filename, 'w') as w:
         w.write("\n".join(lines))
+        w.write("\n")
 
 
 def get_FORCE_SETS_lines(dataset, forces=None):
