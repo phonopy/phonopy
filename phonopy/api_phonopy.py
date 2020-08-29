@@ -2919,12 +2919,14 @@ class Phonopy(object):
             msg = "hdf5_settings parameter has not yet been implemented."
             raise NotImplementedError(msg)
 
-        phpy_yaml = PhonopyYaml(settings=settings)
+        if settings is None:
+            _settings = {}
+        else:
+            _settings = settings.copy()
         if (not forces_in_dataset(self.dataset) and
             self.force_constants is not None):
-            phpy_yaml.settings.update({'force_sets': False,
-                                       'displacements': False,
-                                       'force_constants': True})
+            _settings.update({'force_constants': True})
+        phpy_yaml = PhonopyYaml(settings=_settings)
         phpy_yaml.set_phonon_info(self)
         with open(filename, 'w') as w:
             w.write(str(phpy_yaml))
