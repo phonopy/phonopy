@@ -208,7 +208,7 @@ def _update_options(fc_calculator_options):
         raise ImportError("ALM python module was not found.")
 
     # Default settings.
-    alm_options = {'solver': 'SimplicialLDLT',
+    alm_options = {'solver': 'dense',
                    'ndata': None,
                    'nstart': None,
                    'nend': None,
