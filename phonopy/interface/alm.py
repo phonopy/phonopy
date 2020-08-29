@@ -110,6 +110,15 @@ def run_alm(supercell,
         alm_options['nstart'],
         alm_options['nend'])
 
+    if log_level > 1:
+        print("")
+        print("  ndata: %d" % len(displacements))
+        for key, val in alm_options.items():
+            if val is not None:
+                print("  %s: %s" % (key, val))
+        print("")
+        print(" " + "-" * 67)
+
     if log_level > 0:
         log_level_alm = log_level - 1
     else:
@@ -143,6 +152,7 @@ def run_alm(supercell,
         alm.define(
             maxorder,
             cutoff_radii=cutoff_radii,
+            nbody=alm_options['nbody'],
             symmetrization_basis=alm_options['symmetrization_basis'])
         alm.displacements = _disps
         alm.forces = _forces
@@ -202,6 +212,7 @@ def _update_options(fc_calculator_options):
                    'ndata': None,
                    'nstart': None,
                    'nend': None,
+                   'nbody': None,
                    'cutoff': None,
                    'symmetrization_basis': 'Lattice',
                    'output_filename_prefix': None}
@@ -211,6 +222,7 @@ def _update_options(fc_calculator_options):
                             'ndata': int,
                             'nstart': int,
                             'nend': int,
+                            'nbody': np.intc,
                             'output_filename_prefix': str,
                             'solver': str,
                             'symmetrization_basis': str}
