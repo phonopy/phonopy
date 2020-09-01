@@ -66,7 +66,7 @@ def run_alm(supercell,
             displacements,
             forces,
             maxorder,
-            is_compact_fc,
+            is_compact_fc=False,
             options=None,
             log_level=0):
     fcs = None  # This is returned.
@@ -93,7 +93,14 @@ def run_alm(supercell,
     if log_level == 1:
         print("Increase log-level to watch detailed ALM log.")
 
-    shape = (maxorder, num_elems, num_elems)
+    if 'norder' in alm_options:
+        _maxorder = alm_options['norder']
+    elif 'maxorder' in alm_options:
+        _maxorder = alm_options['maxorder']
+    else:
+        _maxorder = maxorder
+
+    shape = (_maxorder, num_elems, num_elems)
     cutoff_radii = -np.ones(shape, dtype='double')
     if alm_options['cutoff'] is not None:
         if len(alm_options['cutoff']) == 1:
@@ -132,8 +139,8 @@ def run_alm(supercell,
     with ALM(lattice, positions, numbers) as alm:
         if log_level > 0:
             if alm_options['cutoff'] is not None:
-                for i in range(maxorder):
-                    if maxorder > 1:
+                for i in range(_maxorder):
+                    if _maxorder > 1:
                         print("fc%d" % (i + 2))
                     print(("cutoff" + " %6s" * num_elems)
                           % tuple(alm.kind_names.values()))
@@ -150,7 +157,7 @@ def run_alm(supercell,
         alm.verbosity = log_level_alm
 
         alm.define(
-            maxorder,
+            _maxorder,
             cutoff_radii=cutoff_radii,
             nbody=alm_options['nbody'],
             symmetrization_basis=alm_options['symmetrization_basis'])
@@ -175,7 +182,7 @@ def run_alm(supercell,
 
         fcs = _extract_fc_from_alm(alm,
                                    natom,
-                                   maxorder,
+                                   _maxorder,
                                    is_compact_fc,
                                    p2s_map=p2s_map,
                                    p2p_map=p2p_map)
@@ -219,6 +226,8 @@ def _update_options(fc_calculator_options):
 
     if fc_calculator_options is not None:
         alm_option_types = {'cutoff': np.double,
+                            'maxorder': int,
+                            'norder': int,
                             'ndata': int,
                             'nstart': int,
                             'nend': int,
