@@ -182,7 +182,7 @@ def run_alm(supercell,
 
         fcs = _extract_fc_from_alm(alm,
                                    natom,
-                                   _maxorder,
+                                   maxorder,
                                    is_compact_fc,
                                    p2s_map=p2s_map,
                                    p2p_map=p2p_map)
