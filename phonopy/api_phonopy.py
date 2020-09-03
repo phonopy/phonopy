@@ -2884,7 +2884,8 @@ class Phonopy(object):
 
     def save(self,
              filename="phonopy_params.yaml",
-             settings=None):
+             settings=None,
+             hdf5_settings=None):
         """Save phonopy parameters into file.
 
         Parameters
@@ -2892,7 +2893,6 @@ class Phonopy(object):
         filename: str, optional
             File name. Default is "phonopy_params.yaml"
         settings: dict, optional
-
             It is described which parameters are written out. Only the
             settings expected to be updated from the following default
             settings are needed to be set in the dictionary.  The
@@ -2904,15 +2904,29 @@ class Phonopy(object):
                  'dielectric_constant': True}
             This default settings are updated by {'force_constants': True}
             when dataset is None and force_constants is not None.
+        hdf5_settings: dict, optional (To be implemented)
+            Force constants and force_sets are stored in hdf5 file when
+            they are activated in the dict. The dict has the following keys.
+            The default filename is the filename of yaml file where '.yaml' is
+            replaced by '.hdf5'.
+                'filename' : str
+                'force_constants': bool (default=False)
+                'force_sets': bool (default=False)
 
         """
 
-        phpy_yaml = PhonopyYaml(settings=settings)
+        if hdf5_settings is not None:
+            msg = "hdf5_settings parameter has not yet been implemented."
+            raise NotImplementedError(msg)
+
+        if settings is None:
+            _settings = {}
+        else:
+            _settings = settings.copy()
         if (not forces_in_dataset(self.dataset) and
             self.force_constants is not None):
-            phpy_yaml.settings.update({'force_sets': False,
-                                       'displacements': False,
-                                       'force_constants': True})
+            _settings.update({'force_constants': True})
+        phpy_yaml = PhonopyYaml(settings=_settings)
         phpy_yaml.set_phonon_info(self)
         with open(filename, 'w') as w:
             w.write(str(phpy_yaml))

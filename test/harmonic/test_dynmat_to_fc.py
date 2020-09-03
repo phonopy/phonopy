@@ -15,7 +15,8 @@ data_dir = os.path.dirname(os.path.abspath(__file__))
 class TestGetCommensuratePoints(unittest.TestCase):
 
     def setUp(self):
-        self._smat = np.dot([[-1, 1, 1], [1, -1, 1], [1, 1, -1]], np.diag([2, 2, 2]))
+        self._smat = np.dot([[-1, 1, 1], [1, -1, 1], [1, 1, -1]],
+                            np.diag([2, 2, 2]))
         self._comm_points = get_commensurate_points(self._smat)
 
     def tearDown(self):

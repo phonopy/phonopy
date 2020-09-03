@@ -35,7 +35,8 @@
 import numpy as np
 from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
 from phonopy.harmonic.dynmat_to_fc import (
-    get_commensurate_points_in_integers, DynmatToForceConstants)
+    get_commensurate_points_in_integers, DynmatToForceConstants,
+    categorize_commensurate_points)
 from phonopy.units import VaspToTHz, THzToEv, Kb, Hbar, AMU, EV, Angstrom, THz
 
 
@@ -169,12 +170,6 @@ class RandomDisplacements(object):
         # The aim is to produce force constants from modified frequencies.
         self._force_constants = None
 
-    def _setup_sampling_qpoints(self, slat, plat):
-        smat = np.rint(np.dot(slat, np.linalg.inv(plat)).T).astype(int)
-        self._comm_points = get_commensurate_points_in_integers(smat)
-        self._ii, self._ij = self._categorize_points()
-        assert len(self._ii) + len(self._ij) * 2 == len(self._comm_points)
-
     def run(self, T, number_of_snapshots=1, random_seed=None, randn=None):
         """
 
@@ -259,12 +254,10 @@ class RandomDisplacements(object):
             eigvecs = self._eigvecs_ii
             qpoints = self._comm_points[self._ii] / float(N)
 
-        d2f = DynmatToForceConstants(
-            self._dynmat.primitive,
-            self._dynmat.supercell,
-            eigenvalues=eigvals,
-            eigenvectors=eigvecs,
-            commensurate_points=qpoints)
+        d2f = DynmatToForceConstants(self._dynmat.primitive,
+                                     self._dynmat.supercell)
+        d2f.commensurate_points = qpoints
+        d2f.create_dynamical_matrices(eigvals, eigvecs)
         d2f.run()
         self._force_constants = d2f.force_constants
 
@@ -289,6 +282,11 @@ class RandomDisplacements(object):
                 self._eigvecs_ij.append(eigvecs)
                 self._phase_ij.append(
                     np.exp(2j * np.pi * np.dot(pos, q)).reshape(-1, 1))
+
+    def _setup_sampling_qpoints(self, slat, plat):
+        smat = np.rint(np.dot(slat, np.linalg.inv(plat)).T).astype(int)
+        self._comm_points = get_commensurate_points_in_integers(smat)
+        self._ii, self._ij = categorize_commensurate_points(self._comm_points)
 
     def _solve_ii(self, T, number_of_snapshots, randn=None):
         """
@@ -355,17 +353,3 @@ class RandomDisplacements(object):
                 np.sqrt(self._unit_conversion / freqs * (0.5 + n)),
                 0)
         return sigma
-
-    def _categorize_points(self):
-        N = len(self._comm_points)
-        ii = []
-        ij = []
-        for i, p in enumerate(self._comm_points):
-            for j, _p in enumerate(self._comm_points):
-                if ((p + _p) % N == 0).all():
-                    if i == j:
-                        ii.append(i)
-                    elif i < j:
-                        ij.append(i)
-                    break
-        return ii, ij

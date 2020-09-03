@@ -69,12 +69,22 @@ def parse_set_of_forces(num_atoms,
                 forces = vasprun.read_forces()
             except RuntimeError:
                 raise RuntimeError(
-                    "Could not parse \"%s\". Please check the content." %
-                    filename)
+                    "Could not parse \"%s\". Probably this vasprun.xml "
+                    "is broken or some value diverges. Check this calculation "
+                    "carefully before sending questions to the phonopy "
+                    "mailing list." % filename)
             except ValueError:
                 raise ValueError(
-                    "Could not parse \"%s\". Please check the content." %
-                    filename)
+                    "Could not parse \"%s\". Probably this vasprun.xml "
+                    "is broken or some value diverges. Check this calculation "
+                    "carefully before sending questions to the phonopy "
+                    "mailing list." % filename)
+            except xml.parsers.expat.ExpatError:
+                raise xml.parsers.expat.ExpatError(
+                    "Could not parse \"%s\". Probably this vasprun.xml "
+                    "is broken or some value diverges. Check this calculation "
+                    "carefully before sending questions to the phonopy "
+                    "mailing list." % filename)
             force_sets.append(forces)
             count += 1
 

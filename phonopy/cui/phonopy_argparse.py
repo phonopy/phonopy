@@ -161,8 +161,8 @@ def get_parser(fc_symmetry=False,
         default=None,
         help="Frequency unit conversion factor")
     parser.add_argument(
-        "--fc", "--force-constants", nargs=1, dest="create_force_constants",
-        default=None,
+        "--fc", "--force-constants", metavar="FILE",
+        dest="create_force_constants", default=None,
         help=("Create FORCE_CONSTANTS from vaspurn.xml. "
               "vasprun.xml has to be passed as argument."))
     parser.add_argument(

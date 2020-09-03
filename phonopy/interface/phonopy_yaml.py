@@ -32,6 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import os
 import numpy as np
 import yaml
 try:
@@ -152,8 +153,7 @@ class PhonopyYaml(object):
 
     def read(self, filename):
         self.yaml_filename = filename
-        with open(filename) as infile:
-            self._load(infile)
+        self._load(filename)
 
     @property
     def yaml_data(self):
@@ -425,11 +425,28 @@ class PhonopyYaml(object):
                                  % tuple(v))
         return lines
 
-    def _load(self, fp):
-        self._yaml = yaml.load(fp, Loader=Loader)
+    def _load(self, filename):
+        _, ext = os.path.splitext(filename)
+        if ext == '.xz' or ext == '.lzma':
+            try:
+                import lzma
+            except ImportError:
+                raise("Reading a lzma compressed file is not supported "
+                      "by this python version.")
+            with lzma.open(filename) as f:
+                self._yaml = yaml.load(f, Loader=Loader)
+        elif ext == '.gz':
+            import gzip
+            with gzip.open(filename) as f:
+                self._yaml = yaml.load(f, Loader=Loader)
+        else:
+            with open(filename, 'r') as f:
+                self._yaml = yaml.load(f, Loader=Loader)
+
         if type(self._yaml) is str:
             msg = "Could not open %s's yaml file." % self.command_name
             raise TypeError(msg)
+
         self.parse()
 
     def _parse_transformation_matrices(self):

@@ -151,16 +151,16 @@ def get_options():
         help="Show labels at band segments")
     parser.add_argument(
         "--dmax", dest="dos_max", type=float,
-        help="Maximum DOS plotted")
+        help="Maximum DOS plotted (legacy plot only)")
     parser.add_argument(
         "--dmin", dest="dos_min", type=float,
-        help="Minimum DOS plotted")
+        help="Minimum DOS plotted (legacy plot only)")
     parser.add_argument(
         "--dos", dest="dos",
         help="Read dos.dat type file and plot with band structure")
     parser.add_argument(
         "--dos-factor", dest="dos_factor", type=float,
-        help="Factor to be multiplied with DOS.")
+        help="Factor to be multiplied with DOS (legacy plot only)")
     parser.add_argument(
         "--factor", dest="factor", type=float,
         help="Conversion factor to favorite frequency unit")
@@ -172,10 +172,10 @@ def get_options():
         help="Minimum frequency plotted")
     parser.add_argument(
         "--gnuplot", dest="is_gnuplot", action="store_true",
-        help="Output in gnuplot data style")
+        help="Output in gnuplot data style (legacy plot only)")
     parser.add_argument(
         "-i", "--indices", dest="pdos_indices",
-        help="Indices like 1 2, 3 4 5 6...")
+        help="Indices like 1 2, 3 4 5 6... (legacy plot only)")
     parser.add_argument(
         "--legend", dest="show_legend", action="store_true",
         help="Show legend")
@@ -184,22 +184,22 @@ def get_options():
         help="Plot in legacy style")
     parser.add_argument(
         "--line", "-l", dest="is_vertical_line", action="store_true",
-        help="Vertical line is drawn at between paths")
+        help="Vertical line is drawn at between paths (legacy plot only)")
     parser.add_argument(
         "-o", "--output", dest="output_filename", action="store",
         help="Output filename of PDF plot")
     parser.add_argument(
         "--xlabel", dest="xlabel",
-        help="Specify x-label")
+        help="Specify x-label (legacy plot only)")
     parser.add_argument(
         "--ylabel", dest="ylabel",
-        help="Specify y-label")
+        help="Specify y-label (legacy plot only)")
     parser.add_argument(
         "--points", dest="points",
-        help="Draw points(o, '*', v, ^, x, p, d etc)")
+        help="Draw points (o, '*', v, ^, x, p, d etc) (legacy plot only)")
     parser.add_argument(
         "-t", "--title", dest="title",
-        help="Title of plot")
+        help="Title of plot (legacy plot only)")
     parser.add_argument(
         "filenames", nargs='*',
         help="Filenames of phonon band structure result (band.yaml)")
@@ -329,7 +329,7 @@ def old_plot(args):
         else:
             plt.xlabel(args.xlabel)
         if args.ylabel is None:
-            plt.ylabel('Frequency(THz)')
+            plt.ylabel('Frequency')
         else:
             plt.ylabel(args.ylabel)
 
@@ -418,12 +418,6 @@ def plot(args):
     rc('text', usetex=True)
     from mpl_toolkits.axes_grid1 import ImageGrid
 
-    # plt.xlim(distances[0], distances[-1])
-    if args.f_max is not None:
-        plt.ylim(top=args.f_max)
-    if args.f_min is not None:
-        plt.ylim(bottom=args.f_min)
-
     if len(args.filenames) == 0:
         filenames = ['band.yaml', ]
     else:
@@ -450,6 +444,12 @@ def plot(args):
                     axes_pad=0.11,
                     add_all=True,
                     label_mode="L")
+    for ax in axs:
+        if args.f_min:
+            ax.set_ylim(ymin=args.f_min)
+        if args.f_max:
+            ax.set_ylim(ymax=args.f_max)
+
     band_plot = BandPlot(axs)
     band_plot.decorate(*plot_data)
 
@@ -458,14 +458,19 @@ def plot(args):
             'r--', 'b--', 'g--', 'c--', 'm--', 'y--', 'k--']
     for (l, p, f, d), fmt, label in zip(plots_data, fmts, filenames):
         if args.show_legend:
-            band_plot.plot(d, f, p, fmt=fmt, label=label)
+            band_plot.plot(d, np.array(f) * args.factor, p, fmt=fmt,
+                           label=_get_label_for_latex(label))
         else:
-            band_plot.plot(d, f, p, fmt=fmt)
+            band_plot.plot(d, np.array(f) * args.factor, p, fmt=fmt)
 
     if args.output_filename is not None:
         savefig(plt, args.output_filename)
     else:
         plt.show()
+
+
+def _get_label_for_latex(label):
+    return label.replace('_', '\_')
 
 
 def _get_max_frequency(frequencies):
@@ -531,7 +536,10 @@ def main(args):
         import matplotlib
         matplotlib.use('Agg')
 
-    old_plot(args)
+    if args.is_legacy_plot:
+        old_plot(args)
+    else:
+        plot(args)
 
 
 def _plot_dos(d, f, dmax):
