@@ -32,6 +32,9 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import sys
+import gzip
+import yaml
 import numpy as np
 from .core import GruneisenBase
 from phonopy.structure.grid_points import get_qpoints
@@ -59,10 +62,10 @@ class GruneisenMesh(GruneisenBase):
                                delta_strain=delta_strain)
         self._mesh = np.array(mesh, dtype='intc')
         self._factor = factor
-        primitive = dynmat.get_primitive()
+        self._cell = dynmat.get_primitive()
         self._qpoints, self._weights = get_qpoints(
             self._mesh,
-            np.linalg.inv(primitive.get_cell()),
+            np.linalg.inv(self._cell.get_cell()),
             q_mesh_shift=shift,
             is_time_reversal=is_time_reversal,
             is_gamma_center=is_gamma_center,
@@ -103,25 +106,69 @@ class GruneisenMesh(GruneisenBase):
         """
         return self._eigenvectors
 
+    def write_yaml(self, comment=None, filename=None, compression=None):
+        if filename is not None:
+            _filename = filename
 
-    def write_yaml(self, filename="gruneisen.yaml"):
-        f = open(filename, 'w')
-        f.write("mesh: [ %5d, %5d, %5d ]\n" % tuple(self._mesh))
-        f.write("nqpoint: %d\n" % len(self._qpoints))
-        f.write("phonon:\n")
-        for q, w, gs, freqs in zip(self._qpoints,
+        if compression is None:
+            if filename is None:
+                _filename = "gruneisen.yaml"
+            with open(_filename, 'w') as w:
+                self._write_yaml(w, comment)
+        elif compression == 'gzip':
+            if filename is None:
+                _filename = "gruneisen.yaml.gz"
+            with gzip.open(_filename, 'wb') as w:
+                self._write_yaml(w, comment, is_binary=True)
+        elif compression == 'lzma':
+            try:
+                import lzma
+            except ImportError:
+                raise("Reading a lzma compressed file is not supported "
+                      "by this python version.")
+            if filename is None:
+                _filename = "gruneisen.yaml.xz"
+            with lzma.open(_filename, 'w') as w:
+                self._write_yaml(w, comment, is_binary=True)
+
+    def _write_yaml(self, w, comment, is_binary=False):
+        natom = self._cell.get_number_of_atoms()
+        rec_lattice = np.linalg.inv(self._cell.get_cell())  # column vectors
+        text = []
+        text.append("mesh: [ %5d, %5d, %5d ]" % tuple(self._mesh))
+        text.append("nqpoint: %d" % len(self._qpoints))
+        text.append("reciprocal_lattice:")
+        for vec, axis in zip(rec_lattice.T, ('a*', 'b*', 'c*')):
+            text.append("- [ %12.8f, %12.8f, %12.8f ] # %2s" %
+                        (tuple(vec) + (axis,)))
+        text.append("natom:   %-7d" % natom)
+        text.append(str(self._cell))
+        text.append('')
+        text.append("phonon:")
+        for q, m, gs, freqs in zip(self._qpoints,
                                    self._weights,
                                    self._gamma,
                                    self._frequencies):
-            f.write("- q-position: [ %10.7f, %10.7f, %10.7f ]\n" % tuple(q))
-            f.write("  multiplicity: %d\n" % w)
-            f.write("  band:\n")
+            text.append("- q-position: [ %10.7f, %10.7f, %10.7f ]" % tuple(q))
+            text.append("  multiplicity: %d" % m)
+            text.append("  band:")
             for j, (g, freq) in enumerate(zip(gs, freqs)):
-                f.write("  - # %d\n" % (j + 1))
-                f.write("    gruneisen: %15.10f\n" % g)
-                f.write("    frequency: %15.10f\n" % freq)
-            f.write("\n")
-        f.close()
+                text.append("  - # %d" % (j + 1))
+                text.append("    gruneisen: %15.10f" % g)
+                text.append("    frequency: %15.10f" % freq)
+            text.append("")
+
+        self._write_lines(w, text, is_binary)
+
+    def _write_lines(self, w, lines, is_binary):
+        text = "\n".join(lines)
+        if is_binary:
+            if sys.version_info < (3, 0):
+                w.write(bytes(text))
+            else:
+                w.write(bytes(text, 'utf8'))
+        else:
+            w.write(text)
 
     def write_hdf5(self, filename="gruneisen.hdf5"):
         import h5py
