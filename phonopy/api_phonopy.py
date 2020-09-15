@@ -2158,7 +2158,7 @@ class Phonopy(object):
                                      t_max=t_max,
                                      t_min=t_min)
         else:
-            tp.set_temperatures(temperatures)
+            tp.temperatures = temperatures
         tp.run()
         self._thermal_properties = tp
 
