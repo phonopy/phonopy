@@ -13,4 +13,5 @@ def ph_nacl():
     return phonopy.load(yaml_filename,
                         force_sets_filename=force_sets_filename,
                         born_filename=born_filename,
+                        is_compact_fc=False,
                         log_level=1, produce_fc=True)
