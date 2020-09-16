@@ -157,6 +157,8 @@ class RandomDisplacements(object):
         s2p = primitive.s2p_map
         p2p = primitive.p2p_map
         self._s2pp = [p2p[i] for i in s2p]
+        # Transformation matrix of scaled supercell positions to primitive
+        self._tmat = np.dot(supercell.cell, np.linalg.inv(primitive.cell)).T
 
         self._eigvals_ii = []
         self._eigvecs_ii = []
@@ -262,26 +264,42 @@ class RandomDisplacements(object):
         self._force_constants = d2f.force_constants
 
     def _prepare(self):
-        pos = self._dynmat.supercell.scaled_positions
+        spos = np.dot(self._dynmat.supercell.scaled_positions, self._tmat.T)
+        ppos = self._dynmat.primitive.scaled_positions
+        lpos = spos - ppos[self._s2pp]
         N = len(self._comm_points)
         for q in self._comm_points[self._ii] / float(N):
             self._dynmat.run(q)
-            dm = self._dynmat.dynamical_matrix
-            eigvals, eigvecs = np.linalg.eigh(dm.real)
+            dm = self._C_to_D(self._dynmat.dynamical_matrix, ppos, q)
+            self._phase_ii.append(
+                np.cos(2 * np.pi * np.dot(lpos, q)).reshape(-1, 1))
+            eigvals, eigvecs = np.linalg.eigh(dm)
             self._eigvals_ii.append(eigvals)
             self._eigvecs_ii.append(eigvecs)
-            self._phase_ii.append(
-                np.cos(2 * np.pi * np.dot(pos, q)).reshape(-1, 1))
 
         if self._ij:
             for q in self._comm_points[self._ij] / float(N):
                 self._dynmat.run(q)
                 dm = self._dynmat.dynamical_matrix
                 eigvals, eigvecs = np.linalg.eigh(dm)
-                self._eigvals_ij.append(eigvals)
+                self._eigvals_ij.append(eigvals.real)
                 self._eigvecs_ij.append(eigvecs)
                 self._phase_ij.append(
-                    np.exp(2j * np.pi * np.dot(pos, q)).reshape(-1, 1))
+                    np.exp(2j * np.pi * np.dot(spos, q)).reshape(-1, 1))
+
+    def _C_to_D(self, dm, ppos, q):
+        """Transform C-type dynamical matrix to D-type
+
+        Taking real part is valid only when q is at Gamma or on BZ boundary,
+        i.e., q=G-q and q in BZ are assumed.
+
+        D(q) = (D(q) + D(G-q)) / 2 -> real matrix.
+
+        """
+
+        V = np.repeat(2j * np.pi * np.dot(ppos, q), 3)
+        dm = ((V * (V.conj() * dm).T).T).real  # C-type to D-type
+        return dm
 
     def _setup_sampling_qpoints(self, slat, plat):
         smat = np.rint(np.dot(slat, np.linalg.inv(plat)).T).astype(int)
