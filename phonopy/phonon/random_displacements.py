@@ -297,7 +297,7 @@ class RandomDisplacements(object):
 
         """
 
-        V = np.repeat(2j * np.pi * np.dot(ppos, q), 3)
+        V = np.repeat(np.exp(2j * np.pi * np.dot(ppos, q)), 3)
         dm = ((V * (V.conj() * dm).T).T).real  # C-type to D-type
         return dm
 
