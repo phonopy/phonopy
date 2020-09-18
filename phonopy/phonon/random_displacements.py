@@ -158,7 +158,10 @@ class RandomDisplacements(object):
         p2p = primitive.p2p_map
         self._s2pp = [p2p[i] for i in s2p]
         # Transformation matrix of scaled supercell positions to primitive
-        self._tmat = np.dot(supercell.cell, np.linalg.inv(primitive.cell)).T
+        tmat = np.dot(supercell.cell, np.linalg.inv(primitive.cell))
+        self._spos = np.dot(self._dynmat.supercell.scaled_positions, tmat)
+        self._ppos = self._dynmat.primitive.scaled_positions
+        self._lpos = self._spos - self._ppos[self._s2pp]
 
         self._eigvals_ii = []
         self._eigvecs_ii = []
@@ -264,9 +267,9 @@ class RandomDisplacements(object):
         self._force_constants = d2f.force_constants
 
     def _prepare(self):
-        spos = np.dot(self._dynmat.supercell.scaled_positions, self._tmat.T)
-        ppos = self._dynmat.primitive.scaled_positions
-        lpos = spos - ppos[self._s2pp]
+        spos = self._spos
+        ppos = self._ppos
+        lpos = self._lpos
         N = len(self._comm_points)
         for q in self._comm_points[self._ii] / float(N):
             self._dynmat.run(q)
@@ -326,6 +329,8 @@ class RandomDisplacements(object):
                 _randn, sigmas, self._eigvecs_ii, self._phase_ii):
             u_red = np.dot(norm_dist * sigma, eigvecs.T).reshape(
                 number_of_snapshots, -1, 3)[:, self._s2pp, :]
+            # u_red.shape = (snapshots, satoms, 3)
+            # phase.shape = (satoms,)
             u += u_red * phase
 
         return u
@@ -349,6 +354,8 @@ class RandomDisplacements(object):
                 _randn, sigmas, self._eigvecs_ij, self._phase_ij):
             u_red = np.dot(norm_dist * sigma, eigvecs.T).reshape(
                 2, number_of_snapshots, -1, 3)[:, :, self._s2pp, :]
+            # u_red.shape = (2, snapshots, satoms, 3)
+            # phase.shape = (satoms,)
             u += (u_red[0] * phase).real
             u -= (u_red[1] * phase).imag
 
@@ -371,3 +378,6 @@ class RandomDisplacements(object):
                 np.sqrt(self._unit_conversion / freqs * (0.5 + n)),
                 0)
         return sigma
+
+    def _run_correlation_matrix(self):
+        pass
