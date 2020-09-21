@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>CASTEP &amp; phonopy calculation &#8212; Phonopy v.2.7.1</title>
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="VASP-DFPT &amp; phonopy calculation" href="vasp-dfpt.html" />
+    <link rel="prev" title="FHI-aims &amp; phonopy calculations" href="aims.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Phonopy</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.7</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-load.html">phonopy-load command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="documentation.html">Documentation</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">CASTEP &amp; phonopy calculation</a><ul>
+<li><a class="reference internal" href="#nacl-castep">NaCl-castep</a></li>
+<li><a class="reference internal" href="#cr-castep">Cr-castep</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="aims.html" title="Previous Chapter: FHI-aims & phonopy calculations"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; FHI-aims & ph...</span>
+    </a>
+  </li>
+  <li>
+    <a href="vasp-dfpt.html" title="Next Chapter: VASP-DFPT & phonopy calculation"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">VASP-DFPT & p... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="body col-md-12 content" role="main">
+      
+  <div class="section" id="castep-phonopy-calculation">
+<span id="castep-interface"></span><h1>CASTEP &amp; phonopy calculation<a class="headerlink" href="#castep-phonopy-calculation" title="Permalink to this headline">¶</a></h1>
+<p>Examples to use phonopy with CASTEP as the force calculator are found
+at <code class="docutils literal notranslate"><span class="pre">example/NaCl-castep</span></code> and <code class="docutils literal notranslate"><span class="pre">example/Cr-castep</span></code>.</p>
+<p>The followings are the copies of <code class="docutils literal notranslate"><span class="pre">README</span></code> contents in these example
+directories.</p>
+<p>These are contriubted by <a class="reference external" href="https://github.com/ladyteam">&#64;ladyteam</a>.</p>
+<div class="section" id="nacl-castep">
+<h2>NaCl-castep<a class="headerlink" href="#nacl-castep" title="Permalink to this headline">¶</a></h2>
+<p>This is step-by-step example how to calculate phonon dispertion with
+CASTEP.</p>
+<ol class="arabic">
+<li><p>Generate supercell based on structrural parameters given in
+<code class="docutils literal notranslate"><span class="pre">unitcell.cell</span></code> file by running:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">--</span><span class="n">castep</span> <span class="o">-</span><span class="n">c</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">cell</span>
+</pre></div>
+</div>
+<p>In this example file unitcell.cell contains initial spin values in
+positions_frac BLOCK. As well as the value of the U parameter in
+LDA+U approximation.</p>
+</li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">make_displ_dirs.sh</span></code> bash script to make directories with input
+files needed to calculate FORCES for supercells.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">make_displ_dirs</span><span class="o">.</span><span class="n">sh</span> <span class="n">supercell</span><span class="o">.</span><span class="n">param</span> <span class="n">tail</span><span class="o">.</span><span class="n">cell</span>
+</pre></div>
+</div>
+<p>Please note file supercell.param is the standart CASTEP file with
+paremeters (convergence criteria, Ecut, functional name etc.). The
+file with name <code class="docutils literal notranslate"><span class="pre">tail.cell</span></code> contains k-mesh description, U parameter
+value, symmetry operation E, and name of pseudopotential.</p>
+</li>
+<li><p>Run CASTEP calculation in <code class="docutils literal notranslate"><span class="pre">displ-001</span></code> directory</p></li>
+<li><p>Generate <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file by running:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">castep</span> <span class="o">-</span><span class="n">f</span> <span class="n">displ</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">castep</span> <span class="n">displ</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">castep</span>
+</pre></div>
+</div>
+</li>
+<li><p>Finally plot phonon bandstructure by running the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">castep</span> <span class="o">-</span><span class="n">c</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">cell</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</div>
+<div class="section" id="cr-castep">
+<h2>Cr-castep<a class="headerlink" href="#cr-castep" title="Permalink to this headline">¶</a></h2>
+<p>This is step-by-step example how to calculate phonon dispertion with CASTEP.
+Spin-polarization example.</p>
+<ol class="arabic">
+<li><p>Generate supercell based on structrural parameters given in
+<code class="docutils literal notranslate"><span class="pre">unitcell.cell</span></code> file by running:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">--</span><span class="n">castep</span> <span class="o">-</span><span class="n">c</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">cell</span>
+</pre></div>
+</div>
+<p>In this example file <code class="docutils literal notranslate"><span class="pre">unitcell.cell</span></code> contains initial spin values in
+<code class="docutils literal notranslate"><span class="pre">positions_frac</span> <span class="pre">BLOCK</span></code>. As well as the value of the U parameter in
+LDA+U approximation.</p>
+</li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">make_displ_dirs.sh</span></code> bash script to make directories with input
+files needed to calculate FORCES for supercells.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">make_displ_dirs</span><span class="o">.</span><span class="n">sh</span> <span class="n">supercell</span><span class="o">.</span><span class="n">param</span> <span class="n">tail</span><span class="o">.</span><span class="n">cell</span>
+</pre></div>
+</div>
+<p>Please note file <code class="docutils literal notranslate"><span class="pre">supercell.param</span></code> is the standart CASTEP file with
+paremeters (convergence criteria, Ecut, functional name etc.). The
+file with name <code class="docutils literal notranslate"><span class="pre">tail.cell</span></code> contains k-mesh description, U parameter
+value, symmetry operation E, and name of pseudopotential.</p>
+</li>
+<li><p>Run CASTEP calculation in <code class="docutils literal notranslate"><span class="pre">displ-001</span></code> directory</p></li>
+<li><p>Generate <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file by running:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">castep</span> <span class="o">-</span><span class="n">f</span> <span class="n">displ</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">castep</span>
+</pre></div>
+</div>
+</li>
+<li><p>Finally plot phonon bandstructure by running the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">--</span><span class="n">pa</span><span class="o">=</span><span class="s2">&quot;-1/2 1/2 1/2 1/2 -1/2 1/2 1/2 1/2 -1/2&quot;</span> <span class="o">--</span><span class="n">castep</span> <span class="o">-</span><span class="n">c</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">cell</span> <span class="o">--</span><span class="n">band</span><span class="o">=</span><span class="s2">&quot;1/2 -1/2 1/2 0 0 0 1/4 1/4 1/4&quot;</span> <span class="o">-</span><span class="n">p</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/castep.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2009, Atsushi Togo.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.1.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

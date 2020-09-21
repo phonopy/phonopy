@@ -8,7 +8,8 @@ Interfaces to calculators
    :local:
 
 The interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT, Elk,
-SIESTA, CRYSTAL, DFTB+, TURBOMOLE, and FHI-AIMS are built in to the usual phonopy command. See the
+SIESTA, CRYSTAL, DFTB+, TURBOMOLE, FHI-AIMS, and CASTEP are built in
+to the usual phonopy command. See the
 command options and how to invoke each of them at
 :ref:`force_calculators`. :ref:`LAMMPS interface
 <external_tools_phonolammps>` is provided as an external tool by Abel
@@ -36,6 +37,7 @@ pages.
    turbomole
    cp2k
    aims
+   castep
 
 The VASP DFPT
 interface reads ``vasprun.xml`` and creates ``FORCE_CONSTANTS`` file.
