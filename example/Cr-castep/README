@@ -1,0 +1,24 @@
+This is step-by-step example how to calculate phonon dispertion with CASTEP.
+Spin-polarization example.
+1. Generate supercell based on structrural parameters given in unitcell.cell 
+file by running:
+% phonopy -d --dim="2 2 2" --castep -c unitcell.cell
+
+In this example file unitcell.cell contains initial spin values in  positions_frac BLOCK. 
+As well as the value of the U parameter in LDA+U approximation.
+
+2. Use make_displ_dirs.sh bash script to make directories with input files needed to 
+calculate FORCES for supercells. 
+% make_displ_dirs.sh supercell.param tail.cell
+
+Please note file supercell.param is the standart CASTEP file with paremeters (convergence 
+criteria, Ecut, functional name etc.). The file with name tail.cell contains k-mesh
+description,  U parameter value, symmetry operation E, and name of pseudopotential.
+
+3. Run CASTEP calculation in displ-001 directory
+
+4. Generate FORCE_SETS file by running:
+% phonopy --castep -f displ-001/supercell.castep
+
+5. Finally plot phonon bandstructure by running the following command:
+% phonopy --dim="2 2 2" --pa="-1/2 1/2 1/2 1/2 -1/2 1/2 1/2 1/2 -1/2" --castep -c unitcell.cell --band="1/2 -1/2 1/2 0 0 0 1/4 1/4 1/4" -p
