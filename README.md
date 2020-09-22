@@ -1,8 +1,8 @@
 [![Version Badge](https://anaconda.org/conda-forge/phonopy/badges/version.svg)](https://anaconda.org/conda-forge/phonopy)
 [![Downloads Badge](https://anaconda.org/conda-forge/phonopy/badges/downloads.svg)](https://anaconda.org/conda-forge/phonopy)
 [![PyPI](https://img.shields.io/pypi/dm/phonopy.svg?maxAge=2592000)](https://pypi.python.org/pypi/phonopy)
-[![Build Status](https://travis-ci.org/phonopy/phonopy.svg?branch=master)](https://travis-ci.org/phonopy/phonopy)
-[![codecov](https://codecov.io/gh/phonopy/phonopy/branch/master/graph/badge.svg)](https://codecov.io/gh/phonopy/phonopy)
+[![Build Status](https://travis-ci.org/phonopy/phonopy.svg?branch=develop)](https://travis-ci.org/phonopy/phonopy)
+[![codecov](https://codecov.io/gh/phonopy/phonopy/branch/develop/graph/badge.svg)](https://codecov.io/gh/phonopy/phonopy)
 
 # Phonopy
 
