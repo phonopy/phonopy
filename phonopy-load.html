@@ -3,7 +3,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>phonopy-load command &#8212; Phonopy v.2.7.1</title>
+    <title>phonopy-load command &#8212; Phonopy v.2.8.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -38,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.7</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.8</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -141,22 +141,28 @@
 similarly to <code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code> (<a class="reference internal" href="phonopy-module.html#phonopy-load"><span class="std std-ref">Shortcut to load input files (phonopy.load)</span></a>) in the phonopy
 python module. The main aim of introducing this command is to provide
 uniform usage over many different force calculators. Once
-<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> is created, the later operations will be the
+<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> is created, the following operations will be the
 same using this command.</p>
-<p>The following default behaviours are changed from that of those
+<p>The following default behaviours are different from that of those
 of <code class="docutils literal notranslate"><span class="pre">phonopy</span></code> command:</p>
 <ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">phonopy_xxx.yaml</span></code> type file is always necessary by a way of (2)
-or (3).</p></li>
-<li><p>The first argument of the command is used to give a <code class="docutils literal notranslate"><span class="pre">phonopy_xxx.yaml</span></code>
-type file.</p></li>
-<li><p>The file names of <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code>, <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>,
-<code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> are the default file
-names and these files are searched in the current directory. The
-preference order is as given here.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phonopy_xxx.yaml</span></code> type file is always necessary in either of two
+ways:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">phonopy_xxx.yaml</span></code> type file is given as the first argument of
+the command.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phonopy_xxx.yaml</span></code> type file is put in the current directory
+with one of the default filenames of <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code>,
+<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>,  <code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code>. The searching
+preference order is <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code> &gt;
+<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> &gt; <code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code>.</p></li>
+</ul>
+</li>
+</ol>
+<ol class="arabic simple" start="4">
 <li><p><code class="docutils literal notranslate"><span class="pre">-c</span></code> option (read crystal structure) does not exist.</p></li>
-<li><p>Use of dommand options is recommended, but phonopy configuration
-file can be read using <code class="docutils literal notranslate"><span class="pre">--config</span></code> option.</p></li>
+<li><p>Use of command options is recommended, but phonopy configuration
+file can be read through the <code class="docutils literal notranslate"><span class="pre">--config</span></code> option.</p></li>
 <li><p>If parameters for non-analytical term correction (NAC) are
 found, NAC is automatically enabled. This can be disabled by
 <code class="docutils literal notranslate"><span class="pre">--nonac</span></code> option.</p></li>
@@ -174,7 +180,7 @@ written.</p></li>
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>In the NaCl-qe example,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span> <span class="o">--</span><span class="n">pa</span> <span class="n">auto</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span>
-<span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">NaCl</span><span class="o">-</span><span class="mi">00</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">}</span><span class="o">.</span><span class="n">out</span>
+<span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">load</span> <span class="o">-</span><span class="n">f</span> <span class="n">NaCl</span><span class="o">-</span><span class="mi">00</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">}</span><span class="o">.</span><span class="n">out</span>
 </pre></div>
 </div>
 <p>With these commands, <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> are
