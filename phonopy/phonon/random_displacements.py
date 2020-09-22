@@ -133,7 +133,7 @@ class RandomDisplacements(object):
             self._cutoff_frequency = cutoff_frequency
         self._factor = factor
         self._T = None
-        self.u = None
+        self._u = None
 
         if dist_func is None or dist_func == 'quantum':
             self._dist_func = 'quantum'
@@ -215,7 +215,11 @@ class RandomDisplacements(object):
         mass = self._dynmat.supercell.masses.reshape(-1, 1)
         u = np.array((u_ii + u_ij) / np.sqrt(mass * N),
                      dtype='double', order='C')
-        self.u = u
+        self._u = u
+
+    @property
+    def u(self):
+        return self._u
 
     @property
     def frequencies(self):
