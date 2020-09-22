@@ -663,9 +663,6 @@ class BandStructure(object):
     def _write_yaml(self, w, comment, is_binary=False):
         natom = len(self._cell)
         rec_lattice = np.linalg.inv(self._cell.cell)  # column vecs
-        smat = self._supercell.get_supercell_matrix()
-        pmat = self._cell.get_primitive_matrix()
-        tmat = np.rint(np.dot(np.linalg.inv(pmat), smat)).astype(int)
         nq_paths = []
         for qpoints in self._paths:
             nq_paths.append(len(qpoints))
@@ -697,9 +694,6 @@ class BandStructure(object):
                         (tuple(vec) + (axis,)))
         text.append("natom: %-7d" % (natom))
         text.append(str(self._cell))
-        text.append("supercell_matrix:")
-        for v in tmat:
-            text.append("- [ %4d, %4d, %4d ]" % tuple(v))
         text.append('')
         text.append("phonon:")
         text.append('')

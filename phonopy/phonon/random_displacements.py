@@ -35,7 +35,8 @@
 import numpy as np
 from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
 from phonopy.harmonic.dynmat_to_fc import (
-    get_commensurate_points_in_integers, DynmatToForceConstants)
+    get_commensurate_points_in_integers, DynmatToForceConstants,
+    categorize_commensurate_points)
 from phonopy.units import VaspToTHz, THzToEv, Kb, Hbar, AMU, EV, Angstrom, THz
 
 
@@ -132,7 +133,7 @@ class RandomDisplacements(object):
             self._cutoff_frequency = cutoff_frequency
         self._factor = factor
         self._T = None
-        self.u = None
+        self._u = None
 
         if dist_func is None or dist_func == 'quantum':
             self._dist_func = 'quantum'
@@ -156,6 +157,11 @@ class RandomDisplacements(object):
         s2p = primitive.s2p_map
         p2p = primitive.p2p_map
         self._s2pp = [p2p[i] for i in s2p]
+        # Transformation matrix of scaled supercell positions to primitive
+        tmat = np.dot(supercell.cell, np.linalg.inv(primitive.cell))
+        self._spos = np.dot(self._dynmat.supercell.scaled_positions, tmat)
+        self._ppos = self._dynmat.primitive.scaled_positions
+        self._lpos = self._spos - self._ppos[self._s2pp]
 
         self._eigvals_ii = []
         self._eigvecs_ii = []
@@ -168,12 +174,6 @@ class RandomDisplacements(object):
         # This is set when running run_d2f.
         # The aim is to produce force constants from modified frequencies.
         self._force_constants = None
-
-    def _setup_sampling_qpoints(self, slat, plat):
-        smat = np.rint(np.dot(slat, np.linalg.inv(plat)).T).astype(int)
-        self._comm_points = get_commensurate_points_in_integers(smat)
-        self._ii, self._ij = self._categorize_points()
-        assert len(self._ii) + len(self._ij) * 2 == len(self._comm_points)
 
     def run(self, T, number_of_snapshots=1, random_seed=None, randn=None):
         """
@@ -215,7 +215,11 @@ class RandomDisplacements(object):
         mass = self._dynmat.supercell.masses.reshape(-1, 1)
         u = np.array((u_ii + u_ij) / np.sqrt(mass * N),
                      dtype='double', order='C')
-        self.u = u
+        self._u = u
+
+    @property
+    def u(self):
+        return self._u
 
     @property
     def frequencies(self):
@@ -259,36 +263,55 @@ class RandomDisplacements(object):
             eigvecs = self._eigvecs_ii
             qpoints = self._comm_points[self._ii] / float(N)
 
-        d2f = DynmatToForceConstants(
-            self._dynmat.primitive,
-            self._dynmat.supercell,
-            eigenvalues=eigvals,
-            eigenvectors=eigvecs,
-            commensurate_points=qpoints)
+        d2f = DynmatToForceConstants(self._dynmat.primitive,
+                                     self._dynmat.supercell)
+        d2f.commensurate_points = qpoints
+        d2f.create_dynamical_matrices(eigvals, eigvecs)
         d2f.run()
         self._force_constants = d2f.force_constants
 
     def _prepare(self):
-        pos = self._dynmat.supercell.scaled_positions
+        spos = self._spos
+        ppos = self._ppos
+        lpos = self._lpos
         N = len(self._comm_points)
         for q in self._comm_points[self._ii] / float(N):
             self._dynmat.run(q)
-            dm = self._dynmat.dynamical_matrix
-            eigvals, eigvecs = np.linalg.eigh(dm.real)
+            dm = self._C_to_D(self._dynmat.dynamical_matrix, ppos, q)
+            self._phase_ii.append(
+                np.cos(2 * np.pi * np.dot(lpos, q)).reshape(-1, 1))
+            eigvals, eigvecs = np.linalg.eigh(dm)
             self._eigvals_ii.append(eigvals)
             self._eigvecs_ii.append(eigvecs)
-            self._phase_ii.append(
-                np.cos(2 * np.pi * np.dot(pos, q)).reshape(-1, 1))
 
         if self._ij:
             for q in self._comm_points[self._ij] / float(N):
                 self._dynmat.run(q)
                 dm = self._dynmat.dynamical_matrix
                 eigvals, eigvecs = np.linalg.eigh(dm)
-                self._eigvals_ij.append(eigvals)
+                self._eigvals_ij.append(eigvals.real)
                 self._eigvecs_ij.append(eigvecs)
                 self._phase_ij.append(
-                    np.exp(2j * np.pi * np.dot(pos, q)).reshape(-1, 1))
+                    np.exp(2j * np.pi * np.dot(spos, q)).reshape(-1, 1))
+
+    def _C_to_D(self, dm, ppos, q):
+        """Transform C-type dynamical matrix to D-type
+
+        Taking real part is valid only when q is at Gamma or on BZ boundary,
+        i.e., q=G-q and q in BZ are assumed.
+
+        D(q) = (D(q) + D(G-q)) / 2 -> real matrix.
+
+        """
+
+        V = np.repeat(np.exp(2j * np.pi * np.dot(ppos, q)), 3)
+        dm = ((V * (V.conj() * dm).T).T).real  # C-type to D-type
+        return dm
+
+    def _setup_sampling_qpoints(self, slat, plat):
+        smat = np.rint(np.dot(slat, np.linalg.inv(plat)).T).astype(int)
+        self._comm_points = get_commensurate_points_in_integers(smat)
+        self._ii, self._ij = categorize_commensurate_points(self._comm_points)
 
     def _solve_ii(self, T, number_of_snapshots, randn=None):
         """
@@ -310,6 +333,8 @@ class RandomDisplacements(object):
                 _randn, sigmas, self._eigvecs_ii, self._phase_ii):
             u_red = np.dot(norm_dist * sigma, eigvecs.T).reshape(
                 number_of_snapshots, -1, 3)[:, self._s2pp, :]
+            # u_red.shape = (snapshots, satoms, 3)
+            # phase.shape = (satoms,)
             u += u_red * phase
 
         return u
@@ -333,6 +358,8 @@ class RandomDisplacements(object):
                 _randn, sigmas, self._eigvecs_ij, self._phase_ij):
             u_red = np.dot(norm_dist * sigma, eigvecs.T).reshape(
                 2, number_of_snapshots, -1, 3)[:, :, self._s2pp, :]
+            # u_red.shape = (2, snapshots, satoms, 3)
+            # phase.shape = (satoms,)
             u += (u_red[0] * phase).real
             u -= (u_red[1] * phase).imag
 
@@ -356,16 +383,5 @@ class RandomDisplacements(object):
                 0)
         return sigma
 
-    def _categorize_points(self):
-        N = len(self._comm_points)
-        ii = []
-        ij = []
-        for i, p in enumerate(self._comm_points):
-            for j, _p in enumerate(self._comm_points):
-                if ((p + _p) % N == 0).all():
-                    if i == j:
-                        ii.append(i)
-                    elif i < j:
-                        ij.append(i)
-                    break
-        return ii, ij
+    def _run_correlation_matrix(self):
+        pass

@@ -32,6 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
 import numpy as np
 from phonopy.units import Kb, THzToEv, EvTokJmol
 
@@ -163,13 +164,31 @@ class ThermalProperties(ThermalPropertiesBase):
         return self._temperatures
 
     def get_temperatures(self):
+        warnings.warn("ThermalProperties.get_temperatures is deprecated."
+                      "Use temperatures attribute.",
+                      DeprecationWarning)
         return self.temperatures
+
+    @temperatures.setter
+    def temperatures(self, temperatures):
+        t_array = np.array(temperatures, dtype='double')
+        self._temperatures = np.array(
+            np.extract(np.invert(t_array < 0), t_array), dtype='double')
+
+    def set_temperatures(self, temperatures):
+        warnings.warn("ThermalProperties.set_temperatures is deprecated."
+                      "Use temperatures attribute.",
+                      DeprecationWarning)
+        self.temperatures = temperatures
 
     @property
     def thermal_properties(self):
         return self._thermal_properties
 
     def get_thermal_properties(self):
+        warnings.warn("ThermalProperties.get_thermal_properties is deprecated."
+                      "Use thermal_properties attribute.",
+                      DeprecationWarning)
         return self.thermal_properties
 
     @property
@@ -177,6 +196,9 @@ class ThermalProperties(ThermalPropertiesBase):
         return self._zero_point_energy
 
     def get_zero_point_energy(self):
+        warnings.warn("ThermalProperties.get_zero_point_energy is deprecated."
+                      "Use zero_point_energy attribute.",
+                      DeprecationWarning)
         return self.zero_point_energy
 
     @property
@@ -184,6 +206,9 @@ class ThermalProperties(ThermalPropertiesBase):
         return self._high_T_entropy
 
     def get_high_T_entropy(self):
+        warnings.warn("ThermalProperties.get_high_T_entropy is deprecated."
+                      "Use high_T_entropy attribute.",
+                      DeprecationWarning)
         return self.high_T_entropy
 
     @property
@@ -192,7 +217,9 @@ class ThermalProperties(ThermalPropertiesBase):
         return self._num_integrated_modes
 
     def get_number_of_integrated_modes(self):
-        """Number of phonon modes used for integration on sampling mesh"""
+        warnings.warn("ThermalProperties.get_number_of_integrated_modes is "
+                      "deprecated. Use number_of_integrated_modes attribute.",
+                      DeprecationWarning)
         return self.number_of_integrated_modes
 
     @property
@@ -201,7 +228,9 @@ class ThermalProperties(ThermalPropertiesBase):
         return self._num_modes
 
     def get_number_of_modes(self):
-        """Number of phonon modes on sampling mesh"""
+        warnings.warn("ThermalProperties.get_number_of_modes is "
+                      "deprecated. Use number_of_modes attribute.",
+                      DeprecationWarning)
         return self.number_of_modes
 
     def set_temperature_range(self, t_min=None, t_max=None, t_step=None):
@@ -229,11 +258,6 @@ class ThermalProperties(ThermalPropertiesBase):
         self._temperatures = np.arange(_t_min, _t_max + _t_step / 2.0, _t_step,
                                        dtype='double')
 
-    def set_temperatures(self, temperatures):
-        t_array = np.array(temperatures)
-        condition = np.logical_not(t_array < 0)
-        self._temperatures = np.extract(condition, t_array)
-
     def plot(self, plt):
         temps, fe, entropy, cv = self._thermal_properties
 
@@ -253,7 +277,8 @@ class ThermalProperties(ThermalPropertiesBase):
             t_min is not None):
             warnings.warn("keywords for this method are depreciated. "
                           "Use \'set_temperature_range\' or "
-                          "\'set_temperature_range\' method instead.")
+                          "\'set_temperature_range\' method instead.",
+                          DeprecationWarning)
             self.set_temperature_range(t_min=t_min, t_max=t_max, t_step=t_step)
 
         try:

@@ -1,0 +1,27 @@
+FIX_COM : true
+
+%BLOCK hubbard_u
+   EV
+   Cr      d:4.000000
+%ENDBLOCK hubbard_u
+
+QUANTISATION_AXIS :     1.000000    0.000000    0.000000
+
+%BLOCK species_pot
+   Cr      ../Cr.upf
+%ENDBLOCK species_pot
+
+SYMMETRY_TOL :     0.000001
+
+%BLOCK symmetry_ops
+# Symm. op. 1       E
+          1.000000000000000       0.000000000000000       0.000000000000000
+          0.000000000000000       1.000000000000000       0.000000000000000
+          0.000000000000000       0.000000000000000       1.000000000000000
+          0.000000000000000       0.000000000000000       0.000000000000000
+%ENDBLOCK symmetry_ops
+
+kpoint_mp_grid :    8   8   8
+
+kpoint_mp_offset :        0.00000000000000       0.00000000000000       0.00000000000000
+
