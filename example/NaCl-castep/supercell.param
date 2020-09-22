@@ -1,0 +1,29 @@
+task : Single Point
+comment : CASTEP calculation from PHONOPY
+xc_functional : LDA
+FINITE_BASIS_CORR : 0
+WRITE_CHECKPOINT : NONE
+spin_polarized : false
+opt_strategy : Speed
+page_wvfns :        0
+cut_off_energy :      750.000000000000000
+grid_scale :        1.750000000000000
+fine_grid_scale :        3.00000000000000
+elec_energy_tol :   1.000000000000000e-010
+elec_eigenvalue_tol :   1.000000000000000e-007
+max_scf_cycles :      120
+fix_occupancy : true
+metals_method : dm
+mixing_scheme : Pulay
+mix_charge_amp :        0.500000000000000
+mix_charge_gmax :        1.500000000000000
+mix_history_length :       20
+nextra_bands : 5
+num_dump_cycles : 0
+geom_modulus_est :      500.000000000000000  GPa
+calculate_ELF : false
+calculate_stress : false
+popn_calculate : false
+calculate_hirshfeld : false
+calculate_densdiff : false
+pdos_calculate_weights : false

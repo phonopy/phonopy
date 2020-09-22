@@ -3,6 +3,13 @@
 Change Log
 ==========
 
+Sep-22-2020: Version 2.8.0
+---------------------------
+* :ref:`CASTEP interface <castep_interface>` was made by @ladyteam.
+* It was made to give more information in ``gruneisen.yaml`` (@ab5424,
+  PR#127).
+* Fix and update of ``phonopy-bandplot`` (@kgmat PR#125, commit 816a12a9)
+
 July-31-2020: Version 2.7.1
 ---------------------------
 * Release for pypi and conda packaging

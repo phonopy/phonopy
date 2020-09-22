@@ -34,18 +34,15 @@ class TestQpoints(unittest.TestCase):
 
     def testQpoints(self):
         phonon = self._get_phonon()
-        phonon.run_qpoints([0, 0, 0], with_eigenvectors=True)
-        qpoints_phonon = phonon.qpoints
-        phonon.get_qpoints_dict()
-        np.testing.assert_allclose(qpoints_phonon.eigenvectors,
-                                   qpoints_phonon.get_eigenvectors())
-        np.testing.assert_allclose(qpoints_phonon.frequencies,
-                                   qpoints_phonon.get_frequencies())
-        phonon.run_qpoints([0, 0, 0], with_dynamical_matrices=True)
-        dm = phonon.qpoints.dynamical_matrices
-        eigs = np.linalg.eigvalsh(dm) * VaspToTHz ** 2
-        freqs = phonon.qpoints.frequencies
-        np.testing.assert_allclose(freqs ** 2 * np.sign(freqs), eigs)
+        qpoints = [[0, 0, 0], [0, 0, 0.5]]
+        phonon.run_qpoints(qpoints, with_dynamical_matrices=True)
+        for i, q in enumerate(qpoints):
+            dm = phonon.qpoints.dynamical_matrices[i]
+            dm_eigs = np.linalg.eigvalsh(dm).real
+            eigs = phonon.qpoints.eigenvalues[i]
+            freqs = phonon.qpoints.frequencies[i] / VaspToTHz
+            np.testing.assert_allclose(dm_eigs, eigs)
+            np.testing.assert_allclose(freqs ** 2 * np.sign(freqs), eigs)
 
 
 if __name__ == '__main__':

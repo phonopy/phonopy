@@ -37,8 +37,9 @@ import os
 import numpy as np
 from phonopy import Phonopy, __version__
 from phonopy.harmonic.force_constants import (
-    distribute_force_constants_by_translations)
+    distribute_force_constants_by_translations, compact_fc_to_full_fc)
 from phonopy.structure.cells import print_cell
+from phonopy.structure.cells import isclose as cells_isclose
 from phonopy.structure.atoms import atom_data, symbol_map
 from phonopy.structure.dataset import forces_in_dataset
 from phonopy.interface.phonopy_yaml import PhonopyYaml
@@ -570,18 +571,6 @@ def produce_force_constants(phonon,
                 calculate_full_force_constants=False,
                 fc_calculator=fc_calculator,
                 fc_calculator_options=fc_calculator_options)
-
-
-def compact_fc_to_full_fc(phonon, compact_fc, log_level=0):
-    fc = np.zeros((compact_fc.shape[1], compact_fc.shape[1], 3, 3),
-                  dtype='double', order='C')
-    fc[phonon.primitive.p2s_map] = compact_fc
-    distribute_force_constants_by_translations(
-        fc, phonon.primitive, phonon.supercell)
-    if log_level:
-        print("Force constants were expanded to full format.")
-
-    return fc
 
 
 def store_force_constants(phonon,
@@ -1462,6 +1451,19 @@ def show_symmetry_info_then_exit(cell_info, symprec):
     sys.exit(0)
 
 
+def check_supercell_in_yaml(cell_info, ph, log_level):
+    if (cell_info['phonopy_yaml'] is not None and
+        cell_info['phonopy_yaml'].supercell is not None):
+        if not cells_isclose(cell_info['phonopy_yaml'].supercell,
+                             ph.supercell):
+            if log_level:
+                print("Generated Supercell is inconsistent with that "
+                      "in \"%s\"." %
+                      cell_info['optional_structure_info'][0])
+                print_error()
+            sys.exit(1)
+
+
 def init_phonopy(settings, cell_info, symprec, log_level):
     # Prepare phonopy object
     if settings.create_displacements and settings.temperatures is None:
@@ -1495,6 +1497,8 @@ def init_phonopy(settings, cell_info, symprec, log_level):
             calculator=cell_info['interface_mode'],
             use_lapack_solver=settings.lapack_solver,
             log_level=log_level)
+
+        check_supercell_in_yaml(cell_info, phonon, log_level)
 
     # Set atomic masses of primitive cell
     if settings.masses is not None:

@@ -451,22 +451,29 @@ def plot(args):
             ax.set_ylim(ymax=args.f_max)
 
     band_plot = BandPlot(axs)
+    band_plot.set_xscale_from_data(plot_data[2], plot_data[3])
+    band_plot.xscale = band_plot.xscale * args.factor
     band_plot.decorate(*plot_data)
 
     # Plot band structures
     fmts = ['r-', 'b-', 'g-', 'c-', 'm-', 'y-', 'k-',
             'r--', 'b--', 'g--', 'c--', 'm--', 'y--', 'k--']
     for (l, p, f, d), fmt, label in zip(plots_data, fmts, filenames):
+        _f = [f_seg * args.factor for f_seg in f]
         if args.show_legend:
-            band_plot.plot(d, np.array(f) * args.factor, p, fmt=fmt,
-                           label=label)
+            band_plot.plot(d, _f, p, fmt=fmt,
+                           label=_get_label_for_latex(label))
         else:
-            band_plot.plot(d, np.array(f) * args.factor, p, fmt=fmt)
+            band_plot.plot(d, _f, p, fmt=fmt)
 
     if args.output_filename is not None:
         savefig(plt, args.output_filename)
     else:
         plt.show()
+
+
+def _get_label_for_latex(label):
+    return label.replace('_', '\_')
 
 
 def _get_max_frequency(frequencies):

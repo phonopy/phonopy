@@ -112,8 +112,9 @@ def get_nac_params(primitive=None,
     else:
         _nac_params = None
 
-    if _nac_params is not None and _nac_params['factor'] is None:
-        _nac_params['factor'] = nac_factor
+    if _nac_params is not None:
+        if 'factor' not in _nac_params or _nac_params['factor'] is None:
+            _nac_params['factor'] = nac_factor
 
     return _nac_params
 

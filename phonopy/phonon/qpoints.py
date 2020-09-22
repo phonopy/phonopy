@@ -32,6 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
 import numpy as np
 from phonopy.units import VaspToTHz
 
@@ -43,11 +44,14 @@ class QpointsPhonon(object):
     ----------
     frequencies : ndarray
         Phonon frequencies. Imaginary frequenies are represented by
-        negative real numbers.
+        negative real numbers. Unit conversion factor is multipled.
         shape=(qpoints, bands), dtype='double'
     eigenvectors : ndarray
-        Phonon eigenvectors. None if eigenvectors are not stored.
+        Phonon eigenvectors. None when with_eigenvectors=False.
         shape=(qpoints, bands, bands), dtype='complex'
+    eigenvalues : ndarray
+        Phonon eigenvvalues. Unit conversion factor is not multipled.
+        shape=(qpoints, bands), dtype='double'
     group_velocities : ndarray
         Phonon group velocities. None if group velocities are not
         calculated.
@@ -83,6 +87,7 @@ class QpointsPhonon(object):
 
         self._group_velocities = None
         self._eigenvectors = None
+        self._eigenvalues = None
         self._frequencies = None
         self._dynamical_matrices = None
 
@@ -93,13 +98,19 @@ class QpointsPhonon(object):
         return self._frequencies
 
     def get_frequencies(self):
+        warnings.warn("Use attribute, frequencies.", DeprecationWarning)
         return self.frequencies
+
+    @property
+    def eigenvalues(self):
+        return self._eigenvalues
 
     @property
     def eigenvectors(self):
         return self._eigenvectors
 
     def get_eigenvectors(self):
+        warnings.warn("Use attribute, eigenvectors.", DeprecationWarning)
         return self.eigenvectors
 
     @property
@@ -107,6 +118,7 @@ class QpointsPhonon(object):
         return self._group_velocities
 
     def get_group_velocities(self):
+        warnings.warn("Use attribute, group_velocities.", DeprecationWarning)
         return self.group_velocities
 
     @property
@@ -178,9 +190,10 @@ class QpointsPhonon(object):
         if self._with_dynamical_matrices:
             dynamical_matrices = []
 
-        self._frequencies = []
+        frequencies = []
+        eigenvalues = []
         if self._with_eigenvectors:
-            self._eigenvectors = []
+            eigenvectors = []
 
         for q in self._qpoints:
             dm = self._get_dynamical_matrix(q)
@@ -188,18 +201,19 @@ class QpointsPhonon(object):
                 dynamical_matrices.append(dm)
             if self._with_eigenvectors:
                 eigvals, eigvecs = np.linalg.eigh(dm)
-                self._eigenvectors.append(eigvecs)
+                eigenvectors.append(eigvecs)
             else:
                 eigvals = np.linalg.eigvalsh(dm)
             eigvals = eigvals.real
-            self._frequencies.append(np.sqrt(np.abs(eigvals)) *
-                                     np.sign(eigvals) * self._factor)
+            eigenvalues.append(eigvals)
+            frequencies.append(np.sqrt(np.abs(eigvals)) *
+                               np.sign(eigvals) * self._factor)
 
-        self._frequencies = np.array(self._frequencies,
-                                     dtype='double', order='C')
+        self._eigenvalues = np.array(eigenvalues, dtype='double', order='C')
+        self._frequencies = np.array(frequencies, dtype='double', order='C')
         dtype = "c%d" % (np.dtype('double').itemsize * 2)
         if self._with_eigenvectors:
-            self._eigenvectors = np.array(self._eigenvectors,
+            self._eigenvectors = np.array(eigenvectors,
                                           dtype=dtype, order='C')
         if self._with_dynamical_matrices:
             self._dynamical_matrices = np.array(dynamical_matrices,
