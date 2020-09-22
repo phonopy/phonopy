@@ -23,8 +23,8 @@ CASTEP.
 
       % phonopy -d --dim="2 2 2" --castep -c unitcell.cell
 
-   In this example file unitcell.cell contains initial spin values in
-   positions_frac BLOCK. As well as the value of the U parameter in
+   In this example file ``unitcell.cell`` contains initial spin values in
+   ``positions_frac`` BLOCK. As well as the value of the U parameter in
    LDA+U approximation.
 
 2. Use ``make_displ_dirs.sh`` bash script to make directories with input
@@ -62,7 +62,7 @@ Spin-polarization example.
       % phonopy -d --dim="2 2 2" --castep -c unitcell.cell
 
    In this example file ``unitcell.cell`` contains initial spin values in
-   ``positions_frac BLOCK``. As well as the value of the U parameter in
+   ``positions_frac`` BLOCK. As well as the value of the U parameter in
    LDA+U approximation.
 
 2. Use ``make_displ_dirs.sh`` bash script to make directories with input
