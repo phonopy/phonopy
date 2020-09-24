@@ -249,20 +249,7 @@ class RandomDisplacements(object):
         return self._force_constants
 
     def run_d2f(self):
-        N = len(self._comm_points)
-        if self._ij:
-            eigvals = np.vstack(
-                (self._eigvals_ii, self._eigvals_ij, self._eigvals_ij))
-            eigvecs = np.vstack(
-                (self._eigvecs_ii, self._eigvecs_ij, self._eigvecs_ij))
-            eigvecs[-len(self._ij):] = eigvecs[-len(self._ij):].conj()
-            qpoints = self._comm_points[self._ii + self._ij * 2] / float(N)
-            qpoints[-len(self._ij):] = -qpoints[-len(self._ij):]
-        else:
-            eigvals = self._eigvals_ii
-            eigvecs = self._eigvecs_ii
-            qpoints = self._comm_points[self._ii] / float(N)
-
+        qpoints, eigvals, eigvecs = self._collect_eigensolutions()
         d2f = DynmatToForceConstants(self._dynmat.primitive,
                                      self._dynmat.supercell)
         d2f.commensurate_points = qpoints
@@ -270,16 +257,35 @@ class RandomDisplacements(object):
         d2f.run()
         self._force_constants = d2f.force_constants
 
+    def _collect_eigensolutions(self):
+        N = len(self._comm_points)
+
+        qpoints = self._comm_points[self._ii] / float(N)
+        eigvals = self._eigvals_ii
+        eigvecs = []
+        # Transform eigenvectors of D-type to those of C-type
+        for q, eigvec in zip(qpoints, self._eigvecs_ii):
+            Vd = np.repeat(np.exp(-2j * np.pi * np.dot(self._ppos, q)), 3)
+            eigvecs.append((Vd * eigvec.T).T)
+
+        if self._ij:
+            eigvals = np.vstack(
+                (eigvals, self._eigvals_ij, self._eigvals_ij))
+            eigvecs = np.vstack(
+                (eigvecs, self._eigvecs_ij, self._eigvecs_ij))
+            eigvecs[-len(self._ij):] = eigvecs[-len(self._ij):].conj()
+            qpoints = self._comm_points[self._ii + self._ij * 2] / float(N)
+            qpoints[-len(self._ij):] = -qpoints[-len(self._ij):]
+
+        return qpoints, eigvals, eigvecs
+
     def _prepare(self):
-        spos = self._spos
-        ppos = self._ppos
-        lpos = self._lpos
         N = len(self._comm_points)
         for q in self._comm_points[self._ii] / float(N):
             self._dynmat.run(q)
-            dm = self._C_to_D(self._dynmat.dynamical_matrix, ppos, q)
+            dm = self._C_to_D(self._dynmat.dynamical_matrix, q)
             self._phase_ii.append(
-                np.cos(2 * np.pi * np.dot(lpos, q)).reshape(-1, 1))
+                np.cos(2 * np.pi * np.dot(self._lpos, q)).reshape(-1, 1))
             eigvals, eigvecs = np.linalg.eigh(dm)
             self._eigvals_ii.append(eigvals)
             self._eigvecs_ii.append(eigvecs)
@@ -292,9 +298,9 @@ class RandomDisplacements(object):
                 self._eigvals_ij.append(eigvals.real)
                 self._eigvecs_ij.append(eigvecs)
                 self._phase_ij.append(
-                    np.exp(2j * np.pi * np.dot(spos, q)).reshape(-1, 1))
+                    np.exp(2j * np.pi * np.dot(self._spos, q)).reshape(-1, 1))
 
-    def _C_to_D(self, dm, ppos, q):
+    def _C_to_D(self, dm, q):
         """Transform C-type dynamical matrix to D-type
 
         Taking real part is valid only when q is at Gamma or on BZ boundary,
@@ -304,7 +310,7 @@ class RandomDisplacements(object):
 
         """
 
-        V = np.repeat(np.exp(2j * np.pi * np.dot(ppos, q)), 3)
+        V = np.repeat(np.exp(2j * np.pi * np.dot(self._ppos, q)), 3)
         dm = ((V * (V.conj() * dm).T).T).real  # C-type to D-type
         return dm
 

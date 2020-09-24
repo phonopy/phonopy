@@ -118,3 +118,7 @@ def test_random_displacements(ph_nacl):
 
     data = np.array(disp_ref)
     np.testing.assert_allclose(data, rd.u.ravel(), atol=1e-5)
+
+    rd.run_d2f()
+    np.testing.assert_allclose(rd.force_constants, phonon.force_constants,
+                               atol=1e-5, rtol=1e-5)
