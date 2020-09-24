@@ -175,6 +175,10 @@ class RandomDisplacements(object):
         # The aim is to produce force constants from modified frequencies.
         self._force_constants = None
 
+        # Displacement correlation matrix (nsatom, nsatom, 3, 3)
+        self._uu = None
+        self._uu_inv = None
+
     def run(self, T, number_of_snapshots=1, random_seed=None, randn=None):
         """
 
@@ -222,6 +226,14 @@ class RandomDisplacements(object):
         return self._u
 
     @property
+    def uu(self):
+        return self._uu
+
+    @property
+    def uu_inv(self):
+        return self._uu_inv
+
+    @property
     def frequencies(self):
         if self._ij:
             eigvals = np.vstack((self._eigvals_ii, self._eigvals_ij))
@@ -256,6 +268,32 @@ class RandomDisplacements(object):
         d2f.create_dynamical_matrices(eigvals, eigvecs)
         d2f.run()
         self._force_constants = d2f.force_constants
+
+    def run_correlation_matrix(self, T):
+        qpoints, eigvals, eigvecs = self._collect_eigensolutions()
+        d2f = DynmatToForceConstants(self._dynmat.primitive,
+                                     self._dynmat.supercell)
+        masses = self._dynmat.supercell.masses
+        d2f.commensurate_points = qpoints
+        freqs = np.sqrt(np.abs(eigvals)) * self._factor
+        conditions = freqs > self._cutoff_frequency
+        a = self._get_sigma(eigvals, T)
+        a2 = a ** 2
+        a = np.where(conditions, a, 1)
+        a2_inv = np.where(conditions, 1 / a ** 2, 0)
+
+        d2f.create_dynamical_matrices(a2_inv, eigvecs)
+        d2f.run()
+        matrix = d2f.force_constants
+        self._uu_inv = np.array(matrix, dtype='double', order='C')
+
+        d2f.create_dynamical_matrices(a2, eigvecs)
+        d2f.run()
+        matrix = d2f.force_constants
+        for i, m_i in enumerate(masses):
+            for j, m_j in enumerate(masses):
+                matrix[i, j] /= m_i * m_j
+        self._uu = np.array(matrix, dtype='double', order='C')
 
     def _collect_eigensolutions(self):
         N = len(self._comm_points)

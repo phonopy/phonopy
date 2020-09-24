@@ -122,3 +122,10 @@ def test_random_displacements(ph_nacl):
     rd.run_d2f()
     np.testing.assert_allclose(rd.force_constants, phonon.force_constants,
                                atol=1e-5, rtol=1e-5)
+
+    rd.run_correlation_matrix(500)
+    shape = (len(phonon.supercell) * 3, len(phonon.supercell) * 3)
+    uu = np.transpose(rd.uu, axes=[0, 2, 1, 3]).reshape(shape)
+    uu_inv = np.transpose(rd.uu_inv, axes=[0, 2, 1, 3]).reshape(shape)
+    np.testing.assert_allclose(np.linalg.pinv(uu), uu_inv,
+                               atol=1e-5, rtol=1e-5)
