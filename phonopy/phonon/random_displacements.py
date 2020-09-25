@@ -279,13 +279,12 @@ class RandomDisplacements(object):
         conditions = freqs > self._cutoff_frequency
         a = self._get_sigma(eigvals, T)
         a2 = a ** 2
-        a = np.where(conditions, a, 1)
-        a2_inv = np.where(conditions, 1 / a ** 2, 0)
+        _a = np.where(conditions, a, 1)
+        a2_inv = np.where(conditions, 1 / _a ** 2, 0)
 
         d2f.create_dynamical_matrices(a2_inv, eigvecs)
         d2f.run()
-        matrix = d2f.force_constants
-        self._uu_inv = np.array(matrix, dtype='double', order='C')
+        self._uu_inv = np.array(d2f.force_constants, dtype='double', order='C')
 
         d2f.create_dynamical_matrices(a2, eigvecs)
         d2f.run()
@@ -415,17 +414,9 @@ class RandomDisplacements(object):
         conditions = freqs > self._cutoff_frequency
         freqs = np.where(conditions, freqs, 1)
         if self._dist_func == 'classical':
-            sigma = np.where(
-                conditions,
-                np.sqrt(T * self._unit_conversion_classical) / freqs,
-                0)
+            sigma = np.sqrt(T * self._unit_conversion_classical) / freqs
         else:
-            n = np.where(conditions, bose_einstein_dist(freqs, T), 0)
-            sigma = np.where(
-                conditions,
-                np.sqrt(self._unit_conversion / freqs * (0.5 + n)),
-                0)
+            n = bose_einstein_dist(freqs, T)
+            sigma = np.sqrt(self._unit_conversion / freqs * (0.5 + n))
+        sigma = np.where(conditions, sigma, 0)
         return sigma
-
-    def _run_correlation_matrix(self):
-        pass
