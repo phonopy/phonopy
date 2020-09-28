@@ -27,7 +27,7 @@ of ``phonopy`` command:
 4. ``-c`` option (read crystal structure) does not exist.
 
 5. Use of command options is recommended, but phonopy configuration
-   file can be read through the ``--config`` option.
+   file can be read through ``--config`` option.
 
 6. If parameters for non-analytical term correction (NAC) are
    found, NAC is automatically enabled. This can be disabled by
