@@ -3,6 +3,10 @@
 Change Log
 ==========
 
+Sep-29-2020: Version 2.8.1
+---------------------------
+* Fix vasprun.xml expat parser (issues #129)
+
 Sep-22-2020: Version 2.8.0
 ---------------------------
 * :ref:`CASTEP interface <castep_interface>` was made by @ladyteam.
