@@ -88,13 +88,13 @@ def test_random_displacements(ph_nacl):
 
     """
 
-    phonon = ph_nacl
-    rd = RandomDisplacements(phonon.supercell,
-                             phonon.primitive,
-                             phonon.force_constants,
+    ph = ph_nacl
+    rd = RandomDisplacements(ph.supercell,
+                             ph.primitive,
+                             ph.force_constants,
                              cutoff_frequency=0.01)
-    num_band = len(phonon.primitive) * 3
-    N = len(phonon.supercell) // len(phonon.primitive)
+    num_band = len(ph.primitive) * 3
+    N = len(ph.supercell) // len(ph.primitive)
     # N = N_ii + N_ij * 2
     # len(rd.qpoints) = N_ii + N_ij
     N_ij = N - len(rd.qpoints)
@@ -118,3 +118,27 @@ def test_random_displacements(ph_nacl):
 
     data = np.array(disp_ref)
     np.testing.assert_allclose(data, rd.u.ravel(), atol=1e-5)
+
+    rd.run_d2f()
+    np.testing.assert_allclose(rd.force_constants, ph.force_constants,
+                               atol=1e-5, rtol=1e-5)
+
+    rd = RandomDisplacements(ph.supercell,
+                             ph.primitive,
+                             ph.force_constants)
+    rd.run_correlation_matrix(500)
+    shape = (len(ph.supercell) * 3, len(ph.supercell) * 3)
+    uu = np.transpose(rd.uu, axes=[0, 2, 1, 3]).reshape(shape)
+    uu_inv = np.transpose(rd.uu_inv, axes=[0, 2, 1, 3]).reshape(shape)
+
+    sqrt_masses = np.repeat(np.sqrt(ph.supercell.masses), 3)
+    uu_bare = mass_sand(uu, sqrt_masses)
+    uu_inv_bare = np.linalg.pinv(uu_bare)
+    _uu_inv = mass_sand(uu_inv_bare, sqrt_masses)
+
+    np.testing.assert_allclose(_uu_inv, uu_inv,
+                               atol=1e-5, rtol=1e-5)
+
+
+def mass_sand(matrix, mass):
+    return ((matrix * mass).T * mass).T
