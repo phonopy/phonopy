@@ -246,13 +246,14 @@ class DynmatToForceConstants(object):
         (self._shortest_vectors,
          self._multiplicity) = primitive.get_smallest_vectors()
         self._dynmat = None
+        self._fc = None
+
         n_s = len(self._supercell)
         n_p = len(self._primitive)
         if is_full_fc:
-            fc_shape = (n_s, n_s, 3, 3)
+            self._fc_shape = (n_s, n_s, 3, 3)
         else:
-            fc_shape = (n_p, n_s, 3, 3)
-        self._fc = np.zeros(fc_shape, dtype='double', order='C')
+            self._fc_shape = (n_p, n_s, 3, 3)
 
         self._dtype_complex = ("c%d" % (np.dtype('double').itemsize * 2))
 
@@ -276,6 +277,7 @@ class DynmatToForceConstants(object):
             self.dynamical_matrices = dynamical_matrices
 
     def run(self):
+        self._fc = np.zeros(self._fc_shape, dtype='double', order='C')
         self._inverse_transformation()
 
     @property
