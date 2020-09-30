@@ -32,6 +32,9 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import sys
+import gzip
+import yaml
 import numpy as np
 from .core import GruneisenBase
 from phonopy.units import VaspToTHz
@@ -44,6 +47,8 @@ class GruneisenBandStructure(GruneisenBase):
                  dynmat_plus,
                  dynmat_minus,
                  delta_strain=None,
+                 path_connections=None,
+                 labels=None,
                  factor=VaspToTHz):
         GruneisenBase.__init__(self,
                                dynmat,
@@ -51,8 +56,8 @@ class GruneisenBandStructure(GruneisenBase):
                                dynmat_minus,
                                delta_strain=delta_strain,
                                is_band_connection=True)
-        primitive = dynmat.get_primitive()
-        rec_lattice = np.linalg.inv(primitive.get_cell())
+        self._cell = dynmat.get_primitive()
+        rec_lattice = np.linalg.inv(self._cell.get_cell())
         distance_shift = 0.0
 
         self._paths = []
@@ -79,6 +84,16 @@ class GruneisenBandStructure(GruneisenBase):
                                 distances_with_shift])
 
             distance_shift = distances_with_shift[-1]
+        self._labels = None
+        self._path_connections = None
+        if path_connections is None:
+            self._path_connections = [True, ] * len(self._paths)
+            self._path_connections[-1] = False
+        else:
+            self._path_connections = path_connections
+        if (labels is not None and
+                len(labels) == (2 - np.array(self._path_connections)).sum()):
+            self._labels = labels
 
     def get_qpoints(self):
         return [path[0] for path in self._paths]
@@ -98,9 +113,69 @@ class GruneisenBandStructure(GruneisenBase):
     def get_frequencies(self):
         return [path[5] for path in self._paths]
 
-    def write_yaml(self):
-        f = open("gruneisen.yaml", 'w')
-        f.write("path:\n\n")
+    def write_yaml(self, comment=None, filename=None, compression=None):
+        if filename is not None:
+            _filename = filename
+
+        if compression is None:
+            if filename is None:
+                _filename = "gruneisen.yaml"
+            with open(_filename, 'w') as w:
+                self._write_yaml(w, comment)
+        elif compression == 'gzip':
+            if filename is None:
+                _filename = "gruneisen.yaml.gz"
+            with gzip.open(_filename, 'wb') as w:
+                self._write_yaml(w, comment, is_binary=True)
+        elif compression == 'lzma':
+            try:
+                import lzma
+            except ImportError:
+                raise("Reading a lzma compressed file is not supported "
+                      "by this python version.")
+            if filename is None:
+                _filename = "gruneisen.yaml.xz"
+            with lzma.open(_filename, 'w') as w:
+                self._write_yaml(w, comment, is_binary=True)
+
+    def _write_yaml(self, w, comment, is_binary=False):
+        natom = self._cell.get_number_of_atoms()
+        rec_lattice = np.linalg.inv(self._cell.cell)  # column vecs
+        nq_paths = []
+        for qpoints in self._paths:
+            nq_paths.append(len(qpoints))
+        text = []
+        if comment is not None:
+            text.append(yaml.dump(comment, default_flow_style=False).rstrip())
+        text.append("nqpoint: %-7d" % np.sum(nq_paths))
+        text.append("npath: %-7d" % len(self._paths))
+        text.append("segment_nqpoint:")
+        text += ["- %d" % nq for nq in nq_paths]
+        if self._labels:
+            text.append("labels:")
+            if self._is_legacy_plot:
+                for i in range(len(self._paths)):
+                    text.append("- [ \'%s\', \'%s\' ]" %
+                                (self._labels[i], self._labels[i + 1]))
+            else:
+                i = 0
+                for c in self._path_connections:
+                    text.append("- [ \'%s\', \'%s\' ]" %
+                                (self._labels[i], self._labels[i + 1]))
+                    if c:
+                        i += 1
+                    else:
+                        i += 2
+        text.append("reciprocal_lattice:")
+        for vec, axis in zip(rec_lattice.T, ('a*', 'b*', 'c*')):
+            text.append("- [ %12.8f, %12.8f, %12.8f ] # %2s" %
+                        (tuple(vec) + (axis,)))
+        text.append("natom: %-7d" % (natom))
+        text.append(str(self._cell))
+        text.append('')
+        text.append("path:")
+        text.append('')
+
         for band_structure in self._paths:
             (qpoints,
              distances,
@@ -110,20 +185,30 @@ class GruneisenBandStructure(GruneisenBase):
              frequencies,
              distances_with_shift) = band_structure
 
-            f.write("- nqpoint: %d\n" % len(qpoints))
-            f.write("  phonon:\n")
+            text.append("- nqpoint: %d" % len(qpoints))
+            text.append("  phonon:")
             for q, d, gs, freqs in zip(qpoints, distances, gamma, frequencies):
-                f.write("  - q-position: [ %10.7f, %10.7f, %10.7f ]\n" %
+                text.append("  - q-position: [ %10.7f, %10.7f, %10.7f ]" %
                         tuple(q))
-                f.write("    distance: %10.7f\n" % d)
-                f.write("    band:\n")
+                text.append("    distance: %10.7f" % d)
+                text.append("    band:")
                 for i, (g, freq) in enumerate(zip(gs, freqs)):
-                    f.write("    - # %d\n" % (i + 1))
-                    f.write("      gruneisen: %15.10f\n" % g)
-                    f.write("      frequency: %15.10f\n" % freq)
-                f.write("\n")
+                    text.append("    - # %d" % (i + 1))
+                    text.append("      gruneisen: %15.10f" % g)
+                    text.append("      frequency: %15.10f" % freq)
+                text.append("")
 
-        f.close()
+        self._write_lines(w, text, is_binary)
+
+    def _write_lines(self, w, lines, is_binary):
+        text = "\n".join(lines)
+        if is_binary:
+            if sys.version_info < (3, 0):
+                w.write(bytes(text))
+            else:
+                w.write(bytes(text, 'utf8'))
+        else:
+            w.write(text)
 
     def plot(self,
              axarr,

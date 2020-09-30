@@ -718,6 +718,8 @@ class VasprunxmlExpat(object):
         self.symbols = None
         self.NELECT = None
 
+        self._cbuf = None
+
     def parse(self):
         self._p.ParseFile(self._fileptr)
 
@@ -900,6 +902,7 @@ class VasprunxmlExpat(object):
             self._is_k_weights or
             self._is_generation):
             if name == 'v':
+                self._cbuf = ""
                 self._is_v = True
                 if 'name' in attrs.keys():
                     if attrs['name'] == 'divisions':
@@ -935,6 +938,7 @@ class VasprunxmlExpat(object):
 
         if name == 'field':
             if 'type' in attrs:
+                self._cbuf = ""
                 if attrs['type'] == 'string':
                     self._is_field_string = True
             else:
@@ -945,6 +949,7 @@ class VasprunxmlExpat(object):
 
         if name == 'i':
             if 'name' in attrs.keys():
+                self._cbuf = ""
                 if attrs['name'] == 'efermi':
                     self._is_i = True
                     self._is_efermi = True
@@ -956,6 +961,7 @@ class VasprunxmlExpat(object):
                     self._is_volume = True
 
         if self._is_energy and name == 'i':
+            self._cbuf = ""
             self._is_i = True
 
         if name == 'energy' and (not self._is_scstep):
@@ -966,6 +972,7 @@ class VasprunxmlExpat(object):
             self._is_rc = True
 
         if self._is_symbols and self._is_rc and name == 'c':
+            self._cbuf = ""
             self._is_c = True
 
         if self._is_born and name == 'set':
@@ -979,6 +986,7 @@ class VasprunxmlExpat(object):
                 self._is_rc = True
                 self._ps_atom = []
             if name == 'c':
+                self._cbuf = ""
                 self._is_c = True
 
         if name == 'array':
@@ -1007,6 +1015,7 @@ class VasprunxmlExpat(object):
                         b_num = int(attrs['comment'].split()[1])
                         self._proj_state[2] = b_num - 1
             if name == 'r':
+                self._cbuf = ""
                 self._is_r = True
 
         if self._is_eigenvalues:
@@ -1021,6 +1030,7 @@ class VasprunxmlExpat(object):
                         k_num = int(attrs['comment'].split()[1])
                         self._eig_state[1] = k_num - 1
             if name == 'r':
+                self._cbuf = ""
                 self._is_r = True
 
         if name == 'projected':
@@ -1080,11 +1090,13 @@ class VasprunxmlExpat(object):
             self._all_energies.append(self._energies)
 
         if name == 'v':
+            self._run_v()
             self._is_v = False
             if self._is_divisions:
                 self._is_divisions = False
 
         if name == 'i':
+            self._run_i()
             self._is_i = False
             if self._is_efermi:
                 self._is_efermi = False
@@ -1099,9 +1111,11 @@ class VasprunxmlExpat(object):
                 self.symbols.pop(-1)
 
         if name == 'c':
+            self._run_c()
             self._is_c = False
 
         if name == 'r':
+            self._run_r()
             self._is_r = False
 
         if name == 'projected':
@@ -1133,94 +1147,98 @@ class VasprunxmlExpat(object):
             if name == 'c':
                 self._is_c = False
 
-    def _char_data(self, data):
-        def to_float(x):
-            try:
-                val = float(x)
-                return val
-            except ValueError:
-                raise
-
-        def to_int(x):
-            try:
-                val = int(x)
-                return val
-            except ValueError:
-                raise
-
+    def _run_v(self):
         if self._is_v:
             if self._is_forces:
                 self._forces.append(
-                    [to_float(x) for x in data.split()])
-
+                    [self._to_float(x) for x in self._cbuf.split()])
             if self._is_stress:
                 self._stress.append(
-                    [to_float(x) for x in data.split()])
-
+                    [self._to_float(x) for x in self._cbuf.split()])
             if self._is_epsilon:
                 self._epsilon.append(
-                    [to_float(x) for x in data.split()])
-
+                    [self._to_float(x) for x in self._cbuf.split()])
             if self._is_positions:
                 self._points.append(
-                    [to_float(x) for x in data.split()])
-
+                    [self._to_float(x) for x in self._cbuf.split()])
             if self._is_basis:
                 self._lattice.append(
-                    [to_float(x) for x in data.split()])
-
+                    [self._to_float(x) for x in self._cbuf.split()])
             if self._is_k_weights:
-                self._k_weights.append(to_float(data))
-
+                self._k_weights.append(self._to_float(self._cbuf))
             if self._is_born:
                 self._born_atom.append(
-                    [to_float(x) for x in data.split()])
-
+                    [self._to_float(x) for x in self._cbuf.split()])
             if self._is_generation:
                 if self._is_divisions:
-                    self._k_mesh = [to_int(x) for x in data.split()]
+                    self._k_mesh = [self._to_int(x) for x in self._cbuf.split()]
+            self._cbuf = None
 
+    def _run_i(self):
         if self._is_i:
             if self._is_energy:
-                self._energies.append(to_float(data.strip()))
-
+                self._energies.append(self._to_float(self._cbuf.strip()))
             if self._is_efermi:
-                self.efermi = to_float(data.strip())
-
+                self.efermi = self._to_float(self._cbuf.strip())
             if self._is_NELECT:
-                self.NELECT = to_float(data.strip())
-
+                self.NELECT = self._to_float(self._cbuf.strip())
             if self._is_volume:
-                self._all_volumes.append(to_float(data.strip()))
+                self._all_volumes.append(self._to_float(self._cbuf.strip()))
+            self._cbuf = None
 
+    def _run_c(self):
         if self._is_c:
             if self._is_symbols:
-                self.symbols.append(str(data.strip()))
+                self.symbols.append(str(self._cbuf.strip()))
             if (self._field_val == 'pseudopotential' and
                 self._is_set and self._is_rc):
                 if len(self._ps_atom) == 0:
-                    self._ps_atom.append(to_int(data.strip()))
+                    self._ps_atom.append(self._to_int(self._cbuf.strip()))
                 elif len(self._ps_atom) == 1:
-                    self._ps_atom.append(data.strip())
+                    self._ps_atom.append(self._cbuf.strip())
                 elif len(self._ps_atom) == 2:
-                    self._ps_atom.append(to_float(data.strip()))
+                    self._ps_atom.append(self._to_float(self._cbuf.strip()))
                 elif len(self._ps_atom) == 3:
-                    self._ps_atom.append(to_float(data.strip()))
+                    self._ps_atom.append(self._to_float(self._cbuf.strip()))
                 elif len(self._ps_atom) == 4:
-                    self._ps_atom.append(data.strip())
+                    self._ps_atom.append(self._cbuf.strip())
+            self._cbuf = None
 
+    def _run_r(self):
         if self._is_r:
             if self._is_projected and not self._is_proj_eig:
                 s, k, b = self._proj_state
-                vals = [to_float(x) for x in data.split()]
+                vals = [self._to_float(x) for x in self._cbuf.split()]
                 self._projectors[s][k][b].append(vals)
             elif self._is_eigenvalues:
                 s, k = self._eig_state
-                vals = [to_float(x) for x in data.split()]
+                vals = [self._to_float(x) for x in self._cbuf.split()]
                 self._eigenvalues[s][k].append(vals)
+            self._cbuf = None
 
+    def _run_field_string(self):
         if self._is_field_string:
-            self._field_val = data.strip()
+            self._field_val = self._cbuf.strip()
+            self._cbuf = None
+
+    def _char_data(self, data):
+        if self._cbuf is not None:
+            self._cbuf += data
+
+    def _to_float(self, x):
+        try:
+            val = float(x)
+            return val
+        except ValueError:
+            raise
+
+    def _to_int(self, x):
+        try:
+            val = int(x)
+            return val
+        except ValueError:
+            raise
+
 
 
 #

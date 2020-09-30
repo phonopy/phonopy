@@ -1,77 +1,42 @@
-import unittest
 import os
 import numpy as np
-from phonopy import Phonopy
-from phonopy.interface.vasp import read_vasp
-from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
 from phonopy.phonon.random_displacements import RandomDisplacements
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
-disp_str = """ 0.08604722 -0.12136884  0.2259561
--0.13041486  0.15097802  0.02631405
--0.07863048 -0.02481802  0.25070963
- 0.18408689  0.07694356 -0.16558913
- 0.33706965  0.00628077  0.20969844
- 0.21434168  0.02912861 -0.04021545
- 0.0249472   0.32642679 -0.09319597
- 0.01595788  0.19935434 -0.52105534
- 0.00885736  0.03454223  0.28437986
- 0.33836971  0.12079372 -0.16240665
--0.10473928  0.2087231  -0.14207728
--0.08785425  0.17651202 -0.51115053
- 0.35337593  0.28786038  0.00841824
--0.21919447  0.24888609 -0.42068416
- 0.01601971  0.02961431 -0.14149282
--0.40903733 -0.20640984 -0.10534949
- 0.12547414  0.03701679  0.222098
- 0.43732633  0.05404798 -0.21346988
- 0.04803753  0.2188926  -0.14176129
- 0.13245449  0.15793342 -0.40829428
- 0.26091131  0.09662185  0.10248825
--0.3035006   0.14364851 -0.32205807
--0.03180122  0.18306307 -0.36144391
--0.42215871  0.05674984 -0.16827307
--0.06753283  0.07419713  0.27199926
- 0.56660137  0.09149754 -0.24834841
--0.07235513  0.06700648 -0.13895612
--0.14135257  0.18357592 -0.35672661
- 0.23447205  0.24139625 -0.04767531
- 0.02104433  0.15424369 -0.37353626
--0.01008879  0.1111799  -0.41855204
--0.42279591  0.00705917 -0.10248661
--0.40652195  0.21784334 -0.12915309
- 0.21742623 -0.03333486  0.09109975
--0.17291133  0.17695929  0.03105908
- 0.49976052 -0.08295726  0.03622586
- 0.27168622  0.22665456 -0.07076577
- 0.20052739  0.04233814  0.11868699
- 0.30357113 -0.21161182  0.06214248
--0.01617524 -0.14392534  0.00242148
--0.24864539  0.00309787 -0.04601912
- 0.0032162  -0.03904985 -0.06521829
--0.43430288  0.25621613 -0.11019557
--0.04498765  0.00251074  0.17407847
--0.1378953   0.06588659 -0.13111823
- 0.18526224 -0.02556599  0.03865567
- 0.08806443  0.20607792 -0.0402066
- 0.4637113  -0.03705598  0.0784063
--0.04777629 -0.05883407 -0.03277642
--0.39592089  0.13746402 -0.08217123
--0.12889752  0.24904472 -0.14989202
--0.29222888  0.16252002  0.17399822
--0.23542401  0.18728961 -0.12993575
- 0.23570141  0.16881034  0.02496769
--0.10183241  0.05345851 -0.08433899
- 0.49015386 -0.15558096  0.06616878
--0.28644251 -0.14249684  0.02677136
--0.12587733  0.02733008 -0.12848019
--0.30201549  0.26556372 -0.16348007
- 0.00981878  0.16449613  0.10119801
- 0.03282114  0.01737568 -0.11360569
- 0.17547094  0.18202549  0.01324873
- 0.13272966  0.096398   -0.10436066
- 0.40076674 -0.10197913  0.05464131"""
+disp_ref = [
+    0.5255182, 0.1154481, -0.1650938, -0.1391975, -0.0325669, 0.1159958,
+    -0.0515713, -0.0560816, 0.2002799, 0.0274924, 0.0819247, 0.0836650,
+    -0.1757185, -0.2045233, -0.0306412, -0.0974841, 0.0304091, 0.2880002,
+    0.1427436, -0.3626578, 0.3181895, 0.2947496, 0.1593430, -0.0270945,
+    0.0527920, 0.1460105, 0.0792984, -0.2346512, -0.0501514, 0.2469412,
+    -0.2742788, 0.1701127, -0.3119930, -0.1617613, 0.1000996, -0.4019160,
+    0.4351045, -0.0419081, 0.0114417, -0.2962694, -0.0621766, 0.1464256,
+    -0.1706402, -0.0206058, -0.2533156, -0.3062348, -0.2719404, 0.0049185,
+    0.1427471, -0.1731007, -0.2020210, 0.1411770, 0.1178138, -0.2353401,
+    0.0980458, -0.2291191, 0.2448786, 0.1874100, 0.3689271, 0.0724985,
+    0.1241272, -0.4015733, 0.0086797, 0.2684956, 0.0376407, -0.0569154,
+    -0.3279178, -0.1151380, -0.1898453, -0.3194299, -0.0529300, 0.0276185,
+    0.2095868, 0.2255762, 0.4280477, -0.0736027, 0.2537949, -0.0969395,
+    0.0178825, -0.3059003, -0.0021005, 0.1399220, 0.2784544, -0.3941123,
+    -0.4035959, -0.1591978, -0.0469361, -0.2885836, 0.0882290, 0.1138904,
+    0.1834180, 0.2155102, -0.5188357, -0.0051214, 0.0364200, -0.1075861,
+    0.0253252, -0.0715150, 0.2132894, 0.1328423, 0.0864454, 0.1657655,
+    -0.0421870, -0.1538078, -0.1405782, 0.0256899, -0.0427033, -0.3010839,
+    -0.0113709, 0.1364445, 0.1728311, -0.0965015, -0.0690002, 0.0431493,
+    -0.0993202, 0.0511081, -0.2262437, -0.1842665, 0.0659104, -0.2986636,
+    0.0035139, 0.0072227, 0.1455849, 0.0240171, 0.1811745, 0.1656752,
+    0.2549368, -0.0440376, 0.1614027, -0.0297986, 0.0068320, -0.0120374,
+    0.0437468, -0.0659683, -0.0085081, -0.3112228, 0.3285055, 0.1853445,
+    0.0500337, 0.0471374, -0.2013677, 0.1400112, 0.0998814, 0.1771226,
+    -0.0248959, -0.0715234, -0.0264319, -0.1041596, 0.0007441, 0.2618391,
+    -0.0862567, -0.0124514, -0.2188877, 0.1648098, 0.0604868, -0.0871112,
+    0.0935734, -0.3321283, 0.1101409, -0.0615406, 0.2851537, 0.1911611,
+    0.0248805, -0.0461630, -0.2658276, 0.0777193, -0.0086363, -0.2819639,
+    0.1037560, 0.0429027, -0.0374409, -0.0850927, 0.0575467, 0.1754464,
+    0.1291631, -0.1632558, 0.2051513, 0.0874337, 0.0664333, -0.2582605,
+    0.2300321, 0.0591922, 0.0911322, -0.0788647, -0.3388829, 0.2461502,
+    -0.0158785, -0.0675720, 0.1815487, -0.1629953, -0.0216446, -0.1068854]
 
 randn_ii_str = """-1.7497654731  0.3426804033  1.1530358026 -0.2524360365  0.9813207870  0.5142188414
  0.2211796692 -1.0700433306 -0.1894958308  0.2550014443 -0.4580269855  0.4351634881
@@ -109,72 +74,71 @@ randn_ij_str_2 = """ 0.1088634678  0.5078095905 -0.8622273465  1.2494697427 -0.0
 -0.7044181997 -0.5913751211  0.7369951690  0.4358672525  1.7759935855  0.5130743788"""
 
 
-class TestRandomDisplacements(unittest.TestCase):
-    def setUp(self):
-        pass
+def test_random_displacements(ph_nacl):
+    """Test by fixed random numbers of np.random.normal
 
-    def tearDown(self):
-        pass
+    randn_ii and randn_ij were created by
 
-    def _get_phonon_NaCl(self):
-        cell = read_vasp(os.path.join(data_dir, "..", "POSCAR_NaCl"))
-        phonon = Phonopy(cell,
-                         np.diag([2, 2, 2]),
-                         primitive_matrix=[[0, 0.5, 0.5],
-                                           [0.5, 0, 0.5],
-                                           [0.5, 0.5, 0]])
-        filename = os.path.join(data_dir, "..", "FORCE_SETS_NaCl")
-        force_sets = parse_FORCE_SETS(filename=filename)
-        phonon.set_displacement_dataset(force_sets)
-        phonon.produce_force_constants()
-        phonon.symmetrize_force_constants()
-        filename_born = os.path.join(data_dir, "..", "BORN_NaCl")
-        nac_params = parse_BORN(phonon.get_primitive(), filename=filename_born)
-        phonon.set_nac_params(nac_params)
-        return phonon
+        np.random.seed(seed=100)
+        randn_ii = np.random.normal(size=(N_ii, 1, num_band))
+        randn_ij = np.random.normal(size=(N_ij, 2, 1, num_band)).
 
-    def test_NaCl(self):
-        """Test by fixed random numbers of np.random.normal
+    numpy v1.16.4 (py37h6b0580a_0) on macOS installed from conda-forge
+    was used.
 
-        randn_ii and randn_ij were created by
+    """
 
-            np.random.seed(seed=100)
-            randn_ii = np.random.normal(size=(N_ii, 1, num_band))
-            randn_ij = np.random.normal(size=(N_ij, 2, 1, num_band)).
+    ph = ph_nacl
+    rd = RandomDisplacements(ph.supercell,
+                             ph.primitive,
+                             ph.force_constants,
+                             cutoff_frequency=0.01)
+    num_band = len(ph.primitive) * 3
+    N = len(ph.supercell) // len(ph.primitive)
+    # N = N_ii + N_ij * 2
+    # len(rd.qpoints) = N_ii + N_ij
+    N_ij = N - len(rd.qpoints)
+    N_ii = N - N_ij * 2
+    shape_ii = (N_ii, 1, num_band)
+    randn_ii = np.fromstring(randn_ii_str.replace('\n', ' '),
+                             dtype=float, sep=' ').reshape(shape_ii)
+    shape_ij = (N_ij, 2, 1, num_band)
+    randn_ij = np.zeros(shape_ij, dtype=float)
+    randn_ij[:, 0, 0, :] = np.fromstring(
+        randn_ij_str_1.replace('\n', ' '),
+        dtype=float, sep=' ').reshape(N_ij, num_band)
+    randn_ij[:, 1, 0, :] = np.fromstring(
+        randn_ij_str_2.replace('\n', ' '),
+        dtype=float, sep=' ').reshape(N_ij, num_band)
 
-        numpy v1.16.4 (py37h6b0580a_0) on macOS installed from conda-forge
-        was used.
+    rd.run(500, randn=(randn_ii, randn_ij))
 
-        """
+    # for line in rd.u.ravel().reshape(-1, 6):
+    #     print(("%.7f, " * 6) % tuple(line))
 
-        phonon = self._get_phonon_NaCl()
-        rd = RandomDisplacements(phonon.supercell,
-                                 phonon.primitive,
-                                 phonon.force_constants,
-                                 cutoff_frequency=0.01)
-        num_band = len(phonon.primitive) * 3
-        N = int(np.rint(phonon.supercell.volume / phonon.primitive.volume))
-        N_ij = N - len(rd.qpoints)
-        N_ii = N - N_ij * 2
-        shape_ii = (N_ii, 1, num_band)
-        randn_ii = np.fromstring(randn_ii_str.replace('\n', ' '),
-                                 dtype=float, sep=' ').reshape(shape_ii)
-        shape_ij = (N_ij, 2, 1, num_band)
-        randn_ij = np.zeros(shape_ij, dtype=float)
-        randn_ij[:, 0, 0, :] = np.fromstring(
-            randn_ij_str_1.replace('\n', ' '),
-            dtype=float, sep=' ').reshape(N_ij, num_band)
-        randn_ij[:, 1, 0, :] = np.fromstring(
-            randn_ij_str_2.replace('\n', ' '),
-            dtype=float, sep=' ').reshape(N_ij, num_band)
+    data = np.array(disp_ref)
+    np.testing.assert_allclose(data, rd.u.ravel(), atol=1e-5)
 
-        rd.run(500, randn=(randn_ii, randn_ij))
+    rd.run_d2f()
+    np.testing.assert_allclose(rd.force_constants, ph.force_constants,
+                               atol=1e-5, rtol=1e-5)
 
-        data = np.fromstring(disp_str.replace('\n', ' '), dtype=float, sep=' ')
-        np.testing.assert_allclose(data, rd.u.ravel(), atol=1e-5)
+    rd = RandomDisplacements(ph.supercell,
+                             ph.primitive,
+                             ph.force_constants)
+    rd.run_correlation_matrix(500)
+    shape = (len(ph.supercell) * 3, len(ph.supercell) * 3)
+    uu = np.transpose(rd.uu, axes=[0, 2, 1, 3]).reshape(shape)
+    uu_inv = np.transpose(rd.uu_inv, axes=[0, 2, 1, 3]).reshape(shape)
+
+    sqrt_masses = np.repeat(np.sqrt(ph.supercell.masses), 3)
+    uu_bare = mass_sand(uu, sqrt_masses)
+    uu_inv_bare = np.linalg.pinv(uu_bare)
+    _uu_inv = mass_sand(uu_inv_bare, sqrt_masses)
+
+    np.testing.assert_allclose(_uu_inv, uu_inv,
+                               atol=1e-5, rtol=1e-5)
 
 
-if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(
-        TestRandomDisplacements)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+def mass_sand(matrix, mass):
+    return ((matrix * mass).T * mass).T
