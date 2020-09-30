@@ -625,12 +625,23 @@ class BandStructure(object):
                                    'eigenvector',
                                    'group_velocity'):
                         w.create_dataset(key, data=np.string_(comment[key]))
+
+            path_labels = []
             if self._labels:
-                max_len = max([len(l) for l in self._labels])
-                dset = w.create_dataset(
-                    'label', (len(self._labels),), dtype='S%d' % max_len)
-                for i, l in enumerate(self._labels):
-                    dset[i] = np.string_(l)
+                if self._is_legacy_plot:
+                    for i in range(len(self._paths)):
+                        path_labels.append([
+                                np.string_(self._labels[i]), np.string_(self._labels[i + 1])])
+                else:
+                    i = 0
+                    for c in self._path_connections:
+                        path_labels.append([
+                                np.string_(self._labels[i]), np.string_(self._labels[i + 1])])
+                        if c:
+                            i += 1
+                        else:
+                            i += 2
+            w.create_dataset('label', data=path_labels)
 
     def write_yaml(self,
                    comment=None,
