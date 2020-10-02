@@ -643,6 +643,12 @@ class BandStructure(object):
                             i += 2
             w.create_dataset('label', data=path_labels)
 
+            nq_paths = []
+            for qpoints in self._paths:
+                nq_paths.append(len(qpoints))
+            w.create_dataset('nqpoint', data=[np.sum(nq_paths)])
+            w.create_dataset('segment_nqpoint', data=nq_paths)
+
     def write_yaml(self,
                    comment=None,
                    filename=None,
