@@ -230,7 +230,7 @@ def get_options():
         help="Title of plot (legacy plot only)")
     parser.add_argument(
         "filenames", nargs='*',
-        help="Filenames of phonon band structure result (band.yaml)")
+        help="Filenames of phonon band structure result: band.yaml or band.hdf5(with --hdf5) ")
     args = parser.parse_args()
     return args
 
