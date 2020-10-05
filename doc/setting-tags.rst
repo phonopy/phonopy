@@ -1370,10 +1370,10 @@ Characters of irreducible representations
 ``IRREPS``
 ~~~~~~~~~~~~~~~~~~~~
 
-Characters of irreducible representations (IRs) of phonon modes are
+Characters of irreducible representations (Irreps) of phonon modes are
 shown. For this calculation, a primitive cell has to be used. If the
 input unit cell is a non-primitive cell, it has to be transformed to a
-primitive cell using ``PRIMITIVE_AXIS`` tag.
+primitive cell using ``PRIMITIVE_AXES`` tag.
 
 The first three values gives a *q*-point in reduced coordinates
 to be calculated.  The degenerated modes are searched only by the closeness of
@@ -1384,10 +1384,9 @@ the fourth value in the frequency unit that the user specified.
 
    IRREPS = 0 0 0 1e-3
 
-Only the databases of IRs for a few point group types at the
-:math:`\Gamma` point are implemented. If the database is available,
-the symbols of the IRs and the rotation operations are shown.
 
+Symbols of Irreps for the 32 point group types at the :math:`\Gamma`
+point are shown but not at non-:math:`\Gamma` point.
 
 ``SHOW_IRREPS``
 ~~~~~~~~~~~~~~~~
