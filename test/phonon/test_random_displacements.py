@@ -91,8 +91,7 @@ def test_random_displacements(ph_nacl):
     ph = ph_nacl
     rd = RandomDisplacements(ph.supercell,
                              ph.primitive,
-                             ph.force_constants,
-                             cutoff_frequency=0.01)
+                             ph.force_constants)
     num_band = len(ph.primitive) * 3
     N = len(ph.supercell) // len(ph.primitive)
     # N = N_ii + N_ij * 2
@@ -123,9 +122,6 @@ def test_random_displacements(ph_nacl):
     np.testing.assert_allclose(rd.force_constants, ph.force_constants,
                                atol=1e-5, rtol=1e-5)
 
-    rd = RandomDisplacements(ph.supercell,
-                             ph.primitive,
-                             ph.force_constants)
     rd.run_correlation_matrix(500)
     shape = (len(ph.supercell) * 3, len(ph.supercell) * 3)
     uu = np.transpose(rd.uu, axes=[0, 2, 1, 3]).reshape(shape)
