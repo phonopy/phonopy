@@ -3,6 +3,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Setting tags &#8212; Phonopy v.2.8.1</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -11,7 +12,7 @@
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/language_data.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="How to watch animation" href="animation.html" />
@@ -20,9 +21,9 @@
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
-<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-1.12.4.min.js "></script>
 <script type="text/javascript" src="_static/js/jquery-fix.js "></script>
-<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.4.1/js/bootstrap.min.js "></script>
 <script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
 
   </head><body>
@@ -1427,10 +1428,10 @@ vector is shown in <code class="docutils literal notranslate"><span class="pre">
 <span id="irreducible-representation-related-tags"></span><h2><a class="toc-backref" href="#id76">Characters of irreducible representations</a><a class="headerlink" href="#characters-of-irreducible-representations" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="irreps">
 <span id="irreps-tag"></span><h3><a class="toc-backref" href="#id77"><code class="docutils literal notranslate"><span class="pre">IRREPS</span></code></a><a class="headerlink" href="#irreps" title="Permalink to this headline">¶</a></h3>
-<p>Characters of irreducible representations (IRs) of phonon modes are
+<p>Characters of irreducible representations (Irreps) of phonon modes are
 shown. For this calculation, a primitive cell has to be used. If the
 input unit cell is a non-primitive cell, it has to be transformed to a
-primitive cell using <code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXIS</span></code> tag.</p>
+primitive cell using <code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code> tag.</p>
 <p>The first three values gives a <em>q</em>-point in reduced coordinates
 to be calculated.  The degenerated modes are searched only by the closeness of
 frequencies. The frequency difference to be tolerated is specified by
@@ -1438,9 +1439,8 @@ the fourth value in the frequency unit that the user specified.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">IRREPS</span> <span class="o">=</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mf">1e-3</span>
 </pre></div>
 </div>
-<p>Only the databases of IRs for a few point group types at the
-<span class="math notranslate nohighlight">\(\Gamma\)</span> point are implemented. If the database is available,
-the symbols of the IRs and the rotation operations are shown.</p>
+<p>Symbols of Irreps for the 32 point group types at the <span class="math notranslate nohighlight">\(\Gamma\)</span>
+point are shown but not at non-<span class="math notranslate nohighlight">\(\Gamma\)</span> point.</p>
 </div>
 <div class="section" id="show-irreps">
 <h3><a class="toc-backref" href="#id78"><code class="docutils literal notranslate"><span class="pre">SHOW_IRREPS</span></code></a><a class="headerlink" href="#show-irreps" title="Permalink to this headline">¶</a></h3>
@@ -1619,7 +1619,7 @@ Force constants are not stored when force sets are stored.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.2.1.<br/>
     </p>
   </div>
 </footer>
