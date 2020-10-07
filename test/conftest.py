@@ -1,6 +1,8 @@
 import os
 import pytest
 import phonopy
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.interface.phonopy_yaml import read_cell_yaml
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -15,3 +17,50 @@ def ph_nacl():
                         born_filename=born_filename,
                         is_compact_fc=False,
                         log_level=1, produce_fc=True)
+
+
+@pytest.fixture(scope='session')
+def convcell_si():
+    symbols = ['Si'] * 2 + ['O'] * 4
+    lattice = [[4.65, 0, 0],
+               [0, 4.75, 0],
+               [0, 0, 3.25]]
+    points = [[0.0, 0.0, 0.0],
+              [0.5, 0.5, 0.5],
+              [0.3, 0.3, 0.0],
+              [0.7, 0.7, 0.0],
+              [0.2, 0.8, 0.5],
+              [0.8, 0.2, 0.5]]
+    return PhonopyAtoms(cell=lattice,
+                        scaled_positions=points,
+                        symbols=symbols)
+
+
+@pytest.fixture(scope='session')
+def primcell_si():
+    symbols = ['Si'] * 2
+    lattice = [[0, 2.73, 2.73],
+               [2.73, 0, 2.73],
+               [2.73, 2.73, 0]]
+    points = [[0.75, 0.75, 0.75],
+              [0.5, 0.5, 0.5]]
+    return PhonopyAtoms(cell=lattice,
+                        scaled_positions=points,
+                        symbols=symbols)
+
+
+@pytest.fixture(scope='session')
+def convcell_nacl():
+    # a=5.59974764
+    return read_cell_yaml(os.path.join(current_dir, "NaCl.yaml"))
+
+
+@pytest.fixture(scope='session')
+def primcell_nacl():
+    symbols = ['Na', 'Cl']
+    x = 2.79987382
+    lattice = [[0, x, x], [x, 0, x], [x, x, 0]]
+    points = [[0, 0, 0], [0.5, 0.5, 0.5]]
+    return PhonopyAtoms(cell=lattice,
+                        scaled_positions=points,
+                        symbols=symbols)
