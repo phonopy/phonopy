@@ -1,11 +1,7 @@
-import unittest
-
 import numpy as np
 from phonopy.structure.symmetry import (Symmetry, symmetrize_borns_and_epsilon,
-                                        _get_supercell_and_primitive,
                                         _get_mapping_between_cells)
 from phonopy.structure.cells import get_supercell
-from phonopy.interface.phonopy_yaml import read_cell_yaml
 import os
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
@@ -32,9 +28,9 @@ def test_get_map_operations(convcell_nacl):
         assert (diff < symprec).all()
 
 
-def test_magmom():
+def test_magmom(convcell_cr):
     symprec = 1e-5
-    cell = read_cell_yaml(os.path.join(data_dir, "Cr.yaml"))
+    cell = convcell_cr
     symmetry_nonspin = Symmetry(cell, symprec=symprec)
     atom_map_nonspin = symmetry_nonspin.get_map_atoms()
     len_sym_nonspin = len(
@@ -63,84 +59,51 @@ def test_magmom():
     assert len_sym_nonspin != len_sym_brokenspin
 
 
-class TestSymmetrizeBornsAndEpsilon(unittest.TestCase):
-    def setUp(self):
-        self.pmat = [[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]]
-        self.smat = np.eye(3, dtype='int') * 2
-        self.cell = read_cell_yaml(os.path.join(data_dir, "..", "NaCl.yaml"))
-        self.scell, self.pcell = _get_supercell_and_primitive(
-            self.cell,
-            primitive_matrix=self.pmat,
-            supercell_matrix=self.smat)
-        self.idx = [self.scell.u2u_map[i]
-                    for i in self.scell.s2u_map[self.pcell.p2s_map]]
-        self.epsilon = np.array([[2.43533967, 0, 0],
-                                 [0, 2.43533967, 0],
-                                 [0, 0, 2.43533967]])
-        self.borns = np.array([[[1.08875538, 0, 0],
-                                [0, 1.08875538, 0],
-                                [0, 0, 1.08875538]],
-                               [[1.08875538, 0, 0],
-                                [0, 1.08875538, 0],
-                                [0, 0, 1.08875538]],
-                               [[1.08875538, 0, 0],
-                                [0, 1.08875538, 0],
-                                [0, 0, 1.08875538]],
-                               [[1.08875538, 0, 0],
-                                [0, 1.08875538, 0],
-                                [0, 0, 1.08875538]],
-                               [[-1.08875538, 0, 0],
-                                [0, -1.08875538, 0],
-                                [0, 0, -1.08875538]],
-                               [[-1.08875538, 0, 0],
-                                [0, -1.08875538, 0],
-                                [0, 0, -1.08875538]],
-                               [[-1.08875538, 0, 0],
-                                [0, -1.08875538, 0],
-                                [0, 0, -1.08875538]],
-                               [[-1.08875538, 0, 0],
-                                [0, -1.08875538, 0],
-                                [0, 0, -1.08875538]]])
-
-    def tearDown(self):
-        pass
-
-    def test_only_symmetrize(self):
-        borns, epsilon = symmetrize_borns_and_epsilon(
-            self.borns,
-            self.epsilon,
-            self.cell)
-        np.testing.assert_allclose(borns, self.borns)
-        np.testing.assert_allclose(epsilon, self.epsilon)
-        # primitive_matrix=[[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]])
-
-    def test_with_pmat_and_smat(self):
-        borns, epsilon = symmetrize_borns_and_epsilon(
-            self.borns,
-            self.epsilon,
-            self.cell,
-            primitive_matrix=self.pmat,
-            supercell_matrix=self.smat)
-        np.testing.assert_allclose(borns, self.borns[self.idx])
-        np.testing.assert_allclose(epsilon, self.epsilon)
-
-    def test_with_pcell(self):
-        idx2 = _get_mapping_between_cells(self.pcell, self.pcell)
-
-        np.testing.assert_array_equal(
-            idx2, np.arange(self.pcell.get_number_of_atoms()))
-
-        borns, epsilon = symmetrize_borns_and_epsilon(
-            self.borns,
-            self.epsilon,
-            self.cell,
-            primitive=self.pcell)
-        np.testing.assert_allclose(borns, self.borns[self.idx][idx2])
-        np.testing.assert_allclose(epsilon, self.epsilon)
+def test_symmetrize_borns_and_epsilon(ph_nacl):
+    nac_params = ph_nacl.nac_params
+    borns, epsilon = symmetrize_borns_and_epsilon(
+        nac_params['born'], nac_params['dielectric'], ph_nacl.primitive)
+    np.testing.assert_allclose(borns, nac_params['born'], atol=1e-8)
+    np.testing.assert_allclose(epsilon, nac_params['dielectric'], atol=1e-8)
 
 
-if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(
-        TestSymmetrizeBornsAndEpsilon)
-    unittest.TextTestRunner(verbosity=2).run(suite)
-    # unittest.main()
+def test_with_pmat_and_smat(ph_nacl):
+    pcell = ph_nacl.primitive
+    scell = ph_nacl.supercell
+    idx = [scell.u2u_map[i] for i in scell.s2u_map[pcell.p2s_map]]
+    uborns, uepsilon = _get_nac_params_in_unitcell(ph_nacl)
+    borns, epsilon = symmetrize_borns_and_epsilon(
+        uborns,
+        uepsilon,
+        ph_nacl.unitcell,
+        primitive_matrix=ph_nacl.primitive_matrix,
+        supercell_matrix=ph_nacl.supercell_matrix)
+    np.testing.assert_allclose(borns, uborns[idx], atol=1e-8)
+    np.testing.assert_allclose(epsilon, uepsilon, atol=1e-8)
+
+
+def test_with_pcell(ph_nacl):
+    pcell = ph_nacl.primitive
+    scell = ph_nacl.supercell
+    idx = [scell.u2u_map[i] for i in scell.s2u_map[pcell.p2s_map]]
+    idx2 = _get_mapping_between_cells(pcell, pcell)
+    np.testing.assert_array_equal(idx2, np.arange(len(pcell)))
+
+    uborns, uepsilon = _get_nac_params_in_unitcell(ph_nacl)
+    borns, epsilon = symmetrize_borns_and_epsilon(
+        uborns, uepsilon, ph_nacl.unitcell, primitive=pcell)
+    np.testing.assert_allclose(borns, uborns[idx][idx2], atol=1e-8)
+    np.testing.assert_allclose(epsilon, uepsilon, atol=1e-8)
+
+
+def _get_nac_params_in_unitcell(ph):
+    nac_params = ph.nac_params
+    uepsilon = nac_params['dielectric']
+    pborns = nac_params['born']
+    s2p_map = ph.primitive.s2p_map
+    p2p_map = ph.primitive.p2p_map
+    s2pp_map = [p2p_map[i] for i in s2p_map]
+    sborns = pborns[s2pp_map]
+    uborns = np.array([sborns[i] for i in ph.supercell.u2s_map])
+
+    return uborns, uepsilon

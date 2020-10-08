@@ -76,3 +76,14 @@ def primcell_nacl():
     return PhonopyAtoms(cell=lattice,
                         scaled_positions=points,
                         symbols=symbols)
+
+
+@pytest.fixture(scope='session')
+def convcell_cr():
+    symbols = ['Cr'] * 2
+    a = 2.812696943681890
+    lattice = [[a, 0, 0], [0, a, 0], [0, 0, a]]
+    points = [[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]]
+    return PhonopyAtoms(cell=lattice,
+                        scaled_positions=points,
+                        symbols=symbols)
