@@ -36,7 +36,8 @@ import warnings
 import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (get_supercell, get_primitive,
-                                     shape_supercell_matrix, SNF3x3)
+                                     shape_supercell_matrix)
+from phonopy.structure.snf import SNF3x3
 from phonopy.harmonic.force_constants import (
     distribute_force_constants_by_translations)
 

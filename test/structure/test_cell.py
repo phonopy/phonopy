@@ -7,12 +7,12 @@ from phonopy.interface.phonopy_yaml import read_cell_yaml
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-def test_get_supercell_convcell_si(convcell_si):
-    _test_get_supercell_convcell_si(convcell_si, is_old_style=True)
+def test_get_supercell_convcell_sio2(convcell_sio2):
+    _test_get_supercell_convcell_sio2(convcell_sio2, is_old_style=True)
 
 
-def test_get_supercell_convcell_si_snf(convcell_si):
-    _test_get_supercell_convcell_si(convcell_si, is_old_style=False)
+def test_get_supercell_convcell_sio2_snf(convcell_sio2):
+    _test_get_supercell_convcell_sio2(convcell_sio2, is_old_style=False)
 
 
 def test_get_supercell_primcell_si(primcell_si):
@@ -31,10 +31,10 @@ def test_get_supercell_nacl_snf(convcell_nacl):
     _compare_cells(scell, scell_snf)
 
 
-def _test_get_supercell_convcell_si(convcell_si, is_old_style=True):
+def _test_get_supercell_convcell_sio2(convcell_sio2, is_old_style=True):
     smat = np.diag([1, 2, 3])
     fname = "SiO2-123.yaml"
-    scell = get_supercell(convcell_si, smat, is_old_style=is_old_style)
+    scell = get_supercell(convcell_sio2, smat, is_old_style=is_old_style)
     cell_ref = read_cell_yaml(os.path.join(data_dir, fname))
     if is_old_style is True:
         _compare_cells_with_order(scell, cell_ref)

@@ -20,7 +20,7 @@ def ph_nacl():
 
 
 @pytest.fixture(scope='session')
-def convcell_si():
+def convcell_sio2():
     symbols = ['Si'] * 2 + ['O'] * 4
     lattice = [[4.65, 0, 0],
                [0, 4.75, 0],
@@ -51,14 +51,26 @@ def primcell_si():
 
 @pytest.fixture(scope='session')
 def convcell_nacl():
-    # a=5.59974764
-    return read_cell_yaml(os.path.join(current_dir, "NaCl.yaml"))
+    symbols = ['Na'] * 4 + ['Cl'] * 4
+    a = 5.6903014761756712
+    lattice = [[a, 0, 0], [0, a, 0], [0, 0, a]]
+    points = [[0.0, 0.0, 0.0],
+              [0.0, 0.5, 0.5],
+              [0.5, 0.0, 0.5],
+              [0.5, 0.5, 0.0],
+              [0.5, 0.5, 0.5],
+              [0.5, 0.0, 0.0],
+              [0.0, 0.5, 0.0],
+              [0.0, 0.0, 0.5]]
+    return PhonopyAtoms(cell=lattice,
+                        scaled_positions=points,
+                        symbols=symbols)
 
 
 @pytest.fixture(scope='session')
 def primcell_nacl():
     symbols = ['Na', 'Cl']
-    x = 2.79987382
+    x = 5.6903014761756712 / 2
     lattice = [[0, x, x], [x, 0, x], [x, x, 0]]
     points = [[0, 0, 0], [0.5, 0.5, 0.5]]
     return PhonopyAtoms(cell=lattice,
