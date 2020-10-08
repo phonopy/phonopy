@@ -1,5 +1,3 @@
-import unittest
-
 import os
 import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms
@@ -9,130 +7,106 @@ from phonopy.interface.phonopy_yaml import read_cell_yaml
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-class TestSupercell(unittest.TestCase):
-    def setUp(self):
-        self._cells = []
-        symbols = ['Si'] * 2 + ['O'] * 4
-        lattice = [[4.65, 0, 0],
-                   [0, 4.75, 0],
-                   [0, 0, 3.25]]
-        points = [[0.0, 0.0, 0.0],
-                  [0.5, 0.5, 0.5],
-                  [0.3, 0.3, 0.0],
-                  [0.7, 0.7, 0.0],
-                  [0.2, 0.8, 0.5],
-                  [0.8, 0.2, 0.5]]
-
-        self._cells.append(PhonopyAtoms(cell=lattice,
-                                        scaled_positions=points,
-                                        symbols=symbols))
-
-        symbols = ['Si'] * 2
-        lattice = [[0, 2.73, 2.73],
-                   [2.73, 0, 2.73],
-                   [2.73, 2.73, 0]]
-        points = [[0.75, 0.75, 0.75],
-                  [0.5, 0.5, 0.5]]
-
-        self._cells.append(PhonopyAtoms(cell=lattice,
-                                        scaled_positions=points,
-                                        symbols=symbols))
-
-        self._smats = []
-        self._smats.append(np.diag([1, 2, 3]))
-        self._smats.append([[-1, 1, 1],
-                            [1, -1, 1],
-                            [1, 1, -1]])
-
-        self._fnames = ("SiO2-123.yaml", "Si-conv.yaml")
-
-    def tearDown(self):
-        pass
-
-    def test_get_supercell(self):
-        for i, (cell, smat, fname) in enumerate(zip(self._cells,
-                                                    self._smats,
-                                                    self._fnames)):
-            scell = get_supercell(cell, smat)
-            scell_yaml = read_cell_yaml(os.path.join(data_dir, fname))
-            np.testing.assert_allclose(scell.cell, scell_yaml.get_cell(),
-                                       atol=1e-5)
-            pos = scell.get_scaled_positions()
-            pos -= np.rint(pos)
-            pos_yaml = scell_yaml.get_scaled_positions()
-            pos_yaml -= np.rint(pos_yaml)
-            np.testing.assert_allclose(pos, pos_yaml, atol=1e-5)
-            np.testing.assert_array_equal(scell.numbers,
-                                          scell_yaml.get_atomic_numbers())
-            np.testing.assert_allclose(scell.masses,
-                                       scell_yaml.get_masses(),
-                                       atol=1e-5)
+def test_get_supercell_convcell_si(convcell_si):
+    _test_get_supercell_convcell_si(convcell_si, is_old_style=True)
 
 
-class TestPrimitive(unittest.TestCase):
-    def setUp(self):
-        cell = read_cell_yaml(os.path.join(data_dir, "..", "NaCl.yaml"))
-        self._pcell = get_primitive(cell, [[0, 0.5, 0.5],
-                                           [0.5, 0, 0.5],
-                                           [0.5, 0.5, 0]])
-
-    def tearDown(self):
-        pass
-
-    def test_properties(self):
-        np.testing.assert_array_equal(
-            self._pcell.p2s_map,
-            self._pcell.get_primitive_to_supercell_map())
-        np.testing.assert_array_equal(
-            self._pcell.s2p_map,
-            self._pcell.get_supercell_to_primitive_map())
-        np.testing.assert_array_equal(
-            self._pcell.atomic_permutations,
-            self._pcell.get_atomic_permutations())
-        self.assertTrue(id(self._pcell.p2p_map)
-                        == id(self._pcell.get_primitive_to_primitive_map()))
+def test_get_supercell_convcell_si_snf(convcell_si):
+    _test_get_supercell_convcell_si(convcell_si, is_old_style=False)
 
 
-class TestTrimmedCell(unittest.TestCase):
-    def setUp(self):
-        pmat = [[0, 0.5, 0.5],
-                [0.5, 0, 0.5],
-                [0.5, 0.5, 0]]
-        smat2 = np.eye(3, dtype='intc') * 2
-        pmat2 = np.dot(np.linalg.inv(smat2), pmat)
-        smat3 = np.eye(3, dtype='intc') * 3
-        pmat3 = np.dot(np.linalg.inv(smat3), pmat)
+def test_get_supercell_primcell_si(primcell_si):
+    _test_get_supercell_primcell_si(primcell_si, is_old_style=True)
 
-        cell = read_cell_yaml(os.path.join(data_dir, "..", "NaCl.yaml"))
-        scell2 = get_supercell(cell, smat2)
-        scell3 = get_supercell(cell, smat3)
-        n = len(scell3) // 2
-        # swap first and last half of atomic order
-        indices = [i + n for i in range(n)] + list(range(n))
-        scell3_swap = PhonopyAtoms(
-            cell=scell3.cell,
-            scaled_positions=scell3.scaled_positions[indices],
-            numbers=scell3.numbers[indices])
-        self._tcell2 = TrimmedCell(pmat2, scell2)
-        self._tcell3 = TrimmedCell(
-            pmat3, scell3_swap,
-            positions_to_reorder=self._tcell2.scaled_positions)
 
-    def tearDown(self):
-        pass
+def test_get_supercell_primcell_si_snf(primcell_si):
+    _test_get_supercell_primcell_si(primcell_si, is_old_style=False)
 
-    def test_reorder(self):
-        np.testing.assert_array_equal(self._tcell2.numbers,
-                                      self._tcell3.numbers)
-        np.testing.assert_allclose(self._tcell2.cell, self._tcell3.cell)
-        diff = self._tcell2.scaled_positions - self._tcell3.scaled_positions
+
+def test_get_supercell_nacl_snf(convcell_nacl):
+    cell = convcell_nacl
+    smat = [[-1, 1, 1], [1, -1, 1], [1, 1, -1]]
+    scell = get_supercell(cell, smat, is_old_style=True)
+    scell_snf = get_supercell(cell, smat, is_old_style=False)
+    _compare_cells(scell, scell_snf)
+
+
+def _test_get_supercell_convcell_si(convcell_si, is_old_style=True):
+    smat = np.diag([1, 2, 3])
+    fname = "SiO2-123.yaml"
+    scell = get_supercell(convcell_si, smat, is_old_style=is_old_style)
+    cell_ref = read_cell_yaml(os.path.join(data_dir, fname))
+    if is_old_style is True:
+        _compare_cells_with_order(scell, cell_ref)
+    else:
+        _compare_cells(scell, cell_ref)
+
+
+def _test_get_supercell_primcell_si(primcell_si, is_old_style=True):
+    smat = [[-1, 1, 1], [1, -1, 1], [1, 1, -1]]
+    fname = "Si-conv.yaml"
+    scell = get_supercell(primcell_si, smat, is_old_style=is_old_style)
+    cell_ref = read_cell_yaml(os.path.join(data_dir, fname))
+    if is_old_style is True:
+        _compare_cells_with_order(scell, cell_ref)
+    else:
+        _compare_cells(scell, cell_ref)
+
+
+def test_get_primitive_convcell_nacl(convcell_nacl, primcell_nacl):
+    pcell = get_primitive(convcell_nacl, [[0, 0.5, 0.5],
+                                          [0.5, 0, 0.5],
+                                          [0.5, 0.5, 0]])
+    _compare_cells_with_order(pcell, primcell_nacl)
+
+
+def test_TrimmedCell(convcell_nacl):
+    pmat = [[0, 0.5, 0.5],
+            [0.5, 0, 0.5],
+            [0.5, 0.5, 0]]
+    smat2 = np.eye(3, dtype='intc') * 2
+    pmat2 = np.dot(np.linalg.inv(smat2), pmat)
+    smat3 = np.eye(3, dtype='intc') * 3
+    pmat3 = np.dot(np.linalg.inv(smat3), pmat)
+
+    cell = convcell_nacl
+    scell2 = get_supercell(cell, smat2)
+    scell3 = get_supercell(cell, smat3)
+    n = len(scell3) // 2
+    # swap first and last half of atomic order
+    indices = [i + n for i in range(n)] + list(range(n))
+    scell3_swap = PhonopyAtoms(
+        cell=scell3.cell,
+        scaled_positions=scell3.scaled_positions[indices],
+        numbers=scell3.numbers[indices])
+    tcell2 = TrimmedCell(pmat2, scell2)
+    tcell3 = TrimmedCell(pmat3, scell3_swap,
+                         positions_to_reorder=tcell2.scaled_positions)
+    _compare_cells_with_order(tcell2, tcell3)
+
+
+def _compare_cells_with_order(cell, cell_ref):
+    np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=1e-5)
+    diff = cell.scaled_positions - cell_ref.scaled_positions
+    diff -= np.rint(diff)
+    dist = (np.dot(diff, cell.cell) ** 2).sum(axis=1)
+    assert (dist < 1e-5).all()
+    np.testing.assert_array_equal(cell.numbers, cell_ref.numbers)
+    np.testing.assert_allclose(cell.masses, cell_ref.masses, atol=1e-5)
+
+
+def _compare_cells(cell, cell_ref):
+    np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=1e-5)
+
+    indices = []
+    for pos in cell.scaled_positions:
+        diff = cell_ref.scaled_positions - pos
         diff -= np.rint(diff)
-        dist = (np.dot(diff, self._tcell2.cell) ** 2).sum(axis=1)
-        self.assertTrue((dist < 1e-5).all())
+        dist = (np.dot(diff, cell.cell) ** 2).sum(axis=1)
+        matches = np.where(dist < 1e-5)[0]
+        assert len(matches) == 1
+        indices.append(matches[0])
 
-
-if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestSupercell)
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestPrimitive)
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestTrimmedCell)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    np.testing.assert_array_equal(cell.numbers, cell_ref.numbers[indices])
+    np.testing.assert_allclose(cell.masses, cell_ref.masses[indices],
+                               atol=1e-5)
