@@ -2,7 +2,6 @@ import os
 import pytest
 import phonopy
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.interface.phonopy_yaml import read_cell_yaml
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -15,6 +14,17 @@ def ph_nacl():
     return phonopy.load(yaml_filename,
                         force_sets_filename=force_sets_filename,
                         born_filename=born_filename,
+                        is_compact_fc=False,
+                        log_level=1, produce_fc=True)
+
+
+@pytest.fixture(scope='session')
+def ph_nacl_nonac():
+    yaml_filename = os.path.join(current_dir, "phonopy_disp_NaCl.yaml")
+    force_sets_filename = os.path.join(current_dir, "FORCE_SETS_NaCl")
+    return phonopy.load(yaml_filename,
+                        force_sets_filename=force_sets_filename,
+                        is_nac=False,
                         is_compact_fc=False,
                         log_level=1, produce_fc=True)
 

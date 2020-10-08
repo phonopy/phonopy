@@ -1,6 +1,4 @@
 import os
-import unittest
-import phonopy
 from phonopy import Phonopy
 import numpy as np
 from phonopy.units import VaspToTHz
@@ -55,79 +53,57 @@ def _write(comm_points, filename="comm_points.dat"):
         w.write("\n".join(lines))
 
 
-class TestDynmatToForceConstants(unittest.TestCase):
-    def setUp(self):
-        filename = os.path.join(data_dir, "..", "POSCAR_NaCl")
-        force_sets_filename = os.path.join(data_dir, "..", "FORCE_SETS_NaCl")
-        born_filename = os.path.join(data_dir, "..", "BORN_NaCl")
-        self.ph = phonopy.load(unitcell_filename=filename,
-                               supercell_matrix=[2, 2, 2],
-                               calculator='vasp',
-                               force_sets_filename=force_sets_filename,
-                               is_compact_fc=False)
-        self.ph_nac = phonopy.load(unitcell_filename=filename,
-                                   supercell_matrix=[2, 2, 2],
-                                   calculator='vasp',
-                                   force_sets_filename=force_sets_filename,
-                                   born_filename=born_filename,
-                                   is_compact_fc=False)
-
-    def tearDown(self):
-        pass
-
-    def test_with_eigenvalues(self):
-        for ph in (self.ph, self.ph_nac):
-            d2f = DynmatToForceConstants(ph.primitive, ph.supercell)
-            ph.run_qpoints(d2f.commensurate_points,
-                           with_eigenvectors=True,
-                           with_dynamical_matrices=True)
-            ph_dict = ph.get_qpoints_dict()
-            eigenvalues = ((ph_dict['frequencies'] / VaspToTHz) ** 2 *
-                           np.sign(ph_dict['frequencies']))
-            d2f.create_dynamical_matrices(eigenvalues=eigenvalues,
-                                          eigenvectors=ph_dict['eigenvectors'])
-            d2f.run()
-            np.testing.assert_allclose(ph.force_constants, d2f.force_constants,
-                                       atol=1e-5)
-
-    def test_with_dynamical_matrices(self):
-        for ph in (self.ph, ):
-            d2f = DynmatToForceConstants(ph.primitive, ph.supercell)
-            ph.run_qpoints(d2f.commensurate_points,
-                           with_dynamical_matrices=True)
-            ph_dict = ph.get_qpoints_dict()
-            d2f.dynamical_matrices = ph_dict['dynamical_matrices']
-            d2f.run()
-            np.testing.assert_allclose(ph.force_constants, d2f.force_constants,
-                                       atol=1e-5)
-
-    def test_ph2fc(self):
-        ph = self.ph_nac
+def test_ph2fc(ph_nacl, ph_nacl_nonac):
+    for ph in (ph_nacl_nonac, ph_nacl):
         fc333 = ph2fc(ph, np.diag([3, 3, 3]))
-        self._phonons_allclose(ph, fc333)
+        _phonons_allclose(ph, fc333)
 
-    def _phonons_allclose(self, ph, fc333):
-        ph333 = Phonopy(ph.unitcell,
-                        supercell_matrix=[3, 3, 3],
-                        primitive_matrix=ph.primitive_matrix)
-        ph333.force_constants = fc333
-        ph333.nac_params = ph.nac_params
-        comm_points = self._get_comm_points(ph)
-        ph.run_qpoints(comm_points)
-        ph333.run_qpoints(comm_points)
-        np.testing.assert_allclose(ph.get_qpoints_dict()['frequencies'],
-                                   ph333.get_qpoints_dict()['frequencies'],
+
+def _phonons_allclose(ph, fc333):
+    ph333 = Phonopy(ph.unitcell,
+                    supercell_matrix=[3, 3, 3],
+                    primitive_matrix=ph.primitive_matrix)
+    ph333.force_constants = fc333
+    ph333.nac_params = ph.nac_params
+    comm_points = _get_comm_points(ph)
+    ph.run_qpoints(comm_points)
+    ph333.run_qpoints(comm_points)
+    np.testing.assert_allclose(ph.get_qpoints_dict()['frequencies'],
+                               ph333.get_qpoints_dict()['frequencies'],
+                               atol=1e-5)
+
+
+def _get_comm_points(ph):
+    smat = np.dot(np.linalg.inv(ph.primitive.primitive_matrix),
+                  ph.supercell_matrix)
+    smat = np.rint(smat).astype(int)
+    comm_points = get_commensurate_points(smat)
+    return comm_points
+
+
+def test_with_eigenvalues(ph_nacl, ph_nacl_nonac):
+    for ph in (ph_nacl_nonac, ph_nacl):
+        d2f = DynmatToForceConstants(ph.primitive, ph.supercell)
+        ph.run_qpoints(d2f.commensurate_points,
+                       with_eigenvectors=True,
+                       with_dynamical_matrices=True)
+        ph_dict = ph.get_qpoints_dict()
+        eigenvalues = ((ph_dict['frequencies'] / VaspToTHz) ** 2 *
+                       np.sign(ph_dict['frequencies']))
+        d2f.create_dynamical_matrices(eigenvalues=eigenvalues,
+                                      eigenvectors=ph_dict['eigenvectors'])
+        d2f.run()
+        np.testing.assert_allclose(ph.force_constants, d2f.force_constants,
                                    atol=1e-5)
 
-    def _get_comm_points(self, ph):
-        smat = np.dot(np.linalg.inv(ph.primitive.primitive_matrix),
-                      ph.supercell_matrix)
-        smat = np.rint(smat).astype(int)
-        comm_points = get_commensurate_points(smat)
-        return comm_points
 
-
-if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(
-        TestDynmatToForceConstants)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+def test_with_dynamical_matrices(ph_nacl, ph_nacl_nonac):
+    for ph in (ph_nacl, ph_nacl_nonac):
+        d2f = DynmatToForceConstants(ph.primitive, ph.supercell)
+        ph.run_qpoints(d2f.commensurate_points,
+                       with_dynamical_matrices=True)
+        ph_dict = ph.get_qpoints_dict()
+        d2f.dynamical_matrices = ph_dict['dynamical_matrices']
+        d2f.run()
+        np.testing.assert_allclose(ph.force_constants, d2f.force_constants,
+                                   atol=1e-5)
