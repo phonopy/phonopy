@@ -1026,7 +1026,7 @@ def run(phonon, settings, plot_conf, log_level):
             t_step = settings.temperature_step
             t_max = settings.max_temperature
             t_min = settings.min_temperature
-            t_cif = settings.thermal_displacement_matrix_temperature
+            t_cif = settings.thermal_displacement_matrix_temperatue
             if t_cif is None:
                 temperatures = None
             else:
@@ -1618,6 +1618,7 @@ def main(**argparse_control):
                 phonon.calculator)
         else:
             displacement_distance = settings.displacement_distance
+
         phonon.generate_displacements(
             distance=displacement_distance,
             is_plusminus=settings.is_plusminus_displacement,

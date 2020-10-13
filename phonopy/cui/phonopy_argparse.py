@@ -80,7 +80,7 @@ def get_parser(fc_symmetry=False,
     add_arguments_of_calculators(parser, calculator_info)
 
     parser.add_argument(
-        "--alm", dest="use_alm", action="store_true", default=False,
+        "--alm", dest="use_alm", action="store_true", default=None,
         help="Use ALM for generating force constants")
     parser.add_argument(
         "--amplitude", dest="displacement_distance", type=float, default=None,
@@ -93,11 +93,11 @@ def get_parser(fc_symmetry=False,
         help="Same behavior as BAND tag")
     parser.add_argument(
         "--band-connection", dest="is_band_connection", action="store_true",
-        default=False,
+        default=None,
         help="Treat band crossings")
     parser.add_argument(
         "--band-const-interval", dest="is_band_const_interval",
-        action="store_true", default=False,
+        action="store_true", default=None,
         help="Band paths are sampled with similar interval.")
     parser.add_argument(
         "--band-labels", nargs='+', dest="band_labels", default=None,
@@ -131,7 +131,7 @@ def get_parser(fc_symmetry=False,
         help="Out of cutoff radius, force constants are set zero.")
     parser.add_argument(
         "-d", "--displacement", dest="is_displacement", action="store_true",
-        default=False,
+        default=None,
         help="Create supercells with displacements")
     parser.add_argument(
         "--dim", nargs='+', dest="supercell_dimension", default=None,
@@ -140,16 +140,16 @@ def get_parser(fc_symmetry=False,
         "--dm-decimals", dest="dynamical_matrix_decimals", default=None,
         type=int, help="Decimals of values of decimals")
     parser.add_argument(
-        "--dos", dest="is_dos_mode", action="store_true", default=False,
+        "--dos", dest="is_dos_mode", action="store_true", default=None,
         help="Calculate (P)DOS")
     parser.add_argument(
         "--eigvecs", "--eigenvectors", dest="is_eigenvectors",
-        action="store_true", default=False,
+        action="store_true", default=None,
         help="Output eigenvectors")
     if load_phonopy_yaml:
         parser.add_argument(
             "--exclude-born", "--exclude-nac-params",
-            dest="include_nac_params", action="store_false", default=True,
+            dest="include_nac_params", action="store_false", default=None,
             help=("Exclude born effective charge and dielectric tensor in "
                   "phonopy.yaml"))
     parser.add_argument(
@@ -179,16 +179,16 @@ def get_parser(fc_symmetry=False,
         help="Force constants input/output file-format")
     parser.add_argument(
         "--fc-spg-symmetry", dest="fc_spg_symmetry", action="store_true",
-        default=False,
+        default=None,
         help="Enforce space group symmetry to force constants")
     if not fc_symmetry:
         parser.add_argument(
             "--fc-symmetry", "--sym-fc",
             dest="fc_symmetry", action="store_true",
-            default=False, help="Symmetrize force constants")
+            default=None, help="Symmetrize force constants")
     parser.add_argument(
         "--fits-debye-model", dest="fits_debye_model", action="store_true",
-        default=False,
+        default=None,
         help="Fits total DOS to a Debye model")
     parser.add_argument(
         "--freq-scale", dest="frequency_scale_factor", type=float,
@@ -197,7 +197,7 @@ def get_parser(fc_symmetry=False,
               "frequency is changed but the contribution from NAC is not "
               "changed."))
     parser.add_argument(
-        "--full-fc", dest="is_full_fc", action="store_true", default=False,
+        "--full-fc", dest="is_full_fc", action="store_true", default=None,
         help="Calculate full supercell force constants matrix")
     parser.add_argument(
         "--fz", "--force-sets-zero", nargs='+', dest="create_force_sets_zero",
@@ -217,33 +217,33 @@ def get_parser(fc_symmetry=False,
         help="Frequency pitch used for DOS or moment calculation")
     parser.add_argument(
         "--gc", "--gamma-center", dest="is_gamma_center", action="store_true",
-        default=False,
+        default=None,
         help="Set mesh as Gamma center")
     parser.add_argument(
         "--gv", "--group-velocity", dest="is_group_velocity",
-        action="store_true", default=False,
+        action="store_true", default=None,
         help="Calculate group velocities at q-points")
     parser.add_argument(
         "--gv-delta-q", dest="gv_delta_q", type=float, default=None,
         help="Delta-q distance used for group velocity calculation")
     parser.add_argument(
-        "--hdf5", dest="is_hdf5", action="store_true", default=False,
+        "--hdf5", dest="is_hdf5", action="store_true", default=None,
         help="Use hdf5 for force constants")
     parser.add_argument(
         "--hdf5-compression", dest="hdf5_compression", default=None,
         help="hdf5 compression filter (default: gzip)")
     parser.add_argument(
-        "--hiphive", dest="use_hiphive", action="store_true", default=False,
+        "--hiphive", dest="use_hiphive", action="store_true", default=None,
         help="Use hiPhive for generating force constants")
     parser.add_argument(
         "--irreps", "--irreps-qpoint", nargs='+', dest="irreps_qpoint",
         default=None,
         help="A q-point where characters of irreps are calculated")
     parser.add_argument(
-        "--include-fc", dest="include_fc", action="store_true", default=False,
+        "--include-fc", dest="include_fc", action="store_true", default=None,
         help="Include force constants in phonopy.yaml")
     parser.add_argument(
-        "--include-fs", dest="include_fs", action="store_true", default=False,
+        "--include-fs", dest="include_fs", action="store_true", default=None,
         help="Include force sets in phonopy.yaml")
     # parser.add_argument(
     #     "--include-bec", dest="include_bec", action="store_true",
@@ -255,16 +255,16 @@ def get_parser(fc_symmetry=False,
         parser.add_argument(
             "--include-born", "--include-nac-params",
             dest="include_nac_params", action="store_true",
-            default=False,
+            default=None,
             help=("Include born effective charge and dielectric tensor in "
                   "phonopy.yaml"))
     parser.add_argument(
         "--include-disp", dest="include_disp", action="store_true",
-        default=False,
+        default=None,
         help="Include displacements in phonopy.yaml")
     parser.add_argument(
         "--include-all", dest="include_all", action="store_true",
-        default=False,
+        default=None,
         help="Include all output file data in phonopy.yaml")
     # parser.add_argument(
     #     "--lapack-solver", dest="lapack_solver", action="store_true",
@@ -273,15 +273,15 @@ def get_parser(fc_symmetry=False,
     #           "option can be used only when phonopy is compiled "
     #           "specially."))
     parser.add_argument(
-        "--legend", dest="is_legend", action="store_true", default=False,
+        "--legend", dest="is_legend", action="store_true", default=None,
         help="Legend of plots is shown in thermal displacements")
     parser.add_argument(
         "--legacy-plot", dest="is_legacy_plot", action="store_true",
-        default=False,
+        default=None,
         help="Legacy style band structure pl")
     parser.add_argument(
         "--lcg", "--little-cogroup", dest="is_little_cogroup",
-        action="store_true", default=False,
+        action="store_true", default=None,
         help=("Show irreps of little co-group (or point-group of "
               "wave vector q) instead of little group"))
     parser.add_argument(
@@ -303,14 +303,14 @@ def get_parser(fc_symmetry=False,
         "--mp", "--mesh", nargs='+', dest="mesh_numbers", default=None,
         help="Same behavior as MP tag")
     parser.add_argument(
-        "--moment", dest="is_moment", action="store_true", default=False,
+        "--moment", dest="is_moment", action="store_true", default=None,
         help="Calculate moment of phonon states distribution")
     parser.add_argument(
         "--moment-order", dest="moment_order", default=None,
         type=int, help="Order of moment of phonon states distribution")
     if not is_nac:
         parser.add_argument(
-            "--nac", dest="is_nac", action="store_true", default=False,
+            "--nac", dest="is_nac", action="store_true", default=None,
             help="Non-analytical term correction")
     parser.add_argument(
         "--nac-method", dest="nac_method", default=None,
@@ -319,26 +319,26 @@ def get_parser(fc_symmetry=False,
         parser.add_argument(
             "--no-fc-symmetry", "--no-sym-fc",
             dest="fc_symmetry", action="store_false",
-            default=True, help="Do not symmetrize force constants")
+            default=None, help="Do not symmetrize force constants")
     parser.add_argument(
-        "--nodiag", dest="is_nodiag", action="store_true", default=False,
+        "--nodiag", dest="is_nodiag", action="store_true", default=None,
         help="Set displacements parallel to axes")
     parser.add_argument(
-        "--nomeshsym", dest="is_nomeshsym", action="store_true", default=False,
+        "--nomeshsym", dest="is_nomeshsym", action="store_true", default=None,
         help="Symmetry is not imposed for mesh sampling.")
     if is_nac:
         parser.add_argument(
-            "--nonac", dest="is_nac", action="store_false", default=True,
+            "--nonac", dest="is_nac", action="store_false", default=None,
             help="Non-analytical term correction")
     parser.add_argument(
-        "--nosym", dest="is_nosym", action="store_true", default=False,
+        "--nosym", dest="is_nosym", action="store_true", default=None,
         help="Symmetry is not imposed.")
     parser.add_argument(
-        "--nowritemesh", dest="write_mesh", action="store_false", default=True,
+        "--nowritemesh", dest="write_mesh", action="store_false", default=None,
         help="Do not write mesh.yaml or mesh.hdf5")
     parser.add_argument(
         "-p", "--plot", dest="is_graph_plot", action="store_true",
-        default=False,
+        default=None,
         help="Plot data")
     parser.add_argument(
         "--pa", "--primitive-axis", "--primitive-axes",
@@ -353,18 +353,18 @@ def get_parser(fc_symmetry=False,
         help="Same as PDOS tag")
     parser.add_argument(
         "--pm", dest="is_plusminus_displacements", action="store_true",
-        default=False,
+        default=None,
         help="Set plus minus displacements")
     parser.add_argument(
         "--pr", "--pretend-real", dest="pretend_real", action="store_true",
-        default=False,
+        default=None,
         help=("Use imaginary frequency as real for thermal property "
               "calculation. For a testing purpose only, when a small "
               "amount of imaginary branches obtained."))
     parser.add_argument(
         "--pt", "--projected-thermal-property",
         dest="is_projected_thermal_properties", action="store_true",
-        default=False,
+        default=None,
         help="Output projected thermal properties")
     parser.add_argument(
         "--qpoints", nargs='+', dest="qpoints", default=None,
@@ -378,7 +378,7 @@ def get_parser(fc_symmetry=False,
               "q->0, and group velocity for degenerate phonon "
               "mode in q-points mode"))
     parser.add_argument(
-        "-q", "--quiet", dest="quiet", action="store_true", default=False,
+        "-q", "--quiet", dest="quiet", action="store_true", default=None,
         help="Print out smallest information")
     parser.add_argument(
         "--random-seed", dest="random_seed", type=int, default=None,
@@ -389,46 +389,46 @@ def get_parser(fc_symmetry=False,
         help="Number of supercells with random displacements")
     parser.add_argument(
         "--readfc", dest="read_force_constants", action="store_true",
-        default=False,
+        default=None,
         help="Read FORCE_CONSTANTS")
     parser.add_argument(
         "--readfc-format", dest="readfc_format", default=None,
         help="Force constants input file-format")
     parser.add_argument(
         "--read-qpoints", dest="read_qpoints", action="store_true",
-        default=False,
+        default=None,
         help="Read QPOITNS")
     parser.add_argument(
         "-s", "--save", dest="is_graph_save", action="store_true",
-        default=False,
+        default=None,
         help="Save plot data in pdf")
     parser.add_argument(
         "--sp", "--save-params", dest="save_params", action="store_true",
-        default=False,
+        default=None,
         help="Save parameters that can run phonopy in phonopy_params.yaml.")
     parser.add_argument(
         "--show-irreps", dest="show_irreps", action="store_true",
-        default=False,
+        default=None,
         help="Show IR-Reps along with characters")
     parser.add_argument(
         "--sigma", dest="sigma", default=None,
         help="Smearing width for DOS")
     parser.add_argument(
         "--symmetry", dest="is_check_symmetry", action="store_true",
-        default=False,
+        default=None,
         help="Check crystal symmetry")
     parser.add_argument(
         "-t", "--thermal-property", dest="is_thermal_properties",
-        action="store_true", default=False,
+        action="store_true", default=None,
         help="Output thermal properties")
     parser.add_argument(
         "--td", "--thermal-displacements", dest="is_thermal_displacements",
-        action="store_true", default=False,
+        action="store_true", default=None,
         help="Output thermal displacements")
     parser.add_argument(
         "--tdm", "--thermal-displacement-matrix",
         dest="is_thermal_displacement_matrices", action="store_true",
-        default=False,
+        default=None,
         help="Output thermal displacement matrices")
     parser.add_argument(
         "--tdm-cif", "--thermal-displacement-matrix-cif",
@@ -450,31 +450,32 @@ def get_parser(fc_symmetry=False,
         help="Symmetry tolerance to search")
     parser.add_argument(
         "--trigonal", dest="is_trigonal_displacements", action="store_true",
-        default=False,
+        default=None,
         help="Set displacements of all trigonal axes ")
     parser.add_argument(
         "--tstep", dest="tstep", type=float, default=None,
         help="Calculated temperature step")
     parser.add_argument(
-        "-v", "--verbose", dest="verbose", action="store_true", default=False,
+        "-v", "--verbose", dest="verbose", action="store_true", default=None,
         help="Detailed information is shown.")
     parser.add_argument(
-        "--wien2k-p1", dest="is_wien2k_p1", action="store_true", default=False,
+        "--wien2k-p1", dest="is_wien2k_p1", action="store_true", default=None,
         help="Assume Wien2k structs with displacements are P1")
     parser.add_argument(
         "--writefc", dest="write_force_constants", action="store_true",
-        default=False,
+        default=None,
         help="Write FORCE_CONSTANTS")
     parser.add_argument(
         "--writefc-format", dest="writefc_format", default=None,
         help="Force constants output file-format")
     parser.add_argument(
         "--writedm", dest="write_dynamical_matrices", action="store_true",
-        default=False,
+        default=None,
         help=("Write dynamical matrices. This has to be used "
               "with QPOINTS setting (or --qpoints)"))
     parser.add_argument(
         "--xyz-projection", dest="xyz_projection", action="store_true",
+        default=None,
         help="Project PDOS x, y, z directions in Cartesian coordinates")
     if load_phonopy_yaml:
         parser.add_argument(
