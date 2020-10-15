@@ -95,18 +95,19 @@ def read_band_yaml(filename):
             data['segment_nqpoint'],
             labels)
 
+
 def read_band_hdf5(filename):
     data = h5py.File(filename, 'r')
     f2 = data['frequency'][:]
     d1 = data['distance'][:]
-    lbl = data['label'][:]
+    # lbl = data['label'][:]
 
-    labels_path=[]
+    labels_path = []
     for x in data['label'][:]:
         labels_path.append([y.decode('utf-8') for y in x])
 
-    frequencies=f2.reshape((f2.shape[0]*f2.shape[1],f2.shape[2]))
-    distances=[]
+    frequencies = f2.reshape((f2.shape[0] * f2.shape[1], f2.shape[2]))
+    distances = []
     for x in d1:
         for y in x:
             distances.append(y)
@@ -114,14 +115,15 @@ def read_band_hdf5(filename):
 
     seg_pt = data['segment_nqpoint'][:]
 
-    nqpt = data['nqpoint'][0]
-    
+    # nqpt = data['nqpoint'][0]
+
     return (np.array(distances),
             np.array(frequencies),
             np.array(qpoints),
             seg_pt,
             labels_path)
-        
+
+
 def read_dos_dat(filename, pdos_indices=None, dos_factor=None):
     dos = []
     frequencies = []
@@ -230,7 +232,8 @@ def get_options():
         help="Title of plot (legacy plot only)")
     parser.add_argument(
         "filenames", nargs='*',
-        help="Filenames of phonon band structure result: band.yaml or band.hdf5(with --hdf5) ")
+        help=("Filenames of phonon band structure result: band.yaml "
+              "or band.hdf5(with --hdf5)"))
     args = parser.parse_args()
     return args
 
@@ -296,16 +299,16 @@ def old_plot(args):
     for i, filename in enumerate(filenames):
         if args.is_hdf5:
             (distances,
-            frequencies,
-            qpoints,
-            segment_nqpoint,
-            labels) = read_band_hdf5(filename)
+             frequencies,
+             qpoints,
+             segment_nqpoint,
+             labels) = read_band_hdf5(filename)
         else:
             (distances,
-            frequencies,
-            qpoints,
-            segment_nqpoint,
-            labels) = read_band_yaml(filename)
+             frequencies,
+             qpoints,
+             segment_nqpoint,
+             labels) = read_band_yaml(filename)
 
         end_points = [0, ]
         for nq in segment_nqpoint:
@@ -359,7 +362,7 @@ def old_plot(args):
                     plt.plot(distances[q:(q + nq)],
                              frequencies[q:(q + nq)] * args.factor,
                              color=colors[i][0],
-                             marker = marker,
+                             marker=marker,
                              linestyle=colors[i][1:])
                 q += nq
 
@@ -466,7 +469,7 @@ def plot(args):
             filenames = ['band.hdf5', ]
         else:
             filenames = args.filenames
-  
+
         bands_data = [read_band_hdf5(fname) for fname in filenames]
     else:
         if len(args.filenames) == 0:
@@ -523,7 +526,7 @@ def plot(args):
 
 
 def _get_label_for_latex(label):
-    return label.replace('_', '\_')
+    return label.replace('_', r'\_')
 
 
 def _get_max_frequency(frequencies):
