@@ -78,8 +78,7 @@ def main(opts):
     except (RuntimeError, FileNotFoundError) as err:
         print("ERROR: %s" % err)
 
-    if args[0] is not None and args[2] is not None:
-        convert_crystal_structure(*args)
+    convert_crystal_structure(*args)
 
 
 def _calc_check(calc_str):

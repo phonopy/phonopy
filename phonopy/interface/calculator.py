@@ -99,6 +99,10 @@ def convert_crystal_structure(filename_in,
     cell, optional_structure_info = read_crystal_structure(
         filename=filename_in,
         interface_mode=interface_in)
+    units_in = get_default_physical_units(interface_in)
+    units_out = get_default_physical_units(interface_out)
+    factor = units_in['distance_to_A'] / units_out['distance_to_A']
+    cell.cell = cell.cell * factor
     write_crystal_structure(filename_out, cell, interface_mode=interface_out)
 
 
