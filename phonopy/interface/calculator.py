@@ -92,6 +92,16 @@ def get_interface_mode(args_dict):
     return None
 
 
+def convert_crystal_structure(filename_in,
+                              interface_in,
+                              filename_out,
+                              interface_out):
+    cell, optional_structure_info = read_crystal_structure(
+        filename=filename_in,
+        interface_mode=interface_in)
+    write_crystal_structure(filename_out, cell, interface_mode=interface_out)
+
+
 def write_crystal_structure(filename,
                             cell,
                             interface_mode=None,
