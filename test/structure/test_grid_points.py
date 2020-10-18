@@ -32,7 +32,7 @@ def test_GridPoints():
     np.testing.assert_array_equal(gp.grid_address, ga234)
 
 
-def test_GridPoints_with_rotations(ph_nacl):
+def test_GridPoints_NaCl_with_rotations(ph_nacl):
     rec_lat = np.linalg.inv(ph_nacl.primitive.cell)
     rotations = ph_nacl.primitive_symmetry.get_pointgroup_operations()
     gp = GridPoints([4, 4, 4], rec_lat, rotations=rotations)
@@ -60,7 +60,7 @@ def test_GridPoints_with_rotations(ph_nacl):
          [-0.25, 0.5, 0.25]], atol=1e-8)
 
 
-def test_GridPoints_with_rotations_fit_BZ_falase(ph_nacl):
+def test_GridPoints_NaCl_with_rotations_fit_BZ_falase(ph_nacl):
     rec_lat = np.linalg.inv(ph_nacl.primitive.cell)
     rotations = ph_nacl.primitive_symmetry.get_pointgroup_operations()
     mesh = [5, 5, 5]
@@ -92,3 +92,71 @@ def test_GridPoints_with_rotations_fit_BZ_falase(ph_nacl):
          [0.4, 0.4, 0.0],
          [-0.4, -0.6, 0.0],
          [0.6, 0.4, 0.2]], atol=1e-8)
+
+
+def test_GridPoints_SnO2_with_rotations(ph_sno2):
+    rec_lat = np.linalg.inv(ph_sno2.primitive.cell)
+    rotations = ph_sno2.primitive_symmetry.get_pointgroup_operations()
+    gp = GridPoints([4, 4, 4], rec_lat, rotations=rotations)
+    np.testing.assert_array_equal(
+        gp.ir_grid_points,
+        [0, 1, 2, 5, 6, 10, 16, 17, 18, 21, 22, 26, 32, 33, 34, 37, 38, 42])
+    np.testing.assert_array_equal(
+        gp.weights,
+        [1, 4, 2, 4, 4, 1, 2, 8, 4, 8, 8, 2, 1, 4, 2, 4, 4, 1])
+    np.testing.assert_array_equal(
+        gp.grid_mapping_table,
+        [0, 1, 2, 1, 1, 5, 6, 5, 2, 6,
+         10, 6, 1, 5, 6, 5, 16, 17, 18, 17,
+         17, 21, 22, 21, 18, 22, 26, 22, 17, 21,
+         22, 21, 32, 33, 34, 33, 33, 37, 38, 37,
+         34, 38, 42, 38, 33, 37, 38, 37, 16, 17,
+         18, 17, 17, 21, 22, 21, 18, 22, 26, 22,
+         17, 21, 22, 21])
+    np.testing.assert_allclose(
+        gp.qpoints,
+        [[0.0, 0.0, 0.0],
+         [0.25, 0.0, 0.0],
+         [0.5, 0.0, 0.0],
+         [0.25, 0.25, 0.0],
+         [0.5, 0.25, 0.0],
+         [0.5, 0.5, 0.0],
+         [0.0, 0.0, 0.25],
+         [0.25, 0.0, 0.25],
+         [0.5, 0.0, 0.25],
+         [0.25, 0.25, 0.25],
+         [0.5, 0.25, 0.25],
+         [0.5, 0.5, 0.25],
+         [0.0, 0.0, 0.5],
+         [0.25, 0.0, 0.5],
+         [0.5, 0.0, 0.5],
+         [0.25, 0.25, 0.5],
+         [0.5, 0.25, 0.5],
+         [0.5, 0.5, 0.5]], atol=1e-8)
+
+
+def test_GridPoints_SnO2_with_rotations_MP(ph_sno2):
+    rec_lat = np.linalg.inv(ph_sno2.primitive.cell)
+    rotations = ph_sno2.primitive_symmetry.get_pointgroup_operations()
+    gp = GridPoints([4, 4, 4], rec_lat, rotations=rotations,
+                    is_gamma_center=False)
+    np.testing.assert_array_equal(
+        gp.ir_grid_points, [0, 1, 5, 16, 17, 21])
+    np.testing.assert_array_equal(gp.weights, [8, 16, 8, 8, 16, 8])
+    np.testing.assert_array_equal(
+        gp.grid_mapping_table,
+        [0, 1, 1, 0, 1, 5, 5, 1, 1, 5,
+         5, 1, 0, 1, 1, 0, 16, 17, 17, 16,
+         17, 21, 21, 17, 17, 21, 21, 17, 16, 17,
+         17, 16, 16, 17, 17, 16, 17, 21, 21, 17,
+         17, 21, 21, 17, 16, 17, 17, 16, 0, 1,
+         1, 0, 1, 5, 5, 1, 1, 5, 5, 1,
+         0, 1, 1, 0])
+    np.testing.assert_allclose(
+        gp.qpoints,
+        [[0.125, 0.125, 0.125],
+         [0.375, 0.125, 0.125],
+         [0.375, 0.375, 0.125],
+         [0.125, 0.125, 0.375],
+         [0.375, 0.125, 0.375],
+         [0.375, 0.375, 0.375]], atol=1e-8)
