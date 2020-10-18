@@ -32,10 +32,15 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
 import numpy as np
-from spglib import get_stabilized_reciprocal_mesh, relocate_BZ_grid_address
+from spglib import (
+    get_stabilized_reciprocal_mesh, relocate_BZ_grid_address,
+    get_symmetry_dataset)
 from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
 from phonopy.structure.symmetry import get_lattice_vector_equivalence
+from phonopy.structure.cells import get_primitive_matrix_by_centring
+from phonopy.structure.snf import SNF3x3
 
 
 def length2mesh(length, lattice, rotations=None):
@@ -219,7 +224,7 @@ class GridPoints(object):
             self._set_grid_points()
             self._ir_qpoints += q_mesh_shift / self._mesh
             self._fit_qpoints_in_BZ()
-        else:
+        else:  # zero or half shift
             self._set_grid_points()
 
     @property
@@ -235,6 +240,9 @@ class GridPoints(object):
         return self._grid_address
 
     def get_grid_address(self):
+        warnings.warn("GridPoints.get_grid_address is deprecated."
+                      "Use grid_address attribute.",
+                      DeprecationWarning)
         return self.grid_address
 
     @property
@@ -242,6 +250,9 @@ class GridPoints(object):
         return self._ir_grid_points
 
     def get_ir_grid_points(self):
+        warnings.warn("GridPoints.get_ir_grid_points is deprecated."
+                      "Use ir_grid_points attribute.",
+                      DeprecationWarning)
         return self.ir_grid_points
 
     @property
@@ -249,6 +260,9 @@ class GridPoints(object):
         return self._ir_qpoints
 
     def get_ir_qpoints(self):
+        warnings.warn("GridPoints.get_ir_qpoints is deprecated."
+                      "Use points attribute.",
+                      DeprecationWarning)
         return self.qpoints
 
     @property
@@ -256,6 +270,9 @@ class GridPoints(object):
         return self._ir_weights
 
     def get_ir_grid_weights(self):
+        warnings.warn("GridPoints.get_ir_grid_weights is deprecated."
+                      "Use weights attribute.",
+                      DeprecationWarning)
         return self.weights
 
     @property
@@ -263,6 +280,9 @@ class GridPoints(object):
         return self._grid_mapping_table
 
     def get_grid_mapping_table(self):
+        warnings.warn("GridPoints.get_grid_mapping_table is deprecated."
+                      "Use grid_mapping_table attribute.",
+                      DeprecationWarning)
         return self.grid_mapping_table
 
     def _set_grid_points(self):
@@ -345,4 +365,49 @@ class GridPoints(object):
         self._ir_qpoints = np.array(
             (self._grid_address[self._ir_grid_points] + shift) / self._mesh,
             dtype='double', order='C')
+
         self._grid_mapping_table = grid_mapping_table
+
+
+class GeneralizedRegularGridPoints(object):
+    """Generalized regular grid points
+
+    Method strategy
+    ---------------
+    1. Create conventional unit cell using spglib.
+    2. Sample regular grid points for the conventional unit cell (mesh_numbers)
+    3. Transformation matrix from primitive to conventinal unit cell (inv_pmat)
+    4. mmat = (inv_pmat * mesh_numbers).T, which is related to the
+       transformation from primitive cell to supercell.
+    5. D = P.mmat.Q, where D = diag([n1, n2, n3])
+    6. Grid points for primitive cell are
+       [np.dot(Q, g) for g in ndindex((n1, n2, n3))].
+
+    """
+
+    def __init__(self, cell, length, symprec=1e-5):
+        sym_dataset = get_symmetry_dataset(cell, symprec=symprec)
+        tmat = sym_dataset['transformation_matrix']
+        centring = sym_dataset['international'][0]
+        pmat = get_primitive_matrix_by_centring(centring)
+        conv_lat = np.dot(np.linalg.inv(tmat).T, cell.cell)
+        mesh_numbers = length2mesh(length, conv_lat)
+        inv_pmat = np.linalg.inv(pmat)
+        inv_pmat_int = np.rint(inv_pmat).astype(int)
+
+        assert (np.abs(inv_pmat - inv_pmat_int) < 1e-5).all()
+
+        mmat = (inv_pmat_int * mesh_numbers).T
+
+        self._snf = SNF3x3(mmat)
+        self._snf.run()
+        self._matrix_to_primitive = np.array(
+            np.dot(np.linalg.inv(tmat), pmat), dtype='double', order='C')
+
+    @property
+    def matrix_to_primitive(self):
+        return self._matrix_to_primitive
+
+    @property
+    def snf(self):
+        return self._snf
