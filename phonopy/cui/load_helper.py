@@ -102,7 +102,7 @@ def get_nac_params(primitive=None,
     if born_filename is not None:
         _nac_params = parse_BORN(primitive, filename=born_filename)
         if log_level:
-            print("NAC params were read from \"%s\"." % born_filename)
+            print("NAC parameters were read from \"%s\"." % born_filename)
     elif nac_params is not None:  # nac_params input or phonopy_yaml.nac_params
         _nac_params = nac_params
     elif is_nac and os.path.isfile("BORN"):

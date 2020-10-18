@@ -606,7 +606,7 @@ def store_force_constants(phonon,
 
             phonon.set_force_constants(fc, show_drift=(log_level > 0))
 
-        if phpy_yaml.dataset is not None:
+        if forces_in_dataset(phpy_yaml.dataset):
             if log_level:
                 text = "Force sets were read from \"%s\"" % unitcell_filename
                 if phpy_yaml.force_constants is not None:
@@ -720,7 +720,7 @@ def store_nac_params(phonon,
             nac_params = get_nac_params(primitive=phonon.primitive,
                                         nac_params=phpy_yaml.nac_params,
                                         log_level=log_level)
-            if nac_params and log_level:
+            if phpy_yaml.nac_params is not None and log_level:
                 print("NAC parameters were read from \"%s\"."
                       % unitcell_filename)
         else:
