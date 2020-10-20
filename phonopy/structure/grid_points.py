@@ -386,6 +386,19 @@ class GeneralizedRegularGridPoints(object):
     """
 
     def __init__(self, cell, length, symprec=1e-5):
+        self._snf = None
+        self._matrix_to_primitive = None
+        self._set_snf(cell, length, symprec)
+
+    @property
+    def matrix_to_primitive(self):
+        return self._matrix_to_primitive
+
+    @property
+    def snf(self):
+        return self._snf
+
+    def _set_snf(self, cell, length, symprec):
         sym_dataset = get_symmetry_dataset(cell, symprec=symprec)
         tmat = sym_dataset['transformation_matrix']
         centring = sym_dataset['international'][0]
@@ -403,11 +416,3 @@ class GeneralizedRegularGridPoints(object):
         self._snf.run()
         self._matrix_to_primitive = np.array(
             np.dot(np.linalg.inv(tmat), pmat), dtype='double', order='C')
-
-    @property
-    def matrix_to_primitive(self):
-        return self._matrix_to_primitive
-
-    @property
-    def snf(self):
-        return self._snf
