@@ -75,6 +75,7 @@ class Unfolding(object):
             the supercell. This works like an inverse primitive matrix.
             shape=(3, 3), dtype='intc'
         ideal_positions : array_like
+            Atomic positions of perfect supercell.
             shape=(3, 3), dtype='intc'
         atom_mapping : list
             Atomic index mapping from ideal_positions to supercell atoms in
@@ -134,7 +135,7 @@ class Unfolding(object):
         self._q_count = 0
         self._unfolding_weights = np.zeros(
             (len(self._qpoints_s),
-             self._phonon.supercell.get_number_of_atoms() * 3), dtype='double')
+             len(self._phonon.supercell) * 3), dtype='double')
         self._frequencies = np.zeros_like(self._unfolding_weights)
 
     @property
@@ -179,7 +180,7 @@ class Unfolding(object):
                              scaled_positions=[[0, 0, 0]],
                              cell=np.diag([1, 1, 1]))
         smat = self._supercell_matrix
-        self._trans_s = get_supercell(pcell, smat).get_scaled_positions()
+        self._trans_s = get_supercell(pcell, smat).scaled_positions
         self._trans_p = np.dot(self._trans_s, self._supercell_matrix.T)
         self._N = len(self._trans_s)
 
