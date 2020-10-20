@@ -39,7 +39,7 @@ from phonopy.structure.cells import get_supercell
 
 
 class Unfolding(object):
-    """
+    """Calculation of a phonon unfolding method
 
     Implementation of an unfolding method by
     P. B. Allen et al., Phys. Rev. B 87, 085322 (2013)
@@ -55,6 +55,17 @@ class Unfolding(object):
 
     By these, sign of phase in Eq.(3) (Eq.(7) as well) is opposite.
 
+    Vacancies are treated as atomic sites where no atoms exist.
+    Interstitials are treated as atomic sites with the interstitial
+    atoms in a specific virtual primitive cell, but the respective
+    atomic sites in the other virtual
+    primitive cells are set as vacancies.
+
+    Attributes
+    ----------
+    unfolding_weights
+    frequencies
+    commensurate_points
 
     """
 
@@ -75,11 +86,13 @@ class Unfolding(object):
             the supercell. This works like an inverse primitive matrix.
             shape=(3, 3), dtype='intc'
         ideal_positions : array_like
-            Atomic positions of perfect supercell.
+            Positions of atomic sites in supercell, which corresponds to those
+            in a set of virtual primitive cells in the supercell.
             shape=(3, 3), dtype='intc'
         atom_mapping : list
             Atomic index mapping from ideal_positions to supercell atoms in
-            phonon. None is used for Vacancies.
+            parameter ``phonon``. The elements are intergers for atoms and
+            None for vacancies.
         qpoints : array_like
             q-points in reciprocal primitive cell coordinates
             shape=(num_qpoints, 3), dtype='double'
