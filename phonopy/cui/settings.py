@@ -589,6 +589,10 @@ class ConfParser(object):
             if conf_key in ('primitive_axis', 'primitive_axes'):
                 if confs[conf_key].strip().lower() == 'auto':
                     self.set_parameter('primitive_axes', 'auto')
+                elif confs[conf_key].strip().upper() in (
+                        'P', 'F', 'I', 'A', 'C', 'R'):
+                    self.set_parameter('primitive_axes',
+                                       confs[conf_key].strip().upper())
                 elif not len(confs[conf_key].split()) == 9:
                     self.setting_error(
                         "Number of elements in %s has to be 9." %

@@ -1087,6 +1087,32 @@ def determinant(m):
             m[0][2] * m[1][1] * m[2][0])
 
 
+def get_primitive_matrix(pmat, symprec=1e-5):
+    if type(pmat) is str and pmat in ('P', 'F', 'I', 'A', 'C', 'R', 'auto'):
+        if pmat == 'auto':
+            _pmat = pmat
+        else:
+            _pmat = get_primitive_matrix_by_centring(pmat)
+    elif pmat is None:
+        _pmat = None
+    elif len(np.ravel(pmat)) == 9:
+        matrix = np.reshape(pmat, (3, 3))
+        if matrix.dtype.kind in ('i', 'u', 'f'):
+            det = np.linalg.det(matrix)
+            if symprec < det and det < 1 + symprec:
+                _pmat = matrix
+            else:
+                msg = ("Determinant of primitive_matrix has to be larger "
+                       "than 0")
+                raise RuntimeError(msg)
+    else:
+        msg = ("primitive_matrix has to be a 3x3 matrix, None, 'auto', "
+               "'P', 'F', 'I', 'A', 'C', or 'R'")
+        raise RuntimeError(msg)
+
+    return _pmat
+
+
 def get_primitive_matrix_by_centring(centring):
     if centring == 'P':
         return [[1, 0, 0],

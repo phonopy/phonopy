@@ -43,7 +43,7 @@ from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
 from phonopy.structure.grid_points import length2mesh
 from phonopy.structure.cells import (
     get_supercell, get_primitive, guess_primitive_matrix,
-    shape_supercell_matrix)
+    get_primitive_matrix, shape_supercell_matrix)
 from phonopy.structure.dataset import (
     get_displacements_and_forces, forces_in_dataset)
 from phonopy.harmonic.displacement import (
@@ -107,8 +107,9 @@ class Phonopy(object):
         # Create supercell and primitive cell
         self._unitcell = PhonopyAtoms(atoms=unitcell)
         self._supercell_matrix = self._shape_supercell_matrix(supercell_matrix)
-        if type(primitive_matrix) is str and primitive_matrix == 'auto':
-            self._primitive_matrix = self._guess_primitive_matrix()
+        if isinstance(primitive_matrix, str):
+            self._primitive_matrix = self._set_primitive_matrix(
+                primitive_matrix)
         elif primitive_matrix is not None:
             self._primitive_matrix = np.array(primitive_matrix,
                                               dtype='double', order='c')
@@ -3098,8 +3099,13 @@ class Phonopy(object):
                    "PRIMITIVE_AXIS may be incorrectly specified.")
             raise RuntimeError(msg)
 
-    def _guess_primitive_matrix(self):
-        return guess_primitive_matrix(self._unitcell, symprec=self._symprec)
+    def _set_primitive_matrix(self, primitive_matrix):
+        pmat = get_primitive_matrix(primitive_matrix, symprec=self._symprec)
+        if isinstance(pmat, str) and pmat == 'auto':
+            return guess_primitive_matrix(self._unitcell,
+                                          symprec=self._symprec)
+        else:
+            return pmat
 
     def _shape_supercell_matrix(self, smat):
         return shape_supercell_matrix(smat)

@@ -35,7 +35,8 @@
 import os
 import numpy as np
 from phonopy.interface.calculator import read_crystal_structure
-from phonopy.structure.cells import get_primitive_matrix_by_centring
+from phonopy.structure.cells import (
+    get_primitive_matrix_by_centring, get_primitive_matrix)
 from phonopy.file_IO import (
     parse_BORN, read_force_constants_hdf5, parse_FORCE_SETS,
     parse_FORCE_CONSTANTS)
@@ -88,7 +89,7 @@ def get_cell_settings(phonopy_yaml=None,
         msg = "'%s' could not be found." % filename
         raise FileNotFoundError(msg)
 
-    pmat = _get_primitive_matrix(pmat, cell, symprec)
+    pmat = get_primitive_matrix(pmat, symprec=symprec)
 
     return cell, smat, pmat
 
@@ -219,32 +220,6 @@ def _read_force_constants_file(phonon, force_constants_filename):
         _fc = parse_FORCE_CONSTANTS(filename=force_constants_filename,
                                     p2s_map=p2s_map)
     return _fc
-
-
-def _get_primitive_matrix(pmat, unitcell, symprec):
-    if type(pmat) is str and pmat in ('F', 'I', 'A', 'C', 'R', 'auto'):
-        if pmat == 'auto':
-            _pmat = pmat
-        else:
-            _pmat = get_primitive_matrix_by_centring(pmat)
-    elif pmat is None:
-        _pmat = None
-    elif len(np.ravel(pmat)) == 9:
-        matrix = np.reshape(pmat, (3, 3))
-        if matrix.dtype.kind in ('i', 'u', 'f'):
-            det = np.linalg.det(matrix)
-            if symprec < det and det < 1 + symprec:
-                _pmat = matrix
-            else:
-                msg = ("Determinant of primitive_matrix has to be larger "
-                       "than 0")
-                raise RuntimeError(msg)
-    else:
-        msg = ("primitive_matrix has to be a 3x3 matrix, None, 'auto', "
-               "'F', 'I', 'A', 'C', or 'R'")
-        raise RuntimeError(msg)
-
-    return _pmat
 
 
 def _produce_force_constants(phonon,
