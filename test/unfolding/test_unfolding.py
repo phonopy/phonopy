@@ -20,7 +20,8 @@ def test_Unfolding_NaCl(ph_nacl):
 
     """
 
-    ph = _get_phonon(ph_nacl)
+    # ph = _get_phonon(ph_nacl)
+    ph = ph_nacl
     nd = 10
     qpoints = np.array([[x, ] * 3 for x in range(nd)]) / float(nd) - 0.5
     unfolding_supercell_matrix = [[-2, 2, 2],
@@ -56,7 +57,8 @@ def test_Unfolding_SC(ph_nacl):
 
     """
 
-    ph = _get_phonon(ph_nacl)
+    # ph = _get_phonon(ph_nacl)
+    ph = ph_nacl
     nd = 10
     qpoints = np.array([[x, ] * 3 for x in range(nd)]) / float(nd) - 0.5
     unfolding_supercell_matrix = np.diag([4, 4, 4])

@@ -33,6 +33,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+from phonopy import Phonopy
+from phonopy.harmonic.force_constants import compact_fc_to_full_fc
 from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_supercell
@@ -61,11 +63,26 @@ class Unfolding(object):
     atomic sites in the other virtual
     primitive cells are set as vacancies.
 
+    The unfolded band structure may be plotted as
+        x (wave vector): qpoints
+        y (frequency): frequencies
+        z (intencity) : unfolding_weights
+
+
     Attributes
     ----------
-    unfolding_weights
-    frequencies
-    commensurate_points
+    unfolding_weights : ndarray
+        Unfolding weights.
+        shape=(qpoints, supercell atoms * 3), dtype='double', order='C'
+    frequencies : ndarray
+        Phonon frequencies at Gamma point of the supercell phonon. By
+        unfolding, these are considered at the phonon frequencies at
+        the specified qpoints but with the unfolding weights.
+        shape=(qpoints, supercell atoms * 3), dtype='double', order='C'
+    commensurate_points : ndarray
+        Commensurate points corresponding to ``supercell_matrix``.
+        shape=(N, 3), dtype='double', order='C'
+        where N = det(supercell_matrix)
 
     """
 
@@ -80,26 +97,26 @@ class Unfolding(object):
         Parameters
         ----------
         phonon : Phonopy
-            Phonopy object made with supercell as the primitive cell.
+            Phonopy object to be unfolded.
         supercell_matrix : array_like
-            Matrix that represents the primitive translation enforced within
-            the supercell. This works like an inverse primitive matrix.
+            Matrix that represents the virtual primitive translation enforced
+            inside the supercell. This works like an inverse primitive matrix.
             shape=(3, 3), dtype='intc'
         ideal_positions : array_like
-            Positions of atomic sites in supercell, which corresponds to those
+            Positions of atomic sites in supercell. This corresponds to those
             in a set of virtual primitive cells in the supercell.
             shape=(3, 3), dtype='intc'
         atom_mapping : list
-            Atomic index mapping from ideal_positions to supercell atoms in
-            parameter ``phonon``. The elements are intergers for atoms and
-            None for vacancies.
+            Atomic index mapping from ``ideal_positions`` to supercell atoms
+            in ``phonon``. The elements of this list are intergers for atoms
+            and None for vacancies.
         qpoints : array_like
-            q-points in reciprocal primitive cell coordinates
+            q-points in reciprocal virtual-primitive-cell coordinates
             shape=(num_qpoints, 3), dtype='double'
 
         """
 
-        self._phonon = phonon
+        self._phonon = self._get_supercell_phonon(phonon)
         self._supercell_matrix = np.array(supercell_matrix, dtype='intc')
         self._ideal_positions = np.array(ideal_positions, dtype='double')
         self._qpoints_p = qpoints  # in PBZ
@@ -209,7 +226,7 @@ class Unfolding(object):
 
         """
 
-        lattice = self._phonon.supercell.get_cell()
+        lattice = self._phonon.supercell.cell
         natom = len(self._ideal_positions)
         index_map_inv = np.zeros((self._N, natom), dtype='intc')
         for i, shift in enumerate(self._trans_s):
@@ -301,3 +318,27 @@ class Unfolding(object):
             print("Phonopy warning: Encountered imaginary values.")
 
         return weights.real
+
+    def _get_supercell_phonon(self, ph_in):
+        """Returns Phonopy instance of supercell as the primitive"""
+        ph = Phonopy(ph_in.supercell,
+                     supercell_matrix=[1, 1, 1],
+                     primitive_matrix='P')
+        fc_shape = ph_in.force_constants.shape
+        if fc_shape[0] == fc_shape[1]:  # assume full fc
+            ph.force_constants = ph_in.force_constants
+        else:
+            ph.force_constants = compact_fc_to_full_fc(
+                ph_in, ph_in.force_constants)
+
+        if ph_in.nac_params:
+            p2p = ph_in.primitive.p2p_map
+            s2p = ph_in.primitive.s2p_map
+            s2pp = [p2p[i] for i in s2p]
+            born_in = ph_in.nac_params['born']
+            born = [born_in[i] for i in s2pp]
+            nac_params = {'born': np.array(born, dtype='double', order='C'),
+                          'factor': ph_in.nac_params['factor'],
+                          'dielectric': ph_in.nac_params['dielectric']}
+            ph.nac_params = nac_params
+        return ph
