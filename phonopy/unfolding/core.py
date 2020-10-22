@@ -326,7 +326,7 @@ class Unfolding(object):
                      primitive_matrix='P')
         fc_shape = ph_in.force_constants.shape
         if fc_shape[0] == fc_shape[1]:  # assume full fc
-            ph.force_constants = ph_in.force_constants
+            ph.force_constants = ph_in.force_constants.copy()
         else:
             ph.force_constants = compact_fc_to_full_fc(
                 ph_in, ph_in.force_constants)
@@ -339,6 +339,6 @@ class Unfolding(object):
             born = [born_in[i] for i in s2pp]
             nac_params = {'born': np.array(born, dtype='double', order='C'),
                           'factor': ph_in.nac_params['factor'],
-                          'dielectric': ph_in.nac_params['dielectric']}
+                          'dielectric': ph_in.nac_params['dielectric'].copy()}
             ph.nac_params = nac_params
         return ph
