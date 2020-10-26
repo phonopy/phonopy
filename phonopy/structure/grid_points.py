@@ -36,10 +36,12 @@ import warnings
 import numpy as np
 from spglib import (
     get_stabilized_reciprocal_mesh, relocate_BZ_grid_address,
-    get_symmetry_dataset)
+    get_symmetry_dataset, get_pointgroup)
 from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
 from phonopy.structure.symmetry import get_lattice_vector_equivalence
-from phonopy.structure.cells import get_primitive_matrix_by_centring
+from phonopy.structure.cells import (
+    get_primitive_matrix_by_centring, estimate_supercell_matrix,
+    estimate_supercell_matrix_from_pointgroup)
 from phonopy.structure.snf import SNF3x3
 
 
@@ -372,20 +374,43 @@ class GridPoints(object):
 class GeneralizedRegularGridPoints(object):
     """Generalized regular grid points
 
-    Method strategy
-    ---------------
+    Method strategy in suggest mode
+    -------------------------------
     1. Create conventional unit cell using spglib.
     2. Sample regular grid points for the conventional unit cell (mesh_numbers)
     3. Transformation matrix from primitive to conventinal unit cell (inv_pmat)
-    4. mmat = (inv_pmat * mesh_numbers).T, which is related to the
+    4. Get supercell multiplicities (mesh_numbers) from the conventional unit
+       cell considering the lattice shape.
+    5. mmat = (inv_pmat * mesh_numbers).T, which is related to the
        transformation from primitive cell to supercell.
+    6. D = P.mmat.Q, where D = diag([n1, n2, n3])
+    7. Grid points for primitive cell are
+       [np.dot(Q, g) for g in ndindex((n1, n2, n3))].
+
+    Method strategy in non-suggest mode
+    -----------------------------------
+    1. Find symmetry operations
+    2. Determine point group and transformation matrix (tmat) from input cell
+    3. Get supercell multiplicities (mesh_numbers) from the transformed cell
+       considering the lattice shape.
+    4. mmat = (tmat * mesh_numbers).T
     5. D = P.mmat.Q, where D = diag([n1, n2, n3])
     6. Grid points for primitive cell are
        [np.dot(Q, g) for g in ndindex((n1, n2, n3))].
 
     """
 
-    def __init__(self, cell, length, symprec=1e-5):
+    def __init__(self, cell, length, suggest=True, symprec=1e-5):
+        """
+
+        Parameters
+        ----------
+        cell : PhonopyAtoms
+            Input cell.
+        length : float
+            Length having the unit of direct space length.
+
+        """
         self._snf = None
         self._matrix_to_primitive = None
         self._set_snf(cell, length, symprec)
@@ -400,19 +425,39 @@ class GeneralizedRegularGridPoints(object):
 
     def _set_snf(self, cell, length, symprec):
         sym_dataset = get_symmetry_dataset(cell, symprec=symprec)
+        if self._suggest:
+            # Standeardized primitive cell is searched
+            self._set_snf_from_primitive_cell(cell, length, sym_dataset)
+        else:
+            # Supercell
+            self._set_snf_from_input_cell(cell, length, sym_dataset)
+
+    def _set_snf_from_primitive_cell(self, cell, length, sym_dataset):
         tmat = sym_dataset['transformation_matrix']
         centring = sym_dataset['international'][0]
         pmat = get_primitive_matrix_by_centring(centring)
         conv_lat = np.dot(np.linalg.inv(tmat).T, cell.cell)
-        mesh_numbers = length2mesh(length, conv_lat)
+        num_cells = np.prod(length2mesh(length, conv_lat))
+        mesh_numbers = estimate_supercell_matrix(
+            sym_dataset,
+            max_num_atoms=num_cells * len(sym_dataset['std_types']))
         inv_pmat = np.linalg.inv(pmat)
         inv_pmat_int = np.rint(inv_pmat).astype(int)
-
         assert (np.abs(inv_pmat - inv_pmat_int) < 1e-5).all()
-
+        # transpose in reciprocal space
         mmat = (inv_pmat_int * mesh_numbers).T
-
         self._snf = SNF3x3(mmat)
         self._snf.run()
         self._matrix_to_primitive = np.array(
             np.dot(np.linalg.inv(tmat), pmat), dtype='double', order='C')
+
+    def _set_snf_from_input_cell(self, cell, length, sym_dataset):
+        pointgroup = get_pointgroup(sym_dataset['rotations'])
+        lattice = np.dot(cell.cell.T, pointgroup[2]).T
+        num_cells = np.prod(length2mesh(length, lattice))
+        mesh_numbers = estimate_supercell_matrix_from_pointgroup(
+            pointgroup[1], lattice, num_cells)
+        # transpose in reciprocal space
+        mmat = (pointgroup[2] * mesh_numbers).T
+        self._snf = SNF3x3(mmat)
+        self._snf.run()
