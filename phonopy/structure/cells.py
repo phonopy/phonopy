@@ -1210,6 +1210,40 @@ def estimate_supercell_matrix(spglib_dataset,
     return multi
 
 
+def estimate_supercell_matrix_from_pointgroup(pointgroup_number,
+                                              lattice,
+                                              max_num_cells=120):
+    """Estimate supercell matrix from crystallographic point group
+
+    Parameters
+    ----------
+    pointgroup_number : int
+        The number representing crystallographic number from 1 to 32.
+    lattice : array_like
+        Basis vectors given as row vectors.
+        shape=(3, 3), dtype='double'
+    max_num_cells : int, optional
+        Maximum number of cells in created supercell to be tolerated.
+
+    Returns
+    -------
+    list of three integer numbers
+        Multiplicities for a, b, c basis vectors, respectively.
+
+    """
+
+    abc_lengths = _get_lattice_parameters(lattice.T)
+
+    if pointgroup_number <= 8:  # Triclinic, monoclinic, and orthorhombic
+        multi = _get_multiplicity_abc(1, abc_lengths, max_num_cells)
+    elif pointgroup_number <= 27:  # Tetragonal and hexagonal
+        multi = _get_multiplicity_ac(1, abc_lengths, max_num_cells)
+    else:  # Cubic
+        multi = _get_multiplicity_a(1, abc_lengths, max_num_cells)
+
+    return multi
+
+
 def _get_lattice_parameters(lattice):
     """Return basis vector lengths
 
