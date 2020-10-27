@@ -59,11 +59,19 @@ def test_magmom(convcell_cr):
     assert len_sym_nonspin != len_sym_brokenspin
 
 
-def test_symmetrize_borns_and_epsilon(ph_nacl):
+def test_symmetrize_borns_and_epsilon_nacl(ph_nacl):
     nac_params = ph_nacl.nac_params
     borns, epsilon = symmetrize_borns_and_epsilon(
         nac_params['born'], nac_params['dielectric'], ph_nacl.primitive)
     np.testing.assert_allclose(borns, nac_params['born'], atol=1e-8)
+    np.testing.assert_allclose(epsilon, nac_params['dielectric'], atol=1e-8)
+
+
+def test_symmetrize_borns_and_epsilon_tio2(ph_tio2):
+    nac_params = ph_tio2.nac_params
+    borns, epsilon = symmetrize_borns_and_epsilon(
+        nac_params['born'], nac_params['dielectric'], ph_tio2.primitive)
+    # np.testing.assert_allclose(borns, nac_params['born'], atol=1e-8)
     np.testing.assert_allclose(epsilon, nac_params['dielectric'], atol=1e-8)
 
 
