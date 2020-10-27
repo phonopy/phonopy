@@ -35,8 +35,7 @@
 import os
 import numpy as np
 from phonopy.interface.calculator import read_crystal_structure
-from phonopy.structure.cells import (
-    get_primitive_matrix_by_centring, get_primitive_matrix)
+from phonopy.structure.cells import get_primitive_matrix
 from phonopy.file_IO import (
     parse_BORN, read_force_constants_hdf5, parse_FORCE_SETS,
     parse_FORCE_CONSTANTS)

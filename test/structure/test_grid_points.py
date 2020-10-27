@@ -160,3 +160,7 @@ def test_GridPoints_SnO2_with_rotations_MP(ph_sno2):
          [0.125, 0.125, 0.375],
          [0.375, 0.125, 0.375],
          [0.375, 0.375, 0.375]], atol=1e-8)
+
+
+def test_GeneralizedRegularGridPoints(ph_tio2):
+    pass
