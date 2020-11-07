@@ -45,7 +45,7 @@ def ph_sno2():
 def ph_tio2():
     yaml_filename = os.path.join(current_dir, "phonopy_disp_TiO2.yaml")
     force_sets_filename = os.path.join(current_dir, "FORCE_SETS_TiO2")
-    born_filename = os.path.join(current_dir, "BORN_SnO2")
+    born_filename = os.path.join(current_dir, "BORN_TiO2")
     return phonopy.load(yaml_filename,
                         force_sets_filename=force_sets_filename,
                         born_filename=born_filename,
