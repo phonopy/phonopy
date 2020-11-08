@@ -1,5 +1,7 @@
+import pytest
 import numpy as np
-from phonopy.structure.grid_points import GridPoints
+from phonopy.structure.grid_points import (
+    GridPoints, GeneralizedRegularGridPoints)
 
 ga234 = [[0, 0, 0],
          [1, 0, 0],
@@ -60,7 +62,7 @@ def test_GridPoints_NaCl_with_rotations(ph_nacl):
          [-0.25, 0.5, 0.25]], atol=1e-8)
 
 
-def test_GridPoints_NaCl_with_rotations_fit_BZ_falase(ph_nacl):
+def test_GridPoints_NaCl_with_rotations_fit_BZ(ph_nacl):
     rec_lat = np.linalg.inv(ph_nacl.primitive.cell)
     rotations = ph_nacl.primitive_symmetry.get_pointgroup_operations()
     mesh = [5, 5, 5]
@@ -161,6 +163,8 @@ def test_GridPoints_SnO2_with_rotations_MP(ph_sno2):
          [0.375, 0.125, 0.375],
          [0.375, 0.375, 0.375]], atol=1e-8)
 
-
-def test_GeneralizedRegularGridPoints(ph_tio2):
-    pass
+@pytest.mark.parametrize("suggest", [True, False])
+def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
+    grgp = GeneralizedRegularGridPoints(ph_tio2.unitcell, 100, suggest=suggest)
+    print(grgp.snf)
+    print(grgp.matrix_to_primitive)

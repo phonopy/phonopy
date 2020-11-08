@@ -1,10 +1,38 @@
 import os
 import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import get_supercell, get_primitive, TrimmedCell
+from phonopy.structure.cells import (
+    get_supercell, get_primitive, TrimmedCell,
+    compute_permutation_for_rotation)
 from phonopy.interface.phonopy_yaml import read_cell_yaml
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
+
+
+def test_compute_permutation_for_rotation_sno2(ph_sno2):
+    _test_compute_permutation_for_rotation(ph_sno2)
+
+
+def test_compute_permutation_for_rotation_tio2(ph_tio2):
+    _test_compute_permutation_for_rotation(ph_tio2)
+
+
+def test_compute_permutation_for_rotation_nacl(ph_nacl):
+    _test_compute_permutation_for_rotation(ph_nacl)
+
+
+def _test_compute_permutation_for_rotation(ph):
+    symmetry = ph.primitive_symmetry
+    ppos = ph.primitive.scaled_positions
+    plat = ph.primitive.cell.T
+    symprec = symmetry.tolerance
+    for r, t in zip(symmetry.get_symmetry_operations()['rotations'],
+                    symmetry.get_symmetry_operations()['translations']):
+        ppos_rot = np.dot(ppos, r.T) + t
+        perm = compute_permutation_for_rotation(ppos, ppos_rot, plat, symprec)
+        diff = ppos[perm] - ppos_rot
+        diff -= np.rint(diff)
+        assert ((np.dot(diff, plat) ** 2).sum(axis=1) < symprec).all()
 
 
 def test_get_supercell_convcell_sio2(convcell_sio2):

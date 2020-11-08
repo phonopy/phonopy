@@ -937,6 +937,25 @@ def compute_permutation_for_rotation(positions_a,  # scaled positions
     This version is optimized for the case where positions_a and positions_b
     are related by a rotation.
 
+    Parameters
+    ----------
+    positions_a : ndarray
+        Scaled positions (like PhonopyAtoms.scaled_positions) before applying
+        the space group operation
+    positions_b : ndarray
+        Scaled positions (like PhonopyAtoms.scaled_positions) after applying
+        the space group operation
+    lattice : ndarray
+        Basis vectors in column vectors (like PhonopyAtoms.cell.T)
+    symprec : float
+        Symmetry tolerance of the distance unit
+
+    Returns
+    -------
+    perm : ndarray
+        A list of atomic indices that maps atoms before the space group
+        operation to those after as explained above.
+
     """
 
     # Sort both sides by some measure which is likely to produce a small

@@ -411,12 +411,24 @@ class GeneralizedRegularGridPoints(object):
             Length having the unit of direct space length.
 
         """
+        self._suggest = suggest
         self._snf = None
         self._matrix_to_primitive = None
         self._set_snf(cell, length, symprec)
 
     @property
     def matrix_to_primitive(self):
+        """Transformation matrix to primitive cell
+
+        Returns
+        -------
+        ndarray
+            Transformation matrix from input cell to the suggested primitive
+            cell.
+            shape=(3,3), dtype='double', order='C'
+
+        """
+
         return self._matrix_to_primitive
 
     @property
@@ -424,7 +436,7 @@ class GeneralizedRegularGridPoints(object):
         return self._snf
 
     def _set_snf(self, cell, length, symprec):
-        sym_dataset = get_symmetry_dataset(cell, symprec=symprec)
+        sym_dataset = get_symmetry_dataset(cell.totuple(), symprec=symprec)
         if self._suggest:
             # Standeardized primitive cell is searched
             self._set_snf_from_primitive_cell(cell, length, sym_dataset)
@@ -458,6 +470,6 @@ class GeneralizedRegularGridPoints(object):
         mesh_numbers = estimate_supercell_matrix_from_pointgroup(
             pointgroup[1], lattice, num_cells)
         # transpose in reciprocal space
-        mmat = (pointgroup[2] * mesh_numbers).T
+        mmat = np.multiply(pointgroup[2], mesh_numbers).T
         self._snf = SNF3x3(mmat)
         self._snf.run()
