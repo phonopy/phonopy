@@ -3,7 +3,7 @@ import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
     get_supercell, get_primitive, TrimmedCell,
-    compute_permutation_for_rotation)
+    compute_permutation_for_rotation, compute_all_sg_permutations)
 from phonopy.interface.phonopy_yaml import read_cell_yaml
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
@@ -26,10 +26,13 @@ def _test_compute_permutation_for_rotation(ph):
     ppos = ph.primitive.scaled_positions
     plat = ph.primitive.cell.T
     symprec = symmetry.tolerance
-    for r, t in zip(symmetry.get_symmetry_operations()['rotations'],
-                    symmetry.get_symmetry_operations()['translations']):
+    rots = symmetry.get_symmetry_operations()['rotations']
+    trans = symmetry.get_symmetry_operations()['translations']
+    perms = compute_all_sg_permutations(ppos, rots, trans, plat, symprec)
+    for i, (r, t) in enumerate(zip(rots, trans)):
         ppos_rot = np.dot(ppos, r.T) + t
         perm = compute_permutation_for_rotation(ppos, ppos_rot, plat, symprec)
+        np.testing.assert_array_equal(perms[i], perm)
         diff = ppos[perm] - ppos_rot
         diff -= np.rint(diff)
         assert ((np.dot(diff, plat) ** 2).sum(axis=1) < symprec).all()

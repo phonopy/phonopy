@@ -904,11 +904,30 @@ def compute_all_sg_permutations(positions,  # scaled positions
                                 translations,  # scaled
                                 lattice,  # column vectors
                                 symprec):
-    """Compute a permutation for every space group operation.
+    """Compute permutations for space group operations.
 
     See 'compute_permutation_for_rotation' for more info.
 
-    Output has shape (num_rot, num_pos)
+    Parameters
+    ----------
+    positions : ndarray
+        Scaled positions (like PhonopyAtoms.scaled_positions) before applying
+        the space group operation
+    rotations : ndarray
+        Matrix (rotation) parts of space group operations
+        shape=(len(operations), 3, 3), dtype='intc'
+    translations : ndarray
+        Vector (translation) parts of space group operations
+        shape=(len(operations), 3), dtype='double'
+    lattice : ndarray
+        Basis vectors in column vectors (like PhonopyAtoms.cell.T)
+    symprec : float
+        Symmetry tolerance of the distance unit
+
+    Returns
+    -------
+    perms : ndarray
+        shape=(len(operations), len(positions)), dtype='intc', order='C'
 
     """
 
@@ -955,6 +974,7 @@ def compute_permutation_for_rotation(positions_a,  # scaled positions
     perm : ndarray
         A list of atomic indices that maps atoms before the space group
         operation to those after as explained above.
+        shape=(len(positions), ), dtype=int
 
     """
 
