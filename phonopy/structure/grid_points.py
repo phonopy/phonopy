@@ -403,6 +403,10 @@ class GeneralizedRegularGridPoints(object):
     grid_address : ndarray
         Grid addresses in integers.
         shape=(num_grid_points, 3), dtype='intc', order='C'
+    qpoints : ndarray
+        q-points with respect to basis vectors of input or standardized
+        primitive cell.
+        shape=(num_grid_points, 3), dtype='intc', order='C'
     grid_matrix : ndarray
         Grid generating matrix.
         shape=(3,3), dtype='intc', order='C'
@@ -433,10 +437,15 @@ class GeneralizedRegularGridPoints(object):
         self._grid_matrix = None
         self._prepare(cell, length, symprec)
         self._generate_grid_points()
+        self._generate_q_points()
 
     @property
     def grid_address(self):
         return self._grid_address
+
+    @property
+    def qpoints(self):
+        return self._qpoints
 
     @property
     def grid_matrix(self):
@@ -504,3 +513,8 @@ class GeneralizedRegularGridPoints(object):
                               indexing='ij')
         self._grid_address = np.array(np.c_[x.ravel(), y.ravel(), z.ravel()],
                                       dtype='intc', order='C')
+
+    def _generate_q_points(self):
+        d = np.diagonal(self._snf.D).astype(float)
+        self._qpoints = np.dot(self._grid_address / d, self._snf.Q.T)
+        self._qpoints -= np.rint(self._qpoints)
