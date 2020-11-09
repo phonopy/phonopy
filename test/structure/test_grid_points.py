@@ -163,8 +163,30 @@ def test_GridPoints_SnO2_with_rotations_MP(ph_sno2):
          [0.375, 0.125, 0.375],
          [0.375, 0.375, 0.375]], atol=1e-8)
 
+
 @pytest.mark.parametrize("suggest", [True, False])
 def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
     grgp = GeneralizedRegularGridPoints(ph_tio2.unitcell, 100, suggest=suggest)
-    print(grgp.snf)
-    print(grgp.matrix_to_primitive)
+
+    if suggest:
+        np.testing.assert_array_equal(
+            grgp.snf.P, [[0, -1, 3], [1, 0, 0], [-3, 3, -8]])
+        np.testing.assert_array_equal(
+            grgp.snf.D, [[2, 0, 0], [0, 16, 0], [0, 0, 96]])
+        np.testing.assert_array_equal(
+            grgp.snf.Q, [[1, 8, 17], [0, 0, -1], [0, 1, 1]])
+        np.testing.assert_allclose(
+            grgp.matrix_to_primitive,
+            [[-0.5, 0.5, 0.5], [0.5, -0.5, 0.5], [0.5, 0.5, -0.5]])
+        np.testing.assert_array_equal(
+            grgp.grid_matrix, [[0, 16, 16], [16, 0, 16], [6, 6, 0]])
+    else:
+        np.testing.assert_array_equal(
+            grgp.snf.P, [[1, 0, -3], [0, -1, 0], [-3, 0, 8]])
+        np.testing.assert_array_equal(
+            grgp.snf.D, [[2, 0, 0], [0, 16, 0], [0, 0, 48]])
+        np.testing.assert_array_equal(
+            grgp.snf.Q, [[-1, 0, -9], [0, -1, 0], [-1, 0, -8]])
+        assert grgp.matrix_to_primitive is None
+        np.testing.assert_array_equal(
+            grgp.grid_matrix, [[16, 0, 0], [0, 16, 0], [0, 0, 6]])
