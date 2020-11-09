@@ -180,6 +180,7 @@ def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
             [[-0.5, 0.5, 0.5], [0.5, -0.5, 0.5], [0.5, 0.5, -0.5]])
         np.testing.assert_array_equal(
             grgp.grid_matrix, [[0, 16, 16], [16, 0, 16], [6, 6, 0]])
+        assert (grgp.grid_address[253] == [0, 2, 61]).all()
     else:
         np.testing.assert_array_equal(
             grgp.snf.P, [[1, 0, -3], [0, -1, 0], [-3, 0, 8]])
@@ -190,3 +191,4 @@ def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
         assert grgp.matrix_to_primitive is None
         np.testing.assert_array_equal(
             grgp.grid_matrix, [[16, 0, 0], [0, 16, 0], [0, 0, 6]])
+        assert (grgp.grid_address[253] == [0, 5, 13]).all()
