@@ -400,6 +400,9 @@ class GeneralizedRegularGridPoints(object):
 
     Attributes
     ----------
+    grid_address : ndarray
+        Grid addresses in integers.
+        shape=(num_grid_points, 3), dtype='intc', order='C'
     grid_matrix : ndarray
         Grid generating matrix.
         shape=(3,3), dtype='intc', order='C'
@@ -424,10 +427,16 @@ class GeneralizedRegularGridPoints(object):
 
         """
         self._suggest = suggest
+        self._grid_address = None
         self._snf = None
         self._matrix_to_primitive = None
         self._grid_matrix = None
-        self._set_snf(cell, length, symprec)
+        self._prepare(cell, length, symprec)
+        self._generate_grid_points()
+
+    @property
+    def grid_address(self):
+        return self._grid_address
 
     @property
     def grid_matrix(self):
@@ -444,37 +453,42 @@ class GeneralizedRegularGridPoints(object):
         """SNF3x3 instance of grid generating matrix"""
         return self._snf
 
-    def _set_snf(self, cell, length, symprec):
-        sym_dataset = get_symmetry_dataset(cell.totuple(), symprec=symprec)
-        if self._suggest:
-            # Standeardized primitive cell is searched
-            self._set_snf_from_primitive_cell(cell, length, sym_dataset)
-        else:
-            # Supercell
-            self._set_snf_from_input_cell(cell, length, sym_dataset)
+    def _prepare(self, cell, length, symprec):
+        """Define grid generating matrix and run the SNF"""
 
-    def _set_snf_from_primitive_cell(self, cell, length, sym_dataset):
-        tmat = sym_dataset['transformation_matrix']
-        centring = sym_dataset['international'][0]
+        self._sym_dataset = get_symmetry_dataset(
+            cell.totuple(), symprec=symprec)
+        if self._suggest:
+            self._set_grid_matrix_by_std_primitive_cell(cell, length)
+        else:
+            self._set_grid_matrix_by_input_cell(cell, length)
+        self._snf = SNF3x3(self._grid_matrix)
+        self._snf.run()
+
+    def _set_grid_matrix_by_std_primitive_cell(self, cell, length):
+        """Grid generating matrix based on standeardized primitive cell"""
+
+        tmat = self._sym_dataset['transformation_matrix']
+        centring = self._sym_dataset['international'][0]
         pmat = get_primitive_matrix_by_centring(centring)
         conv_lat = np.dot(np.linalg.inv(tmat).T, cell.cell)
         num_cells = np.prod(length2mesh(length, conv_lat))
         mesh_numbers = estimate_supercell_matrix(
-            sym_dataset,
-            max_num_atoms=num_cells * len(sym_dataset['std_types']))
+            self._sym_dataset,
+            max_num_atoms=num_cells * len(self._sym_dataset['std_types']))
         inv_pmat = np.linalg.inv(pmat)
         inv_pmat_int = np.rint(inv_pmat).astype(int)
         assert (np.abs(inv_pmat - inv_pmat_int) < 1e-5).all()
         # transpose in reciprocal space
         self._grid_matrix = np.array(
             (inv_pmat_int * mesh_numbers).T, dtype='intc', order='C')
-        self._snf = SNF3x3(self._grid_matrix)
-        self._snf.run()
         self._matrix_to_primitive = np.array(
             np.dot(np.linalg.inv(tmat), pmat), dtype='double', order='C')
 
-    def _set_snf_from_input_cell(self, cell, length, sym_dataset):
-        pointgroup = get_pointgroup(sym_dataset['rotations'])
+    def _set_grid_matrix_by_input_cell(self, cell, length):
+        """Grid generating matrix based on input cell"""
+
+        pointgroup = get_pointgroup(self._sym_dataset['rotations'])
         lattice = np.dot(cell.cell.T, pointgroup[2]).T
         num_cells = np.prod(length2mesh(length, lattice))
         mesh_numbers = estimate_supercell_matrix_from_pointgroup(
@@ -483,5 +497,10 @@ class GeneralizedRegularGridPoints(object):
         self._grid_matrix = np.array(
             np.multiply(pointgroup[2], mesh_numbers).T,
             dtype='intc', order='C')
-        self._snf = SNF3x3(self._grid_matrix)
-        self._snf.run()
+
+    def _generate_grid_points(self):
+        d = np.diagonal(self._snf.D)
+        x, y, z = np.meshgrid(range(d[0]), range(d[1]), range(d[2]),
+                              indexing='ij')
+        self._grid_address = np.array(np.c_[x.ravel(), y.ravel(), z.ravel()],
+                                      dtype='intc', order='C')
