@@ -9,19 +9,19 @@ from phonopy.interface.phonopy_yaml import read_cell_yaml
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-def test_compute_permutation_for_rotation_sno2(ph_sno2):
-    _test_compute_permutation_for_rotation(ph_sno2)
+def test_compute_permutation_sno2(ph_sno2):
+    _test_compute_permutation(ph_sno2)
 
 
-def test_compute_permutation_for_rotation_tio2(ph_tio2):
-    _test_compute_permutation_for_rotation(ph_tio2)
+def test_compute_permutation_tio2(ph_tio2):
+    _test_compute_permutation(ph_tio2)
 
 
-def test_compute_permutation_for_rotation_nacl(ph_nacl):
-    _test_compute_permutation_for_rotation(ph_nacl)
+def test_compute_permutation_nacl(ph_nacl):
+    _test_compute_permutation(ph_nacl)
 
 
-def _test_compute_permutation_for_rotation(ph):
+def _test_compute_permutation(ph):
     symmetry = ph.primitive_symmetry
     ppos = ph.primitive.scaled_positions
     plat = ph.primitive.cell.T

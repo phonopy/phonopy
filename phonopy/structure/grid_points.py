@@ -398,6 +398,18 @@ class GeneralizedRegularGridPoints(object):
     6. Grid points for primitive cell are
        [np.dot(Q, g) for g in ndindex((n1, n2, n3))].
 
+    Attributes
+    ----------
+    grid_matrix : ndarray
+        Grid generating matrix.
+        shape=(3,3), dtype='intc', order='C'
+    matrix_to_primitive : ndarray or None
+        None when ``suggest`` is False. Otherwise, transformation matrix from
+        input cell to the suggested primitive cell.
+        shape=(3,3), dtype='double', order='C'
+    snf : SNF3x3
+        SNF3x3 instance of grid generating matrix.
+
     """
 
     def __init__(self, cell, length, suggest=True, symprec=1e-5):
@@ -414,25 +426,22 @@ class GeneralizedRegularGridPoints(object):
         self._suggest = suggest
         self._snf = None
         self._matrix_to_primitive = None
+        self._grid_matrix = None
         self._set_snf(cell, length, symprec)
 
     @property
+    def grid_matrix(self):
+        """Grid generating matrix"""
+        return self._grid_matrix
+
+    @property
     def matrix_to_primitive(self):
-        """Transformation matrix to primitive cell
-
-        Returns
-        -------
-        ndarray
-            Transformation matrix from input cell to the suggested primitive
-            cell.
-            shape=(3,3), dtype='double', order='C'
-
-        """
-
+        """Transformation matrix to primitive cell"""
         return self._matrix_to_primitive
 
     @property
     def snf(self):
+        """SNF3x3 instance of grid generating matrix"""
         return self._snf
 
     def _set_snf(self, cell, length, symprec):
@@ -457,8 +466,9 @@ class GeneralizedRegularGridPoints(object):
         inv_pmat_int = np.rint(inv_pmat).astype(int)
         assert (np.abs(inv_pmat - inv_pmat_int) < 1e-5).all()
         # transpose in reciprocal space
-        mmat = (inv_pmat_int * mesh_numbers).T
-        self._snf = SNF3x3(mmat)
+        self._grid_matrix = np.array(
+            (inv_pmat_int * mesh_numbers).T, dtype='intc', order='C')
+        self._snf = SNF3x3(self._grid_matrix)
         self._snf.run()
         self._matrix_to_primitive = np.array(
             np.dot(np.linalg.inv(tmat), pmat), dtype='double', order='C')
@@ -470,6 +480,8 @@ class GeneralizedRegularGridPoints(object):
         mesh_numbers = estimate_supercell_matrix_from_pointgroup(
             pointgroup[1], lattice, num_cells)
         # transpose in reciprocal space
-        mmat = np.multiply(pointgroup[2], mesh_numbers).T
-        self._snf = SNF3x3(mmat)
+        self._grid_matrix = np.array(
+            np.multiply(pointgroup[2], mesh_numbers).T,
+            dtype='intc', order='C')
+        self._snf = SNF3x3(self._grid_matrix)
         self._snf.run()
