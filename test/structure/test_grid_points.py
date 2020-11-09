@@ -181,6 +181,8 @@ def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
         np.testing.assert_array_equal(
             grgp.grid_matrix, [[0, 16, 16], [16, 0, 16], [6, 6, 0]])
         assert (grgp.grid_address[253] == [0, 2, 61]).all()
+        np.testing.assert_allclose(grgp.qpoints[253],
+                                   [-0.19791667, 0.36458333, -0.23958333])
     else:
         np.testing.assert_array_equal(
             grgp.snf.P, [[1, 0, -3], [0, -1, 0], [-3, 0, 8]])
@@ -192,3 +194,5 @@ def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
         np.testing.assert_array_equal(
             grgp.grid_matrix, [[16, 0, 0], [0, 16, 0], [0, 0, 6]])
         assert (grgp.grid_address[253] == [0, 5, 13]).all()
+        np.testing.assert_allclose(grgp.qpoints[253],
+                                   [-0.4375, -0.3125, -0.16666667])
