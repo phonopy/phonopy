@@ -478,6 +478,33 @@ def plot(args):
             filenames = args.filenames
         bands_data = [read_band_yaml(fname) for fname in filenames]
 
+    if args.is_gnuplot:
+
+        distances = bands_data[0][0]
+        frequencies = bands_data[0][1]
+        segment_nqpoint = bands_data[0][3]
+        
+        end_points = [0, ]
+        for nq in segment_nqpoint:
+            end_points.append(nq + end_points[-1])
+        end_points[-1] -= 1
+        segment_positions = distances[end_points]
+        
+        
+        print("# End points of segments: ")
+        print("#   " + "%10.8f " * len(segment_positions) %
+                tuple(segment_positions))   
+        for j, freqs in enumerate(frequencies.T):
+            q = 0
+            for nq in segment_nqpoint:
+                for d, f in zip(distances[q:(q + nq)],
+                                freqs[q:(q + nq)] * args.factor):
+                    print("%f %f" % (d, f))
+                q += nq
+                print('')
+            print('') 
+        sys.exit(1)
+
     plots_data = [_arrange_band_data(*band_data) for band_data in bands_data]
     # Check consistency of input band structures
     all_path_connections = [data[1] for data in plots_data]
