@@ -1,7 +1,11 @@
+import os
 import pytest
 import numpy as np
 from phonopy.structure.grid_points import (
     GridPoints, GeneralizedRegularGridPoints)
+
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
 ga234 = [[0, 0, 0],
          [1, 0, 0],
@@ -196,3 +200,21 @@ def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
         assert (grgp.grid_address[253] == [0, 5, 13]).all()
         np.testing.assert_allclose(grgp.qpoints[253],
                                    [-0.4375, -0.3125, -0.16666667])
+
+
+def test_watch_GeneralizedRegularGridPoints(ph_tio2, helper_methods):
+    from phonopy.structure.atoms import PhonopyAtoms
+    from phonopy.interface.phonopy_yaml import read_cell_yaml
+    grgp = GeneralizedRegularGridPoints(ph_tio2.unitcell, 10)
+    tmat = grgp.matrix_to_primitive
+    # direct basis vectors in row vectors
+    plat = np.dot(tmat.T, ph_tio2.unitcell.cell)
+    # reciprocal basis vectors in row vectors (10 times magnified)
+    rec_plat = np.linalg.inv(plat).T * 10
+    nums = [1, ] * len(grgp.qpoints)
+    cell = PhonopyAtoms(cell=rec_plat,
+                        scaled_positions=grgp.qpoints,
+                        numbers=nums)
+    yaml_filename = os.path.join(current_dir, "tio2_qpoints.yaml")
+    cell_ref = read_cell_yaml(yaml_filename)
+    helper_methods.compare_cells(cell, cell_ref)

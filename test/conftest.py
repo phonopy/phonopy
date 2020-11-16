@@ -1,6 +1,7 @@
 import os
 import pytest
 import phonopy
+import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -121,3 +122,38 @@ def convcell_cr():
     return PhonopyAtoms(cell=lattice,
                         scaled_positions=points,
                         symbols=symbols)
+
+
+@pytest.fixture(scope='session')
+def helper_methods():
+    class HelperMethods(object):
+        @staticmethod
+        def compare_cells_with_order(cell, cell_ref):
+            np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=1e-5)
+
+            diff = cell.scaled_positions - cell_ref.scaled_positions
+            diff -= np.rint(diff)
+            dist = (np.dot(diff, cell.cell) ** 2).sum(axis=1)
+            assert (dist < 1e-5).all()
+            np.testing.assert_array_equal(cell.numbers, cell_ref.numbers)
+            np.testing.assert_allclose(cell.masses, cell_ref.masses, atol=1e-5)
+
+        @staticmethod
+        def compare_cells(cell, cell_ref):
+            np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=1e-5)
+
+            indices = []
+            for pos in cell.scaled_positions:
+                diff = cell_ref.scaled_positions - pos
+                diff -= np.rint(diff)
+                dist = (np.dot(diff, cell.cell) ** 2).sum(axis=1)
+                matches = np.where(dist < 1e-5)[0]
+                assert len(matches) == 1
+                indices.append(matches[0])
+
+            np.testing.assert_array_equal(cell.numbers,
+                                          cell_ref.numbers[indices])
+            np.testing.assert_allclose(cell.masses, cell_ref.masses[indices],
+                                       atol=1e-5)
+
+    return HelperMethods

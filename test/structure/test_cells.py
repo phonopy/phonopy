@@ -1,4 +1,5 @@
 import os
+import pytest
 import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
@@ -38,60 +39,64 @@ def _test_compute_permutation(ph):
         assert ((np.dot(diff, plat) ** 2).sum(axis=1) < symprec).all()
 
 
-def test_get_supercell_convcell_sio2(convcell_sio2):
-    _test_get_supercell_convcell_sio2(convcell_sio2, is_old_style=True)
+@pytest.mark.parametrize("nosnf", [True, False])
+def test_get_supercell_convcell_sio2(convcell_sio2, nosnf, helper_methods):
+    _test_get_supercell_convcell_sio2(convcell_sio2,
+                                      helper_methods,
+                                      is_old_style=nosnf)
 
 
-def test_get_supercell_convcell_sio2_snf(convcell_sio2):
-    _test_get_supercell_convcell_sio2(convcell_sio2, is_old_style=False)
+@pytest.mark.parametrize("nosnf", [True, False])
+def test_get_supercell_primcell_si(primcell_si, nosnf, helper_methods):
+    _test_get_supercell_primcell_si(primcell_si,
+                                    helper_methods,
+                                    is_old_style=nosnf)
 
 
-def test_get_supercell_primcell_si(primcell_si):
-    _test_get_supercell_primcell_si(primcell_si, is_old_style=True)
-
-
-def test_get_supercell_primcell_si_snf(primcell_si):
-    _test_get_supercell_primcell_si(primcell_si, is_old_style=False)
-
-
-def test_get_supercell_nacl_snf(convcell_nacl):
+def test_get_supercell_nacl_snf(convcell_nacl, helper_methods):
     cell = convcell_nacl
     smat = [[-1, 1, 1], [1, -1, 1], [1, 1, -1]]
     scell = get_supercell(cell, smat, is_old_style=True)
     scell_snf = get_supercell(cell, smat, is_old_style=False)
-    _compare_cells(scell, scell_snf)
+    helper_methods.compare_cells(scell, scell_snf)
 
 
-def _test_get_supercell_convcell_sio2(convcell_sio2, is_old_style=True):
+def _test_get_supercell_convcell_sio2(convcell_sio2,
+                                      helper_methods,
+                                      is_old_style=True):
     smat = np.diag([1, 2, 3])
     fname = "SiO2-123.yaml"
     scell = get_supercell(convcell_sio2, smat, is_old_style=is_old_style)
     cell_ref = read_cell_yaml(os.path.join(data_dir, fname))
     if is_old_style is True:
-        _compare_cells_with_order(scell, cell_ref)
+        helper_methods.compare_cells_with_order(scell, cell_ref)
     else:
-        _compare_cells(scell, cell_ref)
+        helper_methods.compare_cells(scell, cell_ref)
 
 
-def _test_get_supercell_primcell_si(primcell_si, is_old_style=True):
+def _test_get_supercell_primcell_si(primcell_si,
+                                    helper_methods,
+                                    is_old_style=True):
     smat = [[-1, 1, 1], [1, -1, 1], [1, 1, -1]]
     fname = "Si-conv.yaml"
     scell = get_supercell(primcell_si, smat, is_old_style=is_old_style)
     cell_ref = read_cell_yaml(os.path.join(data_dir, fname))
     if is_old_style is True:
-        _compare_cells_with_order(scell, cell_ref)
+        helper_methods.compare_cells_with_order(scell, cell_ref)
     else:
-        _compare_cells(scell, cell_ref)
+        helper_methods.compare_cells(scell, cell_ref)
 
 
-def test_get_primitive_convcell_nacl(convcell_nacl, primcell_nacl):
+def test_get_primitive_convcell_nacl(convcell_nacl,
+                                     primcell_nacl,
+                                     helper_methods):
     pcell = get_primitive(convcell_nacl, [[0, 0.5, 0.5],
                                           [0.5, 0, 0.5],
                                           [0.5, 0.5, 0]])
-    _compare_cells_with_order(pcell, primcell_nacl)
+    helper_methods.compare_cells_with_order(pcell, primcell_nacl)
 
 
-def test_TrimmedCell(convcell_nacl):
+def test_TrimmedCell(convcell_nacl, helper_methods):
     pmat = [[0, 0.5, 0.5],
             [0.5, 0, 0.5],
             [0.5, 0.5, 0]]
@@ -113,31 +118,4 @@ def test_TrimmedCell(convcell_nacl):
     tcell2 = TrimmedCell(pmat2, scell2)
     tcell3 = TrimmedCell(pmat3, scell3_swap,
                          positions_to_reorder=tcell2.scaled_positions)
-    _compare_cells_with_order(tcell2, tcell3)
-
-
-def _compare_cells_with_order(cell, cell_ref):
-    np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=1e-5)
-    diff = cell.scaled_positions - cell_ref.scaled_positions
-    diff -= np.rint(diff)
-    dist = (np.dot(diff, cell.cell) ** 2).sum(axis=1)
-    assert (dist < 1e-5).all()
-    np.testing.assert_array_equal(cell.numbers, cell_ref.numbers)
-    np.testing.assert_allclose(cell.masses, cell_ref.masses, atol=1e-5)
-
-
-def _compare_cells(cell, cell_ref):
-    np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=1e-5)
-
-    indices = []
-    for pos in cell.scaled_positions:
-        diff = cell_ref.scaled_positions - pos
-        diff -= np.rint(diff)
-        dist = (np.dot(diff, cell.cell) ** 2).sum(axis=1)
-        matches = np.where(dist < 1e-5)[0]
-        assert len(matches) == 1
-        indices.append(matches[0])
-
-    np.testing.assert_array_equal(cell.numbers, cell_ref.numbers[indices])
-    np.testing.assert_allclose(cell.masses, cell_ref.masses[indices],
-                               atol=1e-5)
+    helper_methods.compare_cells_with_order(tcell2, tcell3)
