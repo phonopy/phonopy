@@ -1,5 +1,11 @@
+import os
+import pytest
 import numpy as np
-from phonopy.structure.grid_points import GridPoints
+from phonopy.structure.grid_points import (
+    GridPoints, GeneralizedRegularGridPoints)
+
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
 ga234 = [[0, 0, 0],
          [1, 0, 0],
@@ -60,7 +66,7 @@ def test_GridPoints_NaCl_with_rotations(ph_nacl):
          [-0.25, 0.5, 0.25]], atol=1e-8)
 
 
-def test_GridPoints_NaCl_with_rotations_fit_BZ_falase(ph_nacl):
+def test_GridPoints_NaCl_with_rotations_fit_BZ(ph_nacl):
     rec_lat = np.linalg.inv(ph_nacl.primitive.cell)
     rotations = ph_nacl.primitive_symmetry.get_pointgroup_operations()
     mesh = [5, 5, 5]
@@ -160,3 +166,55 @@ def test_GridPoints_SnO2_with_rotations_MP(ph_sno2):
          [0.125, 0.125, 0.375],
          [0.375, 0.125, 0.375],
          [0.375, 0.375, 0.375]], atol=1e-8)
+
+
+@pytest.mark.parametrize("suggest", [True, False])
+def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
+    grgp = GeneralizedRegularGridPoints(ph_tio2.unitcell, 100, suggest=suggest)
+
+    if suggest:
+        np.testing.assert_array_equal(
+            grgp.snf.P, [[0, -1, 3], [1, 0, 0], [-3, 3, -8]])
+        np.testing.assert_array_equal(
+            grgp.snf.D, [[2, 0, 0], [0, 16, 0], [0, 0, 96]])
+        np.testing.assert_array_equal(
+            grgp.snf.Q, [[1, 8, 17], [0, 0, -1], [0, 1, 1]])
+        np.testing.assert_allclose(
+            grgp.matrix_to_primitive,
+            [[-0.5, 0.5, 0.5], [0.5, -0.5, 0.5], [0.5, 0.5, -0.5]])
+        np.testing.assert_array_equal(
+            grgp.grid_matrix, [[0, 16, 16], [16, 0, 16], [6, 6, 0]])
+        assert (grgp.grid_address[253] == [0, 2, 61]).all()
+        np.testing.assert_allclose(grgp.qpoints[253],
+                                   [-0.19791667, 0.36458333, -0.23958333])
+    else:
+        np.testing.assert_array_equal(
+            grgp.snf.P, [[1, 0, -3], [0, -1, 0], [-3, 0, 8]])
+        np.testing.assert_array_equal(
+            grgp.snf.D, [[2, 0, 0], [0, 16, 0], [0, 0, 48]])
+        np.testing.assert_array_equal(
+            grgp.snf.Q, [[-1, 0, -9], [0, -1, 0], [-1, 0, -8]])
+        assert grgp.matrix_to_primitive is None
+        np.testing.assert_array_equal(
+            grgp.grid_matrix, [[16, 0, 0], [0, 16, 0], [0, 0, 6]])
+        assert (grgp.grid_address[253] == [0, 5, 13]).all()
+        np.testing.assert_allclose(grgp.qpoints[253],
+                                   [-0.4375, -0.3125, -0.16666667])
+
+
+def test_watch_GeneralizedRegularGridPoints(ph_tio2, helper_methods):
+    from phonopy.structure.atoms import PhonopyAtoms
+    from phonopy.interface.phonopy_yaml import read_cell_yaml
+    grgp = GeneralizedRegularGridPoints(ph_tio2.unitcell, 10)
+    tmat = grgp.matrix_to_primitive
+    # direct basis vectors in row vectors
+    plat = np.dot(tmat.T, ph_tio2.unitcell.cell)
+    # reciprocal basis vectors in row vectors (10 times magnified)
+    rec_plat = np.linalg.inv(plat).T * 10
+    nums = [1, ] * len(grgp.qpoints)
+    cell = PhonopyAtoms(cell=rec_plat,
+                        scaled_positions=grgp.qpoints,
+                        numbers=nums)
+    yaml_filename = os.path.join(current_dir, "tio2_qpoints.yaml")
+    cell_ref = read_cell_yaml(yaml_filename)
+    helper_methods.compare_cells(cell, cell_ref)

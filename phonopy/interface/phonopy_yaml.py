@@ -171,6 +171,9 @@ class PhonopyYaml(object):
         self._parse_nac_params()
         self._parse_calculator()
 
+    def set_cell(self, cell):
+        self.unitcell = cell
+
     def set_phonon_info(self, phonopy):
         self.unitcell = phonopy.unitcell
         self.primitive = phonopy.primitive
@@ -203,7 +206,11 @@ class PhonopyYaml(object):
     def _header_yaml_lines(self):
         lines = []
         lines.append("%s:" % self.command_name)
-        lines.append("  version: %s" % self.version)
+        if self.version is None:
+            from phonopy.version import __version__
+            lines.append("  version: %s" % __version__)
+        else:
+            lines.append("  version: %s" % self.version)
         if self.calculator:
             lines.append("  calculator: %s" % self.calculator)
         if self.frequency_unit_conversion_factor:
@@ -326,7 +333,10 @@ class PhonopyYaml(object):
         return lines
 
     def _nac_yaml_lines(self):
-        return self._nac_yaml_lines_given_symbols(self.primitive.symbols)
+        if self.primitive is None:
+            return []
+        else:
+            return self._nac_yaml_lines_given_symbols(self.primitive.symbols)
 
     def _nac_yaml_lines_given_symbols(self, symbols):
         lines = []

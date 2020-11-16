@@ -379,9 +379,8 @@ def elaborate_borns_and_epsilon(ucell,
 
     """
 
-    assert len(borns) == ucell.get_number_of_atoms(), \
-        "num_atom %d != len(borns) %d" % (ucell.get_number_of_atoms(),
-                                          len(borns))
+    assert len(borns) == len(ucell), \
+        "num_atom %d != len(borns) %d" % (len(ucell), len(borns))
 
     if symmetrize_tensors:
         borns_, epsilon_ = symmetrize_borns_and_epsilon(
@@ -453,38 +452,19 @@ def symmetrize_borns_and_epsilon(borns,
 
     """
 
-    lattice = ucell.get_cell()
-    positions = ucell.get_scaled_positions()
+    lattice = ucell.cell
     u_sym = Symmetry(ucell, is_symmetry=is_symmetry, symprec=symprec)
     rotations = u_sym.get_symmetry_operations()['rotations']
     translations = u_sym.get_symmetry_operations()['translations']
     ptg_ops = u_sym.get_pointgroup_operations()
     epsilon_ = _symmetrize_2nd_rank_tensor(epsilon, ptg_ops, lattice)
-
-    for i, Z in enumerate(borns):
-        site_sym = u_sym.get_site_symmetry(i)
-        Z = _symmetrize_2nd_rank_tensor(Z, site_sym, lattice)
-
-    borns_ = np.zeros_like(borns)
-    for i in range(len(borns)):
-        count = 0
-        for r, t in zip(rotations, translations):
-            count += 1
-            diff = np.dot(positions, r.T) + t - positions[i]
-            diff -= np.rint(diff)
-            dist = np.sqrt(np.sum(np.dot(diff, lattice) ** 2, axis=1))
-            j = np.nonzero(dist < symprec)[0][0]
-            r_cart = similarity_transformation(lattice.T, r)
-            borns_[i] += similarity_transformation(r_cart, borns[j])
-        borns_[i] /= count
-
-    sum_born = borns_.sum(axis=0) / len(borns_)
-    borns_ -= sum_born
+    borns_ = _take_average_of_borns(borns, rotations, translations, ucell,
+                                    symprec)
 
     if (abs(borns - borns_) > 0.1).any():
-        lines = ["Born effective charge symmetry is largely broken. "
-                 "Largest different among elements: "
-                 "%s" % np.amax(abs(borns - borns_))]
+        lines = ["Symmetry of Born effective charge is largely broken. "
+                 "The difference is:",
+                 "%s" % (borns - borns_)]
         import warnings
         warnings.warn("\n".join(lines))
 
@@ -510,6 +490,26 @@ def symmetrize_borns_and_epsilon(borns,
         else:
             idx2 = _get_mapping_between_cells(pcell, primitive)
             return borns_in_prim[idx2].copy(), epsilon_
+
+
+def _take_average_of_borns(borns, rotations, translations, cell, symprec):
+    lattice = cell.cell
+    positions = cell.scaled_positions
+    borns_ = np.zeros_like(borns)
+    for i in range(len(borns)):
+        for r, t in zip(rotations, translations):
+            diff = np.dot(positions, r.T) + t - positions[i]
+            diff -= np.rint(diff)
+            dist = np.sqrt(np.sum(np.dot(diff, lattice) ** 2, axis=1))
+            j = np.nonzero(dist < symprec)[0][0]
+            r_cart = similarity_transformation(lattice.T, r)
+            borns_[i] += similarity_transformation(r_cart, borns[j])
+        borns_[i] /= len(rotations)
+
+    sum_born = borns_.sum(axis=0) / len(borns_)
+    borns_ -= sum_born
+
+    return borns_
 
 
 def _get_mapping_between_cells(cell_from, cell_to, symprec=1e-5):
