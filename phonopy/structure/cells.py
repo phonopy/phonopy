@@ -904,11 +904,30 @@ def compute_all_sg_permutations(positions,  # scaled positions
                                 translations,  # scaled
                                 lattice,  # column vectors
                                 symprec):
-    """Compute a permutation for every space group operation.
+    """Compute permutations for space group operations.
 
     See 'compute_permutation_for_rotation' for more info.
 
-    Output has shape (num_rot, num_pos)
+    Parameters
+    ----------
+    positions : ndarray
+        Scaled positions (like PhonopyAtoms.scaled_positions) before applying
+        the space group operation
+    rotations : ndarray
+        Matrix (rotation) parts of space group operations
+        shape=(len(operations), 3, 3), dtype='intc'
+    translations : ndarray
+        Vector (translation) parts of space group operations
+        shape=(len(operations), 3), dtype='double'
+    lattice : ndarray
+        Basis vectors in column vectors (like PhonopyAtoms.cell.T)
+    symprec : float
+        Symmetry tolerance of the distance unit
+
+    Returns
+    -------
+    perms : ndarray
+        shape=(len(operations), len(positions)), dtype='intc', order='C'
 
     """
 
@@ -936,6 +955,26 @@ def compute_permutation_for_rotation(positions_a,  # scaled positions
 
     This version is optimized for the case where positions_a and positions_b
     are related by a rotation.
+
+    Parameters
+    ----------
+    positions_a : ndarray
+        Scaled positions (like PhonopyAtoms.scaled_positions) before applying
+        the space group operation
+    positions_b : ndarray
+        Scaled positions (like PhonopyAtoms.scaled_positions) after applying
+        the space group operation
+    lattice : ndarray
+        Basis vectors in column vectors (like PhonopyAtoms.cell.T)
+    symprec : float
+        Symmetry tolerance of the distance unit
+
+    Returns
+    -------
+    perm : ndarray
+        A list of atomic indices that maps atoms before the space group
+        operation to those after as explained above.
+        shape=(len(positions), ), dtype=int
 
     """
 
@@ -1206,6 +1245,40 @@ def estimate_supercell_matrix(spglib_dataset,
         multi = _get_multiplicity_ac(num_atoms, lengths, max_num_atoms)
     else:  # Cubic
         multi = _get_multiplicity_a(num_atoms, lengths, max_num_atoms)
+
+    return multi
+
+
+def estimate_supercell_matrix_from_pointgroup(pointgroup_number,
+                                              lattice,
+                                              max_num_cells=120):
+    """Estimate supercell matrix from crystallographic point group
+
+    Parameters
+    ----------
+    pointgroup_number : int
+        The number representing crystallographic number from 1 to 32.
+    lattice : array_like
+        Basis vectors given as row vectors.
+        shape=(3, 3), dtype='double'
+    max_num_cells : int, optional
+        Maximum number of cells in created supercell to be tolerated.
+
+    Returns
+    -------
+    list of three integer numbers
+        Multiplicities for a, b, c basis vectors, respectively.
+
+    """
+
+    abc_lengths = _get_lattice_parameters(lattice.T)
+
+    if pointgroup_number <= 8:  # Triclinic, monoclinic, and orthorhombic
+        multi = _get_multiplicity_abc(1, abc_lengths, max_num_cells)
+    elif pointgroup_number <= 27:  # Tetragonal and hexagonal
+        multi = _get_multiplicity_ac(1, abc_lengths, max_num_cells)
+    else:  # Cubic
+        multi = _get_multiplicity_a(1, abc_lengths, max_num_cells)
 
     return multi
 

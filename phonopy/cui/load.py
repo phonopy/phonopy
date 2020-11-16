@@ -37,6 +37,7 @@ from phonopy.api_phonopy import Phonopy
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.calculator import get_default_physical_units
 import phonopy.cui.load_helper as load_helper
+from phonopy.structure.cells import get_primitive_matrix
 
 
 def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
@@ -219,8 +220,8 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         smat = phpy_yaml.supercell_matrix
         if smat is None:
             smat = np.eye(3, dtype='intc', order='C')
-        if primitive_matrix == 'auto':
-            pmat = 'auto'
+        if primitive_matrix is not None:
+            pmat = get_primitive_matrix(primitive_matrix, symprec=symprec)
         else:
             pmat = phpy_yaml.primitive_matrix
         if nac_params is not None:
