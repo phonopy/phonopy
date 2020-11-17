@@ -37,7 +37,6 @@ import warnings
 import spglib
 from phonopy.structure.cells import (get_primitive, get_supercell,
                                      compute_all_sg_permutations)
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.harmonic.force_constants import similarity_transformation
 
 
@@ -68,7 +67,10 @@ class Symmetry(object):
             self._set_symmetry_dataset()
         else:
             self._set_symmetry_operations_with_magmoms()
-        self._set_pointgroup_operations()
+        (self._pointgroup_operations,
+         self._reciprocal_operations) = get_pointgroup_operations(
+             self._symmetry_operations['rotations'])
+        self._pointgroup = get_pointgroup(self._pointgroup_operations)[0]
         self._set_atomic_permutations()
         self._set_independent_atoms()
         self._map_operations = self._get_map_operations_from_permutations()
@@ -230,23 +232,6 @@ class Symmetry(object):
                 indep_atoms.append(i)
         self._independent_atoms = np.array(indep_atoms, dtype='intc')
 
-    def _set_pointgroup_operations(self):
-        rotations = self._symmetry_operations['rotations']
-        ptg_ops = collect_pointgroup_operations(rotations)
-        reciprocal_rotations = [rot.T for rot in ptg_ops]
-        exist_r_inv = False
-        for rot in ptg_ops:
-            if (rot + np.eye(3, dtype='intc') == 0).all():
-                exist_r_inv = True
-                break
-        if not exist_r_inv:
-            reciprocal_rotations += [-rot.T for rot in ptg_ops]
-
-        self._pointgroup_operations = np.array(ptg_ops, dtype='intc')
-        self._pointgroup = get_pointgroup(self._pointgroup_operations)[0]
-        self._reciprocal_operations = np.array(reciprocal_rotations,
-                                               dtype='intc')
-
     def _set_map_operations(self):
         warnings.warn("Symmetry._set_map_operations is deprecated."
                       "This was replaced by "
@@ -312,21 +297,19 @@ class Symmetry(object):
         self._wyckoff_letters = ['a'] * len(self._cell)
 
 
-def find_primitive(cell, symprec=1e-5):
-    """
-    A primitive cell is searched in the input cell. When a primitive
-    cell is found, an object of Atoms class of the primitive cell is
-    returned. When not, None is returned.
-    """
-    lattice, positions, numbers = spglib.find_primitive(cell.totuple(),
-                                                        symprec)
-    if lattice is None:
-        return None
-    else:
-        return Atoms(numbers=numbers,
-                     scaled_positions=positions,
-                     cell=lattice,
-                     pbc=True)
+def get_pointgroup_operations(rotations):
+    ptg_ops = collect_pointgroup_operations(rotations)
+    reciprocal_rotations = [rot.T for rot in ptg_ops]
+    exist_r_inv = False
+    for rot in ptg_ops:
+        if (rot + np.eye(3, dtype='intc') == 0).all():
+            exist_r_inv = True
+            break
+    if not exist_r_inv:
+        reciprocal_rotations += [-rot.T for rot in ptg_ops]
+
+    return (np.array(ptg_ops, dtype='intc'),
+            np.array(reciprocal_rotations, dtype='intc'))
 
 
 def get_pointgroup(rotations):
