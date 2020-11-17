@@ -518,3 +518,20 @@ class GeneralizedRegularGridPoints(object):
         d = np.diagonal(self._snf.D).astype(float)
         self._qpoints = np.dot(self._grid_address / d, self._snf.Q.T)
         self._qpoints -= np.rint(self._qpoints)
+
+    def _get_reciprocal_rotation_matrices(self,
+                                          rotations,
+                                          is_time_reversal=True):
+        """Generate reciprocal rotation matrices
+
+        Collect unique real space rotation matrices and transpose them.
+        When is_time_reversal=True, inversion is added if it is not in the
+        list of the rotation matrices.
+
+        Parameters
+        ----------
+        rotations : array_like
+            Rotation matrices in real space.
+
+        """
+        pass
