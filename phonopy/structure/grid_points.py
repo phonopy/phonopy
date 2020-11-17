@@ -38,11 +38,14 @@ from spglib import (
     get_stabilized_reciprocal_mesh, relocate_BZ_grid_address,
     get_symmetry_dataset, get_pointgroup)
 from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
-from phonopy.structure.symmetry import get_lattice_vector_equivalence
+from phonopy.structure.symmetry import (
+    get_lattice_vector_equivalence, get_pointgroup_operations,
+    collect_unique_rotations)
 from phonopy.structure.cells import (
     get_primitive_matrix_by_centring, estimate_supercell_matrix,
-    estimate_supercell_matrix_from_pointgroup)
+    estimate_supercell_matrix_from_pointgroup, determinant)
 from phonopy.structure.snf import SNF3x3
+from phonopy.harmonic.force_constants import similarity_transformation
 
 
 def length2mesh(length, lattice, rotations=None):
@@ -433,11 +436,17 @@ class GeneralizedRegularGridPoints(object):
         self._suggest = suggest
         self._grid_address = None
         self._snf = None
-        self._matrix_to_primitive = None
+        self._transformation_matrix = None
         self._grid_matrix = None
+        self._reciprocal_operations = None
         self._prepare(cell, length, symprec)
         self._generate_grid_points()
         self._generate_q_points()
+        self._reciprocal_operations = get_reciprocal_operations(
+            self._sym_dataset['rotations'],
+            self._transformation_matrix,
+            self._snf.D,
+            self._snf.Q)
 
     @property
     def grid_address(self):
@@ -453,14 +462,18 @@ class GeneralizedRegularGridPoints(object):
         return self._grid_matrix
 
     @property
-    def matrix_to_primitive(self):
-        """Transformation matrix to primitive cell"""
-        return self._matrix_to_primitive
+    def transformation_matrix(self):
+        """Transformation matrix"""
+        return self._transformation_matrix
 
     @property
     def snf(self):
         """SNF3x3 instance of grid generating matrix"""
         return self._snf
+
+    @property
+    def reciprocal_operations(self):
+        return self._reciprocal_operations
 
     def _prepare(self, cell, length, symprec):
         """Define grid generating matrix and run the SNF"""
@@ -491,21 +504,24 @@ class GeneralizedRegularGridPoints(object):
         # transpose in reciprocal space
         self._grid_matrix = np.array(
             (inv_pmat_int * mesh_numbers).T, dtype='intc', order='C')
-        self._matrix_to_primitive = np.array(
+        # From input lattice to the primitive lattice in real space
+        self._transformation_matrix = np.array(
             np.dot(np.linalg.inv(tmat), pmat), dtype='double', order='C')
 
-    def _set_grid_matrix_by_input_cell(self, cell, length):
+    def _set_grid_matrix_by_input_cell(self, input_cell, length):
         """Grid generating matrix based on input cell"""
 
         pointgroup = get_pointgroup(self._sym_dataset['rotations'])
-        lattice = np.dot(cell.cell.T, pointgroup[2]).T
+        # tmat: From input lattice to point group preserving lattice
+        tmat = pointgroup[2]
+        lattice = np.dot(input_cell.cell.T, tmat).T
         num_cells = np.prod(length2mesh(length, lattice))
         mesh_numbers = estimate_supercell_matrix_from_pointgroup(
             pointgroup[1], lattice, num_cells)
         # transpose in reciprocal space
         self._grid_matrix = np.array(
-            np.multiply(pointgroup[2], mesh_numbers).T,
-            dtype='intc', order='C')
+            np.multiply(tmat, mesh_numbers).T, dtype='intc', order='C')
+        self._transformation_matrix = np.eye(3, dtype='double', order='C')
 
     def _generate_grid_points(self):
         d = np.diagonal(self._snf.D)
@@ -519,19 +535,55 @@ class GeneralizedRegularGridPoints(object):
         self._qpoints = np.dot(self._grid_address / d, self._snf.Q.T)
         self._qpoints -= np.rint(self._qpoints)
 
-    def _get_reciprocal_rotation_matrices(self,
-                                          rotations,
-                                          is_time_reversal=True):
-        """Generate reciprocal rotation matrices
 
-        Collect unique real space rotation matrices and transpose them.
-        When is_time_reversal=True, inversion is added if it is not in the
-        list of the rotation matrices.
+def get_reciprocal_operations(rotations,
+                              transformation_matrix,
+                              D,
+                              Q,
+                              is_time_reversal=True):
+    """Generate reciprocal rotation matrices
 
-        Parameters
-        ----------
-        rotations : array_like
-            Rotation matrices in real space.
+    Collect unique real space rotation matrices and transpose them.
+    When is_time_reversal=True, inversion is added if it is not in the
+    list of the rotation matrices.
 
-        """
-        pass
+    Parameters
+    ----------
+    rotations : ndarray
+        Rotation matrices in real space. x' = Rx.
+        shape=(rotations, 3, 3), dtype='intc'
+    transformation_matrxi : array_like
+        Transformation matrix of basis vectors in real space. Using this
+        rotation matrices are transformed.
+    D : array_like
+        D of smith normal form 3x3.
+        shape=(3, 3)
+    Q : array_like
+        Q of smith normal form 3x3.
+        shape=(3, 3)
+    is_time_reversal : bool
+        When True, inversion operation is added.
+
+    """
+    unique_rots = []
+    tmat_inv = np.linalg.inv(transformation_matrix)
+    for r in collect_unique_rotations(rotations):
+        _r = similarity_transformation(tmat_inv, r)
+        _r_int = np.rint(_r).astype(int)
+        assert (np.abs(_r - _r_int) < 1e-5).all()
+        unique_rots.append(_r_int)
+
+    ptg_ops, rec_ops = get_pointgroup_operations(
+        unique_rots, is_time_reversal=is_time_reversal)
+
+    Q_inv = np.linalg.inv(Q)
+    rec_ops_Q = []
+    for r in rec_ops:
+        _r = similarity_transformation(Q_inv, r)
+        _r = similarity_transformation(D, _r)
+        _r_int = np.rint(_r).astype(int)
+        assert (np.abs(_r - _r_int) < 1e-5).all()
+        assert abs(determinant(_r_int)) == 1
+        rec_ops_Q.append(_r_int)
+
+    return np.array(rec_ops_Q, dtype='intc', order='C')
