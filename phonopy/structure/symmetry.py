@@ -33,6 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+import warnings
 import spglib
 from phonopy.structure.cells import (get_primitive, get_supercell,
                                      compute_all_sg_permutations)
@@ -51,8 +52,12 @@ class Symmetry(object):
         self._wyckoff_letters = None
         self._map_atoms = None
         self._atomic_permutations = None
+        self._pointgroup_operations = None
+        self._pointgroup = None
+        self._independent_atoms = None
+        self._map_operations = None
 
-        magmom = cell.get_magnetic_moments()
+        magmom = cell.magnetic_moments
         if type(magmom) is np.ndarray:
             if (magmom < symprec).all():
                 magmom = None
@@ -63,25 +68,29 @@ class Symmetry(object):
             self._set_symmetry_dataset()
         else:
             self._set_symmetry_operations_with_magmoms()
-
-        self._pointgroup_operations = None
-        self._pointgroup = None
         self._set_pointgroup_operations()
-
-        self._independent_atoms = None
+        self._set_atomic_permutations()
         self._set_independent_atoms()
-        self._map_operations = None
+        self._map_operations = self._get_map_operations_from_permutations()
+
+    @property
+    def symmetry_operations(self):
+        return self._symmetry_operations
 
     def get_symmetry_operations(self):
-        return self._symmetry_operations
+        return self.symmetry_operations
 
     def get_symmetry_operation(self, operation_number):
         operation = self._symmetry_operations
         return {'rotations': operation['rotations'][operation_number],
                 'translations': operation['translations'][operation_number]}
 
-    def get_pointgroup_operations(self):
+    @property
+    def pointgroup_operations(self):
         return self._pointgroup_operations
+
+    def get_pointgroup_operations(self):
+        return self.pointgroup_operations
 
     def get_pointgroup(self):
         return self._pointgroup
@@ -94,20 +103,34 @@ class Symmetry(object):
 
     @property
     def dataset(self):
+        """Return spglib dataset"""
         return self._dataset
 
     def get_dataset(self):
         return self.dataset
 
     def get_independent_atoms(self):
+        """Return symmetrically unique atoms"""
         return self._independent_atoms
 
     def get_map_atoms(self):
+        """Return equivalent_atoms of spglib dataset"""
         return self._map_atoms
 
     def get_map_operations(self):
-        if self._map_operations is None:
-            self._set_map_operations()
+        """
+
+        Returns
+        -------
+        operations : ndarray
+            Indices of symmetry operations that sent atoms to respective
+            equivalent atoms. For each atom, only one of those symmetry
+            operations is stored. When all symmetry mapping information
+            is needed, ``atomic_permulations`` is used.
+            shape=(atoms,), dtype='intc'
+
+        """
+
         return self._map_operations
 
     def get_site_symmetry(self, atom_number):
@@ -130,7 +153,8 @@ class Symmetry(object):
     def get_symmetry_tolerance(self):
         return self.tolerance
 
-    def get_reciprocal_operations(self):
+    @property
+    def reciprocal_operations(self):
         """
         Definition of operation:
         q' = Rq
@@ -139,34 +163,28 @@ class Symmetry(object):
         """
         return self._reciprocal_operations
 
-    def get_atomic_permutations(self):
-        if self._atomic_permutations is None:
-            positions = self._cell.get_scaled_positions()
-            lattice = np.array(self._cell.get_cell().T,
-                               dtype='double', order='C')
-            rotations = self._symmetry_operations['rotations']
-            translations = self._symmetry_operations['translations']
-            self._atomic_permutations = compute_all_sg_permutations(
-                positions,  # scaled positions
-                rotations,  # scaled
-                translations,  # scaled
-                lattice,  # column vectors
-                self._symprec)
+    def get_reciprocal_operations(self):
+        return self.reciprocal_operations
 
+    @property
+    def atomic_permutations(self):
         return self._atomic_permutations
 
-    def _get_pointgroup_operations(self, rotations):
-        ptg_ops = []
-        for rot in rotations:
-            is_same = False
-            for tmp_rot in ptg_ops:
-                if (tmp_rot == rot).all():
-                    is_same = True
-                    break
-            if not is_same:
-                ptg_ops.append(rot)
+    def get_atomic_permutations(self):
+        return self.atomic_permutations
 
-        return ptg_ops
+    def _set_atomic_permutations(self):
+        positions = self._cell.scaled_positions
+        lattice = np.array(self._cell.cell.T,
+                           dtype='double', order='C')
+        rotations = self._symmetry_operations['rotations']
+        translations = self._symmetry_operations['translations']
+        self._atomic_permutations = compute_all_sg_permutations(
+            positions,  # scaled positions
+            rotations,  # scaled
+            translations,  # scaled
+            lattice,  # column vectors
+            self._symprec)
 
     def _get_site_symmetry(self,
                            atom_number,
@@ -204,28 +222,6 @@ class Symmetry(object):
         self._symmetry_operations = spglib.get_symmetry(self._cell.totuple(),
                                                         symprec=self._symprec)
         self._map_atoms = self._symmetry_operations['equivalent_atoms']
-        self._set_map_atoms()
-
-    def _set_map_atoms(self):
-        rotations = self._symmetry_operations['rotations']
-        translations = self._symmetry_operations['translations']
-        positions = self._cell.scaled_positions
-        lattice = self._cell.cell
-        map_atoms = np.arange(len(self._cell), dtype='intc')
-        for i, p in enumerate(positions):
-            is_found = False
-            for j in range(i):
-                for r, t in zip(rotations, translations):
-                    diff = np.dot(p, r.T) + t - positions[j]
-                    diff -= np.rint(diff)
-                    dist = np.linalg.norm(np.dot(diff, lattice))
-                    if dist < self._symprec:
-                        map_atoms[i] = j
-                        is_found = True
-                        break
-                if is_found:
-                    break
-        self._map_atoms = map_atoms
 
     def _set_independent_atoms(self):
         indep_atoms = []
@@ -236,7 +232,7 @@ class Symmetry(object):
 
     def _set_pointgroup_operations(self):
         rotations = self._symmetry_operations['rotations']
-        ptg_ops = self._get_pointgroup_operations(rotations)
+        ptg_ops = collect_pointgroup_operations(rotations)
         reciprocal_rotations = [rot.T for rot in ptg_ops]
         exist_r_inv = False
         for rot in ptg_ops:
@@ -252,6 +248,11 @@ class Symmetry(object):
                                                dtype='intc')
 
     def _set_map_operations(self):
+        warnings.warn("Symmetry._set_map_operations is deprecated."
+                      "This was replaced by "
+                      "_get_map_operations_from_permutations.",
+                      DeprecationWarning)
+
         ops = self._symmetry_operations
         pos = self._cell.scaled_positions
         lattice = self._cell.cell
@@ -267,6 +268,16 @@ class Symmetry(object):
                     map_operations[i] = j
                     break
         self._map_operations = map_operations
+
+    def _get_map_operations_from_permutations(self):
+        perm = self._atomic_permutations
+        map_operations = np.zeros(perm.shape[1], dtype='intc')
+        for i, eq_atom in enumerate(self._map_atoms):
+            for j in range(perm.shape[0]):
+                match = np.where(perm[:, i] == eq_atom)[0]
+                assert len(match) != 0
+                map_operations[i] = match[0]
+        return map_operations
 
     def _set_nosym(self):
         translations = []
@@ -321,6 +332,20 @@ def find_primitive(cell, symprec=1e-5):
 def get_pointgroup(rotations):
     ptg = spglib.get_pointgroup(rotations)
     return ptg[0].strip(), ptg[2]
+
+
+def collect_pointgroup_operations(rotations):
+    ptg_ops = []
+    for rot in rotations:
+        is_same = False
+        for tmp_rot in ptg_ops:
+            if (tmp_rot == rot).all():
+                is_same = True
+                break
+        if not is_same:
+            ptg_ops.append(rot)
+
+    return ptg_ops
 
 
 def get_lattice_vector_equivalence(point_symmetry):
