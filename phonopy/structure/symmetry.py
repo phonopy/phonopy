@@ -297,16 +297,18 @@ class Symmetry(object):
         self._wyckoff_letters = ['a'] * len(self._cell)
 
 
-def get_pointgroup_operations(rotations):
-    ptg_ops = collect_pointgroup_operations(rotations)
+def get_pointgroup_operations(rotations, is_time_reversal=True):
+    ptg_ops = collect_unique_rotations(rotations)
     reciprocal_rotations = [rot.T for rot in ptg_ops]
-    exist_r_inv = False
-    for rot in ptg_ops:
-        if (rot + np.eye(3, dtype='intc') == 0).all():
-            exist_r_inv = True
-            break
-    if not exist_r_inv:
-        reciprocal_rotations += [-rot.T for rot in ptg_ops]
+
+    if not is_time_reversal:
+        exist_r_inv = False
+        for rot in ptg_ops:
+            if (rot + np.eye(3, dtype='intc') == 0).all():
+                exist_r_inv = True
+                break
+        if not exist_r_inv:
+            reciprocal_rotations += [-rot.T for rot in ptg_ops]
 
     return (np.array(ptg_ops, dtype='intc'),
             np.array(reciprocal_rotations, dtype='intc'))
@@ -317,7 +319,7 @@ def get_pointgroup(rotations):
     return ptg[0].strip(), ptg[2]
 
 
-def collect_pointgroup_operations(rotations):
+def collect_unique_rotations(rotations):
     ptg_ops = []
     for rot in rotations:
         is_same = False

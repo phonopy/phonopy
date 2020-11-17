@@ -180,13 +180,15 @@ def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
         np.testing.assert_array_equal(
             grgp.snf.Q, [[1, 8, 17], [0, 0, -1], [0, 1, 1]])
         np.testing.assert_allclose(
-            grgp.matrix_to_primitive,
+            grgp.transformation_matrix,
             [[-0.5, 0.5, 0.5], [0.5, -0.5, 0.5], [0.5, 0.5, -0.5]])
         np.testing.assert_array_equal(
             grgp.grid_matrix, [[0, 16, 16], [16, 0, 16], [6, 6, 0]])
         assert (grgp.grid_address[253] == [0, 2, 61]).all()
         np.testing.assert_allclose(grgp.qpoints[253],
                                    [-0.19791667, 0.36458333, -0.23958333])
+        np.testing.assert_array_equal(grgp.reciprocal_operations[1],
+                                      [[9, 10, 3], [8, 9, 3], [-48, -54, -17]])
     else:
         np.testing.assert_array_equal(
             grgp.snf.P, [[1, 0, -3], [0, -1, 0], [-3, 0, 8]])
@@ -194,19 +196,33 @@ def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
             grgp.snf.D, [[2, 0, 0], [0, 16, 0], [0, 0, 48]])
         np.testing.assert_array_equal(
             grgp.snf.Q, [[-1, 0, -9], [0, -1, 0], [-1, 0, -8]])
-        assert grgp.matrix_to_primitive is None
+        np.testing.assert_allclose(grgp.transformation_matrix, np.eye(3))
         np.testing.assert_array_equal(
             grgp.grid_matrix, [[16, 0, 0], [0, 16, 0], [0, 0, 6]])
         assert (grgp.grid_address[253] == [0, 5, 13]).all()
         np.testing.assert_allclose(grgp.qpoints[253],
                                    [-0.4375, -0.3125, -0.16666667])
+        np.testing.assert_array_equal(grgp.reciprocal_operations[1],
+                                      [[9, -1, 3], [-8, 0, -3], [-24, 3, -8]])
+
+
+@pytest.mark.parametrize("suggest", [True, False])
+def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
+    grgp = GeneralizedRegularGridPoints(ph_tio2.unitcell, 20, suggest=suggest)
+    rot_address = np.dot(grgp.grid_address, grgp.reciprocal_operations[1])
+    diag_n = np.diagonal(grgp.snf.D)
+    rot_address %= diag_n
+    for adrs in rot_address:
+        print(adrs)
+        print(np.abs(grgp.grid_address - adrs).sum(axis=1))
+
 
 
 def test_watch_GeneralizedRegularGridPoints(ph_tio2, helper_methods):
     from phonopy.structure.atoms import PhonopyAtoms
     from phonopy.interface.phonopy_yaml import read_cell_yaml
     grgp = GeneralizedRegularGridPoints(ph_tio2.unitcell, 10)
-    tmat = grgp.matrix_to_primitive
+    tmat = grgp.transformation_matrix
     # direct basis vectors in row vectors
     plat = np.dot(tmat.T, ph_tio2.unitcell.cell)
     # reciprocal basis vectors in row vectors (10 times magnified)
