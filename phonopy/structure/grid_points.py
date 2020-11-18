@@ -422,7 +422,12 @@ class GeneralizedRegularGridPoints(object):
 
     """
 
-    def __init__(self, cell, length, suggest=True, symprec=1e-5):
+    def __init__(self,
+                 cell,
+                 length,
+                 suggest=True,
+                 is_time_reversal=True,
+                 symprec=1e-5):
         """
 
         Parameters
@@ -431,9 +436,18 @@ class GeneralizedRegularGridPoints(object):
             Input cell.
         length : float
             Length having the unit of direct space length.
+        suggest : bool, optional, default True
+            With True, a standardized primitive cell is suggested and the grids
+            are generated for it. With False, input cell is used.
+        is_time_reversal: bool, optional, default True
+            Time reversal symmetry is considered in symmetry search. By this,
+            inversion symmetry is always included.
 
         """
+        self._cell = cell
+        self._length = length
         self._suggest = suggest
+        self._is_time_reversal = is_time_reversal
         self._grid_address = None
         self._snf = None
         self._transformation_matrix = None
@@ -446,7 +460,8 @@ class GeneralizedRegularGridPoints(object):
             self._sym_dataset['rotations'],
             self._transformation_matrix,
             self._snf.D,
-            self._snf.Q)
+            self._snf.Q,
+            is_time_reversal=self._is_time_reversal)
 
     @property
     def grid_address(self):

@@ -206,19 +206,9 @@ def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
                                       [[9, -1, 3], [-8, 0, -3], [-24, 3, -8]])
 
 
-@pytest.mark.parametrize("suggest", [True, ])
-def test_GeneralizedRegularGridPoints_rotations(ph_tio2, suggest):
-    grgp = GeneralizedRegularGridPoints(ph_tio2.unitcell, 20, suggest=suggest)
-    rot_address = np.dot(grgp.grid_address, grgp.reciprocal_operations[1])
-    diag_n = np.diagonal(grgp.snf.D)
-    rot_address %= diag_n
-    matches = []
-    for adrs in rot_address:
-        d = np.abs(grgp.grid_address - adrs).sum(axis=1)
-        match = np.where(d == 0)[0]
-        assert len(match) == 1
-        matches.append(match[0])
-
+@pytest.mark.parametrize("suggest", [True, False])
+def test_GeneralizedRegularGridPoints_rotations_tio2(ph_tio2, suggest):
+    matches = _get_matches(ph_tio2, suggest, True)
     if suggest:
         matches_ref = [0, 29, 58, 67, 96, 5, 34, 43, 72, 81,
                        10, 39, 48, 77, 86, 15, 24, 53, 62, 91,
@@ -237,6 +227,44 @@ def test_GeneralizedRegularGridPoints_rotations(ph_tio2, suggest):
                        21, 46, 11, 36, 1, 26, 41, 16, 31, 8,
                        23, 48, 13, 38, 3, 28, 43, 18, 33]
     np.testing.assert_array_equal(matches, matches_ref)
+
+
+@pytest.mark.parametrize("suggest", [True, False])
+@pytest.mark.parametrize("is_time_reversal", [True, False])
+def test_GeneralizedRegularGridPoints_rotations_zr3n4(ph_zr3n4,
+                                                      suggest,
+                                                      is_time_reversal):
+    """Non-centrosymmetric Zr3N4"""
+    matches = _get_matches(ph_zr3n4, suggest, is_time_reversal)
+    if suggest:
+        matches_ref = [0, 17, 10, 3, 14, 7, 29, 22, 33, 26,
+                       19, 30, 52, 45, 38, 49, 42, 41, 36, 53,
+                       46, 39, 50, 43, 11, 4, 15, 8, 1, 12,
+                       34, 27, 20, 31, 24, 23, 18, 35, 28, 21,
+                       32, 25, 47, 40, 51, 44, 37, 48, 16, 9,
+                       2, 13, 6, 5]
+    else:
+        matches_ref = [0, 2, 1, 9, 11, 10, 18, 20, 19, 6,
+                       8, 7, 15, 17, 16, 24, 26, 25, 3, 5,
+                       4, 12, 14, 13, 21, 23, 22]
+    np.testing.assert_array_equal(matches, matches_ref)
+
+
+def _get_matches(ph, suggest, is_time_reversal):
+    grgp = GeneralizedRegularGridPoints(ph.unitcell,
+                                        20,
+                                        suggest=suggest,
+                                        is_time_reversal=is_time_reversal)
+    rot_address = np.dot(grgp.grid_address, grgp.reciprocal_operations[1])
+    diag_n = np.diagonal(grgp.snf.D)
+    rot_address %= diag_n
+    matches = []
+    for adrs in rot_address:
+        d = np.abs(grgp.grid_address - adrs).sum(axis=1)
+        match = np.where(d == 0)[0]
+        assert len(match) == 1
+        matches.append(match[0])
+    return matches
 
 
 def test_watch_GeneralizedRegularGridPoints(ph_tio2, helper_methods):
