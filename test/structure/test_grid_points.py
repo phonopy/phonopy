@@ -206,16 +206,37 @@ def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
                                       [[9, -1, 3], [-8, 0, -3], [-24, 3, -8]])
 
 
-@pytest.mark.parametrize("suggest", [True, False])
-def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
+@pytest.mark.parametrize("suggest", [True, ])
+def test_GeneralizedRegularGridPoints_rotations(ph_tio2, suggest):
     grgp = GeneralizedRegularGridPoints(ph_tio2.unitcell, 20, suggest=suggest)
     rot_address = np.dot(grgp.grid_address, grgp.reciprocal_operations[1])
     diag_n = np.diagonal(grgp.snf.D)
     rot_address %= diag_n
+    matches = []
     for adrs in rot_address:
-        print(adrs)
-        print(np.abs(grgp.grid_address - adrs).sum(axis=1))
+        d = np.abs(grgp.grid_address - adrs).sum(axis=1)
+        match = np.where(d == 0)[0]
+        assert len(match) == 1
+        matches.append(match[0])
 
+    if suggest:
+        matches_ref = [0, 29, 58, 67, 96, 5, 34, 43, 72, 81,
+                       10, 39, 48, 77, 86, 15, 24, 53, 62, 91,
+                       38, 47, 76, 85, 14, 23, 52, 61, 90, 19,
+                       28, 57, 66, 95, 4, 33, 42, 71, 80, 9,
+                       56, 65, 94, 3, 32, 41, 70, 99, 8, 37,
+                       46, 75, 84, 13, 22, 51, 60, 89, 18, 27,
+                       74, 83, 12, 21, 50, 79, 88, 17, 26, 55,
+                       64, 93, 2, 31, 40, 69, 98, 7, 36, 45,
+                       92, 1, 30, 59, 68, 97, 6, 35, 44, 73,
+                       82, 11, 20, 49, 78, 87, 16, 25, 54, 63]
+    else:
+        matches_ref = [0, 25, 40, 15, 30, 5, 20, 45, 10, 35, 2,
+                       27, 42, 17, 32, 7, 22, 47, 12, 37, 4,
+                       29, 44, 19, 34, 9, 24, 49, 14, 39, 6,
+                       21, 46, 11, 36, 1, 26, 41, 16, 31, 8,
+                       23, 48, 13, 38, 3, 28, 43, 18, 33]
+    np.testing.assert_array_equal(matches, matches_ref)
 
 
 def test_watch_GeneralizedRegularGridPoints(ph_tio2, helper_methods):
