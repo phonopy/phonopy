@@ -70,7 +70,8 @@ class Symmetry(object):
         (self._pointgroup_operations,
          self._reciprocal_operations) = get_pointgroup_operations(
              self._symmetry_operations['rotations'])
-        self._pointgroup = get_pointgroup(self._pointgroup_operations)[0]
+        ptg_symbol = spglib.get_pointgroup(self._pointgroup_operations)[0]
+        self._pointgroup = ptg_symbol.strip()
         self._set_atomic_permutations()
         self._set_independent_atoms()
         self._map_operations = self._get_map_operations_from_permutations()
@@ -93,6 +94,10 @@ class Symmetry(object):
 
     def get_pointgroup_operations(self):
         return self.pointgroup_operations
+
+    @property
+    def pointgroup_symbol(self):
+        return self._pointgroup
 
     def get_pointgroup(self):
         return self._pointgroup
@@ -301,10 +306,10 @@ def get_pointgroup_operations(rotations, is_time_reversal=True):
     ptg_ops = collect_unique_rotations(rotations)
     reciprocal_rotations = [rot.T for rot in ptg_ops]
 
-    if not is_time_reversal:
+    if is_time_reversal:
         exist_r_inv = False
         for rot in ptg_ops:
-            if (rot + np.eye(3, dtype='intc') == 0).all():
+            if (rot == -np.eye(3, dtype='intc')).all():
                 exist_r_inv = True
                 break
         if not exist_r_inv:
@@ -312,11 +317,6 @@ def get_pointgroup_operations(rotations, is_time_reversal=True):
 
     return (np.array(ptg_ops, dtype='intc'),
             np.array(reciprocal_rotations, dtype='intc'))
-
-
-def get_pointgroup(rotations):
-    ptg = spglib.get_pointgroup(rotations)
-    return ptg[0].strip(), ptg[2]
 
 
 def collect_unique_rotations(rotations):

@@ -1,7 +1,7 @@
 import numpy as np
-from phonopy.structure.symmetry import (Symmetry, symmetrize_borns_and_epsilon,
-                                        _get_mapping_between_cells,
-                                        collect_pointgroup_operations)
+from phonopy.structure.symmetry import (
+    Symmetry, symmetrize_borns_and_epsilon, _get_mapping_between_cells,
+    collect_unique_rotations)
 from phonopy.structure.cells import get_supercell
 import os
 
@@ -78,6 +78,10 @@ def test_symmetrize_borns_and_epsilon_tio2(ph_tio2):
     np.testing.assert_allclose(epsilon, nac_params['dielectric'], atol=1e-8)
 
 
+def test_Symmetry_pointgroup(ph_tio2):
+    assert ph_tio2.symmetry.pointgroup_symbol == r'4/mmm'
+
+
 def test_with_pmat_and_smat(ph_nacl):
     pcell = ph_nacl.primitive
     scell = ph_nacl.supercell
@@ -122,9 +126,9 @@ def test_site_symmetry(ph_sno2):
     np.testing.assert_array_equal(site_sym36.ravel(), ref36)
 
 
-def test_collect_pointgroup_operations(ph_nacl):
+def test_collect__unique_rotations(ph_nacl):
     rotations = ph_nacl.symmetry.symmetry_operations['rotations']
-    ptg = collect_pointgroup_operations(rotations)
+    ptg = collect_unique_rotations(rotations)
     assert len(rotations) == 1536
     assert len(ptg) == 48
     assert len(ptg) == len(ph_nacl.symmetry.pointgroup_operations)
