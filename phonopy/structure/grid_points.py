@@ -531,9 +531,11 @@ class GeneralizedRegularGridPoints(object):
                                       dtype='intc', order='C')
 
     def _generate_q_points(self):
-        d = np.diagonal(self._snf.D).astype(float)
-        self._qpoints = np.dot(self._grid_address / d, self._snf.Q.T)
-        self._qpoints -= np.rint(self._qpoints)
+        D_inv = np.linalg.inv(self._snf.D)
+        qpoints = np.dot(
+            self._grid_address, np.dot(self._snf.Q, D_inv).T)
+        qpoints -= np.rint(qpoints)
+        self._qpoints = qpoints
 
 
 def get_reciprocal_operations(rotations,
@@ -563,6 +565,16 @@ def get_reciprocal_operations(rotations,
         shape=(3, 3)
     is_time_reversal : bool
         When True, inversion operation is added.
+
+    Returns
+    -------
+    rotations_for_Q : ndarray
+        Rotation matrices in reciprocal space. Grid points are sent by the
+        symmetrically equivalent grid points as follows:
+
+        g' = (R_Q g) % diagonal(D)
+
+        shape=(rotations, 3, 3), dtype='intc', order='C'
 
     """
     unique_rots = []
