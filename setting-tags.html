@@ -1151,11 +1151,17 @@ the former after v1.13.0.</p>
 </div>
 <div class="section" id="q-direction">
 <h3><a class="toc-backref" href="#id56"><code class="docutils literal notranslate"><span class="pre">Q_DIRECTION</span></code></a><a class="headerlink" href="#q-direction" title="Permalink to this headline">¶</a></h3>
-<p>This tag is used to activate NAC at
+<p>This tag is used to activate non-analytical term correction (NAC) at
 <span class="math notranslate nohighlight">\(\mathbf{q}\rightarrow\mathbf{0}\)</span>, i.e. practically
-<span class="math notranslate nohighlight">\(\Gamma\)</span>-point. Away from <span class="math notranslate nohighlight">\(\Gamma\)</span>-point, this setting is
-ignored and the specified <strong>q</strong>-point is used as the <strong>q</strong>-direction.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MESH</span> <span class="o">=</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span>
+<span class="math notranslate nohighlight">\(\Gamma\)</span>-point, because NAC is direction
+dependent. With this tag, <span class="math notranslate nohighlight">\(\mathbf{q}\)</span> is specified in the
+fractional coordinates of the reciprocal basis vectors. Only the
+direction has the meaning. Therefore <code class="docutils literal notranslate"><span class="pre">Q_DIRECTION</span> <span class="pre">=</span> <span class="pre">1</span> <span class="pre">1</span> <span class="pre">1</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Q_DIRECTION</span> <span class="pre">=</span> <span class="pre">2</span> <span class="pre">2</span> <span class="pre">2</span></code> give the same result. This tag is valid for
+<code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code>, <code class="docutils literal notranslate"><span class="pre">IRREPS</span></code>, and <code class="docutils literal notranslate"><span class="pre">MODULATION</span></code> tags.</p>
+<p>Away from <span class="math notranslate nohighlight">\(\Gamma\)</span>-point, this setting is ignored and the
+specified <strong>q</strong>-point is used as the <strong>q</strong>-direction.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">QPOINTS</span> <span class="o">=</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span>
 <span class="n">NAC</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 <span class="n">Q_DIRECTION</span> <span class="o">=</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span>
 </pre></div>
