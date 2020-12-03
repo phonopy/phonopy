@@ -1003,14 +1003,21 @@ the former after v1.13.0.
 ``Q_DIRECTION``
 ~~~~~~~~~~~~~~~~
 
-This tag is used to activate NAC at
+This tag is used to activate non-analytical term correction (NAC) at
 :math:`\mathbf{q}\rightarrow\mathbf{0}`, i.e. practically
-:math:`\Gamma`-point. Away from :math:`\Gamma`-point, this setting is
-ignored and the specified **q**-point is used as the **q**-direction.
+:math:`\Gamma`-point, because NAC is direction
+dependent. With this tag, :math:`\mathbf{q}` is specified in the
+fractional coordinates of the reciprocal basis vectors. Only the
+direction has the meaning. Therefore ``Q_DIRECTION = 1 1 1`` and
+``Q_DIRECTION = 2 2 2`` give the same result. This tag is valid for
+``QPOINTS``, ``IRREPS``, and ``MODULATION`` tags.
+
+Away from :math:`\Gamma`-point, this setting is ignored and the
+specified **q**-point is used as the **q**-direction.
 
 ::
 
-   MESH = 1 1 1
+   QPOINTS = 0 0 0
    NAC = .TRUE.
    Q_DIRECTION = 1 0 0
 

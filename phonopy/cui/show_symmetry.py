@@ -34,7 +34,7 @@
 
 import numpy as np
 import spglib
-from phonopy.structure.symmetry import get_pointgroup
+from spglib import get_pointgroup
 from phonopy.interface.calculator import (
     write_crystal_structure, get_default_cell_filename)
 from phonopy.structure.atoms import PhonopyAtoms
@@ -122,9 +122,9 @@ def _get_symmetry_yaml(cell, symmetry, phonopy_version=None):
         if cell.get_magnetic_moments() is None:
             lines.append("  Wyckoff: '%s'" % wyckoffs[i])
         site_pointgroup = get_pointgroup(sitesym)
-        lines.append("  site_point_group: '%s'" % site_pointgroup[0])
+        lines.append("  site_point_group: '%s'" % site_pointgroup[0].strip())
         lines.append("  orientation:")
-        for v in site_pointgroup[1]:
+        for v in site_pointgroup[2]:
             lines.append("  - [%2d, %2d, %2d]" % tuple(v))
 
         lines.append("  rotations:")

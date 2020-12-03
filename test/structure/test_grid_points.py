@@ -180,13 +180,15 @@ def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
         np.testing.assert_array_equal(
             grgp.snf.Q, [[1, 8, 17], [0, 0, -1], [0, 1, 1]])
         np.testing.assert_allclose(
-            grgp.matrix_to_primitive,
+            grgp.transformation_matrix,
             [[-0.5, 0.5, 0.5], [0.5, -0.5, 0.5], [0.5, 0.5, -0.5]])
         np.testing.assert_array_equal(
             grgp.grid_matrix, [[0, 16, 16], [16, 0, 16], [6, 6, 0]])
         assert (grgp.grid_address[253] == [0, 2, 61]).all()
         np.testing.assert_allclose(grgp.qpoints[253],
                                    [-0.19791667, 0.36458333, -0.23958333])
+        np.testing.assert_array_equal(grgp.reciprocal_operations[1],
+                                      [[9, 10, 3], [8, 9, 3], [-48, -54, -17]])
     else:
         np.testing.assert_array_equal(
             grgp.snf.P, [[1, 0, -3], [0, -1, 0], [-3, 0, 8]])
@@ -194,19 +196,82 @@ def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
             grgp.snf.D, [[2, 0, 0], [0, 16, 0], [0, 0, 48]])
         np.testing.assert_array_equal(
             grgp.snf.Q, [[-1, 0, -9], [0, -1, 0], [-1, 0, -8]])
-        assert grgp.matrix_to_primitive is None
+        np.testing.assert_allclose(grgp.transformation_matrix, np.eye(3))
         np.testing.assert_array_equal(
             grgp.grid_matrix, [[16, 0, 0], [0, 16, 0], [0, 0, 6]])
         assert (grgp.grid_address[253] == [0, 5, 13]).all()
         np.testing.assert_allclose(grgp.qpoints[253],
                                    [-0.4375, -0.3125, -0.16666667])
+        np.testing.assert_array_equal(grgp.reciprocal_operations[1],
+                                      [[9, -1, 3], [-8, 0, -3], [-24, 3, -8]])
+
+
+@pytest.mark.parametrize("suggest", [True, False])
+def test_GeneralizedRegularGridPoints_rotations_tio2(ph_tio2, suggest):
+    matches = _get_matches(ph_tio2, suggest, True)
+    if suggest:
+        matches_ref = [0, 29, 58, 67, 96, 5, 34, 43, 72, 81,
+                       10, 39, 48, 77, 86, 15, 24, 53, 62, 91,
+                       38, 47, 76, 85, 14, 23, 52, 61, 90, 19,
+                       28, 57, 66, 95, 4, 33, 42, 71, 80, 9,
+                       56, 65, 94, 3, 32, 41, 70, 99, 8, 37,
+                       46, 75, 84, 13, 22, 51, 60, 89, 18, 27,
+                       74, 83, 12, 21, 50, 79, 88, 17, 26, 55,
+                       64, 93, 2, 31, 40, 69, 98, 7, 36, 45,
+                       92, 1, 30, 59, 68, 97, 6, 35, 44, 73,
+                       82, 11, 20, 49, 78, 87, 16, 25, 54, 63]
+    else:
+        matches_ref = [0, 25, 40, 15, 30, 5, 20, 45, 10, 35, 2,
+                       27, 42, 17, 32, 7, 22, 47, 12, 37, 4,
+                       29, 44, 19, 34, 9, 24, 49, 14, 39, 6,
+                       21, 46, 11, 36, 1, 26, 41, 16, 31, 8,
+                       23, 48, 13, 38, 3, 28, 43, 18, 33]
+    np.testing.assert_array_equal(matches, matches_ref)
+
+
+@pytest.mark.parametrize("suggest", [True, False])
+@pytest.mark.parametrize("is_time_reversal", [True, False])
+def test_GeneralizedRegularGridPoints_rotations_zr3n4(ph_zr3n4,
+                                                      suggest,
+                                                      is_time_reversal):
+    """Non-centrosymmetric Zr3N4"""
+    matches = _get_matches(ph_zr3n4, suggest, is_time_reversal)
+    if suggest:
+        matches_ref = [0, 17, 10, 3, 14, 7, 29, 22, 33, 26,
+                       19, 30, 52, 45, 38, 49, 42, 41, 36, 53,
+                       46, 39, 50, 43, 11, 4, 15, 8, 1, 12,
+                       34, 27, 20, 31, 24, 23, 18, 35, 28, 21,
+                       32, 25, 47, 40, 51, 44, 37, 48, 16, 9,
+                       2, 13, 6, 5]
+    else:
+        matches_ref = [0, 2, 1, 9, 11, 10, 18, 20, 19, 6,
+                       8, 7, 15, 17, 16, 24, 26, 25, 3, 5,
+                       4, 12, 14, 13, 21, 23, 22]
+    np.testing.assert_array_equal(matches, matches_ref)
+
+
+def _get_matches(ph, suggest, is_time_reversal):
+    grgp = GeneralizedRegularGridPoints(ph.unitcell,
+                                        20,
+                                        suggest=suggest,
+                                        is_time_reversal=is_time_reversal)
+    rot_address = np.dot(grgp.grid_address, grgp.reciprocal_operations[1])
+    diag_n = np.diagonal(grgp.snf.D)
+    rot_address %= diag_n
+    matches = []
+    for adrs in rot_address:
+        d = np.abs(grgp.grid_address - adrs).sum(axis=1)
+        match = np.where(d == 0)[0]
+        assert len(match) == 1
+        matches.append(match[0])
+    return matches
 
 
 def test_watch_GeneralizedRegularGridPoints(ph_tio2, helper_methods):
     from phonopy.structure.atoms import PhonopyAtoms
     from phonopy.interface.phonopy_yaml import read_cell_yaml
     grgp = GeneralizedRegularGridPoints(ph_tio2.unitcell, 10)
-    tmat = grgp.matrix_to_primitive
+    tmat = grgp.transformation_matrix
     # direct basis vectors in row vectors
     plat = np.dot(tmat.T, ph_tio2.unitcell.cell)
     # reciprocal basis vectors in row vectors (10 times magnified)
