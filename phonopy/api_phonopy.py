@@ -1667,9 +1667,11 @@ class Phonopy(object):
             Calculated dynamical matrices are stored by setting True.
             Default is False.
         nac_q_direction : array_like
-            q=(0,0,0) is replaced by q=epsilon * nac_q_direction where epsilon
-            is infinitsimal for non-analytical term correction. This is used,
-            e.g., to observe LO-TO splitting.
+            q-point direction from Gamma-point in fractional coordinates of
+            reciprocal basis vectors. Only the direction is used, i.e.,
+            (q_direction / |q_direction|) is computed and used. This parameter
+            is activated only at q=(0, 0, 0).
+            shape=(3,), dtype='double'
 
         """
 
@@ -2574,6 +2576,12 @@ class Phonopy(object):
             a list that represents q-point in reduced coordinates. The second,
             third, and fourth elements show the band index starting with 0,
             amplitude, and phase factor, respectively.
+        nac_q_direction : array_like
+            q-point direction from Gamma-point in fractional coordinates of
+            reciprocal basis vectors. Only the direction is used, i.e.,
+            (q_direction / |q_direction|) is computed and used. This parameter
+            is activated only at q=(0, 0, 0).
+            shape=(3,), dtype='double'
 
         """
         if self._dynamical_matrix is None:
@@ -2622,6 +2630,13 @@ class Phonopy(object):
         The design of this API is not very satisfactory and is expceted
         to be redesined in the next major versions once the use case
         of the API for ir-reps feature becomes clearer.
+
+        nac_q_direction : array_like
+            q-point direction from Gamma-point in fractional coordinates of
+            reciprocal basis vectors. Only the direction is used, i.e.,
+            (q_direction / |q_direction|) is computed and used. This parameter
+            is activated only at q=(0, 0, 0).
+            shape=(3,), dtype='double'
 
         """
 
