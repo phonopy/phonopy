@@ -256,8 +256,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
             Maximum phonon frequency to determine wheather include or not.
         lattice: array_like
             Lattice parameters (column vectors) in real space
-            dtype='double'
-            shape=(3, 3)
+            dtype='double', shape=(3, 3)
 
         """
 
