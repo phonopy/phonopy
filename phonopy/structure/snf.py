@@ -77,8 +77,8 @@ class SNF3x3(object):
 
         """
 
-        self._A_orig = np.array(A, dtype='intc', order='C')
-        self._A = np.array(A, dtype='intc', order='C')
+        self._A_orig = np.array(A, dtype='int_', order='C')
+        self._A = np.array(A, dtype='int_', order='C')
         self._Ps = []
         self._Qs = []
         self._L = []
@@ -178,7 +178,7 @@ class SNF3x3(object):
         """
 
         A = self._A
-        L = np.eye(3, dtype='intc')
+        L = np.eye(3, dtype='int_')
         L[1, 0] = -A[1, 0] // A[0, 0]
         L[2, 0] = -A[2, 0] // A[0, 0]
         self._L.append(L.copy())
@@ -235,7 +235,7 @@ class SNF3x3(object):
         """
 
         A = self._A
-        L = np.eye(3, dtype='intc')
+        L = np.eye(3, dtype='int_')
         L[2, 1] = -A[2, 1] // A[1, 1]
         self._L.append(L.copy())
         self._A[:] = np.dot(L, self._A)
@@ -271,7 +271,7 @@ class SNF3x3(object):
             self._A[:] = self._A.T
 
     def _disturb_rows(self, i, j):
-        L = np.eye(3, dtype='intc')
+        L = np.eye(3, dtype='int_')
         L[i, i] = 1
         L[i, j] = 1
         L[j, i] = 0
@@ -296,7 +296,7 @@ class SNF3x3(object):
 
         """
 
-        L = np.eye(3, dtype='intc')
+        L = np.eye(3, dtype='int_')
         L[i, i] = 0
         L[j, j] = 0
         L[i, j] = 1
@@ -307,7 +307,7 @@ class SNF3x3(object):
     def _flip_sign_row(self, i):
         """Multiply -1 for all elements in row"""
 
-        L = np.eye(3, dtype='intc')
+        L = np.eye(3, dtype='int_')
         L[i, i] = -1
         self._L.append(L.copy())
         self._A[:] = np.dot(L, self._A)
@@ -320,7 +320,7 @@ class SNF3x3(object):
 
         """
 
-        L = np.eye(3, dtype='intc')
+        L = np.eye(3, dtype='int_')
         L[i, i] = s
         L[i, j] = t
         L[j, i] = -b // r
@@ -329,10 +329,10 @@ class SNF3x3(object):
         self._A[:] = np.dot(L, self._A)
 
     def _set_PQ(self):
-        P = np.eye(3, dtype='intc')
+        P = np.eye(3, dtype='int_')
         for _P in self._Ps:
             P = np.dot(_P, P)
-        Q = np.eye(3, dtype='intc')
+        Q = np.eye(3, dtype='int_')
         for _Q in self._Qs:
             Q = np.dot(Q, _Q.T)
 
