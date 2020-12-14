@@ -427,6 +427,7 @@ class GeneralizedRegularGridPoints(object):
                  length,
                  suggest=True,
                  is_time_reversal=True,
+                 x_fastest=True,
                  symprec=1e-5):
         """
 
@@ -442,12 +443,16 @@ class GeneralizedRegularGridPoints(object):
         is_time_reversal: bool, optional, default True
             Time reversal symmetry is considered in symmetry search. By this,
             inversion symmetry is always included.
+        x_fastest : bool, optional, default=True
+            In grid generation, [[x, y, z], ...], x runs fastest when True,
+            otherwise z runs fastest.
 
         """
         self._cell = cell
         self._length = length
         self._suggest = suggest
         self._is_time_reversal = is_time_reversal
+        self._x_fastest = x_fastest
         self._grid_address = None
         self._snf = None
         self._transformation_matrix = None
@@ -540,8 +545,14 @@ class GeneralizedRegularGridPoints(object):
 
     def _generate_grid_points(self):
         d = np.diagonal(self._snf.D)
-        x, y, z = np.meshgrid(range(d[0]), range(d[1]), range(d[2]),
-                              indexing='ij')
+        if self._x_fastest:
+            # x runs fastest.
+            z, y, x = np.meshgrid(range(d[2]), range(d[1]), range(d[0]),
+                                  indexing='ij')
+        else:
+            # z runs fastest.
+            x, y, z = np.meshgrid(range(d[0]), range(d[1]), range(d[2]),
+                                  indexing='ij')
         self._grid_address = np.array(np.c_[x.ravel(), y.ravel(), z.ravel()],
                                       dtype='intc', order='C')
 

@@ -170,7 +170,10 @@ def test_GridPoints_SnO2_with_rotations_MP(ph_sno2):
 
 @pytest.mark.parametrize("suggest", [True, False])
 def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
-    grgp = GeneralizedRegularGridPoints(ph_tio2.unitcell, 100, suggest=suggest)
+    grgp = GeneralizedRegularGridPoints(ph_tio2.unitcell,
+                                        100,
+                                        suggest=suggest,
+                                        x_fastest=False)
 
     if suggest:
         np.testing.assert_array_equal(
@@ -254,7 +257,8 @@ def _get_matches(ph, suggest, is_time_reversal):
     grgp = GeneralizedRegularGridPoints(ph.unitcell,
                                         20,
                                         suggest=suggest,
-                                        is_time_reversal=is_time_reversal)
+                                        is_time_reversal=is_time_reversal,
+                                        x_fastest=False)
     rot_address = np.dot(grgp.grid_address, grgp.reciprocal_operations[1])
     diag_n = np.diagonal(grgp.snf.D)
     rot_address %= diag_n
@@ -270,7 +274,9 @@ def _get_matches(ph, suggest, is_time_reversal):
 def test_watch_GeneralizedRegularGridPoints(ph_tio2, helper_methods):
     from phonopy.structure.atoms import PhonopyAtoms
     from phonopy.interface.phonopy_yaml import read_cell_yaml
-    grgp = GeneralizedRegularGridPoints(ph_tio2.unitcell, 10)
+    grgp = GeneralizedRegularGridPoints(ph_tio2.unitcell,
+                                        10,
+                                        x_fastest=False)
     tmat = grgp.transformation_matrix
     # direct basis vectors in row vectors
     plat = np.dot(tmat.T, ph_tio2.unitcell.cell)
