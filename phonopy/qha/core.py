@@ -215,6 +215,7 @@ class QHA(object):
 
         plt.rcParams['pdf.fonttype'] = 42
         plt.rcParams['font.family'] = 'serif'
+        plt.rcParams['text.usetex'] = True
 
         fig, axs = plt.subplots(1, 3, figsize=(7, 3.5))
         axs[0].xaxis.set_ticks_position('both')
@@ -256,13 +257,7 @@ class QHA(object):
                                   filename='helmholtz-volume.pdf'):
         import matplotlib.pyplot as plt
 
-        plt.rcParams['backend'] = 'PDF'
-        plt.rcParams['pdf.fonttype'] = 42
-        plt.rcParams['font.family'] = 'serif'
-        plt.rcParams['axes.labelsize'] = 18
-        plt.rcParams['figure.subplot.left'] = 0.25
-        plt.rcParams['figure.subplot.bottom'] = 0.15
-        plt.rcParams['figure.figsize'] = 4, 6
+        self._set_rcParams(plt)
 
         fig, ax = plt.subplots()
         ax.xaxis.set_ticks_position('both')
@@ -304,13 +299,8 @@ class QHA(object):
                                     exp_data=None,
                                     filename='volume-temperature.pdf'):
         import matplotlib.pyplot as plt
-        plt.rcParams['backend'] = 'PDF'
-        plt.rcParams['pdf.fonttype'] = 42
-        plt.rcParams['font.family'] = 'serif'
-        plt.rcParams['axes.labelsize'] = 18
-        plt.rcParams['figure.subplot.left'] = 0.15
-        plt.rcParams['figure.subplot.bottom'] = 0.15
-        plt.rcParams['figure.figsize'] = 8, 6
+
+        self._set_rcParams(plt)
 
         fig, ax = plt.subplots()
         ax.xaxis.set_ticks_position('both')
@@ -342,13 +332,8 @@ class QHA(object):
 
     def plot_pdf_thermal_expansion(self, filename='thermal_expansion.pdf'):
         import matplotlib.pyplot as plt
-        plt.rcParams['backend'] = 'PDF'
-        plt.rcParams['pdf.fonttype'] = 42
-        plt.rcParams['font.family'] = 'serif'
-        plt.rcParams['axes.labelsize'] = 18
-        plt.rcParams['figure.subplot.left'] = 0.15
-        plt.rcParams['figure.subplot.bottom'] = 0.15
-        plt.rcParams['figure.figsize'] = 8, 6
+
+        self._set_rcParams(plt)
 
         fig, ax = plt.subplots()
         ax.xaxis.set_ticks_position('both')
@@ -382,13 +367,8 @@ class QHA(object):
 
     def plot_pdf_gibbs_temperature(self, filename='gibbs-temperature.pdf'):
         import matplotlib.pyplot as plt
-        plt.rcParams['backend'] = 'PDF'
-        plt.rcParams['pdf.fonttype'] = 42
-        plt.rcParams['font.family'] = 'serif'
-        plt.rcParams['axes.labelsize'] = 18
-        plt.rcParams['figure.subplot.left'] = 0.15
-        plt.rcParams['figure.subplot.bottom'] = 0.15
-        plt.rcParams['figure.figsize'] = 8, 6
+
+        self._set_rcParams(plt)
 
         fig, ax = plt.subplots()
         ax.xaxis.set_ticks_position('both')
@@ -425,13 +405,8 @@ class QHA(object):
             self,
             filename='bulk_modulus-temperature.pdf'):
         import matplotlib.pyplot as plt
-        plt.rcParams['backend'] = 'PDF'
-        plt.rcParams['pdf.fonttype'] = 42
-        plt.rcParams['font.family'] = 'serif'
-        plt.rcParams['axes.labelsize'] = 18
-        plt.rcParams['figure.subplot.left'] = 0.15
-        plt.rcParams['figure.subplot.bottom'] = 0.15
-        plt.rcParams['figure.figsize'] = 8, 6
+
+        self._set_rcParams(plt)
 
         fig, ax = plt.subplots()
         ax.xaxis.set_ticks_position('both')
@@ -467,13 +442,8 @@ class QHA(object):
                                            exp_data=None,
                                            filename='Cp-temperature.pdf'):
         import matplotlib.pyplot as plt
-        plt.rcParams['backend'] = 'PDF'
-        plt.rcParams['pdf.fonttype'] = 42
-        plt.rcParams['font.family'] = 'serif'
-        plt.rcParams['axes.labelsize'] = 18
-        plt.rcParams['figure.subplot.left'] = 0.15
-        plt.rcParams['figure.subplot.bottom'] = 0.15
-        plt.rcParams['figure.figsize'] = 8, 6
+
+        self._set_rcParams(plt)
 
         fig, ax = plt.subplots()
         ax.xaxis.set_ticks_position('both')
@@ -508,13 +478,8 @@ class QHA(object):
             exp_data=None,
             filename='Cp-temperature_polyfit.pdf'):
         import matplotlib.pyplot as plt
-        plt.rcParams['backend'] = 'PDF'
-        plt.rcParams['pdf.fonttype'] = 42
-        plt.rcParams['font.family'] = 'serif'
-        plt.rcParams['axes.labelsize'] = 18
-        plt.rcParams['figure.subplot.left'] = 0.15
-        plt.rcParams['figure.subplot.bottom'] = 0.15
-        plt.rcParams['figure.figsize'] = 8, 6
+
+        self._set_rcParams(plt)
 
         fig, ax = plt.subplots()
         ax.xaxis.set_ticks_position('both')
@@ -576,13 +541,8 @@ class QHA(object):
     def plot_pdf_gruneisen_temperature(self,
                                        filename='gruneisen-temperature.pdf'):
         import matplotlib.pyplot as plt
-        plt.rcParams['backend'] = 'PDF'
-        plt.rcParams['pdf.fonttype'] = 42
-        plt.rcParams['font.family'] = 'serif'
-        plt.rcParams['axes.labelsize'] = 18
-        plt.rcParams['figure.subplot.left'] = 0.15
-        plt.rcParams['figure.subplot.bottom'] = 0.15
-        plt.rcParams['figure.figsize'] = 8, 6
+
+        self._set_rcParams(plt)
 
         fig, ax = plt.subplots()
         ax.xaxis.set_ticks_position('both')
@@ -889,3 +849,13 @@ class QHA(object):
         else:
             i = np.argmin(np.abs(temperatures - self._t_max))
             return i + 1
+
+    def _set_rcParams(self, plt):
+        plt.rcParams['backend'] = 'PDF'
+        plt.rcParams['pdf.fonttype'] = 42
+        plt.rcParams['font.family'] = 'serif'
+        plt.rcParams['axes.labelsize'] = 18
+        plt.rcParams['figure.subplot.left'] = 0.25
+        plt.rcParams['figure.subplot.bottom'] = 0.15
+        plt.rcParams['figure.figsize'] = 4, 6
+        plt.rcParams['text.usetex'] = True
