@@ -219,7 +219,7 @@ class Supercell(PhonopyAtoms):
         if N != determinant(self._supercell_matrix):
             print("Supercell creation failed.")
             print("Probably some atoms are overwrapped. "
-                  "The mapping table is give below.")
+                  "The mapping table is given below.")
             print(mapping_table)
             PhonopyAtoms.__init__(self)
         else:
