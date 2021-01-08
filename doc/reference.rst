@@ -134,7 +134,8 @@ DFPT
 Currently there are several many implementations such as `Abinit
 <http://www.abinit.org/>`_, `Quantum espresso
 <http://www.quantum-espresso.org/>`_, `Elk
-<http://elk.sourceforge.net/>`_, etc.  VASP can calculate force constants
+<http://elk.sourceforge.net/>`_, `Fleur
+<https://www.flapw.de/>`_, etc.  VASP can calculate force constants
 using DFPT however only at Gamma-point.
 
 For the study of basics
