@@ -65,6 +65,8 @@ calculator_info = {
                           'help': "Invoke Wien2k mode"}},
     'castep': {'option': {'name': "--castep",
                            'help': "Invoke CASTEP mode"}},
+    'fleur': {'option': {'name': "--fleur",
+                       'help': "Invoke Fleur mode"}},
 }
 
 
@@ -167,7 +169,10 @@ def write_crystal_structure(filename,
     elif interface_mode == 'castep':
         import phonopy.interface.castep as castep
         castep.write_castep(filename, cell)
-
+    elif interface_mode == 'fleur':
+        import phonopy.interface.fleur as fleur
+        speci, restlines = optional_structure_info
+        fleur.write_fleur(filename, cell, speci, N, restlines)
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -271,6 +276,13 @@ def write_supercells_with_displacements(interface_mode,
     elif interface_mode == 'castep':
         import phonopy.interface.castep as castep
         castep.write_supercells_with_displacements(*args, **kwargs)
+    elif interface_mode == 'fleur':
+        import phonopy.interface.fleur as fleur
+        speci = optional_structure_info[1]
+        restlines = optional_structure_info[2]
+        N = abs(determinant(additional_info['supercell_matrix']))
+        fleur_args = args + (speci, N, restlines)
+        fleur.write_supercells_with_displacements(*fleur_args, **kwargs)
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -391,6 +403,10 @@ def read_crystal_structure(filename=None,
         from phonopy.interface.castep import read_castep
         unitcell = read_castep(cell_filename)
         return unitcell, (cell_filename,)
+    elif interface_mode == 'fleur':
+        from phonopy.interface.fleur import read_fleur
+        unitcell, speci, restlines = read_fleur(cell_filename)
+        return unitcell, (cell_filename,speci,restlines)
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -418,6 +434,8 @@ def get_default_cell_filename(interface_mode):
         return "geometry.in"
     elif interface_mode in ('castep'):
         return "unitcell.cell"
+    elif interface_mode == 'fleur':
+        return "fleur.in"
     else:
         return None
 
@@ -427,7 +445,7 @@ def get_default_supercell_filename(interface_mode):
         return "phonopy_disp.yaml"
     elif interface_mode is None or interface_mode == 'vasp':
         return "SPOSCAR"
-    elif interface_mode in ('abinit', 'elk', 'qe'):
+    elif interface_mode in ('abinit', 'elk', 'qe', 'fleur'):
         return "supercell.in"
     elif interface_mode == 'wien2k':
         return "case.structS"
@@ -452,7 +470,7 @@ def get_default_supercell_filename(interface_mode):
 
 def get_default_displacement_distance(interface_mode):
     if interface_mode in ('wien2k', 'abinit', 'elk', 'qe', 'siesta',
-                          'turbomole'):
+                          'turbomole', 'fleur'):
         displacement_distance = 0.02
     else:  # default or vasp, crystal, cp2k
         displacement_distance = 0.01
@@ -475,6 +493,7 @@ def get_default_physical_units(interface_mode=None):
     CP2K          : hartree, angstrom,  AMU,         hartree/au,   hartree/angstrom.au
     FHI-aims      : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
     castep        : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
+    fleur         : hartree, au,        AMU,         hartree/au,   hartree/au^2
 
     units['force_constants_unit'] is used in
     the 'get_force_constant_conversion_factor' method.
@@ -483,8 +502,8 @@ def get_default_physical_units(interface_mode=None):
 
     from phonopy.units import (Wien2kToTHz, AbinitToTHz, PwscfToTHz, ElkToTHz,
                                SiestaToTHz, VaspToTHz, CP2KToTHz, CrystalToTHz,
-                               DftbpToTHz, TurbomoleToTHz, CastepToTHz, Hartree, Bohr,
-                               Rydberg)
+                               DftbpToTHz, TurbomoleToTHz, CastepToTHz, FleurToTHz,
+                               Hartree, Bohr, Rydberg)
 
     units = {'factor': None,
              'nac_factor': None,
@@ -561,6 +580,12 @@ def get_default_physical_units(interface_mode=None):
         units['distance_to_A'] = 1.0
         units['force_constants_unit'] = 'eV/angstrom^2'
         units['length_unit'] = 'angstrom'
+    elif interface_mode == 'fleur':
+        units['factor'] = FleurToTHz
+        units['nac_factor'] = 1.0 #TODO: Correct?
+        units['distance_to_A'] = Bohr
+        units['force_constants_unit'] = 'hartree/au^2'
+        units['length_unit'] = 'au'
 
     return units
 
@@ -593,6 +618,8 @@ def get_force_sets(interface_mode,
         from phonopy.interface.aims import parse_set_of_forces
     elif interface_mode == 'castep':
         from phonopy.interface.castep import parse_set_of_forces
+    elif interface_mode == 'fleur':
+        from phonopy.interface.fleur import parse_set_of_forces
 
     else:
         return []
