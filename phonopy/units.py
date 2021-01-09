@@ -73,3 +73,4 @@ DftbpToTHz = sqrt(Hartree*EV/AMU)/(Bohr*1e-10)/(2*pi)/1e12 # [THz] 154.10794344
 dftbpToBohr = 0.188972598857892E+01
 TurbomoleToTHz = ElkToTHz # Turbomole uses atomic units (Hartree/Bohr)
 EVAngstromToGPa = EV * 1e21
+FleurToTHz = ElkToTHz # Fleur uses atomic units (Hartree/Bohr)
