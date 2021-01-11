@@ -18,4 +18,4 @@ with n from {0,1,2,3} representing the level of force accuracy).
 The disp.yaml file has to be put in the same directory. Now you can run
 phonon calculation, e.g.,
 
-% phonopy --fleur -c fleur_input -p --dim="2 2 2" --pa="0 1/2 1/2 1/2 0 1/2 1/2 1/2 0" --band="1/2 1/2 1/2 0 0 0 1/2 0 1/2"
+% phonopy --fleur -c fleur_input --dim="2 2 2" --pa="0 1/2 1/2 1/2 0 1/2 1/2 1/2 0" --band="1/2 1/2 1/2 0 0 0 1/2 0 1/2"
