@@ -152,4 +152,4 @@ Default unit conversion factor for non-analytical term correction
    TURBOMOLE | 1
    CP2K      | None (N/A)
    FHI-AIMS  | 14.399652
-   Fleur     | 1 [TODO: understand this]
+   Fleur     | 1 (but feature N/A)

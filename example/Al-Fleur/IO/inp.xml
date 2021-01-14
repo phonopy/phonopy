@@ -5,7 +5,7 @@
    </comment>
    <calculationSetup>
       <cutoffs Kmax="4.00000000" Gmax="24.01000000" GmaxXC="24.01000000" numbands="0"/>
-      <scfLoop itmax="30" minDistance=".00001000" maxIterBroyd="99" imix="Anderson" alpha=".05000000" precondParam="0.0" spinf="2.00000000"/>
+      <scfLoop itmax="20" minDistance=".00001000" maxIterBroyd="99" imix="Anderson" alpha=".05000000" precondParam="0.0" spinf="2.00000000"/>
       <coreElectrons ctail="T" frcor="F" kcrel="0" coretail_lmax="0"/>
       <xcFunctional name="vwn" relativisticCorrections="F"/>
       <magnetism jspins="1"/>
@@ -15,7 +15,7 @@
       <ldaU l_linMix="F" mixParam=".050000" spinf="1.000000"/>
    </calculationSetup>
    <cell>
-      <bzIntegration valenceElectrons="96.00000000" mode="hist" fermiSmearingEnergy=".00100000">
+      <bzIntegration valenceElectrons="24.00000000" mode="hist" fermiSmearingEnergy=".00100000">
          <kPointListSelection listName="default-1"/>
          <!-- k-points included here -->
          <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="kpts.xml"> </xi:include>
@@ -24,9 +24,9 @@
       <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="sym.xml"> </xi:include>
       <bulkLattice scale="1.0000000000">
          <bravaisMatrix>
-            <row-1>   15.3120000000     0.0000000000     0.0000000000</row-1>
-            <row-2>    0.0000000000    15.3120000000     0.0000000000</row-2>
-            <row-3>    0.0000000000     0.0000000000    15.3120000000</row-3>
+            <row-1>    0.0000000000     7.6560000000     7.6560000000</row-1>
+            <row-2>    7.6560000000     0.0000000000     7.6560000000</row-2>
+            <row-3>    7.6560000000     7.6560000000     0.0000000000</row-3>
          </bravaisMatrix>
       </bulkLattice>
    </cell>
@@ -45,7 +45,7 @@
    </atomSpecies>
    <atomGroups>
       <atomGroup species="Al-1">
-         <relPos label="                   1">.0013061700 .0000000000 .0000000000</relPos>
+         <relPos label="                   1">.0018471964 .0000000000 .0000000000</relPos>
          <force calculate="T" relaxXYZ="TTT"/>
       </atomGroup>
       <atomGroup species="Al-1">
@@ -54,11 +54,8 @@
       </atomGroup>
       <atomGroup species="Al-1">
          <relPos label="                   3">.0000000000 1.000/2.000 .0000000000</relPos>
-         <relPos label="                   5">.0000000000 .0000000000 1.000/2.000</relPos>
-         <force calculate="T" relaxXYZ="TTT"/>
-      </atomGroup>
-      <atomGroup species="Al-1">
          <relPos label="                   4">1.000/2.000 1.000/2.000 .0000000000</relPos>
+         <relPos label="                   5">.0000000000 .0000000000 1.000/2.000</relPos>
          <relPos label="                   6">1.000/2.000 .0000000000 1.000/2.000</relPos>
          <force calculate="T" relaxXYZ="TTT"/>
       </atomGroup>
@@ -68,48 +65,6 @@
       </atomGroup>
       <atomGroup species="Al-1">
          <relPos label="                   8">1.000/2.000 1.000/2.000 1.000/2.000</relPos>
-         <force calculate="T" relaxXYZ="TTT"/>
-      </atomGroup>
-      <atomGroup species="Al-1">
-         <relPos label="                   9">.0000000000 1.000/4.000 1.000/4.000</relPos>
-         <relPos label="                  11">.0000000000 -1.000/4.000 1.000/4.000</relPos>
-         <relPos label="                  13">.0000000000 1.000/4.000 -1.000/4.000</relPos>
-         <relPos label="                  15">.0000000000 -1.000/4.000 -1.000/4.000</relPos>
-         <force calculate="T" relaxXYZ="TTT"/>
-      </atomGroup>
-      <atomGroup species="Al-1">
-         <relPos label="                  10">1.000/2.000 1.000/4.000 1.000/4.000</relPos>
-         <relPos label="                  12">1.000/2.000 -1.000/4.000 1.000/4.000</relPos>
-         <relPos label="                  14">1.000/2.000 1.000/4.000 -1.000/4.000</relPos>
-         <relPos label="                  16">1.000/2.000 -1.000/4.000 -1.000/4.000</relPos>
-         <force calculate="T" relaxXYZ="TTT"/>
-      </atomGroup>
-      <atomGroup species="Al-1">
-         <relPos label="                  17">1.000/4.000 .0000000000 1.000/4.000</relPos>
-         <relPos label="                  21">1.000/4.000 .0000000000 -1.000/4.000</relPos>
-         <relPos label="                  25">1.000/4.000 1.000/4.000 .0000000000</relPos>
-         <relPos label="                  27">1.000/4.000 -1.000/4.000 .0000000000</relPos>
-         <force calculate="T" relaxXYZ="TTT"/>
-      </atomGroup>
-      <atomGroup species="Al-1">
-         <relPos label="                  18">-1.000/4.000 .0000000000 1.000/4.000</relPos>
-         <relPos label="                  22">-1.000/4.000 .0000000000 -1.000/4.000</relPos>
-         <relPos label="                  26">-1.000/4.000 1.000/4.000 .0000000000</relPos>
-         <relPos label="                  28">-1.000/4.000 -1.000/4.000 .0000000000</relPos>
-         <force calculate="T" relaxXYZ="TTT"/>
-      </atomGroup>
-      <atomGroup species="Al-1">
-         <relPos label="                  19">1.000/4.000 1.000/2.000 1.000/4.000</relPos>
-         <relPos label="                  23">1.000/4.000 1.000/2.000 -1.000/4.000</relPos>
-         <relPos label="                  29">1.000/4.000 1.000/4.000 1.000/2.000</relPos>
-         <relPos label="                  31">1.000/4.000 -1.000/4.000 1.000/2.000</relPos>
-         <force calculate="T" relaxXYZ="TTT"/>
-      </atomGroup>
-      <atomGroup species="Al-1">
-         <relPos label="                  20">-1.000/4.000 1.000/2.000 1.000/4.000</relPos>
-         <relPos label="                  24">-1.000/4.000 1.000/2.000 -1.000/4.000</relPos>
-         <relPos label="                  30">-1.000/4.000 1.000/4.000 1.000/2.000</relPos>
-         <relPos label="                  32">-1.000/4.000 -1.000/4.000 1.000/2.000</relPos>
          <force calculate="T" relaxXYZ="TTT"/>
       </atomGroup>
    </atomGroups>
