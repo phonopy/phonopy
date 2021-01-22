@@ -141,6 +141,16 @@ using DFPT however only at Gamma-point.
 For the study of basics
 ------------------------
 
+Phonons
+^^^^^^^
 - Introduction to Lattice Dynamics, Martin. T. Dove, Cambridge
   university press
 - Thermodynamics of Crystals, Duane C. Wallace, Dover Publications
+- Electrons and Phonons by J. M. Ziman, Oxford University Press
+
+Symmetry
+^^^^^^^^
+- International Tables for Crystallography - IUCr
+- Symmetry Relationships between Crystal Structures by Ulrich Müller,
+  Oxford University Press
+- Bilbao crystallographic server, https://www.cryst.ehu.es/
