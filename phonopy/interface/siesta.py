@@ -157,7 +157,7 @@ class SiestaIn(object):
             - atomic_species
         """
         for tag, value, unit in re.findall(
-                '([\.A-Za-z]+)\s+%s\s+([A-Za-z]+)?' %
+                r'([\.A-Za-z]+)\s+%s\s+([A-Za-z]+)?' %
                 self._num_regex, lines):
             tag = tag.lower()
             unit = unit.lower()
@@ -171,7 +171,7 @@ class SiestaIn(object):
                     raise ValueError(
                         'Unknown LatticeConstant unit: {}'.format(unit))
 
-        for tag, value in re.findall('([\.A-Za-z]+)[ \t]+([a-zA-Z]+)', lines):
+        for tag, value in re.findall(r'([\.A-Za-z]+)[ \t]+([a-zA-Z]+)', lines):
             tag = tag.replace('_', '').lower()
             if tag == "atomiccoordinatesformat":
                 self._tags[tag] = value.strip().lower()
@@ -182,26 +182,26 @@ class SiestaIn(object):
 
         # capture the blocks
         blocks = re.findall(
-            '%block\s+([A-Za-z_]+)\s((?:.+\n)+?(?=(?:\s+)?%endblock))',
+            r'%block\s+([A-Za-z_]+)\s*\n((?:.+\n)+?(?=(?:\s+)?%endblock))',
             lines, re.MULTILINE)
         for tag, block in blocks:
             tag = tag.replace('_','').lower()
             if tag == "chemicalspecieslabel":
-                lines = block.split('\n')[:-1]
+                block_array = block.split('\n')[:-1]
                 self._tags["atomicnumbers"] = dict(
-                    [map(int, species.split()[:2]) for species in lines])
+                    [map(int, species.split()[:2]) for species in block_array])
                 self._tags[tag] = dict(
                     [(lambda x: (x[2], int(x[0])))(species.split())
-                     for species in lines])
+                     for species in block_array])
             elif tag == "latticevectors":
                 self._tags[tag] = [[float(v)*acell for v in vector.split()]
                                    for vector in block.split('\n')[:3]]
             elif tag == "atomiccoordinatesandatomicspecies":
-                lines = block.split('\n')[:-1]
+                block_array = block.split('\n')[:-1]
                 self._tags["atomiccoordinates"] = [
-                    [float(x) for x in atom.split()[:3]] for atom in lines]
+                    [float(x) for x in atom.split()[:3]] for atom in block_array]
                 self._tags["atomicspecies"] = [int(atom.split()[3])
-                                               for atom in lines]
+                                               for atom in block_array]
 
         # check if the block are present
         self.check_present("atomicspecies")
