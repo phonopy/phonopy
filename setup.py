@@ -45,7 +45,7 @@ if (config_var is not None and
 ######################
 # _phonopy extension #
 ######################
-include_dirs_phonopy = (['c/harmonic_h', 'c/kspclib_h', 'c/spglib_h']
+include_dirs_phonopy = (['c/harmonic', 'c/kspclib', 'c/spglib']
                         + include_dirs_numpy)
 sources_phonopy = ['c/_phonopy.c',
                    'c/harmonic/dynmat.c',
