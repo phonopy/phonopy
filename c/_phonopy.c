@@ -38,10 +38,11 @@
 #include <math.h>
 #include <float.h>
 #include <numpy/arrayobject.h>
-#include <dynmat.h>
-#include <derivative_dynmat.h>
-#include <kgrid.h>
-#include <tetrahedron_method.h>
+#include "dynmat.h"
+#include "derivative_dynmat.h"
+#include "kgrid.h"
+#include "tetrahedron_method.h"
+#include "phonopy.h"
 
 #define KB 8.6173382568083159E-05
 
@@ -85,29 +86,6 @@ static void distribute_fc2(double (*fc2)[3][3],
                            const int * map_syms,
                            const int num_rot,
                            const int num_pos);
-static int compute_permutation(int * rot_atom,
-                                  PHPYCONST double lat[3][3],
-                                  PHPYCONST double (*pos)[3],
-                                  PHPYCONST double (*rot_pos)[3],
-                                  const int num_pos,
-                                  const double symprec);
-static void gsv_copy_smallest_vectors(double (*shortest_vectors)[27][3],
-                                      int * multiplicity,
-                                      PHPYCONST double (*vector_lists)[27][3],
-                                      PHPYCONST double (*length_lists)[27],
-                                      const int num_lists,
-                                      const double symprec);
-static void gsv_set_smallest_vectors(double (*smallest_vectors)[27][3],
-                                     int *multiplicity,
-                                     PHPYCONST double (*pos_to)[3],
-                                     const int num_pos_to,
-                                     PHPYCONST double (*pos_from)[3],
-                                     const int num_pos_from,
-                                     PHPYCONST int (*lattice_points)[3],
-                                     const int num_lattice_points,
-                                     PHPYCONST double reduced_basis[3][3],
-                                     PHPYCONST int trans_mat[3][3],
-                                     const double symprec);
 static double get_free_energy(const double temperature,
                                     const double f);
 static double get_entropy(const double temperature,
@@ -132,7 +110,6 @@ static void set_translational_symmetry_compact_fc(double * fc,
                                                   const int n_patom);
 
 /* static double get_energy(double temperature, double f); */
-static int nint(const double a);
 
 struct module_state {
   PyObject *error;
@@ -306,16 +283,16 @@ static PyObject * py_transform_dynmat_to_fc(PyObject *self, PyObject *args)
   num_patom = PyArray_DIMS(py_multiplicities)[1];
   num_satom = PyArray_DIMS(py_multiplicities)[0];
 
-  dym_transform_dynmat_to_fc(fc,
-                             dm,
-                             comm_points,
-                             shortest_vectors,
-                             multiplicities,
-                             masses,
-                             s2pp_map,
-                             fc_index_map,
-                             num_patom,
-                             num_satom);
+  phpy_transform_dynmat_to_fc(fc,
+                              dm,
+                              comm_points,
+                              shortest_vectors,
+                              multiplicities,
+                              masses,
+                              s2pp_map,
+                              fc_index_map,
+                              num_patom,
+                              num_satom);
 
   Py_RETURN_NONE;
 }
@@ -351,12 +328,12 @@ static PyObject * py_compute_permutation(PyObject *self, PyObject *args)
   rot_pos = (double(*)[3])PyArray_DATA(permuted_positions);
   num_pos = PyArray_DIMS(positions)[0];
 
-  is_found = compute_permutation(rot_atoms,
-                                 lat,
-                                 pos,
-                                 rot_pos,
-                                 num_pos,
-                                 symprec);
+  is_found = phpy_compute_permutation(rot_atoms,
+                                      lat,
+                                      pos,
+                                      rot_pos,
+                                      num_pos,
+                                      symprec);
 
   if (is_found) {
     Py_RETURN_TRUE;
@@ -395,12 +372,12 @@ static PyObject * py_gsv_copy_smallest_vectors(PyObject *self, PyObject *args)
   size_super = PyArray_DIMS(py_vectors)[0];
   size_prim = PyArray_DIMS(py_vectors)[1];
 
-  gsv_copy_smallest_vectors(shortest_vectors,
-                            multiplicity,
-                            vectors,
-                            lengths,
-                            size_super * size_prim,
-                            symprec);
+  phpy_copy_smallest_vectors(shortest_vectors,
+                             multiplicity,
+                             vectors,
+                             lengths,
+                             size_super * size_prim,
+                             symprec);
 
   Py_RETURN_NONE;
 }
@@ -448,17 +425,17 @@ static PyObject * py_gsv_set_smallest_vectors(PyObject *self, PyObject *args)
   reduced_basis = (double(*)[3])PyArray_DATA(py_reduced_basis);
   trans_mat = (int(*)[3])PyArray_DATA(py_trans_mat);
 
-  gsv_set_smallest_vectors(smallest_vectors,
-                           multiplicity,
-                           pos_to,
-                           num_pos_to,
-                           pos_from,
-                           num_pos_from,
-                           lattice_points,
-                           num_lattice_points,
-                           reduced_basis,
-                           trans_mat,
-                           symprec);
+  phpy_set_smallest_vectors(smallest_vectors,
+                            multiplicity,
+                            pos_to,
+                            num_pos_to,
+                            pos_from,
+                            num_pos_from,
+                            lattice_points,
+                            num_lattice_points,
+                            reduced_basis,
+                            trans_mat,
+                            symprec);
 
   Py_RETURN_NONE;
 }
@@ -1513,180 +1490,6 @@ static double get_heat_capacity(const double temperature, const double f)
 /*   return f / (exp(f / (KB * temperature)) - 1); */
 /* } */
 
-static int compute_permutation(int * rot_atom,
-                               PHPYCONST double lat[3][3],
-                               PHPYCONST double (*pos)[3],
-                               PHPYCONST double (*rot_pos)[3],
-                               const int num_pos,
-                               const double symprec)
-{
-  int i,j,k,l;
-  int search_start;
-  double distance2, diff_cart;
-  double diff[3];
-
-  for (i = 0; i < num_pos; i++) {
-    rot_atom[i] = -1;
-  }
-
-  /* optimization: Iterate primarily by pos instead of rot_pos. */
-  /*  (find where 0 belongs in rot_atom, then where 1 belongs, etc.) */
-  /*  Then track the first unassigned index. */
-  /* */
-  /* This works best if the permutation is close to the identity. */
-  /* (more specifically, if the max value of 'rot_atom[i] - i' is small) */
-  search_start = 0;
-  for (i = 0; i < num_pos; i++) {
-    while (rot_atom[search_start] >= 0) {
-      search_start++;
-    }
-    for (j = search_start; j < num_pos; j++) {
-      if (rot_atom[j] >= 0) {
-        continue;
-      }
-
-      for (k = 0; k < 3; k++) {
-        diff[k] = pos[i][k] - rot_pos[j][k];
-        diff[k] -= nint(diff[k]);
-      }
-      distance2 = 0;
-      for (k = 0; k < 3; k++) {
-        diff_cart = 0;
-        for (l = 0; l < 3; l++) {
-          diff_cart += lat[k][l] * diff[l];
-        }
-        distance2 += diff_cart * diff_cart;
-      }
-
-      if (sqrt(distance2) < symprec) {
-        rot_atom[j] = i;
-        break;
-      }
-    }
-  }
-
-  for (i = 0; i < num_pos; i++) {
-    if (rot_atom[i] < 0) {
-      return 0;
-    }
-  }
-  return 1;
-}
-
-/* Implementation detail of get_smallest_vectors. */
-/* Finds the smallest vectors within each list and copies them to the output. */
-static void gsv_copy_smallest_vectors(double (*shortest_vectors)[27][3],
-                                      int * multiplicity,
-                                      PHPYCONST double (*vector_lists)[27][3],
-                                      PHPYCONST double (*length_lists)[27],
-                                      const int num_lists,
-                                      const double symprec)
-{
-  int i,j,k;
-  int count;
-  double minimum;
-  double (*vectors)[3];
-  double *lengths;
-
-  for (i = 0; i < num_lists; i++) {
-    /* Look at a single list of 27 vectors. */
-    lengths = length_lists[i];
-    vectors = vector_lists[i];
-
-    /* Compute the minimum length. */
-    minimum = DBL_MAX;
-    for (j = 0; j < 27; j++) {
-      if (lengths[j] < minimum) {
-        minimum = lengths[j];
-      }
-    }
-
-    /* Copy vectors whose length is within tolerance. */
-    count = 0;
-    for (j = 0; j < 27; j++) {
-      if (lengths[j] - minimum <= symprec) {
-        for (k = 0; k < 3; k++) {
-          shortest_vectors[i][count][k] = vectors[j][k];
-        }
-        count++;
-      }
-    }
-
-    multiplicity[i] = count;
-  }
-}
-
-static void gsv_set_smallest_vectors(double (*smallest_vectors)[27][3],
-                                     int *multiplicity,
-                                     PHPYCONST double (*pos_to)[3],
-                                     const int num_pos_to,
-                                     PHPYCONST double (*pos_from)[3],
-                                     const int num_pos_from,
-                                     PHPYCONST int (*lattice_points)[3],
-                                     const int num_lattice_points,
-                                     PHPYCONST double reduced_basis[3][3],
-                                     PHPYCONST int trans_mat[3][3],
-                                     const double symprec)
-{
-  int i, j, k, l, count;
-  double length_tmp, minimum, vec_xyz;
-  double *length;
-  double (*vec)[3];
-
-  length = (double*)malloc(sizeof(double) * num_lattice_points);
-  vec = (double(*)[3])malloc(sizeof(double[3]) * num_lattice_points);
-
-  for (i = 0; i < num_pos_to; i++) {
-    for (j = 0; j < num_pos_from; j++) {
-      for (k = 0; k < num_lattice_points; k++) {
-        length[k] = 0;
-        for (l = 0; l < 3; l++) {
-          vec[k][l] = pos_to[i][l] - pos_from[j][l] + lattice_points[k][l];
-        }
-        for (l = 0; l < 3; l++) {
-          length_tmp = (reduced_basis[l][0] * vec[k][0] +
-                        reduced_basis[l][1] * vec[k][1] +
-                        reduced_basis[l][2] * vec[k][2]);
-          length[k] += length_tmp * length_tmp;
-        }
-        length[k] = sqrt(length[k]);
-      }
-
-      minimum = DBL_MAX;
-      for (k = 0; k < num_lattice_points; k++) {
-        if (length[k] < minimum) {
-          minimum = length[k];
-        }
-      }
-
-      count = 0;
-      for (k = 0; k < num_lattice_points; k++) {
-        if (length[k] - minimum < symprec) {
-          for (l = 0; l < 3; l++) {
-            /* Transform to supercell coordinates */
-            vec_xyz = (trans_mat[l][0] * vec[k][0] +
-                       trans_mat[l][1] * vec[k][1] +
-                       trans_mat[l][2] * vec[k][2]);
-            smallest_vectors[i * num_pos_from + j][count][l] = vec_xyz;
-          }
-          count++;
-        }
-      }
-      if (count > 27) { /* should not be greater than 27 */
-        printf("Warning (gsv_set_smallest_vectors): ");
-        printf("number of shortest vectors is out of range,\n");
-        break;
-      } else {
-        multiplicity[i * num_pos_from + j] = count;
-      }
-    }
-  }
-
-  free(length);
-  length = NULL;
-  free(vec);
-  vec = NULL;
-}
 
 static void distribute_fc2(double (*fc2)[3][3], /* shape[n_pos][n_pos] */
                            const int * atom_list,
@@ -1913,12 +1716,4 @@ static void set_translational_symmetry_compact_fc(double * fc,
       }
     }
   }
-}
-
-static int nint(const double a)
-{
-  if (a < 0.0)
-    return (int) (a - 0.5);
-  else
-    return (int) (a + 0.5);
 }

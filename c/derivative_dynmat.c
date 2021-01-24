@@ -34,6 +34,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include "derivative_dynmat.h"
 #define PI 3.14159265358979323846
 
 static void get_derivative_nac(double *ddnac,
