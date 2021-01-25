@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Atsushi Togo
+# Copyright (C) 2021 Alexander Neukirchen
 # All rights reserved.
 #
 # This file is part of phonopy.
