@@ -37,7 +37,14 @@
 #include <stdlib.h>
 #include <float.h>
 #include "dynmat.h"
+#include "phonopy.h"
 
+static void set_index_permutation_symmetry_fc(double * fc, const int natom);
+static void set_translational_symmetry_fc(double * fc, const int natom);
+static void set_translational_symmetry_compact_fc(double * fc,
+                                                  const int p2s[],
+                                                  const int n_satom,
+                                                  const int n_patom);
 static int nint(const double a);
 
 void phpy_transform_dynmat_to_fc(double *fc,
@@ -61,6 +68,44 @@ void phpy_transform_dynmat_to_fc(double *fc,
                              fc_index_map,
                              num_patom,
                              num_satom);
+}
+
+
+int phpy_get_dynamical_matrix_at_q(double *dynamical_matrix,
+                                   const int num_patom,
+                                   const int num_satom,
+                                   const double *fc,
+                                   const double q[3],
+                                   PHPYCONST double (*svecs)[27][3],
+                                   const int *multi,
+                                   const double *mass,
+                                   const int *s2p_map,
+                                   const int *p2s_map,
+                                   PHPYCONST double (*charge_sum)[3][3],
+                                   const int with_openmp)
+{
+  return dym_get_dynamical_matrix_at_q(dynamical_matrix,
+                                       num_patom,
+                                       num_satom,
+                                       fc,
+                                       q,
+                                       svecs,
+                                       multi,
+                                       mass,
+                                       s2p_map,
+                                       p2s_map,
+                                       charge_sum,
+                                       1);
+}
+
+
+void phpy_get_charge_sum(double (*charge_sum)[3][3],
+                         const int num_patom,
+                         const double factor, /* 4pi/V*unit-conv and denominator */
+                         const double q_cart[3],
+                         PHPYCONST double (*born)[3][3])
+{
+  dym_get_charge_sum(charge_sum, num_patom, factor, q_cart, born);
 }
 
 
@@ -239,6 +284,270 @@ void phpy_set_smallest_vectors(double (*smallest_vectors)[27][3],
   length = NULL;
   free(vec);
   vec = NULL;
+}
+
+
+void phpy_perm_trans_symmetrize_fc(double *fc,
+                                   const int n_satom,
+                                   const int level)
+{
+  int i, j, k, l, iter;
+  double sum;
+
+  for (iter = 0; iter < level; iter++) {
+    /* Subtract drift along column */
+    for (j = 0; j < n_satom; j++) {
+      for (k = 0; k < 3; k++) {
+        for (l = 0; l < 3; l++) {
+          sum = 0;
+          for (i = 0; i < n_satom; i++) {
+            sum += fc[i * n_satom * 9 + j * 9 + k * 3 + l];
+          }
+          sum /= n_satom;
+          for (i = 0; i < n_satom; i++) {
+            fc[i * n_satom * 9 + j * 9 + k * 3 + l] -= sum;
+          }
+        }
+      }
+    }
+    /* Subtract drift along row */
+    for (i = 0; i < n_satom; i++) {
+      for (k = 0; k < 3; k++) {
+        for (l = 0; l < 3; l++) {
+          sum = 0;
+          for (j = 0; j < n_satom; j++) {
+            sum += fc[i * n_satom * 9 + j * 9 + k * 3 + l];
+          }
+          sum /= n_satom;
+          for (j = 0; j < n_satom; j++) {
+            fc[i * n_satom * 9 + j * 9 + k * 3 + l] -= sum;
+          }
+        }
+      }
+    }
+    set_index_permutation_symmetry_fc(fc, n_satom);
+  }
+  set_translational_symmetry_fc(fc, n_satom);
+}
+
+
+void phpy_perm_trans_symmetrize_compact_fc(double *fc,
+                                           const int p2s[],
+                                           const int s2pp[],
+                                           const int nsym_list[],
+                                           const int perms[],
+                                           const int n_satom,
+                                           const int n_patom,
+                                           const int level)
+{
+  int i, j, k, l, n, iter;
+  double sum;
+
+  for (iter=0; iter < level; iter++) {
+
+    for (n = 0; n < 2; n++) {
+      /* transpose only */
+      phpy_set_index_permutation_symmetry_compact_fc(fc,
+                                                     p2s,
+                                                     s2pp,
+                                                     nsym_list,
+                                                     perms,
+                                                     n_satom,
+                                                     n_patom,
+                                                     1);
+      for (i = 0; i < n_patom; i++) {
+        for (k = 0; k < 3; k++) {
+          for (l = 0; l < 3; l++) {
+            sum = 0;
+            for (j = 0; j < n_satom; j++) {
+              sum += fc[i * n_satom * 9 + j * 9 + k * 3 + l];
+            }
+            sum /= n_satom;
+            for (j = 0; j < n_satom; j++) {
+              fc[i * n_satom * 9 + j * 9 + k * 3 + l] -= sum;
+            }
+          }
+        }
+      }
+    }
+
+    phpy_set_index_permutation_symmetry_compact_fc(fc,
+                                                   p2s,
+                                                   s2pp,
+                                                   nsym_list,
+                                                   perms,
+                                                   n_satom,
+                                                   n_patom,
+                                                   0);
+  }
+
+  set_translational_symmetry_compact_fc(fc, p2s, n_satom, n_patom);
+
+}
+
+
+void phpy_set_index_permutation_symmetry_compact_fc(double * fc,
+                                                    const int p2s[],
+                                                    const int s2pp[],
+                                                    const int nsym_list[],
+                                                    const int perms[],
+                                                    const int n_satom,
+                                                    const int n_patom,
+                                                    const int is_transpose)
+{
+  int i, j, k, l, m, n, i_p, j_p, i_trans;
+  double fc_elem;
+  char *done;
+
+  done = NULL;
+  done = (char*)malloc(sizeof(char) * n_satom * n_patom);
+  for (i = 0; i < n_satom * n_patom; i++) {
+    done[i] = 0;
+  }
+
+  for (j = 0; j < n_satom; j++) {
+    j_p = s2pp[j];
+    for (i_p = 0; i_p < n_patom; i_p++) {
+      i = p2s[i_p];
+      if (i == j) { /* diagnoal part */
+        for (k = 0; k < 3; k++) {
+          for (l = 0; l < 3; l++) {
+            if (l > k) {
+              m = i_p * n_satom * 9 + i * 9 + k * 3 + l;
+              n = i_p * n_satom * 9 + i * 9 + l * 3 + k;
+              if (is_transpose) {
+                fc_elem = fc[m];
+                fc[m] = fc[n];
+                fc[n] = fc_elem;
+              } else {
+                fc[m] = (fc[m] + fc[n]) / 2;
+                fc[n] = fc[m];
+              }
+            }
+          }
+        }
+      }
+      if (!done[i_p * n_satom + j]) {
+        /* (j, i) -- nsym_list[j] --> (j', i') */
+        /* nsym_list[j] translates j to j' where j' is in */
+        /* primitive cell. The same translation sends i to i' */
+        /* where i' is not necessarily to be in primitive cell. */
+        /* Thus, i' = perms[nsym_list[j] * n_satom + i] */
+        i_trans = perms[nsym_list[j] * n_satom + i];
+        done[i_p * n_satom + j] = 1;
+        done[j_p * n_satom + i_trans] = 1;
+        for (k = 0; k < 3; k++) {
+          for (l = 0; l < 3; l++) {
+            m = i_p * n_satom * 9 + j * 9 + k * 3 + l;
+            n = j_p * n_satom * 9 + i_trans * 9 + l * 3 + k;
+            if (is_transpose) {
+              fc_elem = fc[m];
+              fc[m] = fc[n];
+              fc[n] = fc_elem;
+            } else {
+              fc[m] = (fc[n] + fc[m]) / 2;
+              fc[n] = fc[m];
+            }
+          }
+        }
+      }
+    }
+  }
+
+  free(done);
+  done = NULL;
+}
+
+
+static void set_index_permutation_symmetry_fc(double * fc,
+                                              const int natom)
+{
+  int i, j, k, l, m, n;
+
+  for (i = 0; i < natom; i++) {
+    /* non diagonal part */
+    for (j = i + 1; j < natom; j++) {
+      for (k = 0; k < 3; k++) {
+        for (l = 0; l < 3; l++) {
+          m = i * natom * 9 + j * 9 + k * 3 + l;
+          n = j * natom * 9 + i * 9 + l * 3 + k;
+          fc[m] += fc[n];
+          fc[m] /= 2;
+          fc[n] = fc[m];
+        }
+      }
+    }
+
+    /* diagnoal part */
+    for (k = 0; k < 2; k++) {
+      for (l = k + 1; l < 3; l++) {
+        m = i * natom * 9 + i * 9 + k * 3 + l;
+        n = i * natom * 9 + i * 9 + l * 3 + k;
+        fc[m] += fc[n];
+        fc[m] /= 2;
+        fc[n] = fc[m];
+      }
+    }
+  }
+}
+
+
+static void set_translational_symmetry_fc(double * fc,
+                                          const int natom)
+{
+  int i, j, k, l, m;
+  double sums[3][3];
+
+  for (i = 0; i < natom; i++) {
+    for (k = 0; k < 3; k++) {
+      for (l = 0; l < 3; l++) {
+        sums[k][l] = 0;
+        m = i * natom * 9 + k * 3 + l;
+        for (j = 0; j < natom; j++) {
+          if (i != j) {
+            sums[k][l] += fc[m];
+          }
+          m += 9;
+        }
+      }
+    }
+    for (k = 0; k < 3; k++) {
+      for (l = 0; l < 3; l++) {
+        fc[i * natom * 9 + i * 9 + k * 3 + l] = -(sums[k][l] + sums[l][k]) / 2;
+      }
+    }
+  }
+}
+
+
+static void set_translational_symmetry_compact_fc(double * fc,
+                                                  const int p2s[],
+                                                  const int n_satom,
+                                                  const int n_patom)
+{
+  int j, k, l, m, i_p;
+  double sums[3][3];
+
+  for (i_p = 0; i_p < n_patom; i_p++) {
+    for (k = 0; k < 3; k++) {
+      for (l = 0; l < 3; l++) {
+        sums[k][l] = 0;
+        m = i_p * n_satom * 9 + k * 3 + l;
+        for (j = 0; j < n_satom; j++) {
+          if (p2s[i_p] != j) {
+            sums[k][l] += fc[m];
+          }
+          m += 9;
+        }
+      }
+    }
+    for (k = 0; k < 3; k++) {
+      for (l = 0; l < 3; l++) {
+        fc[i_p * n_satom * 9 + p2s[i_p] * 9 + k * 3 + l] =
+          -(sums[k][l] + sums[l][k]) / 2;
+      }
+    }
+  }
 }
 
 

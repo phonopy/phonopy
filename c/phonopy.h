@@ -44,6 +44,23 @@ void phpy_transform_dynmat_to_fc(double *fc,
                                  const int *fc_index_map,
                                  const int num_patom,
                                  const int num_satom);
+int phpy_get_dynamical_matrix_at_q(double *dynamical_matrix,
+                                   const int num_patom,
+                                   const int num_satom,
+                                   const double *fc,
+                                   const double q[3],
+                                   PHPYCONST double (*svecs)[27][3],
+                                   const int *multi,
+                                   const double *mass,
+                                   const int *s2p_map,
+                                   const int *p2s_map,
+                                   PHPYCONST double (*charge_sum)[3][3],
+                                   const int with_openmp);
+void phpy_get_charge_sum(double (*charge_sum)[3][3],
+                         const int num_patom,
+                         const double factor, /* 4pi/V*unit-conv and denominator */
+                         const double q_cart[3],
+                         PHPYCONST double (*born)[3][3]);
 
 int phpy_compute_permutation(int * rot_atom,
                              PHPYCONST double lat[3][3],
@@ -68,3 +85,22 @@ void phpy_set_smallest_vectors(double (*smallest_vectors)[27][3],
                                PHPYCONST double reduced_basis[3][3],
                                PHPYCONST int trans_mat[3][3],
                                const double symprec);
+void phpy_perm_trans_symmetrize_fc(double *fc,
+                                   const int nsatom,
+                                   const int level);
+void phpy_perm_trans_symmetrize_compact_fc(double *fc,
+                                           const int p2s[],
+                                           const int s2pp[],
+                                           const int nsym_list[],
+                                           const int perms[],
+                                           const int n_satom,
+                                           const int n_patom,
+                                           const int level);
+void phpy_set_index_permutation_symmetry_compact_fc(double * fc,
+                                                    const int p2s[],
+                                                    const int s2pp[],
+                                                    const int nsym_list[],
+                                                    const int perms[],
+                                                    const int n_satom,
+                                                    const int n_patom,
+                                                    const int is_transpose);
