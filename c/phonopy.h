@@ -99,6 +99,23 @@ void phpy_get_derivative_dynmat_at_q(double *derivative_dynmat,
                                      const double *dielectric,
                                      const double *q_direction);
 
+void phpy_get_thermal_properties(double *thermal_props,
+                                 const double *temperature,
+                                 const double *freqs,
+                                 const int *weights,
+                                 const int num_temp,
+                                 const int num_qpoints,
+                                 const int num_bands,
+                                 const double cutoff_frequency);
+void phpy_distribute_fc2(double (*fc2)[3][3],
+                         const int * atom_list,
+                         const int len_atom_list,
+                         PHPYCONST double (*r_carts)[3][3],
+                         const int * permutations,
+                         const int * map_atoms,
+                         const int * map_syms,
+                         const int num_rot,
+                         const int num_pos);
 int phpy_compute_permutation(int * rot_atom,
                              PHPYCONST double lat[3][3],
                              PHPYCONST double (*pos)[3],

@@ -40,12 +40,27 @@
 #include "derivative_dynmat.h"
 #include "phonopy.h"
 
+#define KB 8.6173382568083159E-05
+
 static void set_index_permutation_symmetry_fc(double * fc, const int natom);
 static void set_translational_symmetry_fc(double * fc, const int natom);
 static void set_translational_symmetry_compact_fc(double * fc,
                                                   const int p2s[],
                                                   const int n_satom,
                                                   const int n_patom);
+static double get_free_energy(const double temperature, const double f);
+static double get_entropy(const double temperature, const double f);
+static double get_heat_capacity(const double temperature, const double f);
+/* static double get_energy(double temperature, double f); */
+static void distribute_fc2(double (*fc2)[3][3],
+                           const int * atom_list,
+                           const int len_atom_list,
+                           PHPYCONST double (*r_carts)[3][3],
+                           const int * permutations,
+                           const int * map_atoms,
+                           const int * map_syms,
+                           const int num_rot,
+                           const int num_pos);
 static int nint(const double a);
 
 void phpy_transform_dynmat_to_fc(double *fc,
@@ -193,6 +208,74 @@ void phpy_get_derivative_dynmat_at_q(double *derivative_dynmat,
                                  born,
                                  dielectric,
                                  q_direction);
+}
+
+
+void phpy_get_thermal_properties(double *thermal_props,
+                                 const double *temperatures,
+                                 const double *freqs,
+                                 const int *weights,
+                                 const int num_temp,
+                                 const int num_qpoints,
+                                 const int num_bands,
+                                 const double cutoff_frequency)
+{
+  int i, j, k;
+  double f;
+  double *tp;
+
+  tp = (double*)malloc(sizeof(double) * num_qpoints * num_temp * 3);
+  for (i = 0; i < num_qpoints * num_temp * 3; i++) {
+    tp[i] = 0;
+  }
+
+#pragma omp parallel for private(j, k, f)
+  for (i = 0; i < num_qpoints; i++){
+    for (j = 0; j < num_temp; j++) {
+      for (k = 0; k < num_bands; k++){
+        f = freqs[i * num_bands + k];
+        if (temperatures[j] > 0 && f > cutoff_frequency) {
+          tp[i * num_temp * 3 + j * 3] +=
+            get_free_energy(temperatures[j], f) * weights[i];
+          tp[i * num_temp * 3 + j * 3 + 1] +=
+            get_entropy(temperatures[j], f) * weights[i];
+          tp[i * num_temp * 3 + j * 3 + 2] +=
+            get_heat_capacity(temperatures[j], f) * weights[i];
+        }
+      }
+    }
+  }
+
+  for (i = 0; i < num_qpoints; i++) {
+    for (j = 0; j < num_temp * 3; j++) {
+      thermal_props[j] += tp[i * num_temp * 3 + j];
+    }
+  }
+
+  free(tp);
+  tp = NULL;
+}
+
+
+void phpy_distribute_fc2(double (*fc2)[3][3],
+                         const int * atom_list,
+                         const int len_atom_list,
+                         PHPYCONST double (*r_carts)[3][3],
+                         const int * permutations,
+                         const int * map_atoms,
+                         const int * map_syms,
+                         const int num_rot,
+                         const int num_pos)
+{
+  distribute_fc2(fc2,
+                 atom_list,
+                 len_atom_list,
+                 r_carts,
+                 permutations,
+                 map_atoms,
+                 map_syms,
+                 num_rot,
+                 num_pos);
 }
 
 
@@ -636,6 +719,113 @@ static void set_translational_symmetry_compact_fc(double * fc,
     }
   }
 }
+
+
+static double get_free_energy(const double temperature, const double f)
+{
+  /* temperature is defined by T (K) */
+  /* 'f' must be given in eV. */
+  return KB * temperature * log(1 - exp(- f / (KB * temperature)));
+}
+
+
+static double get_entropy(const double temperature, const double f)
+{
+  /* temperature is defined by T (K) */
+  /* 'f' must be given in eV. */
+  double val;
+
+  val = f / (2 * KB * temperature);
+  return 1 / (2 * temperature) * f * cosh(val) / sinh(val) - KB * log(2 * sinh(val));
+}
+
+
+static double get_heat_capacity(const double temperature, const double f)
+{
+  /* temperature is defined by T (K) */
+  /* 'f' must be given in eV. */
+  /* If val is close to 1. Then expansion is used. */
+  double val, val1, val2;
+
+  val = f / (KB * temperature);
+  val1 = exp(val);
+  val2 = (val) / (val1 - 1);
+  return KB * val1 * val2 * val2;
+}
+
+
+static void distribute_fc2(double (*fc2)[3][3], /* shape[n_pos][n_pos] */
+                           const int * atom_list,
+                           const int len_atom_list,
+                           PHPYCONST double (*r_carts)[3][3], /* shape[n_rot] */
+                           const int * permutations, /* shape[n_rot][n_pos] */
+                           const int * map_atoms, /* shape [n_pos] */
+                           const int * map_syms, /* shape [n_pos] */
+                           const int num_rot,
+                           const int num_pos)
+{
+  int i, j, k, l, m;
+  int atom_todo, atom_done, atom_other;
+  int sym_index;
+  int *atom_list_reverse;
+  double (*fc2_done)[3];
+  double (*fc2_todo)[3];
+  double (*r_cart)[3];
+  const int * permutation;
+
+  atom_list_reverse = NULL;
+  atom_list_reverse = (int*)malloc(sizeof(int) * num_pos);
+  /* atom_list_reverse[!atom_done] is undefined. */
+  for (i = 0; i < len_atom_list; i++) {
+    atom_done = map_atoms[atom_list[i]];
+    if (atom_done == atom_list[i]) {
+      atom_list_reverse[atom_done] = i;
+    }
+  }
+
+  for (i = 0; i < len_atom_list; i++) {
+    /* look up how this atom maps into the done list. */
+    atom_todo = atom_list[i];
+    atom_done = map_atoms[atom_todo];
+    sym_index = map_syms[atom_todo];
+
+    /* skip the atoms in the done list, */
+    /* which are easily identified because they map to themselves. */
+    if (atom_todo == atom_done) {
+      continue;
+    }
+
+    /* look up information about the rotation */
+    r_cart = r_carts[sym_index];
+    permutation = &permutations[sym_index * num_pos]; /* shape[num_pos] */
+
+    /* distribute terms from atom_done to atom_todo */
+    for (atom_other = 0; atom_other < num_pos; atom_other++) {
+      fc2_done = fc2[atom_list_reverse[atom_done] * num_pos + permutation[atom_other]];
+      fc2_todo = fc2[i * num_pos + atom_other];
+      for (j = 0; j < 3; j++) {
+        for (k = 0; k < 3; k++) {
+          for (l = 0; l < 3; l++) {
+            for (m = 0; m < 3; m++) {
+              /* P' = R^-1 P R */
+              fc2_todo[j][k] += r_cart[l][j] * r_cart[m][k] * fc2_done[l][m];
+            }
+          }
+        }
+      }
+    }
+  }
+
+  free(atom_list_reverse);
+  atom_list_reverse = NULL;
+}
+
+
+/* static double get_energy(double temperature, double f){ */
+/*   /\* temperature is defined by T (K) *\/ */
+/*   /\* 'f' must be given in eV. *\/ */
+/*   return f / (exp(f / (KB * temperature)) - 1); */
+/* } */
 
 
 static int nint(const double a)

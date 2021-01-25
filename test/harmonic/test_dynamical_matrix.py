@@ -90,6 +90,9 @@ def test_dynmat_wang(ph_nacl):
     ph_nacl.nac_params = nac_params
     dynmat = ph_nacl.dynamical_matrix
     _test_dynmat_252525(dynmat, dynmat_wang_ref_252525)
+    # Reset nac_params['method']
+    nac_params.pop('method')
+    ph_nacl.nac_params = nac_params
 
 
 def _test_dynmat(dynmat):
