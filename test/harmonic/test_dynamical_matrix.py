@@ -1,42 +1,118 @@
-import unittest
 import numpy as np
-from phonopy import Phonopy
-from phonopy.interface.vasp import read_vasp
-from phonopy.file_IO import parse_FORCE_SETS
-import os
-
-data_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-class TestDynamicalMatrix(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def test_properties(self):
-        cell = read_vasp(os.path.join(data_dir, "..", "POSCAR_NaCl"))
-        phonon = Phonopy(cell,
-                         np.diag([2, 2, 2]),
-                         primitive_matrix=[[0, 0.5, 0.5],
-                                           [0.5, 0, 0.5],
-                                           [0.5, 0.5, 0]])
-        filename = os.path.join(data_dir, "..", "FORCE_SETS_NaCl")
-        force_sets = parse_FORCE_SETS(filename=filename)
-        phonon.set_displacement_dataset(force_sets)
-        phonon.produce_force_constants()
-        dynmat = phonon.dynamical_matrix
-        dynmat.run([0, 0, 0])
-        self.assertTrue(id(dynmat.primitive)
-                        == id(dynmat.get_primitive()))
-        self.assertTrue(id(dynmat.supercell)
-                        == id(dynmat.get_supercell()))
-        np.testing.assert_allclose(dynmat.dynamical_matrix,
-                                   dynmat.get_dynamical_matrix())
+dynmat_ref_000 = [
+    0.052897, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000,
+    -0.042597, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000,
+    0.000000, 0.000000, 0.052897, 0.000000, 0.000000, 0.000000,
+    0.000000, 0.000000, -0.042597, 0.000000, 0.000000, 0.000000,
+    0.000000, 0.000000, 0.000000, 0.000000, 0.052897, 0.000000,
+    0.000000, 0.000000, 0.000000, 0.000000, -0.042597, 0.000000,
+    -0.042597, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000,
+    0.034302, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000,
+    0.000000, 0.000000, -0.042597, 0.000000, 0.000000, 0.000000,
+    0.000000, 0.000000, 0.034302, 0.000000, 0.000000, 0.000000,
+    0.000000, 0.000000, 0.000000, 0.000000, -0.042597, 0.000000,
+    0.000000, 0.000000, 0.000000, 0.000000, 0.034302, 0.000000]
 
 
-if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestDynamicalMatrix)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+dynmat_ref_252525 = [
+    0.075295, 0.000000, 0.016777, 0.000000, 0.016777, 0.000000,
+    -0.040182, 0.000000, -0.004226, 0.000000, -0.004226, 0.000000,
+    0.016777, 0.000000, 0.075295, 0.000000, 0.016777, 0.000000,
+    -0.004226, 0.000000, -0.040182, 0.000000, -0.004226, 0.000000,
+    0.016777, 0.000000, 0.016777, 0.000000, 0.075295, 0.000000,
+    -0.004226, 0.000000, -0.004226, 0.000000, -0.040182, 0.000000,
+    -0.040182, 0.000000, -0.004226, 0.000000, -0.004226, 0.000000,
+    0.055704, 0.000000, 0.011621, 0.000000, 0.011621, 0.000000,
+    -0.004226, 0.000000, -0.040182, 0.000000, -0.004226, 0.000000,
+    0.011621, 0.000000, 0.055704, 0.000000, 0.011621, 0.000000,
+    -0.004226, 0.000000, -0.004226, 0.000000, -0.040182, 0.000000,
+    0.011621, 0.000000, 0.011621, 0.000000, 0.055704, 0.000000]
+
+dynmat_gonze_lee_ref_252525 = [
+    0.081339, 0.000000, 0.029509, 0.000000, 0.029509, 0.000000,
+    -0.045098, 0.000000, -0.015204, 0.000000, -0.015204, 0.000000,
+    0.029509, 0.000000, 0.081339, 0.000000, 0.029509, 0.000000,
+    -0.015204, 0.000000, -0.045098, 0.000000, -0.015204, 0.000000,
+    0.029509, 0.000000, 0.029509, 0.000000, 0.081339, 0.000000,
+    -0.015204, 0.000000, -0.015204, 0.000000, -0.045098, 0.000000,
+    -0.045098, 0.000000, -0.015204, 0.000000, -0.015204, 0.000000,
+    0.059623, 0.000000, 0.019878, 0.000000, 0.019878, 0.000000,
+    -0.015204, 0.000000, -0.045098, 0.000000, -0.015204, 0.000000,
+    0.019878, 0.000000, 0.059623, 0.000000, 0.019878, 0.000000,
+    -0.015204, 0.000000, -0.015204, 0.000000, -0.045098, 0.000000,
+    0.019878, 0.000000, 0.019878, 0.000000, 0.059623, 0.000000]
+
+dynmat_wang_ref_252525 = [
+    0.081339, -0.000000, 0.022821, 0.000000, 0.022821, 0.000000,
+    -0.045098, -0.000000, -0.009142, -0.000000, -0.009142, 0.000000,
+    0.022821, 0.000000, 0.081339, 0.000000, 0.022821, 0.000000,
+    -0.009142, 0.000000, -0.045098, 0.000000, -0.009142, 0.000000,
+    0.022821, 0.000000, 0.022821, 0.000000, 0.081339, 0.000000,
+    -0.009142, 0.000000, -0.009142, 0.000000, -0.045098, 0.000000,
+    -0.045098, 0.000000, -0.009142, 0.000000, -0.009142, 0.000000,
+    0.059623, 0.000000, 0.015541, 0.000000, 0.015541, 0.000000,
+    -0.009142, 0.000000, -0.045098, 0.000000, -0.009142, 0.000000,
+    0.015541, 0.000000, 0.059623, 0.000000, 0.015541, 0.000000,
+    -0.009142, 0.000000, -0.009142, 0.000000, -0.045098, 0.000000,
+    0.015541, 0.000000, 0.015541, -0.000000, 0.059623, 0.000000]
+
+dynmat_ref_555 = [
+    0.091690, 0.000000, 0.033857, 0.000000, 0.033857, 0.000000,
+    0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000,
+    0.033857, 0.000000, 0.091690, 0.000000, 0.033857, 0.000000,
+    0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000,
+    0.033857, 0.000000, 0.033857, 0.000000, 0.091690, 0.000000,
+    0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000,
+    0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000,
+    0.064909, 0.000000, 0.021086, 0.000000, 0.021086, 0.000000,
+    0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000,
+    0.021086, 0.000000, 0.064909, 0.000000, 0.021086, 0.000000,
+    0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000,
+    0.021086, 0.000000, 0.021086, 0.000000, 0.064909, 0.000000]
+
+
+def test_dynmat(ph_nacl_nonac):
+    dynmat = ph_nacl_nonac.dynamical_matrix
+    _test_dynmat(dynmat)
+    _test_dynmat_252525(dynmat, dynmat_ref_252525)
+
+
+def test_dynmat_gonze_lee(ph_nacl):
+    dynmat = ph_nacl.dynamical_matrix
+    _test_dynmat_252525(dynmat, dynmat_gonze_lee_ref_252525)
+
+
+def test_dynmat_wang(ph_nacl):
+    nac_params = ph_nacl.nac_params
+    nac_params['method'] = 'wang'
+    ph_nacl.nac_params = nac_params
+    dynmat = ph_nacl.dynamical_matrix
+    _test_dynmat_252525(dynmat, dynmat_wang_ref_252525)
+    # Reset nac_params['method']
+    nac_params.pop('method')
+    ph_nacl.nac_params = nac_params
+
+
+def _test_dynmat(dynmat):
+    dtype_complex = ("c%d" % (np.dtype('double').itemsize * 2))
+    dynmat.run([0, 0, 0])
+    dynmat_ref = np.array(
+        dynmat_ref_000, dtype='double').view(dtype=dtype_complex).reshape(6, 6)
+    np.testing.assert_allclose(dynmat.dynamical_matrix, dynmat_ref, atol=1e-5)
+
+    dynmat.run([0.5, 0.5, 0.5])
+    dynmat_ref = np.array(
+        dynmat_ref_555, dtype='double').view(dtype=dtype_complex).reshape(6, 6)
+    np.testing.assert_allclose(dynmat.dynamical_matrix, dynmat_ref, atol=1e-5)
+
+
+def _test_dynmat_252525(dynmat, dynmat_ref):
+    dtype_complex = ("c%d" % (np.dtype('double').itemsize * 2))
+    dynmat.run([0.25, 0.25, 0.25])
+    # for row in dynmat.dynamical_matrix:
+    #     print("".join(["%f, %f, " % (c.real, c.imag) for c in row]))
+    dynmat_ref = np.array(
+        dynmat_ref, dtype='double').view(dtype=dtype_complex).reshape(6, 6)
+    np.testing.assert_allclose(dynmat.dynamical_matrix, dynmat_ref, atol=1e-5)

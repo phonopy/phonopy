@@ -20,6 +20,30 @@ def ph_nacl():
 
 
 @pytest.fixture(scope='session')
+def ph_nacl_nofcsym():
+    yaml_filename = os.path.join(current_dir, "phonopy_disp_NaCl.yaml")
+    force_sets_filename = os.path.join(current_dir, "FORCE_SETS_NaCl")
+    born_filename = os.path.join(current_dir, "BORN_NaCl")
+    return phonopy.load(yaml_filename,
+                        force_sets_filename=force_sets_filename,
+                        born_filename=born_filename,
+                        symmetrize_fc=False,
+                        log_level=1, produce_fc=True)
+
+
+@pytest.fixture(scope='session')
+def ph_nacl_compact_fcsym():
+    yaml_filename = os.path.join(current_dir, "phonopy_disp_NaCl.yaml")
+    force_sets_filename = os.path.join(current_dir, "FORCE_SETS_NaCl")
+    born_filename = os.path.join(current_dir, "BORN_NaCl")
+    return phonopy.load(yaml_filename,
+                        force_sets_filename=force_sets_filename,
+                        born_filename=born_filename,
+                        is_compact_fc=True,
+                        log_level=1, produce_fc=True)
+
+
+@pytest.fixture(scope='session')
 def ph_nacl_nonac():
     yaml_filename = os.path.join(current_dir, "phonopy_disp_NaCl.yaml")
     force_sets_filename = os.path.join(current_dir, "FORCE_SETS_NaCl")
