@@ -13,25 +13,25 @@ cvs = [0.000000, 36.273760, 45.739877, 47.905271, 48.700700,
 def test_thermal_properties(ph_nacl):
     ph_nacl.run_mesh([5, 5, 5])
     ph_nacl.run_thermal_properties(t_step=100, t_max=900)
-    tp = ph_nacl.thermal_properties
-
-    for vals in tp.thermal_properties:
-        print(", ".join(["%.6f" % v for v in vals]))
-
-    for vals_ref, vals in zip(
-            (temps, fes, entropies, cvs), tp.thermal_properties):
-        np.testing.assert_allclose(vals_ref, vals, atol=1e-5)
+    _test_thermal_properties(ph_nacl)
 
 
 def test_thermal_properties_at_temperatues(ph_nacl):
     ph_nacl.run_mesh([5, 5, 5])
     temperatures = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900]
     ph_nacl.run_thermal_properties(temperatures=temperatures)
-    tp = ph_nacl.thermal_properties
+    _test_thermal_properties(ph_nacl)
 
-    for vals in tp.thermal_properties:
-        print(", ".join(["%.6f" % v for v in vals]))
 
-    for vals_ref, vals in zip(
-            (temps, fes, entropies, cvs), tp.thermal_properties):
-        np.testing.assert_allclose(vals_ref, vals, atol=1e-5)
+def _test_thermal_properties(ph):
+    tp = ph.thermal_properties
+
+    # for vals in tp.thermal_properties:
+    #     print(", ".join(["%.6f" % v for v in vals]))
+
+    for i in range(2):
+        if i == 1:
+            tp.run(lang='py')
+        for vals_ref, vals in zip(
+                (temps, fes, entropies, cvs), tp.thermal_properties):
+            np.testing.assert_allclose(vals_ref, vals, atol=1e-5)
