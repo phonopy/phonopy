@@ -63,21 +63,21 @@ static double get_dC(const int cart_i,
                      const double q[3],
                      const double *dielectric);
 
-void get_derivative_dynmat_at_q(double *derivative_dynmat,
-                                const int num_patom,
-                                const int num_satom,
-                                const double *fc,
-                                const double *q,
-                                const double *lattice, /* column vector */
-                                const double *r,
-                                const int *multi,
-                                const double *mass,
-                                const int *s2p_map,
-                                const int *p2s_map,
-                                const double nac_factor,
-                                const double *born,
-                                const double *dielectric,
-                                const double *q_direction)
+void ddm_get_derivative_dynmat_at_q(double *derivative_dynmat,
+                                    const int num_patom,
+                                    const int num_satom,
+                                    const double *fc,
+                                    const double *q,
+                                    const double *lattice, /* column vector */
+                                    const double *r,
+                                    const int *multi,
+                                    const double *mass,
+                                    const int *s2p_map,
+                                    const int *p2s_map,
+                                    const double nac_factor,
+                                    const double *born,
+                                    const double *dielectric,
+                                    const double *q_direction)
 {
   int i, j, k, l, m, n, adrs, adrsT, is_nac;
   double coef[3], real_coef[3], imag_coef[3];

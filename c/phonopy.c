@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include <float.h>
 #include "dynmat.h"
+#include "derivative_dynmat.h"
 #include "phonopy.h"
 
 static void set_index_permutation_symmetry_fc(double * fc, const int natom);
@@ -106,6 +107,92 @@ void phpy_get_charge_sum(double (*charge_sum)[3][3],
                          PHPYCONST double (*born)[3][3])
 {
   dym_get_charge_sum(charge_sum, num_patom, factor, q_cart, born);
+}
+
+
+void phpy_get_recip_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real,imag)] */
+                                  const double *dd_q0, /* [natom, 3, 3, (real,imag)] */
+                                  PHPYCONST double (*G_list)[3], /* [num_G, 3] */
+                                  const int num_G,
+                                  const int num_patom,
+                                  const double q_cart[3],
+                                  const double *q_direction_cart, /* must be pointer */
+                                  PHPYCONST double (*born)[3][3],
+                                  PHPYCONST double dielectric[3][3],
+                                  PHPYCONST double (*pos)[3], /* [num_patom, 3] */
+                                  const double factor, /* 4pi/V*unit-conv */
+                                  const double lambda,
+                                  const double tolerance)
+{
+  dym_get_recip_dipole_dipole(dd,
+                              dd_q0,
+                              G_list,
+                              num_G,
+                              num_patom,
+                              q_cart,
+                              q_direction_cart,
+                              born,
+                              dielectric,
+                              pos,
+                              factor,
+                              lambda,
+                              tolerance);
+}
+
+
+void phpy_get_recip_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real,imag)] */
+                                     PHPYCONST double (*G_list)[3], /* [num_G, 3] */
+                                     const int num_G,
+                                     const int num_patom,
+                                     PHPYCONST double (*born)[3][3],
+                                     PHPYCONST double dielectric[3][3],
+                                     PHPYCONST double (*pos)[3], /* [num_patom, 3] */
+                                     const double lambda,
+                                     const double tolerance)
+{
+  dym_get_recip_dipole_dipole_q0(dd_q0,
+                                 G_list,
+                                 num_G,
+                                 num_patom,
+                                 born,
+                                 dielectric,
+                                 pos,
+                                 lambda,
+                                 tolerance);
+}
+
+
+void phpy_get_derivative_dynmat_at_q(double *derivative_dynmat,
+                                     const int num_patom,
+                                     const int num_satom,
+                                     const double *fc,
+                                     const double *q,
+                                     const double *lattice, /* column vector */
+                                     const double *r,
+                                     const int *multi,
+                                     const double *mass,
+                                     const int *s2p_map,
+                                     const int *p2s_map,
+                                     const double nac_factor,
+                                     const double *born,
+                                     const double *dielectric,
+                                     const double *q_direction)
+{
+  ddm_get_derivative_dynmat_at_q(derivative_dynmat,
+                                 num_patom,
+                                 num_satom,
+                                 fc,
+                                 q,
+                                 lattice,
+                                 r,
+                                 multi,
+                                 mass,
+                                 s2p_map,
+                                 p2s_map,
+                                 nac_factor,
+                                 born,
+                                 dielectric,
+                                 q_direction);
 }
 
 

@@ -61,6 +61,43 @@ void phpy_get_charge_sum(double (*charge_sum)[3][3],
                          const double factor, /* 4pi/V*unit-conv and denominator */
                          const double q_cart[3],
                          PHPYCONST double (*born)[3][3]);
+void phpy_get_recip_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real,imag)] */
+                                  const double *dd_q0, /* [natom, 3, 3, (real,imag)] */
+                                  PHPYCONST double (*G_list)[3], /* [num_G, 3] */
+                                  const int num_G,
+                                  const int num_patom,
+                                  const double q_cart[3],
+                                  const double *q_direction_cart, /* must be pointer */
+                                  PHPYCONST double (*born)[3][3],
+                                  PHPYCONST double dielectric[3][3],
+                                  PHPYCONST double (*pos)[3], /* [num_patom, 3] */
+                                  const double factor, /* 4pi/V*unit-conv */
+                                  const double lambda,
+                                  const double tolerance);
+void phpy_get_recip_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real,imag)] */
+                                     PHPYCONST double (*G_list)[3], /* [num_G, 3] */
+                                     const int num_G,
+                                     const int num_patom,
+                                     PHPYCONST double (*born)[3][3],
+                                     PHPYCONST double dielectric[3][3],
+                                     PHPYCONST double (*pos)[3], /* [num_patom, 3] */
+                                     const double lambda,
+                                     const double tolerance);
+void phpy_get_derivative_dynmat_at_q(double *derivative_dynmat,
+                                     const int num_patom,
+                                     const int num_satom,
+                                     const double *fc,
+                                     const double *q,
+                                     const double *lattice, /* column vector */
+                                     const double *r,
+                                     const int *multi,
+                                     const double *mass,
+                                     const int *s2p_map,
+                                     const int *p2s_map,
+                                     const double nac_factor,
+                                     const double *born,
+                                     const double *dielectric,
+                                     const double *q_direction);
 
 int phpy_compute_permutation(int * rot_atom,
                              PHPYCONST double lat[3][3],
