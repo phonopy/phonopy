@@ -98,7 +98,49 @@ void phpy_get_derivative_dynmat_at_q(double *derivative_dynmat,
                                      const double *born,
                                      const double *dielectric,
                                      const double *q_direction);
+void phpy_get_neighboring_grid_points(size_t neighboring_grid_points[],
+                                      const size_t grid_point,
+                                      PHPYCONST int relative_grid_address[][3],
+                                      const int num_relative_grid_address,
+                                      const int mesh[3],
+                                      PHPYCONST int bz_grid_address[][3],
+                                      const size_t bz_map[]);
+void phpy_get_relative_grid_address(int relative_grid_address[24][4][3],
+                                    PHPYCONST double reciprocal_lattice[3][3]);
+void phpy_get_all_relative_grid_address(int relative_grid_address[4][24][4][3]);
+double phpy_get_integration_weight(const double omega,
+                                   PHPYCONST double tetrahedra_omegas[24][4],
+                                   const char function);
+void
+phpy_get_integration_weight_at_omegas(double *integration_weights,
+                                      const int num_omegas,
+                                      const double *omegas,
+                                      PHPYCONST double tetrahedra_omegas[24][4],
+                                      const char function);
 
+
+void phpy_get_tetrahedra_frequenies(double *freq_tetras,
+                                    const int mesh[3],
+                                    const size_t* grid_points,
+                                    PHPYCONST int (*grid_address)[3],
+                                    PHPYCONST int (*relative_grid_address)[3],
+                                    const size_t* gp_ir_index,
+                                    const double *frequencies,
+                                    const size_t num_band,
+                                    const size_t num_gp);
+void phpy_tetrahedron_method_dos(double *dos,
+                                 const int mesh[3],
+                                 PHPYCONST int (*grid_address)[3],
+                                 PHPYCONST int (*relative_grid_address)[4][3],
+                                 const size_t *grid_mapping_table,
+                                 const double *freq_points,
+                                 const double *frequencies,
+                                 const double *coef,
+                                 const size_t num_freq_points,
+                                 const size_t num_ir_gp,
+                                 const size_t num_band,
+                                 const size_t num_coef,
+                                 const size_t num_gp);
 void phpy_get_thermal_properties(double *thermal_props,
                                  const double *temperature,
                                  const double *freqs,

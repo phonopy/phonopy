@@ -1012,13 +1012,13 @@ static PyObject *py_thm_neighboring_grid_points(PyObject *self, PyObject *args)
   bz_map_size_t = (size_t*)PyArray_DATA(py_bz_map);
   relative_grid_points_size_t = (size_t*)PyArray_DATA(py_relative_grid_points);
 
-  thm_get_dense_neighboring_grid_points(relative_grid_points_size_t,
-                                        grid_point,
-                                        relative_grid_address,
-                                        num_relative_grid_address,
-                                        mesh,
-                                        bz_grid_address,
-                                        bz_map_size_t);
+  phpy_get_neighboring_grid_points(relative_grid_points_size_t,
+                                   grid_point,
+                                   relative_grid_address,
+                                   num_relative_grid_address,
+                                   mesh,
+                                   bz_grid_address,
+                                   bz_map_size_t);
   Py_RETURN_NONE;
 }
 
@@ -1040,7 +1040,7 @@ py_thm_relative_grid_address(PyObject *self, PyObject *args)
   relative_grid_address = (int(*)[4][3])PyArray_DATA(py_relative_grid_address);
   reciprocal_lattice = (double(*)[3])PyArray_DATA(py_reciprocal_lattice_py);
 
-  thm_get_relative_grid_address(relative_grid_address, reciprocal_lattice);
+  phpy_get_relative_grid_address(relative_grid_address, reciprocal_lattice);
 
   Py_RETURN_NONE;
 }
@@ -1060,7 +1060,7 @@ py_thm_all_relative_grid_address(PyObject *self, PyObject *args)
   relative_grid_address =
     (int(*)[24][4][3])PyArray_DATA(py_relative_grid_address);
 
-  thm_get_all_relative_grid_address(relative_grid_address);
+  phpy_get_all_relative_grid_address(relative_grid_address);
 
   Py_RETURN_NONE;
 }
@@ -1084,9 +1084,9 @@ py_thm_integration_weight(PyObject *self, PyObject *args)
 
   tetrahedra_omegas = (double(*)[4])PyArray_DATA(py_tetrahedra_omegas);
 
-  iw = thm_get_integration_weight(omega,
-                                  tetrahedra_omegas,
-                                  function[0]);
+  iw = phpy_get_integration_weight(omega,
+                                   tetrahedra_omegas,
+                                   function[0]);
 
   return PyFloat_FromDouble(iw);
 }
@@ -1117,11 +1117,11 @@ py_thm_integration_weight_at_omegas(PyObject *self, PyObject *args)
   num_omegas = (int)PyArray_DIMS(py_omegas)[0];
   tetrahedra_omegas = (double(*)[4])PyArray_DATA(py_tetrahedra_omegas);
 
-  thm_get_integration_weight_at_omegas(iw,
-                                       num_omegas,
-                                       omegas,
-                                       tetrahedra_omegas,
-                                       function[0]);
+  phpy_get_integration_weight_at_omegas(iw,
+                                        num_omegas,
+                                        omegas,
+                                        tetrahedra_omegas,
+                                        function[0]);
 
   Py_RETURN_NONE;
 }
@@ -1144,10 +1144,7 @@ static PyObject * py_get_tetrahedra_frequenies(PyObject *self, PyObject *args)
   int (*relative_grid_address)[3];
   double* frequencies;
 
-  int is_shift[3] = {0, 0, 0};
-  size_t i, j, k, gp, num_gp_in, num_band;
-  int g_addr[3];
-  int address_double[3];
+  size_t num_gp_in, num_band;
 
   if (!PyArg_ParseTuple(args, "OOOOOOO",
                         &py_freq_tetras,
@@ -1170,22 +1167,15 @@ static PyObject * py_get_tetrahedra_frequenies(PyObject *self, PyObject *args)
   frequencies = (double*)PyArray_DATA(py_frequencies);
   num_band = PyArray_DIMS(py_frequencies)[1];
 
-  for (i = 0; i < num_gp_in;  i++) {
-#pragma omp parallel for private(k, g_addr, gp, address_double)
-    for (j = 0; j < num_band * 96; j++) {
-      for (k = 0; k < 3; k++) {
-        g_addr[k] = grid_address[grid_points[i]][k] +
-          relative_grid_address[j % 96][k];
-      }
-      kgd_get_grid_address_double_mesh(address_double,
-                                       g_addr,
-                                       mesh,
-                                       is_shift);
-      gp = kgd_get_dense_grid_point_double_mesh(address_double, mesh);
-      freq_tetras[i * num_band * 96 + j] =
-        frequencies[gp_ir_index[gp] * num_band + j / 96];
-    }
-  }
+  phpy_get_tetrahedra_frequenies(freq_tetras,
+                                 mesh,
+                                 grid_points,
+                                 grid_address,
+                                 relative_grid_address,
+                                 gp_ir_index,
+                                 frequencies,
+                                 num_band,
+                                 num_gp_in);
 
   Py_RETURN_NONE;
 }
@@ -1210,20 +1200,6 @@ static PyObject * py_tetrahedron_method_dos(PyObject *self, PyObject *args)
   size_t num_gp, num_ir_gp, num_band, num_freq_points, num_coef;
   size_t *grid_mapping_table;
   int (*relative_grid_address)[4][3];
-
-  int is_shift[3] = {0, 0, 0};
-  size_t i, j, k, l, m, q, r, count;
-  size_t ir_gps[24][4];
-  int g_addr[3];
-  double tetrahedra[24][4];
-  int address_double[3];
-  size_t *gp2ir, *ir_grid_points;
-  int *weights;
-  double iw;
-
-  gp2ir = NULL;
-  ir_grid_points = NULL;
-  weights = NULL;
 
   if (!PyArg_ParseTuple(args, "OOOOOOOO",
                         &py_dos,
@@ -1252,67 +1228,19 @@ static PyObject * py_tetrahedron_method_dos(PyObject *self, PyObject *args)
   grid_mapping_table = (size_t*)PyArray_DATA(py_grid_mapping_table);
   relative_grid_address = (int(*)[4][3])PyArray_DATA(py_relative_grid_address);
 
-  gp2ir = (size_t*)malloc(sizeof(size_t) * num_gp);
-  ir_grid_points = (size_t*)malloc(sizeof(size_t) * num_ir_gp);
-  weights = (int*)malloc(sizeof(int) * num_ir_gp);
-
-  count = 0;
-  for (i = 0; i < num_gp; i++) {
-    if (grid_mapping_table[i] == i) {
-      gp2ir[i] = count;
-      ir_grid_points[count] = i;
-      weights[count] = 1;
-      count++;
-    } else {
-      gp2ir[i] = gp2ir[grid_mapping_table[i]];
-      weights[gp2ir[i]]++;
-    }
-  }
-
-  if (num_ir_gp != count) {
-    printf("Something is wrong!\n");
-  }
-
-#pragma omp parallel for private(j, k, l, m, q, r, iw, ir_gps, g_addr, tetrahedra, address_double)
-  for (i = 0; i < num_ir_gp; i++) {
-    /* set 24 tetrahedra */
-    for (l = 0; l < 24; l++) {
-      for (q = 0; q < 4; q++) {
-        for (r = 0; r < 3; r++) {
-          g_addr[r] = grid_address[ir_grid_points[i]][r] +
-            relative_grid_address[l][q][r];
-        }
-        kgd_get_grid_address_double_mesh(address_double,
-                                         g_addr,
-                                         mesh,
-                                         is_shift);
-        ir_gps[l][q] = gp2ir[kgd_get_grid_point_double_mesh(address_double, mesh)];
-      }
-    }
-
-    for (k = 0; k < num_band; k++) {
-      for (l = 0; l < 24; l++) {
-        for (q = 0; q < 4; q++) {
-          tetrahedra[l][q] = frequencies[ir_gps[l][q] * num_band + k];
-        }
-      }
-      for (j = 0; j < num_freq_points; j++) {
-        iw = thm_get_integration_weight(freq_points[j], tetrahedra, 'I') * weights[i];
-        for (m = 0; m < num_coef; m++) {
-          dos[i * num_band * num_freq_points * num_coef +
-              k * num_coef * num_freq_points + j * num_coef + m] +=
-            iw * coef[i * num_coef * num_band + m * num_band + k];
-        }
-      }
-    }
-  }
-
-  free(gp2ir);
-  gp2ir = NULL;
-  free(ir_grid_points);
-  ir_grid_points = NULL;
-  free(weights);
-  weights = NULL;
+  phpy_tetrahedron_method_dos(dos,
+                              mesh,
+                              grid_address,
+                              relative_grid_address,
+                              grid_mapping_table,
+                              freq_points,
+                              frequencies,
+                              coef,
+                              num_freq_points,
+                              num_ir_gp,
+                              num_band,
+                              num_coef,
+                              num_gp);
 
   Py_RETURN_NONE;
 }
