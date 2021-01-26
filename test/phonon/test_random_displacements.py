@@ -74,8 +74,78 @@ randn_ij_str_2 = """ 0.1088634678  0.5078095905 -0.8622273465  1.2494697427 -0.0
 -0.7044181997 -0.5913751211  0.7369951690  0.4358672525  1.7759935855  0.5130743788"""
 
 
-def test_random_displacements(ph_nacl):
+# ph_nacl, number_of_snapshots=100000, temperature=500, nbins=101
+disp_bins = np.linspace(0, 1, 101)
+h_Na = [131, 884, 2439, 4680, 7670, 11344, 15492, 20375, 25447, 31250,
+        36869, 42855, 49056, 54910, 60854, 66522, 72224, 77071, 81986, 86454,
+        90295, 93479, 96001, 97900, 99001, 99978, 100033, 99898, 99001, 97994,
+        95998, 93555, 90986, 87959, 85552, 81545, 77635, 74093, 69226, 65031,
+        61404, 57073, 53036, 49600, 45360, 41963, 38282, 34505, 31644, 28668,
+        25958, 23186, 20969, 18672, 16734, 14703, 12958, 11162, 10009, 8643,
+        7596, 6604, 5821, 4872, 4199, 3644, 3089, 2707, 2200, 1932,
+        1553, 1292, 1101, 929, 751, 623, 543, 424, 384, 303,
+        244, 197, 146, 132, 92, 85, 65, 43, 50, 35,
+        34, 18, 23, 13, 11, 12, 5, 11, 4, 3]
+h_Cl = [178, 1347, 3693, 7469, 11766, 17497, 23524, 30447, 38050, 45919,
+        53889, 62269, 70103, 77359, 84780, 92006, 97850, 103442, 108053, 111876,
+        113442, 115291, 116398, 116577, 114803, 112641, 110651, 108045, 103658, 99194,
+        95266, 89463, 85213, 78880, 73102, 68533, 62582, 57701, 52733, 47538,
+        42725, 38592, 34362, 30343, 26928, 23748, 20681, 18026, 15670, 13572,
+        11624, 10202, 8609, 7016, 6147, 5131, 4403, 3454, 3007, 2426,
+        1927, 1661, 1284, 1031, 890, 702, 577, 448, 342, 264,
+        222, 189, 147, 105, 65, 57, 38, 42, 31, 20,
+        15, 18, 8, 5, 6, 2, 4, 2, 1, 0,
+        2, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+
+
+def test_random_displacements_NaCl(ph_nacl):
+    """Compare histgram of NaCl 2x2x2 displacements"""
+    answer = (16, 14)
+    argmaxs = _test_random_displacements(ph_nacl, answer, ntimes=20, d_max=0.8)
+    assert argmaxs == answer
+
+
+def test_random_displacements_SnO2(ph_sno2):
+    """Compare histgram of SnO2 2x2x3 displacements"""
+    answer = (19, 14)
+    argmaxs = _test_random_displacements(ph_sno2, answer, ntimes=30, d_max=0.3)
+    assert argmaxs == answer
+
+
+def _test_random_displacements(ph, answer, ntimes=30, d_max=1, nbins=51):
+    hist = np.zeros((2, nbins - 1), dtype=int)
+    for i in range(100):
+        ph.generate_displacements(number_of_snapshots=5000, temperature=500)
+        h_1, h_2 = _generate_random_displacements(ph, d_max, nbins)
+        hist[0] += h_1
+        hist[1] += h_2
+        argmaxs = (np.argmax(hist[0]), np.argmax(hist[1]))
+        # print(hist[0])
+        # print(hist[1])
+        # print(i, argmaxs)
+        if i >= ntimes and argmaxs == answer:
+            break
+    return argmaxs
+
+
+def _generate_random_displacements(ph, d_max, nbins):
+    _disp_bins = np.linspace(0, d_max, nbins)
+    natom1 = ph.supercell.symbols.count(ph.supercell.symbols[0])
+    d_1 = np.linalg.norm(ph.displacements[:, :natom1].reshape(-1, 3), axis=1)
+    d_2 = np.linalg.norm(ph.displacements[:, natom1:].reshape(-1, 3), axis=1)
+    h_1, bin_d = np.histogram(d_1, bins=_disp_bins)
+    h_2, bin_d = np.histogram(d_2, bins=_disp_bins)
+    # for line in h_1.reshape(-1, 10):
+    #     print("".join(["%d, " % n for n in line]))
+    # for line in h_2.reshape(-1, 10):
+    #     print("".join(["%d, " % n for n in line]))
+    return h_1, h_2
+
+
+def _test_random_displacements_all_atoms(ph_nacl):
     """Test by fixed random numbers of np.random.normal
+
+    ** This test is not good because the result depends on eigenvectors. **
 
     randn_ii and randn_ij were created by
 
