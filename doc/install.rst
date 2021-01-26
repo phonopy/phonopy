@@ -118,11 +118,10 @@ is strongly recommended to create conda's virtual environment by
 ``conda create -n <venvname>`` as written above. The installation of
 necessary libraries is done as follows::
 
-   % conda install -c conda-forge numpy scipy h5py pyyaml
-   matplotlib-base spglib
+   % conda install -c conda-forge numpy scipy h5py pyyaml matplotlib-base spglib
 
-On macOS, libblas with mkl may have numerical problem. When the test
-fails, you can try to install an openblas version by
+A libblas library installed can be chosen among ``[openblas, mkl, blis,
+netlib]``. If specific one is expected, it is installed by (e.g. ``openblas``)
 
 ::
 
