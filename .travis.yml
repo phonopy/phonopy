@@ -79,7 +79,6 @@ script:
     if [[ "$TRAVIS_BRANCH" != "rc" && "$TRAVIS_BRANCH" != "master" ]]; then
       python setup.py build;
       pip install -e .;
-      # rm test/phonon/test_random_displacements.py;
       pytest --cov-report term --cov=phonopy test;
     fi;
   fi
