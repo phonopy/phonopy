@@ -87,6 +87,14 @@ def ph_zr3n4():
 
 
 @pytest.fixture(scope='session')
+def ph_tipn3():
+    yaml_filename = os.path.join(current_dir, "phonopy_params_TiPN3.yaml.xz")
+    return phonopy.load(yaml_filename,
+                        is_compact_fc=False,
+                        log_level=1, produce_fc=True)
+
+
+@pytest.fixture(scope='session')
 def convcell_sio2():
     symbols = ['Si'] * 2 + ['O'] * 4
     lattice = [[4.65, 0, 0],
