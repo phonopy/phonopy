@@ -2,7 +2,7 @@ import os
 import numpy as np
 from phonopy.phonon.random_displacements import RandomDisplacements
 
-data_dir = os.path.dirname(os.path.abspath(__file__))
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
 randn_ii_TiPN3 = [
     -0.75205998, 0.27277617, 0.83138473, 0.34503635, -0.97548523,
@@ -96,6 +96,7 @@ disp_ref_TiPN3 = [
     0.0253257, -0.0505731, 0.0246412, -0.0471122, -0.0212583, 0.0771720,
     0.1058798, 0.0065750, 0.0318078, 0.1027323, 0.0543087, 0.0294196]
 
+# This is just a record of the histgram of NaCl 2x2x2 calculation.
 # ph_nacl, number_of_snapshots=100000, temperature=500, nbins=101
 disp_bins = np.linspace(0, 1, 101)
 h_Na = [131, 884, 2439, 4680, 7670, 11344, 15492, 20375, 25447, 31250,
@@ -120,15 +121,23 @@ h_Cl = [178, 1347, 3693, 7469, 11766, 17497, 23524, 30447, 38050, 45919,
         2, 0, 1, 0, 0, 0, 0, 0, 0, 0]
 
 
-def test_random_displacements_NaCl(ph_nacl):
-    """Compare histgram of NaCl 2x2x2 displacements"""
+def _test_random_displacements_NaCl(ph_nacl):
+    """Compare histgram of NaCl 2x2x2 displacements
+
+    answer gives the highest histgram bins of two atoms.
+
+    """
     answer = (16, 14)
     argmaxs = _test_random_displacements(ph_nacl, answer, ntimes=20, d_max=0.8)
     assert argmaxs == answer
 
 
-def test_random_displacements_SnO2(ph_sno2):
-    """Compare histgram of SnO2 2x2x3 displacements"""
+def _test_random_displacements_SnO2(ph_sno2):
+    """Compare histgram of SnO2 2x2x3 displacements
+
+    answer gives the highest histgram bins of two atoms.
+
+    """
     answer = (19, 14)
     argmaxs = _test_random_displacements(ph_sno2, answer, ntimes=30, d_max=0.3)
     assert argmaxs == answer
@@ -164,10 +173,8 @@ def _generate_random_displacements(ph, d_max, nbins):
     return h_1, h_2
 
 
-def _test_random_displacements_all_atoms_TiPN3(ph_tipn3):
+def test_random_displacements_all_atoms_TiPN3(ph_tipn3):
     """Test by fixed random numbers of np.random.normal
-
-    ** This test is not good because the result depends on eigenvectors. **
 
     randn_ii and randn_ij were created by
 
@@ -175,13 +182,18 @@ def _test_random_displacements_all_atoms_TiPN3(ph_tipn3):
         randn_ii = np.random.normal(size=(N_ii, 1, num_band))
         randn_ij = np.random.normal(size=(N_ij, 2, 1, num_band)).
 
+    Precalculated eigenvectors are used because those depend on
+    eigensolvers such as openblas, mkl, blis, or netlib. Eigenvalues
+    are expected to be equivalent over the eigensolvers. So the
+    eigenvalues calculated on the fly are used.
+
     """
 
     ph = ph_tipn3
     rd = RandomDisplacements(ph.supercell,
                              ph.primitive,
                              ph.force_constants)
-    rd.run(T=500)
+
     num_band = len(ph.primitive) * 3
     N = len(ph.supercell) // len(ph.primitive)
     # N = N_ii + N_ij * 2
@@ -189,10 +201,19 @@ def _test_random_displacements_all_atoms_TiPN3(ph_tipn3):
     N_ij = N - len(rd.qpoints)
     N_ii = N - N_ij * 2
     shape_ii = (N_ii, 1, num_band)
-    randn_ii = np.reshape(randn_ii_TiPN3, shape_ii)
     shape_ij = (N_ij, 2, 1, num_band)
+    randn_ii = np.reshape(randn_ii_TiPN3, shape_ii)
     randn_ij = np.reshape(randn_ij_TiPN3, shape_ij)
 
+    eigvecs_ii = np.reshape(
+        np.loadtxt(os.path.join(current_dir, "eigvecs_ii_TiPN3.txt")),
+        (N_ii, num_band, num_band))
+    eigvecs_ij = np.reshape(
+        np.loadtxt(os.path.join(current_dir, "eigvecs_ij_TiPN3.txt"),
+                   dtype=complex),
+        (N_ij, num_band, num_band))
+    rd._eigvecs_ii = eigvecs_ii
+    rd._eigvecs_ij = eigvecs_ij
     rd.run(500, randn=(randn_ii, randn_ij))
 
     # for line in rd.u.ravel().reshape(-1, 6):
