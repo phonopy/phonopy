@@ -32,7 +32,12 @@
 /* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
 /* POSSIBILITY OF SUCH DAMAGE. */
 
-#include <dynmat.h>
+#ifndef __phonopy_H__
+#define __phonopy_H__
+
+#ifndef PHPYCONST
+#define PHPYCONST
+#endif
 
 void phpy_transform_dynmat_to_fc(double *fc,
                                  const double *dm,
@@ -200,3 +205,5 @@ void phpy_set_index_permutation_symmetry_compact_fc(double * fc,
                                                     const int n_satom,
                                                     const int n_patom,
                                                     const int is_transpose);
+
+#endif

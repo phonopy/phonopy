@@ -38,10 +38,6 @@
 #include <math.h>
 #include <float.h>
 #include <numpy/arrayobject.h>
-#include "dynmat.h"
-#include "derivative_dynmat.h"
-#include "kgrid.h"
-#include "tetrahedron_method.h"
 #include "phonopy.h"
 
 /* PHPYCONST is defined in dynmat.h */
