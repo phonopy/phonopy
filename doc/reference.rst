@@ -134,12 +134,23 @@ DFPT
 Currently there are several many implementations such as `Abinit
 <http://www.abinit.org/>`_, `Quantum espresso
 <http://www.quantum-espresso.org/>`_, `Elk
-<http://elk.sourceforge.net/>`_, etc.  VASP can calculate force constants
+<http://elk.sourceforge.net/>`_, `Fleur
+<https://www.flapw.de/>`_, etc.  VASP can calculate force constants
 using DFPT however only at Gamma-point.
 
 For the study of basics
 ------------------------
 
+Phonons
+^^^^^^^
 - Introduction to Lattice Dynamics, Martin. T. Dove, Cambridge
   university press
 - Thermodynamics of Crystals, Duane C. Wallace, Dover Publications
+- Electrons and Phonons by J. M. Ziman, Oxford University Press
+
+Symmetry
+^^^^^^^^
+- International Tables for Crystallography - IUCr
+- Symmetry Relationships between Crystal Structures by Ulrich Müller,
+  Oxford University Press
+- Bilbao crystallographic server, https://www.cryst.ehu.es/

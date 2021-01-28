@@ -38,6 +38,7 @@ pages.
    cp2k
    aims
    castep
+   Fleur
 
 The VASP DFPT
 interface reads ``vasprun.xml`` and creates ``FORCE_CONSTANTS`` file.
@@ -64,6 +65,7 @@ Physical unit systems used for the calculators are as follows::
    TURBOMOLE | au (bohr)  AMU           hartree/au    hartree/au^2
    CP2K      | Angstrom   AMU           hartree/au    hartree/Angstrom.au
    FHI-AIMS  | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
+   Fleur     | au (bohr)  AMU           hartree/au    hartree/au^2
 
 For these sets of physical properties, phonon frequency is calculated
 in THz.
@@ -88,6 +90,7 @@ used as shown below::
    TURBOMOLE | control
    CP2K      | unitcell.inp
    FHI-AIMS  | geometry.in
+   Fleur     | fleur.in
 
 Default displacement distances
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -109,6 +112,7 @@ shown below::
    TURBOMOLE | 0.02 au (bohr)
    CP2K      | 0.01 Angstrom
    FHI-AIMS  | 0.01 Angstrom
+   Fleur     | 0.02 au (bohr)
 
 .. _frequency_default_value_interfaces:
 
@@ -128,6 +132,7 @@ Default unit conversion factor of phonon frequency to THz
    TURBOMOLE | 154.10794
    CP2K      | 112.10516
    FHI-AIMS  | 15.633302
+   Fleur     | 154.10794
 
 .. _nac_default_value_interfaces:
 
@@ -147,3 +152,4 @@ Default unit conversion factor for non-analytical term correction
    TURBOMOLE | 1
    CP2K      | None (N/A)
    FHI-AIMS  | 14.399652
+   Fleur     | 1 (but feature N/A)

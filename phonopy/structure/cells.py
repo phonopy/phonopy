@@ -36,6 +36,7 @@ import numpy as np
 from distutils.version import StrictVersion
 import spglib
 from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.snf import SNF3x3
 
 
 def get_supercell(unitcell, supercell_matrix, is_old_style=True, symprec=1e-5):
@@ -218,7 +219,7 @@ class Supercell(PhonopyAtoms):
         if N != determinant(self._supercell_matrix):
             print("Supercell creation failed.")
             print("Probably some atoms are overwrapped. "
-                  "The mapping table is give below.")
+                  "The mapping table is given below.")
             print(mapping_table)
             PhonopyAtoms.__init__(self)
         else:
@@ -903,11 +904,30 @@ def compute_all_sg_permutations(positions,  # scaled positions
                                 translations,  # scaled
                                 lattice,  # column vectors
                                 symprec):
-    """Compute a permutation for every space group operation.
+    """Compute permutations for space group operations.
 
     See 'compute_permutation_for_rotation' for more info.
 
-    Output has shape (num_rot, num_pos)
+    Parameters
+    ----------
+    positions : ndarray
+        Scaled positions (like PhonopyAtoms.scaled_positions) before applying
+        the space group operation
+    rotations : ndarray
+        Matrix (rotation) parts of space group operations
+        shape=(len(operations), 3, 3), dtype='intc'
+    translations : ndarray
+        Vector (translation) parts of space group operations
+        shape=(len(operations), 3), dtype='double'
+    lattice : ndarray
+        Basis vectors in column vectors (like PhonopyAtoms.cell.T)
+    symprec : float
+        Symmetry tolerance of the distance unit
+
+    Returns
+    -------
+    perms : ndarray
+        shape=(len(operations), len(positions)), dtype='intc', order='C'
 
     """
 
@@ -935,6 +955,26 @@ def compute_permutation_for_rotation(positions_a,  # scaled positions
 
     This version is optimized for the case where positions_a and positions_b
     are related by a rotation.
+
+    Parameters
+    ----------
+    positions_a : ndarray
+        Scaled positions (like PhonopyAtoms.scaled_positions) before applying
+        the space group operation
+    positions_b : ndarray
+        Scaled positions (like PhonopyAtoms.scaled_positions) after applying
+        the space group operation
+    lattice : ndarray
+        Basis vectors in column vectors (like PhonopyAtoms.cell.T)
+    symprec : float
+        Symmetry tolerance of the distance unit
+
+    Returns
+    -------
+    perm : ndarray
+        A list of atomic indices that maps atoms before the space group
+        operation to those after as explained above.
+        shape=(len(positions), ), dtype=int
 
     """
 
@@ -1086,319 +1126,30 @@ def determinant(m):
             m[0][2] * m[1][1] * m[2][0])
 
 
-#
-# Smith normal form for 3x3 integer matrix
-# This code is maintained at https://github.com/atztogo/snf3x3.
-#
-class SNF3x3(object):
-    """Smith normal form for 3x3 matrix
-
-    Input 3x3 interger matrix A is transformed to 3x3 diagonal interger
-    matrix (D) by two 3x3 interger matrices P and Q, which is written as
-
-        D = PAQ
-
-    with abs(det(A)) = det(D), det(P) = 1, det(Q) = sgn(det(A)).
-
-    The algorithm is implemented following
-    https://en.wikipedia.org/wiki/Smith_normal_form,
-    but the diagonal elements don't follow the rule of it.
-
-    Usage
-    -----
-    snf = SNF3x3(int_mat)
-    snf.run()
-
-    Attributes
-    ----------
-    D, P, Q : ndarray
-        These 3x3 interger matrices explained above.
-        shape=(3, 3), dtype='intc'
-
-    """
-
-    def __init__(self, A):
-        """
-
-        Parameters
-        ----------
-        A : array_like
-            3x3 interger matrix.
-            shape=(3, 3)
-
-        """
-
-        self._A_orig = np.array(A, dtype='intc', order='C')
-        self._A = np.array(A, dtype='intc', order='C')
-        self._Ps = []
-        self._Qs = []
-        self._L = []
-        self._P = None
-        self._Q = None
-        self._D = None
-        self._attempt = 0
-
-    def run(self):
-        for i in self:
-            pass
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        self._attempt += 1
-        if self._first():
-            if self._second():
-                self._set_PQ()
-                raise StopIteration
-        return self._attempt
-
-    def next(self):
-        self.__next__()
-
-    @property
-    def A(self):
-        return self._A
-
-    @property
-    def D(self):
-        return self._D
-
-    @property
-    def P(self):
-        return self._P
-
-    @property
-    def Q(self):
-        return self._Q
-
-    def _set_PQ(self):
-        for i in range(3):
-            if self._A[i, i] < 0:
-                self._flip_sign_row(i)
-        self._Ps += self._L
-        self._L = []
-
-        P = np.eye(3, dtype='intc')
-        for _P in self._Ps:
-            P = np.dot(_P, P)
-        Q = np.eye(3, dtype='intc')
-        for _Q in self._Qs:
-            Q = np.dot(Q, _Q.T)
-
-        if np.linalg.det(P) < 0:
-            P = -P
-            Q = -Q
-
-        self._P = P
-        self._Q = Q
-        self._D = self._A.copy()
-
-    def _first(self):
-        self._first_one_loop()
-        A = self._A
-        if A[1, 0] == 0 and A[2, 0] == 0:
-            return True
-        elif A[1, 0] % A[0, 0] == 0 and A[2, 0] % A[0, 0] == 0:
-            self._first_finalize()
-            self._Ps += self._L
-            self._L = []
-            return True
+def get_primitive_matrix(pmat, symprec=1e-5):
+    if type(pmat) is str and pmat in ('P', 'F', 'I', 'A', 'C', 'R', 'auto'):
+        if pmat == 'auto':
+            _pmat = pmat
         else:
-            return False
+            _pmat = get_primitive_matrix_by_centring(pmat)
+    elif pmat is None:
+        _pmat = None
+    elif len(np.ravel(pmat)) == 9:
+        matrix = np.reshape(pmat, (3, 3))
+        if matrix.dtype.kind in ('i', 'u', 'f'):
+            det = np.linalg.det(matrix)
+            if symprec < det and det < 1 + symprec:
+                _pmat = matrix
+            else:
+                msg = ("Determinant of primitive_matrix has to be larger "
+                       "than 0")
+                raise RuntimeError(msg)
+    else:
+        msg = ("primitive_matrix has to be a 3x3 matrix, None, 'auto', "
+               "'P', 'F', 'I', 'A', 'C', or 'R'")
+        raise RuntimeError(msg)
 
-    def _first_one_loop(self):
-        self._first_column()
-        self._Ps += self._L
-        self._L = []
-        self._A = self._A.T
-        self._first_column()
-        self._Qs += self._L
-        self._L = []
-        self._A = self._A.T
-
-    def _first_column(self):
-        i = self._search_first_pivot()
-        if i > 0:
-            self._swap_rows(0, i)
-        if i < 0:
-            raise RuntimeError("Determinant is 0.")
-
-        if self._A[1, 0] != 0:
-            self._zero_first_column(1)
-        if self._A[2, 0] != 0:
-            self._zero_first_column(2)
-
-    def _zero_first_column(self, j):
-        # if self._A[j, 0] < 0:
-        #     self._flip_sign_row(j)
-        A = self._A
-        r, s, t = xgcd([A[0, 0], A[j, 0]])
-        self._set_zero(0, j, A[0, 0], A[j, 0], r, s, t)
-
-    def _search_first_pivot(self):
-        A = self._A
-        for i in range(3):  # column index
-            if A[i, 0] != 0:
-                return i
-        return -1
-
-    def _first_finalize(self):
-        """Set zeros along the first colomn except for A[0, 0]
-
-        This is possible only when A[1,0] and A[2,0] are dividable by A[0,0].
-
-        """
-
-        A = self._A
-        L = np.eye(3, dtype='intc')
-        L[1, 0] = -A[1, 0] // A[0, 0]
-        L[2, 0] = -A[2, 0] // A[0, 0]
-        self._L.append(L.copy())
-        self._A = np.dot(L, self._A)
-
-    def _second(self):
-        """Find Smith normal form for Right-low 2x2 matrix"""
-
-        self._second_one_loop()
-        A = self._A
-        if A[2, 1] == 0:
-            return True
-        elif A[2, 1] % A[1, 1] == 0:
-            self._second_finalize()
-            self._Ps += self._L
-            self._L = []
-            return True
-        else:
-            return False
-
-    def _second_one_loop(self):
-        self._second_column()
-        self._Ps += self._L
-        self._L = []
-        self._A = self._A.T
-        self._second_column()
-        self._Qs += self._L
-        self._L = []
-        self._A = self._A.T
-
-    def _second_column(self):
-        """Right-low 2x2 matrix
-
-        Assume elements in first row and column are all zero except for A[0,0].
-
-        """
-
-        if self._A[1, 1] == 0 and self._A[2, 1] != 0:
-            self._swap_rows(1, 2)
-
-        if self._A[2, 1] != 0:
-            self._zero_second_column()
-
-    def _zero_second_column(self):
-        # if self._A[2, 1] < 0:
-        #     self._flip_sign_row(2)
-        A = self._A
-        r, s, t = xgcd([A[1, 1], A[2, 1]])
-        self._set_zero(1, 2, A[1, 1], A[2, 1], r, s, t)
-
-    def _second_finalize(self):
-        """Set zero at A[2, 1]
-
-        This is possible only when A[2,1] is dividable by A[1,1].
-
-        """
-
-        A = self._A
-        L = np.eye(3, dtype='intc')
-        L[2, 1] = -A[2, 1] // A[1, 1]
-        self._L.append(L.copy())
-        self._A = np.dot(L, self._A)
-
-    def _swap_rows(self, i, j):
-        """Swap i and j rows
-
-        As the side effect, determinant flips.
-
-        """
-
-        L = np.eye(3, dtype='intc')
-        L[i, i] = 0
-        L[j, j] = 0
-        L[i, j] = 1
-        L[j, i] = 1
-        self._L.append(L.copy())
-        self._A = np.dot(L, self._A)
-
-    def _flip_sign_row(self, i):
-        """Multiply -1 for all elements in row"""
-
-        L = np.eye(3, dtype='intc')
-        L[i, i] = -1
-        self._L.append(L.copy())
-        self._A = np.dot(L, self._A)
-
-    def _set_zero(self, i, j, a, b, r, s, t):
-        """Let A[i, j] be zero based on Bezout's identity
-
-           [ii ij]
-           [ji jj] is a (k,k) minor of original 3x3 matrix.
-
-        """
-
-        L = np.eye(3, dtype='intc')
-        L[i, i] = s
-        L[i, j] = t
-        L[j, i] = -b // r
-        L[j, j] = a // r
-        self._L.append(L.copy())
-        self._A = np.dot(L, self._A)
-
-
-def xgcd(vals):
-    _xgcd = Xgcd(vals)
-    return _xgcd.run()
-
-
-class Xgcd(object):
-    def __init__(self, vals):
-        self._vals = np.array(vals, dtype='intc')
-
-    def run(self):
-        r0, r1 = self._vals
-        s0 = 1
-        s1 = 0
-        t0 = 0
-        t1 = 1
-        for i in range(1000):
-            r0, r1, s0, s1, t0, t1 = self._step(r0, r1, s0, s1, t0, t1)
-            if r1 == 0:
-                break
-
-        assert r0 == self._vals[0] * s0 + self._vals[1] * t0
-
-        self._rst = np.array([r0, s0, t0], dtype='intc')
-
-        return self._rst
-
-    def _step(self, r0, r1, s0, s1, t0, t1):
-        q, m = divmod(r0, r1)
-        if m < 0:
-            if r1 > 0:
-                m += r1
-                q -= 1
-            if r1 < 0:
-                m -= r1
-                q += 1
-        r2 = m
-        s2 = s0 - q * s1
-        t2 = t0 - q * t1
-        return r1, r2, s1, s2, t1, t2
-
-    def __str__(self):
-        v = self._vals
-        r, s, t = self._rst
-        return "%d = %d * (%d) + %d * (%d)" % (r, v[0], s, v[1], t)
+    return _pmat
 
 
 def get_primitive_matrix_by_centring(centring):
@@ -1494,6 +1245,40 @@ def estimate_supercell_matrix(spglib_dataset,
         multi = _get_multiplicity_ac(num_atoms, lengths, max_num_atoms)
     else:  # Cubic
         multi = _get_multiplicity_a(num_atoms, lengths, max_num_atoms)
+
+    return multi
+
+
+def estimate_supercell_matrix_from_pointgroup(pointgroup_number,
+                                              lattice,
+                                              max_num_cells=120):
+    """Estimate supercell matrix from crystallographic point group
+
+    Parameters
+    ----------
+    pointgroup_number : int
+        The number representing crystallographic number from 1 to 32.
+    lattice : array_like
+        Basis vectors given as row vectors.
+        shape=(3, 3), dtype='double'
+    max_num_cells : int, optional
+        Maximum number of cells in created supercell to be tolerated.
+
+    Returns
+    -------
+    list of three integer numbers
+        Multiplicities for a, b, c basis vectors, respectively.
+
+    """
+
+    abc_lengths = _get_lattice_parameters(lattice.T)
+
+    if pointgroup_number <= 8:  # Triclinic, monoclinic, and orthorhombic
+        multi = _get_multiplicity_abc(1, abc_lengths, max_num_cells)
+    elif pointgroup_number <= 27:  # Tetragonal and hexagonal
+        multi = _get_multiplicity_ac(1, abc_lengths, max_num_cells)
+    else:  # Cubic
+        multi = _get_multiplicity_a(1, abc_lengths, max_num_cells)
 
     return multi
 

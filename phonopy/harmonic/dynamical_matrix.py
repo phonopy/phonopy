@@ -321,8 +321,8 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             q-point in fractional coordinates without 2pi.
             shape=(3,), dtype='double'
         q_direction : array_like
-            q-point direction from Gamma-point in fractional coordinates
-            without 2pi. Only the direction is used, i.e.,
+            q-point direction from Gamma-point in fractional coordinates of
+            reciprocal basis vectors. Only the direction is used, i.e.,
             (q_direction / |q_direction|) is computed and used.
             shape=(3,), dtype='double'
 

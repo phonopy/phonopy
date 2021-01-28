@@ -32,10 +32,20 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
 import numpy as np
-from spglib import get_stabilized_reciprocal_mesh, relocate_BZ_grid_address
+from spglib import (
+    get_stabilized_reciprocal_mesh, relocate_BZ_grid_address,
+    get_symmetry_dataset, get_pointgroup)
 from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
-from phonopy.structure.symmetry import get_lattice_vector_equivalence
+from phonopy.structure.symmetry import (
+    get_lattice_vector_equivalence, get_pointgroup_operations,
+    collect_unique_rotations)
+from phonopy.structure.cells import (
+    get_primitive_matrix_by_centring, estimate_supercell_matrix,
+    estimate_supercell_matrix_from_pointgroup, determinant)
+from phonopy.structure.snf import SNF3x3
+from phonopy.harmonic.force_constants import similarity_transformation
 
 
 def length2mesh(length, lattice, rotations=None):
@@ -219,7 +229,7 @@ class GridPoints(object):
             self._set_grid_points()
             self._ir_qpoints += q_mesh_shift / self._mesh
             self._fit_qpoints_in_BZ()
-        else:
+        else:  # zero or half shift
             self._set_grid_points()
 
     @property
@@ -235,6 +245,9 @@ class GridPoints(object):
         return self._grid_address
 
     def get_grid_address(self):
+        warnings.warn("GridPoints.get_grid_address is deprecated."
+                      "Use grid_address attribute.",
+                      DeprecationWarning)
         return self.grid_address
 
     @property
@@ -242,6 +255,9 @@ class GridPoints(object):
         return self._ir_grid_points
 
     def get_ir_grid_points(self):
+        warnings.warn("GridPoints.get_ir_grid_points is deprecated."
+                      "Use ir_grid_points attribute.",
+                      DeprecationWarning)
         return self.ir_grid_points
 
     @property
@@ -249,6 +265,9 @@ class GridPoints(object):
         return self._ir_qpoints
 
     def get_ir_qpoints(self):
+        warnings.warn("GridPoints.get_ir_qpoints is deprecated."
+                      "Use points attribute.",
+                      DeprecationWarning)
         return self.qpoints
 
     @property
@@ -256,6 +275,9 @@ class GridPoints(object):
         return self._ir_weights
 
     def get_ir_grid_weights(self):
+        warnings.warn("GridPoints.get_ir_grid_weights is deprecated."
+                      "Use weights attribute.",
+                      DeprecationWarning)
         return self.weights
 
     @property
@@ -263,6 +285,9 @@ class GridPoints(object):
         return self._grid_mapping_table
 
     def get_grid_mapping_table(self):
+        warnings.warn("GridPoints.get_grid_mapping_table is deprecated."
+                      "Use grid_mapping_table attribute.",
+                      DeprecationWarning)
         return self.grid_mapping_table
 
     def _set_grid_points(self):
@@ -345,4 +370,258 @@ class GridPoints(object):
         self._ir_qpoints = np.array(
             (self._grid_address[self._ir_grid_points] + shift) / self._mesh,
             dtype='double', order='C')
+
         self._grid_mapping_table = grid_mapping_table
+
+
+class GeneralizedRegularGridPoints(object):
+    """Generalized regular grid points
+
+    Method strategy in suggest mode
+    -------------------------------
+    1. Create conventional unit cell using spglib.
+    2. Sample regular grid points for the conventional unit cell (mesh_numbers)
+    3. Transformation matrix from primitive to conventinal unit cell (inv_pmat)
+    4. Get supercell multiplicities (mesh_numbers) from the conventional unit
+       cell considering the lattice shape.
+    5. mmat = (inv_pmat * mesh_numbers).T, which is related to the
+       transformation from primitive cell to supercell.
+    6. D = P.mmat.Q, where D = diag([n1, n2, n3])
+    7. Grid points for primitive cell are
+       [np.dot(Q, g) for g in ndindex((n1, n2, n3))].
+
+    Method strategy in non-suggest mode
+    -----------------------------------
+    1. Find symmetry operations
+    2. Determine point group and transformation matrix (tmat) from input cell
+    3. Get supercell multiplicities (mesh_numbers) from the transformed cell
+       considering the lattice shape.
+    4. mmat = (tmat * mesh_numbers).T
+    5. D = P.mmat.Q, where D = diag([n1, n2, n3])
+    6. Grid points for primitive cell are
+       [np.dot(Q, g) for g in ndindex((n1, n2, n3))].
+
+    Attributes
+    ----------
+    grid_address : ndarray
+        Grid addresses in integers.
+        shape=(num_grid_points, 3), dtype='intc', order='C'
+    qpoints : ndarray
+        q-points with respect to basis vectors of input or standardized
+        primitive cell.
+        shape=(num_grid_points, 3), dtype='intc', order='C'
+    grid_matrix : ndarray
+        Grid generating matrix.
+        shape=(3,3), dtype='intc', order='C'
+    matrix_to_primitive : ndarray or None
+        None when ``suggest`` is False. Otherwise, transformation matrix from
+        input cell to the suggested primitive cell.
+        shape=(3,3), dtype='double', order='C'
+    snf : SNF3x3
+        SNF3x3 instance of grid generating matrix.
+
+    """
+
+    def __init__(self,
+                 cell,
+                 length,
+                 suggest=True,
+                 is_time_reversal=True,
+                 x_fastest=True,
+                 symprec=1e-5):
+        """
+
+        Parameters
+        ----------
+        cell : PhonopyAtoms
+            Input cell.
+        length : float
+            Length having the unit of direct space length.
+        suggest : bool, optional, default True
+            With True, a standardized primitive cell is suggested and the grids
+            are generated for it. With False, input cell is used.
+        is_time_reversal: bool, optional, default True
+            Time reversal symmetry is considered in symmetry search. By this,
+            inversion symmetry is always included.
+        x_fastest : bool, optional, default=True
+            In grid generation, [[x, y, z], ...], x runs fastest when True,
+            otherwise z runs fastest.
+
+        """
+        self._cell = cell
+        self._length = length
+        self._suggest = suggest
+        self._is_time_reversal = is_time_reversal
+        self._x_fastest = x_fastest
+        self._grid_address = None
+        self._snf = None
+        self._transformation_matrix = None
+        self._grid_matrix = None
+        self._reciprocal_operations = None
+        self._prepare(cell, length, symprec)
+        self._generate_grid_points()
+        self._generate_q_points()
+        self._reciprocal_operations = get_reciprocal_operations(
+            self._sym_dataset['rotations'],
+            self._transformation_matrix,
+            self._snf.D,
+            self._snf.Q,
+            is_time_reversal=self._is_time_reversal)
+
+    @property
+    def grid_address(self):
+        return self._grid_address
+
+    @property
+    def qpoints(self):
+        return self._qpoints
+
+    @property
+    def grid_matrix(self):
+        """Grid generating matrix"""
+        return self._grid_matrix
+
+    @property
+    def transformation_matrix(self):
+        """Transformation matrix"""
+        return self._transformation_matrix
+
+    @property
+    def snf(self):
+        """SNF3x3 instance of grid generating matrix"""
+        return self._snf
+
+    @property
+    def reciprocal_operations(self):
+        return self._reciprocal_operations
+
+    def _prepare(self, cell, length, symprec):
+        """Define grid generating matrix and run the SNF"""
+
+        self._sym_dataset = get_symmetry_dataset(
+            cell.totuple(), symprec=symprec)
+        if self._suggest:
+            self._set_grid_matrix_by_std_primitive_cell(cell, length)
+        else:
+            self._set_grid_matrix_by_input_cell(cell, length)
+        self._snf = SNF3x3(self._grid_matrix)
+        self._snf.run()
+
+    def _set_grid_matrix_by_std_primitive_cell(self, cell, length):
+        """Grid generating matrix based on standeardized primitive cell"""
+
+        tmat = self._sym_dataset['transformation_matrix']
+        centring = self._sym_dataset['international'][0]
+        pmat = get_primitive_matrix_by_centring(centring)
+        conv_lat = np.dot(np.linalg.inv(tmat).T, cell.cell)
+        num_cells = np.prod(length2mesh(length, conv_lat))
+        mesh_numbers = estimate_supercell_matrix(
+            self._sym_dataset,
+            max_num_atoms=num_cells * len(self._sym_dataset['std_types']))
+        inv_pmat = np.linalg.inv(pmat)
+        inv_pmat_int = np.rint(inv_pmat).astype(int)
+        assert (np.abs(inv_pmat - inv_pmat_int) < 1e-5).all()
+        # transpose in reciprocal space
+        self._grid_matrix = np.array(
+            (inv_pmat_int * mesh_numbers).T, dtype='intc', order='C')
+        # From input lattice to the primitive lattice in real space
+        self._transformation_matrix = np.array(
+            np.dot(np.linalg.inv(tmat), pmat), dtype='double', order='C')
+
+    def _set_grid_matrix_by_input_cell(self, input_cell, length):
+        """Grid generating matrix based on input cell"""
+
+        pointgroup = get_pointgroup(self._sym_dataset['rotations'])
+        # tmat: From input lattice to point group preserving lattice
+        tmat = pointgroup[2]
+        lattice = np.dot(input_cell.cell.T, tmat).T
+        num_cells = np.prod(length2mesh(length, lattice))
+        mesh_numbers = estimate_supercell_matrix_from_pointgroup(
+            pointgroup[1], lattice, num_cells)
+        # transpose in reciprocal space
+        self._grid_matrix = np.array(
+            np.multiply(tmat, mesh_numbers).T, dtype='intc', order='C')
+        self._transformation_matrix = np.eye(3, dtype='double', order='C')
+
+    def _generate_grid_points(self):
+        d = np.diagonal(self._snf.D)
+        if self._x_fastest:
+            # x runs fastest.
+            z, y, x = np.meshgrid(range(d[2]), range(d[1]), range(d[0]),
+                                  indexing='ij')
+        else:
+            # z runs fastest.
+            x, y, z = np.meshgrid(range(d[0]), range(d[1]), range(d[2]),
+                                  indexing='ij')
+        self._grid_address = np.array(np.c_[x.ravel(), y.ravel(), z.ravel()],
+                                      dtype='intc', order='C')
+
+    def _generate_q_points(self):
+        D_inv = np.linalg.inv(self._snf.D)
+        qpoints = np.dot(
+            self._grid_address, np.dot(self._snf.Q, D_inv).T)
+        qpoints -= np.rint(qpoints)
+        self._qpoints = qpoints
+
+
+def get_reciprocal_operations(rotations,
+                              transformation_matrix,
+                              D,
+                              Q,
+                              is_time_reversal=True):
+    """Generate reciprocal rotation matrices
+
+    Collect unique real space rotation matrices and transpose them.
+    When is_time_reversal=True, inversion is added if it is not in the
+    list of the rotation matrices.
+
+    Parameters
+    ----------
+    rotations : ndarray
+        Rotation matrices in real space. x' = Rx.
+        shape=(rotations, 3, 3), dtype='intc'
+    transformation_matrxi : array_like
+        Transformation matrix of basis vectors in real space. Using this
+        rotation matrices are transformed.
+    D : array_like
+        D of smith normal form 3x3.
+        shape=(3, 3)
+    Q : array_like
+        Q of smith normal form 3x3.
+        shape=(3, 3)
+    is_time_reversal : bool
+        When True, inversion operation is added.
+
+    Returns
+    -------
+    rotations_for_Q : ndarray
+        Rotation matrices in reciprocal space. Grid points are sent by the
+        symmetrically equivalent grid points as follows:
+
+        g' = (R_Q g) % diagonal(D)
+
+        shape=(rotations, 3, 3), dtype='intc', order='C'
+
+    """
+    unique_rots = []
+    tmat_inv = np.linalg.inv(transformation_matrix)
+    for r in collect_unique_rotations(rotations):
+        _r = similarity_transformation(tmat_inv, r)
+        _r_int = np.rint(_r).astype(int)
+        assert (np.abs(_r - _r_int) < 1e-5).all()
+        unique_rots.append(_r_int)
+
+    ptg_ops, rec_ops = get_pointgroup_operations(
+        unique_rots, is_time_reversal=is_time_reversal)
+
+    Q_inv = np.linalg.inv(Q)
+    rec_ops_Q = []
+    for r in rec_ops:
+        _r = similarity_transformation(Q_inv, r)
+        _r = similarity_transformation(D, _r)
+        _r_int = np.rint(_r).astype(int)
+        assert (np.abs(_r - _r_int) < 1e-5).all()
+        assert abs(determinant(_r_int)) == 1
+        rec_ops_Q.append(_r_int)
+
+    return np.array(rec_ops_Q, dtype='intc', order='C')

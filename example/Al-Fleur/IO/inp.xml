@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<fleurInput fleurInputVersion="0.33">
+   <comment>
+      Aluminiu
+   </comment>
+   <calculationSetup>
+      <cutoffs Kmax="4.00000000" Gmax="24.01000000" GmaxXC="24.01000000" numbands="0"/>
+      <scfLoop itmax="20" minDistance=".00001000" maxIterBroyd="99" imix="Anderson" alpha=".05000000" precondParam="0.0" spinf="2.00000000"/>
+      <coreElectrons ctail="T" frcor="F" kcrel="0" coretail_lmax="0"/>
+      <xcFunctional name="vwn" relativisticCorrections="F"/>
+      <magnetism jspins="1"/>
+      <soc l_soc="F" theta=".00000000" phi=".00000000" spav="F"/>
+      <expertModes gw="0" secvar="F"/>
+      <geometryOptimization l_f="T" f_level="3" forcealpha="1.00000000" forcemix="BFGS" epsdisp=".00001000" epsforce=".00001000"/>
+      <ldaU l_linMix="F" mixParam=".050000" spinf="1.000000"/>
+   </calculationSetup>
+   <cell>
+      <bzIntegration valenceElectrons="24.00000000" mode="hist" fermiSmearingEnergy=".00100000">
+         <kPointListSelection listName="default-1"/>
+         <!-- k-points included here -->
+         <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="kpts.xml"> </xi:include>
+      </bzIntegration>
+      <!-- symmetry operations included here -->
+      <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="sym.xml"> </xi:include>
+      <bulkLattice scale="1.0000000000">
+         <bravaisMatrix>
+            <row-1>    0.0000000000     7.6560000000     7.6560000000</row-1>
+            <row-2>    7.6560000000     0.0000000000     7.6560000000</row-2>
+            <row-3>    7.6560000000     7.6560000000     0.0000000000</row-3>
+         </bravaisMatrix>
+      </bulkLattice>
+   </cell>
+   <atomSpecies>
+      <species name="Al-1" element="Al" atomicNumber="13">
+         <mtSphere radius="2.50000000" gridPoints="827" logIncrement=".01400000"/>
+         <atomicCutoffs lmax="12" lnonsphr="12"/>
+         <electronConfig>
+            <coreConfig>(1s1/2) (2s1/2) (2p1/2) (2p3/2)</coreConfig>
+            <valenceConfig>(3s1/2) (3p1/2) (3p3/2)</valenceConfig>
+            <stateOccupation state="(3p1/2)" spinUp=".16666667" spinDown=".16666667"/>
+            <stateOccupation state="(3p3/2)" spinUp=".33333333" spinDown=".33333333"/>
+         </electronConfig>
+         <energyParameters s="3" p="3" d="3" f="4"/>
+      </species>
+   </atomSpecies>
+   <atomGroups>
+      <atomGroup species="Al-1">
+         <relPos label="                   1">.0018471964 .0000000000 .0000000000</relPos>
+         <force calculate="T" relaxXYZ="TTT"/>
+      </atomGroup>
+      <atomGroup species="Al-1">
+         <relPos label="                   2">1.000/2.000 .0000000000 .0000000000</relPos>
+         <force calculate="T" relaxXYZ="TTT"/>
+      </atomGroup>
+      <atomGroup species="Al-1">
+         <relPos label="                   3">.0000000000 1.000/2.000 .0000000000</relPos>
+         <relPos label="                   4">1.000/2.000 1.000/2.000 .0000000000</relPos>
+         <relPos label="                   5">.0000000000 .0000000000 1.000/2.000</relPos>
+         <relPos label="                   6">1.000/2.000 .0000000000 1.000/2.000</relPos>
+         <force calculate="T" relaxXYZ="TTT"/>
+      </atomGroup>
+      <atomGroup species="Al-1">
+         <relPos label="                   7">.0000000000 1.000/2.000 1.000/2.000</relPos>
+         <force calculate="T" relaxXYZ="TTT"/>
+      </atomGroup>
+      <atomGroup species="Al-1">
+         <relPos label="                   8">1.000/2.000 1.000/2.000 1.000/2.000</relPos>
+         <force calculate="T" relaxXYZ="TTT"/>
+      </atomGroup>
+   </atomGroups>
+   <output dos="F" band="F" slice="F">
+      <checks vchk="F" cdinf="F"/>
+      <bandDOS minEnergy="-.50000000" maxEnergy=".50000000" sigma=".01500000"/>
+      <vacuumDOS vacdos="F" integ="F" star="F" nstars="0" locx1=".00000" locy1=".00000" locx2=".00000" locy2=".00000" nstm="0" tworkf=".00000"/>
+      <unfoldingBand unfoldBand="F" supercellX="1" supercellY="1" supercellZ="1"/>
+      <plotting iplot="0"/>
+      <chargeDensitySlicing numkpt="0" minEigenval=".00000000" maxEigenval=".00000000" nnne="0" pallst="F"/>
+      <specialOutput eonly="F" bmt="F"/>
+      <magneticCircularDichroism mcd="F" energyLo="-10.00000000" energyUp=".00000000"/>
+   </output>
+  <!-- We include the file relax.inp here to enable relaxations (see documentation) -->
+  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="relax.xml"> <xi:fallback/> </xi:include>
+</fleurInput>
