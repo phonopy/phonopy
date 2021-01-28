@@ -35,7 +35,7 @@
 /* Copyright (C) 2014 Atsushi Togo */
 
 #include <stddef.h>
-#include <kgrid.h>
+#include "kgrid.h"
 #include "tetrahedron_method.h"
 
 #ifdef THMWARNING

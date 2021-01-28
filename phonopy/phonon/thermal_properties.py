@@ -270,21 +270,19 @@ class ThermalProperties(ThermalPropertiesBase):
         plt.grid(True)
         plt.xlabel('Temperature [K]')
 
-    def run(self, t_step=None, t_max=None, t_min=None):
+    def run(self, t_step=None, t_max=None, t_min=None, lang='C'):
         import warnings
-        if (t_step is not None or
-            t_max is not None or
-            t_min is not None):
+        if (t_step is not None or t_max is not None or t_min is not None):
             warnings.warn("keywords for this method are depreciated. "
                           "Use \'set_temperature_range\' or "
                           "\'set_temperature_range\' method instead.",
                           DeprecationWarning)
             self.set_temperature_range(t_min=t_min, t_max=t_max, t_step=t_step)
 
-        try:
+        if lang == 'C':
             import phonopy._phonopy as phonoc
             self._run_c_thermal_properties()
-        except ImportError:
+        else:
             self._run_py_thermal_properties()
 
         if self._is_projection:

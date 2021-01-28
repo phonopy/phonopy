@@ -18,15 +18,18 @@ matrix:
          DOCKER_DEPLOY='manylinux2010_x86_64'
          TRAVIS_PYTHON_VERSION='3.6'
          PLAT=manylinux2010_x86_64
-  - python: '2.7'
-    env: DOCKER_DEPLOY=false
-         TRAVIS_PYTHON_VERSION='2.7'
+  # - python: '2.7'
+  #   env: DOCKER_DEPLOY=false
+  #        TRAVIS_PYTHON_VERSION='2.7'
   - python: '3.6'
     env: DOCKER_DEPLOY=false
          TRAVIS_PYTHON_VERSION='3.6'
   - python: '3.7'
     env: DOCKER_DEPLOY=false
          TRAVIS_PYTHON_VERSION='3.7'
+  - python: '3.8'
+    env: DOCKER_DEPLOY=false
+         TRAVIS_PYTHON_VERSION='3.8'
 
 before_install:
 - echo $DOCKER_DEPLOY
@@ -72,12 +75,10 @@ install:
 
 script:
 - pwd
-# test_random_displacements.py fails unknown reason on travis-CI.
 - if [[ "$DOCKER_DEPLOY" == "false" ]]; then
     if [[ "$TRAVIS_BRANCH" != "rc" && "$TRAVIS_BRANCH" != "master" ]]; then
       python setup.py build;
       pip install -e .;
-      rm test/phonon/test_random_displacements.py;
       pytest --cov-report term --cov=phonopy test;
     fi;
   fi

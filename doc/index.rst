@@ -61,6 +61,7 @@ The following features of phonopy are highlighted:
   :ref:`CP2K <cp2k_interface>`,
   :ref:`FHI-aims <FHI_aims_interface>`,
   :ref:`CASTEP <castep_interface>`,
+  :ref:`Fleur <Fleur_interface>`,
   :ref:`LAMMPS (external) <external_tools_phonolammps>`
 - :ref:`Phonopy API for Python <phonopy_module>`
 

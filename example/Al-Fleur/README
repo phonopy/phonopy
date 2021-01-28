@@ -1,0 +1,26 @@
+This is an example of the Fleur phonopy interface.
+
+We calculate the phonon spectrum for a simple metal, fcc Al,
+as found in the input file fleur_inpgen.
+
+First create the supercells (with displacements):
+
+% phonopy --fleur -c fleur_inpgen -d --dim="2 2 2"
+
+A perfect 2x2x2 supercell (supercell.in) and a 2x2x2 supercell
+(supercell-001.in) of the conventional unit cell written in fleur_inpgen
+are created. In addition, phonopy_disp.yaml file is generated. After a force
+calculation with the crystal structure in supercell-001.in (see Fleur documentation
+at flapw.de), you need to create a FORCE_SETS file by
+
+% phonopy --fleur -f FORCES
+
+Here the FORCES file is the force output of the Fleur calculation and is
+supposed to contain the forces on atoms calculated by Fleur (l_f="T" f_level="n"
+with n from {0,1,2,3} representing the level of force accuracy).
+The disp.yaml file has to be put in the same directory. Now you can run a
+phonon calculation, e.g.,
+
+% phonopy --fleur -c fleur_inpgen --dim="2 2 2" -p --band="1/2 1/2 1/2 0 0 0 1/2 0 1/2"
+
+to find the phonon spectrum along the path L-Gamma-X.

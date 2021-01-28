@@ -102,9 +102,10 @@ class Settings(object):
     }
 
     def __init__(self, default=None):
-        self._v = Settings._default.copy()
+        self.default = Settings._default.copy()
         if default is not None:
-            self._v.update(default)
+            self.default.update(default)
+        self._v = self.default.copy()
 
     def __getattr__(self, attr):
         return self._v[attr]
@@ -354,8 +355,8 @@ class ConfParser(object):
                 self._confs['fc_calculator_options'] = fc_calc_opt
 
         if 'fc_symmetry' in arg_list:
-            if self._settings.fc_symmetry:
-                if not self._args.fc_symmetry:
+            if self._settings.default['fc_symmetry']:
+                if self._args.fc_symmetry is False:
                     self._confs['fc_symmetry'] = '.false.'
             else:
                 if self._args.fc_symmetry:
@@ -401,8 +402,8 @@ class ConfParser(object):
                 self._confs['eigenvectors'] = '.true.'
 
         if 'is_nac' in arg_list:
-            if self._settings.is_nac:  # Check default settings
-                if not self._args.is_nac:
+            if self._settings.default['is_nac']:  # Check default settings
+                if self._args.is_nac is False:
                     self._confs['nac'] = '.false.'
             else:
                 if self._args.is_nac:
@@ -588,6 +589,10 @@ class ConfParser(object):
             if conf_key in ('primitive_axis', 'primitive_axes'):
                 if confs[conf_key].strip().lower() == 'auto':
                     self.set_parameter('primitive_axes', 'auto')
+                elif confs[conf_key].strip().upper() in (
+                        'P', 'F', 'I', 'A', 'C', 'R'):
+                    self.set_parameter('primitive_axes',
+                                       confs[conf_key].strip().upper())
                 elif not len(confs[conf_key].split()) == 9:
                     self.setting_error(
                         "Number of elements in %s has to be 9." %
@@ -686,9 +691,6 @@ class ConfParser(object):
                     self.set_parameter('fc_symmetry', False)
                 elif confs['fc_symmetry'].lower() == '.true.':
                     self.set_parameter('fc_symmetry', True)
-                else:
-                    self.setting_error(
-                        "FC_SYMMETRY has to be specified by .TRUE. or .FALSE.")
 
             if conf_key == 'fc_decimals':
                 self.set_parameter('fc_decimals', confs['fc_decimals'])
@@ -823,11 +825,6 @@ class ConfParser(object):
             # Group velocity finite difference
             if conf_key == 'gv_delta_q':
                 self.set_parameter('gv_delta_q', float(confs['gv_delta_q']))
-
-            # Use ALM for generating force constants
-            if conf_key == 'alm':
-                if confs['alm'].lower() == '.true.':
-                    self.set_parameter('alm', True)
 
             # Compression option for writing int hdf5
             if conf_key == 'hdf5_compression':
@@ -1044,10 +1041,6 @@ class ConfParser(object):
             self._settings.set_is_band_const_interval(
                 params['is_band_const_interval'])
 
-        # Use ALM to generating force constants
-        if 'alm' in params:
-            self._settings.set_use_alm(params['alm'])
-
         # Compression option for writing int hdf5
         if 'hdf5_compression' in params:
             self._settings.set_hdf5_compression(params['hdf5_compression'])
@@ -1132,9 +1125,10 @@ class PhonopySettings(Settings):
 
     def __init__(self, default=None):
         Settings.__init__(self)
-        self._v.update(PhonopySettings._default.copy())
+        self.default.update(PhonopySettings._default.copy())
         if default is not None:
-            self._v.update(default)
+            self.default.update(default)
+        self._v = self.default.copy()
 
     def set_anime_band_index(self, val):
         self._v['anime_band_index'] = val
@@ -1289,7 +1283,7 @@ class PhonopySettings(Settings):
     def set_thermal_atom_pairs(self, val):
         self._v['thermal_atom_pairs'] = val
 
-    def set_thermal_displacement_matrix_temperature(self, val):
+    def set_thermal_displacement_matrix_temperatue(self, val):
         self._v['thermal_displacement_matrix_temperatue'] = val
 
     def set_save_params(self, val):
@@ -1458,7 +1452,7 @@ class PhonopyConfParser(ConfParser):
                 self._confs['writedm'] = '.true.'
 
         if 'write_mesh' in arg_list:
-            if not self._args.write_mesh:
+            if self._args.write_mesh is False:
                 self._confs['write_mesh'] = '.false.'
 
         if 'mesh_format' in arg_list:
@@ -1549,8 +1543,8 @@ class PhonopyConfParser(ConfParser):
                 self._confs['include_fs'] = '.true.'
 
         if 'include_nac_params' in arg_list:
-            if self._settings.include_nac_params:
-                if not self._args.include_nac_params:
+            if self._settings.default['include_nac_params']:
+                if self._args.include_nac_params is False:
                     self._confs['include_nac_params'] = '.false.'
             else:
                 if self._args.include_nac_params:
@@ -2012,29 +2006,29 @@ class PhonopyConfParser(ConfParser):
         if 'mesh_numbers' in params:
             self._settings.set_run_mode('mesh')
             self._settings.set_mesh_numbers(params['mesh_numbers'])
-            if 'mp_shift' in params:
-                self._settings.set_mesh_shift(params['mp_shift'])
-            if 'is_time_reversal_symmetry' in params:
-                self._settings.set_is_time_reversal_symmetry(
-                    params['is_time_reversal_symmetry'])
-            if 'is_mesh_symmetry' in params:
-                self._settings.set_is_mesh_symmetry(params['is_mesh_symmetry'])
-            if 'is_gamma_center' in params:
-                self._settings.set_is_gamma_center(params['is_gamma_center'])
-            if 'mesh_format' in params:
-                self._settings.set_mesh_format(params['mesh_format'])
+        if 'mp_shift' in params:
+            self._settings.set_mesh_shift(params['mp_shift'])
+        if 'is_time_reversal_symmetry' in params:
+            self._settings.set_is_time_reversal_symmetry(
+                params['is_time_reversal_symmetry'])
+        if 'is_mesh_symmetry' in params:
+            self._settings.set_is_mesh_symmetry(params['is_mesh_symmetry'])
+        if 'is_gamma_center' in params:
+            self._settings.set_is_gamma_center(params['is_gamma_center'])
+        if 'mesh_format' in params:
+            self._settings.set_mesh_format(params['mesh_format'])
 
         # band mode
         if 'band_paths' in params:
             self._settings.set_run_mode('band')
-            if 'band_format' in params:
-                self._settings.set_band_format(params['band_format'])
-            if 'band_labels' in params:
-                self._settings.set_band_labels(params['band_labels'])
-            if 'band_connection' in params:
-                self._settings.set_is_band_connection(params['band_connection'])
-            if 'legacy_plot' in params:
-                self._settings.set_is_legacy_plot(params['legacy_plot'])
+        if 'band_format' in params:
+            self._settings.set_band_format(params['band_format'])
+        if 'band_labels' in params:
+            self._settings.set_band_labels(params['band_labels'])
+        if 'band_connection' in params:
+            self._settings.set_is_band_connection(params['band_connection'])
+        if 'legacy_plot' in params:
+            self._settings.set_is_legacy_plot(params['legacy_plot'])
 
         # Q-points mode
         if 'qpoints' in params or 'read_qpoints' in params:
@@ -2084,16 +2078,15 @@ class PhonopyConfParser(ConfParser):
                 params['irreps_qpoint'][:3])
             if len(params['irreps_qpoint']) == 4:
                 self._settings.set_irreps_tolerance(params['irreps_qpoint'][3])
-            if self._settings.run_mode == 'irreps':
-                if 'show_irreps' in params:
-                    self._settings.set_show_irreps(params['show_irreps'])
-                if 'little_cogroup' in params:
-                    self._settings.set_is_little_cogroup(params['little_cogroup'])
+        if 'show_irreps' in params:
+            self._settings.set_show_irreps(params['show_irreps'])
+        if 'little_cogroup' in params:
+            self._settings.set_is_little_cogroup(params['little_cogroup'])
 
         # DOS
         if 'dos_range' in params:
-            fmin =  params['dos_range'][0]
-            fmax =  params['dos_range'][1]
+            fmin = params['dos_range'][0]
+            fmax = params['dos_range'][1]
             fpitch = params['dos_range'][2]
             self._settings.set_min_frequency(fmin)
             self._settings.set_max_frequency(fmax)

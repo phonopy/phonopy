@@ -256,8 +256,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
             Maximum phonon frequency to determine wheather include or not.
         lattice: array_like
             Lattice parameters (column vectors) in real space
-            dtype='double'
-            shape=(3, 3)
+            dtype='double', shape=(3, 3)
 
         """
 
@@ -386,92 +385,4 @@ class ThermalDisplacementMatrices(ThermalMotion):
                          m[1, 2], m[0, 2], m[0, 1], j + 1))
 
         with open('thermal_displacement_matrices.yaml', 'w') as w:
-            w.write("\n".join(lines))
-
-
-class ThermalDistances(ThermalMotion):
-    def __init__(self,
-                 frequencies,
-                 eigenvectors,
-                 supercell,
-                 primitive,
-                 qpoints,
-                 symprec=1e-5,
-                 freq_min=None):
-
-        self._primitive = primitive
-        self._supercell = supercell
-        self._qpoints = qpoints
-        self._symprec = symprec
-        self._frequencies = frequencies
-        self._eigenvectors = eigenvectors
-
-        ThermalMotion.__init__(self,
-                               primitive.get_masses(),
-                               freq_min=freq_min)
-
-        self._p_eigenvectors = None
-        self._distances = None
-
-    def _get_cross(self, v, delta_r, q, atom1, atom2):
-        phase = np.exp(2j * np.pi * np.dot(delta_r, q))
-        cross_val = v[atom1]*phase*v[atom2].conjugate()
-        return -2*(cross_val).real
-
-    def run(self, atom_pairs):
-        s2p = self._primitive.get_supercell_to_primitive_map()
-        p2p = self._primitive.get_primitive_to_primitive_map()
-        dists = np.zeros((len(self._temperatures), len(atom_pairs)),
-                         dtype=float)
-        for i, (atom1, atom2) in enumerate(atom_pairs):
-            patom1 = p2p[s2p[atom1]]
-            patom2 = p2p[s2p[atom2]]
-            spos = self._supercell.get_scaled_positions()
-
-            # This may be wrong.
-            delta_r = get_smallest_vectors(
-                self._supercell.get_cell(),
-                spos[[atom2]],
-                spos[[atom1]],
-                symprec=self._symprec)[0]
-
-            # This is no longer implemented.
-            self._project_eigenvectors(delta_r, self._primitive.get_cell())
-
-            for freqs, vecs, q in zip(self._frequencies,
-                                      self._p_eigenvectors,
-                                      self._qpoints):
-                c_cross = 1.0 / np.sqrt(self._masses[patom1] *
-                                        self._masses[patom2])
-                c1 = 1.0 / self._masses[patom1]
-                c2 = 1.0 / self._masses[patom2]
-
-                for f, v in zip(freqs, vecs.T):
-                    cross_term = self._get_cross(v, delta_r, q, patom1, patom2)
-                    v2 = abs(v)**2
-                    if f > self._fmin:
-                        for j, t in enumerate(self._temperatures):
-                            dists[j, i] += self._get_Q2(f, t) * (
-                                v2[patom1] * c1 +
-                                cross_term * c_cross + v2[patom2] * c2)
-
-        self._atom_pairs = atom_pairs
-        self._distances = dists / len(self._frequencies)
-
-    def write_yaml(self):
-        natom = len(self._masses)
-        lines = []
-
-        lines.append("natom: %5d" % (natom))
-        lines.append("freq_min: %f" % self._fmin)
-
-        lines.append("thermal_distances:")
-        for t, u in zip(self._temperatures, self._distances):
-            lines.append("- temperature:   %15.7f" % t)
-            lines.append("  distance:")
-            for i, (atom1, atom2) in enumerate(self._atom_pairs):
-                lines.append("  - %10.7f # atom pair %d-%d"
-                             % (u[i], atom1 + 1, atom2 + 1))
-
-        with open('thermal_distances.yaml', 'w') as w:
             w.write("\n".join(lines))

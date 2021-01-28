@@ -699,6 +699,8 @@ def is_file_phonopy_yaml(filename, keyword='phonopy'):
     with open(filename, 'r') as f:
         try:
             data = yaml.load(f, Loader=Loader)
+            if data is None:
+                return False
             if keyword in data:
                 return True
             else:

@@ -1,0 +1,22 @@
+      <symmetryOperations>
+         <symOp>
+            <row-1>1 0 0 .0000000000</row-1>
+            <row-2>0 1 0 .0000000000</row-2>
+            <row-3>0 0 1 .0000000000</row-3>
+         </symOp>
+         <symOp>
+            <row-1>1 1 1 .0000000000</row-1>
+            <row-2>0 -1 0 .0000000000</row-2>
+            <row-3>0 0 -1 .0000000000</row-3>
+         </symOp>
+         <symOp>
+            <row-1>1 1 1 .0000000000</row-1>
+            <row-2>0 0 -1 .0000000000</row-2>
+            <row-3>0 -1 0 .0000000000</row-3>
+         </symOp>
+         <symOp>
+            <row-1>1 0 0 .0000000000</row-1>
+            <row-2>0 0 1 .0000000000</row-2>
+            <row-3>0 1 0 .0000000000</row-3>
+         </symOp>
+      </symmetryOperations>

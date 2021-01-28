@@ -10,6 +10,6 @@ else:
 x, y, z = np.loadtxt(filename).T
 idx = z.argsort()
 x, y, z = x[idx], y[idx], z[idx]
-sc = plt.scatter(x, y, c=z, s=30, vmin=0, edgecolor='', cmap='Greys')
+sc = plt.scatter(x, y, c=z, s=30, vmin=0, edgecolor=None, cmap='Greys')
 plt.colorbar(sc)
 plt.show()

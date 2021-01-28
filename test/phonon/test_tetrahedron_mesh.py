@@ -24,65 +24,54 @@ dos_str = """-0.672024 0.000000 0.029844 0.005522 0.731712 0.029450 1.433580 0.1
 24.595217 0.204422 25.297085 0.252177 25.998953 0.676881 26.700820 0.000000"""
 
 
-class TestTetrahedronMesh(unittest.TestCase):
-    def setUp(self):
-        pass
+def test_Amm2():
+    data = np.loadtxt(StringIO(dos_str))
+    phonon = _get_phonon("Amm2",
+                         [3, 2, 2],
+                         [[1, 0, 0],
+                          [0, 0.5, -0.5],
+                          [0, 0.5, 0.5]])
+    mesh = [11, 11, 11]
+    primitive = phonon.get_primitive()
+    phonon.run_mesh([11, 11, 11])
+    weights = phonon.mesh.weights
+    frequencies = phonon.mesh.frequencies
+    grid_address = phonon.mesh.grid_address
+    ir_grid_points = phonon.mesh.ir_grid_points
+    grid_mapping_table = phonon.mesh.grid_mapping_table
+    thm = TetrahedronMesh(primitive,
+                          frequencies,
+                          mesh,
+                          grid_address,
+                          grid_mapping_table,
+                          ir_grid_points)
+    thm.set(value='I', division_number=40)
+    freq_points = thm.get_frequency_points()
+    dos = np.zeros_like(freq_points)
 
-    def tearDown(self):
-        pass
+    for i, iw in enumerate(thm):
+        dos += np.sum(iw * weights[i], axis=1)
 
-    def test_Amm2(self):
-        data = np.loadtxt(StringIO(dos_str))
-        phonon = self._get_phonon("Amm2",
-                                  [3, 2, 2],
-                                  [[1, 0, 0],
-                                   [0, 0.5, -0.5],
-                                   [0, 0.5, 0.5]])
-        mesh = [11, 11, 11]
-        primitive = phonon.get_primitive()
-        phonon.run_mesh([11, 11, 11])
-        qpoints = phonon.mesh.qpoints
-        weights = phonon.mesh.weights
-        frequencies = phonon.mesh.frequencies
-        grid_address = phonon.mesh.grid_address
-        ir_grid_points = phonon.mesh.ir_grid_points
-        grid_mapping_table = phonon.mesh.grid_mapping_table
-        thm = TetrahedronMesh(primitive,
-                              frequencies,
-                              mesh,
-                              grid_address,
-                              grid_mapping_table,
-                              ir_grid_points)
-        thm.set(value='I', division_number=40)
-        freq_points = thm.get_frequency_points()
-        dos = np.zeros_like(freq_points)
-
-        for i, iw in enumerate(thm):
-            dos += np.sum(iw * weights[i], axis=1)
-
-        dos_comp = np.transpose([freq_points, dos]).reshape(10, 8)
-        self.assertTrue(np.abs(dos_comp - data).all() < 1e-5)
-
-    def _show(self, freq_points, dos):
-        data = []
-        for f, d in zip(freq_points, dos):
-            data.append([f, d])
-        data = np.reshape(data, (10, 8))
-        for row in data:
-            print(("%f " * 8) % tuple(row))
-
-    def _get_phonon(self, spgtype, dim, pmat):
-        cell = read_vasp(os.path.join(data_dir, "POSCAR_%s" % spgtype))
-        phonon = Phonopy(cell,
-                         np.diag(dim),
-                         primitive_matrix=pmat)
-        force_sets = parse_FORCE_SETS(
-            filename=os.path.join(data_dir, "FORCE_SETS_%s" % spgtype))
-        phonon.set_displacement_dataset(force_sets)
-        phonon.produce_force_constants()
-        return phonon
+    dos_comp = np.transpose([freq_points, dos]).reshape(10, 8)
+    np.testing.assert_allclose(dos_comp, data, atol=1e-5)
 
 
-if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestTetrahedronMesh)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+def _show(freq_points, dos):
+    data = []
+    for f, d in zip(freq_points, dos):
+        data.append([f, d])
+    data = np.reshape(data, (10, 8))
+    for row in data:
+        print(("%f " * 8) % tuple(row))
+
+
+def _get_phonon(spgtype, dim, pmat):
+    cell = read_vasp(os.path.join(data_dir, "POSCAR_%s" % spgtype))
+    phonon = Phonopy(cell,
+                     np.diag(dim),
+                     primitive_matrix=pmat)
+    force_sets = parse_FORCE_SETS(
+        filename=os.path.join(data_dir, "FORCE_SETS_%s" % spgtype))
+    phonon.set_displacement_dataset(force_sets)
+    phonon.produce_force_constants()
+    return phonon

@@ -43,7 +43,7 @@ from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
 from phonopy.structure.grid_points import length2mesh
 from phonopy.structure.cells import (
     get_supercell, get_primitive, guess_primitive_matrix,
-    shape_supercell_matrix)
+    get_primitive_matrix, shape_supercell_matrix)
 from phonopy.structure.dataset import (
     get_displacements_and_forces, forces_in_dataset)
 from phonopy.harmonic.displacement import (
@@ -107,8 +107,9 @@ class Phonopy(object):
         # Create supercell and primitive cell
         self._unitcell = PhonopyAtoms(atoms=unitcell)
         self._supercell_matrix = self._shape_supercell_matrix(supercell_matrix)
-        if type(primitive_matrix) is str and primitive_matrix == 'auto':
-            self._primitive_matrix = self._guess_primitive_matrix()
+        if isinstance(primitive_matrix, str):
+            self._primitive_matrix = self._set_primitive_matrix(
+                primitive_matrix)
         elif primitive_matrix is not None:
             self._primitive_matrix = np.array(primitive_matrix,
                                               dtype='double', order='c')
@@ -412,8 +413,7 @@ class Phonopy(object):
     @displacements.setter
     def displacements(self, displacements):
         disp = np.array(displacements, dtype='double', order='C')
-        if (disp.ndim != 3 or
-            disp.shape[1:] != (self._supercell.get_number_of_atoms(), 3)):
+        if disp.ndim != 3 or disp.shape[1:] != (len(self._supercell), 3):
             raise RuntimeError("Array shape of displacements is incorrect.")
 
         if 'first_atoms' in self._displacement_dataset:
@@ -665,7 +665,7 @@ class Phonopy(object):
                 disp['forces'] = forces
         elif 'displacements' in self._displacement_dataset:
             forces = np.array(sets_of_forces, dtype='double', order='C')
-            natom = self._supercell.get_number_of_atoms()
+            natom = len(self._supercell)
             if forces.ndim != 3 or forces.shape[1:] != (natom, 3):
                 raise RuntimeError("Array shape of input forces is incorrect.")
 
@@ -679,14 +679,14 @@ class Phonopy(object):
         if type(force_constants) is np.ndarray:
             fc_shape = force_constants.shape
             if fc_shape[0] != fc_shape[1]:
-                if self._primitive.get_number_of_atoms() != fc_shape[0]:
+                if len(self._primitive) != fc_shape[0]:
                     msg = ("Force constants shape disagrees with crystal "
                            "structure setting. This may be due to "
                            "PRIMITIVE_AXIS.")
                     raise RuntimeError(msg)
 
         self._force_constants = force_constants
-        if self._primitive.get_masses() is not None:
+        if self._primitive.masses is not None:
             self._set_dynamical_matrix()
 
     def set_force_constants(self, force_constants, show_drift=True):
@@ -701,7 +701,7 @@ class Phonopy(object):
                                self._primitive,
                                cutoff_radius,
                                symprec=self._symprec)
-        if self._primitive.get_masses() is not None:
+        if self._primitive.masses is not None:
             self._set_dynamical_matrix()
 
     def generate_displacements(self,
@@ -771,7 +771,7 @@ class Phonopy(object):
                 displacement_dataset = get_random_displacements_dataset(
                     number_of_snapshots,
                     distance,
-                    self._supercell.get_number_of_atoms(),
+                    len(self._supercell),
                     random_seed=random_seed)
             else:
                 self.run_random_displacements(
@@ -846,9 +846,8 @@ class Phonopy(object):
                 fc_calculator_options=fc_calculator_options,
                 decimals=self._force_constants_decimals)
         else:
-            p2s_map = self._primitive.get_primitive_to_supercell_map()
             self._run_force_constants_from_forces(
-                distributed_atom_list=p2s_map,
+                distributed_atom_list=self._primitive.p2s_map,
                 fc_calculator=fc_calculator,
                 fc_calculator_options=fc_calculator_options,
                 decimals=self._force_constants_decimals)
@@ -857,7 +856,7 @@ class Phonopy(object):
             show_drift_force_constants(self._force_constants,
                                        primitive=self._primitive)
 
-        if self._primitive.get_masses() is not None:
+        if self._primitive.masses is not None:
             self._set_dynamical_matrix()
 
     def symmetrize_force_constants(self, level=1, show_drift=True):
@@ -876,7 +875,7 @@ class Phonopy(object):
                                        primitive=self._primitive,
                                        values_only=True)
 
-        if self._primitive.get_masses() is not None:
+        if self._primitive.masses is not None:
             self._set_dynamical_matrix()
 
     def symmetrize_force_constants_by_space_group(self, show_drift=True):
@@ -891,7 +890,7 @@ class Phonopy(object):
                                        primitive=self._primitive,
                                        values_only=True)
 
-        if self._primitive.get_masses() is not None:
+        if self._primitive.masses is not None:
             self._set_dynamical_matrix()
 
     #####################
@@ -1345,10 +1344,10 @@ class Phonopy(object):
             if self._primitive_symmetry is not None:
                 rots = self._primitive_symmetry.get_pointgroup_operations()
                 mesh_nums = length2mesh(mesh,
-                                        self._primitive.get_cell(),
+                                        self._primitive.cell,
                                         rotations=rots)
             else:
-                mesh_nums = length2mesh(mesh, self._primitive.get_cell())
+                mesh_nums = length2mesh(mesh, self._primitive.cell)
             _is_gamma_center = True
         if mesh_nums is None:
             msg = "mesh has inappropriate type."
@@ -1668,9 +1667,11 @@ class Phonopy(object):
             Calculated dynamical matrices are stored by setting True.
             Default is False.
         nac_q_direction : array_like
-            q=(0,0,0) is replaced by q=epsilon * nac_q_direction where epsilon
-            is infinitsimal for non-analytical term correction. This is used,
-            e.g., to observe LO-TO splitting.
+            q-point direction from Gamma-point in fractional coordinates of
+            reciprocal basis vectors. Only the direction is used, i.e.,
+            (q_direction / |q_direction|) is computed and used. This parameter
+            is activated only at q=(0, 0, 0).
+            shape=(3,), dtype='double'
 
         """
 
@@ -1949,7 +1950,7 @@ class Phonopy(object):
             raise RuntimeError(msg)
 
         if direction is not None:
-            direction_cart = np.dot(direction, self._primitive.get_cell())
+            direction_cart = np.dot(direction, self._primitive.cell)
         else:
             direction_cart = None
         self._pdos = PartialDos(self._mesh,
@@ -2291,8 +2292,7 @@ class Phonopy(object):
             raise RuntimeError(msg)
 
         if direction is not None:
-            projection_direction = np.dot(direction,
-                                          self._primitive.get_cell())
+            projection_direction = np.dot(direction, self._primitive.cell)
             td = ThermalDisplacements(
                 self._mesh,
                 projection_direction=projection_direction,
@@ -2408,7 +2408,7 @@ class Phonopy(object):
             self._mesh,
             freq_min=freq_min,
             freq_max=freq_max,
-            lattice=self._primitive.get_cell().T)
+            lattice=self._primitive.cell.T)
 
         if temperatures is None:
             tdm.set_temperature_range(t_min, t_max, t_step)
@@ -2576,6 +2576,12 @@ class Phonopy(object):
             a list that represents q-point in reduced coordinates. The second,
             third, and fourth elements show the band index starting with 0,
             amplitude, and phase factor, respectively.
+        nac_q_direction : array_like
+            q-point direction from Gamma-point in fractional coordinates of
+            reciprocal basis vectors. Only the direction is used, i.e.,
+            (q_direction / |q_direction|) is computed and used. This parameter
+            is activated only at q=(0, 0, 0).
+            shape=(3,), dtype='double'
 
         """
         if self._dynamical_matrix is None:
@@ -2624,6 +2630,13 @@ class Phonopy(object):
         The design of this API is not very satisfactory and is expceted
         to be redesined in the next major versions once the use case
         of the API for ir-reps feature becomes clearer.
+
+        nac_q_direction : array_like
+            q-point direction from Gamma-point in fractional coordinates of
+            reciprocal basis vectors. Only the direction is used, i.e.,
+            (q_direction / |q_direction|) is computed and used. This parameter
+            is activated only at q=(0, 0, 0).
+            shape=(3,), dtype='double'
 
         """
 
@@ -3066,11 +3079,11 @@ class Phonopy(object):
         supercells = []
         for positions in all_positions:
             supercells.append(PhonopyAtoms(
-                    numbers=self._supercell.get_atomic_numbers(),
-                    masses=self._supercell.get_masses(),
-                    magmoms=self._supercell.get_magnetic_moments(),
+                    numbers=self._supercell.numbers,
+                    masses=self._supercell.masses,
+                    magmoms=self._supercell.magnetic_moments,
                     positions=positions,
-                    cell=self._supercell.get_cell(),
+                    cell=self._supercell.cell,
                     pbc=True))
         self._supercells_with_displacements = supercells
 
@@ -3098,8 +3111,13 @@ class Phonopy(object):
                    "PRIMITIVE_AXIS may be incorrectly specified.")
             raise RuntimeError(msg)
 
-    def _guess_primitive_matrix(self):
-        return guess_primitive_matrix(self._unitcell, symprec=self._symprec)
+    def _set_primitive_matrix(self, primitive_matrix):
+        pmat = get_primitive_matrix(primitive_matrix, symprec=self._symprec)
+        if isinstance(pmat, str) and pmat == 'auto':
+            return guess_primitive_matrix(self._unitcell,
+                                          symprec=self._symprec)
+        else:
+            return pmat
 
     def _shape_supercell_matrix(self, smat):
         return shape_supercell_matrix(smat)
