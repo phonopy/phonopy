@@ -209,16 +209,16 @@ input file that contains the unit cell crystal structure, e.g.,
 
 .. _fleur_mode:
 
-   ``--fleur``
-   ~~~~~~~~~~~~
+``--fleur``
+~~~~~~~~~~~~
 
-   Fleur mode is invoked with this option. Usually this option is used
-   with ``--cell`` (``-c``) option or ``CELL_FILENAME`` tag to read a Fleur
-   input generator file that contains the unit cell crystal structure, e.g.,
+Fleur mode is invoked with this option. Usually this option is used
+with ``--cell`` (``-c``) option or ``CELL_FILENAME`` tag to read a Fleur
+input generator file that contains the unit cell crystal structure, e.g.,
 
-   ::
+::
 
-      % phonopy --fleur -c fleur_inpgen
+   % phonopy --fleur -c fleur_inpgen
 
 .. _cp2k_mode:
 
@@ -394,15 +394,15 @@ files.
 
 .. _fleur_force_sets_option:
 
-   Fleur interface
-   ^^^^^^^^^^^^^^^^
+Fleur interface
+^^^^^^^^^^^^^^^^
 
-   ``FORCE_SETS`` file is created from ``phonopy_disp.yaml`` and special Fleur
-     FORCES output files.
+``FORCE_SETS`` file is created from ``phonopy_disp.yaml`` and special Fleur
+FORCES output files.
 
-   ::
+::
 
-      % phonopy -f disp-001/FORCES disp-002/FORCES  ...
+   % phonopy -f disp-001/FORCES disp-002/FORCES  ...
 
 .. _cp2k_force_sets_option:
 
