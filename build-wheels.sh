@@ -14,7 +14,7 @@ yum install -y hdf5 freetype freetype-devel pkgconfig libpng-devel
 
 
 for PYBIN in /opt/python/*/bin; do
-    if [[ $PYBIN == *"36"* ]] || [[ $PYBIN == *"37"* ]] || [[ $PYBIN == *"38"* ]]; then
+    if [[ $PYBIN == *"36"* ]] || [[ $PYBIN == *"37"* ]] || [[ $PYBIN == *"38"* ]] || [[ $PYBIN == *"39"* ]]; then
         "${PYBIN}/pip" install -r /io/dev-requirements.txt
         "${PYBIN}/pip" wheel /io/ -w wheelhouse/
     fi
