@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Phonopy API for Python &#8212; Phonopy v.2.8.1</title>
+    <title>Phonopy API for Python &#8212; Phonopy v.2.9.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -39,7 +39,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.8</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.9</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -299,8 +299,9 @@ is 0.01.)</p>
 <code class="docutils literal notranslate"><span class="pre">factor</span></code> keyword in <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> class. The factors are <code class="docutils literal notranslate"><span class="pre">VaspToTHz</span></code>
 for VASP, <code class="docutils literal notranslate"><span class="pre">Wien2kToTHz</span></code> for Wien2k, <code class="docutils literal notranslate"><span class="pre">AbinitToTHz</span></code> for Abinit,
 <code class="docutils literal notranslate"><span class="pre">PwscfToTHz</span></code> for Pwscf, <code class="docutils literal notranslate"><span class="pre">ElkToTHz</span></code> for Elk, <code class="docutils literal notranslate"><span class="pre">SiestaToTHz</span></code> for
-Siesta, <code class="docutils literal notranslate"><span class="pre">CrystalToTHz</span></code> for CRYSTAL <code class="docutils literal notranslate"><span class="pre">VaspToTHz</span></code>, and <code class="docutils literal notranslate"><span class="pre">DftbpToTHz</span></code>
-for DFTB+ is the default value.  For example:</p>
+Siesta, <code class="docutils literal notranslate"><span class="pre">CrystalToTHz</span></code> for CRYSTAL, <code class="docutils literal notranslate"><span class="pre">FleurToTHz</span></code> for Fleur,
+<cite>VaspToTHz`</cite>, and <code class="docutils literal notranslate"><span class="pre">DftbpToTHz</span></code> for DFTB+ is the default value. For
+example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy.units</span> <span class="kn">import</span> <span class="n">AbinitToTHz</span>
 
 <span class="n">phonon</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span><span class="n">unitcell</span><span class="p">,</span>
@@ -763,12 +764,23 @@ in <code class="docutils literal notranslate"><span class="pre">phonopy/structur
 </pre></div>
 </div>
 <p>The arguments have to be set in the structures shown in
-<a class="reference internal" href="#phonopy-atoms-variables"><span class="std std-ref">Variables</span></a>. There are the respective attributes
-<code class="docutils literal notranslate"><span class="pre">cell</span></code>, <code class="docutils literal notranslate"><span class="pre">positions</span></code>, <code class="docutils literal notranslate"><span class="pre">scaled_positions</span></code>, <code class="docutils literal notranslate"><span class="pre">masses</span></code>, <code class="docutils literal notranslate"><span class="pre">magnetic_moments</span></code>,
-<code class="docutils literal notranslate"><span class="pre">symbols</span></code>, <code class="docutils literal notranslate"><span class="pre">numbers</span></code>, and <code class="docutils literal notranslate"><span class="pre">volume</span></code>. <code class="docutils literal notranslate"><span class="pre">unitcell.get_number_of_atoms()</span></code>
-is equivalent to <code class="docutils literal notranslate"><span class="pre">len(unitcell)</span></code>. The instance can be deep-copied by
-<code class="docutils literal notranslate"><span class="pre">unitcell.copy()</span></code>. <code class="docutils literal notranslate"><span class="pre">print(unitcell)</span></code> shows human-readable crystal structure
-in Yaml format.</p>
+<a class="reference internal" href="#phonopy-atoms-variables"><span class="std std-ref">Variables</span></a>. There are the respective attributes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cell</span>
+<span class="n">positions</span>
+<span class="n">scaled_positions</span>
+<span class="n">masses</span>
+<span class="n">magnetic_moments</span>
+<span class="n">symbols</span>
+<span class="n">numbers</span>
+<span class="n">volume</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">unitcell.get_number_of_atoms()</span></code> is equivalent to
+<code class="docutils literal notranslate"><span class="pre">len(unitcell)</span></code>. The instance can be deep-copied by
+<code class="docutils literal notranslate"><span class="pre">unitcell.copy()</span></code>. <code class="docutils literal notranslate"><span class="pre">print(unitcell)</span></code> shows human-readable crystal
+structure in Yaml format. <code class="docutils literal notranslate"><span class="pre">unitcell.to_tuple</span></code> converts to spglib
+crystal structure
+(<a class="reference external" href="https://spglib.github.io/spglib/python-spglib.html#crystal-structure-cell">https://spglib.github.io/spglib/python-spglib.html#crystal-structure-cell</a>).</p>
 </div>
 </div>
 <div class="section" id="definitions-of-variables">
@@ -845,10 +857,10 @@ dielectric constant were calculated using VASP code by the unit cell.</p>
 
 <span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;vasprun.xml&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
     <span class="n">vasprun</span> <span class="o">=</span> <span class="n">VasprunxmlExpat</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">parse</span><span class="p">():</span>
-        <span class="n">epsilon</span> <span class="o">=</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">epsilon</span>
-        <span class="n">borns</span> <span class="o">=</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">born</span>
-        <span class="n">unitcell</span> <span class="o">=</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">cell</span>
+    <span class="n">vasprun</span><span class="o">.</span><span class="n">parse</span><span class="p">():</span>
+    <span class="n">epsilon</span> <span class="o">=</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">epsilon</span>
+    <span class="n">borns</span> <span class="o">=</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">born</span>
+    <span class="n">unitcell</span> <span class="o">=</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">cell</span>
 
 <span class="n">borns_</span><span class="p">,</span> <span class="n">epsilon_</span> <span class="o">=</span> <span class="n">symmetrize_borns_and_epsilon</span><span class="p">(</span>
     <span class="n">borns</span><span class="p">,</span>

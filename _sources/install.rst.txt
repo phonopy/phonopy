@@ -11,8 +11,8 @@ Installation
 
 .. _install_conda:
 
-Using conda
------------
+Installation via conda
+----------------------
 
 Conda is an open source package management system. Once the conda
 system is set-up (see `details about conda setting up
@@ -24,11 +24,7 @@ To install::
 
 This phonopy's conda package is prepared and maintained by
 Paweł T. Jochym at conda-forge channel (please be aware that this is
-not a trivial job). Installation of h5py is optional. When using hdf5
-files from NFS mouted location, the latest h5py may not work. In this
-case, installation of an older version is recommended::
-
-   % conda install hdf5=1.8.18
+not a trivial job).
 
 Minimum steps to install and use phonopy via conda
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -76,8 +72,18 @@ To use this phonopy, entering this environment is necessary like below.
 
 .. _install_from_source:
 
-From source code
------------------
+Using HDF5 on NFS mounted file system
+-------------------------------------
+
+Recent hdf5 versions just as installed may not work on NFS mounted
+file systems. In this case, setting the following environment variable
+may solve the problem::
+
+   export HDF5_USE_FILE_LOCKING=FALSE
+
+
+Installation from source code
+-----------------------------
 
 System requirement
 ~~~~~~~~~~~~~~~~~~
@@ -97,9 +103,10 @@ Prepare the following Python libraries:
 * python-yaml (pyyaml)
 * python-h5py (h5py)
 
-And optionally the following:
+For the CP2K interface, the following package will be needed to install:
 
-* cp2k-input-tools, for the CP2K force calculator backend
+* cp2k-input-tools
+
 
 Installing required packages by conda
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -112,6 +119,13 @@ is strongly recommended to create conda's virtual environment by
 necessary libraries is done as follows::
 
    % conda install -c conda-forge numpy scipy h5py pyyaml matplotlib-base spglib
+
+A libblas library installed can be chosen among ``[openblas, mkl, blis,
+netlib]``. If specific one is expected, it is installed by (e.g. ``openblas``)
+
+::
+
+   % conda install -c conda-forge "libblas=*=*openblas"
 
 If you need a compiler, for usual 64-bit linux system::
 
