@@ -33,4 +33,8 @@ jobs:
         pip install -e .
     - name: Test with pytest
       run: |
-        pytest --cov-report term --cov=phonopy test
+        pytest --cov=./ --cov-report=xml
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        verbose: true
