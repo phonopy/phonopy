@@ -492,7 +492,13 @@ class GeneralizedRegularGridPoints(object):
         return self._snf
 
     @property
+    def mesh_numbers(self):
+        """Reciprocal regular mesh numbers of standardized basis vectors"""
+        return self._mesh_numbers
+
+    @property
     def reciprocal_operations(self):
+        """Reciprocal point group operations"""
         return self._reciprocal_operations
 
     def _prepare(self, cell, length, symprec):
@@ -515,7 +521,7 @@ class GeneralizedRegularGridPoints(object):
         pmat = get_primitive_matrix_by_centring(centring)
         conv_lat = np.dot(np.linalg.inv(tmat).T, cell.cell)
         num_cells = np.prod(length2mesh(length, conv_lat))
-        mesh_numbers = estimate_supercell_matrix(
+        self._mesh_numbers = estimate_supercell_matrix(
             self._sym_dataset,
             max_num_atoms=num_cells * len(self._sym_dataset['std_types']))
         inv_pmat = np.linalg.inv(pmat)
@@ -523,7 +529,7 @@ class GeneralizedRegularGridPoints(object):
         assert (np.abs(inv_pmat - inv_pmat_int) < 1e-5).all()
         # transpose in reciprocal space
         self._grid_matrix = np.array(
-            (inv_pmat_int * mesh_numbers).T, dtype='intc', order='C')
+            (inv_pmat_int * self._mesh_numbers).T, dtype='intc', order='C')
         # From input lattice to the primitive lattice in real space
         self._transformation_matrix = np.array(
             np.dot(np.linalg.inv(tmat), pmat), dtype='double', order='C')
@@ -536,11 +542,11 @@ class GeneralizedRegularGridPoints(object):
         tmat = pointgroup[2]
         lattice = np.dot(input_cell.cell.T, tmat).T
         num_cells = np.prod(length2mesh(length, lattice))
-        mesh_numbers = estimate_supercell_matrix_from_pointgroup(
+        self._mesh_numbers = estimate_supercell_matrix_from_pointgroup(
             pointgroup[1], lattice, num_cells)
         # transpose in reciprocal space
         self._grid_matrix = np.array(
-            np.multiply(tmat, mesh_numbers).T, dtype='intc', order='C')
+            np.multiply(tmat, self._mesh_numbers).T, dtype='intc', order='C')
         self._transformation_matrix = np.eye(3, dtype='double', order='C')
 
     def _generate_grid_points(self):
