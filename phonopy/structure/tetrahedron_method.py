@@ -86,6 +86,11 @@ def get_tetrahedra_relative_grid_address(microzone_lattice):
 
 
 def get_all_tetrahedra_relative_grid_address():
+    """Returns relative grid addresses dataset
+
+    This exists only for the test.
+
+    """
     relative_grid_address = np.zeros((4, 24, 4, 3), dtype='intc')
     phonoc.all_tetrahedra_relative_grid_address(relative_grid_address)
 

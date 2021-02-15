@@ -93,7 +93,9 @@ The frequency unit conversion factor to THz has to be set by using the
 for VASP, ``Wien2kToTHz`` for Wien2k, ``AbinitToTHz`` for Abinit,
 ``PwscfToTHz`` for Pwscf, ``ElkToTHz`` for Elk, ``SiestaToTHz`` for
 Siesta, ``CrystalToTHz`` for CRYSTAL, ``FleurToTHz`` for Fleur,
- ``VaspToTHz``, and ``DftbpToTHz`` for DFTB+ is the default value.  For example::
+`VaspToTHz``, and ``DftbpToTHz`` for DFTB+ is the default value. For
+example::
+
 
    from phonopy.units import AbinitToTHz
 
@@ -634,12 +636,23 @@ Methods and attributes
    get_number_of_atoms()
 
 The arguments have to be set in the structures shown in
-:ref:`phonopy_Atoms_variables`. There are the respective attributes
-``cell``, ``positions``, ``scaled_positions``, ``masses``, ``magnetic_moments``,
-``symbols``, ``numbers``, and ``volume``. ``unitcell.get_number_of_atoms()``
-is equivalent to ``len(unitcell)``. The instance can be deep-copied by
-``unitcell.copy()``. ``print(unitcell)`` shows human-readable crystal structure
-in Yaml format.
+:ref:`phonopy_Atoms_variables`. There are the respective attributes::
+
+  cell
+  positions
+  scaled_positions
+  masses
+  magnetic_moments
+  symbols
+  numbers
+  volume
+
+``unitcell.get_number_of_atoms()`` is equivalent to
+``len(unitcell)``. The instance can be deep-copied by
+``unitcell.copy()``. ``print(unitcell)`` shows human-readable crystal
+structure in Yaml format. ``unitcell.to_tuple`` converts to spglib
+crystal structure
+(https://spglib.github.io/spglib/python-spglib.html#crystal-structure-cell).
 
 Definitions of variables
 -------------------------
@@ -739,10 +752,10 @@ dielectric constant were calculated using VASP code by the unit cell.
 
     with io.open("vasprun.xml", "rb") as f:
         vasprun = VasprunxmlExpat(f)
-        if vasprun.parse():
-            epsilon = vasprun.epsilon
-            borns = vasprun.born
-            unitcell = vasprun.cell
+        vasprun.parse():
+        epsilon = vasprun.epsilon
+        borns = vasprun.born
+        unitcell = vasprun.cell
 
     borns_, epsilon_ = symmetrize_borns_and_epsilon(
         borns,

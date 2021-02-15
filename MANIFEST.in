@@ -1,6 +1,6 @@
-graft c/harmonic_h
-graft c/spglib_h
-graft c/kspclib_h
+graft c/harmonic
+graft c/spglib
+graft c/kspclib
 graft example
 include __nanoversion__.txt
 include LICENSE
