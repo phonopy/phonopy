@@ -204,14 +204,14 @@ class FleurIn(object):
         for count,line in enumerate(self._lines):
             if '&factor' in line:
                 currentline=self._lines.pop(count).split()
-                factors=[currentline[1],currentline[2],currentline[3]]
+                factors=[float(currentline[1]),float(currentline[2]),float(currentline[3])]
 
         for count,line in enumerate(self._lines):
             if '&shift' in line:
                 currentline=self._lines.pop(count).split()
-                shifts=[currentline[1],currentline[2],currentline[3]]
-
-        for x in positions:
+                shifts=[float(currentline[1]),float(currentline[2]),float(currentline[3])]
+        
+        for x in positions[0]:
             x[0]=x[0]/factors[0]+shifts[0]
             x[1]=x[1]/factors[1]+shifts[1]
             x[2]=x[2]/factors[2]+shifts[2]
