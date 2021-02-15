@@ -212,9 +212,9 @@ class FleurIn(object):
                 shifts=[currentline[1],currentline[2],currentline[3]]
 
         for x in positions:
-            x[0]=x[0]/scale[0]+shift[0]
-            x[1]=x[1]/scale[1]+shift[1]
-            x[2]=x[2]/scale[2]+shift[2]
+            x[0]=x[0]/factors[0]+shifts[0]
+            x[1]=x[1]/factors[1]+shifts[1]
+            x[2]=x[2]/factors[2]+shifts[2]
 
         self._tags['atoms'] = {'speci':  speci,
                                'positions': positions}
