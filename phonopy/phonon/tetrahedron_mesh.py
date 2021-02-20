@@ -81,13 +81,13 @@ def _get_tetrahedra_frequencies_C(gp,
 
     t_frequencies = np.zeros((1, frequencies.shape[1], 24, 4),
                              dtype='double')
-    phonoc.get_tetrahedra_frequencies(t_frequencies,
-                                      np.array([gp], dtype='uintp'),
-                                      mesh,
-                                      grid_address,
-                                      gp_ir_index,
-                                      relative_grid_address,
-                                      frequencies)
+    phonoc.tetrahedra_frequencies(t_frequencies,
+                                  np.array([gp], dtype='int_'),
+                                  np.array(mesh, dtype='int_'),
+                                  np.array(grid_address, dtype='int_', order='C'),
+                                  np.array(gp_ir_index, dtype='int_'),
+                                  relative_grid_address,
+                                  frequencies)
     return np.array(t_frequencies[0], dtype='double', order='C')
 
 
@@ -129,11 +129,11 @@ class TetrahedronMesh(object):
         mesh : ndarray or list of int
             Mesh numbers for grids
             shape=(3,)
-            dtype='intc'
+            dtype='int_'
         grid_address : ndarray
             Addresses of all grid points given by GridPoints class.
             shape=(prod(mesh), 3)
-            dtype='intc'
+            dtype='int_'
         grid_mapping_table : ndarray
             Mapping of grid points to irreducible grid points given by
             GridPoints class.
@@ -153,7 +153,7 @@ class TetrahedronMesh(object):
         """
         self._cell = cell
         self._frequencies = frequencies
-        self._mesh = np.array(mesh, dtype='intc')
+        self._mesh = np.array(mesh, dtype='int_')
         self._grid_address = grid_address
         self._grid_mapping_table = grid_mapping_table
         self._lang = lang

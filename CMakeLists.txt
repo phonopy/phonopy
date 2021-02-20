@@ -29,8 +29,8 @@ include_directories("${PROJECT_SOURCE_DIR}/c")
 set(SOURCES
   ${PROJECT_SOURCE_DIR}/c/derivative_dynmat.c
   ${PROJECT_SOURCE_DIR}/c/dynmat.c
-  ${PROJECT_SOURCE_DIR}/c/kgrid.c
   ${PROJECT_SOURCE_DIR}/c/phonopy.c
+  ${PROJECT_SOURCE_DIR}/c/rgrid.c
   ${PROJECT_SOURCE_DIR}/c/tetrahedron_method.c)
 
 # Shared library

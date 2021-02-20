@@ -47,23 +47,7 @@ parallelepiped_vertices = np.array([[0, 0, 0],
                                     [0, 0, 1],
                                     [1, 0, 1],
                                     [0, 1, 1],
-                                    [1, 1, 1]], dtype='intc', order='C')
-
-
-def get_neighboring_grid_points(grid_point,
-                                relative_grid_address,
-                                mesh,
-                                bz_grid_address,
-                                bz_map):
-    relative_grid_points = np.zeros(len(relative_grid_address),
-                                    dtype=bz_map.dtype)
-    phonoc.neighboring_grid_points(relative_grid_points,
-                                   grid_point,
-                                   relative_grid_address,
-                                   mesh,
-                                   bz_grid_address,
-                                   bz_map)
-    return relative_grid_points
+                                    [1, 1, 1]], dtype='int_', order='C')
 
 
 def get_tetrahedra_relative_grid_address(microzone_lattice):
@@ -77,7 +61,7 @@ def get_tetrahedra_relative_grid_address(microzone_lattice):
 
     """
 
-    relative_grid_address = np.zeros((24, 4, 3), dtype='intc')
+    relative_grid_address = np.zeros((24, 4, 3), dtype='int_')
     phonoc.tetrahedra_relative_grid_address(
         relative_grid_address,
         np.array(microzone_lattice, dtype='double', order='C'))
@@ -91,7 +75,7 @@ def get_all_tetrahedra_relative_grid_address():
     This exists only for the test.
 
     """
-    relative_grid_address = np.zeros((4, 24, 4, 3), dtype='intc')
+    relative_grid_address = np.zeros((4, 24, 4, 3), dtype='int_')
     phonoc.all_tetrahedra_relative_grid_address(relative_grid_address)
 
     return relative_grid_address
@@ -175,7 +159,7 @@ class TetrahedronMethod(object):
                     break
             if not found:
                 unique_vertices.append(adrs)
-        return np.array(unique_vertices, dtype='intc', order='C')
+        return np.array(unique_vertices, dtype='int_', order='C')
 
     def set_tetrahedra_omegas(self, tetrahedra_omegas):
         """
@@ -286,15 +270,15 @@ class TetrahedronMethod(object):
             self._relative_grid_addresses = rga
         else:
             self._create_tetrahedra()
-            relative_grid_addresses = np.zeros((24, 4, 3), dtype='intc')
-            central_indices = np.zeros(24, dtype='intc')
+            relative_grid_addresses = np.zeros((24, 4, 3), dtype='int_')
+            central_indices = np.zeros(24, dtype='int_')
             pos = 0
             for i in range(8):
                 ppd_shifted = (parallelepiped_vertices -
                                parallelepiped_vertices[i])
                 for tetra in self._vertices:
                     if i in tetra:
-                        central_indices[pos] = np.where(tetra==i)[0][0]
+                        central_indices[pos] = np.where(tetra == i)[0][0]
                         relative_grid_addresses[pos, :, :] = ppd_shifted[tetra]
                         pos += 1
             self._relative_grid_addresses = relative_grid_addresses
