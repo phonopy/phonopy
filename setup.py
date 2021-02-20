@@ -50,7 +50,7 @@ sources_phonopy = ['c/_phonopy.c',
                    'c/phonopy.c',
                    'c/dynmat.c',
                    'c/derivative_dynmat.c',
-                   'c/kgrid.c',
+                   'c/rgrid.c',
                    'c/tetrahedron_method.c']
 
 if with_openmp:

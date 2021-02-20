@@ -38,7 +38,7 @@
 #include <float.h>
 #include "dynmat.h"
 #include "derivative_dynmat.h"
-#include "kgrid.h"
+#include "rgrid.h"
 #include "phonopy.h"
 #include "tetrahedron_method.h"
 
@@ -213,31 +213,13 @@ void phpy_get_derivative_dynmat_at_q(double *derivative_dynmat,
 }
 
 
-void phpy_get_neighboring_grid_points(size_t neighboring_grid_points[],
-                                      const size_t grid_point,
-                                      PHPYCONST int relative_grid_address[][3],
-                                      const int num_relative_grid_address,
-                                      const int mesh[3],
-                                      PHPYCONST int bz_grid_address[][3],
-                                      const size_t bz_map[])
-{
-  thm_get_dense_neighboring_grid_points(neighboring_grid_points,
-                                        grid_point,
-                                        relative_grid_address,
-                                        num_relative_grid_address,
-                                        mesh,
-                                        bz_grid_address,
-                                        bz_map);
-}
-
-
-void phpy_get_relative_grid_address(int relative_grid_address[24][4][3],
+void phpy_get_relative_grid_address(long relative_grid_address[24][4][3],
                                     PHPYCONST double reciprocal_lattice[3][3])
 {
   thm_get_relative_grid_address(relative_grid_address, reciprocal_lattice);
 }
 
-void phpy_get_all_relative_grid_address(int relative_grid_address[4][24][4][3])
+void phpy_get_all_relative_grid_address(long relative_grid_address[4][24][4][3])
 {
   thm_get_all_relative_grid_address(relative_grid_address);
 }
@@ -249,35 +231,20 @@ double phpy_get_integration_weight(const double omega,
   return thm_get_integration_weight(omega, tetrahedra_omegas, function);
 }
 
-void
-phpy_get_integration_weight_at_omegas(double *integration_weights,
-                                      const int num_omegas,
-                                      const double *omegas,
-                                      PHPYCONST double tetrahedra_omegas[24][4],
-                                      const char function)
-{
-  thm_get_integration_weight_at_omegas(integration_weights,
-                                       num_omegas,
-                                       omegas,
-                                       tetrahedra_omegas,
-                                       function);
-}
-
-
 void phpy_get_tetrahedra_frequenies(double *freq_tetras,
-                                    const int mesh[3],
-                                    const size_t* grid_points,
-                                    PHPYCONST int (*grid_address)[3],
-                                    PHPYCONST int (*relative_grid_address)[3],
-                                    const size_t* gp_ir_index,
+                                    const long mesh[3],
+                                    const long* grid_points,
+                                    PHPYCONST long (*grid_address)[3],
+                                    PHPYCONST long (*relative_grid_address)[3],
+                                    const long* gp_ir_index,
                                     const double *frequencies,
-                                    const size_t num_band,
-                                    const size_t num_gp)
+                                    const long num_band,
+                                    const long num_gp)
 {
-  int is_shift[3] = {0, 0, 0};
-  size_t i, j, k, gp;
-  int g_addr[3];
-  int address_double[3];
+  long is_shift[3] = {0, 0, 0};
+  long i, j, k, gp;
+  long g_addr[3];
+  long address_double[3];
 
   /* relative_grid_address[4, 24, 3] is viewed as [96, 3]. */
   for (i = 0; i < num_gp;  i++) {
@@ -287,11 +254,11 @@ void phpy_get_tetrahedra_frequenies(double *freq_tetras,
         g_addr[k] = grid_address[grid_points[i]][k] +
           relative_grid_address[j % 96][k];
       }
-      kgd_get_grid_address_double_mesh(address_double,
-                                       g_addr,
-                                       mesh,
-                                       is_shift);
-      gp = kgd_get_dense_grid_point_double_mesh(address_double, mesh);
+      rgd_get_double_grid_address(address_double,
+                                  g_addr,
+                                  mesh,
+                                  is_shift);
+      gp = rgd_get_double_grid_index(address_double, mesh);
       freq_tetras[i * num_band * 96 + j] = frequencies[gp_ir_index[gp] * num_band + j / 96];
     }
   }
@@ -299,36 +266,36 @@ void phpy_get_tetrahedra_frequenies(double *freq_tetras,
 
 
 void phpy_tetrahedron_method_dos(double *dos,
-                                 const int mesh[3],
-                                 PHPYCONST int (*grid_address)[3],
-                                 PHPYCONST int (*relative_grid_address)[4][3],
-                                 const size_t *grid_mapping_table,
+                                 const long mesh[3],
+                                 PHPYCONST long (*grid_address)[3],
+                                 PHPYCONST long (*relative_grid_address)[4][3],
+                                 const long *grid_mapping_table,
                                  const double *freq_points,
                                  const double *frequencies,
                                  const double *coef,
-                                 const size_t num_freq_points,
-                                 const size_t num_ir_gp,
-                                 const size_t num_band,
-                                 const size_t num_coef,
-                                 const size_t num_gp)
+                                 const long num_freq_points,
+                                 const long num_ir_gp,
+                                 const long num_band,
+                                 const long num_coef,
+                                 const long num_gp)
 {
-  int is_shift[3] = {0, 0, 0};
-  size_t i, j, k, l, m, q, r, count;
-  size_t ir_gps[24][4];
-  int g_addr[3];
+  long is_shift[3] = {0, 0, 0};
+  long i, j, k, l, m, q, r, count;
+  long ir_gps[24][4];
+  long g_addr[3];
   double tetrahedra[24][4];
-  int address_double[3];
-  size_t *gp2ir, *ir_grid_points;
-  int *weights;
+  long address_double[3];
+  long *gp2ir, *ir_grid_points;
+  long *weights;
   double iw;
 
   gp2ir = NULL;
   ir_grid_points = NULL;
   weights = NULL;
 
-  gp2ir = (size_t*)malloc(sizeof(size_t) * num_gp);
-  ir_grid_points = (size_t*)malloc(sizeof(size_t) * num_ir_gp);
-  weights = (int*)malloc(sizeof(int) * num_ir_gp);
+  gp2ir = (long*)malloc(sizeof(long) * num_gp);
+  ir_grid_points = (long*)malloc(sizeof(long) * num_ir_gp);
+  weights = (long*)malloc(sizeof(long) * num_ir_gp);
 
   count = 0;
   for (i = 0; i < num_gp; i++) {
@@ -356,11 +323,11 @@ void phpy_tetrahedron_method_dos(double *dos,
           g_addr[r] = grid_address[ir_grid_points[i]][r] +
             relative_grid_address[l][q][r];
         }
-        kgd_get_grid_address_double_mesh(address_double,
-                                         g_addr,
-                                         mesh,
-                                         is_shift);
-        ir_gps[l][q] = gp2ir[kgd_get_grid_point_double_mesh(address_double, mesh)];
+        rgd_get_double_grid_address(address_double,
+                                    g_addr,
+                                    mesh,
+                                    is_shift);
+        ir_gps[l][q] = gp2ir[rgd_get_double_grid_index(address_double, mesh)];
       }
     }
 
@@ -393,13 +360,13 @@ void phpy_tetrahedron_method_dos(double *dos,
 void phpy_get_thermal_properties(double *thermal_props,
                                  const double *temperatures,
                                  const double *freqs,
-                                 const int *weights,
-                                 const int num_temp,
-                                 const int num_qpoints,
-                                 const int num_bands,
+                                 const long *weights,
+                                 const long num_temp,
+                                 const long num_qpoints,
+                                 const long num_bands,
                                  const double cutoff_frequency)
 {
-  int i, j, k;
+  long i, j, k;
   double f;
   double *tp;
 
