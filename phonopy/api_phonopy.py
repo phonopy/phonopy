@@ -1529,10 +1529,12 @@ class Phonopy(object):
             msg = ("run_mesh has to be done.")
             raise RuntimeError(msg)
 
-        return (self._mesh.qpoints,
-                self._mesh.weights,
-                self._mesh.frequencies,
-                self._mesh.eigenvectors)
+        mesh_dict = self.get_mesh_dict()
+
+        return (mesh_dict['qpoints'],
+                mesh_dict['weights'],
+                mesh_dict['frequencies'],
+                mesh_dict['eigenvectors'])
 
     def get_mesh_grid_info(self):
         warnings.warn("Phonopy.get_mesh_grid_info is deprecated. "
