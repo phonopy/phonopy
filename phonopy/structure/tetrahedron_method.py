@@ -61,7 +61,7 @@ def get_tetrahedra_relative_grid_address(microzone_lattice):
 
     """
 
-    relative_grid_address = np.zeros((24, 4, 3), dtype='int_')
+    relative_grid_address = np.zeros((24, 4, 3), dtype='int_', order='C')
     phonoc.tetrahedra_relative_grid_address(
         relative_grid_address,
         np.array(microzone_lattice, dtype='double', order='C'))
