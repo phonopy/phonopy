@@ -486,61 +486,17 @@ int phpy_compute_permutation(int * rot_atom,
 }
 
 
-/* Implementation detail of get_smallest_vectors. */
-/* Finds the smallest vectors within each list and copies them to the output. */
-void phpy_copy_smallest_vectors(double (*shortest_vectors)[27][3],
-                                int * multiplicity,
-                                PHPYCONST double (*vector_lists)[27][3],
-                                PHPYCONST double (*length_lists)[27],
-                                const int num_lists,
-                                const double symprec)
-{
-  int i,j,k;
-  int count;
-  double minimum;
-  double (*vectors)[3];
-  double *lengths;
-
-  for (i = 0; i < num_lists; i++) {
-    /* Look at a single list of 27 vectors. */
-    lengths = length_lists[i];
-    vectors = vector_lists[i];
-
-    /* Compute the minimum length. */
-    minimum = DBL_MAX;
-    for (j = 0; j < 27; j++) {
-      if (lengths[j] < minimum) {
-        minimum = lengths[j];
-      }
-    }
-
-    /* Copy vectors whose length is within tolerance. */
-    count = 0;
-    for (j = 0; j < 27; j++) {
-      if (lengths[j] - minimum <= symprec) {
-        for (k = 0; k < 3; k++) {
-          shortest_vectors[i][count][k] = vectors[j][k];
-        }
-        count++;
-      }
-    }
-
-    multiplicity[i] = count;
-  }
-}
-
-
-void phpy_set_smallest_vectors(double (*smallest_vectors)[27][3],
-                               int *multiplicity,
-                               PHPYCONST double (*pos_to)[3],
-                               const int num_pos_to,
-                               PHPYCONST double (*pos_from)[3],
-                               const int num_pos_from,
-                               PHPYCONST int (*lattice_points)[3],
-                               const int num_lattice_points,
-                               PHPYCONST double reduced_basis[3][3],
-                               PHPYCONST int trans_mat[3][3],
-                               const double symprec)
+void phpy_set_smallest_vectors_sparse(double (*smallest_vectors)[27][3],
+                                      int *multiplicity,
+                                      PHPYCONST double (*pos_to)[3],
+                                      const int num_pos_to,
+                                      PHPYCONST double (*pos_from)[3],
+                                      const int num_pos_from,
+                                      PHPYCONST int (*lattice_points)[3],
+                                      const int num_lattice_points,
+                                      PHPYCONST double reduced_basis[3][3],
+                                      PHPYCONST int trans_mat[3][3],
+                                      const double symprec)
 {
   int i, j, k, l, count;
   double length_tmp, minimum, vec_xyz;
@@ -577,7 +533,7 @@ void phpy_set_smallest_vectors(double (*smallest_vectors)[27][3],
       for (k = 0; k < num_lattice_points; k++) {
         if (length[k] - minimum < symprec) {
           for (l = 0; l < 3; l++) {
-            /* Transform to supercell coordinates */
+            /* Transform back to supercell coordinates */
             vec_xyz = (trans_mat[l][0] * vec[k][0] +
                        trans_mat[l][1] * vec[k][1] +
                        trans_mat[l][2] * vec[k][2]);
@@ -587,12 +543,88 @@ void phpy_set_smallest_vectors(double (*smallest_vectors)[27][3],
         }
       }
       if (count > 27) { /* should not be greater than 27 */
-        printf("Warning (gsv_set_smallest_vectors): ");
+        printf("Warning (gsv_set_smallest_vectors_sparse): ");
         printf("number of shortest vectors is out of range,\n");
         break;
       } else {
         multiplicity[i * num_pos_from + j] = count;
       }
+    }
+  }
+
+  free(length);
+  length = NULL;
+  free(vec);
+  vec = NULL;
+}
+
+
+void phpy_set_smallest_vectors_dense(double (*smallest_vectors)[3],
+                                     long (*multiplicity)[2],
+                                     PHPYCONST double (*pos_to)[3],
+                                     const long num_pos_to,
+                                     PHPYCONST double (*pos_from)[3],
+                                     const long num_pos_from,
+                                     PHPYCONST long (*lattice_points)[3],
+                                     const long num_lattice_points,
+                                     PHPYCONST double reduced_basis[3][3],
+                                     PHPYCONST long trans_mat[3][3],
+                                     const long initialize,
+                                     const double symprec)
+{
+  long i, j, k, l, count, adrs;
+  double length_tmp, minimum, vec_xyz;
+  double *length;
+  double (*vec)[3];
+
+  length = (double*)malloc(sizeof(double) * num_lattice_points);
+  vec = (double(*)[3])malloc(sizeof(double[3]) * num_lattice_points);
+
+  adrs = 0;
+
+  for (i = 0; i < num_pos_to; i++) {
+    for (j = 0; j < num_pos_from; j++) {
+      for (k = 0; k < num_lattice_points; k++) {
+        length[k] = 0;
+        for (l = 0; l < 3; l++) {
+          vec[k][l] = pos_to[i][l] - pos_from[j][l] + lattice_points[k][l];
+        }
+        for (l = 0; l < 3; l++) {
+          length_tmp = (reduced_basis[l][0] * vec[k][0] +
+                        reduced_basis[l][1] * vec[k][1] +
+                        reduced_basis[l][2] * vec[k][2]);
+          length[k] += length_tmp * length_tmp;
+        }
+        length[k] = sqrt(length[k]);
+      }
+
+      minimum = DBL_MAX;
+      for (k = 0; k < num_lattice_points; k++) {
+        if (length[k] < minimum) {
+          minimum = length[k];
+        }
+      }
+
+      count = 0;
+      for (k = 0; k < num_lattice_points; k++) {
+        if (length[k] - minimum < symprec) {
+          if (!initialize) {
+            for (l = 0; l < 3; l++) {
+              /* Transform back to supercell coordinates */
+              vec_xyz = (trans_mat[l][0] * vec[k][0] +
+                         trans_mat[l][1] * vec[k][1] +
+                         trans_mat[l][2] * vec[k][2]);
+              smallest_vectors[adrs + count][l] = vec_xyz;
+            }
+          }
+          count++;
+        }
+      }
+      if (initialize) {
+        multiplicity[i * num_pos_from + j][0] = count;
+        multiplicity[i * num_pos_from + j][1] = adrs;
+      }
+      adrs += count;
     }
   }
 

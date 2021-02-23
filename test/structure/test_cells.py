@@ -9,6 +9,20 @@ from phonopy.interface.phonopy_yaml import read_cell_yaml
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
+multi_nacl_ref = [1, 1, 2, 1, 2, 1, 4, 1, 2, 1, 4, 1, 4, 1, 8, 1,
+                  1, 1, 2, 1, 1, 2, 2, 2, 1, 2, 2, 2, 1, 4, 2, 4,
+                  1, 1, 1, 2, 2, 1, 2, 2, 1, 2, 1, 4, 2, 2, 2, 4,
+                  1, 1, 1, 2, 1, 2, 1, 4, 2, 1, 2, 2, 2, 2, 2, 4,
+                  1, 1, 1, 2, 1, 2, 1, 4, 1, 2, 1, 4, 1, 4, 1, 8,
+                  1, 1, 1, 2, 2, 1, 2, 2, 2, 1, 2, 2, 4, 1, 4, 2,
+                  1, 1, 2, 1, 1, 2, 2, 2, 2, 1, 4, 1, 2, 2, 4, 2,
+                  1, 1, 2, 1, 2, 1, 4, 1, 1, 2, 2, 2, 2, 2, 4, 2]
+svecs_nacl_ref10 = [[-0.5, 0., 0.], [0.5, 0., 0.]]
+svecs_nacl_ref30 = [[-0.5, -0.5, 0.],
+                    [-0.5, 0.5, 0.],
+                    [0.5, -0.5, 0.],
+                    [0.5, 0.5, 0.]]
+
 
 def test_compute_permutation_sno2(ph_sno2):
     _test_compute_permutation(ph_sno2)
@@ -128,22 +142,30 @@ def test_ShortestPairs_sparse_nacl(ph_nacl, helper_methods):
     spairs = ShortestPairs(scell.cell, pos, pos[pcell.p2s_map])
     svecs = spairs.shortest_vectors
     multi = spairs.multiplicities
-    multi_ref = [1, 1, 2, 1, 2, 1, 4, 1, 2, 1, 4, 1, 4, 1, 8, 1,
-                 1, 1, 2, 1, 1, 2, 2, 2, 1, 2, 2, 2, 1, 4, 2, 4,
-                 1, 1, 1, 2, 2, 1, 2, 2, 1, 2, 1, 4, 2, 2, 2, 4,
-                 1, 1, 1, 2, 1, 2, 1, 4, 2, 1, 2, 2, 2, 2, 2, 4,
-                 1, 1, 1, 2, 1, 2, 1, 4, 1, 2, 1, 4, 1, 4, 1, 8,
-                 1, 1, 1, 2, 2, 1, 2, 2, 2, 1, 2, 2, 4, 1, 4, 2,
-                 1, 1, 2, 1, 1, 2, 2, 2, 2, 1, 4, 1, 2, 2, 4, 2,
-                 1, 1, 2, 1, 2, 1, 4, 1, 1, 2, 2, 2, 2, 2, 4, 2]
-    np.testing.assert_array_equal(multi.ravel(), multi_ref)
-    svecs_ref10 = [[-0.5, 0., 0.], [0.5, 0., 0.]]
-    svecs_ref30 = [[-0.5, -0.5, 0.],
-                   [-0.5, 0.5, 0.],
-                   [0.5, -0.5, 0.],
-                   [0.5, 0.5, 0.]]
-    np.testing.assert_allclose(svecs_ref10, svecs[1, 0, :2], atol=1e-8)
-    np.testing.assert_allclose(svecs_ref30, svecs[3, 0, :4], atol=1e-8)
+    np.testing.assert_array_equal(multi.ravel(), multi_nacl_ref)
     pos_from_svecs = svecs[:, 0, 0, :] + pos[0]
+    np.testing.assert_allclose(svecs_nacl_ref10, svecs[1, 0, :2], atol=1e-8)
+    np.testing.assert_allclose(svecs_nacl_ref30, svecs[3, 0, :4], atol=1e-8)
+    helper_methods.compare_positions_with_order(
+        pos_from_svecs, pos, scell.cell)
+
+
+def test_ShortestPairs_dense_nacl(ph_nacl, helper_methods):
+    scell = ph_nacl.supercell
+    pcell = ph_nacl.primitive
+    pos = scell.scaled_positions
+    spairs = ShortestPairs(scell.cell, pos, pos[pcell.p2s_map],
+                           store_dense_vectors=True)
+    svecs = spairs.shortest_vectors
+    multi = spairs.multiplicities
+    assert multi[-1, -1, :].sum() == multi[:, :, 0].sum()
+    np.testing.assert_array_equal(multi[:, :, 0].ravel(), multi_nacl_ref)
+    np.testing.assert_allclose(
+        svecs_nacl_ref10, svecs[multi[1, 0, 1]:multi[1, 0, :].sum()],
+        atol=1e-8)
+    np.testing.assert_allclose(
+        svecs_nacl_ref30, svecs[multi[3, 0, 1]:multi[3, 0, :].sum()],
+        atol=1e-8)
+    pos_from_svecs = svecs[multi[:, 0, 1], :] + pos[0]
     helper_methods.compare_positions_with_order(
         pos_from_svecs, pos, scell.cell)

@@ -810,8 +810,9 @@ class ShortestPairs(object):
         self._symprec = symprec
 
         if store_dense_vectors:
-            raise NotImplementedError(
-                "store_dense_vectors=True is not supported.")
+            svecs, multi = self._run_dense()
+            self._smallest_vectors = svecs
+            self._multiplicities = multi
         else:
             svecs, multi = self._run_sparse()
             self._smallest_vectors = svecs
@@ -824,6 +825,60 @@ class ShortestPairs(object):
     @property
     def multiplicities(self):
         return self._multiplicities
+
+    def _run_dense(self):
+        """Find shortest atomic pair vectors
+
+        Returns
+        -------
+        shortest_vectors : ndarray
+            Shortest vectors in supercell coordinates.
+            shape=(size_super, size_prim, sum(multiplicities[:, :, 1]),
+            dtype='double'
+        multiplicities : ndarray
+            Number of equidistance shortest vectors
+            shape=(size_super, size_prim, 2), dtype='int_'
+
+        """
+
+        (lattice_points,
+         supercell_fracs,
+         primitive_fracs,
+         trans_mat_inv,
+         reduced_bases) = self._transform_cell_basis('int_')
+
+        # This shortest_vectors is already used at many locations.
+        # Therefore the constant number 27 = 3*3*3 can not be easily changed.
+        shortest_vectors = np.zeros((1, 3), dtype='double', order='C')
+        multiplicity = np.zeros(
+            (len(supercell_fracs), len(primitive_fracs), 2),
+            dtype='int_', order='C')
+        import phonopy._phonopy as phonoc
+        phonoc.gsv_set_smallest_vectors_dense(
+            shortest_vectors,
+            multiplicity,
+            supercell_fracs,
+            primitive_fracs,
+            lattice_points,
+            np.array(reduced_bases.T, dtype='double', order='C'),
+            np.array(trans_mat_inv.T, dtype='int_', order='C'),
+            1,
+            self._symprec)
+
+        shortest_vectors = np.zeros((np.sum(multiplicity[:, :, 0]), 3),
+                                    dtype='double', order='C')
+        phonoc.gsv_set_smallest_vectors_dense(
+            shortest_vectors,
+            multiplicity,
+            supercell_fracs,
+            primitive_fracs,
+            lattice_points,
+            np.array(reduced_bases.T, dtype='double', order='C'),
+            np.array(trans_mat_inv.T, dtype='int_', order='C'),
+            0,
+            self._symprec)
+
+        return shortest_vectors, multiplicity
 
     def _run_sparse(self):
         """Find shortest atomic pair vectors
@@ -854,7 +909,7 @@ class ShortestPairs(object):
         multiplicity = np.zeros((len(supercell_fracs), len(primitive_fracs)),
                                 dtype='intc', order='C')
         import phonopy._phonopy as phonoc
-        phonoc.gsv_set_smallest_vectors(
+        phonoc.gsv_set_smallest_vectors_sparse(
             shortest_vectors,
             multiplicity,
             supercell_fracs,
@@ -863,67 +918,6 @@ class ShortestPairs(object):
             np.array(reduced_bases.T, dtype='double', order='C'),
             np.array(trans_mat_inv.T, dtype='intc', order='C'),
             self._symprec)
-
-        # Here's where things get interesting.
-        # We want to avoid manually iterating over all possible pairings of
-        # supercell atoms and primitive atoms, because doing so creates a
-        # tight loop in larger structures that is difficult to optimize.
-        #
-        # Furthermore, it seems wise to call numpy.dot on as large of an array
-        # as possible, since numpy can shell out to BLAS to handle the
-        # real heavy lifting.
-
-        # lattice_1D = (-1, 0, 1)
-        # lattice_points = np.array([[i, j, k]
-        #                            for i in lattice_1D
-        #                            for j in lattice_1D
-        #                            for k in lattice_1D],
-        #                           dtype='intc', order='C')
-
-        # # For every atom in the supercell and every atom in the primitive cell,
-        # # we want 27 images of the vector between them.
-        # #
-        # # 'None' is used to insert trivial axes to make these arrays broadcast.
-        # #
-        # # shape: (size_super, size_prim, 27, 3)
-        # candidate_fracs = (
-        #     supercell_fracs[:, None, None, :]    # shape: (size_super, 1, 1, 3)
-        #     - primitive_fracs[None, :, None, :]  # shape: (1, size_prim, 1, 3)
-        #     + lattice_points[None, None, :, :]   # shape: (1, 1, 27, 3)
-        # )
-
-        # # To compute the lengths, we want cartesian positions.
-        # #
-        # # Conveniently, calling 'numpy.dot' between a 4D array and a 2D array
-        # # does vector-matrix multiplication on each row vector in the last axis
-        # # of the 4D array.
-        # #
-        # # shape: (size_super, size_prim, 27)
-        # lengths = np.array(np.sqrt(
-        #     np.sum(np.dot(candidate_fracs, reduced_bases)**2, axis=-1)),
-        #                    dtype='double', order='C')
-
-        # # Create the output, initially consisting of all candidate vectors scaled
-        # # by the primitive cell.
-        # #
-        # # shape: (size_super, size_prim, 27, 3)
-        # candidate_vectors = np.array(np.dot(candidate_fracs, trans_mat_inv),
-        #                              dtype='double', order='C')
-
-        # # The last final bits are done in C.
-        # #
-        # # We will gather the shortest ones from each list of 27 vectors.
-        # shortest_vectors = np.zeros_like(candidate_vectors,
-        #                                  dtype='double', order='C')
-        # multiplicity = np.zeros(shortest_vectors.shape[:2], dtype='intc',
-        #                         order='C')
-
-        # import phonopy._phonopy as phonoc
-        # phonoc.gsv_copy_smallest_vectors(shortest_vectors,
-        #                                  multiplicity,
-        #                                  candidate_vectors,
-        #                                  lengths,
-        #                                  symprec)
 
         return shortest_vectors, multiplicity
 
