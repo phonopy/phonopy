@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
-    get_supercell, get_primitive, TrimmedCell,
+    get_supercell, get_primitive, TrimmedCell, ShortestPairs,
     compute_permutation_for_rotation, compute_all_sg_permutations)
 from phonopy.interface.phonopy_yaml import read_cell_yaml
 
@@ -119,3 +119,31 @@ def test_TrimmedCell(convcell_nacl, helper_methods):
     tcell3 = TrimmedCell(pmat3, scell3_swap,
                          positions_to_reorder=tcell2.scaled_positions)
     helper_methods.compare_cells_with_order(tcell2, tcell3)
+
+
+def test_ShortestPairs_sparse_nacl(ph_nacl, helper_methods):
+    scell = ph_nacl.supercell
+    pcell = ph_nacl.primitive
+    pos = scell.scaled_positions
+    spairs = ShortestPairs(scell.cell, pos, pos[pcell.p2s_map])
+    svecs = spairs.shortest_vectors
+    multi = spairs.multiplicities
+    multi_ref = [1, 1, 2, 1, 2, 1, 4, 1, 2, 1, 4, 1, 4, 1, 8, 1,
+                 1, 1, 2, 1, 1, 2, 2, 2, 1, 2, 2, 2, 1, 4, 2, 4,
+                 1, 1, 1, 2, 2, 1, 2, 2, 1, 2, 1, 4, 2, 2, 2, 4,
+                 1, 1, 1, 2, 1, 2, 1, 4, 2, 1, 2, 2, 2, 2, 2, 4,
+                 1, 1, 1, 2, 1, 2, 1, 4, 1, 2, 1, 4, 1, 4, 1, 8,
+                 1, 1, 1, 2, 2, 1, 2, 2, 2, 1, 2, 2, 4, 1, 4, 2,
+                 1, 1, 2, 1, 1, 2, 2, 2, 2, 1, 4, 1, 2, 2, 4, 2,
+                 1, 1, 2, 1, 2, 1, 4, 1, 1, 2, 2, 2, 2, 2, 4, 2]
+    np.testing.assert_array_equal(multi.ravel(), multi_ref)
+    svecs_ref10 = [[-0.5, 0., 0.], [0.5, 0., 0.]]
+    svecs_ref30 = [[-0.5, -0.5, 0.],
+                   [-0.5, 0.5, 0.],
+                   [0.5, -0.5, 0.],
+                   [0.5, 0.5, 0.]]
+    np.testing.assert_allclose(svecs_ref10, svecs[1, 0, :2], atol=1e-8)
+    np.testing.assert_allclose(svecs_ref30, svecs[3, 0, :4], atol=1e-8)
+    pos_from_svecs = svecs[:, 0, 0, :] + pos[0]
+    helper_methods.compare_positions_with_order(
+        pos_from_svecs, pos, scell.cell)
