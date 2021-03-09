@@ -137,7 +137,7 @@ class TestElectronFreeEnergy(unittest.TestCase):
              6, 24, 24, 24, 24, 24, 24, 24, 12, 6, 24, 24, 24, 24, 24, 12,
              6, 24, 24, 24, 12, 6, 24, 12, 3, 24, 48, 48, 48, 24, 24, 48,
              48, 48, 48, 48, 24, 24, 48, 48, 48, 24, 24, 48, 24, 12, 24, 48,
-             24, 24, 48, 24, 12, 6], dtype='intc')
+             24, 24, 48, 24, 12, 6], dtype='int_')
         eigvals = np.reshape([float(x) for x in eigvals_Al.split()],
                              (1, len(weights), -1))
         n_electrons = 3.0

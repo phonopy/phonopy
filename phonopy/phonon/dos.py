@@ -198,14 +198,15 @@ def run_tetrahedron_method_dos(mesh,
     arr_shape = frequencies.shape + (len(frequency_points), _coef.shape[1])
     dos = np.zeros(arr_shape, dtype='double')
 
-    phonoc.tetrahedron_method_dos(dos,
-                                  mesh,
-                                  frequency_points,
-                                  frequencies,
-                                  _coef,
-                                  grid_address,
-                                  grid_mapping_table,
-                                  relative_grid_address)
+    phonoc.tetrahedron_method_dos(
+        dos,
+        np.array(mesh, dtype='int_'),
+        frequency_points,
+        frequencies,
+        _coef,
+        grid_address,
+        grid_mapping_table,
+        relative_grid_address)
     if coef is None:
         return dos[:, :, :, 0].sum(axis=0).sum(axis=0) / np.prod(mesh)
     else:

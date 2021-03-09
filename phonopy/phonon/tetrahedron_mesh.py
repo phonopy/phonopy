@@ -44,6 +44,43 @@ def get_tetrahedra_frequencies(gp,
                                frequencies,
                                grid_order=None,
                                lang='C'):
+    """Returns frequencies on the relative_grid_addresses
+
+    Parameters
+    ----------
+    gp : float
+        Grid index
+    mesh : ndarray
+        Mesh numbers.
+        shape=(3, ), dtype='int_'
+    grid_address : ndarray
+        Grid address in integers.
+        shape=(prod(mesh), 3), dtype='int_', order='C'
+    relative_grid_addresses : ndarray
+        Relative grid addresses from the centre (i.e., gp)
+        shape=(24, 4, 3), dtype='int_', order='C'
+    gp_ir_index : ndarray
+        Grid index to ir-grid index. The ir-grid index is
+        range(len(ir-grid-points)).
+        shape=(prod(mesh), ), dtype='int_'
+    frequencies : ndarray
+        Phonon frequences on ir-grid points.
+        shape=(ir-grid-points, num_band)
+        dtype='double'
+    grid_order : list of int, optional
+        This controls how grid addresses are stored either C style or
+        Fortran style. This is only valid when lang != 'C'.
+    lang : str, 'C' or else, optional
+        With 'C', C implementation is used. Otherwise Python implementation
+        runs.
+
+    Returns
+    -------
+    ndarray
+        Frequencies at tetheredra tertices.
+        shape=(num_bands, 24, 4), dtype='double', order='C'
+
+    """
     if lang == 'C':
         try:
             import phonopy._phonopy as phonoc
@@ -81,13 +118,13 @@ def _get_tetrahedra_frequencies_C(gp,
 
     t_frequencies = np.zeros((1, frequencies.shape[1], 24, 4),
                              dtype='double')
-    phonoc.get_tetrahedra_frequencies(t_frequencies,
-                                      np.array([gp], dtype='uintp'),
-                                      mesh,
-                                      grid_address,
-                                      gp_ir_index,
-                                      relative_grid_address,
-                                      frequencies)
+    phonoc.tetrahedra_frequencies(t_frequencies,
+                                  np.array([gp], dtype='int_'),
+                                  mesh,
+                                  grid_address,
+                                  gp_ir_index,
+                                  relative_grid_address,
+                                  frequencies)
     return np.array(t_frequencies[0], dtype='double', order='C')
 
 
@@ -123,26 +160,26 @@ class TetrahedronMesh(object):
         cell : PhonopyAtoms
             Primitive cell used to calculate frequencies
         frequencies: ndarray
-            Phonon frequences on grid points
+            Phonon frequences on ir-grid points
             shape=(num_ir_grid_points, num_band)
             dtype='double'
         mesh : ndarray or list of int
             Mesh numbers for grids
             shape=(3,)
-            dtype='intc'
+            dtype='int_'
         grid_address : ndarray
             Addresses of all grid points given by GridPoints class.
             shape=(prod(mesh), 3)
-            dtype='intc'
+            dtype='int_'
         grid_mapping_table : ndarray
             Mapping of grid points to irreducible grid points given by
             GridPoints class.
             shape=(prod(mesh),)
-            dtype='uintp'
+            dtype='int_'
         ir_grid_points : ndarray
             Irreducible gird points given by GridPoints class.
             shape=(len(np.unique(grid_mapping_table)),)
-            dtype='uintp'
+            dtype='int_'
         grid_order : list of int, optional
             This controls how grid addresses are stored either C style or
             Fortran style.
@@ -153,7 +190,7 @@ class TetrahedronMesh(object):
         """
         self._cell = cell
         self._frequencies = frequencies
-        self._mesh = np.array(mesh, dtype='intc')
+        self._mesh = np.array(mesh, dtype='int_')
         self._grid_address = grid_address
         self._grid_mapping_table = grid_mapping_table
         self._lang = lang
