@@ -263,10 +263,9 @@ class Symmetry(object):
         perm = self._atomic_permutations
         map_operations = np.zeros(perm.shape[1], dtype='intc')
         for i, eq_atom in enumerate(self._map_atoms):
-            for j in range(perm.shape[0]):
-                match = np.where(perm[:, i] == eq_atom)[0]
-                assert len(match) != 0
-                map_operations[i] = match[0]
+            match = np.where(perm[:, i] == eq_atom)[0]
+            assert len(match) != 0
+            map_operations[i] = match[0]
         return map_operations
 
     def _set_nosym(self):
