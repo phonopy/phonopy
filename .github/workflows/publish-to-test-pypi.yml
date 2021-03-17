@@ -18,6 +18,7 @@ jobs:
       run: |
         ./get_nanoversion.sh
         cat __nanoversion__.txt
+        pip install numpy
         python setup.py sdist
     - name: Publish package
       if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/rc')
