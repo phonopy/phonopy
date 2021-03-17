@@ -1,0 +1,40 @@
+name: phonopy using conda
+
+on: [push]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 5
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Add conda to system path
+      run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        echo $CONDA/bin >> $GITHUB_PATH
+    - name: Install dependencies
+      run: |
+        conda install --yes -c conda-forge python=3.8
+        conda install --yes -c conda-forge gcc_linux-64 gxx_linux-64 matplotlib-base pyyaml scipy numpy spglib h5py setuptools_scm conda-build pip pytest codecov pytest-cov pytest
+    - name: Install cp2k-input-tools
+      run: |
+        pip install cp2k-input-tools
+    - name: Setup phonopy
+      run: |
+        ./get_nanoversion.sh
+        cat __nanoversion__.txt
+        python setup.py build
+        pip install -e .
+    - name: Test with pytest
+      run: |
+        pytest --cov=./ --cov-report=xml
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        verbose: true
