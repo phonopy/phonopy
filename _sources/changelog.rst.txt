@@ -3,6 +3,10 @@
 Change Log
 ==========
 
+Mar-17-2021: Version 2.9.3
+--------------------------
+* Fix ``MANIFEST.in`` to provide necessary files to compile.
+
 Mar-17-2021: Version 2.9.2
 --------------------------
 * Fix a bug to make the initial symmetry search slow.
