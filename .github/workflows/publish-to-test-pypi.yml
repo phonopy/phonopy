@@ -20,8 +20,14 @@ jobs:
         cat __nanoversion__.txt
         pip install numpy
         python setup.py sdist
-    - name: Publish package
+    - name: Publish package to TestPyPI
       if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/rc')
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+    - name: Publish package to PyPI
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/master')
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
