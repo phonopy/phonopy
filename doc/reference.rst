@@ -154,3 +154,6 @@ Symmetry
 - Symmetry Relationships between Crystal Structures by Ulrich Müller,
   Oxford University Press
 - Bilbao crystallographic server, https://www.cryst.ehu.es/
+- Supplementary Material for the Lekeitio School,
+  https://www.cryst.ehu.es/html/lekeitio.html, the presentation
+  by B. Mihailova (phonons) is considered nice for beginners.

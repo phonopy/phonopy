@@ -3,11 +3,18 @@
 Change Log
 ==========
 
+Mar-17-2021: Version 2.9.2
+--------------------------
+* Fix a bug to make the initial symmetry search slow.
+
+Jan-29-2021: Version 2.9.1
+--------------------------
+* Release for making pypi wheel of py3.9
+
 Jan-28-2021: Version 2.9.0
 --------------------------
 * :ref:`Fleur interface <Fleur_interface>` was made by @neukirchen-212.
 * Improvement of ``phonopy-bandplot`` by @kgmat (PR#131, #132, #134)
-
 
 Sep-29-2020: Version 2.8.1
 ---------------------------
