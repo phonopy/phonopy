@@ -1283,7 +1283,8 @@ def shape_supercell_matrix(smat):
 
 
 def estimate_supercell_matrix(spglib_dataset,
-                              max_num_atoms=120):
+                              max_num_atoms=120,
+                              max_iter=100):
     """Estimate supercell matrix from conventional cell
 
     Diagonal supercell matrix is estimated from basis vector lengths
@@ -1314,18 +1315,22 @@ def estimate_supercell_matrix(spglib_dataset,
     lengths = _get_lattice_parameters(spglib_dataset['std_lattice'])
 
     if spg_num <= 74:  # Triclinic, monoclinic, and orthorhombic
-        multi = _get_multiplicity_abc(num_atoms, lengths, max_num_atoms)
+        multi = _get_multiplicity_abc(num_atoms, lengths, max_num_atoms,
+                                      max_iter=max_iter)
     elif spg_num <= 194:  # Tetragonal and hexagonal
-        multi = _get_multiplicity_ac(num_atoms, lengths, max_num_atoms)
+        multi = _get_multiplicity_ac(num_atoms, lengths, max_num_atoms,
+                                     max_iter=max_iter)
     else:  # Cubic
-        multi = _get_multiplicity_a(num_atoms, lengths, max_num_atoms)
+        multi = _get_multiplicity_a(num_atoms, lengths, max_num_atoms,
+                                    max_iter=max_iter)
 
     return multi
 
 
 def estimate_supercell_matrix_from_pointgroup(pointgroup_number,
                                               lattice,
-                                              max_num_cells=120):
+                                              max_num_cells=120,
+                                              max_iter=100):
     """Estimate supercell matrix from crystallographic point group
 
     Parameters
@@ -1348,11 +1353,14 @@ def estimate_supercell_matrix_from_pointgroup(pointgroup_number,
     abc_lengths = _get_lattice_parameters(lattice.T)
 
     if pointgroup_number <= 8:  # Triclinic, monoclinic, and orthorhombic
-        multi = _get_multiplicity_abc(1, abc_lengths, max_num_cells)
+        multi = _get_multiplicity_abc(1, abc_lengths, max_num_cells,
+                                      max_iter=max_iter)
     elif pointgroup_number <= 27:  # Tetragonal and hexagonal
-        multi = _get_multiplicity_ac(1, abc_lengths, max_num_cells)
+        multi = _get_multiplicity_ac(1, abc_lengths, max_num_cells,
+                                     max_iter=max_iter)
     else:  # Cubic
-        multi = _get_multiplicity_a(1, abc_lengths, max_num_cells)
+        multi = _get_multiplicity_a(1, abc_lengths, max_num_cells,
+                                    max_iter=max_iter)
 
     return multi
 
