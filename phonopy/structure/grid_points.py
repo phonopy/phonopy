@@ -46,6 +46,7 @@ from phonopy.structure.cells import (
     estimate_supercell_matrix_from_pointgroup, determinant)
 from phonopy.structure.snf import SNF3x3
 from phonopy.harmonic.force_constants import similarity_transformation
+from phonopy.version import __version__
 
 
 def length2mesh(length, lattice, rotations=None):
@@ -111,12 +112,12 @@ def get_qpoints(mesh_numbers,
 
 
 def extract_ir_grid_points(grid_mapping_table):
-    ir_grid_points = np.array(np.unique(grid_mapping_table),
-                              dtype=grid_mapping_table.dtype)
+    dtype = grid_mapping_table.dtype
+    ir_grid_points = np.array(np.unique(grid_mapping_table), dtype=dtype)
     weights = np.zeros_like(grid_mapping_table)
     for i, gp in enumerate(grid_mapping_table):
         weights[gp] += 1
-    ir_weights = np.array(weights[ir_grid_points], dtype='int_')
+    ir_weights = np.array(weights[ir_grid_points], dtype=dtype)
 
     return ir_grid_points, ir_weights
 
@@ -128,7 +129,7 @@ class GridPoints(object):
     ----------
     mesh_numbers: ndarray
        Mesh numbers along a, b, c axes.
-       dtype='int_'
+       dtype='intc'
        shape=(3,)
     reciprocal_lattice: array_like
         Basis vectors in reciprocal space. a*, b*, c* are given in column
@@ -141,18 +142,18 @@ class GridPoints(object):
        shape=(ir-grid points, 3)
     weights: ndarray
        Geometric q-point weights. Its sum is the number of grid points.
-       dtype='int_'
+       dtype='intc'
        shape=(ir-grid points,)
     grid_address: ndarray
        Addresses of all grid points represented by integers.
-       dtype='int_'
+       dtype='intc'
        shape=(prod(mesh_numbers), 3)
     ir_grid_points: ndarray
         Indices of irreducible grid points in grid_address.
-        dtype='int_', shape=(ir-grid points,)
+        dtype='intc', shape=(ir-grid points,)
     grid_mapping_table: ndarray
         Index mapping table from all grid points to ir-grid points.
-        dtype='int_', shape=(prod(mesh_numbers),)
+        dtype='intc', shape=(prod(mesh_numbers),)
 
     """
 
@@ -208,7 +209,7 @@ class GridPoints(object):
 
         """
 
-        self._mesh = np.array(mesh_numbers, dtype='int_')
+        self._mesh = np.array(mesh_numbers, dtype='intc')
         self._rec_lat = reciprocal_lattice
         self._is_shift = self._shift2boolean(q_mesh_shift,
                                              is_gamma_center=is_gamma_center)
@@ -295,7 +296,7 @@ class GridPoints(object):
             self._set_ir_qpoints(self._rotations,
                                  is_time_reversal=self._is_time_reversal)
         else:
-            self._set_ir_qpoints([np.eye(3, dtype='int_')],
+            self._set_ir_qpoints([np.eye(3, dtype='intc')],
                                  is_time_reversal=self._is_time_reversal)
 
     def _shift2boolean(self,
@@ -351,7 +352,11 @@ class GridPoints(object):
             is_time_reversal=is_time_reversal,
             is_dense=True)
 
-        shift = np.array(self._is_shift, dtype='int_') * 0.5
+        # Currently 'intc', but will be 'int_' in next major version.
+        if int(__version__.split('.')[0]) < 3:
+            dtype = 'intc'
+        else:
+            dtype = 'int_'
 
         if self._fit_in_BZ:
             grid_address, _ = relocate_BZ_grid_address(
@@ -361,14 +366,15 @@ class GridPoints(object):
                 is_shift=self._is_shift,
                 is_dense=True)
             self._grid_address = np.array(grid_address[:np.prod(self._mesh)],
-                                          dtype='int_', order='C')
+                                          dtype=dtype, order='C')
         else:
             self._grid_address = np.array(grid_address,
-                                          dtype='int_', order='C')
+                                          dtype=dtype, order='C')
 
         (self._ir_grid_points,
          self._ir_weights) = extract_ir_grid_points(grid_mapping_table)
 
+        shift = np.array(self._is_shift) * 0.5
         self._ir_qpoints = np.array(
             (self._grid_address[self._ir_grid_points] + shift) / self._mesh,
             dtype='double', order='C')

@@ -42,8 +42,8 @@ def test_Amm2():
     thm = TetrahedronMesh(primitive,
                           frequencies,
                           mesh,
-                          grid_address,
-                          grid_mapping_table,
+                          np.array(grid_address, dtype='int_'),
+                          np.array(grid_mapping_table, dtype='int_'),
                           ir_grid_points)
     thm.set(value='I', division_number=40)
     freq_points = thm.get_frequency_points()

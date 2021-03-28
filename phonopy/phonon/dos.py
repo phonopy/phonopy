@@ -204,8 +204,8 @@ def run_tetrahedron_method_dos(mesh,
         frequency_points,
         frequencies,
         _coef,
-        grid_address,
-        grid_mapping_table,
+        np.array(grid_address, dtype='int_', order='C'),
+        np.array(grid_mapping_table, dtype='int_', order='C'),
         relative_grid_address)
     if coef is None:
         return dos[:, :, :, 0].sum(axis=0).sum(axis=0) / np.prod(mesh)
@@ -223,8 +223,8 @@ class Dos(object):
                 mesh_object.dynamical_matrix.primitive,
                 self._frequencies,
                 mesh_object.mesh_numbers,
-                mesh_object.grid_address,
-                mesh_object.grid_mapping_table,
+                np.array(mesh_object.grid_address, dtype='int_'),
+                np.array(mesh_object.grid_mapping_table, dtype='int_'),
                 mesh_object.ir_grid_points)
         else:
             self._tetrahedron_mesh = None
