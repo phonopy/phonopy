@@ -864,7 +864,7 @@ static double _J_31(const double omega,
 static double _J_32(const double omega,
                     const double vertices_omegas[4])
 {
-  return (1.0 +
+  return (1.0 -
           _f(0, 3, omega, vertices_omegas) *
           _f(1, 3, omega, vertices_omegas) *
           _f(2, 3, omega, vertices_omegas) *
