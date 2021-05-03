@@ -113,8 +113,8 @@ class GroupVelocity(object):
 
         """
         self._dynmat = dynamical_matrix
-        primitive = dynamical_matrix.get_primitive()
-        self._reciprocal_lattice_inv = primitive.get_cell()
+        primitive = dynamical_matrix.primitive
+        self._reciprocal_lattice_inv = primitive.cell
         self._reciprocal_lattice = np.linalg.inv(self._reciprocal_lattice_inv)
         self._q_length = q_length
         if self._dynmat.is_nac() and self._dynmat.get_nac_method() == 'gonze':
@@ -141,9 +141,13 @@ class GroupVelocity(object):
     def run(self, q_points, perturbation=None):
         """Group velocities are computed at q-points.
 
-        q_points : Array-like
+        Calculated group velocities are stored in self._group_velocities.
+
+        Parameters
+        ----------
+        q_points : array-like
             List of q-points such as [[0, 0, 0], [0.1, 0.2, 0.3], ...].
-        perturbation : Array-like
+        perturbation : array-like
             Direction in fractional coordinates of reciprocal space.
 
         """
@@ -215,10 +219,10 @@ class GroupVelocity(object):
         """Symmetrize obtained group velocities using site symmetries."""
 
         rotations = []
-        for r in self._symmetry.get_reciprocal_operations():
+        for r in self._symmetry.reciprocal_operations:
             q_in_BZ = q - np.rint(q)
             diff = q_in_BZ - np.dot(r, q_in_BZ)
-            if (np.abs(diff) < self._symmetry.get_symmetry_tolerance()).all():
+            if (np.abs(diff) < self._symmetry.tolerance).all():
                 rotations.append(r)
 
         gv_sym = np.zeros_like(gv)
@@ -265,10 +269,10 @@ class GroupVelocity(object):
         Group velocities are calculated using analytical continuation using
         specified directions (self._directions) in reciprocal space.
 
-        ddms : Array-like
+        ddms : array-like
             List of delta (derivative or finite difference) of dynamical
             matrices along several q-directions for perturbation.
-        eigsets : Array-like
+        eigsets : array-like
             List of phonon eigenvectors of degenerate bands.
 
         """
