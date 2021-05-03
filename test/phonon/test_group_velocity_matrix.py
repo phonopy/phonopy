@@ -15,3 +15,18 @@ def test_gvm_nacl(ph_nacl):
         gvs.append(np.diagonal(mat.real))
     gvs = np.transpose(gvs)
     np.testing.assert_allclose(gvs, gv.group_velocities[0], atol=1e-5)
+
+
+def test_gvm_api_nacl(ph_nacl):
+    qpoints = [[0.1, 0.1, 0.1]]
+    ph_nacl.init_group_velocity_matrix()
+    gv = GroupVelocity(ph_nacl.dynamical_matrix,
+                       symmetry=ph_nacl.primitive_symmetry)
+    gv.run(qpoints)
+    gvm = ph_nacl.group_velocity_matrix
+    gvm.run(qpoints)
+    gvs = []
+    for mat in gvm.group_velocity_matrices[0]:
+        gvs.append(np.diagonal(mat.real))
+    gvs = np.transpose(gvs)
+    np.testing.assert_allclose(gvs, gv.group_velocities[0], atol=1e-5)

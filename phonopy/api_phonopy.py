@@ -71,6 +71,7 @@ from phonopy.phonon.modulation import Modulation
 from phonopy.phonon.qpoints import QpointsPhonon
 from phonopy.phonon.irreps import IrReps
 from phonopy.phonon.group_velocity import GroupVelocity
+from phonopy.phonon.group_velocity_matrix import GroupVelocityMatrix
 from phonopy.phonon.moment import PhononMoment
 from phonopy.spectrum.dynamic_structure_factor import DynamicStructureFactor
 
@@ -175,6 +176,7 @@ class Phonopy(object):
 
         # set_group_velocity
         self._group_velocity = None
+        self._group_velocity_matrix = None
         self._gv_delta_q = group_velocity_delta_q
 
     @property
@@ -551,6 +553,14 @@ class Phonopy(object):
     @property
     def band_structure(self):
         return self._band_structure
+
+    @property
+    def group_velocity(self):
+        return self._group_velocity
+
+    @property
+    def group_velocity_matrix(self):
+        return self._group_velocity_matrix
 
     @property
     def mesh(self):
@@ -2739,6 +2749,9 @@ class Phonopy(object):
     def get_moment(self):
         return self._moment.moment
 
+    def init_group_velocity_matrix(self):
+        self._set_group_velocity(group_velocity_type="matrix")
+
     def init_dynamic_structure_factor(self,
                                       Qpoints,
                                       T,
@@ -3022,31 +3035,38 @@ class Phonopy(object):
         if self._group_velocity is not None:
             self._set_group_velocity()
 
-    def _set_group_velocity(self):
+    def _set_group_velocity(self, group_velocity_type="vector"):
         if self._dynamical_matrix is None:
             raise RuntimeError("Dynamical matrix has not yet built.")
 
         if (self._dynamical_matrix.is_nac() and
             self._dynamical_matrix.get_nac_method() == 'gonze' and
             self._gv_delta_q is None):
-            self._gv_delta_q = 1e-5
             if self._log_level:
                 msg = "Group velocity calculation:\n"
                 text = ("Analytical derivative of dynamical matrix is not "
                         "implemented for NAC by Gonze et al. Instead "
-                        "numerical derivative of it is used with dq=1e-5 "
-                        "for group velocity calculation.")
+                        "numerical derivative of it is used with dq=%.1e "
+                        "for group velocity calculation."
+                        % GroupVelocity.Default_q_length)
                 msg += textwrap.fill(text,
                                      initial_indent="  ",
                                      subsequent_indent="  ",
                                      width=70)
                 print(msg)
 
-        self._group_velocity = GroupVelocity(
-            self._dynamical_matrix,
-            q_length=self._gv_delta_q,
-            symmetry=self._primitive_symmetry,
-            frequency_factor_to_THz=self._factor)
+        if group_velocity_type == "matrix":
+            self._group_velocity_matrix = GroupVelocityMatrix(
+                self._dynamical_matrix,
+                q_length=self._gv_delta_q,
+                symmetry=self._primitive_symmetry,
+                frequency_factor_to_THz=self._factor)
+        else:
+            self._group_velocity = GroupVelocity(
+                self._dynamical_matrix,
+                q_length=self._gv_delta_q,
+                symmetry=self._primitive_symmetry,
+                frequency_factor_to_THz=self._factor)
 
     def _search_symmetry(self):
         self._symmetry = Symmetry(self._supercell,

@@ -88,6 +88,7 @@ class GroupVelocity(object):
         dynamcial matrix.
 
     """
+    Default_q_length = 1e-5
 
     def __init__(self,
                  dynamical_matrix,
@@ -119,7 +120,7 @@ class GroupVelocity(object):
         self._q_length = q_length
         if self._dynmat.is_nac() and self._dynmat.get_nac_method() == 'gonze':
             if self._q_length is None:
-                self._q_length = 1e-5
+                self._q_length = self.Default_q_length
         if self._q_length is None:
             self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
         else:
@@ -184,6 +185,10 @@ class GroupVelocity(object):
         return self._group_velocities
 
     def get_group_velocity(self):
+        warnings.warn(
+            "GroupVelocity.get_group_velocity() is deprecated. "
+            "Use the attribute group_velocities.",
+            DeprecationWarning)
         return self.group_velocities
 
     def _calculate_group_velocity_at_q(self, q):
