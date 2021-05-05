@@ -191,10 +191,9 @@ class GroupVelocityMatrix(GroupVelocity):
         gv_sym = gv_sym / len(rotations)
 
         # band hermicity
-        gv_sym= (gv_sym + gv_sym.transpose(0, 2 ,1).conj()) / 2
+        gv_sym = (gv_sym + gv_sym.transpose(0, 2 ,1).conj()) / 2
 
         return gv_sym
-
 
     def _rot_eigsets(self, ddms, eigsets):
         """Treat degeneracy
