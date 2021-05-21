@@ -32,6 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
 from phonopy.qha import BulkModulus, QHA
 from phonopy.units import EvTokJmol, EVAngstromToGPa
 
@@ -115,9 +116,32 @@ class PhonopyQHA(object):
                             energy_plot_factor=energy_plot_factor)
             self._qha.run(verbose=verbose)
 
-    def get_bulk_modulus(self):
+    @property
+    def bulk_modulus(self):
         """Returns bulk modulus computed without phonon free energy"""
-        return self._bulk_modulus.get_bulk_modulus()
+        return self._bulk_modulus.bulk_modulus
+
+    @property
+    def thermal_expansion(self):
+        """Returns thermal expansion coefficients at temperatures"""
+        return self._qha.thermal_expansion
+
+    @property
+    def helmholtz_volume(self):
+        """Returns free_energies at volumes
+
+        free_energies: list of list of float
+            Free energies calculated at temperatures and volumes
+            shape=(temperatures, volumes)
+
+        """
+        return self._qha.helmholtz_volume
+
+    def get_bulk_modulus(self):
+        warnings.warn("PhonopyQHA.get_bulk_modulus() is deprecated."
+                      "Use bulk_modulus attribute.",
+                      DeprecationWarning)
+        return self.bulk_modulus
 
     def get_bulk_modulus_parameters(self):
         """
@@ -140,14 +164,10 @@ class PhonopyQHA(object):
                               volume_temp_exp=volume_temp_exp)
 
     def get_helmholtz_volume(self):
-        """Returns free_energies at volumes
-
-        free_energies: list of list of float
-            Free energies calculated at temperatures and volumes
-            shape=(temperatures, volumes)
-
-        """
-        return self._qha.get_helmholtz_volume()
+        warnings.warn("PhonopyQHA.get_helmholtz_volume() is deprecated."
+                      "Use helmholtz_volume attribute.",
+                      DeprecationWarning)
+        return self.helmholtz_volume
 
     def plot_helmholtz_volume(self,
                               thin_number=10,
@@ -184,7 +204,10 @@ class PhonopyQHA(object):
 
     def get_thermal_expansion(self):
         """Returns thermal expansion coefficients at temperatures"""
-        return self._qha.get_thermal_expansion()
+        warnings.warn("PhonopyQHA.get_thermal_expansion() is deprecated."
+                      "Use thermal_expansion attribute.",
+                      DeprecationWarning)
+        return self.thermal_expansion
 
     def plot_thermal_expansion(self):
         return self._qha.plot_thermal_expansion()

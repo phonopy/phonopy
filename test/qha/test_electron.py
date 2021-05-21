@@ -1,4 +1,3 @@
-import unittest
 import numpy as np
 from phonopy.qha.electron import ElectronFreeEnergy, get_free_energy_at_T
 
@@ -76,86 +75,73 @@ eigvals_Al = """ -3.1277  20.6836  20.6836  20.6836  22.1491  22.1491  22.1491  
   7.1712   7.1712   8.1868   9.1337  23.8810  23.8810  24.4184  26.4784  35.2568  40.0588  42.6207  42.6207"""
 
 
-class TestElectronFreeEnergy(unittest.TestCase):
-    def setUp(self):
-        pass
+def test_Al():
+    """ElectronFreeEnergy for Aluminium
 
-    def tearDown(self):
-        pass
+    VASP 5.4.4 was run with following setting parameters.
 
-    def test_Al(self):
-        """ElectronFreeEnergy for Aluminium
+    POSCAR
+    ------
+    Fm-3m (225) / -F 4 2 3 (523) / m-3m
+       1.0
+         0.0000000000000000    2.0196332190180484    2.0196332190180484
+         2.0196332190180484    0.0000000000000000    2.0196332190180484
+         2.0196332190180484    2.0196332190180484    0.0000000000000000
+     Al
+       1
+    Direct
+       0.0000000000000000  0.0000000000000000  0.0000000000000000
 
-        VASP 5.4.4 was run with following setting parameters.
+    INCAR
+    -----
+       PREC = Accurate
+     IBRION = -1
+        NSW = 1
+       ISIF = 2
+     NELMIN = 5
+      ENCUT = 300
+      EDIFF = 1.000000e-08
+     EDIFFG = -1.000000e-08
+     ISMEAR = -1
+      SIGMA = 0.08617338256808316
+      IALGO = 38
+      LREAL = .FALSE.
+    ADDGRID = .TRUE.
+      LWAVE = .FALSE.
+     LCHARG = .FALSE.
 
-        POSCAR
-        ------
-        Fm-3m (225) / -F 4 2 3 (523) / m-3m
-           1.0
-             0.0000000000000000    2.0196332190180484    2.0196332190180484
-             2.0196332190180484    0.0000000000000000    2.0196332190180484
-             2.0196332190180484    2.0196332190180484    0.0000000000000000
-         Al
-           1
-        Direct
-           0.0000000000000000  0.0000000000000000  0.0000000000000000
+    KPOINTS
+    -------
+    Automatic mesh
+    0
+    Gamma
+    12 12 12
+         0     0     0
 
-        INCAR
-        -----
-           PREC = Accurate
-         IBRION = -1
-            NSW = 1
-           ISIF = 2
-         NELMIN = 5
-          ENCUT = 300
-          EDIFF = 1.000000e-08
-         EDIFFG = -1.000000e-08
-         ISMEAR = -1
-          SIGMA = 0.08617338256808316
-          IALGO = 38
-          LREAL = .FALSE.
-        ADDGRID = .TRUE.
-          LWAVE = .FALSE.
-         LCHARG = .FALSE.
+    POTCAR
+    ------
+    PAW_PBE Al 04Jan2001
 
-        KPOINTS
-        -------
-        Automatic mesh
-        0
-        Gamma
-        12 12 12
-             0     0     0
+    """
 
-        POTCAR
-        ------
-        PAW_PBE Al 04Jan2001
+    weights = np.array(
+        [1, 8, 8, 8, 8, 8, 4, 6, 24, 24, 24, 24, 24, 24, 24, 24, 24, 12,
+         6, 24, 24, 24, 24, 24, 24, 24, 12, 6, 24, 24, 24, 24, 24, 12,
+         6, 24, 24, 24, 12, 6, 24, 12, 3, 24, 48, 48, 48, 24, 24, 48,
+         48, 48, 48, 48, 24, 24, 48, 48, 48, 24, 24, 48, 24, 12, 24, 48,
+         24, 24, 48, 24, 12, 6], dtype='int_')
+    eigvals = np.reshape([float(x) for x in eigvals_Al.split()],
+                         (1, len(weights), -1))
+    n_electrons = 3.0
+    efe = ElectronFreeEnergy(eigvals, weights, n_electrons)
+    efe.run(1000)
+    _efermi = efe.mu  # E-fermi :   7.9104
+    _entropy = efe.entropy  # EENTRO = -0.00959209
+    _energy = efe.energy  # EBANDS = 10.76680671
 
-        """
+    assert np.abs(_efermi - 7.9104) < 1e-4
+    assert np.abs(_entropy - 0.00959209) < 1e-6
+    assert np.abs(_energy - 10.76680671) < 1e-6
 
-        weights = np.array(
-            [1, 8, 8, 8, 8, 8, 4, 6, 24, 24, 24, 24, 24, 24, 24, 24, 24, 12,
-             6, 24, 24, 24, 24, 24, 24, 24, 12, 6, 24, 24, 24, 24, 24, 12,
-             6, 24, 24, 24, 12, 6, 24, 12, 3, 24, 48, 48, 48, 24, 24, 48,
-             48, 48, 48, 48, 24, 24, 48, 48, 48, 24, 24, 48, 24, 12, 24, 48,
-             24, 24, 48, 24, 12, 6], dtype='int_')
-        eigvals = np.reshape([float(x) for x in eigvals_Al.split()],
-                             (1, len(weights), -1))
-        n_electrons = 3.0
-        efe = ElectronFreeEnergy(eigvals, weights, n_electrons)
-        efe.run(1000)
-        _efermi = efe.mu  # E-fermi :   7.9104
-        _entropy = efe.entropy  # EENTRO = -0.00959209
-        _energy = efe.energy  # EBANDS = 10.76680671
-
-        self.assertTrue(np.abs(_efermi - 7.9104) < 1e-4)
-        self.assertTrue(np.abs(_entropy - 0.00959209) < 1e-6)
-        self.assertTrue(np.abs(_energy - 10.76680671) < 1e-6)
-
-        (temperaturs,
-         free_energy) = get_free_energy_at_T(0, 1000, 10,
-                                             eigvals, weights, n_electrons)
-
-
-if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestElectronFreeEnergy)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    (temperaturs, free_energy) = get_free_energy_at_T(
+        0, 1000, 10, eigvals, weights, n_electrons)

@@ -67,8 +67,15 @@ class BulkModulus(object):
             msg += ["Careful choice of volume points is recommended."]
             raise RuntimeError("\n".join(msg))
 
-    def get_bulk_modulus(self):
+    @property
+    def bulk_modulus(self):
         return self._bulk_modulus
+
+    def get_bulk_modulus(self):
+        warnings.warn("QHA.get_bulk_modulus() is deprecated."
+                      "Use bulk_modulus attribute.",
+                      DeprecationWarning)
+        return self.bulk_modulus
 
     def get_equilibrium_volume(self):
         return self._volume
@@ -140,6 +147,14 @@ class QHA(object):
         self._dsdv = None
         self._gruneisen_parameters = None
         self._len = None
+
+    @property
+    def thermal_expansion(self):
+        return self._thermal_expansions[:self._len]
+
+    @property
+    def helmholtz_volume(self):
+        return self._free_energies[:self._len]
 
     def run(self, verbose=False):
         """Fit parameters to EOS at temperatures
@@ -237,7 +252,10 @@ class QHA(object):
         return plt
 
     def get_helmholtz_volume(self):
-        return self._free_energies[:self._len]
+        warnings.warn("QHA.get_helmholtz_volume() is deprecated."
+                      "Use helmholtz_volume attribute.",
+                      DeprecationWarning)
+        return self.helmholtz_volume
 
     def plot_helmholtz_volume(self,
                               thin_number=10,
@@ -320,7 +338,10 @@ class QHA(object):
         w.close()
 
     def get_thermal_expansion(self):
-        return self._thermal_expansions[:self._len]
+        warnings.warn("QHA.get_thermal_expansion() is deprecated."
+                      "Use thermal_expansion attribute.",
+                      DeprecationWarning)
+        return self.thermal_expansion
 
     def plot_thermal_expansion(self):
         import matplotlib.pyplot as plt
