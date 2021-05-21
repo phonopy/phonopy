@@ -1,5 +1,8 @@
+import os
 import numpy as np
 from phonopy import PhonopyQHA
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
 ev_vs_v = np.array([[140.030000, -42.132246],
                     [144.500000, -42.600974],
@@ -13,7 +16,8 @@ ev_vs_v = np.array([[140.030000, -42.132246],
                     [183.720000, -42.817825],
                     [189.070000, -42.527932]])
 temperatures = np.arange(0, 2101, 10)
-cv, entropy, fe_phonon = np.loadtxt("tprop.dat").reshape(3, 211, 11)
+tprop_file = os.path.join(current_dir, "tprop.dat")
+cv, entropy, fe_phonon = np.loadtxt(tprop_file).reshape(3, 211, 11)
 
 thermal_expansion = np.array([
     0.0, -0.6332219, 5.6139850, 9.6750859, 11.8141234, 13.0844083,
