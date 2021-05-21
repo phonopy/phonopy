@@ -62,28 +62,28 @@ class PhonopyQHA(object):
         Parameters
         ----------
         volumes: array_like
-            Unit cell volumes (V) in angstrom^3
+            Unit cell volumes (V) in angstrom^3.
             dtype='double'
             shape=(volumes,)
         electronic_energies: array_like
-            Electronic energies (U) or electronic free energies (U) in eV.
+            Electronic energies (U_el) or electronic free energies (F_el) in eV.
             It is assumed as formar if ndim==1 and latter if ndim==2.
             dtype='double'
             shape=(volumes,) or (temperatuers, volumes)
         temperatures: array_like
-            Temperatures ascending order (T) in K
+            Temperatures ascending order (T) in K.
             dtype='double'
-            shape=(temperatuers,)
+            shape=(temperatures,)
         free_energy: array_like
-            Helmholtz free energy (F) kJ/mol
+            Phonon Helmholtz free energy (F_ph) in kJ/mol.
             dtype='double'
             shape=(temperatuers, volumes)
         cv: array_like
-            Heat capacity at constant volume in J/K/mol
+            Phonon heat capacity at constant volume in J/K/mol.
             dtype='double'
             shape=(temperatuers, volumes)
         entropy: array_like
-            Entropy at constant volume (S) J/K/mol
+            Phonon entropy at constant volume (S_ph) in J/K/mol.
             dtype='double'
             shape=(temperatuers, volumes)
         eos: str

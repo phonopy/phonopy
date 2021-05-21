@@ -110,13 +110,54 @@ class QHA(object):
     def __init__(self,
                  volumes,              # angstrom^3
                  electronic_energies,  # eV
-                 temperatures,
+                 temperatures,         # K
                  cv,                   # J/K/mol
                  entropy,              # J/K/mol
                  fe_phonon,            # kJ/mol
                  eos='vinet',
                  t_max=None,
                  energy_plot_factor=None):
+        """
+
+        Parameters
+        ----------
+        volumes: array_like
+            Unit cell volumes (V) in angstrom^3.
+            dtype='double'
+            shape=(volumes,)
+        electronic_energies: array_like
+            Electronic energies (U_el) or electronic free energies (F_el) in eV.
+            It is assumed as formar if ndim==1 and latter if ndim==2.
+            dtype='double'
+            shape=(volumes,) or (temperatuers, volumes)
+        temperatures: array_like
+            Temperatures ascending order (T) in K.
+            dtype='double'
+            shape=(temperatures,)
+        cv: array_like
+            Phonon Heat capacity at constant volume in J/K/mol.
+            dtype='double'
+            shape=(temperatuers, volumes)
+        entropy: array_like
+            Phonon entropy at constant volume (S_ph) in J/K/mol.
+            dtype='double'
+            shape=(temperatuers, volumes)
+        fe_phonon: array_like
+            Phonon Helmholtz free energy (F_ph) in kJ/mol.
+            dtype='double'
+            shape=(temperatuers, volumes)
+        eos: str
+            Equation of state used for fitting F vs V.
+            'vinet', 'murnaghan' or 'birch_murnaghan'.
+        t_max: float
+            Maximum temperature to be calculated. This has to be not
+            greater than the temperature of the third element from the
+            end of 'temperatre' elements. If max_t=None, the temperature
+            of the third element from the end is used.
+        energy_plot_factor: float
+            This value is multiplied to energy like values only in plotting.
+
+        """
         self._volumes = np.array(volumes)
         self._electronic_energies = np.array(electronic_energies)
 
