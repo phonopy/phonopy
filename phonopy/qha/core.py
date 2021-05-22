@@ -197,6 +197,30 @@ class QHA(object):
     def helmholtz_volume(self):
         return self._free_energies[:self._len]
 
+    @property
+    def volume_temperature(self):
+        return self._equiv_volumes[:self._len]
+
+    @property
+    def gibbs_temperature(self):
+        return self._equiv_energies[:self._len]
+
+    @property
+    def bulk_modulus_temperature(self):
+        return self._equiv_bulk_modulus[:self._len]
+
+    @property
+    def heat_capacity_P_numerical(self):
+        return self._cp_numerical[:self._len]
+
+    @property
+    def heat_capacity_P_polyfit(self):
+        return self._cp_polyfit[:self._len]
+
+    @property
+    def gruneisen_temperature(self):
+        return self._gruneisen_parameters[:self._len]
+
     def run(self, verbose=False):
         """Fit parameters to EOS at temperatures
 
@@ -344,7 +368,10 @@ class QHA(object):
         w.close()
 
     def get_volume_temperature(self):
-        return self._equiv_volumes[:self._len]
+        warnings.warn("QHA.get_volume_temperature() is deprecated."
+                      "Use volume_temperature attribute.",
+                      DeprecationWarning)
+        return self.volume_temperature
 
     def plot_volume_temperature(self, exp_data=None):
         import matplotlib.pyplot as plt
@@ -415,7 +442,7 @@ class QHA(object):
         w.close()
 
     def get_gibbs_temperature(self):
-        return self._equiv_energies[:self._len]
+        return self.gibbs_temperature
 
     def plot_gibbs_temperature(self,
                                xlabel='Temperature (K)',
@@ -450,7 +477,7 @@ class QHA(object):
         w.close()
 
     def get_bulk_modulus_temperature(self):
-        return self._equiv_bulk_modulus[:self._len]
+        return self.bulk_modulus_temperature
 
     def plot_bulk_modulus_temperature(self,
                                       xlabel='Temperature (K)',
@@ -489,8 +516,8 @@ class QHA(object):
                                            self._equiv_bulk_modulus[i]))
         w.close()
 
-    def get_heat_capacity_P_numerical(self, exp_data=None):
-        return self._cp_numerical[:self._len]
+    def get_heat_capacity_P_numerical(self):
+        return self.heat_capacity_P_numerical
 
     def plot_heat_capacity_P_numerical(self, Z=1, exp_data=None):
         import matplotlib.pyplot as plt
@@ -525,7 +552,7 @@ class QHA(object):
         w.close()
 
     def get_heat_capacity_P_polyfit(self):
-        return self._cp_polyfit[:self._len]
+        return self.heat_capacity_P_polyfit
 
     def plot_heat_capacity_P_polyfit(self, Z=1, exp_data=None):
         import matplotlib.pyplot as plt
@@ -590,7 +617,7 @@ class QHA(object):
         w.close()
 
     def get_gruneisen_temperature(self):
-        return self._gruneisen_parameters[:self._len]
+        return self.gruneisen_temperature
 
     def plot_gruneisen_temperature(self):
         import matplotlib.pyplot as plt
