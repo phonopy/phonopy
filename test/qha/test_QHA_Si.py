@@ -103,7 +103,7 @@ def test_QHA_Si():
     np.testing.assert_allclose(
         np.array(phonopy_qha.heat_capacity_P_numerical)[t_indices],
         cp_temperature,
-        atol=1e-5)
+        atol=1e-4)
 
     # Cp vs temperature by polynomial fittings of Cv and S
     np.testing.assert_allclose(
