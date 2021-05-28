@@ -501,7 +501,7 @@ class TetrahedronMethod(object):
                 4 / self._n_3())
 
     def _J_32(self):
-        return ((1.0 + self._f(0, 3) * self._f(1, 3) * self._f(2, 3) ** 2) /
+        return ((1.0 - self._f(0, 3) * self._f(1, 3) * self._f(2, 3) ** 2) /
                 4 / self._n_3())
 
     def _J_33(self):

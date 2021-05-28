@@ -472,7 +472,6 @@ def plot(args):
     axs = ImageGrid(fig, 111,  # similar to subplot(111)
                     nrows_ncols=(1, n),
                     axes_pad=0.11,
-                    add_all=True,
                     label_mode="L")
     for ax in axs:
         if args.f_min:
@@ -583,17 +582,17 @@ def write_gunplot_data(args):
         distances = bands_data[0][0]
         frequencies = bands_data[0][1]
         segment_nqpoint = bands_data[0][3]
-        
+
         end_points = [0, ]
         for nq in segment_nqpoint:
             end_points.append(nq + end_points[-1])
         end_points[-1] -= 1
         segment_positions = distances[end_points]
-        
-        
+
+
         print("# End points of segments: ")
         print("#   " + "%10.8f " * len(segment_positions) %
-                tuple(segment_positions))   
+                tuple(segment_positions))
         for j, freqs in enumerate(frequencies.T):
             q = 0
             for nq in segment_nqpoint:
@@ -602,7 +601,7 @@ def write_gunplot_data(args):
                     print("%f %f" % (d, f))
                 q += nq
                 print('')
-            print('') 
+            print('')
 
 def main(args):
     if args.is_gnuplot:

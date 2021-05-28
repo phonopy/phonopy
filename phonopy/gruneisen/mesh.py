@@ -60,7 +60,7 @@ class GruneisenMesh(GruneisenBase):
                                dynmat_plus,
                                dynmat_minus,
                                delta_strain=delta_strain)
-        self._mesh = np.array(mesh, dtype='int_')
+        self._mesh = np.array(mesh, dtype='intc')
         self._factor = factor
         self._cell = dynmat.get_primitive()
         self._qpoints, self._weights = get_qpoints(

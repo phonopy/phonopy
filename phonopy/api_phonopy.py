@@ -2918,7 +2918,8 @@ class Phonopy(object):
                  'born_effective_charge': True,
                  'dielectric_constant': True}
             This default settings are updated by {'force_constants': True}
-            when dataset is None and force_constants is not None.
+            when dataset is None and force_constants is not None unless
+            {'force_constants': False} is specified.
         hdf5_settings: dict, optional (To be implemented)
             Force constants and force_sets are stored in hdf5 file when
             they are activated in the dict. The dict has the following keys.
@@ -2938,8 +2939,10 @@ class Phonopy(object):
             _settings = {}
         else:
             _settings = settings.copy()
-        if (not forces_in_dataset(self.dataset) and
-            self.force_constants is not None):
+        if _settings.get('force_constants') is False:
+            pass
+        elif (not forces_in_dataset(self.dataset) and
+              self.force_constants is not None):
             _settings.update({'force_constants': True})
         phpy_yaml = PhonopyYaml(settings=_settings)
         phpy_yaml.set_phonon_info(self)

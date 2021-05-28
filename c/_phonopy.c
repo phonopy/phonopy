@@ -56,8 +56,10 @@ static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args);
 static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2(PyObject *self, PyObject *args);
 static PyObject * py_compute_permutation(PyObject *self, PyObject *args);
-static PyObject * py_gsv_copy_smallest_vectors(PyObject *self, PyObject *args);
-static PyObject * py_gsv_set_smallest_vectors(PyObject *self, PyObject *args);
+static PyObject *
+py_gsv_set_smallest_vectors_sparse(PyObject *self, PyObject *args);
+static PyObject *
+py_gsv_set_smallest_vectors_dense(PyObject *self, PyObject *args);
 static PyObject *
 py_thm_relative_grid_address(PyObject *self, PyObject *args);
 static PyObject *
@@ -115,10 +117,10 @@ static PyMethodDef _phonopy_methods[] = {
    "Distribute force constants for all atoms in atom_list using precomputed symmetry mappings."},
   {"compute_permutation", py_compute_permutation, METH_VARARGS,
    "Compute indices of original points in a set of rotated points."},
-  {"gsv_copy_smallest_vectors", py_gsv_copy_smallest_vectors, METH_VARARGS,
-   "Implementation detail of get_smallest_vectors."},
-  {"gsv_set_smallest_vectors", py_gsv_set_smallest_vectors, METH_VARARGS,
-   "Set candidate vectors."},
+  {"gsv_set_smallest_vectors_sparse", py_gsv_set_smallest_vectors_sparse,
+   METH_VARARGS, "Set shortest vectors in sparse array."},
+  {"gsv_set_smallest_vectors_dense", py_gsv_set_smallest_vectors_dense,
+   METH_VARARGS, "Set shortest vectors in dense array."},
   {"tetrahedra_relative_grid_address", py_thm_relative_grid_address,
    METH_VARARGS, "Relative grid addresses of vertices of 24 tetrahedra"},
   {"all_tetrahedra_relative_grid_address",
@@ -297,47 +299,8 @@ static PyObject * py_compute_permutation(PyObject *self, PyObject *args)
   }
 }
 
-static PyObject * py_gsv_copy_smallest_vectors(PyObject *self, PyObject *args)
-{
-  PyArrayObject* py_shortest_vectors;
-  PyArrayObject* py_multiplicity;
-  PyArrayObject* py_vectors;
-  PyArrayObject* py_lengths;
-  double symprec;
-
-  double (*shortest_vectors)[27][3];
-  double (*vectors)[27][3];
-  double (*lengths)[27];
-  int * multiplicity;
-  int size_super, size_prim;
-
-  if (!PyArg_ParseTuple(args, "OOOOd",
-                        &py_shortest_vectors,
-                        &py_multiplicity,
-                        &py_vectors,
-                        &py_lengths,
-                        &symprec)) {
-    return NULL;
-  }
-
-  shortest_vectors = (double(*)[27][3])PyArray_DATA(py_shortest_vectors);
-  multiplicity = (int*)PyArray_DATA(py_multiplicity);
-  vectors = (double(*)[27][3])PyArray_DATA(py_vectors);
-  lengths = (double(*)[27])PyArray_DATA(py_lengths);
-  size_super = PyArray_DIMS(py_vectors)[0];
-  size_prim = PyArray_DIMS(py_vectors)[1];
-
-  phpy_copy_smallest_vectors(shortest_vectors,
-                             multiplicity,
-                             vectors,
-                             lengths,
-                             size_super * size_prim,
-                             symprec);
-
-  Py_RETURN_NONE;
-}
-
-static PyObject * py_gsv_set_smallest_vectors(PyObject *self, PyObject *args)
+static PyObject *
+py_gsv_set_smallest_vectors_sparse(PyObject *self, PyObject *args)
 {
   PyArrayObject* py_smallest_vectors;
   PyArrayObject* py_multiplicity;
@@ -380,17 +343,79 @@ static PyObject * py_gsv_set_smallest_vectors(PyObject *self, PyObject *args)
   reduced_basis = (double(*)[3])PyArray_DATA(py_reduced_basis);
   trans_mat = (int(*)[3])PyArray_DATA(py_trans_mat);
 
-  phpy_set_smallest_vectors(smallest_vectors,
-                            multiplicity,
-                            pos_to,
-                            num_pos_to,
-                            pos_from,
-                            num_pos_from,
-                            lattice_points,
-                            num_lattice_points,
-                            reduced_basis,
-                            trans_mat,
-                            symprec);
+  phpy_set_smallest_vectors_sparse(smallest_vectors,
+                                   multiplicity,
+                                   pos_to,
+                                   num_pos_to,
+                                   pos_from,
+                                   num_pos_from,
+                                   lattice_points,
+                                   num_lattice_points,
+                                   reduced_basis,
+                                   trans_mat,
+                                   symprec);
+
+  Py_RETURN_NONE;
+}
+
+static PyObject *
+py_gsv_set_smallest_vectors_dense(PyObject *self, PyObject *args)
+{
+  PyArrayObject* py_smallest_vectors;
+  PyArrayObject* py_multiplicity;
+  PyArrayObject* py_pos_to;
+  PyArrayObject* py_pos_from;
+  PyArrayObject* py_lattice_points;
+  PyArrayObject* py_reduced_basis;
+  PyArrayObject* py_trans_mat;
+  long initialize;
+  double symprec;
+
+  double (*smallest_vectors)[3];
+  long (*multiplicity)[2];
+  double (*pos_to)[3];
+  double (*pos_from)[3];
+  long (*lattice_points)[3];
+  double (*reduced_basis)[3];
+  long (*trans_mat)[3];
+  long num_pos_to, num_pos_from, num_lattice_points;
+
+  if (!PyArg_ParseTuple(args, "OOOOOOOld",
+                        &py_smallest_vectors,
+                        &py_multiplicity,
+                        &py_pos_to,
+                        &py_pos_from,
+                        &py_lattice_points,
+                        &py_reduced_basis,
+                        &py_trans_mat,
+                        &initialize,
+                        &symprec)) {
+    return NULL;
+  }
+
+  smallest_vectors = (double(*)[3])PyArray_DATA(py_smallest_vectors);
+  multiplicity = (long(*)[2])PyArray_DATA(py_multiplicity);
+  pos_to = (double(*)[3])PyArray_DATA(py_pos_to);
+  pos_from = (double(*)[3])PyArray_DATA(py_pos_from);
+  num_pos_to = PyArray_DIMS(py_pos_to)[0];
+  num_pos_from = PyArray_DIMS(py_pos_from)[0];
+  lattice_points = (long(*)[3])PyArray_DATA(py_lattice_points);
+  num_lattice_points = PyArray_DIMS(py_lattice_points)[0];
+  reduced_basis = (double(*)[3])PyArray_DATA(py_reduced_basis);
+  trans_mat = (long(*)[3])PyArray_DATA(py_trans_mat);
+
+  phpy_set_smallest_vectors_dense(smallest_vectors,
+                                  multiplicity,
+                                  pos_to,
+                                  num_pos_to,
+                                  pos_from,
+                                  num_pos_from,
+                                  lattice_points,
+                                  num_lattice_points,
+                                  reduced_basis,
+                                  trans_mat,
+                                  initialize,
+                                  symprec);
 
   Py_RETURN_NONE;
 }

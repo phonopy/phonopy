@@ -3,6 +3,10 @@
 Change Log
 ==========
 
+Mar-17-2021: Version 2.9.2
+--------------------------
+* Fix a bug to make the initial symmetry search slow.
+
 Jan-29-2021: Version 2.9.1
 --------------------------
 * Release for making pypi wheel of py3.9
