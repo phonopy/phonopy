@@ -367,6 +367,66 @@ class QHA(object):
             w.write("\n\n")
         w.close()
 
+    def write_helmholtz_volume_fitted(self, thin_number, filename = 'helholtz-volume_fitted.dat',):
+
+        if self._energy_plot_factor is None:
+            _energy_plot_factor = 1
+        else:
+            _energy_plot_factor = self._energy_plot_factor
+
+        volume_points = np.linspace(min(self._volumes),
+                                    max(self._volumes),
+                                    201)
+        selected_volumes = []
+        selected_energies = []
+
+        for i, t in enumerate(self._temperatures[:self._len]):
+            if i % thin_number == 0:
+                selected_volumes.append(self._equiv_volumes[i])
+                selected_energies.append(self._equiv_energies[i])
+
+        for i, t in enumerate(self._temperatures[:self._len]):
+            if t >= 298:
+                if i > 0:
+                    de = self._equiv_energies[i] - self._equiv_energies[i - 1]
+                    dt = t - self._temperatures[i - 1]
+                    e0 = ((298 - self._temperatures[i - 1]) / dt * de +
+                          self._equiv_energies[i - 1])
+                else:
+                    e0 = 0
+                break
+        e0 *= _energy_plot_factor
+        _data_vol_points = []
+        _data_eos = []
+        for i, t in enumerate(self._temperatures[:self._len]):
+            if i % thin_number == 0:
+
+                _data_vol_points.append(np.array(self._free_energies[i]) * _energy_plot_factor - e0)
+                _data_eos.append(self._eos(volume_points, * self._equiv_parameters[i])* _energy_plot_factor - e0)
+
+        data_eos = np.array(_data_eos).T
+        data_vol_points = np.array(_data_vol_points).T
+        data_min = (np.array(selected_energies) * _energy_plot_factor - e0)
+
+        with open(filename, 'w') as w:
+            w.write("# Volume points\n")
+            for (j,k) in zip(self._volumes, data_vol_points):
+                w.write("%10.5f " %j )
+                for l in k:
+                    w.write("%10.5f" %l )
+                w.write("\n")
+            w.write("\n# Fitted data\n")
+
+            for (m,n) in zip(volume_points, data_eos):
+                w.write("%10.5f " %m )
+                for ll in n:
+                    w.write("%10.5f" %ll)
+                w.write("\n")
+            w.write("\n# Minimas\n")
+            for (a,b) in zip(selected_volumes, data_min):
+                w.write("%10.5f %10.5f %s" %(a, b, '\n') )
+            w.write('\n')
+
     def get_volume_temperature(self):
         warnings.warn("QHA.get_volume_temperature() is deprecated."
                       "Use volume_temperature attribute.",
