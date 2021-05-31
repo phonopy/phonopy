@@ -1,0 +1,272 @@
+#!/usr/bin/env python
+
+# Copyright (C) 2011 Atsushi Togo
+# All rights reserved.
+#
+# This file is part of phonopy.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# * Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in
+#   the documentation and/or other materials provided with the
+#   distribution.
+#
+# * Neither the name of the phonopy project nor the names of its
+#   contributors may be used to endorse or promote products derived
+#   from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+# PDOS plot (pdosplot)
+#
+# Usage:
+#   pdosplot -i "1 2, 4 5" -o "pdos.pdf"
+#
+# The axis resolved PDOS is summed up with the successive
+# indices separated by ",". In this example, indices 1 and
+# 2, 3 and 4 are summed respectively, and then they are
+# ploted respectively.
+#
+# The indices are defined like:
+# 1 2 3 : X Y Z of the 1st atom,
+# 4 5 6 : X Y Z of the 2nd atom,
+# ...
+
+import sys
+import numpy as np
+import matplotlib.pyplot as plt
+
+def get_options():
+    # Parse options
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Phonopy total DOS command-line-tool")
+    parser.set_defaults( output_filename = None,
+                         factor = 1.0,
+                         legend_labels = None,
+                         xlabel = None,
+                         ylabel = None,
+                         show_legend = False,
+                         pdos_indices = None,
+                         ymax = None,
+                         ymin = None,
+                         title = None,
+                         f_max = None,
+                         f_min = None )
+    parser.add_argument(
+        "filenames", nargs='*',
+        help="Filename(s) of phonon DOS result(single or multiple files allowed)")
+    parser.add_argument(
+        "-t", "--title", dest="title",
+        help="Title of plot")
+    parser.add_argument(
+        "--xlabel", dest="xlabel",
+        help="Set x label")
+    parser.add_argument(
+        "--ylabel", dest="ylabel",
+        help="Set y label")
+    parser.add_argument(
+        "--ymax", dest="ymax", type=float,
+        help="Maximum value of y axis")
+    parser.add_argument(
+        "--ymin", dest="ymin", type=float,
+        help="Minimum value of y axis")
+    parser.add_argument(
+        "--fmax", dest="f_max", type=float,
+        help="Maximum frequency plotted")
+    parser.add_argument(
+        "--fmin", dest="f_min", type=float,
+        help="Minimum frequency plotted")
+    parser.add_argument(
+        "--factor", dest="factor", type=float,
+        help="Factor is multiplied with DOS.")
+    parser.add_argument(
+        "-l", "--legend", dest="show_legend", action="store_true",
+        help="Show legend")
+    parser.add_argument(
+        "--legend_labels", dest="legend_labels",
+        help="Set legend labels")
+    parser.add_argument(
+        "--line_styles", dest="line_styles",
+        help="Set line style (Matlplotlib styles: '-','-.','--','..', etc)")
+    parser.add_argument(
+        "--line_colors", dest="line_colors",
+        help="Set line color (Matlplotlib color codes: 'b','c','r', etc)") 
+    parser.add_argument(
+        "--line_widths", dest="line_widths",
+        help="Set line width (Float numbers)")
+    parser.add_argument(
+        "-o", "--output", dest="output_filename",
+        help="Output filename")
+    args = parser.parse_args()
+    return args
+
+def main(args):
+
+    # Read data file
+    dos_data = []
+    filenames = args.filenames
+ 
+    if len(filenames) == 0:
+        print('')
+        print('Provide at least one filename with vaild DOS data!')
+        print('')
+        sys.exit()
+
+    for i, filename in enumerate(filenames):
+        frequencies = []
+        dos = []
+        for line in open(filename):
+            if line.strip().split()[0] == '#' or line.strip().split() == '':
+                continue
+
+            tmp_array = [float(x) for x in line.split()]
+            frequencies.append(tmp_array.pop(0))
+            dos.append(tmp_array)
+
+        frequencies = np.array(frequencies)
+        dos = np.array(dos)
+        dos_data.append([frequencies,dos])
+    
+
+    # Set plot range in frequency axis
+    if args.f_max is None:
+        x_max = []
+        for i in range(len(dos_data)):
+            x_max.append(max(dos_data[i][0]))
+        max_freq = max(x_max)
+    else:
+        max_freq = args.f_max
+    if args.f_min is None:
+        x_min = []
+        for i in range(len(dos_data)):
+            x_min.append(min(dos_data[i][0]))
+        min_freq = min(x_min)
+    else:
+        min_freq = args.f_min 
+
+    min_i = 0
+    max_i = len(dos_data[0][0])  
+
+    for j in range(len(dos_data)):
+        for i, f in enumerate(dos_data[j][0]):
+            if f > max_freq + (dos_data[j][0][1] - dos_data[j][0][0]) / 10:
+                max_i = i + 1
+                break
+
+    for j in range(len(dos_data)):
+        for i, f in enumerate(dos_data[j][0]):
+            if f > min_freq - (dos_data[j][0][1] - dos_data[j][0][0]) / 10:
+                min_i = i
+                break
+          
+    # Plot
+    fig, ax = plt.subplots()
+    ax.xaxis.set_ticks_position('both')
+    ax.yaxis.set_ticks_position('both')
+    ax.xaxis.set_tick_params(which='both', direction='in')
+    ax.yaxis.set_tick_params(which='both', direction='in')
+
+    # Set line styles
+
+    if args.line_styles is not None:
+        if len(args.line_styles.split()) == len(dos_data):
+            l_styles = args.line_styles.split()
+        else:
+            print("Number of line-styles is not same as number of plots.")
+            l_styles = None
+    else:
+        l_styles = None
+
+    # Set line colors
+
+    if args.line_colors is not None:
+        if len(args.line_colors.split()) == len(dos_data):
+            l_colors = args.line_colors.split()
+        else:
+            print("Number of line-styles is not same as number of plots.")
+            l_colors = None
+    else:
+        l_colors = None
+
+    # Set line widths
+
+    if args.line_widths is not None:
+        if len(args.line_widths.split()) == len(dos_data):
+            l_widths = args.line_widths.split()
+        else:
+            print("Number of line-widths is not same as number of plots.")
+            l_widths = None
+    else:
+        l_widths = None
+    print(l_widths)
+    plots = []
+    for i, x in enumerate(dos_data):
+
+        curve, = plt.plot(x[0], x[1] * args.factor, ls = l_styles[i], c = l_colors[i], lw = l_widths[i])
+        plots.append(curve)
+
+    ax.set_ylim((0, None))
+    plt.xlim(min_freq, max_freq)
+    
+    if (args.ymin is not None) and (args.ymax is not None):
+        plt.ylim(args.ymin, args.ymax)
+    elif (args.ymin is not None) and (args.ymax is not None):
+        plt.ylim(ymax=args.ymax)
+    elif (args.ymin is not None) and (args.ymax is None):
+        plt.ylim(ymin=args.ymin)
+
+    # labels
+
+    if args.xlabel is None:
+        plt.xlabel('Frequency')
+    else:
+        plt.xlabel(args.xlabel)
+    if args.ylabel is None:
+        plt.ylabel('Total density of states')
+    else:
+        plt.ylabel(args.ylabel)
+
+    if args.show_legend:
+        if args.legend_labels is not None:
+            if len(args.legend_labels.split()) == len(plots):
+                labels = args.legend_labels.split()
+            else:
+                print("Number of labels is not same as number of plots.")
+                labels = filenames
+        else:
+            labels = filenames
+        plt.legend(plots, labels, loc='upper left')
+
+
+
+
+    if args.title is not None:
+        plt.title(args.title)
+
+    if args.output_filename is not None:
+        plt.rcParams['pdf.fonttype'] = 42
+        plt.rcParams['font.family'] = 'serif'
+        plt.savefig(args.output_filename)
+    else:
+        plt.show()
+
+if __name__ == "__main__":
+    main(get_options())
