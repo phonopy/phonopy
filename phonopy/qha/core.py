@@ -32,6 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
 import numpy as np
 from phonopy.units import Avogadro, EvTokJmol, EVAngstromToGPa
 from phonopy.qha.eos import get_eos, fit_to_eos
@@ -367,16 +368,17 @@ class QHA(object):
             w.write("\n\n")
         w.close()
 
-    def write_helmholtz_volume_fitted(self, thin_number, filename = 'helholtz-volume_fitted.dat',):
+    def write_helmholtz_volume_fitted(self,
+                                      thin_number,
+                                      filename='helholtz-volume_fitted.dat'):
 
         if self._energy_plot_factor is None:
             _energy_plot_factor = 1
         else:
             _energy_plot_factor = self._energy_plot_factor
 
-        volume_points = np.linspace(min(self._volumes),
-                                    max(self._volumes),
-                                    201)
+        volume_points = np.linspace(
+            min(self._volumes), max(self._volumes), 201)
         selected_volumes = []
         selected_energies = []
 
@@ -401,8 +403,11 @@ class QHA(object):
         for i, t in enumerate(self._temperatures[:self._len]):
             if i % thin_number == 0:
 
-                _data_vol_points.append(np.array(self._free_energies[i]) * _energy_plot_factor - e0)
-                _data_eos.append(self._eos(volume_points, * self._equiv_parameters[i])* _energy_plot_factor - e0)
+                _data_vol_points.append(
+                    np.array(self._free_energies[i]) * _energy_plot_factor - e0)
+                _data_eos.append(
+                    self._eos(volume_points, * self._equiv_parameters[i])
+                    * _energy_plot_factor - e0)
 
         data_eos = np.array(_data_eos).T
         data_vol_points = np.array(_data_vol_points).T
@@ -410,21 +415,21 @@ class QHA(object):
 
         with open(filename, 'w') as w:
             w.write("# Volume points\n")
-            for (j,k) in zip(self._volumes, data_vol_points):
-                w.write("%10.5f " %j )
+            for (j, k) in zip(self._volumes, data_vol_points):
+                w.write("%10.5f " % j)
                 for l in k:
-                    w.write("%10.5f" %l )
+                    w.write("%10.5f" % l)
                 w.write("\n")
             w.write("\n# Fitted data\n")
 
-            for (m,n) in zip(volume_points, data_eos):
-                w.write("%10.5f " %m )
+            for (m, n) in zip(volume_points, data_eos):
+                w.write("%10.5f " % m)
                 for ll in n:
-                    w.write("%10.5f" %ll)
+                    w.write("%10.5f" % ll)
                 w.write("\n")
             w.write("\n# Minimas\n")
-            for (a,b) in zip(selected_volumes, data_min):
-                w.write("%10.5f %10.5f %s" %(a, b, '\n') )
+            for (a, b) in zip(selected_volumes, data_min):
+                w.write("%10.5f %10.5f %s" % (a, b, '\n'))
             w.write('\n')
 
     def get_volume_temperature(self):

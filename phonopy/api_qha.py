@@ -250,7 +250,9 @@ class PhonopyQHA(object):
     def write_helmholtz_volume(self, filename='helmholtz-volume.dat'):
         self._qha.write_helmholtz_volume(filename=filename)
 
-    def write_helmholtz_volume_fitted(self, thin_number, filename='helmholtz-volume_fitted.dat'):
+    def write_helmholtz_volume_fitted(self,
+                                      thin_number,
+                                      filename='helmholtz-volume_fitted.dat'):
         self._qha.write_helmholtz_volume_fitted(thin_number, filename=filename)
 
     def write_volume_temperature(self, filename='volume-temperature.dat'):

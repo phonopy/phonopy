@@ -244,7 +244,7 @@ def main(args):
         phonopy_qha.plot_pdf_gruneisen_temperature()
 
     phonopy_qha.write_helmholtz_volume()
-    phonopy_qha.write_helmholtz_volume_fitted(thin_number = args.thin_number)
+    phonopy_qha.write_helmholtz_volume_fitted(thin_number=args.thin_number)
     phonopy_qha.write_volume_temperature()
     phonopy_qha.write_thermal_expansion()
     phonopy_qha.write_gibbs_temperature()
