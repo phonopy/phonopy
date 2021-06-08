@@ -68,7 +68,7 @@ from phonopy.phonon.dos import TotalDos, PartialDos
 from phonopy.phonon.thermal_displacement import (
     ThermalDisplacements, ThermalDisplacementMatrices)
 from phonopy.phonon.random_displacements import RandomDisplacements
-from phonopy.phonon.animation import Animation
+from phonopy.phonon.animation import write_animation
 from phonopy.phonon.modulation import Modulation
 from phonopy.phonon.qpoints import QpointsPhonon
 from phonopy.phonon.irreps import IrReps
@@ -1327,7 +1327,7 @@ class Phonopy(object):
                             plot=False,
                             write_yaml=False,
                             filename="band.yaml"):
-        """Conveniently calculate/draw band structure.
+        """Conveniently calculate and draw band structure.
 
         Parameters
         ----------
@@ -1625,7 +1625,7 @@ class Phonopy(object):
                            is_gamma_center=is_gamma_center)
 
     def get_mesh_dict(self):
-        """Returns calculated mesh sampling phonons
+        """Return phonon properties calculated by mesh sampling.
 
         Returns
         -------
@@ -1674,8 +1674,9 @@ class Phonopy(object):
         return retdict
 
     def get_mesh(self):
-        warnings.warn("Phonopy.get_mesh is deprecated. "
-                      "Use Phonopy.get_mesh_dict.",
+        """Return phonon properties calculated by mesh sampling."""
+        warnings.warn("Phonopy.get_mesh() is deprecated. "
+                      "Use Phonopy.get_mesh_dict().",
                       DeprecationWarning)
 
         if self._mesh is None:
@@ -1690,7 +1691,8 @@ class Phonopy(object):
                 mesh_dict['eigenvectors'])
 
     def get_mesh_grid_info(self):
-        warnings.warn("Phonopy.get_mesh_grid_info is deprecated. "
+        """Return grid point information of mesh sampling."""
+        warnings.warn("Phonopy.get_mesh_grid_info() is deprecated. "
                       "Use attributes of phonon.mesh instance.",
                       DeprecationWarning)
         if self._mesh is None:
@@ -1702,9 +1704,11 @@ class Phonopy(object):
                 self._mesh.grid_mapping_table)
 
     def write_hdf5_mesh(self):
+        """Write mesh calculation results in hdf5 format."""
         self._mesh.write_hdf5()
 
     def write_yaml_mesh(self):
+        """Write mesh calculation results in yaml format."""
         self._mesh.write_yaml()
 
     # Sampling mesh:
@@ -1716,16 +1720,13 @@ class Phonopy(object):
                       is_mesh_symmetry=True,
                       is_eigenvectors=False,
                       is_gamma_center=False):
-        """Create an IterMesh instancer
+        """Create an IterMesh instance.
 
-        Attributes
-        ----------
         See set_mesh method.
 
         """
-
-        warnings.warn("Phonopy.set_iter_mesh is deprecated. "
-                      "Use Phonopy.run_mesh with use_iter_mesh=True.",
+        warnings.warn("Phonopy.set_iter_mesh() is deprecated. "
+                      "Use Phonopy.run_mesh() with use_iter_mesh=True.",
                       DeprecationWarning)
 
         self.run_mesh(mesh=mesh,
@@ -1738,6 +1739,7 @@ class Phonopy(object):
 
     # Plot band structure and DOS (PDOS) together
     def plot_band_structure_and_dos(self, pdos_indices=None):
+        """Plot band structure and DOS."""
         import matplotlib.pyplot as plt
         if self._band_structure.labels:
             from matplotlib import rc
@@ -1807,7 +1809,7 @@ class Phonopy(object):
                     with_group_velocities=False,
                     with_dynamical_matrices=False,
                     nac_q_direction=None):
-        """Phonon calculations on q-points.
+        """Run phonon calculation at specified q-points.
 
         Parameters
         ----------
@@ -1829,7 +1831,6 @@ class Phonopy(object):
             shape=(3,), dtype='double'
 
         """
-
         if self._dynamical_matrix is None:
             msg = ("Dynamical matrix has not yet built.")
             raise RuntimeError(msg)
@@ -1855,8 +1856,9 @@ class Phonopy(object):
                            nac_q_direction=None,
                            is_eigenvectors=False,
                            write_dynamical_matrices=False):
-        warnings.warn("Phonopy.set_qpoints_phonon is deprecated. "
-                      "Use Phonopy.run_qpoints.", DeprecationWarning)
+        """Run phonon calculation at specified q-points."""
+        warnings.warn("Phonopy.set_qpoints_phonon() is deprecated. "
+                      "Use Phonopy.run_qpoints().", DeprecationWarning)
         if self._group_velocity is None:
             with_group_velocities = False
         else:
@@ -1869,7 +1871,7 @@ class Phonopy(object):
             nac_q_direction=nac_q_direction)
 
     def get_qpoints_dict(self):
-        """Returns calculated phonons at q-points
+        """Return calculated phonon properties at q-points.
 
         Returns
         -------
@@ -1894,9 +1896,8 @@ class Phonopy(object):
                 shape=(qpoints, bands, bands), dtype='double'
 
         """
-
         if self._qpoints is None:
-            msg = ("run_qpoints has to be done.")
+            msg = ("Phonopy.run_qpoints() has to be done.")
             raise RuntimeError(msg)
 
         return {'frequencies': self._qpoints.frequencies,
@@ -1905,15 +1906,19 @@ class Phonopy(object):
                 'dynamical_matrices': self._qpoints.dynamical_matrices}
 
     def get_qpoints_phonon(self):
-        warnings.warn("Phonopy.get_qpoints_phonon is deprecated. "
-                      "Use Phonopy.run_get_qpoints_dict.", DeprecationWarning)
+        """Return phonon properties calculated at q-points."""
+        warnings.warn("Phonopy.get_qpoints_phonon() is deprecated. "
+                      "Use Phonopy.run_get_qpoints_dict().",
+                      DeprecationWarning)
         qpt = self.get_qpoints_dict()
         return (qpt['frequencies'], qpt['eigenvectors'])
 
     def write_hdf5_qpoints_phonon(self):
+        """Write phonon properties calculated at q-points in hdf5 format."""
         self._qpoints.write_hdf5()
 
     def write_yaml_qpoints_phonon(self):
+        """Write phonon properties calculated at q-points in yaml format."""
         self._qpoints.write_yaml()
 
     # DOS
@@ -1923,7 +1928,7 @@ class Phonopy(object):
                       freq_max=None,
                       freq_pitch=None,
                       use_tetrahedron_method=True):
-        """Calculate total DOS from phonons on sampling mesh.
+        """Run total DOS calculation.
 
         Parameters
         ----------
@@ -1955,8 +1960,9 @@ class Phonopy(object):
                       freq_max=None,
                       freq_pitch=None,
                       tetrahedron_method=False):
-        warnings.warn("Phonopy.set_total_DOS is deprecated. "
-                      "Use Phonopy.run_total_DOS", DeprecationWarning)
+        """Run total DOS calculation."""
+        warnings.warn("Phonopy.set_total_DOS() is deprecated. "
+                      "Use Phonopy.run_total_DOS()", DeprecationWarning)
 
         self.run_total_dos(sigma=sigma,
                            freq_min=freq_min,
@@ -1972,6 +1978,7 @@ class Phonopy(object):
                        plot=False,
                        write_dat=False,
                        filename="total_dos.dat"):
+        """Conveniently calculate and draw total DOS."""
         self.run_mesh(mesh=mesh,
                       is_time_reversal=is_time_reversal,
                       is_mesh_symmetry=is_mesh_symmetry,
@@ -1983,7 +1990,7 @@ class Phonopy(object):
             return self.plot_total_dos()
 
     def get_total_dos_dict(self):
-        """Return frequencies and total DOS as a dictionary.
+        """Return total DOS.
 
         Returns
         -------
@@ -1996,12 +2003,11 @@ class Phonopy(object):
             shape=(frequency_sampling_points, ), dtype='double'
 
         """
-
         return {'frequency_points': self._total_dos.frequency_points,
                 'total_dos': self._total_dos.dos}
 
     def get_total_DOS(self):
-        """Return frequency points and total DOS as a tuple.
+        """Return total DOS.
 
         Returns
         -------
@@ -2013,29 +2019,31 @@ class Phonopy(object):
             shape=(frequency_sampling_points, ), dtype='double'
 
         """
-
-        warnings.warn("Phonopy.get_total_DOS is deprecated. "
-                      "Use Phonopy.get_total_dos_dict.", DeprecationWarning)
+        warnings.warn("Phonopy.get_total_DOS() is deprecated. "
+                      "Use Phonopy.get_total_dos_dict().", DeprecationWarning)
 
         dos = self.get_total_dos_dict()
 
         return dos['frequency_points'], dos['total_dos']
 
     def set_Debye_frequency(self, freq_max_fit=None):
+        """Calculate Debye frequency on top of total DOS."""
         self._total_dos.set_Debye_frequency(
-            self._primitive.get_number_of_atoms(),
-            freq_max_fit=freq_max_fit)
+            len(self._primitive), freq_max_fit=freq_max_fit)
 
     def get_Debye_frequency(self):
+        """Return Debye frequency."""
         return self._total_dos.get_Debye_frequency()
 
     def plot_total_DOS(self):
-        warnings.warn("Phonopy.plot_total_DOS is deprecated. "
-                      "Use Phonopy.plot_total_dos (lowercase on DOS).",
+        """Plot total DOS."""
+        warnings.warn("Phonopy.plot_total_DOS() is deprecated. "
+                      "Use Phonopy.plot_total_dos() (lowercase on DOS).",
                       DeprecationWarning)
         return self.plot_total_dos()
 
     def plot_total_dos(self):
+        """Plot total DOS."""
         if self._total_dos is None:
             msg = ("run_total_dos has to be done before plotting "
                    "total DOS.")
@@ -2050,12 +2058,14 @@ class Phonopy(object):
         return plt
 
     def write_total_DOS(self, filename="total_dos.dat"):
-        warnings.warn("Phonopy.write_total_DOS is deprecated. "
-                      "Use Phonopy.write_total_dos (lowercase on DOS).",
+        """Write total DOS to text file."""
+        warnings.warn("Phonopy.write_total_DOS() is deprecated. "
+                      "Use Phonopy.write_total_dos() (lowercase on DOS).",
                       DeprecationWarning)
         self.write_total_dos(filename=filename)
 
     def write_total_dos(self, filename="total_dos.dat"):
+        """Write total DOS to text file."""
         self._total_dos.write(filename=filename)
 
     # PDOS
@@ -2067,7 +2077,7 @@ class Phonopy(object):
                           use_tetrahedron_method=True,
                           direction=None,
                           xyz_projection=False):
-        """Calculate projected DOS from phonons on sampling mesh.
+        """Run projected DOS calculation.
 
         Parameters
         ----------
@@ -2089,7 +2099,6 @@ class Phonopy(object):
             not. Default is False, i.e., no projection.
 
         """
-
         self._pdos = None
 
         if self._mesh is None:
@@ -2124,8 +2133,9 @@ class Phonopy(object):
                         tetrahedron_method=False,
                         direction=None,
                         xyz_projection=False):
-        warnings.warn("Phonopy.set_partial_DOS is deprecated. "
-                      "Use Phonopy.run_projected_dos", DeprecationWarning)
+        """Run projected DOS calculation."""
+        warnings.warn("Phonopy.set_partial_DOS() is deprecated. "
+                      "Use Phonopy.run_projected_dos()", DeprecationWarning)
 
         self.run_projected_dos(sigma=sigma,
                                freq_min=freq_min,
@@ -2144,11 +2154,10 @@ class Phonopy(object):
                            legend=None,
                            write_dat=False,
                            filename="projected_dos.dat"):
-        """Convenient method to calculate/draw projected density of states
+        """Conveniently calculate and draw projected DOS.
 
         Parameters
         ----------
-
         See docstring of ``Phonopy.init_mesh`` for the parameters of ``mesh``
         (default is 100.0), ``is_time_reversal`` (default is True),
         and ``is_gamma_center`` (default is False).
@@ -2168,7 +2177,6 @@ class Phonopy(object):
             is ``projected_dos.dat``.
 
         """
-
         self.run_mesh(mesh=mesh,
                       is_time_reversal=is_time_reversal,
                       is_mesh_symmetry=False,
@@ -2182,7 +2190,7 @@ class Phonopy(object):
                                            legend=legend)
 
     def get_projected_dos_dict(self):
-        """Return frequency points and projected DOS as a tuple.
+        """Return projected DOS.
 
         Projection is done to atoms and may be also done along directions
         depending on the parameters at run_projected_dos.
@@ -2202,7 +2210,7 @@ class Phonopy(object):
                 'projected_dos': self._pdos.partial_dos}
 
     def get_partial_DOS(self):
-        """Return frequency points and partial DOS as a tuple.
+        """Return projected DOS.
 
         Projection is done to atoms and may be also done along directions
         depending on the parameters at run_partial_dos.
@@ -2217,8 +2225,8 @@ class Phonopy(object):
             shape=(frequency_sampling_points, projections), dtype='double'
 
         """
-        warnings.warn("Phonopy.get_partial_DOS is deprecated. "
-                      "Use Phonopy.get_projected_dos_dict.",
+        warnings.warn("Phonopy.get_partial_DOS() is deprecated. "
+                      "Use Phonopy.get_projected_dos_dict().",
                       DeprecationWarning)
 
         pdos = self.get_projected_dos_dict()
@@ -2226,15 +2234,16 @@ class Phonopy(object):
         return pdos['frequency_points'], pdos['projected_dos']
 
     def plot_partial_DOS(self, pdos_indices=None, legend=None):
-        warnings.warn("Phonopy.plot_partial_DOS is deprecated. "
-                      "Use Phonopy.plot_projected_dos (lowercase on DOS).",
+        """Plot projected DOS."""
+        warnings.warn("Phonopy.plot_partial_DOS() is deprecated. "
+                      "Use Phonopy.plot_projected_dos() (lowercase on DOS).",
                       DeprecationWarning)
 
         return self.plot_projected_dos(pdos_indices=pdos_indices,
                                        legend=legend)
 
     def plot_projected_dos(self, pdos_indices=None, legend=None):
-        """Plot projected DOS
+        """Plot projected DOS.
 
         Parameters
         ----------
@@ -2250,7 +2259,6 @@ class Phonopy(object):
              When None, legend is not shown.
 
         """
-
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
@@ -2269,12 +2277,14 @@ class Phonopy(object):
         return plt
 
     def write_partial_DOS(self, filename="partial_dos.dat"):
-        warnings.warn("Phonopy.write_partial_DOS is deprecated. "
-                      "Use Phonopy.write_projected_dos (lowercase on DOS).",
+        """Write projected DOS to text file."""
+        warnings.warn("Phonopy.write_partial_DOS() is deprecated. "
+                      "Use Phonopy.write_projected_dos() (lowercase on DOS).",
                       DeprecationWarning)
         self.write_projected_dos(filename=filename)
 
     def write_projected_dos(self, filename="projected_dos.dat"):
+        """Write projected DOS to text file."""
         self._pdos.write(filename=filename)
 
     # Thermal property
@@ -2287,7 +2297,7 @@ class Phonopy(object):
                                band_indices=None,
                                cutoff_frequency=None,
                                pretend_real=False):
-        """Calculate thermal properties at constant volume
+        """Run calculation of thermal properties at constant volume.
 
         Parameters
         ----------
@@ -2327,8 +2337,9 @@ class Phonopy(object):
                                band_indices=None,
                                cutoff_frequency=None,
                                pretend_real=False):
-        warnings.warn("Phonopy.set_thermal_properties is deprecated. "
-                      "Use Phonopy.run_thermal_properties",
+        """Run calculation of thermal properties at constant volume."""
+        warnings.warn("Phonopy.set_thermal_properties() is deprecated. "
+                      "Use Phonopy.run_thermal_properties()",
                       DeprecationWarning)
         self.run_thermal_properties(t_step=t_step,
                                     t_max=t_max,
@@ -2340,7 +2351,7 @@ class Phonopy(object):
                                     pretend_real=pretend_real)
 
     def get_thermal_properties_dict(self):
-        """Return thermal properties by a dictionary
+        """Return thermal properties.
 
         Returns
         -------
@@ -2358,20 +2369,19 @@ class Phonopy(object):
             shape=(temperatures, ), dtype='double'
 
         """
-
         keys = ('temperatures', 'free_energy', 'entropy', 'heat_capacity')
         return dict(zip(keys, self._thermal_properties.thermal_properties))
 
     def get_thermal_properties(self):
-        """Return thermal properties
+        """Return thermal properties.
 
         Returns
         -------
         (temperatures, free energy, entropy, heat capacity)
 
         """
-        warnings.warn("Phonopy.get_thermal_properties is deprecated. "
-                      "Use Phonopy.get_thermal_properties_dict.",
+        warnings.warn("Phonopy.get_thermal_properties() is deprecated. "
+                      "Use Phonopy.get_thermal_properties_dict().",
                       DeprecationWarning)
 
         tp = self.get_thermal_properties_dict()
@@ -2381,6 +2391,7 @@ class Phonopy(object):
                 tp['heat_capacity'])
 
     def plot_thermal_properties(self):
+        """Plot thermal properties."""
         import matplotlib.pyplot as plt
         plt.rcParams['pdf.fonttype'] = 42
         plt.rcParams['font.family'] = 'serif'
@@ -2400,6 +2411,7 @@ class Phonopy(object):
 
     def write_yaml_thermal_properties(self,
                                       filename='thermal_properties.yaml'):
+        """Write thermal properties in yaml format."""
         self._thermal_properties.write_yaml(filename=filename)
 
     # Thermal displacement
@@ -2411,7 +2423,7 @@ class Phonopy(object):
                                   direction=None,
                                   freq_min=None,
                                   freq_max=None):
-        """Prepare thermal displacements calculation
+        """Run thermal displacements calculation.
 
         Parameters
         ----------
@@ -2430,7 +2442,6 @@ class Phonopy(object):
             freq_max are included. Default is None, i.e., all phonons.
 
         """
-
         if self._dynamical_matrix is None:
             msg = ("Dynamical matrix has not yet built.")
             raise RuntimeError(msg)
@@ -2474,8 +2485,9 @@ class Phonopy(object):
                                   direction=None,
                                   freq_min=None,
                                   freq_max=None):
-        warnings.warn("Phonopy.set_thermal_displacements is deprecated. "
-                      "Use Phonopy.run_thermal_displacements",
+        """Run thermal displacements calculation."""
+        warnings.warn("Phonopy.set_thermal_displacements() is deprecated. "
+                      "Use Phonopy.run_thermal_displacements()",
                       DeprecationWarning)
         self.run_thermal_displacements(t_min=t_min,
                                        t_max=t_max,
@@ -2486,6 +2498,7 @@ class Phonopy(object):
                                        freq_max=freq_max)
 
     def get_thermal_displacements_dict(self):
+        """Return thermal displacements."""
         if self._thermal_displacements is None:
             msg = ("run_thermal_displacements has to be done.")
             raise RuntimeError(msg)
@@ -2495,13 +2508,15 @@ class Phonopy(object):
                 'thermal_displacements': td.thermal_displacements}
 
     def get_thermal_displacements(self):
-        warnings.warn("Phonopy.get_thermal_displacements is deprecated. "
-                      "Use Phonopy.get_thermal_displacements_dict",
+        """Return thermal displacements."""
+        warnings.warn("Phonopy.get_thermal_displacements() is deprecated. "
+                      "Use Phonopy.get_thermal_displacements_dict()",
                       DeprecationWarning)
         td = self.get_thermal_displacements_dict()
         return (td['temperatures'], td['thermal_displacements'])
 
     def plot_thermal_displacements(self, is_legend=False):
+        """Plot thermal displacements."""
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
@@ -2518,6 +2533,7 @@ class Phonopy(object):
         return plt
 
     def write_yaml_thermal_displacements(self):
+        """Write thermal displacements in yaml format."""
         self._thermal_displacements.write_yaml()
 
     # Thermal displacement matrix
@@ -2528,7 +2544,7 @@ class Phonopy(object):
                                           temperatures=None,
                                           freq_min=None,
                                           freq_max=None):
-        """Prepare thermal displacement matrices
+        """Run thermal displacement matrices calculation.
 
         Parameters
         ----------
@@ -2580,8 +2596,9 @@ class Phonopy(object):
                                           freq_min=None,
                                           freq_max=None,
                                           t_cif=None):
-        warnings.warn("Phonopy.set_thermal_displacement_matrices is "
-                      "deprecated. Use Phonopy.run_thermal_displacements",
+        """Run thermal displacement matrices calculation."""
+        warnings.warn("Phonopy.set_thermal_displacement_matrices() is "
+                      "deprecated. Use Phonopy.run_thermal_displacements()",
                       DeprecationWarning)
         if t_cif is None:
             temperatures = None
@@ -2595,6 +2612,7 @@ class Phonopy(object):
                                                freq_max=freq_max)
 
     def get_thermal_displacement_matrices_dict(self):
+        """Return thermal displacement matrices."""
         if self._thermal_displacement_matrices is None:
             msg = ("run_thermal_displacement_matrices has to be done.")
             raise RuntimeError(msg)
@@ -2607,22 +2625,24 @@ class Phonopy(object):
                 tdm.thermal_displacement_matrices_cif}
 
     def get_thermal_displacement_matrices(self):
-        warnings.warn("Phonopy.get_thermal_displacement_matrices is "
+        """Return thermal displacement matrices."""
+        warnings.warn("Phonopy.get_thermal_displacement_matrices() is "
                       "deprecated. Use "
-                      "Phonopy.get_thermal_displacement_matrices_dict",
+                      "Phonopy.get_thermal_displacement_matrices_dict()",
                       DeprecationWarning)
         tdm = self.get_thermal_displacement_matrices_dict()
         return (tdm['temperatures'],
                 tdm['thermal_displacement_matrices'])
 
     def write_yaml_thermal_displacement_matrices(self):
+        """Write thermal displacement matrices in yaml format."""
         self._thermal_displacement_matrices.write_yaml()
 
     def write_thermal_displacement_matrix_to_cif(self, temperature_index):
+        """Write thermal displacement matrices at a termperature in cif."""
         self._thermal_displacement_matrices.write_cif(self._primitive,
                                                       temperature_index)
 
-    # Normal mode animation
     def write_animation(self,
                         q_point=None,
                         anime_type='v_sim',
@@ -2631,79 +2651,32 @@ class Phonopy(object):
                         num_div=None,
                         shift=None,
                         filename=None):
+        """Write atomic modulations in animation format.
+
+        Returns
+        -------
+        str
+            Output filename.
+
+        """
         if self._dynamical_matrix is None:
             msg = ("Dynamical matrix has not yet built.")
             raise RuntimeError(msg)
 
-        if q_point is None:
-            animation = Animation([0, 0, 0],
-                                  self._dynamical_matrix,
-                                  shift=shift)
-        else:
-            animation = Animation(q_point,
-                                  self._dynamical_matrix,
-                                  shift=shift)
-        if anime_type == 'v_sim':
-            if amplitude:
-                amplitude_ = amplitude
-            else:
-                amplitude_ = 1.0
-
-            if filename:
-                animation.write_v_sim(amplitude=amplitude_,
-                                      factor=self._factor,
-                                      filename=filename)
-            else:
-                animation.write_v_sim(amplitude=amplitude_,
-                                      factor=self._factor)
         if anime_type in ('arc', 'xyz', 'jmol', 'poscar'):
             if band_index is None or amplitude is None or num_div is None:
                 msg = ("Parameters are not correctly set for animation.")
                 raise RuntimeError(msg)
 
-            if anime_type == 'arc' or anime_type is None:
-                if filename:
-                    animation.write_arc(band_index,
-                                        amplitude,
-                                        num_div,
-                                        filename=filename)
-                else:
-                    animation.write_arc(band_index,
-                                        amplitude,
-                                        num_div)
-
-            if anime_type == 'xyz':
-                if filename:
-                    animation.write_xyz(band_index,
-                                        amplitude,
-                                        num_div,
-                                        self._factor,
-                                        filename=filename)
-                else:
-                    animation.write_xyz(band_index,
-                                        amplitude,
-                                        num_div,
-                                        self._factor)
-
-            if anime_type == 'jmol':
-                if filename:
-                    animation.write_xyz_jmol(amplitude=amplitude,
-                                             factor=self._factor,
-                                             filename=filename)
-                else:
-                    animation.write_xyz_jmol(amplitude=amplitude,
-                                             factor=self._factor)
-
-            if anime_type == 'poscar':
-                if filename:
-                    animation.write_POSCAR(band_index,
-                                           amplitude,
-                                           num_div,
-                                           filename=filename)
-                else:
-                    animation.write_POSCAR(band_index,
-                                           amplitude,
-                                           num_div)
+        return write_animation(self._dynamical_matrix,
+                               q_point=q_point,
+                               anime_type=anime_type,
+                               band_index=band_index,
+                               amplitude=amplitude,
+                               num_div=num_div,
+                               shift=shift,
+                               factor=self._factor,
+                               filename=filename)
 
     # Atomic modulation of normal mode
     def set_modulations(self,
@@ -2753,11 +2726,16 @@ class Phonopy(object):
         self._modulation.run()
 
     def get_modulated_supercells(self):
-        """Returns cells with modulations as PhonopyAtoms instances"""
+        """Return cells with atom modulations.
+
+        list of PhonopyAtoms
+            Modulated structures.
+
+        """
         return self._modulation.get_modulated_supercells()
 
     def get_modulations_and_supercell(self):
-        """Return modulations and supercell
+        """Return atomic modulations and perfect supercell.
 
         (modulations, supercell)
 
@@ -2768,10 +2746,11 @@ class Phonopy(object):
         return self._modulation.get_modulations_and_supercell()
 
     def write_modulations(self):
-        """Create MPOSCAR's"""
+        """Write modulated structures to MPOSCAR's."""
         self._modulation.write()
 
     def write_yaml_modulations(self):
+        """Write atomic modulations in yaml format."""
         self._modulation.write_yaml()
 
     # Irreducible representation
@@ -2794,7 +2773,6 @@ class Phonopy(object):
             shape=(3,), dtype='double'
 
         """
-
         if self._dynamical_matrix is None:
             msg = ("Dynamical matrix has not yet built.")
             raise RuntimeError(msg)
@@ -2812,17 +2790,21 @@ class Phonopy(object):
         return self._irreps.run()
 
     def get_irreps(self):
+        """Return Ir-reps."""
         return self._irreps
 
     def show_irreps(self, show_irreps=False):
+        """Show Ir-reps."""
         self._irreps.show(show_irreps=show_irreps)
 
     def write_yaml_irreps(self, show_irreps=False):
+        """Write Ir-reps in yaml format."""
         self._irreps.write_yaml(show_irreps=show_irreps)
 
     # Group velocity
     def set_group_velocity(self, q_length=None):
-        warnings.warn("Phonopy.set_group_velocity is deprecated. "
+        """Prepare group velocity calculation."""
+        warnings.warn("Phonopy.set_group_velocity() is deprecated. "
                       "No need to call this. gv_delta_q "
                       "(q_length) is set at Phonopy.__init__().",
                       DeprecationWarning)
@@ -2830,6 +2812,7 @@ class Phonopy(object):
         self._set_group_velocity()
 
     def get_group_velocity(self):
+        """Return group velocities."""
         warnings.warn("Phonopy.get_group_velocities_on_bands is deprecated. "
                       "Use Phonopy.[mode].group_velocities attribute or "
                       "Phonopy.get_[mode]_dict()[group_velocities], where "
@@ -2838,12 +2821,14 @@ class Phonopy(object):
         return self._group_velocity.get_group_velocity()
 
     def get_group_velocity_at_q(self, q_point):
+        """Return group velocity at a q-point."""
         if self._group_velocity is None:
             self._set_group_velocity()
         self._group_velocity.run([q_point])
         return self._group_velocity.group_velocities[0]
 
     def get_group_velocities_on_bands(self):
+        """Return group velocities calculated on band structure."""
         warnings.warn(
             "Phonopy.get_group_velocities_on_bands is deprecated. "
             "Use Phonopy.get_band_structure_dict()['group_velocities'].",
@@ -2856,6 +2841,7 @@ class Phonopy(object):
                    is_projection=False,
                    freq_min=None,
                    freq_max=None):
+        """Run moment calculation."""
         if self._mesh is None:
             msg = ("run_mesh has to be done before run_moment.")
             raise RuntimeError(msg)
@@ -2882,14 +2868,16 @@ class Phonopy(object):
                    is_projection=False,
                    freq_min=None,
                    freq_max=None):
-        warnings.warn("Phonopy.set_moment is deprecated. "
-                      "Use Phonopy.run_moment.", DeprecationWarning)
+        """Run moment calculation."""
+        warnings.warn("Phonopy.set_moment() is deprecated. "
+                      "Use Phonopy.run_moment().", DeprecationWarning)
         self.run_moment(order=order,
                         is_projection=is_projection,
                         freq_min=freq_min,
                         freq_max=freq_max)
 
     def get_moment(self):
+        """Return moment."""
         return self._moment.moment
 
     def init_dynamic_structure_factor(self,
@@ -2968,13 +2956,12 @@ class Phonopy(object):
                                      scattering_lengths=None,
                                      freq_min=None,
                                      freq_max=None):
-        """Run dynamic structure factor calculation
+        """Run dynamic structure factor calculation.
 
         See the detail of parameters at
         Phonopy.init_dynamic_structure_factor().
 
         """
-
         self.init_dynamic_structure_factor(
             Qpoints,
             T,
@@ -2992,6 +2979,10 @@ class Phonopy(object):
                                      freq_min=None,
                                      freq_max=None,
                                      run_immediately=True):
+        """Run dynamic structure factor calculation."""
+        warnings.warn("Phonopy.set_dynamic_structure_factor() is deprecated. "
+                      "Use Phonopy.run_dynamic_structure_factor()",
+                      DeprecationWarning)
         if run_immediately:
             self.run_dynamic_structure_factor(
                 Qpoints,
@@ -3010,6 +3001,7 @@ class Phonopy(object):
                 freq_max=freq_max)
 
     def get_dynamic_structure_factor(self):
+        """Return dynamic structure factors."""
         return (self._dynamic_structure_factor.qpoints,
                 self._dynamic_structure_factor.dynamic_structure_factors)
 
@@ -3019,7 +3011,7 @@ class Phonopy(object):
                                  random_seed=None,
                                  dist_func=None,
                                  cutoff_frequency=None):
-        """Generate random displacements from phonon structure
+        """Generate random displacements from phonon structure.
 
         Some more details are written at generate_displacements.
 
@@ -3037,7 +3029,6 @@ class Phonopy(object):
             to generate random displacements.
 
         """
-
         self._random_displacements = RandomDisplacements(
             self._supercell,
             self._primitive,
@@ -3083,7 +3074,6 @@ class Phonopy(object):
                 'force_sets': bool (default=False)
 
         """
-
         if hdf5_settings is not None:
             msg = "hdf5_settings parameter has not yet been implemented."
             raise NotImplementedError(msg)
@@ -3246,15 +3236,16 @@ class Phonopy(object):
         self._supercells_with_displacements = supercells
 
     def _build_primitive_cell(self):
-        """
+        """Create primitive cell.
+
         primitive_matrix:
           Relative axes of primitive cell to the input unit cell.
           Relative axes to the supercell is calculated by:
              supercell_matrix^-1 * primitive_matrix
           Therefore primitive cell lattice is finally calculated by:
              (supercell_lattice * (supercell_matrix)^-1 * primitive_matrix)^T
-        """
 
+        """
         inv_supercell_matrix = np.linalg.inv(self._supercell_matrix)
         if self._primitive_matrix is None:
             trans_mat = inv_supercell_matrix

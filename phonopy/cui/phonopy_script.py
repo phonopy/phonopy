@@ -1196,9 +1196,9 @@ def run(phonon, settings, plot_conf, log_level):
         if anime_type == "v_sim":
             q_point = settings.anime_qpoint
             amplitude = settings.anime_amplitude
-            phonon.write_animation(q_point=q_point,
-                                   anime_type='v_sim',
-                                   amplitude=amplitude)
+            fname_out = phonon.write_animation(q_point=q_point,
+                                               anime_type='v_sim',
+                                               amplitude=amplitude)
             if log_level:
                 print("Animation type: v_sim")
                 print("q-point: [%6.3f %6.3f %6.3f]" % tuple(q_point))
@@ -1207,18 +1207,19 @@ def run(phonon, settings, plot_conf, log_level):
             band_index = settings.anime_band_index
             division = settings.anime_division
             shift = settings.anime_shift
-            phonon.write_animation(anime_type=anime_type,
-                                   band_index=band_index,
-                                   amplitude=amplitude,
-                                   num_div=division,
-                                   shift=shift)
-
+            fname_out = phonon.write_animation(anime_type=anime_type,
+                                               band_index=band_index,
+                                               amplitude=amplitude,
+                                               num_div=division,
+                                               shift=shift)
             if log_level:
                 print("Animation type: %s" % anime_type)
                 print("amplitude: %f" % amplitude)
                 if anime_type != "jmol":
                     print("band index: %d" % band_index)
                     print("Number of images: %d" % division)
+        if log_level:
+            print("Animation was written in \"%s\". " % fname_out)
 
     #
     # Modulation
