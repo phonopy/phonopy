@@ -38,7 +38,7 @@
 #include <float.h>
 #include "dynmat.h"
 #include "derivative_dynmat.h"
-#include "kgrid.h"
+#include "rgrid.h"
 #include "phonopy.h"
 #include "tetrahedron_method.h"
 
@@ -213,31 +213,13 @@ void phpy_get_derivative_dynmat_at_q(double *derivative_dynmat,
 }
 
 
-void phpy_get_neighboring_grid_points(size_t neighboring_grid_points[],
-                                      const size_t grid_point,
-                                      PHPYCONST int relative_grid_address[][3],
-                                      const int num_relative_grid_address,
-                                      const int mesh[3],
-                                      PHPYCONST int bz_grid_address[][3],
-                                      const size_t bz_map[])
-{
-  thm_get_dense_neighboring_grid_points(neighboring_grid_points,
-                                        grid_point,
-                                        relative_grid_address,
-                                        num_relative_grid_address,
-                                        mesh,
-                                        bz_grid_address,
-                                        bz_map);
-}
-
-
-void phpy_get_relative_grid_address(int relative_grid_address[24][4][3],
+void phpy_get_relative_grid_address(long relative_grid_address[24][4][3],
                                     PHPYCONST double reciprocal_lattice[3][3])
 {
   thm_get_relative_grid_address(relative_grid_address, reciprocal_lattice);
 }
 
-void phpy_get_all_relative_grid_address(int relative_grid_address[4][24][4][3])
+void phpy_get_all_relative_grid_address(long relative_grid_address[4][24][4][3])
 {
   thm_get_all_relative_grid_address(relative_grid_address);
 }
@@ -249,35 +231,20 @@ double phpy_get_integration_weight(const double omega,
   return thm_get_integration_weight(omega, tetrahedra_omegas, function);
 }
 
-void
-phpy_get_integration_weight_at_omegas(double *integration_weights,
-                                      const int num_omegas,
-                                      const double *omegas,
-                                      PHPYCONST double tetrahedra_omegas[24][4],
-                                      const char function)
-{
-  thm_get_integration_weight_at_omegas(integration_weights,
-                                       num_omegas,
-                                       omegas,
-                                       tetrahedra_omegas,
-                                       function);
-}
-
-
 void phpy_get_tetrahedra_frequenies(double *freq_tetras,
-                                    const int mesh[3],
-                                    const size_t* grid_points,
-                                    PHPYCONST int (*grid_address)[3],
-                                    PHPYCONST int (*relative_grid_address)[3],
-                                    const size_t* gp_ir_index,
+                                    const long mesh[3],
+                                    const long* grid_points,
+                                    PHPYCONST long (*grid_address)[3],
+                                    PHPYCONST long (*relative_grid_address)[3],
+                                    const long* gp_ir_index,
                                     const double *frequencies,
-                                    const size_t num_band,
-                                    const size_t num_gp)
+                                    const long num_band,
+                                    const long num_gp)
 {
-  int is_shift[3] = {0, 0, 0};
-  size_t i, j, k, gp;
-  int g_addr[3];
-  int address_double[3];
+  long is_shift[3] = {0, 0, 0};
+  long i, j, k, gp;
+  long g_addr[3];
+  long address_double[3];
 
   /* relative_grid_address[4, 24, 3] is viewed as [96, 3]. */
   for (i = 0; i < num_gp;  i++) {
@@ -287,11 +254,11 @@ void phpy_get_tetrahedra_frequenies(double *freq_tetras,
         g_addr[k] = grid_address[grid_points[i]][k] +
           relative_grid_address[j % 96][k];
       }
-      kgd_get_grid_address_double_mesh(address_double,
-                                       g_addr,
-                                       mesh,
-                                       is_shift);
-      gp = kgd_get_dense_grid_point_double_mesh(address_double, mesh);
+      rgd_get_double_grid_address(address_double,
+                                  g_addr,
+                                  mesh,
+                                  is_shift);
+      gp = rgd_get_double_grid_index(address_double, mesh);
       freq_tetras[i * num_band * 96 + j] = frequencies[gp_ir_index[gp] * num_band + j / 96];
     }
   }
@@ -299,36 +266,36 @@ void phpy_get_tetrahedra_frequenies(double *freq_tetras,
 
 
 void phpy_tetrahedron_method_dos(double *dos,
-                                 const int mesh[3],
-                                 PHPYCONST int (*grid_address)[3],
-                                 PHPYCONST int (*relative_grid_address)[4][3],
-                                 const size_t *grid_mapping_table,
+                                 const long mesh[3],
+                                 PHPYCONST long (*grid_address)[3],
+                                 PHPYCONST long (*relative_grid_address)[4][3],
+                                 const long *grid_mapping_table,
                                  const double *freq_points,
                                  const double *frequencies,
                                  const double *coef,
-                                 const size_t num_freq_points,
-                                 const size_t num_ir_gp,
-                                 const size_t num_band,
-                                 const size_t num_coef,
-                                 const size_t num_gp)
+                                 const long num_freq_points,
+                                 const long num_ir_gp,
+                                 const long num_band,
+                                 const long num_coef,
+                                 const long num_gp)
 {
-  int is_shift[3] = {0, 0, 0};
-  size_t i, j, k, l, m, q, r, count;
-  size_t ir_gps[24][4];
-  int g_addr[3];
+  long is_shift[3] = {0, 0, 0};
+  long i, j, k, l, m, q, r, count;
+  long ir_gps[24][4];
+  long g_addr[3];
   double tetrahedra[24][4];
-  int address_double[3];
-  size_t *gp2ir, *ir_grid_points;
-  int *weights;
+  long address_double[3];
+  long *gp2ir, *ir_grid_points;
+  long *weights;
   double iw;
 
   gp2ir = NULL;
   ir_grid_points = NULL;
   weights = NULL;
 
-  gp2ir = (size_t*)malloc(sizeof(size_t) * num_gp);
-  ir_grid_points = (size_t*)malloc(sizeof(size_t) * num_ir_gp);
-  weights = (int*)malloc(sizeof(int) * num_ir_gp);
+  gp2ir = (long*)malloc(sizeof(long) * num_gp);
+  ir_grid_points = (long*)malloc(sizeof(long) * num_ir_gp);
+  weights = (long*)malloc(sizeof(long) * num_ir_gp);
 
   count = 0;
   for (i = 0; i < num_gp; i++) {
@@ -356,11 +323,11 @@ void phpy_tetrahedron_method_dos(double *dos,
           g_addr[r] = grid_address[ir_grid_points[i]][r] +
             relative_grid_address[l][q][r];
         }
-        kgd_get_grid_address_double_mesh(address_double,
-                                         g_addr,
-                                         mesh,
-                                         is_shift);
-        ir_gps[l][q] = gp2ir[kgd_get_grid_point_double_mesh(address_double, mesh)];
+        rgd_get_double_grid_address(address_double,
+                                    g_addr,
+                                    mesh,
+                                    is_shift);
+        ir_gps[l][q] = gp2ir[rgd_get_double_grid_index(address_double, mesh)];
       }
     }
 
@@ -393,13 +360,13 @@ void phpy_tetrahedron_method_dos(double *dos,
 void phpy_get_thermal_properties(double *thermal_props,
                                  const double *temperatures,
                                  const double *freqs,
-                                 const int *weights,
-                                 const int num_temp,
-                                 const int num_qpoints,
-                                 const int num_bands,
+                                 const long *weights,
+                                 const long num_temp,
+                                 const long num_qpoints,
+                                 const long num_bands,
                                  const double cutoff_frequency)
 {
-  int i, j, k;
+  long i, j, k;
   double f;
   double *tp;
 
@@ -519,61 +486,17 @@ int phpy_compute_permutation(int * rot_atom,
 }
 
 
-/* Implementation detail of get_smallest_vectors. */
-/* Finds the smallest vectors within each list and copies them to the output. */
-void phpy_copy_smallest_vectors(double (*shortest_vectors)[27][3],
-                                int * multiplicity,
-                                PHPYCONST double (*vector_lists)[27][3],
-                                PHPYCONST double (*length_lists)[27],
-                                const int num_lists,
-                                const double symprec)
-{
-  int i,j,k;
-  int count;
-  double minimum;
-  double (*vectors)[3];
-  double *lengths;
-
-  for (i = 0; i < num_lists; i++) {
-    /* Look at a single list of 27 vectors. */
-    lengths = length_lists[i];
-    vectors = vector_lists[i];
-
-    /* Compute the minimum length. */
-    minimum = DBL_MAX;
-    for (j = 0; j < 27; j++) {
-      if (lengths[j] < minimum) {
-        minimum = lengths[j];
-      }
-    }
-
-    /* Copy vectors whose length is within tolerance. */
-    count = 0;
-    for (j = 0; j < 27; j++) {
-      if (lengths[j] - minimum <= symprec) {
-        for (k = 0; k < 3; k++) {
-          shortest_vectors[i][count][k] = vectors[j][k];
-        }
-        count++;
-      }
-    }
-
-    multiplicity[i] = count;
-  }
-}
-
-
-void phpy_set_smallest_vectors(double (*smallest_vectors)[27][3],
-                               int *multiplicity,
-                               PHPYCONST double (*pos_to)[3],
-                               const int num_pos_to,
-                               PHPYCONST double (*pos_from)[3],
-                               const int num_pos_from,
-                               PHPYCONST int (*lattice_points)[3],
-                               const int num_lattice_points,
-                               PHPYCONST double reduced_basis[3][3],
-                               PHPYCONST int trans_mat[3][3],
-                               const double symprec)
+void phpy_set_smallest_vectors_sparse(double (*smallest_vectors)[27][3],
+                                      int *multiplicity,
+                                      PHPYCONST double (*pos_to)[3],
+                                      const int num_pos_to,
+                                      PHPYCONST double (*pos_from)[3],
+                                      const int num_pos_from,
+                                      PHPYCONST int (*lattice_points)[3],
+                                      const int num_lattice_points,
+                                      PHPYCONST double reduced_basis[3][3],
+                                      PHPYCONST int trans_mat[3][3],
+                                      const double symprec)
 {
   int i, j, k, l, count;
   double length_tmp, minimum, vec_xyz;
@@ -610,7 +533,7 @@ void phpy_set_smallest_vectors(double (*smallest_vectors)[27][3],
       for (k = 0; k < num_lattice_points; k++) {
         if (length[k] - minimum < symprec) {
           for (l = 0; l < 3; l++) {
-            /* Transform to supercell coordinates */
+            /* Transform back to supercell coordinates */
             vec_xyz = (trans_mat[l][0] * vec[k][0] +
                        trans_mat[l][1] * vec[k][1] +
                        trans_mat[l][2] * vec[k][2]);
@@ -620,12 +543,88 @@ void phpy_set_smallest_vectors(double (*smallest_vectors)[27][3],
         }
       }
       if (count > 27) { /* should not be greater than 27 */
-        printf("Warning (gsv_set_smallest_vectors): ");
+        printf("Warning (gsv_set_smallest_vectors_sparse): ");
         printf("number of shortest vectors is out of range,\n");
         break;
       } else {
         multiplicity[i * num_pos_from + j] = count;
       }
+    }
+  }
+
+  free(length);
+  length = NULL;
+  free(vec);
+  vec = NULL;
+}
+
+
+void phpy_set_smallest_vectors_dense(double (*smallest_vectors)[3],
+                                     long (*multiplicity)[2],
+                                     PHPYCONST double (*pos_to)[3],
+                                     const long num_pos_to,
+                                     PHPYCONST double (*pos_from)[3],
+                                     const long num_pos_from,
+                                     PHPYCONST long (*lattice_points)[3],
+                                     const long num_lattice_points,
+                                     PHPYCONST double reduced_basis[3][3],
+                                     PHPYCONST long trans_mat[3][3],
+                                     const long initialize,
+                                     const double symprec)
+{
+  long i, j, k, l, count, adrs;
+  double length_tmp, minimum, vec_xyz;
+  double *length;
+  double (*vec)[3];
+
+  length = (double*)malloc(sizeof(double) * num_lattice_points);
+  vec = (double(*)[3])malloc(sizeof(double[3]) * num_lattice_points);
+
+  adrs = 0;
+
+  for (i = 0; i < num_pos_to; i++) {
+    for (j = 0; j < num_pos_from; j++) {
+      for (k = 0; k < num_lattice_points; k++) {
+        length[k] = 0;
+        for (l = 0; l < 3; l++) {
+          vec[k][l] = pos_to[i][l] - pos_from[j][l] + lattice_points[k][l];
+        }
+        for (l = 0; l < 3; l++) {
+          length_tmp = (reduced_basis[l][0] * vec[k][0] +
+                        reduced_basis[l][1] * vec[k][1] +
+                        reduced_basis[l][2] * vec[k][2]);
+          length[k] += length_tmp * length_tmp;
+        }
+        length[k] = sqrt(length[k]);
+      }
+
+      minimum = DBL_MAX;
+      for (k = 0; k < num_lattice_points; k++) {
+        if (length[k] < minimum) {
+          minimum = length[k];
+        }
+      }
+
+      count = 0;
+      for (k = 0; k < num_lattice_points; k++) {
+        if (length[k] - minimum < symprec) {
+          if (!initialize) {
+            for (l = 0; l < 3; l++) {
+              /* Transform back to supercell coordinates */
+              vec_xyz = (trans_mat[l][0] * vec[k][0] +
+                         trans_mat[l][1] * vec[k][1] +
+                         trans_mat[l][2] * vec[k][2]);
+              smallest_vectors[adrs + count][l] = vec_xyz;
+            }
+          }
+          count++;
+        }
+      }
+      if (initialize) {
+        multiplicity[i * num_pos_from + j][0] = count;
+        multiplicity[i * num_pos_from + j][1] = adrs;
+      }
+      adrs += count;
     }
   }
 

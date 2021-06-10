@@ -1,3 +1,5 @@
+"""Phonopy QHA module."""
+
 # Copyright (C) 2012 Atsushi Togo
 # All rights reserved.
 #
@@ -32,21 +34,41 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
 import numpy as np
 from phonopy.units import Avogadro, EvTokJmol, EVAngstromToGPa
 from phonopy.qha.eos import get_eos, fit_to_eos
 
 
 class BulkModulus(object):
+    """Bulk modulus class.
+
+    This class is used to calculate bulk modulus only from temperature
+    independent energy input.
+
+    """
+
     def __init__(self,
                  volumes,
-                 electronic_energies,
+                 energies,
                  eos='vinet'):
+        """Init method.
+
+        volumes : array_like
+            Unit cell volumes where energies are obtained.
+            shape=(volumes, ), dtype='double'.
+        energies : array_like
+            Energies obtained at volumes.
+            shape=(volumes, ), dtype='double'.
+        eos : str
+            Identifier of equation of states function.
+
+        """
         self._volumes = volumes
-        if np.array(electronic_energies).ndim == 1:
-            self._electronic_energies = electronic_energies
+        if np.array(energies).ndim == 1:
+            self._energies = energies
         else:
-            self._electronic_energies = electronic_energies[0]
+            self._energies = energies[0]
         self._eos = get_eos(eos)
 
         self._energy = None
@@ -58,7 +80,7 @@ class BulkModulus(object):
              self._bulk_modulus,
              self._b_prime,
              self._volume) = fit_to_eos(volumes,
-                                        self._electronic_energies,
+                                        self._energies,
                                         self._eos)
         except TypeError:
             msg = ["Failed to fit to \"%s\" equation of states." % eos]
@@ -67,49 +89,133 @@ class BulkModulus(object):
             msg += ["Careful choice of volume points is recommended."]
             raise RuntimeError("\n".join(msg))
 
-    def get_bulk_modulus(self):
+    @property
+    def bulk_modulus(self):
+        """Return bulk modulus."""
         return self._bulk_modulus
 
-    def get_equilibrium_volume(self):
+    def get_bulk_modulus(self):
+        """Return bulk modulus."""
+        warnings.warn("BulkModulus.get_bulk_modulus() is deprecated."
+                      "Use BulkModulus.bulk_modulus attribute.",
+                      DeprecationWarning)
+        return self.bulk_modulus
+
+    @property
+    def equilibrium_volume(self):
+        """Return volume at equilibrium."""
         return self._volume
 
-    def get_b_prime(self):
+    def get_equilibrium_volume(self):
+        """Return volume at equilibrium."""
+        warnings.warn("BulkModulus.get_equilibrium_volume() is deprecated."
+                      "Use BulkModulus.equilibrium_volume attribute.",
+                      DeprecationWarning)
+        return self.equilibrium_volume
+
+    @property
+    def b_prime(self):
+        """Return fitted parameter B'."""
         return self._b_prime
 
+    def get_b_prime(self):
+        """Return fitted parameter B'."""
+        warnings.warn("BulkModulus.get_b_prime() is deprecated."
+                      "Use BulkModulus.b_prime attribute.",
+                      DeprecationWarning)
+        return self._b_prime
+
+    @property
+    def energy(self):
+        """Return fitted parameter of energy."""
+        return self._energy
+
     def get_energy(self):
+        """Return fitted parameter of energy."""
+        warnings.warn("BulkModulus.get_energy() is deprecated."
+                      "Use BulkModulus.energy attribute.",
+                      DeprecationWarning)
         return self._energy
 
     def get_parameters(self):
+        """Return fitted parameters."""
         return (self._energy,
                 self._bulk_modulus,
                 self._b_prime,
                 self._volume)
 
     def get_eos(self):
+        """Return EOS function as a python method."""
+        warnings.warn("BulkModulus.get_eos() is deprecated.",
+                      DeprecationWarning)
         return self._eos
 
     def plot(self):
+        """Plot fitted EOS curve."""
         import matplotlib.pyplot as plt
         ep = self.get_parameters()
         vols = self._volumes
         volume_points = np.linspace(min(vols), max(vols), 201)
         fig, ax = plt.subplots()
         ax.plot(volume_points, self._eos(volume_points, *ep), 'r-')
-        ax.plot(vols, self._electronic_energies, 'bo', markersize=4)
+        ax.plot(vols, self._energies, 'bo', markersize=4)
         return plt
 
 
 class QHA(object):
+    """Quasi harmonic approximation class."""
+
     def __init__(self,
                  volumes,              # angstrom^3
                  electronic_energies,  # eV
-                 temperatures,
+                 temperatures,         # K
                  cv,                   # J/K/mol
                  entropy,              # J/K/mol
                  fe_phonon,            # kJ/mol
                  eos='vinet',
                  t_max=None,
                  energy_plot_factor=None):
+        """Init method.
+
+        Parameters
+        ----------
+        volumes: array_like
+            Unit cell volumes (V) in angstrom^3.
+            dtype='double'
+            shape=(volumes,)
+        electronic_energies: array_like
+            Electronic energies (U_el) or electronic free energies (F_el) in eV.
+            It is assumed as formar if ndim==1 and latter if ndim==2.
+            dtype='double'
+            shape=(volumes,) or (temperatuers, volumes)
+        temperatures: array_like
+            Temperatures ascending order (T) in K.
+            dtype='double'
+            shape=(temperatures,)
+        cv: array_like
+            Phonon Heat capacity at constant volume in J/K/mol.
+            dtype='double'
+            shape=(temperatuers, volumes)
+        entropy: array_like
+            Phonon entropy at constant volume (S_ph) in J/K/mol.
+            dtype='double'
+            shape=(temperatuers, volumes)
+        fe_phonon: array_like
+            Phonon Helmholtz free energy (F_ph) in kJ/mol.
+            dtype='double'
+            shape=(temperatuers, volumes)
+        eos: str
+            Equation of state used for fitting F vs V.
+            'vinet', 'murnaghan' or 'birch_murnaghan'.
+        t_max: float
+            Maximum temperature to be calculated. This has to be not
+            greater than the temperature of the third element from the
+            end of 'temperatre' elements. If max_t=None, the temperature
+            of the third element from the end is used.
+        energy_plot_factor: float
+            This value is multiplied to energy like values only in plotting.
+
+        """
         self._volumes = np.array(volumes)
         self._electronic_energies = np.array(electronic_energies)
 
@@ -141,14 +247,66 @@ class QHA(object):
         self._gruneisen_parameters = None
         self._len = None
 
+    @property
+    def thermal_expansion(self):
+        """Return volumetric thermal expansion coefficients at temperatures."""
+        return self._thermal_expansions[:self._len]
+
+    @property
+    def helmholtz_volume(self):
+        """Return Helmholtz free energies at temperatures and volumes."""
+        return self._free_energies[:self._len]
+
+    @property
+    def volume_temperature(self):
+        """Return equilibrium volumes at temperatures."""
+        return self._equiv_volumes[:self._len]
+
+    @property
+    def gibbs_temperature(self):
+        """Return Gibbs free energies at temperatures."""
+        return self._equiv_energies[:self._len]
+
+    @property
+    def bulk_modulus_temperature(self):
+        """Return bulk modulus vs temperature data."""
+        return self._equiv_bulk_modulus[:self._len]
+
+    @property
+    def heat_capacity_P_numerical(self):
+        """Return heat capacities at constant pressure at temperatures.
+
+        Values are computed by numerical derivative of Gibbs free energy.
+
+        """
+        return self._cp_numerical[:self._len]
+
+    @property
+    def heat_capacity_P_polyfit(self):
+        """Return heat capacities at constant pressure at temperatures.
+
+        Volumes are computed in another way to heat_capacity_P_numerical
+        for the better numerical behaviour. But this does not work
+        when temperature dependent electronic_energies is supplied.
+
+        """
+        if self._electronic_energies.ndim == 1:
+            return self._cp_polyfit[:self._len]
+        else:
+            return None
+
+    @property
+    def gruneisen_temperature(self):
+        """Return Gruneisen parameters at temperatures."""
+        return self._gruneisen_parameters[:self._len]
+
     def run(self, verbose=False):
-        """Fit parameters to EOS at temperatures
+        """Fit parameters to EOS at temperatures.
 
         Even if fitting failed, simply omit the volume point. In this case,
         the failed temperature point doesn't exist in the returned arrays.
 
         """
-
         if verbose:
             print(("#%11s" + "%14s" * 4) % ("T", "E_0", "B_0", "B'_0", "V_0"))
 
@@ -237,7 +395,10 @@ class QHA(object):
         return plt
 
     def get_helmholtz_volume(self):
-        return self._free_energies[:self._len]
+        warnings.warn("QHA.get_helmholtz_volume() is deprecated."
+                      "Use helmholtz_volume attribute.",
+                      DeprecationWarning)
+        return self.helmholtz_volume
 
     def plot_helmholtz_volume(self,
                               thin_number=10,
@@ -284,8 +445,75 @@ class QHA(object):
             w.write("\n\n")
         w.close()
 
+    def write_helmholtz_volume_fitted(self,
+                                      thin_number,
+                                      filename='helholtz-volume_fitted.dat'):
+
+        if self._energy_plot_factor is None:
+            _energy_plot_factor = 1
+        else:
+            _energy_plot_factor = self._energy_plot_factor
+
+        volume_points = np.linspace(
+            min(self._volumes), max(self._volumes), 201)
+        selected_volumes = []
+        selected_energies = []
+
+        for i, t in enumerate(self._temperatures[:self._len]):
+            if i % thin_number == 0:
+                selected_volumes.append(self._equiv_volumes[i])
+                selected_energies.append(self._equiv_energies[i])
+
+        for i, t in enumerate(self._temperatures[:self._len]):
+            if t >= 298:
+                if i > 0:
+                    de = self._equiv_energies[i] - self._equiv_energies[i - 1]
+                    dt = t - self._temperatures[i - 1]
+                    e0 = ((298 - self._temperatures[i - 1]) / dt * de +
+                          self._equiv_energies[i - 1])
+                else:
+                    e0 = 0
+                break
+        e0 *= _energy_plot_factor
+        _data_vol_points = []
+        _data_eos = []
+        for i, t in enumerate(self._temperatures[:self._len]):
+            if i % thin_number == 0:
+
+                _data_vol_points.append(
+                    np.array(self._free_energies[i]) * _energy_plot_factor - e0)
+                _data_eos.append(
+                    self._eos(volume_points, * self._equiv_parameters[i])
+                    * _energy_plot_factor - e0)
+
+        data_eos = np.array(_data_eos).T
+        data_vol_points = np.array(_data_vol_points).T
+        data_min = (np.array(selected_energies) * _energy_plot_factor - e0)
+
+        with open(filename, 'w') as w:
+            w.write("# Volume points\n")
+            for (j, k) in zip(self._volumes, data_vol_points):
+                w.write("%10.5f " % j)
+                for l in k:
+                    w.write("%10.5f" % l)
+                w.write("\n")
+            w.write("\n# Fitted data\n")
+
+            for (m, n) in zip(volume_points, data_eos):
+                w.write("%10.5f " % m)
+                for ll in n:
+                    w.write("%10.5f" % ll)
+                w.write("\n")
+            w.write("\n# Minimas\n")
+            for (a, b) in zip(selected_volumes, data_min):
+                w.write("%10.5f %10.5f %s" % (a, b, '\n'))
+            w.write('\n')
+
     def get_volume_temperature(self):
-        return self._equiv_volumes[:self._len]
+        warnings.warn("QHA.get_volume_temperature() is deprecated."
+                      "Use volume_temperature attribute.",
+                      DeprecationWarning)
+        return self.volume_temperature
 
     def plot_volume_temperature(self, exp_data=None):
         import matplotlib.pyplot as plt
@@ -320,7 +548,10 @@ class QHA(object):
         w.close()
 
     def get_thermal_expansion(self):
-        return self._thermal_expansions[:self._len]
+        warnings.warn("QHA.get_thermal_expansion() is deprecated."
+                      "Use thermal_expansion attribute.",
+                      DeprecationWarning)
+        return self.thermal_expansion
 
     def plot_thermal_expansion(self):
         import matplotlib.pyplot as plt
@@ -353,7 +584,7 @@ class QHA(object):
         w.close()
 
     def get_gibbs_temperature(self):
-        return self._equiv_energies[:self._len]
+        return self.gibbs_temperature
 
     def plot_gibbs_temperature(self,
                                xlabel='Temperature (K)',
@@ -388,7 +619,7 @@ class QHA(object):
         w.close()
 
     def get_bulk_modulus_temperature(self):
-        return self._equiv_bulk_modulus[:self._len]
+        return self.bulk_modulus_temperature
 
     def plot_bulk_modulus_temperature(self,
                                       xlabel='Temperature (K)',
@@ -427,8 +658,8 @@ class QHA(object):
                                            self._equiv_bulk_modulus[i]))
         w.close()
 
-    def get_heat_capacity_P_numerical(self, exp_data=None):
-        return self._cp_numerical[:self._len]
+    def get_heat_capacity_P_numerical(self):
+        return self.heat_capacity_P_numerical
 
     def plot_heat_capacity_P_numerical(self, Z=1, exp_data=None):
         import matplotlib.pyplot as plt
@@ -463,7 +694,7 @@ class QHA(object):
         w.close()
 
     def get_heat_capacity_P_polyfit(self):
-        return self._cp_polyfit[:self._len]
+        return self.heat_capacity_P_polyfit
 
     def plot_heat_capacity_P_polyfit(self, Z=1, exp_data=None):
         import matplotlib.pyplot as plt
@@ -502,10 +733,10 @@ class QHA(object):
             t = self._temperatures[i]
             wve.write("# temperature %20.15f\n" % t)
             wve.write("# %20.15f %20.15f %20.15f %20.15f %20.15f\n" %
-                      tuple(self._volume_cv_parameters[i - 1]))
+                      tuple(self._volume_entropy_parameters[i - 1]))
             wvcv.write("# temperature %20.15f\n" % t)
             wvcv.write("# %20.15f %20.15f %20.15f %20.15f %20.15f\n" %
-                       tuple(self._volume_entropy_parameters[i - 1]))
+                       tuple(self._volume_cv_parameters[i - 1]))
             for ve, vcv in zip(self._volume_entropy[i - 1],
                                self._volume_cv[i - 1]):
                 wve.write("%20.15f %20.15f\n" % tuple(ve))
@@ -528,7 +759,7 @@ class QHA(object):
         w.close()
 
     def get_gruneisen_temperature(self):
-        return self._gruneisen_parameters[:self._len]
+        return self.gruneisen_temperature
 
     def plot_gruneisen_temperature(self):
         import matplotlib.pyplot as plt

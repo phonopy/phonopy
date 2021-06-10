@@ -70,6 +70,7 @@ class MeshBase(object):
         Dynamical matrix instance to compute dynamical matrix at q-points.
 
     """
+
     def __init__(self,
                  dynamical_matrix,
                  mesh,

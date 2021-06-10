@@ -50,7 +50,7 @@ before_install:
     source $(conda info --root)/etc/profile.d/conda.sh;
   fi;
 - conda install --yes -c conda-forge python=$TRAVIS_PYTHON_VERSION;
-- conda install --yes -c conda-forge gcc_linux-64 gxx_linux-64 matplotlib-base pyyaml scipy numpy spglib h5py setuptools_scm conda-build pip pytest codecov pytest-cov;
+- conda install --yes -c conda-forge gcc_linux-64 gxx_linux-64 matplotlib-base pyyaml scipy numpy spglib h5py setuptools_scm conda-build pip pytest;
 - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then
     pip install cp2k-input-tools;
   fi;
@@ -79,12 +79,9 @@ script:
     if [[ "$TRAVIS_BRANCH" != "rc" && "$TRAVIS_BRANCH" != "master" ]]; then
       python setup.py build;
       pip install -e .;
-      pytest --cov-report term --cov=phonopy test;
+      pytest;
     fi;
   fi
-
-after_success:
-- codecov
 
 deploy:
 # testing pypi

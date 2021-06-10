@@ -3,6 +3,13 @@
 Change Log
 ==========
 
+Jun-10-2021: Version 2.10.0
+---------------------------
+* Fix the contents of ``entropy-volume.dat`` and ``Cv-volume.dat`` in QHA
+  were swapped. (Issue #144 by @prnvrvs)
+* Implementation of writing ``helmholtz-volume_fitted.dat`` in QHA. (PR
+  #149 by @kgmat)
+
 Mar-17-2021: Version 2.9.3
 --------------------------
 * Fix ``MANIFEST.in`` to provide necessary files to compile.

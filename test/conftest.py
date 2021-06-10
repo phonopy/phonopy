@@ -167,33 +167,46 @@ def convcell_cr():
 @pytest.fixture(scope='session')
 def helper_methods():
     class HelperMethods(object):
-        @staticmethod
-        def compare_cells_with_order(cell, cell_ref):
+        @classmethod
+        def compare_cells_with_order(cls, cell, cell_ref):
             np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=1e-5)
-
-            diff = cell.scaled_positions - cell_ref.scaled_positions
-            diff -= np.rint(diff)
-            dist = (np.dot(diff, cell.cell) ** 2).sum(axis=1)
-            assert (dist < 1e-5).all()
+            cls.compare_positions_with_order(
+                cell.scaled_positions, cell_ref.scaled_positions, cell.cell)
             np.testing.assert_array_equal(cell.numbers, cell_ref.numbers)
             np.testing.assert_allclose(cell.masses, cell_ref.masses, atol=1e-5)
 
-        @staticmethod
-        def compare_cells(cell, cell_ref):
+        @classmethod
+        def compare_positions_with_order(cls, pos, pos_ref, lattice):
+            """lattice : basis vectors in row vectors"""
+            diff = pos - pos_ref
+            diff -= np.rint(diff)
+            dist = (np.dot(diff, lattice) ** 2).sum(axis=1)
+            assert (dist < 1e-5).all()
+
+        @classmethod
+        def compare_cells(cls, cell, cell_ref):
             np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=1e-5)
 
-            indices = []
-            for pos in cell.scaled_positions:
-                diff = cell_ref.scaled_positions - pos
-                diff -= np.rint(diff)
-                dist = (np.dot(diff, cell.cell) ** 2).sum(axis=1)
-                matches = np.where(dist < 1e-5)[0]
-                assert len(matches) == 1
-                indices.append(matches[0])
-
+            indices = cls.compare_positions_in_arbitrary_order(
+                cell.scaled_positions,
+                cell_ref.scaled_positions,
+                cell.cell)
             np.testing.assert_array_equal(cell.numbers,
                                           cell_ref.numbers[indices])
             np.testing.assert_allclose(cell.masses, cell_ref.masses[indices],
                                        atol=1e-5)
+
+        @classmethod
+        def compare_positions_in_arbitrary_order(
+                cls, pos_in, pos_ref, lattice):
+            indices = []
+            for pos in pos_in:
+                diff = pos_ref - pos
+                diff -= np.rint(diff)
+                dist = (np.dot(diff, lattice) ** 2).sum(axis=1)
+                matches = np.where(dist < 1e-5)[0]
+                assert len(matches) == 1
+                indices.append(matches[0])
+            return indices
 
     return HelperMethods
