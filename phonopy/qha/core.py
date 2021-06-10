@@ -733,10 +733,10 @@ class QHA(object):
             t = self._temperatures[i]
             wve.write("# temperature %20.15f\n" % t)
             wve.write("# %20.15f %20.15f %20.15f %20.15f %20.15f\n" %
-                      tuple(self._volume_cv_parameters[i - 1]))
+                      tuple(self._volume_entropy_parameters[i - 1]))
             wvcv.write("# temperature %20.15f\n" % t)
             wvcv.write("# %20.15f %20.15f %20.15f %20.15f %20.15f\n" %
-                       tuple(self._volume_entropy_parameters[i - 1]))
+                       tuple(self._volume_cv_parameters[i - 1]))
             for ve, vcv in zip(self._volume_entropy[i - 1],
                                self._volume_cv[i - 1]):
                 wve.write("%20.15f %20.15f\n" % tuple(ve))
