@@ -28,7 +28,7 @@ class TestQpoints(unittest.TestCase):
         phonon.dataset = force_sets
         phonon.produce_force_constants()
         filename_born = os.path.join(data_dir, "..", "BORN_NaCl")
-        nac_params = parse_BORN(phonon.get_primitive(), filename=filename_born)
+        nac_params = parse_BORN(phonon.primitive, filename=filename_born)
         phonon.nac_params = nac_params
         return phonon
 

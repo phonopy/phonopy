@@ -1415,7 +1415,7 @@ class Phonopy(object):
 
         Parameters
         ----------
-        comment : str
+        comment : dict
             Data structure dumped in YAML and the dumped YAML text is put
             at the beggining of the file.
         filename : str

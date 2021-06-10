@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -53,7 +52,126 @@ except ImportError:
     from yaml import Loader
 
 
-def read_band_yaml(filename):
+def _get_label_for_latex(label):
+    return label.replace('_', r'\_')
+
+
+def _get_max_frequency(frequencies):
+    return max([np.max(fq) for fq in frequencies])
+
+
+def _find_wrong_path_connections(all_path_connections):
+    for i, path_connections in enumerate(all_path_connections):
+        if path_connections != all_path_connections[0]:
+            return i
+    return 0
+
+
+def _arrange_band_data(distances,
+                       frequencies,
+                       qpoints,
+                       segment_nqpoints,
+                       label_pairs):
+    i = 0
+    freq_list = []
+    dist_list = []
+    qpt_list = []
+    for nq in segment_nqpoints:
+        freq_list.append(frequencies[i:(i + nq)])
+        dist_list.append(distances[i:(i + nq)])
+        qpt_list.append(qpoints[i:(i + nq)])
+        i += nq
+
+    if not label_pairs:
+        labels = None
+        path_connections = []
+        if len(qpt_list) > 1:
+            for i, qpts in enumerate(qpt_list[1:]):
+                if (np.abs(qpt_list[i][-1] - qpts[0]) < 1e-5).all():
+                    path_connections.append(True)
+                else:
+                    path_connections.append(False)
+        path_connections += [False, ]
+    else:
+        labels = []
+        path_connections = []
+        if len(label_pairs) > 1:
+            for i, pair in enumerate(label_pairs[1:]):
+                labels.append(label_pairs[i][0])
+                if label_pairs[i][1] != pair[0]:
+                    labels.append(label_pairs[i][1])
+                    path_connections.append(False)
+                else:
+                    path_connections.append(True)
+            if label_pairs[-2][1] != label_pairs[-1][1]:
+                labels += label_pairs[-1]
+            else:
+                labels.append(label_pairs[-1][1])
+        else:
+            labels += label_pairs[0]
+        path_connections += [False, ]
+
+    return labels, path_connections, freq_list, dist_list
+
+
+def _savefig(plt, file, fonttype=42, family='serif'):
+    plt.rcParams['pdf.fonttype'] = fonttype
+    plt.rcParams['font.family'] = family
+    plt.savefig(file)
+
+
+def _plot_dos(d, f, dmax):
+    pdos = []
+    for f1, f2, d1, d2 in zip(f[:-1], f[1:], d[:-1], d[1:]):
+        pdos += _cut_dos([f1, d1], [f2, d2], dmax)
+    return np.transpose(pdos)
+
+
+def _cut_dos(p1, p2, dmax):
+    """Cut DOS at dmax
+
+    ** Cutting by fmin and fmax should be implemented someday. **
+
+    Args:
+        p1: (f1, d1)
+        p2: (f2, d2)
+
+    When d1 < dmax and d2 < dmax
+        p1: (f1, d1)
+        p2: (f2, d2)
+    When d1 < dmax and d2 > dmax
+        p1: (f1, d1)
+        pi: (fi, dmax), f1 < fi < f2
+        p2: (f2, dmax)
+    Whend1 > dmax and d2 < dmax,
+        p1: (f1, dmax)
+        pi: (fi, dmax), f1 < fi < f2
+        p2: (f2, d2)
+    When d2 > dmax and d1 > dmax
+        p1: (f1, dmax)
+        p2: (f2, dmax)
+
+    """
+
+    def _get_fi(p1, p2, dmax):
+        df = p2[0] - p1[0]
+        dd = p2[1] - p1[1]
+        fi = (dmax - p1[1]) / dd * df + p1[0]
+        return fi
+
+    if p1[1] < dmax and p2[1] < dmax:
+        return [p1, p2]
+    elif p1[1] < dmax and p2[1] > dmax:
+        fi = _get_fi(p1, p2, dmax)
+        return [p1, [fi, dmax], [p2[0], dmax]]
+    elif p1[1] > dmax and p2[1] < dmax:
+        fi = _get_fi(p1, p2, dmax)
+        return [[p1[0], dmax], [fi, dmax], p2]
+    else:
+        return [[p1[0], dmax], [p1[0], dmax]]
+
+
+def _read_band_yaml(filename):
     _, ext = os.path.splitext(filename)
     if ext == '.xz' or ext == '.lzma':
         try:
@@ -96,7 +214,7 @@ def read_band_yaml(filename):
             labels)
 
 
-def read_band_hdf5(filename):
+def _read_band_hdf5(filename):
     data = h5py.File(filename, 'r')
     f2 = data['frequency'][:]
     d1 = data['distance'][:]
@@ -124,7 +242,7 @@ def read_band_hdf5(filename):
             labels_path)
 
 
-def read_dos_dat(filename, pdos_indices=None, dos_factor=None):
+def _read_dos_dat(filename, pdos_indices=None, dos_factor=None):
     dos = []
     frequencies = []
     for line in open(filename):
@@ -238,13 +356,7 @@ def get_options():
     return args
 
 
-def savefig(plt, file, fonttype=42, family='serif'):
-    plt.rcParams['pdf.fonttype'] = fonttype
-    plt.rcParams['font.family'] = family
-    plt.savefig(file)
-
-
-def old_plot(args):
+def _old_plot(args):
     import matplotlib.pyplot as plt
     if args.band_labels:
         from matplotlib import rc
@@ -287,9 +399,9 @@ def old_plot(args):
             filenames = args.filenames
 
     if args.dos:
-        dos_frequencies, dos = read_dos_dat(args.dos,
-                                            pdos_indices=args.pdos_indices,
-                                            dos_factor=args.dos_factor)
+        dos_frequencies, dos = _read_dos_dat(args.dos,
+                                             pdos_indices=args.pdos_indices,
+                                             dos_factor=args.dos_factor)
 
     curves = []
     for i, filename in enumerate(filenames):
@@ -298,13 +410,13 @@ def old_plot(args):
              frequencies,
              qpoints,
              segment_nqpoint,
-             labels) = read_band_hdf5(filename)
+             labels) = _read_band_hdf5(filename)
         else:
             (distances,
              frequencies,
              qpoints,
              segment_nqpoint,
-             labels) = read_band_yaml(filename)
+             labels) = _read_band_yaml(filename)
 
         end_points = [0, ]
         for nq in segment_nqpoint:
@@ -430,12 +542,12 @@ def old_plot(args):
             plt.xlim(left=args.dos_min)
 
     if args.output_filename is not None:
-        savefig(plt, args.output_filename)
+        _savefig(plt, args.output_filename)
     else:
         plt.show()
 
 
-def plot(args):
+def _plot(args):
     import matplotlib.pyplot as plt
     from matplotlib import rc
     rc('text', usetex=True)
@@ -447,13 +559,13 @@ def plot(args):
         else:
             filenames = args.filenames
 
-        bands_data = [read_band_hdf5(fname) for fname in filenames]
+        bands_data = [_read_band_hdf5(fname) for fname in filenames]
     else:
         if len(args.filenames) == 0:
             filenames = ['band.yaml', ]
         else:
             filenames = args.filenames
-        bands_data = [read_band_yaml(fname) for fname in filenames]
+        bands_data = [_read_band_yaml(fname) for fname in filenames]
 
     plots_data = [_arrange_band_data(*band_data) for band_data in bands_data]
     # Check consistency of input band structures
@@ -496,86 +608,25 @@ def plot(args):
             band_plot.plot(d, _f, p, fmt=fmt)
 
     if args.output_filename is not None:
-        savefig(plt, args.output_filename)
+        _savefig(plt, args.output_filename)
     else:
         plt.show()
 
 
-def _get_label_for_latex(label):
-    return label.replace('_', r'\_')
-
-
-def _get_max_frequency(frequencies):
-    return max([np.max(fq) for fq in frequencies])
-
-
-def _find_wrong_path_connections(all_path_connections):
-    for i, path_connections in enumerate(all_path_connections):
-        if path_connections != all_path_connections[0]:
-            return i
-    return 0
-
-
-def _arrange_band_data(distances,
-                       frequencies,
-                       qpoints,
-                       segment_nqpoints,
-                       label_pairs):
-    i = 0
-    freq_list = []
-    dist_list = []
-    qpt_list = []
-    for nq in segment_nqpoints:
-        freq_list.append(frequencies[i:(i + nq)])
-        dist_list.append(distances[i:(i + nq)])
-        qpt_list.append(qpoints[i:(i + nq)])
-        i += nq
-
-    if not label_pairs:
-        labels = None
-        path_connections = []
-        if len(qpt_list) > 1:
-            for i, qpts in enumerate(qpt_list[1:]):
-                if (np.abs(qpt_list[i][-1] - qpts[0]) < 1e-5).all():
-                    path_connections.append(True)
-                else:
-                    path_connections.append(False)
-        path_connections += [False, ]
-    else:
-        labels = []
-        path_connections = []
-        if len(label_pairs) > 1:
-            for i, pair in enumerate(label_pairs[1:]):
-                labels.append(label_pairs[i][0])
-                if label_pairs[i][1] != pair[0]:
-                    labels.append(label_pairs[i][1])
-                    path_connections.append(False)
-                else:
-                    path_connections.append(True)
-            if label_pairs[-2][1] != label_pairs[-1][1]:
-                labels += label_pairs[-1]
-            else:
-                labels.append(label_pairs[-1][1])
-        else:
-            labels += label_pairs[0]
-        path_connections += [False, ]
-
-    return labels, path_connections, freq_list, dist_list
-
-def write_gunplot_data(args):
+def _write_gnuplot_data(args):
     if args.is_hdf5:
         if len(args.filenames) == 0:
             filenames = ['band.hdf5', ]
         else:
             filenames = args.filenames
 
-        bands_data = [read_band_hdf5(fname) for fname in filenames]
+        bands_data = [_read_band_hdf5(fname) for fname in filenames]
     else:
         if len(args.filenames) == 0:
             filenames = ['band.yaml', ]
         else:
             filenames = args.filenames
-        bands_data = [read_band_yaml(fname) for fname in filenames]
+        bands_data = [_read_band_yaml(fname) for fname in filenames]
 
     if args.is_gnuplot:
 
@@ -589,10 +640,9 @@ def write_gunplot_data(args):
         end_points[-1] -= 1
         segment_positions = distances[end_points]
 
-
         print("# End points of segments: ")
         print("#   " + "%10.8f " * len(segment_positions) %
-                tuple(segment_positions))
+              tuple(segment_positions))
         for j, freqs in enumerate(frequencies.T):
             q = 0
             for nq in segment_nqpoint:
@@ -603,9 +653,10 @@ def write_gunplot_data(args):
                 print('')
             print('')
 
+
 def main(args):
     if args.is_gnuplot:
-        write_gunplot_data(args)
+        _write_gnuplot_data(args)
         sys.exit(1)
 
     if args.output_filename:
@@ -613,59 +664,9 @@ def main(args):
         matplotlib.use('Agg')
 
     if args.is_legacy_plot:
-        old_plot(args)
+        _old_plot(args)
     else:
-        plot(args)
-
-def _plot_dos(d, f, dmax):
-    pdos = []
-    for f1, f2, d1, d2 in zip(f[:-1], f[1:], d[:-1], d[1:]):
-        pdos += _cut_dos([f1, d1], [f2, d2], dmax)
-    return np.transpose(pdos)
-
-
-def _cut_dos(p1, p2, dmax):
-    """Cut DOS at dmax
-
-    ** Cutting by fmin and fmax should be implemented someday. **
-
-    Args:
-        p1: (f1, d1)
-        p2: (f2, d2)
-
-    When d1 < dmax and d2 < dmax
-        p1: (f1, d1)
-        p2: (f2, d2)
-    When d1 < dmax and d2 > dmax
-        p1: (f1, d1)
-        pi: (fi, dmax), f1 < fi < f2
-        p2: (f2, dmax)
-    Whend1 > dmax and d2 < dmax,
-        p1: (f1, dmax)
-        pi: (fi, dmax), f1 < fi < f2
-        p2: (f2, d2)
-    When d2 > dmax and d1 > dmax
-        p1: (f1, dmax)
-        p2: (f2, dmax)
-
-    """
-
-    def _get_fi(p1, p2, dmax):
-        df = p2[0] - p1[0]
-        dd = p2[1] - p1[1]
-        fi = (dmax - p1[1]) / dd * df + p1[0]
-        return fi
-
-    if p1[1] < dmax and p2[1] < dmax:
-        return [p1, p2]
-    elif p1[1] < dmax and p2[1] > dmax:
-        fi = _get_fi(p1, p2, dmax)
-        return [p1, [fi, dmax], [p2[0], dmax]]
-    elif p1[1] > dmax and p2[1] < dmax:
-        fi = _get_fi(p1, p2, dmax)
-        return [[p1[0], dmax], [fi, dmax], p2]
-    else:
-        return [[p1[0], dmax], [p1[0], dmax]]
+        _plot(args)
 
 
 if __name__ == "__main__":
