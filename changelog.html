@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Change Log &#8212; Phonopy v.2.9.3</title>
+    <title>Change Log &#8212; Phonopy v.2.10.0</title>
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -20,9 +20,9 @@
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
-<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
+<script type="text/javascript" src="_static/js/jquery-1.12.4.min.js "></script>
 <script type="text/javascript" src="_static/js/jquery-fix.js "></script>
-<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
+<script type="text/javascript" src="_static/bootstrap-3.4.1/js/bootstrap.min.js "></script>
 <script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
 
   </head><body>
@@ -38,7 +38,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.9</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>2.10</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -91,7 +91,7 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Change Log</a><ul>
-<li><a class="reference internal" href="#mar-17-2021-version-2-9-3">Mar-17-2021: Version 2.9.3</a></li>
+<li><a class="reference internal" href="#jun-10-2021-version-2-10-0">Jun-10-2021: Version 2.10.0</a></li>
 <li><a class="reference internal" href="#mar-17-2021-version-2-9-2">Mar-17-2021: Version 2.9.2</a></li>
 <li><a class="reference internal" href="#jan-29-2021-version-2-9-1">Jan-29-2021: Version 2.9.1</a></li>
 <li><a class="reference internal" href="#jan-28-2021-version-2-9-0">Jan-28-2021: Version 2.9.0</a></li>
@@ -248,10 +248,13 @@
       
   <div class="section" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="mar-17-2021-version-2-9-3">
-<h2>Mar-17-2021: Version 2.9.3<a class="headerlink" href="#mar-17-2021-version-2-9-3" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="jun-10-2021-version-2-10-0">
+<h2>Jun-10-2021: Version 2.10.0<a class="headerlink" href="#jun-10-2021-version-2-10-0" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>Fix <code class="docutils literal notranslate"><span class="pre">MANIFEST.in</span></code> to provide necessary files to compile.</p></li>
+<li><p>Fix the contents of <code class="docutils literal notranslate"><span class="pre">entropy-volume.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">Cv-volume.dat</span></code> in QHA
+were swapped. (Issue #144 by &#64;prnvrvs)</p></li>
+<li><p>Implementation of writing <code class="docutils literal notranslate"><span class="pre">helmholtz-volume_fitted.dat</span></code> in QHA. (PR
+#149 by &#64;kgmat)</p></li>
 </ul>
 </div>
 <div class="section" id="mar-17-2021-version-2-9-2">
@@ -1495,7 +1498,7 @@ from those in structure with atomic displacements.</p></li>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.1.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.4.<br/>
     </p>
   </div>
 </footer>
