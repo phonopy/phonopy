@@ -56,10 +56,10 @@ static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args);
 static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2(PyObject *self, PyObject *args);
 static PyObject * py_compute_permutation(PyObject *self, PyObject *args);
-static PyObject * py_gsv_copy_smallest_vectors(PyObject *self, PyObject *args);
-static PyObject * py_gsv_set_smallest_vectors(PyObject *self, PyObject *args);
 static PyObject *
-py_thm_neighboring_grid_points(PyObject *self, PyObject *args);
+py_gsv_set_smallest_vectors_sparse(PyObject *self, PyObject *args);
+static PyObject *
+py_gsv_set_smallest_vectors_dense(PyObject *self, PyObject *args);
 static PyObject *
 py_thm_relative_grid_address(PyObject *self, PyObject *args);
 static PyObject *
@@ -117,12 +117,10 @@ static PyMethodDef _phonopy_methods[] = {
    "Distribute force constants for all atoms in atom_list using precomputed symmetry mappings."},
   {"compute_permutation", py_compute_permutation, METH_VARARGS,
    "Compute indices of original points in a set of rotated points."},
-  {"gsv_copy_smallest_vectors", py_gsv_copy_smallest_vectors, METH_VARARGS,
-   "Implementation detail of get_smallest_vectors."},
-  {"gsv_set_smallest_vectors", py_gsv_set_smallest_vectors, METH_VARARGS,
-   "Set candidate vectors."},
-  {"neighboring_grid_points", py_thm_neighboring_grid_points,
-   METH_VARARGS, "Neighboring grid points by relative grid addresses"},
+  {"gsv_set_smallest_vectors_sparse", py_gsv_set_smallest_vectors_sparse,
+   METH_VARARGS, "Set shortest vectors in sparse array."},
+  {"gsv_set_smallest_vectors_dense", py_gsv_set_smallest_vectors_dense,
+   METH_VARARGS, "Set shortest vectors in dense array."},
   {"tetrahedra_relative_grid_address", py_thm_relative_grid_address,
    METH_VARARGS, "Relative grid addresses of vertices of 24 tetrahedra"},
   {"all_tetrahedra_relative_grid_address",
@@ -133,7 +131,7 @@ static PyMethodDef _phonopy_methods[] = {
   {"tetrahedra_integration_weight_at_omegas",
    py_thm_integration_weight_at_omegas,
    METH_VARARGS, "Integration weight for tetrahedron method at omegas"},
-  {"get_tetrahedra_frequencies", py_get_tetrahedra_frequenies,
+  {"tetrahedra_frequencies", py_get_tetrahedra_frequenies,
    METH_VARARGS, "Run tetrahedron method"},
   {"tetrahedron_method_dos", py_tetrahedron_method_dos,
    METH_VARARGS, "Run tetrahedron method"},
@@ -301,47 +299,8 @@ static PyObject * py_compute_permutation(PyObject *self, PyObject *args)
   }
 }
 
-static PyObject * py_gsv_copy_smallest_vectors(PyObject *self, PyObject *args)
-{
-  PyArrayObject* py_shortest_vectors;
-  PyArrayObject* py_multiplicity;
-  PyArrayObject* py_vectors;
-  PyArrayObject* py_lengths;
-  double symprec;
-
-  double (*shortest_vectors)[27][3];
-  double (*vectors)[27][3];
-  double (*lengths)[27];
-  int * multiplicity;
-  int size_super, size_prim;
-
-  if (!PyArg_ParseTuple(args, "OOOOd",
-                        &py_shortest_vectors,
-                        &py_multiplicity,
-                        &py_vectors,
-                        &py_lengths,
-                        &symprec)) {
-    return NULL;
-  }
-
-  shortest_vectors = (double(*)[27][3])PyArray_DATA(py_shortest_vectors);
-  multiplicity = (int*)PyArray_DATA(py_multiplicity);
-  vectors = (double(*)[27][3])PyArray_DATA(py_vectors);
-  lengths = (double(*)[27])PyArray_DATA(py_lengths);
-  size_super = PyArray_DIMS(py_vectors)[0];
-  size_prim = PyArray_DIMS(py_vectors)[1];
-
-  phpy_copy_smallest_vectors(shortest_vectors,
-                             multiplicity,
-                             vectors,
-                             lengths,
-                             size_super * size_prim,
-                             symprec);
-
-  Py_RETURN_NONE;
-}
-
-static PyObject * py_gsv_set_smallest_vectors(PyObject *self, PyObject *args)
+static PyObject *
+py_gsv_set_smallest_vectors_sparse(PyObject *self, PyObject *args)
 {
   PyArrayObject* py_smallest_vectors;
   PyArrayObject* py_multiplicity;
@@ -384,17 +343,79 @@ static PyObject * py_gsv_set_smallest_vectors(PyObject *self, PyObject *args)
   reduced_basis = (double(*)[3])PyArray_DATA(py_reduced_basis);
   trans_mat = (int(*)[3])PyArray_DATA(py_trans_mat);
 
-  phpy_set_smallest_vectors(smallest_vectors,
-                            multiplicity,
-                            pos_to,
-                            num_pos_to,
-                            pos_from,
-                            num_pos_from,
-                            lattice_points,
-                            num_lattice_points,
-                            reduced_basis,
-                            trans_mat,
-                            symprec);
+  phpy_set_smallest_vectors_sparse(smallest_vectors,
+                                   multiplicity,
+                                   pos_to,
+                                   num_pos_to,
+                                   pos_from,
+                                   num_pos_from,
+                                   lattice_points,
+                                   num_lattice_points,
+                                   reduced_basis,
+                                   trans_mat,
+                                   symprec);
+
+  Py_RETURN_NONE;
+}
+
+static PyObject *
+py_gsv_set_smallest_vectors_dense(PyObject *self, PyObject *args)
+{
+  PyArrayObject* py_smallest_vectors;
+  PyArrayObject* py_multiplicity;
+  PyArrayObject* py_pos_to;
+  PyArrayObject* py_pos_from;
+  PyArrayObject* py_lattice_points;
+  PyArrayObject* py_reduced_basis;
+  PyArrayObject* py_trans_mat;
+  long initialize;
+  double symprec;
+
+  double (*smallest_vectors)[3];
+  long (*multiplicity)[2];
+  double (*pos_to)[3];
+  double (*pos_from)[3];
+  long (*lattice_points)[3];
+  double (*reduced_basis)[3];
+  long (*trans_mat)[3];
+  long num_pos_to, num_pos_from, num_lattice_points;
+
+  if (!PyArg_ParseTuple(args, "OOOOOOOld",
+                        &py_smallest_vectors,
+                        &py_multiplicity,
+                        &py_pos_to,
+                        &py_pos_from,
+                        &py_lattice_points,
+                        &py_reduced_basis,
+                        &py_trans_mat,
+                        &initialize,
+                        &symprec)) {
+    return NULL;
+  }
+
+  smallest_vectors = (double(*)[3])PyArray_DATA(py_smallest_vectors);
+  multiplicity = (long(*)[2])PyArray_DATA(py_multiplicity);
+  pos_to = (double(*)[3])PyArray_DATA(py_pos_to);
+  pos_from = (double(*)[3])PyArray_DATA(py_pos_from);
+  num_pos_to = PyArray_DIMS(py_pos_to)[0];
+  num_pos_from = PyArray_DIMS(py_pos_from)[0];
+  lattice_points = (long(*)[3])PyArray_DATA(py_lattice_points);
+  num_lattice_points = PyArray_DIMS(py_lattice_points)[0];
+  reduced_basis = (double(*)[3])PyArray_DATA(py_reduced_basis);
+  trans_mat = (long(*)[3])PyArray_DATA(py_trans_mat);
+
+  phpy_set_smallest_vectors_dense(smallest_vectors,
+                                  multiplicity,
+                                  pos_to,
+                                  num_pos_to,
+                                  pos_from,
+                                  num_pos_from,
+                                  lattice_points,
+                                  num_lattice_points,
+                                  reduced_basis,
+                                  trans_mat,
+                                  initialize,
+                                  symprec);
 
   Py_RETURN_NONE;
 }
@@ -874,10 +895,10 @@ static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args)
   double *temperatures;
   double* freqs;
   double *thermal_props;
-  int* weights;
-  int num_qpoints;
-  int num_bands;
-  int num_temp;
+  long* weights;
+  long num_qpoints;
+  long num_bands;
+  long num_temp;
 
   if (!PyArg_ParseTuple(args, "OOOOd",
                         &py_thermal_props,
@@ -890,11 +911,11 @@ static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args)
 
   thermal_props = (double*)PyArray_DATA(py_thermal_props);
   temperatures = (double*)PyArray_DATA(py_temperatures);
-  num_temp = PyArray_DIMS(py_temperatures)[0];
+  num_temp = (long)PyArray_DIMS(py_temperatures)[0];
   freqs = (double*)PyArray_DATA(py_frequencies);
-  num_qpoints = PyArray_DIMS(py_frequencies)[0];
-  weights = (int*)PyArray_DATA(py_weights);
-  num_bands = PyArray_DIMS(py_frequencies)[1];
+  num_qpoints = (long)PyArray_DIMS(py_frequencies)[0];
+  weights = (long*)PyArray_DATA(py_weights);
+  num_bands = (long)PyArray_DIMS(py_frequencies)[1];
 
   phpy_get_thermal_properties(thermal_props,
                               temperatures,
@@ -975,48 +996,6 @@ static PyObject * py_distribute_fc2(PyObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
-static PyObject *py_thm_neighboring_grid_points(PyObject *self, PyObject *args)
-{
-  PyArrayObject* py_relative_grid_points;
-  PyArrayObject* py_relative_grid_address;
-  PyArrayObject* py_mesh;
-  PyArrayObject* py_bz_grid_address;
-  PyArrayObject* py_bz_map;
-  long grid_point;
-
-  int (*relative_grid_address)[3];
-  int num_relative_grid_address;
-  int *mesh;
-  int (*bz_grid_address)[3];
-  size_t *bz_map_size_t;
-  size_t *relative_grid_points_size_t;
-
-  if (!PyArg_ParseTuple(args, "OlOOOO",
-                        &py_relative_grid_points,
-                        &grid_point,
-                        &py_relative_grid_address,
-                        &py_mesh,
-                        &py_bz_grid_address,
-                        &py_bz_map)) {
-    return NULL;
-  }
-
-  relative_grid_address = (int(*)[3])PyArray_DATA(py_relative_grid_address);
-  num_relative_grid_address = PyArray_DIMS(py_relative_grid_address)[0];
-  mesh = (int*)PyArray_DATA(py_mesh);
-  bz_grid_address = (int(*)[3])PyArray_DATA(py_bz_grid_address);
-  bz_map_size_t = (size_t*)PyArray_DATA(py_bz_map);
-  relative_grid_points_size_t = (size_t*)PyArray_DATA(py_relative_grid_points);
-
-  phpy_get_neighboring_grid_points(relative_grid_points_size_t,
-                                   grid_point,
-                                   relative_grid_address,
-                                   num_relative_grid_address,
-                                   mesh,
-                                   bz_grid_address,
-                                   bz_map_size_t);
-  Py_RETURN_NONE;
-}
 
 static PyObject *
 py_thm_relative_grid_address(PyObject *self, PyObject *args)
@@ -1024,7 +1003,7 @@ py_thm_relative_grid_address(PyObject *self, PyObject *args)
   PyArrayObject* py_relative_grid_address;
   PyArrayObject* py_reciprocal_lattice_py;
 
-  int (*relative_grid_address)[4][3];
+  long (*relative_grid_address)[4][3];
   double (*reciprocal_lattice)[3];
 
   if (!PyArg_ParseTuple(args, "OO",
@@ -1033,7 +1012,7 @@ py_thm_relative_grid_address(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  relative_grid_address = (int(*)[4][3])PyArray_DATA(py_relative_grid_address);
+  relative_grid_address = (long(*)[4][3])PyArray_DATA(py_relative_grid_address);
   reciprocal_lattice = (double(*)[3])PyArray_DATA(py_reciprocal_lattice_py);
 
   phpy_get_relative_grid_address(relative_grid_address, reciprocal_lattice);
@@ -1046,7 +1025,7 @@ py_thm_all_relative_grid_address(PyObject *self, PyObject *args)
 {
   PyArrayObject* py_relative_grid_address;
 
-  int (*relative_grid_address)[24][4][3];
+  long (*relative_grid_address)[24][4][3];
 
   if (!PyArg_ParseTuple(args, "O",
                         &py_relative_grid_address)) {
@@ -1054,7 +1033,7 @@ py_thm_all_relative_grid_address(PyObject *self, PyObject *args)
   }
 
   relative_grid_address =
-    (int(*)[24][4][3])PyArray_DATA(py_relative_grid_address);
+    (long(*)[24][4][3])PyArray_DATA(py_relative_grid_address);
 
   phpy_get_all_relative_grid_address(relative_grid_address);
 
@@ -1097,8 +1076,10 @@ py_thm_integration_weight_at_omegas(PyObject *self, PyObject *args)
 
   double *omegas;
   double *iw;
-  int num_omegas;
+  long num_omegas;
   double (*tetrahedra_omegas)[4];
+
+  long i;
 
   if (!PyArg_ParseTuple(args, "OOOs",
                         &py_integration_weights,
@@ -1110,14 +1091,15 @@ py_thm_integration_weight_at_omegas(PyObject *self, PyObject *args)
 
   omegas = (double*)PyArray_DATA(py_omegas);
   iw = (double*)PyArray_DATA(py_integration_weights);
-  num_omegas = (int)PyArray_DIMS(py_omegas)[0];
+  num_omegas = (long)PyArray_DIMS(py_omegas)[0];
   tetrahedra_omegas = (double(*)[4])PyArray_DATA(py_tetrahedra_omegas);
 
-  phpy_get_integration_weight_at_omegas(iw,
-                                        num_omegas,
-                                        omegas,
+#pragma omp parallel for
+  for (i = 0; i < num_omegas; i++) {
+    iw[i] = phpy_get_integration_weight(omegas[i],
                                         tetrahedra_omegas,
                                         function[0]);
+  }
 
   Py_RETURN_NONE;
 }
@@ -1133,14 +1115,14 @@ static PyObject * py_get_tetrahedra_frequenies(PyObject *self, PyObject *args)
   PyArrayObject* py_frequencies;
 
   double* freq_tetras;
-  size_t* grid_points;
-  int* mesh;
-  int (*grid_address)[3];
-  size_t* gp_ir_index;
-  int (*relative_grid_address)[3];
+  long* grid_points;
+  long* mesh;
+  long (*grid_address)[3];
+  long* gp_ir_index;
+  long (*relative_grid_address)[3];
   double* frequencies;
 
-  size_t num_gp_in, num_band;
+  long num_gp_in, num_band;
 
   if (!PyArg_ParseTuple(args, "OOOOOOO",
                         &py_freq_tetras,
@@ -1154,12 +1136,12 @@ static PyObject * py_get_tetrahedra_frequenies(PyObject *self, PyObject *args)
   }
 
   freq_tetras = (double*)PyArray_DATA(py_freq_tetras);
-  grid_points = (size_t*)PyArray_DATA(py_grid_points);
+  grid_points = (long*)PyArray_DATA(py_grid_points);
   num_gp_in = PyArray_DIMS(py_grid_points)[0];
-  mesh = (int*)PyArray_DATA(py_mesh);
-  grid_address = (int(*)[3])PyArray_DATA(py_grid_address);
-  gp_ir_index = (size_t*)PyArray_DATA(py_gp_ir_index);
-  relative_grid_address = (int(*)[3])PyArray_DATA(py_relative_grid_address);
+  mesh = (long*)PyArray_DATA(py_mesh);
+  grid_address = (long(*)[3])PyArray_DATA(py_grid_address);
+  gp_ir_index = (long*)PyArray_DATA(py_gp_ir_index);
+  relative_grid_address = (long(*)[3])PyArray_DATA(py_relative_grid_address);
   frequencies = (double*)PyArray_DATA(py_frequencies);
   num_band = PyArray_DIMS(py_frequencies)[1];
 
@@ -1188,14 +1170,14 @@ static PyObject * py_tetrahedron_method_dos(PyObject *self, PyObject *args)
   PyArrayObject* py_relative_grid_address;
 
   double *dos;
-  int* mesh;
+  long* mesh;
   double* freq_points;
   double* frequencies;
   double* coef;
-  int (*grid_address)[3];
-  size_t num_gp, num_ir_gp, num_band, num_freq_points, num_coef;
-  size_t *grid_mapping_table;
-  int (*relative_grid_address)[4][3];
+  long (*grid_address)[3];
+  long num_gp, num_ir_gp, num_band, num_freq_points, num_coef;
+  long *grid_mapping_table;
+  long (*relative_grid_address)[4][3];
 
   if (!PyArg_ParseTuple(args, "OOOOOOOO",
                         &py_dos,
@@ -1211,18 +1193,18 @@ static PyObject * py_tetrahedron_method_dos(PyObject *self, PyObject *args)
 
   /* dos[num_ir_gp][num_band][num_freq_points][num_coef] */
   dos = (double*)PyArray_DATA(py_dos);
-  mesh = (int*)PyArray_DATA(py_mesh);
+  mesh = (long*)PyArray_DATA(py_mesh);
   freq_points = (double*)PyArray_DATA(py_freq_points);
-  num_freq_points = (size_t)PyArray_DIMS(py_freq_points)[0];
+  num_freq_points = (long)PyArray_DIMS(py_freq_points)[0];
   frequencies = (double*)PyArray_DATA(py_frequencies);
-  num_ir_gp = (size_t)PyArray_DIMS(py_frequencies)[0];
-  num_band = (size_t)PyArray_DIMS(py_frequencies)[1];
+  num_ir_gp = (long)PyArray_DIMS(py_frequencies)[0];
+  num_band = (long)PyArray_DIMS(py_frequencies)[1];
   coef = (double*)PyArray_DATA(py_coef);
-  num_coef = (size_t)PyArray_DIMS(py_coef)[1];
-  grid_address = (int(*)[3])PyArray_DATA(py_grid_address);
-  num_gp = (size_t)PyArray_DIMS(py_grid_address)[0];
-  grid_mapping_table = (size_t*)PyArray_DATA(py_grid_mapping_table);
-  relative_grid_address = (int(*)[4][3])PyArray_DATA(py_relative_grid_address);
+  num_coef = (long)PyArray_DIMS(py_coef)[1];
+  grid_address = (long(*)[3])PyArray_DATA(py_grid_address);
+  num_gp = (long)PyArray_DIMS(py_grid_address)[0];
+  grid_mapping_table = (long*)PyArray_DATA(py_grid_mapping_table);
+  relative_grid_address = (long(*)[4][3])PyArray_DATA(py_relative_grid_address);
 
   phpy_tetrahedron_method_dos(dos,
                               mesh,

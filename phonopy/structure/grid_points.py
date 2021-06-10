@@ -46,6 +46,7 @@ from phonopy.structure.cells import (
     estimate_supercell_matrix_from_pointgroup, determinant)
 from phonopy.structure.snf import SNF3x3
 from phonopy.harmonic.force_constants import similarity_transformation
+from phonopy.version import __version__
 
 
 def length2mesh(length, lattice, rotations=None):
@@ -65,7 +66,7 @@ def length2mesh(length, lattice, rotations=None):
     rotations: array_like, optional
         Rotation matrices in real space. When given, mesh numbers that are
         symmetrically reasonable are returned. Default is None.
-        dtype='intc', shape=(rotations, 3, 3)
+        dtype='int_', shape=(rotations, 3, 3)
 
     Returns
     -------
@@ -111,12 +112,12 @@ def get_qpoints(mesh_numbers,
 
 
 def extract_ir_grid_points(grid_mapping_table):
-    ir_grid_points = np.array(np.unique(grid_mapping_table),
-                              dtype=grid_mapping_table.dtype)
+    dtype = grid_mapping_table.dtype
+    ir_grid_points = np.array(np.unique(grid_mapping_table), dtype=dtype)
     weights = np.zeros_like(grid_mapping_table)
     for i, gp in enumerate(grid_mapping_table):
         weights[gp] += 1
-    ir_weights = np.array(weights[ir_grid_points], dtype='intc')
+    ir_weights = np.array(weights[ir_grid_points], dtype=dtype)
 
     return ir_grid_points, ir_weights
 
@@ -149,10 +150,10 @@ class GridPoints(object):
        shape=(prod(mesh_numbers), 3)
     ir_grid_points: ndarray
         Indices of irreducible grid points in grid_address.
-        dtype='uintp', shape=(ir-grid points,)
+        dtype='intc', shape=(ir-grid points,)
     grid_mapping_table: ndarray
         Index mapping table from all grid points to ir-grid points.
-        dtype='uintp', shape=(prod(mesh_numbers),)
+        dtype='intc', shape=(prod(mesh_numbers),)
 
     """
 
@@ -177,7 +178,7 @@ class GridPoints(object):
         ----------
         mesh_numbers: array_like
             Mesh numbers along a, b, c axes.
-            dtype='intc'
+            dtype='int_'
             shape=(3, )
         reciprocal_lattice: array_like
             Basis vectors in reciprocal space. a*, b*, c* are given in column
@@ -201,7 +202,7 @@ class GridPoints(object):
         rotations: array_like, default None (only unitary operation)
             Rotation matrices in direct space. For each rotation matrix R,
             a point in crystallographic coordinates, x, is sent as x' = Rx.
-            dtype='intc'
+            dtype='int_'
             shape=(rotations, 3, 3)
         is_mesh_symmetry: bool, optional, default True
             Wheather symmetry search is done or not.
@@ -351,7 +352,11 @@ class GridPoints(object):
             is_time_reversal=is_time_reversal,
             is_dense=True)
 
-        shift = np.array(self._is_shift, dtype='intc') * 0.5
+        # Currently 'intc', but will be 'int_' in next major version.
+        if int(__version__.split('.')[0]) < 3:
+            dtype = 'intc'
+        else:
+            dtype = 'int_'
 
         if self._fit_in_BZ:
             grid_address, _ = relocate_BZ_grid_address(
@@ -360,13 +365,16 @@ class GridPoints(object):
                 self._rec_lat,
                 is_shift=self._is_shift,
                 is_dense=True)
-            self._grid_address = grid_address[:np.prod(self._mesh)]
+            self._grid_address = np.array(grid_address[:np.prod(self._mesh)],
+                                          dtype=dtype, order='C')
         else:
-            self._grid_address = grid_address
+            self._grid_address = np.array(grid_address,
+                                          dtype=dtype, order='C')
 
         (self._ir_grid_points,
          self._ir_weights) = extract_ir_grid_points(grid_mapping_table)
 
+        shift = np.array(self._is_shift) * 0.5
         self._ir_qpoints = np.array(
             (self._grid_address[self._ir_grid_points] + shift) / self._mesh,
             dtype='double', order='C')
@@ -405,14 +413,14 @@ class GeneralizedRegularGridPoints(object):
     ----------
     grid_address : ndarray
         Grid addresses in integers.
-        shape=(num_grid_points, 3), dtype='intc', order='C'
+        shape=(num_grid_points, 3), dtype='int_', order='C'
     qpoints : ndarray
         q-points with respect to basis vectors of input or standardized
         primitive cell.
-        shape=(num_grid_points, 3), dtype='intc', order='C'
+        shape=(num_grid_points, 3), dtype='double', order='C'
     grid_matrix : ndarray
         Grid generating matrix.
-        shape=(3,3), dtype='intc', order='C'
+        shape=(3,3), dtype='int_', order='C'
     matrix_to_primitive : ndarray or None
         None when ``suggest`` is False. Otherwise, transformation matrix from
         input cell to the suggested primitive cell.
@@ -492,7 +500,13 @@ class GeneralizedRegularGridPoints(object):
         return self._snf
 
     @property
+    def mesh_numbers(self):
+        """Reciprocal regular mesh numbers of standardized basis vectors"""
+        return self._mesh_numbers
+
+    @property
     def reciprocal_operations(self):
+        """Reciprocal point group operations"""
         return self._reciprocal_operations
 
     def _prepare(self, cell, length, symprec):
@@ -515,7 +529,7 @@ class GeneralizedRegularGridPoints(object):
         pmat = get_primitive_matrix_by_centring(centring)
         conv_lat = np.dot(np.linalg.inv(tmat).T, cell.cell)
         num_cells = np.prod(length2mesh(length, conv_lat))
-        mesh_numbers = estimate_supercell_matrix(
+        self._mesh_numbers = estimate_supercell_matrix(
             self._sym_dataset,
             max_num_atoms=num_cells * len(self._sym_dataset['std_types']))
         inv_pmat = np.linalg.inv(pmat)
@@ -523,7 +537,7 @@ class GeneralizedRegularGridPoints(object):
         assert (np.abs(inv_pmat - inv_pmat_int) < 1e-5).all()
         # transpose in reciprocal space
         self._grid_matrix = np.array(
-            (inv_pmat_int * mesh_numbers).T, dtype='intc', order='C')
+            (inv_pmat_int * self._mesh_numbers).T, dtype='int_', order='C')
         # From input lattice to the primitive lattice in real space
         self._transformation_matrix = np.array(
             np.dot(np.linalg.inv(tmat), pmat), dtype='double', order='C')
@@ -536,11 +550,11 @@ class GeneralizedRegularGridPoints(object):
         tmat = pointgroup[2]
         lattice = np.dot(input_cell.cell.T, tmat).T
         num_cells = np.prod(length2mesh(length, lattice))
-        mesh_numbers = estimate_supercell_matrix_from_pointgroup(
+        self._mesh_numbers = estimate_supercell_matrix_from_pointgroup(
             pointgroup[1], lattice, num_cells)
         # transpose in reciprocal space
         self._grid_matrix = np.array(
-            np.multiply(tmat, mesh_numbers).T, dtype='intc', order='C')
+            np.multiply(tmat, self._mesh_numbers).T, dtype='int_', order='C')
         self._transformation_matrix = np.eye(3, dtype='double', order='C')
 
     def _generate_grid_points(self):
@@ -554,7 +568,7 @@ class GeneralizedRegularGridPoints(object):
             x, y, z = np.meshgrid(range(d[0]), range(d[1]), range(d[2]),
                                   indexing='ij')
         self._grid_address = np.array(np.c_[x.ravel(), y.ravel(), z.ravel()],
-                                      dtype='intc', order='C')
+                                      dtype='int_', order='C')
 
     def _generate_q_points(self):
         D_inv = np.linalg.inv(self._snf.D)
@@ -579,7 +593,7 @@ def get_reciprocal_operations(rotations,
     ----------
     rotations : ndarray
         Rotation matrices in real space. x' = Rx.
-        shape=(rotations, 3, 3), dtype='intc'
+        shape=(rotations, 3, 3), dtype='int_'
     transformation_matrxi : array_like
         Transformation matrix of basis vectors in real space. Using this
         rotation matrices are transformed.
@@ -600,7 +614,7 @@ def get_reciprocal_operations(rotations,
 
         g' = (R_Q g) % diagonal(D)
 
-        shape=(rotations, 3, 3), dtype='intc', order='C'
+        shape=(rotations, 3, 3), dtype='int_', order='C'
 
     """
     unique_rots = []
@@ -624,4 +638,4 @@ def get_reciprocal_operations(rotations,
         assert abs(determinant(_r_int)) == 1
         rec_ops_Q.append(_r_int)
 
-    return np.array(rec_ops_Q, dtype='intc', order='C')
+    return np.array(rec_ops_Q, dtype='int_', order='C')

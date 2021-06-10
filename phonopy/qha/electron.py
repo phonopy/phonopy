@@ -99,7 +99,7 @@ class ElectronFreeEnergy(object):
             shape=(spin, kpoints, bands)
         weights: ndarray
             Geometric k-point weights (number of arms of k-star in BZ).
-            dtype='intc'
+            dtype='int_'
             shape=(irreducible_kpoints,)
         n_electrons: float
             Number of electrons in unit cell.

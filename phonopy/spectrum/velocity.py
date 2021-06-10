@@ -103,7 +103,7 @@ class VelocityQpoints(object):
             rotations=self._point_group_opts)
 
     def set_qpoints(self, qpoints):
-        self._weights = np.ones(len(qpoints), dtype='intc')
+        self._weights = np.ones(len(qpoints), dtype='int_')
         self._qpoints = qpoints
 
     def set_commensurate_points(self):

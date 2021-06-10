@@ -36,7 +36,7 @@ class TestMoment(unittest.TestCase):
         moment = phonon.run_mesh([13, 13, 13],
                                  with_eigenvectors=True,
                                  is_mesh_symmetry=False)
-        num_atom = phonon.get_primitive().get_number_of_atoms()
+        num_atom = len(phonon.primitive)
         q = phonon.mesh.qpoints
         w = phonon.mesh.weights
         f = phonon.mesh.frequencies
@@ -86,11 +86,11 @@ class TestMoment(unittest.TestCase):
                                            [0.5, 0.5, 0]])
         filename = os.path.join(data_dir, "..", "FORCE_SETS_NaCl")
         force_sets = parse_FORCE_SETS(filename=filename)
-        phonon.set_displacement_dataset(force_sets)
+        phonon.dataset = force_sets
         phonon.produce_force_constants()
         filename_born = os.path.join(data_dir, "..", "BORN_NaCl")
-        nac_params = parse_BORN(phonon.get_primitive(), filename=filename_born)
-        phonon.set_nac_params(nac_params)
+        nac_params = parse_BORN(phonon.primitive, filename=filename_born)
+        phonon.nac_params = nac_params
 
         return phonon
 

@@ -171,11 +171,13 @@ def test_GridPoints_SnO2_with_rotations_MP(ph_sno2):
 @pytest.mark.parametrize("suggest", [True, False])
 def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
     grgp = GeneralizedRegularGridPoints(ph_tio2.unitcell,
-                                        100,
+                                        60,
                                         suggest=suggest,
                                         x_fastest=False)
 
     if suggest:
+        np.testing.assert_array_equal(
+            grgp.grid_matrix, [[0, 16, 16], [16, 0, 16], [6, 6, 0]])
         np.testing.assert_array_equal(
             grgp.snf.P, [[0, -1, 3], [1, 0, 0], [-3, 3, -8]])
         np.testing.assert_array_equal(
@@ -185,8 +187,6 @@ def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
         np.testing.assert_allclose(
             grgp.transformation_matrix,
             [[-0.5, 0.5, 0.5], [0.5, -0.5, 0.5], [0.5, 0.5, -0.5]])
-        np.testing.assert_array_equal(
-            grgp.grid_matrix, [[0, 16, 16], [16, 0, 16], [6, 6, 0]])
         assert (grgp.grid_address[253] == [0, 2, 61]).all()
         np.testing.assert_allclose(grgp.qpoints[253],
                                    [-0.19791667, 0.36458333, -0.23958333])
@@ -194,14 +194,14 @@ def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
                                       [[9, 10, 3], [8, 9, 3], [-48, -54, -17]])
     else:
         np.testing.assert_array_equal(
+            grgp.grid_matrix, [[16, 0, 0], [0, 16, 0], [0, 0, 6]])
+        np.testing.assert_array_equal(
             grgp.snf.P, [[1, 0, -3], [0, -1, 0], [-3, 0, 8]])
         np.testing.assert_array_equal(
             grgp.snf.D, [[2, 0, 0], [0, 16, 0], [0, 0, 48]])
         np.testing.assert_array_equal(
             grgp.snf.Q, [[-1, 0, -9], [0, -1, 0], [-1, 0, -8]])
         np.testing.assert_allclose(grgp.transformation_matrix, np.eye(3))
-        np.testing.assert_array_equal(
-            grgp.grid_matrix, [[16, 0, 0], [0, 16, 0], [0, 0, 6]])
         assert (grgp.grid_address[253] == [0, 5, 13]).all()
         np.testing.assert_allclose(grgp.qpoints[253],
                                    [-0.4375, -0.3125, -0.16666667])

@@ -854,9 +854,9 @@ class TestIrreps(unittest.TestCase):
                          primitive_matrix=pmat)
         filename = os.path.join(data_dir, "FORCE_SETS_%s" % spgtype)
         force_sets = parse_FORCE_SETS(filename=filename)
-        phonon.set_displacement_dataset(force_sets)
+        phonon.dataset = force_sets
         phonon.produce_force_constants()
-        print(phonon.get_symmetry().get_pointgroup())
+        print(phonon.symmetry.get_pointgroup())
         return phonon
 
     def _show_chars(self, chars):
