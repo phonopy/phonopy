@@ -475,6 +475,26 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         return self.nac_method
 
     @property
+    def nac_params(self):
+        """Return NAC basic parameters."""
+        return {'born': self.born,
+                'factor': self.factor,
+                'dielectric': self.dielectric}
+
+    @nac_params.setter
+    def nac_params(self, nac_params):
+        """Set NAC parameters."""
+        self._set_nac_params(nac_params)
+
+    def set_nac_params(self, nac_params):
+        """Set NAC parameters."""
+        warnings.warn(
+            "DynamicalMatrixNAC.set_nac_params() is deprecated."
+            "Use DynamicalMatrixNAC.nac_params attribute instead.",
+            DeprecationWarning)
+        self.nac_params = nac_params
+
+    @property
     def symprec(self):
         """Return symmetry tolerance."""
         return self._symprec
@@ -484,6 +504,16 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         """Return log level."""
         return self._log_level
 
+    def _set_nac_params(self, nac_params):
+        raise NotImplementedError()
+
+    def _set_basic_nac_params(self, nac_params):
+        """Set basic NAC parameters."""
+        self._born = np.array(nac_params['born'], dtype='double', order='C')
+        self._unit_conversion = nac_params['factor']
+        self._dielectric = np.array(nac_params['dielectric'],
+                                    dtype='double', order='C')
+
     def set_dynamical_matrix(self, q, q_direction=None):
         """Run dynamical matrix calculation at q-point."""
         warnings.warn(
@@ -491,12 +521,6 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             "Use DynamicalMatrixNAC.run().",
             DeprecationWarning)
         self.run(q, q_direction=q_direction)
-
-    def _set_basic_nac_params(self, nac_params):
-        self._born = np.array(nac_params['born'], dtype='double', order='C')
-        self._unit_conversion = nac_params['factor']
-        self._dielectric = np.array(nac_params['dielectric'],
-                                    dtype='double', order='C')
 
     def _get_charge_sum(self, num_atom, q, born):
         nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype='double', order='C')
@@ -509,6 +533,9 @@ class DynamicalMatrixNAC(DynamicalMatrix):
     def _get_constant_factor(self, q, dielectric, volume, unit_conversion):
         return (unit_conversion * 4.0 * np.pi / volume /
                 np.dot(q.T, np.dot(dielectric, q)))
+
+    def _compute_dynamical_matrix(self, q_red, q_direction):
+        raise NotImplementedError()
 
 
 class DynamicalMatrixGL(DynamicalMatrixNAC):
@@ -567,10 +594,11 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         self._dd_q0 = None
 
         if nac_params is not None:
-            self.set_nac_params(nac_params)
+            self.nac_params = nac_params
 
     @property
     def Gonze_nac_dataset(self):
+        """Return Gonze-Lee NAC dataset."""
         return (self._Gonze_force_constants,
                 self._dd_q0,
                 self._G_cutoff,
@@ -578,9 +606,19 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
                 self._Lambda)
 
     def get_Gonze_nac_dataset(self):
+        """Return Gonze-Lee NAC dataset."""
+        warnings.warn(
+            "DynamicalMatrixGL.get_Gonze_nac_dataset() is deprecated."
+            "Use DynamicalMatrixGL.Gonze_nac_dataset attribute instead.",
+            DeprecationWarning)
         return self.Gonze_nac_dataset
 
-    def set_nac_params(self, nac_params):
+    def _set_nac_params(self, nac_params):
+        """Set and prepare NAC parameters.
+
+        This is called via DynamicalMatrixNAC.nac_params.
+
+        """
         self._set_basic_nac_params(nac_params)
         if 'G_cutoff' in nac_params:
             self._G_cutoff = nac_params['G_cutoff']
@@ -598,18 +636,41 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         # self._H = self._get_H()
 
     def make_Gonze_nac_dataset(self):
+        """Prepare Gonze-Lee force constants.
+
+        Dipole-dipole interaction contribution is subtracted from
+        supercell force constants.
+
+        """
         try:
-            import phonopy._phonopy as phonoc
+            import phonopy._phonopy as phonoc  # noqa F401
             self._run_c_recip_dipole_dipole_q0()
         except ImportError:
             print("Python version of dipole-dipole calculation is not well "
                   "implemented.")
             sys.exit(1)
 
-        self._run_Gonze_force_constants()
+        fc_shape = self._force_constants.shape
+        d2f = DynmatToForceConstants(self._pcell,
+                                     self._scell,
+                                     is_full_fc=(fc_shape[0] == fc_shape[1]))
+        dynmat = []
+        num_q = len(d2f.commensurate_points)
+        for i, q_red in enumerate(d2f.commensurate_points):
+            if self._log_level > 2:
+                print("%d/%d %s" % (i + 1, num_q, q_red))
+            self._run(q_red)
+            dm_dd = self._get_Gonze_dipole_dipole(q_red, None)
+            self._dynamical_matrix -= dm_dd
+            dynmat.append(self._dynamical_matrix)
+        d2f.dynamical_matrices = dynmat
+        d2f.run()
+
+        self._Gonze_force_constants = d2f.force_constants
         self._Gonze_count = 0
 
     def show_nac_message(self):
+        """Show message on Gonze-Lee NAC parameters."""
         print("Use NAC by Gonze et al. (no real space sum in current "
               "implementation)")
         print("  PRB 50, 13035(R) (1994), PRB 55, 10355 (1997)")
@@ -618,10 +679,11 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
               % (self._G_cutoff, len(self._G_list), self._Lambda))
 
     def show_Gonze_nac_message(self):
-        warnings.warn("DynamicalMatrixGL.show_Gonze_nac_message is deprecated."
-                      "Use DynamicalMatrixGL.show_nac_message instead.",
-                      DeprecationWarning)
-
+        """Show message on Gonze-Lee NAC parameters."""
+        warnings.warn(
+            "DynamicalMatrixGL.show_Gonze_nac_message() is deprecated."
+            "Use DynamicalMatrixGL.show_nac_message instead.",
+            DeprecationWarning)
         self.show_nac_message()
 
     def _compute_dynamical_matrix(self, q_red, q_direction):
@@ -638,24 +700,6 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         dm_dd = self._get_Gonze_dipole_dipole(q_red, q_direction)
         self._dynamical_matrix += dm_dd
 
-    def _run_Gonze_force_constants(self):
-        fc_shape = self._force_constants.shape
-        d2f = DynmatToForceConstants(self._pcell,
-                                     self._scell,
-                                     is_full_fc=(fc_shape[0] == fc_shape[1]))
-        dynmat = []
-        num_q = len(d2f.commensurate_points)
-        for i, q_red in enumerate(d2f.commensurate_points):
-            if self._log_level > 2:
-                print("%d/%d %s" % (i + 1, num_q, q_red))
-            self._run(q_red)
-            dm_dd = self._get_Gonze_dipole_dipole(q_red, None)
-            self._dynamical_matrix -= dm_dd
-            dynmat.append(self._dynamical_matrix)
-        d2f.dynamical_matrices = dynmat
-        d2f.run()
-        self._Gonze_force_constants = d2f.force_constants
-
     def _get_Gonze_dipole_dipole(self, q_red, q_direction):
         rec_lat = np.linalg.inv(self._pcell.cell)  # column vectors
         q_cart = np.array(np.dot(q_red, rec_lat.T), dtype='double')
@@ -666,7 +710,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
                                   dtype='double')
 
         try:
-            import phonopy._phonopy as phonoc
+            import phonopy._phonopy as phonoc  # noqa F401
             C_recip = self._get_c_recip_dipole_dipole(q_cart, q_dir_cart)
         except ImportError:
             print("Python version of dipole-dipole calculation is not well "
@@ -685,7 +729,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         return C_dd
 
     def _get_c_recip_dipole_dipole(self, q_cart, q_dir_cart):
-        """Reciprocal part of Eq.(71) on the right hand side
+        """Reciprocal part of Eq.(71) on the right hand side.
 
         This is subtracted from supercell force constants to create
         short-range force constants. Only once at commensurate points.
@@ -694,7 +738,6 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         to create full force constants. Called many times.
 
         """
-
         import phonopy._phonopy as phonoc
 
         pos = self._pcell.positions
@@ -718,12 +761,11 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         return dd
 
     def _run_c_recip_dipole_dipole_q0(self):
-        """Reciprocal part of Eq.(71) second term on the right hand side
+        """Reciprocal part of Eq.(71) second term on the right hand side.
 
         Computed only once.
 
         """
-
         import phonopy._phonopy as phonoc
 
         pos = self._pcell.get_positions()
@@ -887,9 +929,14 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
 
         self._symprec = symprec
         if nac_params is not None:
-            self.set_nac_params(nac_params)
+            self.nac_params = nac_params
 
-    def set_nac_params(self, nac_params):
+    def _set_nac_params(self, nac_params):
+        """Set NAC parameters.
+
+        This is called via DynamicalMatrixNAC.nac_params.
+
+        """
         self._set_basic_nac_params(nac_params)
 
     def show_nac_message(self):
