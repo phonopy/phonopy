@@ -130,7 +130,24 @@ class DynamicalMatrix(object):
                  primitive,
                  force_constants,
                  decimals=None):
-        """Init method."""
+        """Init method.
+
+        Parameters
+        ----------
+        supercell : Supercell
+            Supercell.
+        primitive : Primitive
+            Primitive cell.
+        force_constants : array_like
+            Supercell force constants. Full and compact shapes of arrays are
+            supported.
+            shape=(supercell atoms, supercell atoms, 3, 3) for full FC.
+            shape=(primitive atoms, supercell atoms, 3, 3) for compact FC.
+            dtype='double'
+        decimals : int, optional, default=None
+            Number of decimals. Use like dm.round(decimals).
+
+        """
         self._scell = supercell
         self._pcell = primitive
         self._decimals = decimals
@@ -229,7 +246,9 @@ class DynamicalMatrix(object):
             return dm.round(decimals=self._decimals)
 
     def get_dynamical_matrix(self):
-        warnings.warn("DynamicalMatrix.get_get_dynamical_matrix() is deprecated."
+        """Return dynamcial matrix calculated at q."""
+        warnings.warn("DynamicalMatrix.get_get_dynamical_matrix() is "
+                      "deprecated."
                       "Use DynamicalMatrix.get_dynamical_matrix attribute.",
                       DeprecationWarning)
         return self.dynamical_matrix
@@ -339,20 +358,49 @@ class DynamicalMatrix(object):
 
 
 class DynamicalMatrixNAC(DynamicalMatrix):
+    """Dynamical matrix with NAC base class."""
+
     _nac = True
 
     def __init__(self,
                  supercell,
                  primitive,
                  force_constants,
-                 decimals=None):
-        super(DynamicalMatrix, self).__init__(supercell,
-                                              primitive,
-                                              force_constants,
-                                              decimals=decimals)
+                 symprec=1e-5,
+                 decimals=None,
+                 log_level=0):
+        """Init method.
+
+        Parameters
+        ----------
+        supercell : Supercell
+            Supercell.
+        primitive : Primitive
+            Primitive cell.
+        force_constants : array_like
+            Supercell force constants. Full and compact shapes of arrays are
+            supported.
+            shape=(supercell atoms, supercell atoms, 3, 3) for full FC.
+            shape=(primitive atoms, supercell atoms, 3, 3) for compact FC.
+            dtype='double'
+        symprec : float, optional, defualt=1e-5
+            Symmetri tolerance.
+        decimals : int, optional, default=None
+            Number of decimals. Use like dm.round(decimals).
+        log_levelc : int, optional, defualt=0
+            Log level.
+
+        """
+        super(DynamicalMatrixNAC, self).__init__(
+            supercell,
+            primitive,
+            force_constants,
+            decimals=decimals)
+        self._symprec = symprec
+        self._log_level = log_level
 
     def run(self, q, q_direction=None):
-        """Calculate dynamical matrix at q
+        """Calculate dynamical matrix at q-point.
 
         q : array_like
             q-point in fractional coordinates without 2pi.
@@ -378,44 +426,70 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
     @property
     def born(self):
+        """Return Born effective charge."""
         return self._born
 
     def get_born_effective_charges(self):
+        """Return Born effective charge."""
+        warnings.warn(
+            "DynamicalMatrixNAC.get_born_effective_charges() is deprecated."
+            "Use DynamicalMatrixNAC.born_effective_charges attribute.",
+            DeprecationWarning)
         return self.born
 
     @property
     def nac_factor(self):
+        """Return NAC unit conversion factor."""
         return self._unit_conversion * 4.0 * np.pi / self._pcell.volume
 
     def get_nac_factor(self):
+        """Return NAC unit conversion factor."""
+        warnings.warn("DynamicalMatrixNAC.get_nac_factor() is deprecated."
+                      "Use DynamicalMatrixNAC.nac_factor attribute.",
+                      DeprecationWarning)
         return self.nac_factor
 
     @property
     def dielectric_constant(self):
+        """Return dielectric constant."""
         return self._dielectric
 
     def get_dielectric_constant(self):
+        """Return dielectric constant."""
+        warnings.warn(
+            "DynamicalMatrixNAC.get_dielectric_constant() is deprecated."
+            "Use DynamicalMatrixNAC.dielectric_constant attribute.",
+            DeprecationWarning)
         return self.dielectric_constant
 
     @property
     def nac_method(self):
+        """Return NAC method name."""
         return self._method
 
     def get_nac_method(self):
+        """Return NAC method name."""
+        warnings.warn("DynamicalMatrixNAC.get_nac_method() is deprecated."
+                      "Use DynamicalMatrixNAC.nac_method attribute.",
+                      DeprecationWarning)
         return self.nac_method
 
     @property
     def symprec(self):
+        """Return symmetry tolerance."""
         return self._symprec
 
     @property
     def log_level(self):
+        """Return log level."""
         return self._log_level
 
     def set_dynamical_matrix(self, q, q_direction=None):
-        warnings.warn("DynamicalMatrixNAC.set_dynamical_matrix is deprecated."
-                      "Use DynamicalMatrixNAC.run.",
-                      DeprecationWarning)
+        """Run dynamical matrix calculation at q-point."""
+        warnings.warn(
+            "DynamicalMatrixNAC.set_dynamical_matrix() is deprecated."
+            "Use DynamicalMatrixNAC.run().",
+            DeprecationWarning)
         self.run(q, q_direction=q_direction)
 
     def _set_basic_nac_params(self, nac_params):
@@ -438,7 +512,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
 
 class DynamicalMatrixGL(DynamicalMatrixNAC):
-    """Non analytical term correction (NAC) by Gonze and Lee"""
+    """Non analytical term correction (NAC) by Gonze and Lee."""
 
     _method = 'gonze'
 
@@ -451,15 +525,35 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
                  decimals=None,
                  symprec=1e-5,
                  log_level=0):
+        """Init method.
 
-        super(DynamicalMatrixNAC, self).__init__(
+        Parameters
+        ----------
+        supercell : Supercell
+            Supercell.
+        primitive : Primitive
+            Primitive cell.
+        force_constants : array_like
+            Supercell force constants. Full and compact shapes of arrays are
+            supported.
+            shape=(supercell atoms, supercell atoms, 3, 3) for full FC.
+            shape=(primitive atoms, supercell atoms, 3, 3) for compact FC.
+            dtype='double'
+        symprec : float, optional, defualt=1e-5
+            Symmetri tolerance.
+        decimals : int, optional, default=None
+            Number of decimals. Use like dm.round(decimals).
+        log_levelc : int, optional, defualt=0
+            Log level.
+
+        """
+        super(DynamicalMatrixGL, self).__init__(
             supercell,
             primitive,
             force_constants,
-            decimals=decimals)
-
-        self._log_level = log_level
-        self._symprec = symprec
+            symprec=symprec,
+            decimals=decimals,
+            log_level=log_level)
 
         # For the method by Gonze et al.
         self._Gonze_force_constants = None
@@ -761,14 +855,36 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
                  decimals=None,
                  symprec=1e-5,
                  log_level=0):
+        """Init method.
 
-        super(DynamicalMatrixNAC, self).__init__(
+        Parameters
+        ----------
+        supercell : Supercell
+            Supercell.
+        primitive : Primitive
+            Primitive cell.
+        force_constants : array_like
+            Supercell force constants. Full and compact shapes of arrays are
+            supported.
+            shape=(supercell atoms, supercell atoms, 3, 3) for full FC.
+            shape=(primitive atoms, supercell atoms, 3, 3) for compact FC.
+            dtype='double'
+        symprec : float, optional, defualt=1e-5
+            Symmetri tolerance.
+        decimals : int, optional, default=None
+            Number of decimals. Use like dm.round(decimals).
+        log_levelc : int, optional, defualt=0
+            Log level.
+
+        """
+        super(DynamicalMatrixWang, self).__init__(
             supercell,
             primitive,
             force_constants,
-            decimals=decimals)
+            symprec=symprec,
+            decimals=decimals,
+            log_level=log_level)
 
-        self._log_level = log_level
         self._symprec = symprec
         if nac_params is not None:
             self.set_nac_params(nac_params)
