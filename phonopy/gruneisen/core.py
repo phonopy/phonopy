@@ -84,7 +84,7 @@ class GruneisenBase(object):
     def _set_gruneisen(self):
         if self._is_band_connection:
             self._q_direction = self._qpoints[0] - self._qpoints[-1]
-            band_order = range(self._dynmat.get_dimension())
+            band_order = range(len(self._dynmat.primitive) * 3)
             prev_eigvecs = None
 
         edDe = []  # <e|dD|e>

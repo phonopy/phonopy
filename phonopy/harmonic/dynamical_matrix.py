@@ -1,3 +1,5 @@
+"""Dynamical matrix classes."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -46,6 +48,12 @@ def get_dynamical_matrix(fc2,
                          decimals=None,
                          symprec=1e-5,
                          log_level=0):
+    """Return dynamical matrix.
+
+    The instance of a class inherited from DynamicalMatrix will be returned
+    depending on paramters.
+
+    """
     if frequency_scale_factor is None:
         _fc2 = fc2
     else:
@@ -79,7 +87,7 @@ def get_dynamical_matrix(fc2,
 
 
 class DynamicalMatrix(object):
-    """Dynamical matrix class
+    """Dynamical matrix base class.
 
     When prmitive and supercell lattices are L_p and L_s, respectively,
     frame F is defined by
@@ -122,6 +130,7 @@ class DynamicalMatrix(object):
                  primitive,
                  force_constants,
                  decimals=None):
+        """Init method."""
         self._scell = supercell
         self._pcell = primitive
         self._decimals = decimals
@@ -141,49 +150,74 @@ class DynamicalMatrix(object):
          self._multiplicity) = primitive.get_smallest_vectors()
 
     def is_nac(self):
+        """Return bool if NAC is considered or not."""
         return self._nac
 
     def get_dimension(self):
+        """Return number of bands."""
+        warnings.warn("DynamicalMatrix.get_dimension() is deprecated.",
+                      DeprecationWarning)
         return len(self._pcell) * 3
 
     @property
     def decimals(self):
+        """Return number of decimals of dynamical matrix values."""
         return self._decimals
 
     def get_decimals(self):
+        """Return number of decimals of dynamical matrix values."""
+        warnings.warn("DynamicalMatrix.get_decimals() is deprecated."
+                      "Use DynamicalMatrix.decimals attribute.",
+                      DeprecationWarning)
         return self.decimals
 
     @property
     def supercell(self):
+        """Return supercell."""
         return self._scell
 
     def get_supercell(self):
+        """Return supercell."""
+        warnings.warn("DynamicalMatrix.get_supercell() is deprecated."
+                      "Use DynamicalMatrix.supercell attribute.",
+                      DeprecationWarning)
         return self.supercell
 
     @property
     def primitive(self):
+        """Return primitive cell."""
         return self._pcell
 
     def get_primitive(self):
+        """Return primitive cell."""
+        warnings.warn("DynamicalMatrix.get_primitive() is deprecated."
+                      "Use DynamicalMatrix.primitive attribute.",
+                      DeprecationWarning)
         return self.primitive
 
     @property
     def force_constants(self):
+        """Return supercell force constants."""
         return self._force_constants
 
     def get_force_constants(self):
+        """Return supercell force constants."""
+        warnings.warn("DynamicalMatrix.get_force_constants() is deprecated."
+                      "Use DynamicalMatrix.force_constants attribute.",
+                      DeprecationWarning)
         return self.force_constants
 
     @property
     def dynamical_matrix(self):
-        """Dynamcial matrix calculated at q
+        """Return dynamcial matrix calculated at q.
 
+        Returns
+        -------
         ndarray
             shape=(natom * 3, natom *3)
             dtype=complex of "c%d" % (np.dtype('double').itemsize * 2)
 
         """
-
         dm = self._dynamical_matrix
 
         if self._dynamical_matrix is None:
@@ -195,28 +229,31 @@ class DynamicalMatrix(object):
             return dm.round(decimals=self._decimals)
 
     def get_dynamical_matrix(self):
+        warnings.warn("DynamicalMatrix.get_get_dynamical_matrix() is deprecated."
+                      "Use DynamicalMatrix.get_dynamical_matrix attribute.",
+                      DeprecationWarning)
         return self.dynamical_matrix
 
     def run(self, q):
-        """Calculate dynamical matrix at q
+        """Run dynamical matrix calculation at a q-point.
 
         q : array_like
             q-point in fractional coordinates without 2pi.
             shape=(3,), dtype='double'
 
         """
-
         self._run(q)
 
     def set_dynamical_matrix(self, q):
-        warnings.warn("DynamicalMatrix.set_dynamical_matrix is deprecated."
-                      "Use DynamicalMatrix.run.",
+        """Run dynamical matrix calculation at a q-point."""
+        warnings.warn("DynamicalMatrix.set_dynamical_matrix() is deprecated."
+                      "Use DynamicalMatrix.run().",
                       DeprecationWarning)
         self.run(q)
 
     def _run(self, q):
         try:
-            import phonopy._phonopy as phonoc
+            import phonopy._phonopy as phonoc  # noqa F401
             self._run_c_dynamical_matrix(q)
         except ImportError:
             self._run_py_dynamical_matrix(q)
@@ -226,7 +263,7 @@ class DynamicalMatrix(object):
             fc.dtype is np.double and
             fc.flags.aligned and
             fc.flags.owndata and
-            fc.flags.c_contiguous):
+            fc.flags.c_contiguous):  # noqa E129
             self._force_constants = fc
         else:
             self._force_constants = np.array(fc, dtype='double', order='C')
