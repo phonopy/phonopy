@@ -82,7 +82,7 @@ def get_dynamical_matrix(fc2,
             decimals=decimals,
             symprec=symprec,
             log_level=log_level)
-        dm.set_nac_params(nac_params)
+        dm.nac_params = nac_params
     return dm
 
 

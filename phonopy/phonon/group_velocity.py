@@ -113,11 +113,11 @@ class GroupVelocity(object):
 
         """
         self._dynmat = dynamical_matrix
-        primitive = dynamical_matrix.get_primitive()
-        self._reciprocal_lattice_inv = primitive.get_cell()
+        primitive = dynamical_matrix.primitive
+        self._reciprocal_lattice_inv = primitive.cell
         self._reciprocal_lattice = np.linalg.inv(self._reciprocal_lattice_inv)
         self._q_length = q_length
-        if self._dynmat.is_nac() and self._dynmat.get_nac_method() == 'gonze':
+        if self._dynmat.is_nac() and self._dynmat.nac_method == 'gonze':
             if self._q_length is None:
                 self._q_length = 1e-5
         if self._q_length is None:
