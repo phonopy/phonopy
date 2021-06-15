@@ -345,8 +345,8 @@ class DynamicalMatrix(object):
                     if s_j == self._s2p_map[k]:
                         multi = multiplicity[k][i]
                         phase = []
-                        for l in range(multi):
-                            vec = vecs[k][i][l]
+                        for ll in range(multi):
+                            vec = vecs[k][i][ll]
                             phase.append(np.vdot(vec, q) * 2j * np.pi)
                         phase_factor = np.exp(phase).sum()
                         dm_local += fc[s_i, k] * phase_factor / sqrt_mm / multi
@@ -670,7 +670,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         self._Gonze_count = 0
 
     def show_nac_message(self):
-        """Show message on Gonze-Lee NAC parameters."""
+        """Show message on Gonze-Lee NAC method."""
         print("Use NAC by Gonze et al. (no real space sum in current "
               "implementation)")
         print("  PRB 50, 13035(R) (1994), PRB 55, 10355 (1997)")
@@ -679,7 +679,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
               % (self._G_cutoff, len(self._G_list), self._Lambda))
 
     def show_Gonze_nac_message(self):
-        """Show message on Gonze-Lee NAC parameters."""
+        """Show message on Gonze-Lee NAC method."""
         warnings.warn(
             "DynamicalMatrixGL.show_Gonze_nac_message() is deprecated."
             "Use DynamicalMatrixGL.show_nac_message instead.",
@@ -931,6 +931,12 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
         if nac_params is not None:
             self.nac_params = nac_params
 
+    def show_nac_message(self):
+        """Show Wang et al.'s paper reference."""
+        if self._log_level:
+            print("NAC by Wang et al., J. Phys. Condens. Matter 22, "
+                  "202201 (2010)")
+
     def _set_nac_params(self, nac_params):
         """Set NAC parameters.
 
@@ -938,11 +944,6 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
 
         """
         self._set_basic_nac_params(nac_params)
-
-    def show_nac_message(self):
-        if self._log_level:
-            print("NAC by Wang et al., J. Phys. Condens. Matter 22, "
-                  "202201 (2010)")
 
     def _compute_dynamical_matrix(self, q_red, q_direction):
         # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
@@ -957,7 +958,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
                                              self._pcell.volume,
                                              self._unit_conversion)
         try:
-            import phonopy._phonopy as phonoc
+            import phonopy._phonopy as phonoc  # noqa F401
             self._run_c_Wang_dynamical_matrix(q_red, q, constant)
         except ImportError:
             num_atom = len(self._pcell)
