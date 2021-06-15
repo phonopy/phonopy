@@ -1,3 +1,5 @@
+"""Conventinal and generalized regular grid routines."""
+
 # Copyright (C) 2014 Atsushi Togo
 # All rights reserved.
 #
@@ -50,7 +52,7 @@ from phonopy.version import __version__
 
 
 def length2mesh(length, lattice, rotations=None):
-    """Convert length to mesh for q-point sampling
+    """Convert length to mesh for q-point sampling.
 
     This conversion for each reciprocal axis follows VASP convention by
         N = max(1, int(l * |a|^* + 0.5))
@@ -74,7 +76,6 @@ def length2mesh(length, lattice, rotations=None):
         dtype=int, shape=(3,)
 
     """
-
     rec_lattice = np.linalg.inv(lattice)
     rec_lat_lengths = np.sqrt(np.diagonal(np.dot(rec_lattice.T, rec_lattice)))
     mesh_numbers = np.rint(rec_lat_lengths * length).astype(int)
@@ -99,6 +100,7 @@ def get_qpoints(mesh_numbers,
                 fit_in_BZ=True,
                 rotations=None,  # Point group operations in real space
                 is_mesh_symmetry=True):
+    """Return q-points and weights on a mesh sampling grid."""
     gp = GridPoints(mesh_numbers,
                     reciprocal_lattice,
                     q_mesh_shift=q_mesh_shift,
@@ -112,6 +114,7 @@ def get_qpoints(mesh_numbers,
 
 
 def extract_ir_grid_points(grid_mapping_table):
+    """Return ir-grid points and weights in grid index mapping table."""
     dtype = grid_mapping_table.dtype
     ir_grid_points = np.array(np.unique(grid_mapping_table), dtype=dtype)
     weights = np.zeros_like(grid_mapping_table)
@@ -123,7 +126,7 @@ def extract_ir_grid_points(grid_mapping_table):
 
 
 class GridPoints(object):
-    """Class to generate irreducible grid points on uniform mesh grids
+    """Class to generate irreducible grid points on uniform mesh grids.
 
     Attributes
     ----------
@@ -166,7 +169,7 @@ class GridPoints(object):
                  fit_in_BZ=True,
                  rotations=None,  # Point group operations in real space
                  is_mesh_symmetry=True):  # Except for time reversal symmetry
-        """
+        """Init method.
 
         Note
         ----
@@ -208,7 +211,6 @@ class GridPoints(object):
             Wheather symmetry search is done or not.
 
         """
-
         self._mesh = np.array(mesh_numbers, dtype='intc')
         self._rec_lat = reciprocal_lattice
         self._is_shift = self._shift2boolean(q_mesh_shift,
@@ -235,59 +237,71 @@ class GridPoints(object):
 
     @property
     def mesh_numbers(self):
+        """Return mesh numbers."""
         return self._mesh
 
     @property
     def reciprocal_lattice(self):
+        """Return reciprocal lattice in column vectors."""
         return self._rec_lat
 
     @property
     def grid_address(self):
+        """Return all grid point addresses."""
         return self._grid_address
 
     def get_grid_address(self):
-        warnings.warn("GridPoints.get_grid_address is deprecated."
-                      "Use grid_address attribute.",
+        """Return all grid point addresses."""
+        warnings.warn("GridPoints.get_grid_address() is deprecated."
+                      "Use GridPoints.grid_address attribute.",
                       DeprecationWarning)
         return self.grid_address
 
     @property
     def ir_grid_points(self):
+        """Return ir-grid point indices."""
         return self._ir_grid_points
 
     def get_ir_grid_points(self):
-        warnings.warn("GridPoints.get_ir_grid_points is deprecated."
-                      "Use ir_grid_points attribute.",
+        """Return ir-grid point indices."""
+        warnings.warn("GridPoints.get_ir_grid_points() is deprecated."
+                      "Use GridPoints.ir_grid_points attribute.",
                       DeprecationWarning)
         return self.ir_grid_points
 
     @property
     def qpoints(self):
+        """Return irreducible q-points."""
         return self._ir_qpoints
 
     def get_ir_qpoints(self):
-        warnings.warn("GridPoints.get_ir_qpoints is deprecated."
-                      "Use points attribute.",
+        """Return irreducible q-points."""
+        warnings.warn("GridPoints.get_ir_qpoints() is deprecated."
+                      "Use GridPoints.qpoints attribute.",
                       DeprecationWarning)
         return self.qpoints
 
     @property
     def weights(self):
+        """Return weights of ir-grid points."""
         return self._ir_weights
 
     def get_ir_grid_weights(self):
-        warnings.warn("GridPoints.get_ir_grid_weights is deprecated."
-                      "Use weights attribute.",
+        """Return weights of ir-grid points."""
+        warnings.warn("GridPoints.get_ir_grid_weights() is deprecated."
+                      "Use GridPoints.weights attribute.",
                       DeprecationWarning)
         return self.weights
 
     @property
     def grid_mapping_table(self):
+        """Return grid index mapping table."""
         return self._grid_mapping_table
 
     def get_grid_mapping_table(self):
-        warnings.warn("GridPoints.get_grid_mapping_table is deprecated."
-                      "Use grid_mapping_table attribute.",
+        """Return grid index mapping table."""
+        warnings.warn("GridPoints.get_grid_mapping_table() is deprecated."
+                      "Use GridPoints.grid_mapping_table attribute.",
                       DeprecationWarning)
         return self.grid_mapping_table
 
@@ -303,9 +317,13 @@ class GridPoints(object):
                        q_mesh_shift,
                        is_gamma_center=False,
                        tolerance=1e-5):
-        """
-        Tolerance is used to judge zero/half gird shift.
-        This value is not necessary to be changed usually.
+        """Return bools of with or without half-shifts.
+
+        Parameters
+        ----------
+        tolerance : float
+            This is used to judge zero/half gird shift.
+
         """
         if q_mesh_shift is None:
             shift = np.zeros(3, dtype='double')
@@ -383,7 +401,7 @@ class GridPoints(object):
 
 
 class GeneralizedRegularGridPoints(object):
-    """Generalized regular grid points
+    """Generalized regular grid points.
 
     Method strategy in suggest mode
     -------------------------------
@@ -437,7 +455,7 @@ class GeneralizedRegularGridPoints(object):
                  is_time_reversal=True,
                  x_fastest=True,
                  symprec=1e-5):
-        """
+        """Init method.
 
         Parameters
         ----------
@@ -478,40 +496,41 @@ class GeneralizedRegularGridPoints(object):
 
     @property
     def grid_address(self):
+        """Return all grid point addresses."""
         return self._grid_address
 
     @property
     def qpoints(self):
+        """Return all q-points."""
         return self._qpoints
 
     @property
     def grid_matrix(self):
-        """Grid generating matrix"""
+        """Return grid generating matrix."""
         return self._grid_matrix
 
     @property
     def transformation_matrix(self):
-        """Transformation matrix"""
+        """Return transformation matrix."""
         return self._transformation_matrix
 
     @property
     def snf(self):
-        """SNF3x3 instance of grid generating matrix"""
+        """Return SNF3x3 instance of grid generating matrix."""
         return self._snf
 
     @property
     def mesh_numbers(self):
-        """Reciprocal regular mesh numbers of standardized basis vectors"""
+        """Return mesh numbers for reciprocal conventional unit cell."""
         return self._mesh_numbers
 
     @property
     def reciprocal_operations(self):
-        """Reciprocal point group operations"""
+        """Return reciprocal point group operations."""
         return self._reciprocal_operations
 
     def _prepare(self, cell, length, symprec):
-        """Define grid generating matrix and run the SNF"""
-
+        """Define grid generating matrix and run the SNF."""
         self._sym_dataset = get_symmetry_dataset(
             cell.totuple(), symprec=symprec)
         if self._suggest:
@@ -522,8 +541,7 @@ class GeneralizedRegularGridPoints(object):
         self._snf.run()
 
     def _set_grid_matrix_by_std_primitive_cell(self, cell, length):
-        """Grid generating matrix based on standeardized primitive cell"""
-
+        """Grid generating matrix based on standeardized primitive cell."""
         tmat = self._sym_dataset['transformation_matrix']
         centring = self._sym_dataset['international'][0]
         pmat = get_primitive_matrix_by_centring(centring)
@@ -543,8 +561,7 @@ class GeneralizedRegularGridPoints(object):
             np.dot(np.linalg.inv(tmat), pmat), dtype='double', order='C')
 
     def _set_grid_matrix_by_input_cell(self, input_cell, length):
-        """Grid generating matrix based on input cell"""
-
+        """Grid generating matrix based on input cell."""
         pointgroup = get_pointgroup(self._sym_dataset['rotations'])
         # tmat: From input lattice to point group preserving lattice
         tmat = pointgroup[2]
@@ -583,7 +600,7 @@ def get_reciprocal_operations(rotations,
                               D,
                               Q,
                               is_time_reversal=True):
-    """Generate reciprocal rotation matrices
+    """Generate reciprocal rotation matrices.
 
     Collect unique real space rotation matrices and transpose them.
     When is_time_reversal=True, inversion is added if it is not in the
