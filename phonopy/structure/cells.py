@@ -52,11 +52,13 @@ def get_supercell(unitcell, supercell_matrix, is_old_style=True, symprec=1e-5):
 def get_primitive(supercell,
                   primitive_frame,
                   symprec=1e-5,
+                  store_dense_vectors=False,
                   positions_to_reorder=None):
     """Create primitive cell."""
     return Primitive(supercell,
                      primitive_frame,
                      symprec=symprec,
+                     store_dense_vectors=store_dense_vectors,
                      positions_to_reorder=positions_to_reorder)
 
 
@@ -406,6 +408,7 @@ class Primitive(PhonopyAtoms):
                  supercell,
                  primitive_matrix,
                  symprec=1e-5,
+                 store_dense_vectors=False,
                  positions_to_reorder=None):
         """Init method.
 
@@ -418,10 +421,11 @@ class Primitive(PhonopyAtoms):
             such as:
                np.dot(primitive_matrix.T, supercell.cell)
             shape=(3,3)
-        symprec : float, optional
-            Tolerance to find overlapping atoms in primitive cell. The default
-            values is 1e-5.
-        positions_to_reorder : array_like
+        symprec : float, optional, default=1e-5
+            Tolerance to find overlapping atoms in primitive cell.
+        store_dense_vectors : bool, optional, default=False
+            Shortest vectors are stored in a dense array. See `ShortestPairs`.
+        positions_to_reorder : array_like, optional, default=None
             If atomic positions in a created primitive cell is known and
             the order of atoms is expected to be sure, these positions with
             the specific order is used after position matching between
@@ -431,6 +435,7 @@ class Primitive(PhonopyAtoms):
         self._primitive_matrix = np.array(
             primitive_matrix, dtype='double', order='C')
         self._symprec = symprec
+        self._store_dense_vectors = store_dense_vectors
         self._p2s_map = None
         self._s2p_map = None
         self._p2p_map = None
@@ -639,7 +644,10 @@ class Primitive(PhonopyAtoms):
         supercell_bases = supercell.cell
         primitive_bases = self._cell
         svecs, multi = get_smallest_vectors(
-            supercell_bases, supercell_pos, primitive_pos,
+            supercell_bases,
+            supercell_pos,
+            primitive_pos,
+            store_dense_vectors=self._store_dense_vectors,
             symprec=self._symprec)
         trans_mat_float = np.dot(
             supercell_bases, np.linalg.inv(primitive_bases))
@@ -883,11 +891,17 @@ def get_reduced_bases(lattice,
 def get_smallest_vectors(supercell_bases,
                          supercell_pos,
                          primitive_pos,
+                         store_dense_vectors=False,
                          symprec=1e-5):
-    """Return shortest vectors and multiplicities."""
+    """Return shortest vectors and multiplicities.
+
+    See the details at `ShortestPairs`.
+
+    """
     spairs = ShortestPairs(supercell_bases,
                            supercell_pos,
                            primitive_pos,
+                           store_dense_vectors=store_dense_vectors,
                            symprec=symprec)
     return spairs.shortest_vectors, spairs.multiplicities
 

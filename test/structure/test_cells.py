@@ -8,6 +8,9 @@ from phonopy.structure.cells import (
 from phonopy.interface.phonopy_yaml import read_cell_yaml
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
+primitive_matrix_nacl = [[0, 0.5, 0.5],
+                         [0.5, 0, 0.5],
+                         [0.5, 0.5, 0]]
 
 multi_nacl_ref = [1, 1, 2, 1, 2, 1, 4, 1, 2, 1, 4, 1, 4, 1, 8, 1,
                   1, 1, 2, 1, 1, 2, 2, 2, 1, 2, 2, 2, 1, 4, 2, 4,
@@ -104,10 +107,26 @@ def _test_get_supercell_primcell_si(primcell_si,
 def test_get_primitive_convcell_nacl(convcell_nacl,
                                      primcell_nacl,
                                      helper_methods):
-    pcell = get_primitive(convcell_nacl, [[0, 0.5, 0.5],
-                                          [0.5, 0, 0.5],
-                                          [0.5, 0.5, 0]])
+    pcell = get_primitive(convcell_nacl, primitive_matrix_nacl)
     helper_methods.compare_cells_with_order(pcell, primcell_nacl)
+
+
+@pytest.mark.parametrize("store_dense_vectors", [True, False])
+def test_get_primitive_convcell_nacl_svecs(convcell_nacl,
+                                           primcell_nacl,
+                                           store_dense_vectors):
+    pcell = get_primitive(convcell_nacl,
+                          primitive_matrix_nacl,
+                          store_dense_vectors=store_dense_vectors)
+    svecs, multi = pcell.get_smallest_vectors()
+    if store_dense_vectors:
+        assert svecs.shape == (54, 3)
+        assert multi.shape == (8, 2, 2)
+        assert np.sum(multi[:, :, 0]) == 54
+        assert np.sum(multi[-1:, -1, :]) == 54
+    else:
+        assert svecs.shape == (8, 2, 27, 3)
+        assert multi.shape == (8, 2)
 
 
 def test_TrimmedCell(convcell_nacl, helper_methods):
