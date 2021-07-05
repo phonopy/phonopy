@@ -52,13 +52,13 @@ def get_supercell(unitcell, supercell_matrix, is_old_style=True, symprec=1e-5):
 def get_primitive(supercell,
                   primitive_frame,
                   symprec=1e-5,
-                  store_in_dense_array=False,
+                  store_dense_svecs=False,
                   positions_to_reorder=None):
     """Create primitive cell."""
     return Primitive(supercell,
                      primitive_frame,
                      symprec=symprec,
-                     store_in_dense_array=store_in_dense_array,
+                     store_dense_svecs=store_dense_svecs,
                      positions_to_reorder=positions_to_reorder)
 
 
@@ -401,7 +401,7 @@ class Primitive(PhonopyAtoms):
     s2p_map : ndarray
     p2p_map : dict
     atomic_permutations : ndarray
-    store_in_dense_array : bool
+    store_dense_svecs : bool
 
     """
 
@@ -409,7 +409,7 @@ class Primitive(PhonopyAtoms):
                  supercell,
                  primitive_matrix,
                  symprec=1e-5,
-                 store_in_dense_array=False,
+                 store_dense_svecs=False,
                  positions_to_reorder=None):
         """Init method.
 
@@ -424,7 +424,7 @@ class Primitive(PhonopyAtoms):
             shape=(3,3)
         symprec : float, optional, default=1e-5
             Tolerance to find overlapping atoms in primitive cell.
-        store_in_dense_array : bool, optional, default=False
+        store_dense_svecs : bool, optional, default=False
             Shortest vectors are stored in a dense array. See `ShortestPairs`.
         positions_to_reorder : array_like, optional, default=None
             If atomic positions in a created primitive cell is known and
@@ -436,7 +436,7 @@ class Primitive(PhonopyAtoms):
         self._primitive_matrix = np.array(
             primitive_matrix, dtype='double', order='C')
         self._symprec = symprec
-        self._store_in_dense_array = store_in_dense_array
+        self._store_dense_svecs = store_dense_svecs
         self._p2s_map = None
         self._s2p_map = None
         self._p2p_map = None
@@ -568,9 +568,9 @@ class Primitive(PhonopyAtoms):
         return self.atomic_permutations
 
     @property
-    def store_in_dense_array(self):
+    def store_dense_svecs(self):
         """Return whether shortest vectors are stored in dense array or not."""
-        return self._store_in_dense_array
+        return self._store_dense_svecs
 
     def _run(self, supercell, positions_to_reorder=None):
         self._p2s_map = self._create_primitive_cell(
@@ -653,7 +653,7 @@ class Primitive(PhonopyAtoms):
             supercell_bases,
             supercell_pos,
             primitive_pos,
-            store_in_dense_array=self._store_in_dense_array,
+            store_dense_svecs=self._store_dense_svecs,
             symprec=self._symprec)
         trans_mat_float = np.dot(
             supercell_bases, np.linalg.inv(primitive_bases))
@@ -897,7 +897,7 @@ def get_reduced_bases(lattice,
 def get_smallest_vectors(supercell_bases,
                          supercell_pos,
                          primitive_pos,
-                         store_in_dense_array=False,
+                         store_dense_svecs=False,
                          symprec=1e-5):
     """Return shortest vectors and multiplicities.
 
@@ -907,7 +907,7 @@ def get_smallest_vectors(supercell_bases,
     spairs = ShortestPairs(supercell_bases,
                            supercell_pos,
                            primitive_pos,
-                           store_in_dense_array=store_in_dense_array,
+                           store_dense_svecs=store_dense_svecs,
                            symprec=symprec)
     return spairs.shortest_vectors, spairs.multiplicities
 
@@ -945,7 +945,7 @@ class ShortestPairs(object):
                  supercell_bases,
                  supercell_pos,
                  primitive_pos,
-                 store_in_dense_array=False,
+                 store_dense_svecs=False,
                  symprec=1e-5):
         """Init method.
 
@@ -961,7 +961,7 @@ class ShortestPairs(object):
             Atomic positions in fractional coordinates of supercell. Note that
             not in fractional coodinates of primitive cell.  dtype='double',
             shape=(size_prim, 3)
-        store_in_dense_array_: bool, optional
+        store_dense_svecs_: bool, optional
             ``shortest_vectors`` are stored in the dense data structure.
             Default is False.
         symprec : float, optional
@@ -973,7 +973,7 @@ class ShortestPairs(object):
         self._primitive_pos = primitive_pos
         self._symprec = symprec
 
-        if store_in_dense_array:
+        if store_dense_svecs:
             svecs, multi = self._run_dense()
             self._smallest_vectors = svecs
             self._multiplicities = multi

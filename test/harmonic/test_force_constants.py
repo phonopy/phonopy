@@ -55,11 +55,11 @@ def test_fc_cutoff_radius(ph_nacl, ph_nacl_compact_fcsym, is_compact):
         assert np.sum(changed) == 17088
 
 
-@pytest.mark.parametrize("is_compact,store_in_dense_array",
+@pytest.mark.parametrize("is_compact,store_dense_svecs",
                          [(False, False), (False, True),
                           (True, False), (True, True)])
 def test_fc_cutoff_radius_svecs(ph_nacl, ph_nacl_compact_fcsym,
-                                is_compact, store_in_dense_array):
+                                is_compact, store_dense_svecs):
     if is_compact:
         ph = ph_nacl_compact_fcsym
     else:
@@ -69,7 +69,7 @@ def test_fc_cutoff_radius_svecs(ph_nacl, ph_nacl_compact_fcsym,
     primitive_matrix = np.dot(np.linalg.inv(ph.supercell_matrix),
                               ph.primitive_matrix)
     primitive = get_primitive(ph.supercell, primitive_matrix,
-                              store_in_dense_array=store_in_dense_array)
+                              store_dense_svecs=store_dense_svecs)
 
     cutoff_force_constants(fc, ph.supercell, primitive, 4.0)
     changed = (np.abs(ph.force_constants - fc) > 1e-8)

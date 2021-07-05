@@ -144,13 +144,13 @@ def cutoff_force_constants(force_constants,
             supercell.scaled_positions,
             supercell.scaled_positions,
             symprec=symprec,
-            store_in_dense_array=primitive.store_in_dense_array)
+            store_dense_svecs=primitive.store_dense_svecs)
         lattice = supercell.cell
     else:
         svecs, multi = primitive.get_smallest_vectors()
         lattice = primitive.cell
 
-    if primitive.store_in_dense_array:
+    if primitive.store_dense_svecs:
         _svecs = svecs[multi[:, :, 1]]
     else:
         _svecs = svecs[:, :, 0, :]
