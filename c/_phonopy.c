@@ -200,8 +200,8 @@ static PyObject * py_transform_dynmat_to_fc(PyObject *self, PyObject *args)
   PyArrayObject* py_force_constants;
   PyArrayObject* py_dynamical_matrices;
   PyArrayObject* py_commensurate_points;
-  PyArrayObject* py_shortest_vectors;
-  PyArrayObject* py_multiplicities;
+  PyArrayObject* py_svecs;
+  PyArrayObject* py_multi;
   PyArrayObject* py_masses;
   PyArrayObject* py_s2pp_map;
   PyArrayObject* py_fc_index_map;
@@ -209,20 +209,20 @@ static PyObject * py_transform_dynmat_to_fc(PyObject *self, PyObject *args)
   double* fc;
   double* dm;
   double (*comm_points)[3];
-  double (*shortest_vectors)[27][3];
+  double (*svecs)[3];
   double* masses;
-  int* multiplicities;
-  int* s2pp_map;
-  int* fc_index_map;
-  int num_patom;
-  int num_satom;
+  long (*multi)[2];
+  long* s2pp_map;
+  long* fc_index_map;
+  long num_patom;
+  long num_satom;
 
   if (!PyArg_ParseTuple(args, "OOOOOOOO",
                         &py_force_constants,
                         &py_dynamical_matrices,
                         &py_commensurate_points,
-                        &py_shortest_vectors,
-                        &py_multiplicities,
+                        &py_svecs,
+                        &py_multi,
                         &py_masses,
                         &py_s2pp_map,
                         &py_fc_index_map)) {
@@ -232,19 +232,19 @@ static PyObject * py_transform_dynmat_to_fc(PyObject *self, PyObject *args)
   fc = (double*)PyArray_DATA(py_force_constants);
   dm = (double*)PyArray_DATA(py_dynamical_matrices);
   comm_points = (double(*)[3])PyArray_DATA(py_commensurate_points);
-  shortest_vectors = (double(*)[27][3])PyArray_DATA(py_shortest_vectors);
+  svecs = (double(*)[3])PyArray_DATA(py_svecs);
   masses = (double*)PyArray_DATA(py_masses);
-  multiplicities = (int*)PyArray_DATA(py_multiplicities);
-  s2pp_map = (int*)PyArray_DATA(py_s2pp_map);
-  fc_index_map = (int*)PyArray_DATA(py_fc_index_map);
-  num_patom = PyArray_DIMS(py_multiplicities)[1];
-  num_satom = PyArray_DIMS(py_multiplicities)[0];
+  multi = (long(*)[2])PyArray_DATA(py_multi);
+  s2pp_map = (long*)PyArray_DATA(py_s2pp_map);
+  fc_index_map = (long*)PyArray_DATA(py_fc_index_map);
+  num_patom = PyArray_DIMS(py_multi)[1];
+  num_satom = PyArray_DIMS(py_multi)[0];
 
   phpy_transform_dynmat_to_fc(fc,
                               dm,
                               comm_points,
-                              shortest_vectors,
-                              multiplicities,
+                              svecs,
+                              multi,
                               masses,
                               s2pp_map,
                               fc_index_map,
@@ -528,9 +528,9 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
 {
   PyArrayObject* py_dynamical_matrix;
   PyArrayObject* py_force_constants;
-  PyArrayObject* py_shortest_vectors;
+  PyArrayObject* py_svecs;
   PyArrayObject* py_q;
-  PyArrayObject* py_multiplicities;
+  PyArrayObject* py_multi;
   PyArrayObject* py_masses;
   PyArrayObject* py_s2p_map;
   PyArrayObject* py_p2s_map;
@@ -538,20 +538,20 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
   double* dm;
   double* fc;
   double* q;
-  double (*svecs)[27][3];
+  double (*svecs)[3];
   double* m;
-  int* multi;
-  int* s2p_map;
-  int* p2s_map;
-  int num_patom;
-  int num_satom;
+  long (*multi)[2];
+  long* s2p_map;
+  long* p2s_map;
+  long num_patom;
+  long num_satom;
 
   if (!PyArg_ParseTuple(args, "OOOOOOOO",
                         &py_dynamical_matrix,
                         &py_force_constants,
                         &py_q,
-                        &py_shortest_vectors,
-                        &py_multiplicities,
+                        &py_svecs,
+                        &py_multi,
                         &py_masses,
                         &py_s2p_map,
                         &py_p2s_map)) {
@@ -561,11 +561,11 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
   dm = (double*)PyArray_DATA(py_dynamical_matrix);
   fc = (double*)PyArray_DATA(py_force_constants);
   q = (double*)PyArray_DATA(py_q);
-  svecs = (double(*)[27][3])PyArray_DATA(py_shortest_vectors);
+  svecs = (double(*)[3])PyArray_DATA(py_svecs);
   m = (double*)PyArray_DATA(py_masses);
-  multi = (int*)PyArray_DATA(py_multiplicities);
-  s2p_map = (int*)PyArray_DATA(py_s2p_map);
-  p2s_map = (int*)PyArray_DATA(py_p2s_map);
+  multi = (long(*)[2])PyArray_DATA(py_multi);
+  s2p_map = (long*)PyArray_DATA(py_s2p_map);
+  p2s_map = (long*)PyArray_DATA(py_p2s_map);
   num_patom = PyArray_DIMS(py_p2s_map)[0];
   num_satom = PyArray_DIMS(py_s2p_map)[0];
 
@@ -590,10 +590,10 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
 {
   PyArrayObject* py_dynamical_matrix;
   PyArrayObject* py_force_constants;
-  PyArrayObject* py_shortest_vectors;
+  PyArrayObject* py_svecs;
   PyArrayObject* py_q_cart;
   PyArrayObject* py_q;
-  PyArrayObject* py_multiplicities;
+  PyArrayObject* py_multi;
   PyArrayObject* py_masses;
   PyArrayObject* py_s2p_map;
   PyArrayObject* py_p2s_map;
@@ -604,24 +604,24 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
   double* fc;
   double* q_cart;
   double* q;
-  double (*svecs)[27][3];
+  double (*svecs)[3];
   double* m;
   double (*born)[3][3];
-  int* multi;
-  int* s2p_map;
-  int* p2s_map;
-  int num_patom;
-  int num_satom;
+  long (*multi)[2];
+  long* s2p_map;
+  long* p2s_map;
+  long num_patom;
+  long num_satom;
 
-  int n;
+  long n;
   double (*charge_sum)[3][3];
 
   if (!PyArg_ParseTuple(args, "OOOOOOOOOOd",
                         &py_dynamical_matrix,
                         &py_force_constants,
                         &py_q,
-                        &py_shortest_vectors,
-                        &py_multiplicities,
+                        &py_svecs,
+                        &py_multi,
                         &py_masses,
                         &py_s2p_map,
                         &py_p2s_map,
@@ -634,12 +634,12 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
   fc = (double*)PyArray_DATA(py_force_constants);
   q_cart = (double*)PyArray_DATA(py_q_cart);
   q = (double*)PyArray_DATA(py_q);
-  svecs = (double(*)[27][3])PyArray_DATA(py_shortest_vectors);
+  svecs = (double(*)[3])PyArray_DATA(py_svecs);
   m = (double*)PyArray_DATA(py_masses);
   born = (double(*)[3][3])PyArray_DATA(py_born);
-  multi = (int*)PyArray_DATA(py_multiplicities);
-  s2p_map = (int*)PyArray_DATA(py_s2p_map);
-  p2s_map = (int*)PyArray_DATA(py_p2s_map);
+  multi = (long(*)[2])PyArray_DATA(py_multi);
+  s2p_map = (long*)PyArray_DATA(py_s2p_map);
+  p2s_map = (long*)PyArray_DATA(py_p2s_map);
   num_patom = PyArray_DIMS(py_p2s_map)[0];
   num_satom = PyArray_DIMS(py_s2p_map)[0];
 
@@ -688,7 +688,7 @@ static PyObject * py_get_recip_dipole_dipole(PyObject *self, PyObject *args)
   double (*born)[3][3];
   double (*dielectric)[3];
   double (*pos)[3];
-  int num_patom, num_G;
+  long num_patom, num_G;
 
   if (!PyArg_ParseTuple(args, "OOOOOOOOddd",
                         &py_dd,
@@ -752,7 +752,7 @@ static PyObject * py_get_recip_dipole_dipole_q0(PyObject *self, PyObject *args)
   double (*born)[3][3];
   double (*dielectric)[3];
   double (*pos)[3];
-  int num_patom, num_G;
+  long num_patom, num_G;
 
   if (!PyArg_ParseTuple(args, "OOOOOdd",
                         &py_dd_q0,
@@ -793,7 +793,7 @@ static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args)
   PyArrayObject* r_vector;
   PyArrayObject* lattice;
   PyArrayObject* q_vector;
-  PyArrayObject* py_multiplicities;
+  PyArrayObject* py_multi;
   PyArrayObject* py_masses;
   PyArrayObject* py_s2p_map;
   PyArrayObject* py_p2s_map;
@@ -824,7 +824,7 @@ static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args)
                         &q_vector,
                         &lattice, /* column vectors */
                         &r_vector,
-                        &py_multiplicities,
+                        &py_multi,
                         &py_masses,
                         &py_s2p_map,
                         &py_p2s_map,
@@ -841,7 +841,7 @@ static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args)
   lat = (double*)PyArray_DATA(lattice);
   r = (double*)PyArray_DATA(r_vector);
   m = (double*)PyArray_DATA(py_masses);
-  multi = (int*)PyArray_DATA(py_multiplicities);
+  multi = (int*)PyArray_DATA(py_multi);
   s2p_map = (int*)PyArray_DATA(py_s2p_map);
   p2s_map = (int*)PyArray_DATA(py_p2s_map);
   num_patom = PyArray_DIMS(py_p2s_map)[0];

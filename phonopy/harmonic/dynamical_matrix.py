@@ -36,6 +36,7 @@
 
 import sys
 import warnings
+from phonopy.structure.cells import sparse_to_dense_svecs
 from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
 import numpy as np
 
@@ -157,14 +158,18 @@ class DynamicalMatrix(object):
 
         self._dtype_complex = ("c%d" % (np.dtype('double').itemsize * 2))
 
-        self._p2s_map = primitive.p2s_map
-        self._s2p_map = primitive.s2p_map
-        p2p_map = primitive.p2p_map
+        self._p2s_map = np.array(self._pcell.p2s_map, dtype='int_')
+        self._s2p_map = np.array(self._pcell.s2p_map, dtype='int_')
+        p2p_map = self._pcell.p2p_map
         self._s2pp_map = np.array(
             [p2p_map[self._s2p_map[i]] for i in range(len(self._s2p_map))],
-            dtype='intc')
-        (self._smallest_vectors,
-         self._multiplicity) = primitive.get_smallest_vectors()
+            dtype='int_')
+        svecs, multi = self._pcell.get_smallest_vectors()
+        if self._pcell.store_dense_svecs:
+            self._svecs = svecs
+            self._multi = multi
+        else:
+            self._svecs, self._multi = sparse_to_dense_svecs(svecs, multi)
 
     def is_nac(self):
         """Return bool if NAC is considered or not."""
@@ -291,9 +296,7 @@ class DynamicalMatrix(object):
         import phonopy._phonopy as phonoc
 
         fc = self._force_constants
-        svecs = self._smallest_vectors
         mass = self._pcell.masses
-        multi = self._multiplicity
         size_prim = len(mass)
         dm = np.zeros((size_prim * 3, size_prim * 3),
                       dtype=self._dtype_complex)
@@ -303,13 +306,13 @@ class DynamicalMatrix(object):
             p2s_map = self._p2s_map
         else:  # compact-fc
             s2p_map = self._s2pp_map
-            p2s_map = np.arange(len(self._p2s_map), dtype='intc')
+            p2s_map = np.arange(len(self._p2s_map), dtype='int_')
 
         phonoc.dynamical_matrix(dm.view(dtype='double'),
                                 fc,
                                 np.array(q, dtype='double'),
-                                svecs,
-                                multi,
+                                self._svecs,
+                                self._multi,
                                 mass,
                                 s2p_map,
                                 p2s_map)
@@ -332,9 +335,9 @@ class DynamicalMatrix(object):
 
         """
         fc = self._force_constants
-        svecs = self._smallest_vectors
-        multi = self._multiplicity
-        num_atom = len(self._p2s_map)
+        svecs = self._svecs
+        multi = self._multi
+        num_atom = len(self._pcell)
         dm = np.zeros((3 * num_atom, 3 * num_atom), dtype=self._dtype_complex)
         mass = self._pcell.masses
         if fc.shape[0] == fc.shape[1]:
@@ -342,23 +345,19 @@ class DynamicalMatrix(object):
         else:
             is_compact_fc = True
 
-        for i, s_i in enumerate(self._p2s_map):
+        for i, s_i in enumerate(self._pcell.p2s_map):
             if is_compact_fc:
                 fc_elem = fc[i]
             else:
                 fc_elem = fc[s_i]
-            for j, s_j in enumerate(self._p2s_map):
+            for j, s_j in enumerate(self._pcell.p2s_map):
                 sqrt_mm = np.sqrt(mass[i] * mass[j])
                 dm_local = np.zeros((3, 3), dtype=self._dtype_complex)
                 # Sum in lattice points
                 for k in range(len(self._scell)):
                     if s_j == self._s2p_map[k]:
-                        if self._pcell.store_dense_svecs:
-                            m, adrs = multi[k][i]
-                            svecs_at = svecs[adrs:adrs + m]
-                        else:
-                            m = multi[k][i]
-                            svecs_at = svecs[k][i]
+                        m, adrs = multi[k][i]
+                        svecs_at = svecs[adrs:adrs + m]
                         phase = []
                         for ll in range(m):
                             vec = svecs_at[ll]
@@ -866,7 +865,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
 
     def _get_H(self):
         lat = self._scell.cell
-        cart_vecs = np.dot(self._smallest_vectors, lat)
+        cart_vecs = np.dot(self._svecs, lat)
         Delta = np.dot(cart_vecs, np.linalg.inv(self._dielectric).T)
         D = np.sqrt(cart_vecs * Delta).sum(axis=3)
         x = self._Lambda * Delta
@@ -987,9 +986,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
         import phonopy._phonopy as phonoc
 
         fc = self._force_constants
-        vectors = self._smallest_vectors
         mass = self._pcell.masses
-        multiplicity = self._multiplicity
         size_prim = len(mass)
         dm = np.zeros((size_prim * 3, size_prim * 3),
                       dtype=self._dtype_complex)
@@ -998,8 +995,8 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
             phonoc.nac_dynamical_matrix(dm.view(dtype='double'),
                                         fc,
                                         np.array(q_red, dtype='double'),
-                                        vectors,
-                                        multiplicity,
+                                        self._svecs,
+                                        self._multi,
                                         mass,
                                         self._s2p_map,
                                         self._p2s_map,
@@ -1010,12 +1007,12 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
             phonoc.nac_dynamical_matrix(dm.view(dtype='double'),
                                         fc,
                                         np.array(q_red, dtype='double'),
-                                        vectors,
-                                        multiplicity,
+                                        self._svecs,
+                                        self._multi,
                                         mass,
                                         self._s2pp_map,
                                         np.arange(len(self._p2s_map),
-                                                  dtype='intc'),
+                                                  dtype='int_'),
                                         np.array(q, dtype='double'),
                                         self._born,
                                         factor)

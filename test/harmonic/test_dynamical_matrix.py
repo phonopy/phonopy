@@ -116,22 +116,31 @@ def test_dynmat_wang(ph_nacl):
     ph_nacl.nac_params = nac_params
 
 
-def _test_dynmat(dynmat, lang='C'):
+def _test_dynmat(dynmat, lang=None):
     dtype_complex = ("c%d" % (np.dtype('double').itemsize * 2))
-    dynmat.run([0, 0, 0], lang=lang)
+    if lang:
+        dynmat.run([0, 0, 0], lang=lang)
+    else:
+        dynmat.run([0, 0, 0])
     dynmat_ref = np.array(
         dynmat_ref_000, dtype='double').view(dtype=dtype_complex).reshape(6, 6)
     np.testing.assert_allclose(dynmat.dynamical_matrix, dynmat_ref, atol=1e-5)
 
-    dynmat.run([0.5, 0.5, 0.5], lang=lang)
+    if lang:
+        dynmat.run([0.5, 0.5, 0.5], lang=lang)
+    else:
+        dynmat.run([0.5, 0.5, 0.5])
     dynmat_ref = np.array(
         dynmat_ref_555, dtype='double').view(dtype=dtype_complex).reshape(6, 6)
     np.testing.assert_allclose(dynmat.dynamical_matrix, dynmat_ref, atol=1e-5)
 
 
-def _test_dynmat_252525(dynmat, dynmat_ref, lang='C'):
+def _test_dynmat_252525(dynmat, dynmat_ref, lang=None):
     dtype_complex = ("c%d" % (np.dtype('double').itemsize * 2))
-    dynmat.run([0.25, 0.25, 0.25], lang=lang)
+    if lang:
+        dynmat.run([0.25, 0.25, 0.25], lang=lang)
+    else:
+        dynmat.run([0.25, 0.25, 0.25])
     # for row in dynmat.dynamical_matrix:
     #     print("".join(["%f, %f, " % (c.real, c.imag) for c in row]))
     dynmat_ref = np.array(

@@ -4,7 +4,8 @@ import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
     get_supercell, get_primitive, TrimmedCell, ShortestPairs,
-    compute_permutation_for_rotation, compute_all_sg_permutations)
+    compute_permutation_for_rotation, compute_all_sg_permutations,
+    sparse_to_dense_svecs)
 from phonopy.interface.phonopy_yaml import read_cell_yaml
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
@@ -188,3 +189,25 @@ def test_ShortestPairs_dense_nacl(ph_nacl, helper_methods):
     pos_from_svecs = svecs[multi[:, 0, 1], :] + pos[0]
     helper_methods.compare_positions_with_order(
         pos_from_svecs, pos, scell.cell)
+
+
+def test_sparse_to_dense_nacl(ph_nacl):
+    """Test for sparse_to_dense_svecs."""
+    scell = ph_nacl.supercell
+    pcell = ph_nacl.primitive
+    pos = scell.scaled_positions
+
+    spairs = ShortestPairs(scell.cell, pos, pos[pcell.p2s_map],
+                           store_dense_svecs=False)
+    svecs = spairs.shortest_vectors
+    multi = spairs.multiplicities
+
+    spairs = ShortestPairs(scell.cell, pos, pos[pcell.p2s_map],
+                           store_dense_svecs=True)
+    dsvecs = spairs.shortest_vectors
+    dmulti = spairs.multiplicities
+
+    _dsvecs, _dmulti = sparse_to_dense_svecs(svecs, multi)
+
+    np.testing.assert_array_equal(dmulti, _dmulti)
+    np.testing.assert_allclose(dsvecs, _dsvecs, rtol=0, atol=1e-8)

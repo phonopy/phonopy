@@ -1142,6 +1142,21 @@ class ShortestPairs(object):
                 reduced_bases)
 
 
+def sparse_to_dense_svecs(svecs, multi):
+    """Convert sparse svecs to dense svecs."""
+    dmulti = np.zeros(multi.shape + (2, ), dtype='int_', order='C')
+    dmulti[:, :, 0] = multi
+    dsvecs = np.zeros((multi.sum(), 3), dtype='double', order='C')
+    adrs = 0
+    for s_i in range(multi.shape[0]):
+        for p_i in range(multi.shape[1]):
+            dmulti[s_i, p_i, 1] = adrs
+            m = multi[s_i, p_i]
+            dsvecs[adrs:(adrs + m)] = svecs[s_i, p_i, :m]
+            adrs += multi[s_i, p_i]
+    return dsvecs, dmulti
+
+
 def compute_all_sg_permutations(positions,  # scaled positions
                                 rotations,  # scaled
                                 translations,  # scaled

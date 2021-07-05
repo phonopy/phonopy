@@ -67,20 +67,20 @@ static int nint(const double a);
 
 void phpy_transform_dynmat_to_fc(double *fc,
                                  const double *dm,
-                                 PHPYCONST double (*comm_points)[3],
-                                 PHPYCONST double (*shortest_vectors)[27][3],
-                                 const int *multiplicities,
+                                 const double (*comm_points)[3],
+                                 const double (*svecs)[3],
+                                 const long (*multi)[2],
                                  const double *masses,
-                                 const int *s2pp_map,
-                                 const int *fc_index_map,
-                                 const int num_patom,
-                                 const int num_satom)
+                                 const long *s2pp_map,
+                                 const long *fc_index_map,
+                                 const long num_patom,
+                                 const long num_satom)
 {
   dym_transform_dynmat_to_fc(fc,
                              dm,
                              comm_points,
-                             shortest_vectors,
-                             multiplicities,
+                             svecs,
+                             multi,
                              masses,
                              s2pp_map,
                              fc_index_map,
@@ -89,18 +89,18 @@ void phpy_transform_dynmat_to_fc(double *fc,
 }
 
 
-int phpy_get_dynamical_matrix_at_q(double *dynamical_matrix,
-                                   const int num_patom,
-                                   const int num_satom,
-                                   const double *fc,
-                                   const double q[3],
-                                   PHPYCONST double (*svecs)[27][3],
-                                   const int *multi,
-                                   const double *mass,
-                                   const int *s2p_map,
-                                   const int *p2s_map,
-                                   PHPYCONST double (*charge_sum)[3][3],
-                                   const int with_openmp)
+long phpy_get_dynamical_matrix_at_q(double *dynamical_matrix,
+                                    const long num_patom,
+                                    const long num_satom,
+                                    const double *fc,
+                                    const double q[3],
+                                    const double (*svecs)[3],
+                                    const long (*multi)[2],
+                                    const double *mass,
+                                    const long *s2p_map,
+                                    const long *p2s_map,
+                                    const double (*charge_sum)[3][3],
+                                    const long with_openmp)
 {
   return dym_get_dynamical_matrix_at_q(dynamical_matrix,
                                        num_patom,
@@ -118,10 +118,10 @@ int phpy_get_dynamical_matrix_at_q(double *dynamical_matrix,
 
 
 void phpy_get_charge_sum(double (*charge_sum)[3][3],
-                         const int num_patom,
+                         const long num_patom,
                          const double factor, /* 4pi/V*unit-conv and denominator */
                          const double q_cart[3],
-                         PHPYCONST double (*born)[3][3])
+                         const double (*born)[3][3])
 {
   dym_get_charge_sum(charge_sum, num_patom, factor, q_cart, born);
 }
@@ -129,14 +129,14 @@ void phpy_get_charge_sum(double (*charge_sum)[3][3],
 
 void phpy_get_recip_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real,imag)] */
                                   const double *dd_q0, /* [natom, 3, 3, (real,imag)] */
-                                  PHPYCONST double (*G_list)[3], /* [num_G, 3] */
-                                  const int num_G,
-                                  const int num_patom,
+                                  const double (*G_list)[3], /* [num_G, 3] */
+                                  const long num_G,
+                                  const long num_patom,
                                   const double q_cart[3],
                                   const double *q_direction_cart, /* must be pointer */
-                                  PHPYCONST double (*born)[3][3],
-                                  PHPYCONST double dielectric[3][3],
-                                  PHPYCONST double (*pos)[3], /* [num_patom, 3] */
+                                  const double (*born)[3][3],
+                                  const double dielectric[3][3],
+                                  const double (*pos)[3], /* [num_patom, 3] */
                                   const double factor, /* 4pi/V*unit-conv */
                                   const double lambda,
                                   const double tolerance)
@@ -158,12 +158,12 @@ void phpy_get_recip_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real,imag
 
 
 void phpy_get_recip_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real,imag)] */
-                                     PHPYCONST double (*G_list)[3], /* [num_G, 3] */
-                                     const int num_G,
-                                     const int num_patom,
-                                     PHPYCONST double (*born)[3][3],
-                                     PHPYCONST double dielectric[3][3],
-                                     PHPYCONST double (*pos)[3], /* [num_patom, 3] */
+                                     const double (*G_list)[3], /* [num_G, 3] */
+                                     const long num_G,
+                                     const long num_patom,
+                                     const double (*born)[3][3],
+                                     const double dielectric[3][3],
+                                     const double (*pos)[3], /* [num_patom, 3] */
                                      const double lambda,
                                      const double tolerance)
 {
