@@ -111,15 +111,15 @@ def test_get_primitive_convcell_nacl(convcell_nacl,
     helper_methods.compare_cells_with_order(pcell, primcell_nacl)
 
 
-@pytest.mark.parametrize("store_dense_vectors", [True, False])
+@pytest.mark.parametrize("store_in_dense_array", [True, False])
 def test_get_primitive_convcell_nacl_svecs(convcell_nacl,
                                            primcell_nacl,
-                                           store_dense_vectors):
+                                           store_in_dense_array):
     pcell = get_primitive(convcell_nacl,
                           primitive_matrix_nacl,
-                          store_dense_vectors=store_dense_vectors)
+                          store_in_dense_array=store_in_dense_array)
     svecs, multi = pcell.get_smallest_vectors()
-    if store_dense_vectors:
+    if store_in_dense_array:
         assert svecs.shape == (54, 3)
         assert multi.shape == (8, 2, 2)
         assert np.sum(multi[:, :, 0]) == 54
@@ -174,7 +174,7 @@ def test_ShortestPairs_dense_nacl(ph_nacl, helper_methods):
     pcell = ph_nacl.primitive
     pos = scell.scaled_positions
     spairs = ShortestPairs(scell.cell, pos, pos[pcell.p2s_map],
-                           store_dense_vectors=True)
+                           store_in_dense_array=True)
     svecs = spairs.shortest_vectors
     multi = spairs.multiplicities
     assert multi[-1, -1, :].sum() == multi[:, :, 0].sum()

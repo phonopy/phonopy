@@ -129,18 +129,33 @@ def cutoff_force_constants(force_constants,
                            primitive,
                            cutoff_radius,
                            symprec=1e-5):
+    """Set zero to force constants outside of cutoff distance.
+
+    Note
+    ----
+    `force_constants` is overwritten.
+
+    """
     fc_shape = force_constants.shape
+
     if fc_shape[0] == fc_shape[1]:
-        svecs, _ = get_smallest_vectors(supercell.get_cell(),
-                                        supercell.get_scaled_positions(),
-                                        supercell.get_scaled_positions(),
-                                        symprec=symprec)
-        min_distances = np.sqrt(np.sum(
-            np.dot(svecs[:, :, 0, :], supercell.get_cell()) ** 2, axis=-1))
+        svecs, multi = get_smallest_vectors(
+            supercell.cell,
+            supercell.scaled_positions,
+            supercell.scaled_positions,
+            symprec=symprec,
+            store_in_dense_array=primitive.store_in_dense_array)
+        lattice = supercell.cell
     else:
-        svecs, _ = primitive.get_smallest_vectors()
-        min_distances = np.sqrt(np.sum(
-            np.dot(svecs[:, :, 0, :], primitive.get_cell()) ** 2, axis=-1))
+        svecs, multi = primitive.get_smallest_vectors()
+        lattice = primitive.cell
+
+    if primitive.store_in_dense_array:
+        _svecs = svecs[multi[:, :, 1]]
+    else:
+        _svecs = svecs[:, :, 0, :]
+
+    min_distances = np.sqrt(np.sum(np.dot(_svecs, lattice) ** 2, axis=-1))
 
     for i in range(fc_shape[0]):
         for j in range(fc_shape[1]):

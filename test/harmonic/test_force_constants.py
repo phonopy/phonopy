@@ -1,4 +1,7 @@
+import pytest
 import numpy as np
+from phonopy.harmonic.force_constants import cutoff_force_constants
+from phonopy.structure.cells import get_primitive
 
 
 fc_1_10_ref = [-0.037549, 0.000000, 0.000000,
@@ -31,3 +34,47 @@ def test_fc_compact_fcsym(ph_nacl_compact_fcsym):
     # print("".join(["%f, " % v for v in fc_1_10.ravel()]))
     np.testing.assert_allclose(
         fc_1_10.ravel(), fc_1_10_compact_fcsym_ref, atol=1e-5)
+
+
+@pytest.mark.parametrize("is_compact", [False, True])
+def test_fc_cutoff_radius(ph_nacl, ph_nacl_compact_fcsym, is_compact):
+    if is_compact:
+        ph = ph_nacl_compact_fcsym
+    else:
+        ph = ph_nacl
+
+    # Need restore fc because fc are overwritten.
+    fc_orig = ph.force_constants.copy()
+    ph.set_force_constants_zero_with_radius(4.0)
+    changed = (np.abs(fc_orig - ph.force_constants) > 1e-8)
+    ph.force_constants = fc_orig
+
+    if is_compact:
+        assert np.sum(changed) == 534
+    else:
+        assert np.sum(changed) == 17088
+
+
+@pytest.mark.parametrize("is_compact,store_in_dense_array",
+                         [(False, False), (False, True),
+                          (True, False), (True, True)])
+def test_fc_cutoff_radius_svecs(ph_nacl, ph_nacl_compact_fcsym,
+                                is_compact, store_in_dense_array):
+    if is_compact:
+        ph = ph_nacl_compact_fcsym
+    else:
+        ph = ph_nacl
+
+    fc = ph.force_constants.copy()
+    primitive_matrix = np.dot(np.linalg.inv(ph.supercell_matrix),
+                              ph.primitive_matrix)
+    primitive = get_primitive(ph.supercell, primitive_matrix,
+                              store_in_dense_array=store_in_dense_array)
+
+    cutoff_force_constants(fc, ph.supercell, primitive, 4.0)
+    changed = (np.abs(ph.force_constants - fc) > 1e-8)
+
+    if is_compact:
+        assert np.sum(changed) == 534
+    else:
+        assert np.sum(changed) == 17088
