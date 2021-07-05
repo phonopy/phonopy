@@ -1,3 +1,4 @@
+"""Primitive cell and supercell, and related utilities."""
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -92,6 +93,7 @@ def print_cell(cell, mapping=None, stars=None):
 
 
 def isclose(a, b, rtol=1e-5, atol=1e-8):
+    """Check equivalence of two cells."""
     if len(a) != len(b):
         return False
 
@@ -111,7 +113,16 @@ def isclose(a, b, rtol=1e-5, atol=1e-8):
 
 
 class Supercell(PhonopyAtoms):
-    """Build supercell from supercell matrix and unit cell."""
+    """Build supercell from supercell matrix and unit cell.
+
+    Attributes
+    ----------
+    supercell_matrix : ndarray
+    s2u_map : ndarray
+    u2s_map : ndarray
+    u2u_map : dicst
+
+    """
 
     def __init__(self,
                  unitcell,
@@ -164,28 +175,91 @@ class Supercell(PhonopyAtoms):
         self._supercell_matrix = np.array(supercell_matrix, dtype='intc')
         self._create_supercell(unitcell, symprec)
 
-    def get_supercell_matrix(self):
+    @property
+    def supercell_matrix(self):
+        """Return supercell_matrix.
+
+        Returns
+        -------
+        ndarray
+            Supercell matrix.
+            shape=(3, 3), dtype='intc'
+
+        """
         return self._supercell_matrix
+
+    def get_supercell_matrix(self):
+        """Return supercell_matrix."""
+        warnings.warn("Supercell.get_supercell_matrix() is deprecated."
+                      "Use Supercell.supercell_matrix attribute.",
+                      DeprecationWarning)
+        return self.supercell_matrix
 
     @property
     def s2u_map(self):
+        """Return atomic index mapping table from supercell to unit cell.
+
+        Each array index and the stored value correspond to the supercell atom
+        and unit cell atom in supercell atomic indices in supercell atom index.
+
+        Returns
+        -------
+        ndarray
+            shape=(num_atoms_in_supercell, ), dtype='int_'
+
+        """
         return self._s2u_map
 
     def get_supercell_to_unitcell_map(self):
+        """Return atomic index mapping table from supercell to unit cell."""
+        warnings.warn(
+            "Supercell.get_supercell_to_unitcell_map() is deprecated."
+            "Use Supercell.s2u_map attribute.",
+            DeprecationWarning)
         return self.s2u_map
 
     @property
     def u2s_map(self):
+        """Return atomic index mapping table from unit cell to supercell.
+
+        Each array index and the stored value correspond to the unit cell atom
+        and supecell atom in supercell atom index.
+
+        Returns
+        -------
+        ndarray
+            shape=(num_atoms_in_unitcell, ), dtype='int_'
+
+        """
         return self._u2s_map
 
     def get_unitcell_to_supercell_map(self):
+        """Return atomic index mapping table from unit cell to supercell."""
+        warnings.warn(
+            "Supercell.get_unitcell_to_supercell_map() is deprecated."
+            "Use Supercell.u2s_map attribute.",
+            DeprecationWarning)
         return self.u2s_map
 
     @property
     def u2u_map(self):
+        """Return atomic index mapping table from unit cell to unit cell.
+
+        Returns
+        -------
+        dict
+            Each key and value correspond to supercell atom index and unit cell
+            atom index to represent an atom in unit cell.
+
+        """
         return self._u2u_map
 
     def get_unitcell_to_unitcell_map(self):
+        """Return atomic index mapping table from unit cell to unit cell."""
+        warnings.warn(
+            "Supercell.get_unitcell_to_unitcell_map() is deprecated."
+            "Use Supercell.u2s_map attribute.",
+            DeprecationWarning)
         return self.u2u_map
 
     def _create_supercell(self, unitcell, symprec):
@@ -233,9 +307,9 @@ class Supercell(PhonopyAtoms):
                 scaled_positions=supercell.scaled_positions,
                 cell=supercell.cell,
                 pbc=True)
-            self._u2s_map = np.arange(num_uatom) * N
+            self._u2s_map = np.array(np.arange(num_uatom) * N, dtype='int_')
             self._u2u_map = {j: i for i, j in enumerate(self._u2s_map)}
-            self._s2u_map = np.array(u2sur_map)[sur2s_map] * N
+            self._s2u_map = np.array(u2sur_map[sur2s_map] * N, dtype='int_')
 
     def _get_simple_supercell(self, unitcell, multi, P):
         if self._is_old_style:
@@ -864,9 +938,9 @@ class ShortestPairs(object):
             Atomic positions in fractional coordinates of supercell.
             dtype='double', shape=(size_super, 3)
         primitive_pos : array_like
-            Atomic positions in fractional coordinates of supercell. Note that not
-            in fractional coodinates of primitive cell.
-            dtype='double', shape=(size_prim, 3)
+            Atomic positions in fractional coordinates of supercell. Note that
+            not in fractional coodinates of primitive cell.  dtype='double',
+            shape=(size_prim, 3)
         store_dense_vectors_: bool, optional
             ``shortest_vectors`` are stored in the dense data structure.
             Default is False.
@@ -1017,16 +1091,16 @@ class ShortestPairs(object):
         primitive_fracs = np.array(primitive_fracs, dtype='double', order='C')
 
         # For each vector, we will need to consider all nearby images in the
-        # reduced bases. The lattice points at which supercell images are searched
-        # are composed by linear combinations of three vectors in
-        # (0, a, b, c, -a-b-c, -a, -b, -c, a+b+c). There are finally 65 lattice
+        # reduced bases. The lattice points at which supercell images are
+        # searched are composed by linear combinations of three vectors in (0,
+        # a, b, c, -a-b-c, -a, -b, -c, a+b+c). There are finally 65 lattice
         # points. There is no proof that this is enough.
         lattice_1D = (-1, 0, 1)
-        lattice_4D = np.array([[i, j, k, l]
+        lattice_4D = np.array([[i, j, k, ll]
                                for i in lattice_1D
                                for j in lattice_1D
                                for k in lattice_1D
-                               for l in lattice_1D],
+                               for ll in lattice_1D],
                               dtype=int_dtype, order='C')
         bases = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [-1, -1, -1]]
         lattice_points = np.dot(lattice_4D, bases)
@@ -1035,7 +1109,8 @@ class ShortestPairs(object):
                                       dtype=int_dtype, order='C')
         else:
             unique_indices = np.unique([
-                np.nonzero(np.abs(lattice_points - point).sum(axis=1) == 0)[0][0]
+                np.nonzero(
+                    np.abs(lattice_points - point).sum(axis=1) == 0)[0][0]
                 for point in lattice_points])
             lattice_points = np.array(lattice_points[unique_indices],
                                       dtype=int_dtype, order='C')
@@ -1169,8 +1244,9 @@ def _compute_permutation_c(positions_a,  # scaled positions
     permutation = np.zeros(shape=(len(positions_a),), dtype='intc')
 
     def permutation_error():
-        raise ValueError("Input forces are not enough to calculate force constants, "
-                         "or something wrong (e.g. crystal structure does not match).")
+        raise ValueError(
+            "Input forces are not enough to calculate force constants, "
+            "or something wrong (e.g. crystal structure does not match).")
 
     try:
         import phonopy._phonopy as phonoc
