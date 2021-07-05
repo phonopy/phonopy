@@ -687,10 +687,6 @@ def store_force_constants(phonon,
                     print("  Use --full-fc option for full array of force "
                           "constants.")
 
-    # Show the rotational invariance condition (just show!)
-    if settings.is_rotational_invariance:
-        phonon.get_rotational_condition_of_fc()
-
     if log_level:
         print("")
 

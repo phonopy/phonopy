@@ -530,43 +530,6 @@ def set_permutation_symmetry(force_constants):
                                      fc_copy[j, i].T) / 2
 
 
-def rotational_invariance(force_constants,
-                          supercell,
-                          primitive,
-                          symprec=1e-5):
-    """*** Under development ***
-
-    Just show how force constant is close to the condition of
-    rotational invariance.
-
-    """
-
-    print("Check rotational invariance ...")
-
-    fc = force_constants
-    p2s = primitive.get_primitive_to_supercell_map()
-
-    smallest_vectors, multiplicity = primitive.get_smallest_vectors()
-
-    abc = "xyz"
-
-    for pi, p in enumerate(p2s):
-        for i in range(3):
-            mat = np.zeros((3, 3), dtype='double')
-            for s in range(supercell.get_number_of_atoms()):
-                m = multiplicity[s, pi]
-                vecs = smallest_vectors[s, pi, :m]
-                v = np.dot(vecs.sum(axis=0) / m, primitive.get_cell())
-                for j in range(3):
-                    for k in range(3):
-                        mat[j, k] += (fc[p, s, i, j] * v[k] -
-                                      fc[p, s, i, k] * v[j])
-
-            print("Atom %d %s" % (p + 1, abc[i]))
-            for vec in mat:
-                print("%10.5f %10.5f %10.5f" % tuple(vec))
-
-
 def force_constants_log(force_constants):
     fs = force_constants
     for i, fs_i in enumerate(fs):
