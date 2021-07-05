@@ -202,10 +202,10 @@ def symmetrize_compact_force_constants(force_constants,
 
     """
 
-    s2p_map = primitive.get_supercell_to_primitive_map()
-    p2s_map = primitive.get_primitive_to_supercell_map()
-    p2p_map = primitive.get_primitive_to_primitive_map()
-    permutations = primitive.get_atomic_permutations()
+    s2p_map = primitive.s2p_map
+    p2s_map = primitive.p2s_map
+    p2p_map = primitive.p2p_map
+    permutations = primitive.atomic_permutations
     s2pp_map, nsym_list = get_nsym_list_and_s2pp(s2p_map,
                                                  p2p_map,
                                                  permutations)
@@ -268,7 +268,7 @@ def distribute_force_constants_by_translations(fc, primitive, supercell):
                      dtype='double', order='C')
     rotations = np.array([np.eye(3, dtype='intc')] * len(trans),
                          dtype='intc', order='C')
-    permutations = primitive.get_atomic_permutations()
+    permutations = primitive.atomic_permutations
     distribute_force_constants(fc, p2s, lattice, rotations, permutations)
 
 
@@ -589,7 +589,7 @@ def show_drift_force_constants(force_constants,
         s2p_map = primitive.s2p_map
         p2s_map = primitive.p2s_map
         p2p_map = primitive.p2p_map
-        permutations = primitive.get_atomic_permutations()
+        permutations = primitive.atomic_permutations
         s2pp_map, nsym_list = get_nsym_list_and_s2pp(s2p_map,
                                                      p2p_map,
                                                      permutations)

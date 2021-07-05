@@ -32,6 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
 import numpy as np
 from distutils.version import StrictVersion
 import spglib
@@ -320,33 +321,10 @@ class Primitive(PhonopyAtoms):
     Attributes
     ----------
     primitive_matrix : ndarray
-        Transformation matrix from supercell to primitive cell
-        dtype='double'
-        shape=(3,3)
     p2s_map : ndarray
-        Mapping table from atoms in primitive cell to those in supercell.
-        Supercell atomic indices are used.
-        dtype='intc'
-        shape=(num_atoms_in_primitive_cell,)
     s2p_map : ndarray
-        Mapping table from atoms in supercell cell to those in primitive cell.
-        Supercell atomic indices are used.
-        dtype='intc'
-        shape=(num_atoms_in_supercell,)
     p2p_map : dict
-        Mapping of primitive cell atoms in supercell to those in primitive
-        cell.
-        ex. {0: 0, 4: 1}
     atomic_permutations : ndarray
-        Atomic position permutation by pure translations is represented by
-        changes of indices.
-        dtype='intc'
-        shape=(num_trans, num_atoms_in_supercell)
-        ex.       supercell atomic indices
-                 [[0, 1, 2, 3, 4, 5, 6, 7],
-           trans  [1, 2, 3, 0, 5, 6, 7, 4],
-          indices [2, 3, 0, 1, 6, 7, 4, 5],
-                  [3, 0, 1, 2, 7, 4, 5, 6]]
 
     """
 
@@ -389,40 +367,124 @@ class Primitive(PhonopyAtoms):
 
     @property
     def primitive_matrix(self):
+        """Return primitive_matrix.
+
+        Returns
+        -------
+        ndarray
+            Transformation matrix from supercell to primitive cell
+            dtype='double'
+            shape=(3,3)
+
+        """
         return self._primitive_matrix
 
     def get_primitive_matrix(self):
+        """Return primitive_matrix."""
+        warnings.warn("Primitive.get_primitive_matrix() is deprecated."
+                      "Use Primitive.primitive_matrix attribute.",
+                      DeprecationWarning)
         return self.primitive_matrix
 
     @property
     def p2s_map(self):
+        """Return mapping table of atoms from primitive cell to supercell.
+
+        Returns
+        -------
+        ndarray
+            Mapping table from atoms in primitive cell to those in supercell.
+            Supercell atomic indices are used.
+            shape=(num_atoms_in_primitive_cell,), dtype='intc'
+
+        """
         return self._p2s_map
 
     def get_primitive_to_supercell_map(self):
+        """Return mapping table of atoms from primitive cell to supercell."""
+        warnings.warn(
+            "Primitive.get_primitive_to_supercell_map() is deprecated."
+            "Use Primitive.p2s_map attribute.",
+            DeprecationWarning)
         return self.p2s_map
 
     @property
     def s2p_map(self):
+        """Return mapping table of atoms from supercell to primitive cells.
+
+        Returns
+        -------
+        ndarray
+            Mapping table from atoms in supercell cell to those in primitive
+            cell.  Supercell atomic indices are used.
+            shape=(num_atoms_in_supercell, ), dtype='intc'
+
+        """
         return self._s2p_map
 
     def get_supercell_to_primitive_map(self):
+        """Return mapping table of atoms from supercell to primitive cells."""
+        warnings.warn(
+            "Primitive.get_supercell_to_primitive_map() is deprecated."
+            "Use Primitive.s2p_map attribute.",
+            DeprecationWarning)
         return self.s2p_map
 
     @property
     def p2p_map(self):
+        """Return mapping table of indices in supercell and primitive cell.
+
+        Returns
+        -------
+        dict
+            Mapping of primitive cell atoms in supercell to those in primitive.
+            cell.
+            ex. {0: 0, 4: 1}
+
+        """
         return self._p2p_map
 
     def get_primitive_to_primitive_map(self):
+        """Return mapping table of indices in supercell and primitive cell."""
+        warnings.warn(
+            "Primitive.get_primitive_to_primitive_map() is deprecated."
+            "Use Primitive.p2p_map attribute.",
+            DeprecationWarning)
         return self.p2p_map
 
     def get_smallest_vectors(self):
+        """Return shortest vectors and multiplicities.
+
+        See the docstring of `ShortestPairs`.
+
+        """
         return self._smallest_vectors, self._multiplicity
 
     @property
     def atomic_permutations(self):
+        """Return atomic index permutations by pure translations.
+
+        Returns
+        -------
+        ndarray
+            Atomic position permutation by pure translations is represented by
+            changes of indices.
+            dtype='intc'
+            shape=(num_trans, num_atoms_in_supercell)
+            ex.       supercell atomic indices
+                     [[0, 1, 2, 3, 4, 5, 6, 7],
+               trans  [1, 2, 3, 0, 5, 6, 7, 4],
+              indices [2, 3, 0, 1, 6, 7, 4, 5],
+                      [3, 0, 1, 2, 7, 4, 5, 6]]
+
+        """
         return self._atomic_permutations
 
     def get_atomic_permutations(self):
+        """Return atomic index permutations by pure translations."""
+        warnings.warn("Primitive.get_atomic_permutations() is deprecated."
+                      "Use Primitive.atomic_permutations attribute.",
+                      DeprecationWarning)
         return self.atomic_permutations
 
     def _run(self, supercell, positions_to_reorder=None):
@@ -479,7 +541,7 @@ class Primitive(PhonopyAtoms):
         atomic_permutations = compute_all_sg_permutations(
             positions,
             rotations,
-           trans,
+            trans,
             np.array(supercell.get_cell().T, dtype='double', order='C'),
             self._symprec)
 
@@ -488,12 +550,13 @@ class Primitive(PhonopyAtoms):
     def _get_smallest_vectors(self, supercell):
         """Find shortest vectors.
 
-        See the docstring of `get_smallest_vectors`.
+        See the docstring of `ShortestPairs`.
 
         Note
         ----
-        Returned shortest vectors are transformed in this method
-        to those in the primitive cell coordinates.
+        Returned shortest vectors are transformed to those in the primitive
+        cell coordinates from those in the supercell coordinates in this
+        method.
 
         """
         p2s_map = self._p2s_map
