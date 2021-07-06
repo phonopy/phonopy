@@ -36,6 +36,7 @@
 
 import sys
 import warnings
+from phonopy.structure.cells import sparse_to_dense_svecs
 from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
 import numpy as np
 
@@ -157,14 +158,18 @@ class DynamicalMatrix(object):
 
         self._dtype_complex = ("c%d" % (np.dtype('double').itemsize * 2))
 
-        self._p2s_map = primitive.p2s_map
-        self._s2p_map = primitive.s2p_map
-        p2p_map = primitive.p2p_map
+        self._p2s_map = np.array(self._pcell.p2s_map, dtype='int_')
+        self._s2p_map = np.array(self._pcell.s2p_map, dtype='int_')
+        p2p_map = self._pcell.p2p_map
         self._s2pp_map = np.array(
             [p2p_map[self._s2p_map[i]] for i in range(len(self._s2p_map))],
-            dtype='intc')
-        (self._smallest_vectors,
-         self._multiplicity) = primitive.get_smallest_vectors()
+            dtype='int_')
+        svecs, multi = self._pcell.get_smallest_vectors()
+        if self._pcell.store_dense_svecs:
+            self._svecs = svecs
+            self._multi = multi
+        else:
+            self._svecs, self._multi = sparse_to_dense_svecs(svecs, multi)
 
     def is_nac(self):
         """Return bool if NAC is considered or not."""
@@ -253,7 +258,7 @@ class DynamicalMatrix(object):
                       DeprecationWarning)
         return self.dynamical_matrix
 
-    def run(self, q):
+    def run(self, q, lang='C'):
         """Run dynamical matrix calculation at a q-point.
 
         q : array_like
@@ -261,7 +266,7 @@ class DynamicalMatrix(object):
             shape=(3,), dtype='double'
 
         """
-        self._run(q)
+        self._run(q, lang=lang)
 
     def set_dynamical_matrix(self, q):
         """Run dynamical matrix calculation at a q-point."""
@@ -270,11 +275,11 @@ class DynamicalMatrix(object):
                       DeprecationWarning)
         self.run(q)
 
-    def _run(self, q):
-        try:
+    def _run(self, q, lang='C'):
+        if lang == 'C':
             import phonopy._phonopy as phonoc  # noqa F401
             self._run_c_dynamical_matrix(q)
-        except ImportError:
+        else:
             self._run_py_dynamical_matrix(q)
 
     def _set_force_constants(self, fc):
@@ -291,32 +296,26 @@ class DynamicalMatrix(object):
         import phonopy._phonopy as phonoc
 
         fc = self._force_constants
-        vectors = self._smallest_vectors
-        mass = self._pcell.get_masses()
-        multiplicity = self._multiplicity
+        mass = self._pcell.masses
         size_prim = len(mass)
         dm = np.zeros((size_prim * 3, size_prim * 3),
                       dtype=self._dtype_complex)
 
-        if fc.shape[0] == fc.shape[1]:  # full FC
-            phonoc.dynamical_matrix(dm.view(dtype='double'),
-                                    fc,
-                                    np.array(q, dtype='double'),
-                                    vectors,
-                                    multiplicity,
-                                    mass,
-                                    self._s2p_map,
-                                    self._p2s_map)
-        else:
-            phonoc.dynamical_matrix(
-                dm.view(dtype='double'),
-                fc,
-                np.array(q, dtype='double'),
-                vectors,
-                multiplicity,
-                mass,
-                self._s2pp_map,
-                np.arange(len(self._p2s_map), dtype='intc'))
+        if fc.shape[0] == fc.shape[1]:  # full-fc
+            s2p_map = self._s2p_map
+            p2s_map = self._p2s_map
+        else:  # compact-fc
+            s2p_map = self._s2pp_map
+            p2s_map = np.arange(len(self._p2s_map), dtype='int_')
+
+        phonoc.dynamical_matrix(dm.view(dtype='double'),
+                                fc,
+                                np.array(q, dtype='double'),
+                                self._svecs,
+                                self._multi,
+                                mass,
+                                s2p_map,
+                                p2s_map)
 
         # Data of dm array are stored in memory by the C order of
         # (size_prim * 3, size_prim * 3, 2), where the last 2 means
@@ -329,27 +328,42 @@ class DynamicalMatrix(object):
         self._dynamical_matrix = dm
 
     def _run_py_dynamical_matrix(self, q):
-        fc = self._force_constants
-        vecs = self._smallest_vectors
-        multiplicity = self._multiplicity
-        num_atom = len(self._p2s_map)
-        dm = np.zeros((3 * num_atom, 3 * num_atom), dtype=self._dtype_complex)
-        mass = self._pcell.get_masses()
+        """Python implementation of building dynamical matrix.
 
-        for i, s_i in enumerate(self._p2s_map):
-            for j, s_j in enumerate(self._p2s_map):
+        This is not used in production.
+        This works only with full-fc.
+
+        """
+        fc = self._force_constants
+        svecs = self._svecs
+        multi = self._multi
+        num_atom = len(self._pcell)
+        dm = np.zeros((3 * num_atom, 3 * num_atom), dtype=self._dtype_complex)
+        mass = self._pcell.masses
+        if fc.shape[0] == fc.shape[1]:
+            is_compact_fc = False
+        else:
+            is_compact_fc = True
+
+        for i, s_i in enumerate(self._pcell.p2s_map):
+            if is_compact_fc:
+                fc_elem = fc[i]
+            else:
+                fc_elem = fc[s_i]
+            for j, s_j in enumerate(self._pcell.p2s_map):
                 sqrt_mm = np.sqrt(mass[i] * mass[j])
                 dm_local = np.zeros((3, 3), dtype=self._dtype_complex)
                 # Sum in lattice points
-                for k in range(self._scell.get_number_of_atoms()):
+                for k in range(len(self._scell)):
                     if s_j == self._s2p_map[k]:
-                        multi = multiplicity[k][i]
+                        m, adrs = multi[k][i]
+                        svecs_at = svecs[adrs:adrs + m]
                         phase = []
-                        for ll in range(multi):
-                            vec = vecs[k][i][ll]
+                        for ll in range(m):
+                            vec = svecs_at[ll]
                             phase.append(np.vdot(vec, q) * 2j * np.pi)
                         phase_factor = np.exp(phase).sum()
-                        dm_local += fc[s_i, k] * phase_factor / sqrt_mm / multi
+                        dm_local += fc_elem[k] * phase_factor / sqrt_mm / m
 
                 dm[(i*3):(i*3+3), (j*3):(j*3+3)] += dm_local
 
@@ -433,7 +447,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         """Return Born effective charge."""
         warnings.warn(
             "DynamicalMatrixNAC.get_born_effective_charges() is deprecated."
-            "Use DynamicalMatrixNAC.born_effective_charges attribute.",
+            "Use DynamicalMatrixNAC.born attribute.",
             DeprecationWarning)
         return self.born
 
@@ -851,7 +865,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
 
     def _get_H(self):
         lat = self._scell.cell
-        cart_vecs = np.dot(self._smallest_vectors, lat)
+        cart_vecs = np.dot(self._svecs, lat)
         Delta = np.dot(cart_vecs, np.linalg.inv(self._dielectric).T)
         D = np.sqrt(cart_vecs * Delta).sum(axis=3)
         x = self._Lambda * Delta
@@ -972,9 +986,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
         import phonopy._phonopy as phonoc
 
         fc = self._force_constants
-        vectors = self._smallest_vectors
         mass = self._pcell.masses
-        multiplicity = self._multiplicity
         size_prim = len(mass)
         dm = np.zeros((size_prim * 3, size_prim * 3),
                       dtype=self._dtype_complex)
@@ -983,8 +995,8 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
             phonoc.nac_dynamical_matrix(dm.view(dtype='double'),
                                         fc,
                                         np.array(q_red, dtype='double'),
-                                        vectors,
-                                        multiplicity,
+                                        self._svecs,
+                                        self._multi,
                                         mass,
                                         self._s2p_map,
                                         self._p2s_map,
@@ -995,12 +1007,12 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
             phonoc.nac_dynamical_matrix(dm.view(dtype='double'),
                                         fc,
                                         np.array(q_red, dtype='double'),
-                                        vectors,
-                                        multiplicity,
+                                        self._svecs,
+                                        self._multi,
                                         mass,
                                         self._s2pp_map,
                                         np.arange(len(self._p2s_map),
-                                                  dtype='intc'),
+                                                  dtype='int_'),
                                         np.array(q, dtype='double'),
                                         self._born,
                                         factor)

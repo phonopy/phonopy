@@ -4,10 +4,14 @@ import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
     get_supercell, get_primitive, TrimmedCell, ShortestPairs,
-    compute_permutation_for_rotation, compute_all_sg_permutations)
+    compute_permutation_for_rotation, compute_all_sg_permutations,
+    sparse_to_dense_svecs)
 from phonopy.interface.phonopy_yaml import read_cell_yaml
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
+primitive_matrix_nacl = [[0, 0.5, 0.5],
+                         [0.5, 0, 0.5],
+                         [0.5, 0.5, 0]]
 
 multi_nacl_ref = [1, 1, 2, 1, 2, 1, 4, 1, 2, 1, 4, 1, 4, 1, 8, 1,
                   1, 1, 2, 1, 1, 2, 2, 2, 1, 2, 2, 2, 1, 4, 2, 4,
@@ -104,10 +108,26 @@ def _test_get_supercell_primcell_si(primcell_si,
 def test_get_primitive_convcell_nacl(convcell_nacl,
                                      primcell_nacl,
                                      helper_methods):
-    pcell = get_primitive(convcell_nacl, [[0, 0.5, 0.5],
-                                          [0.5, 0, 0.5],
-                                          [0.5, 0.5, 0]])
+    pcell = get_primitive(convcell_nacl, primitive_matrix_nacl)
     helper_methods.compare_cells_with_order(pcell, primcell_nacl)
+
+
+@pytest.mark.parametrize("store_dense_svecs", [True, False])
+def test_get_primitive_convcell_nacl_svecs(convcell_nacl,
+                                           primcell_nacl,
+                                           store_dense_svecs):
+    pcell = get_primitive(convcell_nacl,
+                          primitive_matrix_nacl,
+                          store_dense_svecs=store_dense_svecs)
+    svecs, multi = pcell.get_smallest_vectors()
+    if store_dense_svecs:
+        assert svecs.shape == (54, 3)
+        assert multi.shape == (8, 2, 2)
+        assert np.sum(multi[:, :, 0]) == 54
+        assert np.sum(multi[-1:, -1, :]) == 54
+    else:
+        assert svecs.shape == (8, 2, 27, 3)
+        assert multi.shape == (8, 2)
 
 
 def test_TrimmedCell(convcell_nacl, helper_methods):
@@ -155,7 +175,7 @@ def test_ShortestPairs_dense_nacl(ph_nacl, helper_methods):
     pcell = ph_nacl.primitive
     pos = scell.scaled_positions
     spairs = ShortestPairs(scell.cell, pos, pos[pcell.p2s_map],
-                           store_dense_vectors=True)
+                           store_dense_svecs=True)
     svecs = spairs.shortest_vectors
     multi = spairs.multiplicities
     assert multi[-1, -1, :].sum() == multi[:, :, 0].sum()
@@ -169,3 +189,25 @@ def test_ShortestPairs_dense_nacl(ph_nacl, helper_methods):
     pos_from_svecs = svecs[multi[:, 0, 1], :] + pos[0]
     helper_methods.compare_positions_with_order(
         pos_from_svecs, pos, scell.cell)
+
+
+def test_sparse_to_dense_nacl(ph_nacl):
+    """Test for sparse_to_dense_svecs."""
+    scell = ph_nacl.supercell
+    pcell = ph_nacl.primitive
+    pos = scell.scaled_positions
+
+    spairs = ShortestPairs(scell.cell, pos, pos[pcell.p2s_map],
+                           store_dense_svecs=False)
+    svecs = spairs.shortest_vectors
+    multi = spairs.multiplicities
+
+    spairs = ShortestPairs(scell.cell, pos, pos[pcell.p2s_map],
+                           store_dense_svecs=True)
+    dsvecs = spairs.shortest_vectors
+    dmulti = spairs.multiplicities
+
+    _dsvecs, _dmulti = sparse_to_dense_svecs(svecs, multi)
+
+    np.testing.assert_array_equal(dmulti, _dmulti)
+    np.testing.assert_allclose(dsvecs, _dsvecs, rtol=0, atol=1e-8)

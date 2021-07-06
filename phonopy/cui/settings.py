@@ -77,7 +77,6 @@ class Settings(object):
         'is_eigenvectors': False,
         'is_mesh_symmetry': True,
         'is_nac': False,
-        'is_rotational_invariance': False,
         'is_plusminus_displacement': 'auto',
         'is_symmetry': True,
         'is_tetrahedron_method': True,
@@ -184,9 +183,6 @@ class Settings(object):
 
     def set_is_plusminus_displacement(self, val):
         self._v['is_plusminus_displacement'] = val
-
-    def set_is_rotational_invariance(self, val):
-        self._v['is_rotational_invariance'] = val
 
     def set_is_tetrahedron_method(self, val):
         self._v['is_tetrahedron_method'] = val
@@ -670,12 +666,6 @@ class ConfParser(object):
                 elif confs['mesh_symmetry'].lower() == '.true.':
                     self.set_parameter('is_mesh_symmetry', True)
 
-            if conf_key == 'rotational':
-                if confs['rotational'].lower() == '.false.':
-                    self.set_parameter('is_rotational', False)
-                elif confs['rotational'].lower() == '.true.':
-                    self.set_parameter('is_rotational', True)
-
             if conf_key == 'calculator':
                 self.set_parameter('calculator', confs['calculator'])
 
@@ -940,10 +930,6 @@ class ConfParser(object):
         # Non analytical term correction?
         if 'is_nac' in params:
             self._settings.set_is_nac(params['is_nac'])
-
-        # Is rotational invariance ?
-        if 'is_rotational' in params:
-            self._settings.set_is_rotational_invariance(params['is_rotational'])
 
         # Is crystal symmetry searched?
         if 'is_symmetry' in params:

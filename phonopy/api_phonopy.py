@@ -131,6 +131,7 @@ class Phonopy(object):
                  group_velocity_delta_q=None,
                  symprec=1e-5,
                  is_symmetry=True,
+                 store_dense_svecs=False,
                  calculator=None,
                  use_lapack_solver=False,
                  log_level=0):
@@ -140,6 +141,7 @@ class Phonopy(object):
         self._frequency_scale_factor = frequency_scale_factor
         self._is_symmetry = is_symmetry
         self._calculator = calculator
+        self._store_dense_svecs = store_dense_svecs
         self._use_lapack_solver = use_lapack_solver
         self._log_level = log_level
 
@@ -3254,7 +3256,8 @@ class Phonopy(object):
 
         try:
             self._primitive = get_primitive(
-                self._supercell, trans_mat, self._symprec)
+                self._supercell, trans_mat, self._symprec,
+                store_dense_svecs=self._store_dense_svecs)
         except ValueError:
             msg = ("Creating primitive cell is failed. "
                    "PRIMITIVE_AXIS may be incorrectly specified.")

@@ -121,7 +121,7 @@ class Unfolding(object):
         self._ideal_positions = np.array(ideal_positions, dtype='double')
         self._qpoints_p = qpoints  # in PBZ
         self._qpoints_s = self._get_qpoints_in_SBZ()  # in SBZ
-        self._symprec = self._phonon.symmetry.get_symmetry_tolerance()
+        self._symprec = self._phonon.symmetry.tolerance
 
         self._frequencies = None
         self._eigvecs = None  # This may have anormal array shape.
