@@ -63,7 +63,7 @@ class DerivativeOfDynamicalMatrix(object):
         self._scell = self._dynmat.supercell
         self._pcell = self._dynmat.primitive
 
-        dtype = 'intc'
+        dtype = 'int_'
         self._p2s_map = np.array(self._pcell.p2s_map, dtype=dtype)
         self._s2p_map = np.array(self._pcell.s2p_map, dtype=dtype)
         p2p_map = self._pcell.p2p_map
@@ -71,13 +71,13 @@ class DerivativeOfDynamicalMatrix(object):
             [p2p_map[self._s2p_map[i]] for i in range(len(self._s2p_map))],
             dtype=dtype)
 
-        # svecs, multi = self._pcell.get_smallest_vectors()
-        # if self._pcell.store_dense_svecs:
-        #     self._svecs = svecs
-        #     self._multi = multi
-        # else:
-        #     self._svecs, self._multi = sparse_to_dense_svecs(svecs, multi)
-        self._svecs, self._multi = self._pcell.get_smallest_vectors()
+        svecs, multi = self._pcell.get_smallest_vectors()
+        if self._pcell.store_dense_svecs:
+            self._svecs = svecs
+            self._multi = multi
+        else:
+            self._svecs, self._multi = sparse_to_dense_svecs(svecs, multi)
+        # self._svecs, self._multi = self._pcell.get_smallest_vectors()
 
         self._ddm = None
 
@@ -165,7 +165,7 @@ class DerivativeOfDynamicalMatrix(object):
                                      self._pcell.masses,
                                      self._s2pp_map,
                                      np.arange(len(self._p2s_map),
-                                               dtype='intc'),
+                                               dtype='int_'),
                                      nac_factor,
                                      born,
                                      dielectric,

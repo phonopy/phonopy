@@ -788,94 +788,94 @@ static PyObject * py_get_recip_dipole_dipole_q0(PyObject *self, PyObject *args)
 
 static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args)
 {
-  PyArrayObject* derivative_dynmat;
+  PyArrayObject* py_derivative_dynmat;
   PyArrayObject* py_force_constants;
-  PyArrayObject* r_vector;
-  PyArrayObject* lattice;
-  PyArrayObject* q_vector;
+  PyArrayObject* py_svecs;
+  PyArrayObject* py_lattice;
+  PyArrayObject* py_q_vector;
   PyArrayObject* py_multi;
   PyArrayObject* py_masses;
   PyArrayObject* py_s2p_map;
   PyArrayObject* py_p2s_map;
   PyArrayObject* py_born;
-  PyArrayObject* dielectric;
-  PyArrayObject* q_direction;
+  PyArrayObject* py_dielectric;
+  PyArrayObject* py_q_direction;
   double nac_factor;
 
   double* ddm;
   double* fc;
-  double* q;
+  double* q_vector;
   double* lat;
-  double* r;
-  double* m;
-  int* multi;
-  int* s2p_map;
-  int* p2s_map;
-  int num_patom;
-  int num_satom;
+  double (*svecs)[3];
+  double* masses;
+  long (*multi)[2];
+  long* s2p_map;
+  long* p2s_map;
+  long num_patom;
+  long num_satom;
 
-  double *z;
+  double *born;
   double *epsilon;
   double *q_dir;
 
   if (!PyArg_ParseTuple(args, "OOOOOOOOOdOOO",
-                        &derivative_dynmat,
+                        &py_derivative_dynmat,
                         &py_force_constants,
-                        &q_vector,
-                        &lattice, /* column vectors */
-                        &r_vector,
+                        &py_q_vector,
+                        &py_lattice, /* column vectors */
+                        &py_svecs,
                         &py_multi,
                         &py_masses,
                         &py_s2p_map,
                         &py_p2s_map,
                         &nac_factor,
                         &py_born,
-                        &dielectric,
-                        &q_direction)) {
+                        &py_dielectric,
+                        &py_q_direction)) {
     return NULL;
   }
 
-  ddm = (double*)PyArray_DATA(derivative_dynmat);
+  ddm = (double*)PyArray_DATA(py_derivative_dynmat);
   fc = (double*)PyArray_DATA(py_force_constants);
-  q = (double*)PyArray_DATA(q_vector);
-  lat = (double*)PyArray_DATA(lattice);
-  r = (double*)PyArray_DATA(r_vector);
-  m = (double*)PyArray_DATA(py_masses);
-  multi = (int*)PyArray_DATA(py_multi);
-  s2p_map = (int*)PyArray_DATA(py_s2p_map);
-  p2s_map = (int*)PyArray_DATA(py_p2s_map);
+  q_vector = (double*)PyArray_DATA(py_q_vector);
+  lat = (double*)PyArray_DATA(py_lattice);
+  svecs = (double(*)[3])PyArray_DATA(py_svecs);
+  masses = (double*)PyArray_DATA(py_masses);
+  multi = (long(*)[2])PyArray_DATA(py_multi);
+  s2p_map = (long*)PyArray_DATA(py_s2p_map);
+  p2s_map = (long*)PyArray_DATA(py_p2s_map);
   num_patom = PyArray_DIMS(py_p2s_map)[0];
   num_satom = PyArray_DIMS(py_s2p_map)[0];
 
   if ((PyObject*)py_born == Py_None) {
-    z = NULL;
+    born = NULL;
   } else {
-    z = (double*)PyArray_DATA(py_born);
+    born = (double*)PyArray_DATA(py_born);
   }
-  if ((PyObject*)dielectric == Py_None) {
+  if ((PyObject*)py_dielectric == Py_None) {
     epsilon = NULL;
   } else {
-    epsilon = (double*)PyArray_DATA(dielectric);
+    epsilon = (double*)PyArray_DATA(py_dielectric);
   }
-  if ((PyObject*)q_direction == Py_None) {
+  if ((PyObject*)py_q_direction == Py_None) {
     q_dir = NULL;
   } else {
-    q_dir = (double*)PyArray_DATA(q_direction);
+    q_dir = (double*)PyArray_DATA(py_q_direction);
   }
 
   phpy_get_derivative_dynmat_at_q(ddm,
                                   num_patom,
                                   num_satom,
                                   fc,
-                                  q,
+                                  q_vector,
                                   lat,
-                                  r,
+                                  svecs,
                                   multi,
-                                  m,
+                                  masses,
                                   s2p_map,
                                   p2s_map,
                                   nac_factor,
-                                  z,
+                                  born,
                                   epsilon,
                                   q_dir);
 
