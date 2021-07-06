@@ -282,10 +282,10 @@ class DynmatToForceConstants(object):
         elif dynamical_matrices is not None:
             self.dynamical_matrices = dynamical_matrices
 
-    def run(self):
+    def run(self, lang='C'):
         """Run."""
         self._fc = np.zeros(self._fc_shape, dtype='double', order='C')
-        self._inverse_transformation()
+        self._inverse_transformation(lang=lang)
 
     @property
     def force_constants(self):
@@ -377,11 +377,11 @@ class DynmatToForceConstants(object):
                              eigvecs.T.conj()))
         self.dynamical_matrices = dm
 
-    def _inverse_transformation(self):
-        try:
+    def _inverse_transformation(self, lang='C'):
+        if lang == 'C':
             import phonopy._phonopy as phonoc
             self._c_inverse_transformation()
-        except ImportError:
+        else:
             self._py_inverse_transformation()
 
         if self._fc.shape[0] == self._fc.shape[1]:
@@ -428,8 +428,8 @@ class DynmatToForceConstants(object):
                     self._fc[p_i, s_j] = fc_elem
 
     def _sum_q(self, p_i, s_j, p_j):
-        multi = self._multi[s_j, p_i]
-        pos = self._svecs[s_j, p_i, :multi]
+        multi, adrs = self._multi[s_j, p_i]
+        pos = self._svecs[adrs:(adrs + multi)]
         sum_q = np.zeros((3, 3), dtype=self._dtype_complex, order='C')
         phases = -2j * np.pi * np.dot(self._commensurate_points, pos.T)
         phase_factors = np.exp(phases).sum(axis=1) / multi
