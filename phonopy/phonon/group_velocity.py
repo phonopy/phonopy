@@ -215,10 +215,10 @@ class GroupVelocity(object):
         """Symmetrize obtained group velocities using site symmetries."""
 
         rotations = []
-        for r in self._symmetry.get_reciprocal_operations():
+        for r in self._symmetry.reciprocal_operations:
             q_in_BZ = q - np.rint(q)
             diff = q_in_BZ - np.dot(r, q_in_BZ)
-            if (np.abs(diff) < self._symmetry.get_symmetry_tolerance()).all():
+            if (np.abs(diff) < self._symmetry.tolerance).all():
                 rotations.append(r)
 
         gv_sym = np.zeros_like(gv)
