@@ -447,7 +447,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         """Return Born effective charge."""
         warnings.warn(
             "DynamicalMatrixNAC.get_born_effective_charges() is deprecated."
-            "Use DynamicalMatrixNAC.born_effective_charges attribute.",
+            "Use DynamicalMatrixNAC.born attribute.",
             DeprecationWarning)
         return self.born
 
