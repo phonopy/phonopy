@@ -535,7 +535,7 @@ class Primitive(PhonopyAtoms):
     def get_smallest_vectors(self):
         """Return shortest vectors and multiplicities.
 
-        See the docstring of `ShortestPairs`.
+        See the docstring of `Primitive_get_smallest_vectors()`.
 
         """
         return self._smallest_vectors, self._multiplicity
@@ -918,14 +918,7 @@ class ShortestPairs(object):
     Attributes
     ----------
     shortest_vectors : ndarray
-        Shortest vectors in supercell coordinates. The 27 in shape is the
-        possible maximum number of elements.
-        dtype='double'
-        shape=(size_super, size_prim, 27, 3)
     multiplicities : ndarray
-        Number of equidistance shortest vectors
-        dtype='intc'
-        shape=(size_super, size_prim)
 
     Note
     ----
@@ -984,12 +977,22 @@ class ShortestPairs(object):
 
     @property
     def shortest_vectors(self):
-        """Return shortest_vectors."""
+        """Return shortest_vectors.
+
+        See details in `ShortestPairs_run_sparse()` (`store_dense_svecs=True`)
+        or `ShortestPairs._run_dense()` (`store_dense_svecs=False`).
+
+        """
         return self._smallest_vectors
 
     @property
     def multiplicities(self):
-        """Return multiplicities."""
+        """Return multiplicities.
+
+        See details in `ShortestPairs_run_sparse()` (`store_dense_svecs=True`)
+        or `ShortestPairs._run_dense()` (`store_dense_svecs=False`).
+
+        """
         return self._multiplicities
 
     def _run_dense(self):
