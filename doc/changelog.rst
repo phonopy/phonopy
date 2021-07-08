@@ -3,6 +3,12 @@
 Change Log
 ==========
 
+Jul-8-2021: Version 2.11.0
+---------------------------
+* Maintenance release. C-methods were changed to use dense shortest vectors
+  (``Primitive.get_smallest_vectors()``) format. But the front end still
+  uses current format ``shape=(size_super, size_prim, 27, 3)``.
+
 Jun-10-2021: Version 2.10.0
 ---------------------------
 * Fix the contents of ``entropy-volume.dat`` and ``Cv-volume.dat`` in QHA

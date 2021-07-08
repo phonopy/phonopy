@@ -1,3 +1,4 @@
+"""Phonopy input and command option tools."""
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -37,6 +38,7 @@ import numpy as np
 
 
 def fracval(frac):
+    """Return floating point value from rational."""
     if frac.find('/') == -1:
         return float(frac)
     else:
@@ -45,7 +47,7 @@ def fracval(frac):
 
 
 class Settings(object):
-    """Phonopy settings container
+    """Phonopy settings container.
 
     This works almost like a dictionary.
     Method names without 'set_' and 'get_' and keys of self._v have to be same.
@@ -77,7 +79,6 @@ class Settings(object):
         'is_eigenvectors': False,
         'is_mesh_symmetry': True,
         'is_nac': False,
-        'is_rotational_invariance': False,
         'is_plusminus_displacement': 'auto',
         'is_symmetry': True,
         'is_tetrahedron_method': True,
@@ -102,12 +103,20 @@ class Settings(object):
     }
 
     def __init__(self, default=None):
+        """Init method.
+
+        Note
+        ----
+        self.default is used in inherited classes.
+
+        """
         self.default = Settings._default.copy()
         if default is not None:
             self.default.update(default)
         self._v = self.default.copy()
 
     def __getattr__(self, attr):
+        """Return dict value of key attr."""
         return self._v[attr]
 
     def set_band_paths(self, val):
@@ -185,9 +194,6 @@ class Settings(object):
     def set_is_plusminus_displacement(self, val):
         self._v['is_plusminus_displacement'] = val
 
-    def set_is_rotational_invariance(self, val):
-        self._v['is_rotational_invariance'] = val
-
     def set_is_tetrahedron_method(self, val):
         self._v['is_tetrahedron_method'] = val
 
@@ -251,7 +257,10 @@ class Settings(object):
 
 # Parse phonopy setting filen
 class ConfParser(object):
+    """Phonopy conf file parser."""
+
     def __init__(self, filename=None, args=None):
+        """Init method."""
         self._confs = {}
         self._parameters = {}
         self._args = args
@@ -670,12 +679,6 @@ class ConfParser(object):
                 elif confs['mesh_symmetry'].lower() == '.true.':
                     self.set_parameter('is_mesh_symmetry', True)
 
-            if conf_key == 'rotational':
-                if confs['rotational'].lower() == '.false.':
-                    self.set_parameter('is_rotational', False)
-                elif confs['rotational'].lower() == '.true.':
-                    self.set_parameter('is_rotational', True)
-
             if conf_key == 'calculator':
                 self.set_parameter('calculator', confs['calculator'])
 
@@ -919,7 +922,8 @@ class ConfParser(object):
 
         # Number of sampling points for spectram drawing
         if 'num_frequency_points' in params:
-            self._settings.set_num_frequency_points(params['num_frequency_points'])
+            self._settings.set_num_frequency_points(
+                params['num_frequency_points'])
 
         # Group velocity finite difference
         if 'gv_delta_q' in params:
@@ -940,10 +944,6 @@ class ConfParser(object):
         # Non analytical term correction?
         if 'is_nac' in params:
             self._settings.set_is_nac(params['is_nac'])
-
-        # Is rotational invariance ?
-        if 'is_rotational' in params:
-            self._settings.set_is_rotational_invariance(params['is_rotational'])
 
         # Is crystal symmetry searched?
         if 'is_symmetry' in params:
@@ -1015,21 +1015,6 @@ class ConfParser(object):
             self._settings.set_temperature_step(params['tstep'])
 
         # Band paths
-        # BAND = 0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5
-        # [array([[ 0. ,  0. ,  0. ],
-        #         [ 0.5,  0. ,  0. ],
-        #         [ 0.5,  0.5,  0. ],
-        #         [ 0. ,  0. ,  0. ],
-        #         [ 0.5,  0.5,  0.5]])]
-        #
-        # BAND = 0.0 0.0 0.0  0.5 0.0 0.0, 0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5
-        # [array([[ 0. ,  0. ,  0. ],
-        #         [ 0.5,  0. ,  0. ]]),
-        #  array([[ 0.5,  0.5,  0. ],
-        #         [ 0. ,  0. ,  0. ],
-        #         [ 0.5,  0.5,  0.5]])]
-        # or
-        # BAND = AUTO
         if 'band_paths' in params:
             self._settings.set_band_paths(params['band_paths'])
 
@@ -1114,6 +1099,7 @@ class PhonopySettings(Settings):
         'run_mode': None,
         'save_params': False,
         'show_irreps': False,
+        'store_dense_svecs': False,
         'thermal_atom_pairs': None,
         'thermal_displacement_matrix_temperatue': None,
         'write_dynamical_matrices': False,
@@ -1292,6 +1278,9 @@ class PhonopySettings(Settings):
     def set_show_irreps(self, val):
         self._v['show_irreps'] = val
 
+    def set_store_dense_svecs(self, val):
+        self._v['store_dense_svecs'] = val
+
     def set_write_dynamical_matrices(self, val):
         self._v['write_dynamical_matrices'] = val
 
@@ -1309,12 +1298,19 @@ class PhonopySettings(Settings):
 
 
 class PhonopyConfParser(ConfParser):
-    def __init__(self, filename=None, args=None, default_settings=None):
-        # This is fragile implementation.
-        # Remember that options have to be activated only
-        # when it changes the default value, i.e.,
-        # _read_options has to be written in this way.
+    """Phonopy conf parser."""
 
+    def __init__(self, filename=None, args=None, default_settings=None):
+        """Init method.
+
+        Note
+        ----
+        This implementation is fragile.
+        Remember that options have to be activated only
+        when it changes the default value, i.e.,
+        _read_options has to be written in this way.
+
+        """
         self._settings = PhonopySettings(default=default_settings)
         confs = {}
         if filename is not None:
@@ -1523,17 +1519,6 @@ class PhonopyConfParser(ConfParser):
                     seed >= 0 and seed < 2 ** 32):
                     self._confs['random_seed'] = seed
 
-        # Overwrite
-        if 'is_check_symmetry' in arg_list:
-            if self._args.is_check_symmetry:
-                # Dummy 'dim' setting for sym-check
-                self._confs['dim'] = '1 1 1'
-
-        if 'lapack_solver' in arg_list:
-            if self._args.lapack_solver:
-                self._confs['lapack_solver'] = '.true.'
-
-        # Select yaml summary contents
         if 'include_fc' in arg_list:
             if self._args.include_fc:
                 self._confs['include_fc'] = '.true.'
@@ -1557,6 +1542,20 @@ class PhonopyConfParser(ConfParser):
         if 'include_all' in arg_list:
             if self._args.include_all:
                 self._confs['include_all'] = '.true.'
+
+        if 'store_dense_svecs' in arg_list:
+            if self._args.store_dense_svecs:
+                self._confs['store_dense_svecs'] = '.true.'
+
+        if 'lapack_solver' in arg_list:
+            if self._args.lapack_solver:
+                self._confs['lapack_solver'] = '.true.'
+
+        # Overwrite
+        if 'is_check_symmetry' in arg_list:
+            if self._args.is_check_symmetry:
+                # Dummy 'dim' setting for sym-check
+                self._confs['dim'] = '1 1 1'
 
     def _parse_conf(self):
         ConfParser.parse_conf(self)
@@ -1899,6 +1898,11 @@ class PhonopyConfParser(ConfParser):
                 elif confs['include_all'].lower() == '.false.':
                     self.set_parameter('include_all', False)
 
+            # Pair shortest vectors in supercell are stored in dense format.
+            if conf_key == 'store_dense_svecs':
+                if confs['store_dense_svecs'].lower() == '.true.':
+                    self.set_parameter('store_dense_svecs', True)
+
     def _parse_conf_modulation(self, conf_modulation):
         modulation = {}
         modulation['dimension'] = [1, 1, 1]
@@ -2230,6 +2234,10 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_include_force_sets(True)
             self._settings.set_include_nac_params(True)
             self._settings.set_include_displacements(True)
+
+        # Pair shortest vectors in supercell are stored in dense format.
+        if 'store_dense_svecs' in params:
+            self._settings.set_store_dense_svecs(params['store_dense_svecs'])
 
         # ***********************************************************
         # This has to come last in this method to overwrite run_mode.

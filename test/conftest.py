@@ -55,6 +55,29 @@ def ph_nacl_nonac():
 
 
 @pytest.fixture(scope='session')
+def ph_nacl_nonac_compact_fc():
+    yaml_filename = os.path.join(current_dir, "phonopy_disp_NaCl.yaml")
+    force_sets_filename = os.path.join(current_dir, "FORCE_SETS_NaCl")
+    return phonopy.load(yaml_filename,
+                        force_sets_filename=force_sets_filename,
+                        is_nac=False,
+                        is_compact_fc=True,
+                        log_level=1, produce_fc=True)
+
+
+@pytest.fixture(scope='session')
+def ph_nacl_nonac_dense_svecs():
+    yaml_filename = os.path.join(current_dir, "phonopy_disp_NaCl.yaml")
+    force_sets_filename = os.path.join(current_dir, "FORCE_SETS_NaCl")
+    return phonopy.load(yaml_filename,
+                        force_sets_filename=force_sets_filename,
+                        is_nac=False,
+                        is_compact_fc=True,
+                        store_dense_svecs=True,
+                        log_level=1, produce_fc=True)
+
+
+@pytest.fixture(scope='session')
 def ph_sno2():
     yaml_filename = os.path.join(current_dir, "phonopy_disp_SnO2.yaml")
     force_sets_filename = os.path.join(current_dir, "FORCE_SETS_SnO2")

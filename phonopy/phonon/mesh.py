@@ -84,11 +84,11 @@ class MeshBase(object):
         self._mesh = np.array(mesh, dtype='intc')
         self._with_eigenvectors = with_eigenvectors
         self._factor = factor
-        self._cell = dynamical_matrix.get_primitive()
+        self._cell = dynamical_matrix.primitive
         self._dynamical_matrix = dynamical_matrix
 
         self._gp = GridPoints(self._mesh,
-                              np.linalg.inv(self._cell.get_cell()),
+                              np.linalg.inv(self._cell.cell),
                               q_mesh_shift=shift,
                               is_gamma_center=is_gamma_center,
                               is_time_reversal=(is_time_reversal and

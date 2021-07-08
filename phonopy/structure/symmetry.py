@@ -155,14 +155,20 @@ class Symmetry(object):
 
     @property
     def tolerance(self):
+        """Return symmetry tolerance."""
         return self._symprec
 
     def get_symmetry_tolerance(self):
+        """Return symmetry tolerance."""
+        warnings.warn("Symmetry.get_symmetry_tolerance() is deprecated."
+                      "Use Symmetry.tolerance attribute instead.",
+                      DeprecationWarning)
         return self.tolerance
 
     @property
     def reciprocal_operations(self):
-        """
+        """Return reciprocal space point group operations.
+
         Definition of operation:
         q' = Rq
 
@@ -171,13 +177,28 @@ class Symmetry(object):
         return self._reciprocal_operations
 
     def get_reciprocal_operations(self):
+        """Return reciprocal space point group operations."""
+        warnings.warn("Symmetry.get_reciprocal_operations() is deprecated."
+                      "Use Symmetry.reciprocal_operations attribute instead.",
+                      DeprecationWarning)
         return self.reciprocal_operations
 
     @property
     def atomic_permutations(self):
+        """Return atomic index permutations by space group operations.
+
+        shape=(operations, positions)
+
+        See compute_all_sg_permutations.
+
+        """
         return self._atomic_permutations
 
     def get_atomic_permutations(self):
+        """Return atomic index permutations by space group operations."""
+        warnings.warn("Symmetry.get_atomic_permutations() is deprecated."
+                      "Use Symmetry.atomic_permutations attribute instead.",
+                      DeprecationWarning)
         return self.atomic_permutations
 
     def _set_atomic_permutations(self):

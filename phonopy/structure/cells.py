@@ -1,3 +1,4 @@
+"""Primitive cell and supercell, and related utilities."""
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -32,15 +33,16 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
 import numpy as np
 from distutils.version import StrictVersion
 import spglib
-import phonopy
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.snf import SNF3x3
 
 
 def get_supercell(unitcell, supercell_matrix, is_old_style=True, symprec=1e-5):
+    """Create supercell."""
     return Supercell(unitcell,
                      supercell_matrix,
                      is_old_style=is_old_style,
@@ -50,14 +52,18 @@ def get_supercell(unitcell, supercell_matrix, is_old_style=True, symprec=1e-5):
 def get_primitive(supercell,
                   primitive_frame,
                   symprec=1e-5,
+                  store_dense_svecs=False,
                   positions_to_reorder=None):
+    """Create primitive cell."""
     return Primitive(supercell,
                      primitive_frame,
                      symprec=symprec,
+                     store_dense_svecs=store_dense_svecs,
                      positions_to_reorder=positions_to_reorder)
 
 
 def print_cell(cell, mapping=None, stars=None):
+    """Show cell information."""
     symbols = cell.symbols
     masses = cell.masses
     magmoms = cell.magnetic_moments
@@ -89,6 +95,7 @@ def print_cell(cell, mapping=None, stars=None):
 
 
 def isclose(a, b, rtol=1e-5, atol=1e-8):
+    """Check equivalence of two cells."""
     if len(a) != len(b):
         return False
 
@@ -108,19 +115,27 @@ def isclose(a, b, rtol=1e-5, atol=1e-8):
 
 
 class Supercell(PhonopyAtoms):
-    """Build supercell from supercell matrix and unit cell"""
+    """Build supercell from supercell matrix and unit cell.
+
+    Attributes
+    ----------
+    supercell_matrix : ndarray
+    s2u_map : ndarray
+    u2s_map : ndarray
+    u2u_map : dicst
+
+    """
 
     def __init__(self,
                  unitcell,
                  supercell_matrix,
                  is_old_style=True,
                  symprec=1e-5):
-        """
+        """Init method.
 
         Note
         ----
-
-        ``is_old_style=True`` invokes the following algorithm.
+        `is_old_style=True` invokes the following algorithm.
         In this function, unit cell is considered
           [1,0,0]
           [0,1,0]
@@ -133,10 +148,10 @@ class Supercell(PhonopyAtoms):
         First, create supercell with surrounding simple lattice.
         Second, trim the surrounding supercell with the target lattice.
 
-        ``is_old_style=False`` calls the Smith normal form.
+        `is_old_style=False` calls the Smith normal form.
 
         These two algorithm may order atoms in different ways. So for the
-        backward compatibitily, ``is_old_style=True`` is the default
+        backward compatibility, `is_old_style=True` is the default
         option. However the Smith normal form shows far better performance
         in case of very large supercell multiplicities.
 
@@ -155,7 +170,6 @@ class Supercell(PhonopyAtoms):
             values is 1e-5.
 
         """
-
         self._is_old_style = is_old_style
         self._s2u_map = None
         self._u2s_map = None
@@ -163,28 +177,91 @@ class Supercell(PhonopyAtoms):
         self._supercell_matrix = np.array(supercell_matrix, dtype='intc')
         self._create_supercell(unitcell, symprec)
 
-    def get_supercell_matrix(self):
+    @property
+    def supercell_matrix(self):
+        """Return supercell_matrix.
+
+        Returns
+        -------
+        ndarray
+            Supercell matrix.
+            shape=(3, 3), dtype='intc'
+
+        """
         return self._supercell_matrix
+
+    def get_supercell_matrix(self):
+        """Return supercell_matrix."""
+        warnings.warn("Supercell.get_supercell_matrix() is deprecated."
+                      "Use Supercell.supercell_matrix attribute.",
+                      DeprecationWarning)
+        return self.supercell_matrix
 
     @property
     def s2u_map(self):
+        """Return atomic index mapping table from supercell to unit cell.
+
+        Each array index and the stored value correspond to the supercell atom
+        and unit cell atom in supercell atomic indices in supercell atom index.
+
+        Returns
+        -------
+        ndarray
+            shape=(num_atoms_in_supercell, ), dtype='int_'
+
+        """
         return self._s2u_map
 
     def get_supercell_to_unitcell_map(self):
+        """Return atomic index mapping table from supercell to unit cell."""
+        warnings.warn(
+            "Supercell.get_supercell_to_unitcell_map() is deprecated."
+            "Use Supercell.s2u_map attribute.",
+            DeprecationWarning)
         return self.s2u_map
 
     @property
     def u2s_map(self):
+        """Return atomic index mapping table from unit cell to supercell.
+
+        Each array index and the stored value correspond to the unit cell atom
+        and supecell atom in supercell atom index.
+
+        Returns
+        -------
+        ndarray
+            shape=(num_atoms_in_unitcell, ), dtype='int_'
+
+        """
         return self._u2s_map
 
     def get_unitcell_to_supercell_map(self):
+        """Return atomic index mapping table from unit cell to supercell."""
+        warnings.warn(
+            "Supercell.get_unitcell_to_supercell_map() is deprecated."
+            "Use Supercell.u2s_map attribute.",
+            DeprecationWarning)
         return self.u2s_map
 
     @property
     def u2u_map(self):
+        """Return atomic index mapping table from unit cell to unit cell.
+
+        Returns
+        -------
+        dict
+            Each key and value correspond to supercell atom index and unit cell
+            atom index to represent an atom in unit cell.
+
+        """
         return self._u2u_map
 
     def get_unitcell_to_unitcell_map(self):
+        """Return atomic index mapping table from unit cell to unit cell."""
+        warnings.warn(
+            "Supercell.get_unitcell_to_unitcell_map() is deprecated."
+            "Use Supercell.u2s_map attribute.",
+            DeprecationWarning)
         return self.u2u_map
 
     def _create_supercell(self, unitcell, symprec):
@@ -232,9 +309,9 @@ class Supercell(PhonopyAtoms):
                 scaled_positions=supercell.scaled_positions,
                 cell=supercell.cell,
                 pbc=True)
-            self._u2s_map = np.arange(num_uatom) * N
+            self._u2s_map = np.array(np.arange(num_uatom) * N, dtype='int_')
             self._u2u_map = {j: i for i, j in enumerate(self._u2s_map)}
-            self._s2u_map = np.array(u2sur_map)[sur2s_map] * N
+            self._s2u_map = np.array(u2sur_map[sur2s_map] * N, dtype='int_')
 
     def _get_simple_supercell(self, unitcell, multi, P):
         if self._is_old_style:
@@ -315,38 +392,16 @@ class Supercell(PhonopyAtoms):
 
 
 class Primitive(PhonopyAtoms):
-    """Primitive cell
+    """Build primitive cell.
 
     Attributes
     ----------
     primitive_matrix : ndarray
-        Transformation matrix from supercell to primitive cell
-        dtype='double'
-        shape=(3,3)
     p2s_map : ndarray
-        Mapping table from atoms in primitive cell to those in supercell.
-        Supercell atomic indices are used.
-        dtype='intc'
-        shape=(num_atoms_in_primitive_cell,)
     s2p_map : ndarray
-        Mapping table from atoms in supercell cell to those in primitive cell.
-        Supercell atomic indices are used.
-        dtype='intc'
-        shape=(num_atoms_in_supercell,)
     p2p_map : dict
-        Mapping of primitive cell atoms in supercell to those in primitive
-        cell.
-        ex. {0: 0, 4: 1}
     atomic_permutations : ndarray
-        Atomic position permutation by pure translations is represented by
-        changes of indices.
-        dtype='intc'
-        shape=(num_trans, num_atoms_in_supercell)
-        ex.       supercell atomic indices
-                 [[0, 1, 2, 3, 4, 5, 6, 7],
-           trans  [1, 2, 3, 0, 5, 6, 7, 4],
-          indices [2, 3, 0, 1, 6, 7, 4, 5],
-                  [3, 0, 1, 2, 7, 4, 5, 6]]
+    store_dense_svecs : bool
 
     """
 
@@ -354,8 +409,9 @@ class Primitive(PhonopyAtoms):
                  supercell,
                  primitive_matrix,
                  symprec=1e-5,
+                 store_dense_svecs=False,
                  positions_to_reorder=None):
-        """
+        """Init method.
 
         Parameters
         ----------
@@ -366,20 +422,21 @@ class Primitive(PhonopyAtoms):
             such as:
                np.dot(primitive_matrix.T, supercell.cell)
             shape=(3,3)
-        symprec : float, optional
-            Tolerance to find overlapping atoms in primitive cell. The default
-            values is 1e-5.
-        positions_to_reorder : array_like
+        symprec : float, optional, default=1e-5
+            Tolerance to find overlapping atoms in primitive cell.
+        store_dense_svecs : bool, optional, default=False
+            Shortest vectors are stored in a dense array. See `ShortestPairs`.
+        positions_to_reorder : array_like, optional, default=None
             If atomic positions in a created primitive cell is known and
             the order of atoms is expected to be sure, these positions with
             the specific order is used after position matching between
             this data and generated positions.
 
         """
-
         self._primitive_matrix = np.array(
             primitive_matrix, dtype='double', order='C')
         self._symprec = symprec
+        self._store_dense_svecs = store_dense_svecs
         self._p2s_map = None
         self._s2p_map = None
         self._p2p_map = None
@@ -390,41 +447,130 @@ class Primitive(PhonopyAtoms):
 
     @property
     def primitive_matrix(self):
+        """Return primitive_matrix.
+
+        Returns
+        -------
+        ndarray
+            Transformation matrix from supercell to primitive cell
+            dtype='double'
+            shape=(3,3)
+
+        """
         return self._primitive_matrix
 
     def get_primitive_matrix(self):
+        """Return primitive_matrix."""
+        warnings.warn("Primitive.get_primitive_matrix() is deprecated."
+                      "Use Primitive.primitive_matrix attribute.",
+                      DeprecationWarning)
         return self.primitive_matrix
 
     @property
     def p2s_map(self):
+        """Return mapping table of atoms from primitive cell to supercell.
+
+        Returns
+        -------
+        ndarray
+            Mapping table from atoms in primitive cell to those in supercell.
+            Supercell atomic indices are used.
+            shape=(num_atoms_in_primitive_cell,), dtype='intc'
+
+        """
         return self._p2s_map
 
     def get_primitive_to_supercell_map(self):
+        """Return mapping table of atoms from primitive cell to supercell."""
+        warnings.warn(
+            "Primitive.get_primitive_to_supercell_map() is deprecated."
+            "Use Primitive.p2s_map attribute.",
+            DeprecationWarning)
         return self.p2s_map
 
     @property
     def s2p_map(self):
+        """Return mapping table of atoms from supercell to primitive cells.
+
+        Returns
+        -------
+        ndarray
+            Mapping table from atoms in supercell cell to those in primitive
+            cell.  Supercell atomic indices are used.
+            shape=(num_atoms_in_supercell, ), dtype='intc'
+
+        """
         return self._s2p_map
 
     def get_supercell_to_primitive_map(self):
+        """Return mapping table of atoms from supercell to primitive cells."""
+        warnings.warn(
+            "Primitive.get_supercell_to_primitive_map() is deprecated."
+            "Use Primitive.s2p_map attribute.",
+            DeprecationWarning)
         return self.s2p_map
 
     @property
     def p2p_map(self):
+        """Return mapping table of indices in supercell and primitive cell.
+
+        Returns
+        -------
+        dict
+            Mapping of primitive cell atoms in supercell to those in primitive.
+            cell.
+            ex. {0: 0, 4: 1}
+
+        """
         return self._p2p_map
 
     def get_primitive_to_primitive_map(self):
+        """Return mapping table of indices in supercell and primitive cell."""
+        warnings.warn(
+            "Primitive.get_primitive_to_primitive_map() is deprecated."
+            "Use Primitive.p2p_map attribute.",
+            DeprecationWarning)
         return self.p2p_map
 
     def get_smallest_vectors(self):
+        """Return shortest vectors and multiplicities.
+
+        See the docstring of `Primitive_get_smallest_vectors()`.
+
+        """
         return self._smallest_vectors, self._multiplicity
 
     @property
     def atomic_permutations(self):
+        """Return atomic index permutations by pure translations.
+
+        Returns
+        -------
+        ndarray
+            Atomic position permutation by pure translations is represented by
+            changes of indices.
+            dtype='intc'
+            shape=(num_trans, num_atoms_in_supercell)
+            ex.       supercell atomic indices
+                     [[0, 1, 2, 3, 4, 5, 6, 7],
+               trans  [1, 2, 3, 0, 5, 6, 7, 4],
+              indices [2, 3, 0, 1, 6, 7, 4, 5],
+                      [3, 0, 1, 2, 7, 4, 5, 6]]
+
+        """
         return self._atomic_permutations
 
     def get_atomic_permutations(self):
+        """Return atomic index permutations by pure translations."""
+        warnings.warn("Primitive.get_atomic_permutations() is deprecated."
+                      "Use Primitive.atomic_permutations attribute.",
+                      DeprecationWarning)
         return self.atomic_permutations
+
+    @property
+    def store_dense_svecs(self):
+        """Return whether shortest vectors are stored in dense array or not."""
+        return self._store_dense_svecs
 
     def _run(self, supercell, positions_to_reorder=None):
         self._p2s_map = self._create_primitive_cell(
@@ -480,21 +626,22 @@ class Primitive(PhonopyAtoms):
         atomic_permutations = compute_all_sg_permutations(
             positions,
             rotations,
-           trans,
+            trans,
             np.array(supercell.get_cell().T, dtype='double', order='C'),
             self._symprec)
 
         return atomic_permutations
 
     def _get_smallest_vectors(self, supercell):
-        """Find shortest vectors
+        """Find shortest vectors.
 
-        See the docstring of ``get_smallest_vectors``.
+        See the docstring of `ShortestPairs`.
 
         Note
         ----
-        Returned shortest vectors are transformed in this method
-        to those in the primitive cell coordinates.
+        Returned shortest vectors are transformed to those in the primitive
+        cell coordinates from those in the supercell coordinates in this
+        method.
 
         """
         p2s_map = self._p2s_map
@@ -503,7 +650,10 @@ class Primitive(PhonopyAtoms):
         supercell_bases = supercell.cell
         primitive_bases = self._cell
         svecs, multi = get_smallest_vectors(
-            supercell_bases, supercell_pos, primitive_pos,
+            supercell_bases,
+            supercell_pos,
+            primitive_pos,
+            store_dense_svecs=self._store_dense_svecs,
             symprec=self._symprec)
         trans_mat_float = np.dot(
             supercell_bases, np.linalg.inv(primitive_bases))
@@ -514,29 +664,23 @@ class Primitive(PhonopyAtoms):
 
 
 class TrimmedCell(PhonopyAtoms):
-
-    """Cell after trimming
+    """Trim cell.
 
     Trimmed cell is self.
 
     Attributes
     ----------
     extracted_atoms : ndarray
-        Indices of atomic indices of input cell that are in the trimmed
-        cell.
-        shape=(len(trimmed_cell), ), dtype='intc'
     mapping_table : ndarray
-        The atomic indices of 'extracted_atom's of all atoms in the input
-        cell.
-        shape=(len(cell), ), dtype='intc'
 
     """
+
     def __init__(self,
                  relative_axes,
                  cell,
                  positions_to_reorder=None,
                  symprec=1e-5):
-        """
+        """Init method.
 
         Parameters
         ----------
@@ -556,15 +700,32 @@ class TrimmedCell(PhonopyAtoms):
             Default is 1e-5.
 
         """
-
         self._run(cell, relative_axes, positions_to_reorder, symprec)
 
     @property
     def mapping_table(self):
+        """Return mappping table.
+
+        mapping_table : ndarray
+            The atomic indices of 'extracted_atom's of all atoms in the input
+            cell.
+            shape=(len(cell), ), dtype='intc'
+
+        """
         return self._mapping_table
 
     @property
     def extracted_atoms(self):
+        """Return extracted atoms.
+
+        Returns
+        -------
+        extracted_atoms : ndarray
+            Indices of atomic indices of input cell that are in the trimmed
+            cell.
+            shape=(len(trimmed_cell), ), dtype='intc'
+
+        """
         return self._extracted_atoms
 
     def _run(self, cell, relative_axes, positions_to_reorder, symprec):
@@ -677,8 +838,7 @@ class TrimmedCell(PhonopyAtoms):
                              trimmed_positions,
                              trimmed_lattice,
                              symprec):
-        """Optionally reorder trimmed cell by input primitive cell positions"""
-
+        """Reorder trimmed cell by input primitive cell positions."""
         reorder_indices = []
         for pos in positions:
             diff = trimmed_positions - pos
@@ -691,8 +851,7 @@ class TrimmedCell(PhonopyAtoms):
 
 
 def _trim_cell(relative_axes, cell, symprec=1e-5, positions_to_reorder=None):
-    """Trim overlapping atoms"""
-
+    """Trim overlapping atoms."""
     tcell = TrimmedCell(relative_axes,
                         cell,
                         symprec=symprec,
@@ -708,7 +867,7 @@ def _trim_cell(relative_axes, cell, symprec=1e-5, positions_to_reorder=None):
 def get_reduced_bases(lattice,
                       method='niggli',
                       tolerance=1e-5):
-    """Search kinds of shortest basis vectors
+    """Search kinds of shortest basis vectors.
 
     Parameters
     ----------
@@ -729,7 +888,6 @@ def get_reduced_bases(lattice,
         order='C'
 
     """
-
     if method == 'niggli':
         return spglib.niggli_reduce(lattice, eps=tolerance)
     else:
@@ -739,28 +897,28 @@ def get_reduced_bases(lattice,
 def get_smallest_vectors(supercell_bases,
                          supercell_pos,
                          primitive_pos,
+                         store_dense_svecs=False,
                          symprec=1e-5):
+    """Return shortest vectors and multiplicities.
+
+    See the details at `ShortestPairs`.
+
+    """
     spairs = ShortestPairs(supercell_bases,
                            supercell_pos,
                            primitive_pos,
+                           store_dense_svecs=store_dense_svecs,
                            symprec=symprec)
     return spairs.shortest_vectors, spairs.multiplicities
 
 
 class ShortestPairs(object):
-    """Find shortest atomic pair vectors
+    """Find shortest atomic pair vectors.
 
     Attributes
     ----------
     shortest_vectors : ndarray
-        Shortest vectors in supercell coordinates. The 27 in shape is the
-        possible maximum number of elements.
-        dtype='double'
-        shape=(size_super, size_prim, 27, 3)
     multiplicities : ndarray
-        Number of equidistance shortest vectors
-        dtype='intc'
-        shape=(size_super, size_prim)
 
     Note
     ----
@@ -780,9 +938,9 @@ class ShortestPairs(object):
                  supercell_bases,
                  supercell_pos,
                  primitive_pos,
-                 store_dense_vectors=False,
+                 store_dense_svecs=False,
                  symprec=1e-5):
-        """
+        """Init method.
 
         Parameters
         ----------
@@ -793,23 +951,22 @@ class ShortestPairs(object):
             Atomic positions in fractional coordinates of supercell.
             dtype='double', shape=(size_super, 3)
         primitive_pos : array_like
-            Atomic positions in fractional coordinates of supercell. Note that not
-            in fractional coodinates of primitive cell.
-            dtype='double', shape=(size_prim, 3)
-        store_dense_vectors_: bool, optional
+            Atomic positions in fractional coordinates of supercell. Note that
+            not in fractional coodinates of primitive cell.  dtype='double',
+            shape=(size_prim, 3)
+        store_dense_svecs_: bool, optional
             ``shortest_vectors`` are stored in the dense data structure.
             Default is False.
         symprec : float, optional
             Tolerance to find equal distances of vectors. Default is 1e-5.
 
         """
-
         self._supercell_bases = supercell_bases
         self._supercell_pos = supercell_pos
         self._primitive_pos = primitive_pos
         self._symprec = symprec
 
-        if store_dense_vectors:
+        if store_dense_svecs:
             svecs, multi = self._run_dense()
             self._smallest_vectors = svecs
             self._multiplicities = multi
@@ -820,35 +977,49 @@ class ShortestPairs(object):
 
     @property
     def shortest_vectors(self):
+        """Return shortest_vectors.
+
+        See details in `ShortestPairs_run_sparse()` (`store_dense_svecs=True`)
+        or `ShortestPairs._run_dense()` (`store_dense_svecs=False`).
+
+        """
         return self._smallest_vectors
 
     @property
     def multiplicities(self):
+        """Return multiplicities.
+
+        See details in `ShortestPairs_run_sparse()` (`store_dense_svecs=True`)
+        or `ShortestPairs._run_dense()` (`store_dense_svecs=False`).
+
+        """
         return self._multiplicities
 
     def _run_dense(self):
-        """Find shortest atomic pair vectors
+        """Find shortest atomic pair vectors.
 
         Returns
         -------
         shortest_vectors : ndarray
             Shortest vectors in supercell coordinates.
-            shape=(size_super, size_prim, sum(multiplicities[:, :, 1]),
-            dtype='double'
+            shape=(sum(multiplicities[:, :, 0], 3), dtype='double'
         multiplicities : ndarray
-            Number of equidistance shortest vectors
+            Number of equidistance shortest vectors. The last dimension
+            indicates [0] multipliticy at the pair of atoms in the supercell
+            and primitive cell, and [1] integral of multiplicities to
+            this pair, i.e., which indicates address used in
+            `shortest_vectors`.
             shape=(size_super, size_prim, 2), dtype='int_'
 
         """
-
         (lattice_points,
          supercell_fracs,
          primitive_fracs,
          trans_mat_inv,
          reduced_bases) = self._transform_cell_basis('int_')
 
-        # This shortest_vectors is already used at many locations.
-        # Therefore the constant number 27 = 3*3*3 can not be easily changed.
+        # Phase1 : Set multiplicity.
+        # shortest_vectors is a dummy array.
         shortest_vectors = np.zeros((1, 3), dtype='double', order='C')
         multiplicity = np.zeros(
             (len(supercell_fracs), len(primitive_fracs), 2),
@@ -865,6 +1036,7 @@ class ShortestPairs(object):
             1,
             self._symprec)
 
+        # Phase 2 : Set shortest_vectors.
         shortest_vectors = np.zeros((np.sum(multiplicity[:, :, 0]), 3),
                                     dtype='double', order='C')
         phonoc.gsv_set_smallest_vectors_dense(
@@ -881,7 +1053,7 @@ class ShortestPairs(object):
         return shortest_vectors, multiplicity
 
     def _run_sparse(self):
-        """Find shortest atomic pair vectors
+        """Find shortest atomic pair vectors.
 
         Returns
         -------
@@ -894,7 +1066,6 @@ class ShortestPairs(object):
             shape=(size_super, size_prim), dtype='intc'
 
         """
-
         (lattice_points,
          supercell_fracs,
          primitive_fracs,
@@ -943,16 +1114,16 @@ class ShortestPairs(object):
         primitive_fracs = np.array(primitive_fracs, dtype='double', order='C')
 
         # For each vector, we will need to consider all nearby images in the
-        # reduced bases. The lattice points at which supercell images are searched
-        # are composed by linear combinations of three vectors in
-        # (0, a, b, c, -a-b-c, -a, -b, -c, a+b+c). There are finally 65 lattice
+        # reduced bases. The lattice points at which supercell images are
+        # searched are composed by linear combinations of three vectors in (0,
+        # a, b, c, -a-b-c, -a, -b, -c, a+b+c). There are finally 65 lattice
         # points. There is no proof that this is enough.
         lattice_1D = (-1, 0, 1)
-        lattice_4D = np.array([[i, j, k, l]
+        lattice_4D = np.array([[i, j, k, ll]
                                for i in lattice_1D
                                for j in lattice_1D
                                for k in lattice_1D
-                               for l in lattice_1D],
+                               for ll in lattice_1D],
                               dtype=int_dtype, order='C')
         bases = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [-1, -1, -1]]
         lattice_points = np.dot(lattice_4D, bases)
@@ -961,7 +1132,8 @@ class ShortestPairs(object):
                                       dtype=int_dtype, order='C')
         else:
             unique_indices = np.unique([
-                np.nonzero(np.abs(lattice_points - point).sum(axis=1) == 0)[0][0]
+                np.nonzero(
+                    np.abs(lattice_points - point).sum(axis=1) == 0)[0][0]
                 for point in lattice_points])
             lattice_points = np.array(lattice_points[unique_indices],
                                       dtype=int_dtype, order='C')
@@ -971,6 +1143,21 @@ class ShortestPairs(object):
                 primitive_fracs,
                 trans_mat_inv,
                 reduced_bases)
+
+
+def sparse_to_dense_svecs(svecs, multi):
+    """Convert sparse svecs to dense svecs."""
+    dmulti = np.zeros(multi.shape + (2, ), dtype='int_', order='C')
+    dmulti[:, :, 0] = multi
+    dsvecs = np.zeros((multi.sum(), 3), dtype='double', order='C')
+    adrs = 0
+    for s_i in range(multi.shape[0]):
+        for p_i in range(multi.shape[1]):
+            dmulti[s_i, p_i, 1] = adrs
+            m = multi[s_i, p_i]
+            dsvecs[adrs:(adrs + m)] = svecs[s_i, p_i, :m]
+            adrs += multi[s_i, p_i]
+    return dsvecs, dmulti
 
 
 def compute_all_sg_permutations(positions,  # scaled positions
@@ -1004,7 +1191,6 @@ def compute_all_sg_permutations(positions,  # scaled positions
         shape=(len(operations), len(positions)), dtype='intc', order='C'
 
     """
-
     out = []  # Finally the shape is fixed as (num_sym, num_pos_of_supercell).
     for (sym, t) in zip(rotations, translations):
         rotated_positions = np.dot(positions, sym.T) + t
@@ -1019,7 +1205,7 @@ def compute_permutation_for_rotation(positions_a,  # scaled positions
                                      positions_b,
                                      lattice,  # column vectors
                                      symprec):
-    """Get the overall permutation such that
+    """Get the overall permutation such that.
 
         positions_a[perm[i]] == positions_b[i]   (modulo the lattice)
 
@@ -1051,7 +1237,6 @@ def compute_permutation_for_rotation(positions_a,  # scaled positions
         shape=(len(positions), ), dtype=int
 
     """
-
     # Sort both sides by some measure which is likely to produce a small
     # maximum value of (sorted_rotated_index - sorted_original_index).
     # The C code is optimized for this case, reducing an O(n^2)
@@ -1086,18 +1271,20 @@ def _compute_permutation_c(positions_a,  # scaled positions
                            positions_b,
                            lattice,  # column vectors
                            symprec):
-    """Version of '_compute_permutation_for_rotation' which just directly
+    """Return mapping defined by positions_a[perm[i]] == positions_b[i].
+
+    Version of `_compute_permutation_for_rotation` which just directly
     calls the C function, without any conditioning of the data.
     Skipping the conditioning step makes this EXTREMELY slow on large
     structures.
 
     """
-
     permutation = np.zeros(shape=(len(positions_a),), dtype='intc')
 
     def permutation_error():
-        raise ValueError("Input forces are not enough to calculate force constants, "
-                         "or something wrong (e.g. crystal structure does not match).")
+        raise ValueError(
+            "Input forces are not enough to calculate force constants, "
+            "or something wrong (e.g. crystal structure does not match).")
 
     try:
         import phonopy._phonopy as phonoc
@@ -1147,13 +1334,12 @@ def _compute_permutation_c(positions_a,  # scaled positions
 # Other tiny tools
 #
 def get_angles(lattice):
-    """Returns angles between basis vectors
+    """Return angles between basis vectors.
 
     lattice : Array-like
         (a, b, c)^T, i.e., basis vectors are given as row vectors.
 
     """
-
     a, b, c = get_cell_parameters(lattice)
     alpha = np.arccos(np.vdot(lattice[1], lattice[2]) / b / c) / np.pi * 180
     beta = np.arccos(np.vdot(lattice[2], lattice[0]) / c / a) / np.pi * 180
@@ -1162,19 +1348,17 @@ def get_angles(lattice):
 
 
 def get_cell_parameters(lattice):
-    """Returns lenghts are basis vectors
+    """Return lenghts are basis vectors.
 
     lattice : Array-like
         (a, b, c)^T, i.e., basis vectors are given as row vectors.
 
     """
-
     return np.sqrt(np.dot(lattice, np.transpose(lattice)).diagonal())
 
 
 def get_cell_matrix(a, b, c, alpha, beta, gamma):
-    """Return basis vectors as row vectors"""
-
+    """Return basis vectors as row vectors."""
     alpha *= np.pi / 180
     beta *= np.pi / 180
     gamma *= np.pi / 180
@@ -1192,6 +1376,7 @@ def get_cell_matrix(a, b, c, alpha, beta, gamma):
 
 
 def determinant(m):
+    """Compute determinant."""
     return (m[0][0] * m[1][1] * m[2][2] -
             m[0][0] * m[1][2] * m[2][1] +
             m[0][1] * m[1][2] * m[2][0] -
@@ -1201,6 +1386,7 @@ def determinant(m):
 
 
 def get_primitive_matrix(pmat, symprec=1e-5):
+    """Find primitive matrix from primitive cell."""
     if type(pmat) is str and pmat in ('P', 'F', 'I', 'A', 'C', 'R', 'auto'):
         if pmat == 'auto':
             _pmat = pmat
@@ -1227,6 +1413,7 @@ def get_primitive_matrix(pmat, symprec=1e-5):
 
 
 def get_primitive_matrix_by_centring(centring):
+    """Return primitive matrix corresponding to centring."""
     if centring == 'P':
         return [[1, 0, 0],
                 [0, 1, 0],
@@ -1256,6 +1443,7 @@ def get_primitive_matrix_by_centring(centring):
 
 
 def guess_primitive_matrix(unitcell, symprec=1e-5):
+    """Guess primitive matrix from crystal symmetry."""
     if unitcell.magnetic_moments is not None:
         msg = "Can not be used with the unit cell having magnetic moments."
         raise RuntimeError(msg)
@@ -1270,6 +1458,7 @@ def guess_primitive_matrix(unitcell, symprec=1e-5):
 
 
 def shape_supercell_matrix(smat):
+    """Reshape supercell matrix."""
     if smat is None:
         _smat = np.eye(3, dtype='intc', order='C')
     elif len(np.ravel(smat)) == 3:
@@ -1285,7 +1474,7 @@ def shape_supercell_matrix(smat):
 def estimate_supercell_matrix(spglib_dataset,
                               max_num_atoms=120,
                               max_iter=100):
-    """Estimate supercell matrix from conventional cell
+    """Estimate supercell matrix from conventional cell.
 
     Diagonal supercell matrix is estimated from basis vector lengths
     and maximum number of atoms to be accepted. Supercell is assumed
@@ -1309,7 +1498,6 @@ def estimate_supercell_matrix(spglib_dataset,
         Multiplicities for a, b, c basis vectors, respectively.
 
     """
-
     spg_num = spglib_dataset['number']
     num_atoms = len(spglib_dataset['std_types'])
     lengths = _get_lattice_parameters(spglib_dataset['std_lattice'])
@@ -1331,7 +1519,7 @@ def estimate_supercell_matrix_from_pointgroup(pointgroup_number,
                                               lattice,
                                               max_num_cells=120,
                                               max_iter=100):
-    """Estimate supercell matrix from crystallographic point group
+    """Estimate supercell matrix from crystallographic point group.
 
     Parameters
     ----------
@@ -1349,7 +1537,6 @@ def estimate_supercell_matrix_from_pointgroup(pointgroup_number,
         Multiplicities for a, b, c basis vectors, respectively.
 
     """
-
     abc_lengths = _get_lattice_parameters(lattice.T)
 
     if pointgroup_number <= 8:  # Triclinic, monoclinic, and orthorhombic
@@ -1366,7 +1553,7 @@ def estimate_supercell_matrix_from_pointgroup(pointgroup_number,
 
 
 def _get_lattice_parameters(lattice):
-    """Return basis vector lengths
+    """Return basis vector lengths.
 
     Parameters
     ----------
@@ -1379,7 +1566,6 @@ def _get_lattice_parameters(lattice):
     ndarray, shape=(3,), dtype='double'
 
     """
-
     return np.array(np.sqrt(np.dot(lattice.T, lattice).diagonal()),
                     dtype='double')
 

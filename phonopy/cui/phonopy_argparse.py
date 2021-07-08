@@ -1,3 +1,4 @@
+"""Phonopy command line argument parser."""
 # Copyright (C) 2016 Atsushi Togo
 # All rights reserved.
 #
@@ -36,6 +37,7 @@ import sys
 
 
 def fix_deprecated_option_names(argv):
+    """Replace underscore in command option name by hyphen."""
     deprecated = []
     for i, v in enumerate(argv[1:]):
         if v[0] == '-':
@@ -49,6 +51,7 @@ def fix_deprecated_option_names(argv):
 
 
 def show_deprecated_option_warnings(deprecated):
+    """Show warning when underscore is included in command option name."""
     lines = ["Option names with underscores are deprecated, by which",
              "the underscores are replaced by dashes. Therefore"]
     for tag in deprecated:
@@ -65,6 +68,7 @@ def get_parser(fc_symmetry=False,
                is_nac=False,
                include_born=False,
                load_phonopy_yaml=False):
+    """Return ArgumentParser instance."""
     deprecated = fix_deprecated_option_names(sys.argv)
     import argparse
     from phonopy.interface.calculator import (
@@ -133,6 +137,10 @@ def get_parser(fc_symmetry=False,
         "-d", "--displacement", dest="is_displacement", action="store_true",
         default=None,
         help="Create supercells with displacements")
+    parser.add_argument(
+        "--dense-svecs", dest="store_dense_svecs", action="store_true",
+        default=None,
+        help="Pair shortest vectors in supercell are stored in dense format.")
     parser.add_argument(
         "--dim", nargs='+', dest="supercell_dimension", default=None,
         help="Same behavior as DIM tag")
@@ -245,12 +253,6 @@ def get_parser(fc_symmetry=False,
     parser.add_argument(
         "--include-fs", dest="include_fs", action="store_true", default=None,
         help="Include force sets in phonopy.yaml")
-    # parser.add_argument(
-    #     "--include-bec", dest="include_bec", action="store_true",
-    #     help="Include born effective charge in phonopy.yaml")
-    # parser.add_argument(
-    #     "--include-eps", dest="include_eps", action="store_true",
-    #     help="Include dielectric tensor in phonopy.yaml")
     if not load_phonopy_yaml:
         parser.add_argument(
             "--include-born", "--include-nac-params",
