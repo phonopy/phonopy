@@ -1,4 +1,5 @@
 import os
+import pytest
 from phonopy import Phonopy
 import numpy as np
 from phonopy.units import VaspToTHz
@@ -97,13 +98,20 @@ def test_with_eigenvalues(ph_nacl, ph_nacl_nonac):
                                    atol=1e-5)
 
 
-def test_with_dynamical_matrices(ph_nacl, ph_nacl_nonac):
-    for ph in (ph_nacl, ph_nacl_nonac):
-        d2f = DynmatToForceConstants(ph.primitive, ph.supercell)
-        ph.run_qpoints(d2f.commensurate_points,
-                       with_dynamical_matrices=True)
-        ph_dict = ph.get_qpoints_dict()
-        d2f.dynamical_matrices = ph_dict['dynamical_matrices']
-        d2f.run()
-        np.testing.assert_allclose(ph.force_constants, d2f.force_constants,
-                                   atol=1e-5)
+@pytest.mark.parametrize("is_nac,lang",
+                         [(False, "C"), (True, "C"),
+                          (False, "Py"), (True, "Py")])
+def test_with_dynamical_matrices(ph_nacl, ph_nacl_nonac, is_nac, lang):
+    if is_nac:
+        ph = ph_nacl
+    else:
+        ph = ph_nacl_nonac
+
+    d2f = DynmatToForceConstants(ph.primitive, ph.supercell)
+    ph.run_qpoints(d2f.commensurate_points,
+                   with_dynamical_matrices=True)
+    ph_dict = ph.get_qpoints_dict()
+    d2f.dynamical_matrices = ph_dict['dynamical_matrices']
+    d2f.run(lang=lang)
+    np.testing.assert_allclose(ph.force_constants, d2f.force_constants,
+                               atol=1e-5)

@@ -492,8 +492,8 @@ class BandStructure(object):
 
         """
         self._dynamical_matrix = dynamical_matrix
-        self._cell = dynamical_matrix.get_primitive()
-        self._supercell = dynamical_matrix.get_supercell()
+        self._cell = dynamical_matrix.primitive
+        self._supercell = dynamical_matrix.supercell
         self._factor = factor
         self._with_eigenvectors = with_eigenvectors
         self._is_band_connection = is_band_connection

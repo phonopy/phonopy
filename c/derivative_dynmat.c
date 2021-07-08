@@ -39,7 +39,7 @@
 
 static void get_derivative_nac(double *ddnac,
                                double *dnac,
-                               const int num_patom,
+                               const long num_patom,
                                const double *lattice,
                                const double *mass,
                                const double *q,
@@ -47,39 +47,39 @@ static void get_derivative_nac(double *ddnac,
                                const double *dielectric,
                                const double *q_direction,
                                const double factor);
-static double get_A(const int atom_i,
-                    const int cart_i,
+static double get_A(const long atom_i,
+                    const long cart_i,
                     const double q[3],
                     const double *born);
 static double get_C(const double q[3],
                     const double *dielectric);
-static double get_dA(const int atom_i,
-                     const int cart_i,
-                     const int cart_j,
+static double get_dA(const long atom_i,
+                     const long cart_i,
+                     const long cart_j,
                      const double *born);
-static double get_dC(const int cart_i,
-                     const int cart_j,
-                     const int cart_k,
+static double get_dC(const long cart_i,
+                     const long cart_j,
+                     const long cart_k,
                      const double q[3],
                      const double *dielectric);
 
 void ddm_get_derivative_dynmat_at_q(double *derivative_dynmat,
-                                    const int num_patom,
-                                    const int num_satom,
+                                    const long num_patom,
+                                    const long num_satom,
                                     const double *fc,
                                     const double *q,
                                     const double *lattice, /* column vector */
-                                    const double *r,
-                                    const int *multi,
+                                    const double (*svecs)[3],
+                                    const long (*multi)[2],
                                     const double *mass,
-                                    const int *s2p_map,
-                                    const int *p2s_map,
+                                    const long *s2p_map,
+                                    const long *p2s_map,
                                     const double nac_factor,
                                     const double *born,
                                     const double *dielectric,
                                     const double *q_direction)
 {
-  int i, j, k, l, m, n, adrs, adrsT, is_nac;
+  long i, j, k, l, m, n, adrs, adrsT, is_nac, m_pair, i_pair, svecs_adrs;
   double coef[3], real_coef[3], imag_coef[3];
   double c, s, phase, mass_sqrt, fc_elem, factor, real_phase, imag_phase;
   double ddm_real[3][3][3], ddm_imag[3][3][3];
@@ -144,10 +144,13 @@ void ddm_get_derivative_dynmat_at_q(double *derivative_dynmat,
           real_coef[l] = 0;
           imag_coef[l] = 0;
         }
-        for (l = 0; l < multi[k * num_patom + i]; l++) {
+        i_pair = k * num_patom + i;
+        m_pair = multi[i_pair][0];
+        svecs_adrs = multi[i_pair][1];
+        for (l = 0; l < m_pair; l++) {
           phase = 0;
           for (m = 0; m < 3; m++) {
-            phase += q[m] * r[k * num_patom * 81 + i * 81 + l * 3 + m];
+            phase += q[m] * svecs[svecs_adrs + l][m];
           }
           s = sin(phase * 2 * PI);
           c = cos(phase * 2 * PI);
@@ -158,8 +161,7 @@ void ddm_get_derivative_dynmat_at_q(double *derivative_dynmat,
           for (m = 0; m < 3; m++) {
             coef[m] = 0;
             for (n = 0; n < 3; n++) {
-              coef[m] += 2 * PI *
-                lattice[m * 3 + n] * r[k * num_patom * 81 + i * 81 + l * 3 + n];
+              coef[m] += 2 * PI * lattice[m * 3 + n] * svecs[svecs_adrs + l][n];
             }
           }
 
@@ -169,12 +171,12 @@ void ddm_get_derivative_dynmat_at_q(double *derivative_dynmat,
           }
         }
 
-        real_phase /= multi[k * num_patom + i];
-        imag_phase /= multi[k * num_patom + i];
+        real_phase /= m_pair;
+        imag_phase /= m_pair;
 
         for (l = 0; l < 3; l++) {
-          real_coef[l] /= multi[k * num_patom + i];
-          imag_coef[l] /= multi[k * num_patom + i];
+          real_coef[l] /= m_pair;
+          imag_coef[l] /= m_pair;
         }
 
         for (l = 0; l < 3; l++) {
@@ -232,7 +234,9 @@ void ddm_get_derivative_dynmat_at_q(double *derivative_dynmat,
 
   if (is_nac) {
     free(ddnac);
+    ddnac = NULL;
     free(dnac);
+    dnac = NULL;
   }
 }
 
@@ -240,7 +244,7 @@ void ddm_get_derivative_dynmat_at_q(double *derivative_dynmat,
 /* dD_nac = a * D_nac * (A'/A + B'/B - C'/C) */
 static void get_derivative_nac(double *ddnac,
                                double *dnac,
-                               const int num_patom,
+                               const long num_patom,
                                const double *lattice,
                                const double *mass,
                                const double *q,
@@ -249,7 +253,7 @@ static void get_derivative_nac(double *ddnac,
                                const double *q_direction,
                                const double factor)
 {
-  int i, j, k, l, m;
+  long i, j, k, l, m;
   double a, b, c, da, db, dc, volume, mass_sqrt;
   double q_cart[3], rec_lat[9];
 
@@ -306,12 +310,12 @@ static void get_derivative_nac(double *ddnac,
   }
 }
 
-static double get_A(const int atom_i,
-                    const int cart_i,
+static double get_A(const long atom_i,
+                    const long cart_i,
                     const double q[3],
                     const double *born)
 {
-  int i;
+  long i;
   double sum;
 
   sum = 0;
@@ -325,7 +329,7 @@ static double get_A(const int atom_i,
 static double get_C(const double q[3],
                     const double *dielectric)
 {
-  int i, j;
+  long i, j;
   double sum;
 
   sum = 0;
@@ -338,17 +342,17 @@ static double get_C(const double q[3],
   return sum;
 }
 
-static double get_dA(const int atom_i,
-                     const int cart_i,
-                     const int cart_j,
+static double get_dA(const long atom_i,
+                     const long cart_i,
+                     const long cart_j,
                      const double *born)
 {
   return born[atom_i * 9 + cart_j * 3 + cart_i];
 }
 
-static double get_dC(const int cart_i,
-                     const int cart_j,
-                     const int cart_k,
+static double get_dC(const long cart_i,
+                     const long cart_j,
+                     const long cart_k,
                      const double q[3],
                      const double *dielectric)
 {

@@ -70,12 +70,12 @@ class QpointsPhonon(object):
                  group_velocity=None,
                  with_dynamical_matrices=False,
                  factor=VaspToTHz):
-        primitive = dynamical_matrix.get_primitive()
-        self._natom = primitive.get_number_of_atoms()
-        self._masses = primitive.get_masses()
-        self._symbols = primitive.get_chemical_symbols()
-        self._positions = primitive.get_scaled_positions()
-        self._lattice = primitive.get_cell()
+        primitive = dynamical_matrix.primitive
+        self._natom = len(primitive)
+        self._masses = primitive.masses
+        self._symbols = primitive.symbols
+        self._positions = primitive.scaled_positions
+        self._lattice = primitive.cell
 
         self._qpoints = qpoints
         self._dynamical_matrix = dynamical_matrix
