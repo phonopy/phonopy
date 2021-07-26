@@ -435,21 +435,6 @@ class Phonopy(object):
         """
         return self._displacement_dataset
 
-    @property
-    def displacement_dataset(self):
-        """Return dataset to store displacements and forces."""
-        warnings.warn("Phonopy.displacement_dataset attribute is deprecated."
-                      "Use Phonopy.dataset attribute.",
-                      DeprecationWarning)
-        return self.dataset
-
-    def get_displacement_dataset(self):
-        """Return dataset to store displacements and forces."""
-        warnings.warn("Phonopy.get_displacement_dataset() is deprecated."
-                      "Use Phonopy.dataset attribute.",
-                      DeprecationWarning)
-        return self.dataset
-
     @dataset.setter
     def dataset(self, dataset):
         if dataset is None:
@@ -465,6 +450,21 @@ class Phonopy(object):
             raise RuntimeError("Data format of dataset is wrong.")
 
         self._supercells_with_displacements = None
+
+    @property
+    def displacement_dataset(self):
+        """Return dataset to store displacements and forces."""
+        warnings.warn("Phonopy.displacement_dataset attribute is deprecated."
+                      "Use Phonopy.dataset attribute.",
+                      DeprecationWarning)
+        return self.dataset
+
+    def get_displacement_dataset(self):
+        """Return dataset to store displacements and forces."""
+        warnings.warn("Phonopy.get_displacement_dataset() is deprecated."
+                      "Use Phonopy.dataset attribute.",
+                      DeprecationWarning)
+        return self.dataset
 
     def set_displacement_dataset(self, displacement_dataset):
         """Set displacements."""
@@ -513,13 +513,6 @@ class Phonopy(object):
 
         return disps
 
-    def get_displacements(self):
-        """Return displacements in supercells."""
-        warnings.warn("Phonopy.get_displacements() is deprecated."
-                      "Use Phonopy.displacements attribute.",
-                      DeprecationWarning)
-        return self.displacements
-
     @displacements.setter
     def displacements(self, displacements):
         disp = np.array(displacements, dtype='double', order='C')
@@ -530,6 +523,13 @@ class Phonopy(object):
             raise RuntimeError("This displacement format is not supported.")
 
         self._displacement_dataset['displacements'] = disp
+
+    def get_displacements(self):
+        """Return displacements in supercells."""
+        warnings.warn("Phonopy.get_displacements() is deprecated."
+                      "Use Phonopy.displacements attribute.",
+                      DeprecationWarning)
+        return self.displacements
 
     @property
     def force_constants(self):
@@ -555,13 +555,6 @@ class Phonopy(object):
         """
         return self._force_constants
 
-    def get_force_constants(self):
-        """Return supercell force constants."""
-        warnings.warn("Phonopy.get_force_constants() is deprecated."
-                      "Use Phonopy.force_constants attribute.",
-                      DeprecationWarning)
-        return self.force_constants
-
     @force_constants.setter
     def force_constants(self, force_constants):
         if type(force_constants) is np.ndarray:
@@ -576,6 +569,13 @@ class Phonopy(object):
         self._force_constants = force_constants
         if self._primitive.masses is not None:
             self._set_dynamical_matrix()
+
+    def get_force_constants(self):
+        """Return supercell force constants."""
+        warnings.warn("Phonopy.get_force_constants() is deprecated."
+                      "Use Phonopy.force_constants attribute.",
+                      DeprecationWarning)
+        return self.force_constants
 
     def set_force_constants(self, force_constants, show_drift=True):
         """Set force constants."""
@@ -684,18 +684,18 @@ class Phonopy(object):
         """
         return self._nac_params
 
+    @nac_params.setter
+    def nac_params(self, nac_params):
+        self._nac_params = nac_params
+        if self._force_constants is not None:
+            self._set_dynamical_matrix()
+
     def get_nac_params(self):
         """Return parameters for non-analytical term correction."""
         warnings.warn("Phonopy.get_nac_params() is deprecated."
                       "Use Phonopy.nac_params attribute.",
                       DeprecationWarning)
         return self.nac_params
-
-    @nac_params.setter
-    def nac_params(self, nac_params):
-        self._nac_params = nac_params
-        if self._force_constants is not None:
-            self._set_dynamical_matrix()
 
     def set_nac_params(self, nac_params):
         """Set parameters for non-analytical term correction."""
@@ -745,6 +745,11 @@ class Phonopy(object):
     def band_structure(self):
         """Return BandStructure instance."""
         return self._band_structure
+
+    @property
+    def group_velocity(self):
+        """Return GroupVelocity instance."""
+        return self._group_velocity
 
     @property
     def mesh(self):
@@ -3172,15 +3177,15 @@ class Phonopy(object):
             raise RuntimeError("Dynamical matrix has not yet built.")
 
         if (self._dynamical_matrix.is_nac() and
-            self._dynamical_matrix.nac_method == 'gonze' and
-            self._gv_delta_q is None):  # noqa: E129
-            self._gv_delta_q = 1e-5
+            self._dynamical_matrix.get_nac_method() == 'gonze' and
+            self._gv_delta_q is None):  # noqa E129
             if self._log_level:
                 msg = "Group velocity calculation:\n"
                 text = ("Analytical derivative of dynamical matrix is not "
                         "implemented for NAC by Gonze et al. Instead "
-                        "numerical derivative of it is used with dq=1e-5 "
-                        "for group velocity calculation.")
+                        "numerical derivative of it is used with dq=%.1e "
+                        "for group velocity calculation."
+                        % GroupVelocity.Default_q_length)
                 msg += textwrap.fill(text,
                                      initial_indent="  ",
                                      subsequent_indent="  ",

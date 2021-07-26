@@ -88,6 +88,7 @@ class GroupVelocity(object):
         dynamcial matrix.
 
     """
+    Default_q_length = 1e-5
 
     def __init__(self,
                  dynamical_matrix,
@@ -119,7 +120,7 @@ class GroupVelocity(object):
         self._q_length = q_length
         if self._dynmat.is_nac() and self._dynmat.nac_method == 'gonze':
             if self._q_length is None:
-                self._q_length = 1e-5
+                self._q_length = self.Default_q_length
         if self._q_length is None:
             self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
         else:
@@ -141,9 +142,13 @@ class GroupVelocity(object):
     def run(self, q_points, perturbation=None):
         """Group velocities are computed at q-points.
 
-        q_points : Array-like
+        Calculated group velocities are stored in self._group_velocities.
+
+        Parameters
+        ----------
+        q_points : array-like
             List of q-points such as [[0, 0, 0], [0.1, 0.2, 0.3], ...].
-        perturbation : Array-like
+        perturbation : array-like
             Direction in fractional coordinates of reciprocal space.
 
         """
@@ -180,6 +185,10 @@ class GroupVelocity(object):
         return self._group_velocities
 
     def get_group_velocity(self):
+        warnings.warn(
+            "GroupVelocity.get_group_velocity() is deprecated. "
+            "Use the attribute group_velocities.",
+            DeprecationWarning)
         return self.group_velocities
 
     def _calculate_group_velocity_at_q(self, q):
@@ -265,10 +274,10 @@ class GroupVelocity(object):
         Group velocities are calculated using analytical continuation using
         specified directions (self._directions) in reciprocal space.
 
-        ddms : Array-like
+        ddms : array-like
             List of delta (derivative or finite difference) of dynamical
             matrices along several q-directions for perturbation.
-        eigsets : Array-like
+        eigsets : array-like
             List of phonon eigenvectors of degenerate bands.
 
         """
