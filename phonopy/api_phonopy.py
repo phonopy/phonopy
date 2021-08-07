@@ -3177,7 +3177,7 @@ class Phonopy(object):
             raise RuntimeError("Dynamical matrix has not yet built.")
 
         if (self._dynamical_matrix.is_nac() and
-            self._dynamical_matrix.get_nac_method() == 'gonze' and
+            self._dynamical_matrix.nac_method == 'gonze' and
             self._gv_delta_q is None):  # noqa E129
             if self._log_level:
                 msg = "Group velocity calculation:\n"

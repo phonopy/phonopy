@@ -1,3 +1,4 @@
+"""phonopy.yaml reader and writer."""
 # Copyright (C) 2018 Atsushi Togo
 # All rights reserved.
 #
@@ -44,6 +45,12 @@ from phonopy.structure.atoms import PhonopyAtoms
 
 
 def read_cell_yaml(filename, cell_type='unitcell'):
+    """Read crystal structure from a phonopy.yaml like file.
+
+    This returns unit cell, primitive cell, or supercell. The first one found
+    in this order is returned.
+
+    """
     ph_yaml = PhonopyYaml()
     ph_yaml.read(filename)
     if ph_yaml.unitcell and cell_type == 'unitcell':
@@ -57,7 +64,7 @@ def read_cell_yaml(filename, cell_type='unitcell'):
 
 
 class PhonopyYaml(object):
-    """PhonopyYaml is a container of phonopy setting
+    """PhonopyYaml is a container of phonopy setting.
 
     This contains the writer (__str__) and reader (read) of phonopy.yaml type
     file.
@@ -122,6 +129,20 @@ class PhonopyYaml(object):
                  calculator=None,
                  physical_units=None,
                  settings=None):
+        """Init method.
+
+        Parameters
+        ----------
+        configuration : dict
+            Key-value pairs of phonopy calculation settings.
+        calculator : str
+            Force calculator name.
+        physical_units : dict
+            Physical units used for the calculation.
+        settings : dict
+            See Phonopy.save().
+
+        """
         self.configuration = configuration
         self.calculator = calculator
         self.physical_units = physical_units
@@ -149,14 +170,17 @@ class PhonopyYaml(object):
         self._yaml = None
 
     def __str__(self):
+        """Return string text of yaml output."""
         return "\n".join(self.get_yaml_lines())
 
     def read(self, filename):
+        """Read phonopy.yaml life file."""
         self.yaml_filename = filename
         self._load(filename)
 
     @property
     def yaml_data(self):
+        """Raw yaml data as dict."""
         return self._yaml
 
     @yaml_data.setter
@@ -164,6 +188,7 @@ class PhonopyYaml(object):
         self._yaml = yaml_data
 
     def parse(self):
+        """Parse raw yaml data."""
         self._parse_transformation_matrices()
         self._parse_all_cells()
         self._parse_force_constants()
@@ -171,10 +196,8 @@ class PhonopyYaml(object):
         self._parse_nac_params()
         self._parse_calculator()
 
-    def set_cell(self, cell):
-        self.unitcell = cell
-
     def set_phonon_info(self, phonopy):
+        """Collect data from Phonopy instance."""
         self.unitcell = phonopy.unitcell
         self.primitive = phonopy.primitive
         self.supercell = phonopy.supercell
@@ -194,6 +217,7 @@ class PhonopyYaml(object):
         self.dataset = phonopy.dataset
 
     def get_yaml_lines(self):
+        """Return yaml string lines as a list."""
         lines = self._header_yaml_lines()
         lines += self._physical_units_yaml_lines()
         lines += self._symmetry_yaml_lines()
@@ -218,7 +242,7 @@ class PhonopyYaml(object):
                          self.frequency_unit_conversion_factor)
         if self.symmetry:
             lines.append("  symmetry_tolerance: %.5e" %
-                         self.symmetry.get_symmetry_tolerance())
+                         self.symmetry.tolerance)
         if self.nac_params:
             lines.append("  nac_unit_conversion_factor: %f"
                          % self.nac_params['factor'])
@@ -241,7 +265,7 @@ class PhonopyYaml(object):
             if units['length_unit'] is not None:
                 lines.append("  length: \"%s\"" % units['length_unit'])
             if (self.command_name == "phonopy" and
-                units['force_constants_unit'] is not None):
+                    units['force_constants_unit'] is not None):
                 lines.append("  force_constants: \"%s\"" %
                              units['force_constants_unit'])
         lines.append("")
@@ -419,7 +443,7 @@ class PhonopyYaml(object):
     def _force_constants_yaml_lines(self):
         lines = []
         if (self.settings['force_constants'] and
-            self.force_constants is not None):
+                self.force_constants is not None):
             shape = self.force_constants.shape[:2]
             lines = ["force_constants:", ]
             if shape[0] == shape[1]:
@@ -476,7 +500,7 @@ class PhonopyYaml(object):
             self.supercell = self._parse_cell(self._yaml['supercell'])
         if self.unitcell is None:
             if ('lattice' in self._yaml and
-                ('points' in self._yaml or 'atoms' in self._yaml)):
+                    ('points' in self._yaml or 'atoms' in self._yaml)):
                 self.unitcell = self._parse_cell(self._yaml)
 
     def _parse_cell(self, cell_yaml):
@@ -609,7 +633,7 @@ class PhonopyYaml(object):
             nac_params['dielectric'] = np.array(
                 self._yaml['dielectric_constant'], dtype='double', order='C')
         if (self.command_name in self._yaml and
-            'nac_unit_conversion_factor' in self._yaml[self.command_name]):
+                'nac_unit_conversion_factor' in self._yaml[self.command_name]):
             nac_params['factor'] = self._yaml[self.command_name][
                 'nac_unit_conversion_factor']
         if 'born' in nac_params and 'dielectric' in nac_params:
@@ -617,5 +641,5 @@ class PhonopyYaml(object):
 
     def _parse_calculator(self):
         if (self.command_name in self._yaml and
-            'calculator' in self._yaml[self.command_name]):
+                'calculator' in self._yaml[self.command_name]):
             self.calculator = self._yaml[self.command_name]['calculator']
