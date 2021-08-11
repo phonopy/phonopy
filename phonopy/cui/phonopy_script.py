@@ -37,6 +37,7 @@ import sys
 import os
 import numpy as np
 from phonopy import Phonopy, __version__
+from phonopy.units import THzToEv
 from phonopy.harmonic.force_constants import compact_fc_to_full_fc
 from phonopy.structure.cells import print_cell
 from phonopy.structure.cells import isclose as cells_isclose
@@ -330,7 +331,7 @@ def print_settings(settings,
               % settings.symmetry_tolerance)
     if run_mode == 'mesh' or run_mode == 'band_mesh':
         mesh = settings.mesh_numbers
-        if type(mesh) is float:
+        if isinstance(mesh, float):
             print("  Length for sampling mesh: %.1f" % mesh)
         elif mesh is not None:
             print("  Sampling mesh: %s" % np.array(mesh))
@@ -338,9 +339,6 @@ def print_settings(settings,
             cutoff_freq = settings.cutoff_frequency
             if cutoff_freq is None:
                 pass
-            elif cutoff_freq < 0:
-                print("  - Thermal properties are calculatd with "
-                      "absolute phonon frequnecy.")
             else:
                 print("  - Phonon frequencies > %5.3f are used to calculate "
                       "thermal properties." % cutoff_freq)
@@ -542,7 +540,7 @@ def produce_force_constants(phonon,
 
         if (log_level and
             force_sets is not None and
-            'displacements' in force_sets):
+                'displacements' in force_sets):
             print("%d snapshots were found."
                   % len(force_sets['displacements']))
 
@@ -964,13 +962,23 @@ def run(phonon, settings, plot_conf, log_level):
                 t_min=t_min,
                 t_max=t_max,
                 t_step=t_step,
-                is_projection=settings.is_projected_thermal_properties,
-                band_indices=settings.band_indices,
                 cutoff_frequency=settings.cutoff_frequency,
-                pretend_real=settings.pretend_real)
+                pretend_real=settings.pretend_real,
+                band_indices=settings.band_indices,
+                is_projection=settings.is_projected_thermal_properties)
             phonon.write_yaml_thermal_properties()
 
             if log_level:
+                cutoff_freq = phonon.thermal_properties.cutoff_frequency
+                cutoff_freq /= THzToEv
+                print("Cutoff frequency: %.5f" % cutoff_freq)
+                num_ignored_modes = (
+                    phonon.thermal_properties.number_of_modes
+                    - phonon.thermal_properties.number_of_integrated_modes)
+                print("Number of phonon frequencies less than cutoff "
+                      "frequency: %d/%d"
+                      % (num_ignored_modes,
+                         phonon.thermal_properties.number_of_modes))
                 print("#%11s %15s%15s%15s%15s" % ('T [K]',
                                                   'F [kJ/mol]',
                                                   'S [J/K/mol]',
@@ -1467,7 +1475,7 @@ def show_symmetry_info_then_exit(cell_info, symprec):
 def check_supercell_in_yaml(cell_info, ph, log_level):
     """Check supercell size consistency."""
     if (cell_info['phonopy_yaml'] is not None and
-        cell_info['phonopy_yaml'].supercell is not None):
+            cell_info['phonopy_yaml'].supercell is not None):
         if not cells_isclose(cell_info['phonopy_yaml'].supercell,
                              ph.supercell):
             if log_level:
@@ -1525,7 +1533,7 @@ def init_phonopy(settings, cell_info, symprec, log_level):
     if phonon.primitive.masses is None:
         for s in phonon.primitive.symbols:
             if (atom_data[symbol_map[s]][3] is None and
-                s not in symbols_with_no_mass):
+                    s not in symbols_with_no_mass):
                 symbols_with_no_mass.append(s)
                 print_error_message(
                     "Atomic mass of \'%s\' is not implemented in phonopy." % s)
@@ -1629,7 +1637,7 @@ def main(**argparse_control):
     # Create constant amplitude displacements and then exit #
     #########################################################
     if ((settings.create_displacements or settings.random_displacements) and
-        settings.temperatures is None):
+            settings.temperatures is None):
         if settings.displacement_distance is None:
             displacement_distance = get_default_displacement_distance(
                 phonon.calculator)

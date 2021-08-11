@@ -2300,11 +2300,15 @@ class Phonopy(object):
                                t_max=1000,
                                t_step=10,
                                temperatures=None,
-                               is_projection=False,
-                               band_indices=None,
                                cutoff_frequency=None,
-                               pretend_real=False):
+                               pretend_real=False,
+                               band_indices=None,
+                               is_projection=False):
         """Run calculation of thermal properties at constant volume.
+
+        In phonopy, imaginary frequencies are represented as negative real
+        value. Under this situation, `cutoff_frequency` is used to ignore
+        phonon modes that have frequencies less than `cutoff_frequency`.
 
         Parameters
         ----------
@@ -2314,18 +2318,33 @@ class Phonopy(object):
         temperatures : array_like, optional
             Temperature points where thermal properties are calculated.
             When this is set, t_min, t_max, and t_step are ignored.
+        cutoff_frequency : float, optional
+            Ignore phonon modes whose frequencies are smaller than this value.
+            Default is None, which gives cutoff frequency as zero.
+        pretend_real : bool, optional
+            Use absolute value of phonon frequency when True. Default is False.
+        band_indices : array_like, optional
+            Band indices starting with 0. Normally the numbers correspond to
+            phonon bands in ascending order of phonon frequencies. Thermal
+            properties are calculated only including specified bands.
+            Note that use of this results in unphysical values, and it is not
+            recommended to use this feature. Default is None.
+        is_projection : bool, optional
+            When True, fractions of squeared eigenvector elements are
+            multiplied to mode thermal property quantities at respective phonon
+            modes. Note that use of this results in unphysical values, and it
+            is not recommended to use this feature. Default is False.
 
         """
         if self._mesh is None:
-            msg = ("run_mesh has to be done before"
-                   "run_thermal_properties.")
+            msg = ("run_mesh has to be done before run_thermal_properties.")
             raise RuntimeError(msg)
 
         tp = ThermalProperties(self._mesh,
-                               is_projection=is_projection,
-                               band_indices=band_indices,
                                cutoff_frequency=cutoff_frequency,
-                               pretend_real=pretend_real)
+                               pretend_real=pretend_real,
+                               band_indices=band_indices,
+                               is_projection=is_projection)
         if temperatures is None:
             tp.set_temperature_range(t_step=t_step,
                                      t_max=t_max,
@@ -3234,12 +3253,12 @@ class Phonopy(object):
         supercells = []
         for positions in all_positions:
             supercells.append(PhonopyAtoms(
-                    numbers=self._supercell.numbers,
-                    masses=self._supercell.masses,
-                    magmoms=self._supercell.magnetic_moments,
-                    positions=positions,
-                    cell=self._supercell.cell,
-                    pbc=True))
+                numbers=self._supercell.numbers,
+                masses=self._supercell.masses,
+                magmoms=self._supercell.magnetic_moments,
+                positions=positions,
+                cell=self._supercell.cell,
+                pbc=True))
         self._supercells_with_displacements = supercells
 
     def _build_primitive_cell(self):
