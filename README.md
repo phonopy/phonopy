@@ -5,7 +5,7 @@
 
 # Phonopy
 
-Phonon code. Phonopy user documetation is found at
+Phonon code. Phonopy user documentation is found at
 http://phonopy.github.io/phonopy/
 
 ## Mailing list for questions
@@ -37,7 +37,7 @@ repository.
 
 ## Documentation
 
-Phonopy user documetation is written using python sphinx. The source files are
+Phonopy user documentation is written using python sphinx. The source files are
 stored in `doc` directory. Please see how to write the documentation at
 `doc/README.md`.
 
