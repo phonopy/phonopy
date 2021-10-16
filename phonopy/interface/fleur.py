@@ -201,6 +201,32 @@ class FleurIn(object):
             positions1.append(currentspeci)
         positions.append(positions1)
 
+        factors = [1.0, 1.0, 1.0]
+        shifts = [0.0, 0.0, 0.0]
+
+        for count, line in enumerate(self._lines):
+            if "&factor" in line:
+                currentline = self._lines.pop(count).split()
+                factors = [
+                    float(currentline[1]),
+                    float(currentline[2]),
+                    float(currentline[3]),
+                ]
+
+        for count, line in enumerate(self._lines):
+            if "&shift" in line:
+                currentline = self._lines.pop(count).split()
+                shifts = [
+                    float(currentline[1]),
+                    float(currentline[2]),
+                    float(currentline[3]),
+                ]
+
+        for x in positions[0]:
+            x[0] = x[0] / factors[0] + shifts[0]
+            x[1] = x[1] / factors[1] + shifts[1]
+            x[2] = x[2] / factors[2] + shifts[2]
+
         self._tags["atoms"] = {"speci": speci, "positions": positions}
         for j in range(len(self._lines)):
             self._restlines.append(self._lines[j])
@@ -215,6 +241,8 @@ class FleurIn(object):
             for k in range(3):
                 if scale[k] < 0:
                     scale[k] = np.sqrt(np.abs(scale[k]))
+                if scale[k] == 0.0:
+                    scale[k] = 1.0
                 avec[j][k] = lattcon * avec[j][k] * scale[k]
         self._tags["avec"] = avec
 

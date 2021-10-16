@@ -172,7 +172,7 @@ def write_crystal_structure(
         import phonopy.interface.fleur as fleur
 
         speci, restlines = optional_structure_info
-        fleur.write_fleur(filename, cell, speci, N, restlines)  # noqa F821
+        fleur.write_fleur(filename, cell, speci, 1, restlines)
     else:
         raise RuntimeError("No calculator interface was found.")
 
