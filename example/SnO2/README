@@ -1,6 +1,6 @@
 SnO2 rutile structure. Forces were calcualted using VASP with 500 eV cutoff energy and 4x4x6 k-point mesh for the unit cell.
 
-The space group type is P4_2/mnm (136). This is a non-symmorphic space group and a screw axis of c exists. Usually slope of phonon band normal to the Brillouin zone boundary becomes zero, but there are some positive and negative slopes are found at the Brilloun zone boundary due to the screw symmetry operation. This can be watched by 
+The space group type is P4_2/mnm (136). This is a non-symmorphic space group and a screw axis of c exists. Usually slope of phonon band normal to the Brillouin zone boundary becomes zero, but there are some positive and negative slopes are found at the Brilloun zone boundary due to the screw symmetry operation. This can be watched by
 
 % phonopy --dim="2 2 3" --band="0 0 0  0 0 1" -p
 

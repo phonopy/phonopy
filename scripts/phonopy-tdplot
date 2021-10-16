@@ -66,85 +66,97 @@ try:
 except ImportError:
     from yaml import Loader
 
+
 def get_options():
     # Parse options
     import argparse
-    parser = argparse.ArgumentParser(
-        description="Phonopy tdplot command-line-tool")
-    parser.set_defaults(output_filename=None,
-                        factor=1.0,
-                        td_indices=None,
-                        show_legend=False,
-                        is_distance=False,
-                        is_gnuplot=False,
-                        ymax=None,
-                        ymin=None,
-                        tmax=None,
-                        tmin=None)
+
+    parser = argparse.ArgumentParser(description="Phonopy tdplot command-line-tool")
+    parser.set_defaults(
+        output_filename=None,
+        factor=1.0,
+        td_indices=None,
+        show_legend=False,
+        is_distance=False,
+        is_gnuplot=False,
+        ymax=None,
+        ymin=None,
+        tmax=None,
+        tmin=None,
+    )
     parser.add_argument(
-        "-i", "--indices", dest="td_indices",
-        help="Indices like 1 2, 3 4 5 6...")
+        "-i", "--indices", dest="td_indices", help="Indices like 1 2, 3 4 5 6..."
+    )
     parser.add_argument(
-        "--factor", dest="factor", type=float,
-        help="Conversion factor of energy unit to internal electronic energy")
+        "--factor",
+        dest="factor",
+        type=float,
+        help="Conversion factor of energy unit to internal electronic energy",
+    )
     parser.add_argument(
-        "--ymax", dest="ymax", type=float,
-        help="Maximum value of y axis")
+        "--ymax", dest="ymax", type=float, help="Maximum value of y axis"
+    )
     parser.add_argument(
-        "--ymin", dest="ymin", type=float,
-        help="Minimum value of y axis")
+        "--ymin", dest="ymin", type=float, help="Minimum value of y axis"
+    )
     parser.add_argument(
-        "--tmax", dest="tmax", type=float,
-        help="Maximum value of temperature")
+        "--tmax", dest="tmax", type=float, help="Maximum value of temperature"
+    )
     parser.add_argument(
-        "--tmin", dest="tmin", type=float,
-        help="Minimum value of temperature")
+        "--tmin", dest="tmin", type=float, help="Minimum value of temperature"
+    )
     parser.add_argument(
-        "-o", "--output", dest="output_filename",
-        help="Output filename")
+        "-o", "--output", dest="output_filename", help="Output filename"
+    )
     parser.add_argument(
-        "-l", "--legend", dest="show_legend", action="store_true",
-        help="Show legend")
+        "-l", "--legend", dest="show_legend", action="store_true", help="Show legend"
+    )
     parser.add_argument(
-        "--distance", dest="is_distance", action="store_true",
-        help="Plot thermal distance")
+        "--distance",
+        dest="is_distance",
+        action="store_true",
+        help="Plot thermal distance",
+    )
     parser.add_argument(
-        "filename", nargs='*',
-        help=("Filename of phonon thermal displacement result "
-              "(thermal_displacements.yaml)"))
+        "filename",
+        nargs="*",
+        help=(
+            "Filename of phonon thermal displacement result "
+            "(thermal_displacements.yaml)"
+        ),
+    )
     args = parser.parse_args()
     return args
+
 
 def main(args):
     if not args.is_distance:
         if len(args.filename) == 0:
-            filename = 'thermal_displacements.yaml'
+            filename = "thermal_displacements.yaml"
         else:
             filename = args.filename[0]
         yamldata = yaml.load(open(filename).read(), Loader=Loader)
 
-        td = yamldata['thermal_displacements']
-        temperatures = [v['temperature'] for v in td]
-        displacements = [v['displacements'] for v in td]
+        td = yamldata["thermal_displacements"]
+        temperatures = [v["temperature"] for v in td]
+        displacements = [v["displacements"] for v in td]
         displacements = np.array(displacements).reshape(len(temperatures), -1)
     else:
         if len(args.filename) == 0:
-            filename = 'thermal_distances.yaml'
+            filename = "thermal_distances.yaml"
         else:
             filename = args.filename[0]
         yamldata = yaml.load(open(filename).read(), Loader=Loader)
 
-        td = yamldata['thermal_distances']
-        temperatures = [v['temperature'] for v in td]
-        distances = [v['distance'] for v in td]
+        td = yamldata["thermal_distances"]
+        temperatures = [v["temperature"] for v in td]
+        distances = [v["distance"] for v in td]
         for t, dists in zip(temperatures, distances):
             print(("%14.7f" * (len(dists) + 1)) % ((t,) + tuple(dists)))
-            print('')
-        print('')
-        print('')
+            print("")
+        print("")
+        print("")
         sys.exit(0)
-
-
 
     # Set temperature range
     tmin_index = 0
@@ -166,23 +178,24 @@ def main(args):
     if args.td_indices is None:
         set_of_indices.append(range(1, displacements.shape[1] + 1))
     else:
-        for v in args.td_indices.split(','):
+        for v in args.td_indices.split(","):
             set_of_indices.append([int(x) for x in v.split()])
 
     # Plot
     fig, ax = plt.subplots()
-    ax.xaxis.set_ticks_position('both')
-    ax.yaxis.set_ticks_position('both')
-    ax.xaxis.set_tick_params(which='both', direction='in')
-    ax.yaxis.set_tick_params(which='both', direction='in')
+    ax.xaxis.set_ticks_position("both")
+    ax.yaxis.set_ticks_position("both")
+    ax.xaxis.set_tick_params(which="both", direction="in")
+    ax.yaxis.set_tick_params(which="both", direction="in")
 
     plots = []
     for indices in set_of_indices:
-        d = np.zeros(len(temperatures), dtype='double')
+        d = np.zeros(len(temperatures), dtype="double")
         for i in indices:
-            d += displacements[:, i-1]
-        curve, = plt.plot(temperatures[tmin_index:tmax_index],
-                         d[tmin_index:tmax_index] / len(indices))
+            d += displacements[:, i - 1]
+        (curve,) = plt.plot(
+            temperatures[tmin_index:tmax_index], d[tmin_index:tmax_index] / len(indices)
+        )
         plots.append(curve)
 
     ax.set_xlim((0, temperatures[tmax_index - 1]))
@@ -196,15 +209,16 @@ def main(args):
         plt.ylim(ymin=args.ymin)
 
     if args.show_legend:
-        plt.legend(plots, set_of_indices, loc='upper left')
+        plt.legend(plots, set_of_indices, loc="upper left")
 
     # Set output device and show
     if args.output_filename is not None:
-        plt.rcParams['pdf.fonttype'] = 42
-        plt.rcParams['font.family'] = 'serif'
+        plt.rcParams["pdf.fonttype"] = 42
+        plt.rcParams["font.family"] = "serif"
         plt.savefig(args.output_filename)
     else:
         plt.show()
+
 
 if __name__ == "__main__":
     main(get_options())

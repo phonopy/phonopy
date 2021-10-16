@@ -47,8 +47,8 @@ from phonopy.interface.vasp import check_forces, get_drift_forces
 # FK 2018/07/19
 def lmap(func, lis):
     """Python2/3 compatibility:
-        replace map(int, list) with lmap(int, list) that always returns a list
-        instead of an iterator. Otherwise conflicts with np.array in python3. """
+    replace map(int, list) with lmap(int, list) that always returns a list
+    instead of an iterator. Otherwise conflicts with np.array in python3."""
     return list(map(func, lis))
 
 
@@ -80,16 +80,18 @@ def read_aims(filename):
             positions.append(pos)
             symbols.append(sym)
             magmoms.append(None)
-        # implicitly assuming that initial_moments line adhere to FHI-aims geometry.in specification,
-        # i.e. two subsequent initial_moments lines do not occur
-        # if they do, the value specified in the last line is taken here - without any warning
+        # implicitly assuming that initial_moments line adhere to FHI-aims geometry.in
+        # specification, i.e. two subsequent initial_moments lines do not occur
+        # if they do, the value specified in the last line is taken here - without
+        # any warning
         elif fields[0] == "initial_moment":
             magmoms[-1] = float(fields[1])
 
     for (n, frac) in enumerate(is_frac):
         if frac:
             pos = [
-                sum([positions[n][l] * cell[l][i] for l in range(3)]) for i in range(3)
+                sum([positions[n][ll] * cell[ll][i] for ll in range(3)])
+                for i in range(3)
             ]
             positions[n] = pos
     if None in magmoms:
@@ -130,29 +132,29 @@ def write_aims(filename, atoms):
 
 
 class Atoms_with_forces(Atoms):
-    """ Hack to phonopy.atoms to maintain ASE compatibility also for forces."""
+    """Hack to phonopy.atoms to maintain ASE compatibility also for forces."""
 
     def get_forces(self):
         return self.forces
 
 
 def read_aims_output(filename):
-    """ Read FHI-aims output and
-        return geometry, energy and forces from last self-consistency iteration"""
+    """Read FHI-aims output and
+    return geometry, energy and forces from last self-consistency iteration"""
 
     lines = open(filename, "r").readlines()
 
-    l = 0
+    ll = 0
     N = 0
-    while l < len(lines):
-        line = lines[l]
+    while ll < len(lines):
+        line = lines[ll]
         if "| Number of atoms" in line:
             N = int(line.split()[5])
         elif "| Unit cell:" in line:
             cell = []
             for i in range(3):
-                l += 1
-                vec = lmap(float, lines[l].split()[1:4])
+                ll += 1
+                vec = lmap(float, lines[ll].split()[1:4])
                 cell.append(vec)
         elif ("Atomic structure:" in line) or ("Updated atomic structure:" in line):
             if "Atomic structure:" in line:
@@ -163,12 +165,12 @@ def read_aims_output(filename):
                 i_sym = 4
                 i_pos_min = 1
                 i_pos_max = 4
-            l += 1
+            ll += 1
             symbols = []
             positions = []
             for n in range(N):
-                l += 1
-                fields = lines[l].split()
+                ll += 1
+                fields = lines[ll].split()
                 sym = fields[i_sym]
                 pos = lmap(float, fields[i_pos_min:i_pos_max])
                 symbols.append(sym)
@@ -176,10 +178,10 @@ def read_aims_output(filename):
         elif "Total atomic forces" in line:
             forces = []
             for i in range(N):
-                l += 1
-                force = lmap(float, lines[l].split()[-3:])
+                ll += 1
+                force = lmap(float, lines[ll].split()[-3:])
                 forces.append(force)
-        l += 1
+        ll += 1
 
     atoms = Atoms_with_forces(cell=cell, symbols=symbols, positions=positions)
     atoms.forces = forces
@@ -187,11 +189,9 @@ def read_aims_output(filename):
     return atoms
 
 
-def write_supercells_with_displacements(supercell,
-                                        cells_with_disps,
-                                        ids,
-                                        pre_filename="geometry.in",
-                                        width=3):
+def write_supercells_with_displacements(
+    supercell, cells_with_disps, ids, pre_filename="geometry.in", width=3
+):
     """Writes perfect supercell and supercells with displacements
 
     Args:
@@ -206,7 +206,8 @@ def write_supercells_with_displacements(supercell,
     # displaced cells
     for i, cell in zip(ids, cells_with_disps):
         filename = "{pre_filename}-{0:0{width}}".format(
-            i, pre_filename=pre_filename, width=width)
+            i, pre_filename=pre_filename, width=width
+        )
         write_aims(filename, cell)
 
 

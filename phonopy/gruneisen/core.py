@@ -38,13 +38,15 @@ from phonopy.phonon.degeneracy import rotate_eigenvectors
 
 
 class GruneisenBase(object):
-    def __init__(self,
-                 dynmat,
-                 dynmat_plus,
-                 dynmat_minus,
-                 delta_strain=None,
-                 qpoints=None,
-                 is_band_connection=False):
+    def __init__(
+        self,
+        dynmat,
+        dynmat_plus,
+        dynmat_minus,
+        delta_strain=None,
+        qpoints=None,
+        is_band_connection=False,
+    ):
         self._dynmat = dynmat
         self._dynmat_plus = dynmat_plus
         self._dynmat_minus = dynmat_minus
@@ -105,9 +107,8 @@ class GruneisenBase(object):
             if self._is_band_connection:
                 if prev_eigvecs is not None:
                     band_order = estimate_band_connection(
-                        prev_eigvecs,
-                        evecs_at_q,
-                        band_order)
+                        prev_eigvecs, evecs_at_q, band_order
+                    )
                 eigvals.append(evals_at_q[band_order])
                 eigvecs.append(evecs_at_q[:, band_order])
                 edDe.append(edDe_at_q[band_order])
@@ -117,15 +118,16 @@ class GruneisenBase(object):
                 eigvecs.append(evecs_at_q)
                 edDe.append(edDe_at_q)
 
-        edDe = np.array(edDe, dtype='double', order='C')
-        self._eigenvalues = np.array(eigvals, dtype='double', order='C')
+        edDe = np.array(edDe, dtype="double", order="C")
+        self._eigenvalues = np.array(eigvals, dtype="double", order="C")
         itemsize = self._eigenvalues.itemsize
-        self._eigenvectors = np.array(eigvecs,
-                                      dtype=("c%d" % (itemsize * 2)), order='C')
+        self._eigenvectors = np.array(
+            eigvecs, dtype=("c%d" % (itemsize * 2)), order="C"
+        )
         self._gruneisen = -edDe / self._delta_strain / self._eigenvalues / 2
 
     def _get_dD(self, q, d_a, d_b):
-        if (self._is_band_connection and d_a.is_nac() and d_b.is_nac()):
+        if self._is_band_connection and d_a.is_nac() and d_b.is_nac():
             d_a.run(q, q_direction=self._q_direction)
             d_b.run(q, q_direction=self._q_direction)
         else:
@@ -133,4 +135,4 @@ class GruneisenBase(object):
             d_b.run(q)
         dm_a = d_a.get_dynamical_matrix()
         dm_b = d_b.get_dynamical_matrix()
-        return (dm_b - dm_a)
+        return dm_b - dm_a

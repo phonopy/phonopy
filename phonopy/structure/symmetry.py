@@ -35,8 +35,11 @@
 import numpy as np
 import warnings
 import spglib
-from phonopy.structure.cells import (get_primitive, get_supercell,
-                                     compute_all_sg_permutations)
+from phonopy.structure.cells import (
+    get_primitive,
+    get_supercell,
+    compute_all_sg_permutations,
+)
 from phonopy.harmonic.force_constants import similarity_transformation
 
 
@@ -67,9 +70,10 @@ class Symmetry(object):
             self._set_symmetry_dataset()
         else:
             self._set_symmetry_operations_with_magmoms()
-        (self._pointgroup_operations,
-         self._reciprocal_operations) = get_pointgroup_operations(
-             self._symmetry_operations['rotations'])
+        (
+            self._pointgroup_operations,
+            self._reciprocal_operations,
+        ) = get_pointgroup_operations(self._symmetry_operations["rotations"])
         ptg_symbol = spglib.get_pointgroup(self._pointgroup_operations)[0]
         self._pointgroup = ptg_symbol.strip()
         self._set_atomic_permutations()
@@ -85,8 +89,10 @@ class Symmetry(object):
 
     def get_symmetry_operation(self, operation_number):
         operation = self._symmetry_operations
-        return {'rotations': operation['rotations'][operation_number],
-                'translations': operation['translations'][operation_number]}
+        return {
+            "rotations": operation["rotations"][operation_number],
+            "translations": operation["translations"][operation_number],
+        }
 
     @property
     def pointgroup_operations(self):
@@ -143,15 +149,12 @@ class Symmetry(object):
     def get_site_symmetry(self, atom_number):
         positions = self._cell.get_scaled_positions()
         lattice = self._cell.get_cell()
-        rotations = self._symmetry_operations['rotations']
-        translations = self._symmetry_operations['translations']
+        rotations = self._symmetry_operations["rotations"]
+        translations = self._symmetry_operations["translations"]
 
-        return self._get_site_symmetry(atom_number,
-                                       lattice,
-                                       positions,
-                                       rotations,
-                                       translations,
-                                       self._symprec)
+        return self._get_site_symmetry(
+            atom_number, lattice, positions, rotations, translations, self._symprec
+        )
 
     @property
     def tolerance(self):
@@ -160,9 +163,11 @@ class Symmetry(object):
 
     def get_symmetry_tolerance(self):
         """Return symmetry tolerance."""
-        warnings.warn("Symmetry.get_symmetry_tolerance() is deprecated."
-                      "Use Symmetry.tolerance attribute instead.",
-                      DeprecationWarning)
+        warnings.warn(
+            "Symmetry.get_symmetry_tolerance() is deprecated."
+            "Use Symmetry.tolerance attribute instead.",
+            DeprecationWarning,
+        )
         return self.tolerance
 
     @property
@@ -178,9 +183,11 @@ class Symmetry(object):
 
     def get_reciprocal_operations(self):
         """Return reciprocal space point group operations."""
-        warnings.warn("Symmetry.get_reciprocal_operations() is deprecated."
-                      "Use Symmetry.reciprocal_operations attribute instead.",
-                      DeprecationWarning)
+        warnings.warn(
+            "Symmetry.get_reciprocal_operations() is deprecated."
+            "Use Symmetry.reciprocal_operations attribute instead.",
+            DeprecationWarning,
+        )
         return self.reciprocal_operations
 
     @property
@@ -196,31 +203,29 @@ class Symmetry(object):
 
     def get_atomic_permutations(self):
         """Return atomic index permutations by space group operations."""
-        warnings.warn("Symmetry.get_atomic_permutations() is deprecated."
-                      "Use Symmetry.atomic_permutations attribute instead.",
-                      DeprecationWarning)
+        warnings.warn(
+            "Symmetry.get_atomic_permutations() is deprecated."
+            "Use Symmetry.atomic_permutations attribute instead.",
+            DeprecationWarning,
+        )
         return self.atomic_permutations
 
     def _set_atomic_permutations(self):
         positions = self._cell.scaled_positions
-        lattice = np.array(self._cell.cell.T,
-                           dtype='double', order='C')
-        rotations = self._symmetry_operations['rotations']
-        translations = self._symmetry_operations['translations']
+        lattice = np.array(self._cell.cell.T, dtype="double", order="C")
+        rotations = self._symmetry_operations["rotations"]
+        translations = self._symmetry_operations["translations"]
         self._atomic_permutations = compute_all_sg_permutations(
             positions,  # scaled positions
             rotations,  # scaled
             translations,  # scaled
             lattice,  # column vectors
-            self._symprec)
+            self._symprec,
+        )
 
-    def _get_site_symmetry(self,
-                           atom_number,
-                           lattice,
-                           positions,
-                           rotations,
-                           translations,
-                           symprec):
+    def _get_site_symmetry(
+        self, atom_number, lattice, positions, rotations, translations, symprec
+    ):
         pos = positions[atom_number]
         site_symmetries = []
 
@@ -232,46 +237,50 @@ class Symmetry(object):
             if np.linalg.norm(diff) < symprec:
                 site_symmetries.append(r)
 
-        return np.array(site_symmetries, dtype='intc')
+        return np.array(site_symmetries, dtype="intc")
 
     def _set_symmetry_dataset(self):
-        self._dataset = spglib.get_symmetry_dataset(self._cell.totuple(),
-                                                    self._symprec)
+        self._dataset = spglib.get_symmetry_dataset(self._cell.totuple(), self._symprec)
         self._symmetry_operations = {
-            'rotations': self._dataset['rotations'],
-            'translations': self._dataset['translations']}
+            "rotations": self._dataset["rotations"],
+            "translations": self._dataset["translations"],
+        }
         self._international_table = "%s (%d)" % (
-            self._dataset['international'], self._dataset['number'])
-        self._wyckoff_letters = self._dataset['wyckoffs']
+            self._dataset["international"],
+            self._dataset["number"],
+        )
+        self._wyckoff_letters = self._dataset["wyckoffs"]
 
-        self._map_atoms = self._dataset['equivalent_atoms']
+        self._map_atoms = self._dataset["equivalent_atoms"]
 
     def _set_symmetry_operations_with_magmoms(self):
-        self._symmetry_operations = spglib.get_symmetry(self._cell.totuple(),
-                                                        symprec=self._symprec)
-        self._map_atoms = self._symmetry_operations['equivalent_atoms']
+        self._symmetry_operations = spglib.get_symmetry(
+            self._cell.totuple(), symprec=self._symprec
+        )
+        self._map_atoms = self._symmetry_operations["equivalent_atoms"]
 
     def _set_independent_atoms(self):
         indep_atoms = []
         for i, atom_map in enumerate(self._map_atoms):
             if i == atom_map:
                 indep_atoms.append(i)
-        self._independent_atoms = np.array(indep_atoms, dtype='intc')
+        self._independent_atoms = np.array(indep_atoms, dtype="intc")
 
     def _set_map_operations(self):
-        warnings.warn("Symmetry._set_map_operations is deprecated."
-                      "This was replaced by "
-                      "_get_map_operations_from_permutations.",
-                      DeprecationWarning)
+        warnings.warn(
+            "Symmetry._set_map_operations is deprecated."
+            "This was replaced by "
+            "_get_map_operations_from_permutations.",
+            DeprecationWarning,
+        )
 
         ops = self._symmetry_operations
         pos = self._cell.scaled_positions
         lattice = self._cell.cell
-        map_operations = np.zeros(len(pos), dtype='intc')
+        map_operations = np.zeros(len(pos), dtype="intc")
 
         for i, eq_atom in enumerate(self._map_atoms):
-            for j, (r, t) in enumerate(zip(ops['rotations'],
-                                           ops['translations'])):
+            for j, (r, t) in enumerate(zip(ops["rotations"], ops["translations"])):
                 diff = np.dot(pos[i], r.T) + t - pos[eq_atom]
                 diff -= np.rint(diff)
                 dist = np.linalg.norm(np.dot(diff, lattice))
@@ -282,7 +291,7 @@ class Symmetry(object):
 
     def _get_map_operations_from_permutations(self):
         perm = self._atomic_permutations
-        map_operations = np.zeros(perm.shape[1], dtype='intc')
+        map_operations = np.zeros(perm.shape[1], dtype="intc")
         for i, eq_atom in enumerate(self._map_atoms):
             match = np.where(perm[:, i] == eq_atom)[0]
             assert len(match) != 0
@@ -293,7 +302,7 @@ class Symmetry(object):
         translations = []
         rotations = []
 
-        if 'get_supercell_to_unitcell_map' in dir(self._cell):
+        if "get_supercell_to_unitcell_map" in dir(self._cell):
             s2u_map = self._cell.s2u_map
             positions = self._cell.scaled_positions
 
@@ -307,19 +316,20 @@ class Symmetry(object):
                     trans = p - positions[ipos0]
                     trans -= np.floor(trans)
                     translations.append(trans)
-                    rotations.append(np.eye(3, dtype='intc'))
+                    rotations.append(np.eye(3, dtype="intc"))
 
             self._map_atoms = s2u_map
         else:
-            rotations.append(np.eye(3, dtype='intc'))
-            translations.append(np.zeros(3, dtype='double'))
+            rotations.append(np.eye(3, dtype="intc"))
+            translations.append(np.zeros(3, dtype="double"))
             self._map_atoms = range(len(self._cell))
 
         self._symmetry_operations = {
-            'rotations': np.array(rotations, dtype='intc'),
-            'translations': np.array(translations, dtype='double')}
-        self._international_table = 'P1 (1)'
-        self._wyckoff_letters = ['a'] * len(self._cell)
+            "rotations": np.array(rotations, dtype="intc"),
+            "translations": np.array(translations, dtype="double"),
+        }
+        self._international_table = "P1 (1)"
+        self._wyckoff_letters = ["a"] * len(self._cell)
 
 
 def get_pointgroup_operations(rotations, is_time_reversal=True):
@@ -329,14 +339,16 @@ def get_pointgroup_operations(rotations, is_time_reversal=True):
     if is_time_reversal:
         exist_r_inv = False
         for rot in ptg_ops:
-            if (rot == -np.eye(3, dtype='intc')).all():
+            if (rot == -np.eye(3, dtype="intc")).all():
                 exist_r_inv = True
                 break
         if not exist_r_inv:
             reciprocal_rotations += [-rot.T for rot in ptg_ops]
 
-    return (np.array(ptg_ops, dtype='intc'),
-            np.array(reciprocal_rotations, dtype='intc'))
+    return (
+        np.array(ptg_ops, dtype="intc"),
+        np.array(reciprocal_rotations, dtype="intc"),
+    )
 
 
 def collect_unique_rotations(rotations):
@@ -375,14 +387,16 @@ def get_lattice_vector_equivalence(point_symmetry):
     return equivalence
 
 
-def elaborate_borns_and_epsilon(ucell,
-                                borns,
-                                epsilon,
-                                primitive_matrix=None,
-                                supercell_matrix=None,
-                                is_symmetry=True,
-                                symmetrize_tensors=False,
-                                symprec=1e-5):
+def elaborate_borns_and_epsilon(
+    ucell,
+    borns,
+    epsilon,
+    primitive_matrix=None,
+    supercell_matrix=None,
+    is_symmetry=True,
+    symmetrize_tensors=False,
+    symprec=1e-5,
+):
     """Symmetrize Born effective charges and dielectric constants and
     extract Born effective charges of symmetrically independent atoms
     for primitive cell.
@@ -409,16 +423,15 @@ def elaborate_borns_and_epsilon(ucell,
 
     """
 
-    assert len(borns) == len(ucell), \
-        "num_atom %d != len(borns) %d" % (len(ucell), len(borns))
+    assert len(borns) == len(ucell), "num_atom %d != len(borns) %d" % (
+        len(ucell),
+        len(borns),
+    )
 
     if symmetrize_tensors:
         borns_, epsilon_ = symmetrize_borns_and_epsilon(
-            borns,
-            epsilon,
-            ucell,
-            symprec=symprec,
-            is_symmetry=is_symmetry)
+            borns, epsilon, ucell, symprec=symprec, is_symmetry=is_symmetry
+        )
     else:
         borns_ = borns
         epsilon_ = epsilon
@@ -428,19 +441,22 @@ def elaborate_borns_and_epsilon(ucell,
         primitive_matrix=primitive_matrix,
         supercell_matrix=supercell_matrix,
         is_symmetry=is_symmetry,
-        symprec=symprec)
+        symprec=symprec,
+    )
 
     return borns_[indeps_in_unitcell].copy(), epsilon_, indeps_in_supercell
 
 
-def symmetrize_borns_and_epsilon(borns,
-                                 epsilon,
-                                 ucell,
-                                 primitive_matrix=None,
-                                 primitive=None,
-                                 supercell_matrix=None,
-                                 symprec=1e-5,
-                                 is_symmetry=True):
+def symmetrize_borns_and_epsilon(
+    borns,
+    epsilon,
+    ucell,
+    primitive_matrix=None,
+    primitive=None,
+    supercell_matrix=None,
+    symprec=1e-5,
+    is_symmetry=True,
+):
     """Symmetrize Born effective charges and dielectric tensor
 
     Parameters
@@ -484,18 +500,20 @@ def symmetrize_borns_and_epsilon(borns,
 
     lattice = ucell.cell
     u_sym = Symmetry(ucell, is_symmetry=is_symmetry, symprec=symprec)
-    rotations = u_sym.get_symmetry_operations()['rotations']
-    translations = u_sym.get_symmetry_operations()['translations']
+    rotations = u_sym.get_symmetry_operations()["rotations"]
+    translations = u_sym.get_symmetry_operations()["translations"]
     ptg_ops = u_sym.get_pointgroup_operations()
     epsilon_ = _symmetrize_2nd_rank_tensor(epsilon, ptg_ops, lattice)
-    borns_ = _take_average_of_borns(borns, rotations, translations, ucell,
-                                    symprec)
+    borns_ = _take_average_of_borns(borns, rotations, translations, ucell, symprec)
 
     if (abs(borns - borns_) > 0.1).any():
-        lines = ["Symmetry of Born effective charge is largely broken. "
-                 "The difference is:",
-                 "%s" % (borns - borns_)]
+        lines = [
+            "Symmetry of Born effective charge is largely broken. "
+            "The difference is:",
+            "%s" % (borns - borns_),
+        ]
         import warnings
+
         warnings.warn("\n".join(lines))
 
     if primitive_matrix is None and primitive is None:
@@ -510,7 +528,8 @@ def symmetrize_borns_and_epsilon(borns,
             ucell,
             primitive_matrix=pmat,
             supercell_matrix=supercell_matrix,
-            symprec=symprec)
+            symprec=symprec,
+        )
 
         idx = [scell.u2u_map[i] for i in scell.s2u_map[pcell.p2s_map]]
         borns_in_prim = borns_[idx].copy()
@@ -560,24 +579,22 @@ def _get_mapping_between_cells(cell_from, cell_to, symprec=1e-5):
 
 
 def _symmetrize_2nd_rank_tensor(tensor, symmetry_operations, lattice):
-    sym_cart = [similarity_transformation(lattice.T, r)
-                for r in symmetry_operations]
+    sym_cart = [similarity_transformation(lattice.T, r) for r in symmetry_operations]
     sum_tensor = np.zeros_like(tensor)
     for sym in sym_cart:
         sum_tensor += similarity_transformation(sym, tensor)
     return sum_tensor / len(symmetry_operations)
 
 
-def _extract_independent_atoms(ucell,
-                               primitive_matrix=None,
-                               supercell_matrix=None,
-                               is_symmetry=True,
-                               symprec=1e-5):
+def _extract_independent_atoms(
+    ucell, primitive_matrix=None, supercell_matrix=None, is_symmetry=True, symprec=1e-5
+):
     scell, pcell = _get_supercell_and_primitive(
         ucell,
         primitive_matrix=primitive_matrix,
         supercell_matrix=supercell_matrix,
-        symprec=symprec)
+        symprec=symprec,
+    )
     p_sym = Symmetry(pcell, is_symmetry=is_symmetry, symprec=symprec)
     s_indep_atoms = pcell.p2s_map[p_sym.get_independent_atoms()]
     u_indep_atoms = [scell.u2u_map[x] for x in s_indep_atoms]
@@ -585,16 +602,15 @@ def _extract_independent_atoms(ucell,
     return s_indep_atoms, u_indep_atoms
 
 
-def _get_supercell_and_primitive(ucell,
-                                 primitive_matrix=None,
-                                 supercell_matrix=None,
-                                 symprec=1e-5):
+def _get_supercell_and_primitive(
+    ucell, primitive_matrix=None, supercell_matrix=None, symprec=1e-5
+):
     if primitive_matrix is None:
         pmat = np.eye(3)
     else:
         pmat = primitive_matrix
     if supercell_matrix is None:
-        smat = np.eye(3, dtype='intc')
+        smat = np.eye(3, dtype="intc")
     else:
         smat = supercell_matrix
 

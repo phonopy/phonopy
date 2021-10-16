@@ -18,11 +18,11 @@ class TestQpoints(unittest.TestCase):
 
     def _get_phonon(self):
         cell = read_vasp(os.path.join(data_dir, "..", "POSCAR_NaCl"))
-        phonon = Phonopy(cell,
-                         np.diag([2, 2, 2]),
-                         primitive_matrix=[[0, 0.5, 0.5],
-                                           [0.5, 0, 0.5],
-                                           [0.5, 0.5, 0]])
+        phonon = Phonopy(
+            cell,
+            np.diag([2, 2, 2]),
+            primitive_matrix=[[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]],
+        )
         filename = os.path.join(data_dir, "..", "FORCE_SETS_NaCl")
         force_sets = parse_FORCE_SETS(filename=filename)
         phonon.dataset = force_sets
@@ -45,6 +45,6 @@ class TestQpoints(unittest.TestCase):
             np.testing.assert_allclose(freqs ** 2 * np.sign(freqs), eigs)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestQpoints)
     unittest.TextTestRunner(verbosity=2).run(suite)

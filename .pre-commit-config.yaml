@@ -1,0 +1,47 @@
+# See https://pre-commit.com for more informatio
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.0.1
+  hooks:
+  - id: trailing-whitespace
+  - id: end-of-file-fixer
+  - id: check-yaml
+    exclude: ^conda/
+  - id: check-added-large-files
+
+- repo: https://github.com/pycqa/flake8
+  rev: 4.0.1
+  hooks:
+  - id: flake8
+    exclude: |
+      (?x)^(
+      test/phonon/test_irreps.py|
+      test/qha/test_electron.py|
+      phonopy/interface/fleur.py|
+      phonopy/interface/cp2k.py
+      )$
+    args:
+    - "--max-line-length=88"
+    - "--ignore=E203,W503"
+  - id: flake8
+    files: |
+      (?x)^(
+      test/phonon/test_irreps.py|
+      test/qha/test_electron.py
+      )$
+    args:
+    - "--max-line-length=88"
+    - "--ignore=E203,W503,E501"
+
+- repo: https://github.com/psf/black
+  rev: 21.9b0
+  hooks:
+  - id: black
+    args:
+    - --line-length=88
+
+- repo: https://github.com/pycqa/pydocstyle
+  rev: 6.0.0
+  hooks:
+  - id: pydocstyle

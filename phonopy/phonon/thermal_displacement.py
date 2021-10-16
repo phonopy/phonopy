@@ -38,10 +38,7 @@ from phonopy.interface.cif import write_cif_P1
 
 
 class ThermalMotion(object):
-    def __init__(self,
-                 iter_mesh,
-                 freq_min=None,
-                 freq_max=None):
+    def __init__(self, iter_mesh, freq_min=None, freq_max=None):
         self._iter_mesh = iter_mesh
         if freq_min is None:
             self._fmin = 0
@@ -58,8 +55,12 @@ class ThermalMotion(object):
         self._temperatures = None
 
     def _get_Q2(self, freq, t):  # freq in THz
-        return Hbar * EV / Angstrom ** 2 * (
-            (self._get_population(freq, t) + 0.5) / (freq * 1e12 * 2 * np.pi))
+        return (
+            Hbar
+            * EV
+            / Angstrom ** 2
+            * ((self._get_population(freq, t) + 0.5) / (freq * 1e12 * 2 * np.pi))
+        )
 
     @property
     def temperatures(self):
@@ -90,8 +91,9 @@ class ThermalMotion(object):
         else:
             _t_step = 10
 
-        self._temperatures = np.arange(_t_min, _t_max + _t_step / 2.0, _t_step,
-                                       dtype='double')
+        self._temperatures = np.arange(
+            _t_min, _t_max + _t_step / 2.0, _t_step, dtype="double"
+        )
 
     def set_temperatures(self, temperatures):
         t_array = np.array(temperatures)
@@ -114,18 +116,15 @@ class ThermalMotion(object):
             else:
                 return 0.0
         else:
-            vals = np.zeros(len(t), dtype='double')
-            vals[condition] = 1.0 / (
-                np.exp(freq * THzToEv / (Kb * t[condition])) - 1)
+            vals = np.zeros(len(t), dtype="double")
+            vals[condition] = 1.0 / (np.exp(freq * THzToEv / (Kb * t[condition])) - 1)
             return vals
 
 
 class ThermalDisplacements(ThermalMotion):
-    def __init__(self,
-                 iter_mesh,
-                 projection_direction=None,
-                 freq_min=None,
-                 freq_max=None):
+    def __init__(
+        self, iter_mesh, projection_direction=None, freq_min=None, freq_max=None
+    ):
         """Calculate mean square displacements
 
         Parameters
@@ -144,15 +143,13 @@ class ThermalDisplacements(ThermalMotion):
 
         """
 
-        ThermalMotion.__init__(self,
-                               iter_mesh,
-                               freq_min=freq_min,
-                               freq_max=freq_max)
+        ThermalMotion.__init__(self, iter_mesh, freq_min=freq_min, freq_max=freq_max)
         if projection_direction is None:
             self._projection_direction = None
         else:
-            self._projection_direction = (projection_direction /
-                                          np.linalg.norm(projection_direction))
+            self._projection_direction = projection_direction / np.linalg.norm(
+                projection_direction
+            )
         self._displacements = None
 
     @property
@@ -173,8 +170,8 @@ class ThermalDisplacements(ThermalMotion):
         for count, (fs, vecs) in enumerate(self._iter_mesh):
             if self._projection_direction is not None:
                 p_vecs = np.dot(
-                    vecs.T.reshape(-1, 3),
-                    self._projection_direction).reshape(-1, len(masses))
+                    vecs.T.reshape(-1, 3), self._projection_direction
+                ).reshape(-1, len(masses))
                 vecs2 = np.abs(p_vecs) ** 2 / masses
             else:
                 vecs2 = (abs(vecs) ** 2).T / masses
@@ -211,17 +208,18 @@ class ThermalDisplacements(ThermalMotion):
                 text += " ] # atom %d" % (i + 1)
                 lines.append(text)
 
-        with open('thermal_displacements.yaml', 'w') as w:
+        with open("thermal_displacements.yaml", "w") as w:
             w.write("\n".join(lines))
 
     def plot(self, pyplot, is_legend=False):
-        xyz = ['x', 'y', 'z']
+        xyz = ["x", "y", "z"]
         for i, u in enumerate(self._displacements.transpose()):
-            pyplot.plot(self._temperatures, u,
-                        label=("%d-%s" % (i//3 + 1, xyz[i % 3])))
+            pyplot.plot(
+                self._temperatures, u, label=("%d-%s" % (i // 3 + 1, xyz[i % 3]))
+            )
 
         if is_legend:
-            pyplot.legend(loc='upper left')
+            pyplot.legend(loc="upper left")
 
     def _project_eigenvectors(self):
         """Eigenvectors are projected along Cartesian direction"""
@@ -230,18 +228,13 @@ class ThermalDisplacements(ThermalMotion):
         for vecs_q in self._eigenvectors:
             p_vecs_q = []
             for vecs in vecs_q.T:
-                p_vecs_q.append(np.dot(vecs.reshape(-1, 3),
-                                       self._projection_direction))
+                p_vecs_q.append(np.dot(vecs.reshape(-1, 3), self._projection_direction))
             self._p_eigenvectors.append(np.transpose(p_vecs_q))
         self._p_eigenvectors = np.array(self._p_eigenvectors)
 
 
 class ThermalDisplacementMatrices(ThermalMotion):
-    def __init__(self,
-                 iter_mesh,
-                 freq_min=None,
-                 freq_max=None,
-                 lattice=None):
+    def __init__(self, iter_mesh, freq_min=None, freq_max=None, lattice=None):
         """Calculate mean square displacement matrices
 
         Parameters
@@ -260,10 +253,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
 
         """
 
-        ThermalMotion.__init__(self,
-                               iter_mesh,
-                               freq_min=freq_min,
-                               freq_max=freq_max)
+        ThermalMotion.__init__(self, iter_mesh, freq_min=freq_min, freq_max=freq_max)
         self._disp_matrices = None
         self._disp_matrices_cif = None
 
@@ -301,30 +291,30 @@ class ThermalDisplacementMatrices(ThermalMotion):
         np.seterr(over=None)
 
         if self._ANinv is not None:
-            self._disp_matrices_cif = np.zeros(self._disp_matrices.shape,
-                                               dtype='double')
+            self._disp_matrices_cif = np.zeros(
+                self._disp_matrices.shape, dtype="double"
+            )
             for i, matrices in enumerate(self._disp_matrices):
                 for j, mat in enumerate(matrices):
-                    mat_cif = np.dot(np.dot(self._ANinv, mat),
-                                     self._ANinv.T)
+                    mat_cif = np.dot(np.dot(self._ANinv, mat), self._ANinv.T)
                     self._disp_matrices_cif[i, j] = mat_cif
 
         self._get_disp_matrices()
 
     def _get_disp_matrices(self):
-        dtype_complex = "c%d" % (np.dtype('double').itemsize * 2)
-        disps = np.zeros((len(self._temperatures), len(self._masses),
-                          3, 3), dtype=dtype_complex)
+        dtype_complex = "c%d" % (np.dtype("double").itemsize * 2)
+        disps = np.zeros(
+            (len(self._temperatures), len(self._masses), 3, 3), dtype=dtype_complex
+        )
         for count, (freqs, eigvecs) in enumerate(self._iter_mesh):
             valid_indices = freqs > self._fmin
             if self._fmax is not None:
                 valid_indices *= freqs < self._fmax
             for i_band, (f, vec) in enumerate(
-                    zip(freqs[valid_indices], (eigvecs.T)[valid_indices])):
-                c = np.zeros((len(self._masses), 3, 3),
-                             dtype=dtype_complex, order='C')
-                for i, (v, m) in enumerate(
-                        zip(vec.reshape(-1, 3), self._masses)):
+                zip(freqs[valid_indices], (eigvecs.T)[valid_indices])
+            ):
+                c = np.zeros((len(self._masses), 3, 3), dtype=dtype_complex, order="C")
+                for i, (v, m) in enumerate(zip(vec.reshape(-1, 3), self._masses)):
                     c[i] = np.outer(v, v.conj()) / m
 
                 # for i, t in enumerate(self._temperatures):
@@ -346,9 +336,11 @@ class ThermalDisplacementMatrices(ThermalMotion):
         self._disp_matrices = disps.real / (count + 1)
 
     def write_cif(self, cell, temperature_index):
-        write_cif_P1(cell,
-                     U_cif=self._disp_matrices_cif[temperature_index],
-                     filename="tdispmat.cif")
+        write_cif_P1(
+            cell,
+            U_cif=self._disp_matrices_cif[temperature_index],
+            filename="tdispmat.cif",
+        )
 
     def write_yaml(self):
         natom = len(self._masses)
@@ -371,18 +363,18 @@ class ThermalDisplacementMatrices(ThermalMotion):
                 #         % (tuple(v.real) + tuple(v.imag)))
                 m = mat
                 lines.append(
-                    ("  - [ " + "%8.5f, " * 5 + "%8.5f ] # atom %d") %
-                    (m[0, 0], m[1, 1], m[2, 2],
-                     m[1, 2], m[0, 2], m[0, 1], j + 1))
+                    ("  - [ " + "%8.5f, " * 5 + "%8.5f ] # atom %d")
+                    % (m[0, 0], m[1, 1], m[2, 2], m[1, 2], m[0, 2], m[0, 1], j + 1)
+                )
             if self._ANinv is not None:
                 matrices_cif = self._disp_matrices_cif[i]
                 lines.append("  displacement_matrices_cif:")
                 for j, mat_cif in enumerate(matrices_cif):
                     m = mat_cif
                     lines.append(
-                        ("  - [ " + "%8.5f, " * 5 + "%8.5f ] # atom %d") %
-                        (m[0, 0], m[1, 1], m[2, 2],
-                         m[1, 2], m[0, 2], m[0, 1], j + 1))
+                        ("  - [ " + "%8.5f, " * 5 + "%8.5f ] # atom %d")
+                        % (m[0, 0], m[1, 1], m[2, 2], m[1, 2], m[0, 2], m[0, 1], j + 1)
+                    )
 
-        with open('thermal_displacement_matrices.yaml', 'w') as w:
+        with open("thermal_displacement_matrices.yaml", "w") as w:
             w.write("\n".join(lines))

@@ -38,34 +38,30 @@ import numpy as np
 from phonopy.file_IO import iter_collect_forces
 from phonopy.interface.vasp import check_forces, get_drift_forces
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
-from phonopy.structure.atoms import symbol_map
-from phonopy.structure.cells import get_cell_parameters, get_angles
 from phonopy.units import Hartree, Bohr
 from phonopy.structure.symmetry import Symmetry
 
-def parse_set_of_forces(num_atoms,
-                        forces_filenames,
-                        verbose=True):
-    hook = 'ATOM                     X                   Y                   Z'
+
+def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+    hook = "ATOM                     X                   Y                   Z"
     force_sets = []
     for i, filename in enumerate(forces_filenames):
         if verbose:
             sys.stdout.write("%d. " % (i + 1))
-        crystal_forces = iter_collect_forces(filename,
-                                           num_atoms,
-                                           hook,
-                                           [2, 3, 4])
+        crystal_forces = iter_collect_forces(filename, num_atoms, hook, [2, 3, 4])
         if check_forces(crystal_forces, num_atoms, filename, verbose=verbose):
             is_parsed = True
-            drift_force = get_drift_forces(crystal_forces,
-                                           filename=filename,
-                                           verbose=verbose)
+            drift_force = get_drift_forces(
+                crystal_forces, filename=filename, verbose=verbose
+            )
             # Convert forces Hartree / Bohr ->  eV / Angstrom
             # This avoids confusion with the units. CRYSTAL uses Angstroms for
             # coordinates, but Hartree / Bohr for forces. This would lead in mixed
             # units hartree / (Angstrom * Bohr) for force constants, requiring
             # additional tweaks for unit conversions in other parts of the code
-            force_sets.append(np.multiply(np.array(crystal_forces) - drift_force, Hartree / Bohr))
+            force_sets.append(
+                np.multiply(np.array(crystal_forces) - drift_force, Hartree / Bohr)
+            )
         else:
             is_parsed = False
 
@@ -74,37 +70,50 @@ def parse_set_of_forces(num_atoms,
     else:
         return []
 
+
 def read_crystal(filename):
     f_crystal = open(filename)
     crystal_in = CrystalIn(f_crystal.readlines())
     f_crystal.close()
     tags = crystal_in.get_tags()
 
+    cell = Atoms(
+        cell=tags["lattice_vectors"],
+        symbols=tags["atomic_species"],
+        scaled_positions=tags["coordinates"],
+    )
 
-    cell = Atoms(cell=tags['lattice_vectors'],
-                 symbols=tags['atomic_species'],
-                 scaled_positions=tags['coordinates'])
-
-    magmoms = tags['magnetic_moments']
+    magmoms = tags["magnetic_moments"]
     if magmoms is not None:
         # Print out symmetry information for magnetic cases
         # Original code from structure/symmetry.py
         symmetry = Symmetry(cell, symprec=1e-5)
-        print("CRYSTAL-interface: Magnetic structure, number of operations without spin: %d" %
-              len(symmetry.get_symmetry_operations()['rotations']))
-        print("CRYSTAL-interface: Spacegroup without spin: %s" % symmetry.get_international_table())
+        print(
+            "CRYSTAL-interface: Magnetic structure, "
+            "number of operations without spin: %d"
+            % len(symmetry.get_symmetry_operations()["rotations"])
+        )
+        print(
+            "CRYSTAL-interface: Spacegroup without spin: %s"
+            % symmetry.get_international_table()
+        )
 
         cell.set_magnetic_moments(magmoms)
         symmetry = Symmetry(cell, symprec=1e-5)
-        print("CRYSTAL-interface: Magnetic structure, number of operations with spin: %d" %
-              len(symmetry.get_symmetry_operations()['rotations']))
+        print(
+            "CRYSTAL-interface: Magnetic structure, number of operations with spin: %d"
+            % len(symmetry.get_symmetry_operations()["rotations"])
+        )
         print("")
 
-    return cell, tags['conv_numbers']
+    return cell, tags["conv_numbers"]
 
-def write_crystal(filename, cell, conv_numbers, template_file="TEMPLATE", write_symmetry=False):
+
+def write_crystal(
+    filename, cell, conv_numbers, template_file="TEMPLATE", write_symmetry=False
+):
     # Write geometry in EXTERNAL file (fort.34)
-    f_ext = open(filename + '.ext', 'w')
+    f_ext = open(filename + ".ext", "w")
     f_ext.write(get_crystal_structure(cell, conv_numbers, write_symmetry))
     f_ext.close()
 
@@ -130,26 +139,29 @@ def write_crystal(filename, cell, conv_numbers, template_file="TEMPLATE", write_
         for i in range(0, len(magmoms)):
             if magmoms[i] != 0:
                 N_spins += 1
-                atomspins += ("%d %d " % (i + 1, magmoms[i]))
+                atomspins += "%d %d " % (i + 1, magmoms[i])
         lines += "ATOMSPIN\n"
-        lines += ("%d\n" % N_spins)
+        lines += "%d\n" % N_spins
         lines += atomspins + "\n"
     lines += "GRADCAL\n"
     lines += "END\n"
 
     # Write the input file
-    f_inputfile = open(filename + '.d12', 'w')
+    f_inputfile = open(filename + ".d12", "w")
     f_inputfile.writelines(lines)
     f_inputfile.close()
 
-def write_supercells_with_displacements(supercell,
-                                        cells_with_displacements,
-                                        ids,
-                                        conv_numbers,
-                                        num_unitcells_in_supercell,
-                                        pre_filename="supercell",
-                                        width=3,
-                                        template_file="TEMPLATE"):
+
+def write_supercells_with_displacements(
+    supercell,
+    cells_with_displacements,
+    ids,
+    conv_numbers,
+    num_unitcells_in_supercell,
+    pre_filename="supercell",
+    width=3,
+    template_file="TEMPLATE",
+):
     convnum_super = []
     for i in conv_numbers:
         for j in range(num_unitcells_in_supercell):
@@ -158,40 +170,48 @@ def write_supercells_with_displacements(supercell,
     # Currently, symmetry is not used by default
     # It can be turned on by creating a file called CRY_SYM
     try:
-        f = open('CRY_SYM')
+        f = open("CRY_SYM")
         use_symmetry = True
         f.close()
     except IOError:
         use_symmetry = False
 
     if use_symmetry:
-        print("CRYSTAL-interface: WARNING: Symmetry enabled in EXTERNAL files.\n" +
-              "  Check the supercells very carefully, some spacegroups do not work (e.g. R-3m)\n" +
-              "  Non-displaced supercell is always written without symmetry")
+        print(
+            "CRYSTAL-interface: WARNING: Symmetry enabled in EXTERNAL files.\n"
+            "  Check the supercells very carefully, some spacegroups do not work "
+            "(e.g. R-3m)\n"
+            "  Non-displaced supercell is always written without symmetry"
+        )
 
-    write_crystal(pre_filename, supercell, convnum_super, template_file, write_symmetry=False)
+    write_crystal(
+        pre_filename, supercell, convnum_super, template_file, write_symmetry=False
+    )
     for i, cell in zip(ids, cells_with_displacements):
         filename = "{pre_filename}-{0:0{width}}".format(
-                   i, pre_filename=pre_filename, width=width)
-        write_crystal(filename, cell, convnum_super, template_file, write_symmetry=use_symmetry)
+            i, pre_filename=pre_filename, width=width
+        )
+        write_crystal(
+            filename, cell, convnum_super, template_file, write_symmetry=use_symmetry
+        )
+
 
 def get_crystal_structure(cell, conv_numbers, write_symmetry=False):
     lattice = cell.get_cell()
     positions = cell.get_positions()
-    numbers = cell.get_atomic_numbers()
 
     # Create and EXTERNAL file (fort.34)
     # Dimensionality, centring, crystal type
     lines = "3 1 1\n"
     # Cartesian components of the lattice vectors
     for lattvec in lattice:
-      lines += ("%12.8f" * 3 + "\n") % tuple(lattvec)
+        lines += ("%12.8f" * 3 + "\n") % tuple(lattvec)
 
     # Symmetry operators
     if write_symmetry:
         symmetry = Symmetry(cell, symprec=1e-5)
-        rotations = symmetry.get_symmetry_operations()['rotations']
-        translations = symmetry.get_symmetry_operations()['translations']
+        rotations = symmetry.get_symmetry_operations()["rotations"]
+        translations = symmetry.get_symmetry_operations()["translations"]
         N_symmops = 0
         symmlines = ""
         for i in range(0, len(rotations)):
@@ -200,7 +220,7 @@ def get_crystal_structure(cell, conv_numbers, write_symmetry=False):
                 symmlines += ("  %5.2f" * 3 + "\n") % tuple(rotations[i][j])
             symmlines += ("  %5.2f" * 3 + "\n") % tuple(translations[i])
 
-        lines += ("%d\n" % N_symmops)
+        lines += "%d\n" % N_symmops
         lines += symmlines
 
     else:
@@ -214,18 +234,22 @@ def get_crystal_structure(cell, conv_numbers, write_symmetry=False):
     lines += ("%d\n") % len(positions)
     # Conventional atomic number and cartesian coordinates of the atoms
     for i, pos in zip(conv_numbers, positions):
-        lines += ("  %d " + "%16.12f"*3 + "\n") % (i,  pos[0], pos[1], pos[2])
+        lines += ("  %d " + "%16.12f" * 3 + "\n") % (i, pos[0], pos[1], pos[2])
 
     return lines
 
+
 class CrystalIn:
     def __init__(self, lines):
-        # conv_numbers = CRYSTAL conventional atomic number mapping: 'Ge' -> 32 or 'Ge' -> 232
-        self._tags = {'lattice_vectors':  None,
-                      'atomic_species':   None,
-                      'coordinates':      None,
-                      'magnetic_moments': None,
-                      'conv_numbers':     None}
+        # conv_numbers = CRYSTAL conventional atomic number mapping:
+        #  'Ge' -> 32 or 'Ge' -> 232
+        self._tags = {
+            "lattice_vectors": None,
+            "atomic_species": None,
+            "coordinates": None,
+            "magnetic_moments": None,
+            "conv_numbers": None,
+        }
 
         self._values = None
         self._collect(lines)
@@ -237,57 +261,62 @@ class CrystalIn:
         # Reads a CRYSTAL output file (lattice vectors, conventional atomic numbers,
         # fractional atomic positions).
         # - For optimization outputs, the final geometry in the file is read.
-        # - Dielectric tensor and effective Born charges can be read with script phonopy-crystal-born
+        # - Dielectric tensor and effective Born charges can be read with script
+        #   phonopy-crystal-born
         # - If ATOMSPIN keyword is present, magnetic moments are read from it
         magmoms = []
         atomspins = []
         numspins = 0
-        l = 0
-        while l < len(lines):
-            line = lines[l]
-            if 'PRIMITIVE CELL - CENTRING CODE' in line:
+        ll = 0
+        while ll < len(lines):
+            line = lines[ll]
+            if "PRIMITIVE CELL - CENTRING CODE" in line:
                 aspecies = []
                 coords = []
                 convnum = []
-                l += 4
+                ll += 4
                 # ATOMS IN THE ASYMMETRIC UNIT    2 - ATOMS IN THE UNIT CELL:    6
-                N_asym_atoms = int(lines[l].split()[5])
-                N_atoms = int(lines[l].split()[12])
-                l += 3
-                # 1 T  22 TI    4.721218104494E-21  3.307446203077E-21  1.413771901417E-21
+                N_atoms = int(lines[ll].split()[12])
+                ll += 3
+                # 1 T  22 TI    4.721218104494E-21  3.307446203077E-21  1.413771901417E-21  # noqa E501
                 for atom in range(0, N_atoms):
-                    atomdata = lines[l].split()
+                    atomdata = lines[ll].split()
                     aspecies.append(atomdata[3].capitalize())
                     coords.append([float(x) for x in atomdata[4:7]])
                     convnum.append(int(atomdata[2]))
-                    l += 1
-            elif 'DIRECT LATTICE VECTORS CARTESIAN COMPONENTS' in line:
+                    ll += 1
+            elif "DIRECT LATTICE VECTORS CARTESIAN COMPONENTS" in line:
                 lattvecs = []
-                l += 2
+                ll += 2
                 #          X                    Y                    Z
                 for lattvec in range(1, 4):
-                    lattvecs.append([float(x) for x in lines[l].split()])
-                    l += 1
-            elif 'ATOMSPIN' in line:
+                    lattvecs.append([float(x) for x in lines[ll].split()])
+                    ll += 1
+            elif "ATOMSPIN" in line:
                 # Read ATOMSPIN, and save the magnetic moments for later parsing
                 # (not all necessary information is available at this point)
                 # All spins must be entered on one line!
                 # ATOMSPIN
                 # 8
                 # 1 1 2 1 3 -1 4 -1 5 1 6 1 7 -1 8 -1
-                l += 1
-                numspins = int(lines[l])
-                l += 1
-                atomspins = [int(x) for x in lines[l].split()]
-                l += 1
+                ll += 1
+                numspins = int(lines[ll])
+                ll += 1
+                atomspins = [int(x) for x in lines[ll].split()]
+                ll += 1
 
-            l += 1 # while l < len(lines)
+            ll += 1  # while l < len(lines)
 
-        if len(lattvecs) == 3 and len(aspecies) > 0 and len(aspecies) == len(coords) and len(aspecies) == len(convnum):
-            self._tags['lattice_vectors'] = lattvecs
-            self._tags['atomic_species'] = aspecies
-            self._tags['coordinates'] = coords
-            self._tags['conv_numbers'] = convnum
+        if (
+            len(lattvecs) == 3
+            and len(aspecies) > 0
+            and len(aspecies) == len(coords)
+            and len(aspecies) == len(convnum)
+        ):
+            self._tags["lattice_vectors"] = lattvecs
+            self._tags["atomic_species"] = aspecies
+            self._tags["coordinates"] = coords
+            self._tags["conv_numbers"] = convnum
         else:
             print("CRYSTAL-interface: Error parsing CRYSTAL output file")
 
@@ -297,22 +326,26 @@ class CrystalIn:
             magmoms = [0] * N_atoms
             if numspins * 2 == len(atomspins):
                 for i in range(0, numspins):
-                    atomnum = atomspins[i*2] - 1
-                    magmom = atomspins[i*2 + 1]
+                    atomnum = atomspins[i * 2] - 1
+                    magmom = atomspins[i * 2 + 1]
                     magmoms[atomnum] = magmom
 
-                self._tags['magnetic_moments'] = magmoms
-                print("CRYSTAL-interface: Following magnetic moments have been read from ATOMSPIN entry:")
+                self._tags["magnetic_moments"] = magmoms
+                print(
+                    "CRYSTAL-interface: Following magnetic moments "
+                    "have been read from ATOMSPIN entry:"
+                )
                 print(magmoms)
             else:
-                print("CRYSTAL-interface: Invalid ATOMSPIN entry, magnetic moments have not been set")
+                print(
+                    "CRYSTAL-interface: Invalid ATOMSPIN entry, "
+                    "magnetic moments have not been set"
+                )
         else:
             print("")
 
 
-if __name__ == '__main__':
-    import sys
-    from phonopy.structure.symmetry import Symmetry
+if __name__ == "__main__":
     cell, conv_numbers = read_crystal(sys.argv[1])
     symmetry = Symmetry(cell)
     print("# %s" % symmetry.get_international_table())

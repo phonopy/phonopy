@@ -100,7 +100,7 @@ Creating temporary directory /chemtemp/CRY_9310 on node compute-0-0.local
  PROCESS           10  OF           12  WORKING
  PROCESS           11  OF           12  WORKING
 
-         
+
  *******************************************************************************
  *                                                                             *
  *                               CRYSTAL17                                     *
@@ -145,14 +145,14 @@ Creating temporary directory /chemtemp/CRY_9310 on node compute-0-0.local
  *                                                                             *
  *******************************************************************************
  EEEEEEEEEE STARTING  DATE 10 06 2018 TIME 13:56:02.5
- NaCl at the PBE0/SVP level of theory                                            
+ NaCl at the PBE0/SVP level of theory
 
  CRYSTAL CALCULATION
  (INPUT ACCORDING TO THE INTERNATIONAL TABLES FOR X-RAY CRYSTALLOGRAPHY)
- CRYSTAL FAMILY                       :  CUBIC       
- CRYSTAL CLASS  (GROTH - 1921)        :  CUBIC HEXAKISOCTAHEDRAL              
+ CRYSTAL FAMILY                       :  CUBIC
+ CRYSTAL CLASS  (GROTH - 1921)        :  CUBIC HEXAKISOCTAHEDRAL
 
- SPACE GROUP (CENTROSYMMETRIC)        :  F M 3 M         
+ SPACE GROUP (CENTROSYMMETRIC)        :  F M 3 M
 
  LATTICE PARAMETERS  (ANGSTROMS AND DEGREES) - CONVENTIONAL CELL
         A           B           C        ALPHA        BETA       GAMMA
@@ -187,7 +187,7 @@ Creating temporary directory /chemtemp/CRY_9310 on node compute-0-0.local
 
  NUMBER OF SYMMETRY OPERATORS         :   48
  *******************************************************************************
- * GEOMETRY EDITING - INPUT COORDINATES ARE GIVEN IN ANGSTROM         
+ * GEOMETRY EDITING - INPUT COORDINATES ARE GIVEN IN ANGSTROM
  *******************************************************************************
 
  GEOMETRY NOW FULLY CONSISTENT WITH THE GROUP
@@ -208,11 +208,11 @@ Creating temporary directory /chemtemp/CRY_9310 on node compute-0-0.local
  *******************************************************************************
  LATTICE PARAMETERS (ANGSTROMS AND DEGREES) - BOHR = 0.5291772083 ANGSTROM
  PRIMITIVE CELL - CENTRING CODE 5/0 VOLUME=    43.197975 - DENSITY  2.228 g/cm^3
-         A              B              C           ALPHA      BETA       GAMMA 
+         A              B              C           ALPHA      BETA       GAMMA
      3.93845719     3.93845719     3.93845719    60.000000  60.000000  60.000000
  *******************************************************************************
  ATOMS IN THE ASYMMETRIC UNIT    2 - ATOMS IN THE UNIT CELL:    2
-     ATOM                 X/A                 Y/B                 Z/C    
+     ATOM                 X/A                 Y/B                 Z/C
  *******************************************************************************
       1 T  11 NA    0.000000000000E+00  0.000000000000E+00  0.000000000000E+00
       2 T  17 CL   -5.000000000000E-01  5.000000000000E-01  5.000000000000E-01
@@ -222,11 +222,11 @@ Creating temporary directory /chemtemp/CRY_9310 on node compute-0-0.local
 
  *******************************************************************************
  CRYSTALLOGRAPHIC CELL (VOLUME=        172.79190008)
-         A              B              C           ALPHA      BETA       GAMMA 
+         A              B              C           ALPHA      BETA       GAMMA
      5.56981957     5.56981957     5.56981957    90.000000  90.000000  90.000000
 
  COORDINATES IN THE CRYSTALLOGRAPHIC CELL
-     ATOM                 X/A                 Y/B                 Z/C    
+     ATOM                 X/A                 Y/B                 Z/C
  *******************************************************************************
       1 T  11 NA    0.000000000000E+00  0.000000000000E+00  0.000000000000E+00
       2 T  17 CL   -5.000000000000E-01  5.000000000000E-01  5.000000000000E-01
@@ -305,50 +305,50 @@ Creating temporary directory /chemtemp/CRY_9310 on node compute-0-0.local
    ATOM   X(AU)   Y(AU)   Z(AU)  N. TYPE  EXPONENT  S COEF   P COEF   D/F/G COEF
  *******************************************************************************
    1 NA   0.000   0.000   0.000
-                                  1 S  
+                                  1 S
                                          4.098E+03-5.854E-03 0.000E+00 0.000E+00
                                          6.165E+02-4.365E-02 0.000E+00 0.000E+00
                                          1.400E+02-1.943E-01 0.000E+00 0.000E+00
                                          3.907E+01-4.869E-01 0.000E+00 0.000E+00
                                          1.193E+01-4.188E-01 0.000E+00 0.000E+00
-                                  2 S  
+                                  2 S
                                          2.066E+01 8.595E-02 0.000E+00 0.000E+00
                                          1.984E+00-5.636E-01 0.000E+00 0.000E+00
                                          6.484E-01-5.195E-01 0.000E+00 0.000E+00
-                                  3 S  
+                                  3 S
                                          3.200E-01 1.000E+00 0.000E+00 0.000E+00
-                           4-     7 SP 
+                           4-     7 SP
                                          1.600E-01 1.000E+00 1.000E+00 0.000E+00
-                           8-    10 P  
+                           8-    10 P
                                          7.540E+01 0.000E+00 1.544E-02 0.000E+00
                                          1.727E+01 0.000E+00 9.974E-02 0.000E+00
                                          5.184E+00 0.000E+00 3.121E-01 0.000E+00
                                          1.660E+00 0.000E+00 4.930E-01 0.000E+00
                                          5.123E-01 0.000E+00 3.242E-01 0.000E+00
    2 CL   5.263   5.263   5.263
-                                 11 S  
+                                 11 S
                                          1.045E+04 1.971E-03 0.000E+00 0.000E+00
                                          1.572E+03 1.475E-02 0.000E+00 0.000E+00
                                          3.571E+02 6.668E-02 0.000E+00 0.000E+00
                                          1.003E+02 1.723E-01 0.000E+00 0.000E+00
                                          3.081E+01 1.588E-01 0.000E+00 0.000E+00
-                                 12 S  
+                                 12 S
                                          5.192E+01-1.001E-01 0.000E+00 0.000E+00
                                          5.705E+00 6.084E-01 0.000E+00 0.000E+00
                                          2.351E+00 5.435E-01 0.000E+00 0.000E+00
-                                 13 S  
+                                 13 S
                                          4.973E-01 1.000E+00 0.000E+00 0.000E+00
-                          14-    17 SP 
+                          14-    17 SP
                                          2.100E-01 1.000E+00 1.000E+00 0.000E+00
-                          18-    20 P  
+                          18-    20 P
                                          3.077E+02 0.000E+00-8.780E-03 0.000E+00
                                          7.210E+01 0.000E+00-6.356E-02 0.000E+00
                                          2.253E+01 0.000E+00-2.402E-01 0.000E+00
                                          7.899E+00 0.000E+00-4.780E-01 0.000E+00
                                          2.877E+00 0.000E+00-3.852E-01 0.000E+00
-                          21-    23 P  
+                          21-    23 P
                                          7.736E-01 0.000E+00 1.000E+00 0.000E+00
-                          24-    28 D  
+                          24-    28 D
                                          6.500E-01 0.000E+00 0.000E+00 1.000E+00
  INFORMATION **** SET_MPP **** PCRYSTAL CALCULATION
  INFORMATION **** READM2 **** NEW DEFAULT: FOCK/KS MATRIX MIXING SET TO 30 %
@@ -402,7 +402,7 @@ Creating temporary directory /chemtemp/CRY_9310 on node compute-0-0.local
   25-C(  4  3  1)  26-C(  5  3  1)  27-C(  6  3  1)  28-C(  5  4  1)
   29-C(  6  4  2)
 
- DIRECT LATTICE VECTORS COMPON. (A.U.)     RECIP. LATTICE VECTORS COMPON. (A.U.) 
+ DIRECT LATTICE VECTORS COMPON. (A.U.)     RECIP. LATTICE VECTORS COMPON. (A.U.)
         X            Y            Z              X            Y            Z
     0.0000000    5.2627168    5.2627168     -0.5969526    0.5969526    0.5969526
     5.2627168    0.0000000    5.2627168      0.5969526   -0.5969526    0.5969526
@@ -505,7 +505,7 @@ Creating temporary directory /chemtemp/CRY_9310 on node compute-0-0.local
  EEEEEEEEEE INT_CALC TERMINATION  DATE 10 06 2018 TIME 13:56:02.7
 
  *******************************************************************************
- NaCl at the PBE0/SVP level of theory                                            
+ NaCl at the PBE0/SVP level of theory
  CRYSTAL - SCF - TYPE OF CALCULATION :  RESTRICTED CLOSED SHELL
  *******************************************************************************
 
@@ -1094,7 +1094,7 @@ Creating temporary directory /chemtemp/CRY_9310 on node compute-0-0.local
  TENSOR IN PRINCIPAL AXES SYSTEM
  AA  1.812611E+00 BB  1.812611E+00 CC  1.812612E+00
 
- REFRACTIVE INDICES 
+ REFRACTIVE INDICES
  AA  1.346332E+00 BB  1.346332E+00 CC  1.346333E+00
 
  OPTICALLY ISOTROPIC CRYSTAL
@@ -1171,13 +1171,13 @@ Creating temporary directory /chemtemp/CRY_9310 on node compute-0-0.local
  THERE ARE NO SYMMETRY ALLOWED DIRECTIONS
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT SYMM        TELAPSE       36.91 TCPU       36.81
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT INT_SCREEN  TELAPSE       36.91 TCPU       36.82
- 
+
  COMPUTING IR TENSOR ALONG DIRECTION X
  COMPUTING IR TENSOR ALONG DIRECTION Y
  COMPUTING IR TENSOR ALONG DIRECTION Z
- 
+
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT IR TENSOR   TELAPSE      106.00 TCPU      105.84
- 
+
 
  *******************************************************************************
  *                                                                             *
@@ -1226,7 +1226,7 @@ Creating temporary directory /chemtemp/CRY_9310 on node compute-0-0.local
 
 
 
- ATOMS ISOTOPIC MASS (AMU) FOR FREQUENCY CALCULATION 
+ ATOMS ISOTOPIC MASS (AMU) FOR FREQUENCY CALCULATION
 
     1 NA     22.9898    2 CL     34.9689
 
@@ -1234,10 +1234,10 @@ Creating temporary directory /chemtemp/CRY_9310 on node compute-0-0.local
  GENERATING FREQUENCIES. IN PRINCIPLE 3N+1 SCF + GRADIENT
  CALCULATIONS  ARE REQUIRED;
  FOR EACH OF THEM THE REMAINING POINT SYMMETRY IS INDICATED.
- POINT SYMMETRY PERMITS TO GENERATE GRADIENTS FOR DISPLACEMENT B 
+ POINT SYMMETRY PERMITS TO GENERATE GRADIENTS FOR DISPLACEMENT B
  STARTING FROM THE GRADIENT GENERATED BY DISPLACEMENT A.
 
-   N   LABEL SYMBOL DISPLACEMENT     SYM. 
+   N   LABEL SYMBOL DISPLACEMENT     SYM.
 
    1     EQUILIBRIUM GEOMETRY           48
 
@@ -1303,7 +1303,7 @@ Creating temporary directory /chemtemp/CRY_9310 on node compute-0-0.local
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT INT_CALC    TELAPSE      106.14 TCPU      105.98
 
  *******************************************************************************
- NaCl at the PBE0/SVP level of theory                                            
+ NaCl at the PBE0/SVP level of theory
  CRYSTAL - SCF - TYPE OF CALCULATION :  RESTRICTED CLOSED SHELL
  *******************************************************************************
 
@@ -1540,7 +1540,7 @@ Creating temporary directory /chemtemp/CRY_9310 on node compute-0-0.local
             (2) ONLY RELEVANT CLASSES ARE CONSIDERED IN THE CHARACTER TABLE
             (3) SYMBOLS MAY NOT FULLY COINCIDE WITH THOSE FROM TEXT BOOKS.]
 
- (P, D, RP, RD, STAND FOR PAIRING, DOUBLING, REAL PAIRING AND REAL DOUBLING 
+ (P, D, RP, RD, STAND FOR PAIRING, DOUBLING, REAL PAIRING AND REAL DOUBLING
  OF THE IRREPS (SEE MANUAL))
 
  CLASS  | GROUP OPERATORS (SEE SYMMOPS KEYWORD)
@@ -1560,7 +1560,7 @@ Creating temporary directory /chemtemp/CRY_9310 on node compute-0-0.local
   MULTIP |      1      3      8      6      6      1      3      8      6      6
  -------------------------------------------------------------------------------
     Fu   |   3.00  -1.00   0.00  -1.00   1.00  -3.00   1.00   0.00   1.00  -1.00
- 
+
 
  Fu -(3,   2);
 

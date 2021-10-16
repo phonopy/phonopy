@@ -1,4 +1,5 @@
 import unittest
+
 try:
     from StringIO import StringIO
 except ImportError:
@@ -30,29 +31,28 @@ class TestMoment(unittest.TestCase):
         pass
 
     def test_moment(self):
-        data = np.loadtxt(StringIO(result_full_range), dtype='double')
+        data = np.loadtxt(StringIO(result_full_range), dtype="double")
 
         phonon = self._get_phonon(self._cell)
-        moment = phonon.run_mesh([13, 13, 13],
-                                 with_eigenvectors=True,
-                                 is_mesh_symmetry=False)
+        moment = phonon.run_mesh(
+            [13, 13, 13], with_eigenvectors=True, is_mesh_symmetry=False
+        )
         num_atom = len(phonon.primitive)
-        q = phonon.mesh.qpoints
         w = phonon.mesh.weights
         f = phonon.mesh.frequencies
         e = phonon.mesh.eigenvectors
-        vals = np.zeros((6, num_atom + 1), dtype='double')
+        vals = np.zeros((6, num_atom + 1), dtype="double")
 
         moment = PhononMoment(f, w)
         for i in range(3):
             moment.run(order=i)
-            vals[i, 0] = moment.get_moment()
-            self.assertTrue(np.abs(moment.get_moment() - data[i, 0]) < 1e-5)
+            vals[i, 0] = moment.moment
+            self.assertTrue(np.abs(moment.moment - data[i, 0]) < 1e-5)
 
         moment = PhononMoment(f, w, eigenvectors=e)
         for i in range(3):
             moment.run(order=i)
-            moms = moment.get_moment()
+            moms = moment.moment
             vals[i, 1:] = moms
             self.assertTrue((np.abs(moms - data[i, 1:]) < 1e-5).all())
 
@@ -60,15 +60,14 @@ class TestMoment(unittest.TestCase):
         moment.set_frequency_range(freq_min=3, freq_max=4)
         for i in range(3):
             moment.run(order=i)
-            vals[i + 3, 0] = moment.get_moment()
-            self.assertTrue(
-                np.abs(moment.get_moment() - data[i + 3, 0]) < 1e-5)
+            vals[i + 3, 0] = moment.moment
+            self.assertTrue(np.abs(moment.moment - data[i + 3, 0]) < 1e-5)
 
         moment = PhononMoment(f, w, eigenvectors=e)
         moment.set_frequency_range(freq_min=3, freq_max=4)
         for i in range(3):
             moment.run(order=i)
-            moms = moment.get_moment()
+            moms = moment.moment
             vals[i + 3, 1:] = moms
             self.assertTrue((np.abs(moms - data[i + 3, 1:]) < 1e-5).all())
 
@@ -79,11 +78,11 @@ class TestMoment(unittest.TestCase):
             print(("%9.6f " * len(v)) % tuple(v))
 
     def _get_phonon(self, cell):
-        phonon = Phonopy(cell,
-                         np.diag([2, 2, 2]),
-                         primitive_matrix=[[0, 0.5, 0.5],
-                                           [0.5, 0, 0.5],
-                                           [0.5, 0.5, 0]])
+        phonon = Phonopy(
+            cell,
+            np.diag([2, 2, 2]),
+            primitive_matrix=[[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]],
+        )
         filename = os.path.join(data_dir, "..", "FORCE_SETS_NaCl")
         force_sets = parse_FORCE_SETS(filename=filename)
         phonon.dataset = force_sets
@@ -95,6 +94,6 @@ class TestMoment(unittest.TestCase):
         return phonon
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestMoment)
     unittest.TextTestRunner(verbosity=2).run(suite)

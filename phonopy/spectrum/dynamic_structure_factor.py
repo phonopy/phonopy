@@ -61,6 +61,7 @@ from phonopy.phonon.thermal_displacement import ThermalDisplacements
 # Exmple: {'Na': 3.63,
 #          'Cl': 9.5770}
 
+
 def atomic_form_factor_WK1995(Q, f_x):
     a, b = np.array(f_x[:10]).reshape(-1, 2).T
     return (a * np.exp(-b * Q ** 2)).sum() + f_x[10]
@@ -94,14 +95,16 @@ class DynamicStructureFactor(object):
 
     """
 
-    def __init__(self,
-                 mesh_phonon,
-                 Qpoints,
-                 T,
-                 atomic_form_factor_func=None,
-                 scattering_lengths=None,
-                 freq_min=None,
-                 freq_max=None):
+    def __init__(
+        self,
+        mesh_phonon,
+        Qpoints,
+        T,
+        atomic_form_factor_func=None,
+        scattering_lengths=None,
+        freq_min=None,
+        freq_max=None,
+    ):
         """
 
         Parameters
@@ -169,8 +172,9 @@ class DynamicStructureFactor(object):
         self._q_count = 0
         self._unit_convertion_factor = 1.0 / (AMU * (2 * np.pi * THz) ** 2)
 
-        self.dynamic_structure_factors = np.zeros(self.frequencies.shape,
-                                                  dtype='double', order='C')
+        self.dynamic_structure_factors = np.zeros(
+            self.frequencies.shape, dtype="double", order="C"
+        )
 
     def __iter__(self):
         return self
@@ -198,32 +202,34 @@ class DynamicStructureFactor(object):
         Q_cart = np.dot(self._rec_lat, self._Qpoints[self._q_count])
         Q_length = np.linalg.norm(Q_cart)
         if Q_length < 1e-8:
-            DW = np.zeros(len(self._primitive.get_number_of_atoms()),
-                          dtype='double')
+            DW = np.zeros(len(self._primitive.get_number_of_atoms()), dtype="double")
         else:
             _, disps = self._get_thermal_displacements(Q_cart)
             DW = np.exp(-0.5 * (2 * np.pi * Q_length) ** 2 * disps[0])
-        S = np.zeros(len(freqs), dtype='double')
+        S = np.zeros(len(freqs), dtype="double")
         for i, f in enumerate(freqs):
             if self._fmin < f:
                 F = self._phonon_structure_factor(
-                    Q_cart, self._Gpoints[self._q_count], DW, f, eigvecs[:, i])
+                    Q_cart, self._Gpoints[self._q_count], DW, f, eigvecs[:, i]
+                )
                 n = 1.0 / (np.exp(f * THzToEv / (Kb * self._T)) - 1)
                 S[i] = abs(F) ** 2 * (n + 1)
         return S * self._unit_convertion_factor
 
     def _set_phonon(self):
-        qpoints_phonon = QpointsPhonon(self.qpoints,
-                                       self._dynamical_matrix,
-                                       with_eigenvectors=True)
+        qpoints_phonon = QpointsPhonon(
+            self.qpoints, self._dynamical_matrix, with_eigenvectors=True
+        )
         self.frequencies = qpoints_phonon.frequencies
         self._eigvecs = qpoints_phonon.eigenvectors
 
     def _get_thermal_displacements(self, proj_dir):
-        td = ThermalDisplacements(self._mesh_phonon,
-                                  projection_direction=proj_dir,
-                                  freq_min=self._fmin,
-                                  freq_max=self._fmax)
+        td = ThermalDisplacements(
+            self._mesh_phonon,
+            projection_direction=proj_dir,
+            freq_min=self._fmin,
+            freq_max=self._fmax,
+        )
         td.set_temperatures([self._T])
         td.run()
         return td.get_thermal_displacements()
@@ -249,6 +255,5 @@ class DynamicStructureFactor(object):
 
     def _set_qpoints(self):
         qpoints = get_qpoints_in_Brillouin_zone(self._rec_lat, self._Qpoints)
-        self.qpoints = np.array([q[0] for q in qpoints],
-                                dtype='double', order='C')
+        self.qpoints = np.array([q[0] for q in qpoints], dtype="double", order="C")
         self._Gpoints = self._Qpoints - self.qpoints

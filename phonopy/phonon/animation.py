@@ -33,88 +33,70 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.structure.cells import (get_angles, get_cell_parameters,
-                                     get_cell_matrix)
+from phonopy.structure.cells import get_angles, get_cell_parameters, get_cell_matrix
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.interface.vasp import write_vasp
 from phonopy.units import VaspToTHz
 
 
-def write_animation(dynamical_matrix,
-                    q_point=None,
-                    anime_type='v_sim',
-                    band_index=None,
-                    amplitude=None,
-                    num_div=None,
-                    shift=None,
-                    factor=None,
-                    filename=None):
+def write_animation(
+    dynamical_matrix,
+    q_point=None,
+    anime_type="v_sim",
+    band_index=None,
+    amplitude=None,
+    num_div=None,
+    shift=None,
+    factor=None,
+    filename=None,
+):
     """Write atomic modulations in animation format."""
-    animation = Animation(q_point,
-                          dynamical_matrix,
-                          shift=shift)
+    animation = Animation(q_point, dynamical_matrix, shift=shift)
 
-    if anime_type == 'v_sim':
+    if anime_type == "v_sim":
         if filename:
-            fname_out = animation.write_v_sim(amplitude=amplitude,
-                                              factor=factor,
-                                              filename=filename)
+            fname_out = animation.write_v_sim(
+                amplitude=amplitude, factor=factor, filename=filename
+            )
         else:
-            fname_out = animation.write_v_sim(amplitude=amplitude,
-                                              factor=factor)
+            fname_out = animation.write_v_sim(amplitude=amplitude, factor=factor)
 
-    elif anime_type == 'arc' or anime_type is None:
+    elif anime_type == "arc" or anime_type is None:
         if filename:
-            fname_out = animation.write_arc(band_index,
-                                            amplitude,
-                                            num_div,
-                                            filename=filename)
+            fname_out = animation.write_arc(
+                band_index, amplitude, num_div, filename=filename
+            )
         else:
-            fname_out = animation.write_arc(band_index,
-                                            amplitude,
-                                            num_div)
-    elif anime_type == 'xyz':
+            fname_out = animation.write_arc(band_index, amplitude, num_div)
+    elif anime_type == "xyz":
         if filename:
-            fname_out = animation.write_xyz(band_index,
-                                            amplitude,
-                                            num_div,
-                                            factor,
-                                            filename=filename)
+            fname_out = animation.write_xyz(
+                band_index, amplitude, num_div, factor, filename=filename
+            )
         else:
-            fname_out = animation.write_xyz(band_index,
-                                            amplitude,
-                                            num_div,
-                                            factor)
-    elif anime_type == 'jmol':
+            fname_out = animation.write_xyz(band_index, amplitude, num_div, factor)
+    elif anime_type == "jmol":
         if filename:
-            fname_out = animation.write_xyz_jmol(amplitude=amplitude,
-                                                 factor=factor,
-                                                 filename=filename)
+            fname_out = animation.write_xyz_jmol(
+                amplitude=amplitude, factor=factor, filename=filename
+            )
         else:
-            fname_out = animation.write_xyz_jmol(amplitude=amplitude,
-                                                 factor=factor)
-    elif anime_type == 'poscar':
+            fname_out = animation.write_xyz_jmol(amplitude=amplitude, factor=factor)
+    elif anime_type == "poscar":
         if filename:
-            fname_out = animation.write_POSCAR(band_index,
-                                               amplitude,
-                                               num_div,
-                                               filename=filename)
+            fname_out = animation.write_POSCAR(
+                band_index, amplitude, num_div, filename=filename
+            )
         else:
-            fname_out = animation.write_POSCAR(band_index,
-                                               amplitude,
-                                               num_div)
+            fname_out = animation.write_POSCAR(band_index, amplitude, num_div)
     else:
-        raise RuntimeError(
-            "Animation format \'%s\' was not found." % anime_type)
+        raise RuntimeError("Animation format '%s' was not found." % anime_type)
 
     return fname_out
 
 
 class Animation(object):
-    def __init__(self,
-                 qpoint,
-                 dynamical_matrix,
-                 shift=None):
+    def __init__(self, qpoint, dynamical_matrix, shift=None):
         if qpoint is None:
             _qpoint = [0, 0, 0]
         else:
@@ -138,14 +120,15 @@ class Animation(object):
         a, b, c = self._cell_params
         alpha, beta, gamma = self._angles
         self._lattice_oriented = get_cell_matrix(a, b, c, alpha, beta, gamma)
-        self._positions_oriented = \
-            self._get_oriented_displacements(np.dot(self._positions,
-                                                    self._lattice))
+        self._positions_oriented = self._get_oriented_displacements(
+            np.dot(self._positions, self._lattice)
+        )
 
     # For the orientation, see get_cell_matrix
     def _get_oriented_displacements(self, vec_cartesian):
-        return np.dot(np.dot(vec_cartesian, np.linalg.inv(self._lattice)),
-                      self._lattice_oriented)
+        return np.dot(
+            np.dot(vec_cartesian, np.linalg.inv(self._lattice)), self._lattice_oriented
+        )
 
     def _set_displacements(self, band_index):
         u = []
@@ -154,18 +137,15 @@ class Animation(object):
 
         self._displacements = np.array(u).reshape(-1, 3)
 
-    def write_v_sim(self,
-                    amplitude=None,
-                    factor=VaspToTHz,
-                    filename="anime.ascii"):
+    def write_v_sim(self, amplitude=None, factor=VaspToTHz, filename="anime.ascii"):
         if amplitude is None:
             _amplitude = 1.0
         self._set_cell_oriented()
         lat = self._lattice_oriented
         q = self._qpoint
-        text  = "# Phonopy generated file for v_sim 3.6\n"
-        text += "%15.9f%15.9f%15.9f\n" % (lat[0,0], lat[1,0], lat[1,1])
-        text += "%15.9f%15.9f%15.9f\n" % (lat[2,0], lat[2,1], lat[2,2])
+        text = "# Phonopy generated file for v_sim 3.6\n"
+        text += "%15.9f%15.9f%15.9f\n" % (lat[0, 0], lat[1, 0], lat[1, 1])
+        text += "%15.9f%15.9f%15.9f\n" % (lat[2, 0], lat[2, 1], lat[2, 2])
         for s, p in zip(self._symbols, self._positions_oriented):
             text += "%15.9f%15.9f%15.9f %2s\n" % (p[0], p[1], p[2], s)
 
@@ -176,24 +156,28 @@ class Animation(object):
                 omega = -np.sqrt(-val)
             self._set_displacements(i)
             text += "#metaData: qpt=[%f;%f;%f;%f \\\n" % (
-                q[0], q[1], q[2], omega * factor)
-            for u in (self._get_oriented_displacements(self._displacements) *
-                      _amplitude):
+                q[0],
+                q[1],
+                q[2],
+                omega * factor,
+            )
+            for u in self._get_oriented_displacements(self._displacements) * _amplitude:
                 text += "#; %f; %f; %f; %f; %f; %f \\\n" % (
-                    u[0].real, u[1].real, u[2].real,
-                    u[0].imag, u[1].imag, u[2].imag)
+                    u[0].real,
+                    u[1].real,
+                    u[2].real,
+                    u[0].imag,
+                    u[1].imag,
+                    u[2].imag,
+                )
             text += "# ]\n"
-        w = open(filename, 'w')
+        w = open(filename, "w")
         w.write(text)
         w.close()
 
         return filename
 
-    def write_arc(self,
-                  band_index,
-                  amplitude=1,
-                  num_div=20,
-                  filename="anime.arc"):
+    def write_arc(self, band_index, amplitude=1, num_div=20, filename="anime.arc"):
         self._set_cell_oriented()
         self._set_displacements(band_index - 1)
         displacements = self._get_oriented_displacements(self._displacements)
@@ -206,32 +190,46 @@ class Animation(object):
         text += "PBC=ON\n"
 
         for i in range(num_div):
-            text += "                                                                        0.000000\n"
+            text += "                                                                        0.000000\n"  # noqa E501
             text += "!DATE\n"
             text += "%-4s%10.4f%10.4f%10.4f%10.4f%10.4f%10.4f\n" % (
-                "PBC", a, b, c, alpha, beta, gamma)
-            positions = (self._positions_oriented +
-                         (displacements *
-                          np.exp(2j * np.pi / num_div * i)).imag * amplitude)
+                "PBC",
+                a,
+                b,
+                c,
+                alpha,
+                beta,
+                gamma,
+            )
+            positions = (
+                self._positions_oriented
+                + (displacements * np.exp(2j * np.pi / num_div * i)).imag * amplitude
+            )
             for j, p in enumerate(positions):
                 text += "%-5s%15.9f%15.9f%15.9f CORE" % (
-                    self._symbols[j], p[0], p[1], p[2])
+                    self._symbols[j],
+                    p[0],
+                    p[1],
+                    p[2],
+                )
                 text += "%5s%3s%3s%9.4f%5s\n" % (
-                    j + 1, self._symbols[j], self._symbols[j], 0.0, j + 1)
+                    j + 1,
+                    self._symbols[j],
+                    self._symbols[j],
+                    0.0,
+                    j + 1,
+                )
 
             text += "end\n"
             text += "end\n"
 
-        w = open(filename, 'w')
+        w = open(filename, "w")
         w.write(text)
         w.close()
 
         return filename
 
-    def write_xyz_jmol(self,
-                       amplitude=10,
-                       factor=VaspToTHz,
-                       filename="anime.xyz_jmol"):
+    def write_xyz_jmol(self, amplitude=10, factor=VaspToTHz, filename="anime.xyz_jmol"):
         self._set_cell_oriented()
         text = ""
         for i, val in enumerate(self._eigenvalues):
@@ -240,27 +238,29 @@ class Animation(object):
             else:
                 freq = -np.sqrt(-val)
             self._set_displacements(i)
-            displacements = self._get_oriented_displacements(
-                self._displacements) * amplitude
+            displacements = (
+                self._get_oriented_displacements(self._displacements) * amplitude
+            )
             text += "%d\n" % len(self._symbols)
-            text += "q %s , b %d , f %f " % (str(self._qpoint), i+1, freq * factor)
+            text += "q %s , b %d , f %f " % (str(self._qpoint), i + 1, freq * factor)
             text += "(generated by Phonopy)\n"
-            for s, p, u in zip(
-                self._symbols, self._positions_oriented, displacements):
+            for s, p, u in zip(self._symbols, self._positions_oriented, displacements):
                 text += "%-3s  %22.15f %22.15f %22.15f  " % (s, p[0], p[1], p[2])
                 text += "%15.9f %15.9f %15.9f\n" % (u[0].real, u[1].real, u[2].real)
-        w = open(filename, 'w')
+        w = open(filename, "w")
         w.write(text)
         w.close()
 
         return filename
 
-    def write_xyz(self,
-                  band_index,
-                  amplitude=1,
-                  num_div=20,
-                  factor=VaspToTHz,
-                  filename="anime.xyz"):
+    def write_xyz(
+        self,
+        band_index,
+        amplitude=1,
+        num_div=20,
+        factor=VaspToTHz,
+        filename="anime.xyz",
+    ):
         self._set_cell_oriented()
         freq = self._eigenvalues[band_index - 1]
         self._set_displacements(band_index - 1)
@@ -269,36 +269,44 @@ class Animation(object):
         for i in range(num_div):
             text += "%d\n" % len(self._symbols)
             text += "q %s , b %d , f %f , " % (
-                str(self._qpoint), band_index, freq * factor)
+                str(self._qpoint),
+                band_index,
+                freq * factor,
+            )
             text += "div %d / %d " % (i, num_div)
             text += "(generated by Phonopy)\n"
-            positions = (self._positions_oriented +
-                         (displacements *
-                          np.exp(2j * np.pi / num_div * i)).imag * amplitude)
+            positions = (
+                self._positions_oriented
+                + (displacements * np.exp(2j * np.pi / num_div * i)).imag * amplitude
+            )
             for j, p in enumerate(positions):
                 text += "%-3s %22.15f %22.15f %22.15f\n" % (
-                    self._symbols[j], p[0], p[1], p[2])
-        w = open(filename, 'w')
+                    self._symbols[j],
+                    p[0],
+                    p[1],
+                    p[2],
+                )
+        w = open(filename, "w")
         w.write(text)
         w.close()
 
         return filename
 
-    def write_POSCAR(self,
-                     band_index,
-                     amplitude=1,
-                     num_div=20,
-                     filename="APOSCAR"):
+    def write_POSCAR(self, band_index, amplitude=1, num_div=20, filename="APOSCAR"):
         self._set_displacements(band_index - 1)
         for i in range(num_div):
-            positions = (np.dot(self._positions, self._lattice) +
-                         (self._displacements *
-                          np.exp(2j * np.pi / num_div * i)).imag * amplitude)
-            atoms = PhonopyAtoms(cell=self._lattice,
-                                 positions=positions,
-                                 masses=self._masses,
-                                 symbols=self._symbols,
-                                 pbc=True)
-            write_vasp((filename+"-%03d") % i, atoms, direct=True)
+            positions = (
+                np.dot(self._positions, self._lattice)
+                + (self._displacements * np.exp(2j * np.pi / num_div * i)).imag
+                * amplitude
+            )
+            atoms = PhonopyAtoms(
+                cell=self._lattice,
+                positions=positions,
+                masses=self._masses,
+                symbols=self._symbols,
+                pbc=True,
+            )
+            write_vasp((filename + "-%03d") % i, atoms, direct=True)
 
         return filename

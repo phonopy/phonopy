@@ -125,13 +125,83 @@ def test_Al():
     """
 
     weights = np.array(
-        [1, 8, 8, 8, 8, 8, 4, 6, 24, 24, 24, 24, 24, 24, 24, 24, 24, 12,
-         6, 24, 24, 24, 24, 24, 24, 24, 12, 6, 24, 24, 24, 24, 24, 12,
-         6, 24, 24, 24, 12, 6, 24, 12, 3, 24, 48, 48, 48, 24, 24, 48,
-         48, 48, 48, 48, 24, 24, 48, 48, 48, 24, 24, 48, 24, 12, 24, 48,
-         24, 24, 48, 24, 12, 6], dtype='int_')
-    eigvals = np.reshape([float(x) for x in eigvals_Al.split()],
-                         (1, len(weights), -1))
+        [
+            1,
+            8,
+            8,
+            8,
+            8,
+            8,
+            4,
+            6,
+            24,
+            24,
+            24,
+            24,
+            24,
+            24,
+            24,
+            24,
+            24,
+            12,
+            6,
+            24,
+            24,
+            24,
+            24,
+            24,
+            24,
+            24,
+            12,
+            6,
+            24,
+            24,
+            24,
+            24,
+            24,
+            12,
+            6,
+            24,
+            24,
+            24,
+            12,
+            6,
+            24,
+            12,
+            3,
+            24,
+            48,
+            48,
+            48,
+            24,
+            24,
+            48,
+            48,
+            48,
+            48,
+            48,
+            24,
+            24,
+            48,
+            48,
+            48,
+            24,
+            24,
+            48,
+            24,
+            12,
+            24,
+            48,
+            24,
+            24,
+            48,
+            24,
+            12,
+            6,
+        ],
+        dtype="int_",
+    )
+    eigvals = np.reshape([float(x) for x in eigvals_Al.split()], (1, len(weights), -1))
     n_electrons = 3.0
     efe = ElectronFreeEnergy(eigvals, weights, n_electrons)
     efe.run(1000)
@@ -144,4 +214,5 @@ def test_Al():
     assert np.abs(_energy - 10.76680671) < 1e-6
 
     (temperaturs, free_energy) = get_free_energy_at_T(
-        0, 1000, 10, eigvals, weights, n_electrons)
+        0, 1000, 10, eigvals, weights, n_electrons
+    )

@@ -38,49 +38,59 @@ import numpy as np
 from phonopy.interface.calculator import read_crystal_structure
 from phonopy.structure.cells import get_primitive_matrix
 from phonopy.file_IO import (
-    parse_BORN, read_force_constants_hdf5, parse_FORCE_SETS,
-    parse_FORCE_CONSTANTS)
+    parse_BORN,
+    read_force_constants_hdf5,
+    parse_FORCE_SETS,
+    parse_FORCE_CONSTANTS,
+)
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.interface.calculator import get_force_constant_conversion_factor
 
 
-def get_cell_settings(supercell_matrix=None,
-                      primitive_matrix=None,
-                      unitcell=None,
-                      supercell=None,
-                      unitcell_filename=None,
-                      supercell_filename=None,
-                      calculator=None,
-                      symprec=1e-5,
-                      log_level=0):
+def get_cell_settings(
+    supercell_matrix=None,
+    primitive_matrix=None,
+    unitcell=None,
+    supercell=None,
+    unitcell_filename=None,
+    supercell_filename=None,
+    calculator=None,
+    symprec=1e-5,
+    log_level=0,
+):
     """Return crystal structures."""
     optional_structure_info = None
-    if (primitive_matrix is None or
-        (type(primitive_matrix) is str and primitive_matrix == "auto")):  # noqa E129
-        pmat = 'auto'
+    if primitive_matrix is None or (
+        type(primitive_matrix) is str and primitive_matrix == "auto"
+    ):  # noqa E129
+        pmat = "auto"
     else:
         pmat = primitive_matrix
 
     if unitcell_filename is not None:
         cell, optional_structure_info = _read_crystal_structure(
-            filename=unitcell_filename, interface_mode=calculator)
+            filename=unitcell_filename, interface_mode=calculator
+        )
         smat = supercell_matrix
         if log_level:
-            print("Unit cell structure was read from \"%s\"."
-                  % optional_structure_info[0])
+            print(
+                'Unit cell structure was read from "%s".' % optional_structure_info[0]
+            )
     elif supercell_filename is not None:
         cell, optional_structure_info = read_crystal_structure(
-            filename=supercell_filename, interface_mode=calculator)
-        smat = np.eye(3, dtype='intc', order='C')
+            filename=supercell_filename, interface_mode=calculator
+        )
+        smat = np.eye(3, dtype="intc", order="C")
         if log_level:
-            print("Supercell structure was read from \"%s\"."
-                  % optional_structure_info[0])
+            print(
+                'Supercell structure was read from "%s".' % optional_structure_info[0]
+            )
     elif unitcell is not None:
         cell = PhonopyAtoms(atoms=unitcell)
         smat = supercell_matrix
     elif supercell is not None:
         cell = PhonopyAtoms(atoms=supercell)
-        smat = np.eye(3, dtype='intc', order='C')
+        smat = np.eye(3, dtype="intc", order="C")
     else:
         raise RuntimeError("Cell has to be specified.")
 
@@ -94,36 +104,38 @@ def get_cell_settings(supercell_matrix=None,
     return cell, smat, pmat
 
 
-def get_nac_params(primitive=None,
-                   nac_params=None,
-                   born_filename=None,
-                   is_nac=True,
-                   nac_factor=None,
-                   log_level=0):
+def get_nac_params(
+    primitive=None,
+    nac_params=None,
+    born_filename=None,
+    is_nac=True,
+    nac_factor=None,
+    log_level=0,
+):
     """Look for and return NAC parameters."""
     if born_filename is not None:
         _nac_params = parse_BORN(primitive, filename=born_filename)
         if log_level:
-            print("NAC parameters were read from \"%s\"." % born_filename)
+            print('NAC parameters were read from "%s".' % born_filename)
     elif nac_params is not None:  # nac_params input or phonopy_yaml.nac_params
         _nac_params = nac_params
     elif is_nac and os.path.isfile("BORN"):
         _nac_params = parse_BORN(primitive, filename="BORN")
         if log_level:
-            print("NAC params were read from \"BORN\".")
+            print('NAC params were read from "BORN".')
     else:
         _nac_params = None
 
     if _nac_params is not None:
-        if 'factor' not in _nac_params or _nac_params['factor'] is None:
-            _nac_params['factor'] = nac_factor
+        if "factor" not in _nac_params or _nac_params["factor"] is None:
+            _nac_params["factor"] = nac_factor
 
     return _nac_params
 
 
-def read_force_constants_from_hdf5(filename='force_constants.hdf5',
-                                   p2s_map=None,
-                                   calculator=None):
+def read_force_constants_from_hdf5(
+    filename="force_constants.hdf5", p2s_map=None, calculator=None
+):
     """Convert force constants physical unit.
 
     Each calculator interface has own default force constants physical unit.
@@ -136,9 +148,9 @@ def read_force_constants_from_hdf5(filename='force_constants.hdf5',
     This method is also used from phonopy script.
 
     """
-    fc, fc_unit = read_force_constants_hdf5(filename=filename,
-                                            p2s_map=p2s_map,
-                                            return_physical_unit=True)
+    fc, fc_unit = read_force_constants_hdf5(
+        filename=filename, p2s_map=p2s_map, return_physical_unit=True
+    )
     if fc_unit is None:
         return fc
     else:
@@ -147,17 +159,18 @@ def read_force_constants_from_hdf5(filename='force_constants.hdf5',
 
 
 def set_dataset_and_force_constants(
-        phonon,
-        dataset,
-        fc,  # From phonopy_yaml
-        force_constants_filename=None,
-        force_sets_filename=None,
-        fc_calculator=None,
-        fc_calculator_options=None,
-        produce_fc=True,
-        symmetrize_fc=True,
-        is_compact_fc=True,
-        log_level=0):
+    phonon,
+    dataset,
+    fc,  # From phonopy_yaml
+    force_constants_filename=None,
+    force_sets_filename=None,
+    fc_calculator=None,
+    fc_calculator_options=None,
+    produce_fc=True,
+    symmetrize_fc=True,
+    is_compact_fc=True,
+    log_level=0,
+):
     """Set displacement-force dataset and force constants."""
     natom = len(phonon.supercell)
 
@@ -190,49 +203,52 @@ def set_dataset_and_force_constants(
     if _fc is not None:
         phonon.force_constants = _fc
         if log_level:
-            print("Force constants were read from \"%s\"."
-                  % _force_constants_filename)
+            print('Force constants were read from "%s".' % _force_constants_filename)
 
     if phonon.force_constants is None:
         # Overwrite dataset
         if _dataset is not None:
             phonon.dataset = _dataset
             if log_level:
-                print("Force sets were read from \"%s\"."
-                      % _force_sets_filename)
+                print('Force sets were read from "%s".' % _force_sets_filename)
         if produce_fc:
-            _produce_force_constants(phonon,
-                                     fc_calculator,
-                                     fc_calculator_options,
-                                     symmetrize_fc,
-                                     is_compact_fc,
-                                     log_level)
+            _produce_force_constants(
+                phonon,
+                fc_calculator,
+                fc_calculator_options,
+                symmetrize_fc,
+                is_compact_fc,
+                log_level,
+            )
 
 
 def _read_force_constants_file(phonon, force_constants_filename):
-    dot_split = force_constants_filename.split('.')
+    dot_split = force_constants_filename.split(".")
     p2s_map = phonon.primitive.p2s_map
-    if len(dot_split) > 1 and dot_split[-1] == 'hdf5':
+    if len(dot_split) > 1 and dot_split[-1] == "hdf5":
         _fc = read_force_constants_from_hdf5(
             filename=force_constants_filename,
             p2s_map=p2s_map,
-            calculator=phonon.calculator)
+            calculator=phonon.calculator,
+        )
     else:
-        _fc = parse_FORCE_CONSTANTS(filename=force_constants_filename,
-                                    p2s_map=p2s_map)
+        _fc = parse_FORCE_CONSTANTS(filename=force_constants_filename, p2s_map=p2s_map)
     return _fc
 
 
-def _produce_force_constants(phonon,
-                             fc_calculator,
-                             fc_calculator_options,
-                             symmetrize_fc,
-                             is_compact_fc,
-                             log_level):
+def _produce_force_constants(
+    phonon,
+    fc_calculator,
+    fc_calculator_options,
+    symmetrize_fc,
+    is_compact_fc,
+    log_level,
+):
     phonon.produce_force_constants(
         calculate_full_force_constants=(not is_compact_fc),
         fc_calculator=fc_calculator,
-        fc_calculator_options=fc_calculator_options)
+        fc_calculator_options=fc_calculator_options,
+    )
     if symmetrize_fc:
         phonon.symmetrize_force_constants(show_drift=(log_level > 0))
         if log_level:
@@ -241,17 +257,14 @@ def _produce_force_constants(phonon,
 
 def _read_crystal_structure(filename=None, interface_mode=None):
     try:
-        return read_crystal_structure(filename=filename,
-                                      interface_mode=interface_mode)
+        return read_crystal_structure(filename=filename, interface_mode=interface_mode)
     except FileNotFoundError:
         raise
     except Exception:
         msg = [
-            "============================ phonopy.load "
-            "============================",
+            "============================ phonopy.load " "============================",
             "  Reading crystal structure file failed in phonopy.load.",
-            "  Maybe phonopy.load(..., calculator='<calculator name>') "
-            "expected?",
-            "============================ phonopy.load "
-            "============================"]
+            "  Maybe phonopy.load(..., calculator='<calculator name>') " "expected?",
+            "============================ phonopy.load " "============================",
+        ]
         raise RuntimeError("\n".join(msg))

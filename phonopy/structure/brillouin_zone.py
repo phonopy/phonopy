@@ -35,7 +35,8 @@
 import numpy as np
 from phonopy.structure.cells import get_reduced_bases
 
-search_space = np.array([
+search_space = np.array(
+    [
         [0, 0, 0],
         [0, 0, 1],
         [0, 1, -1],
@@ -62,18 +63,21 @@ search_space = np.array([
         [0, -1, -1],
         [0, -1, 0],
         [0, -1, 1],
-        [0, 0, -1]], dtype='intc')
+        [0, 0, -1],
+    ],
+    dtype="intc",
+)
 
 
-def get_qpoints_in_Brillouin_zone(reciprocal_lattice,
-                                  qpoints,
-                                  only_unique=False,
-                                  tolerance=0.01):
+def get_qpoints_in_Brillouin_zone(
+    reciprocal_lattice, qpoints, only_unique=False, tolerance=0.01
+):
     bz = BrillouinZone(reciprocal_lattice)
     bz.run(qpoints)
     if only_unique:
-        return np.array([pts[0] for pts in bz.shortest_qpoints],
-                        dtype='double', order='C')
+        return np.array(
+            [pts[0] for pts in bz.shortest_qpoints], dtype="double", order="C"
+        )
     else:
         return bz.shortest_qpoints
 
@@ -106,11 +110,11 @@ class BrillouinZone(object):
         """
 
         self._reciprocal_lattice = np.array(reciprocal_lattice)
-        self._tolerance = min(
-            np.sum(reciprocal_lattice ** 2, axis=0)) * tolerance
+        self._tolerance = min(np.sum(reciprocal_lattice ** 2, axis=0)) * tolerance
         self._reduced_bases = get_reduced_bases(reciprocal_lattice.T)
-        self._tmat = np.dot(np.linalg.inv(self._reciprocal_lattice),
-                            self._reduced_bases.T)
+        self._tmat = np.dot(
+            np.linalg.inv(self._reciprocal_lattice), self._reduced_bases.T
+        )
         self._tmat_inv = np.linalg.inv(self._tmat)
         self.shortest_qpoints = None
 
@@ -119,10 +123,9 @@ class BrillouinZone(object):
         reduced_qpoints -= np.rint(reduced_qpoints)
         self.shortest_qpoints = []
         for q in reduced_qpoints:
-            distances = (np.dot(q + search_space,
-                                self._reduced_bases) ** 2).sum(axis=1)
+            distances = (np.dot(q + search_space, self._reduced_bases) ** 2).sum(axis=1)
             min_dist = min(distances)
-            shortest_indices = np.where(
-                distances < min_dist + self._tolerance)[0]
+            shortest_indices = np.where(distances < min_dist + self._tolerance)[0]
             self.shortest_qpoints.append(
-                np.dot(search_space[shortest_indices] + q, self._tmat.T))
+                np.dot(search_space[shortest_indices] + q, self._tmat.T)
+            )

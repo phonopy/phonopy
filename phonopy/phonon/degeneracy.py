@@ -53,12 +53,9 @@ def degenerate_sets(freqs, cutoff=1e-4):
     return indices
 
 
-def get_eigenvectors(q,
-                     dm,
-                     ddm,
-                     perturbation=None,
-                     derivative_order=None,
-                     nac_q_direction=None):
+def get_eigenvectors(
+    q, dm, ddm, perturbation=None, derivative_order=None, nac_q_direction=None
+):
     if nac_q_direction is not None and (np.abs(q) < 1e-5).all():
         dm.run(q, q_direction=nac_q_direction)
     else:
@@ -89,7 +86,7 @@ def rotate_eigenvectors(eigvals, eigvecs, dD):
 def _get_dD(q, ddm, perturbation):
     ddm.run(q)
     ddm_vals = ddm.get_derivative_of_dynamical_matrix()
-    dD = np.zeros(ddm_vals.shape[1:], dtype=ddm_vals.dtype, order='C')
+    dD = np.zeros(ddm_vals.shape[1:], dtype=ddm_vals.dtype, order="C")
     if len(ddm_vals) == 3:
         for i in range(3):
             dD += perturbation[i] * ddm_vals[i]

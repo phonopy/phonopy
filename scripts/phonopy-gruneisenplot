@@ -54,17 +54,18 @@ def print_band(data):
     text = "#%-9s %-10s %-10s    " % ("    q_a", "    q_b", "    q_c")
     text += "%-12s    " % "   Distance"
     text += "%-12s %-12s     ..." % ("   Gruneisen", "   Frequency")
-    lines = [text, ]
+    lines = [
+        text,
+    ]
 
-    for path in data['path']:
-        for q in path['phonon']:
-            text = "%10.7f %10.7f %10.7f    " % (tuple(q['q-position']))
-            text += "%12.7f    " % (q['distance'] + distance)
-            for band in q['band']:
-                text += "%12.7f %12.7f  " % (band['gruneisen'],
-                                             band['frequency'])
+    for path in data["path"]:
+        for q in path["phonon"]:
+            text = "%10.7f %10.7f %10.7f    " % (tuple(q["q-position"]))
+            text += "%12.7f    " % (q["distance"] + distance)
+            for band in q["band"]:
+                text += "%12.7f %12.7f  " % (band["gruneisen"], band["frequency"])
             lines.append(text)
-        distance += path['phonon'][-1]['distance']
+        distance += path["phonon"][-1]["distance"]
 
     print("\n".join(lines))
 
@@ -73,13 +74,15 @@ def print_mesh(data):
     text = "#%-9s %-10s %-10s  " % ("    q_a", "    q_b", "    q_c")
     text += "%-12s  " % "Multiplicity"
     text += "%-12s %-12s     ..." % ("   Gruneisen", "   Frequency")
-    lines = [text, ]
+    lines = [
+        text,
+    ]
 
-    for qpt in data['phonon']:
-        text = "%10.7f %10.7f %10.7f  " % (tuple(qpt['q-position']))
-        text += "%12d  " % qpt['multiplicity']
-        for band in qpt['band']:
-            text += "%12.7f %12.7f  " % (band['gruneisen'], band['frequency'])
+    for qpt in data["phonon"]:
+        text = "%10.7f %10.7f %10.7f  " % (tuple(qpt["q-position"]))
+        text += "%12d  " % qpt["multiplicity"]
+        for band in qpt["band"]:
+            text += "%12.7f %12.7f  " % (band["gruneisen"], band["frequency"])
         lines.append(text)
 
     print("\n".join(lines))
@@ -93,22 +96,22 @@ def plot_band(data, is_fg, g_max, g_min):
     f = []
     distance = 0.0
 
-    for path in data['path']:
-        for q in path['phonon']:
-            d.append(q['distance'] + distance)
-            g.append([band['gruneisen'] for band in q['band']])
-            f.append([band['frequency'] for band in q['band']])
-        distance += path['phonon'][-1]['distance']
+    for path in data["path"]:
+        for q in path["phonon"]:
+            d.append(q["distance"] + distance)
+            g.append([band["gruneisen"] for band in q["band"]])
+            f.append([band["frequency"] for band in q["band"]])
+        distance += path["phonon"][-1]["distance"]
 
     if is_fg:
         fig, (ax1, ax2, ax3) = plt.subplots(3, 1)
-        ax1.plot(d, g, '-')
-        ax2.plot(d, np.array(g) * np.array(f), '-')
-        ax3.plot(d, f, '-')
+        ax1.plot(d, g, "-")
+        ax2.plot(d, np.array(g) * np.array(f), "-")
+        ax3.plot(d, f, "-")
     else:
         fig, (ax1, ax2) = plt.subplots(2, 1)
-        ax1.plot(d, g, '-')
-        ax2.plot(d, f, '-')
+        ax1.plot(d, g, "-")
+        ax2.plot(d, f, "-")
 
     if g_max is not None:
         ax1.set_ylim(ymax=g_max)
@@ -121,30 +124,31 @@ def plot_band(data, is_fg, g_max, g_min):
 def plot_yaml_mesh(data, is_fg, cutoff_frequency=None):
     x = []
     y = []
-    for qpt in data['phonon']:
-        x.append([band['frequency'] for band in qpt['band']])
-        y.append([band['gruneisen'] for band in qpt['band']])
+    for qpt in data["phonon"]:
+        x.append([band["frequency"] for band in qpt["band"]])
+        y.append([band["gruneisen"] for band in qpt["band"]])
 
     return plot_mesh(x, y, is_fg, cutoff_frequency=cutoff_frequency)
 
 
 def plot_hdf5_mesh(data, is_fg, cutoff_frequency=None):
-    x = data['frequency']
-    y = data['gruneisen'][:]
+    x = data["frequency"]
+    y = data["gruneisen"][:]
     return plot_mesh(x, y, is_fg, cutoff_frequency=cutoff_frequency)
 
 
 def plot_mesh(x, y, is_fg, cutoff_frequency=None):
     import matplotlib.pyplot as plt
+
     for (g, freqs) in zip(np.transpose(y), np.transpose(x)):
         if cutoff_frequency:
             g = np.extract(freqs > cutoff_frequency, g)
             freqs = np.extract(freqs > cutoff_frequency, freqs)
 
         if is_fg:
-            plt.plot(freqs, np.array(freqs) * np.array(g), 'o')
+            plt.plot(freqs, np.array(freqs) * np.array(g), "o")
         else:
-            plt.plot(freqs, g, 'o')
+            plt.plot(freqs, g, "o")
 
     return plt
 
@@ -152,55 +156,69 @@ def plot_mesh(x, y, is_fg, cutoff_frequency=None):
 def get_options():
     # Parse options
     import argparse
+
     parser = argparse.ArgumentParser(
-        description="Phonopy gruneisenplot command-line-tool")
-    parser.set_defaults(f_max=None,
-                        f_min=None,
-                        g_max=None,
-                        g_min=None,
-                        is_hdf5=False,
-                        is_fg=False,
-                        is_gnuplot=False,
-                        cutoff_frequency=None,
-                        output_filename=None,
-                        save_graph=None,
-                        title=None)
+        description="Phonopy gruneisenplot command-line-tool"
+    )
+    parser.set_defaults(
+        f_max=None,
+        f_min=None,
+        g_max=None,
+        g_min=None,
+        is_hdf5=False,
+        is_fg=False,
+        is_gnuplot=False,
+        cutoff_frequency=None,
+        output_filename=None,
+        save_graph=None,
+        title=None,
+    )
     parser.add_argument(
-        "--gnuplot", dest="is_gnuplot", action="store_true",
-        help="Output in gnuplot data style")
+        "--gnuplot",
+        dest="is_gnuplot",
+        action="store_true",
+        help="Output in gnuplot data style",
+    )
     parser.add_argument(
-        "-o", "--output", dest="output_filename",
-        help="Output filename of PDF plot")
+        "-o", "--output", dest="output_filename", help="Output filename of PDF plot"
+    )
     parser.add_argument(
-        "-s", "--save", dest="save_graph", action="store_true",
-        help="Save plot data in pdf")
+        "-s",
+        "--save",
+        dest="save_graph",
+        action="store_true",
+        help="Save plot data in pdf",
+    )
     parser.add_argument(
-        "--fg", dest="is_fg", action="store_true",
-        help="Plot omega x gamma")
+        "--fg", dest="is_fg", action="store_true", help="Plot omega x gamma"
+    )
+    parser.add_argument("-t", "--title", dest="title", help="Title of plot")
     parser.add_argument(
-        "-t", "--title", dest="title",
-        help="Title of plot")
+        "--cutoff",
+        dest="cutoff_frequency",
+        type=float,
+        help="Plot above this cutoff frequency for mesh sampling mode.",
+    )
     parser.add_argument(
-        "--cutoff", dest="cutoff_frequency", type=float,
-        help="Plot above this cutoff frequency for mesh sampling mode.")
+        "--fmax", dest="f_max", type=float, help="Maximum frequency plotted"
+    )
     parser.add_argument(
-        "--fmax", dest="f_max", type=float,
-        help="Maximum frequency plotted")
+        "--fmin", dest="f_min", type=float, help="Minimum frequency plotted"
+    )
     parser.add_argument(
-        "--fmin", dest="f_min", type=float,
-        help="Minimum frequency plotted")
+        "--gmax", dest="g_max", type=float, help="Maximum Gruneisen params plotted"
+    )
     parser.add_argument(
-        "--gmax", dest="g_max", type=float,
-        help="Maximum Gruneisen params plotted")
+        "--gmin", dest="g_min", type=float, help="Minimum Gruneisen params plotted"
+    )
     parser.add_argument(
-        "--gmin", dest="g_min", type=float,
-        help="Minimum Gruneisen params plotted")
+        "--hdf5", dest="is_hdf5", action="store_true", help="Use hdf5 to read results"
+    )
     parser.add_argument(
-        "--hdf5", dest="is_hdf5", action="store_true",
-        help="Use hdf5 to read results")
-    parser.add_argument(
-        "filename", nargs='*',
-        help="Filename of phonopy-gruneisen result (gruneisen.yaml)")
+        "filename",
+        nargs="*",
+        help="Filename of phonopy-gruneisen result (gruneisen.yaml)",
+    )
     args = parser.parse_args()
     return args
 
@@ -217,7 +235,7 @@ def main(args):
             filename = "gruneisen.hdf5"
         else:
             filename = args.filename[0]
-        with h5py.File(filename, 'r') as f:
+        with h5py.File(filename, "r") as f:
             data = {key: f[key][:] for key in list(f)}
     else:
         if len(args.filename) == 0:
@@ -229,14 +247,15 @@ def main(args):
 
     if args.save_graph:
         import matplotlib as mpl
-        mpl.use('Agg')
+
+        mpl.use("Agg")
 
     if args.output_filename:
         pdffile = args.output_filename
     else:
         pdffile = "gruneisenplot.pdf"
 
-    if 'path' in data:
+    if "path" in data:
         if args.is_gnuplot:
             print_band(data)
         else:
@@ -248,18 +267,18 @@ def main(args):
             else:
                 plt.show()
 
-    if 'mesh' in data:
+    if "mesh" in data:
         if args.is_hdf5:
-            plt = plot_hdf5_mesh(data,
-                                 args.is_fg,
-                                 cutoff_frequency=args.cutoff_frequency)
+            plt = plot_hdf5_mesh(
+                data, args.is_fg, cutoff_frequency=args.cutoff_frequency
+            )
         else:
             if args.is_gnuplot:
                 print_mesh(data)
             else:
-                plt = plot_yaml_mesh(data,
-                                     args.is_fg,
-                                     cutoff_frequency=args.cutoff_frequency)
+                plt = plot_yaml_mesh(
+                    data, args.is_fg, cutoff_frequency=args.cutoff_frequency
+                )
 
         if args.title is not None:
             plt.subtitle(args.title)

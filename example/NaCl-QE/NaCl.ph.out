@@ -1,10 +1,10 @@
 
-     Program PHONON v.5.4.0 starts on 14Sep2016 at 14:55: 8 
+     Program PHONON v.5.4.0 starts on 14Sep2016 at 14:55: 8
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
-          URL http://www.quantum-espresso.org", 
+          URL http://www.quantum-espresso.org",
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
@@ -37,20 +37,20 @@
 
                file Na.pbe-spn-kjpaw_psl.0.2.UPF: wavefunction(s)  2P 3P renormalized
                file Cl.pbe-n-kjpaw_psl.0.1.UPF: wavefunction(s)  3S 3P renormalized
- 
+
      Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Min         214     214     59                 8198     8198    1195
      Max         217     217     60                 8200     8200    1198
      Sum        2585    2585    717                98385    98385   14363
- 
+
 
      Check: negative/imaginary core charge=   -0.000005    0.000000
 
      Calculation of q =    0.0000000   0.0000000   0.0000000
 
-                                                                                
+
 
      bravais-lattice index     =            0
      lattice parameter (alat)  =      10.7531  a.u.
@@ -69,17 +69,17 @@
      celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
 
      crystal axes: (cart. coord. in units of alat)
-               a(1) = (  1.0000  0.0000  0.0000 )  
-               a(2) = (  0.0000  1.0000  0.0000 )  
-               a(3) = (  0.0000  0.0000  1.0000 )  
+               a(1) = (  1.0000  0.0000  0.0000 )
+               a(2) = (  0.0000  1.0000  0.0000 )
+               a(3) = (  0.0000  0.0000  1.0000 )
 
      reciprocal axes: (cart. coord. in units 2 pi/alat)
-               b(1) = (  1.0000  0.0000  0.0000 )  
-               b(2) = (  0.0000  1.0000  0.0000 )  
-               b(3) = (  0.0000  0.0000  1.0000 )  
+               b(1) = (  1.0000  0.0000  0.0000 )
+               b(2) = (  0.0000  1.0000  0.0000 )
+               b(3) = (  0.0000  0.0000  1.0000 )
 
 
-     Atoms inside the unit cell: 
+     Atoms inside the unit cell:
 
      Cartesian axes
 
@@ -93,9 +93,9 @@
         7     Cl  35.4530   tau(    7) = (    0.00000    0.50000    0.00000  )
         8     Cl  35.4530   tau(    8) = (    0.00000    0.00000    0.50000  )
 
-     Computing dynamical matrix for 
+     Computing dynamical matrix for
                     q = (   0.0000000   0.0000000   0.0000000 )
- 
+
      49 Sym.Ops. (with q -> -q+G )
 
 
@@ -129,12 +129,12 @@
      Pseudo is Projector augmented-wave, Zval =  9.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.2 svn rev. 9415
      Shape of augmentation charge: PSQ
-     Using radial grid of 1121 points,  4 beta functions with: 
+     Using radial grid of 1121 points,  4 beta functions with:
                 l(1) =   0
                 l(2) =   0
                 l(3) =   1
                 l(4) =   1
-     Q(r) pseudized with 0 coefficients 
+     Q(r) pseudized with 0 coefficients
 
 
      PseudoPot. # 2 for Cl read from file:
@@ -143,12 +143,12 @@
      Pseudo is Projector augmented-wave + core cor, Zval =  7.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.2 svn rev. 9415
      Shape of augmentation charge: PSQ
-     Using radial grid of 1157 points,  4 beta functions with: 
+     Using radial grid of 1157 points,  4 beta functions with:
                 l(1) =   0
                 l(2) =   0
                 l(3) =   1
                 l(4) =   1
-     Q(r) pseudized with 0 coefficients 
+     Q(r) pseudized with 0 coefficients
 
 
      Mode symmetry, O_h (m-3m)  point group:
@@ -203,7 +203,7 @@
 
      End of electric fields calculation
 
-          Dielectric constant in cartesian axis 
+          Dielectric constant in cartesian axis
 
           (       2.472958201       0.000000000       0.000000000 )
           (       0.000000000       2.472958201       0.000000000 )
@@ -211,35 +211,35 @@
 
           Effective charges (d Force / dE) in cartesian axis
 
-           atom      1   Na 
+           atom      1   Na
       Ex  (        1.09924        0.00000        0.00000 )
       Ey  (        0.00000        1.09924        0.00000 )
       Ez  (        0.00000        0.00000        1.09924 )
-           atom      2   Na 
+           atom      2   Na
       Ex  (        1.09924        0.00000        0.00000 )
       Ey  (        0.00000        1.09922        0.00000 )
       Ez  (        0.00000        0.00000        1.09922 )
-           atom      3   Na 
+           atom      3   Na
       Ex  (        1.09922        0.00000        0.00000 )
       Ey  (        0.00000        1.09924        0.00000 )
       Ez  (        0.00000        0.00000        1.09922 )
-           atom      4   Na 
+           atom      4   Na
       Ex  (        1.09922        0.00000        0.00000 )
       Ey  (        0.00000        1.09922        0.00000 )
       Ez  (        0.00000        0.00000        1.09924 )
-           atom      5   Cl 
+           atom      5   Cl
       Ex  (       -1.11106        0.00000        0.00000 )
       Ey  (        0.00000       -1.11106        0.00000 )
       Ez  (        0.00000        0.00000       -1.11106 )
-           atom      6   Cl 
+           atom      6   Cl
       Ex  (       -1.11114        0.00000        0.00000 )
       Ey  (        0.00000       -1.11198        0.00000 )
       Ez  (        0.00000        0.00000       -1.11198 )
-           atom      7   Cl 
+           atom      7   Cl
       Ex  (       -1.11198        0.00000        0.00000 )
       Ey  (        0.00000       -1.11114        0.00000 )
       Ez  (        0.00000        0.00000       -1.11198 )
-           atom      8   Cl 
+           atom      8   Cl
       Ex  (       -1.11198        0.00000        0.00000 )
       Ey  (        0.00000       -1.11198        0.00000 )
       Ez  (        0.00000        0.00000       -1.11114 )
@@ -272,7 +272,7 @@
 
      End of self-consistent calculation
 
-     Convergence has been achieved 
+     Convergence has been achieved
 
 
      Representation #  2 modes #   4  5  6
@@ -302,7 +302,7 @@
 
      End of self-consistent calculation
 
-     Convergence has been achieved 
+     Convergence has been achieved
 
 
      Representation #  3 modes #   7  8  9
@@ -329,7 +329,7 @@
 
      End of self-consistent calculation
 
-     Convergence has been achieved 
+     Convergence has been achieved
 
 
      Representation #  4 modes #  10 11 12
@@ -359,7 +359,7 @@
 
      End of self-consistent calculation
 
-     Convergence has been achieved 
+     Convergence has been achieved
 
 
      Representation #  5 modes #  13 14 15
@@ -389,7 +389,7 @@
 
      End of self-consistent calculation
 
-     Convergence has been achieved 
+     Convergence has been achieved
 
 
      Representation #  6 modes #  16 17 18
@@ -419,7 +419,7 @@
 
      End of self-consistent calculation
 
-     Convergence has been achieved 
+     Convergence has been achieved
 
 
      Representation #  7 modes #  19 20 21
@@ -443,7 +443,7 @@
 
      End of self-consistent calculation
 
-     Convergence has been achieved 
+     Convergence has been achieved
 
 
      Representation #  8 modes #  22 23 24
@@ -471,13 +471,13 @@
 
      End of self-consistent calculation
 
-     Convergence has been achieved 
- 
+     Convergence has been achieved
+
      Number of q in the star =    1
      List of q in the star:
           1   0.000000000   0.000000000   0.000000000
 
-          Dielectric constant in cartesian axis 
+          Dielectric constant in cartesian axis
 
           (       2.472958201       0.000000000       0.000000000 )
           (       0.000000000       2.472958201       0.000000000 )
@@ -485,42 +485,42 @@
 
           Effective charges (d Force / dE) in cartesian axis
 
-           atom      1   Na 
+           atom      1   Na
       Ex  (        1.09924        0.00000        0.00000 )
       Ey  (        0.00000        1.09924        0.00000 )
       Ez  (        0.00000        0.00000        1.09924 )
-           atom      2   Na 
+           atom      2   Na
       Ex  (        1.09924        0.00000        0.00000 )
       Ey  (        0.00000        1.09922        0.00000 )
       Ez  (        0.00000        0.00000        1.09922 )
-           atom      3   Na 
+           atom      3   Na
       Ex  (        1.09922        0.00000        0.00000 )
       Ey  (        0.00000        1.09924        0.00000 )
       Ez  (        0.00000        0.00000        1.09922 )
-           atom      4   Na 
+           atom      4   Na
       Ex  (        1.09922        0.00000        0.00000 )
       Ey  (        0.00000        1.09922        0.00000 )
       Ez  (        0.00000        0.00000        1.09924 )
-           atom      5   Cl 
+           atom      5   Cl
       Ex  (       -1.11106        0.00000        0.00000 )
       Ey  (        0.00000       -1.11106        0.00000 )
       Ez  (        0.00000        0.00000       -1.11106 )
-           atom      6   Cl 
+           atom      6   Cl
       Ex  (       -1.11114        0.00000        0.00000 )
       Ey  (        0.00000       -1.11198        0.00000 )
       Ez  (        0.00000        0.00000       -1.11198 )
-           atom      7   Cl 
+           atom      7   Cl
       Ex  (       -1.11198        0.00000        0.00000 )
       Ey  (        0.00000       -1.11114        0.00000 )
       Ez  (        0.00000        0.00000       -1.11198 )
-           atom      8   Cl 
+           atom      8   Cl
       Ex  (       -1.11198        0.00000        0.00000 )
       Ey  (        0.00000       -1.11198        0.00000 )
       Ez  (        0.00000        0.00000       -1.11114 )
 
      Diagonalizing the dynamical matrix
 
-     q = (    0.000000000   0.000000000   0.000000000 ) 
+     q = (    0.000000000   0.000000000   0.000000000 )
 
  **************************************************************************
      freq (    1) =       1.098704 [THz] =      36.648806 [cm-1]
@@ -551,21 +551,21 @@
 
      Mode symmetry, O_h (m-3m)  point group:
 
-     freq (  1 -  3) =         36.6  [cm-1]   --> T_1u G_15  G_4- I  
-     freq (  4 -  6) =         90.3  [cm-1]   --> T_2u G_25  G_5-    
-     freq (  7 -  9) =         90.6  [cm-1]   --> T_1u G_15  G_4- I  
-     freq ( 10 - 12) =        145.3  [cm-1]   --> T_1u G_15  G_4- I  
-     freq ( 13 - 15) =        152.2  [cm-1]   --> T_1u G_15  G_4- I  
-     freq ( 16 - 18) =        156.3  [cm-1]   --> T_2u G_25  G_5-    
-     freq ( 19 - 21) =        165.3  [cm-1]   --> T_1u G_15  G_4- I  
-     freq ( 22 - 24) =        170.0  [cm-1]   --> T_1u G_15  G_4- I  
- 
+     freq (  1 -  3) =         36.6  [cm-1]   --> T_1u G_15  G_4- I
+     freq (  4 -  6) =         90.3  [cm-1]   --> T_2u G_25  G_5-
+     freq (  7 -  9) =         90.6  [cm-1]   --> T_1u G_15  G_4- I
+     freq ( 10 - 12) =        145.3  [cm-1]   --> T_1u G_15  G_4- I
+     freq ( 13 - 15) =        152.2  [cm-1]   --> T_1u G_15  G_4- I
+     freq ( 16 - 18) =        156.3  [cm-1]   --> T_2u G_25  G_5-
+     freq ( 19 - 21) =        165.3  [cm-1]   --> T_1u G_15  G_4- I
+     freq ( 22 - 24) =        170.0  [cm-1]   --> T_1u G_15  G_4- I
+
      PHONON       : 37m26.06s CPU    41m53.10s WALL
 
-     INITIALIZATION: 
+     INITIALIZATION:
      phq_setup    :      0.04s CPU      0.04s WALL (       1 calls)
      phq_init     :     11.31s CPU     11.80s WALL (       1 calls)
- 
+
      phq_init     :     11.31s CPU     11.80s WALL (       1 calls)
      set_drhoc    :      0.41s CPU      0.41s WALL (       3 calls)
      init_vloc    :      0.01s CPU      0.01s WALL (       1 calls)
@@ -574,32 +574,32 @@
      dvanqq       :      0.79s CPU      0.79s WALL (       1 calls)
      drho         :      9.66s CPU     10.14s WALL (       1 calls)
      cmpt_qdipol  :      0.00s CPU      0.00s WALL (       1 calls)
- 
+
      DIELECTRIC CONSTANT AND EFFECTIVE CHARGES:
      solve_e      :    231.28s CPU    260.53s WALL (       1 calls)
      dielec       :      0.01s CPU      0.03s WALL (       1 calls)
      zstar_eu     :     45.23s CPU     48.31s WALL (       1 calls)
- 
+
      DYNAMICAL MATRIX:
      dynmat0      :      0.50s CPU      0.52s WALL (       1 calls)
      phqscf       :   1957.25s CPU   2191.24s WALL (       1 calls)
      dynmatrix    :      0.01s CPU      0.01s WALL (       1 calls)
- 
+
      phqscf       :   1957.25s CPU   2191.24s WALL (       1 calls)
      solve_linter :   1954.55s CPU   2188.36s WALL (       8 calls)
      drhodv       :      2.69s CPU      2.76s WALL (       8 calls)
- 
+
      dynmat0      :      0.50s CPU      0.52s WALL (       1 calls)
      dynmat_us    :      0.19s CPU      0.19s WALL (       1 calls)
      d2ionq       :      0.03s CPU      0.03s WALL (       1 calls)
      dynmatcc     :      0.28s CPU      0.29s WALL (       1 calls)
- 
+
      dynmat_us    :      0.19s CPU      0.19s WALL (       1 calls)
      addusdynmat  :      0.00s CPU      0.00s WALL (       1 calls)
- 
+
      phqscf       :   1957.25s CPU   2191.24s WALL (       1 calls)
      solve_linter :   1954.55s CPU   2188.36s WALL (       8 calls)
- 
+
      solve_linter :   1954.55s CPU   2188.36s WALL (       8 calls)
      dvqpsi_us    :     21.65s CPU     23.86s WALL (     960 calls)
      ortho        :      8.57s CPU      9.23s WALL (    3480 calls)
@@ -613,27 +613,27 @@
      newdq        :      4.06s CPU      4.12s WALL (      57 calls)
      adddvscf     :      4.46s CPU      4.63s WALL (    2880 calls)
      drhodvus     :      0.03s CPU      0.04s WALL (       8 calls)
- 
+
      dvqpsi_us    :     21.65s CPU     23.86s WALL (     960 calls)
      dvqpsi_us_on :      5.03s CPU      5.22s WALL (     960 calls)
- 
+
      cgsolve      :   1933.54s CPU   2143.85s WALL (    3480 calls)
      ch_psi       :   1855.46s CPU   2067.24s WALL (  107294 calls)
- 
+
      ch_psi       :   1855.46s CPU   2067.24s WALL (  107294 calls)
      h_psiq       :   1589.26s CPU   1774.95s WALL (  107294 calls)
      last         :    237.95s CPU    255.04s WALL (  107294 calls)
- 
+
      h_psiq       :   1589.26s CPU   1774.95s WALL (  107294 calls)
      firstfft     :    703.09s CPU    762.54s WALL ( 2709650 calls)
      secondfft    :    638.03s CPU    724.92s WALL ( 2709650 calls)
      add_vuspsi   :     63.87s CPU     63.75s WALL (  107294 calls)
- 
+
      incdrhoscf   :     65.39s CPU     75.73s WALL (    3480 calls)
      addusdbec    :      3.32s CPU      3.34s WALL (    3960 calls)
- 
+
      drhodvus     :      0.03s CPU      0.04s WALL (       8 calls)
- 
+
       General routines
      calbec       :    156.15s CPU    168.19s WALL (  235788 calls)
      fft          :      3.34s CPU      3.86s WALL (    3904 calls)
@@ -641,12 +641,12 @@
      fftw         :   1426.30s CPU   1568.29s WALL ( 5903780 calls)
      davcio       :      3.55s CPU     34.64s WALL (   16934 calls)
      write_rec    :      0.13s CPU      1.76s WALL (      65 calls)
- 
- 
+
+
      PHONON       : 37m26.06s CPU    41m53.10s WALL
 
- 
-   This run was terminated on:  15:37: 1  14Sep2016            
+
+   This run was terminated on:  15:37: 1  14Sep2016
 
 =------------------------------------------------------------------------------=
    JOB DONE.

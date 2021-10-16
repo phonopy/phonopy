@@ -36,35 +36,52 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import os
-from phonopy.interface.calculator import (
-    convert_crystal_structure, calculator_info)
+from phonopy.interface.calculator import convert_crystal_structure, calculator_info
 
 
 def get_options():
     # Parse options
     import argparse
-    parser = argparse.ArgumentParser(
-        description="Phonopy bandplot command-line-tool")
+
+    parser = argparse.ArgumentParser(description="Phonopy bandplot command-line-tool")
     parser.add_argument(
-        "-i", dest="filename_in", metavar="FILE_IN", default=None,
-        help="Input crystal structure filename")
+        "-i",
+        dest="filename_in",
+        metavar="FILE_IN",
+        default=None,
+        help="Input crystal structure filename",
+    )
     parser.add_argument(
-        "-o", dest="filename_out", metavar="FILE_OUT", default=None,
-        help="Output crystal structure filename")
+        "-o",
+        dest="filename_out",
+        metavar="FILE_OUT",
+        default=None,
+        help="Output crystal structure filename",
+    )
     parser.add_argument(
-        "--calcin", dest="calculator_in", metavar="CALC_IN", default=None,
-        help="Input calculator format")
+        "--calcin",
+        dest="calculator_in",
+        metavar="CALC_IN",
+        default=None,
+        help="Input calculator format",
+    )
     parser.add_argument(
-        "--calcout", dest="calculator_out", metavar="CALC_OUT", default=None,
-        help="Output calculator format")
+        "--calcout",
+        dest="calculator_out",
+        metavar="CALC_OUT",
+        default=None,
+        help="Output calculator format",
+    )
     return parser.parse_args()
 
 
 def main(opts):
-    args = (opts.filename_in,
-            opts.calculator_in,
-            opts.filename_out,
-            opts.calculator_out)
+    args = (
+        opts.filename_in,
+        opts.calculator_in,
+        opts.filename_out,
+        opts.calculator_out,
+    )
 
     try:
         _is_file_None(args[0], "input")
@@ -83,32 +100,34 @@ def main(opts):
 
 def _calc_check(calc_str):
     if calc_str.lower() not in calculator_info:
-        msg = "Calculator name of \"%s\" is not supported." % calc_str
+        msg = 'Calculator name of "%s" is not supported.' % calc_str
         raise RuntimeError(msg)
 
 
 def _is_calc_None(calculator, input_or_output):
     if calculator is None:
-        msg = ("Specify %s calculator format." % input_or_output)
+        msg = "Specify %s calculator format." % input_or_output
         raise RuntimeError(msg)
 
 
 def _is_file_None(filename, input_or_output):
     if filename is None:
-        msg = ("Specify %s filename." % input_or_output)
+        msg = "Specify %s filename." % input_or_output
         raise RuntimeError(msg)
 
 
 def _infile_exist(filename):
     if not os.path.isfile(filename):
-        msg = "No such file of \"%s\"" % filename
+        msg = 'No such file of "%s"' % filename
         raise FileNotFoundError(msg)
 
 
 def _outfile_exist(filename):
     if os.path.isfile(filename):
-        msg = ("\"%s\" exists in the current directory. "
-               "Use different filename." % filename)
+        msg = (
+            '"%s" exists in the current directory. '
+            "Use different filename." % filename
+        )
         raise RuntimeError(msg)
 
 

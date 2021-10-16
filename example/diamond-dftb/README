@@ -5,7 +5,7 @@ parameteters for carbon
 (https://www.dftb.org/parameters/download/pbc/pbc-0-3-cc/).
 
 1) Create the (one) displaced supercell structure(s):
-   phonopy -d --dim="4 4 4" --dftb+ 
+   phonopy -d --dim="4 4 4" --dftb+
 
 2) Run the supercell input with dftb+. This has been pre-calculated
    with DFTB+ version 18.2, with the required data stored in the file

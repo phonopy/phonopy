@@ -34,20 +34,22 @@
 
 # Each key has to be lowercase. {fc_calculator: name, ...}
 # name is supporsed to be str and used for text output to stdout.
-fc_calculator_names = {'alm': 'ALM', 'hiphive': 'hiPhive'}
+fc_calculator_names = {"alm": "ALM", "hiphive": "hiPhive"}
 
 
 # get_fc2 is called from
 # phonopy.api_phonopy.Phonopy._run_force_constants_from_forces.
-def get_fc2(supercell,
-            primitive,
-            displacements,
-            forces,
-            fc_calculator=None,
-            fc_calculator_options=None,
-            atom_list=None,
-            log_level=0,
-            symprec=None):
+def get_fc2(
+    supercell,
+    primitive,
+    displacements,
+    forces,
+    fc_calculator=None,
+    fc_calculator_options=None,
+    atom_list=None,
+    log_level=0,
+    symprec=None,
+):
     """Supercell 2nd order force constants (fc2) are calculated.
 
     The expected shape of supercell fc2 to be returned is
@@ -91,22 +93,28 @@ def get_fc2(supercell,
 
     """
 
-    if fc_calculator == 'alm' or fc_calculator is None:
+    if fc_calculator == "alm" or fc_calculator is None:
         from phonopy.interface.alm import get_fc2
-        return get_fc2(supercell,
-                       primitive,
-                       displacements,
-                       forces,
-                       atom_list=atom_list,
-                       options=fc_calculator_options,
-                       log_level=log_level)
-    if fc_calculator == 'hiphive':
+
+        return get_fc2(
+            supercell,
+            primitive,
+            displacements,
+            forces,
+            atom_list=atom_list,
+            options=fc_calculator_options,
+            log_level=log_level,
+        )
+    if fc_calculator == "hiphive":
         from phonopy.interface.hiphive_interface import get_fc2
-        return get_fc2(supercell,
-                       primitive,
-                       displacements,
-                       forces,
-                       atom_list=atom_list,
-                       options=fc_calculator_options,
-                       log_level=log_level,
-                       symprec=symprec)
+
+        return get_fc2(
+            supercell,
+            primitive,
+            displacements,
+            forces,
+            atom_list=atom_list,
+            options=fc_calculator_options,
+            log_level=log_level,
+            symprec=symprec,
+        )

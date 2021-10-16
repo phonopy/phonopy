@@ -7,11 +7,11 @@ from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_FORCE_SETS
 
 import os
+
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 class TestPhonopyYaml(unittest.TestCase):
-
     def setUp(self):
         pass
 
@@ -30,32 +30,31 @@ class TestPhonopyYaml(unittest.TestCase):
 
     def test_write_phonopy_yaml(self):
         phonopy = self._get_phonon()
-        phpy_yaml = PhonopyYaml(calculator='vasp')
+        phpy_yaml = PhonopyYaml(calculator="vasp")
         phpy_yaml.set_phonon_info(phonopy)
         # print(phpy_yaml)
 
     def test_write_phonopy_yaml_extra(self):
         phonopy = self._get_phonon()
 
-        settings = {'force_sets': True,
-                         'displacements': True,
-                         'force_constants': True,
-                         'born_effective_charge': True,
-                         'dielectric_constant': True}
+        settings = {
+            "force_sets": True,
+            "displacements": True,
+            "force_constants": True,
+            "born_effective_charge": True,
+            "dielectric_constant": True,
+        }
 
-        phpy_yaml = PhonopyYaml(calculator='vasp', settings=settings)
+        phpy_yaml = PhonopyYaml(calculator="vasp", settings=settings)
         phpy_yaml.set_phonon_info(phonopy)
 
     def _compare(self, cell):
         cell_ref = read_vasp(os.path.join(data_dir, "..", "POSCAR_NaCl"))
-        self.assertTrue(
-            (np.abs(cell.get_cell() - cell_ref.get_cell()) < 1e-5).all())
-        diff_pos = (cell.get_scaled_positions()
-                    - cell_ref.get_scaled_positions())
+        self.assertTrue((np.abs(cell.get_cell() - cell_ref.get_cell()) < 1e-5).all())
+        diff_pos = cell.get_scaled_positions() - cell_ref.get_scaled_positions()
         diff_pos -= np.rint(diff_pos)
         self.assertTrue((np.abs(diff_pos) < 1e-5).all())
-        for s, s_r in zip(cell.get_chemical_symbols(),
-                          cell_ref.get_chemical_symbols()):
+        for s, s_r in zip(cell.get_chemical_symbols(), cell_ref.get_chemical_symbols()):
             self.assertTrue(s == s_r)
 
     def _get_unitcell(self, filename):
@@ -65,33 +64,27 @@ class TestPhonopyYaml(unittest.TestCase):
 
     def _get_phonon(self):
         cell = read_vasp(os.path.join(data_dir, "..", "POSCAR_NaCl"))
-        phonon = Phonopy(cell,
-                         np.diag([2, 2, 2]),
-                         primitive_matrix=[[0, 0.5, 0.5],
-                                           [0.5, 0, 0.5],
-                                           [0.5, 0.5, 0]])
+        phonon = Phonopy(
+            cell,
+            np.diag([2, 2, 2]),
+            primitive_matrix=[[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]],
+        )
         filename = os.path.join(data_dir, "FORCE_SETS_NaCl")
         force_sets = parse_FORCE_SETS(filename=filename)
         phonon.dataset = force_sets
         phonon.produce_force_constants()
-        born_elems = {'Na': [[1.08703, 0, 0],
-                             [0, 1.08703, 0],
-                             [0, 0, 1.08703]],
-                      'Cl': [[-1.08672, 0, 0],
-                             [0, -1.08672, 0],
-                             [0, 0, -1.08672]]}
-        born = [born_elems[s] for s in ['Na', 'Cl']]
-        epsilon = [[2.43533967, 0, 0],
-                   [0, 2.43533967, 0],
-                   [0, 0, 2.43533967]]
+        born_elems = {
+            "Na": [[1.08703, 0, 0], [0, 1.08703, 0], [0, 0, 1.08703]],
+            "Cl": [[-1.08672, 0, 0], [0, -1.08672, 0], [0, 0, -1.08672]],
+        }
+        born = [born_elems[s] for s in ["Na", "Cl"]]
+        epsilon = [[2.43533967, 0, 0], [0, 2.43533967, 0], [0, 0, 2.43533967]]
         factors = 14.400
-        phonon.nac_params = {'born': born,
-                             'factor': factors,
-                             'dielectric': epsilon}
+        phonon.nac_params = {"born": born, "factor": factors, "dielectric": epsilon}
         return phonon
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestPhonopyYaml)
     unittest.TextTestRunner(verbosity=2).run(suite)
     # unittest.main()

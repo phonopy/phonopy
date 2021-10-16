@@ -62,14 +62,16 @@ class QpointsPhonon(object):
 
     """
 
-    def __init__(self,
-                 qpoints,
-                 dynamical_matrix,
-                 nac_q_direction=None,
-                 with_eigenvectors=False,
-                 group_velocity=None,
-                 with_dynamical_matrices=False,
-                 factor=VaspToTHz):
+    def __init__(
+        self,
+        qpoints,
+        dynamical_matrix,
+        nac_q_direction=None,
+        with_eigenvectors=False,
+        group_velocity=None,
+        with_dynamical_matrices=False,
+        factor=VaspToTHz,
+    ):
         primitive = dynamical_matrix.primitive
         self._natom = len(primitive)
         self._masses = primitive.masses
@@ -127,26 +129,25 @@ class QpointsPhonon(object):
 
     def write_hdf5(self):
         import h5py
-        with h5py.File('qpoints.hdf5', 'w') as w:
-            w.create_dataset('qpoint', data=self._qpoints)
-            w.create_dataset('frequency', data=self._frequencies)
+
+        with h5py.File("qpoints.hdf5", "w") as w:
+            w.create_dataset("qpoint", data=self._qpoints)
+            w.create_dataset("frequency", data=self._frequencies)
             if self._with_eigenvectors:
-                w.create_dataset('eigenvector', data=self._eigenvectors)
+                w.create_dataset("eigenvector", data=self._eigenvectors)
             if self._group_velocities is not None:
-                w.create_dataset('group_velocity', data=self._group_velocities)
+                w.create_dataset("group_velocity", data=self._group_velocities)
             if self._with_dynamical_matrices:
-                w.create_dataset('dynamical_matrix',
-                                 data=self._dynamical_matrices)
+                w.create_dataset("dynamical_matrix", data=self._dynamical_matrices)
 
     def write_yaml(self):
-        w = open('qpoints.yaml', 'w')
+        w = open("qpoints.yaml", "w")
         w.write("nqpoint: %-7d\n" % len(self._qpoints))
         w.write("natom:   %-7d\n" % self._natom)
         rec_lattice = np.linalg.inv(self._lattice)  # column vectors
         w.write("reciprocal_lattice:\n")
-        for vec, axis in zip(rec_lattice.T, ('a*', 'b*', 'c*')):
-            w.write("- [ %12.8f, %12.8f, %12.8f ] # %2s\n" %
-                    (tuple(vec) + (axis,)))
+        for vec, axis in zip(rec_lattice.T, ("a*", "b*", "c*")):
+            w.write("- [ %12.8f, %12.8f, %12.8f ] # %2s\n" % (tuple(vec) + (axis,)))
         w.write("phonon:\n")
 
         for i, q in enumerate(self._qpoints):
@@ -168,23 +169,28 @@ class QpointsPhonon(object):
                 w.write("    frequency: %15.10f\n" % freq)
 
                 if self._group_velocities is not None:
-                    w.write("    group_velocity: [ %13.7f, %13.7f, %13.7f ]\n"
-                            % tuple(self._group_velocities[i, j]))
+                    w.write(
+                        "    group_velocity: [ %13.7f, %13.7f, %13.7f ]\n"
+                        % tuple(self._group_velocities[i, j])
+                    )
 
                 if self._with_eigenvectors:
                     w.write("    eigenvector:\n")
                     for k in range(self._natom):
                         w.write("    - # atom %d\n" % (k + 1))
-                        for l in (0, 1, 2):
-                            w.write("      - [ %17.14f, %17.14f ]\n" %
-                                    (self._eigenvectors[i][k * 3 + l, j].real,
-                                     self._eigenvectors[i][k * 3 + l, j].imag))
+                        for ll in (0, 1, 2):
+                            w.write(
+                                "      - [ %17.14f, %17.14f ]\n"
+                                % (
+                                    self._eigenvectors[i][k * 3 + ll, j].real,
+                                    self._eigenvectors[i][k * 3 + ll, j].imag,
+                                )
+                            )
             w.write("\n")
 
     def _run(self):
         if self._group_velocity is not None:
-            self._group_velocity.run(
-                self._qpoints, perturbation=self._nac_q_direction)
+            self._group_velocity.run(self._qpoints, perturbation=self._nac_q_direction)
             self._group_velocities = self._group_velocity.group_velocities
 
         if self._with_dynamical_matrices:
@@ -206,25 +212,27 @@ class QpointsPhonon(object):
                 eigvals = np.linalg.eigvalsh(dm)
             eigvals = eigvals.real
             eigenvalues.append(eigvals)
-            frequencies.append(np.sqrt(np.abs(eigvals)) *
-                               np.sign(eigvals) * self._factor)
+            frequencies.append(
+                np.sqrt(np.abs(eigvals)) * np.sign(eigvals) * self._factor
+            )
 
-        self._eigenvalues = np.array(eigenvalues, dtype='double', order='C')
-        self._frequencies = np.array(frequencies, dtype='double', order='C')
-        dtype = "c%d" % (np.dtype('double').itemsize * 2)
+        self._eigenvalues = np.array(eigenvalues, dtype="double", order="C")
+        self._frequencies = np.array(frequencies, dtype="double", order="C")
+        dtype = "c%d" % (np.dtype("double").itemsize * 2)
         if self._with_eigenvectors:
-            self._eigenvectors = np.array(eigenvectors,
-                                          dtype=dtype, order='C')
+            self._eigenvectors = np.array(eigenvectors, dtype=dtype, order="C")
         if self._with_dynamical_matrices:
-            self._dynamical_matrices = np.array(dynamical_matrices,
-                                                dtype=dtype, order='C')
+            self._dynamical_matrices = np.array(
+                dynamical_matrices, dtype=dtype, order="C"
+            )
 
     def _get_dynamical_matrix(self, q):
-        if (self._dynamical_matrix.is_nac() and
-            self._nac_q_direction is not None and
-            (np.abs(q) < 1e-5).all()):
-            self._dynamical_matrix.run(
-                q, q_direction=self._nac_q_direction)
+        if (
+            self._dynamical_matrix.is_nac()
+            and self._nac_q_direction is not None
+            and (np.abs(q) < 1e-5).all()
+        ):
+            self._dynamical_matrix.run(q, q_direction=self._nac_q_direction)
         else:
             self._dynamical_matrix.run(q)
         return self._dynamical_matrix.dynamical_matrix

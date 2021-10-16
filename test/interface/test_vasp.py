@@ -11,7 +11,6 @@ data_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 class TestVASP(unittest.TestCase):
-
     def setUp(self):
         pass
 
@@ -22,14 +21,11 @@ class TestVASP(unittest.TestCase):
         cell = read_vasp(os.path.join(data_dir, "..", "POSCAR_NaCl"))
         filename = os.path.join(data_dir, "NaCl-vasp.yaml")
         cell_ref = read_cell_yaml(filename)
-        self.assertTrue(
-            (np.abs(cell.get_cell() - cell_ref.get_cell()) < 1e-5).all())
-        diff_pos = (cell.get_scaled_positions()
-                    - cell_ref.get_scaled_positions())
+        self.assertTrue((np.abs(cell.get_cell() - cell_ref.get_cell()) < 1e-5).all())
+        diff_pos = cell.get_scaled_positions() - cell_ref.get_scaled_positions()
         diff_pos -= np.rint(diff_pos)
         self.assertTrue((np.abs(diff_pos) < 1e-5).all())
-        for s, s_r in zip(cell.get_chemical_symbols(),
-                          cell_ref.get_chemical_symbols()):
+        for s, s_r in zip(cell.get_chemical_symbols(), cell_ref.get_chemical_symbols()):
             self.assertTrue(s == s_r)
 
     def test_parse_vasprun_xml(self):
@@ -42,11 +38,11 @@ class TestVASP(unittest.TestCase):
             # for force in vr.read_forces():
             #     print("% 15.8f % 15.8f % 15.8f" % tuple(force))
             # print("")
-            ref = dataset['first_atoms'][i]['forces']
+            ref = dataset["first_atoms"][i]["forces"]
             np.testing.assert_allclose(ref, vr.read_forces(), atol=1e-8)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestVASP)
     unittest.TextTestRunner(verbosity=2).run(suite)
     # unittest.main()

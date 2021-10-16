@@ -43,21 +43,19 @@ from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
-    hook = ''  # Just for skipping the first line
+    hook = ""  # Just for skipping the first line
     is_parsed = True
     force_sets = []
     for i, filename in enumerate(forces_filenames):
         if verbose:
             sys.stdout.write("%d. " % (i + 1))
-        siesta_forces = iter_collect_forces(filename,
-                                            num_atoms,
-                                            hook,
-                                            [1, 2, 3],
-                                            word='')
+        siesta_forces = iter_collect_forces(
+            filename, num_atoms, hook, [1, 2, 3], word=""
+        )
         if check_forces(siesta_forces, num_atoms, filename, verbose=verbose):
-            drift_force = get_drift_forces(siesta_forces,
-                                           filename=filename,
-                                           verbose=verbose)
+            drift_force = get_drift_forces(
+                siesta_forces, filename=filename, verbose=verbose
+            )
             force_sets.append(np.array(siesta_forces) - drift_force)
         else:
             is_parsed = False
@@ -87,32 +85,32 @@ def read_siesta(filename):
     elif coordformat == "notscaledcartesianbohr" or coordformat == "bohr":
         cell.set_positions(np.array(positions))
     else:
-        print("The format %s for the AtomicCoordinatesFormat is not "
-              "implemented." % coordformat)
+        print(
+            "The format %s for the AtomicCoordinatesFormat is not "
+            "implemented." % coordformat
+        )
         sys.exit(1)
 
     return cell, atypes
 
 
 def write_siesta(filename, cell, atypes):
-    with open(filename, 'w') as w:
+    with open(filename, "w") as w:
         w.write(get_siesta_structure(cell, atypes))
 
 
-def write_supercells_with_displacements(supercell,
-                                        cells_with_displacements,
-                                        ids,
-                                        atypes,
-                                        pre_filename="supercell",
-                                        width=3):
+def write_supercells_with_displacements(
+    supercell, cells_with_displacements, ids, atypes, pre_filename="supercell", width=3
+):
     write_siesta("%s.fdf" % pre_filename, supercell, atypes)
     for i, cell in zip(ids, cells_with_displacements):
         filename = "{pre_filename}-{0:0{width}}.fdf".format(
-            i, pre_filename=pre_filename, width=width)
+            i, pre_filename=pre_filename, width=width
+        )
         write_siesta(filename, cell, atypes)
 
 
-def get_siesta_structure(cell,atypes):
+def get_siesta_structure(cell, atypes):
     lattice = cell.get_cell()
     positions = cell.get_scaled_positions()
     chemical_symbols = cell.get_chemical_symbols()
@@ -131,77 +129,88 @@ def get_siesta_structure(cell,atypes):
 
     lines += "%block AtomicCoordinatesAndAtomicSpecies\n"
     for pos, i in zip(positions, chemical_symbols):
-        lines += ("%21.16lf"*3+" %d\n") % tuple(pos.tolist()+[atypes[i]])
+        lines += ("%21.16lf" * 3 + " %d\n") % tuple(pos.tolist() + [atypes[i]])
     lines += "%endblock AtomicCoordinatesAndAtomicSpecies\n"
 
     return lines
 
 
 class SiestaIn(object):
-    _num_regex = '([+-]?\d+(?:\.\d*)?(?:[eE][-+]?\d+)?)'
-    _tags = { "latticeconstant":          1.0,
-              "latticeconstantunit":     None,
-              "chemicalspecieslabel":    None,
-              "atomiccoordinatesformat": None,
-              "atomicnumbers":           None,
-              "atomicspecies":           None,
-              "atomiccoordinates":       None }
+    _num_regex = r"([+-]?\d+(?:\.\d*)?(?:[eE][-+]?\d+)?)"
+    _tags = {
+        "latticeconstant": 1.0,
+        "latticeconstantunit": None,
+        "chemicalspecieslabel": None,
+        "atomiccoordinatesformat": None,
+        "atomicnumbers": None,
+        "atomicspecies": None,
+        "atomiccoordinates": None,
+    }
 
     def __init__(self, lines):
         self._collect(lines)
 
     def _collect(self, lines):
-        """ This routine reads the following from the Siesta file:
-            - atomic positions
-            - cell_parameters
-            - atomic_species
+        """This routine reads the following from the Siesta file:
+        - atomic positions
+        - cell_parameters
+        - atomic_species
         """
         for tag, value, unit in re.findall(
-                r'([\.A-Za-z]+)\s+%s\s+([A-Za-z]+)?' %
-                self._num_regex, lines):
+            r"([\.A-Za-z]+)\s+%s\s+([A-Za-z]+)?" % self._num_regex, lines
+        ):
             tag = tag.lower()
             unit = unit.lower()
             if tag == "latticeconstant":
-                self._tags['latticeconstantunit'] = unit.capitalize()
-                if unit == 'ang':
+                self._tags["latticeconstantunit"] = unit.capitalize()
+                if unit == "ang":
                     self._tags[tag] = float(value) / Bohr
-                elif unit == 'bohr':
+                elif unit == "bohr":
                     self._tags[tag] = float(value)
                 else:
-                    raise ValueError(
-                        'Unknown LatticeConstant unit: {}'.format(unit))
+                    raise ValueError("Unknown LatticeConstant unit: {}".format(unit))
 
-        for tag, value in re.findall(r'([\.A-Za-z]+)[ \t]+([a-zA-Z]+)', lines):
-            tag = tag.replace('_', '').lower()
+        for tag, value in re.findall(r"([\.A-Za-z]+)[ \t]+([a-zA-Z]+)", lines):
+            tag = tag.replace("_", "").lower()
             if tag == "atomiccoordinatesformat":
                 self._tags[tag] = value.strip().lower()
 
         # check if the necessary tags are present
-        self.check_present('atomiccoordinatesformat')
-        acell = self._tags['latticeconstant']
+        self.check_present("atomiccoordinatesformat")
+        acell = self._tags["latticeconstant"]
 
         # capture the blocks
         blocks = re.findall(
-            r'%block\s+([A-Za-z_]+)\s*\n((?:.+\n)+?(?=(?:\s+)?%endblock))',
-            lines, re.MULTILINE)
+            r"%block\s+([A-Za-z_]+)\s*\n((?:.+\n)+?(?=(?:\s+)?%endblock))",
+            lines,
+            re.MULTILINE,
+        )
         for tag, block in blocks:
-            tag = tag.replace('_','').lower()
+            tag = tag.replace("_", "").lower()
             if tag == "chemicalspecieslabel":
-                block_array = block.split('\n')[:-1]
+                block_array = block.split("\n")[:-1]
                 self._tags["atomicnumbers"] = dict(
-                    [map(int, species.split()[:2]) for species in block_array])
+                    [map(int, species.split()[:2]) for species in block_array]
+                )
                 self._tags[tag] = dict(
-                    [(lambda x: (x[2], int(x[0])))(species.split())
-                     for species in block_array])
+                    [
+                        (lambda x: (x[2], int(x[0])))(species.split())
+                        for species in block_array
+                    ]
+                )
             elif tag == "latticevectors":
-                self._tags[tag] = [[float(v)*acell for v in vector.split()]
-                                   for vector in block.split('\n')[:3]]
+                self._tags[tag] = [
+                    [float(v) * acell for v in vector.split()]
+                    for vector in block.split("\n")[:3]
+                ]
             elif tag == "atomiccoordinatesandatomicspecies":
-                block_array = block.split('\n')[:-1]
+                block_array = block.split("\n")[:-1]
                 self._tags["atomiccoordinates"] = [
-                    [float(x) for x in atom.split()[:3]] for atom in block_array]
-                self._tags["atomicspecies"] = [int(atom.split()[3])
-                                               for atom in block_array]
+                    [float(x) for x in atom.split()[:3]] for atom in block_array
+                ]
+                self._tags["atomicspecies"] = [
+                    int(atom.split()[3]) for atom in block_array
+                ]
 
         # check if the block are present
         self.check_present("atomicspecies")
@@ -211,8 +220,8 @@ class SiestaIn(object):
 
         # translate the atomicspecies to atomic numbers
         self._tags["atomicnumbers"] = [
-            self._tags["atomicnumbers"][atype]
-            for atype in self._tags["atomicspecies"]]
+            self._tags["atomicnumbers"][atype] for atype in self._tags["atomicspecies"]
+        ]
 
     def check_present(self, tag):
         if not self._tags[tag]:
@@ -223,8 +232,9 @@ class SiestaIn(object):
         return self._tags
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from phonopy.structure.symmetry import Symmetry
+
     cell, atypes = read_siesta(sys.argv[1])
     symmetry = Symmetry(cell)
     print("# %s" % symmetry.get_international_table())

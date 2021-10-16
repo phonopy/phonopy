@@ -86,12 +86,9 @@ class Unfolding(object):
 
     """
 
-    def __init__(self,
-                 phonon,
-                 supercell_matrix,
-                 ideal_positions,
-                 atom_mapping,
-                 qpoints):
+    def __init__(
+        self, phonon, supercell_matrix, ideal_positions, atom_mapping, qpoints
+    ):
         """
 
         Parameters
@@ -117,8 +114,8 @@ class Unfolding(object):
         """
 
         self._phonon = self._get_supercell_phonon(phonon)
-        self._supercell_matrix = np.array(supercell_matrix, dtype='intc')
-        self._ideal_positions = np.array(ideal_positions, dtype='double')
+        self._supercell_matrix = np.array(supercell_matrix, dtype="intc")
+        self._ideal_positions = np.array(ideal_positions, dtype="double")
         self._qpoints_p = qpoints  # in PBZ
         self._qpoints_s = self._get_qpoints_in_SBZ()  # in SBZ
         self._symprec = self._phonon.symmetry.tolerance
@@ -164,8 +161,8 @@ class Unfolding(object):
     def prepare(self):
         self._q_count = 0
         self._unfolding_weights = np.zeros(
-            (len(self._qpoints_s),
-             len(self._phonon.supercell) * 3), dtype='double')
+            (len(self._qpoints_s), len(self._phonon.supercell) * 3), dtype="double"
+        )
         self._frequencies = np.zeros_like(self._unfolding_weights)
 
     @property
@@ -206,9 +203,9 @@ class Unfolding(object):
 
         """
 
-        pcell = PhonopyAtoms(numbers=[1],
-                             scaled_positions=[[0, 0, 0]],
-                             cell=np.diag([1, 1, 1]))
+        pcell = PhonopyAtoms(
+            numbers=[1], scaled_positions=[[0, 0, 0]], cell=np.diag([1, 1, 1])
+        )
         smat = self._supercell_matrix
         self._trans_s = get_supercell(pcell, smat).scaled_positions
         self._trans_p = np.dot(self._trans_s, self._supercell_matrix.T)
@@ -228,7 +225,7 @@ class Unfolding(object):
 
         lattice = self._phonon.supercell.cell
         natom = len(self._ideal_positions)
-        index_map_inv = np.zeros((self._N, natom), dtype='intc')
+        index_map_inv = np.zeros((self._N, natom), dtype="intc")
         for i, shift in enumerate(self._trans_s):
             for j, p in enumerate(self._ideal_positions - shift):  # minus r_i
                 diff = self._ideal_positions - p
@@ -239,7 +236,7 @@ class Unfolding(object):
                 index_map_inv[i, j] = k
         self._index_map_inv = index_map_inv
 
-        self._atom_mapping = np.zeros(len(atom_mapping), dtype='int')
+        self._atom_mapping = np.zeros(len(atom_mapping), dtype="int")
         for i, idx in enumerate(atom_mapping):
             if idx is None:
                 self._atom_mapping[i] = -1
@@ -247,11 +244,10 @@ class Unfolding(object):
                 self._atom_mapping[i] = idx
 
     def _solve_phonon(self):
-        self._phonon.run_qpoints(self._qpoints_s[self._q_count],
-                                 with_eigenvectors=True)
+        self._phonon.run_qpoints(self._qpoints_s[self._q_count], with_eigenvectors=True)
         qpt = self._phonon.get_qpoints_dict()
-        self._frequencies[self._q_count] = qpt['frequencies'][0]
-        eigvecs = qpt['eigenvectors'][0]
+        self._frequencies[self._q_count] = qpt["frequencies"][0]
+        eigvecs = qpt["eigenvectors"][0]
 
         if -1 in self._atom_mapping:
             shape = list(eigvecs.shape)
@@ -279,7 +275,7 @@ class Unfolding(object):
         """
 
         eigvecs = self._eigvecs
-        dtype = "c%d" % (np.dtype('double').itemsize * 2)
+        dtype = "c%d" % (np.dtype("double").itemsize * 2)
         q_p = self._qpoints_p[self._q_count]  # k
         q_s = self._qpoints_s[self._q_count]  # K
         diff = q_p - np.dot(q_s, np.linalg.inv(self._supercell_matrix))
@@ -291,14 +287,11 @@ class Unfolding(object):
             if (np.abs(d) < 1e-5).all():
                 break
 
-        e = np.zeros((len(self._atom_mapping) * 3, eigvecs.shape[1]),
-                     dtype=dtype)
+        e = np.zeros((len(self._atom_mapping) * 3, eigvecs.shape[1]), dtype=dtype)
         phases = np.exp(2j * np.pi * np.dot(self._trans_p, G))
 
-        for phase, indices in zip(
-                phases, self._atom_mapping[self._index_map_inv]):
-            eig_indices = (
-                np.c_[indices * 3, indices * 3 + 1, indices * 3 + 2]).ravel()
+        for phase, indices in zip(phases, self._atom_mapping[self._index_map_inv]):
+            eig_indices = (np.c_[indices * 3, indices * 3 + 1, indices * 3 + 2]).ravel()
             e += eigvecs[eig_indices, :] * phase
         e /= self._N
         weights = (e.conj() * e).sum(axis=0)
@@ -321,24 +314,23 @@ class Unfolding(object):
 
     def _get_supercell_phonon(self, ph_in):
         """Returns Phonopy instance of supercell as the primitive"""
-        ph = Phonopy(ph_in.supercell,
-                     supercell_matrix=[1, 1, 1],
-                     primitive_matrix='P')
+        ph = Phonopy(ph_in.supercell, supercell_matrix=[1, 1, 1], primitive_matrix="P")
         fc_shape = ph_in.force_constants.shape
         if fc_shape[0] == fc_shape[1]:  # assume full fc
             ph.force_constants = ph_in.force_constants.copy()
         else:
-            ph.force_constants = compact_fc_to_full_fc(
-                ph_in, ph_in.force_constants)
+            ph.force_constants = compact_fc_to_full_fc(ph_in, ph_in.force_constants)
 
         if ph_in.nac_params:
             p2p = ph_in.primitive.p2p_map
             s2p = ph_in.primitive.s2p_map
             s2pp = [p2p[i] for i in s2p]
-            born_in = ph_in.nac_params['born']
+            born_in = ph_in.nac_params["born"]
             born = [born_in[i] for i in s2pp]
-            nac_params = {'born': np.array(born, dtype='double', order='C'),
-                          'factor': ph_in.nac_params['factor'],
-                          'dielectric': ph_in.nac_params['dielectric'].copy()}
+            nac_params = {
+                "born": np.array(born, dtype="double", order="C"),
+                "factor": ph_in.nac_params["factor"],
+                "dielectric": ph_in.nac_params["dielectric"].copy(),
+            }
             ph.nac_params = nac_params
         return ph

@@ -59,24 +59,25 @@ def get_displacements_and_forces(disp_dataset):
 
     """
 
-    if 'first_atoms' in disp_dataset:
-        natom = disp_dataset['natom']
-        disps = np.zeros((len(disp_dataset['first_atoms']), natom, 3),
-                         dtype='double', order='C')
+    if "first_atoms" in disp_dataset:
+        natom = disp_dataset["natom"]
+        disps = np.zeros(
+            (len(disp_dataset["first_atoms"]), natom, 3), dtype="double", order="C"
+        )
         forces = None
-        for i, disp1 in enumerate(disp_dataset['first_atoms']):
-            disps[i, disp1['number']] = disp1['displacement']
-            if 'forces' in disp1:
+        for i, disp1 in enumerate(disp_dataset["first_atoms"]):
+            disps[i, disp1["number"]] = disp1["displacement"]
+            if "forces" in disp1:
                 if forces is None:
                     forces = np.zeros_like(disps)
-                forces[i] = disp1['forces']
+                forces[i] = disp1["forces"]
         return disps, forces
-    elif 'displacements' in disp_dataset:
-        if 'forces' in disp_dataset:
-            forces = disp_dataset['forces']
+    elif "displacements" in disp_dataset:
+        if "forces" in disp_dataset:
+            forces = disp_dataset["forces"]
         else:
             forces = None
-        return disp_dataset['displacements'], forces
+        return disp_dataset["displacements"], forces
 
 
 def forces_in_dataset(dataset):
@@ -88,13 +89,13 @@ def forces_in_dataset(dataset):
     if type(dataset) is not dict:
         raise RuntimeError("dataset is wrongly made.")
 
-    if 'first_atoms' in dataset:  # type-1
-        for d in dataset['first_atoms']:
-            if 'forces' not in d:
+    if "first_atoms" in dataset:  # type-1
+        for d in dataset["first_atoms"]:
+            if "forces" not in d:
                 return False
         return True
 
-    if 'forces' in dataset:  # type-2
+    if "forces" in dataset:  # type-2
         return True
 
     return False

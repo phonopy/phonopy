@@ -7,9 +7,9 @@ Geometry = GenFormat {
 }
 
 Hamiltonian = DFTB {
-    
+
     SCC = No # non-self-consistent, as diamond
-    
+
     MaxAngularMomentum = {
         C = "p" # s and p functions, read parameter file for details
     }
@@ -28,7 +28,7 @@ Hamiltonian = DFTB {
         0 0 2
         0.5 0.5 0.5
     }
-    
+
 }
 
 Options = {

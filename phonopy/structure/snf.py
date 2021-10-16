@@ -77,8 +77,8 @@ class SNF3x3(object):
 
         """
 
-        self._A_orig = np.array(A, dtype='int_', order='C')
-        self._A = np.array(A, dtype='int_', order='C')
+        self._A_orig = np.array(A, dtype="int_", order="C")
+        self._A = np.array(A, dtype="int_", order="C")
         self._Ps = []
         self._Qs = []
         self._L = []
@@ -178,7 +178,7 @@ class SNF3x3(object):
         """
 
         A = self._A
-        L = np.eye(3, dtype='int_')
+        L = np.eye(3, dtype="int_")
         L[1, 0] = -A[1, 0] // A[0, 0]
         L[2, 0] = -A[2, 0] // A[0, 0]
         self._L.append(L.copy())
@@ -235,7 +235,7 @@ class SNF3x3(object):
         """
 
         A = self._A
-        L = np.eye(3, dtype='int_')
+        L = np.eye(3, dtype="int_")
         L[2, 1] = -A[2, 1] // A[1, 1]
         self._L.append(L.copy())
         self._A[:] = np.dot(L, self._A)
@@ -271,7 +271,7 @@ class SNF3x3(object):
             self._A[:] = self._A.T
 
     def _disturb_rows(self, i, j):
-        L = np.eye(3, dtype='int_')
+        L = np.eye(3, dtype="int_")
         L[i, i] = 1
         L[i, j] = 1
         L[j, i] = 0
@@ -296,7 +296,7 @@ class SNF3x3(object):
 
         """
 
-        L = np.eye(3, dtype='int_')
+        L = np.eye(3, dtype="int_")
         L[i, i] = 0
         L[j, j] = 0
         L[i, j] = 1
@@ -307,7 +307,7 @@ class SNF3x3(object):
     def _flip_sign_row(self, i):
         """Multiply -1 for all elements in row"""
 
-        L = np.eye(3, dtype='int_')
+        L = np.eye(3, dtype="int_")
         L[i, i] = -1
         self._L.append(L.copy())
         self._A[:] = np.dot(L, self._A)
@@ -315,12 +315,12 @@ class SNF3x3(object):
     def _set_zero(self, i, j, a, b, r, s, t):
         """Let A[i, j] be zero based on Bezout's identity
 
-           [ii ij]
-           [ji jj] is a (k,k) minor of original 3x3 matrix.
+        [ii ij]
+        [ji jj] is a (k,k) minor of original 3x3 matrix.
 
         """
 
-        L = np.eye(3, dtype='int_')
+        L = np.eye(3, dtype="int_")
         L[i, i] = s
         L[i, j] = t
         L[j, i] = -b // r
@@ -329,10 +329,10 @@ class SNF3x3(object):
         self._A[:] = np.dot(L, self._A)
 
     def _set_PQ(self):
-        P = np.eye(3, dtype='int_')
+        P = np.eye(3, dtype="int_")
         for _P in self._Ps:
             P = np.dot(_P, P)
-        Q = np.eye(3, dtype='int_')
+        Q = np.eye(3, dtype="int_")
         for _Q in self._Qs:
             Q = np.dot(Q, _Q.T)
 
@@ -345,9 +345,11 @@ class SNF3x3(object):
         self._D = self._A.copy()
 
     def _det(self, m):
-        return (m[0, 0] * (m[1, 1] * m[2, 2] - m[1, 2] * m[2, 1])
-                + m[0, 1] * (m[1, 2] * m[2, 0] - m[1, 0] * m[2, 2])
-                + m[0, 2] * (m[1, 0] * m[2, 1] - m[1, 1] * m[2, 0]))
+        return (
+            m[0, 0] * (m[1, 1] * m[2, 2] - m[1, 2] * m[2, 1])
+            + m[0, 1] * (m[1, 2] * m[2, 0] - m[1, 0] * m[2, 2])
+            + m[0, 2] * (m[1, 0] * m[2, 1] - m[1, 1] * m[2, 0])
+        )
 
 
 def xgcd(vals):
@@ -357,7 +359,7 @@ def xgcd(vals):
 
 class Xgcd(object):
     def __init__(self, vals):
-        self._vals = np.array(vals, dtype='intc')
+        self._vals = np.array(vals, dtype="intc")
 
     def run(self):
         r0, r1 = self._vals
@@ -372,7 +374,7 @@ class Xgcd(object):
 
         assert r0 == self._vals[0] * s0 + self._vals[1] * t0
 
-        self._rst = np.array([r0, s0, t0], dtype='intc')
+        self._rst = np.array([r0, s0, t0], dtype="intc")
 
         return self._rst
 

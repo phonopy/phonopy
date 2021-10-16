@@ -79,56 +79,45 @@ class TestDOS(unittest.TestCase):
         phonon.run_total_dos(freq_pitch=1, use_tetrahedron_method=True)
         dos = phonon.total_dos.dos
         freqs = phonon.total_dos.frequency_points
-        data_ref = np.reshape([float(x) for x in tdos_thm_str.split()],
-                              (-1, 2))
+        data_ref = np.reshape([float(x) for x in tdos_thm_str.split()], (-1, 2))
         np.testing.assert_allclose(data_ref, np.c_[freqs, dos], atol=1e-5)
         # for f, d in zip(freqs, dos):
         #     print("%f %f" % (f, d))
 
     def testPartialDOS(self):
         phonon = self._phonon
-        phonon.run_mesh([5, 5, 5],
-                        is_mesh_symmetry=False,
-                        with_eigenvectors=True)
+        phonon.run_mesh([5, 5, 5], is_mesh_symmetry=False, with_eigenvectors=True)
         phonon.run_projected_dos(freq_pitch=1, use_tetrahedron_method=False)
         pdos = phonon.projected_dos.projected_dos
         freqs = phonon.projected_dos.frequency_points
-        data_ref = np.reshape([float(x) for x in pdos_str.split()],
-                              (-1, 3)).T
-        np.testing.assert_allclose(data_ref, np.vstack([freqs, pdos]),
-                                   atol=1e-5)
+        data_ref = np.reshape([float(x) for x in pdos_str.split()], (-1, 3)).T
+        np.testing.assert_allclose(data_ref, np.vstack([freqs, pdos]), atol=1e-5)
         # for f, d in zip(freqs, pdos.T):
         #     print(("%f" + " %f" * len(d)) % ((f, ) + tuple(d)))
 
     def testPartialDOSTetrahedron(self):
         phonon = self._phonon
-        phonon.run_mesh([5, 5, 5],
-                        is_mesh_symmetry=False,
-                        with_eigenvectors=True)
+        phonon.run_mesh([5, 5, 5], is_mesh_symmetry=False, with_eigenvectors=True)
         phonon.run_projected_dos(freq_pitch=1, use_tetrahedron_method=True)
         pdos = phonon.projected_dos.projected_dos
         freqs = phonon.projected_dos.frequency_points
-        data_ref = np.reshape([float(x) for x in pdos_thm_str.split()],
-                              (-1, 3)).T
-        np.testing.assert_allclose(data_ref, np.vstack([freqs, pdos]),
-                                   atol=1e-5)
+        data_ref = np.reshape([float(x) for x in pdos_thm_str.split()], (-1, 3)).T
+        np.testing.assert_allclose(data_ref, np.vstack([freqs, pdos]), atol=1e-5)
         # for f, d in zip(freqs, pdos.T):
         #     print(("%f" + " %f" * len(d)) % ((f, ) + tuple(d)))
 
     def _get_phonon(self):
         phonon = phonopy.load(
             supercell_matrix=[[2, 0, 0], [0, 2, 0], [0, 0, 2]],
-            primitive_matrix=[[0, 0.5, 0.5],
-                              [0.5, 0, 0.5],
-                              [0.5, 0.5, 0]],
+            primitive_matrix=[[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]],
             unitcell_filename=os.path.join(data_dir, "..", "POSCAR_NaCl"),
-            force_sets_filename=os.path.join(data_dir, "..",
-                                             "FORCE_SETS_NaCl"),
+            force_sets_filename=os.path.join(data_dir, "..", "FORCE_SETS_NaCl"),
             born_filename=os.path.join(data_dir, "..", "BORN_NaCl"),
-            symmetrize_fc=False)
+            symmetrize_fc=False,
+        )
         return phonon
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestDOS)
     unittest.TextTestRunner(verbosity=2).run(suite)

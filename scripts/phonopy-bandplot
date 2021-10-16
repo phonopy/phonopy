@@ -53,7 +53,7 @@ except ImportError:
 
 
 def _get_label_for_latex(label):
-    return label.replace('_', r'\_')
+    return label.replace("_", r"\_")
 
 
 def _get_max_frequency(frequencies):
@@ -67,19 +67,15 @@ def _find_wrong_path_connections(all_path_connections):
     return 0
 
 
-def _arrange_band_data(distances,
-                       frequencies,
-                       qpoints,
-                       segment_nqpoints,
-                       label_pairs):
+def _arrange_band_data(distances, frequencies, qpoints, segment_nqpoints, label_pairs):
     i = 0
     freq_list = []
     dist_list = []
     qpt_list = []
     for nq in segment_nqpoints:
-        freq_list.append(frequencies[i:(i + nq)])
-        dist_list.append(distances[i:(i + nq)])
-        qpt_list.append(qpoints[i:(i + nq)])
+        freq_list.append(frequencies[i : (i + nq)])
+        dist_list.append(distances[i : (i + nq)])
+        qpt_list.append(qpoints[i : (i + nq)])
         i += nq
 
     if not label_pairs:
@@ -91,7 +87,9 @@ def _arrange_band_data(distances,
                     path_connections.append(True)
                 else:
                     path_connections.append(False)
-        path_connections += [False, ]
+        path_connections += [
+            False,
+        ]
     else:
         labels = []
         path_connections = []
@@ -109,14 +107,16 @@ def _arrange_band_data(distances,
                 labels.append(label_pairs[-1][1])
         else:
             labels += label_pairs[0]
-        path_connections += [False, ]
+        path_connections += [
+            False,
+        ]
 
     return labels, path_connections, freq_list, dist_list
 
 
-def _savefig(plt, file, fonttype=42, family='serif'):
-    plt.rcParams['pdf.fonttype'] = fonttype
-    plt.rcParams['font.family'] = family
+def _savefig(plt, file, fonttype=42, family="serif"):
+    plt.rcParams["pdf.fonttype"] = fonttype
+    plt.rcParams["font.family"] = family
     plt.savefig(file)
 
 
@@ -173,80 +173,87 @@ def _cut_dos(p1, p2, dmax):
 
 def _read_band_yaml(filename):
     _, ext = os.path.splitext(filename)
-    if ext == '.xz' or ext == '.lzma':
+    if ext == ".xz" or ext == ".lzma":
         try:
             import lzma
         except ImportError:
-            raise("Reading a lzma compressed file is not supported "
-                  "by this python version.")
+            raise (
+                "Reading a lzma compressed file is not supported "
+                "by this python version."
+            )
         with lzma.open(filename) as f:
             data = yaml.load(f, Loader=Loader)
-    elif ext == '.gz':
+    elif ext == ".gz":
         import gzip
+
         with gzip.open(filename) as f:
             data = yaml.load(f, Loader=Loader)
     else:
-        with open(filename, 'r') as f:
+        with open(filename, "r") as f:
             data = yaml.load(f, Loader=Loader)
 
     frequencies = []
     distances = []
     qpoints = []
     labels = []
-    for j, v in enumerate(data['phonon']):
-        if 'label' in v:
-            labels.append(v['label'])
+    for j, v in enumerate(data["phonon"]):
+        if "label" in v:
+            labels.append(v["label"])
         else:
             labels.append(None)
-        frequencies.append([f['frequency'] for f in v['band']])
-        qpoints.append(v['q-position'])
-        distances.append(v['distance'])
+        frequencies.append([f["frequency"] for f in v["band"]])
+        qpoints.append(v["q-position"])
+        distances.append(v["distance"])
 
-    if 'labels' in data:
-        labels = data['labels']
+    if "labels" in data:
+        labels = data["labels"]
     elif all(x is None for x in labels):
         labels = []
 
-    return (np.array(distances),
-            np.array(frequencies),
-            np.array(qpoints),
-            data['segment_nqpoint'],
-            labels)
+    return (
+        np.array(distances),
+        np.array(frequencies),
+        np.array(qpoints),
+        data["segment_nqpoint"],
+        labels,
+    )
 
 
 def _read_band_hdf5(filename):
-    data = h5py.File(filename, 'r')
-    f2 = data['frequency'][:]
-    d1 = data['distance'][:]
+    data = h5py.File(filename, "r")
+    f2 = data["frequency"][:]
+    d1 = data["distance"][:]
     # lbl = data['label'][:]
 
     labels_path = []
-    for x in data['label'][:]:
-        labels_path.append([y.decode('utf-8') for y in x])
+    for x in data["label"][:]:
+        labels_path.append([y.decode("utf-8") for y in x])
 
     frequencies = f2.reshape((f2.shape[0] * f2.shape[1], f2.shape[2]))
     distances = []
     for x in d1:
         for y in x:
             distances.append(y)
-    qpoints = [i for j in data['path'][:] for i in j]
+    qpoints = [i for j in data["path"][:] for i in j]
 
-    seg_pt = data['segment_nqpoint'][:]
+    seg_pt = data["segment_nqpoint"][:]
 
     # nqpt = data['nqpoint'][0]
 
-    return (np.array(distances),
-            np.array(frequencies),
-            np.array(qpoints),
-            seg_pt,
-            labels_path)
+    return (
+        np.array(distances),
+        np.array(frequencies),
+        np.array(qpoints),
+        seg_pt,
+        labels_path,
+    )
 
 
 def _read_dos_dat(filename, pdos_indices=None, dos_factor=None):
     dos = []
     frequencies = []
     for line in open(filename):
-        if line.strip()[0] == '#':
+        if line.strip()[0] == "#":
             continue
         ary = [float(x) for x in line.split()]
         frequencies.append(ary.pop(0))
@@ -256,7 +263,7 @@ def _read_dos_dat(filename, pdos_indices=None, dos_factor=None):
 
     if pdos_indices:
         pi = []
-        for nums in pdos_indices.split(','):
+        for nums in pdos_indices.split(","):
             pi.append([int(x) - 1 for x in nums.split()])
         dos_sum = []
         for indices in pi:
@@ -273,112 +280,166 @@ def _read_dos_dat(filename, pdos_indices=None, dos_factor=None):
 def get_options():
     # Parse options
     import argparse
-    parser = argparse.ArgumentParser(
-        description="Phonopy bandplot command-line-tool")
-    parser.set_defaults(hdf5=None,
-                        band_labels=None,
-                        dos=None,
-                        dos_max=None,
-                        dos_min=None,
-                        dos_factor=None,
-                        factor=1.0,
-                        f_max=None,
-                        f_min=None,
-                        is_gnuplot=False,
-                        is_legacy_plot=False,
-                        is_points=False,
-                        is_vertical_line=False,
-                        output_filename=None,
-                        pdos_indices=None,
-                        xlabel=None,
-                        ylabel=None,
-                        show_legend=False,
-                        title=None)
+
+    parser = argparse.ArgumentParser(description="Phonopy bandplot command-line-tool")
+    parser.set_defaults(
+        hdf5=None,
+        band_labels=None,
+        dos=None,
+        dos_max=None,
+        dos_min=None,
+        dos_factor=None,
+        factor=1.0,
+        f_max=None,
+        f_min=None,
+        is_gnuplot=False,
+        is_legacy_plot=False,
+        is_points=False,
+        is_vertical_line=False,
+        output_filename=None,
+        pdos_indices=None,
+        xlabel=None,
+        ylabel=None,
+        show_legend=False,
+        title=None,
+    )
     parser.add_argument(
-        "--hdf5", dest="is_hdf5", action="store_true",
-        help="Read HDF5 format")
+        "--hdf5", dest="is_hdf5", action="store_true", help="Read HDF5 format"
+    )
     parser.add_argument(
-        "--dmax", dest="dos_max", type=float,
-        help="Maximum DOS plotted (legacy plot only)")
+        "--dmax",
+        dest="dos_max",
+        type=float,
+        help="Maximum DOS plotted (legacy plot only)",
+    )
     parser.add_argument(
-        "--dmin", dest="dos_min", type=float,
-        help="Minimum DOS plotted (legacy plot only)")
+        "--dmin",
+        dest="dos_min",
+        type=float,
+        help="Minimum DOS plotted (legacy plot only)",
+    )
     parser.add_argument(
-        "--dos", dest="dos",
-        help="Read dos.dat type file and plot with band structure")
+        "--dos", dest="dos", help="Read dos.dat type file and plot with band structure"
+    )
     parser.add_argument(
-        "--dos-factor", dest="dos_factor", type=float,
-        help="Factor to be multiplied with DOS (legacy plot only)")
+        "--dos-factor",
+        dest="dos_factor",
+        type=float,
+        help="Factor to be multiplied with DOS (legacy plot only)",
+    )
     parser.add_argument(
-        "--factor", dest="factor", type=float,
-        help="Conversion factor to favorite frequency unit")
+        "--factor",
+        dest="factor",
+        type=float,
+        help="Conversion factor to favorite frequency unit",
+    )
     parser.add_argument(
-        "--fmax", dest="f_max", type=float,
-        help="Maximum frequency plotted")
+        "--fmax", dest="f_max", type=float, help="Maximum frequency plotted"
+    )
     parser.add_argument(
-        "--fmin", dest="f_min", type=float,
-        help="Minimum frequency plotted")
+        "--fmin", dest="f_min", type=float, help="Minimum frequency plotted"
+    )
     parser.add_argument(
-        "--gnuplot", dest="is_gnuplot", action="store_true",
-        help="Output in gnuplot data style")
+        "--gnuplot",
+        dest="is_gnuplot",
+        action="store_true",
+        help="Output in gnuplot data style",
+    )
     parser.add_argument(
-        "-i", "--indices", dest="pdos_indices",
-        help="Indices like 1 2, 3 4 5 6... (legacy plot only)")
+        "-i",
+        "--indices",
+        dest="pdos_indices",
+        help="Indices like 1 2, 3 4 5 6... (legacy plot only)",
+    )
     parser.add_argument(
-        "--legend", dest="show_legend", action="store_true",
-        help="Show legend")
+        "--legend", dest="show_legend", action="store_true", help="Show legend"
+    )
     parser.add_argument(
-        "--legacy", dest="is_legacy_plot", action="store_true",
-        help="Plot in legacy style")
+        "--legacy",
+        dest="is_legacy_plot",
+        action="store_true",
+        help="Plot in legacy style",
+    )
     parser.add_argument(
-        "--line", "-l", dest="is_vertical_line", action="store_true",
-        help="Vertical line is drawn at between paths (legacy plot only)")
+        "--line",
+        "-l",
+        dest="is_vertical_line",
+        action="store_true",
+        help="Vertical line is drawn at between paths (legacy plot only)",
+    )
     parser.add_argument(
-        "-o", "--output", dest="output_filename", action="store",
-        help="Output filename of PDF plot")
+        "-o",
+        "--output",
+        dest="output_filename",
+        action="store",
+        help="Output filename of PDF plot",
+    )
     parser.add_argument(
-        "--xlabel", dest="xlabel",
-        help="Specify x-label (legacy plot only)")
+        "--xlabel", dest="xlabel", help="Specify x-label (legacy plot only)"
+    )
     parser.add_argument(
-        "--ylabel", dest="ylabel",
-        help="Specify y-label (legacy plot only)")
+        "--ylabel", dest="ylabel", help="Specify y-label (legacy plot only)"
+    )
     parser.add_argument(
-        "--points", dest="points",
-        help="Draw points (o, '*', v, ^, x, p, d etc) (legacy plot only)")
+        "--points",
+        dest="points",
+        help="Draw points (o, '*', v, ^, x, p, d etc) (legacy plot only)",
+    )
     parser.add_argument(
-        "-t", "--title", dest="title",
-        help="Title of plot (legacy plot only)")
+        "-t", "--title", dest="title", help="Title of plot (legacy plot only)"
+    )
     parser.add_argument(
-        "filenames", nargs='*',
-        help=("Filenames of phonon band structure result: band.yaml "
-              "or band.hdf5(with --hdf5)"))
+        "filenames",
+        nargs="*",
+        help=(
+            "Filenames of phonon band structure result: band.yaml "
+            "or band.hdf5(with --hdf5)"
+        ),
+    )
     args = parser.parse_args()
     return args
 
 
 def _old_plot(args):
     import matplotlib.pyplot as plt
+
     if args.band_labels:
         from matplotlib import rc
-        rc('text', usetex=True)
+
+        rc("text", usetex=True)
     if args.dos:
         import matplotlib.gridspec as gridspec
+
         plt.figure(figsize=(10, 6))
         gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1])
         ax1 = plt.subplot(gs[0, 0])
-        ax1.xaxis.set_ticks_position('both')
-        ax1.yaxis.set_ticks_position('both')
-        ax1.xaxis.set_tick_params(which='both', direction='in')
-        ax1.yaxis.set_tick_params(which='both', direction='in')
+        ax1.xaxis.set_ticks_position("both")
+        ax1.yaxis.set_ticks_position("both")
+        ax1.xaxis.set_tick_params(which="both", direction="in")
+        ax1.yaxis.set_tick_params(which="both", direction="in")
     else:
         fig, ax = plt.subplots()
-        ax.xaxis.set_ticks_position('both')
-        ax.yaxis.set_ticks_position('both')
-        ax.xaxis.set_tick_params(which='both', direction='in')
-        ax.yaxis.set_tick_params(which='both', direction='in')
+        ax.xaxis.set_ticks_position("both")
+        ax.yaxis.set_ticks_position("both")
+        ax.xaxis.set_tick_params(which="both", direction="in")
+        ax.yaxis.set_tick_params(which="both", direction="in")
 
-    colors = ['r-', 'b-', 'g-', 'c-', 'm-', 'y-', 'k-',
-              'r--', 'b--', 'g--', 'c--', 'm--', 'y--', 'k--']
+    colors = [
+        "r-",
+        "b-",
+        "g-",
+        "c-",
+        "m-",
+        "y-",
+        "k-",
+        "r--",
+        "b--",
+        "g--",
+        "c--",
+        "m--",
+        "y--",
+        "k--",
+    ]
 
     if args.points is None:
         marker = None
@@ -387,38 +448,46 @@ def _old_plot(args):
 
     if args.is_hdf5:
         if len(args.filenames) == 0:
-            filenames = ['band.hdf5', ]
+            filenames = [
+                "band.hdf5",
+            ]
         else:
             filenames = args.filenames
 
     else:
 
         if len(args.filenames) == 0:
-            filenames = ['band.yaml']
+            filenames = ["band.yaml"]
         else:
             filenames = args.filenames
 
     if args.dos:
-        dos_frequencies, dos = _read_dos_dat(args.dos,
-                                             pdos_indices=args.pdos_indices,
-                                             dos_factor=args.dos_factor)
+        dos_frequencies, dos = _read_dos_dat(
+            args.dos, pdos_indices=args.pdos_indices, dos_factor=args.dos_factor
+        )
 
     curves = []
     for i, filename in enumerate(filenames):
         if args.is_hdf5:
-            (distances,
-             frequencies,
-             qpoints,
-             segment_nqpoint,
-             labels) = _read_band_hdf5(filename)
+            (
+                distances,
+                frequencies,
+                qpoints,
+                segment_nqpoint,
+                labels,
+            ) = _read_band_hdf5(filename)
         else:
-            (distances,
-             frequencies,
-             qpoints,
-             segment_nqpoint,
-             labels) = _read_band_yaml(filename)
+            (
+                distances,
+                frequencies,
+                qpoints,
+                segment_nqpoint,
+                labels,
+            ) = _read_band_yaml(filename)
 
-        end_points = [0, ]
+        end_points = [
+            0,
+        ]
         for nq in segment_nqpoint:
             end_points.append(nq + end_points[-1])
         end_points[-1] -= 1
@@ -427,7 +496,9 @@ def _old_plot(args):
         if not labels:
             labels_at_ends = None
         elif type(labels[0]) is list:
-            labels_at_ends = [labels[0][0], ]
+            labels_at_ends = [
+                labels[0][0],
+            ]
             for j, pair in enumerate(labels[1:]):
                 if labels[j][1] != pair[0]:
                     labels_at_ends.append("|".join([labels[j][1], pair[0]]))
@@ -439,32 +510,37 @@ def _old_plot(args):
 
         if args.is_vertical_line and len(filenames) == 1:
             for v in segment_positions[1:-1]:
-                plt.axvline(x=v, linewidth=0.5, color='b')
+                plt.axvline(x=v, linewidth=0.5, color="b")
 
         q = 0
         for j, nq in enumerate(segment_nqpoint):
             if j == 0:
                 curves.append(
-                    plt.plot(distances[q:(q + nq)],
-                             frequencies[q:(q + nq)] * args.factor,
-                             color=colors[i][0],
-                             linestyle=colors[i][1:],
-                             marker=marker,
-                             label=filename)[0])
+                    plt.plot(
+                        distances[q : (q + nq)],
+                        frequencies[q : (q + nq)] * args.factor,
+                        color=colors[i][0],
+                        linestyle=colors[i][1:],
+                        marker=marker,
+                        label=filename,
+                    )[0]
+                )
             else:
-                plt.plot(distances[q:(q + nq)],
-                         frequencies[q:(q + nq)] * args.factor,
-                         color=colors[i][0],
-                         marker=marker,
-                         linestyle=colors[i][1:])
+                plt.plot(
+                    distances[q : (q + nq)],
+                    frequencies[q : (q + nq)] * args.factor,
+                    color=colors[i][0],
+                    marker=marker,
+                    linestyle=colors[i][1:],
+                )
             q += nq
 
     if args.xlabel is None:
-        plt.xlabel('Wave vector')
+        plt.xlabel("Wave vector")
     else:
         plt.xlabel(args.xlabel)
     if args.ylabel is None:
-        plt.ylabel('Frequency')
+        plt.ylabel("Frequency")
     else:
         plt.ylabel(args.ylabel)
 
@@ -473,7 +549,7 @@ def _old_plot(args):
         plt.ylim(top=args.f_max)
     if args.f_min is not None:
         plt.ylim(bottom=args.f_min)
-    plt.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
+    plt.axhline(y=0, linestyle=":", linewidth=0.5, color="b")
     if len(filenames) == 1:
         xticks = segment_positions
         if args.band_labels:
@@ -486,7 +562,7 @@ def _old_plot(args):
         elif labels_at_ends:
             plt.xticks(xticks, labels_at_ends)
         else:
-            plt.xticks(xticks, [''] * len(xticks))
+            plt.xticks(xticks, [""] * len(xticks))
     else:
         plt.xticks([])
 
@@ -511,24 +587,25 @@ def _old_plot(args):
                         arg_fmin = i - 1
                     break
         ax2 = plt.subplot(gs[0, 1], sharey=ax1)
-        ax2.xaxis.set_ticks_position('both')
-        ax2.yaxis.set_ticks_position('both')
-        ax2.xaxis.set_tick_params(which='both', direction='in')
-        ax2.yaxis.set_tick_params(which='both', direction='in')
+        ax2.xaxis.set_ticks_position("both")
+        ax2.yaxis.set_ticks_position("both")
+        ax2.xaxis.set_tick_params(which="both", direction="in")
+        ax2.yaxis.set_tick_params(which="both", direction="in")
 
         plt.subplots_adjust(wspace=0.03)
         plt.setp(ax2.get_yticklabels(), visible=False)
 
         for pdos in dos.T:
             if args.dos_max:
-                _pdos = _plot_dos(pdos[arg_fmin:arg_fmax],
-                                  dos_frequencies[arg_fmin:arg_fmax],
-                                  args.dos_max)
+                _pdos = _plot_dos(
+                    pdos[arg_fmin:arg_fmax],
+                    dos_frequencies[arg_fmin:arg_fmax],
+                    args.dos_max,
+                )
                 plt.plot(_pdos[1], _pdos[0])
             else:
-                plt.plot(pdos[arg_fmin:arg_fmax],
-                         dos_frequencies[arg_fmin:arg_fmax])
-        plt.xlabel('DOS')
+                plt.plot(pdos[arg_fmin:arg_fmax], dos_frequencies[arg_fmin:arg_fmax])
+        plt.xlabel("DOS")
 
         ax2.set_xlim((0, None))
 
@@ -550,19 +627,24 @@ def _old_plot(args):
 def _plot(args):
     import matplotlib.pyplot as plt
     from matplotlib import rc
-    rc('text', usetex=True)
+
+    rc("text", usetex=True)
     from mpl_toolkits.axes_grid1 import ImageGrid
 
     if args.is_hdf5:
         if len(args.filenames) == 0:
-            filenames = ['band.hdf5', ]
+            filenames = [
+                "band.hdf5",
+            ]
         else:
             filenames = args.filenames
 
         bands_data = [_read_band_hdf5(fname) for fname in filenames]
     else:
         if len(args.filenames) == 0:
-            filenames = ['band.yaml', ]
+            filenames = [
+                "band.yaml",
+            ]
         else:
             filenames = args.filenames
         bands_data = [_read_band_yaml(fname) for fname in filenames]
@@ -572,8 +654,10 @@ def _plot(args):
     all_path_connections = [data[1] for data in plots_data]
     wrong_file_i = _find_wrong_path_connections(all_path_connections)
     if wrong_file_i > 0:
-        raise RuntimeError("Band path of %s is inconsistent with %s."
-                           % (filenames[wrong_file_i], filenames[0]))
+        raise RuntimeError(
+            "Band path of %s is inconsistent with %s."
+            % (filenames[wrong_file_i], filenames[0])
+        )
 
     # Decoration of figure
     max_frequencies = [_get_max_frequency(data[2]) for data in plots_data]
@@ -581,10 +665,13 @@ def _plot(args):
     _, path_connections, _, _ = plot_data
     n = len([x for x in path_connections if not x])
     fig = plt.figure()
-    axs = ImageGrid(fig, 111,  # similar to subplot(111)
-                    nrows_ncols=(1, n),
-                    axes_pad=0.11,
-                    label_mode="L")
+    axs = ImageGrid(
+        fig,
+        111,  # similar to subplot(111)
+        nrows_ncols=(1, n),
+        axes_pad=0.11,
+        label_mode="L",
+    )
     for ax in axs:
         if args.f_min:
             ax.set_ylim(ymin=args.f_min)
@@ -597,13 +684,26 @@ def _plot(args):
     band_plot.decorate(*plot_data)
 
     # Plot band structures
-    fmts = ['r-', 'b-', 'g-', 'c-', 'm-', 'y-', 'k-',
-            'r--', 'b--', 'g--', 'c--', 'm--', 'y--', 'k--']
+    fmts = [
+        "r-",
+        "b-",
+        "g-",
+        "c-",
+        "m-",
+        "y-",
+        "k-",
+        "r--",
+        "b--",
+        "g--",
+        "c--",
+        "m--",
+        "y--",
+        "k--",
+    ]
     for (l, p, f, d), fmt, label in zip(plots_data, fmts, filenames):
         _f = [f_seg * args.factor for f_seg in f]
         if args.show_legend:
-            band_plot.plot(d, _f, p, fmt=fmt,
-                           label=_get_label_for_latex(label))
+            band_plot.plot(d, _f, p, fmt=fmt, label=_get_label_for_latex(label))
         else:
             band_plot.plot(d, _f, p, fmt=fmt)
 
@@ -616,14 +716,18 @@ def _plot(args):
 def _write_gnuplot_data(args):
     if args.is_hdf5:
         if len(args.filenames) == 0:
-            filenames = ['band.hdf5', ]
+            filenames = [
+                "band.hdf5",
+            ]
         else:
             filenames = args.filenames
 
         bands_data = [_read_band_hdf5(fname) for fname in filenames]
     else:
         if len(args.filenames) == 0:
-            filenames = ['band.yaml', ]
+            filenames = [
+                "band.yaml",
+            ]
         else:
             filenames = args.filenames
         bands_data = [_read_band_yaml(fname) for fname in filenames]
@@ -634,24 +738,26 @@ def _write_gnuplot_data(args):
         frequencies = bands_data[0][1]
         segment_nqpoint = bands_data[0][3]
 
-        end_points = [0, ]
+        end_points = [
+            0,
+        ]
         for nq in segment_nqpoint:
             end_points.append(nq + end_points[-1])
         end_points[-1] -= 1
         segment_positions = distances[end_points]
 
         print("# End points of segments: ")
-        print("#   " + "%10.8f " * len(segment_positions) %
-              tuple(segment_positions))
+        print("#   " + "%10.8f " * len(segment_positions) % tuple(segment_positions))
         for j, freqs in enumerate(frequencies.T):
             q = 0
             for nq in segment_nqpoint:
-                for d, f in zip(distances[q:(q + nq)],
-                                freqs[q:(q + nq)] * args.factor):
+                for d, f in zip(
+                    distances[q : (q + nq)], freqs[q : (q + nq)] * args.factor
+                ):
                     print("%f %f" % (d, f))
                 q += nq
-                print('')
-            print('')
+                print("")
+            print("")
 
 
 def main(args):
@@ -661,7 +767,8 @@ def main(args):
 
     if args.output_filename:
         import matplotlib
-        matplotlib.use('Agg')
+
+        matplotlib.use("Agg")
 
     if args.is_legacy_plot:
         _old_plot(args)

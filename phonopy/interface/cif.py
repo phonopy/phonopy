@@ -34,10 +34,12 @@
 
 from phonopy.structure.cells import get_angles, get_cell_parameters
 
+
 def write_cif_P1(cell, U_cif=None, filename=None):
     if filename:
-        with open(filename, 'w') as w:
+        with open(filename, "w") as w:
             w.write(get_cif_P1(cell, U_cif=U_cif))
+
 
 def get_cif_P1(cell, U_cif=None):
     a, b, c = get_cell_parameters(cell.get_cell())
@@ -67,13 +69,26 @@ _atom_site_type_symbol
 _atom_site_fract_x
 _atom_site_fract_y
 _atom_site_fract_z
-_atom_site_occupancy\n""" % (a, b, c, alpha, beta, gamma, cell.get_volume())
+_atom_site_occupancy\n""" % (
+        a,
+        b,
+        c,
+        alpha,
+        beta,
+        gamma,
+        cell.get_volume(),
+    )
 
     symbols = []
     for s, p in zip(cell.get_chemical_symbols(), cell.get_scaled_positions()):
         symbols.append(s)
-        cif += ("%-7s%2s %10.5f%10.5f%10.5f   1.00000\n" %
-                (s + "%d" % symbols.count(s), s, p[0], p[1], p[2]))
+        cif += "%-7s%2s %10.5f%10.5f%10.5f   1.00000\n" % (
+            s + "%d" % symbols.count(s),
+            s,
+            p[0],
+            p[1],
+            p[2],
+        )
 
     if U_cif is not None:
 
@@ -87,13 +102,14 @@ _atom_site_aniso_U_13
 _atom_site_aniso_U_12\n"""
 
         cif += aniso_U
-    
+
         symbols = []
         for i, s in enumerate(cell.get_chemical_symbols()):
             symbols.append(s)
             m = U_cif[i]
             vals = (m[0, 0], m[1, 1], m[2, 2], m[1, 2], m[0, 2], m[0, 1])
-            cif += ("%6s %10.5f %10.5f %10.5f %10.5f %10.5f %10.5f\n" %
-                    ((s + "%d" % symbols.count(s),) + vals))
+            cif += "%6s %10.5f %10.5f %10.5f %10.5f %10.5f %10.5f\n" % (
+                (s + "%d" % symbols.count(s),) + vals
+            )
 
     return cif
