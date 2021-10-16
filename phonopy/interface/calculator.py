@@ -172,6 +172,7 @@ def write_crystal_structure(filename,
     elif interface_mode == 'fleur':
         import phonopy.interface.fleur as fleur
         speci, restlines = optional_structure_info
+        N = abs(determinant(additional_info['supercell_matrix']))
         fleur.write_fleur(filename, cell, speci, N, restlines)
     else:
         raise RuntimeError("No calculator interface was found.")
