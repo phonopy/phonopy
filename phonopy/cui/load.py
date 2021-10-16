@@ -61,6 +61,7 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
          is_symmetry=True,
          symmetrize_fc=True,
          is_compact_fc=True,
+         store_dense_svecs=False,
          symprec=1e-5,
          log_level=0):
     """Create Phonopy instance from parameters and/or input files.
@@ -182,12 +183,15 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
     symmetrize_fc : bool, optional
         Setting False, force constants are not symmetrized when creating
         force constants from displacements and forces. Default is True.
-    is_compact_fc : bool
+    is_compact_fc : bool, optional
         Force constants are produced in the array whose shape is
             True: (primitive, supecell, 3, 3)
             False: (supercell, supecell, 3, 3)
         where 'supercell' and 'primitive' indicate number of atoms in these
         cells. Default is True.
+    store_dense_svecs : bool, optional
+        This is for the test use. Do not set True.
+        Default is False.
     symprec : float, optional
         Tolerance used to find crystal symmetry. Default is 1e-5.
     log_level : int, optional
@@ -198,7 +202,7 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
     if (supercell is not None or
         supercell_filename is not None or
         unitcell is not None or
-        unitcell_filename is not None):
+        unitcell_filename is not None):  # noqa E129
         cell, smat, pmat = load_helper.get_cell_settings(
             supercell_matrix=supercell_matrix,
             primitive_matrix=primitive_matrix,
@@ -257,6 +261,7 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
                      frequency_scale_factor=frequency_scale_factor,
                      symprec=symprec,
                      is_symmetry=is_symmetry,
+                     store_dense_svecs=store_dense_svecs,
                      calculator=_calculator,
                      log_level=log_level)
 

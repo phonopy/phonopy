@@ -1,3 +1,5 @@
+"""Phonon band structure module."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -41,6 +43,7 @@ from phonopy.units import VaspToTHz
 
 
 def estimate_band_connection(prev_eigvecs, eigvecs, prev_band_order):
+    """Connect neighboring qpoints by eigenvector similarity."""
     metric = np.abs(np.dot(prev_eigvecs.conjugate().T, eigvecs))
     connection_order = []
     for overlaps in metric:
@@ -61,6 +64,7 @@ def estimate_band_connection(prev_eigvecs, eigvecs, prev_band_order):
 
 def get_band_qpoints_and_path_connections(band_paths, npoints=51,
                                           rec_lattice=None):
+    """Return qpoints and connections of paths."""
     path_connections = []
     for paths in band_paths:
         path_connections += [True, ] * (len(paths) - 2)
@@ -71,7 +75,7 @@ def get_band_qpoints_and_path_connections(band_paths, npoints=51,
 
 
 def get_band_qpoints(band_paths, npoints=51, rec_lattice=None):
-    """Generate qpoints for band structure path
+    """Generate qpoints for band structure path.
 
     Note
     ----
@@ -100,7 +104,6 @@ def get_band_qpoints(band_paths, npoints=51, rec_lattice=None):
         shape=(3, 3)
 
     """
-
     npts = _get_npts(band_paths, npoints, rec_lattice)
     qpoints_of_paths = []
     c = 0
@@ -142,7 +145,6 @@ def get_band_qpoints_by_seekpath(primitive, npoints, is_const_interval=False):
         that of paths.
 
     """
-
     try:
         import seekpath
     except ImportError:
@@ -168,8 +170,15 @@ def get_band_qpoints_by_seekpath(primitive, npoints, is_const_interval=False):
     return qpoints_of_paths, labels, path_connections
 
 
+def band_plot(axs, frequencies, distances, path_connections, labels, fmt='r-'):
+    """Return band structure plot."""
+    bp = BandPlot(axs)
+    bp.decorate(labels, path_connections, frequencies, distances)
+    bp.plot(distances, frequencies, path_connections, fmt=fmt)
+
+
 class BandPlot(object):
-    """Band structure plotting class
+    """Band structure plotting class.
 
     This class adds band structure plots to Matplotlib axes.
 
@@ -184,13 +193,14 @@ class BandPlot(object):
     """
 
     def __init__(self, axs):
-        """
+        """Init method.
 
+        Parameters
+        ----------
         axs : Matplotlib axes of ImageGrid, optional
             axs = ImageGrid(fig, 111, nrows_ncols=(1, n), ...)
 
         """
-
         self._axs = axs
         self.xscale = None
         self._decorated = False
@@ -222,7 +232,6 @@ class BandPlot(object):
             Label attached to band structure.
 
         """
-
         if fmt is None:
             _fmt = 'r-'
         else:
@@ -247,19 +256,21 @@ class BandPlot(object):
                 count += 1
 
     def set_xscale_from_data(self, frequencies, distances):
+        """Set xscale from data."""
         max_freq = max([np.max(fq) for fq in frequencies])
         max_dist = distances[-1][-1]
         self.xscale = max_freq / max_dist * 1.5
 
     def decorate(self, labels, path_connections, frequencies, distances):
-        """
+        """Decorate plots.
 
+        Parameters
+        ----------
         labels : List of str, optional
             Labels of special points.
             See the detail in docstring of Phonopy.run_band_structure.
 
         """
-
         if self._decorated:
             raise RuntimeError("Already BandPlot instance is decorated.")
         else:
@@ -277,7 +288,8 @@ class BandPlot(object):
             if not c:
                 lefts.append(i + 1)
                 rights.append(i)
-        seg_indices = [list(range(l, r + 1)) for l, r in zip(lefts, rights)]
+        seg_indices = [list(range(lft, rgt + 1))
+                       for lft, rgt in zip(lefts, rights)]
         special_points = []
         for indices in seg_indices:
             pts = [distances_scaled[i][0] for i in indices]
@@ -302,19 +314,13 @@ class BandPlot(object):
                     linestyle=':', linewidth=0.5, color='b')
 
 
-def band_plot(axs, frequencies, distances, path_connections, labels, fmt='r-'):
-    bp = BandPlot(axs)
-    bp.decorate(labels, path_connections, frequencies, distances)
-    bp.plot(distances, frequencies, path_connections, fmt=fmt)
-
-
 def _plot_legacy(ax,
                  all_distances,
                  all_frequencies,
                  labels,
                  special_points,
                  is_band_connection):
-
+    """Plot band structure in legacy style."""
     ax.xaxis.set_ticks_position('both')
     ax.yaxis.set_ticks_position('both')
     ax.xaxis.set_tick_params(which='both', direction='in')
@@ -343,6 +349,7 @@ def _plot_legacy(ax,
 
 
 def _get_npts(band_paths, npoints, rec_lattice):
+    """Return numbers of qpoints of band segments."""
     if rec_lattice is not None:
         path_lengths = []
         for band_path in band_paths:
@@ -352,8 +359,8 @@ def _get_npts(band_paths, npoints, rec_lattice):
                 length = np.linalg.norm(np.dot(rec_lattice, vector))
                 path_lengths.append(length)
         max_length = max(path_lengths)
-        npts = [np.rint(l / max_length * npoints).astype(int)
-                for l in path_lengths]
+        npts = [np.rint(pl / max_length * npoints).astype(int)
+                for pl in path_lengths]
     else:
         npts = [npoints, ] * np.sum([len(paths) for paths in band_paths])
 
@@ -394,7 +401,7 @@ def _get_labels(pairs_of_symbols):
 
 
 class BandStructure(object):
-    """Class for phonons of q-poitns along reciprocal space paths
+    """Class for phonons of q-poitns along reciprocal space paths.
 
     Note
     ----
@@ -453,7 +460,7 @@ class BandStructure(object):
                  labels=None,
                  is_legacy_plot=False,
                  factor=VaspToTHz):
-        """
+        """Init method.
 
         Parameters
         ----------
@@ -484,10 +491,9 @@ class BandStructure(object):
             This makes the old style band structure plot. Default is False.
 
         """
-
         self._dynamical_matrix = dynamical_matrix
-        self._cell = dynamical_matrix.get_primitive()
-        self._supercell = dynamical_matrix.get_supercell()
+        self._cell = dynamical_matrix.primitive
+        self._supercell = dynamical_matrix.supercell
         self._factor = factor
         self._with_eigenvectors = with_eigenvectors
         self._is_band_connection = is_band_connection
@@ -509,7 +515,7 @@ class BandStructure(object):
             else:
                 self._path_connections = path_connections
             if (labels is not None and
-                len(labels) == (2 - np.array(self._path_connections)).sum()):
+                len(labels) == (2 - np.array(self._path_connections)).sum()):  # noqa #129 #E501
                 self._labels = labels
         self._distances = []
         self._distance = 0.
@@ -522,48 +528,73 @@ class BandStructure(object):
 
     @property
     def distances(self):
+        """Return distances of band segments."""
         return self._distances
 
     def get_distances(self):
+        """Return distances of band segments."""
+        warnings.warn("BandStructure.get_distances() is deprecated."
+                      "Use BandStructure.distances attribute.",
+                      DeprecationWarning)
         return self.distances
 
     @property
     def qpoints(self):
+        """Return qpoints of band segments."""
         return self._paths
 
     def get_qpoints(self):
+        """Return qpoints of band segments."""
+        warnings.warn("BandStructure.get_qpoints() is deprecated."
+                      "Use BandStructure.qpoints attribute.",
+                      DeprecationWarning)
         return self.qpoints
 
     @property
     def eigenvectors(self):
+        """Return phonon eigenvectors of band segments."""
         return self._eigenvectors
 
     def get_eigenvectors(self):
+        """Return phonon eigenvectors of band segments."""
+        warnings.warn("BandStructure.get_eigenvectors() is deprecated."
+                      "Use BandStructure.eigenvectors attribute.",
+                      DeprecationWarning)
         return self.eigenvectors
 
     @property
     def frequencies(self):
+        """Return phonon frequencies of band segments."""
         return self._frequencies
 
     def get_frequencies(self):
+        """Return phonon frequencies of band segments."""
+        warnings.warn("BandStructure.get_frequencies() is deprecated."
+                      "Use BandStructure.frequencies attribute.",
+                      DeprecationWarning)
         return self.frequencies
 
     @property
     def group_velocities(self):
+        """Return phonon group velocities of band segments."""
         return self._group_velocities
 
     def get_group_velocities(self):
+        """Return phonon group velocities of band segments."""
+        warnings.warn("BandStructure.get_group_velocities() is deprecated."
+                      "Use BandStructure.group_velocities attribute.",
+                      DeprecationWarning)
         return self.group_velocities
 
     def get_eigenvalues(self):
-        warnings.simplefilter("always")
+        """Return phonon eigenvalues of band segments."""
         warnings.warn(
             "Bandstructure.get_engenvalues is deprecated.",
             DeprecationWarning)
         return self._eigenvalues
 
     def get_unit_conversion_factor(self):
-        warnings.simplefilter("always")
+        """Return frequency unit conversion factor of band segments."""
         warnings.warn(
             "Bandstructure.get_unit_conversion_factor is deprecated.",
             DeprecationWarning)
@@ -571,17 +602,27 @@ class BandStructure(object):
 
     @property
     def labels(self):
+        """Return special point symbols."""
         return self._labels
 
     @property
     def path_connections(self):
+        """Return band segment connections."""
         return self._path_connections
 
     @property
     def is_legacy_plot(self):
+        """Identify legacy plot or not."""
         return self._is_legacy_plot
 
     def plot(self, ax):
+        """Plot band structure.
+
+        Parameters
+        ----------
+        ax : matplotlib.pyplot.axis
+
+        """
         if self._is_legacy_plot:
             self._plot_legacy(ax)
         else:
@@ -608,6 +649,7 @@ class BandStructure(object):
                      self._is_band_connection)
 
     def write_hdf5(self, comment=None, filename="band.hdf5"):
+        """Write band structure in hdf5 format."""
         import h5py
         with h5py.File(filename, 'w') as w:
             w.create_dataset('path', data=self._paths)
@@ -630,13 +672,13 @@ class BandStructure(object):
             if self._labels:
                 if self._is_legacy_plot:
                     for i in range(len(self._paths)):
-                        path_labels.append([
-                                np.string_(self._labels[i]), np.string_(self._labels[i + 1])])
+                        path_labels.append([np.string_(self._labels[i]),
+                                            np.string_(self._labels[i + 1])])
                 else:
                     i = 0
                     for c in self._path_connections:
-                        path_labels.append([
-                                np.string_(self._labels[i]), np.string_(self._labels[i + 1])])
+                        path_labels.append([np.string_(self._labels[i]),
+                                            np.string_(self._labels[i + 1])])
                         if c:
                             i += 1
                         else:
@@ -653,6 +695,22 @@ class BandStructure(object):
                    comment=None,
                    filename=None,
                    compression=None):
+        """Write band structure in yaml format.
+
+        Parameters
+        ----------
+        comment : dict
+            Data structure dumped in YAML and the dumped YAML text is put
+            at the beggining of the file.
+        filename : str
+            Default filename is 'band.yaml' when compression=None.
+            With compression, an extention of filename is added such as
+            'band.yaml.xz'.
+        compression : None, 'gzip', or 'lzma'
+            None gives usual text file. 'gzip and 'lzma' compresse yaml
+            text in respective compression methods.
+
+        """
         if filename is not None:
             _filename = filename
 
@@ -760,12 +818,12 @@ class BandStructure(object):
 
                 if eigenvectors is not None:
                     text.append("    eigenvector:")
-                    for l in range(natom):
-                        text.append("    - # atom %d" % (l + 1))
+                    for ll in range(natom):
+                        text.append("    - # atom %d" % (ll + 1))
                         for m in (0, 1, 2):
                             text.append("      - [ %17.14f, %17.14f ]" %
-                                        (eigenvectors[j, l * 3 + m, k].real,
-                                         eigenvectors[j, l * 3 + m, k].imag))
+                                        (eigenvectors[j, ll * 3 + m, k].real,
+                                         eigenvectors[j, ll * 3 + m, k].imag))
             text.append('')
         text.append('')
 

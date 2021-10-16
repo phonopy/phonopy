@@ -1,3 +1,4 @@
+"""Phonopy command user interface."""
 # Copyright (C) 2020 Atsushi Togo
 # All rights reserved.
 #
@@ -36,8 +37,8 @@ import sys
 import os
 import numpy as np
 from phonopy import Phonopy, __version__
-from phonopy.harmonic.force_constants import (
-    distribute_force_constants_by_translations, compact_fc_to_full_fc)
+from phonopy.units import THzToEv
+from phonopy.harmonic.force_constants import compact_fc_to_full_fc
 from phonopy.structure.cells import print_cell
 from phonopy.structure.cells import isclose as cells_isclose
 from phonopy.structure.atoms import atom_data, symbol_map
@@ -68,6 +69,7 @@ from phonopy.cui.phonopy_argparse import (
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phonopy():
+    """Show phonopy logo."""
     print(r"""        _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
@@ -77,6 +79,7 @@ def print_phonopy():
 
 
 def print_version(version, package_name="phonopy"):
+    """Show phonopy version number."""
     try:
         version_text = ('%s' % version).rjust(44)
         import pkg_resources
@@ -90,7 +93,7 @@ def print_version(version, package_name="phonopy"):
         pass
     except Exception as err:
         if (err.__module__ == 'pkg_resources' and
-            err.__class__.__name__ == 'DistributionNotFound'):
+            err.__class__.__name__ == 'DistributionNotFound'):  # noqa E129
             pass
         else:
             raise
@@ -100,6 +103,7 @@ def print_version(version, package_name="phonopy"):
 
 
 def print_end():
+    """Show end banner."""
     print(r"""                 _
    ___ _ __   __| |
   / _ \ '_ \ / _` |
@@ -109,6 +113,7 @@ def print_end():
 
 
 def print_error():
+    """Show error banner."""
     print(r"""  ___ _ __ _ __ ___  _ __
  / _ \ '__| '__/ _ \| '__|
 |  __/ |  | | | (_) | |
@@ -117,6 +122,7 @@ def print_error():
 
 
 def print_attention(attention_text):
+    """Show attentinal information."""
     print("*" * 67)
     print(attention_text)
     print("*" * 67)
@@ -124,11 +130,13 @@ def print_attention(attention_text):
 
 
 def print_error_message(message):
+    """Show error message."""
     print('')
     print(message)
 
 
 def file_exists(filename, log_level, is_any=False):
+    """Check existence of file."""
     if os.path.exists(filename):
         return True
     else:
@@ -143,6 +151,7 @@ def file_exists(filename, log_level, is_any=False):
 
 
 def files_exist(filename_list, log_level, is_any=False):
+    """Check existence of files."""
     filenames = []
     for filename in filename_list:
         if file_exists(filename, log_level, is_any=is_any):
@@ -169,6 +178,7 @@ def finalize_phonopy(log_level,
                      confs,
                      phonon,
                      filename="phonopy.yaml"):
+    """Finalize phonopy."""
     units = get_default_physical_units(phonon.calculator)
 
     if settings.save_params:
@@ -211,6 +221,7 @@ def finalize_phonopy(log_level,
 
 
 def print_cells(phonon, unitcell_filename):
+    """Show cells."""
     supercell = phonon.get_supercell()
     unitcell = phonon.get_unitcell()
     primitive = phonon.get_primitive()
@@ -237,6 +248,7 @@ def print_settings(settings,
                    is_primitive_axes_auto,
                    unitcell_filename,
                    load_phonopy_yaml):
+    """Show setting info."""
     primitive_matrix = phonon.primitive_matrix
     supercell_matrix = phonon.supercell_matrix
     interface_mode = phonon.calculator
@@ -244,7 +256,7 @@ def print_settings(settings,
     if interface_mode:
         print("Calculator interface: %s" % interface_mode)
     if (settings.cell_filename is not None and
-        settings.cell_filename != unitcell_filename):
+        settings.cell_filename != unitcell_filename):  # noqa E129
         print("\"%s\" was not able to be used."
               % settings.cell_filename)
     print("Crystal structure was read from \"%s\"." % unitcell_filename)
@@ -274,7 +286,7 @@ def print_settings(settings,
         else:
             print("QPOINTS mode")
     if ((run_mode == 'band' or run_mode == 'mesh' or run_mode == 'qpoints') and
-        settings.is_group_velocity):
+        settings.is_group_velocity):  # noqa 129
         gv_delta_q = settings.group_velocity_delta_q
         if gv_delta_q is not None:
             print("  With group velocity calculation (dq=%3.1e)" % gv_delta_q)
@@ -319,7 +331,7 @@ def print_settings(settings,
               % settings.symmetry_tolerance)
     if run_mode == 'mesh' or run_mode == 'band_mesh':
         mesh = settings.mesh_numbers
-        if type(mesh) is float:
+        if isinstance(mesh, float):
             print("  Length for sampling mesh: %.1f" % mesh)
         elif mesh is not None:
             print("  Sampling mesh: %s" % np.array(mesh))
@@ -327,9 +339,6 @@ def print_settings(settings,
             cutoff_freq = settings.cutoff_frequency
             if cutoff_freq is None:
                 pass
-            elif cutoff_freq < 0:
-                print("  - Thermal properties are calculatd with "
-                      "absolute phonon frequnecy.")
             else:
                 print("  - Phonon frequencies > %5.3f are used to calculate "
                       "thermal properties." % cutoff_freq)
@@ -374,7 +383,7 @@ def write_displacements_files_then_exit(phonon,
                                         confs,
                                         optional_structure_info,
                                         log_level):
-    """Write supercells with displacements and displacement dataset
+    """Write supercells with displacements and displacement dataset.
 
     Note
     ----
@@ -382,7 +391,6 @@ def write_displacements_files_then_exit(phonon,
     phonopy_disp.yaml.
 
     """
-
     cells_with_disps = phonon.supercells_with_displacements
     additional_info = {'supercell_matrix': phonon.supercell_matrix}
     write_supercells_with_displacements(phonon.calculator,
@@ -404,6 +412,7 @@ def write_displacements_files_then_exit(phonon,
 
 
 def create_FORCE_SETS_from_settings(settings, symprec, log_level):
+    """Create FORCE_SETS."""
     if settings.create_force_sets:
         filenames = settings.create_force_sets
         force_sets_zero_mode = False
@@ -450,6 +459,7 @@ def produce_force_constants(phonon,
                             phpy_yaml,
                             unitcell_filename,
                             log_level):
+    """Run force constants calculation."""
     num_satom = len(phonon.supercell)
     p2s_map = phonon.primitive.p2s_map
     is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
@@ -530,7 +540,7 @@ def produce_force_constants(phonon,
 
         if (log_level and
             force_sets is not None and
-            'displacements' in force_sets):
+                'displacements' in force_sets):
             print("%d snapshots were found."
                   % len(force_sets['displacements']))
 
@@ -579,6 +589,7 @@ def store_force_constants(phonon,
                           unitcell_filename,
                           load_phonopy_yaml,
                           log_level):
+    """Calculate or read force constants."""
     physical_units = get_default_physical_units(phonon.calculator)
     p2s_map = phonon.primitive.p2s_map
 
@@ -687,10 +698,6 @@ def store_force_constants(phonon,
                     print("  Use --full-fc option for full array of force "
                           "constants.")
 
-    # Show the rotational invariance condition (just show!)
-    if settings.is_rotational_invariance:
-        phonon.get_rotational_condition_of_fc()
-
     if log_level:
         print("")
 
@@ -702,6 +709,7 @@ def store_nac_params(phonon,
                      log_level,
                      nac_factor=None,
                      load_phonopy_yaml=False):
+    """Calculate or read NAC params."""
     if nac_factor is None:
         physical_units = get_default_physical_units(phonon.calculator)
         _nac_factor = physical_units['nac_factor']
@@ -776,6 +784,7 @@ def store_nac_params(phonon,
 
 
 def run(phonon, settings, plot_conf, log_level):
+    """Run phonon calculations."""
     interface_mode = phonon.calculator
     physical_units = get_default_physical_units(interface_mode)
     run_mode = settings.run_mode
@@ -888,7 +897,7 @@ def run(phonon, settings, plot_conf, log_level):
         is_gamma_center = settings.is_gamma_center
 
         if (settings.is_thermal_displacements or
-            settings.is_thermal_displacement_matrices):
+            settings.is_thermal_displacement_matrices):  # noqa E129
             if settings.cutoff_frequency is not None:
                 if log_level:
                     print_error_message(
@@ -953,13 +962,23 @@ def run(phonon, settings, plot_conf, log_level):
                 t_min=t_min,
                 t_max=t_max,
                 t_step=t_step,
-                is_projection=settings.is_projected_thermal_properties,
-                band_indices=settings.band_indices,
                 cutoff_frequency=settings.cutoff_frequency,
-                pretend_real=settings.pretend_real)
+                pretend_real=settings.pretend_real,
+                band_indices=settings.band_indices,
+                is_projection=settings.is_projected_thermal_properties)
             phonon.write_yaml_thermal_properties()
 
             if log_level:
+                cutoff_freq = phonon.thermal_properties.cutoff_frequency
+                cutoff_freq /= THzToEv
+                print("Cutoff frequency: %.5f" % cutoff_freq)
+                num_ignored_modes = (
+                    phonon.thermal_properties.number_of_modes
+                    - phonon.thermal_properties.number_of_integrated_modes)
+                print("Number of phonon frequencies less than cutoff "
+                      "frequency: %d/%d"
+                      % (num_ignored_modes,
+                         phonon.thermal_properties.number_of_modes))
                 print("#%11s %15s%15s%15s%15s" % ('T [K]',
                                                   'F [kJ/mol]',
                                                   'S [J/K/mol]',
@@ -1050,7 +1069,7 @@ def run(phonon, settings, plot_conf, log_level):
             p_direction = settings.projection_direction
             if (log_level and
                 p_direction is not None and
-                not settings.xyz_projection):
+                not settings.xyz_projection):  # noqa E129
                 c_direction = np.dot(p_direction, phonon.primitive.cell)
                 c_direction /= np.linalg.norm(c_direction)
                 print("Projection direction: [%6.3f %6.3f %6.3f] "
@@ -1177,7 +1196,7 @@ def run(phonon, settings, plot_conf, log_level):
             not settings.is_thermal_properties and
             not settings.is_thermal_displacements and
             not settings.is_thermal_displacement_matrices and
-            not settings.is_thermal_distances):
+            not settings.is_thermal_distances):  # noqa E129
             if settings.pdos_indices is not None:
                 plot = phonon.plot_band_structure_and_dos(
                     pdos_indices=pdos_indices)
@@ -1196,9 +1215,9 @@ def run(phonon, settings, plot_conf, log_level):
         if anime_type == "v_sim":
             q_point = settings.anime_qpoint
             amplitude = settings.anime_amplitude
-            phonon.write_animation(q_point=q_point,
-                                   anime_type='v_sim',
-                                   amplitude=amplitude)
+            fname_out = phonon.write_animation(q_point=q_point,
+                                               anime_type='v_sim',
+                                               amplitude=amplitude)
             if log_level:
                 print("Animation type: v_sim")
                 print("q-point: [%6.3f %6.3f %6.3f]" % tuple(q_point))
@@ -1207,18 +1226,19 @@ def run(phonon, settings, plot_conf, log_level):
             band_index = settings.anime_band_index
             division = settings.anime_division
             shift = settings.anime_shift
-            phonon.write_animation(anime_type=anime_type,
-                                   band_index=band_index,
-                                   amplitude=amplitude,
-                                   num_div=division,
-                                   shift=shift)
-
+            fname_out = phonon.write_animation(anime_type=anime_type,
+                                               band_index=band_index,
+                                               amplitude=amplitude,
+                                               num_div=division,
+                                               shift=shift)
             if log_level:
                 print("Animation type: %s" % anime_type)
                 print("amplitude: %f" % amplitude)
                 if anime_type != "jmol":
                     print("band index: %d" % band_index)
                     print("Number of images: %d" % division)
+        if log_level:
+            print("Animation was written in \"%s\". " % fname_out)
 
     #
     # Modulation
@@ -1283,8 +1303,7 @@ def run(phonon, settings, plot_conf, log_level):
 
 
 def start_phonopy(**argparse_control):
-    """Parse arguments and set some basic parameters"""
-
+    """Parse arguments and set some basic parameters."""
     parser, deprecated = get_parser(**argparse_control)
     args = parser.parse_args()
 
@@ -1322,8 +1341,7 @@ def start_phonopy(**argparse_control):
 
 
 def read_phonopy_settings(args, argparse_control, log_level):
-    """Read phonopy settings"""
-
+    """Read phonopy settings."""
     load_phonopy_yaml = argparse_control.get('load_phonopy_yaml', False)
     conf_filename = None
 
@@ -1366,18 +1384,22 @@ def read_phonopy_settings(args, argparse_control, log_level):
 
 
 def is_band_auto(settings):
+    """Check whether automatic band paths setting or not."""
     return (type(settings.band_paths) is str and settings.band_paths == 'auto')
 
 
 def is_pdos_auto(settings):
+    """Check whether automatic PDOS setting or not."""
     return (settings.pdos_indices == 'auto')
 
 
 def auto_primitive_axes(primitive_matrix):
+    """Check whether automatic primitive matrix setting or not."""
     return (type(primitive_matrix) is str and primitive_matrix == 'auto')
 
 
 def get_fc_calculator_params(settings):
+    """Return fc_calculator and fc_calculator_params from settings."""
     fc_calculator = None
     if settings.fc_calculator is not None:
         if settings.fc_calculator.lower() in fc_calculator_names:
@@ -1391,8 +1413,7 @@ def get_fc_calculator_params(settings):
 
 
 def get_cell_info(settings, cell_filename, symprec, log_level):
-    """calculator interface and crystal structure information"""
-
+    """Return calculator interface and crystal structure information."""
     cell_info = collect_cell_info(
         supercell_matrix=settings.supercell_matrix,
         primitive_matrix=settings.primitive_matrix,
@@ -1452,8 +1473,9 @@ def show_symmetry_info_then_exit(cell_info, symprec):
 
 
 def check_supercell_in_yaml(cell_info, ph, log_level):
+    """Check supercell size consistency."""
     if (cell_info['phonopy_yaml'] is not None and
-        cell_info['phonopy_yaml'].supercell is not None):
+            cell_info['phonopy_yaml'].supercell is not None):
         if not cells_isclose(cell_info['phonopy_yaml'].supercell,
                              ph.supercell):
             if log_level:
@@ -1465,13 +1487,14 @@ def check_supercell_in_yaml(cell_info, ph, log_level):
 
 
 def init_phonopy(settings, cell_info, symprec, log_level):
-    # Prepare phonopy object
+    """Prepare phonopy object."""
     if settings.create_displacements and settings.temperatures is None:
         phonon = Phonopy(cell_info['unitcell'],
                          cell_info['supercell_matrix'],
                          primitive_matrix=cell_info['primitive_matrix'],
                          symprec=symprec,
                          is_symmetry=settings.is_symmetry,
+                         store_dense_svecs=settings.store_dense_svecs,
                          calculator=cell_info['interface_mode'],
                          log_level=log_level)
     else:  # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
@@ -1494,6 +1517,7 @@ def init_phonopy(settings, cell_info, symprec, log_level):
             group_velocity_delta_q=settings.group_velocity_delta_q,
             symprec=symprec,
             is_symmetry=settings.is_symmetry,
+            store_dense_svecs=settings.store_dense_svecs,
             calculator=cell_info['interface_mode'],
             use_lapack_solver=settings.lapack_solver,
             log_level=log_level)
@@ -1509,7 +1533,7 @@ def init_phonopy(settings, cell_info, symprec, log_level):
     if phonon.primitive.masses is None:
         for s in phonon.primitive.symbols:
             if (atom_data[symbol_map[s]][3] is None and
-                s not in symbols_with_no_mass):
+                    s not in symbols_with_no_mass):
                 symbols_with_no_mass.append(s)
                 print_error_message(
                     "Atomic mass of \'%s\' is not implemented in phonopy." % s)
@@ -1525,6 +1549,7 @@ def init_phonopy(settings, cell_info, symprec, log_level):
 
 
 def main(**argparse_control):
+    """Start phonopy."""
     ############################################
     # Parse phonopy conf and crystal structure #
     ############################################
@@ -1612,7 +1637,7 @@ def main(**argparse_control):
     # Create constant amplitude displacements and then exit #
     #########################################################
     if ((settings.create_displacements or settings.random_displacements) and
-        settings.temperatures is None):
+            settings.temperatures is None):
         if settings.displacement_distance is None:
             displacement_distance = get_default_displacement_distance(
                 phonon.calculator)

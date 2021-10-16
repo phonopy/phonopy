@@ -40,15 +40,89 @@ from phonopy.interface.vasp import write_vasp
 from phonopy.units import VaspToTHz
 
 
+def write_animation(dynamical_matrix,
+                    q_point=None,
+                    anime_type='v_sim',
+                    band_index=None,
+                    amplitude=None,
+                    num_div=None,
+                    shift=None,
+                    factor=None,
+                    filename=None):
+    """Write atomic modulations in animation format."""
+    animation = Animation(q_point,
+                          dynamical_matrix,
+                          shift=shift)
+
+    if anime_type == 'v_sim':
+        if filename:
+            fname_out = animation.write_v_sim(amplitude=amplitude,
+                                              factor=factor,
+                                              filename=filename)
+        else:
+            fname_out = animation.write_v_sim(amplitude=amplitude,
+                                              factor=factor)
+
+    elif anime_type == 'arc' or anime_type is None:
+        if filename:
+            fname_out = animation.write_arc(band_index,
+                                            amplitude,
+                                            num_div,
+                                            filename=filename)
+        else:
+            fname_out = animation.write_arc(band_index,
+                                            amplitude,
+                                            num_div)
+    elif anime_type == 'xyz':
+        if filename:
+            fname_out = animation.write_xyz(band_index,
+                                            amplitude,
+                                            num_div,
+                                            factor,
+                                            filename=filename)
+        else:
+            fname_out = animation.write_xyz(band_index,
+                                            amplitude,
+                                            num_div,
+                                            factor)
+    elif anime_type == 'jmol':
+        if filename:
+            fname_out = animation.write_xyz_jmol(amplitude=amplitude,
+                                                 factor=factor,
+                                                 filename=filename)
+        else:
+            fname_out = animation.write_xyz_jmol(amplitude=amplitude,
+                                                 factor=factor)
+    elif anime_type == 'poscar':
+        if filename:
+            fname_out = animation.write_POSCAR(band_index,
+                                               amplitude,
+                                               num_div,
+                                               filename=filename)
+        else:
+            fname_out = animation.write_POSCAR(band_index,
+                                               amplitude,
+                                               num_div)
+    else:
+        raise RuntimeError(
+            "Animation format \'%s\' was not found." % anime_type)
+
+    return fname_out
+
+
 class Animation(object):
     def __init__(self,
                  qpoint,
                  dynamical_matrix,
                  shift=None):
-        dynamical_matrix.run(qpoint)
+        if qpoint is None:
+            _qpoint = [0, 0, 0]
+        else:
+            _qpoint = qpoint
+        dynamical_matrix.run(_qpoint)
         dynmat = dynamical_matrix.dynamical_matrix
         self._eigenvalues, self._eigenvectors = np.linalg.eigh(dynmat)
-        self._qpoint = qpoint
+        self._qpoint = _qpoint
         primitive = dynamical_matrix.get_primitive()
         self._positions = primitive.get_scaled_positions()
         self._symbols = primitive.get_chemical_symbols()
@@ -81,9 +155,11 @@ class Animation(object):
         self._displacements = np.array(u).reshape(-1, 3)
 
     def write_v_sim(self,
-                    amplitude=1.0,
+                    amplitude=None,
                     factor=VaspToTHz,
                     filename="anime.ascii"):
+        if amplitude is None:
+            _amplitude = 1.0
         self._set_cell_oriented()
         lat = self._lattice_oriented
         q = self._qpoint
@@ -102,7 +178,7 @@ class Animation(object):
             text += "#metaData: qpt=[%f;%f;%f;%f \\\n" % (
                 q[0], q[1], q[2], omega * factor)
             for u in (self._get_oriented_displacements(self._displacements) *
-                      amplitude):
+                      _amplitude):
                 text += "#; %f; %f; %f; %f; %f; %f \\\n" % (
                     u[0].real, u[1].real, u[2].real,
                     u[0].imag, u[1].imag, u[2].imag)
@@ -110,6 +186,8 @@ class Animation(object):
         w = open(filename, 'w')
         w.write(text)
         w.close()
+
+        return filename
 
     def write_arc(self,
                   band_index,
@@ -148,6 +226,8 @@ class Animation(object):
         w.write(text)
         w.close()
 
+        return filename
+
     def write_xyz_jmol(self,
                        amplitude=10,
                        factor=VaspToTHz,
@@ -172,6 +252,8 @@ class Animation(object):
         w = open(filename, 'w')
         w.write(text)
         w.close()
+
+        return filename
 
     def write_xyz(self,
                   band_index,
@@ -200,6 +282,8 @@ class Animation(object):
         w.write(text)
         w.close()
 
+        return filename
+
     def write_POSCAR(self,
                      band_index,
                      amplitude=1,
@@ -216,3 +300,5 @@ class Animation(object):
                                  symbols=self._symbols,
                                  pbc=True)
             write_vasp((filename+"-%03d") % i, atoms, direct=True)
+
+        return filename

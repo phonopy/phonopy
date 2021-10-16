@@ -1,2 +1,9 @@
 [build-system]
 requires = ["setuptools", "wheel", "numpy"]
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = "E203,W503"
+
+[tool.black]
+line-length = 88

@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 
 
@@ -73,10 +74,30 @@ dynmat_ref_555 = [
     0.021086, 0.000000, 0.021086, 0.000000, 0.064909, 0.000000]
 
 
-def test_dynmat(ph_nacl_nonac):
-    dynmat = ph_nacl_nonac.dynamical_matrix
-    _test_dynmat(dynmat)
-    _test_dynmat_252525(dynmat, dynmat_ref_252525)
+
+@pytest.mark.parametrize("is_compact_fc,lang",
+                         [(True, "C"), (False, "C"),
+                          (True, "Py"), (False, "Py")])
+def test_dynmat(ph_nacl_nonac,
+                ph_nacl_nonac_compact_fc,
+                is_compact_fc,
+                lang):
+    if is_compact_fc:
+        ph = ph_nacl_nonac_compact_fc
+    else:
+        ph = ph_nacl_nonac
+    dynmat = ph.dynamical_matrix
+    _test_dynmat(dynmat, lang=lang)
+    _test_dynmat_252525(dynmat, dynmat_ref_252525, lang=lang)
+
+
+def test_dynmat_dense_svecs(ph_nacl_nonac_dense_svecs):
+    ph = ph_nacl_nonac_dense_svecs
+    svecs, multi = ph.primitive.get_smallest_vectors()
+    dynmat = ph.dynamical_matrix
+    lang = 'Py'
+    _test_dynmat(dynmat, lang=lang)
+    _test_dynmat_252525(dynmat, dynmat_ref_252525, lang=lang)
 
 
 def test_dynmat_gonze_lee(ph_nacl):
@@ -95,22 +116,31 @@ def test_dynmat_wang(ph_nacl):
     ph_nacl.nac_params = nac_params
 
 
-def _test_dynmat(dynmat):
+def _test_dynmat(dynmat, lang=None):
     dtype_complex = ("c%d" % (np.dtype('double').itemsize * 2))
-    dynmat.run([0, 0, 0])
+    if lang:
+        dynmat.run([0, 0, 0], lang=lang)
+    else:
+        dynmat.run([0, 0, 0])
     dynmat_ref = np.array(
         dynmat_ref_000, dtype='double').view(dtype=dtype_complex).reshape(6, 6)
     np.testing.assert_allclose(dynmat.dynamical_matrix, dynmat_ref, atol=1e-5)
 
-    dynmat.run([0.5, 0.5, 0.5])
+    if lang:
+        dynmat.run([0.5, 0.5, 0.5], lang=lang)
+    else:
+        dynmat.run([0.5, 0.5, 0.5])
     dynmat_ref = np.array(
         dynmat_ref_555, dtype='double').view(dtype=dtype_complex).reshape(6, 6)
     np.testing.assert_allclose(dynmat.dynamical_matrix, dynmat_ref, atol=1e-5)
 
 
-def _test_dynmat_252525(dynmat, dynmat_ref):
+def _test_dynmat_252525(dynmat, dynmat_ref, lang=None):
     dtype_complex = ("c%d" % (np.dtype('double').itemsize * 2))
-    dynmat.run([0.25, 0.25, 0.25])
+    if lang:
+        dynmat.run([0.25, 0.25, 0.25], lang=lang)
+    else:
+        dynmat.run([0.25, 0.25, 0.25])
     # for row in dynmat.dynamical_matrix:
     #     print("".join(["%f, %f, " % (c.real, c.imag) for c in row]))
     dynmat_ref = np.array(

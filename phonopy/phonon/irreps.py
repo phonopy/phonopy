@@ -59,7 +59,7 @@ class IrReps(object):
         self._q = np.array(q)
         self._degeneracy_tolerance = degeneracy_tolerance
         self._symprec = symprec
-        self._primitive = dynamical_matrix.get_primitive()
+        self._primitive = dynamical_matrix.primitive
         self._dynamical_matrix = dynamical_matrix
         self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
         self._character_table = None

@@ -85,9 +85,9 @@ class TestPhonopyYaml(unittest.TestCase):
                    [0, 2.43533967, 0],
                    [0, 0, 2.43533967]]
         factors = 14.400
-        phonon.set_nac_params({'born': born,
-                               'factor': factors,
-                               'dielectric': epsilon})
+        phonon.nac_params = {'born': born,
+                             'factor': factors,
+                             'dielectric': epsilon}
         return phonon
 
 

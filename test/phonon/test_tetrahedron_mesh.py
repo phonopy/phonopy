@@ -32,7 +32,7 @@ def test_Amm2():
                           [0, 0.5, -0.5],
                           [0, 0.5, 0.5]])
     mesh = [11, 11, 11]
-    primitive = phonon.get_primitive()
+    primitive = phonon.primitive
     phonon.run_mesh([11, 11, 11])
     weights = phonon.mesh.weights
     frequencies = phonon.mesh.frequencies
@@ -72,6 +72,6 @@ def _get_phonon(spgtype, dim, pmat):
                      primitive_matrix=pmat)
     force_sets = parse_FORCE_SETS(
         filename=os.path.join(data_dir, "FORCE_SETS_%s" % spgtype))
-    phonon.set_displacement_dataset(force_sets)
+    phonon.dataset = force_sets
     phonon.produce_force_constants()
     return phonon

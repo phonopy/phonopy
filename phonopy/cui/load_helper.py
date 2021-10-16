@@ -1,3 +1,4 @@
+"""Helper methods of phonopy loader."""
 # Copyright (C) 2018 Atsushi Togo
 # All rights reserved.
 #
@@ -43,8 +44,7 @@ from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.interface.calculator import get_force_constant_conversion_factor
 
 
-def get_cell_settings(phonopy_yaml=None,
-                      supercell_matrix=None,
+def get_cell_settings(supercell_matrix=None,
                       primitive_matrix=None,
                       unitcell=None,
                       supercell=None,
@@ -53,9 +53,10 @@ def get_cell_settings(phonopy_yaml=None,
                       calculator=None,
                       symprec=1e-5,
                       log_level=0):
+    """Return crystal structures."""
     optional_structure_info = None
     if (primitive_matrix is None or
-        (type(primitive_matrix) is str and primitive_matrix == "auto")):
+        (type(primitive_matrix) is str and primitive_matrix == "auto")):  # noqa E129
         pmat = 'auto'
     else:
         pmat = primitive_matrix
@@ -99,6 +100,7 @@ def get_nac_params(primitive=None,
                    is_nac=True,
                    nac_factor=None,
                    log_level=0):
+    """Look for and return NAC parameters."""
     if born_filename is not None:
         _nac_params = parse_BORN(primitive, filename=born_filename)
         if log_level:
@@ -122,7 +124,7 @@ def get_nac_params(primitive=None,
 def read_force_constants_from_hdf5(filename='force_constants.hdf5',
                                    p2s_map=None,
                                    calculator=None):
-    """Convert force constants physical unit
+    """Convert force constants physical unit.
 
     Each calculator interface has own default force constants physical unit.
     This method reads 'physical_unit' in force constants hdf5 file and
@@ -134,7 +136,6 @@ def read_force_constants_from_hdf5(filename='force_constants.hdf5',
     This method is also used from phonopy script.
 
     """
-
     fc, fc_unit = read_force_constants_hdf5(filename=filename,
                                             p2s_map=p2s_map,
                                             return_physical_unit=True)
@@ -157,6 +158,7 @@ def set_dataset_and_force_constants(
         symmetrize_fc=True,
         is_compact_fc=True,
         log_level=0):
+    """Set displacement-force dataset and force constants."""
     natom = len(phonon.supercell)
 
     # dataset and fc are those obtained from phonopy_yaml unless None.
@@ -243,9 +245,13 @@ def _read_crystal_structure(filename=None, interface_mode=None):
                                       interface_mode=interface_mode)
     except FileNotFoundError:
         raise
-    except:
-        print("============================ phonopy.load ============================")
-        print("  Reading crystal structure file failed in phonopy.load.")
-        print("  Maybe phonopy.load(..., calculator='<calculator name>') expected?")
-        print("============================ phonopy.load ============================")
-        raise
+    except Exception:
+        msg = [
+            "============================ phonopy.load "
+            "============================",
+            "  Reading crystal structure file failed in phonopy.load.",
+            "  Maybe phonopy.load(..., calculator='<calculator name>') "
+            "expected?",
+            "============================ phonopy.load "
+            "============================"]
+        raise RuntimeError("\n".join(msg))

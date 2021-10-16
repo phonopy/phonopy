@@ -34,12 +34,10 @@
 
 import warnings
 from phonopy.qha import BulkModulus, QHA
-from phonopy.units import EvTokJmol, EVAngstromToGPa
+
 
 class PhonopyQHA(object):
-    """PhonopyQHA API
-
-    """
+    """PhonopyQHA API."""
 
     def __init__(self,
                  volumes=None,
@@ -52,7 +50,7 @@ class PhonopyQHA(object):
                  t_max=None,
                  energy_plot_factor=None,
                  verbose=False):
-        """
+        """Init method.
 
         Notes
         -----
@@ -118,7 +116,7 @@ class PhonopyQHA(object):
 
     @property
     def bulk_modulus(self):
-        """Returns bulk modulus computed without phonon contribution.
+        """Return bulk modulus computed without phonon contribution.
 
         Returns
         -------
@@ -130,7 +128,7 @@ class PhonopyQHA(object):
 
     @property
     def thermal_expansion(self):
-        """Returns thermal expansion coefficients at temperatures
+        """Return thermal expansion coefficients at temperatures.
 
         Returns
         -------
@@ -143,7 +141,7 @@ class PhonopyQHA(object):
 
     @property
     def helmholtz_volume(self):
-        """Returns free_energies at volumes
+        """Return free_energies at volumes.
 
         Returns
         -------
@@ -156,7 +154,7 @@ class PhonopyQHA(object):
 
     @property
     def volume_temperature(self):
-        """Returns volumes at temperatures
+        """Return volumes at temperatures.
 
         Returns
         -------
@@ -169,7 +167,7 @@ class PhonopyQHA(object):
 
     @property
     def gibbs_temperature(self):
-        """Returns Gibbs free energies at temperatures
+        """Return Gibbs free energies at temperatures.
 
         Returns
         -------
@@ -182,7 +180,7 @@ class PhonopyQHA(object):
 
     @property
     def bulk_modulus_temperature(self):
-        """Returns bulk modulus at temperatures
+        """Return bulk modulus at temperatures.
 
         Returns
         -------
@@ -195,7 +193,7 @@ class PhonopyQHA(object):
 
     @property
     def heat_capacity_P_numerical(self):
-        """Returns heat capacities at constant pressure at temperatures
+        """Return heat capacities at constant pressure at temperatures.
 
         These values are calculated by -T*d^2G/dT^2.
 
@@ -210,7 +208,12 @@ class PhonopyQHA(object):
 
     @property
     def heat_capacity_P_polyfit(self):
-        """Returns heat capacities at constant pressure at temperatures
+        """Return heat capacities at constant pressure at temperatures.
+
+        Note
+        ----
+        This does not work when temperature dependent electronic_energies
+        is supplied.
 
         Returns
         -------
@@ -218,6 +221,7 @@ class PhonopyQHA(object):
             Heat capacities at constant pressure at temperatures, which are
             calculated from the values obtained by polynomial fittings of
             Cv and S.
+
             shape=(temperatures, )
 
         """
@@ -225,7 +229,7 @@ class PhonopyQHA(object):
 
     @property
     def gruneisen_temperature(self):
-        """Returns Gruneisen parameters at temperatures
+        """Return Gruneisen parameters at temperatures.
 
         Returns
         -------
@@ -237,10 +241,9 @@ class PhonopyQHA(object):
         return self._qha.gruneisen_temperature
 
     def get_bulk_modulus_parameters(self):
-        """
+        """Return temperature independent bulk modulus EOS fitting parameters.
 
-        Returns bulk modulus EOS fitting parameters computed without
-        phonon free energy
+        These values are those computed without phonon free energy.
 
         (lowest energy, bulk modulus, b_prime, equilibrium volume)
 
@@ -249,6 +252,11 @@ class PhonopyQHA(object):
 
     def write_helmholtz_volume(self, filename='helmholtz-volume.dat'):
         self._qha.write_helmholtz_volume(filename=filename)
+
+    def write_helmholtz_volume_fitted(self,
+                                      thin_number,
+                                      filename='helmholtz-volume_fitted.dat'):
+        self._qha.write_helmholtz_volume_fitted(thin_number, filename=filename)
 
     def write_volume_temperature(self, filename='volume-temperature.dat'):
         self._qha.write_volume_temperature(filename=filename)

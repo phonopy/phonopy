@@ -1,3 +1,4 @@
+"""VASP interface."""
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -41,17 +42,74 @@ import io
 import xml.parsers.expat
 import xml.etree.cElementTree as etree
 import numpy as np
-from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.atoms import symbol_map, atom_data
+from phonopy.units import VaspToTHz
+from phonopy.structure.atoms import symbol_map, atom_data, PhonopyAtoms
 from phonopy.structure.symmetry import elaborate_borns_and_epsilon
 from phonopy.file_IO import (write_force_constants_to_hdf5,
                              write_FORCE_CONSTANTS)
+
+
+def check_forces(forces, num_atom, filename, verbose=True):
+    """Check a set of forces and show message if it is wrong."""
+    if len(forces) != num_atom:
+        if verbose:
+            stars = '*' * len(filename)
+            print("")
+            print("***************%s***************" % stars)
+            print("***** Parsing \"%s\" failed. *****" % filename)
+            print("***************%s***************" % stars)
+        return False
+    else:
+        return True
+
+
+def get_drift_forces(forces, filename=None, verbose=True):
+    """Calculate drift force and show it."""
+    drift_force = np.sum(forces, axis=0) / len(forces)
+
+    if verbose:
+        if filename is None:
+            print("Drift force: %12.8f %12.8f %12.8f to be subtracted"
+                  % tuple(drift_force))
+        else:
+            print("Drift force of \"%s\" to be subtracted" % filename)
+            print("%12.8f %12.8f %12.8f" % tuple(drift_force))
+        sys.stdout.flush()
+
+    return drift_force
+
+
+def get_scaled_positions_lines(scaled_positions):
+    """Return text lines of scaled positions."""
+    return "\n".join(_get_scaled_positions_lines(scaled_positions))
+
+
+def sort_positions_by_symbols(symbols, positions):
+    """Sort atomic positions by symbols."""
+    from collections import Counter
+
+    # unique symbols in order of first appearance in 'symbols'
+    reduced_symbols = _unique_stable(symbols)
+
+    # counts of each symbol
+    counts_dict = Counter(symbols)
+    counts_list = [counts_dict[s] for s in reduced_symbols]
+
+    # sort positions by symbol (using the order defined by reduced_symbols).
+    # using a stable sort algorithm matches the behavior of previous versions
+    #  of phonopy (but is not otherwise necessary)
+    sort_keys = [reduced_symbols.index(i) for i in symbols]
+    perm = _argsort_stable(sort_keys)
+    sorted_positions = positions[perm]
+
+    return counts_list, reduced_symbols, sorted_positions, perm
 
 
 def parse_set_of_forces(num_atoms,
                         forces_filenames,
                         use_expat=True,
                         verbose=True):
+    """Parse sets of forces of files."""
     if verbose:
         sys.stdout.write("counter (file index): ")
 
@@ -67,24 +125,14 @@ def parse_set_of_forces(num_atoms,
             vasprun = Vasprun(fp, use_expat=use_expat)
             try:
                 forces = vasprun.read_forces()
-            except RuntimeError:
-                raise RuntimeError(
-                    "Could not parse \"%s\". Probably this vasprun.xml "
-                    "is broken or some value diverges. Check this calculation "
-                    "carefully before sending questions to the phonopy "
-                    "mailing list." % filename)
-            except ValueError:
-                raise ValueError(
-                    "Could not parse \"%s\". Probably this vasprun.xml "
-                    "is broken or some value diverges. Check this calculation "
-                    "carefully before sending questions to the phonopy "
-                    "mailing list." % filename)
-            except xml.parsers.expat.ExpatError:
-                raise xml.parsers.expat.ExpatError(
-                    "Could not parse \"%s\". Probably this vasprun.xml "
-                    "is broken or some value diverges. Check this calculation "
-                    "carefully before sending questions to the phonopy "
-                    "mailing list." % filename)
+            except (RuntimeError,
+                    ValueError,
+                    xml.parsers.expat.ExpatError) as err:
+                msg = ("Could not parse \"%s\". Probably this vasprun.xml "
+                       "is broken or some value diverges. Check this "
+                       "calculation carefully before sending questions to the "
+                       "phonopy mailing list." % filename)
+                raise RuntimeError(msg) from err
             force_sets.append(forces)
             count += 1
 
@@ -100,43 +148,15 @@ def parse_set_of_forces(num_atoms,
         return []
 
 
-def check_forces(forces, num_atom, filename, verbose=True):
-    if len(forces) != num_atom:
-        if verbose:
-            stars = '*' * len(filename)
-            sys.stdout.write("\n")
-            sys.stdout.write("***************%s***************\n" % stars)
-            sys.stdout.write("***** Parsing \"%s\" failed. *****\n" % filename)
-            sys.stdout.write("***************%s***************\n" % stars)
-        return False
-    else:
-        return True
-
-
-def get_drift_forces(forces, filename=None, verbose=True):
-    drift_force = np.sum(forces, axis=0) / len(forces)
-
-    if verbose:
-        if filename is None:
-            print("Drift force: %12.8f %12.8f %12.8f to be subtracted"
-                  % tuple(drift_force))
-        else:
-            print("Drift force of \"%s\" to be subtracted" % filename)
-            print("%12.8f %12.8f %12.8f" % tuple(drift_force))
-        sys.stdout.flush()
-
-    return drift_force
-
-
 def create_FORCE_CONSTANTS(filename, is_hdf5, log_level):
-    fc_and_atom_types = parse_force_constants(filename)
+    """Parse vasprun.xml and write it into force constants file."""
+    force_constants, atom_types = parse_force_constants(filename)
 
-    if not fc_and_atom_types:
+    if force_constants is None:
         print('')
         print("\'%s\' dones not contain necessary information." % filename)
         return 1
 
-    force_constants, atom_types = fc_and_atom_types
     if is_hdf5:
         try:
             import h5py
@@ -159,16 +179,19 @@ def create_FORCE_CONSTANTS(filename, is_hdf5, log_level):
 
 
 def parse_force_constants(filename):
-    """Return force constants and chemical elements
+    """Return force constants and chemical elements.
 
-    Args:
-        filename (str): Filename
+    Parameters
+    ----------
+    filename : str
+       File name.
 
-    Returns:
-        tuple: force constants and chemical elements
+    Returns
+    -------
+    tuple :
+        force constants and chemical elements
 
     """
-
     vasprun = Vasprun(io.open(filename, "rb"))
     return vasprun.read_force_constants()
 
@@ -177,12 +200,14 @@ def parse_force_constants(filename):
 # read VASP POSCAR
 #
 def read_vasp(filename, symbols=None):
+    """Parse POSCAR type file."""
     with open(filename) as infile:
         lines = infile.readlines()
     return _get_atoms_from_poscar(lines, symbols)
 
 
 def read_vasp_from_strings(strings, symbols=None):
+    """Parse POSCAR type string."""
     return _get_atoms_from_poscar(StringIO(strings).readlines(), symbols)
 
 
@@ -213,7 +238,7 @@ def _get_atoms_from_poscar(lines, symbols):
 
     is_scaled = True
     if (lines[line_at][0].lower() == 'c' or
-        lines[line_at][0].lower() == 'k'):
+            lines[line_at][0].lower() == 'k'):
         is_scaled = False
 
     line_at += 1
@@ -281,73 +306,25 @@ def write_vasp(filename, cell, direct=True):
         In 'Direct' or not in VASP POSCAR format. Default is True.
 
     """
-
     lines = get_vasp_structure_lines(cell, direct=direct)
     with open(filename, 'w') as w:
         w.write("\n".join(lines))
 
 
-def write_supercells_with_displacements(supercell,
-                                        cells_with_displacements,
-                                        ids,
-                                        pre_filename="POSCAR",
-                                        width=3):
-    write_vasp("S%s" % pre_filename, supercell, direct=True)
-    for i, cell in zip(ids, cells_with_displacements):
-        filename = "{pre_filename}-{0:0{width}}".format(
-            i, pre_filename=pre_filename, width=width)
-        write_vasp(filename, cell, direct=True)
-
-
-def get_scaled_positions_lines(scaled_positions):
-    return "\n".join(_get_scaled_positions_lines(scaled_positions))
-
-
-def _get_scaled_positions_lines(scaled_positions):
-    # map into 0 <= x < 1.
-    # (the purpose of the second '% 1' is to handle a surprising
-    #  edge case for small negative numbers: '-1e-30 % 1 == 1.0')
-    unit_positions = scaled_positions % 1 % 1
-
-    return [
-        " %19.16f %19.16f %19.16f" % tuple(vec)
-        for vec in unit_positions.tolist()  # lists are faster for iteration
-    ]
-
-
-def sort_positions_by_symbols(symbols, positions):
-    from collections import Counter
-
-    # unique symbols in order of first appearance in 'symbols'
-    reduced_symbols = _unique_stable(symbols)
-
-    # counts of each symbol
-    counts_dict = Counter(symbols)
-    counts_list = [counts_dict[s] for s in reduced_symbols]
-
-    # sort positions by symbol (using the order defined by reduced_symbols).
-    # using a stable sort algorithm matches the behavior of previous versions
-    #  of phonopy (but is not otherwise necessary)
-    sort_keys = [reduced_symbols.index(i) for i in symbols]
-    perm = _argsort_stable(sort_keys)
-    sorted_positions = positions[perm]
-
-    return counts_list, reduced_symbols, sorted_positions, perm
-
-
-def get_vasp_structure_lines(atoms, direct=True, is_vasp5=True):
+def get_vasp_structure_lines(cell, direct=True, is_vasp5=True):
+    """Generate POSCAR text lines as a list from PhonopyAtoms instance."""
     (num_atoms,
      symbols,
      scaled_positions,
-     sort_list) = sort_positions_by_symbols(atoms.get_chemical_symbols(),
-                                            atoms.get_scaled_positions())
+     sort_list) = sort_positions_by_symbols(cell.symbols,
+                                            cell.scaled_positions)
     lines = []
     if is_vasp5:
         lines.append("generated by phonopy")
     else:
         lines.append(" ".join(["%s" % s for s in symbols]))
     lines.append("   1.0")
-    for a in atoms.get_cell():
+    for a in cell.cell:
         lines.append("  %21.16f %21.16f %21.16f" % tuple(a))
     if is_vasp5:
         lines.append(" ".join(["%s" % s for s in symbols]))
@@ -360,6 +337,31 @@ def get_vasp_structure_lines(atoms, direct=True, is_vasp5=True):
     lines.append('')
 
     return lines
+
+
+def write_supercells_with_displacements(supercell,
+                                        cells_with_displacements,
+                                        ids,
+                                        pre_filename="POSCAR",
+                                        width=3):
+    """Write supercells with displacements to files."""
+    write_vasp("S%s" % pre_filename, supercell, direct=True)
+    for i, cell in zip(ids, cells_with_displacements):
+        filename = "{pre_filename}-{0:0{width}}".format(
+            i, pre_filename=pre_filename, width=width)
+        write_vasp(filename, cell, direct=True)
+
+
+def _get_scaled_positions_lines(scaled_positions):
+    # map into 0 <= x < 1.
+    # (the purpose of the second '% 1' is to handle a surprising
+    #  edge case for small negative numbers: '-1e-30 % 1 == 1.0')
+    unit_positions = scaled_positions % 1 % 1
+
+    return [
+        " %19.16f %19.16f %19.16f" % tuple(vec)
+        for vec in unit_positions.tolist()  # lists are faster for iteration
+    ]
 
 
 # Get all unique values from a iterable.
@@ -391,6 +393,18 @@ def get_born_vasprunxml(filename="vasprun.xml",
                         is_symmetry=True,
                         symmetrize_tensors=False,
                         symprec=1e-5):
+    """Parse vasprun.xml to get NAC parameters.
+
+    In phonopy, primitive cell is created through the path of
+    unit cell -> supercell -> primitive cell. To trace this path exactly,
+    `primitive_matrix` and `supercell_matrix` can be given, but these are
+    optional.
+
+    Returns
+    -------
+    See elaborate_borns_and_epsilon.
+
+    """
     with io.open(filename, "rb") as f:
         vasprun = VasprunxmlExpat(f)
         try:
@@ -420,6 +434,13 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
                     is_symmetry=True,
                     symmetrize_tensors=False,
                     symprec=1e-5):
+    """Parse OUTCAR to get NAC parameters.
+
+    Returns
+    -------
+    See elaborate_borns_and_epsilon.
+
+    """
     if outcar_filename is None:
         filename = "OUTCAR"
     else:
@@ -486,14 +507,18 @@ def _read_born_and_epsilon_from_OUTCAR(filename):
 # vasprun.xml handling
 #
 class VasprunWrapper(object):
-    """VasprunWrapper class
-    This is used to avoid VASP 5.2.8 vasprun.xml defect at PRECFOCK,
-    xml parser stops with error.
+    """VasprunWrapper class.
+
+    This is used to fix broken vasprun.xml of VASP 5.2.8 at PRECFOCK.
+
     """
+
     def __init__(self, fileptr):
+        """Init method."""
         self._fileptr = fileptr
 
     def read(self, size=None):
+        """Replace broken PRECFOCK."""
         element = self._fileptr.next()
         if element.find("PRECFOCK") == -1:
             return element
@@ -502,11 +527,15 @@ class VasprunWrapper(object):
 
 
 class Vasprun(object):
+    """vasprun.xml parser class."""
+
     def __init__(self, fileptr, use_expat=False):
+        """Init method."""
         self._fileptr = fileptr
         self._use_expat = use_expat
 
     def read_forces(self):
+        """Read forces either using expat or etree."""
         if self._use_expat:
             return self._parse_expat_vasprun_xml()
         else:
@@ -514,12 +543,15 @@ class Vasprun(object):
             return self._get_forces(vasprun_etree)
 
     def read_force_constants(self):
+        """Read force constants using etree."""
         vasprun = self._parse_etree_vasprun_xml()
         return self._get_force_constants(vasprun)
 
     def _get_forces(self, vasprun_etree):
-        """
+        """Return forces using etree.
+
         vasprun_etree = etree.iterparse(fileptr, tag='varray')
+
         """
         forces = []
         for event, element in vasprun_etree:
@@ -529,9 +561,27 @@ class Vasprun(object):
         return np.array(forces)
 
     def _get_force_constants(self, vasprun_etree):
+        """Read hessian and calculate force constants.
+
+        Hessian elements include sqrt(mass_a * mass_b) of two atoms a and b.
+        To obtain force constants, atomic masses are parsed from vasprun.xml
+        and those sqrt VASP masses are multiplied to the Hessian elements.
+
+        In VASP-6, the unit is transformed to THz^2. To recover the unit of
+        eV/Angstrom^2, the unit conversion factor is multiplied.
+
+        """
         fc_tmp = None
+        major_version = None
         num_atom = 0
         for event, element in vasprun_etree:
+            # VASP version
+            if element.tag == 'generator':
+                for element_i in element.findall('./i'):
+                    if element_i.attrib['name'] == 'version':
+                        version_str = element_i.text.strip()
+                        major_version = int(version_str.split('.')[0])
+
             if num_atom == 0:
                 atomtypes = self._get_atomtypes(element)
                 if atomtypes:
@@ -550,23 +600,27 @@ class Vasprun(object):
                                        for x in v.text.strip().split()])
 
         if fc_tmp is None:
-            return False
+            return None, None
         else:
             fc_tmp = np.array(fc_tmp)
             if fc_tmp.shape != (num_atom * 3, num_atom * 3):
                 return False
-            # num_atom = fc_tmp.shape[0] / 3
+
             force_constants = np.zeros((num_atom, num_atom, 3, 3),
                                        dtype='double')
-
             for i in range(num_atom):
                 for j in range(num_atom):
-                    force_constants[i, j] = fc_tmp[i*3:(i+1)*3, j*3:(j+1)*3]
+                    force_constants[i, j] = fc_tmp[i * 3:(i + 1) * 3,
+                                                   j * 3:(j + 1) * 3]
 
             # Inverse normalization by atomic weights
             for i in range(num_atom):
                 for j in range(num_atom):
                     force_constants[i, j] *= -np.sqrt(masses[i] * masses[j])
+
+            # Recover the unit of eV/Angstrom^2 for VASP-6.
+            if major_version == 6:
+                force_constants /= VaspToTHz ** 2
 
             return force_constants, elements
 
@@ -576,10 +630,11 @@ class Vasprun(object):
         valences = []
         num_atoms = []
 
-        if element.tag == 'array':
-            if 'name' in element.attrib:
-                if element.attrib['name'] == 'atomtypes':
-                    for rc in element.findall('./set/rc'):
+        if element.tag == 'atominfo':
+            for element_array in element.findall('./array'):
+                if ('name' in element_array.attrib and
+                        element_array.attrib['name'] == 'atomtypes'):
+                    for rc in element_array.findall('./set/rc'):
                         atom_info = [x.text for x in rc.findall('./c')]
                         num_atoms.append(int(atom_info[0]))
                         atom_types.append(atom_info[1].strip())
@@ -900,7 +955,7 @@ class VasprunxmlExpat(object):
             self._is_basis or
             self._is_volume or
             self._is_k_weights or
-            self._is_generation):
+                self._is_generation):
             if name == 'v':
                 self._cbuf = ""
                 self._is_v = True
@@ -923,7 +978,7 @@ class VasprunxmlExpat(object):
                     self._k_weights = []
 
                 if (attrs['name'] == 'epsilon' or
-                    attrs['name'] == 'epsilon_scf'):
+                        attrs['name'] == 'epsilon_scf'):
                     self._is_epsilon = True
                     self._epsilon = []
 
@@ -1171,7 +1226,8 @@ class VasprunxmlExpat(object):
                     [self._to_float(x) for x in self._cbuf.split()])
             if self._is_generation:
                 if self._is_divisions:
-                    self._k_mesh = [self._to_int(x) for x in self._cbuf.split()]
+                    self._k_mesh = [self._to_int(x)
+                                    for x in self._cbuf.split()]
             self._cbuf = None
 
     def _run_i(self):
@@ -1191,7 +1247,7 @@ class VasprunxmlExpat(object):
             if self._is_symbols:
                 self.symbols.append(str(self._cbuf.strip()))
             if (self._field_val == 'pseudopotential' and
-                self._is_set and self._is_rc):
+                    self._is_set and self._is_rc):
                 if len(self._ps_atom) == 0:
                     self._ps_atom.append(self._to_int(self._cbuf.strip()))
                 elif len(self._ps_atom) == 1:
@@ -1238,7 +1294,6 @@ class VasprunxmlExpat(object):
             return val
         except ValueError:
             raise
-
 
 
 #
