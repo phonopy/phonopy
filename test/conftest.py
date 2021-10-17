@@ -1,3 +1,4 @@
+"""Pytest configuration."""
 import os
 import pytest
 import phonopy
@@ -9,6 +10,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 @pytest.fixture(scope="session")
 def ph_nacl():
+    """Phonopy instance of NaCl 2x2x2."""
     yaml_filename = os.path.join(current_dir, "phonopy_disp_NaCl.yaml")
     force_sets_filename = os.path.join(current_dir, "FORCE_SETS_NaCl")
     born_filename = os.path.join(current_dir, "BORN_NaCl")
@@ -24,6 +26,7 @@ def ph_nacl():
 
 @pytest.fixture(scope="session")
 def ph_nacl_nofcsym():
+    """Phonopy instance of NaCl 2x2x2 without symmetrizing fc2."""
     yaml_filename = os.path.join(current_dir, "phonopy_disp_NaCl.yaml")
     force_sets_filename = os.path.join(current_dir, "FORCE_SETS_NaCl")
     born_filename = os.path.join(current_dir, "BORN_NaCl")
@@ -39,6 +42,7 @@ def ph_nacl_nofcsym():
 
 @pytest.fixture(scope="session")
 def ph_nacl_compact_fcsym():
+    """Phonopy instance of NaCl 2x2x2 with compact fc2."""
     yaml_filename = os.path.join(current_dir, "phonopy_disp_NaCl.yaml")
     force_sets_filename = os.path.join(current_dir, "FORCE_SETS_NaCl")
     born_filename = os.path.join(current_dir, "BORN_NaCl")
@@ -54,6 +58,7 @@ def ph_nacl_compact_fcsym():
 
 @pytest.fixture(scope="session")
 def ph_nacl_nonac():
+    """Phonopy instance of NaCl 2x2x2 without NAC."""
     yaml_filename = os.path.join(current_dir, "phonopy_disp_NaCl.yaml")
     force_sets_filename = os.path.join(current_dir, "FORCE_SETS_NaCl")
     return phonopy.load(
@@ -68,6 +73,7 @@ def ph_nacl_nonac():
 
 @pytest.fixture(scope="session")
 def ph_nacl_nonac_compact_fc():
+    """Phonopy instance of NaCl 2x2x2 without NAC with compact fc2."""
     yaml_filename = os.path.join(current_dir, "phonopy_disp_NaCl.yaml")
     force_sets_filename = os.path.join(current_dir, "FORCE_SETS_NaCl")
     return phonopy.load(
@@ -82,6 +88,7 @@ def ph_nacl_nonac_compact_fc():
 
 @pytest.fixture(scope="session")
 def ph_nacl_nonac_dense_svecs():
+    """Phonopy instance of NaCl 2x2x2 without NAC with dense svecs."""
     yaml_filename = os.path.join(current_dir, "phonopy_disp_NaCl.yaml")
     force_sets_filename = os.path.join(current_dir, "FORCE_SETS_NaCl")
     return phonopy.load(
@@ -97,6 +104,7 @@ def ph_nacl_nonac_dense_svecs():
 
 @pytest.fixture(scope="session")
 def ph_sno2():
+    """Phonopy instance of rutile SnO2 2x2x3."""
     yaml_filename = os.path.join(current_dir, "phonopy_disp_SnO2.yaml")
     force_sets_filename = os.path.join(current_dir, "FORCE_SETS_SnO2")
     born_filename = os.path.join(current_dir, "BORN_SnO2")
@@ -112,6 +120,7 @@ def ph_sno2():
 
 @pytest.fixture(scope="session")
 def ph_tio2():
+    """Phonopy instance of anataze TiO2 3x3x1."""
     yaml_filename = os.path.join(current_dir, "phonopy_disp_TiO2.yaml")
     force_sets_filename = os.path.join(current_dir, "FORCE_SETS_TiO2")
     born_filename = os.path.join(current_dir, "BORN_TiO2")
@@ -127,6 +136,7 @@ def ph_tio2():
 
 @pytest.fixture(scope="session")
 def ph_zr3n4():
+    """Phonopy instance of anataze Zr3N4 1x1x1."""
     yaml_filename = os.path.join(current_dir, "phonopy_params_Zr3N4.yaml")
     return phonopy.load(
         yaml_filename, is_compact_fc=False, log_level=1, produce_fc=True
@@ -135,6 +145,7 @@ def ph_zr3n4():
 
 @pytest.fixture(scope="session")
 def ph_tipn3():
+    """Phonopy instance of anataze TiPN3 4x2x1."""
     yaml_filename = os.path.join(current_dir, "phonopy_params_TiPN3.yaml.xz")
     return phonopy.load(
         yaml_filename, is_compact_fc=False, log_level=1, produce_fc=True
@@ -143,6 +154,7 @@ def ph_tipn3():
 
 @pytest.fixture(scope="session")
 def convcell_sio2():
+    """PhonopyAtoms instance of rutile SiO2."""
     symbols = ["Si"] * 2 + ["O"] * 4
     lattice = [[4.65, 0, 0], [0, 4.75, 0], [0, 0, 3.25]]
     points = [
@@ -158,6 +170,7 @@ def convcell_sio2():
 
 @pytest.fixture(scope="session")
 def primcell_si():
+    """PhonopyAtoms instance of primitive cell of Si."""
     symbols = ["Si"] * 2
     lattice = [[0, 2.73, 2.73], [2.73, 0, 2.73], [2.73, 2.73, 0]]
     points = [[0.75, 0.75, 0.75], [0.5, 0.5, 0.5]]
@@ -166,6 +179,7 @@ def primcell_si():
 
 @pytest.fixture(scope="session")
 def convcell_nacl():
+    """PhonopyAtoms instance of conventional unit cell of NaCl."""
     symbols = ["Na"] * 4 + ["Cl"] * 4
     a = 5.6903014761756712
     lattice = [[a, 0, 0], [0, a, 0], [0, 0, a]]
@@ -184,6 +198,7 @@ def convcell_nacl():
 
 @pytest.fixture(scope="session")
 def primcell_nacl():
+    """PhonopyAtoms instance of primitive cell of NaCl."""
     symbols = ["Na", "Cl"]
     x = 5.6903014761756712 / 2
     lattice = [[0, x, x], [x, 0, x], [x, x, 0]]
@@ -193,6 +208,7 @@ def primcell_nacl():
 
 @pytest.fixture(scope="session")
 def convcell_cr():
+    """PhonopyAtoms instance of primitive cell of Cr."""
     symbols = ["Cr"] * 2
     a = 2.812696943681890
     lattice = [[a, 0, 0], [0, a, 0], [0, 0, a]]
@@ -202,7 +218,9 @@ def convcell_cr():
 
 @pytest.fixture(scope="session")
 def helper_methods():
-    class HelperMethods(object):
+    """Return methods to compare cells."""
+
+    class HelperMethods:
         @classmethod
         def compare_cells_with_order(cls, cell, cell_ref):
             np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=1e-5)

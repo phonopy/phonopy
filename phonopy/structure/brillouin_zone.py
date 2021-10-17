@@ -1,3 +1,4 @@
+"""Use first Brillouin zone (Wigner–Seitz cell) to locate q-points."""
 # Copyright (C) 2013 Atsushi Togo
 # All rights reserved.
 #
@@ -72,6 +73,7 @@ search_space = np.array(
 def get_qpoints_in_Brillouin_zone(
     reciprocal_lattice, qpoints, only_unique=False, tolerance=0.01
 ):
+    """Move qpoints to first Brillouin zone by lattice translation."""
     bz = BrillouinZone(reciprocal_lattice)
     bz.run(qpoints)
     if only_unique:
@@ -96,7 +98,7 @@ class BrillouinZone(object):
     """
 
     def __init__(self, reciprocal_lattice, tolerance=0.01):
-        """
+        """Init method.
 
         Parameters
         ----------
@@ -108,7 +110,6 @@ class BrillouinZone(object):
             Default = 0.01
 
         """
-
         self._reciprocal_lattice = np.array(reciprocal_lattice)
         self._tolerance = min(np.sum(reciprocal_lattice ** 2, axis=0)) * tolerance
         self._reduced_bases = get_reduced_bases(reciprocal_lattice.T)
@@ -119,6 +120,7 @@ class BrillouinZone(object):
         self.shortest_qpoints = None
 
     def run(self, qpoints):
+        """Find q-points inside Wigner–Seitz cell."""
         reduced_qpoints = np.dot(qpoints, self._tmat_inv.T)
         reduced_qpoints -= np.rint(reduced_qpoints)
         self.shortest_qpoints = []

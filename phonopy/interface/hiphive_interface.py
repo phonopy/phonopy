@@ -1,3 +1,4 @@
+"""hiPhive force constants calculator interface."""
 # Copyright (C) 2018 Atsushi Togo
 # All rights reserved.
 #
@@ -33,16 +34,15 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from ase.atoms import Atoms
-from hiphive import ClusterSpace, StructureContainer, ForceConstantPotential
-from hiphive.fitting import Optimizer
-from hiphive.cutoffs import estimate_maximum_cutoff
-from hiphive.input_output.logging_tools import set_config
-
-set_config(level=30)
 
 
 def phonopy_atoms_to_ase(atoms_phonopy):
+    """Convert PhonopyAtoms to Atoms."""
+    try:
+        from ase.atoms import Atoms
+    except ImportError:
+        raise ImportError("ASE python module was not found.")
+
     ase_atoms = Atoms(
         cell=atoms_phonopy.cell,
         scaled_positions=atoms_phonopy.scaled_positions,
@@ -62,6 +62,7 @@ def get_fc2(
     options=None,
     log_level=0,
 ):
+    """Calculate fc2 using hiPhive."""
     if log_level:
         msg = [
             "-------------------------------"
@@ -107,7 +108,7 @@ def get_fc2(
 def run_hiphive(
     supercell, primitive, displacements, forces, options, symprec, log_level
 ):
-    """Run hiphive
+    """Run hiphive.
 
     supercell : Supercell
         Perfect supercell.
@@ -125,6 +126,15 @@ def run_hiphive(
         Log control. 0: quiet, 1: normal, 2: verbose 3: debug
 
     """
+    try:
+        from hiphive import ClusterSpace, StructureContainer, ForceConstantPotential
+        from hiphive.fitting import Optimizer
+        from hiphive.cutoffs import estimate_maximum_cutoff
+        from hiphive.input_output.logging_tools import set_config
+    except ImportError:
+        raise ImportError("hiPhive python module was not found.")
+
+    set_config(level=30)
 
     ase_supercell = phonopy_atoms_to_ase(supercell)
     ase_prim = phonopy_atoms_to_ase(primitive)
@@ -193,7 +203,7 @@ def run_hiphive(
 
 
 def _decode_options(options):
-    """This is an example to parse options given in str.
+    """Parse options given in str.
 
     When options = 'cutoff = 4.0', options is converted to {'cutoff': 4.0}.
 
@@ -203,7 +213,6 @@ def _decode_options(options):
        phonopy --hiphiveph --fc-calc-opt "cutoff = 4" ...
 
     """
-
     option_dict = {}
     for pair in options.split(","):
         key, value = [x.strip() for x in pair.split("=")]

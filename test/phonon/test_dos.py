@@ -1,7 +1,6 @@
-import unittest
+"""Tests for DOS."""
 import os
 import numpy as np
-import phonopy
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -55,69 +54,53 @@ pdos_thm_str = """-0.750122 0.000000 0.000000
 7.249878 0.000000 0.000000"""
 
 
-class TestDOS(unittest.TestCase):
-    def setUp(self):
-        self._phonon = self._get_phonon()
-
-    def tearDown(self):
-        pass
-
-    def testTotalDOS(self):
-        phonon = self._phonon
-        phonon.run_mesh([5, 5, 5])
-        phonon.run_total_dos(freq_pitch=1, use_tetrahedron_method=False)
-        dos = phonon.total_dos.dos
-        freqs = phonon.total_dos.frequency_points
-        data_ref = np.reshape([float(x) for x in tdos_str.split()], (-1, 2))
-        np.testing.assert_allclose(data_ref, np.c_[freqs, dos], atol=1e-5)
-        # for f, d in zip(freqs, dos):
-        #     print("%f %f" % (f, d))
-
-    def testTotalDOSTetrahedron(self):
-        phonon = self._phonon
-        phonon.run_mesh([5, 5, 5])
-        phonon.run_total_dos(freq_pitch=1, use_tetrahedron_method=True)
-        dos = phonon.total_dos.dos
-        freqs = phonon.total_dos.frequency_points
-        data_ref = np.reshape([float(x) for x in tdos_thm_str.split()], (-1, 2))
-        np.testing.assert_allclose(data_ref, np.c_[freqs, dos], atol=1e-5)
-        # for f, d in zip(freqs, dos):
-        #     print("%f %f" % (f, d))
-
-    def testPartialDOS(self):
-        phonon = self._phonon
-        phonon.run_mesh([5, 5, 5], is_mesh_symmetry=False, with_eigenvectors=True)
-        phonon.run_projected_dos(freq_pitch=1, use_tetrahedron_method=False)
-        pdos = phonon.projected_dos.projected_dos
-        freqs = phonon.projected_dos.frequency_points
-        data_ref = np.reshape([float(x) for x in pdos_str.split()], (-1, 3)).T
-        np.testing.assert_allclose(data_ref, np.vstack([freqs, pdos]), atol=1e-5)
-        # for f, d in zip(freqs, pdos.T):
-        #     print(("%f" + " %f" * len(d)) % ((f, ) + tuple(d)))
-
-    def testPartialDOSTetrahedron(self):
-        phonon = self._phonon
-        phonon.run_mesh([5, 5, 5], is_mesh_symmetry=False, with_eigenvectors=True)
-        phonon.run_projected_dos(freq_pitch=1, use_tetrahedron_method=True)
-        pdos = phonon.projected_dos.projected_dos
-        freqs = phonon.projected_dos.frequency_points
-        data_ref = np.reshape([float(x) for x in pdos_thm_str.split()], (-1, 3)).T
-        np.testing.assert_allclose(data_ref, np.vstack([freqs, pdos]), atol=1e-5)
-        # for f, d in zip(freqs, pdos.T):
-        #     print(("%f" + " %f" * len(d)) % ((f, ) + tuple(d)))
-
-    def _get_phonon(self):
-        phonon = phonopy.load(
-            supercell_matrix=[[2, 0, 0], [0, 2, 0], [0, 0, 2]],
-            primitive_matrix=[[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]],
-            unitcell_filename=os.path.join(data_dir, "..", "POSCAR_NaCl"),
-            force_sets_filename=os.path.join(data_dir, "..", "FORCE_SETS_NaCl"),
-            born_filename=os.path.join(data_dir, "..", "BORN_NaCl"),
-            symmetrize_fc=False,
-        )
-        return phonon
+def testTotalDOS(ph_nacl_nofcsym):
+    """Test of total DOS with smearing method."""
+    phonon = ph_nacl_nofcsym
+    phonon.run_mesh([5, 5, 5])
+    phonon.run_total_dos(freq_pitch=1, use_tetrahedron_method=False)
+    dos = phonon.total_dos.dos
+    freqs = phonon.total_dos.frequency_points
+    data_ref = np.reshape([float(x) for x in tdos_str.split()], (-1, 2))
+    np.testing.assert_allclose(data_ref, np.c_[freqs, dos], atol=1e-5)
+    # for f, d in zip(freqs, dos):
+    #     print("%f %f" % (f, d))
 
 
-if __name__ == "__main__":
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestDOS)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+def testTotalDOSTetrahedron(ph_nacl_nofcsym):
+    """Test of total DOS with tetrahedron method."""
+    phonon = ph_nacl_nofcsym
+    phonon.run_mesh([5, 5, 5])
+    phonon.run_total_dos(freq_pitch=1, use_tetrahedron_method=True)
+    dos = phonon.total_dos.dos
+    freqs = phonon.total_dos.frequency_points
+    data_ref = np.reshape([float(x) for x in tdos_thm_str.split()], (-1, 2))
+    np.testing.assert_allclose(data_ref, np.c_[freqs, dos], atol=1e-5)
+    # for f, d in zip(freqs, dos):
+    #     print("%f %f" % (f, d))
+
+
+def testProjectedlDOS(ph_nacl_nofcsym):
+    """Test projected DOS with smearing method."""
+    phonon = ph_nacl_nofcsym
+    phonon.run_mesh([5, 5, 5], is_mesh_symmetry=False, with_eigenvectors=True)
+    phonon.run_projected_dos(freq_pitch=1, use_tetrahedron_method=False)
+    pdos = phonon.projected_dos.projected_dos
+    freqs = phonon.projected_dos.frequency_points
+    data_ref = np.reshape([float(x) for x in pdos_str.split()], (-1, 3)).T
+    np.testing.assert_allclose(data_ref, np.vstack([freqs, pdos]), atol=1e-5)
+    # for f, d in zip(freqs, pdos.T):
+    #     print(("%f" + " %f" * len(d)) % ((f, ) + tuple(d)))
+
+
+def testPartialDOSTetrahedron(ph_nacl_nofcsym):
+    """Test projected DOS with tetrahedron method."""
+    phonon = ph_nacl_nofcsym
+    phonon.run_mesh([5, 5, 5], is_mesh_symmetry=False, with_eigenvectors=True)
+    phonon.run_projected_dos(freq_pitch=1, use_tetrahedron_method=True)
+    pdos = phonon.projected_dos.projected_dos
+    freqs = phonon.projected_dos.frequency_points
+    data_ref = np.reshape([float(x) for x in pdos_thm_str.split()], (-1, 3)).T
+    np.testing.assert_allclose(data_ref, np.vstack([freqs, pdos]), atol=1e-5)
+    # for f, d in zip(freqs, pdos.T):
+    #     print(("%f" + " %f" * len(d)) % ((f, ) + tuple(d)))

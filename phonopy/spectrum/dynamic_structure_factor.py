@@ -1,3 +1,4 @@
+"""Calculate dynamic structure factor at harmonic level."""
 # Copyright (C) 2016 Atsushi Togo
 # All rights reserved.
 #
@@ -39,36 +40,14 @@ from phonopy.phonon.qpoints import QpointsPhonon
 from phonopy.phonon.thermal_displacement import ThermalDisplacements
 
 
-# D. Waasmaier and A. Kirfel, Acta Cryst. A51, 416 (1995)
-# f(Q) = \sum_i a_i \exp((-b_i Q^2) + c
-# Q is in angstron^-1
-# a1, b1, a2, b2, a3, b3, a4, b4, a5, b5, c
-#
-# Examples:
-#  {'Na': [3.148690, 2.594987, 4.073989, 6.046925,
-#          0.767888, 0.070139, 0.995612, 14.1226457,
-#          0.968249, 0.217037, 0.045300],  # 1+
-#   'Cl': [1.061802, 0.144727, 7.139886, 1.171795,
-#          6.524271, 19.467656, 2.355626, 60.320301,
-#          35.829404, 0.000436, -34.916604],  # 1-
-#   'Si': [5.275329, 2.631338, 3.191038, 33.730728,
-#          1.511514, 0.081119, 1.356849, 86.288640,
-#          2.519114, 1.170087, 0.145073]}  # neutral
-#
-#
-# Neutron scattering length
-# https://www.ncnr.nist.gov/resources/n-lengths/
-# Exmple: {'Na': 3.63,
-#          'Cl': 9.5770}
-
-
 def atomic_form_factor_WK1995(Q, f_x):
+    """Return atomic form factor of WK1995."""
     a, b = np.array(f_x[:10]).reshape(-1, 2).T
     return (a * np.exp(-b * Q ** 2)).sum() + f_x[10]
 
 
-class DynamicStructureFactor(object):
-    """Calculate dynamic structure factor
+class DynamicStructureFactor:
+    r"""Calculate dynamic structure factor at harmonic level.
 
     Result is given in m^2/J with setting k'/k * N = 1 when b is given
     in Angstron.
@@ -81,6 +60,30 @@ class DynamicStructureFactor(object):
     values. Therefore It is possible to improve the performance of
     dynamic structure factor, but it requires to make
     ThermalDisplacements keep Q2 values in its instance.
+
+    Atomic form factor
+    ------------------
+    D. Waasmaier and A. Kirfel, Acta Cryst. A51, 416 (1995)
+    f(Q) = \sum_i a_i \exp((-b_i Q^2) + c
+    Q is in angstron^-1
+    a1, b1, a2, b2, a3, b3, a4, b4, a5, b5, c
+
+    Examples:
+     {'Na': [3.148690, 2.594987, 4.073989, 6.046925,
+             0.767888, 0.070139, 0.995612, 14.1226457,
+             0.968249, 0.217037, 0.045300],  # 1+
+      'Cl': [1.061802, 0.144727, 7.139886, 1.171795,
+             6.524271, 19.467656, 2.355626, 60.320301,
+             35.829404, 0.000436, -34.916604],  # 1-
+      'Si': [5.275329, 2.631338, 3.191038, 33.730728,
+             1.511514, 0.081119, 1.356849, 86.288640,
+             2.519114, 1.170087, 0.145073]}  # neutral
+
+    Neutron scattering length
+    -------------------------
+    https://www.ncnr.nist.gov/resources/n-lengths/
+    Exmple: {'Na': 3.63,
+             'Cl': 9.5770}
 
     Attributes
     ----------
@@ -105,7 +108,7 @@ class DynamicStructureFactor(object):
         freq_min=None,
         freq_max=None,
     ):
-        """
+        """Init method.
 
         Parameters
         ----------
@@ -143,7 +146,6 @@ class DynamicStructureFactor(object):
             for Debye-Waller factor.
 
         """
-
         self._mesh_phonon = mesh_phonon
         self._dynamical_matrix = mesh_phonon.dynamical_matrix
         self._primitive = self._dynamical_matrix.primitive
@@ -177,12 +179,11 @@ class DynamicStructureFactor(object):
         )
 
     def __iter__(self):
+        """Define iterator of calculation over q-points."""
         return self
 
-    def next(self):
-        return self.__next__()
-
     def __next__(self):
+        """Calculate at next q-point."""
         if self._q_count == len(self._Qpoints):
             self._q_count = 0
             raise StopIteration
@@ -193,6 +194,7 @@ class DynamicStructureFactor(object):
             return S
 
     def run(self):
+        """Calculate at all q-points."""
         for S in self:
             pass
 
