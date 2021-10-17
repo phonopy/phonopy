@@ -37,8 +37,7 @@ import gzip
 import numpy as np
 from .core import GruneisenBase
 from phonopy.structure.grid_points import get_qpoints
-from phonopy.phonon.thermal_properties import mode_cv
-from phonopy.units import THzToEv, VaspToTHz
+from phonopy.units import VaspToTHz
 
 
 class GruneisenMesh(GruneisenBase):

@@ -253,4 +253,4 @@ if __name__ == "__main__":
     cell, speci, restlines = read_fleur(sys.argv[1])
     symmetry = Symmetry(cell)
     print("# %s" % symmetry.get_international_table())
-    print(get_fleur_structure(cell, speci, N, restlines))
+    print(get_fleur_structure(cell, speci, 1, restlines))

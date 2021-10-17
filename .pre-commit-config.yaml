@@ -18,7 +18,6 @@ repos:
       (?x)^(
       test/phonon/test_irreps.py|
       test/qha/test_electron.py|
-      phonopy/interface/fleur.py|
       phonopy/interface/cp2k.py
       )$
     args:
@@ -28,7 +27,8 @@ repos:
     files: |
       (?x)^(
       test/phonon/test_irreps.py|
-      test/qha/test_electron.py
+      test/qha/test_electron.py|
+      phonopy/interface/cp2k.py
       )$
     args:
     - "--max-line-length=88"

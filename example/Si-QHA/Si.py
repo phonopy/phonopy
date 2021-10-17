@@ -2,6 +2,7 @@ from phonopy import Phonopy
 from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_FORCE_SETS
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def get_frequency(poscar_filename, force_sets_filename):
@@ -26,8 +27,6 @@ for i in range(-10, 6):
     fs, v = get_frequency(poscar_filename, force_sets_filename)
     frequencies.append(fs)
     volumes.append(v)
-
-import matplotlib.pyplot as plt
 
 for freq_at_X in np.array(frequencies).T:
     freq_squared = freq_at_X ** 2 * np.sign(freq_at_X)
