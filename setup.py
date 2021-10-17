@@ -1,5 +1,5 @@
+"""Setup script of phonopy."""
 import os
-import sys
 import numpy
 import sysconfig
 
@@ -15,18 +15,6 @@ except ImportError:
 
     use_setuptools = False
     print("distutils is used.")
-
-try:
-    from setuptools_scm import get_version
-except ImportError:
-    git_num = None
-
-if "setuptools_scm" in sys.modules.keys():
-    try:
-        git_ver = get_version()
-        git_num = int(git_ver.split(".")[3].split("+")[0].replace("dev", ""))
-    except ValueError:
-        git_num = None
 
 include_dirs_numpy = [numpy.get_include()]
 
@@ -116,13 +104,12 @@ scripts_phonopy = [
 ]
 
 if __name__ == "__main__":
-
-    version_nums = [None, None, None]
+    version_nums = []
     with open("phonopy/version.py") as f:
         for line in f:
             if "__version__" in line:
                 for i, num in enumerate(line.split()[2].strip('"').split(".")):
-                    version_nums[i] = num
+                    version_nums.append(int(num))
                 break
 
     # # To deploy to pypi/conda by travis-CI
@@ -137,16 +124,15 @@ if __name__ == "__main__":
                 pass
         if nanoversion != 0:
             version_nums.append(nanoversion)
-    elif git_num:
-        version_nums.append(git_num)
 
-    if None in version_nums:
+    if len(version_nums) < 3:
         print("Failed to get version number in setup.py.")
         raise
 
     version = ".".join(["%s" % n for n in version_nums[:3]])
     if len(version_nums) > 3:
         version += "-%d" % version_nums[3]
+    print(version)
 
     if use_setuptools:
         setup(
