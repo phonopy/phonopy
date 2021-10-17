@@ -1,3 +1,4 @@
+"""Calculate irreducible representation from eigenvectors."""
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -42,6 +43,15 @@ from phonopy.phonon.character_table import character_table
 
 
 class IrReps(object):
+    """Class to calculate irreducible representations from eigenvectors.
+
+    Methods and terminologies used in this class may be easily found
+    in textbooks such as
+    - Group theory with applications in chemical physics by Patrick Jacobs
+    - Symmetry and condensed matter physics by M. El-Batanouny and F. Wooten
+
+    """
+
     def __init__(
         self,
         dynamical_matrix,
@@ -53,6 +63,7 @@ class IrReps(object):
         degeneracy_tolerance=1e-5,
         log_level=0,
     ):
+        """Init method."""
         self._is_little_cogroup = is_little_cogroup
         self._nac_q_direction = nac_q_direction
         self._factor = factor
@@ -67,6 +78,7 @@ class IrReps(object):
         self._character_table = None
 
     def run(self):
+        """Calculate irreps."""
         self._set_eigenvectors(self._dynamical_matrix)
         self._symmetry_dataset = Symmetry(
             self._primitive, symprec=self._symprec
@@ -122,36 +134,52 @@ class IrReps(object):
         return deg_sets
 
     def get_band_indices(self):
+        """Return band indices.
+
+        Returns
+        -------
+        See docstring of ``degenerate_sets``.
+
+        """
         return self._degenerate_sets
 
     def get_characters(self):
+        """Return characters of irreps."""
         return self._characters
 
     def get_eigenvectors(self):
+        """Return eigenvectors."""
         return self._eigvecs
 
     def get_irreps(self):
+        """Return irreps."""
         return self._irreps
 
     def get_ground_matrices(self):
+        """Return ground matrices."""
         return self._ground_matrices
 
     def get_rotation_symbols(self):
+        """Return symbols assigned to rotation matrices."""
         return self._rotation_symbols
 
     def get_rotations(self):
+        """Return rotation matrices."""
         return self._conventional_rotations
 
     def get_projection_operators(self, idx_irrep, i=None, j=None):
+        """Return projection operators."""
         if i is None or j is None:
             return self._get_character_projection_operators(idx_irrep)
         else:
             return self._get_projection_operators(idx_irrep, i, j)
 
     def show(self, show_irreps=False):
+        """Show irreps."""
         self._show(show_irreps)
 
     def write_yaml(self, show_irreps=False):
+        """Write irreps in yaml file."""
         self._write_yaml(show_irreps)
 
     def _set_eigenvectors(self, dm):

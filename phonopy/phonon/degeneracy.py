@@ -36,6 +36,30 @@ import numpy as np
 
 
 def degenerate_sets(freqs, cutoff=1e-4):
+    """Find degenerate bands from frequencies.
+
+    Parameters
+    ----------
+    freqs : ndarray
+        A list of values.
+        shape=(values,)
+    cutoff : float, optional
+        Equivalent of values is defined by this value, i.e.,
+            abs(val1 - val2) < cutoff
+        Default is 1e-4.
+
+    Returns
+    -------
+    indices : list of list
+        Indices of equivalent values are grouped as a list and those groups are
+        stored in a list.
+
+    Example
+    -------
+    In : degenerate_sets(np.array([1.5, 2.1, 2.1, 3.4, 8]))
+    Out: [[0], [1, 2], [3], [4]]
+
+    """
     indices = []
     done = []
     for i in range(len(freqs)):

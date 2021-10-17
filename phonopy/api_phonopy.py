@@ -44,6 +44,7 @@ from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
 from phonopy.structure.grid_points import length2mesh
 from phonopy.structure.cells import (
+    Primitive,
     get_supercell,
     get_primitive,
     guess_primitive_matrix,
@@ -247,7 +248,7 @@ class Phonopy(object):
         return self.version
 
     @property
-    def primitive(self):
+    def primitive(self) -> Primitive:
         """Return primitive cell.
 
         Primitive

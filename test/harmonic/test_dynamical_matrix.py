@@ -1,3 +1,4 @@
+"""Tests for dynamical matrix classes."""
 import pytest
 import numpy as np
 
@@ -383,6 +384,12 @@ dynmat_ref_555 = [
     "is_compact_fc,lang", [(True, "C"), (False, "C"), (True, "Py"), (False, "Py")]
 )
 def test_dynmat(ph_nacl_nonac, ph_nacl_nonac_compact_fc, is_compact_fc, lang):
+    """Test dynamical matrix of NaCl in C and python implementations.
+
+    1. Without NAC.
+    2. Without NAC with comapact fc2.
+
+    """
     if is_compact_fc:
         ph = ph_nacl_nonac_compact_fc
     else:
@@ -392,21 +399,23 @@ def test_dynmat(ph_nacl_nonac, ph_nacl_nonac_compact_fc, is_compact_fc, lang):
     _test_dynmat_252525(dynmat, dynmat_ref_252525, lang=lang)
 
 
-def test_dynmat_dense_svecs(ph_nacl_nonac_dense_svecs):
+@pytest.mark.parametrize("lang", ["C", "Py"])
+def test_dynmat_dense_svecs(ph_nacl_nonac_dense_svecs, lang):
+    """Test with dense svecs."""
     ph = ph_nacl_nonac_dense_svecs
-    svecs, multi = ph.primitive.get_smallest_vectors()
     dynmat = ph.dynamical_matrix
-    lang = "Py"
     _test_dynmat(dynmat, lang=lang)
     _test_dynmat_252525(dynmat, dynmat_ref_252525, lang=lang)
 
 
 def test_dynmat_gonze_lee(ph_nacl):
+    """Test with NAC by Gonze and Lee."""
     dynmat = ph_nacl.dynamical_matrix
     _test_dynmat_252525(dynmat, dynmat_gonze_lee_ref_252525)
 
 
 def test_dynmat_wang(ph_nacl):
+    """Test with NAC by Wang et al."""
     nac_params = ph_nacl.nac_params
     nac_params["method"] = "wang"
     ph_nacl.nac_params = nac_params

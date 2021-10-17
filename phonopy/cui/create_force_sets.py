@@ -1,3 +1,4 @@
+"""Utilities to create force sets for main CUI script."""
 # Copyright (C) 2020 Atsushi Togo
 # All rights reserved.
 #
@@ -55,7 +56,6 @@ def create_FORCE_SETS(
     Reading disp.yaml instead of phonopy_disp.yaml is deprecated.
 
     """
-
     if log_level > 0:
         if interface_mode:
             print("Calculator interface: %s" % interface_mode)
@@ -161,6 +161,11 @@ def create_FORCE_SETS(
 
 
 def check_number_of_force_files(num_displacements, force_filenames, disp_filename):
+    """Verify number of supercell force files.
+
+    This function is public because being used from phono3py.
+
+    """
     if num_displacements != len(force_filenames):
         print("")
         print("Number of files to be read (%d) don't match to" % len(force_filenames))

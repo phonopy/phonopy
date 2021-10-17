@@ -1,3 +1,4 @@
+"""Phonopy loader."""
 # Copyright (C) 2018 Atsushi Togo
 # All rights reserved.
 #
@@ -200,7 +201,6 @@ def load(
         Verbosity control. Default is 0.
 
     """
-
     if (
         supercell is not None
         or supercell_filename is not None

@@ -1,3 +1,4 @@
+"""Convert phonon results to animation formats."""
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -95,8 +96,11 @@ def write_animation(
     return fname_out
 
 
-class Animation(object):
+class Animation:
+    """Class to convert phonon results to animation formats."""
+
     def __init__(self, qpoint, dynamical_matrix, shift=None):
+        """Init method."""
         if qpoint is None:
             _qpoint = [0, 0, 0]
         else:
@@ -138,6 +142,7 @@ class Animation(object):
         self._displacements = np.array(u).reshape(-1, 3)
 
     def write_v_sim(self, amplitude=None, factor=VaspToTHz, filename="anime.ascii"):
+        """Write to file in v_sim format."""
         if amplitude is None:
             _amplitude = 1.0
         self._set_cell_oriented()
@@ -178,6 +183,7 @@ class Animation(object):
         return filename
 
     def write_arc(self, band_index, amplitude=1, num_div=20, filename="anime.arc"):
+        """Write to file in BIOSYM archive 3 format."""
         self._set_cell_oriented()
         self._set_displacements(band_index - 1)
         displacements = self._get_oriented_displacements(self._displacements)
@@ -230,6 +236,7 @@ class Animation(object):
         return filename
 
     def write_xyz_jmol(self, amplitude=10, factor=VaspToTHz, filename="anime.xyz_jmol"):
+        """Write to file in jmol xyz format."""
         self._set_cell_oriented()
         text = ""
         for i, val in enumerate(self._eigenvalues):
@@ -261,6 +268,7 @@ class Animation(object):
         factor=VaspToTHz,
         filename="anime.xyz",
     ):
+        """Write to file in xyz format."""
         self._set_cell_oriented()
         freq = self._eigenvalues[band_index - 1]
         self._set_displacements(band_index - 1)
@@ -293,6 +301,7 @@ class Animation(object):
         return filename
 
     def write_POSCAR(self, band_index, amplitude=1, num_div=20, filename="APOSCAR"):
+        """Write snapshots to files in VASP POSCAR format."""
         self._set_displacements(band_index - 1)
         for i in range(num_div):
             positions = (
