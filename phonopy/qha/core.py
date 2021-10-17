@@ -1,5 +1,4 @@
-"""Phonopy QHA module."""
-
+"""Core routines for QHA."""
 # Copyright (C) 2012 Atsushi Togo
 # All rights reserved.
 #
@@ -40,7 +39,7 @@ from phonopy.units import Avogadro, EvTokJmol, EVAngstromToGPa
 from phonopy.qha.eos import get_eos, fit_to_eos
 
 
-class BulkModulus(object):
+class BulkModulus:
     """Bulk modulus class.
 
     This class is used to calculate bulk modulus only from temperature
@@ -164,7 +163,7 @@ class BulkModulus(object):
         return plt
 
 
-class QHA(object):
+class QHA:
     """Quasi harmonic approximation class."""
 
     def __init__(
@@ -375,6 +374,13 @@ class QHA(object):
         assert self._len + 1 == self._num_elems
 
     def plot(self, thin_number=10, volume_temp_exp=None):
+        """Plot three figures.
+
+        - Helmholtz free energy at volumes and temperatures.
+        - Equilibrium volumes at temperatures.
+        - Thermal expansion coefficients at temperatures.
+
+        """
         import matplotlib.pyplot as plt
 
         plt.rcParams["pdf.fonttype"] = 42
@@ -401,6 +407,7 @@ class QHA(object):
         return plt
 
     def get_helmholtz_volume(self):
+        """Return Helmholtz free energy at volumes and temperatures."""
         warnings.warn(
             "QHA.get_helmholtz_volume() is deprecated."
             "Use helmholtz_volume attribute.",
@@ -411,6 +418,7 @@ class QHA(object):
     def plot_helmholtz_volume(
         self, thin_number=10, xlabel=r"Volume $(\AA^3)$", ylabel="Free energy"
     ):
+        """Return pyplot of Helmholtz free energes vs volume at temperatures."""
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
@@ -422,6 +430,7 @@ class QHA(object):
     def plot_pdf_helmholtz_volume(
         self, thin_number=10, filename="helmholtz-volume.pdf"
     ):
+        """Plot Helmholtz free energes vs volume at temperatures in pdf."""
         import matplotlib.pyplot as plt
 
         self._set_rcParams(plt)
@@ -437,6 +446,7 @@ class QHA(object):
         plt.close()
 
     def write_helmholtz_volume(self, filename="helmholtz-volume.dat"):
+        """Write Helmholtz free energy vs volume in file."""
         w = open(filename, "w")
         for i, (t, ep, fe) in enumerate(
             zip(self._temperatures, self._equiv_parameters, self._free_energies)
@@ -454,7 +464,7 @@ class QHA(object):
     def write_helmholtz_volume_fitted(
         self, thin_number, filename="helholtz-volume_fitted.dat"
     ):
-
+        """Write Helmholtz free energy (fitted) vs volume in file."""
         if self._energy_plot_factor is None:
             _energy_plot_factor = 1
         else:
@@ -519,6 +529,7 @@ class QHA(object):
             w.write("\n")
 
     def get_volume_temperature(self):
+        """Return equilibrium volumes at temperatures."""
         warnings.warn(
             "QHA.get_volume_temperature() is deprecated."
             "Use volume_temperature attribute.",
@@ -527,6 +538,7 @@ class QHA(object):
         return self.volume_temperature
 
     def plot_volume_temperature(self, exp_data=None):
+        """Return pyplot of volume vs temperature."""
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
@@ -537,6 +549,7 @@ class QHA(object):
     def plot_pdf_volume_temperature(
         self, exp_data=None, filename="volume-temperature.pdf"
     ):
+        """Plot volume vs temperature in pdf."""
         import matplotlib.pyplot as plt
 
         self._set_rcParams(plt)
@@ -552,6 +565,7 @@ class QHA(object):
         plt.close()
 
     def write_volume_temperature(self, filename="volume-temperature.dat"):
+        """Write volume vs temperature in file."""
         w = open(filename, "w")
         for i in range(self._len):
             w.write(
@@ -560,6 +574,7 @@ class QHA(object):
         w.close()
 
     def get_thermal_expansion(self):
+        """Return thermal expansion coefficients at temperatures."""
         warnings.warn(
             "QHA.get_thermal_expansion() is deprecated."
             "Use thermal_expansion attribute.",
@@ -568,6 +583,7 @@ class QHA(object):
         return self.thermal_expansion
 
     def plot_thermal_expansion(self):
+        """Return pyplot of thermal expansion vs temperature."""
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
@@ -576,6 +592,7 @@ class QHA(object):
         return plt
 
     def plot_pdf_thermal_expansion(self, filename="thermal_expansion.pdf"):
+        """Plot thermal expansion vs temperature in pdf."""
         import matplotlib.pyplot as plt
 
         self._set_rcParams(plt)
@@ -591,6 +608,7 @@ class QHA(object):
         plt.close()
 
     def write_thermal_expansion(self, filename="thermal_expansion.dat"):
+        """Write thermal expansion vs temperature in file."""
         w = open(filename, "w")
         for i in range(self._len):
             w.write(
@@ -600,11 +618,13 @@ class QHA(object):
         w.close()
 
     def get_gibbs_temperature(self):
+        """Return Gibbs free energies at temperatures."""
         return self.gibbs_temperature
 
     def plot_gibbs_temperature(
         self, xlabel="Temperature (K)", ylabel="Gibbs free energy"
     ):
+        """Return pyplot Gibbs free energy vs temperature."""
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
@@ -613,6 +633,7 @@ class QHA(object):
         return plt
 
     def plot_pdf_gibbs_temperature(self, filename="gibbs-temperature.pdf"):
+        """Plot Gibbs free energy vs temperature in pdf."""
         import matplotlib.pyplot as plt
 
         self._set_rcParams(plt)
@@ -628,6 +649,7 @@ class QHA(object):
         plt.close()
 
     def write_gibbs_temperature(self, filename="gibbs-temperature.dat"):
+        """Write Gibbs free energy vs temperature in file."""
         w = open(filename, "w")
         for i in range(self._len):
             w.write(
@@ -636,11 +658,13 @@ class QHA(object):
         w.close()
 
     def get_bulk_modulus_temperature(self):
+        """Return bulk moduli at temperatures."""
         return self.bulk_modulus_temperature
 
     def plot_bulk_modulus_temperature(
         self, xlabel="Temperature (K)", ylabel="Bulk modulus"
     ):
+        """Return pyplot of bulk modulus vs temperature."""
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
@@ -650,6 +674,7 @@ class QHA(object):
     def plot_pdf_bulk_modulus_temperature(
         self, filename="bulk_modulus-temperature.pdf"
     ):
+        """Plot bulk modulus vs temperature in pdf."""
         import matplotlib.pyplot as plt
 
         self._set_rcParams(plt)
@@ -665,6 +690,7 @@ class QHA(object):
         plt.close()
 
     def write_bulk_modulus_temperature(self, filename="bulk_modulus-temperature.dat"):
+        """Write bulk modulus vs temperature in file."""
         w = open(filename, "w")
         for i in range(self._len):
             w.write(
@@ -674,9 +700,11 @@ class QHA(object):
         w.close()
 
     def get_heat_capacity_P_numerical(self):
+        """Return C_P by numerical differenciation at temperatures."""
         return self.heat_capacity_P_numerical
 
     def plot_heat_capacity_P_numerical(self, Z=1, exp_data=None):
+        """Return pyplot of C_P by numerical difference vs temperature."""
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
@@ -687,6 +715,7 @@ class QHA(object):
     def plot_pdf_heat_capacity_P_numerical(
         self, exp_data=None, filename="Cp-temperature.pdf"
     ):
+        """Plot C_P by numerical difference vs temperature in pdf."""
         import matplotlib.pyplot as plt
 
         self._set_rcParams(plt)
@@ -702,6 +731,7 @@ class QHA(object):
         plt.close()
 
     def write_heat_capacity_P_numerical(self, filename="Cp-temperature.dat"):
+        """Write C_P by numerical difference vs temperature in file."""
         w = open(filename, "w")
         for i in range(self._len):
             w.write(
@@ -710,9 +740,11 @@ class QHA(object):
         w.close()
 
     def get_heat_capacity_P_polyfit(self):
+        """Return C_P by fitting at temperatures."""
         return self.heat_capacity_P_polyfit
 
     def plot_heat_capacity_P_polyfit(self, Z=1, exp_data=None):
+        """Return pyplot of C_P by fittings vs temperature."""
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
@@ -723,6 +755,7 @@ class QHA(object):
     def plot_pdf_heat_capacity_P_polyfit(
         self, exp_data=None, filename="Cp-temperature_polyfit.pdf"
     ):
+        """Plot C_P by fittings vs temperature in pdf."""
         import matplotlib.pyplot as plt
 
         self._set_rcParams(plt)
@@ -744,6 +777,7 @@ class QHA(object):
         filename_cvv="Cv-volume.dat",
         filename_dsdvt="dsdv-temperature.dat",
     ):
+        """Write C_P by fittings vs temperature in file."""
         wve = open(filename_ev, "w")
         wvcv = open(filename_cvv, "w")
         for i in range(1, self._len):
@@ -780,9 +814,11 @@ class QHA(object):
         w.close()
 
     def get_gruneisen_temperature(self):
+        """Return Grueneisen parameters at temperatures."""
         return self.gruneisen_temperature
 
     def plot_gruneisen_temperature(self):
+        """Return pyplot of Grueneisen parameter vs temperature."""
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
@@ -791,6 +827,7 @@ class QHA(object):
         return plt
 
     def plot_pdf_gruneisen_temperature(self, filename="gruneisen-temperature.pdf"):
+        """Plot Grueneisen parameter vs temperature in pdf."""
         import matplotlib.pyplot as plt
 
         self._set_rcParams(plt)
@@ -806,6 +843,7 @@ class QHA(object):
         plt.close()
 
     def write_gruneisen_temperature(self, filename="gruneisen-temperature.dat"):
+        """Write Grueneisen parameter vs temperature in file."""
         w = open(filename, "w")
         for i in range(self._len):
             w.write(

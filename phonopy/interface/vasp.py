@@ -1,4 +1,4 @@
-"""VASP interface."""
+"""VASP calculator interface."""
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -34,12 +34,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
-
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-import io
+import warnings
+from io import StringIO
 import xml.parsers.expat
 import xml.etree.cElementTree as etree
 import numpy as np
@@ -118,7 +114,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, use_expat=True, verbose=Tru
     force_files = forces_filenames
 
     for filename in force_files:
-        with io.open(filename, "rb") as fp:
+        with open(filename, "rb") as fp:
             if verbose:
                 sys.stdout.write("%d " % (count + 1))
             vasprun = Vasprun(fp, use_expat=use_expat)
@@ -191,7 +187,7 @@ def parse_force_constants(filename):
         force constants and chemical elements
 
     """
-    vasprun = Vasprun(io.open(filename, "rb"))
+    vasprun = Vasprun(open(filename, "rb"))
     return vasprun.read_force_constants()
 
 
@@ -400,7 +396,7 @@ def get_born_vasprunxml(
     See elaborate_borns_and_epsilon.
 
     """
-    with io.open(filename, "rb") as f:
+    with open(filename, "rb") as f:
         vasprun = VasprunxmlExpat(f)
         try:
             vasprun.parse()
@@ -504,7 +500,7 @@ def _read_born_and_epsilon_from_OUTCAR(filename):
 #
 # vasprun.xml handling
 #
-class VasprunWrapper(object):
+class VasprunWrapper:
     """VasprunWrapper class.
 
     This is used to fix broken vasprun.xml of VASP 5.2.8 at PRECFOCK.
@@ -524,7 +520,7 @@ class VasprunWrapper(object):
             return '<i type="string" name="PRECFOCK"></i>'
 
 
-class Vasprun(object):
+class Vasprun:
     """vasprun.xml parser class."""
 
     def __init__(self, fileptr, use_expat=False):
@@ -671,7 +667,7 @@ class Vasprun(object):
         except Exception:
             raise
 
-        return vasprun.get_forces()[-1]
+        return vasprun.forces[-1]
 
     def _is_version528(self):
         for line in self._fileptr:
@@ -689,21 +685,18 @@ class Vasprun(object):
                     return False
 
 
-class VasprunxmlExpat(object):
+class VasprunxmlExpat:
+    """Class to parse vasprun.xml by Expat."""
+
     def __init__(self, fileptr):
-        """Parsing vasprun.xml by Expat
+        """Init method.
 
         Parameters
         ----------
         fileptr: binary stream
-            Considering compatibility between python2.7 and 3.x, it is prepared
-            as follows:
-
-                import io
-                io.open(filename, "rb")
+            E.g., by open(filename, "rb")
 
         """
-
         import xml.parsers.expat
 
         self._fileptr = fileptr
@@ -776,49 +769,86 @@ class VasprunxmlExpat(object):
         self._cbuf = None
 
     def parse(self):
+        """Parse file pointer of vasprun.xml."""
         self._p.ParseFile(self._fileptr)
 
     @property
     def forces(self):
+        """Return forces."""
         return np.array(self._all_forces, dtype="double", order="C")
 
     def get_forces(self):
+        """Return forces."""
+        warnings.warn(
+            "VasprunxmlExpat.get_forces()) is deprecated. "
+            "Use VasprunxmlExpat.forces attribute.",
+            DeprecationWarning,
+        )
         return self.forces
 
     @property
     def stress(self):
+        """Return stress tensor."""
         return np.array(self._all_stress, dtype="double", order="C")
 
     def get_stress(self):
+        """Return stress tensor."""
+        warnings.warn(
+            "VasprunxmlExpat.get_stress()) is deprecated. "
+            "Use VasprunxmlExpat.stress attribute.",
+            DeprecationWarning,
+        )
         return self.stress
 
     @property
     def epsilon(self):
+        """Return dielectric constant tensor."""
         return np.array(self._epsilon, dtype="double", order="C")
 
     def get_epsilon(self):
+        """Return dielectric constant tensor."""
+        warnings.warn(
+            "VasprunxmlExpat.get_epsilon()) is deprecated. "
+            "Use VasprunxmlExpat.epsilon attribute.",
+            DeprecationWarning,
+        )
         return self.epsilon
 
     def get_efermi(self):
+        """Return efermi."""
+        warnings.warn(
+            "VasprunxmlExpat.get_efermi()) is deprecated. "
+            "Use VasprunxmlExpat.efermi attribute.",
+            DeprecationWarning,
+        )
         return self.efermi
 
     @property
     def born(self):
+        """Return Born effective charges."""
         return np.array(self._born, dtype="double", order="C")
 
     def get_born(self):
+        """Return Born effective charges."""
         return self.born
 
     @property
     def points(self):
+        """Return all atomic positions of structure optimization steps."""
         return np.array(self._all_points, dtype="double", order="C")
 
     def get_points(self):
+        """Return all atomic positions of structure optimization steps."""
+        warnings.warn(
+            "VasprunxmlExpat.get_points()) is deprecated. "
+            "Use VasprunxmlExpat.points attribute.",
+            DeprecationWarning,
+        )
         return self.points
 
     @property
     def lattice(self):
-        """All basis vectors of structure optimization steps
+        """Return all basis vectors of structure optimization steps.
 
         Each basis vectors are in row vectors (a, b, c)
 
@@ -826,18 +856,32 @@ class VasprunxmlExpat(object):
         return np.array(self._all_lattice, dtype="double", order="C")
 
     def get_lattice(self):
+        """Return all basis vectors of structure optimization steps."""
+        warnings.warn(
+            "VasprunxmlExpat.get_lattice()) is deprecated. "
+            "Use VasprunxmlExpat.lattice attribute.",
+            DeprecationWarning,
+        )
         return self.lattice
 
     @property
     def volume(self):
+        """Return all cell volumes of structure optimization steps."""
         return np.array(self._all_volumes, dtype="double")
 
     def get_symbols(self):
+        """Return atomic symbols."""
+        warnings.warn(
+            "VasprunxmlExpat.get_symbols()) is deprecated. "
+            "Use VasprunxmlExpat.symbols attribute.",
+            DeprecationWarning,
+        )
         return self.symbols
 
     @property
     def energies(self):
-        """
+        """Return energies.
+
         Returns
         -------
         ndarray
@@ -849,15 +893,23 @@ class VasprunxmlExpat(object):
         return np.array(self._all_energies, dtype="double", order="C")
 
     def get_energies(self):
+        """Return energies."""
+        warnings.warn(
+            "VasprunxmlExpat.get_energies()) is deprecated. "
+            "Use VasprunxmlExpat.energies attribute.",
+            DeprecationWarning,
+        )
         return self.energies
 
     @property
     def k_mesh(self):
+        """Return k_mesh."""
         return np.array(self._k_mesh, dtype="intc")
 
     @property
     def k_weights(self):
-        """
+        """Return k_weights.
+
         Returns
         -------
         ndarray
@@ -867,15 +919,21 @@ class VasprunxmlExpat(object):
             shape=(irreducible_kpoints,)
 
         """
-
         return np.array(self._k_weights, dtype="double")
 
     def get_k_weights(self):
+        """Return k_weights."""
+        warnings.warn(
+            "VasprunxmlExpat.get_k_weights()) is deprecated. "
+            "Use VasprunxmlExpat.k_weights attribute.",
+            DeprecationWarning,
+        )
         return self.k_weights
 
     @property
     def k_weights_int(self):
-        """
+        """Return k_weights in integers.
+
         Returns
         -------
         ndarray
@@ -892,7 +950,8 @@ class VasprunxmlExpat(object):
 
     @property
     def eigenvalues(self):
-        """
+        """Return eigenvalues.
+
         Returns
         -------
         ndarray
@@ -901,36 +960,54 @@ class VasprunxmlExpat(object):
             shape=(spin, kpoints, bands, 2)
 
         """
-
         return np.array(self._eigenvalues, dtype="double", order="C")
 
     def get_eigenvalues(self):
+        """Return eigenvalues."""
+        warnings.warn(
+            "VasprunxmlExpat.get_eigenvalues()) is deprecated. "
+            "Use VasprunxmlExpat.eigenvalues attribute.",
+            DeprecationWarning,
+        )
         return self.eigenvalues
 
     @property
     def projectors(self):
+        """Return projectors."""
         return self._projectors
 
     def get_projectors(self):
+        """Return projectors."""
+        warnings.warn(
+            "VasprunxmlExpat.get_projectors()) is deprecated. "
+            "Use VasprunxmlExpat.projectors attribute.",
+            DeprecationWarning,
+        )
         return self.projectors
 
     @property
     def pseudopotentials(self):
-        """Returns pseudo potential information
+        """Return pseudo potential information.
 
         Example:
             [[2, u'N', 14.001, 5.0, u'PAW_PBE N 08Apr2002'],
              [2, u'Ga', 69.723, 13.0, u'PAW_PBE Ga_d 06Jul2010']]
 
         """
-
         return self._pseudopotentials
 
     def get_pseudopotentials(self):
+        """Return pseudo potential information."""
+        warnings.warn(
+            "VasprunxmlExpat.get_pseudopotentials()) is deprecated. "
+            "Use VasprunxmlExpat.pseudopotentials attribute.",
+            DeprecationWarning,
+        )
         return self.pseudopotentials
 
     @property
     def cell(self):
+        """Return cell in PhonopyAtoms."""
         return PhonopyAtoms(
             symbols=self.symbols,
             scaled_positions=self.points[-1],
@@ -1295,7 +1372,7 @@ class VasprunxmlExpat(object):
 # XDATCAR
 #
 def read_XDATCAR(filename="XDATCAR"):
-    """Read XDATCAR
+    """Read XDATCAR.
 
     Returns
     -------
@@ -1309,7 +1386,6 @@ def read_XDATCAR(filename="XDATCAR"):
         shape=(MD_steps, atoms, 3), dtype='double', order='C'
 
     """
-
     lattice = None
     symbols = None
     numbers_of_atoms = None
@@ -1337,11 +1413,13 @@ def read_XDATCAR(filename="XDATCAR"):
 #
 # OUTCAR handling (obsolete)
 #
-def read_force_constant_OUTCAR(filename):
+def read_force_constants_OUTCAR(filename):
+    """Read force constants from OUTCAR."""
     return get_force_constants_OUTCAR(filename)
 
 
 def get_force_constants_OUTCAR(filename):
+    """Read force constants from OUTCAR."""
     file = open(filename)
     while 1:
         line = file.readline()
