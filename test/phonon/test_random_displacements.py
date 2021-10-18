@@ -1,3 +1,4 @@
+"""Tests for generation of random displacements at finite temperatures."""
 import os
 import numpy as np
 from phonopy.phonon.random_displacements import RandomDisplacements
@@ -701,7 +702,7 @@ h_Cl = [
 
 
 def _test_random_displacements_NaCl(ph_nacl):
-    """Compare histgram of NaCl 2x2x2 displacements
+    """Compare histgram of NaCl 2x2x2 displacements.
 
     answer gives the highest histgram bins of two atoms.
 
@@ -712,7 +713,7 @@ def _test_random_displacements_NaCl(ph_nacl):
 
 
 def _test_random_displacements_SnO2(ph_sno2):
-    """Compare histgram of SnO2 2x2x3 displacements
+    """Compare histgram of SnO2 2x2x3 displacements.
 
     answer gives the highest histgram bins of two atoms.
 
@@ -753,7 +754,7 @@ def _generate_random_displacements(ph, d_max, nbins):
 
 
 def test_random_displacements_all_atoms_TiPN3(ph_tipn3):
-    """Test by fixed random numbers of np.random.normal
+    """Test by fixed random numbers of np.random.normal.
 
     randn_ii and randn_ij were created by
 
@@ -767,7 +768,6 @@ def test_random_displacements_all_atoms_TiPN3(ph_tipn3):
     eigenvalues calculated on the fly are used.
 
     """
-
     ph = ph_tipn3
     rd = RandomDisplacements(ph.supercell, ph.primitive, ph.force_constants)
 

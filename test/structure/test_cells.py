@@ -172,8 +172,8 @@ def _test_compute_permutation(ph):
     ppos = ph.primitive.scaled_positions
     plat = ph.primitive.cell.T
     symprec = symmetry.tolerance
-    rots = symmetry.get_symmetry_operations()["rotations"]
-    trans = symmetry.get_symmetry_operations()["translations"]
+    rots = symmetry.symmetry_operations["rotations"]
+    trans = symmetry.symmetry_operations["translations"]
     perms = compute_all_sg_permutations(ppos, rots, trans, plat, symprec)
     for i, (r, t) in enumerate(zip(rots, trans)):
         ppos_rot = np.dot(ppos, r.T) + t

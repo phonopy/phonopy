@@ -1,3 +1,4 @@
+"""Crystal symmetry routines."""
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -32,9 +33,9 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import numpy as np
 import warnings
 import spglib
+import numpy as np
 from phonopy.structure.cells import (
     get_primitive,
     get_supercell,
@@ -43,8 +44,11 @@ from phonopy.structure.cells import (
 from phonopy.harmonic.force_constants import similarity_transformation
 
 
-class Symmetry(object):
+class Symmetry:
+    """Class to find and store crystal symmetry information."""
+
     def __init__(self, cell, symprec=1e-5, is_symmetry=True):
+        """Init method."""
         self._cell = cell
         self._symprec = symprec
 
@@ -82,12 +86,32 @@ class Symmetry(object):
 
     @property
     def symmetry_operations(self):
+        """Return symmetry operations.
+
+        Returns
+        -------
+        dict
+            'rotations': ndarray
+                Matrix parts.
+                shape(num_operations, 3, 3), dtype='intc',
+             'translations': ndarray
+                Vector parts.
+                shape(num_operations, 3), dtype='double',
+
+        """
         return self._symmetry_operations
 
     def get_symmetry_operations(self):
+        """Return symmetry operations."""
+        warnings.warn(
+            "Symmetry.get_symmetry_operations() is deprecated."
+            "Use symmetry_operations attribute.",
+            DeprecationWarning,
+        )
         return self.symmetry_operations
 
     def get_symmetry_operation(self, operation_number):
+        """Return one symmetry operation."""
         operation = self._symmetry_operations
         return {
             "rotations": operation["rotations"][operation_number],
@@ -96,42 +120,75 @@ class Symmetry(object):
 
     @property
     def pointgroup_operations(self):
+        """Return crystallographic point group operations."""
         return self._pointgroup_operations
 
     def get_pointgroup_operations(self):
+        """Return crystallographic point group operations."""
+        warnings.warn(
+            "Symmetry.get_pointgroup_operations() is deprecated."
+            "Use pointgroup_operations attribute.",
+            DeprecationWarning,
+        )
         return self.pointgroup_operations
 
     @property
     def pointgroup_symbol(self):
+        """Return symbol of crystallographic point group."""
         return self._pointgroup
 
     def get_pointgroup(self):
+        """Return symbol of crystallographic point group."""
+        warnings.warn(
+            "Symmetry.get_pointgroup() is deprecated."
+            "Use pointgroup_symbol attribute.",
+            DeprecationWarning,
+        )
         return self._pointgroup
 
     def get_international_table(self):
+        """Return international symbol of space group."""
         return self._international_table
 
     def get_Wyckoff_letters(self):
+        """Return Wycloff letters."""
         return self._wyckoff_letters
 
     @property
     def dataset(self):
-        """Return spglib dataset"""
+        """Return spglib dataset.
+
+        This is raw data of symmetry.
+
+        """
         return self._dataset
 
     def get_dataset(self):
+        """Return spglib dataset."""
+        warnings.warn(
+            "Symmetry.get_dataset() is deprecated." "Use dataset attribute.",
+            DeprecationWarning,
+        )
         return self.dataset
 
     def get_independent_atoms(self):
-        """Return symmetrically unique atoms"""
+        """Return symmetrically unique atoms."""
         return self._independent_atoms
 
     def get_map_atoms(self):
-        """Return equivalent_atoms of spglib dataset"""
+        """Return equivalent_atoms of spglib dataset.
+
+        Returns
+        -------
+        spglib_dataset["equivalent_atoms"]
+        e.g.,
+            [0, 0, 0, 0, 4, 4, 4, 4]
+
+        """
         return self._map_atoms
 
     def get_map_operations(self):
-        """
+        """Return symmetry operation indices that map to respective equivalent atoms.
 
         Returns
         -------
@@ -143,10 +200,10 @@ class Symmetry(object):
             shape=(atoms,), dtype='intc'
 
         """
-
         return self._map_operations
 
     def get_site_symmetry(self, atom_number):
+        """Return matrix parts of site symmetry operations."""
         positions = self._cell.get_scaled_positions()
         lattice = self._cell.get_cell()
         rotations = self._symmetry_operations["rotations"]
@@ -165,7 +222,7 @@ class Symmetry(object):
         """Return symmetry tolerance."""
         warnings.warn(
             "Symmetry.get_symmetry_tolerance() is deprecated."
-            "Use Symmetry.tolerance attribute instead.",
+            "Use tolerance attribute instead.",
             DeprecationWarning,
         )
         return self.tolerance
@@ -178,6 +235,7 @@ class Symmetry(object):
         q' = Rq
 
         This is transpose of that shown in ITA (q' = qR).
+
         """
         return self._reciprocal_operations
 
@@ -185,7 +243,7 @@ class Symmetry(object):
         """Return reciprocal space point group operations."""
         warnings.warn(
             "Symmetry.get_reciprocal_operations() is deprecated."
-            "Use Symmetry.reciprocal_operations attribute instead.",
+            "Use reciprocal_operations attribute instead.",
             DeprecationWarning,
         )
         return self.reciprocal_operations
@@ -205,7 +263,7 @@ class Symmetry(object):
         """Return atomic index permutations by space group operations."""
         warnings.warn(
             "Symmetry.get_atomic_permutations() is deprecated."
-            "Use Symmetry.atomic_permutations attribute instead.",
+            "Use atomic_permutations attribute instead.",
             DeprecationWarning,
         )
         return self.atomic_permutations
@@ -333,6 +391,7 @@ class Symmetry(object):
 
 
 def get_pointgroup_operations(rotations, is_time_reversal=True):
+    """Return direct and reciprocal point group operations."""
     ptg_ops = collect_unique_rotations(rotations)
     reciprocal_rotations = [rot.T for rot in ptg_ops]
 
@@ -352,6 +411,7 @@ def get_pointgroup_operations(rotations, is_time_reversal=True):
 
 
 def collect_unique_rotations(rotations):
+    """Collect unique rotations in input rotation matrices."""
     ptg_ops = []
     for rot in rotations:
         is_same = False
@@ -366,7 +426,7 @@ def collect_unique_rotations(rotations):
 
 
 def get_lattice_vector_equivalence(point_symmetry):
-    """Return (b==c, c==a, a==b)"""
+    """Return (b==c, c==a, a==b)."""
     # primitive_vectors: column vectors
 
     equivalence = [False, False, False]
@@ -397,32 +457,40 @@ def elaborate_borns_and_epsilon(
     symmetrize_tensors=False,
     symprec=1e-5,
 ):
-    """Symmetrize Born effective charges and dielectric constants and
-    extract Born effective charges of symmetrically independent atoms
-    for primitive cell.
+    """Symmetrize Born effective charges and dielectric constants.
+
+    Born effective charges of symmetrically independent atoms
+    for primitive cell are extracted.
 
 
-     Args:
-         ucell (Atoms): Unit cell structure
-         borns (np.array): Born effective charges of ucell
-         epsilon (np.array): Dielectric constant tensor
+    Parameters
+    ----------
+    ucell : PhonopyAtoms
+        Unit cell structure
+    borns : array_like
+        Born effective charges of ucell
+    epsilon : array_like
+        Dielectric constant tensor
 
-     Returns:
-         (np.array) Born effective charges of symmetrically independent atoms
-             in primitive cell
-         (np.array) Dielectric constant
-         (np.array) Atomic index mapping table from supercell to primitive cell
-             of independent atoms
+    Returns
+    -------
+    ndarray
+        Born effective charges of symmetrically independent atoms in primitive cell
+        Dielectric constant
+    ndarray
+        Atomic index mapping table from supercell to primitive cell
+        of independent atoms
 
-     Raises:
-          AssertionError: Inconsistency of number of atoms or Born effective
-              charges.
+    Raises
+    ------
+    AssertionError
+        Inconsistency of number of atoms or Born effective charges.
 
-     Warning:
-         Broken symmetry of Born effective charges
+    Warning
+    -------
+    Broken symmetry of Born effective charges
 
     """
-
     assert len(borns) == len(ucell), "num_atom %d != len(borns) %d" % (
         len(ucell),
         len(borns),
@@ -457,7 +525,7 @@ def symmetrize_borns_and_epsilon(
     symprec=1e-5,
     is_symmetry=True,
 ):
-    """Symmetrize Born effective charges and dielectric tensor
+    """Symmetrize Born effective charges and dielectric tensor.
 
     Parameters
     ----------
@@ -497,12 +565,11 @@ def symmetrize_borns_and_epsilon(
         By setting False, symmetrization can be switched off. Default is True.
 
     """
-
     lattice = ucell.cell
     u_sym = Symmetry(ucell, is_symmetry=is_symmetry, symprec=symprec)
-    rotations = u_sym.get_symmetry_operations()["rotations"]
-    translations = u_sym.get_symmetry_operations()["translations"]
-    ptg_ops = u_sym.get_pointgroup_operations()
+    rotations = u_sym.symmetry_operations["rotations"]
+    translations = u_sym.symmetry_operations["translations"]
+    ptg_ops = u_sym.pointgroup_operations
     epsilon_ = _symmetrize_2nd_rank_tensor(epsilon, ptg_ops, lattice)
     borns_ = _take_average_of_borns(borns, rotations, translations, ucell, symprec)
 

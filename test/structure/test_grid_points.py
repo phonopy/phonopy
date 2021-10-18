@@ -41,7 +41,7 @@ def test_GridPoints():
 
 def test_GridPoints_NaCl_with_rotations(ph_nacl):
     rec_lat = np.linalg.inv(ph_nacl.primitive.cell)
-    rotations = ph_nacl.primitive_symmetry.get_pointgroup_operations()
+    rotations = ph_nacl.primitive_symmetry.pointgroup_operations
     gp = GridPoints([4, 4, 4], rec_lat, rotations=rotations)
     np.testing.assert_array_equal(gp.ir_grid_points, [0, 1, 2, 5, 6, 7, 10, 27])
     np.testing.assert_array_equal(gp.weights, [1, 8, 4, 6, 24, 12, 3, 6])
@@ -132,7 +132,7 @@ def test_GridPoints_NaCl_with_rotations(ph_nacl):
 
 def test_GridPoints_NaCl_with_rotations_fit_BZ(ph_nacl):
     rec_lat = np.linalg.inv(ph_nacl.primitive.cell)
-    rotations = ph_nacl.primitive_symmetry.get_pointgroup_operations()
+    rotations = ph_nacl.primitive_symmetry.pointgroup_operations
     mesh = [5, 5, 5]
     gpf = GridPoints(mesh, rec_lat, rotations=rotations, fit_in_BZ=False)
     gpt = GridPoints(mesh, rec_lat, rotations=rotations, fit_in_BZ=True)
@@ -172,7 +172,7 @@ def test_GridPoints_NaCl_with_rotations_fit_BZ(ph_nacl):
 
 def test_GridPoints_SnO2_with_rotations(ph_sno2):
     rec_lat = np.linalg.inv(ph_sno2.primitive.cell)
-    rotations = ph_sno2.primitive_symmetry.get_pointgroup_operations()
+    rotations = ph_sno2.primitive_symmetry.pointgroup_operations
     gp = GridPoints([4, 4, 4], rec_lat, rotations=rotations)
     np.testing.assert_array_equal(
         gp.ir_grid_points,
@@ -278,7 +278,7 @@ def test_GridPoints_SnO2_with_rotations(ph_sno2):
 
 def test_GridPoints_SnO2_with_rotations_MP(ph_sno2):
     rec_lat = np.linalg.inv(ph_sno2.primitive.cell)
-    rotations = ph_sno2.primitive_symmetry.get_pointgroup_operations()
+    rotations = ph_sno2.primitive_symmetry.pointgroup_operations
     gp = GridPoints([4, 4, 4], rec_lat, rotations=rotations, is_gamma_center=False)
     np.testing.assert_array_equal(gp.ir_grid_points, [0, 1, 5, 16, 17, 21])
     np.testing.assert_array_equal(gp.weights, [8, 16, 8, 8, 16, 8])

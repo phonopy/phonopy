@@ -92,7 +92,7 @@ def get_fc2(supercell, symmetry, dataset, atom_list=None, decimals=None):
         force_constants, supercell, dataset, symmetry, atom_list=atom_list
     )
 
-    rotations = symmetry.get_symmetry_operations()["rotations"]
+    rotations = symmetry.symmetry_operations["rotations"]
     lattice = np.array(supercell.cell.T, dtype="double", order="C")
     permutations = symmetry.atomic_permutations
     distribute_force_constants(

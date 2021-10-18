@@ -1,3 +1,4 @@
+"""Tests for dynmat_to_fc, inverse phonon transformation."""
 import os
 import pytest
 from phonopy import Phonopy
@@ -14,11 +15,13 @@ data_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_get_commensurate_points():
-    comm_points, smat = _get_commensurate_points()
+    """Test for getting commensurate points."""
+    comm_points, _ = _get_commensurate_points()
     _compare(comm_points)
 
 
 def test_get_commensurate_points_in_integers():
+    """Test for getting commensurate points represented by integers."""
     comm_points_ref, smat = _get_commensurate_points()
     comm_points = get_commensurate_points_in_integers(smat)
     comm_points = comm_points / np.linalg.det(smat)
@@ -57,6 +60,11 @@ def _write(comm_points, filename="comm_points.dat"):
 
 
 def test_ph2fc(ph_nacl, ph_nacl_nonac):
+    """Test transformation of phonon to force constants.
+
+    Here effectively the interpolation in reciprocal space is performed.
+
+    """
     for ph in (ph_nacl_nonac, ph_nacl):
         fc333 = ph2fc(ph, np.diag([3, 3, 3]))
         _phonons_allclose(ph, fc333)
@@ -86,6 +94,7 @@ def _get_comm_points(ph):
 
 
 def test_with_eigenvalues(ph_nacl, ph_nacl_nonac):
+    """Test transformation from eigensolutions to dynamical matrix."""
     for ph in (ph_nacl_nonac, ph_nacl):
         d2f = DynmatToForceConstants(ph.primitive, ph.supercell)
         ph.run_qpoints(
@@ -108,6 +117,7 @@ def test_with_eigenvalues(ph_nacl, ph_nacl_nonac):
     "is_nac,lang", [(False, "C"), (True, "C"), (False, "Py"), (True, "Py")]
 )
 def test_with_dynamical_matrices(ph_nacl, ph_nacl_nonac, is_nac, lang):
+    """Test transformation from dynamical matrix to force constants."""
     if is_nac:
         ph = ph_nacl
     else:

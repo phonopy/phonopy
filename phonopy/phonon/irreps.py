@@ -85,7 +85,7 @@ class IrReps(object):
         self._set_eigenvectors(self._dynamical_matrix)
         self._symmetry_dataset = Symmetry(
             self._primitive, symprec=self._symprec
-        ).get_dataset()
+        ).dataset
 
         if not self._is_primitive_cell():
             print("")

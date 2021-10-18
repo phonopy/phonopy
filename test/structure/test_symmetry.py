@@ -1,3 +1,4 @@
+"""Tests for symmetry tools."""
 import numpy as np
 from phonopy.structure.symmetry import (
     Symmetry,
@@ -12,6 +13,7 @@ data_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_get_map_operations(convcell_nacl):
+    """Test get_map_operations()."""
     symprec = 1e-5
     cell = convcell_nacl
     scell = get_supercell(cell, np.diag([2, 2, 2]), symprec=symprec)
@@ -35,18 +37,19 @@ def test_get_map_operations(convcell_nacl):
 
 
 def test_magmom(convcell_cr):
+    """Test symmetry search with hmagnetic moments."""
     symprec = 1e-5
     cell = convcell_cr
     symmetry_nonspin = Symmetry(cell, symprec=symprec)
     atom_map_nonspin = symmetry_nonspin.get_map_atoms()
-    len_sym_nonspin = len(symmetry_nonspin.get_symmetry_operations()["rotations"])
+    len_sym_nonspin = len(symmetry_nonspin.symmetry_operations["rotations"])
 
     spin = [1, -1]
     cell_withspin = cell.copy()
     cell_withspin.set_magnetic_moments(spin)
     symmetry_withspin = Symmetry(cell_withspin, symprec=symprec)
     atom_map_withspin = symmetry_withspin.get_map_atoms()
-    len_sym_withspin = len(symmetry_withspin.get_symmetry_operations()["rotations"])
+    len_sym_withspin = len(symmetry_withspin.symmetry_operations["rotations"])
 
     broken_spin = [1, -2]
     cell_brokenspin = cell.copy()
@@ -54,7 +57,7 @@ def test_magmom(convcell_cr):
     cell_brokenspin.set_magnetic_moments(broken_spin)
     symmetry_brokenspin = Symmetry(cell_brokenspin, symprec=symprec)
     atom_map_brokenspin = symmetry_brokenspin.get_map_atoms()
-    len_sym_brokenspin = len(symmetry_brokenspin.get_symmetry_operations()["rotations"])
+    len_sym_brokenspin = len(symmetry_brokenspin.symmetry_operations["rotations"])
 
     assert (atom_map_nonspin == atom_map_withspin).all()
     assert (atom_map_nonspin != atom_map_brokenspin).any()
@@ -63,6 +66,7 @@ def test_magmom(convcell_cr):
 
 
 def test_symmetrize_borns_and_epsilon_nacl(ph_nacl):
+    """Test symmetrization of Born charges and dielectric tensors by NaCl."""
     nac_params = ph_nacl.nac_params
     borns, epsilon = symmetrize_borns_and_epsilon(
         nac_params["born"], nac_params["dielectric"], ph_nacl.primitive
@@ -72,6 +76,7 @@ def test_symmetrize_borns_and_epsilon_nacl(ph_nacl):
 
 
 def test_symmetrize_borns_and_epsilon_tio2(ph_tio2):
+    """Test symmetrization of Born charges and dielectric tensors by TiO2."""
     nac_params = ph_tio2.nac_params
     borns, epsilon = symmetrize_borns_and_epsilon(
         nac_params["born"], nac_params["dielectric"], ph_tio2.primitive
@@ -81,10 +86,12 @@ def test_symmetrize_borns_and_epsilon_tio2(ph_tio2):
 
 
 def test_Symmetry_pointgroup(ph_tio2):
+    """Test for point group symbol."""
     assert ph_tio2.symmetry.pointgroup_symbol == r"4/mmm"
 
 
 def test_with_pmat_and_smat(ph_nacl):
+    """Test Born charges and dielectric tensor symmetrization with pmat and smat."""
     pcell = ph_nacl.primitive
     scell = ph_nacl.supercell
     idx = [scell.u2u_map[i] for i in scell.s2u_map[pcell.p2s_map]]
@@ -101,6 +108,7 @@ def test_with_pmat_and_smat(ph_nacl):
 
 
 def test_with_pcell(ph_nacl):
+    """Test Born charges and dielectric tensor symmetrization with pcell."""
     pcell = ph_nacl.primitive
     scell = ph_nacl.supercell
     idx = [scell.u2u_map[i] for i in scell.s2u_map[pcell.p2s_map]]
@@ -116,6 +124,7 @@ def test_with_pcell(ph_nacl):
 
 
 def test_site_symmetry(ph_sno2):
+    """Test site symmetry operations."""
     site_sym0 = ph_sno2.symmetry.get_site_symmetry(0)
     ref0 = [
         1,
@@ -198,7 +207,8 @@ def test_site_symmetry(ph_sno2):
     np.testing.assert_array_equal(site_sym36.ravel(), ref36)
 
 
-def test_collect__unique_rotations(ph_nacl):
+def test_collect_unique_rotations(ph_nacl):
+    """Test collect_unique_rotations function."""
     rotations = ph_nacl.symmetry.symmetry_operations["rotations"]
     ptg = collect_unique_rotations(rotations)
     assert len(rotations) == 1536
@@ -207,7 +217,11 @@ def test_collect__unique_rotations(ph_nacl):
 
 
 def test_reciprocal_operations(ph_zr3n4):
-    """Zr3N4 is a non-centrosymmetric crystal"""
+    """Test reciprocal operations.
+
+    Zr3N4 is a non-centrosymmetric crystal.
+
+    """
     ptg = ph_zr3n4.symmetry.pointgroup_operations
     rops = ph_zr3n4.symmetry.reciprocal_operations
     matches = []

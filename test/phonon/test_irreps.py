@@ -817,7 +817,7 @@ class TestIrreps(unittest.TestCase):
         force_sets = parse_FORCE_SETS(filename=filename)
         phonon.dataset = force_sets
         phonon.produce_force_constants()
-        print(phonon.symmetry.get_pointgroup())
+        print(phonon.symmetry.pointgroup_symbol)
         return phonon
 
     def _show_chars(self, chars):

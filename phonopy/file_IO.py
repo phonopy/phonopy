@@ -683,7 +683,7 @@ def get_born_parameters(f, primitive, prim_symmetry):
 
 def _expand_borns(borns, primitive, prim_symmetry):
     # Expand Born effective charges to all atoms in the primitive cell
-    rotations = prim_symmetry.get_symmetry_operations()["rotations"]
+    rotations = prim_symmetry.symmetry_operations["rotations"]
     map_operations = prim_symmetry.get_map_operations()
     map_atoms = prim_symmetry.get_map_atoms()
 

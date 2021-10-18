@@ -1615,7 +1615,7 @@ class Phonopy(object):
                 is_mesh_symmetry=is_mesh_symmetry,
                 with_eigenvectors=with_eigenvectors,
                 is_gamma_center=is_gamma_center,
-                rotations=self._primitive_symmetry.get_pointgroup_operations(),
+                rotations=self._primitive_symmetry.pointgroup_operations,
                 factor=self._factor,
             )
         else:
@@ -1628,7 +1628,7 @@ class Phonopy(object):
                 with_eigenvectors=with_eigenvectors,
                 is_gamma_center=_is_gamma_center,
                 group_velocity=group_velocity,
-                rotations=self._primitive_symmetry.get_pointgroup_operations(),
+                rotations=self._primitive_symmetry.pointgroup_operations,
                 factor=self._factor,
                 use_lapack_solver=self._use_lapack_solver,
             )
@@ -3458,8 +3458,8 @@ class Phonopy(object):
             self._primitive, self._symprec, self._is_symmetry
         )
 
-        if len(self._symmetry.get_pointgroup_operations()) != len(
-            self._primitive_symmetry.get_pointgroup_operations()
+        if len(self._symmetry.pointgroup_operations) != len(
+            self._primitive_symmetry.pointgroup_operations
         ):  # noqa: E129 E501
             print(
                 "Warning: Point group symmetries of supercell and primitive"
