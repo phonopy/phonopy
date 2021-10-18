@@ -1,3 +1,4 @@
+"""Force constants calculator interface."""
 # Copyright (C) 2019 Atsushi Togo
 # All rights reserved.
 #
@@ -92,7 +93,6 @@ def get_fc2(
         shape=(len(atom_list), num_atoms, 3, 3), dtype='double', order='C'.
 
     """
-
     if fc_calculator == "alm" or fc_calculator is None:
         from phonopy.interface.alm import get_fc2
 

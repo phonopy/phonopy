@@ -34,6 +34,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
+import warnings
 import numpy as np
 
 
@@ -46,7 +47,7 @@ def fracval(frac):
         return float(x[0]) / float(x[1])
 
 
-class Settings(object):
+class Settings:
     """Phonopy settings container.
 
     This works almost like a dictionary.
@@ -120,144 +121,200 @@ class Settings(object):
         return self._v[attr]
 
     def set_band_paths(self, val):
+        """Set band_paths."""
         self._v["band_paths"] = val
 
     def set_band_points(self, val):
+        """Set band_points."""
         self._v["band_points"] = val
 
     def set_band_indices(self, val):
+        """Set band_indices."""
         self._v["band_indices"] = val
 
     def set_cell_filename(self, val):
+        """Set cell_filename."""
         self._v["cell_filename"] = val
 
     def set_chemical_symbols(self, val):
+        """Set chemical_symbols."""
         self._v["chemical_symbols"] = val
 
     def set_create_displacements(self, val):
+        """Set create_displacements."""
         self._v["create_displacements"] = val
 
     def set_cutoff_frequency(self, val):
+        """Set cutoff_frequency."""
         self._v["cutoff_frequency"] = val
 
     def set_dm_decimals(self, val):
+        """Set dm_decimals."""
         self._v["dm_decimals"] = val
 
     def set_displacement_distance(self, val):
+        """Set displacement_distance."""
         self._v["displacement_distance"] = val
 
     def set_calculator(self, val):
+        """Set calculator."""
         self._v["calculator"] = val
 
     def set_fc_calculator(self, val):
+        """Set fc_calculator."""
         self._v["fc_calculator"] = val
 
     def set_fc_calculator_options(self, val):
+        """Set fc_calculator_options."""
         self._v["fc_calculator_options"] = val
 
     def set_fc_symmetry(self, val):
+        """Set fc_symmetry."""
         self._v["fc_symmetry"] = val
 
     def set_fc_decimals(self, val):
+        """Set fc_decimals."""
         self._v["fc_decimals"] = val
 
     def set_frequency_conversion_factor(self, val):
+        """Set frequency_conversion_factor."""
         self._v["frequency_conversion_factor"] = val
 
     def set_frequency_pitch(self, val):
+        """Set frequency_pitch."""
         self._v["frequency_pitch"] = val
 
     def set_frequency_scale_factor(self, val):
+        """Set frequency_scale_factor."""
         self._v["frequency_scale_factor"] = val
 
     def set_group_velocity_delta_q(self, val):
+        """Set group_velocity_delta_q."""
         self._v["group_velocity_delta_q"] = val
 
     def set_hdf5_compression(self, val):
+        """Set hdf5_compression."""
         self._v["hdf5_compression"] = val
 
     def set_is_band_const_interval(self, val):
+        """Set is_band_const_interval."""
         self._v["is_band_const_interval"] = val
 
     def set_is_diagonal_displacement(self, val):
+        """Set is_diagonal_displacement."""
         self._v["is_diagonal_displacement"] = val
 
     def set_is_eigenvectors(self, val):
+        """Set is_eigenvectors."""
         self._v["is_eigenvectors"] = val
 
     def set_is_mesh_symmetry(self, val):
+        """Set is_mesh_symmetry."""
         self._v["is_mesh_symmetry"] = val
 
     def set_is_nac(self, val):
+        """Set is_nac."""
         self._v["is_nac"] = val
 
     def set_is_plusminus_displacement(self, val):
+        """Set is_plusminus_displacement."""
         self._v["is_plusminus_displacement"] = val
 
     def set_is_tetrahedron_method(self, val):
+        """Set is_tetrahedron_method."""
         self._v["is_tetrahedron_method"] = val
 
     def set_is_trigonal_displacement(self, val):
+        """Set is_trigonal_displacement."""
         self._v["is_trigonal_displacement"] = val
 
     def set_is_symmetry(self, val):
+        """Set is_symmetry."""
         self._v["is_symmetry"] = val
 
     def set_magnetic_moments(self, val):
+        """Set magnetic_moments."""
         self._v["magnetic_moments"] = val
 
     def set_masses(self, val):
+        """Set masses."""
         self._v["masses"] = val
 
     def set_max_temperature(self, val):
+        """Set max_temperature."""
         self._v["max_temperature"] = val
 
     def set_mesh_numbers(self, val):
+        """Set mesh_numbers."""
         self._v["mesh_numbers"] = val
 
     def set_min_temperature(self, val):
+        """Set min_temperature."""
         self._v["min_temperature"] = val
 
     def set_nac_method(self, val):
+        """Set nac_method."""
         self._v["nac_method"] = val
 
     def set_nac_q_direction(self, val):
+        """Set nac_q_direction."""
         self._v["nac_q_direction"] = val
 
     def set_num_frequency_points(self, val):
+        """Set num_frequency_points."""
         self._v["num_frequency_points"] = val
 
     def set_primitive_matrix(self, val):
+        """Set primitive_matrix."""
         self._v["primitive_matrix"] = val
 
     def set_qpoints(self, val):
+        """Set qpoints."""
         self._v["qpoints"] = val
 
     def set_read_qpoints(self, val):
+        """Set read_qpoints."""
         self._v["read_qpoints"] = val
 
     def set_sigma(self, val):
+        """Set sigma."""
         self._v["sigma"] = val
 
     def set_supercell_matrix(self, val):
+        """Set supercell_matrix."""
         self._v["supercell_matrix"] = val
 
     def set_symmetry_tolerance(self, val):
+        """Set symmetry_tolerance."""
         self._v["symmetry_tolerance"] = val
 
     def set_temperatures(self, val):
+        """Set temperatures."""
         self._v["temperatures"] = val
 
     def set_temperature_step(self, val):
+        """Set temperature_step."""
         self._v["temperature_step"] = val
 
     def set_is_time_reversal_symmetry(self, val):
+        """Set is_time_reversal_symmetry."""
         self._v["is_time_reversal_symmetry"] = val
 
 
 # Parse phonopy setting filen
-class ConfParser(object):
-    """Phonopy conf file parser."""
+class ConfParser:
+    """Phonopy conf file parser.
+
+    This class became complicated due to historical reason. Data flow is as follows:
+
+        self._confs -> self._parameters -> self._settings.
+
+    Configurations are obtained either from conf file or command options.
+    These are initially merged to ``self._confs``. Then the data are
+    checked and stored in ``self._parameters`` in appropriate format.
+    Finally they are passed to ``self._settings``.
+
+    """
 
     def __init__(self, filename=None, args=None):
         """Init method."""
@@ -265,27 +322,43 @@ class ConfParser(object):
         self._parameters = {}
         self._args = args
         self._filename = filename
+        if "_settings" not in self.__dict__:
+            self._settings = None
 
     @property
     def confs(self):
+        """Return configuration dict."""
         return self._confs
 
     def get_configures(self):
+        """Return configuration dict."""
+        warnings.warn(
+            "ConfParser.get_configures() is deprecated." "Use confs attribute.",
+            DeprecationWarning,
+        )
         return self.confs
 
     @property
     def settings(self):
+        """Return Settings class instance."""
         return self._settings
 
     def get_settings(self):
+        """Return Settings class instance."""
+        warnings.warn(
+            "ConfParser.get_settings() is deprecated." "Use settings attribute.",
+            DeprecationWarning,
+        )
         return self.settings
 
     def setting_error(self, message):
+        """Show error message."""
         print(message)
         print("Please check the setting tags and options.")
         sys.exit(1)
 
     def read_file(self):
+        """Read conf file."""
         file = open(self._filename, "r")
         is_continue = False
         left = None
@@ -312,6 +385,12 @@ class ConfParser(object):
                 is_continue = True
 
     def read_options(self):
+        """Read options from ArgumentParser class instance.
+
+        This is the interface layer to make settings from command options to be
+        consistent with settings from conf file.
+
+        """
         arg_list = vars(self._args)
         if "band_indices" in arg_list:
             band_indices = self._args.band_indices
@@ -557,6 +636,11 @@ class ConfParser(object):
                 self._confs["fc_calculator"] = "hiphive"
 
     def parse_conf(self):
+        """Add treatments to settings from conf file or command options.
+
+        The results are stored in ``self._parameters[key] = val``.
+
+        """
         confs = self._confs
 
         for conf_key in confs.keys():
@@ -846,9 +930,11 @@ class ConfParser(object):
                 self.set_parameter("hdf5_compression", compression)
 
     def set_parameter(self, key, val):
+        """Pass to another data structure."""
         self._parameters[key] = val
 
     def set_settings(self):
+        """Store parameters in Settings class instance."""
         params = self._parameters
 
         # Chemical symbols
@@ -1032,7 +1118,7 @@ class ConfParser(object):
 # For phonopy
 #
 class PhonopySettings(Settings):
-    """Phonopy settings container
+    """Phonopy settings container.
 
     Basic part is stored in Settings and extended part is stored in this class.
 
@@ -1060,7 +1146,7 @@ class PhonopySettings(Settings):
         "max_frequency": None,
         "min_frequency": None,
         "irreps_q_point": None,
-        "irreps_tolerance": 1e-5,
+        "irreps_tolerance": None,
         "is_band_connection": False,
         "is_dos_mode": False,
         "is_full_fc": False,
@@ -1107,6 +1193,7 @@ class PhonopySettings(Settings):
     }
 
     def __init__(self, default=None):
+        """Init method."""
         Settings.__init__(self)
         self.default.update(PhonopySettings._default.copy())
         if default is not None:
@@ -1114,183 +1201,243 @@ class PhonopySettings(Settings):
         self._v = self.default.copy()
 
     def set_anime_band_index(self, val):
+        """Set anime_band_index."""
         self._v["anime_band_index"] = val
 
     def set_anime_amplitude(self, val):
+        """Set anime_amplitude."""
         self._v["anime_amplitude"] = val
 
     def set_anime_division(self, val):
+        """Set anime_division."""
         self._v["anime_division"] = val
 
     def set_anime_qpoint(self, val):
+        """Set anime_qpoint."""
         self._v["anime_qpoint"] = val
 
     def set_anime_shift(self, val):
+        """Set anime_shift."""
         self._v["anime_shift"] = val
 
     def set_anime_type(self, val):
+        """Set anime_type."""
         self._v["anime_type"] = val
 
     def set_band_format(self, val):
+        """Set band_format."""
         self._v["band_format"] = val
 
     def set_band_labels(self, val):
+        """Set band_labels."""
         self._v["band_labels"] = val
 
     def set_create_force_sets(self, val):
+        """Set create_force_sets."""
         self._v["create_force_sets"] = val
 
     def set_create_force_sets_zero(self, val):
+        """Set create_force_sets_zero."""
         self._v["create_force_sets_zero"] = val
 
     def set_create_force_constants(self, val):
+        """Set create_force_constants."""
         self._v["create_force_constants"] = val
 
     def set_cutoff_radius(self, val):
+        """Set cutoff_radius."""
         self._v["cutoff_radius"] = val
 
     def set_fc_spg_symmetry(self, val):
+        """Set fc_spg_symmetry."""
         self._v["fc_spg_symmetry"] = val
 
     def set_fits_Debye_model(self, val):
+        """Set fits_Debye_model."""
         self._v["fits_Debye_model"] = val
 
     def set_max_frequency(self, val):
+        """Set max_frequency."""
         self._v["max_frequency"] = val
 
     def set_mesh_shift(self, val):
+        """Set mesh_shift."""
         self._v["mesh_shift"] = val
 
     def set_min_frequency(self, val):
+        """Set min_frequency."""
         self._v["min_frequency"] = val
 
     def set_irreps_q_point(self, val):
+        """Set irreps_q_point."""
         self._v["irreps_q_point"] = val
 
     def set_irreps_tolerance(self, val):
+        """Set irreps_tolerance."""
         self._v["irreps_tolerance"] = val
 
     def set_is_band_connection(self, val):
+        """Set is_band_connection."""
         self._v["is_band_connection"] = val
 
     def set_is_dos_mode(self, val):
+        """Set is_dos_mode."""
         self._v["is_dos_mode"] = val
 
     def set_is_full_fc(self, val):
+        """Set is_full_fc."""
         self._v["is_full_fc"] = val
 
     def set_is_gamma_center(self, val):
+        """Set is_gamma_center."""
         self._v["is_gamma_center"] = val
 
     def set_is_group_velocity(self, val):
+        """Set is_group_velocity."""
         self._v["is_group_velocity"] = val
 
     def set_is_hdf5(self, val):
+        """Set is_hdf5."""
         self._v["is_hdf5"] = val
 
     def set_is_legacy_plot(self, val):
+        """Set is_legacy_plot."""
         self._v["is_legacy_plot"] = val
 
     def set_is_little_cogroup(self, val):
+        """Set is_little_cogroup."""
         self._v["is_little_cogroup"] = val
 
     def set_is_moment(self, val):
+        """Set is_moment."""
         self._v["is_moment"] = val
 
     def set_is_projected_thermal_properties(self, val):
+        """Set is_projected_thermal_properties."""
         self._v["is_projected_thermal_properties"] = val
 
     def set_is_thermal_displacements(self, val):
+        """Set is_thermal_displacements."""
         self._v["is_thermal_displacements"] = val
 
     def set_is_thermal_displacement_matrices(self, val):
+        """Set is_thermal_displacement_matrices."""
         self._v["is_thermal_displacement_matrices"] = val
 
     def set_is_thermal_distances(self, val):
+        """Set is_thermal_distances."""
         self._v["is_thermal_distances"] = val
 
     def set_is_thermal_properties(self, val):
+        """Set is_thermal_properties."""
         self._v["is_thermal_properties"] = val
 
     def set_include_force_constants(self, val):
+        """Set include_force_constants."""
         self._v["include_force_constants"] = val
 
     def set_include_force_sets(self, val):
+        """Set include_force_sets."""
         self._v["include_force_sets"] = val
 
     def set_include_nac_params(self, val):
+        """Set include_nac_params."""
         self._v["include_nac_params"] = val
 
     def set_include_displacements(self, val):
+        """Set include_displacements."""
         self._v["include_displacements"] = val
 
     def set_lapack_solver(self, val):
+        """Set lapack_solver."""
         self._v["lapack_solver"] = val
 
     def set_mesh_format(self, val):
+        """Set mesh_format."""
         self._v["mesh_format"] = val
 
     def set_modulation(self, val):
+        """Set modulation."""
         self._v["modulation"] = val
 
     def set_moment_order(self, val):
+        """Set moment_order."""
         self._v["moment_order"] = val
 
     def set_random_displacements(self, val):
+        """Set random_displacements."""
         self._v["random_displacements"] = val
 
     def set_pdos_indices(self, val):
+        """Set pdos_indices."""
         self._v["pdos_indices"] = val
 
     def set_pretend_real(self, val):
+        """Set pretend_real."""
         self._v["pretend_real"] = val
 
     def set_projection_direction(self, val):
+        """Set projection_direction."""
         self._v["projection_direction"] = val
 
     def set_qpoints_format(self, val):
+        """Set qpoints_format."""
         self._v["qpoints_format"] = val
 
     def set_random_seed(self, val):
+        """Set random_seed."""
         self._v["random_seed"] = val
 
     def set_read_force_constants(self, val):
+        """Set read_force_constants."""
         self._v["read_force_constants"] = val
 
     def set_readfc_format(self, val):
+        """Set readfc_format."""
         self._v["readfc_format"] = val
 
     def set_run_mode(self, val):
+        """Set run_mode."""
         self._v["run_mode"] = val
 
     def set_thermal_atom_pairs(self, val):
+        """Set thermal_atom_pairs."""
         self._v["thermal_atom_pairs"] = val
 
     def set_thermal_displacement_matrix_temperatue(self, val):
+        """Set thermal_displacement_matrix_temperatue."""
         self._v["thermal_displacement_matrix_temperatue"] = val
 
     def set_save_params(self, val):
+        """Set save_params."""
         self._v["save_params"] = val
 
     def set_show_irreps(self, val):
+        """Set show_irreps."""
         self._v["show_irreps"] = val
 
     def set_store_dense_svecs(self, val):
+        """Set store_dense_svecs."""
         self._v["store_dense_svecs"] = val
 
     def set_write_dynamical_matrices(self, val):
+        """Set write_dynamical_matrices."""
         self._v["write_dynamical_matrices"] = val
 
     def set_write_force_constants(self, val):
+        """Set write_force_constants."""
         self._v["write_force_constants"] = val
 
     def set_write_mesh(self, val):
+        """Set write_mesh."""
         self._v["write_mesh"] = val
 
     def set_writefc_format(self, val):
+        """Set writefc_format."""
         self._v["writefc_format"] = val
 
     def set_xyz_projection(self, val):
+        """Set xyz_projection."""
         self._v["xyz_projection"] = val
 
 
@@ -1311,14 +1458,14 @@ class PhonopyConfParser(ConfParser):
         self._settings = PhonopySettings(default=default_settings)
         confs = {}
         if filename is not None:
-            ConfParser.__init__(self, filename=filename)
+            super().__init__(filename=filename)
             self.read_file()  # store .conf file setting in self._confs
             self._parse_conf()  # self.parameters[key] = val
             self._set_settings()  # self.parameters -> PhonopySettings
             confs.update(self._confs)
         if args is not None:
             # To invoke ConfParser.__init__() to flush variables.
-            ConfParser.__init__(self, args=args)
+            super().__init__(args=args)
             self._read_options()  # store options in self._confs
             self._parse_conf()  # self.parameters[key] = val
             self._set_settings()  # self.parameters -> PhonopySettings

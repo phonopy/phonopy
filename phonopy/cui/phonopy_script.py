@@ -808,7 +808,7 @@ def store_nac_params(
                 print("-" * 76)
 
 
-def run(phonon, settings, plot_conf, log_level):
+def run(phonon: Phonopy, settings, plot_conf, log_level):
     """Run phonon calculations."""
     interface_mode = phonon.calculator
     physical_units = get_default_physical_units(interface_mode)

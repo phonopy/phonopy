@@ -60,7 +60,7 @@ class IrReps(object):
         nac_q_direction=None,
         factor=VaspToTHz,
         symprec=1e-5,
-        degeneracy_tolerance=1e-5,
+        degeneracy_tolerance=None,
         log_level=0,
     ):
         """Init method."""
@@ -70,7 +70,10 @@ class IrReps(object):
         self._log_level = log_level
 
         self._q = np.array(q)
-        self._degeneracy_tolerance = degeneracy_tolerance
+        if degeneracy_tolerance is None:
+            self._degeneracy_tolerance = 1e-5
+        else:
+            self._degeneracy_tolerance = degeneracy_tolerance
         self._symprec = symprec
         self._primitive = dynamical_matrix.primitive
         self._dynamical_matrix = dynamical_matrix
