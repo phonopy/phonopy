@@ -1,3 +1,4 @@
+"""Mode Grueneisen parameters calculation on sampling mesh."""
 # Copyright (C) 2012 Atsushi Togo
 # All rights reserved.
 #
@@ -41,6 +42,8 @@ from phonopy.units import VaspToTHz
 
 
 class GruneisenMesh(GruneisenBase):
+    """Class to calculate mode Grueneisen parameters on sampling mesh."""
+
     def __init__(
         self,
         dynmat,
@@ -55,6 +58,7 @@ class GruneisenMesh(GruneisenBase):
         rotations=None,  # Point group operations in real space
         factor=VaspToTHz,
     ):
+        """Init method."""
         GruneisenBase.__init__(
             self, dynmat, dynmat_plus, dynmat_minus, delta_strain=delta_strain
         )
@@ -77,18 +81,19 @@ class GruneisenMesh(GruneisenBase):
         )
 
     def get_gruneisen(self):
+        """Return mode Grueneisen parameters."""
         return self._gamma
 
-    def get_gamma_prime(self):
-        return self._gamma_prime
-
     def get_mesh_numbers(self):
+        """Return mesh numbers."""
         return self._mesh
 
     def get_qpoints(self):
+        """Return irreducible q-points."""
         return self._qpoints
 
     def get_weights(self):
+        """Return weights of irreducible q-points."""
         return self._weights
 
     def get_eigenvalues(self):

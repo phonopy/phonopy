@@ -1,3 +1,4 @@
+"""Mode Grueneisen parameter calculation."""
 # Copyright (C) 2012 Atsushi Togo
 # All rights reserved.
 #
@@ -37,7 +38,7 @@ from phonopy.phonon.band_structure import estimate_band_connection
 from phonopy.phonon.degeneracy import rotate_eigenvectors
 
 
-class GruneisenBase(object):
+class GruneisenBase:
     def __init__(
         self,
         dynmat,
@@ -62,7 +63,6 @@ class GruneisenBase(object):
         self._qpoints = qpoints
 
         self._gruneisen = None
-        self._gamma_prime = None
         self._eigenvalues = None
         if qpoints is not None:
             self._set_gruneisen()
@@ -73,9 +73,6 @@ class GruneisenBase(object):
 
     def get_gruneisen(self):
         return self._gruneisen
-
-    def get_gamma_prime(self):
-        return self._gamma_prime
 
     def get_eigenvalues(self):
         return self._eigenvalues

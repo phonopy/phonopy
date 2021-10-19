@@ -1,3 +1,4 @@
+"""API of mode Grueneisen parameter calculation."""
 # Copyright (C) 2015 Atsushi Togo
 # All rights reserved.
 #
@@ -34,11 +35,23 @@
 
 from phonopy.gruneisen.mesh import GruneisenMesh
 from phonopy.gruneisen.band_structure import GruneisenBandStructure
-from phonopy.gruneisen.thermal_properties import GruneisenThermalProperties
 
 
-class PhonopyGruneisen(object):
+class PhonopyGruneisen:
+    """Class to calculate mode Grueneisen parameters."""
+
     def __init__(self, phonon, phonon_plus, phonon_minus, delta_strain=None):
+        """Init method.
+
+        Parameters
+        ----------
+        phonon, phonon_plus, phonon_minus : Phonopy
+            Phonopy instances of the same crystal with differet volumes,
+            V_0, V_0 + dV, V_0 - dV.
+        delta_strain : float, optional
+            Default is None, which gives dV / V_0.
+
+        """
         self._phonon = phonon
         self._phonon_plus = phonon_plus
         self._phonon_minus = phonon_minus
@@ -46,9 +59,9 @@ class PhonopyGruneisen(object):
 
         self._mesh = None
         self._band_structure = None
-        self._thermal_properties = None
 
     def get_phonon(self):
+        """Return Phonopy class instance at dV=0."""
         return self._phonon
 
     def set_mesh(
@@ -60,11 +73,11 @@ class PhonopyGruneisen(object):
         is_mesh_symmetry=True,
     ):
         for phonon in (self._phonon, self._phonon_plus, self._phonon_minus):
-            if phonon.get_dynamical_matrix() is None:
+            if phonon.dynamical_matrix is None:
                 print("Warning: Dynamical matrix has not yet built.")
                 return False
 
-        symmetry = phonon.get_primitive_symmetry()
+        symmetry = phonon.primitive_symmetry
         rotations = symmetry.get_pointgroup_operations()
         self._mesh = GruneisenMesh(
             self._phonon.get_dynamical_matrix(),
@@ -152,21 +165,3 @@ class PhonopyGruneisen(object):
             ax.yaxis.set_tick_params(which="both", direction="in")
             self._band_structure.plot(axarr, epsilon=epsilon, color_scheme=color_scheme)
         return plt
-
-    def set_thermal_properties(
-        self, volumes, t_step=2, t_max=2004, t_min=0, cutoff_frequency=None
-    ):
-        self._thermal_properties = GruneisenThermalProperties(
-            self._mesh,
-            volumes,
-            t_step=t_step,
-            t_max=t_max,
-            t_min=t_min,
-            cutoff_frequency=cutoff_frequency,
-        )
-
-    def get_thermal_properties(self):
-        return self._thermal_properties
-
-    def write_yaml_thermal_properties(self, filename="thermal_properties"):
-        self._thermal_properties.write_yaml(filename=filename)

@@ -111,7 +111,11 @@ def get_qpoints(
     rotations=None,  # Point group operations in real space
     is_mesh_symmetry=True,
 ):
-    """Return q-points and weights on a mesh sampling grid."""
+    """Return q-points and weights on a mesh sampling grid.
+
+    See attributes of GriePoints, qpoints and wegiths.
+
+    """
     gp = GridPoints(
         mesh_numbers,
         reciprocal_lattice,
