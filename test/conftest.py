@@ -153,6 +153,27 @@ def ph_tipn3():
 
 
 @pytest.fixture(scope="session")
+def ph_nacl_gruneisen():
+    """Phonopy instances of NaCl 2x2x2 at three volumes."""
+    ph0 = phonopy.load(
+        os.path.join(current_dir, "phonopy_params_NaCl-1.00.yaml.xz"),
+        log_level=1,
+        produce_fc=True,
+    )
+    ph_minus = phonopy.load(
+        os.path.join(current_dir, "phonopy_params_NaCl-0.995.yaml.xz"),
+        log_level=1,
+        produce_fc=True,
+    )
+    ph_plus = phonopy.load(
+        os.path.join(current_dir, "phonopy_params_NaCl-1.005.yaml.xz"),
+        log_level=1,
+        produce_fc=True,
+    )
+    return ph0, ph_minus, ph_plus
+
+
+@pytest.fixture(scope="session")
 def convcell_sio2():
     """PhonopyAtoms instance of rutile SiO2."""
     symbols = ["Si"] * 2 + ["O"] * 4
