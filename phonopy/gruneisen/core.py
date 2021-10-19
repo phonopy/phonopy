@@ -52,9 +52,9 @@ class GruneisenBase:
         self._dynmat_plus = dynmat_plus
         self._dynmat_minus = dynmat_minus
         if delta_strain is None:
-            volume = dynmat.get_primitive().get_volume()
-            volume_plus = dynmat_plus.get_primitive().get_volume()
-            volume_minus = dynmat_minus.get_primitive().get_volume()
+            volume = dynmat.primitive.volume
+            volume_plus = dynmat_plus.primitive.volume
+            volume_minus = dynmat_minus.primitive.volume
             dV = volume_plus - volume_minus
             self._delta_strain = dV / volume
         else:
@@ -95,7 +95,7 @@ class GruneisenBase:
             else:
                 self._dynmat.run(q)
 
-            dm = self._dynmat.get_dynamical_matrix()
+            dm = self._dynmat.dynamical_matrix
             evals, evecs = np.linalg.eigh(dm)
             evals_at_q = evals.real
             dD = self._get_dD(q, self._dynmat_minus, self._dynmat_plus)
@@ -130,6 +130,6 @@ class GruneisenBase:
         else:
             d_a.run(q)
             d_b.run(q)
-        dm_a = d_a.get_dynamical_matrix()
-        dm_b = d_b.get_dynamical_matrix()
+        dm_a = d_a.dynamical_matrix
+        dm_b = d_b.dynamical_matrix
         return dm_b - dm_a

@@ -36,7 +36,7 @@
 import sys
 import gzip
 import numpy as np
-from .core import GruneisenBase
+from phonopy.gruneisen.core import GruneisenBase
 from phonopy.structure.grid_points import get_qpoints
 from phonopy.units import VaspToTHz
 
@@ -64,10 +64,10 @@ class GruneisenMesh(GruneisenBase):
         )
         self._mesh = np.array(mesh, dtype="intc")
         self._factor = factor
-        self._cell = dynmat.get_primitive()
+        self._cell = dynmat.primitive
         self._qpoints, self._weights = get_qpoints(
             self._mesh,
-            np.linalg.inv(self._cell.get_cell()),
+            np.linalg.inv(self._cell.cell),
             q_mesh_shift=shift,
             is_time_reversal=is_time_reversal,
             is_gamma_center=is_gamma_center,

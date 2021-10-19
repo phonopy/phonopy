@@ -78,11 +78,11 @@ class PhonopyGruneisen:
                 return False
 
         symmetry = phonon.primitive_symmetry
-        rotations = symmetry.get_pointgroup_operations()
+        rotations = symmetry.pointgroup_operations
         self._mesh = GruneisenMesh(
-            self._phonon.get_dynamical_matrix(),
-            self._phonon_plus.get_dynamical_matrix(),
-            self._phonon_minus.get_dynamical_matrix(),
+            self._phonon.dynamical_matrix,
+            self._phonon_plus.dynamical_matrix,
+            self._phonon_minus.dynamical_matrix,
             mesh,
             delta_strain=self._delta_strain,
             shift=shift,
@@ -90,7 +90,7 @@ class PhonopyGruneisen:
             is_gamma_center=is_gamma_center,
             is_mesh_symmetry=is_mesh_symmetry,
             rotations=rotations,
-            factor=self._phonon.get_unit_conversion_factor(),
+            factor=self._phonon.unit_conversion_factor,
         )
         return True
 
@@ -134,11 +134,11 @@ class PhonopyGruneisen:
     def set_band_structure(self, bands):
         self._band_structure = GruneisenBandStructure(
             bands,
-            self._phonon.get_dynamical_matrix(),
-            self._phonon_plus.get_dynamical_matrix(),
-            self._phonon_minus.get_dynamical_matrix(),
+            self._phonon.dynamical_matrix,
+            self._phonon_plus.dynamical_matrix,
+            self._phonon_minus.dynamical_matrix,
             delta_strain=self._delta_strain,
-            factor=self._phonon.get_unit_conversion_factor(),
+            factor=self._phonon.unit_conversion_factor,
         )
 
     def get_band_structure(self):
