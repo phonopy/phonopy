@@ -122,7 +122,9 @@ def test_gruneisen_band(ph_nacl_gruneisen):
     np.testing.assert_allclose(qpoints[0], band_qpoints, atol=1e-5)
     # for line in freqs[0].reshape(-1, 6):
     #     print(", ".join(["%.5f" % v for v in line]))
-    np.testing.assert_allclose(freqs[0], band_freqs, atol=1e-5)
+    for freqs_q, band_freqs_q in zip(freqs[0], band_freqs):
+        np.testing.assert_allclose(np.sort(freqs_q), np.sort(band_freqs_q), atol=1e-5)
     # for line in gammas[0].reshape(-1, 6):
     #     print(", ".join(["%.5f" % v for v in line]))
-    np.testing.assert_allclose(gammas[0], band_gammas, atol=1e-5)
+    for gammas_q, band_gammas_q in zip(gammas[0], band_gammas):
+        np.testing.assert_allclose(np.sort(gammas_q), np.sort(band_gammas_q), atol=1e-5)
