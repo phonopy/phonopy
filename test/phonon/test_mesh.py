@@ -1,5 +1,5 @@
+"""Tests for phonon calculation on sampling mesh."""
 import numpy as np
-from phonopy.phonon.mesh import Mesh
 
 freqs_full_fcsym_ref = [
     0.000000,
@@ -111,23 +111,23 @@ freqs_nonac_ref = [
 
 
 def test_Mesh_nofcsym(ph_nacl_nofcsym):
+    """Test by NaCl without symmetrizing force constants."""
     _test_IterMesh(ph_nacl_nofcsym, freqs_nofcsym)
-    _test_Mesh(ph_nacl_nofcsym)
 
 
 def test_Mesh_full_fcsym(ph_nacl):
+    """Test by NaCl with symmetrizing force constants."""
     _test_IterMesh(ph_nacl, freqs_full_fcsym_ref)
-    _test_Mesh(ph_nacl)
 
 
 def test_Mesh_compact_fcsym(ph_nacl_compact_fcsym):
+    """Test by NaCl with symmetrizing force constants in compact format."""
     _test_IterMesh(ph_nacl_compact_fcsym, freqs_compact_fcsym_ref)
-    _test_Mesh(ph_nacl_compact_fcsym)
 
 
 def test_Mesh_full_fcsym_nonac(ph_nacl_nonac):
+    """Test by NaCl without NAC."""
     _test_IterMesh(ph_nacl_nonac, freqs_nonac_ref)
-    _test_Mesh(ph_nacl_nonac)
 
 
 def _test_IterMesh(ph_nacl, freqs_ref):
@@ -148,14 +148,3 @@ def _test_IterMesh(ph_nacl, freqs_ref):
 
     np.testing.assert_allclose(mesh_freqs, freqs)
     np.testing.assert_allclose(mesh_eigvecs, eigvecs)
-
-
-def _test_Mesh(ph_nacl):
-    mesh_obj = Mesh(ph_nacl.dynamical_matrix, [10, 10, 10], with_eigenvectors=True)
-    mesh_obj.run()
-    for i, x in enumerate(mesh_obj):
-        pass
-    for j, x in enumerate(mesh_obj):
-        pass
-    assert i == j
-    assert id(mesh_obj.dynamical_matrix) == id(mesh_obj.get_dynamical_matrix())

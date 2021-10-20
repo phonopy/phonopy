@@ -1,3 +1,4 @@
+"""Routines to handle displacements in supercells."""
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -56,6 +57,7 @@ directions_diag = np.array(
 
 
 def directions_to_displacement_dataset(displacement_directions, distance, supercell):
+    """Transform displacement directions to displacements in Cartesian coordinates."""
     lattice = supercell.get_cell()
     first_atoms = []
     for disp in displacement_directions:
@@ -76,7 +78,7 @@ def directions_to_displacement_dataset(displacement_directions, distance, superc
 def get_least_displacements(
     symmetry, is_plusminus="auto", is_diagonal=True, is_trigonal=False, log_level=0
 ):
-    """Return a set of displacements
+    """Return a set of displacements.
 
     Returns
     -------
@@ -124,15 +126,16 @@ def get_least_displacements(
 def get_displacement(
     site_symmetry, directions=directions_diag, is_trigonal=False, log_level=0
 ):
+    """Return displacement directions for one atom."""
     # One
-    sitesym_num, disp = get_displacement_one(site_symmetry, directions)
+    sitesym_num, disp = _get_displacement_one(site_symmetry, directions)
     if disp is not None:
         if log_level > 2:
             print("Site symmetry used to expand a direction %s" % disp[0])
             print(site_symmetry[sitesym_num])
         return disp
     # Two
-    sitesym_num, disps = get_displacement_two(site_symmetry, directions)
+    sitesym_num, disps = _get_displacement_two(site_symmetry, directions)
     if disps is not None:
         if log_level > 2:
             print(
@@ -142,7 +145,7 @@ def get_displacement(
 
         if is_trigonal:
             disps_new = [disps[0]]
-            if is_trigonal_axis(site_symmetry[sitesym_num]):
+            if _is_trigonal_axis(site_symmetry[sitesym_num]):
                 if log_level > 2:
                     print("Trigonal axis is found.")
                 disps_new.append(np.dot(disps[0], site_symmetry[sitesym_num].T))
@@ -155,7 +158,13 @@ def get_displacement(
     return [directions[0], directions[1], directions[2]]
 
 
-def get_displacement_one(site_symmetry, directions=directions_diag):
+def _get_displacement_one(site_symmetry, directions=directions_diag):
+    """Return one displacement.
+
+    This method tries to find three linearly independent displacements by
+    applying site symmetry to an input displacement.
+
+    """
     for direction in directions:
         rot_directions = []
         for r in site_symmetry:
@@ -163,13 +172,19 @@ def get_displacement_one(site_symmetry, directions=directions_diag):
         num_sitesym = len(site_symmetry)
         for i in range(num_sitesym):
             for j in range(i + 1, num_sitesym):
-                det = determinant(direction, rot_directions[i], rot_directions[j])
+                det = _determinant(direction, rot_directions[i], rot_directions[j])
                 if det != 0:
                     return i, [direction]
     return None, None
 
 
-def get_displacement_two(site_symmetry, directions=directions_diag):
+def _get_displacement_two(site_symmetry, directions=directions_diag):
+    """Return one displacement.
+
+    This method tries to find three linearly independent displacements by
+    applying site symmetry to two input displacements.
+
+    """
     for direction in directions:
         rot_directions = []
         for r in site_symmetry:
@@ -177,13 +192,14 @@ def get_displacement_two(site_symmetry, directions=directions_diag):
         num_sitesym = len(site_symmetry)
         for i in range(num_sitesym):
             for second_direction in directions:
-                det = determinant(direction, rot_directions[i], second_direction)
+                det = _determinant(direction, rot_directions[i], second_direction)
                 if det != 0:
                     return i, [direction, second_direction]
     return None, None
 
 
 def is_minus_displacement(direction, site_symmetry):
+    """Symmetrically check if minus displacement is necessary or not."""
     is_minus = True
     for r in site_symmetry:
         rot_direction = np.dot(direction, r.T)
@@ -195,7 +211,12 @@ def is_minus_displacement(direction, site_symmetry):
     return is_minus
 
 
-def is_trigonal_axis(r):
+def _is_trigonal_axis(r):
+    """Check three folded rotation.
+
+    True if r^3 = identity.
+
+    """
     r3 = np.dot(np.dot(r, r), r)
     if (r3 == np.eye(3, dtype=int)).all():
         return True
@@ -203,7 +224,8 @@ def is_trigonal_axis(r):
         return False
 
 
-def determinant(a, b, c):
+def _determinant(a, b, c):
+    """Return determinant of 3x3 matrix of [a, b, c]."""
     det = (
         a[0] * b[1] * c[2]
         - a[0] * b[2] * c[1]
@@ -218,6 +240,7 @@ def determinant(a, b, c):
 def get_random_displacements_dataset(
     num_supercells, distance, num_atoms, random_seed=None
 ):
+    """Return random displacements at constant displacement distance."""
     if (
         np.issubdtype(type(random_seed), np.integer)
         and random_seed >= 0
@@ -228,7 +251,7 @@ def get_random_displacements_dataset(
         seed = None
 
     disps = (
-        get_random_directions(num_atoms * num_supercells, random_seed=random_seed)
+        _get_random_directions(num_atoms * num_supercells, random_seed=random_seed)
         * distance
     )
     supercell_disps = np.array(
@@ -241,9 +264,8 @@ def get_random_displacements_dataset(
     return dataset
 
 
-def get_random_directions(num_atoms, random_seed=None):
-    """Returns random directions in sphere with radius 1"""
-
+def _get_random_directions(num_atoms, random_seed=None):
+    """Return random directions in sphere with radius 1."""
     if (
         np.issubdtype(type(random_seed), np.integer)
         and random_seed >= 0
@@ -254,12 +276,3 @@ def get_random_directions(num_atoms, random_seed=None):
     xy = np.random.randn(3, num_atoms)
     r = np.sqrt((xy ** 2).sum(axis=0))
     return (xy / r).T
-
-
-def print_displacements(symmetry, directions=directions_diag):
-    displacements = get_least_displacements(symmetry, directions)
-    print("Least displacements:")
-    print("Atom       Directions")
-    print("----------------------------")
-    for key in displacements:
-        print("%4d  %s" % (key + 1, displacements[key]))

@@ -89,11 +89,11 @@ class GruneisenMesh(GruneisenBase):
         return self._mesh
 
     def get_qpoints(self):
-        """Return irreducible q-points."""
+        """Return (irreducible) q-points."""
         return self._qpoints
 
     def get_weights(self):
-        """Return weights of irreducible q-points."""
+        """Return weights of (irreducible) q-points."""
         return self._weights
 
     def get_eigenvalues(self):
