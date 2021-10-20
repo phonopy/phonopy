@@ -1,3 +1,4 @@
+"""Linear tetrahedron method on regular grid."""
 # copyright (C) 2013 Atsushi Togo
 # All rights reserved.
 #
@@ -46,7 +47,7 @@ def get_tetrahedra_frequencies(
     grid_order=None,
     lang="C",
 ):
-    """Returns frequencies on the relative_grid_addresses
+    """Return frequencies on the relative_grid_addresses.
 
     Parameters
     ----------
@@ -141,7 +142,9 @@ def _get_tetrahedra_frequencies_Py(
     return t_frequencies
 
 
-class TetrahedronMesh(object):
+class TetrahedronMesh:
+    """Class to perform linear tetrahedron method on regular grid."""
+
     def __init__(
         self,
         cell,
@@ -153,7 +156,7 @@ class TetrahedronMesh(object):
         grid_order=None,
         lang="C",
     ):
-        """Linear tetrahedron method on uniform mesh for phonons
+        """Linear tetrahedron method on uniform mesh for phonons.
 
         Parameters
         ----------
@@ -218,9 +221,11 @@ class TetrahedronMesh(object):
         self._prepare()
 
     def __iter__(self):
+        """Define iterator over grid points."""
         return self
 
     def __next__(self):
+        """Peform linear tetrahedron method at a grid point."""
         if self._grid_point_count == len(self._ir_grid_points):
             raise StopIteration
         else:
@@ -235,16 +240,16 @@ class TetrahedronMesh(object):
             self._grid_point_count += 1
             return self._integration_weights
 
-    def next(self):
-        return self.__next__()
-
     def get_integration_weights(self):
+        """Return integration weights."""
         return self._integration_weights
 
     def get_frequency_points(self):
+        """Return frequency points."""
         return self._frequency_points
 
     def set(self, value="I", division_number=201, frequency_points=None):
+        """Prepare environment to peform linear tetrahedron method."""
         self._grid_point_count = 0
         self._value = value
         if frequency_points is None:

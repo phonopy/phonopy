@@ -1,4 +1,4 @@
-"""Implementation of linear tetrahedon method on regular grid."""
+"""Core routine of linear tetrahedon method on regular grid."""
 # Copyright (C) 2013 Atsushi Togo
 # All rights reserved.
 #
@@ -120,7 +120,7 @@ def get_tetrahedra_integration_weight(omegas, tetrahedra_omegas, function="I"):
 
 
 class TetrahedronMethod:
-    """Class to perform linear tetrahedron method on regular grid."""
+    """Class to perform linear tetrahedron method on regular grid locally."""
 
     def __init__(self, primitive_vectors=None, mesh=None, lang="C"):
         """Init method.
