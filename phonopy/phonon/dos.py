@@ -1,3 +1,4 @@
+"""Calculation of density of states."""
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -33,12 +34,15 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
+import warnings
 import numpy as np
+from phonopy.phonon.mesh import Mesh
 from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
 
 def get_pdos_indices(symmetry):
+    """Return atomic indieces grouped by symmetry."""
     mapping = symmetry.get_map_atoms()
     return [list(np.where(mapping == i)[0]) for i in symmetry.get_independent_atoms()]
 
@@ -46,6 +50,7 @@ def get_pdos_indices(symmetry):
 def write_total_dos(
     frequency_points, total_dos, comment=None, filename="total_dos.dat"
 ):
+    """Write total_dos.dat."""
     with open(filename, "w") as fp:
         if comment is not None:
             fp.write("# %s\n" % comment)
@@ -57,11 +62,25 @@ def write_total_dos(
 def write_partial_dos(
     frequency_points, partial_dos, comment=None, filename="partial_dos.dat"
 ):
+    """Write partial_dos.dat."""
+    warnings.warn(
+        "write_partial_dos() is deprecated. Use write_projected_dos() instead.",
+        DeprecationWarning,
+    )
+    write_projected_dos(
+        frequency_points, partial_dos, comment=comment, filename=filename
+    )
+
+
+def write_projected_dos(
+    frequency_points, projected_dos, comment=None, filename="projected_dos.dat"
+):
+    """Write projected_dos.dat."""
     with open(filename, "w") as fp:
         if comment is not None:
             fp.write("# %s\n" % comment)
 
-        for freq, pdos in zip(frequency_points, partial_dos.T):
+        for freq, pdos in zip(frequency_points, projected_dos.T):
             fp.write("%20.10f" % freq)
             fp.write(("%20.10f" * len(pdos)) % tuple(pdos))
             fp.write("\n")
@@ -78,6 +97,7 @@ def plot_total_dos(
     draw_grid=True,
     flip_xy=False,
 ):
+    """Plot total DOS."""
     ax.xaxis.set_ticks_position("both")
     ax.yaxis.set_ticks_position("both")
     ax.xaxis.set_tick_params(which="both", direction="in")
@@ -126,13 +146,43 @@ def plot_partial_dos(
     draw_grid=True,
     flip_xy=False,
 ):
+    """Plot partial DOS."""
+    warnings.warn(
+        "plot_partial_dos() is deprecated. Use plot_projected_dos() instead.",
+        DeprecationWarning,
+    )
+    plot_projected_dos(
+        ax,
+        frequency_points,
+        partial_dos,
+        indices=indices,
+        legend=legend,
+        xlabel=xlabel,
+        ylabel=ylabel,
+        draw_grid=draw_grid,
+        flip_xy=flip_xy,
+    )
+
+
+def plot_projected_dos(
+    ax,
+    frequency_points,
+    projected_dos,
+    indices=None,
+    legend=None,
+    xlabel=None,
+    ylabel=None,
+    draw_grid=True,
+    flip_xy=False,
+):
+    """Plot projected DOS."""
     ax.xaxis.set_ticks_position("both")
     ax.yaxis.set_ticks_position("both")
     ax.xaxis.set_tick_params(which="both", direction="in")
     ax.yaxis.set_tick_params(which="both", direction="in")
 
     plots = []
-    num_pdos = len(partial_dos)
+    num_pdos = len(projected_dos)
 
     if indices is None:
         indices = []
@@ -152,7 +202,7 @@ def plot_partial_dos(
                     "positive." % (i + 1)
                 )
                 raise ValueError
-            pdos_sum += partial_dos[i]
+            pdos_sum += projected_dos[i]
         if flip_xy:
             plots.append(ax.plot(pdos_sum, frequency_points, linewidth=1))
         else:
@@ -169,11 +219,15 @@ def plot_partial_dos(
     ax.grid(draw_grid)
 
 
-class NormalDistribution(object):
+class NormalDistribution:
+    """Class to represent normal distribution."""
+
     def __init__(self, sigma):
+        """Init method."""
         self._sigma = sigma
 
     def calc(self, x):
+        """Return normal distribution."""
         return (
             1.0
             / np.sqrt(2 * np.pi)
@@ -182,11 +236,15 @@ class NormalDistribution(object):
         )
 
 
-class CauchyDistribution(object):
+class CauchyDistribution:
+    """Class to represent Cauchy distribution."""
+
     def __init__(self, gamma):
+        """Init method."""
         self._gamma = gamma
 
     def calc(self, x):
+        """Return Cauchy distribution."""
         return self._gamma / np.pi / (x ** 2 + self._gamma ** 2)
 
 
@@ -198,7 +256,8 @@ def run_tetrahedron_method_dos(
     grid_mapping_table,
     relative_grid_address,
     coef=None,
-):  # for each grid point
+):
+    """Return (P)DOS calculated by tetrahedron method in C."""
     try:
         import phonopy._phonopy as phonoc
     except ImportError:
@@ -230,11 +289,15 @@ def run_tetrahedron_method_dos(
         return dos.sum(axis=0).sum(axis=0) / np.prod(mesh)
 
 
-class Dos(object):
-    def __init__(self, mesh_object, sigma=None, use_tetrahedron_method=False):
+class Dos:
+    """Base class to calculate density of states."""
+
+    def __init__(self, mesh_object: Mesh, sigma=None, use_tetrahedron_method=False):
+        """Init method."""
         self._mesh_object = mesh_object
         self._frequencies = mesh_object.frequencies
         self._weights = mesh_object.weights
+        self._tetrahedron_mesh = None
         if use_tetrahedron_method and sigma is None:
             self._tetrahedron_mesh = TetrahedronMesh(
                 mesh_object.dynamical_matrix.primitive,
@@ -244,9 +307,6 @@ class Dos(object):
                 np.array(mesh_object.grid_mapping_table, dtype="int_"),
                 mesh_object.ir_grid_points,
             )
-        else:
-            self._tetrahedron_mesh = None
-
         self._frequency_points = None
         self._sigma = sigma
         self.set_draw_area()
@@ -254,13 +314,18 @@ class Dos(object):
 
     @property
     def frequency_points(self):
+        """Return frequency points."""
         return self._frequency_points
 
     def set_smearing_function(self, function_name):
-        """
-        function_name ==
-        'Normal': smearing is done by normal distribution.
-        'Cauchy': smearing is done by Cauchy distribution.
+        """Set function form for smearing method.
+
+        Parameters
+        ----------
+        function_name : str
+            'Normal': smearing is done by normal distribution.
+            'Cauchy': smearing is done by Cauchy distribution.
+
         """
         if function_name == "Cauchy":
             self._smearing_function = CauchyDistribution(self._sigma)
@@ -268,10 +333,11 @@ class Dos(object):
             self._smearing_function = NormalDistribution(self._sigma)
 
     def set_sigma(self, sigma):
+        """Set sigma."""
         self._sigma = sigma
 
     def set_draw_area(self, freq_min=None, freq_max=None, freq_pitch=None):
-
+        """Set frequency points."""
         f_min = self._frequencies.min()
         f_max = self._frequencies.max()
 
@@ -296,9 +362,11 @@ class Dos(object):
 
 
 class TotalDos(Dos):
-    def __init__(self, mesh_object, sigma=None, use_tetrahedron_method=False):
-        Dos.__init__(
-            self,
+    """Class to calculate total DOS."""
+
+    def __init__(self, mesh_object: Mesh, sigma=None, use_tetrahedron_method=False):
+        """Init method."""
+        super().__init__(
             mesh_object,
             sigma=sigma,
             use_tetrahedron_method=use_tetrahedron_method,
@@ -309,6 +377,7 @@ class TotalDos(Dos):
         self._openmp_thm = True
 
     def run(self):
+        """Calculate total DOS."""
         if self._tetrahedron_mesh is None:
             self._dos = np.array(
                 [self._get_density_of_states_at_freq(f) for f in self._frequency_points]
@@ -325,18 +394,31 @@ class TotalDos(Dos):
 
     @property
     def dos(self):
+        """Return total DOS."""
         return self._dos
 
     def get_dos(self):
+        """Return frequency points and total DOS.
+
+        Returns
+        -------
+        tuple
+            (frequency_points, total_dos)
+
         """
-        Return freqs and total dos
-        """
+        warnings.warn(
+            "TotalDos.get_dos() is deprecated. "
+            "Use frequency_points and dos attributes instead.",
+            DeprecationWarning,
+        )
         return self._frequency_points, self._dos
 
     def get_Debye_frequency(self):
+        """Return a kind of Debye frequency."""
         return self._freq_Debye
 
     def set_Debye_frequency(self, num_atoms, freq_max_fit=None):
+        """Calculate a kind of Debye frequency."""
         try:
             from scipy.optimize import curve_fit
         except ImportError:
@@ -363,6 +445,7 @@ class TotalDos(Dos):
         self._Debye_fit_coef = a2
 
     def plot(self, ax, xlabel=None, ylabel=None, draw_grid=True, flip_xy=False):
+        """Plot total DOS."""
         if flip_xy:
             _xlabel = "Density of states"
             _ylabel = "Frequency"
@@ -388,6 +471,7 @@ class TotalDos(Dos):
         )
 
     def write(self, filename="total_dos.dat"):
+        """Write total DOS to total_dos.dat."""
         if self._tetrahedron_mesh is None:
             comment = "Sigma = %f" % self._sigma
         else:
@@ -417,23 +501,25 @@ class TotalDos(Dos):
         ) / np.sum(self._weights)
 
 
-class PartialDos(Dos):
+class ProjectedDos(Dos):
+    """Class to calculate projected DOS."""
+
     def __init__(
         self,
-        mesh_object,
+        mesh_object: Mesh,
         sigma=None,
         use_tetrahedron_method=False,
         direction=None,
         xyz_projection=False,
     ):
-        Dos.__init__(
-            self,
+        """Init method."""
+        super().__init__(
             mesh_object,
             sigma=sigma,
             use_tetrahedron_method=use_tetrahedron_method,
         )
         self._eigenvectors = self._mesh_object.eigenvectors
-        self._partial_dos = None
+        self._projected_dos = None
 
         if xyz_projection:
             self._eigvecs2 = np.abs(self._eigenvectors) ** 2
@@ -458,13 +544,21 @@ class PartialDos(Dos):
 
     @property
     def partial_dos(self):
-        return self._partial_dos
+        """Return partial DOS."""
+        warnings.warn(
+            "PartialDos.partial_dos attribute is deprecated. "
+            "Use projected_dos attribute instead.",
+            DeprecationWarning,
+        )
+        return self._projected_dos
 
     @property
     def projected_dos(self):
-        return self._partial_dos
+        """Return projected DOS."""
+        return self._projected_dos
 
     def run(self):
+        """Calculate projected DOS."""
         if self._tetrahedron_mesh is None:
             self._run_smearing_method()
         else:
@@ -474,11 +568,21 @@ class PartialDos(Dos):
                 self._run_tetrahedron_method()
 
     def get_partial_dos(self):
+        """Return partial DOS.
+
+        Returns
+        -------
+        tuple
+            frequency_points: Sampling frequencies
+            projected_dos: [atom_index, frequency_points_index]
+
         """
-        frequency_points: Sampling frequencies
-        partial_dos: [atom_index, frequency_points_index]
-        """
-        return self._frequency_points, self._partial_dos
+        warnings.warn(
+            "ProjectedDos.get_partial_dos() is deprecated. "
+            "Use frequency_points and projected_dos attributes instead.",
+            DeprecationWarning,
+        )
+        return self._frequency_points, self._projected_dos
 
     def plot(
         self,
@@ -490,7 +594,7 @@ class PartialDos(Dos):
         draw_grid=True,
         flip_xy=False,
     ):
-
+        """Plot projected DOS."""
         if flip_xy:
             _xlabel = "Partial density of states"
             _ylabel = "Frequency"
@@ -503,10 +607,10 @@ class PartialDos(Dos):
         if ylabel is not None:
             _ylabel = ylabel
 
-        plot_partial_dos(
+        plot_projected_dos(
             ax,
             self._frequency_points,
-            self._partial_dos,
+            self._projected_dos,
             indices=indices,
             legend=legend,
             xlabel=_xlabel,
@@ -515,15 +619,16 @@ class PartialDos(Dos):
             flip_xy=flip_xy,
         )
 
-    def write(self, filename="partial_dos.dat"):
+    def write(self, filename="projected_dos.dat"):
+        """Write projected DOS to projected_dos.dat."""
         if self._tetrahedron_mesh is None:
             comment = "Sigma = %f" % self._sigma
         else:
             comment = "Tetrahedron method"
 
-        write_partial_dos(
+        write_projected_dos(
             self._frequency_points,
-            self._partial_dos,
+            self._projected_dos,
             comment=comment,
             filename=filename,
         )
@@ -531,24 +636,24 @@ class PartialDos(Dos):
     def _run_smearing_method(self):
         num_pdos = self._eigvecs2.shape[1]
         num_freqs = len(self._frequency_points)
-        self._partial_dos = np.zeros((num_pdos, num_freqs), dtype="double")
+        self._projected_dos = np.zeros((num_pdos, num_freqs), dtype="double")
         weights = self._weights / float(np.sum(self._weights))
         for i, freq in enumerate(self._frequency_points):
             amplitudes = self._smearing_function.calc(self._frequencies - freq)
-            for j in range(self._partial_dos.shape[0]):
-                self._partial_dos[j, i] = np.dot(
+            for j in range(self._projected_dos.shape[0]):
+                self._projected_dos[j, i] = np.dot(
                     weights, self._eigvecs2[:, j, :] * amplitudes
                 ).sum()
 
     def _run_tetrahedron_method(self):
         num_pdos = self._eigvecs2.shape[1]
         num_freqs = len(self._frequency_points)
-        self._partial_dos = np.zeros((num_pdos, num_freqs), dtype="double")
+        self._projected_dos = np.zeros((num_pdos, num_freqs), dtype="double")
         thm = self._tetrahedron_mesh
         thm.set(value="I", frequency_points=self._frequency_points)
         for i, iw in enumerate(thm):
             w = self._weights[i]
-            self._partial_dos += np.dot(iw * w, self._eigvecs2[i].T).T
+            self._projected_dos += np.dot(iw * w, self._eigvecs2[i].T).T
 
     def _run_tetrahedron_method_dos(self):
         mesh_numbers = self._mesh_object.mesh_numbers
@@ -564,4 +669,29 @@ class PartialDos(Dos):
             tm.get_tetrahedra(),
             coef=self._eigvecs2,
         )
-        self._partial_dos = pdos.T
+        self._projected_dos = pdos.T
+
+
+class PartialDos(ProjectedDos):
+    """Class to calculate partial DOS."""
+
+    def __init__(
+        self,
+        mesh_object: Mesh,
+        sigma=None,
+        use_tetrahedron_method=False,
+        direction=None,
+        xyz_projection=False,
+    ):
+        """Init method."""
+        warnings.warn(
+            "PartialDos class is deprecated. Use ProjectedDOS instead.",
+            DeprecationWarning,
+        )
+        super().__init__(
+            mesh_object,
+            sigma=sigma,
+            use_tetrahedron_method=use_tetrahedron_method,
+            direction=direction,
+            xyz_projection=xyz_projection,
+        )

@@ -72,7 +72,7 @@ from phonopy.phonon.band_structure import BandStructure, get_band_qpoints_by_see
 from phonopy.phonon.thermal_properties import ThermalProperties
 from phonopy.phonon.mesh import Mesh, IterMesh
 from phonopy.units import VaspToTHz
-from phonopy.phonon.dos import TotalDos, PartialDos
+from phonopy.phonon.dos import TotalDos, ProjectedDos
 from phonopy.phonon.thermal_displacement import (
     ThermalDisplacements,
     ThermalDisplacementMatrices,
@@ -2273,7 +2273,7 @@ class Phonopy(object):
             direction_cart = np.dot(direction, self._primitive.cell)
         else:
             direction_cart = None
-        self._pdos = PartialDos(
+        self._pdos = ProjectedDos(
             self._mesh,
             sigma=sigma,
             use_tetrahedron_method=use_tetrahedron_method,

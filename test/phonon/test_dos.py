@@ -1,6 +1,8 @@
 """Tests for DOS."""
 import os
 import numpy as np
+from phonopy import Phonopy
+from phonopy.phonon.dos import get_pdos_indices
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -104,3 +106,10 @@ def testPartialDOSTetrahedron(ph_nacl_nofcsym):
     np.testing.assert_allclose(data_ref, np.vstack([freqs, pdos]), atol=1e-5)
     # for f, d in zip(freqs, pdos.T):
     #     print(("%f" + " %f" * len(d)) % ((f, ) + tuple(d)))
+
+
+def test_get_pdos_indices(ph_tio2: Phonopy):
+    """Test get_pdos_indices by TiO2."""
+    indices = get_pdos_indices(ph_tio2.primitive_symmetry)
+    np.testing.assert_array_equal(indices[0], [0, 1, 2, 3])
+    np.testing.assert_array_equal(indices[1], [4, 5])
