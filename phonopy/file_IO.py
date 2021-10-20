@@ -1,3 +1,4 @@
+"""File I/O related routines."""
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -33,13 +34,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
-
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+from io import StringIO
 import numpy as np
-
 import yaml
 
 try:
@@ -58,6 +54,11 @@ from phonopy.harmonic.force_constants import similarity_transformation
 # FORCE_SETS
 #
 def write_FORCE_SETS(dataset, filename="FORCE_SETS"):
+    """Write FORCE_SETS from dataset.
+
+    See more detail in ``get_FORCE_SETS_lines``.
+
+    """
     lines = get_FORCE_SETS_lines(dataset)
     with open(filename, "w") as w:
         w.write("\n".join(lines))
@@ -65,15 +66,14 @@ def write_FORCE_SETS(dataset, filename="FORCE_SETS"):
 
 
 def get_FORCE_SETS_lines(dataset, forces=None):
-    """Generate FORCE_SETS string
+    """Generate FORCE_SETS string.
 
     See the format of dataset in the docstring of
-    Phonopy.set_displacement_dataset. Optionally, sets of forces of supercells
+    Phonopy.dataset. Optionally, sets of forces of supercells
     can be given. In this case, these forces are unnecessary to be stored
     in the dataset.
 
     """
-
     if "first_atoms" in dataset:
         return _get_FORCE_SETS_lines_type1(dataset, forces=forces)
     elif "displacements" in dataset:
@@ -112,42 +112,37 @@ def _get_FORCE_SETS_lines_type2(dataset):
     return lines
 
 
-def parse_FORCE_SETS(
-    natom=None, is_translational_invariance=False, filename="FORCE_SETS", to_type2=False
-):
-    """
+def parse_FORCE_SETS(natom=None, filename="FORCE_SETS", to_type2=False):
+    """Parse FORCE_SETS from file.
 
     to_type2 : bool
         dataset of type2 is returned when True.
 
-    """
+    Returns
+    -------
+    dataset : dict
+        Displacement dataset. See Phonopy.dataset.
 
+    """
     with open(filename, "r") as f:
         return _get_dataset(
             f,
             natom=natom,
-            is_translational_invariance=is_translational_invariance,
             to_type2=to_type2,
         )
 
 
-def parse_FORCE_SETS_from_strings(
-    strings, natom=None, is_translational_invariance=False, to_type2=False
-):
-    return _get_dataset(
-        StringIO(strings),
-        natom=natom,
-        is_translational_invariance=is_translational_invariance,
-        to_type2=to_type2,
-    )
+def parse_FORCE_SETS_from_strings(strings, natom=None, to_type2=False):
+    """Parse FORCE_SETS from strings."""
+    return _get_dataset(StringIO(strings), natom=natom, to_type2=to_type2)
 
 
-def _get_dataset(f, natom=None, is_translational_invariance=False, to_type2=False):
+def _get_dataset(f, natom=None, to_type2=False):
     first_line_ary = _get_line_ignore_blank(f).split()
     f.seek(0)
     if len(first_line_ary) == 1:
         if natom is None or int(first_line_ary[0]) == natom:
-            dataset = _get_dataset_type1(f, is_translational_invariance)
+            dataset = _get_dataset_type1(f)
         else:
             msg = "Number of forces is not consistent with supercell setting."
             raise RuntimeError(msg)
@@ -159,10 +154,10 @@ def _get_dataset(f, natom=None, is_translational_invariance=False, to_type2=Fals
             return dataset
 
     elif len(first_line_ary) == 6:
-        return _get_dataset_type2(f, natom)
+        return get_dataset_type2(f, natom)
 
 
-def _get_dataset_type1(f, is_translational_invariance):
+def _get_dataset_type1(f):
     set_of_forces = []
     num_atom = int(_get_line_ignore_blank(f))
     num_displacements = int(_get_line_ignore_blank(f))
@@ -177,10 +172,6 @@ def _get_dataset_type1(f, is_translational_invariance):
             line = _get_line_ignore_blank(f).split()
             forces_tmp.append(np.array([float(x) for x in line]))
         forces_tmp = np.array(forces_tmp, dtype="double")
-
-        if is_translational_invariance:
-            forces_tmp -= np.sum(forces_tmp, axis=0) / len(forces_tmp)
-
         forces = {
             "number": atom_number - 1,
             "displacement": displacement,
@@ -194,10 +185,7 @@ def _get_dataset_type1(f, is_translational_invariance):
 
 
 def get_dataset_type2(f, natom):
-    return _get_dataset_type2(f, natom)
-
-
-def _get_dataset_type2(f, natom):
+    """Parse type2 FORCE_SETS text and return dataset."""
     data = np.loadtxt(f, dtype="double")
     if data.shape[1] != 6 or (natom and data.shape[0] % natom != 0):
         msg = "Data shape of forces and displacements is incorrect."
@@ -224,6 +212,38 @@ def _get_line_ignore_blank(f):
 
 
 def collect_forces(f, num_atom, hook, force_pos, word=None):
+    """General function to collect forces from lines of a text file.
+
+    Parameters
+    ----------
+    f :
+        Text file pointer such as that returned by ``open(filename)``.
+    num_atom : int
+        Number of atoms in cell. Quit parsing when number of forces reaches this
+        number.
+    hook : str
+        When this word is found at a line, parsing will start from the next line.
+    force_pos : list
+        Positions of force values in `line.split()`.
+    word : str, optional
+        Lines containing this word is only parsed. Default is None.
+
+    Example
+    -------
+    The following is the abinit output.
+
+    ...
+    cartesian forces (hartree/bohr) at end:
+    1     -0.00093686935947    -0.00000000000000    -0.00000000000000
+    2      0.00015427277409    -0.00000000000000    -0.00000000000000
+    3     -0.00000200377550    -0.00000000000000    -0.00000000000000
+    4      0.00000619017547    -0.00000000000000    -0.00000000000000
+    ...
+
+    hook = "cartesian forces (eV/Angstrom)"
+    force_pos = [1, 2, 3]
+
+    """
     for line in f:
         if hook in line:
             break
@@ -253,6 +273,11 @@ def collect_forces(f, num_atom, hook, force_pos, word=None):
 
 
 def iter_collect_forces(filename, num_atom, hook, force_pos, word=None, max_iter=1000):
+    """Repeat ``collect_forces`` to get the last set of forces in the file.
+
+    Details of parameters are explained in ``collect_forces``.
+
+    """
     with open(filename) as f:
         forces = []
         prev_forces = []
@@ -290,13 +315,17 @@ def write_FORCE_CONSTANTS(force_constants, filename="FORCE_CONSTANTS", p2s_map=N
         dtype=intc
 
     """
-
     lines = get_FORCE_CONSTANTS_lines(force_constants, p2s_map=p2s_map)
     with open(filename, "w") as w:
         w.write("\n".join(lines))
 
 
 def get_FORCE_CONSTANTS_lines(force_constants, p2s_map=None):
+    """Return text in FORCE_CONSTANTS format.
+
+    See also ``write_FORCE_CONSTANTS``.
+
+    """
     if p2s_map is not None and len(p2s_map) == force_constants.shape[0]:
         indices = p2s_map
     else:
@@ -343,7 +372,6 @@ def write_force_constants_to_hdf5(
         None.
 
     """
-
     try:
         import h5py
     except ImportError:
@@ -363,6 +391,16 @@ def write_force_constants_to_hdf5(
 
 
 def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS", p2s_map=None):
+    """Parse FORCE_CONSTANTS.
+
+    Parameters
+    ----------
+    filename : str, optional
+        Filename.
+    p2s_map : ndarray, optional
+        Primitive.p2s_map. Supplied, this is used to check file format consistency.
+
+    """
     with open(filename) as fcfile:
         idx1 = []
 
@@ -389,6 +427,19 @@ def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS", p2s_map=None):
 def read_force_constants_hdf5(
     filename="force_constants.hdf5", p2s_map=None, return_physical_unit=False
 ):
+    """Parse force_constants.hdf5.
+
+    Parameters
+    ----------
+    filename : str, optional
+        Filename.
+    p2s_map : ndarray, optional
+        Primitive.p2s_map. Supplied, this is used to check file format consistency.
+    return_physical_unit : bool, optional
+        When True and physical_unit is in file, physical unit is returned.
+        Default is False.
+
+    """
     try:
         import h5py
     except ImportError:
@@ -420,6 +471,7 @@ def read_force_constants_hdf5(
 
 
 def check_force_constants_indices(shape, indices, p2s_map, filename):
+    """Check consistency of force constants data type."""
     if shape[0] != shape[1] and p2s_map is not None:
         if len(p2s_map) != len(indices) or (p2s_map != indices).any():
             text = (
@@ -430,7 +482,7 @@ def check_force_constants_indices(shape, indices, p2s_map, filename):
 
 
 def parse_disp_yaml(filename="disp.yaml", return_cell=False):
-    """Read disp.yaml or phonopy_disp.yaml
+    """Read disp.yaml or phonopy_disp.yaml.
 
     This method was originally made for parsing disp.yaml. Later this
     started to work for phonopy_disp.yaml, too. But now this method is not
@@ -438,7 +490,6 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
     class.
 
     """
-
     with open(filename) as f:
         new_dataset = {}
         dataset = yaml.load(f, Loader=Loader)
@@ -474,6 +525,11 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
 
 
 def write_disp_yaml_from_dataset(dataset, supercell, filename="disp.yaml"):
+    """Write disp.yaml from dataset.
+
+    This function is obsolete, because disp.yaml is obsolete.
+
+    """
     displacements = [
         (d["number"],) + tuple(d["displacement"]) for d in dataset["first_atoms"]
     ]
@@ -481,16 +537,21 @@ def write_disp_yaml_from_dataset(dataset, supercell, filename="disp.yaml"):
 
 
 def write_disp_yaml(displacements, supercell, filename="disp.yaml"):
+    """Write disp.yaml from displacements.
+
+    This function is obsolete, because disp.yaml is obsolete.
+
+    """
     lines = []
     lines.append("natom: %4d" % supercell.get_number_of_atoms())
-    lines += get_disp_yaml_lines(displacements, supercell)
+    lines += _get_disp_yaml_lines(displacements, supercell)
     lines.append(str(supercell))
 
     with open(filename, "w") as w:
         w.write("\n".join(lines))
 
 
-def get_disp_yaml_lines(displacements, supercell):
+def _get_disp_yaml_lines(displacements, supercell):
     lines = []
     lines.append("displacements:")
     for i, disp in enumerate(displacements):
@@ -504,6 +565,11 @@ def get_disp_yaml_lines(displacements, supercell):
 # DISP (old phonopy displacement format)
 #
 def parse_DISP(filename="DISP"):
+    """Parse DISP file.
+
+    This function is obsolete, because DISP is obsolete.
+
+    """
     with open(filename) as disp:
         displacements = []
         for line in disp:
@@ -519,6 +585,7 @@ def parse_DISP(filename="DISP"):
 # Parse supercell in disp.yaml
 #
 def get_cell_from_disp_yaml(dataset):
+    """Read cell from disp.yaml like file."""
     if "lattice" in dataset:
         lattice = dataset["lattice"]
         if "points" in dataset:
@@ -553,6 +620,7 @@ def get_cell_from_disp_yaml(dataset):
 # QPOINTS
 #
 def parse_QPOINTS(filename="QPOINTS"):
+    """Read QPOINTS file."""
     with open(filename, "r") as f:
         num_qpoints = int(f.readline().strip())
         qpoints = []
@@ -565,6 +633,7 @@ def parse_QPOINTS(filename="QPOINTS"):
 # BORN
 #
 def write_BORN(primitive, borns, epsilon, filename="BORN"):
+    """Write BORN from NAC paramters."""
     lines = get_BORN_lines(primitive, borns, epsilon)
     with open(filename, "w") as w:
         w.write("\n".join(lines))
@@ -579,6 +648,7 @@ def get_BORN_lines(
     supercell_matrix=None,
     symprec=1e-5,
 ):
+    """Generate text of BORN file."""
     borns, epsilon, atom_indices = elaborate_borns_and_epsilon(
         unitcell,
         borns,
@@ -601,11 +671,30 @@ def get_BORN_lines(
 
 
 def parse_BORN(primitive, symprec=1e-5, is_symmetry=True, filename="BORN"):
+    """Parse BORN file.
+
+    Parameters
+    ----------
+    primitive : Primitive
+        Primitive cell.
+    symprec : float, optional
+        Symmetry tolerance. Default is 1e-5.
+    is_symmetry : bool, optional
+        When True, parse values are symmetrized. Default is True.
+    filename : str, optional
+        Filename.
+
+    """
     with open(filename, "r") as f:
         return _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry)
 
 
 def parse_BORN_from_strings(strings, primitive, symprec=1e-5, is_symmetry=True):
+    """Parse BORN file text.
+
+    See `parse_BORN` for parameters.
+
+    """
     f = StringIO(strings)
     return _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry)
 
@@ -616,6 +705,18 @@ def _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry):
 
 
 def get_born_parameters(f, primitive, prim_symmetry):
+    """Parse BORN file text.
+
+    Parameters
+    ----------
+    f :
+        File pointer of BORN file.
+    primitive : Primitive
+        Primitive cell.
+    prim_symmetry : Symmetry
+        Symmetry of primitive cell.
+
+    """
     line_arr = f.readline().split()
     if len(line_arr) < 1:
         print("BORN file format of line 1 is incorrect")
@@ -702,6 +803,32 @@ def _expand_borns(borns, primitive, prim_symmetry):
 # phonopy.yaml
 #
 def is_file_phonopy_yaml(filename, keyword="phonopy"):
+    """Check whether the file is phonopy.yaml like file or not.
+
+    Parameters
+    ----------
+    filename : str
+        Filename.
+    keyword : str
+        When this keyword is found in dict keys returned by yaml loader,
+        this function return True.
+
+    Example
+    -------
+    The initial part of phonopy_disp.yaml is like below.
+
+        phonopy:
+          version: 2.7.0
+          frequency_unit_conversion_factor: 15.633302
+          symmetry_tolerance: 1.00000e-05
+          configuration:
+              cell_filename: "POSCAR-unitcell"
+              create_displacements: ".true."
+              primitive_axes: "auto"
+              dim: "2 2 2"
+        ...
+
+    """
     with open(filename, "r") as f:
         try:
             data = yaml.load(f, Loader=Loader)
@@ -719,6 +846,7 @@ def is_file_phonopy_yaml(filename, keyword="phonopy"):
 # e-v.dat, thermal_properties.yaml
 #
 def read_thermal_properties_yaml(filenames):
+    """Read thermal_properties.yaml."""
     thermal_properties = []
     num_modes = []
     num_integrated_modes = []
@@ -764,6 +892,7 @@ def read_thermal_properties_yaml(filenames):
 
 
 def read_v_e(filename):
+    """Read v-e.dat file."""
     data = _parse_QHA_data(filename)
     if data.shape[1] != 2:
         msg = "File format of %s is incorrect for reading e-v data." % filename
@@ -773,6 +902,7 @@ def read_v_e(filename):
 
 
 def read_efe(filename):
+    """Read fe-v.dat (efe) file."""
     data = _parse_QHA_data(filename)
     temperatures = data[:, 0]
     free_energies = data[:, 1:]

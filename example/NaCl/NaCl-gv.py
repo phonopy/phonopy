@@ -1,3 +1,4 @@
+"""Group velocity example by NaCl."""
 import numpy as np
 import phonopy
 import matplotlib.pyplot as plt

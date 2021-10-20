@@ -1,3 +1,4 @@
+"""Example by corundum Al2O3."""
 import phonopy
 import numpy as np
 
