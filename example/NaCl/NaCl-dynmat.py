@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+"""NaCl example to obtain dynamical matrix."""
 
 import phonopy
 import yaml

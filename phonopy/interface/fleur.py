@@ -1,3 +1,4 @@
+"""Fleur calculator interface."""
 # Copyright (C) 2021 Alexander Neukirchen
 # All rights reserved.
 #
@@ -48,6 +49,7 @@ from phonopy.structure.atoms import symbol_map
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+    """Parse forces from output files."""
     hook = "1 #"
     is_parsed = True
     force_sets = []
@@ -72,6 +74,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
 
 
 def read_fleur(filename):
+    """Read crystal structure."""
     fleur_in = FleurIn(open(filename).readlines())
     tags = fleur_in.get_variables()
     avec = [tags["avec"][i] for i in range(3)]
@@ -102,6 +105,7 @@ def read_fleur(filename):
 
 
 def write_fleur(filename, cell, speci, N, restlines):
+    """Write crystal structure to file."""
     f = open(filename, "w")
     f.write(get_fleur_structure(cell, speci, N, restlines))
 
@@ -116,6 +120,7 @@ def write_supercells_with_displacements(
     pre_filename="supercell",
     width=3,
 ):
+    """Write supercells with displacements to files."""
     write_fleur("%s.in" % pre_filename, supercell, speci, N, restlines)
     for i, cell in zip(ids, cells_with_displacements):
         filename = "{pre_filename}-{0:0{width}}.in".format(
@@ -125,6 +130,7 @@ def write_supercells_with_displacements(
 
 
 def get_fleur_structure(cell, speci, N, restlines):
+    """Return Fleur structure in text."""
     lattice = cell.get_cell()
     (num_atoms, symbols, scaled_positions, sort_list) = sort_positions_by_symbols(
         cell.get_chemical_symbols(), cell.get_scaled_positions()
@@ -156,8 +162,11 @@ def get_fleur_structure(cell, speci, N, restlines):
     return lines
 
 
-class FleurIn(object):
+class FleurIn:
+    """Class to generate Fleur crystal structure."""
+
     def __init__(self, lines):
+        """Init method."""
         self._set_methods = {"a1": self._set_avec, "atoms": self._set_atoms}
         self._tags = {"atoms": None, "a1": None}
         self._lines = lines[:]
@@ -165,6 +174,7 @@ class FleurIn(object):
         self._collect()
 
     def get_variables(self):
+        """Return variables."""
         return self._tags
 
     def _collect(self):

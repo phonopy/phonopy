@@ -1,3 +1,4 @@
+"""Implementation of linear tetrahedon method on regular grid."""
 # Copyright (C) 2013 Atsushi Togo
 # All rights reserved.
 #
@@ -59,7 +60,7 @@ parallelepiped_vertices = np.array(
 
 
 def get_tetrahedra_relative_grid_address(microzone_lattice):
-    """Returns relative (differences of) grid addresses from the central
+    """Return relative (differences of) grid addresses from the central.
 
     Parameter
     ---------
@@ -68,7 +69,6 @@ def get_tetrahedra_relative_grid_address(microzone_lattice):
         microzone_lattice = np.linalg.inv(cell.get_cell()) / mesh
 
     """
-
     relative_grid_address = np.zeros((24, 4, 3), dtype="int_", order="C")
     phonoc.tetrahedra_relative_grid_address(
         relative_grid_address, np.array(microzone_lattice, dtype="double", order="C")
@@ -78,7 +78,7 @@ def get_tetrahedra_relative_grid_address(microzone_lattice):
 
 
 def get_all_tetrahedra_relative_grid_address():
-    """Returns relative grid addresses dataset
+    """Return relative grid addresses dataset.
 
     This exists only for the test.
 
@@ -90,7 +90,7 @@ def get_all_tetrahedra_relative_grid_address():
 
 
 def get_tetrahedra_integration_weight(omegas, tetrahedra_omegas, function="I"):
-    """Returns integration weights
+    """Return integration weights.
 
     Parameters
     ----------
@@ -104,7 +104,6 @@ def get_tetrahedra_integration_weight(omegas, tetrahedra_omegas, function="I"):
         'J' is for intetration and 'I' is for its derivative.
 
     """
-
     if isinstance(omegas, float):
         return phonoc.tetrahedra_integration_weight(
             omegas, np.array(tetrahedra_omegas, dtype="double", order="C"), function
@@ -120,8 +119,21 @@ def get_tetrahedra_integration_weight(omegas, tetrahedra_omegas, function="I"):
         return integration_weights
 
 
-class TetrahedronMethod(object):
-    def __init__(self, primitive_vectors=None, mesh=None, lang="C"):  # column vectors
+class TetrahedronMethod:
+    """Class to perform linear tetrahedron method on regular grid."""
+
+    def __init__(self, primitive_vectors=None, mesh=None, lang="C"):
+        """Init method.
+
+        Parameters
+        ----------
+        primitive_vectors : ndarray
+            a, b, c in column vectors.
+            shape=(3, 3)
+        mesh : array_like
+            Mesh numbers.
+
+        """
         if mesh is None:
             mesh = [1, 1, 1]
         if primitive_vectors is None:
@@ -142,18 +154,26 @@ class TetrahedronMethod(object):
         self._integration_weight = None
 
     def run(self, omegas, value="I"):
+        """Perform tetrahedron method.
+
+        Parameters
+        ----------
+        value : str of "I" or "J"
+            "I": Imaginary part (delta function).
+            "J": Integral function of imaginary part.
+
+        """
         if self._lang == "C":
             self._run_c(omegas, value=value)
         else:
             self._run_py(omegas, value=value)
 
     def get_tetrahedra(self):
-        """
-        Returns relative grid addresses at vertices of tetrahedra
-        """
+        """Return relative grid addresses at vertices of tetrahedra."""
         return self._relative_grid_addresses
 
     def get_unique_tetrahedra_vertices(self):
+        """Return unique grid indices in neighboring tetrahedra."""
         unique_vertices = []
         for adrs in self._relative_grid_addresses.reshape(-1, 3):
             found = False
@@ -166,12 +186,15 @@ class TetrahedronMethod(object):
         return np.array(unique_vertices, dtype="int_", order="C")
 
     def set_tetrahedra_omegas(self, tetrahedra_omegas):
-        """
+        """Set values on vertices of tetrahedra.
+
         tetrahedra_omegas: (24, 4) omegas at self._relative_grid_addresses
+
         """
         self._tetrahedra_omegas = tetrahedra_omegas
 
     def get_integration_weight(self):
+        """Return integration weights."""
         return self._integration_weight
 
     def _run_c(self, omegas, value="I"):
@@ -400,15 +423,27 @@ class TetrahedronMethod(object):
             assert False
 
     def _n_0(self):
-        """omega < omega1"""
+        """n0.
+
+        omega < omega1
+
+        """
         return 0.0
 
     def _n_1(self):
-        """omega1 < omega < omega2"""
+        """n1.
+
+        omega1 < omega < omega2
+
+        """
         return self._f(1, 0) * self._f(2, 0) * self._f(3, 0)
 
     def _n_2(self):
-        """omega2 < omega < omega3"""
+        """n2.
+
+        omega2 < omega < omega3
+
+        """
         return (
             self._f(3, 1) * self._f(2, 1)
             + self._f(3, 0) * self._f(1, 3) * self._f(2, 1)
@@ -416,19 +451,35 @@ class TetrahedronMethod(object):
         )
 
     def _n_3(self):
-        """omega2 < omega < omega3"""
+        """n3.
+
+        omega2 < omega < omega3
+
+        """
         return 1.0 - self._f(0, 3) * self._f(1, 3) * self._f(2, 3)
 
     def _n_4(self):
-        """omega4 < omega"""
+        """n4.
+
+        omega4 < omega
+
+        """
         return 1.0
 
     def _g_0(self):
-        """omega < omega1"""
+        """g0.
+
+        omega < omega1
+
+        """
         return 0.0
 
     def _g_1(self):
-        """omega1 < omega < omega2"""
+        """g1.
+
+        omega1 < omega < omega2
+
+        """
         # return 3 * self._n_1() / (self._omega - self._vertices_omegas[0])
         return (
             3
@@ -438,7 +489,11 @@ class TetrahedronMethod(object):
         )
 
     def _g_2(self):
-        """omega2 < omega < omega3"""
+        """g2.
+
+        omega2 < omega < omega3
+
+        """
         return (
             3
             / (self._vertices_omegas[3] - self._vertices_omegas[0])
@@ -446,7 +501,11 @@ class TetrahedronMethod(object):
         )
 
     def _g_3(self):
-        """omega3 < omega < omega4"""
+        """g3.
+
+        omega3 < omega < omega4
+
+        """
         # return 3 * (1.0 - self._n_3()) / (self._vertices_omegas[3] - self._omega)
         return (
             3
@@ -456,7 +515,11 @@ class TetrahedronMethod(object):
         )
 
     def _g_4(self):
-        """omega4 < omega"""
+        """g4.
+
+        omega4 < omega
+
+        """
         return 0.0
 
     def _J_0(self):

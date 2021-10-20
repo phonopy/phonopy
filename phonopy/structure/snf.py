@@ -1,3 +1,4 @@
+"""Calculation of Smith normal form of 3x3 matrix."""
 # Copyright (C) 2020 Atsushi Togo
 # All rights reserved.
 #
@@ -39,8 +40,8 @@ import numpy as np
 # Smith normal form for 3x3 integer matrix
 # This code is maintained at https://github.com/atztogo/snf3x3.
 #
-class SNF3x3(object):
-    """Smith normal form for 3x3 matrix
+class SNF3x3:
+    """Smith normal form for 3x3 matrix.
 
     Input 3x3 interger matrix A is transformed to 3x3 diagonal interger
     matrix (D) by two 3x3 interger matrices P and Q, which is written as
@@ -67,7 +68,7 @@ class SNF3x3(object):
     """
 
     def __init__(self, A):
-        """
+        """Init method.
 
         Parameters
         ----------
@@ -76,7 +77,6 @@ class SNF3x3(object):
             shape=(3, 3)
 
         """
-
         self._A_orig = np.array(A, dtype="int_", order="C")
         self._A = np.array(A, dtype="int_", order="C")
         self._Ps = []
@@ -88,6 +88,7 @@ class SNF3x3(object):
         self._attempt = 0
 
     def run(self):
+        """Calculate SNF."""
         for i in self:
             pass
 
@@ -95,9 +96,11 @@ class SNF3x3(object):
         assert (A == self._A).all()
 
     def __iter__(self):
+        """Define iterator over calculation steps."""
         return self
 
     def __next__(self):
+        """Calculate an algorithm step."""
         self._attempt += 1
         if self._first():
             if self._second():
@@ -105,23 +108,24 @@ class SNF3x3(object):
                 raise StopIteration
         return self._attempt
 
-    def next(self):
-        self.__next__()
-
     @property
     def A(self):
+        """Return A of D = PAQ."""
         return self._A
 
     @property
     def D(self):
+        """Return D of D = PAQ."""
         return self._D
 
     @property
     def P(self):
+        """Return P of D = PAQ."""
         return self._P
 
     @property
     def Q(self):
+        """Return Q of D = PAQ."""
         return self._Q
 
     def _first(self):
@@ -171,12 +175,11 @@ class SNF3x3(object):
         return -1
 
     def _first_finalize(self):
-        """Set zeros along the first colomn except for A[0, 0]
+        """Set zeros along the first colomn except for A[0, 0].
 
         This is possible only when A[1,0] and A[2,0] are dividable by A[0,0].
 
         """
-
         A = self._A
         L = np.eye(3, dtype="int_")
         L[1, 0] = -A[1, 0] // A[0, 0]
@@ -185,8 +188,7 @@ class SNF3x3(object):
         self._A[:] = np.dot(L, self._A)
 
     def _second(self):
-        """Find Smith normal form for Right-low 2x2 matrix"""
-
+        """Find Smith normal form for Right-low 2x2 matrix."""
         self._second_one_loop()
         A = self._A
         if A[2, 1] == 0:
@@ -210,12 +212,11 @@ class SNF3x3(object):
         self._A[:] = self._A.T
 
     def _second_column(self):
-        """Right-low 2x2 matrix
+        """Right-low 2x2 matrix.
 
         Assume elements in first row and column are all zero except for A[0,0].
 
         """
-
         if self._A[1, 1] == 0 and self._A[2, 1] != 0:
             self._swap_rows(1, 2)
 
@@ -228,12 +229,11 @@ class SNF3x3(object):
         self._set_zero(1, 2, A[1, 1], A[2, 1], r, s, t)
 
     def _second_finalize(self):
-        """Set zero at A[2, 1]
+        """Set zero at A[2, 1].
 
         This is possible only when A[2,1] is dividable by A[1,1].
 
         """
-
         A = self._A
         L = np.eye(3, dtype="int_")
         L[2, 1] = -A[2, 1] // A[1, 1]
@@ -290,12 +290,11 @@ class SNF3x3(object):
         self._A[:] = self._A.T
 
     def _swap_rows(self, i, j):
-        """Swap i and j rows
+        """Swap i and j rows.
 
         As the side effect, determinant flips.
 
         """
-
         L = np.eye(3, dtype="int_")
         L[i, i] = 0
         L[j, j] = 0
@@ -305,21 +304,19 @@ class SNF3x3(object):
         self._A[:] = np.dot(L, self._A)
 
     def _flip_sign_row(self, i):
-        """Multiply -1 for all elements in row"""
-
+        """Multiply -1 for all elements in row."""
         L = np.eye(3, dtype="int_")
         L[i, i] = -1
         self._L.append(L.copy())
         self._A[:] = np.dot(L, self._A)
 
     def _set_zero(self, i, j, a, b, r, s, t):
-        """Let A[i, j] be zero based on Bezout's identity
+        """Let A[i, j] be zero based on Bezout's identity.
 
         [ii ij]
         [ji jj] is a (k,k) minor of original 3x3 matrix.
 
         """
-
         L = np.eye(3, dtype="int_")
         L[i, i] = s
         L[i, j] = t
@@ -353,15 +350,20 @@ class SNF3x3(object):
 
 
 def xgcd(vals):
+    """Calculate extended greatest commond divisor."""
     _xgcd = Xgcd(vals)
     return _xgcd.run()
 
 
-class Xgcd(object):
+class Xgcd:
+    """Class to implement extended Euclidean algorithm."""
+
     def __init__(self, vals):
+        """Init method."""
         self._vals = np.array(vals, dtype="intc")
 
     def run(self):
+        """Calculate extended GCD."""
         r0, r1 = self._vals
         s0 = 1
         s1 = 0
@@ -393,6 +395,7 @@ class Xgcd(object):
         return r1, r2, s1, s2, t1, t2
 
     def __str__(self):
+        """Show GCD relation."""
         v = self._vals
         r, s, t = self._rst
         return "%d = %d * (%d) + %d * (%d)" % (r, v[0], s, v[1], t)

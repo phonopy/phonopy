@@ -97,15 +97,19 @@ class GruneisenMesh(GruneisenBase):
         return self._weights
 
     def get_eigenvalues(self):
+        """Return eigenvalues of dynamical matrices."""
         return self._eigenvalues
 
     def get_eigenvectors(self):
+        """Return phonon eigenvectors."""
         return self._eigenvectors
 
     def get_frequencies(self):
+        """Return phonon frequencies."""
         return self._frequencies
 
     def write_yaml(self, comment=None, filename=None, compression=None):
+        """Write results in yaml file."""
         if filename is not None:
             _filename = filename
 
@@ -170,6 +174,7 @@ class GruneisenMesh(GruneisenBase):
             w.write(text)
 
     def write_hdf5(self, filename="gruneisen.hdf5"):
+        """Write results in hdf5 file."""
         import h5py
 
         w = h5py.File(filename, "w")
@@ -183,6 +188,7 @@ class GruneisenMesh(GruneisenBase):
     def plot(
         self, plt, cutoff_frequency=None, color_scheme=None, marker="o", markersize=None
     ):
+        """Return pyplot of calculation results."""
         n = len(self._gamma.T) - 1
         for i, (g, freqs) in enumerate(zip(self._gamma.T, self._frequencies.T)):
             if cutoff_frequency:

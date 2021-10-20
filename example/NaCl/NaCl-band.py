@@ -1,3 +1,4 @@
+"""NaCl band structure calculation example."""
 import phonopy
 from phonopy.phonon.band_structure import get_band_qpoints
 

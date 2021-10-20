@@ -1,3 +1,4 @@
+"""CP2K calculator interface."""
 # vim: set fileencoding=utf-8 :
 # Copyright (C) 2017-2019 Tiziano Müller
 # All rights reserved.
@@ -46,6 +47,7 @@ from phonopy.structure.atoms import PhonopyAtoms, symbol_map
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+    """Parse forces from output files."""
     force_sets = []
 
     for i, filename in enumerate(forces_filenames):
@@ -66,6 +68,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
 
 
 def read_cp2k(filename):
+    """Read crystal structure."""
     from cp2k_input_tools.parser import CP2KInputParser
 
     with open(filename) as fhandle:
@@ -173,7 +176,7 @@ def write_supercells_with_displacements(
     pre_filename="supercell",
     width=3,
 ):
-
+    """Write supercells with displacements to files."""
     orig_fname, tree = optional_structure_info
 
     fbase, fext = path.splitext(orig_fname)
@@ -209,7 +212,7 @@ def write_supercells_with_displacements(
 
 
 def write_cp2k_by_filename(filename, cell, tree, header=None):
-    """Simple wrapper of write_cp2k to write an arbitrary unit cell
+    """Wrap write_cp2k to write an arbitrary unit cell.
 
     Note
     ----
@@ -219,7 +222,6 @@ def write_cp2k_by_filename(filename, cell, tree, header=None):
     Please rewrite if somebody who knows well about cp2k input.
 
     """
-
     fbase, fext = path.splitext(filename)
     pbase = tree["+global"]["project_name"]
     project_name = "{}-{}".format(pbase, fbase)
@@ -235,14 +237,13 @@ def write_cp2k_by_filename(filename, cell, tree, header=None):
 
 
 def write_cp2k(fhandle, project_name, atoms, tree):
-    """Merge the new the atoms structure with the configuration tree to a new CP2K input file
+    """Merge the new the atoms structure with the configuration tree to a new CP2K input file.
 
     :param fhandle: open file handle to which the routine will write to
     :param project_name: the project name to use (CP2K uses that as prefix for generated files)i
     :param atoms: the Atoms objects to use
     :param tree: the configuration tree as returned from CP2KInputParser
     """
-
     from cp2k_input_tools.generator import CP2KInputGenerator
 
     generator = CP2KInputGenerator()
