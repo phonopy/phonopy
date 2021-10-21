@@ -1,3 +1,4 @@
+"""Mode Grueneisen paramater calculation."""
 # Copyright (C) 2017 Atsushi Togo
 # All rights reserved.
 #

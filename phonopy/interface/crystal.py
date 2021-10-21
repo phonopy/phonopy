@@ -1,3 +1,4 @@
+"""CRYSTAL calculator interface."""
 # Copyright (C) 2016 Antti J. Karttunen (antti.j.karttunen@iki.fi)
 # All rights reserved.
 #
@@ -43,6 +44,7 @@ from phonopy.structure.symmetry import Symmetry
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+    """Parse forces from output files."""
     hook = "ATOM                     X                   Y                   Z"
     force_sets = []
     for i, filename in enumerate(forces_filenames):
@@ -72,6 +74,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
 
 
 def read_crystal(filename):
+    """Read crystal structure."""
     f_crystal = open(filename)
     crystal_in = CrystalIn(f_crystal.readlines())
     f_crystal.close()
@@ -112,6 +115,7 @@ def read_crystal(filename):
 def write_crystal(
     filename, cell, conv_numbers, template_file="TEMPLATE", write_symmetry=False
 ):
+    """Write cell to file."""
     # Write geometry in EXTERNAL file (fort.34)
     f_ext = open(filename + ".ext", "w")
     f_ext.write(get_crystal_structure(cell, conv_numbers, write_symmetry))
@@ -162,6 +166,7 @@ def write_supercells_with_displacements(
     width=3,
     template_file="TEMPLATE",
 ):
+    """Write supercells with displacements to files."""
     convnum_super = []
     for i in conv_numbers:
         for j in range(num_unitcells_in_supercell):
@@ -197,6 +202,7 @@ def write_supercells_with_displacements(
 
 
 def get_crystal_structure(cell, conv_numbers, write_symmetry=False):
+    """Return CRYSTAL structure in text."""
     lattice = cell.get_cell()
     positions = cell.get_positions()
 
@@ -240,7 +246,10 @@ def get_crystal_structure(cell, conv_numbers, write_symmetry=False):
 
 
 class CrystalIn:
+    """Class to create CRYSTAL input file."""
+
     def __init__(self, lines):
+        """Init method."""
         # conv_numbers = CRYSTAL conventional atomic number mapping:
         #  'Ge' -> 32 or 'Ge' -> 232
         self._tags = {
@@ -255,6 +264,7 @@ class CrystalIn:
         self._collect(lines)
 
     def get_tags(self):
+        """Return tags."""
         return self._tags
 
     def _collect(self, lines):

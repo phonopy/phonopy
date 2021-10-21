@@ -1,3 +1,4 @@
+"""Band unfolding routines."""
 # Copyright (C) 2019 Atsushi Togo
 # All rights reserved.
 #

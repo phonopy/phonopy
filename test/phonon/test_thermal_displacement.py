@@ -1,3 +1,4 @@
+"""Tests for thermal displacement calculations."""
 import numpy as np
 
 temps = [
@@ -70,6 +71,7 @@ tdm_ref = np.array(
 
 
 def test_ThermalDisplacements(ph_nacl):
+    """Test for ThermalDisplacements."""
     ph_nacl.init_mesh(
         [5, 5, 5], with_eigenvectors=True, is_mesh_symmetry=False, use_iter_mesh=True
     )
@@ -96,6 +98,7 @@ def test_ThermalDisplacements(ph_nacl):
 
 
 def test_ThermalDisplacementMatrices(ph_sno2):
+    """Test for ThermalDisplacementMatrices."""
     ph_sno2.init_mesh(
         [5, 5, 5], with_eigenvectors=True, is_mesh_symmetry=False, use_iter_mesh=True
     )
