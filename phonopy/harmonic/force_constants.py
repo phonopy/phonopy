@@ -672,7 +672,7 @@ def _get_force_constants_disps(
         Force constants
         shape=(len(atom_list),n_satom,3,3)
         dtype=double
-    supercell: Supercell
+    supercell: PhonopyAtoms
         Supercell
     dataset: dict
         Distplacement dataset. Forces are also stored.
