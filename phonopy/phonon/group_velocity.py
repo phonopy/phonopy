@@ -61,7 +61,7 @@ class GroupVelocity:
     ----------
     group_velocity : ndarray
         Group velocities at q-points.
-        shape=(q-points, 3), dtype='double', order='C'
+        shape=(q-points, num_band, 3), dtype='double', order='C'
     q_length : float
         Distance in reciprocal space used to calculate finite difference of
         dynamcial matrix.
