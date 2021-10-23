@@ -140,7 +140,7 @@ def mode_zero(temp, freqs):
     return np.zeros_like(freqs)
 
 
-class ThermalPropertiesBase(object):
+class ThermalPropertiesBase:
     """Base class of thermal property calculation."""
 
     def __init__(
@@ -275,8 +275,7 @@ class ThermalProperties(ThermalPropertiesBase):
         See Phonopy.run_thermal_properties().
 
         """
-        ThermalPropertiesBase.__init__(
-            self,
+        super().__init__(
             mesh,
             cutoff_frequency=cutoff_frequency,
             pretend_real=pretend_real,

@@ -946,7 +946,7 @@ class QHA:
 
         class FixedScaledFormatter(ScalarFormatter):
             def __init__(self):
-                ScalarFormatter.__init__(self, useMathText=True)
+                super().__init__(useMathText=True)
 
             def _set_orderOfMagnitude(self, range):
                 self.orderOfMagnitude = -6

@@ -61,9 +61,7 @@ class GruneisenMesh(GruneisenBase):
         factor=VaspToTHz,
     ):
         """Init method."""
-        GruneisenBase.__init__(
-            self, dynmat, dynmat_plus, dynmat_minus, delta_strain=delta_strain
-        )
+        super().__init__(dynmat, dynmat_plus, dynmat_minus, delta_strain=delta_strain)
         self._mesh = np.array(mesh, dtype="intc")
         self._factor = factor
         self._cell = dynmat.primitive

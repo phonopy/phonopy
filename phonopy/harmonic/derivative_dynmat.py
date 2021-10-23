@@ -38,7 +38,7 @@ import numpy as np
 from phonopy.structure.cells import sparse_to_dense_svecs
 
 
-class DerivativeOfDynamicalMatrix(object):
+class DerivativeOfDynamicalMatrix:
     """Compute analytical derivative of dynamical matrix.
 
     This can be used dynamical matrix without NAC or with Wang-NAC.

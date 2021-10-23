@@ -38,7 +38,7 @@ import warnings
 from phonopy.qha.core import QHA, BulkModulus
 
 
-class PhonopyQHA(object):
+class PhonopyQHA:
     """PhonopyQHA API."""
 
     def __init__(

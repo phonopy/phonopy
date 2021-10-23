@@ -182,7 +182,7 @@ def band_plot(axs, frequencies, distances, path_connections, labels, fmt="r-"):
     bp.plot(distances, frequencies, path_connections, fmt=fmt)
 
 
-class BandPlot(object):
+class BandPlot:
     """Band structure plotting class.
 
     This class adds band structure plots to Matplotlib axes.
@@ -407,7 +407,7 @@ def _get_labels(pairs_of_symbols):
     return labels, path_connections
 
 
-class BandStructure(object):
+class BandStructure:
     """Class for phonons of q-poitns along reciprocal space paths.
 
     Note

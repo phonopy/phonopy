@@ -47,7 +47,7 @@ def Atoms(*args, **kwargs):
     return PhonopyAtoms(*args, **kwargs)
 
 
-class _Atoms(object):
+class _Atoms:
     """A class compatible with the ASE Atoms class.
 
     Only the necessary stuffs to phonopy are implemented. The data
@@ -253,8 +253,7 @@ class PhonopyAtoms(_Atoms):
                 magmoms = atoms.get_magnetic_moments()
             except RuntimeError:
                 magmoms = None
-            _Atoms.__init__(
-                self,
+            super().__init__(
                 numbers=atoms.get_atomic_numbers(),
                 masses=atoms.get_masses(),
                 magmoms=magmoms,
@@ -263,8 +262,7 @@ class PhonopyAtoms(_Atoms):
                 pbc=True,
             )
         else:
-            _Atoms.__init__(
-                self,
+            super().__init__(
                 symbols=symbols,
                 numbers=numbers,
                 masses=masses,

@@ -47,7 +47,7 @@ def bose_einstein_dist(x, t):
     return 1.0 / (np.exp(THzToEv * x / (Kb * t)) - 1)
 
 
-class RandomDisplacements(object):
+class RandomDisplacements:
     """Generate random displacements by Canonical ensenmble.
 
     Note

@@ -88,7 +88,7 @@ def get_dynamical_matrix(
     return dm
 
 
-class DynamicalMatrix(object):
+class DynamicalMatrix:
     """Dynamical matrix base class.
 
     When prmitive and supercell lattices are L_p and L_s, respectively,
@@ -421,9 +421,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             Log level.
 
         """
-        super(DynamicalMatrixNAC, self).__init__(
-            supercell, primitive, force_constants, decimals=decimals
-        )
+        super().__init__(supercell, primitive, force_constants, decimals=decimals)
         self._symprec = symprec
         self._log_level = log_level
 
@@ -610,7 +608,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             Log level.
 
         """
-        super(DynamicalMatrixGL, self).__init__(
+        super().__init__(
             supercell,
             primitive,
             force_constants,
@@ -969,7 +967,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
             Log level.
 
         """
-        super(DynamicalMatrixWang, self).__init__(
+        super().__init__(
             supercell,
             primitive,
             force_constants,

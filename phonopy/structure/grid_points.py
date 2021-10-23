@@ -144,7 +144,7 @@ def extract_ir_grid_points(grid_mapping_table):
     return ir_grid_points, ir_weights
 
 
-class GridPoints(object):
+class GridPoints:
     """Class to generate irreducible grid points on uniform mesh grids.
 
     Attributes
@@ -434,7 +434,7 @@ class GridPoints(object):
         self._grid_mapping_table = grid_mapping_table
 
 
-class GeneralizedRegularGridPoints(object):
+class GeneralizedRegularGridPoints:
     """Generalized regular grid points.
 
     Method strategy in suggest mode

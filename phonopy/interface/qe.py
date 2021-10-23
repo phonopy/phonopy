@@ -196,7 +196,7 @@ def get_pwscf_structure(cell, pp_filenames=None):
     return lines
 
 
-class PwscfIn(object):
+class PwscfIn:
     _set_methods = OrderedDict(
         [
             ("ibrav", "_set_ibrav"),
@@ -343,7 +343,7 @@ class PwscfIn(object):
         self._tags["atomic_species"] = species
 
 
-class PH_Q2R(object):
+class PH_Q2R:
     """Parse QE/q2r output and create supercell force constants array
     that is readable by phonopy. A simple usage is as follows:
 

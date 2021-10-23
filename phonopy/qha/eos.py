@@ -97,7 +97,7 @@ def fit_to_eos(volumes, fe, eos):
     return fit.parameters
 
 
-class EOSFit(object):
+class EOSFit:
     """
 
     Attributes

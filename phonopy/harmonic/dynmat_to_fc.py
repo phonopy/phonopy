@@ -163,7 +163,7 @@ def ph2fc(ph_orig, supercell_matrix):
     return d2f.force_constants
 
 
-class DynmatToForceConstants(object):
+class DynmatToForceConstants:
     """Transforms eigensolutions to force constants.
 
     This is the inverse transform of force constants to eigensolutions.

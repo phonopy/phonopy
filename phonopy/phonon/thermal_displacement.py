@@ -38,7 +38,7 @@ from phonopy.interface.cif import write_cif_P1
 from phonopy.units import AMU, EV, Angstrom, Hbar, Kb, THzToEv
 
 
-class ThermalMotion(object):
+class ThermalMotion:
     def __init__(self, iter_mesh, freq_min=None, freq_max=None):
         self._iter_mesh = iter_mesh
         if freq_min is None:
@@ -144,7 +144,7 @@ class ThermalDisplacements(ThermalMotion):
 
         """
 
-        ThermalMotion.__init__(self, iter_mesh, freq_min=freq_min, freq_max=freq_max)
+        super().__init__(iter_mesh, freq_min=freq_min, freq_max=freq_max)
         if projection_direction is None:
             self._projection_direction = None
         else:
@@ -254,7 +254,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
 
         """
 
-        ThermalMotion.__init__(self, iter_mesh, freq_min=freq_min, freq_max=freq_max)
+        super().__init__(iter_mesh, freq_min=freq_min, freq_max=freq_max)
         self._disp_matrices = None
         self._disp_matrices_cif = None
 

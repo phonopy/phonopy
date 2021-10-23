@@ -502,8 +502,7 @@ class IterMesh(MeshBase):
         factor=VaspToTHz,
     ):
         """Init method."""
-        MeshBase.__init__(
-            self,
+        super().__init__(
             dynamical_matrix,
             mesh,
             shift=shift,

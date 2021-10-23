@@ -47,7 +47,7 @@ def get_free_energy_at_T(tmin, tmax, tstep, eigenvalues, weights, n_electrons):
     return temperatures, free_energies
 
 
-class ElectronFreeEnergy(object):
+class ElectronFreeEnergy:
     r"""Fixed density-of-states approximation for energy and entropy of electrons
 
     This is supposed to be used for metals, i.e., chemical potential is not

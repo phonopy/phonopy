@@ -1195,7 +1195,7 @@ class PhonopySettings(Settings):
 
     def __init__(self, default=None):
         """Init method."""
-        Settings.__init__(self)
+        super().__init__()
         self.default.update(PhonopySettings._default.copy())
         if default is not None:
             self.default.update(default)

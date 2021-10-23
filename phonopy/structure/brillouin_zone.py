@@ -85,7 +85,7 @@ def get_qpoints_in_Brillouin_zone(
         return bz.shortest_qpoints
 
 
-class BrillouinZone(object):
+class BrillouinZone:
     """Move qpoints to first Brillouin zone by lattice translation.
 
     Attributes

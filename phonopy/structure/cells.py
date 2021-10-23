@@ -310,10 +310,9 @@ class Supercell(PhonopyAtoms):
                 "The mapping table is given below."
             )
             print(mapping_table)
-            PhonopyAtoms.__init__(self)
+            super().__init__()
         else:
-            PhonopyAtoms.__init__(
-                self,
+            super().__init__(
                 numbers=supercell.numbers,
                 masses=supercell.masses,
                 magmoms=supercell.magnetic_moments,
@@ -616,7 +615,7 @@ class Primitive(PhonopyAtoms):
             symprec=self._symprec,
             positions_to_reorder=positions_to_reorder,
         )
-        super(PhonopyAtoms, self).__init__(
+        super().__init__(
             numbers=trimmed_cell.numbers,
             masses=trimmed_cell.masses,
             magmoms=trimmed_cell.magnetic_moments,
@@ -797,7 +796,7 @@ class TrimmedCell(PhonopyAtoms):
         # scale is not always to become integer.
         scale = 1.0 / np.linalg.det(relative_axes)
         if len(cell) == int(np.rint(scale * len(trimmed_numbers))):
-            super(PhonopyAtoms, self).__init__(
+            super().__init__(
                 numbers=trimmed_numbers,
                 masses=trimmed_masses,
                 magmoms=trimmed_magmoms,
@@ -942,7 +941,7 @@ def get_smallest_vectors(
     return spairs.shortest_vectors, spairs.multiplicities
 
 
-class ShortestPairs(object):
+class ShortestPairs:
     """Find shortest atomic pair vectors.
 
     Attributes

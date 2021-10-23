@@ -41,7 +41,7 @@ from phonopy.structure.cells import get_supercell
 from phonopy.units import VaspToTHz
 
 
-class Modulation(object):
+class Modulation:
     def __init__(
         self,
         dynamical_matrix,

@@ -65,7 +65,7 @@ def read_cell_yaml(filename, cell_type="unitcell"):
         return None
 
 
-class PhonopyYaml(object):
+class PhonopyYaml:
     """PhonopyYaml is a container of phonopy setting.
 
     This contains the writer (__str__) and reader (read) of phonopy.yaml type

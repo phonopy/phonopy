@@ -43,7 +43,7 @@ from phonopy.structure.symmetry import Symmetry
 from phonopy.units import VaspToTHz
 
 
-class IrReps(object):
+class IrReps:
     """Class to calculate irreducible representations from eigenvectors.
 
     Methods and terminologies used in this class may be easily found
