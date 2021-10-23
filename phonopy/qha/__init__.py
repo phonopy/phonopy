@@ -1,3 +1,4 @@
+"""Quasi harmonic approximation."""
 # Copyright (C) 2012 Atsushi Togo
 # All rights reserved.
 #

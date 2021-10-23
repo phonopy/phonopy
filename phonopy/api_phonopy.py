@@ -1,5 +1,4 @@
 """Phonopy class."""
-
 # Copyright (C) 2015 Atsushi Togo
 # All rights reserved.
 #
@@ -89,7 +88,7 @@ from phonopy.units import VaspToTHz
 from phonopy.version import __version__
 
 
-class Phonopy(object):
+class Phonopy:
     """Phonopy main API given as a class.
 
     Attributes

@@ -1,3 +1,4 @@
+"""Routines to handle various calculator interfaces."""
 # Copyright (C) 2014 Atsushi Togo
 # All rights reserved.
 #
@@ -33,6 +34,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import os
+from argparse import ArgumentParser
 
 import numpy as np
 import yaml
@@ -41,6 +43,23 @@ from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.vasp import sort_positions_by_symbols
 from phonopy.structure.cells import determinant
 from phonopy.structure.dataset import get_displacements_and_forces
+from phonopy.units import (
+    AbinitToTHz,
+    Bohr,
+    CastepToTHz,
+    CP2KToTHz,
+    CrystalToTHz,
+    DftbpToTHz,
+    ElkToTHz,
+    FleurToTHz,
+    Hartree,
+    PwscfToTHz,
+    Rydberg,
+    SiestaToTHz,
+    TurbomoleToTHz,
+    VaspToTHz,
+    Wien2kToTHz,
+)
 
 calculator_info = {
     "abinit": {"option": {"name": "--abinit", "help": "Invoke Abinit mode"}},
@@ -59,7 +78,8 @@ calculator_info = {
 }
 
 
-def add_arguments_of_calculators(parser, calculator_info):
+def add_arguments_of_calculators(parser: ArgumentParser, calculator_info):
+    """Add options of calculators to ArgumentParser class instance."""
     for calculator in calculator_info:
         option = calculator_info[calculator]["option"]
         parser.add_argument(
@@ -72,14 +92,13 @@ def add_arguments_of_calculators(parser, calculator_info):
 
 
 def get_interface_mode(args_dict):
-    """Return calculator name
+    """Return calculator name.
 
     The calculator name is obtained from command option arguments where
     argparse is used. The argument attribute name has to be
     "{calculator}_mode". Then this method returns "{calculator}".
 
     """
-
     for calculator in calculator_info:
         mode = "%s_mode" % calculator
         if mode in args_dict and args_dict[mode]:
@@ -88,9 +107,8 @@ def get_interface_mode(args_dict):
 
 
 def convert_crystal_structure(filename_in, interface_in, filename_out, interface_out):
-    cell, optional_structure_info = read_crystal_structure(
-        filename=filename_in, interface_mode=interface_in
-    )
+    """Convert crystal structures between different calculator interfaces."""
+    cell, _ = read_crystal_structure(filename=filename_in, interface_mode=interface_in)
     units_in = get_default_physical_units(interface_in)
     units_out = get_default_physical_units(interface_out)
     factor = units_in["distance_to_A"] / units_out["distance_to_A"]
@@ -101,7 +119,7 @@ def convert_crystal_structure(filename_in, interface_in, filename_out, interface
 def write_crystal_structure(
     filename, cell, interface_mode=None, optional_structure_info=None
 ):
-    """Utility method to write out a crystal structure
+    """Write crystal structure to file in each calculator format.
 
     filename : str, optional
         File name to be used to write out the crystal structure.
@@ -115,7 +133,6 @@ def write_crystal_structure(
         See the docstring. Default is None.
 
     """
-
     if interface_mode is None or interface_mode == "vasp":
         import phonopy.interface.vasp as vasp
 
@@ -188,7 +205,7 @@ def write_supercells_with_displacements(
     zfill_width=3,
     additional_info=None,
 ):
-    """Utility method to write out supercell structures with displacements
+    """Write supercell with displacements to files in each calculator format.
 
     interface_mode : str
         Calculator interface such as 'vasp', 'qe', ...
@@ -211,7 +228,6 @@ def write_supercells_with_displacements(
         Default is None.
 
     """
-
     if displacement_ids is None:
         ids = np.arange(len(cells_with_disps), dtype=int) + 1
     else:
@@ -304,6 +320,7 @@ def write_supercells_with_displacements(
 
 
 def write_magnetic_moments(cell, sort_by_elements=False):
+    """Write MAGMOM."""
     magmoms = cell.magnetic_moments
     if magmoms is not None:
         if sort_by_elements:
@@ -324,7 +341,7 @@ def write_magnetic_moments(cell, sort_by_elements=False):
 def read_crystal_structure(
     filename=None, interface_mode=None, chemical_symbols=None, phonopy_yaml_cls=None
 ):
-    """Returns crystal structure information
+    """Return crystal structure from file in each calculator format.
 
     Parameters
     ----------
@@ -352,7 +369,6 @@ def read_crystal_structure(
         and the rest is dependent on calculator interface.
 
     """
-
     if interface_mode == "phonopy_yaml":
         if phonopy_yaml_cls is None:
             return _read_phonopy_yaml(filename, PhonopyYaml)
@@ -441,6 +457,7 @@ def read_crystal_structure(
 
 
 def get_default_cell_filename(interface_mode):
+    """Return default filename of unit cell structure of each calculator."""
     if interface_mode is None or interface_mode == "vasp":
         return "POSCAR"
     elif interface_mode in ("abinit", "qe"):
@@ -470,6 +487,7 @@ def get_default_cell_filename(interface_mode):
 
 
 def get_default_supercell_filename(interface_mode):
+    """Return default filename of supercell structure of each calculator."""
     if interface_mode == "phonopy_yaml":
         return "phonopy_disp.yaml"
     elif interface_mode is None or interface_mode == "vasp":
@@ -498,6 +516,7 @@ def get_default_supercell_filename(interface_mode):
 
 
 def get_default_displacement_distance(interface_mode):
+    """Return default displacement distance of each calculator."""
     if interface_mode in (
         "wien2k",
         "abinit",
@@ -514,7 +533,7 @@ def get_default_displacement_distance(interface_mode):
 
 
 def get_default_physical_units(interface_mode=None):
-    """Return physical units used for calculators
+    """Return physical units of eachi calculator.
 
     Physical units: energy,  distance,  atomic mass, force,        force constants
     vasp          : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
@@ -535,25 +554,6 @@ def get_default_physical_units(interface_mode=None):
     the 'get_force_constant_conversion_factor' method.
 
     """
-
-    from phonopy.units import (
-        AbinitToTHz,
-        Bohr,
-        CastepToTHz,
-        CP2KToTHz,
-        CrystalToTHz,
-        DftbpToTHz,
-        ElkToTHz,
-        FleurToTHz,
-        Hartree,
-        PwscfToTHz,
-        Rydberg,
-        SiestaToTHz,
-        TurbomoleToTHz,
-        VaspToTHz,
-        Wien2kToTHz,
-    )
-
     units = {
         "factor": None,
         "nac_factor": None,
@@ -644,11 +644,16 @@ def get_default_physical_units(interface_mode=None):
 def get_force_sets(
     interface_mode,
     num_atoms,
-    num_displacements,
     force_filenames,
-    disp_filename=None,
     verbose=True,
 ):
+    """Read calculator output files and parse force sets.
+
+    Note
+    ----
+    Wien2k output is treated by ``get_force_sets_wien2k``.
+
+    """
     if interface_mode is None or interface_mode == "vasp":
         from phonopy.interface.vasp import parse_set_of_forces
     elif interface_mode == "abinit":
@@ -683,15 +688,14 @@ def get_force_sets(
 
 
 def get_force_sets_wien2k(
-    num_displacements,
     force_filenames,
-    disp_filename,
     supercell,
     disp_dataset,
     wien2k_P1_mode=False,
     symmetry_tolerance=None,
     verbose=False,
 ):
+    """Read Wien2k output files and parse force sets."""
     from phonopy.interface.wien2k import parse_set_of_forces
 
     disps, _ = get_displacements_and_forces(disp_dataset)
@@ -707,9 +711,8 @@ def get_force_sets_wien2k(
 
 
 def get_force_constant_conversion_factor(unit, interface_mode):
-    from phonopy.units import Bohr, Hartree, Rydberg
-
-    _unit = unit.replace("Angstrom", "angstrom")  # backward compatibility
+    """Return unit conversion factor of force constants."""
+    _unit = unit.replace("Angstrom", "angstrom")  # for backward compatibility
     interface_default_units = get_default_physical_units(interface_mode)
     default_unit = interface_default_units["force_constants_unit"]
     factor_to_eVperA2 = {

@@ -1,3 +1,4 @@
+"""Phonon calculation at specific q-points."""
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -33,14 +34,18 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
+from typing import Optional, Union
 
 import numpy as np
 
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
+from phonopy.phonon.group_velocity import GroupVelocity
+from phonopy.structure.cells import Primitive
 from phonopy.units import VaspToTHz
 
 
-class QpointsPhonon(object):
-    """Calculate phonons at specified qpoints
+class QpointsPhonon:
+    """Calculate phonons at specified qpoints.
 
     Attributes
     ----------
@@ -67,14 +72,15 @@ class QpointsPhonon(object):
     def __init__(
         self,
         qpoints,
-        dynamical_matrix,
+        dynamical_matrix: Union[DynamicalMatrix, DynamicalMatrixNAC],
         nac_q_direction=None,
         with_eigenvectors=False,
         group_velocity=None,
         with_dynamical_matrices=False,
         factor=VaspToTHz,
     ):
-        primitive = dynamical_matrix.primitive
+        """Init method."""
+        primitive: Primitive = dynamical_matrix.primitive
         self._natom = len(primitive)
         self._masses = primitive.masses
         self._symbols = primitive.symbols
@@ -85,7 +91,7 @@ class QpointsPhonon(object):
         self._dynamical_matrix = dynamical_matrix
         self._nac_q_direction = nac_q_direction
         self._with_eigenvectors = with_eigenvectors
-        self._group_velocity = group_velocity
+        self._gv_obj: Optional[GroupVelocity] = group_velocity
         self._with_dynamical_matrices = with_dynamical_matrices
         self._factor = factor
 
@@ -99,40 +105,59 @@ class QpointsPhonon(object):
 
     @property
     def frequencies(self):
+        """Return frequencies."""
         return self._frequencies
 
     def get_frequencies(self):
-        warnings.warn("Use attribute, frequencies.", DeprecationWarning)
+        """Return frequencies."""
+        warnings.warn(
+            "QpointsPhonon.get_frequencies() is deprecated. Use frequencies instead.",
+            DeprecationWarning,
+        )
         return self.frequencies
 
     @property
     def eigenvalues(self):
+        """Return eigenvalues."""
         return self._eigenvalues
 
     @property
     def eigenvectors(self):
+        """Return eigenvectors."""
         return self._eigenvectors
 
     def get_eigenvectors(self):
-        warnings.warn("Use attribute, eigenvectors.", DeprecationWarning)
+        """Return eigenvectors."""
+        warnings.warn(
+            "QpointsPhonon.get_eigenvectors() is deprecated. Use eigenvectors instead.",
+            DeprecationWarning,
+        )
         return self.eigenvectors
 
     @property
     def group_velocities(self):
+        """Return group velocities."""
         return self._group_velocities
 
     def get_group_velocities(self):
-        warnings.warn("Use attribute, group_velocities.", DeprecationWarning)
+        """Return group velocities."""
+        warnings.warn(
+            "QpointsPhonon.get_group_velocities() is deprecated. "
+            "Use group_velocities instead.",
+            DeprecationWarning,
+        )
         return self.group_velocities
 
     @property
     def dynamical_matrices(self):
+        """Return DynamicalMatrix class instance."""
         return self._dynamical_matrices
 
-    def write_hdf5(self):
+    def write_hdf5(self, filename="qpoints.hdf5"):
+        """Write results in hdf5."""
         import h5py
 
-        with h5py.File("qpoints.hdf5", "w") as w:
+        with h5py.File(filename, "w") as w:
             w.create_dataset("qpoint", data=self._qpoints)
             w.create_dataset("frequency", data=self._frequencies)
             if self._with_eigenvectors:
@@ -142,8 +167,9 @@ class QpointsPhonon(object):
             if self._with_dynamical_matrices:
                 w.create_dataset("dynamical_matrix", data=self._dynamical_matrices)
 
-    def write_yaml(self):
-        w = open("qpoints.yaml", "w")
+    def write_yaml(self, filename="qpoints.yaml"):
+        """Write results in yaml."""
+        w = open(filename, "w")
         w.write("nqpoint: %-7d\n" % len(self._qpoints))
         w.write("natom:   %-7d\n" % self._natom)
         rec_lattice = np.linalg.inv(self._lattice)  # column vectors
@@ -191,9 +217,9 @@ class QpointsPhonon(object):
             w.write("\n")
 
     def _run(self):
-        if self._group_velocity is not None:
-            self._group_velocity.run(self._qpoints, perturbation=self._nac_q_direction)
-            self._group_velocities = self._group_velocity.group_velocities
+        if self._gv_obj is not None:
+            self._gv_obj.run(self._qpoints, perturbation=self._nac_q_direction)
+            self._group_velocities = self._gv_obj.group_velocities
 
         if self._with_dynamical_matrices:
             dynamical_matrices = []

@@ -114,9 +114,7 @@ def create_FORCE_SETS(
         force_sets = []
     elif interface_mode == "wien2k":
         force_sets = get_force_sets_wien2k(
-            num_displacements,
             force_filenames,
-            disp_filename,
             supercell,
             disp_dataset,
             wien2k_P1_mode=wien2k_P1_mode,
@@ -127,9 +125,7 @@ def create_FORCE_SETS(
         force_sets = get_force_sets(
             interface_mode,
             num_atoms,
-            num_displacements,
             force_filenames,
-            disp_filename=disp_filename,
             verbose=(log_level > 0),
         )
 
