@@ -1,3 +1,4 @@
+"""Tools to manage displacement dataset."""
 # Copyright (C) 2020 Atsushi Togo
 # All rights reserved.
 #
@@ -36,7 +37,7 @@ import numpy as np
 
 
 def get_displacements_and_forces(disp_dataset):
-    """Returns displacements and forces of all atoms from displacement dataset
+    """Return displacements and forces of all atoms from displacement dataset.
 
     This is used to extract displacements and forces from displacement dataset.
     This method is considered more-or-less as a converter when the input is in
@@ -58,7 +59,6 @@ def get_displacements_and_forces(disp_dataset):
         None is returned when forces don't exist.
 
     """
-
     if "first_atoms" in disp_dataset:
         natom = disp_dataset["natom"]
         disps = np.zeros(
@@ -81,8 +81,7 @@ def get_displacements_and_forces(disp_dataset):
 
 
 def forces_in_dataset(dataset):
-    """Check if forces in displacement dataset"""
-
+    """Check if forces in displacement dataset."""
     if dataset is None:
         return False
 

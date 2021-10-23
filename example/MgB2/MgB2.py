@@ -1,3 +1,4 @@
+"""Example of calculation of irreps of MgB2."""
 import numpy as np
 
 import phonopy

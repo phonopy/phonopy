@@ -1,3 +1,4 @@
+"""DFTB+ calculator interface."""
 # Copyright (C) 2015 Atsushi Togo
 # All rights reserved.
 #
@@ -43,6 +44,7 @@ from phonopy.units import dftbpToBohr
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+    """Parse forces from output files."""
     hook = "forces              :real:2:"
     is_parsed = True
     force_sets = []
@@ -72,16 +74,18 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
 
 
 def read_dftbp(filename):
-    """Reads DFTB+ structure files in gen format.
+    """Read DFTB+ structure files in gen format.
 
-    Args:
-        filename: name of the gen-file to be read
+    Parameters
+    ----------
+    filename: name of the gen-file to be read
 
-    Returns:
-        atoms: an object of the phonopy.Atoms class, representing the structure
-        found in filename
+    Returns
+    -------
+    atoms: an object of the phonopy.Atoms class, representing the structure
+    found in filename
+
     """
-
     infile = open(filename, "r")
 
     lines = infile.readlines()
@@ -137,16 +141,19 @@ def read_dftbp(filename):
 # write dftb+ .gen-file
 #
 def get_reduced_symbols(symbols):
-    """Reduces expanded list of symbols.
+    """Reduce expanded list of symbols.
 
-    Args:
-        symbols: list containing any chemical symbols as often as
-        the atom appears in the structure
+    Parameters
+    ----------
+    symbols:
+        list containing any chemical symbols as often as
+        the atom appears in the structure.
 
-    Returns:
-        reduced_symbols: any symbols appears only once
+    Returns
+    -------
+    reduced_symbols: any symbols appears only once.
+
     """
-
     reduced_symbols = []
 
     for ss in symbols:
@@ -157,11 +164,13 @@ def get_reduced_symbols(symbols):
 
 
 def write_dftbp(filename, atoms):
-    """Writes DFTB+ readable, gen-formatted structure files
+    """Write DFTB+ readable, gen-formatted structure files.
 
-    Args:
-        filename: name of the gen-file to be written
-        atoms: object containing information about structure
+    Parameters
+    ----------
+    filename: name of the gen-file to be written
+    atoms: object containing information about structure
+
     """
     scale_pos = dftbpToBohr
 
@@ -208,14 +217,15 @@ def write_dftbp(filename, atoms):
 def write_supercells_with_displacements(
     supercell, cells_with_disps, ids, pre_filename="geo.gen", width=3
 ):
-    """Writes perfect supercell and supercells with displacements
+    """Write perfect supercell and supercells with displacements.
 
-    Args:
-        supercell: perfect supercell
-        cells_with_disps: supercells with displaced atoms
-        filename: root-filename
+    Parameters
+    ----------
+    supercell: perfect supercell
+    cells_with_disps: supercells with displaced atoms
+    filename: root-filename
+
     """
-
     # original cell
     write_dftbp(pre_filename + "S", supercell)
 

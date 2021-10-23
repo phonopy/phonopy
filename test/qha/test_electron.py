@@ -1,3 +1,4 @@
+"""Tests of electronic free energy calculations."""
 import numpy as np
 
 from phonopy.qha.electron import ElectronFreeEnergy, get_free_energy_at_T
@@ -77,7 +78,7 @@ eigvals_Al = """ -3.1277  20.6836  20.6836  20.6836  22.1491  22.1491  22.1491  
 
 
 def test_Al():
-    """ElectronFreeEnergy for Aluminium
+    """Test of ElectronFreeEnergy by Aluminium.
 
     VASP 5.4.4 was run with following setting parameters.
 
@@ -124,7 +125,6 @@ def test_Al():
     PAW_PBE Al 04Jan2001
 
     """
-
     weights = np.array(
         [
             1,

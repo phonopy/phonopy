@@ -1,9 +1,12 @@
+"""Example of band structure and group velocity calculation by NaCl."""
+from typing import List
+
 import numpy as np
 
 import phonopy
 
 
-def append_band(bands, q_start, q_end):
+def _append_band(bands, q_start, q_end):
     band = []
     nq = 51
     for i in range(nq):
@@ -21,11 +24,11 @@ phonon = phonopy.load(
     primitive_matrix=[[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]],
 )
 
-bands = []
-append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.0, 0.0])
-append_band(bands, [0.5, 0.0, 0.0], [0.5, 0.5, 0.0])
-append_band(bands, [0.5, 0.5, 0.0], [0.0, 0.0, 0.0])
-append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.5, 0.5])
+bands = List[List]
+_append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.0, 0.0])
+_append_band(bands, [0.5, 0.0, 0.0], [0.5, 0.5, 0.0])
+_append_band(bands, [0.5, 0.5, 0.0], [0.0, 0.0, 0.0])
+_append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.5, 0.5])
 phonon.run_band_structure(bands, with_group_velocities=True)
 band_dict = phonon.get_band_structure_dict()
 frequencies = band_dict["frequencies"]

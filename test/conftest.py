@@ -248,6 +248,7 @@ def helper_methods():
     class HelperMethods:
         @classmethod
         def compare_cells_with_order(cls, cell, cell_ref):
+            """Compare two cells with the same orders of positions."""
             np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=1e-5)
             cls.compare_positions_with_order(
                 cell.scaled_positions, cell_ref.scaled_positions, cell.cell
@@ -257,7 +258,12 @@ def helper_methods():
 
         @classmethod
         def compare_positions_with_order(cls, pos, pos_ref, lattice):
-            """lattice : basis vectors in row vectors"""
+            """Compare two lists of positions and orders.
+
+            lattice :
+                Basis vectors in row vectors.
+
+            """
             diff = pos - pos_ref
             diff -= np.rint(diff)
             dist = (np.dot(diff, lattice) ** 2).sum(axis=1)
@@ -265,6 +271,7 @@ def helper_methods():
 
         @classmethod
         def compare_cells(cls, cell, cell_ref):
+            """Compare two cells where position orders can be different."""
             np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=1e-5)
 
             indices = cls.compare_positions_in_arbitrary_order(
@@ -275,6 +282,12 @@ def helper_methods():
 
         @classmethod
         def compare_positions_in_arbitrary_order(cls, pos_in, pos_ref, lattice):
+            """Compare two sets of positions irrespective of orders.
+
+            lattice :
+                Basis vectors in row vectors.
+
+            """
             indices = []
             for pos in pos_in:
                 diff = pos_ref - pos
