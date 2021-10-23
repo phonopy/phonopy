@@ -35,14 +35,16 @@
 
 import sys
 import warnings
-from io import StringIO
-import xml.parsers.expat
 import xml.etree.cElementTree as etree
+import xml.parsers.expat
+from io import StringIO
+
 import numpy as np
-from phonopy.units import VaspToTHz
-from phonopy.structure.atoms import symbol_map, atom_data, PhonopyAtoms
+
+from phonopy.file_IO import write_FORCE_CONSTANTS, write_force_constants_to_hdf5
+from phonopy.structure.atoms import PhonopyAtoms, atom_data, symbol_map
 from phonopy.structure.symmetry import elaborate_borns_and_epsilon
-from phonopy.file_IO import write_force_constants_to_hdf5, write_FORCE_CONSTANTS
+from phonopy.units import VaspToTHz
 
 
 def check_forces(forces, num_atom, filename, verbose=True):

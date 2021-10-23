@@ -71,6 +71,7 @@ def get_parser(
     """Return ArgumentParser instance."""
     deprecated = fix_deprecated_option_names(sys.argv)
     import argparse
+
     from phonopy.interface.calculator import (
         add_arguments_of_calculators,
         calculator_info,

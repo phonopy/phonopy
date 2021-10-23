@@ -37,7 +37,9 @@
 import io
 import os
 import sys
+
 import numpy as np
+
 from phonopy.interface.vasp import VasprunxmlExpat
 from phonopy.qha.electron import get_free_energy_at_T
 

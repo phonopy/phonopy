@@ -32,10 +32,12 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import sys
 import gzip
-import yaml
+import sys
+
 import numpy as np
+import yaml
+
 from phonopy.gruneisen.core import GruneisenBase
 from phonopy.units import VaspToTHz
 

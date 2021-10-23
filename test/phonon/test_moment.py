@@ -4,12 +4,15 @@ try:
     from StringIO import StringIO
 except ImportError:
     from io import StringIO
-import numpy as np
-from phonopy import Phonopy
-from phonopy.phonon.moment import PhononMoment
-from phonopy.interface.vasp import read_vasp
-from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
+
 import os
+
+import numpy as np
+
+from phonopy import Phonopy
+from phonopy.file_IO import parse_BORN, parse_FORCE_SETS
+from phonopy.interface.vasp import read_vasp
+from phonopy.phonon.moment import PhononMoment
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 

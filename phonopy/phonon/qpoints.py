@@ -33,7 +33,9 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
+
 import numpy as np
+
 from phonopy.units import VaspToTHz
 
 

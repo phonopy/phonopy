@@ -34,9 +34,11 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
+
 import numpy as np
-from phonopy.units import Avogadro, EvTokJmol, EVAngstromToGPa
-from phonopy.qha.eos import get_eos, fit_to_eos
+
+from phonopy.qha.eos import fit_to_eos, get_eos
+from phonopy.units import Avogadro, EVAngstromToGPa, EvTokJmol
 
 
 class BulkModulus:

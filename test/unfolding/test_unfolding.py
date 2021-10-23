@@ -1,9 +1,10 @@
-import numpy as np
-from phonopy import Phonopy
-from phonopy.unfolding.core import Unfolding
-
 # from phonopy.interface.vasp import write_vasp
 import os
+
+import numpy as np
+
+from phonopy import Phonopy
+from phonopy.unfolding.core import Unfolding
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 

@@ -34,9 +34,11 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 from typing import Union
+
 import numpy as np
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
+
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 
 
 def degenerate_sets(freqs, cutoff=1e-4):

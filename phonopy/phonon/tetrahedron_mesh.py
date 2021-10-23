@@ -34,6 +34,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
 

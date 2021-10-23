@@ -36,7 +36,9 @@
 
 import sys
 import warnings
+
 import numpy as np
+
 from phonopy.interface.vasp import get_born_OUTCAR, get_born_vasprunxml
 
 

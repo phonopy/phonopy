@@ -1,8 +1,9 @@
 """NaCl example to obtain dynamical matrix."""
 
-import phonopy
-import yaml
 import numpy as np
+import yaml
+
+import phonopy
 
 phonon = phonopy.load(
     supercell_matrix=[[2, 0, 0], [0, 2, 0], [0, 0, 2]],

@@ -1,7 +1,6 @@
 """Tests for dynamical matrix classes."""
-import pytest
 import numpy as np
-
+import pytest
 
 dynmat_ref_000 = [
     0.052897,

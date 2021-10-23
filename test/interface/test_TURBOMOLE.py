@@ -1,9 +1,10 @@
+import os
 import unittest
 
 import numpy as np
+
 from phonopy.interface.phonopy_yaml import read_cell_yaml
 from phonopy.interface.turbomole import read_turbomole
-import os
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 

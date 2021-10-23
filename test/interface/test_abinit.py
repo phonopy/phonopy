@@ -1,9 +1,10 @@
+import os
 import unittest
 
 import numpy as np
-from phonopy.interface.phonopy_yaml import read_cell_yaml
+
 from phonopy.interface.abinit import read_abinit
-import os
+from phonopy.interface.phonopy_yaml import read_cell_yaml
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 

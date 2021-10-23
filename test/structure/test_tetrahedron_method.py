@@ -1,9 +1,9 @@
 import numpy as np
+
 from phonopy.structure.tetrahedron_method import (
     get_all_tetrahedra_relative_grid_address,
     get_tetrahedra_integration_weight,
 )
-
 
 rel_ga_ref = [
     0,

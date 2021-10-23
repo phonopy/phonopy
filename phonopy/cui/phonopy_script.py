@@ -33,45 +33,47 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import sys
 import os
+import sys
+
 import numpy as np
+
 from phonopy import Phonopy, __version__
-from phonopy.units import THzToEv
-from phonopy.harmonic.force_constants import compact_fc_to_full_fc
-from phonopy.structure.cells import print_cell
-from phonopy.structure.cells import isclose as cells_isclose
-from phonopy.structure.atoms import atom_data, symbol_map
-from phonopy.structure.dataset import forces_in_dataset
-from phonopy.interface.phonopy_yaml import PhonopyYaml
-from phonopy.interface.fc_calculator import fc_calculator_names
-from phonopy.interface.calculator import (
-    write_supercells_with_displacements,
-    get_default_physical_units,
-    get_default_displacement_distance,
+from phonopy.cui.collect_cell_info import collect_cell_info
+from phonopy.cui.create_force_sets import create_FORCE_SETS
+from phonopy.cui.load_helper import (
+    get_nac_params,
+    read_force_constants_from_hdf5,
+    set_dataset_and_force_constants,
 )
+from phonopy.cui.phonopy_argparse import get_parser, show_deprecated_option_warnings
+from phonopy.cui.settings import PhonopyConfParser
+from phonopy.cui.show_symmetry import check_symmetry
+from phonopy.file_IO import (
+    get_born_parameters,
+    is_file_phonopy_yaml,
+    parse_FORCE_CONSTANTS,
+    parse_FORCE_SETS,
+    parse_QPOINTS,
+    write_FORCE_CONSTANTS,
+    write_force_constants_to_hdf5,
+)
+from phonopy.harmonic.force_constants import compact_fc_to_full_fc
+from phonopy.interface.calculator import (
+    get_default_displacement_distance,
+    get_default_physical_units,
+    write_supercells_with_displacements,
+)
+from phonopy.interface.fc_calculator import fc_calculator_names
+from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.vasp import create_FORCE_CONSTANTS
 from phonopy.phonon.band_structure import get_band_qpoints, get_band_qpoints_by_seekpath
 from phonopy.phonon.dos import get_pdos_indices
-from phonopy.file_IO import (
-    parse_FORCE_CONSTANTS,
-    parse_FORCE_SETS,
-    write_FORCE_CONSTANTS,
-    write_force_constants_to_hdf5,
-    get_born_parameters,
-    parse_QPOINTS,
-    is_file_phonopy_yaml,
-)
-from phonopy.cui.create_force_sets import create_FORCE_SETS
-from phonopy.cui.load_helper import (
-    read_force_constants_from_hdf5,
-    get_nac_params,
-    set_dataset_and_force_constants,
-)
-from phonopy.cui.show_symmetry import check_symmetry
-from phonopy.cui.settings import PhonopyConfParser
-from phonopy.cui.collect_cell_info import collect_cell_info
-from phonopy.cui.phonopy_argparse import get_parser, show_deprecated_option_warnings
+from phonopy.structure.atoms import atom_data, symbol_map
+from phonopy.structure.cells import isclose as cells_isclose
+from phonopy.structure.cells import print_cell
+from phonopy.structure.dataset import forces_in_dataset
+from phonopy.units import THzToEv
 
 
 # AA is created at http://www.network-science.de/ascii/.

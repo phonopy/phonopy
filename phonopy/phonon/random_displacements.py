@@ -33,13 +33,14 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+
 from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
 from phonopy.harmonic.dynmat_to_fc import (
-    get_commensurate_points_in_integers,
     DynmatToForceConstants,
     categorize_commensurate_points,
+    get_commensurate_points_in_integers,
 )
-from phonopy.units import VaspToTHz, THzToEv, Kb, Hbar, AMU, EV, Angstrom, THz
+from phonopy.units import AMU, EV, Angstrom, Hbar, Kb, THz, THzToEv, VaspToTHz
 
 
 def bose_einstein_dist(x, t):

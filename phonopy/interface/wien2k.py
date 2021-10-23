@@ -33,12 +33,14 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
+
 import numpy as np
-from phonopy.interface.vasp import get_drift_forces, check_forces
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
-from phonopy.structure.symmetry import Symmetry
-from phonopy.structure.cells import get_angles, get_cell_parameters
+
 from phonopy.harmonic.force_constants import similarity_transformation
+from phonopy.interface.vasp import check_forces, get_drift_forces
+from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.cells import get_angles, get_cell_parameters
+from phonopy.structure.symmetry import Symmetry
 
 
 def parse_set_of_forces(
@@ -403,7 +405,8 @@ def _get_independent_atoms_in_dot_scf(filename):
 
 if __name__ == "__main__":
     from optparse import OptionParser
-    from phonopy.interface.vasp import write_vasp, read_vasp
+
+    from phonopy.interface.vasp import read_vasp, write_vasp
 
     def clean_scaled_positions(cell):
         positions = cell.get_scaled_positions()

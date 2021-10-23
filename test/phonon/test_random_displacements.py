@@ -1,6 +1,8 @@
 """Tests for generation of random displacements at finite temperatures."""
 import os
+
 import numpy as np
+
 from phonopy.phonon.random_displacements import RandomDisplacements
 
 current_dir = os.path.dirname(os.path.abspath(__file__))

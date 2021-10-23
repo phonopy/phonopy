@@ -1,7 +1,8 @@
 """Tests for BrillouinZone class."""
 import numpy as np
-from phonopy.structure.brillouin_zone import BrillouinZone
 from spglib import get_stabilized_reciprocal_mesh, relocate_BZ_grid_address
+
+from phonopy.structure.brillouin_zone import BrillouinZone
 
 
 def test_FCC():

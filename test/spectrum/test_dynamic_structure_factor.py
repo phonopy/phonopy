@@ -1,9 +1,10 @@
+import os
 import unittest
 
 import numpy as np
-from phonopy.spectrum.dynamic_structure_factor import atomic_form_factor_WK1995
+
 from phonopy import load
-import os
+from phonopy.spectrum.dynamic_structure_factor import atomic_form_factor_WK1995
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 

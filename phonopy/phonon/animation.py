@@ -34,9 +34,10 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.structure.cells import get_angles, get_cell_parameters, get_cell_matrix
-from phonopy.structure.atoms import PhonopyAtoms
+
 from phonopy.interface.vasp import write_vasp
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import get_angles, get_cell_matrix, get_cell_parameters
 from phonopy.units import VaspToTHz
 
 

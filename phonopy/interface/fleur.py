@@ -33,16 +33,17 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import sys
-import numpy as np
-import math
 import itertools
+import math
+import sys
+
+import numpy as np
 
 from phonopy.file_IO import collect_forces
 from phonopy.interface.vasp import (
-    sort_positions_by_symbols,
     check_forces,
     get_drift_forces,
+    sort_positions_by_symbols,
 )
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.atoms import symbol_map

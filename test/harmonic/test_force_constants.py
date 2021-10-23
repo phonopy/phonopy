@@ -1,8 +1,8 @@
-import pytest
 import numpy as np
+import pytest
+
 from phonopy.harmonic.force_constants import cutoff_force_constants
 from phonopy.structure.cells import get_primitive
-
 
 fc_1_10_ref = [
     -0.037549,

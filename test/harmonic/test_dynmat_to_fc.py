@@ -1,15 +1,17 @@
 """Tests for dynmat_to_fc, inverse phonon transformation."""
 import os
-import pytest
-from phonopy import Phonopy
+
 import numpy as np
-from phonopy.units import VaspToTHz
+import pytest
+
+from phonopy import Phonopy
 from phonopy.harmonic.dynmat_to_fc import (
+    DynmatToForceConstants,
     get_commensurate_points,
     get_commensurate_points_in_integers,
-    DynmatToForceConstants,
     ph2fc,
 )
+from phonopy.units import VaspToTHz
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 

@@ -1,7 +1,8 @@
 import numpy as np
+
 from phonopy import Phonopy, PhonopyGruneisen
-from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_FORCE_SETS
+from phonopy.interface.vasp import read_vasp
 
 
 def append_band(bands, q_start, q_end):

@@ -1,5 +1,6 @@
-import phonopy
 import numpy as np
+
+import phonopy
 
 phonon = phonopy.load(unitcell_filename="POSCAR-unitcell", supercell_matrix=[3, 3, 2])
 print("Space group: %s" % phonon.symmetry.get_international_table())

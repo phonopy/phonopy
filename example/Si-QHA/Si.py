@@ -1,9 +1,11 @@
 """QHA example of Si."""
 import tarfile
-from phonopy import Phonopy
-from phonopy.interface.vasp import read_vasp, Vasprun
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
+
+from phonopy import Phonopy
+from phonopy.interface.vasp import Vasprun, read_vasp
 
 
 def get_force_sets(index):

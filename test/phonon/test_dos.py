@@ -1,6 +1,8 @@
 """Tests for DOS."""
 import os
+
 import numpy as np
+
 from phonopy import Phonopy
 from phonopy.phonon.dos import get_pdos_indices
 

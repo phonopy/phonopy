@@ -34,10 +34,11 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.units import THzToEv, Kb, AMU, THz
-from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
+
 from phonopy.phonon.qpoints import QpointsPhonon
 from phonopy.phonon.thermal_displacement import ThermalDisplacements
+from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
+from phonopy.units import AMU, Kb, THz, THzToEv
 
 
 def atomic_form_factor_WK1995(Q, f_x):

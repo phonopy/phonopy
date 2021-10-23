@@ -34,12 +34,13 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.structure.symmetry import Symmetry
-from phonopy.harmonic.force_constants import similarity_transformation
-from phonopy.phonon.degeneracy import degenerate_sets as get_degenerate_sets
-from phonopy.units import VaspToTHz
+
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
+from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.phonon.character_table import character_table
+from phonopy.phonon.degeneracy import degenerate_sets as get_degenerate_sets
+from phonopy.structure.symmetry import Symmetry
+from phonopy.units import VaspToTHz
 
 
 class IrReps(object):

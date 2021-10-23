@@ -33,8 +33,9 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.units import AMU, THzToEv, Kb, EV, Hbar, Angstrom
+
 from phonopy.interface.cif import write_cif_P1
+from phonopy.units import AMU, EV, Angstrom, Hbar, Kb, THzToEv
 
 
 class ThermalMotion(object):

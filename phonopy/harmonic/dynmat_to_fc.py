@@ -34,16 +34,18 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
+
 import numpy as np
+
+from phonopy.harmonic.force_constants import distribute_force_constants_by_translations
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
-    get_supercell,
     get_primitive,
+    get_supercell,
     shape_supercell_matrix,
     sparse_to_dense_svecs,
 )
 from phonopy.structure.snf import SNF3x3
-from phonopy.harmonic.force_constants import distribute_force_constants_by_translations
 
 
 def get_commensurate_points(supercell_matrix):  # wrt primitive cell

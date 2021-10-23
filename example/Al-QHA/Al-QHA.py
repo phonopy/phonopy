@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
+import numpy as np
 import yaml
 from yaml import CLoader as Loader
-import numpy as np
+
 from phonopy import PhonopyQHA
 
 volumes = []

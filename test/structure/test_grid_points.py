@@ -1,8 +1,9 @@
 import os
-import pytest
-import numpy as np
-from phonopy.structure.grid_points import GridPoints, GeneralizedRegularGridPoints
 
+import numpy as np
+import pytest
+
+from phonopy.structure.grid_points import GeneralizedRegularGridPoints, GridPoints
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -686,8 +687,8 @@ def _get_matches(ph, suggest, is_time_reversal):
 
 
 def test_watch_GeneralizedRegularGridPoints(ph_tio2, helper_methods):
-    from phonopy.structure.atoms import PhonopyAtoms
     from phonopy.interface.phonopy_yaml import read_cell_yaml
+    from phonopy.structure.atoms import PhonopyAtoms
 
     grgp = GeneralizedRegularGridPoints(ph_tio2.unitcell, 10, x_fastest=False)
     tmat = grgp.transformation_matrix

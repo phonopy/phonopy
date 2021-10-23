@@ -34,10 +34,12 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
+
 import numpy as np
+
 from phonopy import Phonopy
-from phonopy.harmonic.force_constants import compact_fc_to_full_fc
 from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
+from phonopy.harmonic.force_constants import compact_fc_to_full_fc
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_supercell
 

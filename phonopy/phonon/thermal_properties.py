@@ -34,8 +34,10 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
+
 import numpy as np
-from phonopy.units import Kb, THzToEv, EvTokJmol
+
+from phonopy.units import EvTokJmol, Kb, THzToEv
 
 
 def mode_cv(temp, freqs):  # freqs (eV)

@@ -33,6 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+
 from phonopy.units import Kb
 
 

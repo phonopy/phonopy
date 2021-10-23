@@ -1,8 +1,9 @@
-from gpaw import GPAW, PW
+import numpy as np
 from ase import Atoms
+from gpaw import GPAW, PW
+
 from phonopy import Phonopy
 from phonopy.structure.atoms import PhonopyAtoms
-import numpy as np
 
 
 def get_gpaw(kpts_size=None):

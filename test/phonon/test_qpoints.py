@@ -1,9 +1,11 @@
-import unittest
 import os
+import unittest
+
 import numpy as np
+
 from phonopy import Phonopy
+from phonopy.file_IO import parse_BORN, parse_FORCE_SETS
 from phonopy.interface.vasp import read_vasp
-from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
 from phonopy.units import VaspToTHz
 
 data_dir = os.path.dirname(os.path.abspath(__file__))

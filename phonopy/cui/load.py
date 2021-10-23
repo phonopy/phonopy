@@ -34,10 +34,11 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.api_phonopy import Phonopy
-from phonopy.interface.phonopy_yaml import PhonopyYaml
-from phonopy.interface.calculator import get_default_physical_units
+
 import phonopy.cui.load_helper as load_helper
+from phonopy.api_phonopy import Phonopy
+from phonopy.interface.calculator import get_default_physical_units
+from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.structure.cells import get_primitive_matrix
 
 

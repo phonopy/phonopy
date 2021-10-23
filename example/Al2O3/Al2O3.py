@@ -1,6 +1,7 @@
 """Example by corundum Al2O3."""
-import phonopy
 import numpy as np
+
+import phonopy
 
 phonon = phonopy.load(
     unitcell_filename="POSCAR-unitcell", supercell_matrix=[2, 2, 1], log_level=1

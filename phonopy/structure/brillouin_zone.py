@@ -34,6 +34,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+
 from phonopy.structure.cells import get_reduced_bases
 
 search_space = np.array(

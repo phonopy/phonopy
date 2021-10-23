@@ -35,7 +35,9 @@
 
 import sys
 import warnings
+
 import numpy as np
+
 from phonopy.phonon.mesh import Mesh
 from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 from phonopy.structure.tetrahedron_method import TetrahedronMethod

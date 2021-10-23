@@ -127,9 +127,9 @@ def run_hiphive(
 
     """
     try:
-        from hiphive import ClusterSpace, StructureContainer, ForceConstantPotential
-        from hiphive.fitting import Optimizer
+        from hiphive import ClusterSpace, ForceConstantPotential, StructureContainer
         from hiphive.cutoffs import estimate_maximum_cutoff
+        from hiphive.fitting import Optimizer
         from hiphive.input_output.logging_tools import set_config
     except ImportError:
         raise ImportError("hiPhive python module was not found.")

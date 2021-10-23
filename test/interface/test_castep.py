@@ -1,8 +1,10 @@
 """Tests for CASTEP calculator interface."""
-import numpy as np
-from phonopy.interface.phonopy_yaml import read_cell_yaml
-from phonopy.interface.castep import read_castep
 import os
+
+import numpy as np
+
+from phonopy.interface.castep import read_castep
+from phonopy.interface.phonopy_yaml import read_cell_yaml
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 

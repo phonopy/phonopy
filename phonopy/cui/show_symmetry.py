@@ -35,12 +35,13 @@
 import numpy as np
 import spglib
 from spglib import get_pointgroup
+
 from phonopy.interface.calculator import (
-    write_crystal_structure,
     get_default_cell_filename,
+    write_crystal_structure,
 )
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import guess_primitive_matrix, get_primitive
+from phonopy.structure.cells import get_primitive, guess_primitive_matrix
 
 
 def check_symmetry(phonon, optional_structure_info):

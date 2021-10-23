@@ -1,5 +1,6 @@
 """Tests for band structure calculation."""
 import os
+
 from phonopy.phonon.band_structure import get_band_qpoints
 
 data_dir = os.path.dirname(os.path.abspath(__file__))

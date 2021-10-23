@@ -1,17 +1,18 @@
 """Setup script of phonopy."""
 import os
-import numpy
 import sysconfig
+
+import numpy
 
 with_openmp = False
 
 try:
-    from setuptools import setup, Extension
+    from setuptools import Extension, setup
 
     use_setuptools = True
     print("setuptools is used.")
 except ImportError:
-    from distutils.core import setup, Extension
+    from distutils.core import Extension, setup
 
     use_setuptools = False
     print("distutils is used.")

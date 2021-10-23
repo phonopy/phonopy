@@ -1,11 +1,12 @@
+import os
+import tarfile
 import unittest
 
 import numpy as np
-import tarfile
-import os
-from phonopy.interface.vasp import Vasprun, read_vasp
-from phonopy.interface.phonopy_yaml import read_cell_yaml
+
 from phonopy.file_IO import parse_FORCE_SETS
+from phonopy.interface.phonopy_yaml import read_cell_yaml
+from phonopy.interface.vasp import Vasprun, read_vasp
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 

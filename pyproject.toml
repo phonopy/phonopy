@@ -7,3 +7,6 @@ extend-ignore = "E203,W503"
 
 [tool.black]
 line-length = 88
+
+[tool.isort]
+profile = "black"

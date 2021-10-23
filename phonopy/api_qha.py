@@ -34,7 +34,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
-from phonopy.qha.core import BulkModulus, QHA
+
+from phonopy.qha.core import QHA, BulkModulus
 
 
 class PhonopyQHA(object):

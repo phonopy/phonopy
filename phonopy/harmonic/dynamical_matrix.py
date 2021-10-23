@@ -36,9 +36,11 @@
 
 import sys
 import warnings
-from phonopy.structure.cells import sparse_to_dense_svecs
-from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
+
 import numpy as np
+
+from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
+from phonopy.structure.cells import sparse_to_dense_svecs
 
 
 def get_dynamical_matrix(

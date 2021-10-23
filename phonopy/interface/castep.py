@@ -33,11 +33,10 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
+
 import numpy as np
-from phonopy.interface.vasp import (
-    check_forces,
-    get_drift_forces,
-)
+
+from phonopy.interface.vasp import check_forces, get_drift_forces
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.symmetry import Symmetry
 

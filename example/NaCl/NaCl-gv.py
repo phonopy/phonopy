@@ -1,7 +1,8 @@
 """Group velocity example by NaCl."""
-import numpy as np
-import phonopy
 import matplotlib.pyplot as plt
+import numpy as np
+
+import phonopy
 
 phonon = phonopy.load(
     unitcell_filename="POSCAR-unitcell",

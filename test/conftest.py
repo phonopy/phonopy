@@ -1,8 +1,10 @@
 """Pytest configuration."""
 import os
-import pytest
-import phonopy
+
 import numpy as np
+import pytest
+
+import phonopy
 from phonopy.structure.atoms import PhonopyAtoms
 
 current_dir = os.path.dirname(os.path.abspath(__file__))

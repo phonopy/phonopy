@@ -40,9 +40,11 @@
 # Modified 2020 by Florian Knoop
 
 import sys
+
 import numpy as np
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
+
 from phonopy.interface.vasp import check_forces, get_drift_forces
+from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
 
 # FK 2018/07/19

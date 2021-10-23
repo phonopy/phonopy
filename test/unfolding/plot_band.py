@@ -1,7 +1,8 @@
 """Script to plot unfolding result."""
-import numpy as np
 import sys
+
 import matplotlib.pyplot as plt
+import numpy as np
 
 if len(sys.argv) > 1:
     filename = sys.argv[1]

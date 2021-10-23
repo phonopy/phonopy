@@ -34,10 +34,12 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
+
 import numpy as np
+
 from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
-from phonopy.units import AMU, kb_J
 from phonopy.structure.grid_points import get_qpoints
+from phonopy.units import AMU, kb_J
 
 
 class Velocity:

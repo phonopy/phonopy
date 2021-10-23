@@ -32,8 +32,9 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import sys
 import os
+import sys
+
 import numpy as np
 
 from phonopy.interface.vasp import check_forces, get_drift_forces

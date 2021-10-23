@@ -34,11 +34,13 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import gzip
 import sys
 import warnings
-import gzip
-import yaml
+
 import numpy as np
+import yaml
+
 from phonopy.units import VaspToTHz
 
 

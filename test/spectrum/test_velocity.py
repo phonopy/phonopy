@@ -1,8 +1,10 @@
 """Tests for velocity calculation from MD data."""
-import numpy as np
-from phonopy.spectrum.velocity import Velocity
-from phonopy.interface.vasp import read_XDATCAR
 import os
+
+import numpy as np
+
+from phonopy.interface.vasp import read_XDATCAR
+from phonopy.spectrum.velocity import Velocity
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 

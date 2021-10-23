@@ -1,5 +1,7 @@
 import os
+
 import numpy as np
+
 from phonopy import PhonopyQHA
 
 current_dir = os.path.dirname(os.path.abspath(__file__))

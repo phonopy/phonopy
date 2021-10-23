@@ -34,10 +34,12 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
+
 import numpy as np
-from phonopy.units import VaspToTHz
+
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
 from phonopy.structure.grid_points import GridPoints
+from phonopy.units import VaspToTHz
 
 
 class MeshBase:

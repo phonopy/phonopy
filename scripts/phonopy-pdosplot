@@ -49,8 +49,8 @@
 # 4 5 6 : X Y Z of the 2nd atom,
 # ...
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def get_options():

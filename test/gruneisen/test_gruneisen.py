@@ -1,5 +1,6 @@
 """Tests for mode Grueneisen parameter calculations."""
 import numpy as np
+
 from phonopy.api_gruneisen import PhonopyGruneisen
 from phonopy.phonon.band_structure import get_band_qpoints
 

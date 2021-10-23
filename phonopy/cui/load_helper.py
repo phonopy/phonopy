@@ -34,17 +34,21 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import os
+
 import numpy as np
-from phonopy.interface.calculator import read_crystal_structure
-from phonopy.structure.cells import get_primitive_matrix
+
 from phonopy.file_IO import (
     parse_BORN,
-    read_force_constants_hdf5,
-    parse_FORCE_SETS,
     parse_FORCE_CONSTANTS,
+    parse_FORCE_SETS,
+    read_force_constants_hdf5,
+)
+from phonopy.interface.calculator import (
+    get_force_constant_conversion_factor,
+    read_crystal_structure,
 )
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.interface.calculator import get_force_constant_conversion_factor
+from phonopy.structure.cells import get_primitive_matrix
 
 
 def get_cell_settings(

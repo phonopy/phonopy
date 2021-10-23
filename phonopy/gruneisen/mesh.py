@@ -33,9 +33,11 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import sys
 import gzip
+import sys
+
 import numpy as np
+
 from phonopy.gruneisen.core import GruneisenBase
 from phonopy.structure.grid_points import get_qpoints
 from phonopy.units import VaspToTHz

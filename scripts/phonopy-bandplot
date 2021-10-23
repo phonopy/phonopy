@@ -36,9 +36,11 @@
 
 import os
 import sys
-import numpy as np
-from phonopy.phonon.band_structure import BandPlot
+
 import h5py
+import numpy as np
+
+from phonopy.phonon.band_structure import BandPlot
 
 try:
     import yaml

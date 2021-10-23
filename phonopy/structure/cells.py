@@ -34,9 +34,11 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
-import numpy as np
 from distutils.version import StrictVersion
+
+import numpy as np
 import spglib
+
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.snf import SNF3x3
 

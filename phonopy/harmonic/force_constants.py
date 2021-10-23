@@ -34,10 +34,12 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import textwrap
+
 import numpy as np
+
 from phonopy.structure.cells import (
-    get_smallest_vectors,
     compute_permutation_for_rotation,
+    get_smallest_vectors,
 )
 
 

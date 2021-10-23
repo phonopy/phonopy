@@ -34,6 +34,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+
 from phonopy.structure.cells import sparse_to_dense_svecs
 
 

@@ -39,6 +39,7 @@ from __future__ import print_function
 import sys
 from fractions import Fraction
 from os import path
+
 import numpy as np
 
 from phonopy.file_IO import iter_collect_forces

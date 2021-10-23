@@ -1,14 +1,16 @@
-import unittest
 import os
+import unittest
 
 try:
     from StringIO import StringIO
 except ImportError:
     from io import StringIO
+
 import numpy as np
+
 from phonopy import Phonopy
-from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_FORCE_SETS
+from phonopy.interface.vasp import read_vasp
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 

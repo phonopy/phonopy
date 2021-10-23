@@ -35,56 +35,58 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
-import warnings
 import textwrap
+import warnings
+
 import numpy as np
-from phonopy.version import __version__
-from phonopy.interface.phonopy_yaml import PhonopyYaml
-from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
-from phonopy.structure.grid_points import length2mesh
-from phonopy.structure.cells import (
-    Primitive,
-    get_supercell,
-    get_primitive,
-    guess_primitive_matrix,
-    get_primitive_matrix,
-    shape_supercell_matrix,
-)
-from phonopy.structure.dataset import get_displacements_and_forces, forces_in_dataset
+
 from phonopy.harmonic.displacement import (
-    get_least_displacements,
     directions_to_displacement_dataset,
+    get_least_displacements,
     get_random_displacements_dataset,
 )
-from phonopy.harmonic.force_constants import (
-    symmetrize_force_constants,
-    symmetrize_compact_force_constants,
-    show_drift_force_constants,
-    cutoff_force_constants,
-    set_tensor_symmetry_PJ,
-)
+from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
+from phonopy.harmonic.force_constants import cutoff_force_constants
 from phonopy.harmonic.force_constants import get_fc2 as get_phonopy_fc2
+from phonopy.harmonic.force_constants import (
+    set_tensor_symmetry_PJ,
+    show_drift_force_constants,
+    symmetrize_compact_force_constants,
+    symmetrize_force_constants,
+)
 from phonopy.interface.calculator import get_default_physical_units
 from phonopy.interface.fc_calculator import get_fc2
-from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
-from phonopy.phonon.band_structure import BandStructure, get_band_qpoints_by_seekpath
-from phonopy.phonon.thermal_properties import ThermalProperties
-from phonopy.phonon.mesh import Mesh, IterMesh
-from phonopy.units import VaspToTHz
-from phonopy.phonon.dos import TotalDos, ProjectedDos
-from phonopy.phonon.thermal_displacement import (
-    ThermalDisplacements,
-    ThermalDisplacementMatrices,
-)
-from phonopy.phonon.random_displacements import RandomDisplacements
+from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.phonon.animation import write_animation
-from phonopy.phonon.modulation import Modulation
-from phonopy.phonon.qpoints import QpointsPhonon
-from phonopy.phonon.irreps import IrReps
+from phonopy.phonon.band_structure import BandStructure, get_band_qpoints_by_seekpath
+from phonopy.phonon.dos import ProjectedDos, TotalDos
 from phonopy.phonon.group_velocity import GroupVelocity
+from phonopy.phonon.irreps import IrReps
+from phonopy.phonon.mesh import IterMesh, Mesh
+from phonopy.phonon.modulation import Modulation
 from phonopy.phonon.moment import PhononMoment
+from phonopy.phonon.qpoints import QpointsPhonon
+from phonopy.phonon.random_displacements import RandomDisplacements
+from phonopy.phonon.thermal_displacement import (
+    ThermalDisplacementMatrices,
+    ThermalDisplacements,
+)
+from phonopy.phonon.thermal_properties import ThermalProperties
 from phonopy.spectrum.dynamic_structure_factor import DynamicStructureFactor
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import (
+    Primitive,
+    get_primitive,
+    get_primitive_matrix,
+    get_supercell,
+    guess_primitive_matrix,
+    shape_supercell_matrix,
+)
+from phonopy.structure.dataset import forces_in_dataset, get_displacements_and_forces
+from phonopy.structure.grid_points import length2mesh
+from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
+from phonopy.units import VaspToTHz
+from phonopy.version import __version__
 
 
 class Phonopy(object):

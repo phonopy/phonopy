@@ -33,24 +33,25 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
-import numpy as np
 from collections import OrderedDict
+
+import numpy as np
 
 from phonopy.file_IO import (
     iter_collect_forces,
-    write_force_constants_to_hdf5,
     write_FORCE_CONSTANTS,
+    write_force_constants_to_hdf5,
 )
+from phonopy.harmonic.force_constants import distribute_force_constants_by_translations
 from phonopy.interface.vasp import (
-    get_scaled_positions_lines,
     check_forces,
     get_drift_forces,
+    get_scaled_positions_lines,
 )
-from phonopy.units import Bohr
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.atoms import symbol_map
-from phonopy.structure.cells import get_supercell, get_primitive
-from phonopy.harmonic.force_constants import distribute_force_constants_by_translations
+from phonopy.structure.cells import get_primitive, get_supercell
+from phonopy.units import Bohr
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):

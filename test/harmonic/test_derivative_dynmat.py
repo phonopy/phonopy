@@ -1,6 +1,6 @@
 import numpy as np
-from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 
+from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 
 ddm_ph_nacl = [
     -0.2568036,

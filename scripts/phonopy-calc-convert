@@ -36,7 +36,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import os
-from phonopy.interface.calculator import convert_crystal_structure, calculator_info
+
+from phonopy.interface.calculator import calculator_info, convert_crystal_structure
 
 
 def get_options():

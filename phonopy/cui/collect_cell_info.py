@@ -33,12 +33,13 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+
 from phonopy.interface.calculator import (
-    read_crystal_structure,
     get_default_cell_filename,
+    read_crystal_structure,
 )
-from phonopy.interface.vasp import read_vasp
 from phonopy.interface.phonopy_yaml import PhonopyYaml
+from phonopy.interface.vasp import read_vasp
 
 
 def collect_cell_info(

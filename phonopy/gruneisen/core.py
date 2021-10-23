@@ -34,6 +34,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+
 from phonopy.phonon.band_structure import estimate_band_connection
 from phonopy.phonon.degeneracy import rotate_eigenvectors
 

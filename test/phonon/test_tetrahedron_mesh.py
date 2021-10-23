@@ -1,10 +1,12 @@
-from io import StringIO
-import numpy as np
-from phonopy import Phonopy
-from phonopy.interface.vasp import read_vasp
-from phonopy.file_IO import parse_FORCE_SETS
-from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 import os
+from io import StringIO
+
+import numpy as np
+
+from phonopy import Phonopy
+from phonopy.file_IO import parse_FORCE_SETS
+from phonopy.interface.vasp import read_vasp
+from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 

@@ -33,12 +33,14 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import yaml
+
 import numpy as np
+import yaml
+
 from phonopy.interface.phonopy_yaml import PhonopyYaml
-from phonopy.structure.dataset import get_displacements_and_forces
-from phonopy.structure.cells import determinant
 from phonopy.interface.vasp import sort_positions_by_symbols
+from phonopy.structure.cells import determinant
+from phonopy.structure.dataset import get_displacements_and_forces
 
 calculator_info = {
     "abinit": {"option": {"name": "--abinit", "help": "Invoke Abinit mode"}},
@@ -535,21 +537,21 @@ def get_default_physical_units(interface_mode=None):
     """
 
     from phonopy.units import (
-        Wien2kToTHz,
         AbinitToTHz,
-        PwscfToTHz,
-        ElkToTHz,
-        SiestaToTHz,
-        VaspToTHz,
+        Bohr,
+        CastepToTHz,
         CP2KToTHz,
         CrystalToTHz,
         DftbpToTHz,
-        TurbomoleToTHz,
-        CastepToTHz,
+        ElkToTHz,
         FleurToTHz,
         Hartree,
-        Bohr,
+        PwscfToTHz,
         Rydberg,
+        SiestaToTHz,
+        TurbomoleToTHz,
+        VaspToTHz,
+        Wien2kToTHz,
     )
 
     units = {
@@ -705,7 +707,7 @@ def get_force_sets_wien2k(
 
 
 def get_force_constant_conversion_factor(unit, interface_mode):
-    from phonopy.units import Bohr, Rydberg, Hartree
+    from phonopy.units import Bohr, Hartree, Rydberg
 
     _unit = unit.replace("Angstrom", "angstrom")  # backward compatibility
     interface_default_units = get_default_physical_units(interface_mode)

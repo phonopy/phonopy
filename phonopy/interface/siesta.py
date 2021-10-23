@@ -32,14 +32,15 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import sys
-import numpy as np
 import re
+import sys
+
+import numpy as np
 
 from phonopy.file_IO import iter_collect_forces
 from phonopy.interface.vasp import check_forces, get_drift_forces
-from phonopy.units import Bohr
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.units import Bohr
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):

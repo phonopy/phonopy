@@ -33,11 +33,12 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.structure.cells import get_supercell
-from phonopy.interface.vasp import write_vasp
-from phonopy.units import VaspToTHz
-from phonopy.phonon.degeneracy import get_eigenvectors
+
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
+from phonopy.interface.vasp import write_vasp
+from phonopy.phonon.degeneracy import get_eigenvectors
+from phonopy.structure.cells import get_supercell
+from phonopy.units import VaspToTHz
 
 
 class Modulation(object):

@@ -1,17 +1,19 @@
 import os
-import pytest
+
 import numpy as np
+import pytest
+
+from phonopy.interface.phonopy_yaml import read_cell_yaml
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
-    get_supercell,
-    get_primitive,
-    TrimmedCell,
     ShortestPairs,
-    compute_permutation_for_rotation,
+    TrimmedCell,
     compute_all_sg_permutations,
+    compute_permutation_for_rotation,
+    get_primitive,
+    get_supercell,
     sparse_to_dense_svecs,
 )
-from phonopy.interface.phonopy_yaml import read_cell_yaml
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 primitive_matrix_nacl = [[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]]
