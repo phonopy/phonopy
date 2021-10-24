@@ -1,4 +1,4 @@
-numpy
+numpy >= 1.11.0
 PyYAML
 matplotlib
 h5py
