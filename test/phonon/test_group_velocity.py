@@ -1,9 +1,12 @@
+"""Tests for group velocity calculation."""
 import numpy as np
 
+from phonopy import Phonopy
 from phonopy.phonon.group_velocity import GroupVelocity
 
 
-def test_gv_nacl(ph_nacl):
+def test_gv_nacl(ph_nacl: Phonopy):
+    """Test of GroupVelocity."""
     gv_ref = [
         14.90162220,
         14.90162220,

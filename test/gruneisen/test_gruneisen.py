@@ -109,7 +109,7 @@ def test_gruneisen_mesh(ph_nacl_gruneisen):
 
 def test_gruneisen_band(ph_nacl_gruneisen):
     """Test of mode Grueneisen parameter calculation along band paths."""
-    paths = get_band_qpoints([[[0.05, 0.05, 0.05], [0.5, 0.5, 0.5]]], 10)
+    paths = get_band_qpoints([[[0.05, 0.05, 0.05], [0.5, 0.5, 0.5]]], npoints=10)
     ph0, ph_minus, ph_plus = ph_nacl_gruneisen
     phg = PhonopyGruneisen(ph0, ph_minus, ph_plus)
     phg.set_band_structure(paths)

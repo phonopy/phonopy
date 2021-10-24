@@ -174,7 +174,7 @@ class PhonopyYaml:
         return "\n".join(self.get_yaml_lines())
 
     def read(self, filename):
-        """Read phonopy.yaml life file."""
+        """Read phonopy.yaml like file."""
         self.yaml_filename = filename
         self._load(filename)
 

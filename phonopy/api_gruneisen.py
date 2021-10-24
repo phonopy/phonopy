@@ -72,6 +72,7 @@ class PhonopyGruneisen:
         is_gamma_center=False,
         is_mesh_symmetry=True,
     ):
+        """Set sampling mesh."""
         for phonon in (self._phonon, self._phonon_plus, self._phonon_minus):
             if phonon.dynamical_matrix is None:
                 print("Warning: Dynamical matrix has not yet built.")
@@ -95,6 +96,7 @@ class PhonopyGruneisen:
         return True
 
     def get_mesh(self):
+        """Return mode Grueneisen parameters calculated on sampling mesh."""
         if self._mesh is None:
             return None
         else:
@@ -107,14 +109,17 @@ class PhonopyGruneisen:
             )
 
     def write_yaml_mesh(self):
+        """Write mesh sampling calculation results to file in yaml."""
         self._mesh.write_yaml()
 
     def write_hdf5_mesh(self):
+        """Write mesh sampling calculation results to file in hdf5."""
         self._mesh.write_hdf5()
 
     def plot_mesh(
         self, cutoff_frequency=None, color_scheme=None, marker="o", markersize=None
     ):
+        """Return pyplot of mesh sampling calculation results."""
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
@@ -132,6 +137,7 @@ class PhonopyGruneisen:
         return plt
 
     def set_band_structure(self, bands):
+        """Set band structure paths."""
         self._band_structure = GruneisenBandStructure(
             bands,
             self._phonon.dynamical_matrix,
@@ -142,6 +148,7 @@ class PhonopyGruneisen:
         )
 
     def get_band_structure(self):
+        """Return band structure calculation results."""
         band = self._band_structure
         return (
             band.get_qpoints(),
@@ -152,9 +159,11 @@ class PhonopyGruneisen:
         )
 
     def write_yaml_band_structure(self):
+        """Write band structure calculation results to file in yaml."""
         self._band_structure.write_yaml()
 
     def plot_band_structure(self, epsilon=1e-4, color_scheme=None):
+        """Return pyplot of band structure calculation results."""
         import matplotlib.pyplot as plt
 
         fig, axarr = plt.subplots(2, 1)

@@ -1,3 +1,4 @@
+"""Mode Grueneisen parameter band structure calculation."""
 # Copyright (C) 2012 Atsushi Togo
 # All rights reserved.
 #
@@ -43,6 +44,8 @@ from phonopy.units import VaspToTHz
 
 
 class GruneisenBandStructure(GruneisenBase):
+    """Class to calculate mode Grueneisen parameter along band structure paths."""
+
     def __init__(
         self,
         paths,
@@ -54,6 +57,7 @@ class GruneisenBandStructure(GruneisenBase):
         labels=None,
         factor=VaspToTHz,
     ):
+        """Init method."""
         super().__init__(
             dynmat,
             dynmat_plus,
@@ -110,24 +114,31 @@ class GruneisenBandStructure(GruneisenBase):
             self._labels = labels
 
     def get_qpoints(self):
+        """Return q-points."""
         return [path[0] for path in self._paths]
 
     def get_distances(self):
+        """Return distances."""
         return [path[6] for path in self._paths]
 
     def get_gruneisen(self):
+        """Return mode Gruneisen parameters."""
         return [path[2] for path in self._paths]
 
     def get_eigenvalues(self):
+        """Return eigenvalues."""
         return [path[3] for path in self._paths]
 
     def get_eigenvectors(self):
+        """Return eigenvectors."""
         return [path[4] for path in self._paths]
 
     def get_frequencies(self):
+        """Return frequencies."""
         return [path[5] for path in self._paths]
 
     def write_yaml(self, comment=None, filename=None, compression=None):
+        """Write results to file in yaml."""
         if filename is not None:
             _filename = filename
 
@@ -229,6 +240,7 @@ class GruneisenBandStructure(GruneisenBase):
             w.write(text)
 
     def plot(self, axarr, epsilon=None, color_scheme=None):
+        """Return pyplot of band structure calculation results."""
         for band_structure in self._paths:
             self._plot(axarr, band_structure, epsilon, color_scheme)
 

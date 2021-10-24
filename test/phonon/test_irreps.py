@@ -1,10 +1,6 @@
+"""Tests for irreducible representation calculations."""
 import os
-import unittest
-
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+from io import StringIO
 
 import numpy as np
 
@@ -668,171 +664,197 @@ chars_Pbar43m = """ 3.  0. -1.  0. -1.  0. -1.  0. -1.  0.  1.  0. -1.  0.  1.  
  3.  0. -1.  0. -1.  0. -1.  0. -1.  0.  1.  0. -1.  0.  1.  0. -0.  0.  1.  0.  0.  0. -1.  0.  0.  0.  1.  0. -0.  0. -1.  0. -0.  0. -1.  0. -0.  0.  1.  0.  0.  0.  1.  0.  0.  0. -1.  0."""
 
 
-class TestIrreps(unittest.TestCase):
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def test_pt03_P2(self):
-        data = self._load_data(chars_P2)
-        phonon = self._get_phonon("P2", [3, 2, 2], np.eye(3))
-        phonon.set_irreps([0, 0, 0])
-        chars = phonon.get_irreps().get_characters()
-        np.testing.assert_allclose(chars, data, atol=1e-5)
-
-    def test_pt04_Pc(self):
-        data = self._load_data(chars_Pc)
-        phonon = self._get_phonon("Pc", [2, 2, 2], np.eye(3))
-        phonon.set_irreps([0, 0, 0])
-        chars = phonon.get_irreps().get_characters()
-        np.testing.assert_allclose(chars, data, atol=1e-5)
-
-    def test_pt06_P222_1(self):
-        data = self._load_data(chars_P222_1)
-        phonon = self._get_phonon("P222_1", [2, 2, 1], np.eye(3))
-        phonon.set_irreps([0, 0, 0])
-        chars = phonon.get_irreps().get_characters()
-        np.testing.assert_allclose(chars, data, atol=1e-5)
-
-    def test_pt07_Amm2(self):
-        data = self._load_data(chars_Amm2)
-        phonon = self._get_phonon(
-            "Amm2", [3, 2, 2], [[1, 0, 0], [0, 0.5, -0.5], [0, 0.5, 0.5]]
-        )
-        phonon.set_irreps([0, 0, 0])
-        chars = phonon.get_irreps().get_characters()
-        np.testing.assert_allclose(chars, data, atol=1e-5)
-
-    def test_pt09_P4_1(self):
-        data = self._load_data(chars_P4_1)
-        phonon = self._get_phonon("P4_1", [2, 2, 1], np.eye(3))
-        phonon.set_irreps([0, 0, 0])
-        chars = phonon.get_irreps().get_characters()
-        np.testing.assert_allclose(chars, data, atol=1e-5)
-
-    def test_pt10_Pbar4(self):
-        data = self._load_data(chars_Pbar4)
-        phonon = self._get_phonon("P-4", [1, 1, 2], np.eye(3))
-        phonon.set_irreps([0, 0, 0])
-        chars = phonon.get_irreps().get_characters()
-        np.testing.assert_allclose(chars, data, atol=1e-5)
-
-    def test_pt11_I4_1a(self):
-        data = self._load_data(chars_I4_1a)
-        phonon = self._get_phonon(
-            "I4_1a", [2, 2, 1], np.array([[-1, 1, 1], [1, -1, 1], [1, 1, -1]]) * 0.5
-        )
-        phonon.set_irreps([0, 0, 0])
-        chars = phonon.get_irreps().get_characters()
-        np.testing.assert_allclose(chars, data, atol=1e-5)
-
-    def test_pt13_P4mm(self):
-        data = self._load_data(chars_P4mm)
-        phonon = self._get_phonon("P4mm", [3, 3, 2], np.eye(3))
-        phonon.set_irreps([0, 0, 0])
-        chars = phonon.get_irreps().get_characters()
-        np.testing.assert_allclose(chars, data, atol=1e-5)
-
-    def test_pt14_Pbar42_1m(self):
-        data = self._load_data(chars_Pbar42_1m)
-        phonon = self._get_phonon("P-42_1m", [2, 2, 3], np.eye(3))
-        phonon.set_irreps([0, 0, 0])
-        chars = phonon.get_irreps().get_characters()
-        np.testing.assert_allclose(chars, data, atol=1e-5)
-
-    def test_pt19_P3m1(self):
-        data = self._load_data(chars_P3m1)
-        phonon = self._get_phonon("P3m1", [4, 4, 2], np.eye(3))
-        phonon.set_irreps([0, 0, 0])
-        chars = phonon.get_irreps().get_characters()
-        np.testing.assert_allclose(chars, data, atol=1e-5)
-
-    def test_pt20_Pbar3m1(self):
-        data = self._load_data(chars_Pbar3m1)
-        phonon = self._get_phonon("P-3m1", [3, 3, 2], np.eye(3))
-        phonon.set_irreps([0, 0, 0])
-        chars = phonon.get_irreps().get_characters()
-        np.testing.assert_allclose(chars, data, atol=1e-5)
-
-    def test_pt21_P6(self):
-        data = self._load_data(chars_P6)
-        phonon = self._get_phonon("P6", [2, 2, 1], np.eye(3))
-        phonon.set_irreps([0, 0, 0])
-        chars = phonon.get_irreps().get_characters()
-        np.testing.assert_allclose(chars, data, atol=1e-5)
-
-    def test_pt22_Pbar6(self):
-        data = self._load_data(chars_Pbar6)
-        phonon = self._get_phonon("P-6", [1, 1, 3], np.eye(3))
-        phonon.set_irreps([0, 0, 0])
-        chars = phonon.get_irreps().get_characters()
-        np.testing.assert_allclose(chars, data, atol=1e-5)
-
-    def test_pt24_P6_222(self):
-        data = self._load_data(chars_P6_222)
-        phonon = self._get_phonon("P6_222", [2, 2, 2], np.eye(3))
-        phonon.set_irreps([0, 0, 0])
-        chars = phonon.get_irreps().get_characters()
-        np.testing.assert_allclose(chars, data, atol=1e-5)
-
-    def test_pt26_Pbar6m2(self):
-        data = self._load_data(chars_Pbar6m2)
-        phonon = self._get_phonon("P-6m2", [2, 2, 3], np.eye(3))
-        phonon.set_irreps([0, 0, 0])
-        chars = phonon.get_irreps().get_characters()
-        np.testing.assert_allclose(chars, data, atol=1e-5)
-
-    def test_pt28_P2_13(self):
-        data = self._load_data(chars_P2_13)
-        phonon = self._get_phonon("P2_13", [2, 2, 2], np.eye(3))
-        phonon.set_irreps([0, 0, 0])
-        chars = phonon.get_irreps().get_characters()
-        np.testing.assert_allclose(chars, data, atol=1e-5)
-
-    def test_pt29_Pabar3(self):
-        data = self._load_data(chars_Pabar3)
-        phonon = self._get_phonon("Pa-3", [2, 2, 2], np.eye(3))
-        phonon.set_irreps([0, 0, 0])
-        chars = phonon.get_irreps().get_characters()
-        np.testing.assert_allclose(chars, data, atol=1e-5)
-
-    def test_pt30_P4_332(self):
-        data = self._load_data(chars_P4_332)
-        phonon = self._get_phonon("P4_332", [1, 1, 1], np.eye(3))
-        phonon.set_irreps([0, 0, 0])
-        chars = phonon.get_irreps().get_characters()
-        np.testing.assert_allclose(chars, data, atol=1e-5)
-
-    def test_pt31_Pbar43m(self):
-        data = self._load_data(chars_Pbar43m)
-        phonon = self._get_phonon("P-43m", [2, 2, 2], np.eye(3))
-        phonon.set_irreps([0, 0, 0])
-        chars = phonon.get_irreps().get_characters()
-        np.testing.assert_allclose(chars, data, atol=1e-5)
-
-    def _get_phonon(self, spgtype, dim, pmat):
-        cell = read_vasp(os.path.join(data_dir, "POSCAR_%s" % spgtype))
-        phonon = Phonopy(cell, np.diag(dim), primitive_matrix=pmat)
-        filename = os.path.join(data_dir, "FORCE_SETS_%s" % spgtype)
-        force_sets = parse_FORCE_SETS(filename=filename)
-        phonon.dataset = force_sets
-        phonon.produce_force_constants()
-        print(phonon.symmetry.pointgroup_symbol)
-        return phonon
-
-    def _show_chars(self, chars):
-        for line in chars:
-            line_str = str(line.view(dtype="double").round(decimals=1))
-            print(line_str.replace("[", "").replace("]", ""))
-
-    def _load_data(self, data_str):
-        data = np.loadtxt(StringIO(data_str))
-        data = data.view(dtype="c%d" % (data.itemsize * 2))
-        return data
+def test_pt03_P2():
+    """Test of pt03_P2."""
+    data = _load_data(chars_P2)
+    phonon = _get_phonon("P2", [3, 2, 2], np.eye(3))
+    phonon.set_irreps([0, 0, 0])
+    chars = phonon.get_irreps().get_characters()
+    np.testing.assert_allclose(chars, data, atol=1e-5)
 
 
-if __name__ == "__main__":
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestIrreps)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+def test_pt04_Pc():
+    """Test of pt04_Pc."""
+    data = _load_data(chars_Pc)
+    phonon = _get_phonon("Pc", [2, 2, 2], np.eye(3))
+    phonon.set_irreps([0, 0, 0])
+    chars = phonon.get_irreps().get_characters()
+    np.testing.assert_allclose(chars, data, atol=1e-5)
+
+
+def test_pt06_P222_1():
+    """Test of pt06_P222_1."""
+    data = _load_data(chars_P222_1)
+    phonon = _get_phonon("P222_1", [2, 2, 1], np.eye(3))
+    phonon.set_irreps([0, 0, 0])
+    chars = phonon.get_irreps().get_characters()
+    np.testing.assert_allclose(chars, data, atol=1e-5)
+
+
+def test_pt07_Amm2():
+    """Test of pt07_Amm2."""
+    data = _load_data(chars_Amm2)
+    phonon = _get_phonon("Amm2", [3, 2, 2], [[1, 0, 0], [0, 0.5, -0.5], [0, 0.5, 0.5]])
+    phonon.set_irreps([0, 0, 0])
+    chars = phonon.get_irreps().get_characters()
+    np.testing.assert_allclose(chars, data, atol=1e-5)
+
+
+def test_pt09_P4_1():
+    """Test of pt09_P4_1."""
+    data = _load_data(chars_P4_1)
+    phonon = _get_phonon("P4_1", [2, 2, 1], np.eye(3))
+    phonon.set_irreps([0, 0, 0])
+    chars = phonon.get_irreps().get_characters()
+    np.testing.assert_allclose(chars, data, atol=1e-5)
+
+
+def test_pt10_Pbar4():
+    """Test of pt10_Pbar4."""
+    data = _load_data(chars_Pbar4)
+    phonon = _get_phonon("P-4", [1, 1, 2], np.eye(3))
+    phonon.set_irreps([0, 0, 0])
+    chars = phonon.get_irreps().get_characters()
+    np.testing.assert_allclose(chars, data, atol=1e-5)
+
+
+def test_pt11_I4_1a():
+    """Test of pt11_I4_1a."""
+    data = _load_data(chars_I4_1a)
+    phonon = _get_phonon(
+        "I4_1a", [2, 2, 1], np.array([[-1, 1, 1], [1, -1, 1], [1, 1, -1]]) * 0.5
+    )
+    phonon.set_irreps([0, 0, 0])
+    chars = phonon.get_irreps().get_characters()
+    np.testing.assert_allclose(chars, data, atol=1e-5)
+
+
+def test_pt13_P4mm():
+    """Test of pt13_P4mm."""
+    data = _load_data(chars_P4mm)
+    phonon = _get_phonon("P4mm", [3, 3, 2], np.eye(3))
+    phonon.set_irreps([0, 0, 0])
+    chars = phonon.get_irreps().get_characters()
+    np.testing.assert_allclose(chars, data, atol=1e-5)
+
+
+def test_pt14_Pbar42_1m():
+    """Test of pt14_Pbar42_1m."""
+    data = _load_data(chars_Pbar42_1m)
+    phonon = _get_phonon("P-42_1m", [2, 2, 3], np.eye(3))
+    phonon.set_irreps([0, 0, 0])
+    chars = phonon.get_irreps().get_characters()
+    np.testing.assert_allclose(chars, data, atol=1e-5)
+
+
+def test_pt19_P3m1():
+    """Test of pt19_P3m1."""
+    data = _load_data(chars_P3m1)
+    phonon = _get_phonon("P3m1", [4, 4, 2], np.eye(3))
+    phonon.set_irreps([0, 0, 0])
+    chars = phonon.get_irreps().get_characters()
+    np.testing.assert_allclose(chars, data, atol=1e-5)
+
+
+def test_pt20_Pbar3m1():
+    """Test of pt20_Pbar3m1."""
+    data = _load_data(chars_Pbar3m1)
+    phonon = _get_phonon("P-3m1", [3, 3, 2], np.eye(3))
+    phonon.set_irreps([0, 0, 0])
+    chars = phonon.get_irreps().get_characters()
+    np.testing.assert_allclose(chars, data, atol=1e-5)
+
+
+def test_pt21_P6():
+    """Test of pt21_P6."""
+    data = _load_data(chars_P6)
+    phonon = _get_phonon("P6", [2, 2, 1], np.eye(3))
+    phonon.set_irreps([0, 0, 0])
+    chars = phonon.get_irreps().get_characters()
+    np.testing.assert_allclose(chars, data, atol=1e-5)
+
+
+def test_pt22_Pbar6():
+    """Test of pt22_Pbar6."""
+    data = _load_data(chars_Pbar6)
+    phonon = _get_phonon("P-6", [1, 1, 3], np.eye(3))
+    phonon.set_irreps([0, 0, 0])
+    chars = phonon.get_irreps().get_characters()
+    np.testing.assert_allclose(chars, data, atol=1e-5)
+
+
+def test_pt24_P6_222():
+    """Test of pt24_P6_222."""
+    data = _load_data(chars_P6_222)
+    phonon = _get_phonon("P6_222", [2, 2, 2], np.eye(3))
+    phonon.set_irreps([0, 0, 0])
+    chars = phonon.get_irreps().get_characters()
+    np.testing.assert_allclose(chars, data, atol=1e-5)
+
+
+def test_pt26_Pbar6m2():
+    """Test of pt26_Pbar6m2."""
+    data = _load_data(chars_Pbar6m2)
+    phonon = _get_phonon("P-6m2", [2, 2, 3], np.eye(3))
+    phonon.set_irreps([0, 0, 0])
+    chars = phonon.get_irreps().get_characters()
+    np.testing.assert_allclose(chars, data, atol=1e-5)
+
+
+def test_pt28_P2_13():
+    """Test of pt28_P2_13."""
+    data = _load_data(chars_P2_13)
+    phonon = _get_phonon("P2_13", [2, 2, 2], np.eye(3))
+    phonon.set_irreps([0, 0, 0])
+    chars = phonon.get_irreps().get_characters()
+    np.testing.assert_allclose(chars, data, atol=1e-5)
+
+
+def test_pt29_Pabar3():
+    """Test of pt29_Pabar3."""
+    data = _load_data(chars_Pabar3)
+    phonon = _get_phonon("Pa-3", [2, 2, 2], np.eye(3))
+    phonon.set_irreps([0, 0, 0])
+    chars = phonon.get_irreps().get_characters()
+    np.testing.assert_allclose(chars, data, atol=1e-5)
+
+
+def test_pt30_P4_332():
+    """Test of pt30_P4_332."""
+    data = _load_data(chars_P4_332)
+    phonon = _get_phonon("P4_332", [1, 1, 1], np.eye(3))
+    phonon.set_irreps([0, 0, 0])
+    chars = phonon.get_irreps().get_characters()
+    np.testing.assert_allclose(chars, data, atol=1e-5)
+
+
+def test_pt31_Pbar43m():
+    """Test of pt31_Pbar43m."""
+    data = _load_data(chars_Pbar43m)
+    phonon = _get_phonon("P-43m", [2, 2, 2], np.eye(3))
+    phonon.set_irreps([0, 0, 0])
+    chars = phonon.get_irreps().get_characters()
+    np.testing.assert_allclose(chars, data, atol=1e-5)
+
+
+def _get_phonon(spgtype, dim, pmat):
+    cell = read_vasp(os.path.join(data_dir, "POSCAR_%s" % spgtype))
+    phonon = Phonopy(cell, np.diag(dim), primitive_matrix=pmat)
+    filename = os.path.join(data_dir, "FORCE_SETS_%s" % spgtype)
+    force_sets = parse_FORCE_SETS(filename=filename)
+    phonon.dataset = force_sets
+    phonon.produce_force_constants()
+    print(phonon.symmetry.pointgroup_symbol)
+    return phonon
+
+
+def _show_chars(chars):
+    for line in chars:
+        line_str = str(line.view(dtype="double").round(decimals=1))
+        print(line_str.replace("[", "").replace("]", ""))
+
+
+def _load_data(data_str):
+    data = np.loadtxt(StringIO(data_str))
+    data = data.view(dtype="c%d" % (data.itemsize * 2))
+    return data

@@ -1,3 +1,4 @@
+"""Abinit calculator interface."""
 # Copyright (C) 2014 Atsushi Togo
 # All rights reserved.
 #
@@ -48,6 +49,7 @@ from phonopy.units import Bohr
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+    """Parse forces from output files."""
     hook = "cartesian forces (eV/Angstrom)"
     is_parsed = True
     force_sets = []
@@ -72,6 +74,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
 
 
 def read_abinit(filename):
+    """Read crystal structure."""
     with open(filename) as f:
         abinit_in = AbinitIn(f.readlines())
     tags = abinit_in.get_variables()
@@ -98,6 +101,7 @@ def read_abinit(filename):
 
 
 def write_abinit(filename, cell):
+    """Write cell to file."""
     with open(filename, "w") as f:
         f.write(get_abinit_structure(cell))
 
@@ -105,6 +109,7 @@ def write_abinit(filename, cell):
 def write_supercells_with_displacements(
     supercell, cells_with_displacements, ids, pre_filename="supercell", width=3
 ):
+    """Write supercells with displacements to files."""
     write_abinit("%s.in" % pre_filename, supercell)
     for i, cell in zip(ids, cells_with_displacements):
         filename = "{pre_filename}-{0:0{width}}.in".format(
@@ -114,6 +119,7 @@ def write_supercells_with_displacements(
 
 
 def get_abinit_structure(cell):
+    """Return abinit structure in text."""
     znucl = []
     numbers = cell.get_atomic_numbers()
     for n in numbers:
@@ -139,7 +145,10 @@ def get_abinit_structure(cell):
 
 
 class AbinitIn:
+    """Class to create Abinit input file."""
+
     def __init__(self, lines):
+        """Init method."""
         self._set_methods = {
             "acell": self._set_acell,
             "natom": self._set_natom,
@@ -169,6 +178,7 @@ class AbinitIn:
         self._collect(lines)
 
     def get_variables(self):
+        """Return tags."""
         return self._tags
 
     def _collect(self, lines):
