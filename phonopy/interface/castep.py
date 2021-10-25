@@ -1,3 +1,4 @@
+"""CASTEP calculator interface."""
 # Copyright (C) 2014 Atsushi Togo
 # All rights reserved.
 #
@@ -47,6 +48,7 @@ from phonopy.structure.symmetry import Symmetry
 # only one new variable skipafterhook. Setting this variable to zero (default value)
 # is equivalent to original collect_forces() function.
 def collect_forces_castep(f, num_atom, hook, force_pos, word=None, skipafterhook=0):
+    """Collect forces from CASTEP output."""
     for line in f:
         if hook in line:
             break
@@ -79,6 +81,7 @@ def collect_forces_castep(f, num_atom, hook, force_pos, word=None, skipafterhook
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+    """Parse forces from output files."""
     hook = "Cartesian components (eV/A)"
     # skipafterhook = 3
     is_parsed = True
@@ -107,6 +110,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
 
 
 def read_castep(filename):
+    """Read crystal structure."""
     f_castep = open(filename)
     castep_in = CastepIn(f_castep.readlines())
     f_castep.close()
@@ -145,6 +149,7 @@ def read_castep(filename):
 
 
 def write_castep(filename, cell):
+    """Write cell to file."""
     with open(filename, "w") as f:
         f.write(get_castep_structure(cell))
 
@@ -152,6 +157,7 @@ def write_castep(filename, cell):
 def write_supercells_with_displacements(
     supercell, cells_with_displacements, ids, pre_filename="supercell", width=3
 ):
+    """Write supercells with displacements to files."""
     write_castep("%s.cell" % pre_filename, supercell)
     for i, cell in zip(ids, cells_with_displacements):
         filename = "{pre_filename}-{0:0{width}}.cell".format(
@@ -161,6 +167,7 @@ def write_supercells_with_displacements(
 
 
 def get_castep_structure(cell):
+    """Return CASTEP structure in text."""
     lines = ""
     lines += "%BLOCK LATTICE_CART\n"
     lines += ((" % 20.16f" * 3 + "\n") * 3) % tuple(cell.get_cell().ravel())
@@ -185,7 +192,10 @@ def get_castep_structure(cell):
 
 
 class CastepIn:
+    """Class to create CASTEP input file."""
+
     def __init__(self, lines):
+        """Init method."""
         self._tags = {
             "lattice_vectors": None,
             "atomic_species": None,
@@ -197,6 +207,7 @@ class CastepIn:
         self._collect(lines)
 
     def get_tags(self):
+        """Return tags."""
         return self._tags
 
     def _collect(self, lines):

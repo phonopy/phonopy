@@ -1,3 +1,4 @@
+"""Calculate random displacements from phonons at finite temperatures."""
 # Copyright (C) 2018 Atsushi Togo
 # All rights reserved.
 #
@@ -40,10 +41,13 @@ from phonopy.harmonic.dynmat_to_fc import (
     categorize_commensurate_points,
     get_commensurate_points_in_integers,
 )
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import Primitive
 from phonopy.units import AMU, EV, Angstrom, Hbar, Kb, THz, THzToEv, VaspToTHz
 
 
 def bose_einstein_dist(x, t):
+    """Return Bose-Einsetein distribution."""
     return 1.0 / (np.exp(THzToEv * x / (Kb * t)) - 1)
 
 
@@ -100,18 +104,18 @@ class RandomDisplacements:
 
     def __init__(
         self,
-        supercell,
-        primitive,
+        supercell: PhonopyAtoms,
+        primitive: Primitive,
         force_constants,
         dist_func=None,
         cutoff_frequency=None,
         factor=VaspToTHz,
     ):
-        """
+        """Init method.
 
         Parameters
         ----------
-        supercell : Supercell
+        supercell : PhonopyAtoms
             Supercell.
         primitive : Primitive
             Primitive cell
@@ -131,7 +135,6 @@ class RandomDisplacements:
             Phonon frequency unit conversion factor to THz
 
         """
-
         if cutoff_frequency is None or cutoff_frequency < 0:
             self._cutoff_frequency = 0.01
         else:
@@ -183,7 +186,7 @@ class RandomDisplacements:
         self._uu_inv = None
 
     def run(self, T, number_of_snapshots=1, random_seed=None, randn=None):
-        """
+        """Calculate random displacements.
 
         Parameters
         ----------
@@ -200,7 +203,6 @@ class RandomDisplacements:
             np.random.normal that can depends on system.
 
         """
-
         np.random.seed(seed=random_seed)
 
         N = len(self._comm_points)
@@ -225,18 +227,22 @@ class RandomDisplacements:
 
     @property
     def u(self):
+        """Return random displacements."""
         return self._u
 
     @property
     def uu(self):
+        """Return displacement-displacement correlation matrix."""
         return self._uu
 
     @property
     def uu_inv(self):
+        """Return inversion of displacement-displacement correlation matrix."""
         return self._uu_inv
 
     @property
     def frequencies(self):
+        """Setter and getter of phonon frequencies."""
         if self._ij:
             eigvals = np.vstack((self._eigvals_ii, self._eigvals_ij))
         else:
@@ -255,14 +261,17 @@ class RandomDisplacements:
 
     @property
     def qpoints(self):
+        """Return commensurate q-points where phonons are computed.."""
         N = len(self._comm_points)
         return self._comm_points[self._ii + self._ij] / float(N)
 
     @property
     def force_constants(self):
+        """Return force constants."""
         return self._force_constants
 
     def run_d2f(self):
+        """Calculate force constants from phonon eigen-solutions."""
         qpoints, eigvals, eigvecs = self._collect_eigensolutions()
         d2f = DynmatToForceConstants(self._dynmat.primitive, self._dynmat.supercell)
         d2f.commensurate_points = qpoints
@@ -271,6 +280,7 @@ class RandomDisplacements:
         self._force_constants = d2f.force_constants
 
     def run_correlation_matrix(self, T):
+        """Calculate displacement-displacement correlation matrix."""
         qpoints, eigvals, eigvecs = self._collect_eigensolutions()
         d2f = DynmatToForceConstants(self._dynmat.primitive, self._dynmat.supercell)
         masses = self._dynmat.supercell.masses
@@ -338,7 +348,7 @@ class RandomDisplacements:
                 )
 
     def _C_to_D(self, dm, q):
-        """Transform C-type dynamical matrix to D-type
+        """Transform C-type dynamical matrix to D-type.
 
         Taking real part is valid only when q is at Gamma or on BZ boundary,
         i.e., q=G-q and q in BZ are assumed.
@@ -346,7 +356,6 @@ class RandomDisplacements:
         D(q) = (D(q) + D(G-q)) / 2 -> real matrix.
 
         """
-
         V = np.repeat(np.exp(2j * np.pi * np.dot(self._ppos, q)), 3)
         dm = ((V * (V.conj() * dm).T).T).real  # C-type to D-type
         return dm
@@ -357,7 +366,7 @@ class RandomDisplacements:
         self._ii, self._ij = categorize_commensurate_points(self._comm_points)
 
     def _solve_ii(self, T, number_of_snapshots, randn=None):
-        """
+        """Solve ii terms.
 
         randn parameter is used for the test.
 
@@ -384,7 +393,7 @@ class RandomDisplacements:
         return u
 
     def _solve_ij(self, T, number_of_snapshots, randn=None):
-        """
+        """Solve ij terms.
 
         randn parameter is used for the test.
 
@@ -416,7 +425,7 @@ class RandomDisplacements:
         return u * np.sqrt(2)
 
     def _get_sigma(self, eigvals, T):
-        """Returns sigma in sqrt(AMU).Angstrom unit"""
+        """Return sigma in sqrt(AMU).Angstrom unit."""
         freqs = np.sqrt(np.abs(eigvals)) * self._factor
         conditions = freqs > self._cutoff_frequency
         freqs = np.where(conditions, freqs, 1)

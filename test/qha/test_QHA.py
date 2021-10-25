@@ -1,3 +1,4 @@
+"""Tests for QHA calculations."""
 import os
 
 import numpy as np
@@ -148,6 +149,7 @@ gruneisen_temperature = np.array(
 
 
 def test_QHA_Si():
+    """Test of QHA calculation by Si."""
     indices = list(range(11))
     phonopy_qha = PhonopyQHA(
         volumes=ev_vs_v[indices, 0],
@@ -216,7 +218,7 @@ def test_QHA_Si():
     )
 
 
-def print_values(values):
+def _print_values(values):
     print("%.7f," % values[0])
     for line in np.reshape(values[1:], (-1, 5)):
         print("".join(["%.7f, " % v for v in line]))

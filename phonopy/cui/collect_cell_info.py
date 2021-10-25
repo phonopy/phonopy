@@ -1,3 +1,4 @@
+"""Routines to collect crystal structure information."""
 # Copyright (C) 2018 Atsushi Togo
 # All rights reserved.
 #
@@ -53,6 +54,7 @@ def collect_cell_info(
     symprec=1e-5,
     return_dict=False,
 ):
+    """Collect crystal structure information from inputs."""
     # In some cases, interface mode falls back to phonopy_yaml mode.
     fallback_reason = _fallback_to_phonopy_yaml(
         supercell_matrix, interface_mode, cell_filename
@@ -111,7 +113,7 @@ def collect_cell_info(
 
     # Succeeded!
     if _interface_mode == "phonopy_yaml":
-        phpy_yaml = optional_structure_info[1]
+        phpy_yaml: PhonopyYaml = optional_structure_info[1]
     else:
         phpy_yaml = None
 
@@ -136,7 +138,7 @@ def collect_cell_info(
 
 
 def _fallback_to_phonopy_yaml(supercell_matrix, interface_mode, cell_filename):
-    """Find possibility to fallback to phonopy.yaml mode
+    """Find possibility to fallback to phonopy.yaml mode.
 
     Fallback happens in any of the following cases.
 
@@ -161,7 +163,6 @@ def _fallback_to_phonopy_yaml(supercell_matrix, interface_mode, cell_filename):
         None means fallback to phonopy.yaml mode will not happen.
 
     """
-
     fallback_reason = None
 
     if interface_mode is None:
@@ -175,7 +176,7 @@ def _fallback_to_phonopy_yaml(supercell_matrix, interface_mode, cell_filename):
 
 
 def _poscar_failed(cell_filename):
-    """Determine if fall back happens
+    """Determine if fall back happens.
 
     1) read_vasp (parsing POSCAR-style file) is failed. --> fallback
 
@@ -197,7 +198,6 @@ def _poscar_failed(cell_filename):
     handled properly (read_crystal_structure).
 
     """
-
     fallback_reason = None
     try:
         if cell_filename is None:
@@ -225,10 +225,8 @@ def _collect_cells_info(
     primitive_matrix,
     enforce_primitive_matrix_auto,
 ):
-    """This is a method just to wrap up and exclude dirty stuffs."""
-
     if _interface_mode == "phonopy_yaml" and optional_structure_info[1] is not None:
-        phpy = optional_structure_info[1]
+        phpy: PhonopyYaml = optional_structure_info[1]
         if phpy.calculator is None:
             interface_mode_out = interface_mode
         else:

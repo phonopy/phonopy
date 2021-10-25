@@ -1,3 +1,4 @@
+"""SIESTA calculator interface."""
 # Copyright (C) 2015 Henrique Pereira Coutada Miranda
 # All rights reserved.
 #
@@ -44,6 +45,7 @@ from phonopy.units import Bohr
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+    """Parse forces from output files."""
     hook = ""  # Just for skipping the first line
     is_parsed = True
     force_sets = []
@@ -68,6 +70,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
 
 
 def read_siesta(filename):
+    """Read crystal structure."""
     siesta_in = SiestaIn(open(filename).read())
     numbers = siesta_in._tags["atomicnumbers"]
     alat = siesta_in._tags["latticeconstant"]
@@ -96,6 +99,7 @@ def read_siesta(filename):
 
 
 def write_siesta(filename, cell, atypes):
+    """Write cell to file."""
     with open(filename, "w") as w:
         w.write(get_siesta_structure(cell, atypes))
 
@@ -103,6 +107,7 @@ def write_siesta(filename, cell, atypes):
 def write_supercells_with_displacements(
     supercell, cells_with_displacements, ids, atypes, pre_filename="supercell", width=3
 ):
+    """Write supercells with displacements to files."""
     write_siesta("%s.fdf" % pre_filename, supercell, atypes)
     for i, cell in zip(ids, cells_with_displacements):
         filename = "{pre_filename}-{0:0{width}}.fdf".format(
@@ -112,6 +117,7 @@ def write_supercells_with_displacements(
 
 
 def get_siesta_structure(cell, atypes):
+    """Return SIESTA structure in text."""
     lattice = cell.get_cell()
     positions = cell.get_scaled_positions()
     chemical_symbols = cell.get_chemical_symbols()
@@ -137,6 +143,8 @@ def get_siesta_structure(cell, atypes):
 
 
 class SiestaIn:
+    """Class to create SIESTA input file."""
+
     _num_regex = r"([+-]?\d+(?:\.\d*)?(?:[eE][-+]?\d+)?)"
     _tags = {
         "latticeconstant": 1.0,
@@ -149,13 +157,17 @@ class SiestaIn:
     }
 
     def __init__(self, lines):
+        """Init method."""
         self._collect(lines)
 
     def _collect(self, lines):
-        """This routine reads the following from the Siesta file:
+        """Collect values.
+
+        This routine reads the following from the Siesta file:
         - atomic positions
         - cell_parameters
         - atomic_species
+
         """
         for tag, value, unit in re.findall(
             r"([\.A-Za-z]+)\s+%s\s+([A-Za-z]+)?" % self._num_regex, lines
@@ -177,7 +189,7 @@ class SiestaIn:
                 self._tags[tag] = value.strip().lower()
 
         # check if the necessary tags are present
-        self.check_present("atomiccoordinatesformat")
+        self._check_present("atomiccoordinatesformat")
         acell = self._tags["latticeconstant"]
 
         # capture the blocks
@@ -214,22 +226,23 @@ class SiestaIn:
                 ]
 
         # check if the block are present
-        self.check_present("atomicspecies")
-        self.check_present("atomiccoordinates")
-        self.check_present("latticevectors")
-        self.check_present("chemicalspecieslabel")
+        self._check_present("atomicspecies")
+        self._check_present("atomiccoordinates")
+        self._check_present("latticevectors")
+        self._check_present("chemicalspecieslabel")
 
         # translate the atomicspecies to atomic numbers
         self._tags["atomicnumbers"] = [
             self._tags["atomicnumbers"][atype] for atype in self._tags["atomicspecies"]
         ]
 
-    def check_present(self, tag):
+    def _check_present(self, tag):
         if not self._tags[tag]:
             print("%s not present" % tag)
             sys.exit(1)
 
     def __str__(self):
+        """Return tags."""
         return self._tags
 
 
