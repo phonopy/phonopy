@@ -247,7 +247,9 @@ def helper_methods():
 
     class HelperMethods:
         @classmethod
-        def compare_cells_with_order(cls, cell, cell_ref, symprec=1e-5):
+        def compare_cells_with_order(
+            cls, cell: PhonopyAtoms, cell_ref: PhonopyAtoms, symprec=1e-5
+        ):
             """Compare two cells with the same orders of positions."""
             np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=symprec)
             cls.compare_positions_with_order(
@@ -270,7 +272,9 @@ def helper_methods():
             assert (dist < symprec).all()
 
         @classmethod
-        def compare_cells(cls, cell, cell_ref, symprec=1e-5):
+        def compare_cells(
+            cls, cell: PhonopyAtoms, cell_ref: PhonopyAtoms, symprec=1e-5
+        ):
             """Compare two cells where position orders can be different."""
             np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=symprec)
 

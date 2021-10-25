@@ -1,6 +1,8 @@
+"""Tests for routines in force_constants.py."""
 import numpy as np
 import pytest
 
+from phonopy import Phonopy
 from phonopy.harmonic.force_constants import cutoff_force_constants
 from phonopy.structure.cells import get_primitive
 
@@ -41,26 +43,30 @@ fc_1_10_compact_fcsym_ref = [
 ]
 
 
-def test_fc(ph_nacl):
+def test_fc(ph_nacl: Phonopy):
+    """Test of force constants calculation with fcsym by NaCl."""
     fc_1_10 = ph_nacl.force_constants[1, 10]
     # print("".join(["%f, " % v for v in fc_1_10.ravel()]))
     np.testing.assert_allclose(fc_1_10.ravel(), fc_1_10_ref, atol=1e-5)
 
 
-def test_fc_nofcsym(ph_nacl_nofcsym):
+def test_fc_nofcsym(ph_nacl_nofcsym: Phonopy):
+    """Test of force constants calculation without fcsym by NaCl."""
     fc_1_10 = ph_nacl_nofcsym.force_constants[1, 10]
     # print("".join(["%f, " % v for v in fc_1_10.ravel()]))
     np.testing.assert_allclose(fc_1_10.ravel(), fc_1_10_nofcsym_ref, atol=1e-5)
 
 
-def test_fc_compact_fcsym(ph_nacl_compact_fcsym):
+def test_fc_compact_fcsym(ph_nacl_compact_fcsym: Phonopy):
+    """Test of force constants calculation in compact format with fcsym by NaCl."""
     fc_1_10 = ph_nacl_compact_fcsym.force_constants[1, 10]
     # print("".join(["%f, " % v for v in fc_1_10.ravel()]))
     np.testing.assert_allclose(fc_1_10.ravel(), fc_1_10_compact_fcsym_ref, atol=1e-5)
 
 
 @pytest.mark.parametrize("is_compact", [False, True])
-def test_fc_cutoff_radius(ph_nacl, ph_nacl_compact_fcsym, is_compact):
+def test_fc_cutoff_radius(ph_nacl: Phonopy, ph_nacl_compact_fcsym: Phonopy, is_compact):
+    """Test of cutoff radius of force constants calculation by NaCl."""
     if is_compact:
         ph = ph_nacl_compact_fcsym
     else:
@@ -83,8 +89,9 @@ def test_fc_cutoff_radius(ph_nacl, ph_nacl_compact_fcsym, is_compact):
     [(False, False), (False, True), (True, False), (True, True)],
 )
 def test_fc_cutoff_radius_svecs(
-    ph_nacl, ph_nacl_compact_fcsym, is_compact, store_dense_svecs
+    ph_nacl: Phonopy, ph_nacl_compact_fcsym: Phonopy, is_compact, store_dense_svecs
 ):
+    """Test of cutoff radius with dense-svecs format by NaCl."""
     if is_compact:
         ph = ph_nacl_compact_fcsym
     else:

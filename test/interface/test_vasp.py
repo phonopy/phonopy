@@ -28,7 +28,7 @@ def test_parse_vasprun_xml():
     """Test parsing vasprun.xml with expat."""
     filename_vasprun = os.path.join(data_dir, "vasprun.xml.tar.bz2")
     _tar = tarfile.open(filename_vasprun)
-    filename = os.path.join(data_dir, "FORCE_SETS_NaCl")
+    filename = os.path.join(data_dir, "../FORCE_SETS_NaCl")
     dataset = parse_FORCE_SETS(filename=filename)
     for i, member in enumerate(_tar.getmembers()):
         vr = Vasprun(_tar.extractfile(member), use_expat=True)

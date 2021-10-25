@@ -91,7 +91,7 @@ def _assert(ph: Phonopy, ref_vals, show=False):
     dynmat = ph.dynamical_matrix
     ddynmat = DerivativeOfDynamicalMatrix(dynmat)
     ddynmat.run([0, 0.1, 0.1])
-    ddm = ddynmat.get_derivative_of_dynamical_matrix()
+    ddm = ddynmat.d_dynamical_matrix
     condition = np.abs(ddm) > 1e-8
     vals = np.extract(condition, ddm).real
     if show:

@@ -33,7 +33,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from typing import List, Union
+from typing import Union
 
 import numpy as np
 
@@ -69,17 +69,22 @@ class Modulation:
         self._derivative_order = derivative_order
 
         self._factor = factor
-        self._u = []
-        self._eigvecs = []
-        self._eigvals = []
-        self._supercell = None
-
         dim = self._get_dimension_3x3()
         self._supercell = get_supercell(self._primitive, dim)
+        complex_dtype = "c%d" % (np.dtype("double").itemsize * 2)
+        self._u = np.zeros(
+            (len(self._phonon_modes), len(self._supercell), 3),
+            dtype=complex_dtype,
+            order="C",
+        )
+        self._eigvals = np.zeros(len(self._phonon_modes), dtype="double")
+        self._eigvecs = np.zeros(
+            (len(self._phonon_modes), len(self._primitive) * 3), dtype=complex_dtype
+        )
 
     def run(self):
         """Calculate modulations."""
-        for ph_mode in self._phonon_modes:
+        for i, ph_mode in enumerate(self._phonon_modes):
             q, band_index, amplitude, argument = ph_mode
             eigvals, eigvecs = get_eigenvectors(
                 q,
@@ -90,9 +95,9 @@ class Modulation:
                 nac_q_direction=self._nac_q_direction,
             )
             u = self._get_displacements(eigvecs[:, band_index], q, amplitude, argument)
-            self._u.append(u)
-            self._eigvecs.append(eigvecs[:, band_index])
-            self._eigvals.append(eigvals[band_index])
+            self._u[i] = u
+            self._eigvecs[i] = eigvecs[:, band_index]
+            self._eigvals[i] = eigvals[band_index]
 
     def get_modulated_supercells(self):
         """Return modulations."""

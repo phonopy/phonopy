@@ -233,9 +233,9 @@ class DynamicStructureFactor:
             freq_min=self._fmin,
             freq_max=self._fmax,
         )
-        td.set_temperatures([self._T])
+        td.temperatures = [self._T]
         td.run()
-        return td.get_thermal_displacements()
+        return td.temperatures, td.thermal_displacements
 
     def _phonon_structure_factor(self, Q_cart, G, DW, freq, eigvec):
         symbols = self._primitive.get_chemical_symbols()
