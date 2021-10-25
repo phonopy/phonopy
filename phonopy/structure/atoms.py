@@ -1,3 +1,4 @@
+"""PhonopyAtoms class and routines related to atoms."""
 # -*- coding: utf-8 -*-
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
@@ -34,11 +35,17 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
+from typing import Optional
 
 import numpy as np
 
 
 def Atoms(*args, **kwargs):
+    """Atoms class that is same as PhonopyAtoms class.
+
+    This exists backward compatibility.
+
+    """
     warnings.warn(
         "phonopy.atoms.Atoms is deprecated. Please use "
         "PhonopyAtoms instead of Atoms.",
@@ -47,41 +54,69 @@ def Atoms(*args, **kwargs):
     return PhonopyAtoms(*args, **kwargs)
 
 
-class _Atoms:
-    """A class compatible with the ASE Atoms class.
+class PhonopyAtoms:
+    """Class to represent crystal structure.
 
-    Only the necessary stuffs to phonopy are implemented. The data
-    structure of magnetic moments is incompatible.
+    Originally this aimed to be compatible ASE Atoms class, but now not.
 
     """
 
     def __init__(
         self,
         symbols=None,
-        positions=None,
         numbers=None,
         masses=None,
         magmoms=None,
         scaled_positions=None,
+        positions=None,
         cell=None,
-        pbc=None,
+        atoms: Optional["PhonopyAtoms"] = None,
+        pbc=True,
+    ):  # pbc is dummy argument, and never used.
+        """Init method."""
+        if atoms:
+            magmoms = None
+            self._set_parameters(
+                numbers=atoms.numbers,
+                masses=atoms.masses,
+                magmoms=magmoms,
+                scaled_positions=atoms.scaled_positions,
+                cell=atoms.cell,
+                pbc=True,
+            )
+        else:
+            self._set_parameters(
+                symbols=symbols,
+                numbers=numbers,
+                masses=masses,
+                magmoms=magmoms,
+                scaled_positions=scaled_positions,
+                positions=positions,
+                cell=cell,
+                pbc=True,
+            )
+
+    def _set_parameters(
+        self,
+        symbols=None,
+        numbers=None,
+        masses=None,
+        magmoms=None,
+        scaled_positions=None,
+        positions=None,
+        cell=None,
+        atoms: Optional["PhonopyAtoms"] = None,
+        pbc=True,
     ):
-        # cell and positions
         self._cell = None
         self._scaled_positions = None
         self._set_cell_and_positions(
             cell, positions=positions, scaled_positions=scaled_positions
         )
-
-        # Atom symbols
         self._symbols = symbols
-
-        # Atomic numbers
         self._numbers = None
         if numbers is not None:
             self._numbers = np.array(numbers, dtype="intc")
-
-        # masses
         self._masses = None
         self._set_masses(masses)
 
@@ -102,72 +137,227 @@ class _Atoms:
         self._check()
 
     def __len__(self):
+        """Return number of atoms."""
         return len(self.numbers)
 
-    def set_cell(self, cell):
+    @property
+    def cell(self):
+        """Setter and getter of basis vectors. For getter, copy is returned."""
+        return self._cell.copy()
+
+    @cell.setter
+    def cell(self, cell):
         self._set_cell(cell)
         self._check()
 
-    def get_cell(self):
-        return self._cell.copy()
+    def set_cell(self, cell):
+        """Set basis vectors."""
+        warnings.warn(
+            "PhonopyAtoms.set_cell() is deprecated. Use cell attribute instead.",
+            DeprecationWarning,
+        )
+        self.cell = cell
 
-    def set_positions(self, cart_positions):
-        self._set_positions(cart_positions)
+    def get_cell(self):
+        """Return copy of basis vectors."""
+        warnings.warn(
+            "PhonopyAtoms.get_cell() is deprecated. Use cell attribute instead.",
+            DeprecationWarning,
+        )
+        return self.cell
+
+    @property
+    def positions(self):
+        """Setter and getter of positions in Cartesian coordinates."""
+        return np.dot(self._scaled_positions, self._cell)
+
+    @positions.setter
+    def positions(self, positions):
+        self._set_positions(positions)
         self._check()
 
     def get_positions(self):
-        return np.dot(self._scaled_positions, self._cell)
+        """Return positions in Cartesian coordinates."""
+        warnings.warn(
+            "PhonopyAtoms.get_positions() is deprecated. "
+            "Use positions attribute instead.",
+            DeprecationWarning,
+        )
+        return self.positions
 
-    def set_scaled_positions(self, scaled_positions):
+    def set_positions(self, positions):
+        """Set positions in Cartesian coordinates."""
+        warnings.warn(
+            "PhonopyAtoms.set_positions() is deprecated. "
+            "Use positions attribute instead.",
+            DeprecationWarning,
+        )
+        self.positions = positions
+
+    @property
+    def scaled_positions(self):
+        """Setter and getter of scaled positions. For getter, copy is returned."""
+        return self._scaled_positions.copy()
+
+    @scaled_positions.setter
+    def scaled_positions(self, scaled_positions):
         self._set_scaled_positions(scaled_positions)
         self._check()
 
     def get_scaled_positions(self):
-        return self._scaled_positions.copy()
+        """Return scaled positions."""
+        warnings.warn(
+            "PhonopyAtoms.get_scaled_positions() is deprecated. "
+            "Use scaled_positions attribute instead.",
+            DeprecationWarning,
+        )
+        return self.scaled_positions
 
-    def set_masses(self, masses):
-        self._set_masses(masses)
-        self._check()
+    def set_scaled_positions(self, scaled_positions):
+        """Set scaled positions."""
+        warnings.warn(
+            "PhonopyAtoms.set_scaled_positions() is deprecated. "
+            "Use scaled_positions attribute instead.",
+            DeprecationWarning,
+        )
+        self.scaled_positions = scaled_positions
 
-    def get_masses(self):
-        if self._masses is None:
-            return None
-        else:
-            return self._masses.copy()
+    @property
+    def symbols(self):
+        """Setter and getter of chemical symbols."""
+        return self._symbols[:]
 
-    def set_magnetic_moments(self, magmoms):
-        self._set_magnetic_moments(magmoms)
-        self._check()
-
-    def get_magnetic_moments(self):
-        if self._magmoms is None:
-            return None
-        else:
-            return self._magmoms.copy()
-
-    def set_chemical_symbols(self, symbols):
+    @symbols.setter
+    def symbols(self, symbols):
         self._symbols = symbols
         self._check()
         self._symbols_to_numbers()
         self._symbols_to_masses()
 
     def get_chemical_symbols(self):
-        return self._symbols[:]
+        """Return chemical symbols."""
+        warnings.warn(
+            "PhonopyAtoms.get_chemical_symbols() is deprecated. "
+            "Use symbols attribute instead.",
+            DeprecationWarning,
+        )
+        return self.symbols
 
-    def get_number_of_atoms(self):
-        return len(self)
+    def set_chemical_symbols(self, symbols):
+        """Set chemical symbols."""
+        warnings.warn(
+            "PhonopyAtoms.set_chemical_symbols() is deprecated. "
+            "Use symbols attribute instead.",
+            DeprecationWarning,
+        )
+        self.symbols = symbols
 
-    def set_atomic_numbers(self, number):
-        self.number = number
+    @property
+    def numbers(self):
+        """Setter and getter of atomic numbers. For getter, copy is returned."""
+        return self._numbers.copy()
+
+    @numbers.setter
+    def numbers(self, numbers):
+        self._numbers = numbers
         self._check()
         self._numbers_to_symbols()
         self._symbols_to_masses()
 
     def get_atomic_numbers(self):
-        return self._numbers.copy()
+        """Return atomic numbers."""
+        warnings.warn(
+            "PhonopyAtoms.get_atomic_numbers() is deprecated. "
+            "Use numbers attribute instead.",
+            DeprecationWarning,
+        )
+        return self.numbers
+
+    def set_atomic_numbers(self, numbers):
+        """Set atomic numbers."""
+        warnings.warn(
+            "PhonopyAtoms.set_atomic_numbers() is deprecated. "
+            "Use numbers attribute instead.",
+            DeprecationWarning,
+        )
+        self.numbers = numbers
+
+    @property
+    def masses(self):
+        """Setter and getter of atomic masses. For getter copy is returned."""
+        if self._masses is None:
+            return None
+        else:
+            return self._masses.copy()
+
+    @masses.setter
+    def masses(self, masses):
+        self._set_masses(masses)
+        self._check()
+
+    def get_masses(self):
+        """Return atomic masses."""
+        warnings.warn(
+            "PhonopyAtoms.get_masses() is deprecated. Use masses attribute instead.",
+            DeprecationWarning,
+        )
+        return self.masses
+
+    def set_masses(self, masses):
+        """Set atomic masses."""
+        warnings.warn(
+            "PhonopyAtoms.set_masses() is deprecated. Use masses attribute instead.",
+            DeprecationWarning,
+        )
+        self.masses = masses
+
+    @property
+    def magnetic_moments(self):
+        """Setter and getter of magnetic moments. For getter, copy is returned."""
+        if self._magmoms is None:
+            return None
+        else:
+            return self._magmoms.copy()
+
+    @magnetic_moments.setter
+    def magnetic_moments(self, magmoms):
+        self._set_magnetic_moments(magmoms)
+        self._check()
+
+    def get_magnetic_moments(self):
+        """Return magnetic moments."""
+        warnings.warn(
+            "PhonopyAtoms.get_magnetic_moments() is deprecated. "
+            "Use magnetic_moments attribute instead.",
+            DeprecationWarning,
+        )
+        return self.magnetic_moments
+
+    def set_magnetic_moments(self, magmoms):
+        """Set magnetic moments."""
+        warnings.warn(
+            "PhonopyAtoms.set_magnetic_moments() is deprecated. "
+            "Use magnetic_moments attribute instead.",
+            DeprecationWarning,
+        )
+        self.magnetic_moments = magmoms
+
+    @property
+    def volume(self):
+        """Return cell volume."""
+        return np.linalg.det(self._cell)
 
     def get_volume(self):
-        return np.linalg.det(self._cell)
+        """Return cell volume."""
+        warnings.warn(
+            "PhonopyAtoms.get_volume() is deprecated. " "Use volume attribute instead.",
+            DeprecationWarning,
+        )
+        return self.volume
+
+    def get_number_of_atoms(self):
+        """Return number of atoms."""
+        return len(self)
 
     def _set_cell(self, cell):
         _cell = np.array(cell, dtype="double", order="C")
@@ -234,106 +424,8 @@ class _Atoms:
             if len(self._numbers) != len(self._magmoms):
                 raise RuntimeError("len(numbers) != len(magmoms).")
 
-
-class PhonopyAtoms(_Atoms):
-    def __init__(
-        self,
-        symbols=None,
-        numbers=None,
-        masses=None,
-        magmoms=None,
-        scaled_positions=None,
-        positions=None,
-        cell=None,
-        atoms=None,
-        pbc=True,
-    ):  # pbc is dummy argument, and never used.
-        if atoms:
-            try:  # This is for ASE Atoms class compatibility (not guranteed)
-                magmoms = atoms.get_magnetic_moments()
-            except RuntimeError:
-                magmoms = None
-            super().__init__(
-                numbers=atoms.get_atomic_numbers(),
-                masses=atoms.get_masses(),
-                magmoms=magmoms,
-                scaled_positions=atoms.get_scaled_positions(),
-                cell=atoms.get_cell(),
-                pbc=True,
-            )
-        else:
-            super().__init__(
-                symbols=symbols,
-                numbers=numbers,
-                masses=masses,
-                magmoms=magmoms,
-                scaled_positions=scaled_positions,
-                positions=positions,
-                cell=cell,
-                pbc=True,
-            )
-
-    @property
-    def cell(self):
-        return self.get_cell()
-
-    @cell.setter
-    def cell(self, cell):
-        self.set_cell(cell)
-
-    @property
-    def positions(self):
-        return self.get_positions()
-
-    @positions.setter
-    def positions(self, positions):
-        self.set_positions(positions)
-
-    @property
-    def scaled_positions(self):
-        return self.get_scaled_positions()
-
-    @scaled_positions.setter
-    def scaled_positions(self, scaled_positions):
-        self.set_scaled_positions(scaled_positions)
-
-    @property
-    def symbols(self):
-        return self.get_chemical_symbols()
-
-    @symbols.setter
-    def symbols(self, symbols):
-        self.set_chemical_symbols(symbols)
-
-    @property
-    def numbers(self):
-        return self.get_atomic_numbers()
-
-    @numbers.setter
-    def numbers(self, numbers):
-        self.set_atomic_numbers(numbers)
-
-    @property
-    def masses(self):
-        return self.get_masses()
-
-    @masses.setter
-    def masses(self, masses):
-        self.set_masses(masses)
-
-    @property
-    def magnetic_moments(self):
-        return self.get_magnetic_moments()
-
-    @magnetic_moments.setter
-    def magnetic_moments(self, magmoms):
-        self.set_magnetic_moments(magmoms)
-
-    @property
-    def volume(self):
-        return self.get_volume()
-
     def copy(self):
+        """Return copy of itself."""
         return PhonopyAtoms(
             cell=self._cell,
             scaled_positions=self._scaled_positions,
@@ -344,20 +436,30 @@ class PhonopyAtoms(_Atoms):
         )
 
     def totuple(self):
+        """Return (cell, scaled_position, numbers).
+
+        If magmams is set, (cell, scaled_position, numbers, magmoms) is returned.
+
+        """
         if self._magmoms is None:
             return (self._cell, self._scaled_positions, self._numbers)
         else:
             return (self._cell, self._scaled_positions, self._numbers, self._magmoms)
 
     def to_tuple(self):
+        """Return (cell, scaled_position, numbers).
+
+        If magmams is set, (cell, scaled_position, numbers, magmoms) is returned.
+
+        """
         warnings.warn(
-            "PhonopyAtoms.to_tuple is deprecated. Please use "
-            "PhonopyAtoms.totuple instead.",
+            "PhonopyAtoms.to_tuple() is deprecated. Use totuple() instead.",
             DeprecationWarning,
         )
         return self.totuple()
 
     def get_yaml_lines(self):
+        """Return list of text lines of crystal structure in yaml."""
         lines = ["lattice:"]
         for v, a in zip(self._cell, ("a", "b", "c")):
             lines.append("- [ %21.15f, %21.15f, %21.15f ] # %s" % (v[0], v[1], v[2], a))
@@ -376,6 +478,7 @@ class PhonopyAtoms(_Atoms):
         return lines
 
     def __str__(self):
+        """Return text lines of crystal structure in yaml."""
         return "\n".join(self.get_yaml_lines())
 
 
