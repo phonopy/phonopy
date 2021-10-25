@@ -34,6 +34,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import os
+from typing import TYPE_CHECKING
 
 import numpy as np
 import yaml
@@ -43,14 +44,34 @@ try:
 except ImportError:
     from yaml import Loader
 
+if TYPE_CHECKING:
+    from phonopy import Phonopy
+
 from phonopy.structure.atoms import PhonopyAtoms
 
 
 def read_cell_yaml(filename, cell_type="unitcell"):
-    """Read crystal structure from a phonopy.yaml like file.
+    """Read crystal structure from a phonopy.yaml or PhonopyAtoms.__str__ like file.
 
-    This returns unit cell, primitive cell, or supercell. The first one found
-    in this order is returned.
+    phonopy.yaml like file can contain several different cells, e.g., unit cell,
+    primitive cell, or supercell. In this case, the default preference order of
+    the returned cell is unit cell > primitive cell > supercell. ``cell_type``
+    is used to specify to choose one of them.
+
+    When output of PhonopyAtoms.__str__ is given (like below), this file is
+    parsed and its cell is returned.
+
+    lattice:
+    - [     0.000000000000000,     2.845150738087836,     2.845150738087836 ] # a
+    - [     2.845150738087836,     0.000000000000000,     2.845150738087836 ] # b
+    - [     2.845150738087836,     2.845150738087836,     0.000000000000000 ] # c
+    points:
+    - symbol: Na # 1
+      coordinates: [  0.000000000000000,  0.000000000000000,  0.000000000000000 ]
+      mass: 22.989769
+    - symbol: Cl # 2
+      coordinates: [  0.500000000000000,  0.500000000000000,  0.500000000000000 ]
+      mass: 35.453000
 
     """
     ph_yaml = PhonopyYaml()
@@ -140,7 +161,7 @@ class PhonopyYaml:
         physical_units : dict
             Physical units used for the calculation.
         settings : dict
-            See Phonopy.save().
+            This controls amount of information in yaml output. See Phonopy.save().
 
         """
         self.configuration = configuration
@@ -189,6 +210,7 @@ class PhonopyYaml:
 
     def parse(self):
         """Parse raw yaml data."""
+        self._parse_command_header()
         self._parse_transformation_matrices()
         self._parse_all_cells()
         self._parse_force_constants()
@@ -196,7 +218,7 @@ class PhonopyYaml:
         self._parse_nac_params()
         self._parse_calculator()
 
-    def set_phonon_info(self, phonopy):
+    def set_phonon_info(self, phonopy: "Phonopy"):
         """Collect data from Phonopy instance."""
         self.unitcell = phonopy.unitcell
         self.primitive = phonopy.primitive
@@ -277,9 +299,9 @@ class PhonopyYaml:
         lines = []
         if self.symmetry is not None and self.symmetry.dataset is not None:
             lines.append("space_group:")
-            lines.append('  type: "%s"' % self.symmetry.get_dataset()["international"])
-            lines.append("  number: %d" % self.symmetry.get_dataset()["number"])
-            hall_symbol = self.symmetry.get_dataset()["hall"]
+            lines.append('  type: "%s"' % self.symmetry.dataset["international"])
+            lines.append("  number: %d" % self.symmetry.dataset["number"])
+            hall_symbol = self.symmetry.dataset["hall"]
             if '"' in hall_symbol:
                 hall_symbol = hall_symbol.replace('"', '\\"')
             lines.append('  Hall_symbol: "%s"' % hall_symbol)
@@ -487,6 +509,11 @@ class PhonopyYaml:
             raise TypeError(msg)
 
         self.parse()
+
+    def _parse_command_header(self):
+        if self.command_name in self._yaml:
+            header = self._yaml[self.command_name]
+            self.version = header["version"]
 
     def _parse_transformation_matrices(self):
         if "supercell_matrix" in self._yaml:
