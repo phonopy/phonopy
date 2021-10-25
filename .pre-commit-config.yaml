@@ -42,12 +42,12 @@ repos:
     - --line-length=88
 
 - repo: https://github.com/pycqa/pydocstyle
-  rev: 6.0.0
+  rev: 6.1.1
   hooks:
   - id: pydocstyle
 
 - repo: https://github.com/pycqa/isort
-  rev: 5.8.0
+  rev: 5.9.3
   hooks:
     - id: isort
       name: isort (python)
