@@ -660,7 +660,7 @@ class Primitive(PhonopyAtoms):
             positions,
             rotations,
             trans,
-            np.array(supercell.get_cell().T, dtype="double", order="C"),
+            np.array(supercell.cell.T, dtype="double", order="C"),
             self._symprec,
         )
 

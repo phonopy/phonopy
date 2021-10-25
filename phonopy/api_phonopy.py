@@ -3403,7 +3403,7 @@ class Phonopy:
             raise RuntimeError("Supercell or primitive is not created.")
         if self._force_constants is None:
             raise RuntimeError("Force constants are not prepared.")
-        if self._primitive.get_masses() is None:
+        if self._primitive.masses is None:
             raise RuntimeError("Atomic masses are not correctly set.")
         self._dynamical_matrix = get_dynamical_matrix(
             self._force_constants,

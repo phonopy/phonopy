@@ -137,7 +137,7 @@ class Modulation:
         for p in scaled_positions:
             p -= np.floor(p)
         cell = self._supercell.copy()
-        cell.set_scaled_positions(scaled_positions)
+        cell.scaled_positions = scaled_positions
 
         return cell
 

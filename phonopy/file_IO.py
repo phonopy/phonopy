@@ -783,21 +783,19 @@ def get_born_parameters(f, primitive, prim_symmetry):
     return non_anal
 
 
-def _expand_borns(borns, primitive, prim_symmetry):
+def _expand_borns(borns, primitive: PhonopyAtoms, prim_symmetry: Symmetry):
     # Expand Born effective charges to all atoms in the primitive cell
     rotations = prim_symmetry.symmetry_operations["rotations"]
     map_operations = prim_symmetry.get_map_operations()
     map_atoms = prim_symmetry.get_map_atoms()
 
-    for i in range(primitive.get_number_of_atoms()):
+    for i in range(len(primitive)):
         # R_cart = L R L^-1
         rot_cartesian = similarity_transformation(
-            primitive.get_cell().transpose(), rotations[map_operations[i]]
+            primitive.cell.T, rotations[map_operations[i]]
         )
         # R_cart^T B R_cart^-T (inverse rotation is required to transform)
-        borns[i] = similarity_transformation(
-            rot_cartesian.transpose(), borns[map_atoms[i]]
-        )
+        borns[i] = similarity_transformation(rot_cartesian.T, borns[map_atoms[i]])
 
 
 #

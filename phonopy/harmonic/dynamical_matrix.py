@@ -776,7 +776,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         """
         import phonopy._phonopy as phonoc
 
-        pos = self._pcell.get_positions()
+        pos = self._pcell.positions
         self._dd_q0 = np.zeros((len(pos), 3, 3), dtype=self._dtype_complex, order="C")
 
         phonoc.recip_dipole_dipole_q0(

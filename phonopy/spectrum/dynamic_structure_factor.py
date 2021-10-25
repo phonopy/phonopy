@@ -33,18 +33,15 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from typing import Union
+
 import numpy as np
 
+from phonopy.phonon.mesh import IterMesh, Mesh
 from phonopy.phonon.qpoints import QpointsPhonon
 from phonopy.phonon.thermal_displacement import ThermalDisplacements
 from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
 from phonopy.units import AMU, Kb, THz, THzToEv
-
-
-def atomic_form_factor_WK1995(Q, f_x):
-    """Return atomic form factor of WK1995."""
-    a, b = np.array(f_x[:10]).reshape(-1, 2).T
-    return (a * np.exp(-b * Q ** 2)).sum() + f_x[10]
 
 
 class DynamicStructureFactor:
@@ -101,7 +98,7 @@ class DynamicStructureFactor:
 
     def __init__(
         self,
-        mesh_phonon,
+        mesh_phonon: Union[Mesh, IterMesh],
         Qpoints,
         T,
         atomic_form_factor_func=None,
@@ -164,7 +161,7 @@ class DynamicStructureFactor:
         else:
             self._fmax = freq_max
 
-        self._rec_lat = np.linalg.inv(self._primitive.get_cell())
+        self._rec_lat = np.linalg.inv(self._primitive.cell)
         self.qpoints = None
         self._Gpoints = None
         self._set_qpoints()  # self.qpoints needed in self._set_phonon()
@@ -238,9 +235,9 @@ class DynamicStructureFactor:
         return td.temperatures, td.thermal_displacements
 
     def _phonon_structure_factor(self, Q_cart, G, DW, freq, eigvec):
-        symbols = self._primitive.get_chemical_symbols()
-        masses = self._primitive.get_masses()
-        pos = self._primitive.get_scaled_positions()
+        symbols = self._primitive.symbols
+        masses = self._primitive.masses
+        pos = self._primitive.scaled_positions
         phase = np.exp(-2j * np.pi * np.dot(pos, G))
         W = eigvec.reshape(-1, 3)
         val = 0
@@ -260,3 +257,9 @@ class DynamicStructureFactor:
         qpoints = get_qpoints_in_Brillouin_zone(self._rec_lat, self._Qpoints)
         self.qpoints = np.array([q[0] for q in qpoints], dtype="double", order="C")
         self._Gpoints = self._Qpoints - self.qpoints
+
+
+def atomic_form_factor_WK1995(Q, f_x):
+    """Return atomic form factor of WK1995."""
+    a, b = np.array(f_x[:10]).reshape(-1, 2).T
+    return (a * np.exp(-b * Q ** 2)).sum() + f_x[10]

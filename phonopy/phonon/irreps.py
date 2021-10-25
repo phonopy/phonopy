@@ -33,9 +33,12 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from typing import Union
+
 import numpy as np
 
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.phonon.character_table import character_table
 from phonopy.phonon.degeneracy import degenerate_sets as get_degenerate_sets
@@ -55,7 +58,7 @@ class IrReps:
 
     def __init__(
         self,
-        dynamical_matrix,
+        dynamical_matrix: Union[DynamicalMatrix, DynamicalMatrixNAC],
         q,
         is_little_cogroup=False,
         nac_q_direction=None,
@@ -237,7 +240,7 @@ class IrReps:
 
         for (r, t) in zip(self._rotations_at_q, self._translations_at_q):
 
-            lat = self._primitive.get_cell().T
+            lat = self._primitive.cell.T
             r_cart = similarity_transformation(lat, r)
 
             perm_mat = self._get_modified_permutation_matrix(r, t)
@@ -254,8 +257,8 @@ class IrReps:
         return np.array(characters), np.array(irrep_dims)
 
     def _get_modified_permutation_matrix(self, r, t):
-        num_atom = self._primitive.get_number_of_atoms()
-        pos = self._primitive.get_scaled_positions()
+        num_atom = len(self._primitive)
+        pos = self._primitive.scaled_positions
         matrix = np.zeros((num_atom, num_atom), dtype=complex)
         for i, p1 in enumerate(pos):
             p_rot = np.dot(r, p1) + t
@@ -285,7 +288,7 @@ class IrReps:
         phases = np.kron(
             [
                 np.exp(2j * np.pi * np.dot(self._q, pos))
-                for pos in self._primitive.get_scaled_positions()
+                for pos in self._primitive.scaled_positions
             ],
             [1, 1, 1],
         )

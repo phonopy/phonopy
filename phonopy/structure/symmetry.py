@@ -39,6 +39,7 @@ import numpy as np
 import spglib
 
 from phonopy.harmonic.force_constants import similarity_transformation
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
     compute_all_sg_permutations,
     get_primitive,
@@ -49,7 +50,7 @@ from phonopy.structure.cells import (
 class Symmetry:
     """Class to find and store crystal symmetry information."""
 
-    def __init__(self, cell, symprec=1e-5, is_symmetry=True):
+    def __init__(self, cell: PhonopyAtoms, symprec=1e-5, is_symmetry=True):
         """Init method."""
         self._cell = cell
         self._symprec = symprec
@@ -206,8 +207,8 @@ class Symmetry:
 
     def get_site_symmetry(self, atom_number):
         """Return matrix parts of site symmetry operations."""
-        positions = self._cell.get_scaled_positions()
-        lattice = self._cell.get_cell()
+        positions = self._cell.scaled_positions
+        lattice = self._cell.cell
         rotations = self._symmetry_operations["rotations"]
         translations = self._symmetry_operations["translations"]
 

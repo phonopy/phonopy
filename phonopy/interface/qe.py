@@ -134,7 +134,7 @@ def read_pwscf(filename):
 
     unique_symbols = []
     pp_filenames = {}
-    for i, symbol in enumerate(cell.get_chemical_symbols()):
+    for i, symbol in enumerate(cell.symbols):
         if symbol not in unique_symbols:
             unique_symbols.append(symbol)
             pp_filenames[symbol] = pp_all_filenames[i]

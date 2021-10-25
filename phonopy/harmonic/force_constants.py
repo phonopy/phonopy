@@ -37,6 +37,7 @@ import textwrap
 
 import numpy as np
 
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
     compute_permutation_for_rotation,
     get_smallest_vectors,
@@ -635,10 +636,15 @@ def _get_drift_per_index(force_constants):
 
 
 def _solve_force_constants_svd(
-    disp_atom_number, displacements, sets_of_forces, supercell, site_symmetry, symprec
+    disp_atom_number,
+    displacements,
+    sets_of_forces,
+    supercell: PhonopyAtoms,
+    site_symmetry,
+    symprec,
 ):
-    lattice = supercell.get_cell().T
-    positions = supercell.get_scaled_positions()
+    lattice = supercell.cell.T
+    positions = supercell.scaled_positions
     pos_center = positions[disp_atom_number]
     positions -= pos_center
     rot_map_syms = get_positions_sent_by_rot_inv(
@@ -648,8 +654,8 @@ def _solve_force_constants_svd(
     rot_disps = get_rotated_displacement(displacements, site_sym_cart)
     inv_displacements = np.linalg.pinv(rot_disps)
 
-    fc = np.zeros((supercell.get_number_of_atoms(), 3, 3), dtype="double", order="C")
-    for i in range(supercell.get_number_of_atoms()):
+    fc = np.zeros((len(supercell), 3, 3), dtype="double", order="C")
+    for i in range(len(supercell)):
         combined_forces = []
         for forces in sets_of_forces:
             combined_forces.append(

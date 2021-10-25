@@ -44,7 +44,7 @@ def test_magmom(convcell_cr):
 
     spin = [1, -1]
     cell_withspin = cell.copy()
-    cell_withspin.set_magnetic_moments(spin)
+    cell_withspin.magnetic_moments = spin
     symmetry_withspin = Symmetry(cell_withspin, symprec=symprec)
     atom_map_withspin = symmetry_withspin.get_map_atoms()
     len_sym_withspin = len(symmetry_withspin.symmetry_operations["rotations"])
@@ -52,7 +52,7 @@ def test_magmom(convcell_cr):
     broken_spin = [1, -2]
     cell_brokenspin = cell.copy()
     cell_brokenspin = cell.copy()
-    cell_brokenspin.set_magnetic_moments(broken_spin)
+    cell_brokenspin.magnetic_moments = broken_spin
     symmetry_brokenspin = Symmetry(cell_brokenspin, symprec=symprec)
     atom_map_brokenspin = symmetry_brokenspin.get_map_atoms()
     len_sym_brokenspin = len(symmetry_brokenspin.symmetry_operations["rotations"])

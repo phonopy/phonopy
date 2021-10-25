@@ -1,3 +1,4 @@
+"""Show symmetry information invoked by --symmetry command option."""
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -36,6 +37,7 @@ import numpy as np
 import spglib
 from spglib import get_pointgroup
 
+from phonopy import Phonopy
 from phonopy.interface.calculator import (
     get_default_cell_filename,
     write_crystal_structure,
@@ -44,7 +46,8 @@ from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_primitive, guess_primitive_matrix
 
 
-def check_symmetry(phonon, optional_structure_info):
+def check_symmetry(phonon: Phonopy, optional_structure_info):
+    """Show symmetry information and write refined crystals to files."""
     # Assumed that primitive cell is the cell that user is interested in.
     print(
         _get_symmetry_yaml(phonon.primitive, phonon.primitive_symmetry, phonon.version)

@@ -16,11 +16,11 @@ def test_read_vasp():
     cell = read_vasp(os.path.join(data_dir, "..", "POSCAR_NaCl"))
     filename = os.path.join(data_dir, "NaCl-vasp.yaml")
     cell_ref = read_cell_yaml(filename)
-    assert (np.abs(cell.get_cell() - cell_ref.get_cell()) < 1e-5).all()
-    diff_pos = cell.get_scaled_positions() - cell_ref.get_scaled_positions()
+    assert (np.abs(cell.cell - cell_ref.cell) < 1e-5).all()
+    diff_pos = cell.scaled_positions - cell_ref.scaled_positions
     diff_pos -= np.rint(diff_pos)
     assert (np.abs(diff_pos) < 1e-5).all()
-    for s, s_r in zip(cell.get_chemical_symbols(), cell_ref.get_chemical_symbols()):
+    for s, s_r in zip(cell.symbols, cell_ref.symbols):
         assert s == s_r
 
 

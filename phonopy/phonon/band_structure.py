@@ -37,374 +37,13 @@
 import gzip
 import sys
 import warnings
+from typing import Union
 
 import numpy as np
 import yaml
 
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.units import VaspToTHz
-
-
-def estimate_band_connection(prev_eigvecs, eigvecs, prev_band_order):
-    """Connect neighboring qpoints by eigenvector similarity."""
-    metric = np.abs(np.dot(prev_eigvecs.conjugate().T, eigvecs))
-    connection_order = []
-    for overlaps in metric:
-        maxval = 0
-        for i in reversed(range(len(metric))):
-            val = overlaps[i]
-            if i in connection_order:
-                continue
-            if val > maxval:
-                maxval = val
-                maxindex = i
-        connection_order.append(maxindex)
-
-    band_order = [connection_order[x] for x in prev_band_order]
-
-    return band_order
-
-
-def get_band_qpoints_and_path_connections(band_paths, npoints=51, rec_lattice=None):
-    """Return qpoints and connections of paths."""
-    path_connections = []
-    for paths in band_paths:
-        path_connections += [
-            True,
-        ] * (len(paths) - 2)
-        path_connections.append(False)
-    return (
-        get_band_qpoints(band_paths, npoints=npoints, rec_lattice=rec_lattice),
-        path_connections,
-    )
-
-
-def get_band_qpoints(band_paths, npoints=51, rec_lattice=None):
-    """Generate qpoints for band structure path.
-
-    Note
-    ----
-
-    Behavior changes with and without rec_lattice given.
-
-    Parameters
-    ----------
-    band_paths: list of array_likes
-        Sets of end points of paths
-        dtype='double'
-        shape=(sets of paths, paths, 3)
-
-        example:
-            [[[0, 0, 0], [0.5, 0.5, 0], [0.5, 0.5, 0.5]],
-             [[0.5, 0.25, 0.75], [0, 0, 0]]]
-
-    npoints: int, optional
-        Number of q-points in each path including end points. Default is 51.
-
-    rec_lattice: array_like, optional
-        When given, q-points are sampled in a similar interval. The longest
-        path length divided by npoints including end points is used as the
-        reference interval. Reciprocal basis vectors given in column vectors.
-        dtype='double'
-        shape=(3, 3)
-
-    """
-    npts = _get_npts(band_paths, npoints, rec_lattice)
-    qpoints_of_paths = []
-    c = 0
-    for band_path in band_paths:
-        nd = len(band_path)
-        for i in range(nd - 1):
-            delta = np.subtract(band_path[i + 1], band_path[i]) / (npts[c] - 1)
-            qpoints = [delta * j for j in range(npts[c])]
-            qpoints_of_paths.append(np.array(qpoints) + band_path[i])
-            c += 1
-
-    return qpoints_of_paths
-
-
-def get_band_qpoints_by_seekpath(primitive, npoints, is_const_interval=False):
-    """q-points along BZ high symmetry paths are generated using seekpath.
-
-    Parameters
-    ----------
-    primitive : PhonopyAtoms
-        Primitive cell.
-    npoints : int
-        Number of q-points sampled along a path including end points.
-    is_const_interval : bool, optional
-        When True, q-points are sampled in a similar interval. The longest
-        path length divided by npoints including end points is used as the
-        reference interval. Default is False.
-
-    Returns
-    -------
-    bands : List of ndarray
-        Sets of qpoints that can be passed to phonopy.set_band_structure().
-        shape of each ndarray : (npoints, 3)
-    labels : List of pairs of str
-        Symbols of end points of paths.
-    connections : List of bool
-        This gives one path is connected to the next path, i.e., if False,
-        there is a jump of q-points. Number of elements is the same at
-        that of paths.
-
-    """
-    try:
-        import seekpath
-    except ImportError:
-        raise ImportError("You need to install seekpath.")
-
-    band_path = seekpath.get_path(primitive.totuple())
-    point_coords = band_path["point_coords"]
-    qpoints_of_paths = []
-    if is_const_interval:
-        reclat = np.linalg.inv(primitive.get_cell())
-    else:
-        reclat = None
-    band_paths = [
-        [point_coords[path[0]], point_coords[path[1]]] for path in band_path["path"]
-    ]
-    npts = _get_npts(band_paths, npoints, reclat)
-    for c, path in enumerate(band_path["path"]):
-        q_s = np.array(point_coords[path[0]])
-        q_e = np.array(point_coords[path[1]])
-        band = [q_s + (q_e - q_s) / (npts[c] - 1) * i for i in range(npts[c])]
-        qpoints_of_paths.append(band)
-    labels, path_connections = _get_labels(band_path["path"])
-
-    return qpoints_of_paths, labels, path_connections
-
-
-def band_plot(axs, frequencies, distances, path_connections, labels, fmt="r-"):
-    """Return band structure plot."""
-    bp = BandPlot(axs)
-    bp.decorate(labels, path_connections, frequencies, distances)
-    bp.plot(distances, frequencies, path_connections, fmt=fmt)
-
-
-class BandPlot:
-    """Band structure plotting class.
-
-    This class adds band structure plots to Matplotlib axes.
-
-    Attributes
-    ----------
-    xscale : float
-        This is used to scale the plot shape to be nicer. The value
-        can be computed using set_xscale as default, which is simply:
-
-            xscale = max_freq / max_dist * 1.5
-
-    """
-
-    def __init__(self, axs):
-        """Init method.
-
-        Parameters
-        ----------
-        axs : Matplotlib axes of ImageGrid, optional
-            axs = ImageGrid(fig, 111, nrows_ncols=(1, n), ...)
-
-        """
-        self._axs = axs
-        self.xscale = None
-        self._decorated = False
-
-    def plot(self, distances, frequencies, path_connections, fmt=None, label=None):
-        """Plot one band structure.
-
-        If ``labels`` is given, decoration such as horizontal line at freq=0,
-        x-label, y-label, and tics are set, which should be done only once.
-
-        distances : list of ndarray
-            Distances in reciprocal space.
-            See the detail in docstring of Phonopy.get_band_structure_dict.
-        frequencies : list of ndarray
-            Phonon frequencies.
-            See the detail in docstring of Phonopy.get_band_structure_dict.
-        path_connections : list of ndarray
-            This describes band segments are connected or not.
-            See the detail in docstring of Phonopy.run_band_structure.
-        fmt : str, optional
-            Matplotlib format strings. Default is None, which is equivalent to
-            'r-'.
-        label : str, optional
-            Label attached to band structure.
-
-        """
-        if fmt is None:
-            _fmt = "r-"
-        else:
-            _fmt = fmt
-
-        if self.xscale is None:
-            self.set_xscale_from_data(frequencies, distances)
-
-        count = 0
-        distances_scaled = [d * self.xscale for d in distances]
-        for i, (d, f, c) in enumerate(
-            zip(distances_scaled, frequencies, path_connections)
-        ):
-            ax = self._axs[count]
-            if i == 0 and label is not None:
-                curves = ax.plot(d, f, _fmt, linewidth=1)
-                curves[0].set_label(label)
-                ax.legend()
-            else:
-                ax.plot(d, f, _fmt, linewidth=1)
-            if not c:
-                count += 1
-
-    def set_xscale_from_data(self, frequencies, distances):
-        """Set xscale from data."""
-        max_freq = max([np.max(fq) for fq in frequencies])
-        max_dist = distances[-1][-1]
-        self.xscale = max_freq / max_dist * 1.5
-
-    def decorate(self, labels, path_connections, frequencies, distances):
-        """Decorate plots.
-
-        Parameters
-        ----------
-        labels : List of str, optional
-            Labels of special points.
-            See the detail in docstring of Phonopy.run_band_structure.
-
-        """
-        if self._decorated:
-            raise RuntimeError("Already BandPlot instance is decorated.")
-        else:
-            self._decorated = True
-
-        if self.xscale is None:
-            self.set_xscale_from_data(frequencies, distances)
-
-        distances_scaled = [d * self.xscale for d in distances]
-
-        # T T T F F -> [[0, 3], [4, 4]]
-        lefts = [0]
-        rights = []
-        for i, c in enumerate(path_connections):
-            if not c:
-                lefts.append(i + 1)
-                rights.append(i)
-        seg_indices = [list(range(lft, rgt + 1)) for lft, rgt in zip(lefts, rights)]
-        special_points = []
-        for indices in seg_indices:
-            pts = [distances_scaled[i][0] for i in indices]
-            pts.append(distances_scaled[indices[-1]][-1])
-            special_points.append(pts)
-
-        self._axs[0].set_ylabel("Frequency")
-        l_count = 0
-        for ax, spts in zip(self._axs, special_points):
-            ax.xaxis.set_ticks_position("both")
-            ax.yaxis.set_ticks_position("both")
-            ax.xaxis.set_tick_params(which="both", direction="in")
-            ax.yaxis.set_tick_params(which="both", direction="in")
-            ax.set_xlim(spts[0], spts[-1])
-            ax.set_xticks(spts)
-            if labels is None:
-                ax.set_xticklabels(
-                    [
-                        "",
-                    ]
-                    * len(spts)
-                )
-            else:
-                ax.set_xticklabels(labels[l_count : (l_count + len(spts))])
-                l_count += len(spts)
-            ax.plot(
-                [spts[0], spts[-1]], [0, 0], linestyle=":", linewidth=0.5, color="b"
-            )
-
-
-def _plot_legacy(
-    ax, all_distances, all_frequencies, labels, special_points, is_band_connection
-):
-    """Plot band structure in legacy style."""
-    ax.xaxis.set_ticks_position("both")
-    ax.yaxis.set_ticks_position("both")
-    ax.xaxis.set_tick_params(which="both", direction="in")
-    ax.yaxis.set_tick_params(which="both", direction="in")
-
-    for distances, frequencies in zip(all_distances, all_frequencies):
-        for freqs in frequencies.T:
-            if is_band_connection:
-                ax.plot(distances, freqs, "-")
-            else:
-                ax.plot(distances, freqs, "r-")
-
-    ax.set_ylabel("Frequency")
-    ax.set_xlabel("Wave vector")
-
-    if labels and len(labels) == len(special_points):
-        ax.set_xticks(special_points)
-        ax.set_xticklabels(labels)
-    else:
-        ax.set_xticks(special_points)
-        ax.set_xticklabels(
-            [
-                "",
-            ]
-            * len(special_points)
-        )
-
-    ax.set_xlim(0, all_distances[-1][-1])
-    ax.axhline(y=0, linestyle=":", linewidth=0.5, color="b")
-
-
-def _get_npts(band_paths, npoints, rec_lattice):
-    """Return numbers of qpoints of band segments."""
-    if rec_lattice is not None:
-        path_lengths = []
-        for band_path in band_paths:
-            nd = len(band_path)
-            for i in range(nd - 1):
-                vector = np.subtract(band_path[i + 1], band_path[i])
-                length = np.linalg.norm(np.dot(rec_lattice, vector))
-                path_lengths.append(length)
-        max_length = max(path_lengths)
-        npts = [np.rint(pl / max_length * npoints).astype(int) for pl in path_lengths]
-    else:
-        npts = [
-            npoints,
-        ] * np.sum([len(paths) for paths in band_paths])
-
-    for i, npt in enumerate(npts):
-        if npt < 2:
-            npts[i] = 2
-
-    return npts
-
-
-def _get_labels(pairs_of_symbols):
-    path_connections = []
-    labels = []
-
-    for i, pairs in enumerate(pairs_of_symbols[:-1]):
-        if pairs[1] != pairs_of_symbols[i + 1][0]:
-            path_connections.append(False)
-            labels += list(pairs)
-        else:
-            path_connections.append(True)
-            labels.append(pairs[0])
-    path_connections.append(False)
-    labels += list(pairs_of_symbols[-1])
-
-    for i, l in enumerate(labels):
-        if "GAMMA" in l:
-            labels[i] = "$" + l.replace("GAMMA", r"\Gamma") + "$"
-        elif "SIGMA" in l:
-            labels[i] = "$" + l.replace("SIGMA", r"\Sigma") + "$"
-        elif "DELTA" in l:
-            labels[i] = "$" + l.replace("DELTA", r"\Delta") + "$"
-        elif "LAMBDA" in l:
-            labels[i] = "$" + l.replace("LAMBDA", r"\Lambda") + "$"
-        else:
-            labels[i] = r"$\mathrm{%s}$" % l
-
-    return labels, path_connections
 
 
 class BandStructure:
@@ -460,7 +99,7 @@ class BandStructure:
     def __init__(
         self,
         paths,
-        dynamical_matrix,
+        dynamical_matrix: Union[DynamicalMatrix, DynamicalMatrixNAC],
         with_eigenvectors=False,
         is_band_connection=False,
         group_velocity=None,
@@ -883,7 +522,7 @@ class BandStructure:
 
     def _shift_point(self, qpoint):
         self._distance += np.linalg.norm(
-            np.dot(qpoint - self._lastq, np.linalg.inv(self._cell.get_cell()).T)
+            np.dot(qpoint - self._lastq, np.linalg.inv(self._cell.cell).T)
         )
         self._lastq = qpoint.copy()
 
@@ -980,3 +619,366 @@ class BandStructure:
                 np.sqrt(abs(eigs_path)) * np.sign(eigs_path) * self._factor
             )
         self._frequencies = frequencies
+
+
+def estimate_band_connection(prev_eigvecs, eigvecs, prev_band_order):
+    """Connect neighboring qpoints by eigenvector similarity."""
+    metric = np.abs(np.dot(prev_eigvecs.conjugate().T, eigvecs))
+    connection_order = []
+    for overlaps in metric:
+        maxval = 0
+        for i in reversed(range(len(metric))):
+            val = overlaps[i]
+            if i in connection_order:
+                continue
+            if val > maxval:
+                maxval = val
+                maxindex = i
+        connection_order.append(maxindex)
+
+    band_order = [connection_order[x] for x in prev_band_order]
+
+    return band_order
+
+
+def get_band_qpoints_and_path_connections(band_paths, npoints=51, rec_lattice=None):
+    """Return qpoints and connections of paths."""
+    path_connections = []
+    for paths in band_paths:
+        path_connections += [
+            True,
+        ] * (len(paths) - 2)
+        path_connections.append(False)
+    return (
+        get_band_qpoints(band_paths, npoints=npoints, rec_lattice=rec_lattice),
+        path_connections,
+    )
+
+
+def get_band_qpoints(band_paths, npoints=51, rec_lattice=None):
+    """Generate qpoints for band structure path.
+
+    Note
+    ----
+
+    Behavior changes with and without rec_lattice given.
+
+    Parameters
+    ----------
+    band_paths: list of array_likes
+        Sets of end points of paths
+        dtype='double'
+        shape=(sets of paths, paths, 3)
+
+        example:
+            [[[0, 0, 0], [0.5, 0.5, 0], [0.5, 0.5, 0.5]],
+             [[0.5, 0.25, 0.75], [0, 0, 0]]]
+
+    npoints: int, optional
+        Number of q-points in each path including end points. Default is 51.
+
+    rec_lattice: array_like, optional
+        When given, q-points are sampled in a similar interval. The longest
+        path length divided by npoints including end points is used as the
+        reference interval. Reciprocal basis vectors given in column vectors.
+        dtype='double'
+        shape=(3, 3)
+
+    """
+    npts = _get_npts(band_paths, npoints, rec_lattice)
+    qpoints_of_paths = []
+    c = 0
+    for band_path in band_paths:
+        nd = len(band_path)
+        for i in range(nd - 1):
+            delta = np.subtract(band_path[i + 1], band_path[i]) / (npts[c] - 1)
+            qpoints = [delta * j for j in range(npts[c])]
+            qpoints_of_paths.append(np.array(qpoints) + band_path[i])
+            c += 1
+
+    return qpoints_of_paths
+
+
+def get_band_qpoints_by_seekpath(primitive, npoints, is_const_interval=False):
+    """q-points along BZ high symmetry paths are generated using seekpath.
+
+    Parameters
+    ----------
+    primitive : PhonopyAtoms
+        Primitive cell.
+    npoints : int
+        Number of q-points sampled along a path including end points.
+    is_const_interval : bool, optional
+        When True, q-points are sampled in a similar interval. The longest
+        path length divided by npoints including end points is used as the
+        reference interval. Default is False.
+
+    Returns
+    -------
+    bands : List of ndarray
+        Sets of qpoints that can be passed to phonopy.set_band_structure().
+        shape of each ndarray : (npoints, 3)
+    labels : List of pairs of str
+        Symbols of end points of paths.
+    connections : List of bool
+        This gives one path is connected to the next path, i.e., if False,
+        there is a jump of q-points. Number of elements is the same at
+        that of paths.
+
+    """
+    try:
+        import seekpath
+    except ImportError:
+        raise ImportError("You need to install seekpath.")
+
+    band_path = seekpath.get_path(primitive.totuple())
+    point_coords = band_path["point_coords"]
+    qpoints_of_paths = []
+    if is_const_interval:
+        reclat = np.linalg.inv(primitive.get_cell())
+    else:
+        reclat = None
+    band_paths = [
+        [point_coords[path[0]], point_coords[path[1]]] for path in band_path["path"]
+    ]
+    npts = _get_npts(band_paths, npoints, reclat)
+    for c, path in enumerate(band_path["path"]):
+        q_s = np.array(point_coords[path[0]])
+        q_e = np.array(point_coords[path[1]])
+        band = [q_s + (q_e - q_s) / (npts[c] - 1) * i for i in range(npts[c])]
+        qpoints_of_paths.append(band)
+    labels, path_connections = _get_labels(band_path["path"])
+
+    return qpoints_of_paths, labels, path_connections
+
+
+def band_plot(axs, frequencies, distances, path_connections, labels, fmt="r-"):
+    """Return band structure plot."""
+    bp = BandPlot(axs)
+    bp.decorate(labels, path_connections, frequencies, distances)
+    bp.plot(distances, frequencies, path_connections, fmt=fmt)
+
+
+class BandPlot:
+    """Band structure plotting class.
+
+    This class adds band structure plots to Matplotlib axes.
+
+    Attributes
+    ----------
+    xscale : float
+        This is used to scale the plot shape to be nicer. The value
+        can be computed using set_xscale as default, which is simply:
+
+            xscale = max_freq / max_dist * 1.5
+
+    """
+
+    def __init__(self, axs):
+        """Init method.
+
+        Parameters
+        ----------
+        axs : Matplotlib axes of ImageGrid, optional
+            axs = ImageGrid(fig, 111, nrows_ncols=(1, n), ...)
+
+        """
+        self._axs = axs
+        self.xscale = None
+        self._decorated = False
+
+    def plot(self, distances, frequencies, path_connections, fmt=None, label=None):
+        """Plot one band structure.
+
+        If ``labels`` is given, decoration such as horizontal line at freq=0,
+        x-label, y-label, and tics are set, which should be done only once.
+
+        distances : list of ndarray
+            Distances in reciprocal space.
+            See the detail in docstring of Phonopy.get_band_structure_dict.
+        frequencies : list of ndarray
+            Phonon frequencies.
+            See the detail in docstring of Phonopy.get_band_structure_dict.
+        path_connections : list of ndarray
+            This describes band segments are connected or not.
+            See the detail in docstring of Phonopy.run_band_structure.
+        fmt : str, optional
+            Matplotlib format strings. Default is None, which is equivalent to
+            'r-'.
+        label : str, optional
+            Label attached to band structure.
+
+        """
+        if fmt is None:
+            _fmt = "r-"
+        else:
+            _fmt = fmt
+
+        if self.xscale is None:
+            self.set_xscale_from_data(frequencies, distances)
+
+        count = 0
+        distances_scaled = [d * self.xscale for d in distances]
+        for i, (d, f, c) in enumerate(
+            zip(distances_scaled, frequencies, path_connections)
+        ):
+            ax = self._axs[count]
+            if i == 0 and label is not None:
+                curves = ax.plot(d, f, _fmt, linewidth=1)
+                curves[0].set_label(label)
+                ax.legend()
+            else:
+                ax.plot(d, f, _fmt, linewidth=1)
+            if not c:
+                count += 1
+
+    def set_xscale_from_data(self, frequencies, distances):
+        """Set xscale from data."""
+        max_freq = max([np.max(fq) for fq in frequencies])
+        max_dist = distances[-1][-1]
+        self.xscale = max_freq / max_dist * 1.5
+
+    def decorate(self, labels, path_connections, frequencies, distances):
+        """Decorate plots.
+
+        Parameters
+        ----------
+        labels : List of str, optional
+            Labels of special points.
+            See the detail in docstring of Phonopy.run_band_structure.
+
+        """
+        if self._decorated:
+            raise RuntimeError("Already BandPlot instance is decorated.")
+        else:
+            self._decorated = True
+
+        if self.xscale is None:
+            self.set_xscale_from_data(frequencies, distances)
+
+        distances_scaled = [d * self.xscale for d in distances]
+
+        # T T T F F -> [[0, 3], [4, 4]]
+        lefts = [0]
+        rights = []
+        for i, c in enumerate(path_connections):
+            if not c:
+                lefts.append(i + 1)
+                rights.append(i)
+        seg_indices = [list(range(lft, rgt + 1)) for lft, rgt in zip(lefts, rights)]
+        special_points = []
+        for indices in seg_indices:
+            pts = [distances_scaled[i][0] for i in indices]
+            pts.append(distances_scaled[indices[-1]][-1])
+            special_points.append(pts)
+
+        self._axs[0].set_ylabel("Frequency")
+        l_count = 0
+        for ax, spts in zip(self._axs, special_points):
+            ax.xaxis.set_ticks_position("both")
+            ax.yaxis.set_ticks_position("both")
+            ax.xaxis.set_tick_params(which="both", direction="in")
+            ax.yaxis.set_tick_params(which="both", direction="in")
+            ax.set_xlim(spts[0], spts[-1])
+            ax.set_xticks(spts)
+            if labels is None:
+                ax.set_xticklabels(
+                    [
+                        "",
+                    ]
+                    * len(spts)
+                )
+            else:
+                ax.set_xticklabels(labels[l_count : (l_count + len(spts))])
+                l_count += len(spts)
+            ax.plot(
+                [spts[0], spts[-1]], [0, 0], linestyle=":", linewidth=0.5, color="b"
+            )
+
+
+def _plot_legacy(
+    ax, all_distances, all_frequencies, labels, special_points, is_band_connection
+):
+    """Plot band structure in legacy style."""
+    ax.xaxis.set_ticks_position("both")
+    ax.yaxis.set_ticks_position("both")
+    ax.xaxis.set_tick_params(which="both", direction="in")
+    ax.yaxis.set_tick_params(which="both", direction="in")
+
+    for distances, frequencies in zip(all_distances, all_frequencies):
+        for freqs in frequencies.T:
+            if is_band_connection:
+                ax.plot(distances, freqs, "-")
+            else:
+                ax.plot(distances, freqs, "r-")
+
+    ax.set_ylabel("Frequency")
+    ax.set_xlabel("Wave vector")
+
+    if labels and len(labels) == len(special_points):
+        ax.set_xticks(special_points)
+        ax.set_xticklabels(labels)
+    else:
+        ax.set_xticks(special_points)
+        ax.set_xticklabels(
+            [
+                "",
+            ]
+            * len(special_points)
+        )
+
+    ax.set_xlim(0, all_distances[-1][-1])
+    ax.axhline(y=0, linestyle=":", linewidth=0.5, color="b")
+
+
+def _get_npts(band_paths, npoints, rec_lattice):
+    """Return numbers of qpoints of band segments."""
+    if rec_lattice is not None:
+        path_lengths = []
+        for band_path in band_paths:
+            nd = len(band_path)
+            for i in range(nd - 1):
+                vector = np.subtract(band_path[i + 1], band_path[i])
+                length = np.linalg.norm(np.dot(rec_lattice, vector))
+                path_lengths.append(length)
+        max_length = max(path_lengths)
+        npts = [np.rint(pl / max_length * npoints).astype(int) for pl in path_lengths]
+    else:
+        npts = [
+            npoints,
+        ] * np.sum([len(paths) for paths in band_paths])
+
+    for i, npt in enumerate(npts):
+        if npt < 2:
+            npts[i] = 2
+
+    return npts
+
+
+def _get_labels(pairs_of_symbols):
+    path_connections = []
+    labels = []
+
+    for i, pairs in enumerate(pairs_of_symbols[:-1]):
+        if pairs[1] != pairs_of_symbols[i + 1][0]:
+            path_connections.append(False)
+            labels += list(pairs)
+        else:
+            path_connections.append(True)
+            labels.append(pairs[0])
+    path_connections.append(False)
+    labels += list(pairs_of_symbols[-1])
+
+    for i, l in enumerate(labels):
+        if "GAMMA" in l:
+            labels[i] = "$" + l.replace("GAMMA", r"\Gamma") + "$"
+        elif "SIGMA" in l:
+            labels[i] = "$" + l.replace("SIGMA", r"\Sigma") + "$"
+        elif "DELTA" in l:
+            labels[i] = "$" + l.replace("DELTA", r"\Delta") + "$"
+        elif "LAMBDA" in l:
+            labels[i] = "$" + l.replace("LAMBDA", r"\Lambda") + "$"
+        else:
+            labels[i] = r"$\mathrm{%s}$" % l
+
+    return labels, path_connections

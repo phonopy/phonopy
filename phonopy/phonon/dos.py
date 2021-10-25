@@ -43,184 +43,6 @@ from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
 
-def get_pdos_indices(symmetry):
-    """Return atomic indieces grouped by symmetry."""
-    mapping = symmetry.get_map_atoms()
-    return [list(np.where(mapping == i)[0]) for i in symmetry.get_independent_atoms()]
-
-
-def write_total_dos(
-    frequency_points, total_dos, comment=None, filename="total_dos.dat"
-):
-    """Write total_dos.dat."""
-    with open(filename, "w") as fp:
-        if comment is not None:
-            fp.write("# %s\n" % comment)
-
-        for freq, dos in zip(frequency_points, total_dos):
-            fp.write("%20.10f%20.10f\n" % (freq, dos))
-
-
-def write_partial_dos(
-    frequency_points, partial_dos, comment=None, filename="partial_dos.dat"
-):
-    """Write partial_dos.dat."""
-    warnings.warn(
-        "write_partial_dos() is deprecated. Use write_projected_dos() instead.",
-        DeprecationWarning,
-    )
-    write_projected_dos(
-        frequency_points, partial_dos, comment=comment, filename=filename
-    )
-
-
-def write_projected_dos(
-    frequency_points, projected_dos, comment=None, filename="projected_dos.dat"
-):
-    """Write projected_dos.dat."""
-    with open(filename, "w") as fp:
-        if comment is not None:
-            fp.write("# %s\n" % comment)
-
-        for freq, pdos in zip(frequency_points, projected_dos.T):
-            fp.write("%20.10f" % freq)
-            fp.write(("%20.10f" * len(pdos)) % tuple(pdos))
-            fp.write("\n")
-
-
-def plot_total_dos(
-    ax,
-    frequency_points,
-    total_dos,
-    freq_Debye=None,
-    Debye_fit_coef=None,
-    xlabel=None,
-    ylabel=None,
-    draw_grid=True,
-    flip_xy=False,
-):
-    """Plot total DOS."""
-    ax.xaxis.set_ticks_position("both")
-    ax.yaxis.set_ticks_position("both")
-    ax.xaxis.set_tick_params(which="both", direction="in")
-    ax.yaxis.set_tick_params(which="both", direction="in")
-
-    if freq_Debye is not None:
-        freq_pitch = frequency_points[1] - frequency_points[0]
-        num_points = int(freq_Debye / freq_pitch)
-        freqs = np.linspace(0, freq_Debye, num_points + 1)
-
-    if flip_xy:
-        ax.plot(total_dos, frequency_points, "r-", linewidth=1)
-        if freq_Debye:
-            ax.plot(
-                np.append(Debye_fit_coef * freqs ** 2, 0),
-                np.append(freqs, freq_Debye),
-                "b-",
-                linewidth=1,
-            )
-    else:
-        ax.plot(frequency_points, total_dos, "r-", linewidth=1)
-        if freq_Debye:
-            ax.plot(
-                np.append(freqs, freq_Debye),
-                np.append(Debye_fit_coef * freqs ** 2, 0),
-                "b-",
-                linewidth=1,
-            )
-
-    if xlabel:
-        ax.set_xlabel(xlabel)
-    if ylabel:
-        ax.set_ylabel(ylabel)
-
-    ax.grid(draw_grid)
-
-
-def plot_partial_dos(
-    ax,
-    frequency_points,
-    partial_dos,
-    indices=None,
-    legend=None,
-    xlabel=None,
-    ylabel=None,
-    draw_grid=True,
-    flip_xy=False,
-):
-    """Plot partial DOS."""
-    warnings.warn(
-        "plot_partial_dos() is deprecated. Use plot_projected_dos() instead.",
-        DeprecationWarning,
-    )
-    plot_projected_dos(
-        ax,
-        frequency_points,
-        partial_dos,
-        indices=indices,
-        legend=legend,
-        xlabel=xlabel,
-        ylabel=ylabel,
-        draw_grid=draw_grid,
-        flip_xy=flip_xy,
-    )
-
-
-def plot_projected_dos(
-    ax,
-    frequency_points,
-    projected_dos,
-    indices=None,
-    legend=None,
-    xlabel=None,
-    ylabel=None,
-    draw_grid=True,
-    flip_xy=False,
-):
-    """Plot projected DOS."""
-    ax.xaxis.set_ticks_position("both")
-    ax.yaxis.set_ticks_position("both")
-    ax.xaxis.set_tick_params(which="both", direction="in")
-    ax.yaxis.set_tick_params(which="both", direction="in")
-
-    plots = []
-    num_pdos = len(projected_dos)
-
-    if indices is None:
-        indices = []
-        for i in range(num_pdos):
-            indices.append([i])
-
-    for set_for_sum in indices:
-        pdos_sum = np.zeros_like(frequency_points)
-        for i in set_for_sum:
-            if i > num_pdos - 1:
-                print("Index number '%d' is specified," % (i + 1))
-                print("but it is not allowed to be larger than the number of " "atoms.")
-                raise ValueError
-            if i < 0:
-                print(
-                    "Index number '%d' is specified, but it must be "
-                    "positive." % (i + 1)
-                )
-                raise ValueError
-            pdos_sum += projected_dos[i]
-        if flip_xy:
-            plots.append(ax.plot(pdos_sum, frequency_points, linewidth=1))
-        else:
-            plots.append(ax.plot(frequency_points, pdos_sum, linewidth=1))
-
-    if legend is not None:
-        ax.legend(legend)
-
-    if xlabel:
-        ax.set_xlabel(xlabel)
-    if ylabel:
-        ax.set_ylabel(ylabel)
-
-    ax.grid(draw_grid)
-
-
 class NormalDistribution:
     """Class to represent normal distribution."""
 
@@ -248,47 +70,6 @@ class CauchyDistribution:
     def calc(self, x):
         """Return Cauchy distribution."""
         return self._gamma / np.pi / (x ** 2 + self._gamma ** 2)
-
-
-def run_tetrahedron_method_dos(
-    mesh,
-    frequency_points,
-    frequencies,
-    grid_address,
-    grid_mapping_table,
-    relative_grid_address,
-    coef=None,
-):
-    """Return (P)DOS calculated by tetrahedron method in C."""
-    try:
-        import phonopy._phonopy as phonoc
-    except ImportError:
-        import sys
-
-        print("Phonopy C-extension has to be built properly.")
-        sys.exit(1)
-
-    if coef is None:
-        _coef = np.ones((frequencies.shape[0], 1, frequencies.shape[1]), dtype="double")
-    else:
-        _coef = np.array(coef, dtype="double", order="C")
-    arr_shape = frequencies.shape + (len(frequency_points), _coef.shape[1])
-    dos = np.zeros(arr_shape, dtype="double")
-
-    phonoc.tetrahedron_method_dos(
-        dos,
-        np.array(mesh, dtype="int_"),
-        frequency_points,
-        frequencies,
-        _coef,
-        np.array(grid_address, dtype="int_", order="C"),
-        np.array(grid_mapping_table, dtype="int_", order="C"),
-        relative_grid_address,
-    )
-    if coef is None:
-        return dos[:, :, :, 0].sum(axis=0).sum(axis=0) / np.prod(mesh)
-    else:
-        return dos.sum(axis=0).sum(axis=0) / np.prod(mesh)
 
 
 class Dos:
@@ -486,7 +267,7 @@ class TotalDos(Dos):
     def _run_tetrahedron_method_dos(self):
         mesh_numbers = self._mesh_object.mesh_numbers
         cell = self._mesh_object.dynamical_matrix.primitive
-        reciprocal_lattice = np.linalg.inv(cell.get_cell())
+        reciprocal_lattice = np.linalg.inv(cell.cell)
         tm = TetrahedronMethod(reciprocal_lattice, mesh=mesh_numbers)
         self._dos = run_tetrahedron_method_dos(
             mesh_numbers,
@@ -660,7 +441,7 @@ class ProjectedDos(Dos):
     def _run_tetrahedron_method_dos(self):
         mesh_numbers = self._mesh_object.mesh_numbers
         cell = self._mesh_object.dynamical_matrix.primitive
-        reciprocal_lattice = np.linalg.inv(cell.get_cell())
+        reciprocal_lattice = np.linalg.inv(cell.cell)
         tm = TetrahedronMethod(reciprocal_lattice, mesh=mesh_numbers)
         pdos = run_tetrahedron_method_dos(
             mesh_numbers,
@@ -697,3 +478,222 @@ class PartialDos(ProjectedDos):
             direction=direction,
             xyz_projection=xyz_projection,
         )
+
+
+def get_pdos_indices(symmetry):
+    """Return atomic indieces grouped by symmetry."""
+    mapping = symmetry.get_map_atoms()
+    return [list(np.where(mapping == i)[0]) for i in symmetry.get_independent_atoms()]
+
+
+def write_total_dos(
+    frequency_points, total_dos, comment=None, filename="total_dos.dat"
+):
+    """Write total_dos.dat."""
+    with open(filename, "w") as fp:
+        if comment is not None:
+            fp.write("# %s\n" % comment)
+
+        for freq, dos in zip(frequency_points, total_dos):
+            fp.write("%20.10f%20.10f\n" % (freq, dos))
+
+
+def write_partial_dos(
+    frequency_points, partial_dos, comment=None, filename="partial_dos.dat"
+):
+    """Write partial_dos.dat."""
+    warnings.warn(
+        "write_partial_dos() is deprecated. Use write_projected_dos() instead.",
+        DeprecationWarning,
+    )
+    write_projected_dos(
+        frequency_points, partial_dos, comment=comment, filename=filename
+    )
+
+
+def write_projected_dos(
+    frequency_points, projected_dos, comment=None, filename="projected_dos.dat"
+):
+    """Write projected_dos.dat."""
+    with open(filename, "w") as fp:
+        if comment is not None:
+            fp.write("# %s\n" % comment)
+
+        for freq, pdos in zip(frequency_points, projected_dos.T):
+            fp.write("%20.10f" % freq)
+            fp.write(("%20.10f" * len(pdos)) % tuple(pdos))
+            fp.write("\n")
+
+
+def plot_total_dos(
+    ax,
+    frequency_points,
+    total_dos,
+    freq_Debye=None,
+    Debye_fit_coef=None,
+    xlabel=None,
+    ylabel=None,
+    draw_grid=True,
+    flip_xy=False,
+):
+    """Plot total DOS."""
+    ax.xaxis.set_ticks_position("both")
+    ax.yaxis.set_ticks_position("both")
+    ax.xaxis.set_tick_params(which="both", direction="in")
+    ax.yaxis.set_tick_params(which="both", direction="in")
+
+    if freq_Debye is not None:
+        freq_pitch = frequency_points[1] - frequency_points[0]
+        num_points = int(freq_Debye / freq_pitch)
+        freqs = np.linspace(0, freq_Debye, num_points + 1)
+
+    if flip_xy:
+        ax.plot(total_dos, frequency_points, "r-", linewidth=1)
+        if freq_Debye:
+            ax.plot(
+                np.append(Debye_fit_coef * freqs ** 2, 0),
+                np.append(freqs, freq_Debye),
+                "b-",
+                linewidth=1,
+            )
+    else:
+        ax.plot(frequency_points, total_dos, "r-", linewidth=1)
+        if freq_Debye:
+            ax.plot(
+                np.append(freqs, freq_Debye),
+                np.append(Debye_fit_coef * freqs ** 2, 0),
+                "b-",
+                linewidth=1,
+            )
+
+    if xlabel:
+        ax.set_xlabel(xlabel)
+    if ylabel:
+        ax.set_ylabel(ylabel)
+
+    ax.grid(draw_grid)
+
+
+def plot_partial_dos(
+    ax,
+    frequency_points,
+    partial_dos,
+    indices=None,
+    legend=None,
+    xlabel=None,
+    ylabel=None,
+    draw_grid=True,
+    flip_xy=False,
+):
+    """Plot partial DOS."""
+    warnings.warn(
+        "plot_partial_dos() is deprecated. Use plot_projected_dos() instead.",
+        DeprecationWarning,
+    )
+    plot_projected_dos(
+        ax,
+        frequency_points,
+        partial_dos,
+        indices=indices,
+        legend=legend,
+        xlabel=xlabel,
+        ylabel=ylabel,
+        draw_grid=draw_grid,
+        flip_xy=flip_xy,
+    )
+
+
+def plot_projected_dos(
+    ax,
+    frequency_points,
+    projected_dos,
+    indices=None,
+    legend=None,
+    xlabel=None,
+    ylabel=None,
+    draw_grid=True,
+    flip_xy=False,
+):
+    """Plot projected DOS."""
+    ax.xaxis.set_ticks_position("both")
+    ax.yaxis.set_ticks_position("both")
+    ax.xaxis.set_tick_params(which="both", direction="in")
+    ax.yaxis.set_tick_params(which="both", direction="in")
+
+    plots = []
+    num_pdos = len(projected_dos)
+
+    if indices is None:
+        indices = []
+        for i in range(num_pdos):
+            indices.append([i])
+
+    for set_for_sum in indices:
+        pdos_sum = np.zeros_like(frequency_points)
+        for i in set_for_sum:
+            if i > num_pdos - 1:
+                print("Index number '%d' is specified," % (i + 1))
+                print("but it is not allowed to be larger than the number of " "atoms.")
+                raise ValueError
+            if i < 0:
+                print(
+                    "Index number '%d' is specified, but it must be "
+                    "positive." % (i + 1)
+                )
+                raise ValueError
+            pdos_sum += projected_dos[i]
+        if flip_xy:
+            plots.append(ax.plot(pdos_sum, frequency_points, linewidth=1))
+        else:
+            plots.append(ax.plot(frequency_points, pdos_sum, linewidth=1))
+
+    if legend is not None:
+        ax.legend(legend)
+
+    if xlabel:
+        ax.set_xlabel(xlabel)
+    if ylabel:
+        ax.set_ylabel(ylabel)
+
+    ax.grid(draw_grid)
+
+
+def run_tetrahedron_method_dos(
+    mesh,
+    frequency_points,
+    frequencies,
+    grid_address,
+    grid_mapping_table,
+    relative_grid_address,
+    coef=None,
+):
+    """Return (P)DOS calculated by tetrahedron method in C."""
+    try:
+        import phonopy._phonopy as phonoc
+    except ImportError:
+        import sys
+
+        print("Phonopy C-extension has to be built properly.")
+        sys.exit(1)
+
+    if coef is None:
+        _coef = np.ones((frequencies.shape[0], 1, frequencies.shape[1]), dtype="double")
+    else:
+        _coef = np.array(coef, dtype="double", order="C")
+    arr_shape = frequencies.shape + (len(frequency_points), _coef.shape[1])
+    dos = np.zeros(arr_shape, dtype="double")
+
+    phonoc.tetrahedron_method_dos(
+        dos,
+        np.array(mesh, dtype="int_"),
+        frequency_points,
+        frequencies,
+        _coef,
+        np.array(grid_address, dtype="int_", order="C"),
+        np.array(grid_mapping_table, dtype="int_", order="C"),
+        relative_grid_address,
+    )
+    if coef is None:
+        return dos[:, :, :, 0].sum(axis=0).sum(axis=0) / np.prod(mesh)
+    else:
+        return dos.sum(axis=0).sum(axis=0) / np.prod(mesh)
