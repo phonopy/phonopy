@@ -247,17 +247,17 @@ def helper_methods():
 
     class HelperMethods:
         @classmethod
-        def compare_cells_with_order(cls, cell, cell_ref):
+        def compare_cells_with_order(cls, cell, cell_ref, symprec=1e-5):
             """Compare two cells with the same orders of positions."""
-            np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=1e-5)
+            np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=symprec)
             cls.compare_positions_with_order(
                 cell.scaled_positions, cell_ref.scaled_positions, cell.cell
             )
             np.testing.assert_array_equal(cell.numbers, cell_ref.numbers)
-            np.testing.assert_allclose(cell.masses, cell_ref.masses, atol=1e-5)
+            np.testing.assert_allclose(cell.masses, cell_ref.masses, atol=symprec)
 
         @classmethod
-        def compare_positions_with_order(cls, pos, pos_ref, lattice):
+        def compare_positions_with_order(cls, pos, pos_ref, lattice, symprec=1e-5):
             """Compare two lists of positions and orders.
 
             lattice :
@@ -267,21 +267,25 @@ def helper_methods():
             diff = pos - pos_ref
             diff -= np.rint(diff)
             dist = (np.dot(diff, lattice) ** 2).sum(axis=1)
-            assert (dist < 1e-5).all()
+            assert (dist < symprec).all()
 
         @classmethod
-        def compare_cells(cls, cell, cell_ref):
+        def compare_cells(cls, cell, cell_ref, symprec=1e-5):
             """Compare two cells where position orders can be different."""
-            np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=1e-5)
+            np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=symprec)
 
             indices = cls.compare_positions_in_arbitrary_order(
                 cell.scaled_positions, cell_ref.scaled_positions, cell.cell
             )
             np.testing.assert_array_equal(cell.numbers, cell_ref.numbers[indices])
-            np.testing.assert_allclose(cell.masses, cell_ref.masses[indices], atol=1e-5)
+            np.testing.assert_allclose(
+                cell.masses, cell_ref.masses[indices], atol=symprec
+            )
 
         @classmethod
-        def compare_positions_in_arbitrary_order(cls, pos_in, pos_ref, lattice):
+        def compare_positions_in_arbitrary_order(
+            cls, pos_in, pos_ref, lattice, symprec=1e-5
+        ):
             """Compare two sets of positions irrespective of orders.
 
             lattice :
@@ -293,7 +297,7 @@ def helper_methods():
                 diff = pos_ref - pos
                 diff -= np.rint(diff)
                 dist = (np.dot(diff, lattice) ** 2).sum(axis=1)
-                matches = np.where(dist < 1e-5)[0]
+                matches = np.where(dist < symprec)[0]
                 assert len(matches) == 1
                 indices.append(matches[0])
             return indices

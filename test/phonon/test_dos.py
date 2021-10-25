@@ -1,12 +1,8 @@
 """Tests for DOS."""
-import os
-
 import numpy as np
 
 from phonopy import Phonopy
 from phonopy.phonon.dos import get_pdos_indices
-
-data_dir = os.path.dirname(os.path.abspath(__file__))
 
 tp_str = """0.000000 100.000000 200.000000 300.000000 400.000000
 500.000000 600.000000 700.000000 800.000000 900.000000

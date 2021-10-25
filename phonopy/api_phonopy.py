@@ -2677,7 +2677,7 @@ class Phonopy:
         if temperatures is None:
             td.set_temperature_range(t_min, t_max, t_step)
         else:
-            td.set_temperatures(temperatures)
+            td.temperatures = temperatures
         td.run()
 
         self._thermal_displacements = td
@@ -2802,7 +2802,7 @@ class Phonopy:
         if temperatures is None:
             tdm.set_temperature_range(t_min, t_max, t_step)
         else:
-            tdm.set_temperatures(temperatures)
+            tdm.temperatures = temperatures
         tdm.run()
 
         self._thermal_displacement_matrices = tdm

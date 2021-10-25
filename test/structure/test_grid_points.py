@@ -1,8 +1,12 @@
+"""Tests for routines in grid_points.py."""
 import os
 
 import numpy as np
 import pytest
 
+from phonopy import Phonopy
+from phonopy.interface.phonopy_yaml import read_cell_yaml
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.grid_points import GeneralizedRegularGridPoints, GridPoints
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -36,11 +40,13 @@ ga234 = [
 
 
 def test_GridPoints():
+    """Test of GridPoints."""
     gp = GridPoints([2, 3, 4], [[-1, 1, 1], [1, -1, 1], [1, 1, -1]])
     np.testing.assert_array_equal(gp.grid_address, ga234)
 
 
-def test_GridPoints_NaCl_with_rotations(ph_nacl):
+def test_GridPoints_NaCl_with_rotations(ph_nacl: Phonopy):
+    """Test of GridPoints with rotations from NaCl."""
     rec_lat = np.linalg.inv(ph_nacl.primitive.cell)
     rotations = ph_nacl.primitive_symmetry.pointgroup_operations
     gp = GridPoints([4, 4, 4], rec_lat, rotations=rotations)
@@ -131,47 +137,51 @@ def test_GridPoints_NaCl_with_rotations(ph_nacl):
     )
 
 
-def test_GridPoints_NaCl_with_rotations_fit_BZ(ph_nacl):
+@pytest.mark.parametrize("fit_in_BZ", [True, False])
+def test_GridPoints_NaCl_with_rotations_fit_BZ(ph_nacl: Phonopy, fit_in_BZ):
+    """Test of GridPoints with rotations from NaCl and fit_in_BZ."""
     rec_lat = np.linalg.inv(ph_nacl.primitive.cell)
     rotations = ph_nacl.primitive_symmetry.pointgroup_operations
     mesh = [5, 5, 5]
-    gpf = GridPoints(mesh, rec_lat, rotations=rotations, fit_in_BZ=False)
-    gpt = GridPoints(mesh, rec_lat, rotations=rotations, fit_in_BZ=True)
-    np.testing.assert_allclose(
-        gpf.qpoints,
-        [
-            [0.0, 0.0, 0.0],
-            [0.2, 0.0, 0.0],
-            [0.4, 0.0, 0.0],
-            [0.2, 0.2, 0.0],
-            [0.4, 0.2, 0.0],
-            [-0.4, 0.2, 0.0],
-            [-0.2, 0.2, 0.0],
-            [0.4, 0.4, 0.0],
-            [-0.4, 0.4, 0.0],
-            [-0.4, 0.4, 0.2],
-        ],
-        atol=1e-8,
-    )
-    np.testing.assert_allclose(
-        gpt.qpoints,
-        [
-            [0.0, 0.0, 0.0],
-            [0.2, 0.0, 0.0],
-            [0.4, 0.0, 0.0],
-            [0.2, 0.2, 0.0],
-            [0.4, 0.2, 0.0],
-            [-0.4, 0.2, 0.0],
-            [-0.2, 0.2, 0.0],
-            [0.4, 0.4, 0.0],
-            [-0.4, -0.6, 0.0],
-            [0.6, 0.4, 0.2],
-        ],
-        atol=1e-8,
-    )
+    gpts = GridPoints(mesh, rec_lat, rotations=rotations, fit_in_BZ=fit_in_BZ)
+    if fit_in_BZ:
+        np.testing.assert_allclose(
+            gpts.qpoints,
+            [
+                [0.0, 0.0, 0.0],
+                [0.2, 0.0, 0.0],
+                [0.4, 0.0, 0.0],
+                [0.2, 0.2, 0.0],
+                [0.4, 0.2, 0.0],
+                [-0.4, 0.2, 0.0],
+                [-0.2, 0.2, 0.0],
+                [0.4, 0.4, 0.0],
+                [-0.4, -0.6, 0.0],
+                [0.6, 0.4, 0.2],
+            ],
+            atol=1e-8,
+        )
+    else:
+        np.testing.assert_allclose(
+            gpts.qpoints,
+            [
+                [0.0, 0.0, 0.0],
+                [0.2, 0.0, 0.0],
+                [0.4, 0.0, 0.0],
+                [0.2, 0.2, 0.0],
+                [0.4, 0.2, 0.0],
+                [-0.4, 0.2, 0.0],
+                [-0.2, 0.2, 0.0],
+                [0.4, 0.4, 0.0],
+                [-0.4, 0.4, 0.0],
+                [-0.4, 0.4, 0.2],
+            ],
+            atol=1e-8,
+        )
 
 
-def test_GridPoints_SnO2_with_rotations(ph_sno2):
+def test_GridPoints_SnO2_with_rotations(ph_sno2: Phonopy):
+    """Test of GridPoints with rotations from SnO2."""
     rec_lat = np.linalg.inv(ph_sno2.primitive.cell)
     rotations = ph_sno2.primitive_symmetry.pointgroup_operations
     gp = GridPoints([4, 4, 4], rec_lat, rotations=rotations)
@@ -277,7 +287,8 @@ def test_GridPoints_SnO2_with_rotations(ph_sno2):
     )
 
 
-def test_GridPoints_SnO2_with_rotations_MP(ph_sno2):
+def test_GridPoints_SnO2_with_rotations_MP(ph_sno2: Phonopy):
+    """Test of GridPoints with non-gamma-centre mesh and rotations from SnO2."""
     rec_lat = np.linalg.inv(ph_sno2.primitive.cell)
     rotations = ph_sno2.primitive_symmetry.pointgroup_operations
     gp = GridPoints([4, 4, 4], rec_lat, rotations=rotations, is_gamma_center=False)
@@ -367,7 +378,8 @@ def test_GridPoints_SnO2_with_rotations_MP(ph_sno2):
 
 
 @pytest.mark.parametrize("suggest", [True, False])
-def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
+def test_SNF_from_GeneralizedRegularGridPoints(ph_tio2: Phonopy, suggest):
+    """Test for grid rotation matrix and SNF by TiO2."""
     grgp = GeneralizedRegularGridPoints(
         ph_tio2.unitcell, 60, suggest=suggest, x_fastest=False
     )
@@ -409,6 +421,7 @@ def test_GeneralizedRegularGridPoints(ph_tio2, suggest):
 
 @pytest.mark.parametrize("suggest", [True, False])
 def test_GeneralizedRegularGridPoints_rotations_tio2(ph_tio2, suggest):
+    """Test for GeneralizedRegularGridPoints by TiO2."""
     matches = _get_matches(ph_tio2, suggest, True)
     if suggest:
         matches_ref = [
@@ -574,7 +587,7 @@ def test_GeneralizedRegularGridPoints_rotations_tio2(ph_tio2, suggest):
 def test_GeneralizedRegularGridPoints_rotations_zr3n4(
     ph_zr3n4, suggest, is_time_reversal
 ):
-    """Non-centrosymmetric Zr3N4"""
+    """Test for GeneralizedRegularGridPoints by non-centrosymmetric Zr3N4."""
     matches = _get_matches(ph_zr3n4, suggest, is_time_reversal)
     if suggest:
         matches_ref = [
@@ -686,10 +699,8 @@ def _get_matches(ph, suggest, is_time_reversal):
     return matches
 
 
-def test_watch_GeneralizedRegularGridPoints(ph_tio2, helper_methods):
-    from phonopy.interface.phonopy_yaml import read_cell_yaml
-    from phonopy.structure.atoms import PhonopyAtoms
-
+def test_watch_GeneralizedRegularGridPoints(ph_tio2: Phonopy, helper_methods):
+    """Test for q-points positions obtained from GeneralizedRegularGridPoints."""
     grgp = GeneralizedRegularGridPoints(ph_tio2.unitcell, 10, x_fastest=False)
     tmat = grgp.transformation_matrix
     # direct basis vectors in row vectors

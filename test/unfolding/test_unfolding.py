@@ -1,4 +1,4 @@
-# from phonopy.interface.vasp import write_vasp
+"""Tests for band unfolding calculations."""
 import os
 
 import numpy as np
@@ -9,8 +9,8 @@ from phonopy.unfolding.core import Unfolding
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-def test_Unfolding_NaCl(ph_nacl):
-    """Test to reproduce proper band structure of primitive cell
+def test_Unfolding_NaCl(ph_nacl: Phonopy):
+    """Test to reproduce proper band structure of primitive cell.
 
     Results are written to "bin-unfolding-test.dat".
     This data can be plotted by
@@ -21,7 +21,6 @@ def test_Unfolding_NaCl(ph_nacl):
     The test is done with nd=10.
 
     """
-
     # ph = _get_phonon(ph_nacl)
     ph = ph_nacl
     nd = 10
@@ -50,8 +49,8 @@ def test_Unfolding_NaCl(ph_nacl):
     _compare(weights, os.path.join(data_dir, "bin-unfolding.dat"), filename_out=None)
 
 
-def test_Unfolding_SC(ph_nacl):
-    """Test to reproduce unfoled band structure
+def test_Unfolding_SC(ph_nacl: Phonopy):
+    """Test to reproduce unfoled band structure.
 
     Atomic positions are considered as the lattice ponts.
 
@@ -64,7 +63,6 @@ def test_Unfolding_SC(ph_nacl):
     The test is done with nd=10.
 
     """
-
     # ph = _get_phonon(ph_nacl)
     ph = ph_nacl
     nd = 10

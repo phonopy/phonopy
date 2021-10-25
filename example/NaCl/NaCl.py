@@ -1,3 +1,6 @@
+"""Example of NaCl calculation."""
+from typing import List
+
 import numpy as np
 
 from phonopy import Phonopy
@@ -7,7 +10,7 @@ from phonopy.interface.vasp import read_vasp
 # from phonopy.structure.atoms import PhonopyAtoms
 
 
-def append_band(bands, q_start, q_end):
+def _append_band(bands, q_start, q_end):
     band = []
     for i in range(51):
         band.append(np.array(q_start) + (np.array(q_end) - np.array(q_start)) / 50 * i)
@@ -61,11 +64,11 @@ nac_params = parse_BORN(primitive, filename="BORN")
 phonon.nac_params = nac_params
 
 # BAND = 0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5
-bands = []
-append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.0, 0.0])
-append_band(bands, [0.5, 0.0, 0.0], [0.5, 0.5, 0.0])
-append_band(bands, [0.5, 0.5, 0.0], [0.0, 0.0, 0.0])
-append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.5, 0.5])
+bands = List[List]
+_append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.0, 0.0])
+_append_band(bands, [0.5, 0.0, 0.0], [0.5, 0.5, 0.0])
+_append_band(bands, [0.5, 0.5, 0.0], [0.0, 0.0, 0.0])
+_append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.5, 0.5])
 phonon.set_band_structure(bands)
 band_dict = phonon.get_band_structure_dict()
 q_points = band_dict["qpoints"]

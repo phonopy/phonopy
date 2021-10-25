@@ -1,3 +1,4 @@
+"""Calculations of thermal displacements."""
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -32,14 +33,21 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
+from typing import Union
+
 import numpy as np
 
 from phonopy.interface.cif import write_cif_P1
+from phonopy.phonon.mesh import IterMesh, Mesh
 from phonopy.units import AMU, EV, Angstrom, Hbar, Kb, THzToEv
 
 
 class ThermalMotion:
-    def __init__(self, iter_mesh, freq_min=None, freq_max=None):
+    """Base class of thermal displacement calculation classes."""
+
+    def __init__(self, iter_mesh: Union[IterMesh, Mesh], freq_min=None, freq_max=None):
+        """Init method."""
         self._iter_mesh = iter_mesh
         if freq_min is None:
             self._fmin = 0
@@ -50,7 +58,7 @@ class ThermalMotion:
         else:
             self._fmax = freq_max
 
-        masses = iter_mesh.dynamical_matrix.primitive.get_masses()
+        masses = iter_mesh.dynamical_matrix.primitive.masses
         self._masses = masses * AMU
         self._masses3 = np.array([[m] * 3 for m in masses]).ravel() * AMU
         self._temperatures = None
@@ -65,12 +73,35 @@ class ThermalMotion:
 
     @property
     def temperatures(self):
+        """Setter and getter of temperatures."""
         return self._temperatures
 
+    @temperatures.setter
+    def temperatures(self, temperatures):
+        t_array = np.array(temperatures)
+        condition = np.logical_not(t_array < 0)
+        self._temperatures = np.extract(condition, t_array)
+
     def get_temperatures(self):
+        """Return temperatures."""
+        warnings.warn(
+            "ThermalMotion.get_temperatures() is deprecated. "
+            "Use temperatures attribute instead.",
+            DeprecationWarning,
+        )
         return self.temperatures
 
+    def set_temperatures(self, temperatures):
+        """Set temperatures."""
+        warnings.warn(
+            "ThermalMotion.set_temperatures() is deprecated. "
+            "Use temperatures attribute instead.",
+            DeprecationWarning,
+        )
+        self.temperatures = temperatures
+
     def set_temperature_range(self, t_min=None, t_max=None, t_step=None):
+        """Set temperatures by range."""
         if t_min is None:
             _t_min = 10
         elif t_min < 0:
@@ -96,13 +127,8 @@ class ThermalMotion:
             _t_min, _t_max + _t_step / 2.0, _t_step, dtype="double"
         )
 
-    def set_temperatures(self, temperatures):
-        t_array = np.array(temperatures)
-        condition = np.logical_not(t_array < 0)
-        self._temperatures = np.extract(condition, t_array)
-
     def _get_population(self, freq, t):  # freq in THz
-        """Return phonon population number
+        """Return phonon population number.
 
         Three types of combinations of array inputs are possible.
         - single freq and single t
@@ -123,10 +149,16 @@ class ThermalMotion:
 
 
 class ThermalDisplacements(ThermalMotion):
+    """Class to calculate thermal displacements (mean square displacements)."""
+
     def __init__(
-        self, iter_mesh, projection_direction=None, freq_min=None, freq_max=None
+        self,
+        iter_mesh: Union[IterMesh, Mesh],
+        projection_direction=None,
+        freq_min=None,
+        freq_max=None,
     ):
-        """Calculate mean square displacements
+        """Init method.
 
         Parameters
         ----------
@@ -143,7 +175,6 @@ class ThermalDisplacements(ThermalMotion):
             Maximum phonon frequency to determine wheather include or not.
 
         """
-
         super().__init__(iter_mesh, freq_min=freq_min, freq_max=freq_max)
         if projection_direction is None:
             self._projection_direction = None
@@ -155,12 +186,20 @@ class ThermalDisplacements(ThermalMotion):
 
     @property
     def thermal_displacements(self):
+        """Return thermal displacements."""
         return self._displacements
 
     def get_thermal_displacements(self):
+        """Return thermal displacements and temperatures."""
+        warnings.warn(
+            "ThermalDisplacements.get_thermal_displacements() is deprecated. "
+            "Use thermal_displacements and temperatures attributes instead.",
+            DeprecationWarning,
+        )
         return (self._temperatures, self._displacements)
 
     def run(self):
+        """Calculate thermal displacements."""
         if self._projection_direction is not None:
             masses = self._masses
         else:
@@ -191,7 +230,8 @@ class ThermalDisplacements(ThermalMotion):
         assert np.prod(self._iter_mesh.mesh_numbers) == count + 1
         self._displacements = disps / (count + 1)
 
-    def write_yaml(self):
+    def write_yaml(self, filename="thermal_displacements.yaml"):
+        """Write results to file in yaml."""
         natom = len(self._masses)
         lines = []
         lines.append("# Thermal displacements")
@@ -209,10 +249,11 @@ class ThermalDisplacements(ThermalMotion):
                 text += " ] # atom %d" % (i + 1)
                 lines.append(text)
 
-        with open("thermal_displacements.yaml", "w") as w:
+        with open(filename, "w") as w:
             w.write("\n".join(lines))
 
     def plot(self, pyplot, is_legend=False):
+        """Return pyplot of thermal displacements calculation result."""
         xyz = ["x", "y", "z"]
         for i, u in enumerate(self._displacements.transpose()):
             pyplot.plot(
@@ -223,8 +264,11 @@ class ThermalDisplacements(ThermalMotion):
             pyplot.legend(loc="upper left")
 
     def _project_eigenvectors(self):
-        """Eigenvectors are projected along Cartesian direction"""
+        """Project eigenvectors to specific direction.
 
+        Eigenvectors are projected along Cartesian direction.
+
+        """
         self._p_eigenvectors = []
         for vecs_q in self._eigenvectors:
             p_vecs_q = []
@@ -235,8 +279,16 @@ class ThermalDisplacements(ThermalMotion):
 
 
 class ThermalDisplacementMatrices(ThermalMotion):
-    def __init__(self, iter_mesh, freq_min=None, freq_max=None, lattice=None):
-        """Calculate mean square displacement matrices
+    """Class to calculate thermal displacement (mean square displacement) matrices."""
+
+    def __init__(
+        self,
+        iter_mesh: Union[IterMesh, Mesh],
+        freq_min=None,
+        freq_max=None,
+        lattice=None,
+    ):
+        """Init method.
 
         Parameters
         ----------
@@ -253,7 +305,6 @@ class ThermalDisplacementMatrices(ThermalMotion):
             dtype='double', shape=(3, 3)
 
         """
-
         super().__init__(iter_mesh, freq_min=freq_min, freq_max=freq_max)
         self._disp_matrices = None
         self._disp_matrices_cif = None
@@ -267,26 +318,33 @@ class ThermalDisplacementMatrices(ThermalMotion):
 
     @property
     def thermal_displacement_matrices(self):
+        """Return thermal displacement matrices."""
         return self._disp_matrices
 
     @property
     def thermal_displacement_matrices_cif(self):
+        """Return thermal displacement matrices in cif definition."""
         return self._disp_matrices_cif
 
     def get_thermal_displacement_matrices(self):
+        """Return thermal displacement matrices."""
+        warnings.warn(
+            "ThermalDisplacementMatrices.get_thermal_displacement_matrices() is "
+            "deprecated. Use thermal_displacement_matrices and temperatures "
+            "attributes instead.",
+            DeprecationWarning,
+        )
         return (self._temperatures, self._disp_matrices)
 
     def run(self, np_overflow=None):
-        """
+        """Calculate thermal displacement matrices.
 
         Parameters
         ----------
         np_overflow: str or None
-            Switch of error handling of numpy. 'raise' to see which phonon it
-            is.
+            Switch of error handling of numpy. 'raise' to see which phonon it is.
 
         """
-
         np.seterr(over=np_overflow)
         self._get_disp_matrices()
         np.seterr(over=None)
@@ -336,14 +394,16 @@ class ThermalDisplacementMatrices(ThermalMotion):
         assert (abs(disps.imag) < 1e-10).all()
         self._disp_matrices = disps.real / (count + 1)
 
-    def write_cif(self, cell, temperature_index):
+    def write_cif(self, cell, temperature_index, filename="tdispmat.cif"):
+        """Write results to file in P1 symmetry CIF format."""
         write_cif_P1(
             cell,
             U_cif=self._disp_matrices_cif[temperature_index],
-            filename="tdispmat.cif",
+            filename=filename,
         )
 
-    def write_yaml(self):
+    def write_yaml(self, filename="thermal_displacement_matrices.yaml"):
+        """Write results to file in yaml."""
         natom = len(self._masses)
         lines = []
 
@@ -377,5 +437,5 @@ class ThermalDisplacementMatrices(ThermalMotion):
                         % (m[0, 0], m[1, 1], m[2, 2], m[1, 2], m[0, 2], m[0, 1], j + 1)
                     )
 
-        with open("thermal_displacement_matrices.yaml", "w") as w:
+        with open(filename, "w") as w:
             w.write("\n".join(lines))

@@ -1,3 +1,4 @@
+"""QE calculator interface."""
 # Copyright (C) 2014 Atsushi Togo
 # All rights reserved.
 #
@@ -55,6 +56,7 @@ from phonopy.units import Bohr
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+    """Parse forces from output files."""
     hook = "Forces acting on atoms"
     is_parsed = True
     force_sets = []
@@ -80,6 +82,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
 
 
 def read_pwscf(filename):
+    """Read crystal structure."""
     with open(filename) as f:
         pwscf_in = PwscfIn(f.readlines())
     tags = pwscf_in.get_tags()
@@ -140,6 +143,7 @@ def read_pwscf(filename):
 
 
 def write_pwscf(filename, cell, pp_filenames):
+    """Write cell to file."""
     f = open(filename, "w")
     f.write(get_pwscf_structure(cell, pp_filenames=pp_filenames))
 
@@ -152,6 +156,7 @@ def write_supercells_with_displacements(
     pre_filename="supercell",
     width=3,
 ):
+    """Write supercells with displacements to files."""
     write_pwscf("%s.in" % pre_filename, supercell, pp_filenames)
     for i, cell in zip(ids, cells_with_displacements):
         filename = "{pre_filename}-{0:0{width}}.in".format(
@@ -161,10 +166,11 @@ def write_supercells_with_displacements(
 
 
 def get_pwscf_structure(cell, pp_filenames=None):
-    lattice = cell.get_cell()
-    positions = cell.get_scaled_positions()
-    masses = cell.get_masses()
-    chemical_symbols = cell.get_chemical_symbols()
+    """Return QE structure in text."""
+    lattice = cell.cell
+    positions = cell.scaled_positions
+    masses = cell.masses
+    chemical_symbols = cell.symbols
     unique_symbols = []
     atomic_species = []
     for symbol, m in zip(chemical_symbols, masses):
@@ -197,6 +203,8 @@ def get_pwscf_structure(cell, pp_filenames=None):
 
 
 class PwscfIn:
+    """Class to create QE input file."""
+
     _set_methods = OrderedDict(
         [
             ("ibrav", "_set_ibrav"),
@@ -210,12 +218,14 @@ class PwscfIn:
     )
 
     def __init__(self, lines):
+        """Init method."""
         self._tags = {}
         self._current_tag_name = None
         self._values = None
         self._collect(lines)
 
     def get_tags(self):
+        """Return tags."""
         return self._tags
 
     def _collect(self, lines):
@@ -284,7 +294,6 @@ class PwscfIn:
         Invoked by CELL_PARAMETERS tag_name.
 
         """
-
         unit = self._values[0].lower()
         if unit == "alat":
             if not self._tags["celldm(1)"]:
@@ -344,8 +353,9 @@ class PwscfIn:
 
 
 class PH_Q2R:
-    """Parse QE/q2r output and create supercell force constants array
-    that is readable by phonopy. A simple usage is as follows:
+    """Parse QE/q2r output and create supercell force constants array.
+
+    A simple usage is as follows:
 
     ---------
     #!/usr/bin/env python
@@ -408,6 +418,7 @@ class PH_Q2R:
     """
 
     def __init__(self, filename, symprec=1e-5):
+        """Init method."""
         self.fc = None
         self.dimension = None
         self.epsilon = None
@@ -418,7 +429,7 @@ class PH_Q2R:
         self._filename = filename
 
     def run(self, cell, is_full_fc=False, parse_fc=True):
-        """Make supercell force constants readable for phonopy
+        """Make supercell force constants readable for phonopy.
 
         Note
         ----
@@ -438,7 +449,6 @@ class PH_Q2R:
             False may be used when expected to parse only epsilon and born.
 
         """
-
         with open(self._filename) as f:
             fc_dct = self._parse_q2r(f)
             self.dimension = fc_dct["dimension"]
@@ -450,15 +460,15 @@ class PH_Q2R:
                 )
 
     def write_force_constants(self, fc_format="hdf5"):
+        """Write force constatns to file in hdf5."""
         if self.fc is not None:
             if fc_format == "hdf5":
-                p2s_map = self.primitive.get_primitive_to_supercell_map()
-                write_force_constants_to_hdf5(self.fc, p2s_map=p2s_map)
+                write_force_constants_to_hdf5(self.fc, p2s_map=self.primitive.p2s_map)
             else:
                 write_FORCE_CONSTANTS(self.fc)
 
     def _parse_q2r(self, f):
-        """Parse q2r output file
+        """Parse q2r output file.
 
         The format of q2r output is described at the mailing list below:
         http://www.democritos.it/pipermail/pw_forum/2005-April/002408.html
@@ -467,7 +477,6 @@ class PH_Q2R:
         https://www.mail-archive.com/pw_forum@pwscf.org/msg24388.html
 
         """
-
         natom, dim, epsilon, borns = self._parse_parameters(f)
         fc_dct = {
             "fc": self._parse_fc(f, natom, dim),
@@ -510,12 +519,11 @@ class PH_Q2R:
         return epsilon, borns
 
     def _parse_fc(self, f, natom, dim):
-        """Parse force constants part
+        """Parse force constants part.
 
         Physical unit of force cosntants in the file is Ry/au^2.
 
         """
-
         ndim = np.prod(dim)
         fc = np.zeros((natom, natom * ndim, 3, 3), dtype="double", order="C")
         for k, l, i, j in np.ndindex((3, 3, natom, natom)):

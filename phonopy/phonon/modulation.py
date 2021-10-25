@@ -1,3 +1,4 @@
+"""Create atomic displacements."""
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -32,9 +33,12 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from typing import List, Union
+
 import numpy as np
 
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.interface.vasp import write_vasp
 from phonopy.phonon.degeneracy import get_eigenvectors
 from phonopy.structure.cells import get_supercell
@@ -42,9 +46,11 @@ from phonopy.units import VaspToTHz
 
 
 class Modulation:
+    """Class to create atomic displacements."""
+
     def __init__(
         self,
-        dynamical_matrix,
+        dynamical_matrix: Union[DynamicalMatrix, DynamicalMatrixNAC],
         dimension,
         phonon_modes,
         delta_q=None,
@@ -52,14 +58,9 @@ class Modulation:
         nac_q_direction=None,
         factor=VaspToTHz,
     ):
-
-        """Class describe atomic modulations
-
-        Atomic modulations corresponding to phonon modes are created.
-
-        """
+        """Init method."""
         self._dm = dynamical_matrix
-        self._primitive = dynamical_matrix.get_primitive()
+        self._primitive = dynamical_matrix.primitive
         self._phonon_modes = phonon_modes
         self._dimension = np.array(dimension).ravel()
         self._delta_q = delta_q  # 1st/2nd order perturbation direction
@@ -77,6 +78,7 @@ class Modulation:
         self._supercell = get_supercell(self._primitive, dim)
 
     def run(self):
+        """Calculate modulations."""
         for ph_mode in self._phonon_modes:
             q, band_index, amplitude, argument = ph_mode
             eigvals, eigvecs = get_eigenvectors(
@@ -93,15 +95,18 @@ class Modulation:
             self._eigvals.append(eigvals[band_index])
 
     def get_modulated_supercells(self):
+        """Return modulations."""
         modulations = []
         for u in self._u:
             modulations.append(self._get_cell_with_modulation(u))
         return modulations
 
     def get_modulations_and_supercell(self):
+        """Return modulations and perfect supercell."""
         return self._u, self._supercell
 
     def write(self, filename="MPOSCAR"):
+        """Write supercells with modulations to MPOSCARs."""
         deltas = []
         for i, u in enumerate(self._u):
             cell = self._get_cell_with_modulation(u)
@@ -115,12 +120,13 @@ class Modulation:
         cell = self._get_cell_with_modulation(no_modulations)
         write_vasp(filename + "-orig", cell, direct=True)
 
-    def write_yaml(self):
-        self._write_yaml()
+    def write_yaml(self, filename="modulation.yaml"):
+        """Write modulations to file in yaml."""
+        self._write_yaml(filename=filename)
 
     def _get_cell_with_modulation(self, modulation):
-        lattice = self._supercell.get_cell()
-        positions = self._supercell.get_positions()
+        lattice = self._supercell.cell
+        positions = self._supercell.positions
         positions += modulation.real
         scaled_positions = np.dot(positions, np.linalg.inv(lattice))
         for p in scaled_positions:
@@ -146,12 +152,12 @@ class Modulation:
         return dim
 
     def _get_displacements(self, eigvec, q, amplitude, argument):
-        m = self._supercell.get_masses()
-        s2u_map = self._supercell.get_supercell_to_unitcell_map()
-        u2u_map = self._supercell.get_unitcell_to_unitcell_map()
+        m = self._supercell.masses
+        s2u_map = self._supercell.s2u_map
+        u2u_map = self._supercell.u2u_map
         s2uu_map = [u2u_map[x] for x in s2u_map]
-        spos = self._supercell.get_scaled_positions()
-        dim = self._supercell.get_supercell_matrix()
+        spos = self._supercell.scaled_positions
+        dim = self._supercell.supercell_matrix
         coefs = np.exp(2j * np.pi * np.dot(np.dot(spos, dim.T), q)) / np.sqrt(m)
         u = []
         for i, coef in enumerate(coefs):
@@ -177,10 +183,10 @@ class Modulation:
         e = np.array(eigvals).real
         return np.sqrt(np.abs(e)) * np.sign(e) * self._factor
 
-    def _write_yaml(self):
-        w = open("modulation.yaml", "w")
-        primitive = self._dm.get_primitive()
-        num_atom = primitive.get_number_of_atoms()
+    def _write_yaml(self, filename="modulation.yaml"):
+        w = open(filename, "w")
+        primitive = self._dm.primitive
+        num_atom = len(primitive)
 
         w.write("primitive_cell:\n")
         self._write_cell_yaml(primitive, w)
@@ -190,7 +196,7 @@ class Modulation:
         for v in dim:
             w.write("  - [ %d, %d, %d ]\n" % tuple(v))
         self._write_cell_yaml(self._supercell, w)
-        inv_lattice = np.linalg.inv(self._supercell.get_cell().T)
+        inv_lattice = np.linalg.inv(self._supercell.cell.T)
 
         w.write("modulations:\n")
         for u, mode in zip(self._u, self._phonon_modes):

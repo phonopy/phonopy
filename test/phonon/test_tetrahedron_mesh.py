@@ -1,3 +1,4 @@
+"""Tests for TetrahedronMesh."""
 import os
 from io import StringIO
 
@@ -23,6 +24,7 @@ dos_str = """-0.672024 0.000000 0.029844 0.005522 0.731712 0.029450 1.433580 0.1
 
 
 def test_Amm2():
+    """Test of DOS calculation using TetrahedronMesh for Amm2 crystal."""
     data = np.loadtxt(StringIO(dos_str))
     phonon = _get_phonon("Amm2", [3, 2, 2], [[1, 0, 0], [0, 0.5, -0.5], [0, 0.5, 0.5]])
     mesh = [11, 11, 11]

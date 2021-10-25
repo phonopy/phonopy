@@ -1,5 +1,7 @@
+"""Tests for routines in derivative_dynmat.py."""
 import numpy as np
 
+from phonopy import Phonopy
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 
 ddm_ph_nacl = [
@@ -65,23 +67,27 @@ ddm_ph_nacl_nonac = [
 ]
 
 
-def test_ddm_nac(ph_nacl):
+def test_ddm_nac(ph_nacl: Phonopy):
+    """Test by NaCl."""
     _assert(ph_nacl, ddm_ph_nacl)
 
 
-def test_ddm_nac_compact(ph_nacl_compact_fcsym):
+def test_ddm_nac_compact(ph_nacl_compact_fcsym: Phonopy):
+    """Test by NaCl with compact fc."""
     _assert(ph_nacl_compact_fcsym, ddm_ph_nacl)
 
 
-def test_ddm_nonac(ph_nacl_nonac):
+def test_ddm_nonac(ph_nacl_nonac: Phonopy):
+    """Test by NaCl without NAC."""
     _assert(ph_nacl_nonac, ddm_ph_nacl_nonac)
 
 
-def test_ddm_nonac_compact(ph_nacl_nonac_compact_fc):
+def test_ddm_nonac_compact(ph_nacl_nonac_compact_fc: Phonopy):
+    """Test by NaCl without NAC and with compact fc."""
     _assert(ph_nacl_nonac_compact_fc, ddm_ph_nacl_nonac)
 
 
-def _assert(ph, ref_vals, show=False):
+def _assert(ph: Phonopy, ref_vals, show=False):
     dynmat = ph.dynamical_matrix
     ddynmat = DerivativeOfDynamicalMatrix(dynmat)
     ddynmat.run([0, 0.1, 0.1])

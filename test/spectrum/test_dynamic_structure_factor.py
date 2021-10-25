@@ -1,11 +1,7 @@
 """Tests for dynamic structure factor."""
-import os
-
 import numpy as np
 
 from phonopy.spectrum.dynamic_structure_factor import atomic_form_factor_WK1995
-
-data_dir = os.path.dirname(os.path.abspath(__file__))
 
 # D. Waasmaier and A. Kirfel, Acta Cryst. A51, 416 (1995)
 # f(Q) = \sum_i a_i \exp((-b_i Q^2) + c

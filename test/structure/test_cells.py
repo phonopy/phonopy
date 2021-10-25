@@ -1,8 +1,10 @@
+"""Tests of routines in cells.py."""
 import os
 
 import numpy as np
 import pytest
 
+from phonopy import Phonopy
 from phonopy.interface.phonopy_yaml import read_cell_yaml
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
@@ -157,19 +159,22 @@ svecs_nacl_ref30 = [
 ]
 
 
-def test_compute_permutation_sno2(ph_sno2):
+def test_compute_permutation_sno2(ph_sno2: Phonopy):
+    """Test of compute_permutation by SnO2."""
     _test_compute_permutation(ph_sno2)
 
 
-def test_compute_permutation_tio2(ph_tio2):
+def test_compute_permutation_tio2(ph_tio2: Phonopy):
+    """Test of compute_permutation by TiO2."""
     _test_compute_permutation(ph_tio2)
 
 
-def test_compute_permutation_nacl(ph_nacl):
+def test_compute_permutation_nacl(ph_nacl: Phonopy):
+    """Test of compute_permutation by NaCl."""
     _test_compute_permutation(ph_nacl)
 
 
-def _test_compute_permutation(ph):
+def _test_compute_permutation(ph: Phonopy):
     symmetry = ph.primitive_symmetry
     ppos = ph.primitive.scaled_positions
     plat = ph.primitive.cell.T
@@ -187,16 +192,21 @@ def _test_compute_permutation(ph):
 
 
 @pytest.mark.parametrize("nosnf", [True, False])
-def test_get_supercell_convcell_sio2(convcell_sio2, nosnf, helper_methods):
+def test_get_supercell_convcell_sio2(
+    convcell_sio2: PhonopyAtoms, nosnf, helper_methods
+):
+    """Test of get_supercell with/without SNF by SiO2."""
     _test_get_supercell_convcell_sio2(convcell_sio2, helper_methods, is_old_style=nosnf)
 
 
 @pytest.mark.parametrize("nosnf", [True, False])
-def test_get_supercell_primcell_si(primcell_si, nosnf, helper_methods):
+def test_get_supercell_primcell_si(primcell_si: PhonopyAtoms, nosnf, helper_methods):
+    """Test of get_supercell with/without SNF by Si."""
     _test_get_supercell_primcell_si(primcell_si, helper_methods, is_old_style=nosnf)
 
 
-def test_get_supercell_nacl_snf(convcell_nacl, helper_methods):
+def test_get_supercell_nacl_snf(convcell_nacl: PhonopyAtoms, helper_methods):
+    """Test of get_supercell using SNF by NaCl."""
     cell = convcell_nacl
     smat = [[-1, 1, 1], [1, -1, 1], [1, 1, -1]]
     scell = get_supercell(cell, smat, is_old_style=True)
@@ -204,7 +214,9 @@ def test_get_supercell_nacl_snf(convcell_nacl, helper_methods):
     helper_methods.compare_cells(scell, scell_snf)
 
 
-def _test_get_supercell_convcell_sio2(convcell_sio2, helper_methods, is_old_style=True):
+def _test_get_supercell_convcell_sio2(
+    convcell_sio2: PhonopyAtoms, helper_methods, is_old_style=True
+):
     smat = np.diag([1, 2, 3])
     fname = "SiO2-123.yaml"
     scell = get_supercell(convcell_sio2, smat, is_old_style=is_old_style)
@@ -215,7 +227,9 @@ def _test_get_supercell_convcell_sio2(convcell_sio2, helper_methods, is_old_styl
         helper_methods.compare_cells(scell, cell_ref)
 
 
-def _test_get_supercell_primcell_si(primcell_si, helper_methods, is_old_style=True):
+def _test_get_supercell_primcell_si(
+    primcell_si: PhonopyAtoms, helper_methods, is_old_style=True
+):
     smat = [[-1, 1, 1], [1, -1, 1], [1, 1, -1]]
     fname = "Si-conv.yaml"
     scell = get_supercell(primcell_si, smat, is_old_style=is_old_style)
@@ -226,15 +240,19 @@ def _test_get_supercell_primcell_si(primcell_si, helper_methods, is_old_style=Tr
         helper_methods.compare_cells(scell, cell_ref)
 
 
-def test_get_primitive_convcell_nacl(convcell_nacl, primcell_nacl, helper_methods):
+def test_get_primitive_convcell_nacl(
+    convcell_nacl: PhonopyAtoms, primcell_nacl: PhonopyAtoms, helper_methods
+):
+    """Test get_primitive by NaCl."""
     pcell = get_primitive(convcell_nacl, primitive_matrix_nacl)
     helper_methods.compare_cells_with_order(pcell, primcell_nacl)
 
 
 @pytest.mark.parametrize("store_dense_svecs", [True, False])
 def test_get_primitive_convcell_nacl_svecs(
-    convcell_nacl, primcell_nacl, store_dense_svecs
+    convcell_nacl: PhonopyAtoms, store_dense_svecs
 ):
+    """Test shortest vectors by NaCl."""
     pcell = get_primitive(
         convcell_nacl, primitive_matrix_nacl, store_dense_svecs=store_dense_svecs
     )
@@ -249,7 +267,8 @@ def test_get_primitive_convcell_nacl_svecs(
         assert multi.shape == (8, 2)
 
 
-def test_TrimmedCell(convcell_nacl, helper_methods):
+def test_TrimmedCell(convcell_nacl: PhonopyAtoms, helper_methods):
+    """Test TrimmedCell by NaCl."""
     pmat = [[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]]
     smat2 = np.eye(3, dtype="intc") * 2
     pmat2 = np.dot(np.linalg.inv(smat2), pmat)
@@ -274,7 +293,8 @@ def test_TrimmedCell(convcell_nacl, helper_methods):
     helper_methods.compare_cells_with_order(tcell2, tcell3)
 
 
-def test_ShortestPairs_sparse_nacl(ph_nacl, helper_methods):
+def test_ShortestPairs_sparse_nacl(ph_nacl: Phonopy, helper_methods):
+    """Test ShortestPairs (parse) by NaCl."""
     scell = ph_nacl.supercell
     pcell = ph_nacl.primitive
     pos = scell.scaled_positions
@@ -288,7 +308,8 @@ def test_ShortestPairs_sparse_nacl(ph_nacl, helper_methods):
     helper_methods.compare_positions_with_order(pos_from_svecs, pos, scell.cell)
 
 
-def test_ShortestPairs_dense_nacl(ph_nacl, helper_methods):
+def test_ShortestPairs_dense_nacl(ph_nacl: Phonopy, helper_methods):
+    """Test ShortestPairs (dense) by NaCl."""
     scell = ph_nacl.supercell
     pcell = ph_nacl.primitive
     pos = scell.scaled_positions
@@ -307,7 +328,7 @@ def test_ShortestPairs_dense_nacl(ph_nacl, helper_methods):
     helper_methods.compare_positions_with_order(pos_from_svecs, pos, scell.cell)
 
 
-def test_sparse_to_dense_nacl(ph_nacl):
+def test_sparse_to_dense_nacl(ph_nacl: Phonopy):
     """Test for sparse_to_dense_svecs."""
     scell = ph_nacl.supercell
     pcell = ph_nacl.primitive

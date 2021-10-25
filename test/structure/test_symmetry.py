@@ -1,6 +1,4 @@
 """Tests for symmetry tools."""
-import os
-
 import numpy as np
 
 from phonopy.structure.cells import get_supercell
@@ -10,8 +8,6 @@ from phonopy.structure.symmetry import (
     collect_unique_rotations,
     symmetrize_borns_and_epsilon,
 )
-
-data_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_get_map_operations(convcell_nacl):

@@ -36,56 +36,13 @@
 
 import sys
 import warnings
+from typing import Type, Union
 
 import numpy as np
 
 from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
-from phonopy.structure.cells import sparse_to_dense_svecs
-
-
-def get_dynamical_matrix(
-    fc2,
-    supercell,
-    primitive,
-    nac_params=None,
-    frequency_scale_factor=None,
-    decimals=None,
-    symprec=1e-5,
-    log_level=0,
-):
-    """Return dynamical matrix.
-
-    The instance of a class inherited from DynamicalMatrix will be returned
-    depending on paramters.
-
-    """
-    if frequency_scale_factor is None:
-        _fc2 = fc2
-    else:
-        _fc2 = fc2 * frequency_scale_factor ** 2
-
-    if nac_params is None:
-        dm = DynamicalMatrix(supercell, primitive, _fc2, decimals=decimals)
-    else:
-        if "method" not in nac_params:
-            method = "gonze"
-        else:
-            method = nac_params["method"]
-
-        if method == "wang":
-            DM_cls = DynamicalMatrixWang
-        else:
-            DM_cls = DynamicalMatrixGL
-        dm = DM_cls(
-            supercell,
-            primitive,
-            _fc2,
-            decimals=decimals,
-            symprec=symprec,
-            log_level=log_level,
-        )
-        dm.nac_params = nac_params
-    return dm
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import Primitive, sparse_to_dense_svecs
 
 
 class DynamicalMatrix:
@@ -109,8 +66,8 @@ class DynamicalMatrix:
     primitive: Primitive
         Primitive cell instance. Note that Primitive is inherited from
         PhonopyAtoms.
-    supercell: Supercell
-        Supercell instance. Note that Supercell is inherited from PhonopyAtoms.
+    supercell: PhonopyAtoms.
+        Supercell instance.
     force_constants: ndarray
         Supercell force constants. Full and compact shapes of arrays are
         supported.
@@ -127,12 +84,18 @@ class DynamicalMatrix:
     # Non analytical term correction
     _nac = False
 
-    def __init__(self, supercell, primitive, force_constants, decimals=None):
+    def __init__(
+        self,
+        supercell: PhonopyAtoms,
+        primitive: Primitive,
+        force_constants,
+        decimals=None,
+    ):
         """Init method.
 
         Parameters
         ----------
-        supercell : Supercell
+        supercell : PhonopyAtoms.
             Supercell.
         primitive : Primitive
             Primitive cell.
@@ -208,7 +171,7 @@ class DynamicalMatrix:
         return self.supercell
 
     @property
-    def primitive(self):
+    def primitive(self) -> Primitive:
         """Return primitive cell."""
         return self._pcell
 
@@ -287,8 +250,6 @@ class DynamicalMatrix:
 
     def _run(self, q, lang="C"):
         if lang == "C":
-            import phonopy._phonopy as phonoc  # noqa F401
-
             self._run_c_dynamical_matrix(q)
         else:
             self._run_py_dynamical_matrix(q)
@@ -392,8 +353,8 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
     def __init__(
         self,
-        supercell,
-        primitive,
+        supercell: PhonopyAtoms,
+        primitive: Primitive,
         force_constants,
         symprec=1e-5,
         decimals=None,
@@ -403,7 +364,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
         Parameters
         ----------
-        supercell : Supercell
+        supercell : PhonopyAtoms
             Supercell.
         primitive : Primitive
             Primitive cell.
@@ -577,8 +538,8 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
 
     def __init__(
         self,
-        supercell,
-        primitive,
+        supercell: PhonopyAtoms,
+        primitive: Primitive,
         force_constants,
         nac_params=None,
         num_G_points=None,  # For Gonze NAC
@@ -937,8 +898,8 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
 
     def __init__(
         self,
-        supercell,
-        primitive,
+        supercell: PhonopyAtoms,
+        primitive: Primitive,
         force_constants,
         nac_params=None,
         decimals=None,
@@ -949,7 +910,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
 
         Parameters
         ----------
-        supercell : Supercell
+        supercell : PhonopyAtoms
             Supercell.
         primitive : Primitive
             Primitive cell.
@@ -1068,3 +1029,49 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
             for s2 in range(len(self._scell)):
                 p2 = self._s2pp_map[s2]
                 fc[s1, s2] += nac_q[p1, p2] / N
+
+
+def get_dynamical_matrix(
+    fc2,
+    supercell: PhonopyAtoms,
+    primitive: Primitive,
+    nac_params=None,
+    frequency_scale_factor=None,
+    decimals=None,
+    symprec=1e-5,
+    log_level=0,
+):
+    """Return dynamical matrix.
+
+    The instance of a class inherited from DynamicalMatrix will be returned
+    depending on paramters.
+
+    """
+    if frequency_scale_factor is None:
+        _fc2 = fc2
+    else:
+        _fc2 = fc2 * frequency_scale_factor ** 2
+
+    if nac_params is None:
+        dm = DynamicalMatrix(supercell, primitive, _fc2, decimals=decimals)
+    else:
+        if "method" not in nac_params:
+            method = "gonze"
+        else:
+            method = nac_params["method"]
+
+        DM_cls: Union[Type[DynamicalMatrixGL], Type[DynamicalMatrixWang]]
+        if method == "wang":
+            DM_cls = DynamicalMatrixWang
+        else:
+            DM_cls = DynamicalMatrixGL
+        dm = DM_cls(
+            supercell,
+            primitive,
+            _fc2,
+            decimals=decimals,
+            symprec=symprec,
+            log_level=log_level,
+        )
+        dm.nac_params = nac_params
+    return dm

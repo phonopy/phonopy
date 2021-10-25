@@ -33,22 +33,28 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from typing import Union
+
 import numpy as np
 
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.phonon.band_structure import estimate_band_connection
 from phonopy.phonon.degeneracy import rotate_eigenvectors
 
 
 class GruneisenBase:
+    """Base class of mode Grueneisen parameter calculation classes."""
+
     def __init__(
         self,
-        dynmat,
-        dynmat_plus,
-        dynmat_minus,
+        dynmat: Union[DynamicalMatrix, DynamicalMatrixNAC],
+        dynmat_plus: Union[DynamicalMatrix, DynamicalMatrixNAC],
+        dynmat_minus: Union[DynamicalMatrix, DynamicalMatrixNAC],
         delta_strain=None,
         qpoints=None,
         is_band_connection=False,
     ):
+        """Init method."""
         self._dynmat = dynmat
         self._dynmat_plus = dynmat_plus
         self._dynmat_minus = dynmat_minus
@@ -69,16 +75,20 @@ class GruneisenBase:
             self._set_gruneisen()
 
     def set_qpoints(self, qpoints):
+        """Set q-points."""
         self._qpoints = qpoints
         self._set_gruneisen()
 
     def get_gruneisen(self):
+        """Return mode Grueneisen parameters."""
         return self._gruneisen
 
     def get_eigenvalues(self):
+        """Return eigenvalues."""
         return self._eigenvalues
 
     def get_eigenvectors(self):
+        """Return eigenvectors."""
         return self._eigenvectors
 
     def _set_gruneisen(self):
@@ -124,7 +134,12 @@ class GruneisenBase:
         )
         self._gruneisen = -edDe / self._delta_strain / self._eigenvalues / 2
 
-    def _get_dD(self, q, d_a, d_b):
+    def _get_dD(
+        self,
+        q,
+        d_a: Union[DynamicalMatrix, DynamicalMatrixNAC],
+        d_b: Union[DynamicalMatrix, DynamicalMatrixNAC],
+    ):
         if self._is_band_connection and d_a.is_nac() and d_b.is_nac():
             d_a.run(q, q_direction=self._q_direction)
             d_b.run(q, q_direction=self._q_direction)

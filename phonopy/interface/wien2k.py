@@ -1,3 +1,4 @@
+"""Wien2k calculator interface."""
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -51,6 +52,7 @@ def parse_set_of_forces(
     symmetry_tolerance=None,
     verbose=True,
 ):
+    """Parse forces from output files."""
     if symmetry_tolerance is None:
         symprec = 1e-5
     else:
@@ -90,6 +92,7 @@ def parse_set_of_forces(
 
 
 def parse_wien2k_struct(filename):
+    """Read crystal structure."""
     with open(filename) as f:
         # 1
         _ = f.readline().rstrip()
@@ -169,6 +172,7 @@ def write_supercells_with_displacements(
     pre_filename="wien2k",
     width=3,
 ):
+    """Write supercells with displacements to files."""
     npts_super = []
     r0s_super = []
     rmts_super = []
@@ -194,6 +198,7 @@ def write_supercells_with_displacements(
 
 
 def write_wein2k(filename, cell, npts, r0s, rmts):
+    """Write cell to file."""
     with open(filename, "w") as w:
         w.write(_get_wien2k_struct(cell, npts, r0s, rmts))
 
@@ -408,7 +413,7 @@ if __name__ == "__main__":
 
     from phonopy.interface.vasp import read_vasp, write_vasp
 
-    def clean_scaled_positions(cell):
+    def _clean_scaled_positions(cell):
         positions = cell.get_scaled_positions()
         for pos in positions:
             for i in (0, 1, 2):
@@ -443,7 +448,7 @@ if __name__ == "__main__":
         lattice = cell.get_cell() * Bohr
         cell.set_cell(lattice)
         cell.set_scaled_positions(positions)
-        clean_scaled_positions(cell)
+        _clean_scaled_positions(cell)
         write_vasp("POSCAR.wien2k", cell, direct=True)
         w = open("wien2k_core.dat", "w")
 

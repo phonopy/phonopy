@@ -1,12 +1,8 @@
 """Tests for phonon calculation at specific q-points."""
-import os
-
 import numpy as np
 
 from phonopy import Phonopy
 from phonopy.units import VaspToTHz
-
-data_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 def testQpoints(ph_nacl_nofcsym: Phonopy):

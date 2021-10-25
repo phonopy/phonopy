@@ -1,3 +1,4 @@
+"""Tests for CIF tools."""
 # Copyright (C) 2016 Atsushi Togo
 # All rights reserved.
 #
@@ -36,14 +37,16 @@ from phonopy.structure.cells import get_angles, get_cell_parameters
 
 
 def write_cif_P1(cell, U_cif=None, filename=None):
+    """Write P1 symmetry CIF file."""
     if filename:
         with open(filename, "w") as w:
             w.write(get_cif_P1(cell, U_cif=U_cif))
 
 
 def get_cif_P1(cell, U_cif=None):
-    a, b, c = get_cell_parameters(cell.get_cell())
-    alpha, beta, gamma = get_angles(cell.get_cell())
+    """Return P1 symmetry CIF text."""
+    a, b, c = get_cell_parameters(cell.cell)
+    alpha, beta, gamma = get_angles(cell.cell)
 
     cif = """data_crystal_structure_P1
 

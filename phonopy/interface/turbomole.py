@@ -1,3 +1,4 @@
+"""CRYSTAL calculator interface."""
 # Copyright (C) 2019 Antti J. Karttunen (antti.j.karttunen@iki.fi)
 # All rights reserved.
 #
@@ -42,6 +43,7 @@ from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+    """Parse forces from output files."""
     # Filenames = subdirectories supercell-001, supercell-002, ...
     force_sets = []
     for i, filename in enumerate(forces_filenames):
@@ -82,6 +84,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
 
 
 def read_turbomole(filename):
+    """Read crystal structure."""
     # filename is typically "control"
     f_turbomole = open(filename)
     turbomole_in = TurbomoleIn(f_turbomole.readlines())
@@ -97,6 +100,7 @@ def read_turbomole(filename):
 
 
 def write_turbomole(filename, cell):
+    """Write cell to file."""
     # Write geometry in a new directory
     # Check if directory exists (directory supercell will already exist for phono3py)
     if not os.path.exists(filename):
@@ -134,7 +138,7 @@ def write_turbomole(filename, cell):
 def write_supercells_with_displacements(
     supercell, cells_with_displacements, ids, pre_filename="supercell", width=3
 ):
-
+    """Write supercells with displacements to files."""
     write_turbomole(pre_filename, supercell)
     for i, cell in zip(ids, cells_with_displacements):
         filename = "{pre_filename}-{0:0{width}}".format(
@@ -144,7 +148,10 @@ def write_supercells_with_displacements(
 
 
 class TurbomoleIn:
+    """Class to create TURBOMOLE input file."""
+
     def __init__(self, lines):
+        """Init method."""
         self._tags = {
             "lattice_vectors": None,
             "atomic_species": None,
@@ -155,6 +162,7 @@ class TurbomoleIn:
         self._collect(lines)
 
     def get_tags(self):
+        """Return tags."""
         return self._tags
 
     def _collect(self, lines):

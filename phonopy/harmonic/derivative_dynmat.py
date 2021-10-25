@@ -33,8 +33,12 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
+from typing import Union
+
 import numpy as np
 
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.structure.cells import sparse_to_dense_svecs
 
 
@@ -50,7 +54,7 @@ class DerivativeOfDynamicalMatrix:
 
     """
 
-    def __init__(self, dynamical_matrix):
+    def __init__(self, dynamical_matrix: Union[DynamicalMatrix, DynamicalMatrixNAC]):
         """Init method.
 
         Parameters
@@ -117,6 +121,11 @@ class DerivativeOfDynamicalMatrix:
 
     def get_derivative_of_dynamical_matrix(self):
         """Return derivative of dynamical matrix."""
+        warnings.warn(
+            "DerivativeOfDynamicalMatrix.get_derivative_of_dynamical_matrix() is "
+            "deprecated. Use d_dynamical_matrix attribute instead.",
+            DeprecationWarning,
+        )
         return self.d_dynamical_matrix
 
     def _run_c(self, q, q_direction=None):

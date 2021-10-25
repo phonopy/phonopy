@@ -1,3 +1,4 @@
+"""Elk calculator interface."""
 # Copyright (C) 2015 Atsushi Togo
 # All rights reserved.
 #
@@ -48,6 +49,7 @@ from phonopy.structure.atoms import symbol_map
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+    """Parse forces from output files."""
     hook = "Forces :"
     is_parsed = True
     force_sets = []
@@ -72,6 +74,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
 
 
 def read_elk(filename):
+    """Read crystal structure."""
     elk_in = ElkIn(open(filename).readlines())
     tags = elk_in.get_variables()
     avec = [tags["scale"][i] * np.array(tags["avec"][i]) for i in range(3)]
@@ -100,6 +103,7 @@ def read_elk(filename):
 
 
 def write_elk(filename, cell, sp_filenames):
+    """Write cell to file."""
     f = open(filename, "w")
     f.write(get_elk_structure(cell, sp_filenames))
 
@@ -112,6 +116,7 @@ def write_supercells_with_displacements(
     pre_filename="supercell",
     width=3,
 ):
+    """Write supercells with displacements to files."""
     write_elk("%s.in" % pre_filename, supercell, sp_filenames)
     for i, cell in zip(ids, cells_with_displacements):
         filename = "{pre_filename}-{0:0{width}}.in".format(
@@ -121,6 +126,7 @@ def write_supercells_with_displacements(
 
 
 def get_elk_structure(cell, sp_filenames=None):
+    """Return Elk structure in text."""
     lattice = cell.get_cell()
     (num_atoms, symbols, scaled_positions, sort_list) = sort_positions_by_symbols(
         cell.get_chemical_symbols(), cell.get_scaled_positions()
@@ -149,7 +155,10 @@ def get_elk_structure(cell, sp_filenames=None):
 
 
 class ElkIn:
+    """Class to create Elk input file."""
+
     def __init__(self, lines):
+        """Init method."""
         self._set_methods = {
             "atoms": self._set_atoms,
             "avec": self._set_avec,
@@ -163,6 +172,7 @@ class ElkIn:
         self._collect()
 
     def get_variables(self):
+        """Return tags."""
         return self._tags
 
     def _collect(self):

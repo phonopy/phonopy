@@ -1347,7 +1347,7 @@ def run(phonon: Phonopy, settings, plot_conf, log_level):
             if ph_mode[1] < 0 or ph_mode[1] >= num_band:
                 error_indices.append(i)
             if log_level:
-                text = "%d: q%s, band index=%d, amplitude=%f" % (
+                text = "%d: q=%s, band index=%d, amplitude=%f" % (
                     i + 1,
                     ph_mode[0],
                     ph_mode[1] + 1,
