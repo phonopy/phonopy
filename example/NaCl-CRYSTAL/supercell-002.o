@@ -89,7 +89,7 @@ sent 65104279 bytes  received 75 bytes  43402902.67 bytes/sec
 total size is 65096084  speedup is 1.00
           48 PROCESSORS WORKING
 
-         
+
  *******************************************************************************
  *                                                                             *
  *                               CRYSTAL17                                     *
@@ -134,10 +134,10 @@ total size is 65096084  speedup is 1.00
  *                                                                             *
  *******************************************************************************
  EEEEEEEEEE STARTING  DATE 10 06 2018 TIME 14:30:19.0
- Created by Phonopy CRYSTAL interface                                            
+ Created by Phonopy CRYSTAL interface
 
  GEOMETRY INPUT FROM EXTERNAL FILE (FORTRAN UNIT 34)
- 3D - CRYSTAL 
+ 3D - CRYSTAL
 
  *******************************************************************************
  LATTICE PARAMETERS  (ANGSTROMS AND DEGREES) - PRIMITIVE CELL
@@ -282,11 +282,11 @@ total size is 65096084  speedup is 1.00
  *******************************************************************************
  LATTICE PARAMETERS (ANGSTROMS AND DEGREES) - BOHR = 0.5291772083 ANGSTROM
  PRIMITIVE CELL - CENTRING CODE 1/0 VOLUME=  2764.670401 - DENSITY  2.228 g/cm^3
-         A              B              C           ALPHA      BETA       GAMMA 
+         A              B              C           ALPHA      BETA       GAMMA
     15.75382875    15.75382875    15.75382875    60.000000  60.000000  60.000000
  *******************************************************************************
  ATOMS IN THE ASYMMETRIC UNIT  128 - ATOMS IN THE UNIT CELL:  128
-     ATOM                 X/A                 Y/B                 Z/C    
+     ATOM                 X/A                 Y/B                 Z/C
  *******************************************************************************
       1 T  11 NA    0.000000000000E+00  0.000000000000E+00  0.000000000000E+00
       2 T  11 NA    2.500000000000E-01  2.019909446387E-18 -2.019909446387E-18
@@ -419,7 +419,7 @@ total size is 65096084  speedup is 1.00
 
  T = ATOM BELONGING TO THE ASYMMETRIC UNIT
  *******************************************************************************
- * GEOMETRY EDITING - INPUT COORDINATES ARE GIVEN IN ANGSTROM         
+ * GEOMETRY EDITING - INPUT COORDINATES ARE GIVEN IN ANGSTROM
  *******************************************************************************
 
  GCALCO - MAX INDICES DIRECT LATTICE VECTOR    14    14    14
@@ -430,11 +430,11 @@ total size is 65096084  speedup is 1.00
  *******************************************************************************
  LATTICE PARAMETERS (ANGSTROMS AND DEGREES) - BOHR = 0.5291772083 ANGSTROM
  PRIMITIVE CELL - CENTRING CODE 1/0 VOLUME=  2764.670401 - DENSITY  2.228 g/cm^3
-         A              B              C           ALPHA      BETA       GAMMA 
+         A              B              C           ALPHA      BETA       GAMMA
     15.75382875    15.75382875    15.75382875    60.000000  60.000000  60.000000
  *******************************************************************************
  ATOMS IN THE ASYMMETRIC UNIT  128 - ATOMS IN THE UNIT CELL:  128
-     ATOM                 X/A                 Y/B                 Z/C    
+     ATOM                 X/A                 Y/B                 Z/C
  *******************************************************************************
       1 T  11 NA    0.000000000000E+00  0.000000000000E+00  0.000000000000E+00
       2 T  11 NA    2.500000000000E-01 -4.776101526044E-18  4.776101526044E-18
@@ -718,21 +718,21 @@ total size is 65096084  speedup is 1.00
    ATOM   X(AU)   Y(AU)   Z(AU)  N. TYPE  EXPONENT  S COEF   P COEF   D/F/G COEF
  *******************************************************************************
    1 NA   0.000   0.000   0.000
-                                  1 S  
+                                  1 S
                                          4.098E+03-5.854E-03 0.000E+00 0.000E+00
                                          6.165E+02-4.365E-02 0.000E+00 0.000E+00
                                          1.400E+02-1.943E-01 0.000E+00 0.000E+00
                                          3.907E+01-4.869E-01 0.000E+00 0.000E+00
                                          1.193E+01-4.188E-01 0.000E+00 0.000E+00
-                                  2 S  
+                                  2 S
                                          2.066E+01 8.595E-02 0.000E+00 0.000E+00
                                          1.984E+00-5.636E-01 0.000E+00 0.000E+00
                                          6.484E-01-5.195E-01 0.000E+00 0.000E+00
-                                  3 S  
+                                  3 S
                                          3.200E-01 1.000E+00 0.000E+00 0.000E+00
-                           4-     7 SP 
+                           4-     7 SP
                                          1.600E-01 1.000E+00 1.000E+00 0.000E+00
-                           8-    10 P  
+                           8-    10 P
                                          7.540E+01 0.000E+00 1.544E-02 0.000E+00
                                          1.727E+01 0.000E+00 9.974E-02 0.000E+00
                                          5.184E+00 0.000E+00 3.121E-01 0.000E+00
@@ -802,29 +802,29 @@ total size is 65096084  speedup is 1.00
   63 NA  31.576  26.314  26.314
   64 NA  31.576  31.576  31.576
   65 CL   5.263  21.064  21.064
-                                641 S  
+                                641 S
                                          1.045E+04 1.971E-03 0.000E+00 0.000E+00
                                          1.572E+03 1.475E-02 0.000E+00 0.000E+00
                                          3.571E+02 6.668E-02 0.000E+00 0.000E+00
                                          1.003E+02 1.723E-01 0.000E+00 0.000E+00
                                          3.081E+01 1.588E-01 0.000E+00 0.000E+00
-                                642 S  
+                                642 S
                                          5.192E+01-1.001E-01 0.000E+00 0.000E+00
                                          5.705E+00 6.084E-01 0.000E+00 0.000E+00
                                          2.351E+00 5.435E-01 0.000E+00 0.000E+00
-                                643 S  
+                                643 S
                                          4.973E-01 1.000E+00 0.000E+00 0.000E+00
-                         644-   647 SP 
+                         644-   647 SP
                                          2.100E-01 1.000E+00 1.000E+00 0.000E+00
-                         648-   650 P  
+                         648-   650 P
                                          3.077E+02 0.000E+00-8.780E-03 0.000E+00
                                          7.210E+01 0.000E+00-6.356E-02 0.000E+00
                                          2.253E+01 0.000E+00-2.402E-01 0.000E+00
                                          7.899E+00 0.000E+00-4.780E-01 0.000E+00
                                          2.877E+00 0.000E+00-3.852E-01 0.000E+00
-                         651-   653 P  
+                         651-   653 P
                                          7.736E-01 0.000E+00 1.000E+00 0.000E+00
-                         654-   658 D  
+                         654-   658 D
                                          6.500E-01 0.000E+00 0.000E+00 1.000E+00
   66 CL   5.263   5.263   5.263
   67 CL   5.263  10.525  10.525
@@ -943,7 +943,7 @@ total size is 65096084  speedup is 1.00
  *** K POINTS COORDINATES (OBLIQUE COORDINATES IN UNITS OF IS =  1)
    1-R(  0  0  0)
 
- DIRECT LATTICE VECTORS COMPON. (A.U.)     RECIP. LATTICE VECTORS COMPON. (A.U.) 
+ DIRECT LATTICE VECTORS COMPON. (A.U.)     RECIP. LATTICE VECTORS COMPON. (A.U.)
         X            Y            Z              X            Y            Z
     0.0000000   21.0508672   21.0508672     -0.1492382    0.1492382    0.1492382
    21.0508672    0.0000000   21.0508672      0.1492382   -0.1492382    0.1492382
@@ -4093,7 +4093,7 @@ total size is 65096084  speedup is 1.00
  EEEEEEEEEE INT_CALC TERMINATION  DATE 10 06 2018 TIME 14:30:35.2
 
  *******************************************************************************
- Created by Phonopy CRYSTAL interface                                            
+ Created by Phonopy CRYSTAL interface
  CRYSTAL - SCF - TYPE OF CALCULATION :  RESTRICTED CLOSED SHELL
  *******************************************************************************
 
@@ -4246,7 +4246,7 @@ total size is 65096084  speedup is 1.00
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIAG    TELAPSE      122.48 TCPU      121.58
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIIS    TELAPSE      122.48 TCPU      121.58
  DIIS TEST: 0.58890E+00 AT SCF   CYCLE   2 - DIIS ACTIVE - HISTORY:     2 CYCLES
- MAXIMUM MEMORY OCCUPIED BY DIIS:      1.661 Mb PER CORE 
+ MAXIMUM MEMORY OCCUPIED BY DIIS:      1.661 Mb PER CORE
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_TRAF    TELAPSE      122.67 TCPU      121.77
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIAG    TELAPSE      123.08 TCPU      122.17
  INSULATING STATE
@@ -4291,7 +4291,7 @@ total size is 65096084  speedup is 1.00
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIAG    TELAPSE      159.00 TCPU      158.05
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIIS    TELAPSE      159.00 TCPU      158.05
  DIIS TEST: 0.56993E-03 AT SCF   CYCLE   3 - DIIS ACTIVE - HISTORY:     3 CYCLES
- MAXIMUM MEMORY OCCUPIED BY DIIS:      2.492 Mb PER CORE 
+ MAXIMUM MEMORY OCCUPIED BY DIIS:      2.492 Mb PER CORE
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_TRAF    TELAPSE      159.19 TCPU      158.23
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIAG    TELAPSE      159.58 TCPU      158.63
  INSULATING STATE
@@ -4336,7 +4336,7 @@ total size is 65096084  speedup is 1.00
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIAG    TELAPSE      195.52 TCPU      194.51
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIIS    TELAPSE      195.52 TCPU      194.51
  DIIS TEST: 0.96213E-05 AT SCF   CYCLE   4 - DIIS ACTIVE - HISTORY:     4 CYCLES
- MAXIMUM MEMORY OCCUPIED BY DIIS:      3.322 Mb PER CORE 
+ MAXIMUM MEMORY OCCUPIED BY DIIS:      3.322 Mb PER CORE
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_TRAF    TELAPSE      195.73 TCPU      194.72
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIAG    TELAPSE      196.12 TCPU      195.11
  INSULATING STATE
@@ -4381,7 +4381,7 @@ total size is 65096084  speedup is 1.00
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIAG    TELAPSE      232.10 TCPU      231.02
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIIS    TELAPSE      232.10 TCPU      231.03
  DIIS TEST: 0.15344E-06 AT SCF   CYCLE   5 - DIIS ACTIVE - HISTORY:     5 CYCLES
- MAXIMUM MEMORY OCCUPIED BY DIIS:      4.153 Mb PER CORE 
+ MAXIMUM MEMORY OCCUPIED BY DIIS:      4.153 Mb PER CORE
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_TRAF    TELAPSE      232.29 TCPU      231.22
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIAG    TELAPSE      232.67 TCPU      231.59
  INSULATING STATE
@@ -4426,7 +4426,7 @@ total size is 65096084  speedup is 1.00
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIAG    TELAPSE      268.47 TCPU      267.32
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIIS    TELAPSE      268.47 TCPU      267.32
  DIIS TEST: 0.86690E-09 AT SCF   CYCLE   6 - DIIS ACTIVE - HISTORY:     6 CYCLES
- MAXIMUM MEMORY OCCUPIED BY DIIS:      4.983 Mb PER CORE 
+ MAXIMUM MEMORY OCCUPIED BY DIIS:      4.983 Mb PER CORE
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_TRAF    TELAPSE      268.66 TCPU      267.52
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIAG    TELAPSE      269.04 TCPU      267.90
  INSULATING STATE
@@ -4471,7 +4471,7 @@ total size is 65096084  speedup is 1.00
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIAG    TELAPSE      305.05 TCPU      303.82
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIIS    TELAPSE      305.05 TCPU      303.82
  DIIS TEST: 0.25946E-09 AT SCF   CYCLE   7 - DIIS ACTIVE - HISTORY:     7 CYCLES
- MAXIMUM MEMORY OCCUPIED BY DIIS:      5.814 Mb PER CORE 
+ MAXIMUM MEMORY OCCUPIED BY DIIS:      5.814 Mb PER CORE
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_TRAF    TELAPSE      305.22 TCPU      303.99
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIAG    TELAPSE      305.64 TCPU      304.42
  INSULATING STATE
@@ -4516,7 +4516,7 @@ total size is 65096084  speedup is 1.00
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIAG    TELAPSE      341.61 TCPU      340.31
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIIS    TELAPSE      341.61 TCPU      340.31
  DIIS TEST: 0.29469E-12 AT SCF   CYCLE   8 - DIIS ACTIVE - HISTORY:     8 CYCLES
- MAXIMUM MEMORY OCCUPIED BY DIIS:      6.645 Mb PER CORE 
+ MAXIMUM MEMORY OCCUPIED BY DIIS:      6.645 Mb PER CORE
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_TRAF    TELAPSE      341.79 TCPU      340.49
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIAG    TELAPSE      342.19 TCPU      340.89
  INSULATING STATE
@@ -4561,7 +4561,7 @@ total size is 65096084  speedup is 1.00
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIAG    TELAPSE      378.12 TCPU      376.75
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIIS    TELAPSE      378.12 TCPU      376.75
  DIIS TEST: 0.43931E-13 AT SCF   CYCLE   9 - DIIS ACTIVE - HISTORY:     9 CYCLES
- MAXIMUM MEMORY OCCUPIED BY DIIS:      7.475 Mb PER CORE 
+ MAXIMUM MEMORY OCCUPIED BY DIIS:      7.475 Mb PER CORE
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_TRAF    TELAPSE      378.30 TCPU      376.93
  TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT MPP_DIAG    TELAPSE      378.69 TCPU      377.31
  INSULATING STATE

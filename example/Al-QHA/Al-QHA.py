@@ -1,8 +1,8 @@
-#!/usr/bin/env python
-
+"""Example of QHA calculation by Al."""
+import numpy as np
 import yaml
 from yaml import CLoader as Loader
-import numpy as np
+
 from phonopy import PhonopyQHA
 
 volumes = []
@@ -15,24 +15,25 @@ for line in open("e-v.dat"):
 entropy = []
 cv = []
 fe = []
-for index in range(-5,6):
+for index in range(-5, 6):
     filename = "thermal_properties.yaml-%d" % index
     print("Reading %s" % filename)
-    thermal_properties = yaml.load(open(filename),
-                                  Loader=Loader)['thermal_properties']
-    temperatures = [v['temperature'] for v in thermal_properties]
-    cv.append([v['heat_capacity'] for v in thermal_properties])
-    entropy.append([v['entropy'] for v in thermal_properties])
-    fe.append([v['free_energy'] for v in thermal_properties])
-    
-qha = PhonopyQHA(volumes,
-                 energies,
-                 temperatures=temperatures,
-                 free_energy=np.transpose(fe),
-                 cv=np.transpose(cv),
-                 entropy=np.transpose(entropy),
-                 t_max=400,
-                 verbose=True)
+    thermal_properties = yaml.load(open(filename), Loader=Loader)["thermal_properties"]
+    temperatures = [v["temperature"] for v in thermal_properties]
+    cv.append([v["heat_capacity"] for v in thermal_properties])
+    entropy.append([v["entropy"] for v in thermal_properties])
+    fe.append([v["free_energy"] for v in thermal_properties])
+
+qha = PhonopyQHA(
+    volumes,
+    energies,
+    temperatures=temperatures,
+    free_energy=np.transpose(fe),
+    cv=np.transpose(cv),
+    entropy=np.transpose(entropy),
+    t_max=400,
+    verbose=True,
+)
 
 # qha.plot_helmholtz_volume().show()
 # qha.plot_volume_temperature().show()

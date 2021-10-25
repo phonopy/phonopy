@@ -23,4 +23,3 @@ SYMMETRY_TOL :     0.000001
 Na ../Na.upf
 Cl  ../Cl.upf
 %ENDBLOCK SPECIES_POT
-

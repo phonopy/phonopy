@@ -73,7 +73,7 @@ echo "LatticeConstant 1.0 Bohr">> Si.fdf
 echo "%include supercell-001.fdf" >> Si.fdf
 siesta < Si.fdf
 cd ..
-phonopy --siesta -f disp-001/Si.FA -c Si.fdf 
+phonopy --siesta -f disp-001/Si.FA -c Si.fdf
 cat > band.conf << EOF
 ATOM_NAME = Si O
 DIM =  3 3 3

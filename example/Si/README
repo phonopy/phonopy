@@ -1,4 +1,4 @@
-To create supercell(s) with displacement(s): 
+To create supercell(s) with displacement(s):
 
 % phonopy -d --dim 2 2 2 --pa auto -c POSCAR-unitcell
 

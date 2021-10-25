@@ -1,3 +1,4 @@
+"""Calculation of free energy of one-electronic states."""
 # Copyright (C) 2018 Atsushi Togo
 # All rights reserved.
 #
@@ -33,10 +34,12 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+
 from phonopy.units import Kb
 
 
 def get_free_energy_at_T(tmin, tmax, tstep, eigenvalues, weights, n_electrons):
+    """Return free energies at given temperatures."""
     free_energies = []
     efe = ElectronFreeEnergy(eigenvalues, weights, n_electrons)
     temperatures = np.arange(tmin, tmax + 1e-8, tstep)
@@ -46,8 +49,10 @@ def get_free_energy_at_T(tmin, tmax, tstep, eigenvalues, weights, n_electrons):
     return temperatures, free_energies
 
 
-class ElectronFreeEnergy(object):
-    r"""Fixed density-of-states approximation for energy and entropy of electrons
+class ElectronFreeEnergy:
+    r"""Class to calculate free energy of one-electronic states.
+
+    Fixed density-of-states approximation for energy and entropy of electrons.
 
     This is supposed to be used for metals, i.e., chemical potential is not
     in band gap.
@@ -89,7 +94,7 @@ class ElectronFreeEnergy(object):
     """
 
     def __init__(self, eigenvalues, weights, n_electrons):
-        """
+        """Init method.
 
         Parameters
         ----------
@@ -107,10 +112,10 @@ class ElectronFreeEnergy(object):
             Initial Fermi energy
 
         """
-
         # shape=(kpoints, spin, bands)
         self._eigenvalues = np.array(
-            eigenvalues.swapaxes(0, 1), dtype='double', order='C')
+            eigenvalues.swapaxes(0, 1), dtype="double", order="C"
+        )
         self._weights = weights
         self._n_electrons = n_electrons
 
@@ -123,12 +128,12 @@ class ElectronFreeEnergy(object):
 
         self._T = None
         self._f = None
-        self.mu = None
-        self.entropy = None
-        self.energy = None
+        self._mu = None
+        self._entropy = None
+        self._energy = None
 
     def run(self, T):
-        """
+        """Calculate free energies.
 
         Parameters
         ----------
@@ -136,33 +141,51 @@ class ElectronFreeEnergy(object):
             Temperature in K
 
         """
-
         if T < 1e-10:
             self._T = 1e-10
         else:
             self._T = T * Kb
-        self.mu = self._chemical_potential()
-        self._f = self._occupation_number(self._eigenvalues, self.mu)
-        self.entropy = self._entropy()
-        self.energy = self._energy()
+        self._mu = self._chemical_potential()
+        self._f = self._occupation_number(self._eigenvalues, self._mu)
+        self._entropy = self._get_entropy()
+        self._energy = self._get_energy()
 
     @property
     def free_energy(self):
-        return self.energy - self.entropy
+        """Return free energies."""
+        return self._energy - self._entropy
 
-    def _entropy(self):
+    @property
+    def energy(self):
+        """Return energies."""
+        return self._energy
+
+    @property
+    def entropy(self):
+        """Return entropies."""
+        return self._entropy
+
+    @property
+    def mu(self):
+        """Return chemical potential."""
+        return self._mu
+
+    def _get_entropy(self):
         S = 0
-        for f_k, w in zip(self._f.reshape(len(self._weights), -1),
-                          self._weights):
+        for f_k, w in zip(self._f.reshape(len(self._weights), -1), self._weights):
             _f = np.extract((f_k > 1e-12) * (f_k < 1 - 1e-12), f_k)
             S -= (_f * np.log(_f) + (1 - _f) * np.log(1 - _f)).sum() * w
         return S * self._g * self._T / self._weights.sum()
 
-    def _energy(self):
+    def _get_energy(self):
         occ_eigvals = self._f * self._eigenvalues
-        return np.dot(
-            occ_eigvals.reshape(len(self._weights), -1).sum(axis=1),
-            self._weights) * self._g / self._weights.sum()
+        return (
+            np.dot(
+                occ_eigvals.reshape(len(self._weights), -1).sum(axis=1), self._weights
+            )
+            * self._g
+            / self._weights.sum()
+        )
 
     def _chemical_potential(self):
         emin = np.min(self._eigenvalues)
@@ -173,7 +196,7 @@ class ElectronFreeEnergy(object):
             n = self._number_of_electrons(mu)
             if abs(n - self._n_electrons) < 1e-10:
                 break
-            elif (n < self._n_electrons):
+            elif n < self._n_electrons:
                 emin = mu
             else:
                 emax = mu
@@ -183,9 +206,11 @@ class ElectronFreeEnergy(object):
 
     def _number_of_electrons(self, mu):
         eigvals = self._eigenvalues.reshape(len(self._weights), -1)
-        n = np.dot(
-            self._occupation_number(eigvals, mu).sum(axis=1),
-            self._weights) * self._g / self._weights.sum()
+        n = (
+            np.dot(self._occupation_number(eigvals, mu).sum(axis=1), self._weights)
+            * self._g
+            / self._weights.sum()
+        )
         return n
 
     def _occupation_number(self, e, mu):
