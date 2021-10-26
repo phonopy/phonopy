@@ -305,9 +305,7 @@ In ``example/NaCl``, the phonopy is executed from python script, e.g.,
            [[0.375, 0.375, 0.75], [0, 0, 0], [0.5, 0.5, 0.5], [0.5, 0.25, 0.75]]]
    labels = ["$\\Gamma$", "X", "U", "K", "$\\Gamma$", "L", "W"]
    qpoints, connections = get_band_qpoints_and_path_connections(path, npoints=51)
-   phonon = phonopy.load(unitcell_filename="POSCAR",
-                         supercell_matrix=[2, 2, 2],
-                         primitive_matrix='F')
+   phonon = phonopy.load("phonopy_disp.yaml")
    phonon.run_band_structure(qpoints, path_connections=connections, labels=labels)
    phonon.plot_band_structure().show()
 
@@ -318,6 +316,7 @@ In ``example/NaCl``, the phonopy is executed from python script, e.g.,
 
    # To plot PDOS next to band structure
    phonon.run_mesh([20, 20, 20], with_eigenvectors=True, is_mesh_symmetry=False)
+   phonon.run_projected_dos()
    phonon.plot_band_structure_and_dos(pdos_indices=[[0], [1]]).show()
 
 ``path_connections`` and ``labels`` are unnecessary to set unless nice
