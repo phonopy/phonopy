@@ -387,7 +387,6 @@ class QHA:
 
         plt.rcParams["pdf.fonttype"] = 42
         plt.rcParams["font.family"] = "serif"
-        plt.rcParams["text.usetex"] = True
 
         fig, axs = plt.subplots(1, 3, figsize=(7, 3.5))
         axs[0].xaxis.set_ticks_position("both")
@@ -1159,4 +1158,3 @@ class QHA:
         plt.rcParams["figure.subplot.left"] = 0.25
         plt.rcParams["figure.subplot.bottom"] = 0.15
         plt.rcParams["figure.figsize"] = 4, 6
-        plt.rcParams["text.usetex"] = True

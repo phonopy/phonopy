@@ -1467,11 +1467,6 @@ class Phonopy:
         """
         import matplotlib.pyplot as plt
 
-        if self._band_structure.labels:
-            from matplotlib import rc
-
-            rc("text", usetex=True)
-
         if self._band_structure.is_legacy_plot:
             fig, axs = plt.subplots(1, 1)
         else:
@@ -1862,11 +1857,6 @@ class Phonopy:
     def plot_band_structure_and_dos(self, pdos_indices=None):
         """Plot band structure and DOS."""
         import matplotlib.pyplot as plt
-
-        if self._band_structure.labels:
-            from matplotlib import rc
-
-            rc("text", usetex=True)
 
         if self._band_structure.is_legacy_plot:
             import matplotlib.gridspec as gridspec

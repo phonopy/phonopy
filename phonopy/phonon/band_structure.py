@@ -46,6 +46,143 @@ from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNA
 from phonopy.units import VaspToTHz
 
 
+class BandPlot:
+    """Band structure plotting class.
+
+    This class adds band structure plots to Matplotlib axes.
+
+    Attributes
+    ----------
+    xscale : float
+        This is used to scale the plot shape to be nicer. The value
+        can be computed using set_xscale as default, which is simply:
+
+            xscale = max_freq / max_dist * 1.5
+
+    """
+
+    def __init__(self, axs):
+        """Init method.
+
+        Parameters
+        ----------
+        axs : Matplotlib axes of ImageGrid, optional
+            axs = ImageGrid(fig, 111, nrows_ncols=(1, n), ...)
+
+        """
+        self._axs = axs
+        self.xscale = None
+        self._decorated = False
+
+    def plot(self, distances, frequencies, path_connections, fmt=None, label=None):
+        """Plot one band structure.
+
+        If ``labels`` is given, decoration such as horizontal line at freq=0,
+        x-label, y-label, and tics are set, which should be done only once.
+
+        distances : list of ndarray
+            Distances in reciprocal space.
+            See the detail in docstring of Phonopy.get_band_structure_dict.
+        frequencies : list of ndarray
+            Phonon frequencies.
+            See the detail in docstring of Phonopy.get_band_structure_dict.
+        path_connections : list of ndarray
+            This describes band segments are connected or not.
+            See the detail in docstring of Phonopy.run_band_structure.
+        fmt : str, optional
+            Matplotlib format strings. Default is None, which is equivalent to
+            'r-'.
+        label : str, optional
+            Label attached to band structure.
+
+        """
+        if fmt is None:
+            _fmt = "r-"
+        else:
+            _fmt = fmt
+
+        if self.xscale is None:
+            self.set_xscale_from_data(frequencies, distances)
+
+        count = 0
+        distances_scaled = [d * self.xscale for d in distances]
+        for i, (d, f, c) in enumerate(
+            zip(distances_scaled, frequencies, path_connections)
+        ):
+            ax = self._axs[count]
+            if i == 0 and label is not None:
+                curves = ax.plot(d, f, _fmt, linewidth=1)
+                curves[0].set_label(label)
+                ax.legend()
+            else:
+                ax.plot(d, f, _fmt, linewidth=1)
+            if not c:
+                count += 1
+
+    def set_xscale_from_data(self, frequencies, distances):
+        """Set xscale from data."""
+        max_freq = max([np.max(fq) for fq in frequencies])
+        max_dist = distances[-1][-1]
+        self.xscale = max_freq / max_dist * 1.5
+
+    def decorate(self, labels, path_connections, frequencies, distances):
+        """Decorate plots.
+
+        Parameters
+        ----------
+        labels : List of str, optional
+            Labels of special points.
+            See the detail in docstring of Phonopy.run_band_structure.
+
+        """
+        if self._decorated:
+            raise RuntimeError("Already BandPlot instance is decorated.")
+        else:
+            self._decorated = True
+
+        if self.xscale is None:
+            self.set_xscale_from_data(frequencies, distances)
+
+        distances_scaled = [d * self.xscale for d in distances]
+
+        # T T T F F -> [[0, 3], [4, 4]]
+        lefts = [0]
+        rights = []
+        for i, c in enumerate(path_connections):
+            if not c:
+                lefts.append(i + 1)
+                rights.append(i)
+        seg_indices = [list(range(lft, rgt + 1)) for lft, rgt in zip(lefts, rights)]
+        special_points = []
+        for indices in seg_indices:
+            pts = [distances_scaled[i][0] for i in indices]
+            pts.append(distances_scaled[indices[-1]][-1])
+            special_points.append(pts)
+
+        self._axs[0].set_ylabel("Frequency")
+        l_count = 0
+        for ax, spts in zip(self._axs, special_points):
+            ax.xaxis.set_ticks_position("both")
+            ax.yaxis.set_ticks_position("both")
+            ax.xaxis.set_tick_params(which="both", direction="in")
+            ax.yaxis.set_tick_params(which="both", direction="in")
+            ax.set_xlim(spts[0], spts[-1])
+            ax.set_xticks(spts)
+            if labels is None:
+                ax.set_xticklabels(
+                    [
+                        "",
+                    ]
+                    * len(spts)
+                )
+            else:
+                ax.set_xticklabels(labels[l_count : (l_count + len(spts))])
+                l_count += len(spts)
+            ax.plot(
+                [spts[0], spts[-1]], [0, 0], linestyle=":", linewidth=0.5, color="b"
+            )
+
+
 class BandStructure:
     """Class for phonons of q-poitns along reciprocal space paths.
 
@@ -473,7 +610,7 @@ class BandStructure:
     def _get_q_segment_yaml(
         self, qpoints, distances, frequencies, eigenvectors, group_velocities
     ):
-        natom = self._cell.get_number_of_atoms()
+        natom = len(self._cell)
         text = []
         for j in range(len(qpoints)):
             q = qpoints[j]
@@ -757,143 +894,6 @@ def band_plot(axs, frequencies, distances, path_connections, labels, fmt="r-"):
     bp = BandPlot(axs)
     bp.decorate(labels, path_connections, frequencies, distances)
     bp.plot(distances, frequencies, path_connections, fmt=fmt)
-
-
-class BandPlot:
-    """Band structure plotting class.
-
-    This class adds band structure plots to Matplotlib axes.
-
-    Attributes
-    ----------
-    xscale : float
-        This is used to scale the plot shape to be nicer. The value
-        can be computed using set_xscale as default, which is simply:
-
-            xscale = max_freq / max_dist * 1.5
-
-    """
-
-    def __init__(self, axs):
-        """Init method.
-
-        Parameters
-        ----------
-        axs : Matplotlib axes of ImageGrid, optional
-            axs = ImageGrid(fig, 111, nrows_ncols=(1, n), ...)
-
-        """
-        self._axs = axs
-        self.xscale = None
-        self._decorated = False
-
-    def plot(self, distances, frequencies, path_connections, fmt=None, label=None):
-        """Plot one band structure.
-
-        If ``labels`` is given, decoration such as horizontal line at freq=0,
-        x-label, y-label, and tics are set, which should be done only once.
-
-        distances : list of ndarray
-            Distances in reciprocal space.
-            See the detail in docstring of Phonopy.get_band_structure_dict.
-        frequencies : list of ndarray
-            Phonon frequencies.
-            See the detail in docstring of Phonopy.get_band_structure_dict.
-        path_connections : list of ndarray
-            This describes band segments are connected or not.
-            See the detail in docstring of Phonopy.run_band_structure.
-        fmt : str, optional
-            Matplotlib format strings. Default is None, which is equivalent to
-            'r-'.
-        label : str, optional
-            Label attached to band structure.
-
-        """
-        if fmt is None:
-            _fmt = "r-"
-        else:
-            _fmt = fmt
-
-        if self.xscale is None:
-            self.set_xscale_from_data(frequencies, distances)
-
-        count = 0
-        distances_scaled = [d * self.xscale for d in distances]
-        for i, (d, f, c) in enumerate(
-            zip(distances_scaled, frequencies, path_connections)
-        ):
-            ax = self._axs[count]
-            if i == 0 and label is not None:
-                curves = ax.plot(d, f, _fmt, linewidth=1)
-                curves[0].set_label(label)
-                ax.legend()
-            else:
-                ax.plot(d, f, _fmt, linewidth=1)
-            if not c:
-                count += 1
-
-    def set_xscale_from_data(self, frequencies, distances):
-        """Set xscale from data."""
-        max_freq = max([np.max(fq) for fq in frequencies])
-        max_dist = distances[-1][-1]
-        self.xscale = max_freq / max_dist * 1.5
-
-    def decorate(self, labels, path_connections, frequencies, distances):
-        """Decorate plots.
-
-        Parameters
-        ----------
-        labels : List of str, optional
-            Labels of special points.
-            See the detail in docstring of Phonopy.run_band_structure.
-
-        """
-        if self._decorated:
-            raise RuntimeError("Already BandPlot instance is decorated.")
-        else:
-            self._decorated = True
-
-        if self.xscale is None:
-            self.set_xscale_from_data(frequencies, distances)
-
-        distances_scaled = [d * self.xscale for d in distances]
-
-        # T T T F F -> [[0, 3], [4, 4]]
-        lefts = [0]
-        rights = []
-        for i, c in enumerate(path_connections):
-            if not c:
-                lefts.append(i + 1)
-                rights.append(i)
-        seg_indices = [list(range(lft, rgt + 1)) for lft, rgt in zip(lefts, rights)]
-        special_points = []
-        for indices in seg_indices:
-            pts = [distances_scaled[i][0] for i in indices]
-            pts.append(distances_scaled[indices[-1]][-1])
-            special_points.append(pts)
-
-        self._axs[0].set_ylabel("Frequency")
-        l_count = 0
-        for ax, spts in zip(self._axs, special_points):
-            ax.xaxis.set_ticks_position("both")
-            ax.yaxis.set_ticks_position("both")
-            ax.xaxis.set_tick_params(which="both", direction="in")
-            ax.yaxis.set_tick_params(which="both", direction="in")
-            ax.set_xlim(spts[0], spts[-1])
-            ax.set_xticks(spts)
-            if labels is None:
-                ax.set_xticklabels(
-                    [
-                        "",
-                    ]
-                    * len(spts)
-                )
-            else:
-                ax.set_xticklabels(labels[l_count : (l_count + len(spts))])
-                l_count += len(spts)
-            ax.plot(
-                [spts[0], spts[-1]], [0, 0], linestyle=":", linewidth=0.5, color="b"
-            )
 
 
 def _plot_legacy(

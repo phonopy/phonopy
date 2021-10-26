@@ -405,10 +405,6 @@ def get_options():
 def _old_plot(args):
     import matplotlib.pyplot as plt
 
-    if args.band_labels:
-        from matplotlib import rc
-
-        rc("text", usetex=True)
     if args.dos:
         import matplotlib.gridspec as gridspec
 
@@ -628,9 +624,6 @@ def _old_plot(args):
 
 def _plot(args):
     import matplotlib.pyplot as plt
-    from matplotlib import rc
-
-    rc("text", usetex=True)
     from mpl_toolkits.axes_grid1 import ImageGrid
 
     if args.is_hdf5:
