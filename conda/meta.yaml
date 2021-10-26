@@ -29,7 +29,7 @@ requirements:
     - python
     - pip
     - numpy>=1.11
-    - matplotlib-base
+    - matplotlib-base>=2.0.0
     - pyyaml
     - h5py
     - spglib
@@ -39,7 +39,7 @@ requirements:
     - python
     - pip
     - numpy>=1.11
-    - matplotlib-base
+    - matplotlib-base>=2.0.0
     - pyyaml
     - h5py
     - spglib

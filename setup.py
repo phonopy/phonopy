@@ -148,7 +148,7 @@ if __name__ == "__main__":
             install_requires=[
                 "numpy>=1.11.0",
                 "PyYAML",
-                "matplotlib",
+                "matplotlib>2.0.0",
                 "h5py",
                 "spglib",
             ],
