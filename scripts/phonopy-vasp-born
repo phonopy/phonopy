@@ -36,49 +36,64 @@
 
 import sys
 import warnings
+
 import numpy as np
+
 from phonopy.interface.vasp import get_born_OUTCAR, get_born_vasprunxml
 
 
 def fracval(frac):
-    if frac.find('/') == -1:
+    if frac.find("/") == -1:
         return float(frac)
     else:
-        x = frac.split('/')
+        x = frac.split("/")
         return float(x[0]) / float(x[1])
 
 
 def get_options():
     # Parse options
     import argparse
-    parser = argparse.ArgumentParser(
-        description="Phonopy vasp-born command-line-tool")
-    parser.set_defaults(num_atoms=None,
-                        primitive_axes=None,
-                        supercell_matrix=None,
-                        symmetrize_tensors=True,
-                        read_outcar=False,
-                        symprec=1e-5)
+
+    parser = argparse.ArgumentParser(description="Phonopy vasp-born command-line-tool")
+    parser.set_defaults(
+        num_atoms=None,
+        primitive_axes=None,
+        supercell_matrix=None,
+        symmetrize_tensors=True,
+        read_outcar=False,
+        symprec=1e-5,
+    )
     parser.add_argument(
-        "--dim", dest="supercell_matrix",
-        help="Same behavior as DIM tag")
+        "--dim", dest="supercell_matrix", help="Same behavior as DIM tag"
+    )
     parser.add_argument(
-        "--pa", "--primitive-axis", "--primitive-axes", dest="primitive_axes",
-        help="Same as PRIMITIVE_AXES tags")
+        "--pa",
+        "--primitive-axis",
+        "--primitive-axes",
+        dest="primitive_axes",
+        help="Same as PRIMITIVE_AXES tags",
+    )
     parser.add_argument(
-        "--nost", "--no-symmetrize-tensors", dest="symmetrize_tensors",
+        "--nost",
+        "--no-symmetrize-tensors",
+        dest="symmetrize_tensors",
         action="store_false",
-        help="Prevent from symmetrizing tensors")
+        help="Prevent from symmetrizing tensors",
+    )
     parser.add_argument(
-        "--tolerance", dest="symprec", type=float,
-        help="Symmetry tolerance to search")
+        "--tolerance", dest="symprec", type=float, help="Symmetry tolerance to search"
+    )
     parser.add_argument(
-        "--outcar", dest="read_outcar", action="store_true",
-        help=("Read OUTCAR instead of vasprun.xml. "
-              "POSCAR is necessary in this case."))
+        "--outcar",
+        dest="read_outcar",
+        action="store_true",
+        help=(
+            "Read OUTCAR instead of vasprun.xml. " "POSCAR is necessary in this case."
+        ),
+    )
     parser.add_argument(
-        "filenames", nargs='*',
-        help="Filenames: vasprun.xml or OUTCAR and POSCAR")
+        "filenames", nargs="*", help="Filenames: vasprun.xml or OUTCAR and POSCAR"
+    )
     args = parser.parse_args()
     return args
 
@@ -110,14 +125,14 @@ def main(args):
     if args.supercell_matrix:
         vals = [int(x) for x in args.supercell_matrix.split()]
         if len(vals) == 9:
-            supercell_matrix = np.reshape(np.array(vals, dtype='intc'), (3, 3))
+            supercell_matrix = np.reshape(np.array(vals, dtype="intc"), (3, 3))
         elif len(vals) == 3:
-            supercell_matrix = np.diag(np.array(vals, dtype='intc'))
+            supercell_matrix = np.diag(np.array(vals, dtype="intc"))
         else:
             print("Supercell matrix is incorrectly set.")
             sys.exit(1)
     else:
-        supercell_matrix = np.eye(3, dtype='intc')
+        supercell_matrix = np.eye(3, dtype="intc")
 
     with warnings.catch_warnings():
         # To catch warnings as error, set warnings.simplefilter("error")
@@ -131,14 +146,16 @@ def main(args):
                     primitive_matrix=primitive_axes,
                     supercell_matrix=supercell_matrix,
                     symmetrize_tensors=args.symmetrize_tensors,
-                    symprec=args.symprec)
+                    symprec=args.symprec,
+                )
             else:
                 borns, epsilon, atom_indices = get_born_vasprunxml(
                     filename=outcar_filename,
                     primitive_matrix=primitive_axes,
                     supercell_matrix=supercell_matrix,
                     symmetrize_tensors=args.symmetrize_tensors,
-                    symprec=args.symprec)
+                    symprec=args.symprec,
+                )
         except UserWarning:
             text = "# Symmetry broken"
             lines = [text]
@@ -147,12 +164,12 @@ def main(args):
 
         try:
             text = "# epsilon and Z* of atoms "
-            text += ' '.join(["%d" % n for n in atom_indices + 1])
+            text += " ".join(["%d" % n for n in atom_indices + 1])
             lines = [text]
             lines.append(("%13.8f " * 9) % tuple(epsilon.flatten()))
             for z in borns:
                 lines.append(("%13.8f " * 9) % tuple(z.flatten()))
-        except:
+        except Exception:
             sys.exit(1)
         else:
             print("\n".join(lines))

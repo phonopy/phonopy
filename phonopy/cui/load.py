@@ -1,3 +1,4 @@
+"""Phonopy loader."""
 # Copyright (C) 2018 Atsushi Togo
 # All rights reserved.
 #
@@ -33,37 +34,40 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.api_phonopy import Phonopy
-from phonopy.interface.phonopy_yaml import PhonopyYaml
-from phonopy.interface.calculator import get_default_physical_units
+
 import phonopy.cui.load_helper as load_helper
+from phonopy.api_phonopy import Phonopy
+from phonopy.interface.calculator import get_default_physical_units
+from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.structure.cells import get_primitive_matrix
 
 
-def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
-         supercell_matrix=None,
-         primitive_matrix=None,
-         is_nac=True,
-         calculator=None,
-         unitcell=None,
-         supercell=None,
-         nac_params=None,
-         unitcell_filename=None,
-         supercell_filename=None,
-         born_filename=None,
-         force_sets_filename=None,
-         force_constants_filename=None,
-         fc_calculator=None,
-         fc_calculator_options=None,
-         factor=None,
-         frequency_scale_factor=None,
-         produce_fc=True,
-         is_symmetry=True,
-         symmetrize_fc=True,
-         is_compact_fc=True,
-         store_dense_svecs=False,
-         symprec=1e-5,
-         log_level=0):
+def load(
+    phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
+    supercell_matrix=None,
+    primitive_matrix=None,
+    is_nac=True,
+    calculator=None,
+    unitcell=None,
+    supercell=None,
+    nac_params=None,
+    unitcell_filename=None,
+    supercell_filename=None,
+    born_filename=None,
+    force_sets_filename=None,
+    force_constants_filename=None,
+    fc_calculator=None,
+    fc_calculator_options=None,
+    factor=None,
+    frequency_scale_factor=None,
+    produce_fc=True,
+    is_symmetry=True,
+    symmetrize_fc=True,
+    is_compact_fc=True,
+    store_dense_svecs=False,
+    symprec=1e-5,
+    log_level=0,
+) -> Phonopy:
     """Create Phonopy instance from parameters and/or input files.
 
     "phonopy_yaml"-like file is parsed unless crystal structure information
@@ -198,11 +202,12 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         Verbosity control. Default is 0.
 
     """
-
-    if (supercell is not None or
-        supercell_filename is not None or
-        unitcell is not None or
-        unitcell_filename is not None):  # noqa E129
+    if (
+        supercell is not None
+        or supercell_filename is not None
+        or unitcell is not None
+        or unitcell_filename is not None
+    ):  # noqa E129
         cell, smat, pmat = load_helper.get_cell_settings(
             supercell_matrix=supercell_matrix,
             primitive_matrix=primitive_matrix,
@@ -212,7 +217,8 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
             supercell_filename=supercell_filename,
             calculator=calculator,
             symprec=symprec,
-            log_level=log_level)
+            log_level=log_level,
+        )
         _calculator = calculator
         _nac_params = nac_params
         _dataset = None
@@ -223,7 +229,7 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         cell = phpy_yaml.unitcell
         smat = phpy_yaml.supercell_matrix
         if smat is None:
-            smat = np.eye(3, dtype='intc', order='C')
+            smat = np.eye(3, dtype="intc", order="C")
         if primitive_matrix is not None:
             pmat = get_primitive_matrix(primitive_matrix, symprec=symprec)
         else:
@@ -241,29 +247,30 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         else:
             _calculator = calculator
     else:
-        msg = ("Cell information could not found. "
-               "Phonopy instance loading failed.")
+        msg = "Cell information could not found. " "Phonopy instance loading failed."
         raise RuntimeError(msg)
 
     if log_level and _calculator is not None:
-        print("Set \"%s\" mode." % _calculator)
+        print('Set "%s" mode.' % _calculator)
 
     # units keywords: factor, nac_factor, distance_to_A
     units = get_default_physical_units(_calculator)
     if factor is None:
-        _factor = units['factor']
+        _factor = units["factor"]
     else:
         _factor = factor
-    phonon = Phonopy(cell,
-                     smat,
-                     primitive_matrix=pmat,
-                     factor=_factor,
-                     frequency_scale_factor=frequency_scale_factor,
-                     symprec=symprec,
-                     is_symmetry=is_symmetry,
-                     store_dense_svecs=store_dense_svecs,
-                     calculator=_calculator,
-                     log_level=log_level)
+    phonon = Phonopy(
+        cell,
+        smat,
+        primitive_matrix=pmat,
+        factor=_factor,
+        frequency_scale_factor=frequency_scale_factor,
+        symprec=symprec,
+        is_symmetry=is_symmetry,
+        store_dense_svecs=store_dense_svecs,
+        calculator=_calculator,
+        log_level=log_level,
+    )
 
     # NAC params
     if born_filename is not None or _nac_params is not None or is_nac:
@@ -272,8 +279,9 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
             nac_params=_nac_params,
             born_filename=born_filename,
             is_nac=is_nac,
-            nac_factor=units['nac_factor'],
-            log_level=log_level)
+            nac_factor=units["nac_factor"],
+            log_level=log_level,
+        )
         if ret_nac_params is not None:
             phonon.nac_params = ret_nac_params
 
@@ -289,6 +297,7 @@ def load(phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
         produce_fc=produce_fc,
         symmetrize_fc=symmetrize_fc,
         is_compact_fc=is_compact_fc,
-        log_level=log_level)
+        log_level=log_level,
+    )
 
     return phonon

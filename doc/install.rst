@@ -3,8 +3,6 @@
 Installation
 =============
 
-**From phonopy v2.7.0, spglib has to be installed separately.**
-
 .. contents::
    :depth: 3
    :local:
@@ -37,7 +35,7 @@ environment).
 
 ::
 
-   % conda create -n phonopy -c conda-forge python=3
+   % conda create -n phonopy -c conda-forge
    % conda activate phonopy
    % conda install -c conda-forge phonopy
 
@@ -97,9 +95,9 @@ like Ubuntu or Fedora with Python version 2.7 or later. Python version
 
 Prepare the following Python libraries:
 
-* Python and its header files
-* numpy
-* matplotlib
+* Python (>=3.6) and its header files
+* numpy (>=1.11)
+* matplotlib (>=2.0)
 * python-yaml (pyyaml)
 * python-h5py (h5py)
 
@@ -127,13 +125,11 @@ netlib]``. If specific one is expected, it is installed by (e.g. ``openblas``)
 
    % conda install -c conda-forge "libblas=*=*openblas"
 
-If you need a compiler, for usual 64-bit linux system::
+If you need a compiler,
 
-   % conda install -c conda-forge gcc_linux-64
+::
 
-For macOS::
-
-   % conda install -c conda-forge clang_osx-64
+   % conda install -c conda-forge complilers
 
 .. _install_setup_py:
 
@@ -207,20 +203,6 @@ current environment variables by::
 When multiple different phonopy paths are found, remove all except for
 what you really need. Then logout from the current shell (terminal)
 and open new shell (terminal) to confirm that the modification is activated.
-
-Error in plotting on display
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-``texlive-fonts-recommended`` and ``dviping`` packages may be required
-to install on your system, if you see something like the following
-messages when ploting::
-
-   ! I can't find file `pncr7t'.
-
-or::
-
-   ! LaTeX Error: File `type1cm.sty' not found.
-
 
 Missing Intel libraries when building from source using icc
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

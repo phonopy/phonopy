@@ -1,10 +1,10 @@
 
-     Program PWSCF v.5.1 starts on 30Oct2014 at 18:11:34 
+     Program PWSCF v.5.1 starts on 30Oct2014 at 18:11:34
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
-          URL http://www.quantum-espresso.org", 
+          URL http://www.quantum-espresso.org",
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
@@ -28,14 +28,14 @@ Warning: card  / ignored
      Subspace diagonalization in iterative solution of the eigenvalue problem:
      scalapack distributed-memory algorithm (size of sub-group:  2*  2 procs)
 
- 
+
      Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Min         152     152     42                 5689     5689     820
      Max         154     154     43                 5693     5693     823
      Sum        2449    2449    673                91047    91047   13133
- 
+
 
 
      bravais-lattice index     =            0
@@ -56,14 +56,14 @@ Warning: card  / ignored
      celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
 
      crystal axes: (cart. coord. in units of alat)
-               a(1) = (   1.000000   0.000000   0.000000 )  
-               a(2) = (   0.000000   1.000000   0.000000 )  
-               a(3) = (   0.000000   0.000000   1.000000 )  
+               a(1) = (   1.000000   0.000000   0.000000 )
+               a(2) = (   0.000000   1.000000   0.000000 )
+               a(3) = (   0.000000   0.000000   1.000000 )
 
      reciprocal axes: (cart. coord. in units 2 pi/alat)
-               b(1) = (  1.000000  0.000000  0.000000 )  
-               b(2) = (  0.000000  1.000000  0.000000 )  
-               b(3) = (  0.000000  0.000000  1.000000 )  
+               b(1) = (  1.000000  0.000000  0.000000 )
+               b(2) = (  0.000000  1.000000  0.000000 )
+               b(3) = (  0.000000  0.000000  1.000000 )
 
 
      PseudoPot. # 1 for Si read from file:
@@ -72,12 +72,12 @@ Warning: card  / ignored
      Pseudo is Projector augmented-wave + core cor, Zval =  4.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.2 svn rev. 9415
      Shape of augmentation charge: PSQ
-     Using radial grid of 1141 points,  4 beta functions with: 
+     Using radial grid of 1141 points,  4 beta functions with:
                 l(1) =   0
                 l(2) =   0
                 l(3) =   1
                 l(4) =   1
-     Q(r) pseudized with 0 coefficients 
+     Q(r) pseudized with 0 coefficients
 
 
      atomic species   valence    mass     pseudopotential
@@ -199,7 +199,7 @@ Warning: card  / ignored
 
      starting charge  255.96421, renormalised to  256.00000
      Starting wfc are  256 randomized atomic wfcs
-     Checking if some PAW data can be deallocated... 
+     Checking if some PAW data can be deallocated...
 
      total cpu time spent up to now is       10.9 secs
 
@@ -216,12 +216,12 @@ Warning: card  / ignored
 
      Davidson diagonalization with overlap
 
-     Program PWSCF v.5.1 starts on 30Oct2014 at 18:13:42 
+     Program PWSCF v.5.1 starts on 30Oct2014 at 18:13:42
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
-          URL http://www.quantum-espresso.org", 
+          URL http://www.quantum-espresso.org",
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
@@ -245,14 +245,14 @@ Warning: card  / ignored
      Subspace diagonalization in iterative solution of the eigenvalue problem:
      scalapack distributed-memory algorithm (size of sub-group:  2*  2 procs)
 
- 
+
      Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Min         152     152     42                 5689     5689     820
      Max         154     154     43                 5693     5693     823
      Sum        2449    2449    673                91047    91047   13133
- 
+
 
 
      bravais-lattice index     =            0
@@ -273,14 +273,14 @@ Warning: card  / ignored
      celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
 
      crystal axes: (cart. coord. in units of alat)
-               a(1) = (   1.000000   0.000000   0.000000 )  
-               a(2) = (   0.000000   1.000000   0.000000 )  
-               a(3) = (   0.000000   0.000000   1.000000 )  
+               a(1) = (   1.000000   0.000000   0.000000 )
+               a(2) = (   0.000000   1.000000   0.000000 )
+               a(3) = (   0.000000   0.000000   1.000000 )
 
      reciprocal axes: (cart. coord. in units 2 pi/alat)
-               b(1) = (  1.000000  0.000000  0.000000 )  
-               b(2) = (  0.000000  1.000000  0.000000 )  
-               b(3) = (  0.000000  0.000000  1.000000 )  
+               b(1) = (  1.000000  0.000000  0.000000 )
+               b(2) = (  0.000000  1.000000  0.000000 )
+               b(3) = (  0.000000  0.000000  1.000000 )
 
 
      PseudoPot. # 1 for Si read from file:
@@ -289,12 +289,12 @@ Warning: card  / ignored
      Pseudo is Projector augmented-wave + core cor, Zval =  4.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.2 svn rev. 9415
      Shape of augmentation charge: PSQ
-     Using radial grid of 1141 points,  4 beta functions with: 
+     Using radial grid of 1141 points,  4 beta functions with:
                 l(1) =   0
                 l(2) =   0
                 l(3) =   1
                 l(4) =   1
-     Q(r) pseudized with 0 coefficients 
+     Q(r) pseudized with 0 coefficients
 
 
      atomic species   valence    mass     pseudopotential
@@ -416,7 +416,7 @@ Warning: card  / ignored
 
      starting charge  255.96421, renormalised to  256.00000
      Starting wfc are  256 randomized atomic wfcs
-     Checking if some PAW data can be deallocated... 
+     Checking if some PAW data can be deallocated...
 
      total cpu time spent up to now is       10.7 secs
 
@@ -427,12 +427,12 @@ Warning: card  / ignored
      iteration #  1     ecut=    18.00 Ry     beta=0.70
      Davidson diagonalization with overlap
 
-     Program PWSCF v.5.1 starts on 30Oct2014 at 18:19:12 
+     Program PWSCF v.5.1 starts on 30Oct2014 at 18:19:12
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
-          URL http://www.quantum-espresso.org", 
+          URL http://www.quantum-espresso.org",
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
@@ -456,14 +456,14 @@ Warning: card  / ignored
      Subspace diagonalization in iterative solution of the eigenvalue problem:
      scalapack distributed-memory algorithm (size of sub-group:  2*  2 procs)
 
- 
+
      Parallelization info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Min         306     306     81                16080    16080    2217
      Max         307     307     82                16082    16082    2222
      Sum        4897    4897   1305               257295   257295   35513
- 
+
 
 
      bravais-lattice index     =            0
@@ -484,14 +484,14 @@ Warning: card  / ignored
      celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
 
      crystal axes: (cart. coord. in units of alat)
-               a(1) = (   1.000000   0.000000   0.000000 )  
-               a(2) = (   0.000000   1.000000   0.000000 )  
-               a(3) = (   0.000000   0.000000   1.000000 )  
+               a(1) = (   1.000000   0.000000   0.000000 )
+               a(2) = (   0.000000   1.000000   0.000000 )
+               a(3) = (   0.000000   0.000000   1.000000 )
 
      reciprocal axes: (cart. coord. in units 2 pi/alat)
-               b(1) = (  1.000000  0.000000  0.000000 )  
-               b(2) = (  0.000000  1.000000  0.000000 )  
-               b(3) = (  0.000000  0.000000  1.000000 )  
+               b(1) = (  1.000000  0.000000  0.000000 )
+               b(2) = (  0.000000  1.000000  0.000000 )
+               b(3) = (  0.000000  0.000000  1.000000 )
 
 
      PseudoPot. # 1 for Si read from file:
@@ -500,12 +500,12 @@ Warning: card  / ignored
      Pseudo is Projector augmented-wave + core cor, Zval =  4.0
      Generated using "atomic" code by A. Dal Corso  v.5.0.2 svn rev. 9415
      Shape of augmentation charge: PSQ
-     Using radial grid of 1141 points,  4 beta functions with: 
+     Using radial grid of 1141 points,  4 beta functions with:
                 l(1) =   0
                 l(2) =   0
                 l(3) =   1
                 l(4) =   1
-     Q(r) pseudized with 0 coefficients 
+     Q(r) pseudized with 0 coefficients
 
 
      atomic species   valence    mass     pseudopotential
@@ -618,7 +618,7 @@ Warning: card  / ignored
 
      starting charge  255.96421, renormalised to  256.00000
      Starting wfc are  256 randomized atomic wfcs
-     Checking if some PAW data can be deallocated... 
+     Checking if some PAW data can be deallocated...
 
      total cpu time spent up to now is       16.5 secs
 
@@ -1104,7 +1104,7 @@ Warning: card  / ignored
 
 
      Writing output data file pwscf.save
- 
+
      init_run     :     16.12s CPU     16.28s WALL (       1 calls)
      electrons    :    401.46s CPU    405.04s WALL (       1 calls)
      forces       :      6.70s CPU      6.71s WALL (       1 calls)
@@ -1139,18 +1139,18 @@ Warning: card  / ignored
      fft          :      0.25s CPU      0.26s WALL (     170 calls)
      fftw         :     85.89s CPU     86.13s WALL (  131972 calls)
      davcio       :      0.00s CPU      0.17s WALL (      12 calls)
- 
+
      Parallel routines
      fft_scatter  :     23.47s CPU     23.56s WALL (  132142 calls)
 
      PAW routines
      PAW_pot      :      1.61s CPU      1.61s WALL (      11 calls)
      PAW_symme    :      0.00s CPU      0.00s WALL (      22 calls)
- 
+
      PWSCF        :  7m30.59s CPU     7m34.58s WALL
 
- 
-   This run was terminated on:  18:26:46  30Oct2014            
+
+   This run was terminated on:  18:26:46  30Oct2014
 
 =------------------------------------------------------------------------------=
    JOB DONE.

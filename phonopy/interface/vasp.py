@@ -1,3 +1,4 @@
+"""VASP calculator interface."""
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -33,25 +34,79 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-import io
-import xml.parsers.expat
+import warnings
 import xml.etree.cElementTree as etree
+import xml.parsers.expat
+from io import StringIO
+
 import numpy as np
-from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.atoms import symbol_map, atom_data
+
+from phonopy.file_IO import write_FORCE_CONSTANTS, write_force_constants_to_hdf5
+from phonopy.structure.atoms import PhonopyAtoms, atom_data, symbol_map
 from phonopy.structure.symmetry import elaborate_borns_and_epsilon
-from phonopy.file_IO import (write_force_constants_to_hdf5,
-                             write_FORCE_CONSTANTS)
+from phonopy.units import VaspToTHz
 
 
-def parse_set_of_forces(num_atoms,
-                        forces_filenames,
-                        use_expat=True,
-                        verbose=True):
+def check_forces(forces, num_atom, filename, verbose=True):
+    """Check a set of forces and show message if it is wrong."""
+    if len(forces) != num_atom:
+        if verbose:
+            stars = "*" * len(filename)
+            print("")
+            print("***************%s***************" % stars)
+            print('***** Parsing "%s" failed. *****' % filename)
+            print("***************%s***************" % stars)
+        return False
+    else:
+        return True
+
+
+def get_drift_forces(forces, filename=None, verbose=True):
+    """Calculate drift force and show it."""
+    drift_force = np.sum(forces, axis=0) / len(forces)
+
+    if verbose:
+        if filename is None:
+            print(
+                "Drift force: %12.8f %12.8f %12.8f to be subtracted"
+                % tuple(drift_force)
+            )
+        else:
+            print('Drift force of "%s" to be subtracted' % filename)
+            print("%12.8f %12.8f %12.8f" % tuple(drift_force))
+        sys.stdout.flush()
+
+    return drift_force
+
+
+def get_scaled_positions_lines(scaled_positions):
+    """Return text lines of scaled positions."""
+    return "\n".join(_get_scaled_positions_lines(scaled_positions))
+
+
+def sort_positions_by_symbols(symbols, positions):
+    """Sort atomic positions by symbols."""
+    from collections import Counter
+
+    # unique symbols in order of first appearance in 'symbols'
+    reduced_symbols = _unique_stable(symbols)
+
+    # counts of each symbol
+    counts_dict = Counter(symbols)
+    counts_list = [counts_dict[s] for s in reduced_symbols]
+
+    # sort positions by symbol (using the order defined by reduced_symbols).
+    # using a stable sort algorithm matches the behavior of previous versions
+    #  of phonopy (but is not otherwise necessary)
+    sort_keys = [reduced_symbols.index(i) for i in symbols]
+    perm = _argsort_stable(sort_keys)
+    sorted_positions = positions[perm]
+
+    return counts_list, reduced_symbols, sorted_positions, perm
+
+
+def parse_set_of_forces(num_atoms, forces_filenames, use_expat=True, verbose=True):
+    """Parse sets of forces of files."""
     if verbose:
         sys.stdout.write("counter (file index): ")
 
@@ -61,30 +116,20 @@ def parse_set_of_forces(num_atoms,
     force_files = forces_filenames
 
     for filename in force_files:
-        with io.open(filename, "rb") as fp:
+        with open(filename, "rb") as fp:
             if verbose:
                 sys.stdout.write("%d " % (count + 1))
             vasprun = Vasprun(fp, use_expat=use_expat)
             try:
                 forces = vasprun.read_forces()
-            except RuntimeError:
-                raise RuntimeError(
-                    "Could not parse \"%s\". Probably this vasprun.xml "
-                    "is broken or some value diverges. Check this calculation "
-                    "carefully before sending questions to the phonopy "
-                    "mailing list." % filename)
-            except ValueError:
-                raise ValueError(
-                    "Could not parse \"%s\". Probably this vasprun.xml "
-                    "is broken or some value diverges. Check this calculation "
-                    "carefully before sending questions to the phonopy "
-                    "mailing list." % filename)
-            except xml.parsers.expat.ExpatError:
-                raise xml.parsers.expat.ExpatError(
-                    "Could not parse \"%s\". Probably this vasprun.xml "
-                    "is broken or some value diverges. Check this calculation "
-                    "carefully before sending questions to the phonopy "
-                    "mailing list." % filename)
+            except (RuntimeError, ValueError, xml.parsers.expat.ExpatError) as err:
+                msg = (
+                    'Could not parse "%s". Probably this vasprun.xml '
+                    "is broken or some value diverges. Check this "
+                    "calculation carefully before sending questions to the "
+                    "phonopy mailing list." % filename
+                )
+                raise RuntimeError(msg) from err
             force_sets.append(forces)
             count += 1
 
@@ -92,7 +137,7 @@ def parse_set_of_forces(num_atoms,
                 is_parsed = False
 
     if verbose:
-        print('')
+        print("")
 
     if is_parsed:
         return force_sets
@@ -100,48 +145,20 @@ def parse_set_of_forces(num_atoms,
         return []
 
 
-def check_forces(forces, num_atom, filename, verbose=True):
-    if len(forces) != num_atom:
-        if verbose:
-            stars = '*' * len(filename)
-            sys.stdout.write("\n")
-            sys.stdout.write("***************%s***************\n" % stars)
-            sys.stdout.write("***** Parsing \"%s\" failed. *****\n" % filename)
-            sys.stdout.write("***************%s***************\n" % stars)
-        return False
-    else:
-        return True
-
-
-def get_drift_forces(forces, filename=None, verbose=True):
-    drift_force = np.sum(forces, axis=0) / len(forces)
-
-    if verbose:
-        if filename is None:
-            print("Drift force: %12.8f %12.8f %12.8f to be subtracted"
-                  % tuple(drift_force))
-        else:
-            print("Drift force of \"%s\" to be subtracted" % filename)
-            print("%12.8f %12.8f %12.8f" % tuple(drift_force))
-        sys.stdout.flush()
-
-    return drift_force
-
-
 def create_FORCE_CONSTANTS(filename, is_hdf5, log_level):
-    fc_and_atom_types = parse_force_constants(filename)
+    """Parse vasprun.xml and write it into force constants file."""
+    force_constants, atom_types = parse_force_constants(filename)
 
-    if not fc_and_atom_types:
-        print('')
-        print("\'%s\' dones not contain necessary information." % filename)
+    if force_constants is None:
+        print("")
+        print("'%s' dones not contain necessary information." % filename)
         return 1
 
-    force_constants, atom_types = fc_and_atom_types
     if is_hdf5:
         try:
-            import h5py
+            import h5py  # noqa F401
         except ImportError:
-            print('')
+            print("")
             print("You need to install python-h5py.")
             return 1
 
@@ -159,17 +176,20 @@ def create_FORCE_CONSTANTS(filename, is_hdf5, log_level):
 
 
 def parse_force_constants(filename):
-    """Return force constants and chemical elements
+    """Return force constants and chemical elements.
 
-    Args:
-        filename (str): Filename
+    Parameters
+    ----------
+    filename : str
+       File name.
 
-    Returns:
-        tuple: force constants and chemical elements
+    Returns
+    -------
+    tuple :
+        force constants and chemical elements
 
     """
-
-    vasprun = Vasprun(io.open(filename, "rb"))
+    vasprun = Vasprun(open(filename, "rb"))
     return vasprun.read_force_constants()
 
 
@@ -177,12 +197,14 @@ def parse_force_constants(filename):
 # read VASP POSCAR
 #
 def read_vasp(filename, symbols=None):
+    """Parse POSCAR type file."""
     with open(filename) as infile:
         lines = infile.readlines()
     return _get_atoms_from_poscar(lines, symbols)
 
 
 def read_vasp_from_strings(strings, symbols=None):
+    """Parse POSCAR type string."""
     return _get_atoms_from_poscar(StringIO(strings).readlines(), symbols)
 
 
@@ -208,12 +230,11 @@ def _get_atoms_from_poscar(lines, symbols):
 
     expaned_symbols = _expand_symbols(num_atoms, symbols)
 
-    if lines[line_at][0].lower() == 's':
+    if lines[line_at][0].lower() == "s":
         line_at += 1
 
     is_scaled = True
-    if (lines[line_at][0].lower() == 'c' or
-        lines[line_at][0].lower() == 'k'):
+    if lines[line_at][0].lower() == "c" or lines[line_at][0].lower() == "k":
         is_scaled = False
 
     line_at += 1
@@ -223,13 +244,11 @@ def _get_atoms_from_poscar(lines, symbols):
         positions.append([float(x) for x in lines[i].split()[:3]])
 
     if is_scaled:
-        atoms = PhonopyAtoms(symbols=expaned_symbols,
-                             cell=cell,
-                             scaled_positions=positions)
+        atoms = PhonopyAtoms(
+            symbols=expaned_symbols, cell=cell, scaled_positions=positions
+        )
     else:
-        atoms = PhonopyAtoms(symbols=expaned_symbols,
-                             cell=cell,
-                             positions=positions)
+        atoms = PhonopyAtoms(symbols=expaned_symbols, cell=cell, positions=positions)
 
     return atoms
 
@@ -260,7 +279,7 @@ def _expand_symbols(num_atoms, symbols=None):
             expanded_symbols += [s] * num
     else:
         for i, num in enumerate(num_atoms):
-            expanded_symbols += [atom_data[i+1][1]] * num
+            expanded_symbols += [atom_data[i + 1][1]] * num
 
     return expanded_symbols
 
@@ -281,26 +300,47 @@ def write_vasp(filename, cell, direct=True):
         In 'Direct' or not in VASP POSCAR format. Default is True.
 
     """
-
     lines = get_vasp_structure_lines(cell, direct=direct)
-    with open(filename, 'w') as w:
+    with open(filename, "w") as w:
         w.write("\n".join(lines))
 
 
-def write_supercells_with_displacements(supercell,
-                                        cells_with_displacements,
-                                        ids,
-                                        pre_filename="POSCAR",
-                                        width=3):
+def get_vasp_structure_lines(cell, direct=True, is_vasp5=True):
+    """Generate POSCAR text lines as a list from PhonopyAtoms instance."""
+    (num_atoms, symbols, scaled_positions, sort_list) = sort_positions_by_symbols(
+        cell.symbols, cell.scaled_positions
+    )
+    lines = []
+    if is_vasp5:
+        lines.append("generated by phonopy")
+    else:
+        lines.append(" ".join(["%s" % s for s in symbols]))
+    lines.append("   1.0")
+    for a in cell.cell:
+        lines.append("  %21.16f %21.16f %21.16f" % tuple(a))
+    if is_vasp5:
+        lines.append(" ".join(["%s" % s for s in symbols]))
+    lines.append(" ".join(["%4d" % n for n in num_atoms]))
+    lines.append("Direct")
+    lines += _get_scaled_positions_lines(scaled_positions)
+
+    # VASP compiled on some system, ending by \n is necessary to read POSCAR
+    # properly.
+    lines.append("")
+
+    return lines
+
+
+def write_supercells_with_displacements(
+    supercell, cells_with_displacements, ids, pre_filename="POSCAR", width=3
+):
+    """Write supercells with displacements to files."""
     write_vasp("S%s" % pre_filename, supercell, direct=True)
     for i, cell in zip(ids, cells_with_displacements):
         filename = "{pre_filename}-{0:0{width}}".format(
-            i, pre_filename=pre_filename, width=width)
+            i, pre_filename=pre_filename, width=width
+        )
         write_vasp(filename, cell, direct=True)
-
-
-def get_scaled_positions_lines(scaled_positions):
-    return "\n".join(_get_scaled_positions_lines(scaled_positions))
 
 
 def _get_scaled_positions_lines(scaled_positions):
@@ -313,53 +353,6 @@ def _get_scaled_positions_lines(scaled_positions):
         " %19.16f %19.16f %19.16f" % tuple(vec)
         for vec in unit_positions.tolist()  # lists are faster for iteration
     ]
-
-
-def sort_positions_by_symbols(symbols, positions):
-    from collections import Counter
-
-    # unique symbols in order of first appearance in 'symbols'
-    reduced_symbols = _unique_stable(symbols)
-
-    # counts of each symbol
-    counts_dict = Counter(symbols)
-    counts_list = [counts_dict[s] for s in reduced_symbols]
-
-    # sort positions by symbol (using the order defined by reduced_symbols).
-    # using a stable sort algorithm matches the behavior of previous versions
-    #  of phonopy (but is not otherwise necessary)
-    sort_keys = [reduced_symbols.index(i) for i in symbols]
-    perm = _argsort_stable(sort_keys)
-    sorted_positions = positions[perm]
-
-    return counts_list, reduced_symbols, sorted_positions, perm
-
-
-def get_vasp_structure_lines(atoms, direct=True, is_vasp5=True):
-    (num_atoms,
-     symbols,
-     scaled_positions,
-     sort_list) = sort_positions_by_symbols(atoms.get_chemical_symbols(),
-                                            atoms.get_scaled_positions())
-    lines = []
-    if is_vasp5:
-        lines.append("generated by phonopy")
-    else:
-        lines.append(" ".join(["%s" % s for s in symbols]))
-    lines.append("   1.0")
-    for a in atoms.get_cell():
-        lines.append("  %21.16f %21.16f %21.16f" % tuple(a))
-    if is_vasp5:
-        lines.append(" ".join(["%s" % s for s in symbols]))
-    lines.append(" ".join(["%4d" % n for n in num_atoms]))
-    lines.append("Direct")
-    lines += _get_scaled_positions_lines(scaled_positions)
-
-    # VASP compiled on some system, ending by \n is necessary to read POSCAR
-    # properly.
-    lines.append('')
-
-    return lines
 
 
 # Get all unique values from a iterable.
@@ -385,22 +378,38 @@ def _argsort_stable(keys):
 #
 # Non-analytical term
 #
-def get_born_vasprunxml(filename="vasprun.xml",
-                        primitive_matrix=None,
-                        supercell_matrix=None,
-                        is_symmetry=True,
-                        symmetrize_tensors=False,
-                        symprec=1e-5):
-    with io.open(filename, "rb") as f:
+def get_born_vasprunxml(
+    filename="vasprun.xml",
+    primitive_matrix=None,
+    supercell_matrix=None,
+    is_symmetry=True,
+    symmetrize_tensors=False,
+    symprec=1e-5,
+):
+    """Parse vasprun.xml to get NAC parameters.
+
+    In phonopy, primitive cell is created through the path of
+    unit cell -> supercell -> primitive cell. To trace this path exactly,
+    `primitive_matrix` and `supercell_matrix` can be given, but these are
+    optional.
+
+    Returns
+    -------
+    See elaborate_borns_and_epsilon.
+
+    """
+    with open(filename, "rb") as f:
         vasprun = VasprunxmlExpat(f)
         try:
             vasprun.parse()
         except xml.parsers.expat.ExpatError:
             raise xml.parsers.expat.ExpatError(
-                "Could not parse \"%s\". Please check the content." % filename)
+                'Could not parse "%s". Please check the content.' % filename
+            )
         except ValueError:
             raise ValueError(
-                "Could not parse \"%s\". Please check the content." % filename)
+                'Could not parse "%s". Please check the content.' % filename
+            )
 
     return elaborate_borns_and_epsilon(
         vasprun.cell,
@@ -410,16 +419,26 @@ def get_born_vasprunxml(filename="vasprun.xml",
         supercell_matrix=supercell_matrix,
         is_symmetry=is_symmetry,
         symmetrize_tensors=symmetrize_tensors,
-        symprec=symprec)
+        symprec=symprec,
+    )
 
 
-def get_born_OUTCAR(poscar_filename="POSCAR",
-                    outcar_filename=None,
-                    primitive_matrix=None,
-                    supercell_matrix=None,
-                    is_symmetry=True,
-                    symmetrize_tensors=False,
-                    symprec=1e-5):
+def get_born_OUTCAR(
+    poscar_filename="POSCAR",
+    outcar_filename=None,
+    primitive_matrix=None,
+    supercell_matrix=None,
+    is_symmetry=True,
+    symmetrize_tensors=False,
+    symprec=1e-5,
+):
+    """Parse OUTCAR to get NAC parameters.
+
+    Returns
+    -------
+    See elaborate_borns_and_epsilon.
+
+    """
     if outcar_filename is None:
         filename = "OUTCAR"
     else:
@@ -438,7 +457,8 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
             supercell_matrix=supercell_matrix,
             is_symmetry=is_symmetry,
             symmetrize_tensors=symmetrize_tensors,
-            symprec=symprec)
+            symprec=symprec,
+        )
 
 
 def _read_born_and_epsilon_from_OUTCAR(filename):
@@ -467,17 +487,14 @@ def _read_born_and_epsilon_from_OUTCAR(filename):
                 if "ion" in line:
                     for i in range(num_atom):
                         born = []
-                        born.append([float(x)
-                                     for x in outcar.readline().split()][1:])
-                        born.append([float(x)
-                                     for x in outcar.readline().split()][1:])
-                        born.append([float(x)
-                                     for x in outcar.readline().split()][1:])
+                        born.append([float(x) for x in outcar.readline().split()][1:])
+                        born.append([float(x) for x in outcar.readline().split()][1:])
+                        born.append([float(x) for x in outcar.readline().split()][1:])
                         outcar.readline()
                         borns.append(born)
 
-        borns = np.array(borns, dtype='double')
-        epsilon = np.array(epsilon, dtype='double')
+        borns = np.array(borns, dtype="double")
+        epsilon = np.array(epsilon, dtype="double")
 
     return borns, epsilon
 
@@ -485,53 +502,82 @@ def _read_born_and_epsilon_from_OUTCAR(filename):
 #
 # vasprun.xml handling
 #
-class VasprunWrapper(object):
-    """VasprunWrapper class
-    This is used to avoid VASP 5.2.8 vasprun.xml defect at PRECFOCK,
-    xml parser stops with error.
+class VasprunWrapper:
+    """VasprunWrapper class.
+
+    This is used to fix broken vasprun.xml of VASP 5.2.8 at PRECFOCK.
+
     """
+
     def __init__(self, fileptr):
+        """Init method."""
         self._fileptr = fileptr
 
     def read(self, size=None):
+        """Replace broken PRECFOCK."""
         element = self._fileptr.next()
         if element.find("PRECFOCK") == -1:
             return element
         else:
-            return "<i type=\"string\" name=\"PRECFOCK\"></i>"
+            return '<i type="string" name="PRECFOCK"></i>'
 
 
-class Vasprun(object):
+class Vasprun:
+    """vasprun.xml parser class."""
+
     def __init__(self, fileptr, use_expat=False):
+        """Init method."""
         self._fileptr = fileptr
         self._use_expat = use_expat
 
     def read_forces(self):
+        """Read forces either using expat or etree."""
         if self._use_expat:
             return self._parse_expat_vasprun_xml()
         else:
-            vasprun_etree = self._parse_etree_vasprun_xml(tag='varray')
+            vasprun_etree = self._parse_etree_vasprun_xml(tag="varray")
             return self._get_forces(vasprun_etree)
 
     def read_force_constants(self):
+        """Read force constants using etree."""
         vasprun = self._parse_etree_vasprun_xml()
         return self._get_force_constants(vasprun)
 
     def _get_forces(self, vasprun_etree):
-        """
+        """Return forces using etree.
+
         vasprun_etree = etree.iterparse(fileptr, tag='varray')
+
         """
         forces = []
         for event, element in vasprun_etree:
-            if element.attrib['name'] == 'forces':
+            if element.attrib["name"] == "forces":
                 for v in element:
                     forces.append([float(x) for x in v.text.split()])
         return np.array(forces)
 
     def _get_force_constants(self, vasprun_etree):
+        """Read hessian and calculate force constants.
+
+        Hessian elements include sqrt(mass_a * mass_b) of two atoms a and b.
+        To obtain force constants, atomic masses are parsed from vasprun.xml
+        and those sqrt VASP masses are multiplied to the Hessian elements.
+
+        In VASP-6, the unit is transformed to THz^2. To recover the unit of
+        eV/Angstrom^2, the unit conversion factor is multiplied.
+
+        """
         fc_tmp = None
+        major_version = None
         num_atom = 0
         for event, element in vasprun_etree:
+            # VASP version
+            if element.tag == "generator":
+                for element_i in element.findall("./i"):
+                    if element_i.attrib["name"] == "version":
+                        version_str = element_i.text.strip()
+                        major_version = int(version_str.split(".")[0])
+
             if num_atom == 0:
                 atomtypes = self._get_atomtypes(element)
                 if atomtypes:
@@ -542,31 +588,34 @@ class Vasprun(object):
                         masses += [m] * n
 
             # Get Hessian matrix (normalized by masses)
-            if element.tag == 'varray':
-                if element.attrib['name'] == 'hessian':
+            if element.tag == "varray":
+                if element.attrib["name"] == "hessian":
                     fc_tmp = []
-                    for v in element.findall('./v'):
-                        fc_tmp.append([float(x)
-                                       for x in v.text.strip().split()])
+                    for v in element.findall("./v"):
+                        fc_tmp.append([float(x) for x in v.text.strip().split()])
 
         if fc_tmp is None:
-            return False
+            return None, None
         else:
             fc_tmp = np.array(fc_tmp)
             if fc_tmp.shape != (num_atom * 3, num_atom * 3):
                 return False
-            # num_atom = fc_tmp.shape[0] / 3
-            force_constants = np.zeros((num_atom, num_atom, 3, 3),
-                                       dtype='double')
 
+            force_constants = np.zeros((num_atom, num_atom, 3, 3), dtype="double")
             for i in range(num_atom):
                 for j in range(num_atom):
-                    force_constants[i, j] = fc_tmp[i*3:(i+1)*3, j*3:(j+1)*3]
+                    force_constants[i, j] = fc_tmp[
+                        i * 3 : (i + 1) * 3, j * 3 : (j + 1) * 3
+                    ]
 
             # Inverse normalization by atomic weights
             for i in range(num_atom):
                 for j in range(num_atom):
                     force_constants[i, j] *= -np.sqrt(masses[i] * masses[j])
+
+            # Recover the unit of eV/Angstrom^2 for VASP-6.
+            if major_version == 6:
+                force_constants /= VaspToTHz ** 2
 
             return force_constants, elements
 
@@ -576,11 +625,14 @@ class Vasprun(object):
         valences = []
         num_atoms = []
 
-        if element.tag == 'array':
-            if 'name' in element.attrib:
-                if element.attrib['name'] == 'atomtypes':
-                    for rc in element.findall('./set/rc'):
-                        atom_info = [x.text for x in rc.findall('./c')]
+        if element.tag == "atominfo":
+            for element_array in element.findall("./array"):
+                if (
+                    "name" in element_array.attrib
+                    and element_array.attrib["name"] == "atomtypes"
+                ):
+                    for rc in element_array.findall("./set/rc"):
+                        atom_info = [x.text for x in rc.findall("./c")]
                         num_atoms.append(int(atom_info[0]))
                         atom_types.append(atom_info[1].strip())
                         masses.append(float(atom_info[2]))
@@ -617,38 +669,36 @@ class Vasprun(object):
         except Exception:
             raise
 
-        return vasprun.get_forces()[-1]
+        return vasprun.forces[-1]
 
     def _is_version528(self):
         for line in self._fileptr:
-            if '\"version\"' in str(line):
+            if '"version"' in str(line):
                 self._fileptr.seek(0)
-                if '5.2.8' in str(line):
+                if "5.2.8" in str(line):
                     sys.stdout.write(
                         "\n"
                         "**********************************************\n"
                         "* A special routine was used for VASP 5.2.8. *\n"
-                        "**********************************************\n")
+                        "**********************************************\n"
+                    )
                     return True
                 else:
                     return False
 
 
-class VasprunxmlExpat(object):
+class VasprunxmlExpat:
+    """Class to parse vasprun.xml by Expat."""
+
     def __init__(self, fileptr):
-        """Parsing vasprun.xml by Expat
+        """Init method.
 
         Parameters
         ----------
         fileptr: binary stream
-            Considering compatibility between python2.7 and 3.x, it is prepared
-            as follows:
-
-                import io
-                io.open(filename, "rb")
+            E.g., by open(filename, "rb")
 
         """
-
         import xml.parsers.expat
 
         self._fileptr = fileptr
@@ -721,68 +771,119 @@ class VasprunxmlExpat(object):
         self._cbuf = None
 
     def parse(self):
+        """Parse file pointer of vasprun.xml."""
         self._p.ParseFile(self._fileptr)
 
     @property
     def forces(self):
-        return np.array(self._all_forces, dtype='double', order='C')
+        """Return forces."""
+        return np.array(self._all_forces, dtype="double", order="C")
 
     def get_forces(self):
+        """Return forces."""
+        warnings.warn(
+            "VasprunxmlExpat.get_forces()) is deprecated. "
+            "Use VasprunxmlExpat.forces attribute.",
+            DeprecationWarning,
+        )
         return self.forces
 
     @property
     def stress(self):
-        return np.array(self._all_stress, dtype='double', order='C')
+        """Return stress tensor."""
+        return np.array(self._all_stress, dtype="double", order="C")
 
     def get_stress(self):
+        """Return stress tensor."""
+        warnings.warn(
+            "VasprunxmlExpat.get_stress()) is deprecated. "
+            "Use VasprunxmlExpat.stress attribute.",
+            DeprecationWarning,
+        )
         return self.stress
 
     @property
     def epsilon(self):
-        return np.array(self._epsilon, dtype='double', order='C')
+        """Return dielectric constant tensor."""
+        return np.array(self._epsilon, dtype="double", order="C")
 
     def get_epsilon(self):
+        """Return dielectric constant tensor."""
+        warnings.warn(
+            "VasprunxmlExpat.get_epsilon()) is deprecated. "
+            "Use VasprunxmlExpat.epsilon attribute.",
+            DeprecationWarning,
+        )
         return self.epsilon
 
     def get_efermi(self):
+        """Return efermi."""
+        warnings.warn(
+            "VasprunxmlExpat.get_efermi()) is deprecated. "
+            "Use VasprunxmlExpat.efermi attribute.",
+            DeprecationWarning,
+        )
         return self.efermi
 
     @property
     def born(self):
-        return np.array(self._born, dtype='double', order='C')
+        """Return Born effective charges."""
+        return np.array(self._born, dtype="double", order="C")
 
     def get_born(self):
+        """Return Born effective charges."""
         return self.born
 
     @property
     def points(self):
-        return np.array(self._all_points, dtype='double', order='C')
+        """Return all atomic positions of structure optimization steps."""
+        return np.array(self._all_points, dtype="double", order="C")
 
     def get_points(self):
+        """Return all atomic positions of structure optimization steps."""
+        warnings.warn(
+            "VasprunxmlExpat.get_points()) is deprecated. "
+            "Use VasprunxmlExpat.points attribute.",
+            DeprecationWarning,
+        )
         return self.points
 
     @property
     def lattice(self):
-        """All basis vectors of structure optimization steps
+        """Return all basis vectors of structure optimization steps.
 
         Each basis vectors are in row vectors (a, b, c)
 
         """
-        return np.array(self._all_lattice, dtype='double', order='C')
+        return np.array(self._all_lattice, dtype="double", order="C")
 
     def get_lattice(self):
+        """Return all basis vectors of structure optimization steps."""
+        warnings.warn(
+            "VasprunxmlExpat.get_lattice()) is deprecated. "
+            "Use VasprunxmlExpat.lattice attribute.",
+            DeprecationWarning,
+        )
         return self.lattice
 
     @property
     def volume(self):
-        return np.array(self._all_volumes, dtype='double')
+        """Return all cell volumes of structure optimization steps."""
+        return np.array(self._all_volumes, dtype="double")
 
     def get_symbols(self):
+        """Return atomic symbols."""
+        warnings.warn(
+            "VasprunxmlExpat.get_symbols()) is deprecated. "
+            "Use VasprunxmlExpat.symbols attribute.",
+            DeprecationWarning,
+        )
         return self.symbols
 
     @property
     def energies(self):
-        """
+        """Return energies.
+
         Returns
         -------
         ndarray
@@ -791,18 +892,26 @@ class VasprunxmlExpat(object):
             [free energy TOTEN, energy(sigma->0), entropy T*S EENTRO]
 
         """
-        return np.array(self._all_energies, dtype='double', order='C')
+        return np.array(self._all_energies, dtype="double", order="C")
 
     def get_energies(self):
+        """Return energies."""
+        warnings.warn(
+            "VasprunxmlExpat.get_energies()) is deprecated. "
+            "Use VasprunxmlExpat.energies attribute.",
+            DeprecationWarning,
+        )
         return self.energies
 
     @property
     def k_mesh(self):
-        return np.array(self._k_mesh, dtype='intc')
+        """Return k_mesh."""
+        return np.array(self._k_mesh, dtype="intc")
 
     @property
     def k_weights(self):
-        """
+        """Return k_weights.
+
         Returns
         -------
         ndarray
@@ -812,15 +921,21 @@ class VasprunxmlExpat(object):
             shape=(irreducible_kpoints,)
 
         """
-
-        return np.array(self._k_weights, dtype='double')
+        return np.array(self._k_weights, dtype="double")
 
     def get_k_weights(self):
+        """Return k_weights."""
+        warnings.warn(
+            "VasprunxmlExpat.get_k_weights()) is deprecated. "
+            "Use VasprunxmlExpat.k_weights attribute.",
+            DeprecationWarning,
+        )
         return self.k_weights
 
     @property
     def k_weights_int(self):
-        """
+        """Return k_weights in integers.
+
         Returns
         -------
         ndarray
@@ -831,13 +946,14 @@ class VasprunxmlExpat(object):
         """
         nk = np.prod(self.k_mesh)
         _weights = self.k_weights * nk
-        weights = np.rint(_weights).astype('intc')
+        weights = np.rint(_weights).astype("intc")
         assert (np.abs(weights - _weights) < 1e-7 * nk).all()
-        return np.array(weights, dtype='intc')
+        return np.array(weights, dtype="intc")
 
     @property
     def eigenvalues(self):
-        """
+        """Return eigenvalues.
+
         Returns
         -------
         ndarray
@@ -846,198 +962,219 @@ class VasprunxmlExpat(object):
             shape=(spin, kpoints, bands, 2)
 
         """
-
-        return np.array(self._eigenvalues, dtype='double', order='C')
+        return np.array(self._eigenvalues, dtype="double", order="C")
 
     def get_eigenvalues(self):
+        """Return eigenvalues."""
+        warnings.warn(
+            "VasprunxmlExpat.get_eigenvalues()) is deprecated. "
+            "Use VasprunxmlExpat.eigenvalues attribute.",
+            DeprecationWarning,
+        )
         return self.eigenvalues
 
     @property
     def projectors(self):
+        """Return projectors."""
         return self._projectors
 
     def get_projectors(self):
+        """Return projectors."""
+        warnings.warn(
+            "VasprunxmlExpat.get_projectors()) is deprecated. "
+            "Use VasprunxmlExpat.projectors attribute.",
+            DeprecationWarning,
+        )
         return self.projectors
 
     @property
     def pseudopotentials(self):
-        """Returns pseudo potential information
+        """Return pseudo potential information.
 
         Example:
             [[2, u'N', 14.001, 5.0, u'PAW_PBE N 08Apr2002'],
              [2, u'Ga', 69.723, 13.0, u'PAW_PBE Ga_d 06Jul2010']]
 
         """
-
         return self._pseudopotentials
 
     def get_pseudopotentials(self):
+        """Return pseudo potential information."""
+        warnings.warn(
+            "VasprunxmlExpat.get_pseudopotentials()) is deprecated. "
+            "Use VasprunxmlExpat.pseudopotentials attribute.",
+            DeprecationWarning,
+        )
         return self.pseudopotentials
 
     @property
     def cell(self):
-        return PhonopyAtoms(symbols=self.symbols,
-                            scaled_positions=self.points[-1],
-                            cell=self.lattice[-1])
+        """Return cell in PhonopyAtoms."""
+        return PhonopyAtoms(
+            symbols=self.symbols,
+            scaled_positions=self.points[-1],
+            cell=self.lattice[-1],
+        )
 
     def _start_element(self, name, attrs):
         # Used not to collect energies in <scstep>
-        if name == 'scstep':
+        if name == "scstep":
             self._is_scstep = True
 
         # Used not to collect basis and positions in
         # <structure name="initialpos" >
         # <structure name="finalpos" >
-        if name == 'structure':
-            if 'name' in attrs.keys():
+        if name == "structure":
+            if "name" in attrs.keys():
                 self._is_structure = True
 
-        if (self._is_forces or
-            self._is_stress or
-            self._is_epsilon or
-            self._is_born or
-            self._is_positions or
-            self._is_basis or
-            self._is_volume or
-            self._is_k_weights or
-            self._is_generation):
-            if name == 'v':
+        if (
+            self._is_forces
+            or self._is_stress
+            or self._is_epsilon
+            or self._is_born
+            or self._is_positions
+            or self._is_basis
+            or self._is_volume
+            or self._is_k_weights
+            or self._is_generation
+        ):
+            if name == "v":
                 self._cbuf = ""
                 self._is_v = True
-                if 'name' in attrs.keys():
-                    if attrs['name'] == 'divisions':
+                if "name" in attrs.keys():
+                    if attrs["name"] == "divisions":
                         self._is_divisions = True
 
-        if name == 'varray':
-            if 'name' in attrs.keys():
-                if attrs['name'] == 'forces':
+        if name == "varray":
+            if "name" in attrs.keys():
+                if attrs["name"] == "forces":
                     self._is_forces = True
                     self._forces = []
 
-                if attrs['name'] == 'stress':
+                if attrs["name"] == "stress":
                     self._is_stress = True
                     self._stress = []
 
-                if attrs['name'] == 'weights':
+                if attrs["name"] == "weights":
                     self._is_k_weights = True
                     self._k_weights = []
 
-                if (attrs['name'] == 'epsilon' or
-                    attrs['name'] == 'epsilon_scf'):
+                if attrs["name"] == "epsilon" or attrs["name"] == "epsilon_scf":
                     self._is_epsilon = True
                     self._epsilon = []
 
                 if not self._is_structure:
-                    if attrs['name'] == 'positions':
+                    if attrs["name"] == "positions":
                         self._is_positions = True
                         self._points = []
 
-                    if attrs['name'] == 'basis':
+                    if attrs["name"] == "basis":
                         self._is_basis = True
                         self._lattice = []
 
-        if name == 'field':
-            if 'type' in attrs:
+        if name == "field":
+            if "type" in attrs:
                 self._cbuf = ""
-                if attrs['type'] == 'string':
+                if attrs["type"] == "string":
                     self._is_field_string = True
             else:
                 self._is_field = True
 
-        if name == 'generation':
+        if name == "generation":
             self._is_generation = True
 
-        if name == 'i':
-            if 'name' in attrs.keys():
+        if name == "i":
+            if "name" in attrs.keys():
                 self._cbuf = ""
-                if attrs['name'] == 'efermi':
+                if attrs["name"] == "efermi":
                     self._is_i = True
                     self._is_efermi = True
-                if attrs['name'] == 'NELECT':
+                if attrs["name"] == "NELECT":
                     self._is_i = True
                     self._is_NELECT = True
-                if not self._is_structure and attrs['name'] == 'volume':
+                if not self._is_structure and attrs["name"] == "volume":
                     self._is_i = True
                     self._is_volume = True
 
-        if self._is_energy and name == 'i':
+        if self._is_energy and name == "i":
             self._cbuf = ""
             self._is_i = True
 
-        if name == 'energy' and (not self._is_scstep):
+        if name == "energy" and (not self._is_scstep):
             self._is_energy = True
             self._energies = []
 
-        if self._is_symbols and name == 'rc':
+        if self._is_symbols and name == "rc":
             self._is_rc = True
 
-        if self._is_symbols and self._is_rc and name == 'c':
+        if self._is_symbols and self._is_rc and name == "c":
             self._cbuf = ""
             self._is_c = True
 
-        if self._is_born and name == 'set':
+        if self._is_born and name == "set":
             self._is_set = True
             self._born_atom = []
 
-        if self._field_val == 'pseudopotential':
-            if name == 'set':
+        if self._field_val == "pseudopotential":
+            if name == "set":
                 self._is_set = True
-            if name == 'rc' and self._is_set:
+            if name == "rc" and self._is_set:
                 self._is_rc = True
                 self._ps_atom = []
-            if name == 'c':
+            if name == "c":
                 self._cbuf = ""
                 self._is_c = True
 
-        if name == 'array':
-            if 'name' in attrs.keys():
-                if attrs['name'] == 'atoms':
+        if name == "array":
+            if "name" in attrs.keys():
+                if attrs["name"] == "atoms":
                     self._is_symbols = True
                     self.symbols = []
 
-                if attrs['name'] == 'born_charges':
+                if attrs["name"] == "born_charges":
                     self._is_born = True
 
         if self._is_projected and not self._is_proj_eig:
-            if name == 'set':
-                if 'comment' in attrs.keys():
-                    if 'spin' in attrs['comment']:
+            if name == "set":
+                if "comment" in attrs.keys():
+                    if "spin" in attrs["comment"]:
                         self._projectors.append([])
-                        spin_num = int(attrs['comment'].replace("spin", ''))
+                        spin_num = int(attrs["comment"].replace("spin", ""))
                         self._proj_state = [spin_num - 1, -1, -1]
-                    if 'kpoint' in attrs['comment']:
+                    if "kpoint" in attrs["comment"]:
                         self._projectors[self._proj_state[0]].append([])
-                        k_num = int(attrs['comment'].split()[1])
+                        k_num = int(attrs["comment"].split()[1])
                         self._proj_state[1:3] = k_num - 1, -1
-                    if 'band' in attrs['comment']:
+                    if "band" in attrs["comment"]:
                         s, k = self._proj_state[:2]
                         self._projectors[s][k].append([])
-                        b_num = int(attrs['comment'].split()[1])
+                        b_num = int(attrs["comment"].split()[1])
                         self._proj_state[2] = b_num - 1
-            if name == 'r':
+            if name == "r":
                 self._cbuf = ""
                 self._is_r = True
 
         if self._is_eigenvalues:
-            if name == 'set':
-                if 'comment' in attrs.keys():
-                    if 'spin' in attrs['comment']:
+            if name == "set":
+                if "comment" in attrs.keys():
+                    if "spin" in attrs["comment"]:
                         self._eigenvalues.append([])
-                        spin_num = int(attrs['comment'].split()[1])
+                        spin_num = int(attrs["comment"].split()[1])
                         self._eig_state = [spin_num - 1, -1]
-                    if 'kpoint' in attrs['comment']:
+                    if "kpoint" in attrs["comment"]:
                         self._eigenvalues[self._eig_state[0]].append([])
-                        k_num = int(attrs['comment'].split()[1])
+                        k_num = int(attrs["comment"].split()[1])
                         self._eig_state[1] = k_num - 1
-            if name == 'r':
+            if name == "r":
                 self._cbuf = ""
                 self._is_r = True
 
-        if name == 'projected':
+        if name == "projected":
             self._is_projected = True
             self._projectors = []
 
-        if name == 'eigenvalues':
+        if name == "eigenvalues":
             if self._is_projected:
                 self._is_proj_eig = True
             else:
@@ -1045,13 +1182,13 @@ class VasprunxmlExpat(object):
                 self._eigenvalues = []
 
     def _end_element(self, name):
-        if name == 'scstep':
+        if name == "scstep":
             self._is_scstep = False
 
-        if name == 'structure' and self._is_structure:
+        if name == "structure" and self._is_structure:
             self._is_structure = False
 
-        if name == 'varray':
+        if name == "varray":
             if self._is_forces:
                 self._is_forces = False
                 self._all_forces.append(self._forces)
@@ -1074,28 +1211,28 @@ class VasprunxmlExpat(object):
             if self._is_epsilon:
                 self._is_epsilon = False
 
-        if name == 'generation':
+        if name == "generation":
             if self._is_generation:
                 self._is_generation = False
 
-        if name == 'array':
+        if name == "array":
             if self._is_symbols:
                 self._is_symbols = False
 
             if self._is_born:
                 self._is_born = False
 
-        if name == 'energy' and (not self._is_scstep):
+        if name == "energy" and (not self._is_scstep):
             self._is_energy = False
             self._all_energies.append(self._energies)
 
-        if name == 'v':
+        if name == "v":
             self._run_v()
             self._is_v = False
             if self._is_divisions:
                 self._is_divisions = False
 
-        if name == 'i':
+        if name == "i":
             self._run_i()
             self._is_i = False
             if self._is_efermi:
@@ -1105,70 +1242,64 @@ class VasprunxmlExpat(object):
             if self._is_volume:
                 self._is_volume = False
 
-        if name == 'rc':
+        if name == "rc":
             self._is_rc = False
             if self._is_symbols:
                 self.symbols.pop(-1)
 
-        if name == 'c':
+        if name == "c":
             self._run_c()
             self._is_c = False
 
-        if name == 'r':
+        if name == "r":
             self._run_r()
             self._is_r = False
 
-        if name == 'projected':
+        if name == "projected":
             self._is_projected = False
 
-        if name == 'eigenvalues':
+        if name == "eigenvalues":
             self._is_eigenvalues = False
             if self._is_projected:
                 self._is_proj_eig = False
 
-        if name == 'set':
+        if name == "set":
             self._is_set = False
             if self._is_born:
                 self._born.append(self._born_atom)
                 self._born_atom = None
 
-        if name == 'field':
+        if name == "field":
             self._is_field_string = False
             self._is_field = False
 
-        if self._field_val == 'pseudopotential':
-            if name == 'set':
+        if self._field_val == "pseudopotential":
+            if name == "set":
                 self._is_set = False
                 self._field_val = None
-            if name == 'rc' and self._is_set:
+            if name == "rc" and self._is_set:
                 self._is_rc = False
                 self._pseudopotentials.append(self._ps_atom)
                 self._ps_atom = None
-            if name == 'c':
+            if name == "c":
                 self._is_c = False
 
     def _run_v(self):
         if self._is_v:
             if self._is_forces:
-                self._forces.append(
-                    [self._to_float(x) for x in self._cbuf.split()])
+                self._forces.append([self._to_float(x) for x in self._cbuf.split()])
             if self._is_stress:
-                self._stress.append(
-                    [self._to_float(x) for x in self._cbuf.split()])
+                self._stress.append([self._to_float(x) for x in self._cbuf.split()])
             if self._is_epsilon:
-                self._epsilon.append(
-                    [self._to_float(x) for x in self._cbuf.split()])
+                self._epsilon.append([self._to_float(x) for x in self._cbuf.split()])
             if self._is_positions:
-                self._points.append(
-                    [self._to_float(x) for x in self._cbuf.split()])
+                self._points.append([self._to_float(x) for x in self._cbuf.split()])
             if self._is_basis:
-                self._lattice.append(
-                    [self._to_float(x) for x in self._cbuf.split()])
+                self._lattice.append([self._to_float(x) for x in self._cbuf.split()])
             if self._is_k_weights:
                 self._k_weights.append(self._to_float(self._cbuf))
             if self._is_born:
-                self._born_atom.append(
-                    [self._to_float(x) for x in self._cbuf.split()])
+                self._born_atom.append([self._to_float(x) for x in self._cbuf.split()])
             if self._is_generation:
                 if self._is_divisions:
                     self._k_mesh = [self._to_int(x) for x in self._cbuf.split()]
@@ -1190,8 +1321,7 @@ class VasprunxmlExpat(object):
         if self._is_c:
             if self._is_symbols:
                 self.symbols.append(str(self._cbuf.strip()))
-            if (self._field_val == 'pseudopotential' and
-                self._is_set and self._is_rc):
+            if self._field_val == "pseudopotential" and self._is_set and self._is_rc:
                 if len(self._ps_atom) == 0:
                     self._ps_atom.append(self._to_int(self._cbuf.strip()))
                 elif len(self._ps_atom) == 1:
@@ -1240,12 +1370,11 @@ class VasprunxmlExpat(object):
             raise
 
 
-
 #
 # XDATCAR
 #
 def read_XDATCAR(filename="XDATCAR"):
-    """Read XDATCAR
+    """Read XDATCAR.
 
     Returns
     -------
@@ -1259,7 +1388,6 @@ def read_XDATCAR(filename="XDATCAR"):
         shape=(MD_steps, atoms, 3), dtype='double', order='C'
 
     """
-
     lattice = None
     symbols = None
     numbers_of_atoms = None
@@ -1272,13 +1400,13 @@ def read_XDATCAR(filename="XDATCAR"):
         lattice = np.transpose([a, b, c]) * scale
         symbols = f.readline().split()
         numbers_of_atoms = np.array(
-            [int(x) for x in f.readline().split()[:len(symbols)]],
-            dtype='intc')
+            [int(x) for x in f.readline().split()[: len(symbols)]], dtype="intc"
+        )
 
     if lattice is not None:
-        data = np.loadtxt(filename, skiprows=7, comments='D', dtype='double')
-        pos = data.reshape((-1, numbers_of_atoms.sum(), 3), order='C')
-        lat = np.array(lattice, dtype='double', order='C')
+        data = np.loadtxt(filename, skiprows=7, comments="D", dtype="double")
+        pos = data.reshape((-1, numbers_of_atoms.sum(), 3), order="C")
+        lat = np.array(lattice, dtype="double", order="C")
         return lat, pos
     else:
         return None
@@ -1287,15 +1415,17 @@ def read_XDATCAR(filename="XDATCAR"):
 #
 # OUTCAR handling (obsolete)
 #
-def read_force_constant_OUTCAR(filename):
+def read_force_constants_OUTCAR(filename):
+    """Read force constants from OUTCAR."""
     return get_force_constants_OUTCAR(filename)
 
 
 def get_force_constants_OUTCAR(filename):
+    """Read force constants from OUTCAR."""
     file = open(filename)
     while 1:
         line = file.readline()
-        if line == '':
+        if line == "":
             print("Force constants could not be found.")
             return 0
 
@@ -1314,6 +1444,6 @@ def get_force_constants_OUTCAR(filename):
     force_constants = np.zeros((num_atom, num_atom, 3, 3), dtype=float)
     for i in range(num_atom):
         for j in range(num_atom):
-            force_constants[i, j] = -fc_tmp[i*3:(i+1)*3, j*3:(j+1)*3]
+            force_constants[i, j] = -fc_tmp[i * 3 : (i + 1) * 3, j * 3 : (j + 1) * 3]
 
     return force_constants

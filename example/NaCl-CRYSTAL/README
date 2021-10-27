@@ -4,7 +4,7 @@ CRYSTAL output file is crystal.o. This is the default file name
 for the CRYSTAL interface, so, the -c crystal.o parameter is not needed
 
 CRYSTAL output file crystal.o includes the Born effective
-charges and the dielectric tensor 
+charges and the dielectric tensor
 (from FREQCALC-INTENS-INTCPHF, see the input in the beginning of crystal.o)
 
 1) Create displaced supercells:
@@ -24,7 +24,7 @@ charges and the dielectric tensor
 5) Calculate phonon dispersion data into band.yaml and save band.pdf
    Take the non-analytical correction into account using --nac (see BORN file):
    phonopy --crystal --dim="4 4 4" -p -s --nac band.conf
-   
+
    Plot the phonon dispersion in cm^{-1} units:
    (factor = CrystalToTHz * THzToCm = 15.633302 * 33.356410)
    phonopy --crystal --dim="4 4 4" -p -s --nac --factor=521.47083 band.conf

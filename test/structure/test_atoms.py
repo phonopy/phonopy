@@ -1,47 +1,65 @@
-import unittest
+"""Tests for PhonopyAtoms."""
+from io import StringIO
+
+import numpy as np
+import yaml
 
 from phonopy.structure.atoms import PhonopyAtoms
 
-
-class TestCell(unittest.TestCase):
-
-    def setUp(self):
-        symbols = ['Si'] * 2 + ['O'] * 4
-        lattice = [[4.65, 0, 0],
-                   [0, 4.75, 0],
-                   [0, 0, 3.25]]
-        points = [[0.0, 0.0, 0.0],
-                  [0.5, 0.5, 0.5],
-                  [0.3, 0.3, 0.0],
-                  [0.7, 0.7, 0.0],
-                  [0.2, 0.8, 0.5],
-                  [0.8, 0.2, 0.5]]
-
-        self._cells = []
-        self._cells.append(PhonopyAtoms(cell=lattice,
-                                        scaled_positions=points,
-                                        symbols=symbols))
-
-        # The element for which mass is not defined.
-        symbols = ['Ac'] * 2 + ['O'] * 4
-        self._cells.append(PhonopyAtoms(cell=lattice,
-                                        scaled_positions=points,
-                                        symbols=symbols))
-
-    def tearDown(self):
-        pass
-
-    def test_atoms(self):
-        for cell in self._cells:
-            print(cell.get_cell())
-            for s, p in zip(cell.get_chemical_symbols(),
-                            cell.get_scaled_positions()):
-                print("%s %s" % (s, p))
-
-    def test_phonopy_atoms(self):
-        for cell in self._cells:
-            print(PhonopyAtoms(atoms=cell))
+symbols_SiO2 = ["Si"] * 2 + ["O"] * 4
+symbols_AcO2 = ["Ac"] * 2 + ["O"] * 4
+_lattice = [[4.65, 0, 0], [0, 4.75, 0], [0, 0, 3.25]]
+_points = [
+    [0.0, 0.0, 0.0],
+    [0.5, 0.5, 0.5],
+    [0.3, 0.3, 0.0],
+    [0.7, 0.7, 0.0],
+    [0.2, 0.8, 0.5],
+    [0.8, 0.2, 0.5],
+]
+cell_SiO2 = PhonopyAtoms(cell=_lattice, scaled_positions=_points, symbols=symbols_SiO2)
+cell_AcO2 = PhonopyAtoms(cell=_lattice, scaled_positions=_points, symbols=symbols_AcO2)
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_SiO2():
+    """Test of attributes by SiO2."""
+    _test_cell(cell_SiO2, _lattice, _points, symbols_SiO2)
+
+
+def test_AcO2():
+    """Test of attributes by AcO2."""
+    _test_cell(cell_AcO2, _lattice, _points, symbols_AcO2)
+
+
+def _test_cell(cell, lattice, points, symbols):
+    np.testing.assert_allclose(cell.cell, lattice, atol=1e-8)
+    for s1, s2 in zip(cell.symbols, symbols):
+        assert s1 == s2
+    diff = cell.scaled_positions - points
+    diff -= np.rint(diff)
+    dist = np.linalg.norm(np.dot(diff, cell.cell), axis=1)
+    np.testing.assert_allclose(dist, np.zeros(len(dist)), atol=1e-8)
+
+
+def test_phonopy_atoms_SiO2():
+    """Test of PhonopyAtoms __str__ by SiO2."""
+    _test_phonopy_atoms(cell_SiO2)
+
+
+def test_phonopy_atoms_AcO2():
+    """Test of PhonopyAtoms __str__ by AcO2."""
+    _test_phonopy_atoms(cell_AcO2)
+
+
+def _test_phonopy_atoms(cell):
+    with StringIO(str(PhonopyAtoms(atoms=cell))) as f:
+        data = yaml.safe_load(f)
+        np.testing.assert_allclose(cell.cell, data["lattice"], atol=1e-8)
+        positions = []
+        for atom, symbol in zip(data["points"], cell.symbols):
+            positions.append(atom["coordinates"])
+            assert atom["symbol"] == symbol
+        diff = cell.scaled_positions - positions
+        diff -= np.rint(diff)
+        dist = np.linalg.norm(np.dot(diff, cell.cell), axis=1)
+        np.testing.assert_allclose(dist, np.zeros(len(dist)), atol=1e-8)

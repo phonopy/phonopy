@@ -6,8 +6,8 @@ unit:
   entropy:       J/K/mol
   heat_capacity: J/K/mol
 
-natom: 4    
-volume: 48.4655386547       
+natom: 4
+volume: 48.4655386547
 num_modes: 96000
 num_integrated_modes: 96000
 

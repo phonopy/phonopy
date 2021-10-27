@@ -24,4 +24,3 @@ SYMMETRY_TOL :     0.000001
 kpoint_mp_grid :    8   8   8
 
 kpoint_mp_offset :        0.00000000000000       0.00000000000000       0.00000000000000
-

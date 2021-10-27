@@ -1,3 +1,4 @@
+"""Calculate phonon state moments."""
 # Copyright (C) 2016 Atsushi Togo
 # All rights reserved.
 #
@@ -32,14 +33,24 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
+
 import numpy as np
 
 
-class PhononMoment(object):
-    def __init__(self,
-                 frequencies,
-                 weights,
-                 eigenvectors=None):
+class PhononMoment:
+    """Calculate phonon state moments.
+
+    Attributes
+    ----------
+    moment : float or ndarray
+        Phonon state moment of specified order (float) or
+        projected phonon state moment of specified order (ndarray).
+
+    """
+
+    def __init__(self, frequencies, weights, eigenvectors=None):
+        """Init method."""
         self._frequencies = frequencies
         self._eigenvectors = eigenvectors
         self._weights = weights
@@ -50,15 +61,20 @@ class PhononMoment(object):
 
     @property
     def moment(self):
+        """Return phonon state moment."""
         return self._moment
 
     def get_moment(self):
+        """Return phonon state moment."""
+        warnings.warn(
+            "PhononMoment.get_moment() is deprecated. "
+            "Use PhononMoment.moment attribute.",
+            DeprecationWarning,
+        )
         return self.moment
 
-    def set_frequency_range(self,
-                            freq_min=None,
-                            freq_max=None,
-                            tolerance=1e-8):
+    def set_frequency_range(self, freq_min=None, freq_max=None, tolerance=1e-8):
+        """Set frequeny range where moment is computed."""
         if freq_min is None:
             self._fmin = tolerance
         else:
@@ -70,6 +86,7 @@ class PhononMoment(object):
             self._fmax = freq_max + tolerance
 
     def run(self, order=1):
+        """Calculate phonon state moment of specified order."""
         if self._eigenvectors is None:
             self._get_moment(order)
         else:
@@ -80,20 +97,26 @@ class PhononMoment(object):
         norm0 = 0
         for i, w in enumerate(self._weights):
             for freq in self._frequencies[i]:
-                if self._fmin < freq and freq < self._fmax :
+                if self._fmin < freq and freq < self._fmax:
                     norm0 += w
                     moment += freq ** order * w
         self._moment = moment / norm0
 
     def _get_projected_moment(self, order):
-        moment = np.zeros(self._frequencies.shape[1], dtype='double')
+        moment = np.zeros(self._frequencies.shape[1], dtype="double")
         norm0 = np.zeros_like(moment)
         for i, w in enumerate(self._weights):
-            for freq, eigvec in zip(self._frequencies[i],
-                                    self._eigenvectors[i].T):
-                if self._fmin < freq and freq < self._fmax :
+            for freq, eigvec in zip(self._frequencies[i], self._eigenvectors[i].T):
+                if self._fmin < freq and freq < self._fmax:
                     projection = np.abs(eigvec) ** 2
                     norm0 += w * projection
                     moment += freq ** order * w * projection
-        self._moment = np.array([np.sum((moment / norm0)[i * 3:(i + 1) * 3])
-                                 for i in range(len(moment) // 3)]) / 3
+        self._moment = (
+            np.array(
+                [
+                    np.sum((moment / norm0)[i * 3 : (i + 1) * 3])
+                    for i in range(len(moment) // 3)
+                ]
+            )
+            / 3
+        )

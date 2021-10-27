@@ -1,8 +1,8 @@
 
-.Version 7.8.2 of ABINIT 
-.(MPI version, prepared for a x86_64_linux_gnu4.8 computer) 
+.Version 7.8.2 of ABINIT
+.(MPI version, prepared for a x86_64_linux_gnu4.8 computer)
 
-.Copyright (C) 1998-2014 ABINIT group . 
+.Copyright (C) 1998-2014 ABINIT group .
  ABINIT comes with ABSOLUTELY NO WARRANTY.
  It is free software, and you are welcome to redistribute it
  under certain conditions (GNU General Public License,
@@ -16,7 +16,7 @@
 
 .Starting date : Thu 30 Oct 2014.
 - ( at 11h51 )
-  
+
 - input  file    -> Si.in
 - output file    -> Si.out
 - root for input  files -> Sii
@@ -45,10 +45,10 @@ _ WF disk file :     10.134 Mbytes ; DEN or POT disk file :     22.783 Mbytes.
 ------------- Echo of variables that govern the present computation ------------
 --------------------------------------------------------------------------------
 -
-- outvars: echo of selected default values                                      
+- outvars: echo of selected default values
 -   accesswff0 =  0 , fftalg0 =112 , wfoptalg0 = 10
 -
-- outvars: echo of global parameters not present in the input file              
+- outvars: echo of global parameters not present in the input file
 -  max_nthreads =    0
 -
  -outvars: echo values of preprocessed input variables --------
@@ -1013,7 +1013,7 @@ _setup2: Arith. and geom. avg. npw (full set) are    2075.000    2075.000
 
 == END DATASET(S) ==============================================================
 ================================================================================
-  
+
  -outvars: echo values of variables after computation  --------
         accesswff           1
             acell      1.0000000000E+00  1.0000000000E+00  1.0000000000E+00 Bohr
@@ -1411,7 +1411,7 @@ P           mkmem           2
  M. Torrent, M.J. Verstraete, G. Zerah, J.W. Zwanziger
  Computer Phys. Comm. 180, 2582-2615 (2009).
  Comment : the third generic paper describing the ABINIT project.
- Note that a version of this paper, that is not formatted for Computer Phys. Comm. 
+ Note that a version of this paper, that is not formatted for Computer Phys. Comm.
  is available at http://www.abinit.org/about/ABINIT_CPC_v10.pdf .
  The licence allows the authors to put it on the Web.
 
@@ -1430,7 +1430,7 @@ P           mkmem           2
 
  And optionally :
 
- [5] First-principles computation of material properties : the ABINIT software project. 
+ [5] First-principles computation of material properties : the ABINIT software project.
  X. Gonze, J.-M. Beuken, R. Caracas, F. Detraux, M. Fuchs, G.-M. Rignanese, L. Sindic,
  M. Verstraete, G. Zerah, F. Jollet, M. Torrent, A. Roy, M. Mikami, Ph. Ghosez, J.-Y. Raty, D.C. Allan.
  Computational Materials Science 25, 478-492 (2002). http://dx.doi.org/10.1016/S0927-0256(02)00325-7

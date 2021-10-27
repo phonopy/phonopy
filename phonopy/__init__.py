@@ -1,3 +1,4 @@
+"""Phonon calculation code: Phonopy."""
 # Copyright (C) 2015 Atsushi Togo
 # All rights reserved.
 #
@@ -32,8 +33,8 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from phonopy.version import __version__
-from phonopy.api_phonopy import Phonopy
-from phonopy.api_gruneisen import PhonopyGruneisen
-from phonopy.api_qha import PhonopyQHA
-from phonopy.cui.load import load
+from phonopy.api_gruneisen import PhonopyGruneisen  # noqa F401
+from phonopy.api_phonopy import Phonopy  # noqa F401
+from phonopy.api_qha import PhonopyQHA  # noqa F401
+from phonopy.cui.load import load  # noqa F401
+from phonopy.version import __version__  # noqa F401
