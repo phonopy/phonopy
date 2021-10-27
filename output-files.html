@@ -1,165 +1,704 @@
+
 <!DOCTYPE html>
 
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Output files &#8212; Phonopy v.2.11.0</title>
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Output files &#8212; Phonopy v.2.12.0</title>
+    
+  <link href="_static/css/theme.css" rel="stylesheet" />
+  <link href="_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Setting tags" href="setting-tags.html" />
     <link rel="prev" title="Input files" href="input-files.html" />
-<meta charset='utf-8'>
-<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
-<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
-<meta name="apple-mobile-web-app-capable" content="yes">
-<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
-<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
-<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
-<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
 
-  </head><body>
+    
 
-  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
-    <div class="container">
-      <div class="navbar-header">
-        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
-        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="index.html">
-          Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.11</b></span>
-      </div>
-
-        <div class="collapse navbar-collapse nav-collapse">
-          <ul class="nav navbar-nav">
-            
-            
-              <li class="dropdown globaltoc-container">
-  <a role="button"
-     id="dLabelGlobalToc"
-     data-toggle="dropdown"
-     data-target="#"
-     href="index.html">Site <b class="caret"></b></a>
-  <ul class="dropdown-menu globaltoc"
-      role="menu"
-      aria-labelledby="dLabelGlobalToc"><ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
-<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Output files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
-<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
-<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-load.html">phonopy-load command</a></li>
-<li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
-</ul>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="documentation.html">Documentation</a></li>
-</ul>
-</ul>
-</li>
-              
-                <li class="dropdown">
-  <a role="button"
-     id="dLabelLocalToc"
-     data-toggle="dropdown"
-     data-target="#"
-     href="#">Page <b class="caret"></b></a>
-  <ul class="dropdown-menu localtoc"
-      role="menu"
-      aria-labelledby="dLabelLocalToc"><ul>
-<li><a class="reference internal" href="#">Output files</a><ul>
-<li><a class="reference internal" href="#list-of-files">List of files</a><ul>
-<li><a class="reference internal" href="#band-yaml"><code class="docutils literal notranslate"><span class="pre">band.yaml</span></code></a></li>
-<li><a class="reference internal" href="#mesh-yaml"><code class="docutils literal notranslate"><span class="pre">mesh.yaml</span></code></a></li>
-<li><a class="reference internal" href="#qpoints-yaml"><code class="docutils literal notranslate"><span class="pre">qpoints.yaml</span></code></a></li>
-<li><a class="reference internal" href="#thermal-properties-yaml"><code class="docutils literal notranslate"><span class="pre">thermal_properties.yaml</span></code></a></li>
-<li><a class="reference internal" href="#thermal-displacements-yaml"><code class="docutils literal notranslate"><span class="pre">thermal_displacements.yaml</span></code></a></li>
-<li><a class="reference internal" href="#thermal-displacement-matrices-yaml"><code class="docutils literal notranslate"><span class="pre">thermal_displacement_matrices.yaml</span></code></a></li>
-<li><a class="reference internal" href="#total-dos-dat-and-projected-dos-dat"><code class="docutils literal notranslate"><span class="pre">total_dos.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">projected_dos.dat</span></code></a><ul>
-<li><a class="reference internal" href="#file-format-of-projected-dos-dat">File format of <code class="docutils literal notranslate"><span class="pre">projected_dos.dat</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#phonopy-yaml-and-phonopy-disp-yaml"><code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code></a></li>
-<li><a class="reference internal" href="#hdf5-files"><code class="docutils literal notranslate"><span class="pre">.hdf5</span></code> files</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#how-to-read-phonopy-yaml-files">How to read phonopy YAML files</a><ul>
-<li><a class="reference internal" href="#mesh-yaml-band-yaml-qpoints-yaml"><code class="docutils literal notranslate"><span class="pre">mesh.yaml</span></code>, <code class="docutils literal notranslate"><span class="pre">band.yaml</span></code>, <code class="docutils literal notranslate"><span class="pre">qpoints.yaml</span></code></a><ul>
-<li><a class="reference internal" href="#general">General</a></li>
-<li><a class="reference internal" href="#mesh-sampling-mode">Mesh sampling mode</a></li>
-<li><a class="reference internal" href="#band-structure-mode">Band structure mode</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">thermal_properties.yaml</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</ul>
-</li>
-              
-            
-            
-              
-                
-  <li>
-    <a href="input-files.html" title="Previous Chapter: Input files"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Input files</span>
+    <div class="container-xl">
+      <div class="row">
+          
+<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="index.html">
+      
+      
+      <h1 class="site-logo" id="site-title">Phonopy v.2.12.0</h1>
+      
     </a>
-  </li>
-  <li>
-    <a href="setting-tags.html" title="Next Chapter: Setting tags"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Setting tags &raquo;</span>
+</div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+    <div class="bd-toc-item active">
+        <ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="install.html">
+   Installation
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="symmetry.html">
+   Crystal symmetry
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="workflow.html">
+   Work flow
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="examples.html">
+   Examples
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="input-files.html">
+   Input files
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   Output files
+  </a>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="setting-tags.html">
+   Setting tags
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="animation.html">
+     How to watch animation
     </a>
-  </li>
-              
-            
-            
-            
-            
-          </ul>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="command-options.html">
+   Command options
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="dynamic-structure-factor.html">
+   Dynamic structure factor
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="gruneisen.html">
+   Mode Grüneisen parameters
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="qha.html">
+   Quasi harmonic approximation
+  </a>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="interfaces.html">
+   Interfaces to calculators
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="vasp.html">
+     VASP &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="wien2k.html">
+     Wien2k &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="qe.html">
+     Quantum ESPRESSO (QE) &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="abinit.html">
+     Abinit &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="siesta.html">
+     Siesta &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="elk.html">
+     Elk &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="crystal.html">
+     CRYSTAL &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="dftb%2B.html">
+     DFTB+ &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="turbomole.html">
+     TURBOMOLE &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="cp2k.html">
+     CP2K &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="aims.html">
+     FHI-aims &amp; phonopy calculations
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="castep.html">
+     CASTEP &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Fleur.html">
+     Fleur &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="vasp-dfpt.html">
+     VASP-DFPT &amp; phonopy calculation
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="auxiliary-tools.html">
+   Auxiliary tools
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="external-tools.html">
+   External tools
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="phonopy-module.html">
+   Phonopy API for Python
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="phonopy-load.html">
+   phonopy-load command
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="formulation.html">
+   Formulations
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="citation.html">
+   How to cite phonopy
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="reference.html">
+   References
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="changelog.html">
+   Change Log
+  </a>
+ </li>
+</ul>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="documentation.html">
+   Documentation
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+  <label for="toctree-checkbox-3">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2">
+    <a class="reference internal" href="install.html">
+     Installation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="symmetry.html">
+     Crystal symmetry
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="workflow.html">
+     Work flow
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="examples.html">
+     Examples
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="input-files.html">
+     Input files
+    </a>
+   </li>
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     Output files
+    </a>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="setting-tags.html">
+     Setting tags
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+    <label for="toctree-checkbox-4">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="animation.html">
+       How to watch animation
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="command-options.html">
+     Command options
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="dynamic-structure-factor.html">
+     Dynamic structure factor
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="gruneisen.html">
+     Mode Grüneisen parameters
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="qha.html">
+     Quasi harmonic approximation
+    </a>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="interfaces.html">
+     Interfaces to calculators
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
+    <label for="toctree-checkbox-5">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="vasp.html">
+       VASP &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="wien2k.html">
+       Wien2k &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="qe.html">
+       Quantum ESPRESSO (QE) &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="abinit.html">
+       Abinit &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="siesta.html">
+       Siesta &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="elk.html">
+       Elk &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="crystal.html">
+       CRYSTAL &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="dftb%2B.html">
+       DFTB+ &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="turbomole.html">
+       TURBOMOLE &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="cp2k.html">
+       CP2K &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="aims.html">
+       FHI-aims &amp; phonopy calculations
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="castep.html">
+       CASTEP &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="Fleur.html">
+       Fleur &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="vasp-dfpt.html">
+       VASP-DFPT &amp; phonopy calculation
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="auxiliary-tools.html">
+     Auxiliary tools
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="external-tools.html">
+     External tools
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="phonopy-module.html">
+     Phonopy API for Python
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="formulation.html">
+     Formulations
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="citation.html">
+     How to cite phonopy
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="reference.html">
+     References
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+    </div>
+</nav> <!-- To handle the deprecated key -->
+
+<div class="navbar_extra_footer">
+  Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
+</div>
+
+</div>
+
 
           
-            
-<form class="navbar-form navbar-right" action="search.html" method="get">
- <div class="form-group">
-  <input type="text" name="q" class="form-control" placeholder="Search" />
- </div>
-  <input type="hidden" name="check_keywords" value="yes" />
-  <input type="hidden" name="area" value="default" />
-</form>
+
+
           
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            
+            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
+                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
+                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
+                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
+                <i class="fas fa-bars"></i>
+                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            
+            
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="_sources/output-files.rst.txt"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.rst</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+            onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
+            <!-- Source interaction buttons -->
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show">
+            
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#list-of-files">
+   List of files
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#band-yaml">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       band.yaml
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mesh-yaml">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       mesh.yaml
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#qpoints-yaml">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       qpoints.yaml
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#thermal-properties-yaml">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       thermal_properties.yaml
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#thermal-displacements-yaml">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       thermal_displacements.yaml
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#thermal-displacement-matrices-yaml">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       thermal_displacement_matrices.yaml
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#total-dos-dat-and-projected-dos-dat">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       total_dos.dat
+      </span>
+     </code>
+     and
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       projected_dos.dat
+      </span>
+     </code>
+    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#file-format-of-projected-dos-dat">
+       File format of
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         projected_dos.dat
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#phonopy-yaml-and-phonopy-disp-yaml">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       phonopy.yaml
+      </span>
+     </code>
+     and
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       phonopy_disp.yaml
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#hdf5-files">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       .hdf5
+      </span>
+     </code>
+     files
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#how-to-read-phonopy-yaml-files">
+   How to read phonopy YAML files
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#mesh-yaml-band-yaml-qpoints-yaml">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       mesh.yaml
+      </span>
+     </code>
+     ,
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       band.yaml
+      </span>
+     </code>
+     ,
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       qpoints.yaml
+      </span>
+     </code>
+    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#general">
+       General
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#mesh-sampling-mode">
+       Mesh sampling mode
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#band-structure-mode">
+       Band structure mode
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id2">
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       thermal_properties.yaml
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+            </nav>
         </div>
     </div>
-  </div>
-
-<div class="container">
-  <div class="row">
-    <div class="body col-md-12 content" role="main">
-      
-  <div class="section" id="output-files">
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+        
+              <div>
+                
+  <section id="output-files">
 <span id="id1"></span><h1>Output files<a class="headerlink" href="#output-files" title="Permalink to this headline">¶</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
@@ -186,9 +725,9 @@
 </div>
 <p>The output data are stored in the following files on the current
 directory.</p>
-<div class="section" id="list-of-files">
+<section id="list-of-files">
 <h2><a class="toc-backref" href="#id3">List of files</a><a class="headerlink" href="#list-of-files" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="band-yaml">
+<section id="band-yaml">
 <h3><a class="toc-backref" href="#id4"><code class="docutils literal notranslate"><span class="pre">band.yaml</span></code></a><a class="headerlink" href="#band-yaml" title="Permalink to this headline">¶</a></h3>
 <p>Sets of phonon frequencies on band paths calculated by the
 <a class="reference internal" href="setting-tags.html#band-structure-related-tags"><span class="std std-ref">band-structure mode</span></a>
@@ -196,48 +735,48 @@ directory.</p>
 <p><code class="docutils literal notranslate"><span class="pre">band.yaml</span></code> is viewed using the tool <code class="docutils literal notranslate"><span class="pre">phonopy-bandplot</span></code>
 (<a class="reference internal" href="auxiliary-tools.html#bandplot-tool"><span class="std std-ref">phonopy-bandplot</span></a>). <code class="docutils literal notranslate"><span class="pre">phonopy-bandplot</span></code> can convert the data in the YAML
 format to that in the gnuplot-style format using the <code class="docutils literal notranslate"><span class="pre">--gnuplot</span></code> option.</p>
-</div>
-<div class="section" id="mesh-yaml">
+</section>
+<section id="mesh-yaml">
 <h3><a class="toc-backref" href="#id5"><code class="docutils literal notranslate"><span class="pre">mesh.yaml</span></code></a><a class="headerlink" href="#mesh-yaml" title="Permalink to this headline">¶</a></h3>
 <p>A set of frequencies on irreducible q-points of a q-point mesh by the
 <a class="reference internal" href="setting-tags.html#dos-related-tags"><span class="std std-ref">mesh-sampling mode</span></a> (<code class="docutils literal notranslate"><span class="pre">MESH</span></code> tag) is stored in
 the YAML format.</p>
-</div>
-<div class="section" id="qpoints-yaml">
+</section>
+<section id="qpoints-yaml">
 <h3><a class="toc-backref" href="#id6"><code class="docutils literal notranslate"><span class="pre">qpoints.yaml</span></code></a><a class="headerlink" href="#qpoints-yaml" title="Permalink to this headline">¶</a></h3>
 <p>A set of frequencies calculated by the
 <a class="reference internal" href="setting-tags.html#qpoints-tag"><span class="std std-ref">q-points mode</span></a>
 (<code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code> tag) is stored in the YAML format.</p>
-</div>
-<div class="section" id="thermal-properties-yaml">
+</section>
+<section id="thermal-properties-yaml">
 <h3><a class="toc-backref" href="#id7"><code class="docutils literal notranslate"><span class="pre">thermal_properties.yaml</span></code></a><a class="headerlink" href="#thermal-properties-yaml" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="setting-tags.html#thermal-properties-tag"><span class="std std-ref">Thermal properties</span></a> calculated
 are stored in the YAML format.</p>
 <p>The auxiliary tool <code class="docutils literal notranslate"><span class="pre">phonopy-propplot</span></code> (<a class="reference internal" href="auxiliary-tools.html#propplot-tool"><span class="std std-ref">phonopy-propplot</span></a>) can be used to
 plot the content of <code class="docutils literal notranslate"><span class="pre">thermal_properties.yaml</span></code>.</p>
-</div>
-<div class="section" id="thermal-displacements-yaml">
+</section>
+<section id="thermal-displacements-yaml">
 <h3><a class="toc-backref" href="#id8"><code class="docutils literal notranslate"><span class="pre">thermal_displacements.yaml</span></code></a><a class="headerlink" href="#thermal-displacements-yaml" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="setting-tags.html#thermal-displacements-tag"><span class="std std-ref">Mean square displcements of atoms</span></a>
 are stored in the YAML format. Without projecting eigenvectors along a
 specific direction, the results projected along Cartesianl
 coordinates, therefore three values for each atom at a temperature,
 are written into the file.</p>
-</div>
-<div class="section" id="thermal-displacement-matrices-yaml">
+</section>
+<section id="thermal-displacement-matrices-yaml">
 <h3><a class="toc-backref" href="#id9"><code class="docutils literal notranslate"><span class="pre">thermal_displacement_matrices.yaml</span></code></a><a class="headerlink" href="#thermal-displacement-matrices-yaml" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="setting-tags.html#thermal-displacement-matrices-tag"><span class="std std-ref">Mean square displacement matricies of atoms</span></a> are stored in the YAML
 format. Since the matrix for each atom at a temperature is symmetric,
 only six elements of it, xx, yy, zz, yz, xz, xy, are written in this
 order.</p>
-</div>
-<div class="section" id="total-dos-dat-and-projected-dos-dat">
+</section>
+<section id="total-dos-dat-and-projected-dos-dat">
 <h3><a class="toc-backref" href="#id10"><code class="docutils literal notranslate"><span class="pre">total_dos.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">projected_dos.dat</span></code></a><a class="headerlink" href="#total-dos-dat-and-projected-dos-dat" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="setting-tags.html#dos-related-tags"><span class="std std-ref">Total and projected DOS</span></a> are stored in the
 simple format, respectively.</p>
 <p><code class="docutils literal notranslate"><span class="pre">total_dos.dat</span></code> and <code class="docutils literal notranslate"><span class="pre">projected_dos.dat</span></code> are viewed using the
 auxiliary tool <code class="docutils literal notranslate"><span class="pre">phonopy-pdosplot</span></code> (<a class="reference internal" href="auxiliary-tools.html#pdosplot-tool"><span class="std std-ref">phonopy-pdosplot</span></a>).</p>
-<div class="section" id="file-format-of-projected-dos-dat">
+<section id="file-format-of-projected-dos-dat">
 <h4>File format of <code class="docutils literal notranslate"><span class="pre">projected_dos.dat</span></code><a class="headerlink" href="#file-format-of-projected-dos-dat" title="Permalink to this headline">¶</a></h4>
 <p>The first column is the phonon frequency. The following colums are the
 projected density of states for atoms in the primitive cell. In the
@@ -285,9 +824,9 @@ represent x, y, and z components:</p>
 <span class="o">...</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="phonopy-yaml-and-phonopy-disp-yaml">
+</section>
+</section>
+<section id="phonopy-yaml-and-phonopy-disp-yaml">
 <h3><a class="toc-backref" href="#id11"><code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code></a><a class="headerlink" href="#phonopy-yaml-and-phonopy-disp-yaml" title="Permalink to this headline">¶</a></h3>
 <p>Phonopy configurations and crystal structures are stored in these
 files when running pre-process (<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>) or post-process
@@ -295,13 +834,13 @@ files when running pre-process (<code class="docutils literal notranslate"><span
 <p><code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> contains information used to create supercells
 with displacements. The format is hopefully understood just looking
 into it. <code class="docutils literal notranslate"><span class="pre">displacement</span></code> is written in Cartesian coordinates.</p>
-</div>
-<div class="section" id="hdf5-files">
+</section>
+<section id="hdf5-files">
 <h3><a class="toc-backref" href="#id12"><code class="docutils literal notranslate"><span class="pre">.hdf5</span></code> files</a><a class="headerlink" href="#hdf5-files" title="Permalink to this headline">¶</a></h3>
 <p>See <a class="reference internal" href="setting-tags.html#hdf5-tag"><span class="std std-ref">HDF5</span></a>.</p>
-</div>
-</div>
-<div class="section" id="how-to-read-phonopy-yaml-files">
+</section>
+</section>
+<section id="how-to-read-phonopy-yaml-files">
 <h2><a class="toc-backref" href="#id13">How to read phonopy YAML files</a><a class="headerlink" href="#how-to-read-phonopy-yaml-files" title="Permalink to this headline">¶</a></h2>
 <p>Most phonopy results are written in the YAML format. YAML files are
 easily translated to the combination of lists and dictionaries in the
@@ -316,11 +855,11 @@ yaml files, e.g.,</p>
     <span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="section" id="mesh-yaml-band-yaml-qpoints-yaml">
+<section id="mesh-yaml-band-yaml-qpoints-yaml">
 <h3><a class="toc-backref" href="#id14"><code class="docutils literal notranslate"><span class="pre">mesh.yaml</span></code>, <code class="docutils literal notranslate"><span class="pre">band.yaml</span></code>, <code class="docutils literal notranslate"><span class="pre">qpoints.yaml</span></code></a><a class="headerlink" href="#mesh-yaml-band-yaml-qpoints-yaml" title="Permalink to this headline">¶</a></h3>
-<div class="section" id="general">
+<section id="general">
 <h4>General<a class="headerlink" href="#general" title="Permalink to this headline">¶</a></h4>
-<table class="docutils align-default">
+<table class="table">
 <colgroup>
 <col style="width: 20%" />
 <col style="width: 80%" />
@@ -370,10 +909,10 @@ Cartesian coordinates defined in the unit cell.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="mesh-sampling-mode">
+</section>
+<section id="mesh-sampling-mode">
 <h4>Mesh sampling mode<a class="headerlink" href="#mesh-sampling-mode" title="Permalink to this headline">¶</a></h4>
-<table class="docutils align-default">
+<table class="table">
 <colgroup>
 <col style="width: 20%" />
 <col style="width: 80%" />
@@ -396,10 +935,10 @@ reciprocal space of the primitive cell.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="band-structure-mode">
+</section>
+<section id="band-structure-mode">
 <h4>Band structure mode<a class="headerlink" href="#band-structure-mode" title="Permalink to this headline">¶</a></h4>
-<table class="docutils align-default">
+<table class="table">
 <colgroup>
 <col style="width: 20%" />
 <col style="width: 80%" />
@@ -418,41 +957,47 @@ unit used in the real space.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-</div>
-<div class="section" id="id2">
+</section>
+</section>
+<section id="id2">
 <h3><a class="toc-backref" href="#id15"><code class="docutils literal notranslate"><span class="pre">thermal_properties.yaml</span></code></a><a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
 <p>The physical units of the thermal properties are given in the unit
 section of this YAML file. However the physical units are only correct
 when phonopy ran with proper physical units. See
 <a class="reference internal" href="setting-tags.html#thermal-properties-tag"><span class="std std-ref">Thermal properties related tags</span></a>.</p>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
-    </div>
-      
-  </div>
-</div>
-<footer class="footer">
-  <div class="container">
-    <p class="pull-right">
-      <a href="#">Back to top</a>
-      
-        <br/>
+              </div>
+              
         
-<div id="sourcelink">
-  <a href="_sources/output-files.rst.txt"
-     rel="nofollow">Source</a>
-</div>
-      
-    </p>
-    <p>
-        &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.4.<br/>
-    </p>
-  </div>
-</footer>
+        <div class='prev-next-bottom'>
+            
+    <a class='left-prev' id="prev-link" href="input-files.html" title="previous page">Input files</a>
+    <a class='right-next' id="next-link" href="setting-tags.html" title="next page">Setting tags</a>
+
+        </div>
+        
+        </div>
+    </div>
+    <footer class="footer mt-5 mt-md-0">
+    <div class="container">
+      <p>
+        
+            &copy; Copyright 2009, Atsushi Togo.<br/>
+      </p>
+    </div>
+  </footer>
+</main>
+
+
+      </div>
+    </div>
+  
+  <script src="_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  
   </body>
 </html>

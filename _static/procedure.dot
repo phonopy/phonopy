@@ -23,8 +23,8 @@ digraph phonopy {
   Supercell -> "Force calc." [label = "(1)"];
   Supercell -> "Force-constant calc." [label = "(2)"];
   "Force calc." -> "Force constants" [label = "(1)"];
-  "Force-constant calc." -> "Force constants" [label = "(2)"]; 
-  
+  "Force-constant calc." -> "Force constants" [label = "(2)"];
+
   "Unit cell" -> "Phonopy post-process";
   "Supercell size" -> "Phonopy post-process";
   "Primitive cell size\n(optional)" -> "Phonopy post-process";

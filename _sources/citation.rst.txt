@@ -13,7 +13,7 @@ If you have used phonopy, please cite the following article:
   http://dx.doi.org/10.1016/j.scriptamat.2015.07.021 (Open access)
 
   ::
-  
+
      @article {phonopy,
           Journal = {Scr. Mater.},
           Year = {2015},
@@ -43,7 +43,7 @@ Some papers where phonopy was used
 
   Atsushi Togo and Isao Tanaka,
   Phys. Rev. B, **87**, 184104-1-6 (2013)
- 
+
 * "Transition pathway of CO2 crystals under high pressures",
 
   Atsushi Togo, Fumiyasu Oba, and Isao Tanaka,
@@ -63,7 +63,7 @@ Some papers where phonopy was used
 
   Atsushi Togo, Fumiyasu Oba, and Isao Tanaka, Phys. Rev. B, **78**, 134106 (2008)
 
-``TDISP``, ``TDISPMAT`` tags: Root mean square thermal atomic displacement 
+``TDISP``, ``TDISPMAT`` tags: Root mean square thermal atomic displacement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 *  "Neutron diffraction measurements and first-principles study of
@@ -80,7 +80,7 @@ Some papers where phonopy was used
    Volker L. Deringer, Ralf P. Stoffel, Atsushi Togo, Bernhard Eck,
    Martin Mevencd and Richard Dronskowski, Cryst. Eng. Comm., (2014)
 
-  
+
 A short history of phonopy
 ---------------------------
 
@@ -93,4 +93,3 @@ important part of the implementation is the symmetry handling. In
 fropho, at first the symmetry finder in Abinit code was employed, but
 later the symmetry finder was replaced by spglib
 (http://spglib.sourceforge.net/).
-

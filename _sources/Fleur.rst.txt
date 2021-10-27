@@ -50,7 +50,7 @@ A procedure of a Fleur-phonopy calculation may look as follows:
    The resulting inp.xml is then run by the fleur command itself.
    After successfull convergence, set the tag 'l_f' in the inp.xml to "T"
    and add 'f_level="n"' behind it with n from {0,1,2,3}. This optional
-   tag ensures the write-out of the 'FORCES' file and setting it to 
+   tag ensures the write-out of the 'FORCES' file and setting it to
    {1,2,3} calculates additional refined force contibutions.
 
 3) Create ``FORCE_SETS`` by::
@@ -72,5 +72,5 @@ A procedure of a Fleur-phonopy calculation may look as follows:
    if you prepared a band.conf file or::
 
    % phonopy --fleur -c fleur_inpgen --dim="2 2 2" [other-OPTIONS] [setting-file]
-   
+
    if you want to set the path directly or specify a different file.

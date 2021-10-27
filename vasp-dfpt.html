@@ -1,142 +1,542 @@
+
 <!DOCTYPE html>
 
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>VASP-DFPT &amp; phonopy calculation &#8212; Phonopy v.2.11.0</title>
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>VASP-DFPT &amp; phonopy calculation &#8212; Phonopy v.2.12.0</title>
+    
+  <link href="_static/css/theme.css" rel="stylesheet" />
+  <link href="_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Auxiliary tools" href="auxiliary-tools.html" />
     <link rel="prev" title="Fleur &amp; phonopy calculation" href="Fleur.html" />
-<meta charset='utf-8'>
-<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
-<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
-<meta name="apple-mobile-web-app-capable" content="yes">
-<script type="text/javascript" src="_static/js/jquery-1.11.0.min.js "></script>
-<script type="text/javascript" src="_static/js/jquery-fix.js "></script>
-<script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js "></script>
-<script type="text/javascript" src="_static/bootstrap-sphinx.js "></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
 
-  </head><body>
+    
 
-  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
-    <div class="container">
-      <div class="navbar-header">
-        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
-        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="index.html">
-          Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>2.11</b></span>
-      </div>
-
-        <div class="collapse navbar-collapse nav-collapse">
-          <ul class="nav navbar-nav">
-            
-            
-              <li class="dropdown globaltoc-container">
-  <a role="button"
-     id="dLabelGlobalToc"
-     data-toggle="dropdown"
-     data-target="#"
-     href="index.html">Site <b class="caret"></b></a>
-  <ul class="dropdown-menu globaltoc"
-      role="menu"
-      aria-labelledby="dLabelGlobalToc"><ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
-<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
-<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
-<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-load.html">phonopy-load command</a></li>
-<li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
-</ul>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="documentation.html">Documentation</a></li>
-</ul>
-</ul>
-</li>
-              
-                <li class="dropdown">
-  <a role="button"
-     id="dLabelLocalToc"
-     data-toggle="dropdown"
-     data-target="#"
-     href="#">Page <b class="caret"></b></a>
-  <ul class="dropdown-menu localtoc"
-      role="menu"
-      aria-labelledby="dLabelLocalToc"><ul>
-<li><a class="reference internal" href="#">VASP-DFPT &amp; phonopy calculation</a><ul>
-<li><a class="reference internal" href="#how-to-run">How to run</a></li>
-</ul>
-</li>
-</ul>
-</ul>
-</li>
-              
-            
-            
-              
-                
-  <li>
-    <a href="Fleur.html" title="Previous Chapter: Fleur & phonopy calculation"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Fleur & phono...</span>
+    <div class="container-xl">
+      <div class="row">
+          
+<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="index.html">
+      
+      
+      <h1 class="site-logo" id="site-title">Phonopy v.2.12.0</h1>
+      
     </a>
-  </li>
-  <li>
-    <a href="auxiliary-tools.html" title="Next Chapter: Auxiliary tools"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Auxiliary tools &raquo;</span>
+</div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+    <div class="bd-toc-item active">
+        <ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="install.html">
+   Installation
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="symmetry.html">
+   Crystal symmetry
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="workflow.html">
+   Work flow
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="examples.html">
+   Examples
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="input-files.html">
+   Input files
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="output-files.html">
+   Output files
+  </a>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="setting-tags.html">
+   Setting tags
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="animation.html">
+     How to watch animation
     </a>
-  </li>
-              
-            
-            
-            
-            
-          </ul>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="command-options.html">
+   Command options
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="dynamic-structure-factor.html">
+   Dynamic structure factor
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="gruneisen.html">
+   Mode Grüneisen parameters
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="qha.html">
+   Quasi harmonic approximation
+  </a>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="interfaces.html">
+   Interfaces to calculators
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2">
+    <a class="reference internal" href="vasp.html">
+     VASP &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="wien2k.html">
+     Wien2k &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="qe.html">
+     Quantum ESPRESSO (QE) &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="abinit.html">
+     Abinit &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="siesta.html">
+     Siesta &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="elk.html">
+     Elk &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="crystal.html">
+     CRYSTAL &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="dftb%2B.html">
+     DFTB+ &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="turbomole.html">
+     TURBOMOLE &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="cp2k.html">
+     CP2K &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="aims.html">
+     FHI-aims &amp; phonopy calculations
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="castep.html">
+     CASTEP &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Fleur.html">
+     Fleur &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     VASP-DFPT &amp; phonopy calculation
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="auxiliary-tools.html">
+   Auxiliary tools
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="external-tools.html">
+   External tools
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="phonopy-module.html">
+   Phonopy API for Python
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="phonopy-load.html">
+   phonopy-load command
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="formulation.html">
+   Formulations
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="citation.html">
+   How to cite phonopy
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="reference.html">
+   References
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="changelog.html">
+   Change Log
+  </a>
+ </li>
+</ul>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="documentation.html">
+   Documentation
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+  <label for="toctree-checkbox-3">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2">
+    <a class="reference internal" href="install.html">
+     Installation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="symmetry.html">
+     Crystal symmetry
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="workflow.html">
+     Work flow
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="examples.html">
+     Examples
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="input-files.html">
+     Input files
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="output-files.html">
+     Output files
+    </a>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="setting-tags.html">
+     Setting tags
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+    <label for="toctree-checkbox-4">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="animation.html">
+       How to watch animation
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="command-options.html">
+     Command options
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="dynamic-structure-factor.html">
+     Dynamic structure factor
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="gruneisen.html">
+     Mode Grüneisen parameters
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="qha.html">
+     Quasi harmonic approximation
+    </a>
+   </li>
+   <li class="toctree-l2 current active has-children">
+    <a class="reference internal" href="interfaces.html">
+     Interfaces to calculators
+    </a>
+    <input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
+    <label for="toctree-checkbox-5">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul class="current">
+     <li class="toctree-l3">
+      <a class="reference internal" href="vasp.html">
+       VASP &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="wien2k.html">
+       Wien2k &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="qe.html">
+       Quantum ESPRESSO (QE) &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="abinit.html">
+       Abinit &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="siesta.html">
+       Siesta &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="elk.html">
+       Elk &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="crystal.html">
+       CRYSTAL &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="dftb%2B.html">
+       DFTB+ &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="turbomole.html">
+       TURBOMOLE &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="cp2k.html">
+       CP2K &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="aims.html">
+       FHI-aims &amp; phonopy calculations
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="castep.html">
+       CASTEP &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="Fleur.html">
+       Fleur &amp; phonopy calculation
+      </a>
+     </li>
+     <li class="toctree-l3 current active">
+      <a class="current reference internal" href="#">
+       VASP-DFPT &amp; phonopy calculation
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="auxiliary-tools.html">
+     Auxiliary tools
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="external-tools.html">
+     External tools
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="phonopy-module.html">
+     Phonopy API for Python
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="formulation.html">
+     Formulations
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="citation.html">
+     How to cite phonopy
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="reference.html">
+     References
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+    </div>
+</nav> <!-- To handle the deprecated key -->
+
+<div class="navbar_extra_footer">
+  Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
+</div>
+
+</div>
+
 
           
-            
-<form class="navbar-form navbar-right" action="search.html" method="get">
- <div class="form-group">
-  <input type="text" name="q" class="form-control" placeholder="Search" />
- </div>
-  <input type="hidden" name="check_keywords" value="yes" />
-  <input type="hidden" name="area" value="default" />
-</form>
+
+
           
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            
+            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
+                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
+                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
+                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
+                <i class="fas fa-bars"></i>
+                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            
+            
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="_sources/vasp-dfpt.rst.txt"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.rst</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+            onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
+            <!-- Source interaction buttons -->
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show">
+            
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#how-to-run">
+   How to run
+  </a>
+ </li>
+</ul>
+
+            </nav>
         </div>
     </div>
-  </div>
-
-<div class="container">
-  <div class="row">
-    <div class="body col-md-12 content" role="main">
-      
-  <div class="section" id="vasp-dfpt-phonopy-calculation">
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+        
+              <div>
+                
+  <section id="vasp-dfpt-phonopy-calculation">
 <span id="vasp-dfpt-interface"></span><h1>VASP-DFPT &amp; phonopy calculation<a class="headerlink" href="#vasp-dfpt-phonopy-calculation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="how-to-run">
+<section id="how-to-run">
 <h2>How to run<a class="headerlink" href="#how-to-run" title="Permalink to this headline">¶</a></h2>
 <p>VASP can calculate force constants in real space using DFPT. The
 procedure to calculate phonon properties may be as follows:</p>
@@ -228,32 +628,38 @@ e.g., as found in <code class="docutils literal notranslate"><span class="pre">e
 </li>
 </ol>
 <p><a class="reference internal" href="_images/NaCl-VASPdfpt.png"><img alt="NaCl-VASPdfpt" src="_images/NaCl-VASPdfpt.png" style="width: 406.0px; height: 306.0px;" /></a></p>
-</div>
-</div>
+</section>
+</section>
 
 
-    </div>
-      
-  </div>
-</div>
-<footer class="footer">
-  <div class="container">
-    <p class="pull-right">
-      <a href="#">Back to top</a>
-      
-        <br/>
+              </div>
+              
         
-<div id="sourcelink">
-  <a href="_sources/vasp-dfpt.rst.txt"
-     rel="nofollow">Source</a>
-</div>
-      
-    </p>
-    <p>
-        &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.4.<br/>
-    </p>
-  </div>
-</footer>
+        <div class='prev-next-bottom'>
+            
+    <a class='left-prev' id="prev-link" href="Fleur.html" title="previous page">Fleur &amp; phonopy calculation</a>
+    <a class='right-next' id="next-link" href="auxiliary-tools.html" title="next page">Auxiliary tools</a>
+
+        </div>
+        
+        </div>
+    </div>
+    <footer class="footer mt-5 mt-md-0">
+    <div class="container">
+      <p>
+        
+            &copy; Copyright 2009, Atsushi Togo.<br/>
+      </p>
+    </div>
+  </footer>
+</main>
+
+
+      </div>
+    </div>
+  
+  <script src="_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  
   </body>
 </html>
