@@ -1,7 +1,7 @@
 Si phonon dispersions with TURBOMOLE
 
-The crystal structure in TURBOMOLE format is defined by files "control" and "coord". 
-This is the default file name scheme for the TURBOMOLE interface and therefore 
+The crystal structure in TURBOMOLE format is defined by files "control" and "coord".
+This is the default file name scheme for the TURBOMOLE interface and therefore
 the parameter "-c control" is not needed
 
 The Si crystal structure is defined with the conventional unit cell (eight atoms).
@@ -11,7 +11,7 @@ PRIMITIVE_AXES is defined in band.conf to create the phonon dispersions for the 
 1) Create displaced supercells:
    phonopy --turbomole --dim="3 3 3" -d
 
-   The displaced supercells are created in subdirectories "supercell-NNN". 
+   The displaced supercells are created in subdirectories "supercell-NNN".
    Complete TURBOMOLE inputs need to be prepared manually in the subdirectories.
    Please pay special attention on the k-point mesh.
    Use tight SCF convergence criteria such as $scfconv 10
@@ -35,4 +35,3 @@ PRIMITIVE_AXES is defined in band.conf to create the phonon dispersions for the 
 
    Create a formatted plot (here band.yaml is in cm^{-1) units):
    phonopy-bandplot --fmin=0 --line --ylabel="Frequency (cm\$^{-1}\$)" --band-labels "`grep BAND_LABELS band.conf | cut -d= -f2-`" -o dispersion.pdf
-

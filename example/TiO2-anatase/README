@@ -3,4 +3,3 @@ Phonon calculation for TiO2-anatase. Supercell dimension is 4x4x2 and forces wer
 Band structure is drawn with Seek-Path (pip install seekpath is needed) by
 
 % phonopy band.conf -p --nac
-

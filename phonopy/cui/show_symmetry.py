@@ -1,3 +1,4 @@
+"""Show symmetry information invoked by --symmetry command option."""
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -35,50 +36,56 @@
 import numpy as np
 import spglib
 from spglib import get_pointgroup
+
+from phonopy import Phonopy
 from phonopy.interface.calculator import (
-    write_crystal_structure, get_default_cell_filename)
+    get_default_cell_filename,
+    write_crystal_structure,
+)
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import guess_primitive_matrix, get_primitive
+from phonopy.structure.cells import get_primitive, guess_primitive_matrix
 
 
-def check_symmetry(phonon, optional_structure_info):
+def check_symmetry(phonon: Phonopy, optional_structure_info):
+    """Show symmetry information and write refined crystals to files."""
     # Assumed that primitive cell is the cell that user is interested in.
-    print(_get_symmetry_yaml(phonon.primitive,
-                             phonon.primitive_symmetry,
-                             phonon.version))
+    print(
+        _get_symmetry_yaml(phonon.primitive, phonon.primitive_symmetry, phonon.version)
+    )
 
     if phonon.unitcell.magnetic_moments is None:
         base_fname = get_default_cell_filename(phonon.calculator)
         symprec = phonon.primitive_symmetry.get_symmetry_tolerance()
-        (bravais_lattice,
-         bravais_pos,
-         bravais_numbers) = spglib.refine_cell(phonon.primitive, symprec)
-        bravais = PhonopyAtoms(numbers=bravais_numbers,
-                               scaled_positions=bravais_pos,
-                               cell=bravais_lattice)
-        filename = 'B' + base_fname
-        print("# Symmetrized conventional unit cell is written into %s."
-              % filename)
+        (bravais_lattice, bravais_pos, bravais_numbers) = spglib.refine_cell(
+            phonon.primitive, symprec
+        )
+        bravais = PhonopyAtoms(
+            numbers=bravais_numbers, scaled_positions=bravais_pos, cell=bravais_lattice
+        )
+        filename = "B" + base_fname
+        print("# Symmetrized conventional unit cell is written into %s." % filename)
         trans_mat = guess_primitive_matrix(bravais, symprec=symprec)
         primitive = get_primitive(bravais, trans_mat, symprec=symprec)
         write_crystal_structure(
             filename,
             bravais,
             interface_mode=phonon.calculator,
-            optional_structure_info=optional_structure_info)
+            optional_structure_info=optional_structure_info,
+        )
 
-        filename = 'P' + base_fname
+        filename = "P" + base_fname
         print("# Symmetrized primitive is written into %s." % filename)
         write_crystal_structure(
             filename,
             primitive,
             interface_mode=phonon.calculator,
-            optional_structure_info=optional_structure_info)
+            optional_structure_info=optional_structure_info,
+        )
 
 
 def _get_symmetry_yaml(cell, symmetry, phonopy_version=None):
-    rotations = symmetry.get_symmetry_operations()['rotations']
-    translations = symmetry.get_symmetry_operations()['translations']
+    rotations = symmetry.get_symmetry_operations()["rotations"]
+    translations = symmetry.get_symmetry_operations()["translations"]
 
     atom_sets = symmetry.get_map_atoms()
     independent_atoms = symmetry.get_independent_atoms()
@@ -91,7 +98,7 @@ def _get_symmetry_yaml(cell, symmetry, phonopy_version=None):
 
     if cell.get_magnetic_moments() is None:
         spg_symbol, spg_number = symmetry.get_international_table().split()
-        spg_number = int(spg_number.replace('(', '').replace(')', ''))
+        spg_number = int(spg_number.replace("(", "").replace(")", ""))
         lines.append("space_group_type: '%s'" % spg_symbol)
         lines.append("space_group_number: %d" % spg_number)
         lines.append("point_group_type: '%s'" % symmetry.get_pointgroup())

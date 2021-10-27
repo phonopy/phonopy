@@ -3,6 +3,20 @@
 Change Log
 ==========
 
+Oct-28-2021: Version 2.12.0
+---------------------------
+* Matplotlib built-in mathtext replaced LaTeX renderer with ``text.usetex`` to
+  avoid requiring latex installation.
+* Aiming modernizing phonopy code, required python version and package
+  versions were changed to
+
+  * Python >= 3.6
+  * numpy >= 1.11
+  * matplotlib >= 2.0
+
+* For developers, flake8, black, pydocstyle, and isort were introduced.
+  See ``REAEME.md`` and ``.pre-commit-config.yaml``.
+
 Jul-8-2021: Version 2.11.0
 ---------------------------
 * Maintenance release. C-methods were changed to use dense shortest vectors

@@ -34,14 +34,18 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
+
 import numpy as np
+
+from phonopy.harmonic.force_constants import distribute_force_constants_by_translations
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
-    get_supercell, get_primitive, shape_supercell_matrix,
-    sparse_to_dense_svecs)
+    get_primitive,
+    get_supercell,
+    shape_supercell_matrix,
+    sparse_to_dense_svecs,
+)
 from phonopy.structure.snf import SNF3x3
-from phonopy.harmonic.force_constants import (
-    distribute_force_constants_by_translations)
 
 
 def get_commensurate_points(supercell_matrix):  # wrt primitive cell
@@ -62,14 +66,14 @@ def get_commensurate_points(supercell_matrix):  # wrt primitive cell
 
     """
     smat = np.array(supercell_matrix, dtype=int)
-    rec_primitive = PhonopyAtoms(numbers=[1],
-                                 scaled_positions=[[0, 0, 0]],
-                                 cell=np.diag([1, 1, 1]),
-                                 pbc=True)
+    rec_primitive = PhonopyAtoms(
+        numbers=[1], scaled_positions=[[0, 0, 0]], cell=np.diag([1, 1, 1]), pbc=True
+    )
     rec_supercell = get_supercell(rec_primitive, smat.T)
     q_pos = rec_supercell.scaled_positions
-    return np.array(np.where(q_pos > 1 - 1e-15, q_pos - 1, q_pos),
-                    dtype='double', order='C')
+    return np.array(
+        np.where(q_pos > 1 - 1e-15, q_pos - 1, q_pos), dtype="double", order="C"
+    )
 
 
 def get_commensurate_points_in_integers(supercell_matrix):
@@ -99,11 +103,13 @@ def get_commensurate_points_in_integers(supercell_matrix):
     snf.run()
     D = snf.D.diagonal()
     b, c, a = np.meshgrid(range(D[1]), range(D[2]), range(D[0]))
-    lattice_points = np.dot(np.c_[a.ravel() * D[1] * D[2],
-                                  b.ravel() * D[0] * D[2],
-                                  c.ravel() * D[0] * D[1]], snf.Q.T)
-    lattice_points = np.array(lattice_points % np.prod(D),
-                              dtype='intc', order='C')
+    lattice_points = np.dot(
+        np.c_[
+            a.ravel() * D[1] * D[2], b.ravel() * D[0] * D[2], c.ravel() * D[0] * D[1]
+        ],
+        snf.Q.T,
+    )
+    lattice_points = np.array(lattice_points % np.prod(D), dtype="intc", order="C")
     return lattice_points
 
 
@@ -147,17 +153,17 @@ def ph2fc(ph_orig, supercell_matrix):
     pcell = get_primitive(
         scell,
         np.dot(np.linalg.inv(smat), ph_orig.primitive_matrix),
-        positions_to_reorder=ph_orig.primitive.scaled_positions)
+        positions_to_reorder=ph_orig.primitive.scaled_positions,
+    )
     d2f = DynmatToForceConstants(pcell, scell)
-    ph_orig.run_qpoints(d2f.commensurate_points,
-                        with_dynamical_matrices=True)
+    ph_orig.run_qpoints(d2f.commensurate_points, with_dynamical_matrices=True)
     ph_dict = ph_orig.get_qpoints_dict()
-    d2f.dynamical_matrices = ph_dict['dynamical_matrices']
+    d2f.dynamical_matrices = ph_dict["dynamical_matrices"]
     d2f.run()
     return d2f.force_constants
 
 
-class DynmatToForceConstants(object):
+class DynmatToForceConstants:
     """Transforms eigensolutions to force constants.
 
     This is the inverse transform of force constants to eigensolutions.
@@ -211,14 +217,16 @@ class DynmatToForceConstants(object):
 
     """
 
-    def __init__(self,
-                 primitive,
-                 supercell,
-                 eigenvalues=None,
-                 eigenvectors=None,
-                 dynamical_matrices=None,
-                 commensurate_points=None,
-                 is_full_fc=True):
+    def __init__(
+        self,
+        primitive,
+        supercell,
+        eigenvalues=None,
+        eigenvectors=None,
+        dynamical_matrices=None,
+        commensurate_points=None,
+        is_full_fc=True,
+    ):
         """Init method.
 
         Parameters
@@ -237,10 +245,9 @@ class DynmatToForceConstants(object):
         self._pcell = primitive
         self._scell = supercell
         supercell_matrix = np.linalg.inv(self._pcell.primitive_matrix)
-        supercell_matrix = np.rint(supercell_matrix).astype('intc')
+        supercell_matrix = np.rint(supercell_matrix).astype("intc")
         if commensurate_points is None:
-            self._commensurate_points = get_commensurate_points(
-                supercell_matrix)
+            self._commensurate_points = get_commensurate_points(supercell_matrix)
         else:
             self._commensurate_points = commensurate_points
 
@@ -261,30 +268,34 @@ class DynmatToForceConstants(object):
         else:
             self._fc_shape = (n_p, n_s, 3, 3)
 
-        self._dtype_complex = ("c%d" % (np.dtype('double').itemsize * 2))
+        self._dtype_complex = "c%d" % (np.dtype("double").itemsize * 2)
 
         if dynamical_matrices is not None or commensurate_points is not None:
-            warnings.warn("Instanciation init parameters of dynamical_matrices"
-                          " and commensurate_points are deprecated. Use "
-                          "respecitve attributes.",
-                          DeprecationWarning)
+            warnings.warn(
+                "Instanciation init parameters of dynamical_matrices"
+                " and commensurate_points are deprecated. Use "
+                "respecitve attributes.",
+                DeprecationWarning,
+            )
 
         if eigenvalues is not None or eigenvectors is not None:
-            warnings.warn("Instanciation init parameters of eigenvalues and "
-                          "eigenvectors are deprecated. Use "
-                          "create_dynamical_matrices method.",
-                          DeprecationWarning)
+            warnings.warn(
+                "Instanciation init parameters of eigenvalues and "
+                "eigenvectors are deprecated. Use "
+                "create_dynamical_matrices method.",
+                DeprecationWarning,
+            )
 
         if eigenvalues is not None and eigenvectors is not None:
             self.create_dynamical_matrices(
-                eigenvalues=eigenvalues,
-                eigenvectors=eigenvectors)
+                eigenvalues=eigenvalues, eigenvectors=eigenvectors
+            )
         elif dynamical_matrices is not None:
             self.dynamical_matrices = dynamical_matrices
 
-    def run(self, lang='C'):
+    def run(self, lang="C"):
         """Run."""
-        self._fc = np.zeros(self._fc_shape, dtype='double', order='C')
+        self._fc = np.zeros(self._fc_shape, dtype="double", order="C")
         self._inverse_transformation(lang=lang)
 
     @property
@@ -315,13 +326,11 @@ class DynmatToForceConstants(object):
 
     @commensurate_points.setter
     def commensurate_points(self, comm_points):
-        self._commensurate_points = np.array(
-            comm_points, dtype='double', order='C')
+        self._commensurate_points = np.array(comm_points, dtype="double", order="C")
 
     def get_commensurate_points(self):
         """Commensurate points in supercell with respect to primitive cell."""
-        warnings.warn("Use attribute, commensurate_points.",
-                      DeprecationWarning)
+        warnings.warn("Use attribute, commensurate_points.", DeprecationWarning)
         return self.commensurate_points
 
     @property
@@ -340,7 +349,7 @@ class DynmatToForceConstants(object):
 
     @dynamical_matrices.setter
     def dynamical_matrices(self, dynmat):
-        self._dynmat = np.array(dynmat, dtype=self._dtype_complex, order='C')
+        self._dynmat = np.array(dynmat, dtype=self._dtype_complex, order="C")
 
     def get_dynamical_matrices(self):
         """Return numerical matrices of dynamical matrices."""
@@ -373,42 +382,42 @@ class DynmatToForceConstants(object):
         """
         dm = []
         for eigvals, eigvecs in zip(eigenvalues, eigenvectors):
-            dm.append(np.dot(np.dot(eigvecs, np.diag(eigvals)),
-                             eigvecs.T.conj()))
+            dm.append(np.dot(np.dot(eigvecs, np.diag(eigvals)), eigvecs.T.conj()))
         self.dynamical_matrices = dm
 
-    def _inverse_transformation(self, lang='C'):
-        if lang == 'C':
-            import phonopy._phonopy as phonoc
+    def _inverse_transformation(self, lang="C"):
+        if lang == "C":
             self._c_inverse_transformation()
         else:
             self._py_inverse_transformation()
 
         if self._fc.shape[0] == self._fc.shape[1]:
-            distribute_force_constants_by_translations(self._fc,
-                                                       self._pcell,
-                                                       self._scell)
+            distribute_force_constants_by_translations(
+                self._fc, self._pcell, self._scell
+            )
 
     def _c_inverse_transformation(self):
         import phonopy._phonopy as phonoc
 
-        s2p = np.array(self._pcell.s2p_map, dtype='int_')
+        s2p = np.array(self._pcell.s2p_map, dtype="int_")
         p2p = self._pcell.p2p_map
-        s2pp = np.array([p2p[i] for i in s2p], dtype='int_')
+        s2pp = np.array([p2p[i] for i in s2p], dtype="int_")
 
         if self._fc.shape[0] == self._fc.shape[1]:
-            fc_index_map = np.array(self._pcell.p2s_map, dtype='int_')
+            fc_index_map = np.array(self._pcell.p2s_map, dtype="int_")
         else:
-            fc_index_map = np.arange(self._fc.shape[0], dtype='int_')
+            fc_index_map = np.arange(self._fc.shape[0], dtype="int_")
 
-        phonoc.transform_dynmat_to_fc(self._fc,
-                                      self._dynmat.view(dtype='double'),
-                                      self._commensurate_points,
-                                      self._svecs,
-                                      self._multi,
-                                      self._pcell.masses,
-                                      s2pp,
-                                      fc_index_map)
+        phonoc.transform_dynmat_to_fc(
+            self._fc,
+            self._dynmat.view(dtype="double"),
+            self._commensurate_points,
+            self._svecs,
+            self._multi,
+            self._pcell.masses,
+            s2pp,
+            fc_index_map,
+        )
 
     def _py_inverse_transformation(self):
         s2p = self._pcell.s2p_map
@@ -429,12 +438,13 @@ class DynmatToForceConstants(object):
 
     def _sum_q(self, p_i, s_j, p_j):
         multi, adrs = self._multi[s_j, p_i]
-        pos = self._svecs[adrs:(adrs + multi)]
-        sum_q = np.zeros((3, 3), dtype=self._dtype_complex, order='C')
+        pos = self._svecs[adrs : (adrs + multi)]
+        sum_q = np.zeros((3, 3), dtype=self._dtype_complex, order="C")
         phases = -2j * np.pi * np.dot(self._commensurate_points, pos.T)
         phase_factors = np.exp(phases).sum(axis=1) / multi
         for i, coef in enumerate(phase_factors):
-            sum_q += self._dynmat[i,
-                                  (p_i * 3):(p_i * 3 + 3),
-                                  (p_j * 3):(p_j * 3 + 3)] * coef
+            sum_q += (
+                self._dynmat[i, (p_i * 3) : (p_i * 3 + 3), (p_j * 3) : (p_j * 3 + 3)]
+                * coef
+            )
         return sum_q.real

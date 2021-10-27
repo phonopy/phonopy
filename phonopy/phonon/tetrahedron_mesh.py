@@ -1,3 +1,4 @@
+"""Linear tetrahedron method on regular grid."""
 # copyright (C) 2013 Atsushi Togo
 # All rights reserved.
 #
@@ -33,127 +34,26 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
 
-def get_tetrahedra_frequencies(gp,
-                               mesh,
-                               grid_address,
-                               relative_grid_address,
-                               gp_ir_index,
-                               frequencies,
-                               grid_order=None,
-                               lang='C'):
-    """Returns frequencies on the relative_grid_addresses
+class TetrahedronMesh:
+    """Class to perform linear tetrahedron method on regular grid."""
 
-    Parameters
-    ----------
-    gp : float
-        Grid index
-    mesh : ndarray
-        Mesh numbers.
-        shape=(3, ), dtype='int_'
-    grid_address : ndarray
-        Grid address in integers.
-        shape=(prod(mesh), 3), dtype='int_', order='C'
-    relative_grid_addresses : ndarray
-        Relative grid addresses from the centre (i.e., gp)
-        shape=(24, 4, 3), dtype='int_', order='C'
-    gp_ir_index : ndarray
-        Grid index to ir-grid index. The ir-grid index is
-        range(len(ir-grid-points)).
-        shape=(prod(mesh), ), dtype='int_'
-    frequencies : ndarray
-        Phonon frequences on ir-grid points.
-        shape=(ir-grid-points, num_band)
-        dtype='double'
-    grid_order : list of int, optional
-        This controls how grid addresses are stored either C style or
-        Fortran style. This is only valid when lang != 'C'.
-    lang : str, 'C' or else, optional
-        With 'C', C implementation is used. Otherwise Python implementation
-        runs.
-
-    Returns
-    -------
-    ndarray
-        Frequencies at tetheredra tertices.
-        shape=(num_bands, 24, 4), dtype='double', order='C'
-
-    """
-    if lang == 'C':
-        try:
-            import phonopy._phonopy as phonoc
-            return _get_tetrahedra_frequencies_C(gp,
-                                                 mesh,
-                                                 grid_address,
-                                                 relative_grid_address,
-                                                 gp_ir_index,
-                                                 frequencies)
-        except ImportError:
-            return _get_tetrahedra_frequencies_Py(gp,
-                                                  mesh,
-                                                  grid_address,
-                                                  relative_grid_address,
-                                                  gp_ir_index,
-                                                  frequencies,
-                                                  grid_order)
-    else:
-        return _get_tetrahedra_frequencies_Py(gp,
-                                              mesh,
-                                              grid_address,
-                                              relative_grid_address,
-                                              gp_ir_index,
-                                              frequencies,
-                                              grid_order)
-
-
-def _get_tetrahedra_frequencies_C(gp,
-                                  mesh,
-                                  grid_address,
-                                  relative_grid_address,
-                                  gp_ir_index,
-                                  frequencies):
-    import phonopy._phonopy as phonoc
-
-    t_frequencies = np.zeros((1, frequencies.shape[1], 24, 4),
-                             dtype='double')
-    phonoc.tetrahedra_frequencies(t_frequencies,
-                                  np.array([gp], dtype='int_'),
-                                  mesh,
-                                  grid_address,
-                                  gp_ir_index,
-                                  relative_grid_address,
-                                  frequencies)
-    return np.array(t_frequencies[0], dtype='double', order='C')
-
-
-def _get_tetrahedra_frequencies_Py(gp,
-                                   mesh,
-                                   grid_address,
-                                   relative_grid_address,
-                                   gp_ir_index,
-                                   frequencies,
-                                   grid_order):
-    t_frequencies = np.zeros((frequencies.shape[1], 24, 4), dtype='double')
-    for i, t in enumerate(relative_grid_address):
-        address = t + grid_address[gp]
-        neighbors = np.dot(address % mesh, grid_order)
-        t_frequencies[:, i, :] = frequencies[gp_ir_index[neighbors]].T
-    return t_frequencies
-
-
-class TetrahedronMesh(object):
-    def __init__(self,
-                 cell,
-                 frequencies,  # only at ir-grid-points
-                 mesh,
-                 grid_address,
-                 grid_mapping_table,
-                 ir_grid_points,
-                 grid_order=None,
-                 lang='C'):
-        """Linear tetrahedron method on uniform mesh for phonons
+    def __init__(
+        self,
+        cell: PhonopyAtoms,
+        frequencies,  # only at ir-grid-points
+        mesh,
+        grid_address,
+        grid_mapping_table,
+        ir_grid_points,
+        grid_order=None,
+        lang="C",
+    ):
+        """Linear tetrahedron method on uniform mesh for phonons.
 
         Parameters
         ----------
@@ -190,11 +90,11 @@ class TetrahedronMesh(object):
         """
         self._cell = cell
         self._frequencies = frequencies
-        self._mesh = np.array(mesh, dtype='int_')
+        self._mesh = np.array(mesh, dtype="int_")
         self._grid_address = grid_address
         self._grid_mapping_table = grid_mapping_table
         self._lang = lang
-        if lang == 'C':
+        if lang == "C":
             self._grid_order = None
         else:
             if grid_order is None:
@@ -218,9 +118,11 @@ class TetrahedronMesh(object):
         self._prepare()
 
     def __iter__(self):
+        """Define iterator over grid points."""
         return self
 
     def __next__(self):
+        """Peform linear tetrahedron method at a grid point."""
         if self._grid_point_count == len(self._ir_grid_points):
             raise StopIteration
         else:
@@ -235,36 +137,31 @@ class TetrahedronMesh(object):
             self._grid_point_count += 1
             return self._integration_weights
 
-    def next(self):
-        return self.__next__()
-
     def get_integration_weights(self):
+        """Return integration weights."""
         return self._integration_weights
 
     def get_frequency_points(self):
+        """Return frequency points."""
         return self._frequency_points
 
-    def set(self,
-            value='I',
-            division_number=201,
-            frequency_points=None):
+    def set(self, value="I", division_number=201, frequency_points=None):
+        """Prepare environment to peform linear tetrahedron method."""
         self._grid_point_count = 0
         self._value = value
         if frequency_points is None:
             max_frequency = np.amax(self._frequencies)
             min_frequency = np.amin(self._frequencies)
-            self._frequency_points = np.linspace(min_frequency,
-                                                 max_frequency,
-                                                 division_number,
-                                                 dtype='double')
+            self._frequency_points = np.linspace(
+                min_frequency, max_frequency, division_number, dtype="double"
+            )
         else:
-            self._frequency_points = np.array(frequency_points, dtype='double')
+            self._frequency_points = np.array(frequency_points, dtype="double")
 
         num_band = self._frequencies.shape[1]
         num_freqs = len(self._frequency_points)
-        self._integration_weights = np.zeros((num_freqs, num_band),
-                                             dtype='double')
-        reciprocal_lattice = np.linalg.inv(self._cell.get_cell())
+        self._integration_weights = np.zeros((num_freqs, num_band), dtype="double")
+        reciprocal_lattice = np.linalg.inv(self._cell.cell)
         self._tm = TetrahedronMethod(reciprocal_lattice, mesh=self._mesh)
         self._relative_grid_address = self._tm.get_tetrahedra()
 
@@ -286,4 +183,110 @@ class TetrahedronMesh(object):
             self._gp_ir_index,
             self._frequencies,
             grid_order=self._grid_order,
-            lang=self._lang)
+            lang=self._lang,
+        )
+
+
+def get_tetrahedra_frequencies(
+    gp,
+    mesh,
+    grid_address,
+    relative_grid_address,
+    gp_ir_index,
+    frequencies,
+    grid_order=None,
+    lang="C",
+):
+    """Return frequencies on the relative_grid_addresses.
+
+    Parameters
+    ----------
+    gp : float
+        Grid index
+    mesh : ndarray
+        Mesh numbers.
+        shape=(3, ), dtype='int_'
+    grid_address : ndarray
+        Grid address in integers.
+        shape=(prod(mesh), 3), dtype='int_', order='C'
+    relative_grid_addresses : ndarray
+        Relative grid addresses from the centre (i.e., gp)
+        shape=(24, 4, 3), dtype='int_', order='C'
+    gp_ir_index : ndarray
+        Grid index to ir-grid index. The ir-grid index is
+        range(len(ir-grid-points)).
+        shape=(prod(mesh), ), dtype='int_'
+    frequencies : ndarray
+        Phonon frequences on ir-grid points.
+        shape=(ir-grid-points, num_band)
+        dtype='double'
+    grid_order : list of int, optional
+        This controls how grid addresses are stored either C style or
+        Fortran style. This is only valid when lang != 'C'.
+    lang : str, 'C' or else, optional
+        With 'C', C implementation is used. Otherwise Python implementation
+        runs.
+
+    Returns
+    -------
+    ndarray
+        Frequencies at tetheredra tertices.
+        shape=(num_bands, 24, 4), dtype='double', order='C'
+
+    """
+    if lang == "C":
+        try:
+            import phonopy._phonopy as phonoc  # noqa F401
+
+            return _get_tetrahedra_frequencies_C(
+                gp, mesh, grid_address, relative_grid_address, gp_ir_index, frequencies
+            )
+        except ImportError:
+            return _get_tetrahedra_frequencies_Py(
+                gp,
+                mesh,
+                grid_address,
+                relative_grid_address,
+                gp_ir_index,
+                frequencies,
+                grid_order,
+            )
+    else:
+        return _get_tetrahedra_frequencies_Py(
+            gp,
+            mesh,
+            grid_address,
+            relative_grid_address,
+            gp_ir_index,
+            frequencies,
+            grid_order,
+        )
+
+
+def _get_tetrahedra_frequencies_C(
+    gp, mesh, grid_address, relative_grid_address, gp_ir_index, frequencies
+):
+    import phonopy._phonopy as phonoc
+
+    t_frequencies = np.zeros((1, frequencies.shape[1], 24, 4), dtype="double")
+    phonoc.tetrahedra_frequencies(
+        t_frequencies,
+        np.array([gp], dtype="int_"),
+        mesh,
+        grid_address,
+        gp_ir_index,
+        relative_grid_address,
+        frequencies,
+    )
+    return np.array(t_frequencies[0], dtype="double", order="C")
+
+
+def _get_tetrahedra_frequencies_Py(
+    gp, mesh, grid_address, relative_grid_address, gp_ir_index, frequencies, grid_order
+):
+    t_frequencies = np.zeros((frequencies.shape[1], 24, 4), dtype="double")
+    for i, t in enumerate(relative_grid_address):
+        address = t + grid_address[gp]
+        neighbors = np.dot(address % mesh, grid_order)
+        t_frequencies[:, i, :] = frequencies[gp_ir_index[neighbors]].T
+    return t_frequencies

@@ -50,7 +50,7 @@ compute_forces .true.
     ion_occ      2  p   1.
 ################################################################################
 #
-#  Suggested additional basis functions. For production calculations, 
+#  Suggested additional basis functions. For production calculations,
 #  uncomment them one after another (the most important basis functions are
 #  listed first).
 #

@@ -1,3 +1,4 @@
+"""Phonopy version number only."""
 # Copyright (C) 2013 Atsushi Togo
 # All rights reserved.
 #
@@ -32,4 +33,4 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-__version__ = "2.11.0"
+__version__ = "2.12.0"

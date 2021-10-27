@@ -10,4 +10,4 @@ FORCE_SETS is obtained by
 
 Phonon analysis is done such as
 
-% phonopy --wien2k -c NaCl.struct -p band.conf 
+% phonopy --wien2k -c NaCl.struct -p band.conf

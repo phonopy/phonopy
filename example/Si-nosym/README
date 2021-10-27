@@ -10,8 +10,8 @@ There are 12 displacements, which means 6 directions for each atom in the input 
 
 % phonopy -f vasprun_xmls/disp-{001..012}/vasprun.xml
 
-Phonopy should be run with 'SYMMETRY = .FALSE.' or '--nosym'. 
+Phonopy should be run with 'SYMMETRY = .FALSE.' or '--nosym'.
 
-% phonopy mesh.conf 
+% phonopy mesh.conf
 
 The result of the phonopy calculation may be compared with the example found in Si directory.

@@ -1,3 +1,4 @@
+"""Utility routines to handle degeneracy."""
 # Copyright (C) 2014 Atsushi Togo
 # All rights reserved.
 #
@@ -32,10 +33,39 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from typing import Union
+
 import numpy as np
+
+from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 
 
 def degenerate_sets(freqs, cutoff=1e-4):
+    """Find degenerate bands from frequencies.
+
+    Parameters
+    ----------
+    freqs : ndarray
+        A list of values.
+        shape=(values,)
+    cutoff : float, optional
+        Equivalent of values is defined by this value, i.e.,
+            abs(val1 - val2) < cutoff
+        Default is 1e-4.
+
+    Returns
+    -------
+    indices : list of list
+        Indices of equivalent values are grouped as a list and those groups are
+        stored in a list.
+
+    Example
+    -------
+    In : degenerate_sets(np.array([1.5, 2.1, 2.1, 3.4, 8]))
+    Out: [[0], [1, 2], [3], [4]]
+
+    """
     indices = []
     done = []
     for i in range(len(freqs)):
@@ -53,12 +83,15 @@ def degenerate_sets(freqs, cutoff=1e-4):
     return indices
 
 
-def get_eigenvectors(q,
-                     dm,
-                     ddm,
-                     perturbation=None,
-                     derivative_order=None,
-                     nac_q_direction=None):
+def get_eigenvectors(
+    q,
+    dm: Union[DynamicalMatrix, DynamicalMatrixNAC],
+    ddm: DerivativeOfDynamicalMatrix,
+    perturbation=None,
+    derivative_order=None,
+    nac_q_direction=None,
+):
+    """Return degenerated eigenvalues and rotated eigenvalues."""
     if nac_q_direction is not None and (np.abs(q) < 1e-5).all():
         dm.run(q, q_direction=nac_q_direction)
     else:
@@ -77,6 +110,20 @@ def get_eigenvectors(q,
 
 
 def rotate_eigenvectors(eigvals, eigvecs, dD):
+    """Rotate eigenvectors among degenerated band.
+
+    Parameters
+    ----------
+    eigvals :
+        Eigenvalues.
+        shape=(num_band, )
+    eigvecs :
+        Eigenvectors.
+        shape=(num_atom * 3, num_band)
+    dD :
+        q-point derivative of dynamical matrix.
+
+    """
     rot_eigvecs = np.zeros_like(eigvecs)
     eigvals_dD = np.zeros_like(eigvals)
     for deg in degenerate_sets(eigvals):
@@ -86,10 +133,17 @@ def rotate_eigenvectors(eigvals, eigvecs, dD):
     return rot_eigvecs, eigvals_dD
 
 
-def _get_dD(q, ddm, perturbation):
+def _get_dD(q, ddm: DerivativeOfDynamicalMatrix, perturbation):
+    """Return q-vector derivative of dynamical matrix.
+
+    Returns
+    -------
+    shape=(3, num_band, num_band).
+
+    """
     ddm.run(q)
     ddm_vals = ddm.get_derivative_of_dynamical_matrix()
-    dD = np.zeros(ddm_vals.shape[1:], dtype=ddm_vals.dtype, order='C')
+    dD = np.zeros(ddm_vals.shape[1:], dtype=ddm_vals.dtype, order="C")
     if len(ddm_vals) == 3:
         for i in range(3):
             dD += perturbation[i] * ddm_vals[i]

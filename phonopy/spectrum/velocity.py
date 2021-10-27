@@ -1,3 +1,4 @@
+"""Routines to analyze MD velocity data."""
 # Copyright (C) 2016 Atsushi Togo
 # All rights reserved.
 #
@@ -33,44 +34,57 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
+
 import numpy as np
+
 from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
-from phonopy.units import AMU, kb_J
 from phonopy.structure.grid_points import get_qpoints
+from phonopy.units import AMU, kb_J
 
 
-class Velocity(object):
-    def __init__(self,
-                 lattice=None,  # column vectors, in angstrom
-                 positions=None,  # fractional coordinates
-                 timestep=None):  # in femtosecond
+class Velocity:
+    """Class to calculate atomic velocities from temporal positions."""
 
+    def __init__(
+        self,
+        lattice=None,  # column vectors, in angstrom
+        positions=None,  # fractional coordinates
+        timestep=None,  # in femtosecond
+    ):
+        """Init method."""
         self._lattice = lattice
         self._positions = positions
         self._timestep = timestep
         self._velocities = None  # in m/s [timestep, atom, 3]
 
     def run(self, skip_steps=0):
+        """Calculate velocities."""
         pos = self._positions
-        diff = pos[(skip_steps + 1):] - pos[skip_steps:-1]
+        diff = pos[(skip_steps + 1) :] - pos[skip_steps:-1]
         diff = np.where(diff > 0.5, diff - 1, diff)
         diff = np.where(diff < -0.5, diff + 1, diff)
         self._velocities = np.dot(diff, self._lattice.T * 1e5) / self._timestep
 
     def get_velocities(self):
+        """Return velocities."""
         return self._velocities
 
     def get_timestep(self):
+        """Return time step."""
         return self._timestep
 
 
-class VelocityQpoints(object):
-    def __init__(self,
-                 supercell,
-                 primitive,
-                 velocities,  # in m/s either real or reciprocal
-                 symmetry=None,
-                 symprec=1e-5):
+class VelocityQpoints:
+    """Class to calculate q-point projected velocity."""
+
+    def __init__(
+        self,
+        supercell,
+        primitive,
+        velocities,  # in m/s either real or reciprocal
+        symmetry=None,
+    ):
+        """Init method."""
         if symmetry is not None:
             self._point_group_opts = symmetry.get_pointgroup_operations()
         else:
@@ -80,8 +94,7 @@ class VelocityQpoints(object):
         self._primitive = primitive
         self._velocities = velocities
 
-        (self._shortest_vectors,
-         self._multiplicity) = primitive.get_smallest_vectors()
+        (self._shortest_vectors, self._multiplicity) = primitive.get_smallest_vectors()
 
         self._qpoints = None
         self._weights = None
@@ -89,34 +102,42 @@ class VelocityQpoints(object):
         self._velocities_q = None  # [timestep, p_atom, qpoitns, 3]
 
     def run(self):
+        """Calculate q-point projected velocities."""
         self._velocities_q = self._transform(self._qpoints)
 
     def get_velocities(self):
+        """Return q-point projected velocities."""
         return self._velocities_q
 
     def set_mesh(self, mesh):
+        """Set mesh."""
         rec_lat = np.linalg.inv(self._primitive.get_cell())
         self._qpoints, self._weights = get_qpoints(
-            mesh,
-            rec_lat,
-            is_gamma_center=True,
-            rotations=self._point_group_opts)
+            mesh, rec_lat, is_gamma_center=True, rotations=self._point_group_opts
+        )
 
     def set_qpoints(self, qpoints):
-        self._weights = np.ones(len(qpoints), dtype='int_')
+        """Set q-points."""
+        self._weights = np.ones(len(qpoints), dtype="int_")
         self._qpoints = qpoints
 
     def set_commensurate_points(self):
+        """Set commensurate points."""
         supercell_matrix = np.rint(
-            np.linalg.inv(self._primitive.primitive_matrix)).astype('intc')
+            np.linalg.inv(self._primitive.primitive_matrix)
+        ).astype("intc")
         self.set_qpoints(get_commensurate_points(supercell_matrix))
 
     def get_qpoints(self):
+        """Return irreducible q-points and weights."""
         return self._qpoints, self._weights
 
     def _transform(self, q):
-        """ exp(i q.r(i)) v(i)"""
+        """Calculate projection.
 
+        exp(i q.r(i)) v(i)
+
+        """
         s2p = self._primitive.s2p_map
         p2s = self._primitive.p2s_map
 
@@ -124,14 +145,13 @@ class VelocityQpoints(object):
         v = self._velocities
 
         q_array = np.reshape(q, (-1, 3))
-        dtype = "c%d" % (np.dtype('double').itemsize * 2)
+        dtype = "c%d" % (np.dtype("double").itemsize * 2)
         v_q = np.zeros((v.shape[0], num_p, len(q_array), 3), dtype=dtype)
 
         for p_i, s_i in enumerate(p2s):
             for s_j, s2p_j in enumerate(s2p):
                 if s2p_j == s_i:
-                    for q_i, pf in enumerate(
-                            self._get_phase_factor(p_i, s_j, q_array)):
+                    for q_i, pf in enumerate(self._get_phase_factor(p_i, s_j, q_array)):
                         v_q[:, p_i, q_i, :] += pf * v[:, s_j, :]
         return v_q
 
@@ -141,11 +161,11 @@ class VelocityQpoints(object):
         return np.exp(-2j * np.pi * np.dot(q_array, pos.T)).sum(axis=1) / multi
 
 
-class AutoCorrelation(object):
-    def __init__(self,
-                 velocities,  # in m/s
-                 masses=None,  # in AMU
-                 temperature=None):  # in K
+class AutoCorrelation:
+    """Class to calculate autocorrelation."""
+
+    def __init__(self, velocities, masses=None, temperature=None):  # in m/s, AMU, K
+        """Init method."""
         self._velocities = velocities
         self._masses = masses
         self._temperature = temperature
@@ -154,6 +174,7 @@ class AutoCorrelation(object):
         self._n_elements = 0
 
     def run(self, num_frequency_points, verbose=False):
+        """Calculate autocorrelation."""
         v = self._velocities
         max_lag = num_frequency_points * 2
         n_elem = len(v) - max_lag
@@ -161,7 +182,7 @@ class AutoCorrelation(object):
         if n_elem < 1:
             return False
 
-        vv = np.zeros((max_lag,) + v.shape[1:], dtype=v.dtype, order='C')
+        vv = np.zeros((max_lag,) + v.shape[1:], dtype=v.dtype, order="C")
 
         if np.iscomplexobj(vv):
             v_c = v.conj()
@@ -174,11 +195,9 @@ class AutoCorrelation(object):
                     sys.stdout.write("\r%d%%" % (((i + 1) * 100) // max_lag))
                     sys.stdout.flush()
             if np.iscomplexobj(vv):
-                vv[i - d] = (v[d:(d + n_elem)] *
-                             v_c[i:(i + n_elem)]).sum(axis=0)
+                vv[i - d] = (v[d : (d + n_elem)] * v_c[i : (i + n_elem)]).sum(axis=0)
             else:
-                vv[i - d] = (v[d:(d + n_elem)] *
-                             v[i:(i + n_elem)]).sum(axis=0)
+                vv[i - d] = (v[d : (d + n_elem)] * v[i : (i + n_elem)]).sum(axis=0)
         if verbose:
             sys.stdout.write("\r    \n")
             sys.stdout.flush()
@@ -193,7 +212,9 @@ class AutoCorrelation(object):
         return True
 
     def get_autocorrelation(self):
+        """Return autocorrelation."""
         return self._vv
 
     def get_number_of_elements(self):
+        """Return number of elements of autocorrelation array."""
         return self._n_elements

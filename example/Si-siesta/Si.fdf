@@ -46,4 +46,3 @@ LatticeConstant     5.430 Ang
     0.00    0.00    0.00   1 #  Si  1
     0.25    0.25    0.25   1 #  Si  2
 %endblock AtomicCoordinatesAndAtomicSpecies
-
