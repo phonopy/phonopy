@@ -32,6 +32,8 @@
 /* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
 /* POSSIBILITY OF SUCH DAMAGE. */
 
+#include <stddef.h>
+
 #ifndef __phonopy_H__
 #define __phonopy_H__
 
