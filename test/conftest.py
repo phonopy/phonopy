@@ -13,6 +13,18 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 @pytest.fixture(scope="session")
+def ph_si() -> Phonopy:
+    """Return Phonopy class instance of Si-prim 2x2x2."""
+    yaml_filename = os.path.join(current_dir, "phonopy_params_Si.yaml")
+    return phonopy.load(
+        yaml_filename,
+        is_compact_fc=False,
+        log_level=1,
+        produce_fc=True,
+    )
+
+
+@pytest.fixture(scope="session")
 def ph_nacl() -> Phonopy:
     """Return Phonopy class instance of NaCl 2x2x2."""
     yaml_filename = os.path.join(current_dir, "phonopy_disp_NaCl.yaml")

@@ -256,7 +256,7 @@ class GroupVelocity:
     def _get_dD_analytical(self, q):
         """Compute derivative of dynamcial matrices."""
         self._ddm.run(q)
-        ddm = self._ddm.get_derivative_of_dynamical_matrix()
+        ddm = self._ddm.d_dynamical_matrix
         dtype = "c%d" % (np.dtype("double").itemsize * 2)
         ddm_dirs = np.zeros((len(self._directions),) + ddm.shape[1:], dtype=dtype)
         for i, dq in enumerate(self._directions):
