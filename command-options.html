@@ -4,8 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Command options &#8212; Phonopy v.2.12.0</title>
     
   <link href="_static/css/theme.css" rel="stylesheet" />
@@ -23,12 +22,12 @@
       
 
     
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/sphinx-book-theme.css?digest=c3fdc42140077d1ad13ad2f1588a4309" type="text/css" />
     
   <link rel="preload" as="script" href="_static/js/index.1c5a1a01449ed65a7b51.js">
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
@@ -56,13 +55,14 @@
     <a class="navbar-brand text-wrap" href="index.html">
       
       
+      
       <h1 class="site-logo" id="site-title">Phonopy v.2.12.0</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item active">
         <ul class="current nav bd-sidenav">
  <li class="toctree-l1">
@@ -516,7 +516,7 @@
             <div class="tocsection onthispage pt-5 pb-3">
                 <i class="fas fa-list"></i> Contents
             </div>
-            <nav id="bd-toc-nav">
+            <nav id="bd-toc-nav" aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#choice-of-force-calculator">
@@ -839,7 +839,7 @@
         
               <div>
                 
-  <section id="command-options">
+  <div class="section" id="command-options">
 <span id="id1"></span><h1>Command options<a class="headerlink" href="#command-options" title="Permalink to this headline">¶</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
@@ -983,7 +983,7 @@ the mixed use of setting tags and command-line options, i.e.,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonopy</span> <span class="n">setting</span><span class="o">.</span><span class="n">conf</span> <span class="p">[</span><span class="n">command</span><span class="o">-</span><span class="n">line</span><span class="o">-</span><span class="n">options</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="choice-of-force-calculator">
+<div class="section" id="choice-of-force-calculator">
 <span id="force-calculators"></span><h2><a class="toc-backref" href="#id2">Choice of force calculator</a><a class="headerlink" href="#choice-of-force-calculator" title="Permalink to this headline">¶</a></h2>
 <p>Currently interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT,
 Elk, SIESTA, CRYSTAL, TURBOMOLE, Fleur and CP2K are prepared. These interfaces are invoked
@@ -991,7 +991,7 @@ with <code class="docutils literal notranslate"><span class="pre">--vasp</span><
 <code class="docutils literal notranslate"><span class="pre">--siesta</span></code>, <code class="docutils literal notranslate"><span class="pre">--crystal</span></code>, <code class="docutils literal notranslate"><span class="pre">--turbomole</span></code>, <code class="docutils literal notranslate"><span class="pre">--fleur</span></code> and <code class="docutils literal notranslate"><span class="pre">--cp2k</span></code> options, respectively.
 When no interface is specified, <code class="docutils literal notranslate"><span class="pre">--vasp</span></code> is selected as the default interface.</p>
 <p>The details about these interfaces are found at <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.</p>
-<section id="wien2k">
+<div class="section" id="wien2k">
 <span id="wien2k-mode"></span><h3><a class="toc-backref" href="#id3"><code class="docutils literal notranslate"><span class="pre">--wien2k</span></code></a><a class="headerlink" href="#wien2k" title="Permalink to this headline">¶</a></h3>
 <p><strong>Behavior is changed at phonopy 1.9.2.</strong></p>
 <p>This option invokes the WIEN2k mode.In this mode. Usually this option
@@ -1006,8 +1006,8 @@ information <a class="reference internal" href="wien2k.html#wien2k-interface"><s
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">wien2k</span><span class="o">=</span><span class="n">NaCl</span><span class="o">.</span><span class="n">struct</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>   <span class="p">(</span><span class="n">version</span> <span class="o">&lt;=</span> <span class="mf">1.9.1.3</span><span class="p">)</span>
 </pre></div>
 </div>
-</section>
-<section id="abinit">
+</div>
+<div class="section" id="abinit">
 <span id="abinit-mode"></span><h3><a class="toc-backref" href="#id4"><code class="docutils literal notranslate"><span class="pre">--abinit</span></code></a><a class="headerlink" href="#abinit" title="Permalink to this headline">¶</a></h3>
 <p>Abinit mode is invoked with this option. Usually this option is used
 with <code class="docutils literal notranslate"><span class="pre">--cell</span></code> (<code class="docutils literal notranslate"><span class="pre">-c</span></code>) option or <code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code> tag to read
@@ -1016,8 +1016,8 @@ e.g.,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">abinit</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
-</section>
-<section id="qe">
+</div>
+<div class="section" id="qe">
 <span id="qe-mode"></span><h3><a class="toc-backref" href="#id5"><code class="docutils literal notranslate"><span class="pre">--qe</span></code></a><a class="headerlink" href="#qe" title="Permalink to this headline">¶</a></h3>
 <p>Quantum ESPRESSO mode is invoked with this option. Usually this option
 is used with <code class="docutils literal notranslate"><span class="pre">--cell</span></code> (<code class="docutils literal notranslate"><span class="pre">-c</span></code>) option or <code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code> tag to
@@ -1026,8 +1026,8 @@ e.g.,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
-</section>
-<section id="siesta">
+</div>
+<div class="section" id="siesta">
 <span id="siesta-mode"></span><h3><a class="toc-backref" href="#id6"><code class="docutils literal notranslate"><span class="pre">--siesta</span></code></a><a class="headerlink" href="#siesta" title="Permalink to this headline">¶</a></h3>
 <p>Siesta mode is invoked with this option. Usually this option is used
 with <code class="docutils literal notranslate"><span class="pre">--cell</span></code> (<code class="docutils literal notranslate"><span class="pre">-c</span></code>) option or <code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code> tag to read a Siesta
@@ -1035,8 +1035,8 @@ input file that contains the unit cell crystal structure, e.g.,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">siesta</span> <span class="o">-</span><span class="n">c</span> <span class="n">Si</span><span class="o">.</span><span class="n">fdf</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
-</section>
-<section id="elk">
+</div>
+<div class="section" id="elk">
 <span id="elk-mode"></span><h3><a class="toc-backref" href="#id7"><code class="docutils literal notranslate"><span class="pre">--elk</span></code></a><a class="headerlink" href="#elk" title="Permalink to this headline">¶</a></h3>
 <p>Elk mode is invoked with this option. Usually this option is used
 with <code class="docutils literal notranslate"><span class="pre">--cell</span></code> (<code class="docutils literal notranslate"><span class="pre">-c</span></code>) option or <code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code> tag to read Elk
@@ -1044,8 +1044,8 @@ input file that contains the unit cell crystal structure, e.g.,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">elk</span> <span class="o">-</span><span class="n">c</span> <span class="n">elk</span><span class="o">-</span><span class="n">unitcell</span><span class="o">.</span><span class="ow">in</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
-</section>
-<section id="crystal">
+</div>
+<div class="section" id="crystal">
 <span id="crystal-mode"></span><h3><a class="toc-backref" href="#id8"><code class="docutils literal notranslate"><span class="pre">--crystal</span></code></a><a class="headerlink" href="#crystal" title="Permalink to this headline">¶</a></h3>
 <p>CRYSTAL mode is invoked with this option. Usually this option is used
 with <code class="docutils literal notranslate"><span class="pre">--cell</span></code> (<code class="docutils literal notranslate"><span class="pre">-c</span></code>) option or <code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code> tag to read a CRYSTAL
@@ -1053,8 +1053,8 @@ input file that contains the unit cell crystal structure, e.g.,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">-</span><span class="n">c</span> <span class="n">crystal</span><span class="o">.</span><span class="n">o</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
-</section>
-<section id="turbomole">
+</div>
+<div class="section" id="turbomole">
 <span id="turbomole-mode"></span><h3><a class="toc-backref" href="#id9"><code class="docutils literal notranslate"><span class="pre">--turbomole</span></code></a><a class="headerlink" href="#turbomole" title="Permalink to this headline">¶</a></h3>
 <p>TURBOMOLE mode is invoked with this option. Usually this option is used
 with <code class="docutils literal notranslate"><span class="pre">--cell</span></code> (<code class="docutils literal notranslate"><span class="pre">-c</span></code>) option or <code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code> tag to read a TURBOMOLE
@@ -1062,8 +1062,8 @@ input file that contains the unit cell crystal structure, e.g.,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">turbomole</span> <span class="o">-</span><span class="n">c</span> <span class="n">control</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
-</section>
-<section id="fleur">
+</div>
+<div class="section" id="fleur">
 <span id="fleur-mode"></span><h3><a class="toc-backref" href="#id10"><code class="docutils literal notranslate"><span class="pre">--fleur</span></code></a><a class="headerlink" href="#fleur" title="Permalink to this headline">¶</a></h3>
 <p>Fleur mode is invoked with this option. Usually this option is used
 with <code class="docutils literal notranslate"><span class="pre">--cell</span></code> (<code class="docutils literal notranslate"><span class="pre">-c</span></code>) option or <code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code> tag to read a Fleur
@@ -1071,8 +1071,8 @@ input generator file that contains the unit cell crystal structure, e.g.,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">fleur</span> <span class="o">-</span><span class="n">c</span> <span class="n">fleur_inpgen</span>
 </pre></div>
 </div>
-</section>
-<section id="cp2k">
+</div>
+<div class="section" id="cp2k">
 <span id="cp2k-mode"></span><h3><a class="toc-backref" href="#id11"><code class="docutils literal notranslate"><span class="pre">--cp2k</span></code></a><a class="headerlink" href="#cp2k" title="Permalink to this headline">¶</a></h3>
 <p>CP2K mode is invoked with this option. Usually this option is used
 with <code class="docutils literal notranslate"><span class="pre">--cell</span></code> (<code class="docutils literal notranslate"><span class="pre">-c</span></code>) option or <code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code> tag to read a CP2K
@@ -1080,8 +1080,8 @@ input file that contains the unit cell crystal structure, e.g.,:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">cp2k</span> <span class="o">-</span><span class="n">c</span> <span class="n">project</span><span class="o">.</span><span class="n">inp</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
-</section>
-<section id="vasp">
+</div>
+<div class="section" id="vasp">
 <span id="vasp-mode"></span><h3><a class="toc-backref" href="#id12"><code class="docutils literal notranslate"><span class="pre">--vasp</span></code></a><a class="headerlink" href="#vasp" title="Permalink to this headline">¶</a></h3>
 <p>This doesn’t change the default behaviour, but <code class="docutils literal notranslate"><span class="pre">vasp</span></code> will appear as
 the calculator such as in <code class="docutils literal notranslate"><span class="pre">band.yaml</span></code>:</p>
@@ -1090,11 +1090,11 @@ the calculator such as in <code class="docutils literal notranslate"><span class
 <span class="o">...</span>
 </pre></div>
 </div>
-</section>
-</section>
-<section id="input-cell">
+</div>
+</div>
+<div class="section" id="input-cell">
 <span id="cell-filename-option"></span><h2><a class="toc-backref" href="#id13">Input cell</a><a class="headerlink" href="#input-cell" title="Permalink to this headline">¶</a></h2>
-<section id="c-or-cell">
+<div class="section" id="c-or-cell">
 <h3><a class="toc-backref" href="#id14"><code class="docutils literal notranslate"><span class="pre">-c</span></code> or <code class="docutils literal notranslate"><span class="pre">--cell</span></code></a><a class="headerlink" href="#c-or-cell" title="Permalink to this headline">¶</a></h3>
 <p>Unit cell crystal structure file is specified with this tag.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">cell</span><span class="o">=</span><span class="n">POSCAR</span><span class="o">-</span><span class="n">unitcell</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
@@ -1113,13 +1113,13 @@ directory. The default file names for the calculators are as follows:</p>
 <span class="n">CP2K</span>      <span class="o">|</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">inp</span>
 </pre></div>
 </div>
-</section>
-</section>
-<section id="create-force-sets">
+</div>
+</div>
+<div class="section" id="create-force-sets">
 <h2><a class="toc-backref" href="#id15">Create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code></a><a class="headerlink" href="#create-force-sets" title="Permalink to this headline">¶</a></h2>
-<section id="f-or-forces">
+<div class="section" id="f-or-forces">
 <span id="f-force-sets-option"></span><h3><a class="toc-backref" href="#id16"><code class="docutils literal notranslate"><span class="pre">-f</span></code> or <code class="docutils literal notranslate"><span class="pre">--forces</span></code></a><a class="headerlink" href="#f-or-forces" title="Permalink to this headline">¶</a></h3>
-<section id="vasp-interface">
+<div class="section" id="vasp-interface">
 <span id="vasp-force-sets-option"></span><h4><a class="toc-backref" href="#id17">VASP interface</a><a class="headerlink" href="#vasp-interface" title="Permalink to this headline">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>, which is an
 output file when creating supercells with displacements, and
@@ -1139,8 +1139,8 @@ parsing xml file uses huge memory space. It is recommended</p></li>
 expansions are useful, e.g., <code class="docutils literal notranslate"><span class="pre">disp-*/vasprun.xml</span></code>, or
 <code class="docutils literal notranslate"><span class="pre">disp-{001..128}/vasprun.xml</span></code> (for zsh, and recent bash).</p></li>
 </ul>
-</section>
-<section id="abinit-interface">
+</div>
+<div class="section" id="abinit-interface">
 <span id="abinit-force-sets-option"></span><h4><a class="toc-backref" href="#id18">ABINIT interface</a><a class="headerlink" href="#abinit-interface" title="Permalink to this headline">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and ABINIT
 output files (<code class="docutils literal notranslate"><span class="pre">*.out</span></code>). In the reading of forces in ABINIT output
@@ -1149,8 +1149,8 @@ determined with this unit.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">out</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">out</span>  <span class="o">...</span>
 </pre></div>
 </div>
-</section>
-<section id="quantum-espresso-interface">
+</div>
+<div class="section" id="quantum-espresso-interface">
 <span id="qe-force-sets-option"></span><h4><a class="toc-backref" href="#id19">Quantum ESPRESSO interface</a><a class="headerlink" href="#quantum-espresso-interface" title="Permalink to this headline">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and QE-PW
 output files.</p>
@@ -1159,8 +1159,8 @@ output files.</p>
 </div>
 <p>Here <code class="docutils literal notranslate"><span class="pre">*.out</span></code> files are the saved texts of standard outputs of PWscf
 calculations.</p>
-</section>
-<section id="wien2k-interface">
+</div>
+<div class="section" id="wien2k-interface">
 <span id="wien2k-force-sets-option"></span><h4><a class="toc-backref" href="#id20">WIEN2k interface</a><a class="headerlink" href="#wien2k-interface" title="Permalink to this headline">¶</a></h4>
 <p>This is experimental support to generage <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>. Insted of
 this, you can use the external tool called <code class="docutils literal notranslate"><span class="pre">scf2forces</span></code> to generate
@@ -1176,40 +1176,40 @@ negative atom index with the P lattice format is supported.</strong></p>
 </pre></div>
 </div>
 <p>For more information, <a class="reference internal" href="wien2k.html#wien2k-interface"><span class="std std-ref">Wien2k &amp; phonopy calculation</span></a>.</p>
-</section>
-<section id="elk-interface">
+</div>
+<div class="section" id="elk-interface">
 <span id="elk-force-sets-option"></span><h4><a class="toc-backref" href="#id21">Elk interface</a><a class="headerlink" href="#elk-interface" title="Permalink to this headline">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and Elk output
 files.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">INFO</span><span class="o">.</span><span class="n">OUT</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">INFO</span><span class="o">.</span><span class="n">OUT</span>  <span class="o">...</span>
 </pre></div>
 </div>
-</section>
-<section id="crystal-interface">
+</div>
+<div class="section" id="crystal-interface">
 <span id="crystal-force-sets-option"></span><h4><a class="toc-backref" href="#id22">CRYSTAL interface</a><a class="headerlink" href="#crystal-interface" title="Permalink to this headline">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and CRYSTAL output
 files.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">supercell</span><span class="o">-</span><span class="mf">001.</span><span class="n">o</span> <span class="n">supercell</span><span class="o">-</span><span class="mf">002.</span><span class="n">o</span>  <span class="o">...</span>
 </pre></div>
 </div>
-</section>
-<section id="turbomole-interface">
+</div>
+<div class="section" id="turbomole-interface">
 <span id="turbomole-force-sets-option"></span><h4><a class="toc-backref" href="#id23">TURBOMOLE interface</a><a class="headerlink" href="#turbomole-interface" title="Permalink to this headline">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and TURBOMOLE output
 files.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">supercell</span><span class="o">-</span><span class="mi">001</span> <span class="n">supercell</span><span class="o">-</span><span class="mi">002</span>  <span class="o">...</span>
 </pre></div>
 </div>
-</section>
-<section id="fleur-interface">
+</div>
+<div class="section" id="fleur-interface">
 <span id="fleur-force-sets-option"></span><h4><a class="toc-backref" href="#id24">Fleur interface</a><a class="headerlink" href="#fleur-interface" title="Permalink to this headline">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and special Fleur
 FORCES output files.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">FORCES</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">FORCES</span>  <span class="o">...</span>
 </pre></div>
 </div>
-</section>
-<section id="cp2k-interface">
+</div>
+<div class="section" id="cp2k-interface">
 <span id="cp2k-force-sets-option"></span><h4><a class="toc-backref" href="#id25">CP2K interface</a><a class="headerlink" href="#cp2k-interface" title="Permalink to this headline">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and CP2K output files, with:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">supercell</span><span class="o">-</span><span class="mi">001</span><span class="o">-</span><span class="n">forces</span><span class="o">-</span><span class="mf">1_0.</span><span class="n">xyz</span> <span class="n">supercell</span><span class="o">-</span><span class="mi">002</span><span class="o">-</span><span class="n">forces</span><span class="o">-</span><span class="mf">1_0.</span><span class="n">xyz</span>  <span class="o">...</span>
@@ -1217,9 +1217,9 @@ FORCES output files.</p>
 </div>
 <p>Please note: the files containing the forces can be prefixed with the <code class="docutils literal notranslate"><span class="pre">PROJECT_NAME</span></code>
 as specified in the original CP2K input file.</p>
-</section>
-</section>
-<section id="fz">
+</div>
+</div>
+<div class="section" id="fz">
 <span id="fz-force-sets-option"></span><h3><a class="toc-backref" href="#id26"><code class="docutils literal notranslate"><span class="pre">--fz</span></code></a><a class="headerlink" href="#fz" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">--fz</span></code> option is used to subtract residual forces frown the forces
 calculated for the supercells with displacements. Here the residual
@@ -1243,11 +1243,11 @@ supercell containing residual forces.</p>
 VASP interface, but it is not tested yet. It would be appreciated if
 you report it to the phonopy mailing list when you find it
 does/doesn’t work for any other calculator interfaces.</p>
-</section>
-</section>
-<section id="create-force-constants">
+</div>
+</div>
+<div class="section" id="create-force-constants">
 <h2><a class="toc-backref" href="#id27">Create <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#create-force-constants" title="Permalink to this headline">¶</a></h2>
-<section id="fc-or-force-constants">
+<div class="section" id="fc-or-force-constants">
 <span id="vasp-force-constants"></span><h3><a class="toc-backref" href="#id28"><code class="docutils literal notranslate"><span class="pre">--fc</span></code> or <code class="docutils literal notranslate"><span class="pre">--force_constants</span></code></a><a class="headerlink" href="#fc-or-force-constants" title="Permalink to this headline">¶</a></h3>
 <p><strong>Currently this option supports only VASP output.</strong></p>
 <p>VASP output of force constants is imported from
@@ -1257,39 +1257,39 @@ does/doesn’t work for any other calculator interfaces.</p>
 </div>
 <p>This <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> can be used instead of <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>. For
 more details, please refer <a class="reference internal" href="vasp-dfpt.html#vasp-dfpt-interface"><span class="std std-ref">VASP-DFPT &amp; phonopy calculation</span></a>.</p>
-</section>
-</section>
-<section id="graph-plotting">
+</div>
+</div>
+<div class="section" id="graph-plotting">
 <span id="graph-option"></span><h2><a class="toc-backref" href="#id29">Graph plotting</a><a class="headerlink" href="#graph-plotting" title="Permalink to this headline">¶</a></h2>
-<section id="p">
+<div class="section" id="p">
 <h3><a class="toc-backref" href="#id30"><code class="docutils literal notranslate"><span class="pre">-p</span></code></a><a class="headerlink" href="#p" title="Permalink to this headline">¶</a></h3>
 <p>Result is plotted.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span>
 </pre></div>
 </div>
-</section>
-<section id="p-s">
+</div>
+<div class="section" id="p-s">
 <span id="graph-save-option"></span><h3><a class="toc-backref" href="#id31"><code class="docutils literal notranslate"><span class="pre">-p</span> <span class="pre">-s</span></code></a><a class="headerlink" href="#p-s" title="Permalink to this headline">¶</a></h3>
 <p>Result is plotted (saved) to PDF file.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span> <span class="o">-</span><span class="n">s</span>
 </pre></div>
 </div>
-</section>
-</section>
-<section id="log-level">
+</div>
+</div>
+<div class="section" id="log-level">
 <h2><a class="toc-backref" href="#id32">Log level</a><a class="headerlink" href="#log-level" title="Permalink to this headline">¶</a></h2>
-<section id="v-or-verbose">
+<div class="section" id="v-or-verbose">
 <h3><a class="toc-backref" href="#id33"><code class="docutils literal notranslate"><span class="pre">-v</span></code> or <code class="docutils literal notranslate"><span class="pre">--verbose</span></code></a><a class="headerlink" href="#v-or-verbose" title="Permalink to this headline">¶</a></h3>
 <p>More detailed log are shown</p>
-</section>
-<section id="q-or-quiet">
+</div>
+<div class="section" id="q-or-quiet">
 <h3><a class="toc-backref" href="#id34"><code class="docutils literal notranslate"><span class="pre">-q</span></code> or <code class="docutils literal notranslate"><span class="pre">--quiet</span></code></a><a class="headerlink" href="#q-or-quiet" title="Permalink to this headline">¶</a></h3>
 <p>No log is shown.</p>
-</section>
-</section>
-<section id="crystal-symmetry">
+</div>
+</div>
+<div class="section" id="crystal-symmetry">
 <h2><a class="toc-backref" href="#id35">Crystal symmetry</a><a class="headerlink" href="#crystal-symmetry" title="Permalink to this headline">¶</a></h2>
-<section id="symmetry">
+<div class="section" id="symmetry">
 <span id="symmetry-option"></span><h3><a class="toc-backref" href="#id36"><code class="docutils literal notranslate"><span class="pre">--symmetry</span></code></a><a class="headerlink" href="#symmetry" title="Permalink to this headline">¶</a></h3>
 <p>Using this option, various crystal symmetry information is just
 printed out and phonopy stops without going to phonon analysis.</p>
@@ -1302,24 +1302,44 @@ printed out and phonopy stops without going to phonon analysis.</p>
 <p>After running this, <code class="docutils literal notranslate"><span class="pre">BPOSCAR</span></code> and <code class="docutils literal notranslate"><span class="pre">PPOSCAR</span></code> files are written,
 which are the symmetrized conventional unit cell and primitive cell,
 respectively, in the VASP style format.</p>
-</section>
-</section>
-</section>
+</div>
+</div>
+</div>
 
 
               </div>
               
         
-        <div class='prev-next-bottom'>
             
-    <a class='left-prev' id="prev-link" href="animation.html" title="previous page">How to watch animation</a>
-    <a class='right-next' id="next-link" href="dynamic-structure-factor.html" title="next page">Dynamic structure factor</a>
 
-        </div>
+
+
+<div class='prev-next-bottom'>
+    
+    <div id="prev">
+        <a class="left-prev" href="animation.html" title="previous page">
+            <i class="prevnext-label fas fa-angle-left"></i>
+            <div class="prevnext-info">
+                <p class="prevnext-label">previous</p>
+                <p class="prevnext-title">How to watch animation</p>
+            </div>
+        </a>
+    </div>
+     <div id="next">
+        <a class="right-next" href="dynamic-structure-factor.html" title="next page">
+            <div class="prevnext-info">
+                <p class="prevnext-label">next</p>
+                <p class="prevnext-title">Dynamic structure factor</p>
+            </div>
+            <i class="prevnext-label fas fa-angle-right"></i>
+        </a>
+     </div>
+
+</div>
         
         </div>
     </div>
-    <footer class="footer mt-5 mt-md-0">
+    <footer class="footer">
     <div class="container">
       <p>
         

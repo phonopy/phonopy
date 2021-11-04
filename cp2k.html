@@ -4,8 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CP2K &amp; phonopy calculation &#8212; Phonopy v.2.12.0</title>
     
   <link href="_static/css/theme.css" rel="stylesheet" />
@@ -23,12 +22,12 @@
       
 
     
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/sphinx-book-theme.css?digest=c3fdc42140077d1ad13ad2f1588a4309" type="text/css" />
     
   <link rel="preload" as="script" href="_static/js/index.1c5a1a01449ed65a7b51.js">
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
@@ -56,13 +55,14 @@
     <a class="navbar-brand text-wrap" href="index.html">
       
       
+      
       <h1 class="site-logo" id="site-title">Phonopy v.2.12.0</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item active">
         <ul class="current nav bd-sidenav">
  <li class="toctree-l1">
@@ -516,7 +516,7 @@
             <div class="tocsection onthispage pt-5 pb-3">
                 <i class="fas fa-list"></i> Contents
             </div>
-            <nav id="bd-toc-nav">
+            <nav id="bd-toc-nav" aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#supported-cp2k-configuration-options">
@@ -539,9 +539,9 @@
         
               <div>
                 
-  <section id="cp2k-phonopy-calculation">
+  <div class="section" id="cp2k-phonopy-calculation">
 <span id="cp2k-interface"></span><h1>CP2K &amp; phonopy calculation<a class="headerlink" href="#cp2k-phonopy-calculation" title="Permalink to this headline">¶</a></h1>
-<section id="supported-cp2k-configuration-options">
+<div class="section" id="supported-cp2k-configuration-options">
 <h2>Supported CP2K configuration options<a class="headerlink" href="#supported-cp2k-configuration-options" title="Permalink to this headline">¶</a></h2>
 <p>All CP2K input file features like unit prefixes  (<code class="docutils literal notranslate"><span class="pre">[rad]</span></code> or <code class="docutils literal notranslate"><span class="pre">[Bohr]</span></code>) or preprocessor variables are supported,
 except for the functionality to load cell information or coordinates from external/referenced files (CIF, XYZ).</p>
@@ -597,8 +597,8 @@ except for the functionality to load cell information or coordinates from extern
 <li><p>Multiple <code class="docutils literal notranslate"><span class="pre">&amp;FORCE_EVAL</span></code> sections are not allowed.</p></li>
 <li><p>A <code class="docutils literal notranslate"><span class="pre">&amp;CELL_REF</span></code> section and the <code class="docutils literal notranslate"><span class="pre">MULTIPLE_UNIT_CELL</span></code> will not be read or modified but simply forwarded to the generated configurations.</p></li>
 </ul>
-</section>
-<section id="how-to-run">
+</div>
+<div class="section" id="how-to-run">
 <h2>How to run<a class="headerlink" href="#how-to-run" title="Permalink to this headline">¶</a></h2>
 <p>A procedure of CP2K-phonopy calculation is as follows:</p>
 <ol class="arabic">
@@ -649,23 +649,43 @@ unit cell used in step 1:</p>
 </div>
 </li>
 </ol>
-</section>
-</section>
+</div>
+</div>
 
 
               </div>
               
         
-        <div class='prev-next-bottom'>
             
-    <a class='left-prev' id="prev-link" href="turbomole.html" title="previous page">TURBOMOLE &amp; phonopy calculation</a>
-    <a class='right-next' id="next-link" href="aims.html" title="next page">FHI-aims &amp; phonopy calculations</a>
 
-        </div>
+
+
+<div class='prev-next-bottom'>
+    
+    <div id="prev">
+        <a class="left-prev" href="turbomole.html" title="previous page">
+            <i class="prevnext-label fas fa-angle-left"></i>
+            <div class="prevnext-info">
+                <p class="prevnext-label">previous</p>
+                <p class="prevnext-title">TURBOMOLE &amp; phonopy calculation</p>
+            </div>
+        </a>
+    </div>
+     <div id="next">
+        <a class="right-next" href="aims.html" title="next page">
+            <div class="prevnext-info">
+                <p class="prevnext-label">next</p>
+                <p class="prevnext-title">FHI-aims &amp; phonopy calculations</p>
+            </div>
+            <i class="prevnext-label fas fa-angle-right"></i>
+        </a>
+     </div>
+
+</div>
         
         </div>
     </div>
-    <footer class="footer mt-5 mt-md-0">
+    <footer class="footer">
     <div class="container">
       <p>
         

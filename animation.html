@@ -4,8 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>How to watch animation &#8212; Phonopy v.2.12.0</title>
     
   <link href="_static/css/theme.css" rel="stylesheet" />
@@ -23,18 +22,18 @@
       
 
     
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/sphinx-book-theme.css?digest=c3fdc42140077d1ad13ad2f1588a4309" type="text/css" />
     
   <link rel="preload" as="script" href="_static/js/index.1c5a1a01449ed65a7b51.js">
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"processClass": "tex2jax_process|mathjax_process|math|output_area"}})</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Command options" href="command-options.html" />
@@ -58,13 +57,14 @@
     <a class="navbar-brand text-wrap" href="index.html">
       
       
+      
       <h1 class="site-logo" id="site-title">Phonopy v.2.12.0</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item active">
         <ul class="current nav bd-sidenav">
  <li class="toctree-l1">
@@ -523,7 +523,7 @@
         
               <div>
                 
-  <section id="how-to-watch-animation">
+  <div class="section" id="how-to-watch-animation">
 <span id="create-animation"></span><h1>How to watch animation<a class="headerlink" href="#how-to-watch-animation" title="Permalink to this headline">¶</a></h1>
 <p>To watch each phonon mode, v_sim is recommended. The file
 <code class="docutils literal notranslate"><span class="pre">anime.ascii</span></code> is supposed to work with v_sim version 3.51 or later.
@@ -551,22 +551,42 @@ options help you to use v_sim comfortably, e.g.,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">v_sim</span> <span class="o">-</span><span class="n">w</span> <span class="n">oneWindow</span> <span class="n">anime</span><span class="o">.</span><span class="n">ascii</span> <span class="o">-</span><span class="n">x</span> <span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span> <span class="o">-</span><span class="n">t</span> <span class="mf">0.5</span><span class="p">:</span><span class="mf">0.5</span><span class="p">:</span><span class="mf">0.5</span>
 </pre></div>
 </div>
-</section>
+</div>
 
 
               </div>
               
         
-        <div class='prev-next-bottom'>
             
-    <a class='left-prev' id="prev-link" href="setting-tags.html" title="previous page">Setting tags</a>
-    <a class='right-next' id="next-link" href="command-options.html" title="next page">Command options</a>
 
-        </div>
+
+
+<div class='prev-next-bottom'>
+    
+    <div id="prev">
+        <a class="left-prev" href="setting-tags.html" title="previous page">
+            <i class="prevnext-label fas fa-angle-left"></i>
+            <div class="prevnext-info">
+                <p class="prevnext-label">previous</p>
+                <p class="prevnext-title">Setting tags</p>
+            </div>
+        </a>
+    </div>
+     <div id="next">
+        <a class="right-next" href="command-options.html" title="next page">
+            <div class="prevnext-info">
+                <p class="prevnext-label">next</p>
+                <p class="prevnext-title">Command options</p>
+            </div>
+            <i class="prevnext-label fas fa-angle-right"></i>
+        </a>
+     </div>
+
+</div>
         
         </div>
     </div>
-    <footer class="footer mt-5 mt-md-0">
+    <footer class="footer">
     <div class="container">
       <p>
         

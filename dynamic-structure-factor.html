@@ -4,8 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dynamic structure factor &#8212; Phonopy v.2.12.0</title>
     
   <link href="_static/css/theme.css" rel="stylesheet" />
@@ -23,18 +22,18 @@
       
 
     
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/sphinx-book-theme.css?digest=c3fdc42140077d1ad13ad2f1588a4309" type="text/css" />
     
   <link rel="preload" as="script" href="_static/js/index.1c5a1a01449ed65a7b51.js">
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"processClass": "tex2jax_process|mathjax_process|math|output_area"}})</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Calculation of mode Grüneisen parameters" href="gruneisen.html" />
@@ -58,13 +57,14 @@
     <a class="navbar-brand text-wrap" href="index.html">
       
       
+      
       <h1 class="site-logo" id="site-title">Phonopy v.2.12.0</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item active">
         <ul class="current nav bd-sidenav">
  <li class="toctree-l1">
@@ -518,7 +518,7 @@
             <div class="tocsection onthispage pt-5 pb-3">
                 <i class="fas fa-list"></i> Contents
             </div>
-            <nav id="bd-toc-nav">
+            <nav id="bd-toc-nav" aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#usage">
@@ -536,7 +536,7 @@
         
               <div>
                 
-  <section id="dynamic-structure-factor">
+  <div class="section" id="dynamic-structure-factor">
 <span id="id1"></span><h1>Dynamic structure factor<a class="headerlink" href="#dynamic-structure-factor" title="Permalink to this headline">¶</a></h1>
 <p><strong>This feature is under testing.</strong></p>
 <p>From Eq. (3.120) in the book “Thermal of Neutron Scattering”, coherent
@@ -586,7 +586,7 @@ X-ray scattering, <span class="math notranslate nohighlight">\(\bar{b}_j\)</span
 calcualted with setting <span class="math notranslate nohighlight">\(N k'/k = 1\)</span> and the physical unit is
 <span class="math notranslate nohighlight">\(\text{m}^2/\text{J}\)</span> when <span class="math notranslate nohighlight">\(\bar{b}_j\)</span> is given in
 Angstrom.</p>
-<section id="usage">
+<div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
 <p>Currently this feature is usable only from API. The following example
 runs with the input files in <code class="docutils literal notranslate"><span class="pre">example/NaCl</span></code>.</p>
@@ -722,23 +722,43 @@ runs with the input files in <code class="docutils literal notranslate"><span cl
 <span class="mf">0.152193</span>  <span class="mf">2.500000</span> <span class="o">-</span><span class="mf">2.500000</span> <span class="mf">2.500000</span>  <span class="mf">13.534679</span> <span class="mf">15.548262</span> <span class="mf">21.156819</span> <span class="mf">25.813428</span>  <span class="mf">0.000000</span> <span class="mf">0.000000</span> <span class="mf">34.134746</span> <span class="mf">6.765951</span>
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
               </div>
               
         
-        <div class='prev-next-bottom'>
             
-    <a class='left-prev' id="prev-link" href="command-options.html" title="previous page">Command options</a>
-    <a class='right-next' id="next-link" href="gruneisen.html" title="next page">Calculation of mode Grüneisen parameters</a>
 
-        </div>
+
+
+<div class='prev-next-bottom'>
+    
+    <div id="prev">
+        <a class="left-prev" href="command-options.html" title="previous page">
+            <i class="prevnext-label fas fa-angle-left"></i>
+            <div class="prevnext-info">
+                <p class="prevnext-label">previous</p>
+                <p class="prevnext-title">Command options</p>
+            </div>
+        </a>
+    </div>
+     <div id="next">
+        <a class="right-next" href="gruneisen.html" title="next page">
+            <div class="prevnext-info">
+                <p class="prevnext-label">next</p>
+                <p class="prevnext-title">Calculation of mode Grüneisen parameters</p>
+            </div>
+            <i class="prevnext-label fas fa-angle-right"></i>
+        </a>
+     </div>
+
+</div>
         
         </div>
     </div>
-    <footer class="footer mt-5 mt-md-0">
+    <footer class="footer">
     <div class="container">
       <p>
         

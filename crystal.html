@@ -4,8 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CRYSTAL &amp; phonopy calculation &#8212; Phonopy v.2.12.0</title>
     
   <link href="_static/css/theme.css" rel="stylesheet" />
@@ -23,12 +22,12 @@
       
 
     
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/sphinx-book-theme.css?digest=c3fdc42140077d1ad13ad2f1588a4309" type="text/css" />
     
   <link rel="preload" as="script" href="_static/js/index.1c5a1a01449ed65a7b51.js">
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
@@ -56,13 +55,14 @@
     <a class="navbar-brand text-wrap" href="index.html">
       
       
+      
       <h1 class="site-logo" id="site-title">Phonopy v.2.12.0</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item active">
         <ul class="current nav bd-sidenav">
  <li class="toctree-l1">
@@ -516,7 +516,7 @@
             <div class="tocsection onthispage pt-5 pb-3">
                 <i class="fas fa-list"></i> Contents
             </div>
-            <nav id="bd-toc-nav">
+            <nav id="bd-toc-nav" aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#supported-features">
@@ -546,13 +546,13 @@
         
               <div>
                 
-  <section id="crystal-phonopy-calculation">
+  <div class="section" id="crystal-phonopy-calculation">
 <span id="crystal-interface"></span><h1>CRYSTAL &amp; phonopy calculation<a class="headerlink" href="#crystal-phonopy-calculation" title="Permalink to this headline">¶</a></h1>
 <p>CRYSTAL program package has a robust built-in phonon calculation
 workflow. However, the Phonopy interface enables convenient access
 to many phonon-related properties, such as subsequent Phono3py
 calculations of lattice thermal conductivity.</p>
-<section id="supported-features">
+<div class="section" id="supported-features">
 <h2>Supported features<a class="headerlink" href="#supported-features" title="Permalink to this headline">¶</a></h2>
 <p>The CRYSTAL interface reads the unit cell from a CRYSTAL output file
 (lattice vectors, conventional atomic numbers, fractional atomic positions).
@@ -566,8 +566,8 @@ required quantities and also confirms that the structure optimization has
 converged to a true local minimum.</p>
 <p>If ATOMSPIN keyword is present, magnetic moments are read from it. There
 is very little experience on using this feature, so be careful.</p>
-</section>
-<section id="how-to-run">
+</div>
+<div class="section" id="how-to-run">
 <h2>How to run<a class="headerlink" href="#how-to-run" title="Permalink to this headline">¶</a></h2>
 <p>The workflow for a CRYSTAL-Phonopy calculation is outlined here using the
 Si example found in <code class="docutils literal notranslate"><span class="pre">example/Si-CRYSTAL</span></code>.</p>
@@ -668,7 +668,7 @@ automatically read in. Create phonon dispersion plot with:</p>
 for examples, see <a class="reference internal" href="examples.html#examples-link"><span class="std std-ref">Examples</span></a>.</p>
 </li>
 </ol>
-<section id="non-analytical-term-correction-optional">
+<div class="section" id="non-analytical-term-correction-optional">
 <h3>Non-analytical term correction (Optional)<a class="headerlink" href="#non-analytical-term-correction-optional" title="Permalink to this headline">¶</a></h3>
 <p>The workflow for a CRYSTAL-Phonopy calculation with <a class="reference internal" href="setting-tags.html#nac-tag"><span class="std std-ref">Non-analytical term correction</span></a> is outlined here
 using the NaCl example found in <code class="docutils literal notranslate"><span class="pre">example/NaCl-CRYSTAL</span></code>.</p>
@@ -732,24 +732,44 @@ using non-analytical correction <code class="docutils literal notranslate"><span
 <p><a class="reference internal" href="_images/NaCl-crystal-band-NAC.png"><img alt="crystal-band-nac" src="_images/NaCl-crystal-band-NAC.png" style="width: 33%;" /></a></p>
 </li>
 </ol>
-</section>
-</section>
-</section>
+</div>
+</div>
+</div>
 
 
               </div>
               
         
-        <div class='prev-next-bottom'>
             
-    <a class='left-prev' id="prev-link" href="elk.html" title="previous page">Elk &amp; phonopy calculation</a>
-    <a class='right-next' id="next-link" href="dftb%2B.html" title="next page">DFTB+ &amp; phonopy calculation</a>
 
-        </div>
+
+
+<div class='prev-next-bottom'>
+    
+    <div id="prev">
+        <a class="left-prev" href="elk.html" title="previous page">
+            <i class="prevnext-label fas fa-angle-left"></i>
+            <div class="prevnext-info">
+                <p class="prevnext-label">previous</p>
+                <p class="prevnext-title">Elk &amp; phonopy calculation</p>
+            </div>
+        </a>
+    </div>
+     <div id="next">
+        <a class="right-next" href="dftb%2B.html" title="next page">
+            <div class="prevnext-info">
+                <p class="prevnext-label">next</p>
+                <p class="prevnext-title">DFTB+ &amp; phonopy calculation</p>
+            </div>
+            <i class="prevnext-label fas fa-angle-right"></i>
+        </a>
+     </div>
+
+</div>
         
         </div>
     </div>
-    <footer class="footer mt-5 mt-md-0">
+    <footer class="footer">
     <div class="container">
       <p>
         

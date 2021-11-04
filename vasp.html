@@ -4,8 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>VASP &amp; phonopy calculation &#8212; Phonopy v.2.12.0</title>
     
   <link href="_static/css/theme.css" rel="stylesheet" />
@@ -23,18 +22,18 @@
       
 
     
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/sphinx-book-theme.css?digest=c3fdc42140077d1ad13ad2f1588a4309" type="text/css" />
     
   <link rel="preload" as="script" href="_static/js/index.1c5a1a01449ed65a7b51.js">
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"processClass": "tex2jax_process|mathjax_process|math|output_area"}})</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Wien2k &amp; phonopy calculation" href="wien2k.html" />
@@ -58,13 +57,14 @@
     <a class="navbar-brand text-wrap" href="index.html">
       
       
+      
       <h1 class="site-logo" id="site-title">Phonopy v.2.12.0</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item active">
         <ul class="current nav bd-sidenav">
  <li class="toctree-l1">
@@ -518,7 +518,7 @@
             <div class="tocsection onthispage pt-5 pb-3">
                 <i class="fas fa-list"></i> Contents
             </div>
-            <nav id="bd-toc-nav">
+            <nav id="bd-toc-nav" aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#pre-process">
@@ -551,9 +551,9 @@
         
               <div>
                 
-  <section id="vasp-phonopy-calculation">
+  <div class="section" id="vasp-phonopy-calculation">
 <span id="vasp-interface"></span><h1>VASP &amp; phonopy calculation<a class="headerlink" href="#vasp-phonopy-calculation" title="Permalink to this headline">¶</a></h1>
-<section id="pre-process">
+<div class="section" id="pre-process">
 <h2>Pre-process<a class="headerlink" href="#pre-process" title="Permalink to this headline">¶</a></h2>
 <p>The input stureture of <code class="docutils literal notranslate"><span class="pre">POSCAR</span></code> (<a class="reference internal" href="input-files.html#example-poscar1"><span class="std std-ref">this</span></a>) is
 used as an example here. Most files are found at <a class="reference external" href="https://github.com/phonopy/phonopy/tree/master/example/SiO2-HP/">SiO2-HP example</a>.</p>
@@ -576,8 +576,8 @@ contains the information on displacements, and <code class="docutils literal not
 the supercells with atomic displacements. <code class="docutils literal notranslate"><span class="pre">POSCAR-{number}</span></code>
 corresponds to the different atomic displacements written in
 <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>.</p>
-</section>
-<section id="calculation-of-sets-of-forces">
+</div>
+<div class="section" id="calculation-of-sets-of-forces">
 <h2>Calculation of sets of forces<a class="headerlink" href="#calculation-of-sets-of-forces" title="Permalink to this headline">¶</a></h2>
 <p>Force constants are calculated using the structure files
 <code class="docutils literal notranslate"><span class="pre">POSCAR-{number}</span></code> (from forces on atoms) or using the <code class="docutils literal notranslate"><span class="pre">SPOSCAR</span></code>
@@ -607,8 +607,8 @@ file using <a class="reference internal" href="command-options.html#vasp-force-s
 </div>
 <p>If you want to calculate force constants by VASP-DFPT directory, see
 <a class="reference internal" href="vasp-dfpt.html#vasp-dfpt-interface"><span class="std std-ref">VASP-DFPT &amp; phonopy calculation</span></a>.</p>
-</section>
-<section id="post-process">
+</div>
+<div class="section" id="post-process">
 <h2>Post-process<a class="headerlink" href="#post-process" title="Permalink to this headline">¶</a></h2>
 <p>In the post-process,</p>
 <ol class="arabic simple">
@@ -663,8 +663,8 @@ e.g., <cite>band.conf</cite> by:</p>
 <p>In either case, by setting the <code class="docutils literal notranslate"><span class="pre">-s</span></code> option, the plot is going to be
 saved in the PDF format. If you don’t need to plot DOS, the (partial)
 DOS is just calculated using the <code class="docutils literal notranslate"><span class="pre">--dos</span></code> option.</p>
-</section>
-<section id="non-analytical-term-correction-optional">
+</div>
+<div class="section" id="non-analytical-term-correction-optional">
 <h2>Non-analytical term correction (Optional)<a class="headerlink" href="#non-analytical-term-correction-optional" title="Permalink to this headline">¶</a></h2>
 <p>To activate non-analytical term correction, <a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a> is
 required. This file contains the information of Born effective charge
@@ -719,23 +719,43 @@ original values obtained directly from VASP was already very good.</p>
 </div>
 <p>Please watch the example of NaCl with and without <code class="docutils literal notranslate"><span class="pre">--nac</span></code> option shown in
 <a class="reference internal" href="examples.html#examples-link"><span class="std std-ref">Examples</span></a>.</p>
-</section>
-</section>
+</div>
+</div>
 
 
               </div>
               
         
-        <div class='prev-next-bottom'>
             
-    <a class='left-prev' id="prev-link" href="interfaces.html" title="previous page">Interfaces to calculators</a>
-    <a class='right-next' id="next-link" href="wien2k.html" title="next page">Wien2k &amp; phonopy calculation</a>
 
-        </div>
+
+
+<div class='prev-next-bottom'>
+    
+    <div id="prev">
+        <a class="left-prev" href="interfaces.html" title="previous page">
+            <i class="prevnext-label fas fa-angle-left"></i>
+            <div class="prevnext-info">
+                <p class="prevnext-label">previous</p>
+                <p class="prevnext-title">Interfaces to calculators</p>
+            </div>
+        </a>
+    </div>
+     <div id="next">
+        <a class="right-next" href="wien2k.html" title="next page">
+            <div class="prevnext-info">
+                <p class="prevnext-label">next</p>
+                <p class="prevnext-title">Wien2k &amp; phonopy calculation</p>
+            </div>
+            <i class="prevnext-label fas fa-angle-right"></i>
+        </a>
+     </div>
+
+</div>
         
         </div>
     </div>
-    <footer class="footer mt-5 mt-md-0">
+    <footer class="footer">
     <div class="container">
       <p>
         

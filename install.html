@@ -4,8 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Installation &#8212; Phonopy v.2.12.0</title>
     
   <link href="_static/css/theme.css" rel="stylesheet" />
@@ -23,12 +22,12 @@
       
 
     
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/sphinx-book-theme.css?digest=c3fdc42140077d1ad13ad2f1588a4309" type="text/css" />
     
   <link rel="preload" as="script" href="_static/js/index.1c5a1a01449ed65a7b51.js">
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
@@ -56,13 +55,14 @@
     <a class="navbar-brand text-wrap" href="index.html">
       
       
+      
       <h1 class="site-logo" id="site-title">Phonopy v.2.12.0</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item active">
         <ul class="current nav bd-sidenav">
  <li class="toctree-l1 current active">
@@ -516,7 +516,7 @@
             <div class="tocsection onthispage pt-5 pb-3">
                 <i class="fas fa-list"></i> Contents
             </div>
-            <nav id="bd-toc-nav">
+            <nav id="bd-toc-nav" aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#installation-via-conda">
@@ -601,7 +601,7 @@
         
               <div>
                 
-  <section id="installation">
+  <div class="section" id="installation">
 <span id="install"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
@@ -627,7 +627,7 @@
 </li>
 </ul>
 </div>
-<section id="installation-via-conda">
+<div class="section" id="installation-via-conda">
 <span id="install-conda"></span><h2><a class="toc-backref" href="#id1">Installation via conda</a><a class="headerlink" href="#installation-via-conda" title="Permalink to this headline">¶</a></h2>
 <p>Conda is an open source package management system. Once the conda
 system is set-up (see <a class="reference external" href="https://conda.io/docs/user-guide/install/index.html">details about conda setting up</a>), the installation
@@ -639,7 +639,7 @@ To install:</p>
 <p>This phonopy’s conda package is prepared and maintained by
 Paweł T. Jochym at conda-forge channel (please be aware that this is
 not a trivial job).</p>
-<section id="minimum-steps-to-install-and-use-phonopy-via-conda">
+<div class="section" id="minimum-steps-to-install-and-use-phonopy-via-conda">
 <h3><a class="toc-backref" href="#id2">Minimum steps to install and use phonopy via conda</a><a class="headerlink" href="#minimum-steps-to-install-and-use-phonopy-via-conda" title="Permalink to this headline">¶</a></h3>
 <p>In the following procedure, conda’s environment (see <a class="reference external" href="https://conda.io/docs/user-guide/tasks/manage-environments.html">details at conda
 web site</a>)
@@ -677,9 +677,9 @@ environment).</p>
  \<span class="n">___</span><span class="o">|</span><span class="n">_</span><span class="o">|</span>  <span class="o">|</span><span class="n">_</span><span class="o">|</span>  \<span class="n">___</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span>
 </pre></div>
 </div>
-</section>
-</section>
-<section id="using-hdf5-on-nfs-mounted-file-system">
+</div>
+</div>
+<div class="section" id="using-hdf5-on-nfs-mounted-file-system">
 <span id="install-from-source"></span><h2><a class="toc-backref" href="#id3">Using HDF5 on NFS mounted file system</a><a class="headerlink" href="#using-hdf5-on-nfs-mounted-file-system" title="Permalink to this headline">¶</a></h2>
 <p>Recent hdf5 versions just as installed may not work on NFS mounted
 file systems. In this case, setting the following environment variable
@@ -687,10 +687,10 @@ may solve the problem:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">HDF5_USE_FILE_LOCKING</span><span class="o">=</span><span class="n">FALSE</span>
 </pre></div>
 </div>
-</section>
-<section id="installation-from-source-code">
+</div>
+<div class="section" id="installation-from-source-code">
 <h2><a class="toc-backref" href="#id4">Installation from source code</a><a class="headerlink" href="#installation-from-source-code" title="Permalink to this headline">¶</a></h2>
-<section id="system-requirement">
+<div class="section" id="system-requirement">
 <h3><a class="toc-backref" href="#id5">System requirement</a><a class="headerlink" href="#system-requirement" title="Permalink to this headline">¶</a></h3>
 <p>The procedure to setup phonopy is explained in this section. It is
 supposed that phonopy is installed on the recent linux distribution
@@ -710,8 +710,8 @@ like Ubuntu or Fedora with Python version 2.7 or later. Python version
 <ul class="simple">
 <li><p>cp2k-input-tools</p></li>
 </ul>
-</section>
-<section id="installing-required-packages-by-conda">
+</div>
+<div class="section" id="installing-required-packages-by-conda">
 <h3><a class="toc-backref" href="#id6">Installing required packages by conda</a><a class="headerlink" href="#installing-required-packages-by-conda" title="Permalink to this headline">¶</a></h3>
 <p>The python libraries can be installed using conda. Conda packages are
 distributed in binary. Minimum setup of conda envrironment is done by
@@ -731,8 +731,8 @@ necessary libraries is done as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="n">complilers</span>
 </pre></div>
 </div>
-</section>
-<section id="building-using-setup-py">
+</div>
+<div class="section" id="building-using-setup-py">
 <span id="install-setup-py"></span><h3><a class="toc-backref" href="#id7">Building using setup.py</a><a class="headerlink" href="#building-using-setup-py" title="Permalink to this headline">¶</a></h3>
 <p>If package installation is not possible or you want to compile with
 special compiler or special options, phonopy is built using
@@ -753,11 +753,11 @@ needed.</p>
 </div>
 </li>
 </ol>
-</section>
-</section>
-<section id="trouble-shooting">
+</div>
+</div>
+<div class="section" id="trouble-shooting">
 <span id="install-trouble-shooting"></span><h2><a class="toc-backref" href="#id8">Trouble shooting</a><a class="headerlink" href="#trouble-shooting" title="Permalink to this headline">¶</a></h2>
-<section id="remove-previous-phonopy-installations">
+<div class="section" id="remove-previous-phonopy-installations">
 <h3><a class="toc-backref" href="#id9">Remove previous phonopy installations</a><a class="headerlink" href="#remove-previous-phonopy-installations" title="Permalink to this headline">¶</a></h3>
 <p>Sometimes previous installations of phonopy prevent from loading newly
 installed phonopy. In this case, it is recommended to uninstall all
@@ -773,8 +773,8 @@ recommend to remove them if it is found, e.g.:</p>
 </div>
 </li>
 </ol>
-</section>
-<section id="set-correct-environment-variables-path-and-pythonpath">
+</div>
+<div class="section" id="set-correct-environment-variables-path-and-pythonpath">
 <h3><a class="toc-backref" href="#id10">Set correct environment variables <code class="docutils literal notranslate"><span class="pre">PATH</span></code> and <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code></a><a class="headerlink" href="#set-correct-environment-variables-path-and-pythonpath" title="Permalink to this headline">¶</a></h3>
 <p>When using conda environment, this information is not applicable.</p>
 <p>In phonopy, <code class="docutils literal notranslate"><span class="pre">PATH</span></code> and <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code> play important roles. Of
@@ -796,29 +796,49 @@ current environment variables by:</p>
 <p>When multiple different phonopy paths are found, remove all except for
 what you really need. Then logout from the current shell (terminal)
 and open new shell (terminal) to confirm that the modification is activated.</p>
-</section>
-<section id="missing-intel-libraries-when-building-from-source-using-icc">
+</div>
+<div class="section" id="missing-intel-libraries-when-building-from-source-using-icc">
 <h3><a class="toc-backref" href="#id11">Missing Intel libraries when building from source using icc</a><a class="headerlink" href="#missing-intel-libraries-when-building-from-source-using-icc" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">LDSHARED=&quot;icc</span> <span class="pre">-shared&quot;</span></code> may be of help. See this github issues,
 <a class="reference external" href="https://github.com/phonopy/phonopy/issues/123">https://github.com/phonopy/phonopy/issues/123</a>.</p>
-</section>
-</section>
-</section>
+</div>
+</div>
+</div>
 
 
               </div>
               
         
-        <div class='prev-next-bottom'>
             
-    <a class='left-prev' id="prev-link" href="index.html" title="previous page">Welcome to phonopy</a>
-    <a class='right-next' id="next-link" href="symmetry.html" title="next page">Crystal symmetry</a>
 
-        </div>
+
+
+<div class='prev-next-bottom'>
+    
+    <div id="prev">
+        <a class="left-prev" href="index.html" title="previous page">
+            <i class="prevnext-label fas fa-angle-left"></i>
+            <div class="prevnext-info">
+                <p class="prevnext-label">previous</p>
+                <p class="prevnext-title">Welcome to phonopy</p>
+            </div>
+        </a>
+    </div>
+     <div id="next">
+        <a class="right-next" href="symmetry.html" title="next page">
+            <div class="prevnext-info">
+                <p class="prevnext-label">next</p>
+                <p class="prevnext-title">Crystal symmetry</p>
+            </div>
+            <i class="prevnext-label fas fa-angle-right"></i>
+        </a>
+     </div>
+
+</div>
         
         </div>
     </div>
-    <footer class="footer mt-5 mt-md-0">
+    <footer class="footer">
     <div class="container">
       <p>
         
