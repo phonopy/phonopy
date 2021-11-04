@@ -1405,7 +1405,7 @@ class PhonopySettings(Settings):
         """Set thermal_atom_pairs."""
         self._v["thermal_atom_pairs"] = val
 
-    def set_thermal_displacement_matrix_temperatue(self, val):
+    def set_thermal_displacement_matrix_temperature(self, val):
         """Set thermal_displacement_matrix_temperatue."""
         self._v["thermal_displacement_matrix_temperatue"] = val
 
