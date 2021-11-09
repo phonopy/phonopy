@@ -50,42 +50,6 @@ if TYPE_CHECKING:
 from phonopy.structure.atoms import PhonopyAtoms
 
 
-def read_cell_yaml(filename, cell_type="unitcell"):
-    """Read crystal structure from a phonopy.yaml or PhonopyAtoms.__str__ like file.
-
-    phonopy.yaml like file can contain several different cells, e.g., unit cell,
-    primitive cell, or supercell. In this case, the default preference order of
-    the returned cell is unit cell > primitive cell > supercell. ``cell_type``
-    is used to specify to choose one of them.
-
-    When output of PhonopyAtoms.__str__ is given (like below), this file is
-    parsed and its cell is returned.
-
-    lattice:
-    - [     0.000000000000000,     2.845150738087836,     2.845150738087836 ] # a
-    - [     2.845150738087836,     0.000000000000000,     2.845150738087836 ] # b
-    - [     2.845150738087836,     2.845150738087836,     0.000000000000000 ] # c
-    points:
-    - symbol: Na # 1
-      coordinates: [  0.000000000000000,  0.000000000000000,  0.000000000000000 ]
-      mass: 22.989769
-    - symbol: Cl # 2
-      coordinates: [  0.500000000000000,  0.500000000000000,  0.500000000000000 ]
-      mass: 35.453000
-
-    """
-    ph_yaml = PhonopyYaml()
-    ph_yaml.read(filename)
-    if ph_yaml.unitcell and cell_type == "unitcell":
-        return ph_yaml.unitcell
-    elif ph_yaml.primitive and cell_type == "primitive":
-        return ph_yaml.primitive
-    elif ph_yaml.supercell and cell_type == "supercell":
-        return ph_yaml.supercell
-    else:
-        return None
-
-
 class PhonopyYaml:
     """PhonopyYaml is a container of phonopy setting.
 
@@ -484,30 +448,10 @@ class PhonopyYaml:
         return lines
 
     def _load(self, filename):
-        _, ext = os.path.splitext(filename)
-        if ext == ".xz" or ext == ".lzma":
-            try:
-                import lzma
-            except ImportError:
-                raise (
-                    "Reading a lzma compressed file is not supported "
-                    "by this python version."
-                )
-            with lzma.open(filename) as f:
-                self._yaml = yaml.load(f, Loader=Loader)
-        elif ext == ".gz":
-            import gzip
-
-            with gzip.open(filename) as f:
-                self._yaml = yaml.load(f, Loader=Loader)
-        else:
-            with open(filename, "r") as f:
-                self._yaml = yaml.load(f, Loader=Loader)
-
+        self._yaml = load_yaml(filename)
         if type(self._yaml) is str:
             msg = "Could not open %s's yaml file." % self.command_name
             raise TypeError(msg)
-
         self.parse()
 
     def _parse_command_header(self):
@@ -686,3 +630,68 @@ class PhonopyYaml:
             and "calculator" in self._yaml[self.command_name]
         ):
             self.calculator = self._yaml[self.command_name]["calculator"]
+
+
+def read_cell_yaml(filename, cell_type="unitcell"):
+    """Read crystal structure from a phonopy.yaml or PhonopyAtoms.__str__ like file.
+
+    phonopy.yaml like file can contain several different cells, e.g., unit cell,
+    primitive cell, or supercell. In this case, the default preference order of
+    the returned cell is unit cell > primitive cell > supercell. ``cell_type``
+    is used to specify to choose one of them.
+
+    When output of PhonopyAtoms.__str__ is given (like below), this file is
+    parsed and its cell is returned.
+
+    lattice:
+    - [     0.000000000000000,     2.845150738087836,     2.845150738087836 ] # a
+    - [     2.845150738087836,     0.000000000000000,     2.845150738087836 ] # b
+    - [     2.845150738087836,     2.845150738087836,     0.000000000000000 ] # c
+    points:
+    - symbol: Na # 1
+      coordinates: [  0.000000000000000,  0.000000000000000,  0.000000000000000 ]
+      mass: 22.989769
+    - symbol: Cl # 2
+      coordinates: [  0.500000000000000,  0.500000000000000,  0.500000000000000 ]
+      mass: 35.453000
+
+    """
+    ph_yaml = PhonopyYaml()
+    ph_yaml.read(filename)
+    if ph_yaml.unitcell and cell_type == "unitcell":
+        return ph_yaml.unitcell
+    elif ph_yaml.primitive and cell_type == "primitive":
+        return ph_yaml.primitive
+    elif ph_yaml.supercell and cell_type == "supercell":
+        return ph_yaml.supercell
+    else:
+        return None
+
+
+def load_yaml(filename):
+    """Load yaml file.
+
+    lzma and gzip comppressed files can be loaded.
+
+    """
+    _, ext = os.path.splitext(filename)
+    if ext == ".xz" or ext == ".lzma":
+        try:
+            import lzma
+        except ImportError:
+            raise (
+                "Reading a lzma compressed file is not supported "
+                "by this python version."
+            )
+        with lzma.open(filename) as f:
+            yaml_data = yaml.load(f, Loader=Loader)
+    elif ext == ".gz":
+        import gzip
+
+        with gzip.open(filename) as f:
+            yaml_data = yaml.load(f, Loader=Loader)
+    else:
+        with open(filename, "r") as f:
+            yaml_data = yaml.load(f, Loader=Loader)
+
+    return yaml_data
