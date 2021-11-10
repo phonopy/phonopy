@@ -382,23 +382,37 @@ class PhonopyYaml:
             self.dataset, with_forces=with_forces
         )
 
-    def _displacements_yaml_lines_2types(self, dataset, with_forces=False):
+    def _displacements_yaml_lines_2types(
+        self, dataset, with_forces=False, key="displacements"
+    ):
+        """Choose yaml writer depending on the dataset type.
+
+        See type1 and type2 at Phonopy.dataset.
+
+        """
         if dataset is not None:
             if "first_atoms" in dataset:
                 return self._displacements_yaml_lines_type1(
-                    dataset, with_forces=with_forces
+                    dataset, with_forces=with_forces, key=key
                 )
             elif "displacements" in dataset:
                 return self._displacements_yaml_lines_type2(
-                    dataset, with_forces=with_forces
+                    dataset, with_forces=with_forces, key=key
                 )
         return []
 
-    def _displacements_yaml_lines_type1(self, dataset, with_forces=False):
+    def _displacements_yaml_lines_type1(
+        self, dataset, with_forces=False, key="displacements"
+    ):
+        """Return type1 dataset in yaml.
+
+        See data structure at Phonopy.dataset.
+
+        """
         lines = [
-            "displacements:",
+            "%s:" % key,
         ]
-        for i, d in enumerate(dataset["first_atoms"]):
+        for d in dataset["first_atoms"]:
             lines.append("- atom: %4d" % (d["number"] + 1))
             lines.append("  displacement:")
             lines.append("    [ %20.16f,%20.16f,%20.16f ]" % tuple(d["displacement"]))
@@ -409,12 +423,19 @@ class PhonopyYaml:
         lines.append("")
         return lines
 
-    def _displacements_yaml_lines_type2(self, dataset, with_forces=False):
+    def _displacements_yaml_lines_type2(
+        self, dataset, with_forces=False, key="displacements"
+    ):
+        """Return type2 dataset in yaml.
+
+        See data structure at Phonopy.dataset.
+
+        """
         if "random_seed" in dataset:
             lines = ["random_seed: %d" % dataset["random_seed"], "displacements:"]
         else:
             lines = [
-                "displacements:",
+                "%s:" % key,
             ]
         for i, dset in enumerate(dataset["displacements"]):
             lines.append("- # %4d" % (i + 1))
@@ -545,9 +566,9 @@ class PhonopyYaml:
     def _parse_dataset(self):
         self.dataset = self._get_dataset(self.supercell)
 
-    def _get_dataset(self, supercell):
+    def _get_dataset(self, supercell, key="displacements"):
         dataset = None
-        if "displacements" in self._yaml:
+        if key in self._yaml:
             if supercell is not None:
                 natom = len(supercell)
             else:
