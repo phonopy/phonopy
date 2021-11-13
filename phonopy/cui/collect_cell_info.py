@@ -96,8 +96,10 @@ def collect_cell_info(
         interface_mode,
         supercell_matrix,
         primitive_matrix,
-        enforce_primitive_matrix_auto,
     )
+
+    if enforce_primitive_matrix_auto:
+        primitive_matrix_out = "auto"
 
     # Another error check
     msg_list = [
@@ -107,7 +109,7 @@ def collect_cell_info(
         msg_list.append("Supercell matrix (DIM or --dim) information was not found.")
         return "\n".join(msg_list)
 
-    if np.linalg.det(unitcell.get_cell()) < 0.0:
+    if np.linalg.det(unitcell.cell) < 0.0:
         msg_list.append("Lattice vectors have to follow the right-hand rule.")
         return "\n".join(msg_list)
 
@@ -223,7 +225,6 @@ def _collect_cells_info(
     interface_mode,
     supercell_matrix,
     primitive_matrix,
-    enforce_primitive_matrix_auto,
 ):
     if _interface_mode == "phonopy_yaml" and optional_structure_info[1] is not None:
         phpy: PhonopyYaml = optional_structure_info[1]
@@ -240,16 +241,13 @@ def _collect_cells_info(
         elif phpy.primitive_matrix is not None:
             _primitive_matrix = phpy.primitive_matrix
         else:
-            _primitive_matrix = "auto"
+            _primitive_matrix = None
     else:
         interface_mode_out = _interface_mode
         _supercell_matrix = supercell_matrix
         _primitive_matrix = primitive_matrix
 
-    if enforce_primitive_matrix_auto:
-        _primitive_matrix = "auto"
-
-    if _supercell_matrix is None and _primitive_matrix == "auto":
+    if _supercell_matrix is None:
         supercell_matrix_out = np.eye(3, dtype="intc")
     else:
         supercell_matrix_out = _supercell_matrix
