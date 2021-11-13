@@ -187,14 +187,15 @@ def get_parser(
         default=None,
         help="Out of cutoff radius, force constants are set zero.",
     )
-    parser.add_argument(
-        "-d",
-        "--displacement",
-        dest="is_displacement",
-        action="store_true",
-        default=None,
-        help="Create supercells with displacements",
-    )
+    if not load_phonopy_yaml:
+        parser.add_argument(
+            "-d",
+            "--displacement",
+            dest="is_displacement",
+            action="store_true",
+            default=None,
+            help="Create supercells with displacements",
+        )
     parser.add_argument(
         "--dense-svecs",
         dest="store_dense_svecs",
@@ -202,13 +203,14 @@ def get_parser(
         default=None,
         help="Pair shortest vectors in supercell are stored in dense format.",
     )
-    parser.add_argument(
-        "--dim",
-        nargs="+",
-        dest="supercell_dimension",
-        default=None,
-        help="Same behavior as DIM tag",
-    )
+    if not load_phonopy_yaml:
+        parser.add_argument(
+            "--dim",
+            nargs="+",
+            dest="supercell_dimension",
+            default=None,
+            help="Same behavior as DIM tag",
+        )
     parser.add_argument(
         "--dm-decimals",
         dest="dynamical_matrix_decimals",
