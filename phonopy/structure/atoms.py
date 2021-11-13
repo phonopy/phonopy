@@ -75,11 +75,10 @@ class PhonopyAtoms:
     ):  # pbc is dummy argument, and never used.
         """Init method."""
         if atoms:
-            magmoms = None
             self._set_parameters(
                 numbers=atoms.numbers,
                 masses=atoms.masses,
-                magmoms=magmoms,
+                magmoms=atoms.magnetic_moments,
                 scaled_positions=atoms.scaled_positions,
                 cell=atoms.cell,
                 pbc=True,
