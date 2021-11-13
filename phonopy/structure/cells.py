@@ -269,9 +269,8 @@ class Supercell(PhonopyAtoms):
         )
         return self.u2u_map
 
-    def _create_supercell(self, unitcell, symprec):
+    def _create_supercell(self, unitcell: PhonopyAtoms, symprec):
         mat = self._supercell_matrix
-
         if self._is_old_style:
             P = None
             multi = self._get_surrounding_frame(mat)
@@ -324,7 +323,7 @@ class Supercell(PhonopyAtoms):
             self._u2u_map = {j: i for i, j in enumerate(self._u2s_map)}
             self._s2u_map = np.array(u2sur_map[sur2s_map] * N, dtype="int_")
 
-    def _get_simple_supercell(self, unitcell, multi, P):
+    def _get_simple_supercell(self, unitcell: PhonopyAtoms, multi, P):
         if self._is_old_style:
             mat = np.diag(multi)
         else:
@@ -709,7 +708,9 @@ class TrimmedCell(PhonopyAtoms):
 
     """
 
-    def __init__(self, relative_axes, cell, positions_to_reorder=None, symprec=1e-5):
+    def __init__(
+        self, relative_axes, cell: PhonopyAtoms, positions_to_reorder=None, symprec=1e-5
+    ):
         """Init method.
 
         Parameters
@@ -758,7 +759,7 @@ class TrimmedCell(PhonopyAtoms):
         """
         return self._extracted_atoms
 
-    def _run(self, cell, relative_axes, positions_to_reorder, symprec):
+    def _run(self, cell: PhonopyAtoms, relative_axes, positions_to_reorder, symprec):
         trimmed_lattice = np.dot(relative_axes.T, cell.cell)
         positions_in_new_lattice = np.dot(
             cell.scaled_positions, np.linalg.inv(relative_axes).T

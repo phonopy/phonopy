@@ -1534,6 +1534,13 @@ def get_cell_info(settings, cell_filename, symprec, log_level):
     #  phpy_yaml) = cell_info
     # unitcell_filename = optional_structure_info[0]
 
+    set_magmom_in_cell_info(cell_info, settings, log_level)
+
+    return cell_info
+
+
+def set_magmom_in_cell_info(cell_info, settings, log_level):
+    """Set magnetic moments in cell_info."""
     # Set magnetic moments
     magmoms = settings.magnetic_moments
     if magmoms is not None:
@@ -1546,20 +1553,7 @@ def get_cell_info(settings, cell_filename, symprec, log_level):
             if log_level:
                 print_error()
             sys.exit(1)
-
-        if auto_primitive_axes(cell_info["primitive_matrix"]):
-            error_text = (
-                "'PRIMITIVE_AXES = auto', 'BAND = auto', or no DIM "
-                "setting is not allowed with MAGMOM."
-            )
-            print_error_message(error_text)
-            if log_level:
-                print_error()
-            sys.exit(1)
-
     cell_info["magmoms"] = magmoms
-
-    return cell_info
 
 
 def show_symmetry_info_then_exit(cell_info, symprec):
@@ -1710,6 +1704,16 @@ def main(**argparse_control):
     cell_info = get_cell_info(settings, cell_filename, symprec, log_level)
     unitcell_filename = cell_info["optional_structure_info"][0]
 
+    if auto_primitive_axes(cell_info["primitive_matrix"]):
+        error_text = (
+            "'PRIMITIVE_AXES = auto' and 'BAND = auto' "
+            "are not allowed using with MAGMOM."
+        )
+        print_error_message(error_text)
+        if log_level:
+            print_error()
+        sys.exit(1)
+
     ###########################################################
     # Show crystal symmetry information and exit (--symmetry) #
     ###########################################################
@@ -1734,6 +1738,11 @@ def main(**argparse_control):
         )
         if cell_info["magmoms"] is None:
             print("Spacegroup: %s" % phonon.symmetry.get_international_table())
+        else:
+            print(
+                "Number of symmetry operations in supercell: %d"
+                % len(phonon.symmetry.symmetry_operations["rotations"])
+            )
         if log_level > 1:
             print_cells(phonon, unitcell_filename)
         else:
