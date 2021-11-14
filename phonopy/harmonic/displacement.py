@@ -58,7 +58,7 @@ directions_diag = np.array(
 
 def directions_to_displacement_dataset(displacement_directions, distance, supercell):
     """Transform displacement directions to displacements in Cartesian coordinates."""
-    lattice = supercell.get_cell()
+    lattice = supercell.cell
     first_atoms = []
     for disp in displacement_directions:
         direction = disp[1:]
@@ -68,7 +68,7 @@ def directions_to_displacement_dataset(displacement_directions, distance, superc
             {"number": int(disp[0]), "displacement": disp_cartesian.tolist()}
         )
     displacement_dataset = {
-        "natom": supercell.get_number_of_atoms(),
+        "natom": len(supercell),
         "first_atoms": first_atoms,
     }
 

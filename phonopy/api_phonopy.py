@@ -181,7 +181,7 @@ class Phonopy:
         self._search_primitive_symmetry()
 
         # displacements
-        self._displacement_dataset = {"natom": self._supercell.get_number_of_atoms()}
+        self._displacement_dataset = {"natom": len(self._supercell)}
         self._supercells_with_displacements = None
 
         # set_force_constants or set_forces
@@ -1590,7 +1590,7 @@ class Phonopy:
                 _is_gamma_center = is_gamma_center
         else:
             if self._primitive_symmetry is not None:
-                rots = self._primitive_symmetry.get_pointgroup_operations()
+                rots = self._primitive_symmetry.pointgroup_operations
                 mesh_nums = length2mesh(mesh, self._primitive.cell, rotations=rots)
             else:
                 mesh_nums = length2mesh(mesh, self._primitive.cell)
@@ -3465,7 +3465,7 @@ class Phonopy:
 
         if len(self._symmetry.pointgroup_operations) != len(
             self._primitive_symmetry.pointgroup_operations
-        ):  # noqa: E129 E501
+        ):
             print(
                 "Warning: Point group symmetries of supercell and primitive"
                 "cell are different."
@@ -3480,7 +3480,7 @@ class Phonopy:
         all_positions = []
         if "first_atoms" in self._displacement_dataset:  # type-1
             for disp in self._displacement_dataset["first_atoms"]:
-                positions = self._supercell.get_positions()
+                positions = self._supercell.positions
                 positions[disp["number"]] += disp["displacement"]
                 all_positions.append(positions)
         elif "displacements" in self._displacement_dataset:
@@ -3495,10 +3495,9 @@ class Phonopy:
                 PhonopyAtoms(
                     numbers=self._supercell.numbers,
                     masses=self._supercell.masses,
-                    magmoms=self._supercell.magnetic_moments,
+                    magnetic_moments=self._supercell.magnetic_moments,
                     positions=positions,
                     cell=self._supercell.cell,
-                    pbc=True,
                 )
             )
         self._supercells_with_displacements = supercells

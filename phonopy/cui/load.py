@@ -207,10 +207,14 @@ def load(
         or supercell_filename is not None
         or unitcell is not None
         or unitcell_filename is not None
-    ):  # noqa E129
+    ):
+        if primitive_matrix is None:
+            _primitive_matrix = "auto"
+        else:
+            _primitive_matrix = primitive_matrix
         cell, smat, pmat = load_helper.get_cell_settings(
             supercell_matrix=supercell_matrix,
-            primitive_matrix=primitive_matrix,
+            primitive_matrix=_primitive_matrix,
             unitcell=unitcell,
             supercell=supercell,
             unitcell_filename=unitcell_filename,

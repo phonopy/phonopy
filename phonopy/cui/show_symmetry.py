@@ -44,6 +44,7 @@ from phonopy.interface.calculator import (
 )
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_primitive, guess_primitive_matrix
+from phonopy.structure.symmetry import Symmetry
 
 
 def check_symmetry(phonon: Phonopy, optional_structure_info):
@@ -83,9 +84,9 @@ def check_symmetry(phonon: Phonopy, optional_structure_info):
         )
 
 
-def _get_symmetry_yaml(cell, symmetry, phonopy_version=None):
-    rotations = symmetry.get_symmetry_operations()["rotations"]
-    translations = symmetry.get_symmetry_operations()["translations"]
+def _get_symmetry_yaml(cell: PhonopyAtoms, symmetry: Symmetry, phonopy_version=None):
+    rotations = symmetry.symmetry_operations["rotations"]
+    translations = symmetry.symmetry_operations["translations"]
 
     atom_sets = symmetry.get_map_atoms()
     independent_atoms = symmetry.get_independent_atoms()
@@ -96,7 +97,7 @@ def _get_symmetry_yaml(cell, symmetry, phonopy_version=None):
     if phonopy_version is not None:
         lines.append("phonopy_version: '%s'" % phonopy_version)
 
-    if cell.get_magnetic_moments() is None:
+    if cell.magnetic_moments is None:
         spg_symbol, spg_number = symmetry.get_international_table().split()
         spg_number = int(spg_number.replace("(", "").replace(")", ""))
         lines.append("space_group_type: '%s'" % spg_symbol)
@@ -126,7 +127,7 @@ def _get_symmetry_yaml(cell, symmetry, phonopy_version=None):
         sitesym = symmetry.get_site_symmetry(i)
         lines.append("- atom: %d" % (i + 1))
 
-        if cell.get_magnetic_moments() is None:
+        if cell.magnetic_moments is None:
             lines.append("  Wyckoff: '%s'" % wyckoffs[i])
         site_pointgroup = get_pointgroup(sitesym)
         lines.append("  site_point_group: '%s'" % site_pointgroup[0].strip())

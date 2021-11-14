@@ -66,20 +66,26 @@ class PhonopyAtoms:
         symbols=None,
         numbers=None,
         masses=None,
-        magmoms=None,
+        magnetic_moments=None,
         scaled_positions=None,
         positions=None,
         cell=None,
         atoms: Optional["PhonopyAtoms"] = None,
+        magmoms=None,
         pbc=True,
     ):  # pbc is dummy argument, and never used.
         """Init method."""
+        if magmoms is not None:
+            warnings.warn(
+                "PhonopyAtoms.__init__ parameter of magmoms is deprecated. "
+                "Use magnetic_moments instead.",
+                DeprecationWarning,
+            )
         if atoms:
-            magmoms = None
             self._set_parameters(
                 numbers=atoms.numbers,
                 masses=atoms.masses,
-                magmoms=magmoms,
+                magnetic_moments=atoms.magnetic_moments,
                 scaled_positions=atoms.scaled_positions,
                 cell=atoms.cell,
                 pbc=True,
@@ -89,7 +95,7 @@ class PhonopyAtoms:
                 symbols=symbols,
                 numbers=numbers,
                 masses=masses,
-                magmoms=magmoms,
+                magnetic_moments=magnetic_moments,
                 scaled_positions=scaled_positions,
                 positions=positions,
                 cell=cell,
@@ -101,7 +107,7 @@ class PhonopyAtoms:
         symbols=None,
         numbers=None,
         masses=None,
-        magmoms=None,
+        magnetic_moments=None,
         scaled_positions=None,
         positions=None,
         cell=None,
@@ -122,7 +128,7 @@ class PhonopyAtoms:
 
         # (initial) magnetic moments
         self._magmoms = None
-        self._set_magnetic_moments(magmoms)
+        self._set_magnetic_moments(magnetic_moments)
 
         # numbers and symbols
         if self._numbers is not None:  # number --> symbol
@@ -430,9 +436,8 @@ class PhonopyAtoms:
             cell=self._cell,
             scaled_positions=self._scaled_positions,
             masses=self._masses,
-            magmoms=self._magmoms,
+            magnetic_moments=self._magmoms,
             symbols=self._symbols,
-            pbc=True,
         )
 
     def totuple(self):
@@ -468,13 +473,19 @@ class PhonopyAtoms:
             masses = [None] * len(self._symbols)
         else:
             masses = self._masses
-        for i, (s, v, m) in enumerate(
-            zip(self._symbols, self._scaled_positions, masses)
+        if self._magmoms is None:
+            magmoms = [None] * len(self._symbols)
+        else:
+            magmoms = self._magmoms
+        for i, (s, v, m, mag) in enumerate(
+            zip(self._symbols, self._scaled_positions, masses, magmoms)
         ):
             lines.append("- symbol: %-2s # %d" % (s, i + 1))
             lines.append("  coordinates: [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
             if m is not None:
                 lines.append("  mass: %f" % m)
+            if mag is not None:
+                lines.append("  magnetic_moment: %.8f" % mag)
         return lines
 
     def __str__(self):

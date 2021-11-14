@@ -269,6 +269,12 @@ def helper_methods():
             )
             np.testing.assert_array_equal(cell.numbers, cell_ref.numbers)
             np.testing.assert_allclose(cell.masses, cell_ref.masses, atol=symprec)
+            if cell.magnetic_moments is None:
+                assert cell_ref.magnetic_moments is None
+            else:
+                np.testing.assert_allclose(
+                    cell.magnetic_moments, cell_ref.magnetic_moments, atol=symprec
+                )
 
         @classmethod
         def compare_positions_with_order(cls, pos, pos_ref, lattice, symprec=1e-5):
@@ -297,6 +303,14 @@ def helper_methods():
             np.testing.assert_allclose(
                 cell.masses, cell_ref.masses[indices], atol=symprec
             )
+            if cell.magnetic_moments is None:
+                assert cell_ref.magnetic_moments is None
+            else:
+                np.testing.assert_allclose(
+                    cell.magnetic_moments,
+                    cell_ref.magnetic_moments[indices],
+                    atol=symprec,
+                )
 
         @classmethod
         def compare_positions_in_arbitrary_order(

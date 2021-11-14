@@ -236,22 +236,20 @@ def finalize_phonopy(log_level, settings, confs, phonon, filename="phonopy.yaml"
     sys.exit(0)
 
 
-def print_cells(phonon, unitcell_filename):
+def print_cells(phonon: Phonopy):
     """Show cells."""
-    supercell = phonon.get_supercell()
-    unitcell = phonon.get_unitcell()
-    primitive = phonon.get_primitive()
-    p2p_map = primitive.get_primitive_to_primitive_map()
-    mapping = np.array(
-        [p2p_map[x] for x in primitive.get_supercell_to_primitive_map()], dtype="intc"
-    )
-    s_indep_atoms = phonon.get_symmetry().get_independent_atoms()
+    supercell = phonon.supercell
+    unitcell = phonon.unitcell
+    primitive = phonon.primitive
+    p2p_map = primitive.p2p_map
+    mapping = np.array([p2p_map[x] for x in primitive.s2p_map], dtype="intc")
+    s_indep_atoms = phonon.symmetry.get_independent_atoms()
     p_indep_atoms = mapping[s_indep_atoms]
-    u2s_map = supercell.get_unitcell_to_supercell_map()
+    u2s_map = supercell.u2s_map
     print("-" * 30 + " primitive cell " + "-" * 30)
     print_cell(primitive, stars=p_indep_atoms)
     print("-" * 32 + " unit cell " + "-" * 33)  # 32 + 11 + 33 = 76
-    u2u_map = supercell.get_unitcell_to_unitcell_map()
+    u2u_map = supercell.u2u_map
     u_indep_atoms = [u2u_map[x] for x in s_indep_atoms]
     print_cell(unitcell, mapping=mapping[u2s_map], stars=u_indep_atoms)
     print("-" * 32 + " super cell " + "-" * 32)
@@ -1520,8 +1518,6 @@ def get_cell_info(settings, cell_filename, symprec, log_level):
         cell_filename=cell_filename,
         chemical_symbols=settings.chemical_symbols,
         enforce_primitive_matrix_auto=is_band_auto(settings),
-        symprec=symprec,
-        return_dict=True,
     )
     if type(cell_info) is str:
         print_error_message(cell_info)
@@ -1529,11 +1525,13 @@ def get_cell_info(settings, cell_filename, symprec, log_level):
             print_error()
         sys.exit(1)
 
-    # (unitcell, supercell_matrix, primitive_matrix,
-    #  optional_structure_info, interface_mode,
-    #  phpy_yaml) = cell_info
-    # unitcell_filename = optional_structure_info[0]
+    set_magnetic_moments(cell_info, settings, log_level)
 
+    return cell_info
+
+
+def set_magnetic_moments(cell_info, settings, log_level):
+    """Set magnetic moments to unitcell in cell_info."""
     # Set magnetic moments
     magmoms = settings.magnetic_moments
     if magmoms is not None:
@@ -1546,20 +1544,6 @@ def get_cell_info(settings, cell_filename, symprec, log_level):
             if log_level:
                 print_error()
             sys.exit(1)
-
-        if auto_primitive_axes(cell_info["primitive_matrix"]):
-            error_text = (
-                "'PRIMITIVE_AXES = auto', 'BAND = auto', or no DIM "
-                "setting is not allowed with MAGMOM."
-            )
-            print_error_message(error_text)
-            if log_level:
-                print_error()
-            sys.exit(1)
-
-    cell_info["magmoms"] = magmoms
-
-    return cell_info
 
 
 def show_symmetry_info_then_exit(cell_info, symprec):
@@ -1657,6 +1641,10 @@ def init_phonopy(settings, cell_info, symprec, log_level):
 
 def main(**argparse_control):
     """Start phonopy."""
+    # import warnings
+
+    # warnings.simplefilter("error")
+
     ############################################
     # Parse phonopy conf and crystal structure #
     ############################################
@@ -1710,6 +1698,27 @@ def main(**argparse_control):
     cell_info = get_cell_info(settings, cell_filename, symprec, log_level)
     unitcell_filename = cell_info["optional_structure_info"][0]
 
+    if cell_info["unitcell"].magnetic_moments is not None and auto_primitive_axes(
+        cell_info["primitive_matrix"]
+    ):
+        print_error_message('Unit cell was read from "%s".' % unitcell_filename)
+
+        if cell_info["phonopy_yaml"] is None:
+            print_error_message(
+                "'PRIMITIVE_AXES = auto' and 'BAND = auto' "
+                "are not allowed using with MAGMOM."
+            )
+        else:
+            print_error_message(str(cell_info["phonopy_yaml"].unitcell))
+            print_error_message("")
+            print_error_message(
+                "'PRIMITIVE_AXES = auto' and 'BAND = auto' "
+                "are not allowed using with magnetic_moments."
+            )
+        if log_level:
+            print_error()
+        sys.exit(1)
+
     ###########################################################
     # Show crystal symmetry information and exit (--symmetry) #
     ###########################################################
@@ -1732,10 +1741,15 @@ def main(**argparse_control):
             unitcell_filename,
             load_phonopy_yaml,
         )
-        if cell_info["magmoms"] is None:
+        if phonon.unitcell.magnetic_moments is None:
             print("Spacegroup: %s" % phonon.symmetry.get_international_table())
+        else:
+            print(
+                "Number of symmetry operations in supercell: %d"
+                % len(phonon.symmetry.symmetry_operations["rotations"])
+            )
         if log_level > 1:
-            print_cells(phonon, unitcell_filename)
+            print_cells(phonon)
         else:
             print(
                 "Use -v option to watch primitive cell, unit cell, "

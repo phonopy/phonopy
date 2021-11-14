@@ -51,10 +51,50 @@ def collect_cell_info(
     chemical_symbols=None,
     enforce_primitive_matrix_auto=False,
     phonopy_yaml_cls=None,
-    symprec=1e-5,
-    return_dict=False,
 ):
-    """Collect crystal structure information from inputs."""
+    """Collect crystal structure information from inputs.
+
+    Note
+    ----
+    When the crystal structure is read from phonopy.yaml like file,
+    ``supercell_matrix`` and ``primitive_matrix`` are ignored.
+
+    Parameters
+    ----------
+    supercell_matrix : array_like or None
+        3x3 transformation matrix or when it is a diagonal matrix,
+        three diagonal elements. Default is None.
+        See also shape_supercell_matrix.
+    primitive_matrix : array_like, str, or None
+        3x3 transformation matrix or a character representing centring
+        or None. Default is None. See also get_primitive_matrix.
+    interface_mode : str or None
+        Force calculator or crystal structure format name.
+    cell_filename : str or None
+        Input cell filename.
+    chemical_symbols : list of str
+        List of chemical symbols or unit cell.
+    enforce_primitive_matrix_auto : bool
+        Enforce primitive_matrix='auto' when True. Default is False.
+    phonopy_yaml_cls : Class object
+        PhonopyYaml like class name. This is used to return its instance
+        when needed.
+
+    Returns
+    -------
+    dict :
+        "unitcell": PhonopyAtoms
+            Unit cell.
+        "supercell_matrix": ndarray
+        "primitive_matrix": ndarray
+        "optional_structure_info": list
+            See read_crystal_structure.
+        "interface_mode": str
+            Force calculator or crystal structure format name.
+        "phonopy_yaml": None or instance of the class given by phonopy_yaml_cls
+            Not None when crystal structure was read phonopy.yaml like file.
+
+    """
     # In some cases, interface mode falls back to phonopy_yaml mode.
     fallback_reason = _fallback_to_phonopy_yaml(
         supercell_matrix, interface_mode, cell_filename
@@ -96,8 +136,10 @@ def collect_cell_info(
         interface_mode,
         supercell_matrix,
         primitive_matrix,
-        enforce_primitive_matrix_auto,
     )
+
+    if enforce_primitive_matrix_auto:
+        primitive_matrix_out = "auto"
 
     # Another error check
     msg_list = [
@@ -107,34 +149,23 @@ def collect_cell_info(
         msg_list.append("Supercell matrix (DIM or --dim) information was not found.")
         return "\n".join(msg_list)
 
-    if np.linalg.det(unitcell.get_cell()) < 0.0:
+    if np.linalg.det(unitcell.cell) < 0.0:
         msg_list.append("Lattice vectors have to follow the right-hand rule.")
         return "\n".join(msg_list)
 
-    # Succeeded!
     if _interface_mode == "phonopy_yaml":
         phpy_yaml: PhonopyYaml = optional_structure_info[1]
     else:
         phpy_yaml = None
 
-    if return_dict:
-        return {
-            "unitcell": unitcell,
-            "supercell_matrix": supercell_matrix_out,
-            "primitive_matrix": primitive_matrix_out,
-            "optional_structure_info": optional_structure_info,
-            "interface_mode": interface_mode_out,
-            "phonopy_yaml": phpy_yaml,
-        }
-    else:
-        return (
-            unitcell,
-            supercell_matrix_out,
-            primitive_matrix_out,
-            optional_structure_info,
-            interface_mode_out,
-            phpy_yaml,
-        )
+    return {
+        "unitcell": unitcell,
+        "supercell_matrix": supercell_matrix_out,
+        "primitive_matrix": primitive_matrix_out,
+        "optional_structure_info": optional_structure_info,
+        "interface_mode": interface_mode_out,
+        "phonopy_yaml": phpy_yaml,
+    }
 
 
 def _fallback_to_phonopy_yaml(supercell_matrix, interface_mode, cell_filename):
@@ -223,7 +254,6 @@ def _collect_cells_info(
     interface_mode,
     supercell_matrix,
     primitive_matrix,
-    enforce_primitive_matrix_auto,
 ):
     if _interface_mode == "phonopy_yaml" and optional_structure_info[1] is not None:
         phpy: PhonopyYaml = optional_structure_info[1]
@@ -240,16 +270,13 @@ def _collect_cells_info(
         elif phpy.primitive_matrix is not None:
             _primitive_matrix = phpy.primitive_matrix
         else:
-            _primitive_matrix = "auto"
+            _primitive_matrix = None
     else:
         interface_mode_out = _interface_mode
         _supercell_matrix = supercell_matrix
         _primitive_matrix = primitive_matrix
 
-    if enforce_primitive_matrix_auto:
-        _primitive_matrix = "auto"
-
-    if _supercell_matrix is None and _primitive_matrix == "auto":
+    if _supercell_matrix is None:
         supercell_matrix_out = np.eye(3, dtype="intc")
     else:
         supercell_matrix_out = _supercell_matrix
