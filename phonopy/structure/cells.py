@@ -67,18 +67,25 @@ def get_primitive(
     )
 
 
-def print_cell(cell, mapping=None, stars=None):
+def print_cell(cell: PhonopyAtoms, mapping=None, stars=None):
     """Show cell information."""
+    lines = get_cell_lines(cell, mapping=mapping, stars=stars)
+    print("\n".join(lines))
+
+
+def get_cell_lines(cell: PhonopyAtoms, mapping=None, stars=None):
+    """Return cell information text lines."""
     symbols = cell.symbols
     masses = cell.masses
     magmoms = cell.magnetic_moments
     lattice = cell.cell
-    print("Lattice vectors:")
-    print("  a %20.15f %20.15f %20.15f" % tuple(lattice[0]))
-    print("  b %20.15f %20.15f %20.15f" % tuple(lattice[1]))
-    print("  c %20.15f %20.15f %20.15f" % tuple(lattice[2]))
-    print("Atomic positions (fractional):")
-    for i, v in enumerate(cell.get_scaled_positions()):
+    lines = []
+    lines.append("Lattice vectors:")
+    lines.append("  a %20.15f %20.15f %20.15f" % tuple(lattice[0]))
+    lines.append("  b %20.15f %20.15f %20.15f" % tuple(lattice[1]))
+    lines.append("  c %20.15f %20.15f %20.15f" % tuple(lattice[2]))
+    lines.append("Atomic positions (fractional):")
+    for i, v in enumerate(cell.scaled_positions):
         num = " "
         if stars is not None:
             if i in stars:
@@ -93,9 +100,10 @@ def print_cell(cell, mapping=None, stars=None):
             else:
                 line += "  %s" % magmoms[i].ravel()
         if mapping is None:
-            print(line)
+            lines.append(line)
         else:
-            print(line + " > %d" % (mapping[i] + 1))
+            lines.append(line + " > %d" % (mapping[i] + 1))
+    return lines
 
 
 def isclose(a, b, rtol=1e-5, atol=1e-8):
@@ -314,7 +322,7 @@ class Supercell(PhonopyAtoms):
             super().__init__(
                 numbers=supercell.numbers,
                 masses=supercell.masses,
-                magmoms=supercell.magnetic_moments,
+                magnetic_moments=supercell.magnetic_moments,
                 scaled_positions=supercell.scaled_positions,
                 cell=supercell.cell,
                 pbc=True,
@@ -374,7 +382,7 @@ class Supercell(PhonopyAtoms):
         simple_supercell = PhonopyAtoms(
             numbers=numbers_multi,
             masses=masses_multi,
-            magmoms=magmoms_multi,
+            magnetic_moments=magmoms_multi,
             scaled_positions=positions_multi,
             cell=np.dot(mat, lattice),
             pbc=True,
@@ -617,7 +625,7 @@ class Primitive(PhonopyAtoms):
         super().__init__(
             numbers=trimmed_cell.numbers,
             masses=trimmed_cell.masses,
-            magmoms=trimmed_cell.magnetic_moments,
+            magnetic_moments=trimmed_cell.magnetic_moments,
             scaled_positions=trimmed_cell.scaled_positions,
             cell=trimmed_cell.cell,
             pbc=True,
@@ -800,7 +808,7 @@ class TrimmedCell(PhonopyAtoms):
             super().__init__(
                 numbers=trimmed_numbers,
                 masses=trimmed_masses,
-                magmoms=trimmed_magmoms,
+                magnetic_moments=trimmed_magmoms,
                 scaled_positions=trimmed_positions,
                 cell=trimmed_lattice,
                 pbc=True,
