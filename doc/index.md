@@ -109,7 +109,7 @@ New BSD from version 1.3.
 
 # Contact
 
-- Author: [Atsushi Togo](http://atztogo.github.io/)\_
+- Author: [Atsushi Togo](http://atztogo.github.io/)
 
 # Indices and tables
 
