@@ -39,6 +39,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 import yaml
 
+from phonopy.structure.cells import Primitive
+
 try:
     from yaml import CLoader as Loader
 except ImportError:
@@ -302,7 +304,7 @@ class PhonopyYaml:
             lines.append("")
         return lines
 
-    def _primitive_yaml_lines(self, primitive, name):
+    def _primitive_yaml_lines(self, primitive: Primitive, name):
         lines = []
         if primitive is not None:
             lines += self._cell_yaml_lines(self.primitive, name, None)
@@ -330,7 +332,7 @@ class PhonopyYaml:
             lines.append("")
         return lines
 
-    def _cell_yaml_lines(self, cell, name, map_to_primitive):
+    def _cell_yaml_lines(self, cell: PhonopyAtoms, name, map_to_primitive):
         lines = []
         lines.append("%s:" % name)
         count = 0
@@ -510,6 +512,7 @@ class PhonopyYaml:
         points = []
         symbols = []
         masses = []
+        magnetic_moments = []
         if "points" in cell_yaml:
             for x in cell_yaml["points"]:
                 if "coordinates" in x:
@@ -518,6 +521,8 @@ class PhonopyYaml:
                     symbols.append(x["symbol"])
                 if "mass" in x:
                     masses.append(x["mass"])
+                if "magnetic_moment" in x:
+                    magnetic_moments.append(x["magnetic_moment"])
         # For version < 1.10.9
         elif "atoms" in cell_yaml:
             for x in cell_yaml["atoms"]:
@@ -527,9 +532,11 @@ class PhonopyYaml:
                     symbols.append(x["symbol"])
                 if "mass" in x:
                     masses.append(x["mass"])
-        return self._get_cell(lattice, points, symbols, masses=masses)
+        return self._get_cell(
+            lattice, points, symbols, masses=masses, magnetic_moments=magnetic_moments
+        )
 
-    def _get_cell(self, lattice, points, symbols, masses=None):
+    def _get_cell(self, lattice, points, symbols, masses=None, magnetic_moments=None):
         if lattice:
             _lattice = lattice
         else:
@@ -546,6 +553,10 @@ class PhonopyYaml:
             _masses = masses
         else:
             _masses = None
+        if magnetic_moments:
+            _magnetic_moments = magnetic_moments
+        else:
+            _magnetic_moments = None
 
         if _lattice and _points and _symbols:
             return PhonopyAtoms(
@@ -553,6 +564,7 @@ class PhonopyYaml:
                 cell=_lattice,
                 masses=_masses,
                 scaled_positions=_points,
+                magnetic_moments=_magnetic_moments,
             )
         else:
             return None
