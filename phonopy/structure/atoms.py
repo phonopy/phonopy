@@ -436,9 +436,8 @@ class PhonopyAtoms:
             cell=self._cell,
             scaled_positions=self._scaled_positions,
             masses=self._masses,
-            magmoms=self._magmoms,
+            magnetic_moments=self._magmoms,
             symbols=self._symbols,
-            pbc=True,
         )
 
     def totuple(self):

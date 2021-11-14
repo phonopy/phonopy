@@ -1,5 +1,6 @@
 """Tests for dynmat_to_fc, inverse phonon transformation."""
 import os
+from io import StringIO
 
 import numpy as np
 import pytest
@@ -14,6 +15,40 @@ from phonopy.harmonic.dynmat_to_fc import (
 from phonopy.units import VaspToTHz
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
+
+
+comm_points_str = """1  0.00  0.00  0.00
+2  0.00  0.25  0.25
+3  0.00  0.50  0.50
+4  0.00  0.75  0.75
+5  0.25  0.00  0.25
+6  0.25  0.25  0.50
+7  0.25  0.50  0.75
+8  0.25  0.75  0.00
+9  0.50  0.00  0.50
+10  0.50  0.25  0.75
+11  0.50  0.50  0.00
+12  0.50  0.75  0.25
+13  0.75  0.00  0.75
+14  0.75  0.25  0.00
+15  0.75  0.50  0.25
+16  0.75  0.75  0.50
+17  0.25  0.25  0.00
+18  0.25  0.50  0.25
+19  0.25  0.75  0.50
+20  0.25  0.00  0.75
+21  0.50  0.25  0.25
+22  0.50  0.50  0.50
+23  0.50  0.75  0.75
+24  0.50  0.00  0.00
+25  0.75  0.25  0.50
+26  0.75  0.50  0.75
+27  0.75  0.75  0.00
+28  0.75  0.00  0.25
+29  0.00  0.25  0.75
+30  0.00  0.50  0.00
+31  0.00  0.75  0.25
+32  0.00  0.00  0.50"""
 
 
 def test_get_commensurate_points():
@@ -46,11 +81,10 @@ def _get_commensurate_points():
     return get_commensurate_points(smat), smat
 
 
-def _compare(comm_points, filename="comm_points.dat"):
-    with open(os.path.join(data_dir, filename)) as f:
-        comm_points_in_file = np.loadtxt(f)
-        diff = comm_points_in_file[:, 1:] - comm_points
-        np.testing.assert_allclose(diff, np.rint(diff), atol=1e-3)
+def _compare(comm_points):
+    comm_points_ref = np.loadtxt(StringIO(comm_points_str), dtype="double")
+    diff = comm_points_ref[:, 1:] - comm_points
+    np.testing.assert_allclose(diff, np.rint(diff), atol=1e-3)
 
 
 def _write(comm_points, filename="comm_points.dat"):

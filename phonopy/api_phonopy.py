@@ -3498,7 +3498,6 @@ class Phonopy:
                     magnetic_moments=self._supercell.magnetic_moments,
                     positions=positions,
                     cell=self._supercell.cell,
-                    pbc=True,
                 )
             )
         self._supercells_with_displacements = supercells
