@@ -568,7 +568,7 @@ class Vasprun:
 
         """
         fc_tmp = None
-        major_version = None
+        version_nums = None
         num_atom = 0
         for event, element in vasprun_etree:
             # VASP version
@@ -576,7 +576,7 @@ class Vasprun:
                 for element_i in element.findall("./i"):
                     if element_i.attrib["name"] == "version":
                         version_str = element_i.text.strip()
-                        major_version = int(version_str.split(".")[0])
+                        version_nums = [int(v) for v in version_str.split(".")]
 
             if num_atom == 0:
                 atomtypes = self._get_atomtypes(element)
@@ -614,8 +614,9 @@ class Vasprun:
                     force_constants[i, j] *= -np.sqrt(masses[i] * masses[j])
 
             # Recover the unit of eV/Angstrom^2 for VASP-6.
-            if major_version == 6:
-                force_constants /= VaspToTHz ** 2
+            if version_nums is not None and len(version_nums) > 1:
+                if version_nums[0] == 6 and version_nums[1] > 1:
+                    force_constants /= VaspToTHz ** 2
 
             return force_constants, elements
 
