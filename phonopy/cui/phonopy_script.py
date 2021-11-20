@@ -1509,7 +1509,7 @@ def get_fc_calculator_params(settings):
     return fc_calculator, fc_calculator_options
 
 
-def get_cell_info(settings, cell_filename, symprec, log_level):
+def get_cell_info(settings, cell_filename, log_level):
     """Return calculator interface and crystal structure information."""
     cell_info = collect_cell_info(
         supercell_matrix=settings.supercell_matrix,
@@ -1519,8 +1519,9 @@ def get_cell_info(settings, cell_filename, symprec, log_level):
         chemical_symbols=settings.chemical_symbols,
         enforce_primitive_matrix_auto=is_band_auto(settings),
     )
-    if type(cell_info) is str:
-        print_error_message(cell_info)
+
+    if "error_message" in cell_info:
+        print_error_message(cell_info["error_message"])
         if log_level:
             print_error()
         sys.exit(1)
@@ -1695,7 +1696,7 @@ def main(**argparse_control):
     #################################################################
     # Parse crystal structure and optionally phonopy.yaml-like file #
     #################################################################
-    cell_info = get_cell_info(settings, cell_filename, symprec, log_level)
+    cell_info = get_cell_info(settings, cell_filename, log_level)
     unitcell_filename = cell_info["optional_structure_info"][0]
 
     if cell_info["unitcell"].magnetic_moments is not None and auto_primitive_axes(
