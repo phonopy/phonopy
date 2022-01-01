@@ -872,7 +872,7 @@ def get_band_qpoints_by_seekpath(primitive, npoints, is_const_interval=False):
     point_coords = band_path["point_coords"]
     qpoints_of_paths = []
     if is_const_interval:
-        reclat = np.linalg.inv(primitive.get_cell())
+        reclat = np.linalg.inv(primitive.cell)
     else:
         reclat = None
     band_paths = [
