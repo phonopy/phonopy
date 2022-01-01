@@ -2381,7 +2381,7 @@ class Phonopy:
         """
         return {
             "frequency_points": self._pdos.frequency_points,
-            "projected_dos": self._pdos.partial_dos,
+            "projected_dos": self._pdos.projected_dos,
         }
 
     def get_partial_DOS(self):
