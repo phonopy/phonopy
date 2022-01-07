@@ -38,8 +38,8 @@ The following features of phonopy are highlighted:
   {ref}`LAMMPS (external) <external_tools_phonolammps>`
 - {ref}`Phonopy API for Python <phonopy_module>`
 
-.. A presentation in pdf for introduction to phonopy is downloaded
-`***here*** <https://sf.net/projects/phonopy/files/phonopy.pdf/download>`\_.
+A presentation in pdf for introduction to phonopy is downloaded
+[here](https://sf.net/projects/phonopy/files/phonopy.pdf/download).
 
 ```{image} band.png
 :width: 15%
@@ -88,9 +88,8 @@ for html. -->
 
 ```{toctree}
 :hidden:
-```
-
 documentation
+```
 
 (mailinglist)=
 

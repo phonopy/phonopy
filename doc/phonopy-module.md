@@ -338,7 +338,7 @@ phonon.run_band_structure(bands, with_group_velocities=True)
 ```
 
 Automatic selection of band paths using
-`SeeK-path <https://seekpath.readthedocs.io/en/latest/>`\_ is invoked by
+[SeeK-path](https://seekpath.readthedocs.io/en/latest/) is invoked by
 
 ```python
 phonon.auto_band_structure()
