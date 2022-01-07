@@ -41,7 +41,8 @@ command:
 In the NaCl-qe example,
 
 ```bash
-% phonopy --qe -d --dim 2 2 2 --pa auto -c NaCl.in % phonopy-load -f NaCl-00{1,2}.out
+% phonopy --qe -d --dim 2 2 2 --pa auto -c NaCl.in
+% phonopy-load -f NaCl-00{1,2}.out
 ```
 
 With these commands, `phonopy_disp.yaml` and `FORCE_SETS` are created. After
@@ -57,7 +58,9 @@ Data in `FORCE_SETS` and `BORN` can be saved in `phonopy_params.yaml` using
 fillows:
 
 ```
-% phonopy-load --save-params % mkdir test && cd test % mv ../phonopy_params.yaml .
+% phonopy-load --save-params
+% mkdir test && cd test
+% mv ../phonopy_params.yaml .
 % phonopy-load --band auto -p
 ```
 

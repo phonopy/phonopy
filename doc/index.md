@@ -83,13 +83,13 @@ reference
 changelog
 ```
 
-<!-- Latex master doc is documentation.rst. But documentation.rst is not included
-for html. -->
+<!-- Latex master doc is documentation.md. But documentation.md is not included
+for html. Uncomment below when generating latex documentation. -->
 
-```{toctree}
+<!-- ```{toctree}
 :hidden:
 documentation
-```
+``` -->
 
 (mailinglist)=
 
