@@ -585,19 +585,19 @@ class PhonopyYaml:
                 natom = len(supercell)
             else:
                 natom = None
-            disp = self._yaml["displacements"][0]
+            disp = self._yaml[key][0]
             if type(disp) is dict:  # type1
-                dataset = self._parse_force_sets_type1(natom=natom)
+                dataset = self._parse_force_sets_type1(natom=natom, key=key)
             elif type(disp) is list:  # type2
                 if "displacement" in disp[0]:
-                    dataset = self._parse_force_sets_type2()
+                    dataset = self._parse_force_sets_type2(key=key)
         return dataset
 
-    def _parse_force_sets_type1(self, natom=None):
+    def _parse_force_sets_type1(self, natom=None, key="displacements"):
         with_forces = False
-        if "forces" in self._yaml["displacements"][0]:
+        if "forces" in self._yaml[key][0]:
             with_forces = True
-            dataset = {"natom": len(self._yaml["displacements"][0]["forces"])}
+            dataset = {"natom": len(self._yaml[key][0]["forces"])}
         elif natom is not None:
             dataset = {"natom": natom}
         elif "natom" in self._yaml:
@@ -606,7 +606,7 @@ class PhonopyYaml:
             raise RuntimeError("Number of atoms in supercell could not be found.")
 
         first_atoms = []
-        for d in self._yaml["displacements"]:
+        for d in self._yaml[key]:
             data = {
                 "number": d["atom"] - 1,
                 "displacement": np.array(d["displacement"], dtype="double"),
@@ -618,16 +618,16 @@ class PhonopyYaml:
 
         return dataset
 
-    def _parse_force_sets_type2(self):
-        nsets = len(self._yaml["displacements"])
-        natom = len(self._yaml["displacements"][0])
-        if "force" in self._yaml["displacements"][0][0]:
+    def _parse_force_sets_type2(self, key="displacements"):
+        nsets = len(self._yaml[key])
+        natom = len(self._yaml[key][0])
+        if "force" in self._yaml[key][0][0]:
             with_forces = True
             forces = np.zeros((nsets, natom, 3), dtype="double", order="C")
         else:
             with_forces = False
         displacements = np.zeros((nsets, natom, 3), dtype="double", order="C")
-        for i, dfset in enumerate(self._yaml["displacements"]):
+        for i, dfset in enumerate(self._yaml[key]):
             for j, df in enumerate(dfset):
                 if with_forces:
                     forces[i, j] = df["force"]
