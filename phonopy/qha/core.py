@@ -1078,7 +1078,7 @@ class QHA:
                     msg += ["At least 5 volume points are needed for the fitting."]
                 raise RuntimeError("\n".join(msg))
 
-            cv_p = np.dot(parameters, np.array([x ** 4, x ** 3, x ** 2, x, 1]))
+            cv_p = np.dot(parameters, np.array([x**4, x**3, x**2, x, 1]))
             self._volume_cv_parameters.append(parameters)
 
             try:
@@ -1090,7 +1090,7 @@ class QHA:
                 raise RuntimeError("\n".join(msg))
 
             dsdv_t = np.dot(
-                parameters[:4], np.array([4 * x ** 3, 3 * x ** 2, 2 * x, 1])
+                parameters[:4], np.array([4 * x**3, 3 * x**2, 2 * x, 1])
             )
             self._volume_entropy_parameters.append(parameters)
 
@@ -1131,7 +1131,7 @@ class QHA:
                     msg += ["At least 5 volume points are needed for the fitting."]
                 raise RuntimeError("\n".join(msg))
             cv = (
-                np.dot(parameters, [v ** 4, v ** 3, v ** 2, v, 1])
+                np.dot(parameters, [v**4, v**3, v**2, v, 1])
                 / v
                 / 1000
                 / EvTokJmol

@@ -269,7 +269,7 @@ class TetrahedronMethod:
         diag_vecs = np.array(
             [a + b + c, -a + b + c, a - b + c, a + b - c]  # 0-7  # 1-6  # 2-5
         )  # 3-4
-        shortest_index = np.argmin(np.sum(diag_vecs ** 2, axis=1))
+        shortest_index = np.argmin(np.sum(diag_vecs**2, axis=1))
         # vertices = [np.zeros(3), a, b, a + b, c, c + a, c + b, c + a + b]
         if shortest_index == 0:
             pairs = ((1, 3), (1, 5), (2, 3), (2, 6), (4, 5), (4, 6))

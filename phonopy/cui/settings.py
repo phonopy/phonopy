@@ -1663,7 +1663,7 @@ class PhonopyConfParser(ConfParser):
                 if (
                     np.issubdtype(type(seed), np.integer)
                     and seed >= 0
-                    and seed < 2 ** 32
+                    and seed < 2**32
                 ):
                     self._confs["random_seed"] = seed
 

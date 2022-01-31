@@ -616,7 +616,7 @@ class Vasprun:
             # Recover the unit of eV/Angstrom^2 for VASP-6.
             if version_nums is not None and len(version_nums) > 1:
                 if version_nums[0] == 6 and version_nums[1] > 1:
-                    force_constants /= VaspToTHz ** 2
+                    force_constants /= VaspToTHz**2
 
             return force_constants, elements
 

@@ -630,7 +630,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             self._Lambda = nac_params["Lambda"]
         else:
             exp_cutoff = 1e-10
-            GeG = self._G_cutoff ** 2 * np.trace(self._dielectric) / 3
+            GeG = self._G_cutoff**2 * np.trace(self._dielectric) / 3
             self._Lambda = np.sqrt(-GeG / 4 / np.log(exp_cutoff))
 
         # self._H = self._get_H()
@@ -846,7 +846,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         # g_rad must be greater than 0 for broadcasting.
         G_vec_list = self._get_G_vec_list(g_rad, rec_lat)
         G_norm2 = ((G_vec_list) ** 2).sum(axis=1)
-        return np.array(G_vec_list[G_norm2 < G_cutoff ** 2], dtype="double", order="C")
+        return np.array(G_vec_list[G_norm2 < G_cutoff**2], dtype="double", order="C")
 
     def _get_G_vec_list(self, g_rad, rec_lat):
         pts = np.arange(-g_rad, g_rad + 1)
@@ -862,8 +862,8 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         D = np.sqrt(cart_vecs * Delta).sum(axis=3)
         x = self._Lambda * Delta
         y = self._Lambda * D
-        y2 = y ** 2
-        y3 = y ** 3
+        y2 = y**2
+        y3 = y**3
         exp_y2 = np.exp(-y2)
         eps_inv = np.linalg.inv(self._dielectric)
 
@@ -1050,7 +1050,7 @@ def get_dynamical_matrix(
     if frequency_scale_factor is None:
         _fc2 = fc2
     else:
-        _fc2 = fc2 * frequency_scale_factor ** 2
+        _fc2 = fc2 * frequency_scale_factor**2
 
     if nac_params is None:
         dm = DynamicalMatrix(supercell, primitive, _fc2, decimals=decimals)

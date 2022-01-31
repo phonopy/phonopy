@@ -244,7 +244,7 @@ def get_random_displacements_dataset(
     if (
         np.issubdtype(type(random_seed), np.integer)
         and random_seed >= 0
-        and random_seed < 2 ** 32
+        and random_seed < 2**32
     ):
         seed = random_seed
     else:
@@ -269,10 +269,10 @@ def _get_random_directions(num_atoms, random_seed=None):
     if (
         np.issubdtype(type(random_seed), np.integer)
         and random_seed >= 0
-        and random_seed < 2 ** 32
+        and random_seed < 2**32
     ):
         np.random.seed(random_seed)
 
     xy = np.random.randn(3, num_atoms)
-    r = np.sqrt((xy ** 2).sum(axis=0))
+    r = np.sqrt((xy**2).sum(axis=0))
     return (xy / r).T

@@ -125,7 +125,7 @@ def read_cp2k(filename):
                         (cos_alpha - cos_gamma * cos_beta) / sin_gamma,
                         np.sqrt(
                             1.0
-                            - cos_beta ** 2
+                            - cos_beta**2
                             - ((cos_alpha - cos_gamma * cos_beta) / sin_gamma) ** 2
                         ),
                     ],
