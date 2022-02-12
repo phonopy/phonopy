@@ -126,6 +126,23 @@ def isclose(a, b, rtol=1e-5, atol=1e-8):
     return True
 
 
+def is_primitive_cell(rotations):
+    """Check if single identity operation exists in rotations or not.
+
+    This is used for checking a cell is a primitive cell or not.
+
+    """
+    num_identity = 0
+    identity = np.eye(3, dtype="intc")
+    for r in rotations:
+        if (r == identity).all():
+            num_identity += 1
+            if num_identity > 1:
+                return False
+    else:
+        return True
+
+
 class Supercell(PhonopyAtoms):
     """Build supercell from supercell matrix and unit cell.
 
