@@ -67,7 +67,7 @@ class Symmetry:
         self._map_operations = None
 
         magmom = cell.magnetic_moments
-        if type(magmom) is np.ndarray:
+        if isinstance(magmom, np.ndarray):
             if (magmom < symprec).all():
                 magmom = None
 
