@@ -32,10 +32,11 @@
 /* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
 /* POSSIBILITY OF SUCH DAMAGE. */
 
-#include <stdio.h>
-#include <stddef.h>
-#include <assert.h>
 #include "rgrid.h"
+
+#include <assert.h>
+#include <stddef.h>
+#include <stdio.h>
 
 static void get_all_grid_addresses(long grid_address[][3], const long mesh[3]);
 static long get_double_grid_index(const long address_double[3],
@@ -46,118 +47,106 @@ static void reduce_grid_address(long address[3], const long mesh[3]);
 static void reduce_double_grid_address(long address[3], const long mesh[3]);
 static long mat_modulo_l(const long a, const long b);
 
-
-void rgd_get_all_grid_addresses(long grid_address[][3], const long mesh[3])
-{
-  get_all_grid_addresses(grid_address, mesh);
+void rgd_get_all_grid_addresses(long grid_address[][3], const long mesh[3]) {
+    get_all_grid_addresses(grid_address, mesh);
 }
 
 long rgd_get_double_grid_index(const long address_double[3],
-                               const long mesh[3])
-{
-  return get_double_grid_index(address_double, mesh);
+                               const long mesh[3]) {
+    return get_double_grid_index(address_double, mesh);
 }
 
-void rgd_get_double_grid_address(long address_double[3],
-                                 const long address[3],
-                                 const long mesh[3],
-                                 const long is_shift[3])
-{
-  long i;
+void rgd_get_double_grid_address(long address_double[3], const long address[3],
+                                 const long mesh[3], const long is_shift[3]) {
+    long i;
 
-  for (i = 0; i < 3; i++) {
-    address_double[i] = address[i] * 2 + (is_shift[i] != 0);
-  }
-  reduce_double_grid_address(address_double, mesh);
-}
-
-static void get_all_grid_addresses(long grid_address[][3], const long mesh[3])
-{
-  long i, j, k;
-  long grid_index;
-  long address[3];
-
-  for (i = 0; i < mesh[0]; i++) {
-    address[0] = i;
-    for (j = 0; j < mesh[1]; j++) {
-      address[1] = j;
-      for (k = 0; k < mesh[2]; k++) {
-        address[2] = k;
-        grid_index = get_grid_index_single_mesh(address, mesh);
-
-        assert(mesh[0] * mesh[1] * mesh[2] > grid_index);
-
-        grid_address[grid_index][0] = address[0];
-        grid_address[grid_index][1] = address[1];
-        grid_address[grid_index][2] = address[2];
-        reduce_grid_address(grid_address[grid_index], mesh);
-      }
+    for (i = 0; i < 3; i++) {
+        address_double[i] = address[i] * 2 + (is_shift[i] != 0);
     }
-  }
+    reduce_double_grid_address(address_double, mesh);
+}
+
+static void get_all_grid_addresses(long grid_address[][3], const long mesh[3]) {
+    long i, j, k;
+    long grid_index;
+    long address[3];
+
+    for (i = 0; i < mesh[0]; i++) {
+        address[0] = i;
+        for (j = 0; j < mesh[1]; j++) {
+            address[1] = j;
+            for (k = 0; k < mesh[2]; k++) {
+                address[2] = k;
+                grid_index = get_grid_index_single_mesh(address, mesh);
+
+                assert(mesh[0] * mesh[1] * mesh[2] > grid_index);
+
+                grid_address[grid_index][0] = address[0];
+                grid_address[grid_index][1] = address[1];
+                grid_address[grid_index][2] = address[2];
+                reduce_grid_address(grid_address[grid_index], mesh);
+            }
+        }
+    }
 }
 
 static long get_double_grid_index(const long address_double[3],
-                                  const long mesh[3])
-{
-  long i;
-  long address[3];
+                                  const long mesh[3]) {
+    long i;
+    long address[3];
 
-  for (i = 0; i < 3; i++) {
-    if (address_double[i] % 2 == 0) {
-      address[i] = address_double[i] / 2;
-    } else {
-      address[i] = (address_double[i] - 1) / 2;
+    for (i = 0; i < 3; i++) {
+        if (address_double[i] % 2 == 0) {
+            address[i] = address_double[i] / 2;
+        } else {
+            address[i] = (address_double[i] - 1) / 2;
+        }
+        address[i] = mat_modulo_l(address[i], mesh[i]);
     }
-    address[i] = mat_modulo_l(address[i], mesh[i]);
-  }
 
-  return get_grid_index_single_mesh(address, mesh);
+    return get_grid_index_single_mesh(address, mesh);
 }
 
 static long get_grid_index_single_mesh(const long address[3],
-                                       const long mesh[3])
-{
+                                       const long mesh[3]) {
 #ifndef GRID_ORDER_XYZ
-  return (address[2] * mesh[0] * (long)(mesh[1])
-          + address[1] * mesh[0] + address[0]);
+    return (address[2] * mesh[0] * (long)(mesh[1]) + address[1] * mesh[0] +
+            address[0]);
 #else
-  return (address[0] * mesh[1] * (long)(mesh[2])
-          + address[1] * mesh[2] + address[2]);
+    return (address[0] * mesh[1] * (long)(mesh[2]) + address[1] * mesh[2] +
+            address[2]);
 #endif
 }
 
-static void reduce_grid_address(long address[3], const long mesh[3])
-{
-  long i;
+static void reduce_grid_address(long address[3], const long mesh[3]) {
+    long i;
 
-  for (i = 0; i < 3; i++) {
+    for (i = 0; i < 3; i++) {
 #ifndef GRID_BOUNDARY_AS_NEGATIVE
-    address[i] -= mesh[i] * (address[i] > mesh[i] / 2);
+        address[i] -= mesh[i] * (address[i] > mesh[i] / 2);
 #else
-    address[i] -= mesh[i] * (address[i] > (mesh[i] - 1) / 2);
+        address[i] -= mesh[i] * (address[i] > (mesh[i] - 1) / 2);
 #endif
-  }
+    }
 }
 
-static void reduce_double_grid_address(long address[3], const long mesh[3])
-{
-  long i;
+static void reduce_double_grid_address(long address[3], const long mesh[3]) {
+    long i;
 
-  for (i = 0; i < 3; i++) {
+    for (i = 0; i < 3; i++) {
 #ifndef GRID_BOUNDARY_AS_NEGATIVE
-    address[i] -= 2 * mesh[i] * (address[i] > mesh[i]);
+        address[i] -= 2 * mesh[i] * (address[i] > mesh[i]);
 #else
-    address[i] -= 2 * mesh[i] * (address[i] > mesh[i] - 1);
+        address[i] -= 2 * mesh[i] * (address[i] > mesh[i] - 1);
 #endif
-  }
+    }
 }
 
-static long mat_modulo_l(const long a, const long b)
-{
-  long c;
-  c = a % b;
-  if (c < 0) {
-    c += b;
-  }
-  return c;
+static long mat_modulo_l(const long a, const long b) {
+    long c;
+    c = a % b;
+    if (c < 0) {
+        c += b;
+    }
+    return c;
 }

@@ -39,6 +39,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 import yaml
 
+from phonopy.structure.cells import Primitive
+
 try:
     from yaml import CLoader as Loader
 except ImportError:
@@ -48,42 +50,6 @@ if TYPE_CHECKING:
     from phonopy import Phonopy
 
 from phonopy.structure.atoms import PhonopyAtoms
-
-
-def read_cell_yaml(filename, cell_type="unitcell"):
-    """Read crystal structure from a phonopy.yaml or PhonopyAtoms.__str__ like file.
-
-    phonopy.yaml like file can contain several different cells, e.g., unit cell,
-    primitive cell, or supercell. In this case, the default preference order of
-    the returned cell is unit cell > primitive cell > supercell. ``cell_type``
-    is used to specify to choose one of them.
-
-    When output of PhonopyAtoms.__str__ is given (like below), this file is
-    parsed and its cell is returned.
-
-    lattice:
-    - [     0.000000000000000,     2.845150738087836,     2.845150738087836 ] # a
-    - [     2.845150738087836,     0.000000000000000,     2.845150738087836 ] # b
-    - [     2.845150738087836,     2.845150738087836,     0.000000000000000 ] # c
-    points:
-    - symbol: Na # 1
-      coordinates: [  0.000000000000000,  0.000000000000000,  0.000000000000000 ]
-      mass: 22.989769
-    - symbol: Cl # 2
-      coordinates: [  0.500000000000000,  0.500000000000000,  0.500000000000000 ]
-      mass: 35.453000
-
-    """
-    ph_yaml = PhonopyYaml()
-    ph_yaml.read(filename)
-    if ph_yaml.unitcell and cell_type == "unitcell":
-        return ph_yaml.unitcell
-    elif ph_yaml.primitive and cell_type == "primitive":
-        return ph_yaml.primitive
-    elif ph_yaml.supercell and cell_type == "supercell":
-        return ph_yaml.supercell
-    else:
-        return None
 
 
 class PhonopyYaml:
@@ -338,7 +304,7 @@ class PhonopyYaml:
             lines.append("")
         return lines
 
-    def _primitive_yaml_lines(self, primitive, name):
+    def _primitive_yaml_lines(self, primitive: Primitive, name):
         lines = []
         if primitive is not None:
             lines += self._cell_yaml_lines(self.primitive, name, None)
@@ -366,7 +332,7 @@ class PhonopyYaml:
             lines.append("")
         return lines
 
-    def _cell_yaml_lines(self, cell, name, map_to_primitive):
+    def _cell_yaml_lines(self, cell: PhonopyAtoms, name, map_to_primitive):
         lines = []
         lines.append("%s:" % name)
         count = 0
@@ -418,23 +384,37 @@ class PhonopyYaml:
             self.dataset, with_forces=with_forces
         )
 
-    def _displacements_yaml_lines_2types(self, dataset, with_forces=False):
+    def _displacements_yaml_lines_2types(
+        self, dataset, with_forces=False, key="displacements"
+    ):
+        """Choose yaml writer depending on the dataset type.
+
+        See type1 and type2 at Phonopy.dataset.
+
+        """
         if dataset is not None:
             if "first_atoms" in dataset:
                 return self._displacements_yaml_lines_type1(
-                    dataset, with_forces=with_forces
+                    dataset, with_forces=with_forces, key=key
                 )
             elif "displacements" in dataset:
                 return self._displacements_yaml_lines_type2(
-                    dataset, with_forces=with_forces
+                    dataset, with_forces=with_forces, key=key
                 )
         return []
 
-    def _displacements_yaml_lines_type1(self, dataset, with_forces=False):
+    def _displacements_yaml_lines_type1(
+        self, dataset, with_forces=False, key="displacements"
+    ):
+        """Return type1 dataset in yaml.
+
+        See data structure at Phonopy.dataset.
+
+        """
         lines = [
-            "displacements:",
+            "%s:" % key,
         ]
-        for i, d in enumerate(dataset["first_atoms"]):
+        for d in dataset["first_atoms"]:
             lines.append("- atom: %4d" % (d["number"] + 1))
             lines.append("  displacement:")
             lines.append("    [ %20.16f,%20.16f,%20.16f ]" % tuple(d["displacement"]))
@@ -445,12 +425,19 @@ class PhonopyYaml:
         lines.append("")
         return lines
 
-    def _displacements_yaml_lines_type2(self, dataset, with_forces=False):
+    def _displacements_yaml_lines_type2(
+        self, dataset, with_forces=False, key="displacements"
+    ):
+        """Return type2 dataset in yaml.
+
+        See data structure at Phonopy.dataset.
+
+        """
         if "random_seed" in dataset:
             lines = ["random_seed: %d" % dataset["random_seed"], "displacements:"]
         else:
             lines = [
-                "displacements:",
+                "%s:" % key,
             ]
         for i, dset in enumerate(dataset["displacements"]):
             lines.append("- # %4d" % (i + 1))
@@ -484,30 +471,10 @@ class PhonopyYaml:
         return lines
 
     def _load(self, filename):
-        _, ext = os.path.splitext(filename)
-        if ext == ".xz" or ext == ".lzma":
-            try:
-                import lzma
-            except ImportError:
-                raise (
-                    "Reading a lzma compressed file is not supported "
-                    "by this python version."
-                )
-            with lzma.open(filename) as f:
-                self._yaml = yaml.load(f, Loader=Loader)
-        elif ext == ".gz":
-            import gzip
-
-            with gzip.open(filename) as f:
-                self._yaml = yaml.load(f, Loader=Loader)
-        else:
-            with open(filename, "r") as f:
-                self._yaml = yaml.load(f, Loader=Loader)
-
+        self._yaml = load_yaml(filename)
         if type(self._yaml) is str:
             msg = "Could not open %s's yaml file." % self.command_name
             raise TypeError(msg)
-
         self.parse()
 
     def _parse_command_header(self):
@@ -545,6 +512,7 @@ class PhonopyYaml:
         points = []
         symbols = []
         masses = []
+        magnetic_moments = []
         if "points" in cell_yaml:
             for x in cell_yaml["points"]:
                 if "coordinates" in x:
@@ -553,6 +521,8 @@ class PhonopyYaml:
                     symbols.append(x["symbol"])
                 if "mass" in x:
                     masses.append(x["mass"])
+                if "magnetic_moment" in x:
+                    magnetic_moments.append(x["magnetic_moment"])
         # For version < 1.10.9
         elif "atoms" in cell_yaml:
             for x in cell_yaml["atoms"]:
@@ -562,9 +532,11 @@ class PhonopyYaml:
                     symbols.append(x["symbol"])
                 if "mass" in x:
                     masses.append(x["mass"])
-        return self._get_cell(lattice, points, symbols, masses=masses)
+        return self._get_cell(
+            lattice, points, symbols, masses=masses, magnetic_moments=magnetic_moments
+        )
 
-    def _get_cell(self, lattice, points, symbols, masses=None):
+    def _get_cell(self, lattice, points, symbols, masses=None, magnetic_moments=None):
         if lattice:
             _lattice = lattice
         else:
@@ -581,6 +553,10 @@ class PhonopyYaml:
             _masses = masses
         else:
             _masses = None
+        if magnetic_moments:
+            _magnetic_moments = magnetic_moments
+        else:
+            _magnetic_moments = None
 
         if _lattice and _points and _symbols:
             return PhonopyAtoms(
@@ -588,6 +564,7 @@ class PhonopyYaml:
                 cell=_lattice,
                 masses=_masses,
                 scaled_positions=_points,
+                magnetic_moments=_magnetic_moments,
             )
         else:
             return None
@@ -601,26 +578,26 @@ class PhonopyYaml:
     def _parse_dataset(self):
         self.dataset = self._get_dataset(self.supercell)
 
-    def _get_dataset(self, supercell):
+    def _get_dataset(self, supercell, key="displacements"):
         dataset = None
-        if "displacements" in self._yaml:
+        if key in self._yaml:
             if supercell is not None:
                 natom = len(supercell)
             else:
                 natom = None
-            disp = self._yaml["displacements"][0]
+            disp = self._yaml[key][0]
             if type(disp) is dict:  # type1
-                dataset = self._parse_force_sets_type1(natom=natom)
+                dataset = self._parse_force_sets_type1(natom=natom, key=key)
             elif type(disp) is list:  # type2
                 if "displacement" in disp[0]:
-                    dataset = self._parse_force_sets_type2()
+                    dataset = self._parse_force_sets_type2(key=key)
         return dataset
 
-    def _parse_force_sets_type1(self, natom=None):
+    def _parse_force_sets_type1(self, natom=None, key="displacements"):
         with_forces = False
-        if "forces" in self._yaml["displacements"][0]:
+        if "forces" in self._yaml[key][0]:
             with_forces = True
-            dataset = {"natom": len(self._yaml["displacements"][0]["forces"])}
+            dataset = {"natom": len(self._yaml[key][0]["forces"])}
         elif natom is not None:
             dataset = {"natom": natom}
         elif "natom" in self._yaml:
@@ -629,7 +606,7 @@ class PhonopyYaml:
             raise RuntimeError("Number of atoms in supercell could not be found.")
 
         first_atoms = []
-        for d in self._yaml["displacements"]:
+        for d in self._yaml[key]:
             data = {
                 "number": d["atom"] - 1,
                 "displacement": np.array(d["displacement"], dtype="double"),
@@ -641,16 +618,16 @@ class PhonopyYaml:
 
         return dataset
 
-    def _parse_force_sets_type2(self):
-        nsets = len(self._yaml["displacements"])
-        natom = len(self._yaml["displacements"][0])
-        if "force" in self._yaml["displacements"][0][0]:
+    def _parse_force_sets_type2(self, key="displacements"):
+        nsets = len(self._yaml[key])
+        natom = len(self._yaml[key][0])
+        if "force" in self._yaml[key][0][0]:
             with_forces = True
             forces = np.zeros((nsets, natom, 3), dtype="double", order="C")
         else:
             with_forces = False
         displacements = np.zeros((nsets, natom, 3), dtype="double", order="C")
-        for i, dfset in enumerate(self._yaml["displacements"]):
+        for i, dfset in enumerate(self._yaml[key]):
             for j, df in enumerate(dfset):
                 if with_forces:
                     forces[i, j] = df["force"]
@@ -686,3 +663,68 @@ class PhonopyYaml:
             and "calculator" in self._yaml[self.command_name]
         ):
             self.calculator = self._yaml[self.command_name]["calculator"]
+
+
+def read_cell_yaml(filename, cell_type="unitcell"):
+    """Read crystal structure from a phonopy.yaml or PhonopyAtoms.__str__ like file.
+
+    phonopy.yaml like file can contain several different cells, e.g., unit cell,
+    primitive cell, or supercell. In this case, the default preference order of
+    the returned cell is unit cell > primitive cell > supercell. ``cell_type``
+    is used to specify to choose one of them.
+
+    When output of PhonopyAtoms.__str__ is given (like below), this file is
+    parsed and its cell is returned.
+
+    lattice:
+    - [     0.000000000000000,     2.845150738087836,     2.845150738087836 ] # a
+    - [     2.845150738087836,     0.000000000000000,     2.845150738087836 ] # b
+    - [     2.845150738087836,     2.845150738087836,     0.000000000000000 ] # c
+    points:
+    - symbol: Na # 1
+      coordinates: [  0.000000000000000,  0.000000000000000,  0.000000000000000 ]
+      mass: 22.989769
+    - symbol: Cl # 2
+      coordinates: [  0.500000000000000,  0.500000000000000,  0.500000000000000 ]
+      mass: 35.453000
+
+    """
+    ph_yaml = PhonopyYaml()
+    ph_yaml.read(filename)
+    if ph_yaml.unitcell and cell_type == "unitcell":
+        return ph_yaml.unitcell
+    elif ph_yaml.primitive and cell_type == "primitive":
+        return ph_yaml.primitive
+    elif ph_yaml.supercell and cell_type == "supercell":
+        return ph_yaml.supercell
+    else:
+        return None
+
+
+def load_yaml(filename):
+    """Load yaml file.
+
+    lzma and gzip comppressed files can be loaded.
+
+    """
+    _, ext = os.path.splitext(filename)
+    if ext == ".xz" or ext == ".lzma":
+        try:
+            import lzma
+        except ImportError:
+            raise (
+                "Reading a lzma compressed file is not supported "
+                "by this python version."
+            )
+        with lzma.open(filename) as f:
+            yaml_data = yaml.load(f, Loader=Loader)
+    elif ext == ".gz":
+        import gzip
+
+        with gzip.open(filename) as f:
+            yaml_data = yaml.load(f, Loader=Loader)
+    else:
+        with open(filename, "r") as f:
+            yaml_data = yaml.load(f, Loader=Loader)
+
+    return yaml_data

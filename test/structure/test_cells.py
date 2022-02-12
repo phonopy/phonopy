@@ -214,6 +214,21 @@ def test_get_supercell_nacl_snf(convcell_nacl: PhonopyAtoms, helper_methods):
     helper_methods.compare_cells(scell, scell_snf)
 
 
+def test_get_supercell_Cr(convcell_cr: PhonopyAtoms, helper_methods):
+    """Test of get_supercell using SNF by Cr with magnetic moments."""
+    convcell_cr.magnetic_moments = [1, -1]
+    smat = [[-1, 1, 1], [1, -1, 1], [1, 1, -1]]
+    scell = get_supercell(convcell_cr, smat, is_old_style=True)
+    np.testing.assert_allclose(
+        scell.magnetic_moments,
+        [1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0],
+        atol=1e-8,
+    )
+    scell_snf = get_supercell(convcell_cr, smat, is_old_style=False)
+    helper_methods.compare_cells(scell, scell_snf)
+    convcell_cr.magnetic_moments = None
+
+
 def _test_get_supercell_convcell_sio2(
     convcell_sio2: PhonopyAtoms, helper_methods, is_old_style=True
 ):
@@ -246,6 +261,17 @@ def test_get_primitive_convcell_nacl(
     """Test get_primitive by NaCl."""
     pcell = get_primitive(convcell_nacl, primitive_matrix_nacl)
     helper_methods.compare_cells_with_order(pcell, primcell_nacl)
+
+
+def test_get_primitive_convcell_Cr(convcell_cr: PhonopyAtoms, helper_methods):
+    """Test get_primitive by NaCl."""
+    convcell_cr.magnetic_moments = [1, -1]
+    smat = [[2, 0, 0], [0, 2, 0], [0, 0, 2]]
+    scell = get_supercell(convcell_cr, smat, is_old_style=True)
+    pmat = np.linalg.inv(smat)
+    pcell = get_primitive(scell, pmat)
+    helper_methods.compare_cells(convcell_cr, pcell)
+    convcell_cr.magnetic_moments = None
 
 
 @pytest.mark.parametrize("store_dense_svecs", [True, False])

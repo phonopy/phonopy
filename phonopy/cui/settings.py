@@ -360,30 +360,30 @@ class ConfParser:
 
     def read_file(self):
         """Read conf file."""
-        file = open(self._filename, "r")
-        is_continue = False
-        left = None
+        with open(self._filename, "r") as file:
+            is_continue = False
+            left = None
 
-        for line in file:
-            if line.strip() == "":
-                is_continue = False
-                continue
+            for line in file:
+                if line.strip() == "":
+                    is_continue = False
+                    continue
 
-            if line.strip()[0] == "#":
-                is_continue = False
-                continue
+                if line.strip()[0] == "#":
+                    is_continue = False
+                    continue
 
-            if is_continue and left is not None:
-                self._confs[left] += line.strip()
-                self._confs[left] = self._confs[left].replace("+++", " ")
-                is_continue = False
+                if is_continue and left is not None:
+                    self._confs[left] += line.strip()
+                    self._confs[left] = self._confs[left].replace("+++", " ")
+                    is_continue = False
 
-            if line.find("=") != -1:
-                left, right = [x.strip() for x in line.split("=")]
-                self._confs[left.lower()] = right
+                if line.find("=") != -1:
+                    left, right = [x.strip() for x in line.split("=")]
+                    self._confs[left.lower()] = right
 
-            if line.find("+++") != -1:
-                is_continue = True
+                if line.find("+++") != -1:
+                    is_continue = True
 
     def read_options(self):
         """Read options from ArgumentParser class instance.
@@ -1405,7 +1405,7 @@ class PhonopySettings(Settings):
         """Set thermal_atom_pairs."""
         self._v["thermal_atom_pairs"] = val
 
-    def set_thermal_displacement_matrix_temperatue(self, val):
+    def set_thermal_displacement_matrix_temperature(self, val):
         """Set thermal_displacement_matrix_temperatue."""
         self._v["thermal_displacement_matrix_temperatue"] = val
 
