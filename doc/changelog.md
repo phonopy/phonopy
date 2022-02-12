@@ -2,6 +2,15 @@
 
 # Change Log
 
+## Feb-12-2022: Version 2.13.0
+
+- Dorp python 3.6 support, and dependencies of numpy and matplotlib versions are
+  updated:
+
+  - Python >= 3.7
+  - numpy >= 1.15.0
+  - matplotlib >= 2.2.2
+
 ## Oct-28-2021: Version 2.12.0
 
 - Matplotlib built-in mathtext replaced LaTeX renderer with `text.usetex` to
