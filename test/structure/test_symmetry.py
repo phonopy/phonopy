@@ -1,6 +1,7 @@
 """Tests for symmetry tools."""
 import numpy as np
 
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_supercell
 from phonopy.structure.symmetry import (
     Symmetry,
@@ -34,24 +35,23 @@ def test_get_map_operations(convcell_nacl):
         assert (diff < symprec).all()
 
 
-def test_magmom(convcell_cr):
+def test_magmom(convcell_cr: PhonopyAtoms):
     """Test symmetry search with hmagnetic moments."""
     symprec = 1e-5
-    cell = convcell_cr
-    symmetry_nonspin = Symmetry(cell, symprec=symprec)
+    symmetry_nonspin = Symmetry(convcell_cr, symprec=symprec)
     atom_map_nonspin = symmetry_nonspin.get_map_atoms()
     len_sym_nonspin = len(symmetry_nonspin.symmetry_operations["rotations"])
 
     spin = [1, -1]
-    cell_withspin = cell.copy()
+    cell_withspin = convcell_cr.copy()
     cell_withspin.magnetic_moments = spin
     symmetry_withspin = Symmetry(cell_withspin, symprec=symprec)
     atom_map_withspin = symmetry_withspin.get_map_atoms()
     len_sym_withspin = len(symmetry_withspin.symmetry_operations["rotations"])
 
     broken_spin = [1, -2]
-    cell_brokenspin = cell.copy()
-    cell_brokenspin = cell.copy()
+    cell_brokenspin = convcell_cr.copy()
+    cell_brokenspin = convcell_cr.copy()
     cell_brokenspin.magnetic_moments = broken_spin
     symmetry_brokenspin = Symmetry(cell_brokenspin, symprec=symprec)
     atom_map_brokenspin = symmetry_brokenspin.get_map_atoms()

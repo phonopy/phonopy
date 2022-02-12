@@ -13,6 +13,18 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 @pytest.fixture(scope="session")
+def ph_si() -> Phonopy:
+    """Return Phonopy class instance of Si-prim 2x2x2."""
+    yaml_filename = os.path.join(current_dir, "phonopy_params_Si.yaml")
+    return phonopy.load(
+        yaml_filename,
+        is_compact_fc=False,
+        log_level=1,
+        produce_fc=True,
+    )
+
+
+@pytest.fixture(scope="session")
 def ph_nacl() -> Phonopy:
     """Return Phonopy class instance of NaCl 2x2x2."""
     yaml_filename = os.path.join(current_dir, "phonopy_disp_NaCl.yaml")
@@ -257,6 +269,12 @@ def helper_methods():
             )
             np.testing.assert_array_equal(cell.numbers, cell_ref.numbers)
             np.testing.assert_allclose(cell.masses, cell_ref.masses, atol=symprec)
+            if cell.magnetic_moments is None:
+                assert cell_ref.magnetic_moments is None
+            else:
+                np.testing.assert_allclose(
+                    cell.magnetic_moments, cell_ref.magnetic_moments, atol=symprec
+                )
 
         @classmethod
         def compare_positions_with_order(cls, pos, pos_ref, lattice, symprec=1e-5):
@@ -285,6 +303,14 @@ def helper_methods():
             np.testing.assert_allclose(
                 cell.masses, cell_ref.masses[indices], atol=symprec
             )
+            if cell.magnetic_moments is None:
+                assert cell_ref.magnetic_moments is None
+            else:
+                np.testing.assert_allclose(
+                    cell.magnetic_moments,
+                    cell_ref.magnetic_moments[indices],
+                    atol=symprec,
+                )
 
         @classmethod
         def compare_positions_in_arbitrary_order(

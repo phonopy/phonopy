@@ -33,8 +33,6 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import textwrap
-
 import numpy as np
 
 from phonopy.structure.atoms import PhonopyAtoms
@@ -841,8 +839,7 @@ def _get_sym_mappings_from_permutations(permutations, atom_list_done):
                 "or something wrong (e.g. crystal structure does not "
                 "match)."
             )
-            print(textwrap.fill(text))
-            raise ValueError
+            raise ValueError(text)
 
     assert set(map_atoms) & set(atom_list_done) == set(map_atoms)
     assert -1 not in map_atoms

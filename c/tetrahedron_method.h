@@ -39,8 +39,6 @@
 #define THMCONST
 #endif
 
-#include <stddef.h>
-
 void thm_get_relative_grid_address(long relative_grid_address[24][4][3],
                                    THMCONST double rec_lattice[3][3]);
 void thm_get_all_relative_grid_address(long relative_grid_address[4][24][4][3]);

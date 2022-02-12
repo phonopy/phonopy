@@ -26,12 +26,24 @@ def test_SiO2():
     _test_cell(cell_SiO2, _lattice, _points, symbols_SiO2)
 
 
-def test_AcO2():
+def test_SiO2_copy(helper_methods):
+    """Test of PhonopyAtoms.copy() by SiO2."""
+    helper_methods.compare_cells(cell_SiO2, cell_SiO2.copy())
+    helper_methods.compare_cells_with_order(cell_SiO2, cell_SiO2.copy())
+
+
+def test_AcO2(helper_methods):
     """Test of attributes by AcO2."""
     _test_cell(cell_AcO2, _lattice, _points, symbols_AcO2)
+    helper_methods.compare_cells(cell_AcO2, cell_AcO2.copy())
+    helper_methods.compare_cells_with_order(cell_AcO2, cell_AcO2.copy())
 
 
-def _test_cell(cell, lattice, points, symbols):
+def test_AcO2_copy():
+    """Test of PhonopyAtoms.copy() by AcO2."""
+
+
+def _test_cell(cell: PhonopyAtoms, lattice, points, symbols):
     np.testing.assert_allclose(cell.cell, lattice, atol=1e-8)
     for s1, s2 in zip(cell.symbols, symbols):
         assert s1 == s2
@@ -51,15 +63,37 @@ def test_phonopy_atoms_AcO2():
     _test_phonopy_atoms(cell_AcO2)
 
 
-def _test_phonopy_atoms(cell):
+def test_Cr_magnetic_moments(convcell_cr: PhonopyAtoms):
+    """Test by Cr with [1, -1] magnetic moments."""
+    convcell_cr.magnetic_moments = [1, -1]
+    _test_phonopy_atoms(convcell_cr)
+    convcell_cr.magnetic_moments = None
+
+
+def test_Cr_copy_magnetic_moments(convcell_cr: PhonopyAtoms, helper_methods):
+    """Test by Cr with [1, -1] magnetic moments."""
+    convcell_cr.magnetic_moments = [1, -1]
+    helper_methods.compare_cells(convcell_cr, convcell_cr.copy())
+    helper_methods.compare_cells_with_order(convcell_cr, convcell_cr.copy())
+    convcell_cr.magnetic_moments = None
+
+
+def _test_phonopy_atoms(cell: PhonopyAtoms):
     with StringIO(str(PhonopyAtoms(atoms=cell))) as f:
         data = yaml.safe_load(f)
         np.testing.assert_allclose(cell.cell, data["lattice"], atol=1e-8)
         positions = []
+        magmoms = []
         for atom, symbol in zip(data["points"], cell.symbols):
             positions.append(atom["coordinates"])
+            if "magnetic_moment" in atom:
+                magmoms.append(atom["magnetic_moment"])
             assert atom["symbol"] == symbol
+
         diff = cell.scaled_positions - positions
         diff -= np.rint(diff)
         dist = np.linalg.norm(np.dot(diff, cell.cell), axis=1)
         np.testing.assert_allclose(dist, np.zeros(len(dist)), atol=1e-8)
+
+        if magmoms:
+            np.testing.assert_allclose(cell.magnetic_moments, magmoms, atol=1e-8)

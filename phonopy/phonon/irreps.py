@@ -42,6 +42,7 @@ from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNA
 from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.phonon.character_table import character_table
 from phonopy.phonon.degeneracy import degenerate_sets as get_degenerate_sets
+from phonopy.structure.cells import is_primitive_cell
 from phonopy.structure.symmetry import Symmetry
 from phonopy.units import VaspToTHz
 
@@ -84,21 +85,19 @@ class IrReps:
         self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
         self._character_table = None
 
-    def run(self):
-        """Calculate irreps."""
-        self._set_eigenvectors(self._dynamical_matrix)
         self._symmetry_dataset = Symmetry(
             self._primitive, symprec=self._symprec
         ).dataset
 
-        if not self._is_primitive_cell():
-            print("")
-            print("Non-primitve cell is used.")
-            print(
-                "Your unit cell may be transformed to a primitive cell "
-                "by PRIMITIVE_AXIS tag."
+        if not is_primitive_cell(self._symmetry_dataset["rotations"]):
+            raise RuntimeError(
+                "Non-primitve cell is used. Your unit cell may be transformed to "
+                "a primitive cell by PRIMITIVE_AXIS tag."
             )
-            return False
+
+    def run(self):
+        """Calculate irreps."""
+        self._set_eigenvectors(self._dynamical_matrix)
 
         (self._rotations_at_q, self._translations_at_q) = self._get_rotations_at_q()
 
@@ -395,16 +394,6 @@ class IrReps:
                     print("%s Not found" % text)
 
         return ir_labels
-
-    def _is_primitive_cell(self):
-        num_identity = 0
-        for r in self._symmetry_dataset["rotations"]:
-            if (r - np.eye(3, dtype="intc") == 0).all():
-                num_identity += 1
-                if num_identity > 1:
-                    return False
-        else:
-            return True
 
     def _show(self, show_irreps):
         print("")
