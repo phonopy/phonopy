@@ -42,6 +42,15 @@ ga234 = [
 def test_GridPoints():
     """Test of GridPoints."""
     gp = GridPoints([2, 3, 4], [[-1, 1, 1], [1, -1, 1], [1, 1, -1]])
+
+    assert gp.ir_grid_points.dtype == np.dtype("int_")
+    assert gp.weights.dtype == np.dtype("int_")
+    assert gp.grid_mapping_table.dtype == np.dtype("int_")
+    assert gp.grid_address.dtype == np.dtype("intc")
+    assert gp.mesh_numbers.dtype == np.dtype("intc")
+    assert gp.reciprocal_lattice.dtype == np.dtype("double")
+    assert gp.qpoints.dtype == np.dtype("double")
+
     np.testing.assert_array_equal(gp.grid_address, ga234)
 
 

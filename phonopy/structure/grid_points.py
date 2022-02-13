@@ -153,7 +153,7 @@ class GridPoints:
        Mesh numbers along a, b, c axes.
        dtype='intc'
        shape=(3,)
-    reciprocal_lattice: array_like
+    reciprocal_lattice: ndarray
         Basis vectors in reciprocal space. a*, b*, c* are given in column
         vectors.
         dtype='double'
@@ -164,7 +164,7 @@ class GridPoints:
        shape=(ir-grid points, 3)
     weights: ndarray
        Geometric q-point weights. Its sum is the number of grid points.
-       dtype='intc'
+       dtype='int_'
        shape=(ir-grid points,)
     grid_address: ndarray
        Addresses of all grid points represented by integers.
@@ -172,10 +172,10 @@ class GridPoints:
        shape=(prod(mesh_numbers), 3)
     ir_grid_points: ndarray
         Indices of irreducible grid points in grid_address.
-        dtype='intc', shape=(ir-grid points,)
+        dtype='int_', shape=(ir-grid points,)
     grid_mapping_table: ndarray
         Index mapping table from all grid points to ir-grid points.
-        dtype='intc', shape=(prod(mesh_numbers),)
+        dtype='int_', shape=(prod(mesh_numbers),)
 
     """
 
@@ -233,7 +233,7 @@ class GridPoints:
 
         """
         self._mesh = np.array(mesh_numbers, dtype="intc")
-        self._rec_lat = reciprocal_lattice
+        self._rec_lat = np.array(reciprocal_lattice, dtype="double", order="C")
         self._is_shift = self._shift2boolean(
             q_mesh_shift, is_gamma_center=is_gamma_center
         )
