@@ -399,6 +399,8 @@ class GridPoints:
             is_time_reversal=is_time_reversal,
             is_dense=True,
         )
+        # uintp to int_
+        grid_mapping_table = np.array(grid_mapping_table, dtype="int_")
 
         # Currently 'intc', but will be 'int_' in next major version.
         if int(__version__.split(".")[0]) < 3:
