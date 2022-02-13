@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Feb-13-2022: Version 2.13.1
+
+- Bug fix of thermal property calculation (PR #184).
+
 ## Feb-12-2022: Version 2.13.0
 
 - Dorp python 3.6 support, and dependencies of numpy and matplotlib versions are
