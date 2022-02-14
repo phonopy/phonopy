@@ -1326,7 +1326,9 @@ class VasprunxmlExpat:
                 if self._is_k_weights:
                     self._k_weights.append(self._to_float(self._cbuf))
                 if self._is_kpointlist:
-                    self._kpointlist.append([self._to_float(x) for x in self._cbuf.split()])
+                    self._kpointlist.append(
+                        [self._to_float(x) for x in self._cbuf.split()]
+                    )
                 if self._is_generation:
                     if self._is_divisions:
                         self._k_mesh = [self._to_int(x) for x in self._cbuf.split()]
