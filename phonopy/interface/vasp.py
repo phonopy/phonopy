@@ -712,6 +712,8 @@ class VasprunxmlExpat:
         self._is_volume = False
         self._is_energy = False
         self._is_k_weights = False
+        self._is_kpoints = False
+        self._is_kpointlist = False
         self._is_eigenvalues = False
         self._is_epsilon = False
         self._is_born = False
@@ -750,6 +752,7 @@ class VasprunxmlExpat:
         self._epsilon = None
         self._born_atom = None
         self._k_weights = None
+        self._kpointlist = None
         self._k_mesh = None
         self._eigenvalues = None
         self._eig_state = [0, 0]
@@ -910,6 +913,11 @@ class VasprunxmlExpat:
         return np.array(self._k_mesh, dtype="intc")
 
     @property
+    def kpointlist(self):
+        """Return kpoint list."""
+        return np.array(self._kpointlist, dtype="double")
+
+    @property
     def k_weights(self):
         """Return k_weights.
 
@@ -1038,6 +1046,7 @@ class VasprunxmlExpat:
             or self._is_basis
             or self._is_volume
             or self._is_k_weights
+            or self._is_kpointlist
             or self._is_generation
         ):
             if name == "v":
@@ -1061,6 +1070,10 @@ class VasprunxmlExpat:
                     self._is_k_weights = True
                     self._k_weights = []
 
+                if attrs["name"] == "kpointlist":
+                    self._is_kpointlist = True
+                    self._kpointlist = []
+
                 if attrs["name"] == "epsilon" or attrs["name"] == "epsilon_scf":
                     self._is_epsilon = True
                     self._epsilon = []
@@ -1073,6 +1086,9 @@ class VasprunxmlExpat:
                     if attrs["name"] == "basis":
                         self._is_basis = True
                         self._lattice = []
+
+        if name == "kpoints":
+            self._is_kpoints = True
 
         if name == "field":
             if "type" in attrs:
@@ -1201,6 +1217,9 @@ class VasprunxmlExpat:
             if self._is_k_weights:
                 self._is_k_weights = False
 
+            if self._is_kpointlist:
+                self._is_kpointlist = False
+
             if self._is_positions:
                 self._is_positions = False
                 self._all_points.append(self._points)
@@ -1215,6 +1234,10 @@ class VasprunxmlExpat:
         if name == "generation":
             if self._is_generation:
                 self._is_generation = False
+
+        if name == "kpoints":
+            if self._is_kpoints:
+                self._is_kpoints = False
 
         if name == "array":
             if self._is_symbols:
@@ -1297,13 +1320,18 @@ class VasprunxmlExpat:
                 self._points.append([self._to_float(x) for x in self._cbuf.split()])
             if self._is_basis:
                 self._lattice.append([self._to_float(x) for x in self._cbuf.split()])
-            if self._is_k_weights:
-                self._k_weights.append(self._to_float(self._cbuf))
             if self._is_born:
                 self._born_atom.append([self._to_float(x) for x in self._cbuf.split()])
-            if self._is_generation:
-                if self._is_divisions:
-                    self._k_mesh = [self._to_int(x) for x in self._cbuf.split()]
+            if self._is_kpoints:
+                if self._is_k_weights:
+                    self._k_weights.append(self._to_float(self._cbuf))
+                if self._is_kpointlist:
+                    self._kpointlist.append(
+                        [self._to_float(x) for x in self._cbuf.split()]
+                    )
+                if self._is_generation:
+                    if self._is_divisions:
+                        self._k_mesh = [self._to_int(x) for x in self._cbuf.split()]
             self._cbuf = None
 
     def _run_i(self):
