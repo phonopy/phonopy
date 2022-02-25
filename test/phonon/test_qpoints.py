@@ -16,4 +16,4 @@ def testQpoints(ph_nacl_nofcsym: Phonopy):
         eigs = phonon.qpoints.eigenvalues[i]
         freqs = phonon.qpoints.frequencies[i] / VaspToTHz
         np.testing.assert_allclose(dm_eigs, eigs)
-        np.testing.assert_allclose(freqs ** 2 * np.sign(freqs), eigs)
+        np.testing.assert_allclose(freqs**2 * np.sign(freqs), eigs)

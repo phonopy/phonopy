@@ -262,4 +262,4 @@ class DynamicStructureFactor:
 def atomic_form_factor_WK1995(Q, f_x):
     """Return atomic form factor of WK1995."""
     a, b = np.array(f_x[:10]).reshape(-1, 2).T
-    return (a * np.exp(-b * Q ** 2)).sum() + f_x[10]
+    return (a * np.exp(-b * Q**2)).sum() + f_x[10]

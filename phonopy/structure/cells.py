@@ -659,7 +659,7 @@ class Primitive(PhonopyAtoms):
             frac_diffs = p2s_positions - s_pos
             frac_diffs -= np.rint(frac_diffs)
             cart_diffs = np.dot(frac_diffs, self.cell)
-            distances = np.sqrt((cart_diffs ** 2).sum(axis=1))
+            distances = np.sqrt((cart_diffs**2).sum(axis=1))
             indices = np.where(distances < self._symprec)[0]
             assert len(indices) == 1
             s2p_map.append(self._p2s_map[indices[0]])
@@ -1327,7 +1327,7 @@ def compute_permutation_for_rotation(
     # We choose distance from the nearest bravais lattice point as our measure.
     def sort_by_lattice_distance(fracs):
         carts = np.dot(fracs - np.rint(fracs), lattice.T)
-        perm = np.argsort(np.sum(carts ** 2, axis=1))
+        perm = np.argsort(np.sum(carts**2, axis=1))
         sorted_fracs = np.array(fracs[perm], dtype="double", order="C")
         return perm, sorted_fracs
 
@@ -1398,7 +1398,7 @@ def _compute_permutation_c(
             diffs -= np.rint(diffs)
             diffs = np.dot(diffs, lattice.T)
 
-            possible_j = np.nonzero(np.sqrt(np.sum(diffs ** 2, axis=1)) < symprec)[0]
+            possible_j = np.nonzero(np.sqrt(np.sum(diffs**2, axis=1)) < symprec)[0]
             if len(possible_j) != 1:
                 permutation_error()
 
@@ -1446,8 +1446,8 @@ def get_cell_matrix(a, b, c, alpha, beta, gamma):
     b2 = np.sin(gamma)
     b3 = 0.0
     c1 = np.cos(beta)
-    c2 = (2 * np.cos(alpha) + b1 ** 2 + b2 ** 2 - 2 * b1 * c1 - 1) / (2 * b2)
-    c3 = np.sqrt(1 - c1 ** 2 - c2 ** 2)
+    c2 = (2 * np.cos(alpha) + b1**2 + b2**2 - 2 * b1 * c1 - 1) / (2 * b2)
+    c3 = np.sqrt(1 - c1**2 - c2**2)
     lattice = np.zeros((3, 3), dtype="double")
     lattice[0, 0] = a
     lattice[1] = np.array([b1, b2, b3]) * b
@@ -1676,7 +1676,7 @@ def _get_multiplicity_a(num_atoms, lengths, max_num_atoms, max_iter=20):
     multi = 1
     for i in range(max_iter):
         multi += 1
-        if num_atoms * multi ** 3 > max_num_atoms:
+        if num_atoms * multi**3 > max_num_atoms:
             multi -= 1
 
     return [multi, multi, multi]

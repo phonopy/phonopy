@@ -67,7 +67,7 @@ def test_get_commensurate_points_in_integers():
     for cpt in comm_points:
         diff = comm_points_ref - cpt
         diff -= np.rint(diff)
-        dist2 = (diff ** 2).sum(axis=1)
+        dist2 = (diff**2).sum(axis=1)
         indices = np.where(dist2 < 1e-5)[0]
         assert len(indices) == 1
         all_indices.append(indices[0])
