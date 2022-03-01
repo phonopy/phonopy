@@ -79,6 +79,7 @@ def test_Cr_copy_magnetic_moments(convcell_cr: PhonopyAtoms, helper_methods):
 
 
 def test_parse_cell_dict(helper_methods):
+    """Test parse_cell_dict."""
     cell = cell_SiO2
     points = []
     for coord, mass, symbol in zip(cell.scaled_positions, cell.masses, cell.symbols):
