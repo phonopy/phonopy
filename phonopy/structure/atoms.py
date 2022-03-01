@@ -493,6 +493,75 @@ class PhonopyAtoms:
         return "\n".join(self.get_yaml_lines())
 
 
+def parse_cell_dict(cell_dict: dict) -> Optional[PhonopyAtoms]:
+    """Parse cell dict."""
+    lattice = None
+    if "lattice" in cell_dict:
+        lattice = cell_dict["lattice"]
+    points = []
+    symbols = []
+    masses = []
+    magnetic_moments = []
+    if "points" in cell_dict:
+        for x in cell_dict["points"]:
+            if "coordinates" in x:
+                points.append(x["coordinates"])
+            if "symbol" in x:
+                symbols.append(x["symbol"])
+            if "mass" in x:
+                masses.append(x["mass"])
+            if "magnetic_moment" in x:
+                magnetic_moments.append(x["magnetic_moment"])
+    # For version < 1.10.9
+    elif "atoms" in cell_dict:
+        for x in cell_dict["atoms"]:
+            if "coordinates" not in x and "position" in x:
+                points.append(x["position"])
+            if "symbol" in x:
+                symbols.append(x["symbol"])
+            if "mass" in x:
+                masses.append(x["mass"])
+    return _get_cell(
+        lattice, points, symbols, masses=masses, magnetic_moments=magnetic_moments
+    )
+
+
+def _get_cell(
+    lattice, points, symbols, masses=None, magnetic_moments=None
+) -> Optional[PhonopyAtoms]:
+    if lattice:
+        _lattice = lattice
+    else:
+        _lattice = None
+    if points:
+        _points = points
+    else:
+        _points = None
+    if symbols:
+        _symbols = symbols
+    else:
+        _symbols = None
+    if masses:
+        _masses = masses
+    else:
+        _masses = None
+    if magnetic_moments:
+        _magnetic_moments = magnetic_moments
+    else:
+        _magnetic_moments = None
+
+    if _lattice and _points and _symbols:
+        return PhonopyAtoms(
+            symbols=_symbols,
+            cell=_lattice,
+            masses=_masses,
+            scaled_positions=_points,
+            magnetic_moments=_magnetic_moments,
+        )
+    else:
+        return None
+
+
 # Pure Appl. Chem., Vol. 83, No. 2, pp. 359-396, 2011. is available
 # but the following list is from 2006.
 
