@@ -4,7 +4,7 @@ from io import StringIO
 import numpy as np
 import yaml
 
-from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.atoms import PhonopyAtoms, parse_cell_dict
 
 symbols_SiO2 = ["Si"] * 2 + ["O"] * 4
 symbols_AcO2 = ["Ac"] * 2 + ["O"] * 4
@@ -76,6 +76,16 @@ def test_Cr_copy_magnetic_moments(convcell_cr: PhonopyAtoms, helper_methods):
     helper_methods.compare_cells(convcell_cr, convcell_cr.copy())
     helper_methods.compare_cells_with_order(convcell_cr, convcell_cr.copy())
     convcell_cr.magnetic_moments = None
+
+
+def test_parse_cell_dict(helper_methods):
+    cell = cell_SiO2
+    points = []
+    for coord, mass, symbol in zip(cell.scaled_positions, cell.masses, cell.symbols):
+        points.append({"symbol": symbol, "coordinates": coord, "mass": mass})
+    cell_dict = {"lattice": cell_SiO2.cell, "points": points}
+    _cell = parse_cell_dict(cell_dict)
+    helper_methods.compare_cells_with_order(cell, _cell)
 
 
 def _test_phonopy_atoms(cell: PhonopyAtoms):

@@ -498,6 +498,8 @@ def parse_cell_dict(cell_dict: dict) -> Optional[PhonopyAtoms]:
     lattice = None
     if "lattice" in cell_dict:
         lattice = cell_dict["lattice"]
+    else:
+        return None
     points = []
     symbols = []
     masses = []
@@ -521,42 +523,19 @@ def parse_cell_dict(cell_dict: dict) -> Optional[PhonopyAtoms]:
                 symbols.append(x["symbol"])
             if "mass" in x:
                 masses.append(x["mass"])
-    return _get_cell(
-        lattice, points, symbols, masses=masses, magnetic_moments=magnetic_moments
-    )
 
+    if not masses:
+        masses = None
+    if not magnetic_moments:
+        magnetic_moments = None
 
-def _get_cell(
-    lattice, points, symbols, masses=None, magnetic_moments=None
-) -> Optional[PhonopyAtoms]:
-    if lattice:
-        _lattice = lattice
-    else:
-        _lattice = None
-    if points:
-        _points = points
-    else:
-        _points = None
-    if symbols:
-        _symbols = symbols
-    else:
-        _symbols = None
-    if masses:
-        _masses = masses
-    else:
-        _masses = None
-    if magnetic_moments:
-        _magnetic_moments = magnetic_moments
-    else:
-        _magnetic_moments = None
-
-    if _lattice and _points and _symbols:
+    if points and symbols:
         return PhonopyAtoms(
-            symbols=_symbols,
-            cell=_lattice,
-            masses=_masses,
-            scaled_positions=_points,
-            magnetic_moments=_magnetic_moments,
+            symbols=symbols,
+            cell=lattice,
+            masses=masses,
+            scaled_positions=points,
+            magnetic_moments=magnetic_moments,
         )
     else:
         return None
