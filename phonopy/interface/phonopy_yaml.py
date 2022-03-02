@@ -494,16 +494,19 @@ class PhonopyYaml:
 
     def _parse_all_cells(self):
         if "unit_cell" in self._yaml:
-            self.unitcell = parse_cell_dict(self._yaml["unit_cell"])
+            self.unitcell = self._parse_cell(self._yaml["unit_cell"])
         if "primitive_cell" in self._yaml:
-            self.primitive = parse_cell_dict(self._yaml["primitive_cell"])
+            self.primitive = self._parse_cell(self._yaml["primitive_cell"])
         if "supercell" in self._yaml:
-            self.supercell = parse_cell_dict(self._yaml["supercell"])
+            self.supercell = self._parse_cell(self._yaml["supercell"])
         if self.unitcell is None:
             if "lattice" in self._yaml and (
                 "points" in self._yaml or "atoms" in self._yaml
             ):
                 self.unitcell = parse_cell_dict(self._yaml)
+
+    def _parse_cell(self, cell_dict):
+        return parse_cell_dict(cell_dict)
 
     def _parse_force_constants(self):
         if "force_constants" in self._yaml:
