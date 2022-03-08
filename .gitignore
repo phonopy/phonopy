@@ -53,3 +53,4 @@ _sources
 phonopy/.DS_Store
 test/.DS_Store
 test/phonon/.DS_Store
+site.cfg
