@@ -1,8 +1,8 @@
 """Tests for group velocity calculation."""
 import numpy as np
+from phono3py.phonon.velocity_operator import VelocityOperator
 
 from phonopy import Phonopy
-from phono3py.phonon.velocity_operator import VelocityOperator
 from phonopy.units import THzToCm, VaspToTHz
 
 
