@@ -49,3 +49,7 @@ _build
 
 # sphinx
 _sources
+.DS_Store
+phonopy/.DS_Store
+test/.DS_Store
+test/phonon/.DS_Store
