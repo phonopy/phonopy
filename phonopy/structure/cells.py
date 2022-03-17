@@ -34,7 +34,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
-from distutils.version import StrictVersion
 
 import numpy as np
 import spglib
