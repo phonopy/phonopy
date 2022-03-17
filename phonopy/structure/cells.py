@@ -34,7 +34,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
-from distutils.version import StrictVersion
 
 import numpy as np
 import spglib
@@ -1201,20 +1200,9 @@ class ShortestPairs:
         )
         bases = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [-1, -1, -1]]
         lattice_points = np.dot(lattice_4D, bases)
-        if StrictVersion(np.__version__) >= StrictVersion("1.13.0"):
-            lattice_points = np.array(
-                np.unique(lattice_points, axis=0), dtype=int_dtype, order="C"
-            )
-        else:
-            unique_indices = np.unique(
-                [
-                    np.nonzero(np.abs(lattice_points - point).sum(axis=1) == 0)[0][0]
-                    for point in lattice_points
-                ]
-            )
-            lattice_points = np.array(
-                lattice_points[unique_indices], dtype=int_dtype, order="C"
-            )
+        lattice_points = np.array(
+            np.unique(lattice_points, axis=0), dtype=int_dtype, order="C"
+        )
 
         return (
             lattice_points,
