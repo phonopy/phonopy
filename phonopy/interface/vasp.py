@@ -33,6 +33,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import os
 import sys
 import warnings
 import xml.etree.cElementTree as etree
@@ -1397,6 +1398,22 @@ class VasprunxmlExpat:
             return val
         except ValueError:
             raise
+
+
+def parse_vasprunxml(filename):
+    """Parse vasprun.xml using VasprunxmlExpat."""
+    if not os.path.exists(filename):
+        print("File %s not found." % filename)
+        sys.exit(1)
+    with open(filename, "rb") as f:
+        vxml = VasprunxmlExpat(f)
+        try:
+            vxml.parse()
+        except (xml.parsers.expat.ExpatError, ValueError, Exception):
+            print("Warning: Probably xml structure of %s is broken." % filename)
+            print("Opening %s failed." % filename)
+            sys.exit(1)
+        return vxml
 
 
 #
