@@ -50,91 +50,96 @@
 # ...
 
 import sys
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
+
 
 def get_options():
     # Parse options
     import argparse
-    parser = argparse.ArgumentParser(
-        description="Phonopy total DOS command-line-tool")
-    parser.set_defaults( output_filename = None,
-                         factor = 1.0,
-                         legend_labels = None,
-                         xlabel = None,
-                         ylabel = None,
-                         show_legend = False,
-                         pdos_indices = None,
-                         ymax = None,
-                         ymin = None,
-                         title = None,
-                         f_max = None,
-                         f_min = None )
+
+    parser = argparse.ArgumentParser(description="Phonopy total DOS command-line-tool")
+    parser.set_defaults(
+        output_filename=None,
+        factor=1.0,
+        legend_labels=None,
+        xlabel=None,
+        ylabel=None,
+        show_legend=False,
+        pdos_indices=None,
+        ymax=None,
+        ymin=None,
+        title=None,
+        f_max=None,
+        f_min=None,
+    )
     parser.add_argument(
-        "filenames", nargs='*',
-        help="Filename(s) of phonon DOS result(single or multiple files allowed)")
+        "filenames",
+        nargs="*",
+        help="Filename(s) of phonon DOS result(single or multiple files allowed)",
+    )
+    parser.add_argument("-t", "--title", dest="title", help="Title of plot")
+    parser.add_argument("--xlabel", dest="xlabel", help="Set x label")
+    parser.add_argument("--ylabel", dest="ylabel", help="Set y label")
     parser.add_argument(
-        "-t", "--title", dest="title",
-        help="Title of plot")
+        "--ymax", dest="ymax", type=float, help="Maximum value of y axis"
+    )
     parser.add_argument(
-        "--xlabel", dest="xlabel",
-        help="Set x label")
+        "--ymin", dest="ymin", type=float, help="Minimum value of y axis"
+    )
     parser.add_argument(
-        "--ylabel", dest="ylabel",
-        help="Set y label")
+        "--fmax", dest="f_max", type=float, help="Maximum frequency plotted"
+    )
     parser.add_argument(
-        "--ymax", dest="ymax", type=float,
-        help="Maximum value of y axis")
+        "--fmin", dest="f_min", type=float, help="Minimum frequency plotted"
+    )
     parser.add_argument(
-        "--ymin", dest="ymin", type=float,
-        help="Minimum value of y axis")
+        "--factor", dest="factor", type=float, help="Factor is multiplied with DOS."
+    )
     parser.add_argument(
-        "--fmax", dest="f_max", type=float,
-        help="Maximum frequency plotted")
+        "-l", "--legend", dest="show_legend", action="store_true", help="Show legend"
+    )
     parser.add_argument(
-        "--fmin", dest="f_min", type=float,
-        help="Minimum frequency plotted")
+        "--legend_labels", dest="legend_labels", help="Set legend labels"
+    )
     parser.add_argument(
-        "--factor", dest="factor", type=float,
-        help="Factor is multiplied with DOS.")
+        "--line_styles",
+        dest="line_styles",
+        help="Set line style (Matlplotlib styles: '-','-.','--','..', etc)",
+    )
     parser.add_argument(
-        "-l", "--legend", dest="show_legend", action="store_true",
-        help="Show legend")
+        "--line_colors",
+        dest="line_colors",
+        help="Set line color (Matlplotlib color codes: 'b','c','r', etc)",
+    )
     parser.add_argument(
-        "--legend_labels", dest="legend_labels",
-        help="Set legend labels")
+        "--line_widths", dest="line_widths", help="Set line width (Float numbers)"
+    )
     parser.add_argument(
-        "--line_styles", dest="line_styles",
-        help="Set line style (Matlplotlib styles: '-','-.','--','..', etc)")
-    parser.add_argument(
-        "--line_colors", dest="line_colors",
-        help="Set line color (Matlplotlib color codes: 'b','c','r', etc)") 
-    parser.add_argument(
-        "--line_widths", dest="line_widths",
-        help="Set line width (Float numbers)")
-    parser.add_argument(
-        "-o", "--output", dest="output_filename",
-        help="Output filename")
+        "-o", "--output", dest="output_filename", help="Output filename"
+    )
     args = parser.parse_args()
     return args
+
 
 def main(args):
 
     # Read data file
     dos_data = []
     filenames = args.filenames
- 
+
     if len(filenames) == 0:
-        print('')
-        print('Provide at least one filename with vaild DOS data!')
-        print('')
+        print("")
+        print("Provide at least one filename with vaild DOS data!")
+        print("")
         sys.exit()
 
     for i, filename in enumerate(filenames):
         frequencies = []
         dos = []
         for line in open(filename):
-            if line.strip().split()[0] == '#' or line.strip().split() == '':
+            if line.strip().split()[0] == "#" or line.strip().split() == "":
                 continue
 
             tmp_array = [float(x) for x in line.split()]
@@ -143,8 +148,7 @@ def main(args):
 
         frequencies = np.array(frequencies)
         dos = np.array(dos)
-        dos_data.append([frequencies,dos])
-    
+        dos_data.append([frequencies, dos])
 
     # Set plot range in frequency axis
     if args.f_max is None:
@@ -160,10 +164,10 @@ def main(args):
             x_min.append(min(dos_data[i][0]))
         min_freq = min(x_min)
     else:
-        min_freq = args.f_min 
+        min_freq = args.f_min
 
     min_i = 0
-    max_i = len(dos_data[0][0])  
+    max_i = len(dos_data[0][0])
 
     for j in range(len(dos_data)):
         for i, f in enumerate(dos_data[j][0]):
@@ -176,13 +180,13 @@ def main(args):
             if f > min_freq - (dos_data[j][0][1] - dos_data[j][0][0]) / 10:
                 min_i = i
                 break
-          
+
     # Plot
     fig, ax = plt.subplots()
-    ax.xaxis.set_ticks_position('both')
-    ax.yaxis.set_ticks_position('both')
-    ax.xaxis.set_tick_params(which='both', direction='in')
-    ax.yaxis.set_tick_params(which='both', direction='in')
+    ax.xaxis.set_ticks_position("both")
+    ax.yaxis.set_ticks_position("both")
+    ax.xaxis.set_tick_params(which="both", direction="in")
+    ax.yaxis.set_tick_params(which="both", direction="in")
 
     # Set line styles
 
@@ -220,12 +224,14 @@ def main(args):
     plots = []
     for i, x in enumerate(dos_data):
 
-        curve, = plt.plot(x[0], x[1] * args.factor, ls = l_styles[i], c = l_colors[i], lw = l_widths[i])
+        (curve,) = plt.plot(
+            x[0], x[1] * args.factor, ls=l_styles[i], c=l_colors[i], lw=l_widths[i]
+        )
         plots.append(curve)
 
     ax.set_ylim((0, None))
     plt.xlim(min_freq, max_freq)
-    
+
     if (args.ymin is not None) and (args.ymax is not None):
         plt.ylim(args.ymin, args.ymax)
     elif (args.ymin is not None) and (args.ymax is not None):
@@ -236,11 +242,11 @@ def main(args):
     # labels
 
     if args.xlabel is None:
-        plt.xlabel('Frequency')
+        plt.xlabel("Frequency")
     else:
         plt.xlabel(args.xlabel)
     if args.ylabel is None:
-        plt.ylabel('Total density of states')
+        plt.ylabel("Total density of states")
     else:
         plt.ylabel(args.ylabel)
 
@@ -253,20 +259,18 @@ def main(args):
                 labels = filenames
         else:
             labels = filenames
-        plt.legend(plots, labels, loc='upper left')
-
-
-
+        plt.legend(plots, labels, loc="upper left")
 
     if args.title is not None:
         plt.title(args.title)
 
     if args.output_filename is not None:
-        plt.rcParams['pdf.fonttype'] = 42
-        plt.rcParams['font.family'] = 'serif'
+        plt.rcParams["pdf.fonttype"] = 42
+        plt.rcParams["font.family"] = "serif"
         plt.savefig(args.output_filename)
     else:
         plt.show()
+
 
 if __name__ == "__main__":
     main(get_options())
