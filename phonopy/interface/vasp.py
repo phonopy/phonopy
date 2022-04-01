@@ -577,7 +577,7 @@ class Vasprun:
                 for element_i in element.findall("./i"):
                     if element_i.attrib["name"] == "version":
                         version_str = element_i.text.strip()
-                        version_nums = [int(v) for v in version_str.split(".")]
+                        version_nums = version_str.split('-')[0].split(".")
 
             if num_atom == 0:
                 atomtypes = self._get_atomtypes(element)
@@ -616,7 +616,7 @@ class Vasprun:
 
             # Recover the unit of eV/Angstrom^2 for VASP-6.
             if version_nums is not None and len(version_nums) > 1:
-                if version_nums[0] == 6 and version_nums[1] > 1:
+                if int(version_nums[0]) == 6 and int(version_nums[1]) > 1:
                     force_constants /= VaspToTHz**2
 
             return force_constants, elements
