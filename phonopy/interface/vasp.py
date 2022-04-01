@@ -577,7 +577,7 @@ class Vasprun:
                 for element_i in element.findall("./i"):
                     if element_i.attrib["name"] == "version":
                         version_str = element_i.text.strip()
-                        version_nums = version_str.split('-')[0].split(".")
+                        version_nums = version_str.split("-")[0].split(".")
 
             if num_atom == 0:
                 atomtypes = self._get_atomtypes(element)
