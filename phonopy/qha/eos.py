@@ -1,3 +1,4 @@
+"""Equation of states and fitting routine."""
 # Copyright (C) 2012 Atsushi Togo
 # All rights reserved.
 #
@@ -36,61 +37,74 @@ import numpy as np
 
 
 def get_eos(eos):
-    # Third-order Birch-Murnaghan EOS
+    """Return equation of states."""
+
     def birch_murnaghan(v, *p):
-        """
+        """Return Third-order Birch-Murnaghan EOS.
+
         p[0] = E_0
         p[1] = B_0
         p[2] = B'_0
         p[3] = V_0
+
         """
         return p[0] + 9.0 / 16 * p[3] * p[1] * (
-            ((p[3] / v)**(2.0 / 3) - 1)**3 * p[2] +
-            ((p[3] / v)**(2.0 / 3) - 1)**2 * (6 - 4 * (p[3] / v)**(2.0 / 3)))
+            ((p[3] / v) ** (2.0 / 3) - 1) ** 3 * p[2]
+            + ((p[3] / v) ** (2.0 / 3) - 1) ** 2 * (6 - 4 * (p[3] / v) ** (2.0 / 3))
+        )
 
-    # Murnaghan EOS
     def murnaghan(v, *p):
-        """
+        """Return Murnaghan EOS.
+
         p[0] = E_0
         p[1] = B_0
         p[2] = B'_0
         p[3] = V_0
-        """
-        return (p[0]
-                + p[1] * v / p[2] *((p[3] / v)**p[2] / (p[2] - 1) + 1)
-                - p[1] * p[3] / (p[2] - 1))
 
-    # Vinet EOS
+        """
+        return (
+            p[0]
+            + p[1] * v / p[2] * ((p[3] / v) ** p[2] / (p[2] - 1) + 1)
+            - p[1] * p[3] / (p[2] - 1)
+        )
+
     def vinet(v, *p):
-        """
+        """Return Vinet EOS.
+
         p[0] = E_0
         p[1] = B_0
         p[2] = B'_0
         p[3] = V_0
-        """
 
+        """
         x = (v / p[3]) ** (1.0 / 3)
         xi = 3.0 / 2 * (p[2] - 1)
-        return p[0] + (9 * p[1] * p[3] / (xi**2)
-                       * (1 + (xi * (1 - x) - 1) * np.exp(xi * (1 - x))))
+        return p[0] + (
+            9
+            * p[1]
+            * p[3]
+            / (xi**2)
+            * (1 + (xi * (1 - x) - 1) * np.exp(xi * (1 - x)))
+        )
 
-    if eos == 'murnaghan':
+    if eos == "murnaghan":
         return murnaghan
-    elif eos == 'birch_murnaghan':
+    elif eos == "birch_murnaghan":
         return birch_murnaghan
     else:
         return vinet
 
 
 def fit_to_eos(volumes, fe, eos):
+    """Fit volume-energy data to EOS."""
     fit = EOSFit(volumes, fe, eos)
     fit.fit([fe[len(fe) // 2], 1.0, 4.0, volumes[len(volumes) // 2]])
 
     return fit.parameters
 
 
-class EOSFit(object):
-    """
+class EOSFit:
+    """Class to fit volume-energy data to EOS.
 
     Attributes
     ----------
@@ -102,6 +116,7 @@ class EOSFit(object):
     """
 
     def __init__(self, volume, energy, eos):
+        """Init method."""
         self._energy = np.array(energy)
         self._volume = np.array(volume)
         self._eos = eos
@@ -109,32 +124,36 @@ class EOSFit(object):
         self.parameters = None
 
     def fit(self, initial_parameters):
-        import sys
+        """Fit."""
         import logging
+        import sys
         import warnings
 
         try:
-            from scipy.optimize import leastsq
             import scipy
+            from scipy.optimize import leastsq
         except ImportError:
             print("You need to install python-scipy.")
             sys.exit(1)
 
-        warnings.filterwarnings('error')
+        warnings.filterwarnings("error")
 
         def residuals(p, eos, v, e):
+            """Return residuals."""
             return eos(v, *p) - e
 
         try:
-            result = leastsq(residuals,
-                             initial_parameters,
-                             args=(self._eos, self._volume, self._energy),
-                             full_output=1)
+            result = leastsq(
+                residuals,
+                initial_parameters,
+                args=(self._eos, self._volume, self._energy),
+                full_output=1,
+            )
         except RuntimeError:
-            logging.exception('Fitting to EOS failed.')
+            logging.exception("Fitting to EOS failed.")
             raise
         except (RuntimeWarning, scipy.optimize.optimize.OptimizeWarning):
-            logging.exception('Difficulty in fitting to EOS.')
+            logging.exception("Difficulty in fitting to EOS.")
             raise
         else:
             self.parameters = result[0]

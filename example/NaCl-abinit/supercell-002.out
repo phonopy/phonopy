@@ -1,8 +1,8 @@
 
-.Version 7.8.2 of ABINIT 
-.(MPI version, prepared for a x86_64_linux_gnu4.8 computer) 
+.Version 7.8.2 of ABINIT
+.(MPI version, prepared for a x86_64_linux_gnu4.8 computer)
 
-.Copyright (C) 1998-2014 ABINIT group . 
+.Copyright (C) 1998-2014 ABINIT group .
  ABINIT comes with ABSOLUTELY NO WARRANTY.
  It is free software, and you are welcome to redistribute it
  under certain conditions (GNU General Public License,
@@ -16,7 +16,7 @@
 
 .Starting date : Thu 30 Oct 2014.
 - ( at 09h47 )
-  
+
 - input  file    -> NaCl.in
 - output file    -> NaCl.out
 - root for input  files -> NaCli
@@ -47,10 +47,10 @@ _ WF disk file :     18.903 Mbytes ; DEN or POT disk file :     44.497 Mbytes.
 ------------- Echo of variables that govern the present computation ------------
 --------------------------------------------------------------------------------
 -
-- outvars: echo of selected default values                                      
+- outvars: echo of selected default values
 -   accesswff0 =  0 , fftalg0 =112 , wfoptalg0 = 10
 -
-- outvars: echo of global parameters not present in the input file              
+- outvars: echo of global parameters not present in the input file
 -  max_nthreads =    0
 -
  -outvars: echo values of preprocessed input variables --------
@@ -1016,7 +1016,7 @@ _setup2: Arith. and geom. avg. npw (full set) are    4301.000    4301.000
 
 == END DATASET(S) ==============================================================
 ================================================================================
-  
+
  -outvars: echo values of variables after computation  --------
         accesswff           1
             acell      1.0000000000E+00  1.0000000000E+00  1.0000000000E+00 Bohr
@@ -1415,7 +1415,7 @@ P           mkmem           1
  M. Torrent, M.J. Verstraete, G. Zerah, J.W. Zwanziger
  Computer Phys. Comm. 180, 2582-2615 (2009).
  Comment : the third generic paper describing the ABINIT project.
- Note that a version of this paper, that is not formatted for Computer Phys. Comm. 
+ Note that a version of this paper, that is not formatted for Computer Phys. Comm.
  is available at http://www.abinit.org/about/ABINIT_CPC_v10.pdf .
  The licence allows the authors to put it on the Web.
 

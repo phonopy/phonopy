@@ -1,3 +1,4 @@
+"""PhonopyAtoms class and routines related to atoms."""
 # -*- coding: utf-8 -*-
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
@@ -34,54 +35,100 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
+from typing import Optional
+
 import numpy as np
 
 
 def Atoms(*args, **kwargs):
-    warnings.warn("phonopy.atoms.Atoms is deprecated. Please use "
-                  "PhonopyAtoms instead of Atoms.", DeprecationWarning)
+    """Atoms class that is same as PhonopyAtoms class.
+
+    This exists backward compatibility.
+
+    """
+    warnings.warn(
+        "phonopy.atoms.Atoms is deprecated. Please use "
+        "PhonopyAtoms instead of Atoms.",
+        DeprecationWarning,
+    )
     return PhonopyAtoms(*args, **kwargs)
 
 
-class _Atoms(object):
-    """A class compatible with the ASE Atoms class.
+class PhonopyAtoms:
+    """Class to represent crystal structure.
 
-    Only the necessary stuffs to phonopy are implemented. The data
-    structure of magnetic moments is incompatible.
+    Originally this aimed to be compatible ASE Atoms class, but now not.
 
     """
 
-    def __init__(self,
-                 symbols=None,
-                 positions=None,
-                 numbers=None,
-                 masses=None,
-                 magmoms=None,
-                 scaled_positions=None,
-                 cell=None,
-                 pbc=None):
-        # cell and positions
+    def __init__(
+        self,
+        symbols=None,
+        numbers=None,
+        masses=None,
+        magnetic_moments=None,
+        scaled_positions=None,
+        positions=None,
+        cell=None,
+        atoms: Optional["PhonopyAtoms"] = None,
+        magmoms=None,
+        pbc=True,
+    ):  # pbc is dummy argument, and never used.
+        """Init method."""
+        if magmoms is not None:
+            warnings.warn(
+                "PhonopyAtoms.__init__ parameter of magmoms is deprecated. "
+                "Use magnetic_moments instead.",
+                DeprecationWarning,
+            )
+        if atoms:
+            self._set_parameters(
+                numbers=atoms.numbers,
+                masses=atoms.masses,
+                magnetic_moments=atoms.magnetic_moments,
+                scaled_positions=atoms.scaled_positions,
+                cell=atoms.cell,
+                pbc=True,
+            )
+        else:
+            self._set_parameters(
+                symbols=symbols,
+                numbers=numbers,
+                masses=masses,
+                magnetic_moments=magnetic_moments,
+                scaled_positions=scaled_positions,
+                positions=positions,
+                cell=cell,
+                pbc=True,
+            )
+
+    def _set_parameters(
+        self,
+        symbols=None,
+        numbers=None,
+        masses=None,
+        magnetic_moments=None,
+        scaled_positions=None,
+        positions=None,
+        cell=None,
+        atoms: Optional["PhonopyAtoms"] = None,
+        pbc=True,
+    ):
         self._cell = None
         self._scaled_positions = None
-        self._set_cell_and_positions(cell,
-                                     positions=positions,
-                                     scaled_positions=scaled_positions)
-
-        # Atom symbols
+        self._set_cell_and_positions(
+            cell, positions=positions, scaled_positions=scaled_positions
+        )
         self._symbols = symbols
-
-        # Atomic numbers
         self._numbers = None
         if numbers is not None:
-            self._numbers = np.array(numbers, dtype='intc')
-
-        # masses
+            self._numbers = np.array(numbers, dtype="intc")
         self._masses = None
         self._set_masses(masses)
 
         # (initial) magnetic moments
         self._magmoms = None
-        self._set_magnetic_moments(magmoms)
+        self._set_magnetic_moments(magnetic_moments)
 
         # numbers and symbols
         if self._numbers is not None:  # number --> symbol
@@ -96,75 +143,230 @@ class _Atoms(object):
         self._check()
 
     def __len__(self):
+        """Return number of atoms."""
         return len(self.numbers)
 
-    def set_cell(self, cell):
+    @property
+    def cell(self):
+        """Setter and getter of basis vectors. For getter, copy is returned."""
+        return self._cell.copy()
+
+    @cell.setter
+    def cell(self, cell):
         self._set_cell(cell)
         self._check()
 
-    def get_cell(self):
-        return self._cell.copy()
+    def set_cell(self, cell):
+        """Set basis vectors."""
+        warnings.warn(
+            "PhonopyAtoms.set_cell() is deprecated. Use cell attribute instead.",
+            DeprecationWarning,
+        )
+        self.cell = cell
 
-    def set_positions(self, cart_positions):
-        self._set_positions(cart_positions)
+    def get_cell(self):
+        """Return copy of basis vectors."""
+        warnings.warn(
+            "PhonopyAtoms.get_cell() is deprecated. Use cell attribute instead.",
+            DeprecationWarning,
+        )
+        return self.cell
+
+    @property
+    def positions(self):
+        """Setter and getter of positions in Cartesian coordinates."""
+        return np.dot(self._scaled_positions, self._cell)
+
+    @positions.setter
+    def positions(self, positions):
+        self._set_positions(positions)
         self._check()
 
     def get_positions(self):
-        return np.dot(self._scaled_positions, self._cell)
+        """Return positions in Cartesian coordinates."""
+        warnings.warn(
+            "PhonopyAtoms.get_positions() is deprecated. "
+            "Use positions attribute instead.",
+            DeprecationWarning,
+        )
+        return self.positions
 
-    def set_scaled_positions(self, scaled_positions):
+    def set_positions(self, positions):
+        """Set positions in Cartesian coordinates."""
+        warnings.warn(
+            "PhonopyAtoms.set_positions() is deprecated. "
+            "Use positions attribute instead.",
+            DeprecationWarning,
+        )
+        self.positions = positions
+
+    @property
+    def scaled_positions(self):
+        """Setter and getter of scaled positions. For getter, copy is returned."""
+        return self._scaled_positions.copy()
+
+    @scaled_positions.setter
+    def scaled_positions(self, scaled_positions):
         self._set_scaled_positions(scaled_positions)
         self._check()
 
     def get_scaled_positions(self):
-        return self._scaled_positions.copy()
+        """Return scaled positions."""
+        warnings.warn(
+            "PhonopyAtoms.get_scaled_positions() is deprecated. "
+            "Use scaled_positions attribute instead.",
+            DeprecationWarning,
+        )
+        return self.scaled_positions
 
-    def set_masses(self, masses):
-        self._set_masses(masses)
-        self._check()
+    def set_scaled_positions(self, scaled_positions):
+        """Set scaled positions."""
+        warnings.warn(
+            "PhonopyAtoms.set_scaled_positions() is deprecated. "
+            "Use scaled_positions attribute instead.",
+            DeprecationWarning,
+        )
+        self.scaled_positions = scaled_positions
 
-    def get_masses(self):
-        if self._masses is None:
-            return None
-        else:
-            return self._masses.copy()
+    @property
+    def symbols(self):
+        """Setter and getter of chemical symbols."""
+        return self._symbols[:]
 
-    def set_magnetic_moments(self, magmoms):
-        self._set_magnetic_moments(magmoms)
-        self._check()
-
-    def get_magnetic_moments(self):
-        if self._magmoms is None:
-            return None
-        else:
-            return self._magmoms.copy()
-
-    def set_chemical_symbols(self, symbols):
+    @symbols.setter
+    def symbols(self, symbols):
         self._symbols = symbols
         self._check()
         self._symbols_to_numbers()
         self._symbols_to_masses()
 
     def get_chemical_symbols(self):
-        return self._symbols[:]
+        """Return chemical symbols."""
+        warnings.warn(
+            "PhonopyAtoms.get_chemical_symbols() is deprecated. "
+            "Use symbols attribute instead.",
+            DeprecationWarning,
+        )
+        return self.symbols
 
-    def get_number_of_atoms(self):
-        return len(self)
+    def set_chemical_symbols(self, symbols):
+        """Set chemical symbols."""
+        warnings.warn(
+            "PhonopyAtoms.set_chemical_symbols() is deprecated. "
+            "Use symbols attribute instead.",
+            DeprecationWarning,
+        )
+        self.symbols = symbols
 
-    def set_atomic_numbers(self, number):
-        self.number = number
+    @property
+    def numbers(self):
+        """Setter and getter of atomic numbers. For getter, copy is returned."""
+        return self._numbers.copy()
+
+    @numbers.setter
+    def numbers(self, numbers):
+        self._numbers = numbers
         self._check()
         self._numbers_to_symbols()
         self._symbols_to_masses()
 
     def get_atomic_numbers(self):
-        return self._numbers.copy()
+        """Return atomic numbers."""
+        warnings.warn(
+            "PhonopyAtoms.get_atomic_numbers() is deprecated. "
+            "Use numbers attribute instead.",
+            DeprecationWarning,
+        )
+        return self.numbers
 
-    def get_volume(self):
+    def set_atomic_numbers(self, numbers):
+        """Set atomic numbers."""
+        warnings.warn(
+            "PhonopyAtoms.set_atomic_numbers() is deprecated. "
+            "Use numbers attribute instead.",
+            DeprecationWarning,
+        )
+        self.numbers = numbers
+
+    @property
+    def masses(self):
+        """Setter and getter of atomic masses. For getter copy is returned."""
+        if self._masses is None:
+            return None
+        else:
+            return self._masses.copy()
+
+    @masses.setter
+    def masses(self, masses):
+        self._set_masses(masses)
+        self._check()
+
+    def get_masses(self):
+        """Return atomic masses."""
+        warnings.warn(
+            "PhonopyAtoms.get_masses() is deprecated. Use masses attribute instead.",
+            DeprecationWarning,
+        )
+        return self.masses
+
+    def set_masses(self, masses):
+        """Set atomic masses."""
+        warnings.warn(
+            "PhonopyAtoms.set_masses() is deprecated. Use masses attribute instead.",
+            DeprecationWarning,
+        )
+        self.masses = masses
+
+    @property
+    def magnetic_moments(self):
+        """Setter and getter of magnetic moments. For getter, copy is returned."""
+        if self._magmoms is None:
+            return None
+        else:
+            return self._magmoms.copy()
+
+    @magnetic_moments.setter
+    def magnetic_moments(self, magmoms):
+        self._set_magnetic_moments(magmoms)
+        self._check()
+
+    def get_magnetic_moments(self):
+        """Return magnetic moments."""
+        warnings.warn(
+            "PhonopyAtoms.get_magnetic_moments() is deprecated. "
+            "Use magnetic_moments attribute instead.",
+            DeprecationWarning,
+        )
+        return self.magnetic_moments
+
+    def set_magnetic_moments(self, magmoms):
+        """Set magnetic moments."""
+        warnings.warn(
+            "PhonopyAtoms.set_magnetic_moments() is deprecated. "
+            "Use magnetic_moments attribute instead.",
+            DeprecationWarning,
+        )
+        self.magnetic_moments = magmoms
+
+    @property
+    def volume(self):
+        """Return cell volume."""
         return np.linalg.det(self._cell)
 
+    def get_volume(self):
+        """Return cell volume."""
+        warnings.warn(
+            "PhonopyAtoms.get_volume() is deprecated. " "Use volume attribute instead.",
+            DeprecationWarning,
+        )
+        return self.volume
+
+    def get_number_of_atoms(self):
+        """Return number of atoms."""
+        return len(self)
+
     def _set_cell(self, cell):
-        _cell = np.array(cell, dtype='double', order='C')
+        _cell = np.array(cell, dtype="double", order="C")
         if _cell.shape == (3, 3):
             self._cell = _cell
         else:
@@ -172,29 +374,25 @@ class _Atoms(object):
 
     def _set_positions(self, cart_positions):
         self._scaled_positions = np.array(
-            np.dot(cart_positions, np.linalg.inv(self._cell)),
-            dtype='double', order='C')
+            np.dot(cart_positions, np.linalg.inv(self._cell)), dtype="double", order="C"
+        )
 
     def _set_scaled_positions(self, scaled_positions):
-        self._scaled_positions = np.array(scaled_positions,
-                                          dtype='double', order='C')
+        self._scaled_positions = np.array(scaled_positions, dtype="double", order="C")
 
     def _set_masses(self, masses):
         if masses is None:
             self._masses = None
         else:
-            self._masses = np.array(masses, dtype='double')
+            self._masses = np.array(masses, dtype="double")
 
     def _set_magnetic_moments(self, magmoms):
         if magmoms is None:
             self._magmoms = None
         else:
-            self._magmoms = np.array(magmoms, dtype='double')
+            self._magmoms = np.array(magmoms, dtype="double")
 
-    def _set_cell_and_positions(self,
-                                cell,
-                                positions=None,
-                                scaled_positions=None):
+    def _set_cell_and_positions(self, cell, positions=None, scaled_positions=None):
         self._set_cell(cell)
         if positions is not None:
             self._set_positions(positions)
@@ -205,171 +403,142 @@ class _Atoms(object):
         self._symbols = [atom_data[n][1] for n in self._numbers]
 
     def _symbols_to_numbers(self):
-        self._numbers = np.array(
-            [symbol_map[s] for s in self._symbols], dtype='intc')
+        self._numbers = np.array([symbol_map[s] for s in self._symbols], dtype="intc")
 
     def _symbols_to_masses(self):
         masses = [atom_data[symbol_map[s]][3] for s in self._symbols]
         if None in masses:
             self._masses = None
         else:
-            self._masses = np.array(masses, dtype='double')
+            self._masses = np.array(masses, dtype="double")
 
     def _check(self):
         if self._cell is None:
-            raise RuntimeError('cell is not set.')
+            raise RuntimeError("cell is not set.")
         if self._scaled_positions is None:
-            raise RuntimeError('scaled_positions (positions) is not set.')
+            raise RuntimeError("scaled_positions (positions) is not set.")
         if self._numbers is None:
-            raise RuntimeError('numbers is not set.')
+            raise RuntimeError("numbers is not set.")
         if len(self._numbers) != len(self._scaled_positions):
-            raise RuntimeError('len(numbers) != len(scaled_positions).')
+            raise RuntimeError("len(numbers) != len(scaled_positions).")
         if len(self._numbers) != len(self._symbols):
-            raise RuntimeError('len(numbers) != len(symbols).')
+            raise RuntimeError("len(numbers) != len(symbols).")
         if self._masses is not None:
             if len(self._numbers) != len(self._masses):
-                raise RuntimeError('len(numbers) != len(masses).')
+                raise RuntimeError("len(numbers) != len(masses).")
         if self._magmoms is not None:
             if len(self._numbers) != len(self._magmoms):
-                raise RuntimeError('len(numbers) != len(magmoms).')
-
-
-class PhonopyAtoms(_Atoms):
-    def __init__(self,
-                 symbols=None,
-                 numbers=None,
-                 masses=None,
-                 magmoms=None,
-                 scaled_positions=None,
-                 positions=None,
-                 cell=None,
-                 atoms=None,
-                 pbc=True):  # pbc is dummy argument, and never used.
-        if atoms:
-            try:  # This is for ASE Atoms class compatibility (not guranteed)
-                magmoms = atoms.get_magnetic_moments()
-            except RuntimeError:
-                magmoms = None
-            _Atoms.__init__(self,
-                            numbers=atoms.get_atomic_numbers(),
-                            masses=atoms.get_masses(),
-                            magmoms=magmoms,
-                            scaled_positions=atoms.get_scaled_positions(),
-                            cell=atoms.get_cell(),
-                            pbc=True)
-        else:
-            _Atoms.__init__(self,
-                            symbols=symbols,
-                            numbers=numbers,
-                            masses=masses,
-                            magmoms=magmoms,
-                            scaled_positions=scaled_positions,
-                            positions=positions,
-                            cell=cell,
-                            pbc=True)
-
-    @property
-    def cell(self):
-        return self.get_cell()
-
-    @cell.setter
-    def cell(self, cell):
-        self.set_cell(cell)
-
-    @property
-    def positions(self):
-        return self.get_positions()
-
-    @positions.setter
-    def positions(self, positions):
-        self.set_positions(positions)
-
-    @property
-    def scaled_positions(self):
-        return self.get_scaled_positions()
-
-    @scaled_positions.setter
-    def scaled_positions(self, scaled_positions):
-        self.set_scaled_positions(scaled_positions)
-
-    @property
-    def symbols(self):
-        return self.get_chemical_symbols()
-
-    @symbols.setter
-    def symbols(self, symbols):
-        self.set_chemical_symbols(symbols)
-
-    @property
-    def numbers(self):
-        return self.get_atomic_numbers()
-
-    @numbers.setter
-    def numbers(self, numbers):
-        self.set_atomic_numbers(numbers)
-
-    @property
-    def masses(self):
-        return self.get_masses()
-
-    @masses.setter
-    def masses(self, masses):
-        self.set_masses(masses)
-
-    @property
-    def magnetic_moments(self):
-        return self.get_magnetic_moments()
-
-    @magnetic_moments.setter
-    def magnetic_moments(self, magmoms):
-        self.set_magnetic_moments(magmoms)
-
-    @property
-    def volume(self):
-        return self.get_volume()
+                raise RuntimeError("len(numbers) != len(magmoms).")
 
     def copy(self):
-        return PhonopyAtoms(cell=self._cell,
-                            scaled_positions=self._scaled_positions,
-                            masses=self._masses,
-                            magmoms=self._magmoms,
-                            symbols=self._symbols,
-                            pbc=True)
+        """Return copy of itself."""
+        return PhonopyAtoms(
+            cell=self._cell,
+            scaled_positions=self._scaled_positions,
+            masses=self._masses,
+            magnetic_moments=self._magmoms,
+            symbols=self._symbols,
+        )
 
     def totuple(self):
+        """Return (cell, scaled_position, numbers).
+
+        If magmams is set, (cell, scaled_position, numbers, magmoms) is returned.
+
+        """
         if self._magmoms is None:
             return (self._cell, self._scaled_positions, self._numbers)
         else:
-            return (self._cell, self._scaled_positions, self._numbers,
-                    self._magmoms)
+            return (self._cell, self._scaled_positions, self._numbers, self._magmoms)
 
     def to_tuple(self):
+        """Return (cell, scaled_position, numbers).
+
+        If magmams is set, (cell, scaled_position, numbers, magmoms) is returned.
+
+        """
         warnings.warn(
-            "PhonopyAtoms.to_tuple is deprecated. Please use "
-            "PhonopyAtoms.totuple instead.", DeprecationWarning)
+            "PhonopyAtoms.to_tuple() is deprecated. Use totuple() instead.",
+            DeprecationWarning,
+        )
         return self.totuple()
 
     def get_yaml_lines(self):
+        """Return list of text lines of crystal structure in yaml."""
         lines = ["lattice:"]
-        for v, a in zip(self._cell, ('a', 'b', 'c')):
-            lines.append("- [ %21.15f, %21.15f, %21.15f ] # %s" %
-                         (v[0], v[1], v[2], a))
+        for v, a in zip(self._cell, ("a", "b", "c")):
+            lines.append("- [ %21.15f, %21.15f, %21.15f ] # %s" % (v[0], v[1], v[2], a))
         lines.append("points:")
         if self._masses is None:
             masses = [None] * len(self._symbols)
         else:
             masses = self._masses
-        for i, (s, v, m) in enumerate(
-                zip(self._symbols, self._scaled_positions, masses)):
+        if self._magmoms is None:
+            magmoms = [None] * len(self._symbols)
+        else:
+            magmoms = self._magmoms
+        for i, (s, v, m, mag) in enumerate(
+            zip(self._symbols, self._scaled_positions, masses, magmoms)
+        ):
             lines.append("- symbol: %-2s # %d" % (s, i + 1))
-            lines.append("  coordinates: [ %18.15f, %18.15f, %18.15f ]" %
-                         tuple(v))
+            lines.append("  coordinates: [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
             if m is not None:
                 lines.append("  mass: %f" % m)
+            if mag is not None:
+                lines.append("  magnetic_moment: %.8f" % mag)
         return lines
 
     def __str__(self):
+        """Return text lines of crystal structure in yaml."""
         return "\n".join(self.get_yaml_lines())
+
+
+def parse_cell_dict(cell_dict: dict) -> Optional[PhonopyAtoms]:
+    """Parse cell dict."""
+    lattice = None
+    if "lattice" in cell_dict:
+        lattice = cell_dict["lattice"]
+    else:
+        return None
+    points = []
+    symbols = []
+    masses = []
+    magnetic_moments = []
+    if "points" in cell_dict:
+        for x in cell_dict["points"]:
+            if "coordinates" in x:
+                points.append(x["coordinates"])
+            if "symbol" in x:
+                symbols.append(x["symbol"])
+            if "mass" in x:
+                masses.append(x["mass"])
+            if "magnetic_moment" in x:
+                magnetic_moments.append(x["magnetic_moment"])
+    # For version < 1.10.9
+    elif "atoms" in cell_dict:
+        for x in cell_dict["atoms"]:
+            if "coordinates" not in x and "position" in x:
+                points.append(x["position"])
+            if "symbol" in x:
+                symbols.append(x["symbol"])
+            if "mass" in x:
+                masses.append(x["mass"])
+
+    if not masses:
+        masses = None
+    if not magnetic_moments:
+        magnetic_moments = None
+
+    if points and symbols:
+        return PhonopyAtoms(
+            symbols=symbols,
+            cell=lattice,
+            masses=masses,
+            scaled_positions=points,
+            magnetic_moments=magnetic_moments,
+        )
+    else:
+        return None
 
 
 # Pure Appl. Chem., Vol. 83, No. 2, pp. 359-396, 2011. is available
@@ -629,179 +798,358 @@ symbol_map = {
 # K. J. R. Rosman and P. D. P. Taylor (2003).
 # "Atomic weights of the elements. Review 2000 (IUPAC Technical Report)"
 isotope_data = {
-    'H': [[1, 1.0078250319, 0.999885], [2, 2.0141017779, 0.000115]],
-    'He': [[3, 3.0160293094, 0.00000134], [4, 4.0026032497, 0.99999866]],
-    'Li': [[6, 6.0151223, 0.0759], [7, 7.0160041, 0.9241]],
-    'Be': [[9, 9.0121822, 1.0000]],
-    'B': [[10, 10.0129371, 0.199], [11, 11.0093055, 0.801]],
-    'C': [[12, 12, 0.9893], [13, 13.003354838, 0.0107]],
-    'N': [[14, 14.0030740074, 0.99636], [15, 15.000108973, 0.00364]],
-    'O': [[16, 15.9949146223, 0.99757], [17, 16.99913150, 0.00038],
-          [18, 17.9991604, 0.00205]],
-    'F': [[19, 18.99840320, 1.0000]],
-    'Ne': [[20, 19.992440176, 0.9048], [21, 20.99384674, 0.0027],
-           [22, 21.99138550, 0.0925]],
-    'Na': [[23, 22.98976966, 1.0000]],
-    'Mg': [[24, 23.98504187, 0.7899], [25, 24.98583700, 0.1000],
-           [26, 25.98259300, 0.1101]],
-    'Al': [[27, 26.98153841, 1.0000]],
-    'Si': [[28, 27.97692649, 0.92223], [29, 28.97649468, 0.04685],
-           [30, 29.97377018, 0.03092]],
-    'P': [[31, 30.97376149, 1.0000]],
-    'S': [[32, 31.97207073, 0.9499], [33, 32.97145854, 0.0075],
-          [34, 33.96786687, 0.0425], [36, 35.96708088, 0.0001]],
-    'Cl': [[35, 34.96885271, 0.7576], [37, 36.96590260, 0.2424]],
-    'Ar': [[36, 35.96754626, 0.003365], [38, 37.9627322, 0.000632],
-           [40, 39.962383124, 0.996003]],
-    'K': [[39, 38.96370, 0.932581], [40, 39.96399867, 0.000117],
-          [41, 40.96182597, 0.067302]],
-    'Ca': [[40, 39.9625912, 0.96941], [42, 41.9586183, 0.00647],
-           [43, 42.9587668, 0.00135], [44, 43.9554811, 0.02086],
-           [46, 45.9536927, 0.00004], [48, 47.952533, 0.00187]],
-    'Sc': [[45, 44.9559102, 1.0000]],
-    'Ti': [[46, 45.9526295, 0.0825], [47, 46.9517637, 0.0744],
-           [48, 47.9479470, 0.7372], [49, 48.9478707, 0.0541],
-           [50, 49.9447920, 0.0518]],
-    'V': [[50, 49.9471627, 0.00250], [51, 50.9439635, 0.99750]],
-    'Cr': [[50, 49.9460495, 0.04345], [52, 51.9405115, 0.83789],
-           [53, 52.9406534, 0.09501], [54, 53.9388846, 0.02365]],
-    'Mn': [[55, 54.9380493, 1.0000]],
-    'Fe': [[54, 53.9396147, 0.05845], [56, 55.9349418, 0.91754],
-           [57, 56.9353983, 0.02119], [58, 57.9332801, 0.00282]],
-    'Co': [[59, 58.9331999, 1.0000]],
-    'Ni': [[58, 57.9353477, 0.680769], [60, 59.9307903, 0.262231],
-           [61, 60.9310601, 0.011399], [62, 61.9283484, 0.036345],
-           [64, 63.9279692, 0.009256]],
-    'Cu': [[63, 62.9296007, 0.6915], [65, 64.9277938, 0.3085]],
-    'Zn': [[64, 63.9291461, 0.48268], [66, 65.9260364, 0.27975],
-           [67, 66.9271305, 0.04102], [68, 67.9248473, 0.19024],
-           [70, 69.925325, 0.00631]],
-    'Ga': [[69, 68.925581, 0.60108], [71, 70.9247073, 0.39892]],
-    'Ge': [[70, 69.9242500, 0.2038], [72, 71.9220763, 0.2731],
-           [73, 72.9234595, 0.0776], [74, 73.9211784, 0.3672],
-           [76, 75.921402, 0.0783]],
-    'As': [[75, 74.9215966, 1.0000]],
-    'Se': [[74, 73.9224767, 0.0089], [76, 75.9192143, 0.0937],
-           [77, 76.9199148, 0.0763], [78, 77.9173097, 0.2377],
-           [80, 79.9165221, 0.4961], [82, 81.9167003, 0.0873]],
-    'Br': [[79, 78.9183379, 0.5069], [81, 80.916291, 0.4931]],
-    'Kr': [[78, 77.920388, 0.00355], [80, 79.916379, 0.02286],
-           [82, 81.9134850, 0.11593], [83, 82.914137, 0.11500],
-           [84, 83.911508, 0.56987], [86, 85.910615, 0.17279]],
-    'Rb': [[85, 84.9117924, 0.7217], [87, 86.9091858, 0.2783]],
-    'Sr': [[84, 83.913426, 0.0056], [86, 85.9092647, 0.0986],
-           [87, 86.9088816, 0.0700], [88, 87.9056167, 0.8258]],
-    'Y': [[89, 88.9058485, 1.0000]],
-    'Zr': [[90, 89.9047022, 0.5145], [91, 90.9056434, 0.1122],
-           [92, 91.9050386, 0.1715], [94, 93.9063144, 0.1738],
-           [96, 95.908275, 0.0280]],
-    'Nb': [[93, 92.9063762, 1.0000]],
-    'Mo': [[92, 91.906810, 0.1477], [94, 93.9050867, 0.0923],
-           [95, 94.9058406, 0.1590], [96, 95.9046780, 0.1668],
-           [97, 96.9060201, 0.0956], [98, 97.905406, 0.2419],
-           [100, 99.907476, 0.0967]],
-    'Tc': None,
-    'Ru': [[96, 95.907604, 0.0554], [98, 97.905287, 0.0187],
-           [99, 98.9059385, 0.1276], [100, 99.9042189, 0.1260],
-           [101, 100.9055815, 0.1706], [102, 101.9043488, 0.3155],
-           [104, 103.905430, 0.1862]],
-    'Rh': [[103, 102.905504, 1.0000]],
-    'Pd': [[102, 101.905607, 0.0102], [104, 103.904034, 0.1114],
-           [105, 104.905083, 0.2233], [106, 105.903484, 0.2733],
-           [108, 107.903895, 0.2646], [110, 109.905153, 0.1172]],
-    'Ag': [[107, 106.905093, 0.51839], [109, 108.904756, 0.48161]],
-    'Cd': [[106, 105.906458, 0.0125], [108, 107.904183, 0.0089],
-           [110, 109.903006, 0.1249], [111, 110.904182, 0.1280],
-           [112, 111.9027577, 0.2413], [113, 112.9044014, 0.1222],
-           [114, 113.9033586, 0.2873], [116, 115.904756, 0.0749]],
-    'In': [[113, 112.904062, 0.0429], [115, 114.903879, 0.9571]],
-    'Sn': [[112, 111.904822, 0.0097], [114, 113.902783, 0.0066],
-           [115, 114.903347, 0.0034], [116, 115.901745, 0.1454],
-           [117, 116.902955, 0.0768], [118, 117.901608, 0.2422],
-           [119, 118.903311, 0.0859], [120, 119.9021985, 0.3258],
-           [122, 121.9034411, 0.0463], [124, 123.9052745, 0.0579]],
-    'Sb': [[121, 120.9038222, 0.5721], [123, 122.9042160, 0.4279]],
-    'Te': [[120, 119.904026, 0.0009], [122, 121.9030558, 0.0255],
-           [123, 122.9042711, 0.0089], [124, 123.9028188, 0.0474],
-           [125, 124.9044241, 0.0707], [126, 125.9033049, 0.1884],
-           [128, 127.9044615, 0.3174], [130, 129.9062229, 0.3408]],
-    'I': [[127, 126.904468, 1.0000]],
-    'Xe': [[124, 123.9058954, 0.000952], [126, 125.904268, 0.000890],
-           [128, 127.9035305, 0.019102], [129, 128.9047799, 0.264006],
-           [130, 129.9035089, 0.040710], [131, 130.9050828, 0.212324],
-           [132, 131.9041546, 0.269086], [134, 133.9053945, 0.104357],
-           [136, 135.907220, 0.088573]],
-    'Cs': [[133, 132.905447, 1.0000]],
-    'Ba': [[130, 129.906311, 0.00106], [132, 131.905056, 0.00101],
-           [134, 133.904504, 0.02417], [135, 134.905684, 0.06592],
-           [136, 135.904571, 0.07854], [137, 136.905822, 0.11232],
-           [138, 137.905242, 0.71698]],
-    'La': [[138, 137.907108, 0.00090], [139, 138.906349, 0.99910]],
-    'Ce': [[136, 135.907140, 0.00185], [138, 137.905986, 0.00251],
-           [140, 139.905435, 0.88450], [142, 141.909241, 0.11114]],
-    'Pr': [[141, 140.907648, 1.0000]],
-    'Nd': [[142, 141.907719, 0.272], [143, 142.909810, 0.122],
-           [144, 143.910083, 0.238], [145, 144.912569, 0.083],
-           [146, 145.913113, 0.172], [148, 147.916889, 0.057],
-           [150, 149.920887, 0.056]],
-    'Pm': None,
-    'Sm': [[144, 143.911996, 0.0307], [147, 146.914894, 0.1499],
-           [148, 147.914818, 0.1124], [149, 148.917180, 0.1382],
-           [150, 149.917272, 0.0738], [152, 151.919729, 0.2675],
-           [154, 153.922206, 0.2275]],
-    'Eu': [[151, 150.919846, 0.4781], [153, 152.921227, 0.5219]],
-    'Gd': [[152, 151.919789, 0.0020], [154, 153.920862, 0.0218],
-           [155, 154.922619, 0.1480], [156, 155.922120, 0.2047],
-           [157, 156.923957, 0.1565], [158, 157.924101, 0.2484],
-           [160, 159.927051, 0.2186]],
-    'Tb': [[159, 158.925343, 1.0000]],
-    'Dy': [[156, 155.924278, 0.00056], [158, 157.924405, 0.00095],
-           [160, 159.925194, 0.02329], [161, 160.926930, 0.18889],
-           [162, 161.926795, 0.25475], [163, 162.928728, 0.24896],
-           [164, 163.929171, 0.28260]],
-    'Ho': [[165, 164.930319, 1.0000]],
-    'Er': [[162, 161.928775, 0.00139], [164, 163.929197, 0.01601],
-           [166, 165.930290, 0.33503], [167, 166.932046, 0.22869],
-           [168, 167.932368, 0.26978], [170, 169.935461, 0.14910]],
-    'Tm': [[169, 168.934211, 1.0000]],
-    'Yb': [[168, 167.933895, 0.0013], [170, 169.934759, 0.0304],
-           [171, 170.936323, 0.1428], [172, 171.936378, 0.2183],
-           [173, 172.938207, 0.1613], [174, 173.938858, 0.3183],
-           [176, 175.942569, 0.1276]],
-    'Lu': [[175, 174.9407682, 0.9741], [176, 175.9426827, 0.0259]],
-    'Hf': [[174, 173.940042, 0.0016], [176, 175.941403, 0.0526],
-           [177, 176.9432204, 0.1860], [178, 177.9436981, 0.2728],
-           [179, 178.9458154, 0.1362], [180, 179.9465488, 0.3508]],
-    'Ta': [[180, 179.947466, 0.00012], [181, 180.947996, 0.99988]],
-    'W': [[180, 179.946706, 0.0012], [182, 181.948205, 0.2650],
-          [183, 182.9502242, 0.1431], [184, 183.9509323, 0.3064],
-          [186, 185.95436, 0.2843]],
-    'Re': [[185, 184.952955, 0.3740], [187, 186.9557505, 0.6260]],
-    'Os': [[184, 183.952491, 0.0002], [186, 185.953838, 0.0159],
-           [187, 186.9557476, 0.0196], [188, 187.9558357, 0.1324],
-           [189, 188.958145, 0.1615], [190, 189.958445, 0.2626],
-           [192, 191.961479, 0.4078]],
-    'Ir': [[191, 190.960591, 0.373], [193, 192.962923, 0.627]],
-    'Pt': [[190, 189.959930, 0.00014], [192, 191.961035, 0.00782],
-           [194, 193.962663, 0.32967], [195, 194.964774, 0.33832],
-           [196, 195.964934, 0.25242], [198, 197.967875, 0.07163]],
-    'Au': [[197, 196.966551, 1.0000]],
-    'Hg': [[196, 195.965814, 0.0015], [198, 197.966752, 0.0997],
-           [199, 198.968262, 0.1687], [200, 199.968309, 0.2310],
-           [201, 200.970285, 0.1318], [202, 201.970625, 0.2986],
-           [204, 203.973475, 0.0687]],
-    'Tl': [[203, 202.972329, 0.2952], [205, 204.974412, 0.7048]],
-    'Pb': [[204, 203.973028, 0.014], [206, 205.974449, 0.241],
-           [207, 206.975880, 0.221], [208, 207.976636, 0.524]],
-    'Bi': [[209, 208.980384, 1.0000]],
-    'Po': None,
-    'At': None,
-    'Rn': None,
-    'Fr': None,
-    'Ra': None,
-    'Ac': None,
-    'Th': [[232, 232.0380495, 1.0000]],
-    'Pa': [[231, 231.03588, 1.0000]],
-    'U': [[234, 234.0409447, 0.000054], [235, 235.0439222, 0.007204],
-          [238, 238.0507835, 0.992742]]
+    "H": [[1, 1.0078250319, 0.999885], [2, 2.0141017779, 0.000115]],
+    "He": [[3, 3.0160293094, 0.00000134], [4, 4.0026032497, 0.99999866]],
+    "Li": [[6, 6.0151223, 0.0759], [7, 7.0160041, 0.9241]],
+    "Be": [[9, 9.0121822, 1.0000]],
+    "B": [[10, 10.0129371, 0.199], [11, 11.0093055, 0.801]],
+    "C": [[12, 12, 0.9893], [13, 13.003354838, 0.0107]],
+    "N": [[14, 14.0030740074, 0.99636], [15, 15.000108973, 0.00364]],
+    "O": [
+        [16, 15.9949146223, 0.99757],
+        [17, 16.99913150, 0.00038],
+        [18, 17.9991604, 0.00205],
+    ],
+    "F": [[19, 18.99840320, 1.0000]],
+    "Ne": [
+        [20, 19.992440176, 0.9048],
+        [21, 20.99384674, 0.0027],
+        [22, 21.99138550, 0.0925],
+    ],
+    "Na": [[23, 22.98976966, 1.0000]],
+    "Mg": [
+        [24, 23.98504187, 0.7899],
+        [25, 24.98583700, 0.1000],
+        [26, 25.98259300, 0.1101],
+    ],
+    "Al": [[27, 26.98153841, 1.0000]],
+    "Si": [
+        [28, 27.97692649, 0.92223],
+        [29, 28.97649468, 0.04685],
+        [30, 29.97377018, 0.03092],
+    ],
+    "P": [[31, 30.97376149, 1.0000]],
+    "S": [
+        [32, 31.97207073, 0.9499],
+        [33, 32.97145854, 0.0075],
+        [34, 33.96786687, 0.0425],
+        [36, 35.96708088, 0.0001],
+    ],
+    "Cl": [[35, 34.96885271, 0.7576], [37, 36.96590260, 0.2424]],
+    "Ar": [
+        [36, 35.96754626, 0.003365],
+        [38, 37.9627322, 0.000632],
+        [40, 39.962383124, 0.996003],
+    ],
+    "K": [
+        [39, 38.96370, 0.932581],
+        [40, 39.96399867, 0.000117],
+        [41, 40.96182597, 0.067302],
+    ],
+    "Ca": [
+        [40, 39.9625912, 0.96941],
+        [42, 41.9586183, 0.00647],
+        [43, 42.9587668, 0.00135],
+        [44, 43.9554811, 0.02086],
+        [46, 45.9536927, 0.00004],
+        [48, 47.952533, 0.00187],
+    ],
+    "Sc": [[45, 44.9559102, 1.0000]],
+    "Ti": [
+        [46, 45.9526295, 0.0825],
+        [47, 46.9517637, 0.0744],
+        [48, 47.9479470, 0.7372],
+        [49, 48.9478707, 0.0541],
+        [50, 49.9447920, 0.0518],
+    ],
+    "V": [[50, 49.9471627, 0.00250], [51, 50.9439635, 0.99750]],
+    "Cr": [
+        [50, 49.9460495, 0.04345],
+        [52, 51.9405115, 0.83789],
+        [53, 52.9406534, 0.09501],
+        [54, 53.9388846, 0.02365],
+    ],
+    "Mn": [[55, 54.9380493, 1.0000]],
+    "Fe": [
+        [54, 53.9396147, 0.05845],
+        [56, 55.9349418, 0.91754],
+        [57, 56.9353983, 0.02119],
+        [58, 57.9332801, 0.00282],
+    ],
+    "Co": [[59, 58.9331999, 1.0000]],
+    "Ni": [
+        [58, 57.9353477, 0.680769],
+        [60, 59.9307903, 0.262231],
+        [61, 60.9310601, 0.011399],
+        [62, 61.9283484, 0.036345],
+        [64, 63.9279692, 0.009256],
+    ],
+    "Cu": [[63, 62.9296007, 0.6915], [65, 64.9277938, 0.3085]],
+    "Zn": [
+        [64, 63.9291461, 0.48268],
+        [66, 65.9260364, 0.27975],
+        [67, 66.9271305, 0.04102],
+        [68, 67.9248473, 0.19024],
+        [70, 69.925325, 0.00631],
+    ],
+    "Ga": [[69, 68.925581, 0.60108], [71, 70.9247073, 0.39892]],
+    "Ge": [
+        [70, 69.9242500, 0.2038],
+        [72, 71.9220763, 0.2731],
+        [73, 72.9234595, 0.0776],
+        [74, 73.9211784, 0.3672],
+        [76, 75.921402, 0.0783],
+    ],
+    "As": [[75, 74.9215966, 1.0000]],
+    "Se": [
+        [74, 73.9224767, 0.0089],
+        [76, 75.9192143, 0.0937],
+        [77, 76.9199148, 0.0763],
+        [78, 77.9173097, 0.2377],
+        [80, 79.9165221, 0.4961],
+        [82, 81.9167003, 0.0873],
+    ],
+    "Br": [[79, 78.9183379, 0.5069], [81, 80.916291, 0.4931]],
+    "Kr": [
+        [78, 77.920388, 0.00355],
+        [80, 79.916379, 0.02286],
+        [82, 81.9134850, 0.11593],
+        [83, 82.914137, 0.11500],
+        [84, 83.911508, 0.56987],
+        [86, 85.910615, 0.17279],
+    ],
+    "Rb": [[85, 84.9117924, 0.7217], [87, 86.9091858, 0.2783]],
+    "Sr": [
+        [84, 83.913426, 0.0056],
+        [86, 85.9092647, 0.0986],
+        [87, 86.9088816, 0.0700],
+        [88, 87.9056167, 0.8258],
+    ],
+    "Y": [[89, 88.9058485, 1.0000]],
+    "Zr": [
+        [90, 89.9047022, 0.5145],
+        [91, 90.9056434, 0.1122],
+        [92, 91.9050386, 0.1715],
+        [94, 93.9063144, 0.1738],
+        [96, 95.908275, 0.0280],
+    ],
+    "Nb": [[93, 92.9063762, 1.0000]],
+    "Mo": [
+        [92, 91.906810, 0.1477],
+        [94, 93.9050867, 0.0923],
+        [95, 94.9058406, 0.1590],
+        [96, 95.9046780, 0.1668],
+        [97, 96.9060201, 0.0956],
+        [98, 97.905406, 0.2419],
+        [100, 99.907476, 0.0967],
+    ],
+    "Tc": None,
+    "Ru": [
+        [96, 95.907604, 0.0554],
+        [98, 97.905287, 0.0187],
+        [99, 98.9059385, 0.1276],
+        [100, 99.9042189, 0.1260],
+        [101, 100.9055815, 0.1706],
+        [102, 101.9043488, 0.3155],
+        [104, 103.905430, 0.1862],
+    ],
+    "Rh": [[103, 102.905504, 1.0000]],
+    "Pd": [
+        [102, 101.905607, 0.0102],
+        [104, 103.904034, 0.1114],
+        [105, 104.905083, 0.2233],
+        [106, 105.903484, 0.2733],
+        [108, 107.903895, 0.2646],
+        [110, 109.905153, 0.1172],
+    ],
+    "Ag": [[107, 106.905093, 0.51839], [109, 108.904756, 0.48161]],
+    "Cd": [
+        [106, 105.906458, 0.0125],
+        [108, 107.904183, 0.0089],
+        [110, 109.903006, 0.1249],
+        [111, 110.904182, 0.1280],
+        [112, 111.9027577, 0.2413],
+        [113, 112.9044014, 0.1222],
+        [114, 113.9033586, 0.2873],
+        [116, 115.904756, 0.0749],
+    ],
+    "In": [[113, 112.904062, 0.0429], [115, 114.903879, 0.9571]],
+    "Sn": [
+        [112, 111.904822, 0.0097],
+        [114, 113.902783, 0.0066],
+        [115, 114.903347, 0.0034],
+        [116, 115.901745, 0.1454],
+        [117, 116.902955, 0.0768],
+        [118, 117.901608, 0.2422],
+        [119, 118.903311, 0.0859],
+        [120, 119.9021985, 0.3258],
+        [122, 121.9034411, 0.0463],
+        [124, 123.9052745, 0.0579],
+    ],
+    "Sb": [[121, 120.9038222, 0.5721], [123, 122.9042160, 0.4279]],
+    "Te": [
+        [120, 119.904026, 0.0009],
+        [122, 121.9030558, 0.0255],
+        [123, 122.9042711, 0.0089],
+        [124, 123.9028188, 0.0474],
+        [125, 124.9044241, 0.0707],
+        [126, 125.9033049, 0.1884],
+        [128, 127.9044615, 0.3174],
+        [130, 129.9062229, 0.3408],
+    ],
+    "I": [[127, 126.904468, 1.0000]],
+    "Xe": [
+        [124, 123.9058954, 0.000952],
+        [126, 125.904268, 0.000890],
+        [128, 127.9035305, 0.019102],
+        [129, 128.9047799, 0.264006],
+        [130, 129.9035089, 0.040710],
+        [131, 130.9050828, 0.212324],
+        [132, 131.9041546, 0.269086],
+        [134, 133.9053945, 0.104357],
+        [136, 135.907220, 0.088573],
+    ],
+    "Cs": [[133, 132.905447, 1.0000]],
+    "Ba": [
+        [130, 129.906311, 0.00106],
+        [132, 131.905056, 0.00101],
+        [134, 133.904504, 0.02417],
+        [135, 134.905684, 0.06592],
+        [136, 135.904571, 0.07854],
+        [137, 136.905822, 0.11232],
+        [138, 137.905242, 0.71698],
+    ],
+    "La": [[138, 137.907108, 0.00090], [139, 138.906349, 0.99910]],
+    "Ce": [
+        [136, 135.907140, 0.00185],
+        [138, 137.905986, 0.00251],
+        [140, 139.905435, 0.88450],
+        [142, 141.909241, 0.11114],
+    ],
+    "Pr": [[141, 140.907648, 1.0000]],
+    "Nd": [
+        [142, 141.907719, 0.272],
+        [143, 142.909810, 0.122],
+        [144, 143.910083, 0.238],
+        [145, 144.912569, 0.083],
+        [146, 145.913113, 0.172],
+        [148, 147.916889, 0.057],
+        [150, 149.920887, 0.056],
+    ],
+    "Pm": None,
+    "Sm": [
+        [144, 143.911996, 0.0307],
+        [147, 146.914894, 0.1499],
+        [148, 147.914818, 0.1124],
+        [149, 148.917180, 0.1382],
+        [150, 149.917272, 0.0738],
+        [152, 151.919729, 0.2675],
+        [154, 153.922206, 0.2275],
+    ],
+    "Eu": [[151, 150.919846, 0.4781], [153, 152.921227, 0.5219]],
+    "Gd": [
+        [152, 151.919789, 0.0020],
+        [154, 153.920862, 0.0218],
+        [155, 154.922619, 0.1480],
+        [156, 155.922120, 0.2047],
+        [157, 156.923957, 0.1565],
+        [158, 157.924101, 0.2484],
+        [160, 159.927051, 0.2186],
+    ],
+    "Tb": [[159, 158.925343, 1.0000]],
+    "Dy": [
+        [156, 155.924278, 0.00056],
+        [158, 157.924405, 0.00095],
+        [160, 159.925194, 0.02329],
+        [161, 160.926930, 0.18889],
+        [162, 161.926795, 0.25475],
+        [163, 162.928728, 0.24896],
+        [164, 163.929171, 0.28260],
+    ],
+    "Ho": [[165, 164.930319, 1.0000]],
+    "Er": [
+        [162, 161.928775, 0.00139],
+        [164, 163.929197, 0.01601],
+        [166, 165.930290, 0.33503],
+        [167, 166.932046, 0.22869],
+        [168, 167.932368, 0.26978],
+        [170, 169.935461, 0.14910],
+    ],
+    "Tm": [[169, 168.934211, 1.0000]],
+    "Yb": [
+        [168, 167.933895, 0.0013],
+        [170, 169.934759, 0.0304],
+        [171, 170.936323, 0.1428],
+        [172, 171.936378, 0.2183],
+        [173, 172.938207, 0.1613],
+        [174, 173.938858, 0.3183],
+        [176, 175.942569, 0.1276],
+    ],
+    "Lu": [[175, 174.9407682, 0.9741], [176, 175.9426827, 0.0259]],
+    "Hf": [
+        [174, 173.940042, 0.0016],
+        [176, 175.941403, 0.0526],
+        [177, 176.9432204, 0.1860],
+        [178, 177.9436981, 0.2728],
+        [179, 178.9458154, 0.1362],
+        [180, 179.9465488, 0.3508],
+    ],
+    "Ta": [[180, 179.947466, 0.00012], [181, 180.947996, 0.99988]],
+    "W": [
+        [180, 179.946706, 0.0012],
+        [182, 181.948205, 0.2650],
+        [183, 182.9502242, 0.1431],
+        [184, 183.9509323, 0.3064],
+        [186, 185.95436, 0.2843],
+    ],
+    "Re": [[185, 184.952955, 0.3740], [187, 186.9557505, 0.6260]],
+    "Os": [
+        [184, 183.952491, 0.0002],
+        [186, 185.953838, 0.0159],
+        [187, 186.9557476, 0.0196],
+        [188, 187.9558357, 0.1324],
+        [189, 188.958145, 0.1615],
+        [190, 189.958445, 0.2626],
+        [192, 191.961479, 0.4078],
+    ],
+    "Ir": [[191, 190.960591, 0.373], [193, 192.962923, 0.627]],
+    "Pt": [
+        [190, 189.959930, 0.00014],
+        [192, 191.961035, 0.00782],
+        [194, 193.962663, 0.32967],
+        [195, 194.964774, 0.33832],
+        [196, 195.964934, 0.25242],
+        [198, 197.967875, 0.07163],
+    ],
+    "Au": [[197, 196.966551, 1.0000]],
+    "Hg": [
+        [196, 195.965814, 0.0015],
+        [198, 197.966752, 0.0997],
+        [199, 198.968262, 0.1687],
+        [200, 199.968309, 0.2310],
+        [201, 200.970285, 0.1318],
+        [202, 201.970625, 0.2986],
+        [204, 203.973475, 0.0687],
+    ],
+    "Tl": [[203, 202.972329, 0.2952], [205, 204.974412, 0.7048]],
+    "Pb": [
+        [204, 203.973028, 0.014],
+        [206, 205.974449, 0.241],
+        [207, 206.975880, 0.221],
+        [208, 207.976636, 0.524],
+    ],
+    "Bi": [[209, 208.980384, 1.0000]],
+    "Po": None,
+    "At": None,
+    "Rn": None,
+    "Fr": None,
+    "Ra": None,
+    "Ac": None,
+    "Th": [[232, 232.0380495, 1.0000]],
+    "Pa": [[231, 231.03588, 1.0000]],
+    "U": [
+        [234, 234.0409447, 0.000054],
+        [235, 235.0439222, 0.007204],
+        [238, 238.0507835, 0.992742],
+    ],
 }

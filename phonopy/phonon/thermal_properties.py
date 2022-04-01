@@ -1,3 +1,4 @@
+"""Phonon thermal properties at constant volume."""
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -33,73 +34,184 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
+
 import numpy as np
-from phonopy.units import Kb, THzToEv, EvTokJmol
+
+from phonopy.units import EvTokJmol, Kb, THzToEv
 
 
 def mode_cv(temp, freqs):  # freqs (eV)
+    """Return mode heat capacity.
+
+    Parameters
+    ----------
+    temp : float
+        Temperature in K.
+    freqs : float or ndarray
+        Phonon frequency in eV.
+
+    Returns
+    -------
+    float or ndarray
+        Mode heat capacity in eV/K.
+
+    """
     x = freqs / Kb / temp
     expVal = np.exp(x)
-    return Kb * x ** 2 * expVal / (expVal - 1.0) ** 2
+    return Kb * x**2 * expVal / (expVal - 1.0) ** 2
 
 
 def mode_F(temp, freqs):
-    return (Kb * temp * np.log(1.0 - np.exp((- freqs) / (Kb * temp)))
-            + freqs / 2)
+    """Return mode Helmholtz free energy.
+
+    Parameters
+    ----------
+    temp : float
+        Temperature in K.
+    freqs : float or ndarray
+        Phonon frequency in eV.
+
+    Returns
+    -------
+    float or ndarray
+        Mode Helmholtz free energy in eV.
+
+    """
+    return Kb * temp * np.log(1.0 - np.exp((-freqs) / (Kb * temp))) + freqs / 2
 
 
 def mode_S(temp, freqs):
+    """Return mode entropy.
+
+    Parameters
+    ----------
+    temp : float
+        Temperature in K.
+    freqs : float or ndarray
+        Phonon frequency in eV.
+
+    Returns
+    -------
+    float or ndarray
+        Mode entropy in eV/K.
+
+    """
     val = freqs / (2 * Kb * temp)
-    return (1 / (2 * temp) * freqs * np.cosh(val) / np.sinh(val)
-            - Kb * np.log(2 * np.sinh(val)))
+    return 1 / (2 * temp) * freqs * np.cosh(val) / np.sinh(val) - Kb * np.log(
+        2 * np.sinh(val)
+    )
 
 
 def mode_ZPE(temp, freqs):
+    """Return half of phonon frequency as mode zero point energy.
+
+    Parameters
+    ----------
+    temp :
+        Dummy parameter. This is not used.
+    freqs : float or ndarray
+        Phonon frequency in eV.
+
+    Returns
+    -------
+    float or ndarray
+        Half of phonon frequency as mode zero point energy in eV.
+
+    """
     return freqs / 2
 
 
 def mode_zero(temp, freqs):
+    """Return zero.
+
+    Parameters
+    ----------
+    temp :
+        Dummy parameter. This is not used.
+    freqs : float or ndarray
+        Dummy parameter. This is not used.
+
+    Returns
+    -------
+    float or ndarray
+        0 or an array of zero.
+
+    """
     return np.zeros_like(freqs)
 
 
-class ThermalPropertiesBase(object):
-    def __init__(self,
-                 mesh,
-                 is_projection=False,
-                 band_indices=None,
-                 cutoff_frequency=None,
-                 pretend_real=False):
+class ThermalPropertiesBase:
+    """Base class of thermal property calculation."""
+
+    def __init__(
+        self,
+        mesh,
+        cutoff_frequency=None,
+        pretend_real=False,
+        band_indices=None,
+        is_projection=False,
+    ):
+        """Init method.
+
+        Note
+        ----
+        Physical unit of Phonon frequency is eV throughout this class, for
+        which phonon frequencies and cutoff frequency are stored as class
+        instance variables by being transfomred to have eV unit.
+
+        Parameters
+        ----------
+         See Phonopy.run_thermal_properties().
+
+        """
         self._is_projection = is_projection
         self._band_indices = None
 
         if cutoff_frequency is None or cutoff_frequency < 0:
             self._cutoff_frequency = 0.0
         else:
-            self._cutoff_frequency = cutoff_frequency
+            self._cutoff_frequency = cutoff_frequency * THzToEv
 
         if band_indices is not None:
-            bi = np.hstack(band_indices).astype('intc')
+            bi = np.hstack(band_indices).astype("intc")
             self._band_indices = bi
-            self._frequencies = np.array(mesh.frequencies[:, bi],
-                                         dtype='double', order='C')
+            self._frequencies = np.array(
+                mesh.frequencies[:, bi], dtype="double", order="C"
+            )
             if mesh.eigenvectors is not None:
-                self._eigenvectors = np.array(mesh.eigenvectors[:, :, bi],
-                                              dtype='double', order='C')
+                self._eigenvectors = np.array(
+                    mesh.eigenvectors[:, :, bi], dtype="double", order="C"
+                )
         else:
             self._frequencies = mesh.frequencies
             self._eigenvectors = mesh.eigenvectors
 
         if pretend_real:
             self._frequencies = abs(self._frequencies)
-        self._frequencies = np.array(self._frequencies,
-                                     dtype='double', order='C') * THzToEv
+        self._frequencies = (
+            np.array(self._frequencies, dtype="double", order="C") * THzToEv
+        )
         self._weights = mesh.weights
         self._num_modes = self._frequencies.shape[1] * self._weights.sum()
         self._num_integrated_modes = np.sum(
-            self._weights * (self._frequencies >
-                             self._cutoff_frequency).sum(axis=1))
+            self._weights * (self._frequencies > self._cutoff_frequency).sum(axis=1)
+        )
+
+        # When self._weights.dtype is 'uint', the number is casted to float.
+        # In future version, self._weights.dtype will be 'int_', so this
+        # treatment will be unnecessary.
+        if isinstance(self._num_modes, float):
+            self._num_modes = int(self._num_modes)
+        if isinstance(self._num_integrated_modes, float):
+            self._num_integrated_modes = int(self._num_integrated_modes)
+
+    @property
+    def cutoff_frequency(self):
+        """Return cutoff frequency in eV."""
+        return self._cutoff_frequency
 
     def run_free_energy(self, t):
+        """Calculate mode Helmholtz free energy in kJ/mol."""
         if t > 0:
             free_energy = self._calculate_thermal_property(mode_F, t)
         else:
@@ -107,6 +219,7 @@ class ThermalPropertiesBase(object):
         return free_energy / np.sum(self._weights) * EvTokJmol
 
     def run_heat_capacity(self, t):
+        """Calculate mode heat capacity in kJ/K/mol."""
         if t > 0:
             cv = self._calculate_thermal_property(mode_cv, t)
         else:
@@ -114,6 +227,7 @@ class ThermalPropertiesBase(object):
         return cv / np.sum(self._weights) * EvTokJmol
 
     def run_entropy(self, t):
+        """Calculate mode entropy in kJ/K/mol."""
         if t > 0:
             entropy = self._calculate_thermal_property(mode_S, t)
         else:
@@ -128,112 +242,155 @@ class ThermalPropertiesBase(object):
                 t_property += np.sum(func(t, freqs[cond])) * w
             return t_property
         else:
-            t_property = np.zeros(len(self._frequencies[0]), dtype='double')
-            for freqs, eigvecs2, w in zip(self._frequencies,
-                                          np.abs(self._eigenvectors) ** 2,
-                                          self._weights):
+            t_property = np.zeros(len(self._frequencies[0]), dtype="double")
+            for freqs, eigvecs2, w in zip(
+                self._frequencies, np.abs(self._eigenvectors) ** 2, self._weights
+            ):
                 cond = freqs > self._cutoff_frequency
-                t_property += np.dot(eigvecs2[:, cond],
-                                     func(t, freqs[cond])) * w
+                t_property += np.dot(eigvecs2[:, cond], func(t, freqs[cond])) * w
             return t_property
 
 
 class ThermalProperties(ThermalPropertiesBase):
-    def __init__(self,
-                 mesh,
-                 is_projection=False,
-                 band_indices=None,
-                 cutoff_frequency=None,
-                 pretend_real=False):
-        ThermalPropertiesBase.__init__(self,
-                                       mesh,
-                                       is_projection=is_projection,
-                                       band_indices=band_indices,
-                                       cutoff_frequency=cutoff_frequency,
-                                       pretend_real=pretend_real)
+    """Phonon thermal property calculation."""
+
+    def __init__(
+        self,
+        mesh,
+        cutoff_frequency=None,
+        pretend_real=False,
+        band_indices=None,
+        is_projection=False,
+    ):
+        """Init method.
+
+        Note
+        ----
+        Physical unit of Phonon frequency is eV throughout this class, for
+        which phonon frequencies and cutoff frequency are stored as class
+        instance variables by being transfomred to have eV unit.
+
+        Parameters
+        ----------
+        See Phonopy.run_thermal_properties().
+
+        """
+        super().__init__(
+            mesh,
+            cutoff_frequency=cutoff_frequency,
+            pretend_real=pretend_real,
+            band_indices=band_indices,
+            is_projection=is_projection,
+        )
         self._thermal_properties = None
         self._temperatures = None
-        self._high_T_entropy = None
         self._zero_point_energy = None
         self._projected_thermal_properties = None
 
-        self._set_high_T_entropy_and_zero_point_energy()
+        zp_energy = 0.0
+        for freqs, w in zip(self._frequencies, self._weights):
+            positive_fs = np.extract(freqs > 0.0, freqs)
+            zp_energy += np.sum(positive_fs) * w / 2
+        self._zero_point_energy = zp_energy / np.sum(self._weights) * EvTokJmol
 
     @property
     def temperatures(self):
+        """Setter and getter of temperatures in K."""
         return self._temperatures
-
-    def get_temperatures(self):
-        warnings.warn("ThermalProperties.get_temperatures is deprecated."
-                      "Use temperatures attribute.",
-                      DeprecationWarning)
-        return self.temperatures
 
     @temperatures.setter
     def temperatures(self, temperatures):
-        t_array = np.array(temperatures, dtype='double')
+        t_array = np.array(temperatures, dtype="double")
         self._temperatures = np.array(
-            np.extract(np.invert(t_array < 0), t_array), dtype='double')
+            np.extract(np.invert(t_array < 0), t_array), dtype="double"
+        )
+
+    def get_temperatures(self):
+        """Return temperatures."""
+        warnings.warn(
+            "ThermalProperties.get_temperatures is deprecated."
+            "Use temperatures attribute.",
+            DeprecationWarning,
+        )
+        return self.temperatures
 
     def set_temperatures(self, temperatures):
-        warnings.warn("ThermalProperties.set_temperatures is deprecated."
-                      "Use temperatures attribute.",
-                      DeprecationWarning)
+        """Set temperatures."""
+        warnings.warn(
+            "ThermalProperties.set_temperatures is deprecated."
+            "Use temperatures attribute.",
+            DeprecationWarning,
+        )
         self.temperatures = temperatures
 
     @property
     def thermal_properties(self):
+        """Return thermal properties.
+
+        Returns
+        -------
+        tuple :
+            Temperatures in K,
+            Helmholtz free energies in kJmol,
+            Entropies in J/K/mol,
+            Heat capacities. in J/K/mol.
+
+        """
         return self._thermal_properties
 
     def get_thermal_properties(self):
-        warnings.warn("ThermalProperties.get_thermal_properties is deprecated."
-                      "Use thermal_properties attribute.",
-                      DeprecationWarning)
+        """Return thermal properties."""
+        warnings.warn(
+            "ThermalProperties.get_thermal_properties is deprecated."
+            "Use thermal_properties attribute.",
+            DeprecationWarning,
+        )
         return self.thermal_properties
 
     @property
     def zero_point_energy(self):
+        """Return zero point energy in kJ/mol."""
         return self._zero_point_energy
 
     def get_zero_point_energy(self):
-        warnings.warn("ThermalProperties.get_zero_point_energy is deprecated."
-                      "Use zero_point_energy attribute.",
-                      DeprecationWarning)
+        """Return zero point energy in kJ/mol."""
+        warnings.warn(
+            "ThermalProperties.get_zero_point_energy is deprecated."
+            "Use zero_point_energy attribute.",
+            DeprecationWarning,
+        )
         return self.zero_point_energy
 
     @property
-    def high_T_entropy(self):
-        return self._high_T_entropy
-
-    def get_high_T_entropy(self):
-        warnings.warn("ThermalProperties.get_high_T_entropy is deprecated."
-                      "Use high_T_entropy attribute.",
-                      DeprecationWarning)
-        return self.high_T_entropy
-
-    @property
     def number_of_integrated_modes(self):
-        """Number of phonon modes used for integration on sampling mesh"""
+        """Return number of phonon modes integrated on mesh sampling grid."""
         return self._num_integrated_modes
 
     def get_number_of_integrated_modes(self):
-        warnings.warn("ThermalProperties.get_number_of_integrated_modes is "
-                      "deprecated. Use number_of_integrated_modes attribute.",
-                      DeprecationWarning)
+        """Return number of phonon modes integrated on mesh sampling grid."""
+        warnings.warn(
+            "ThermalProperties.get_number_of_integrated_modes is "
+            "deprecated. Use number_of_integrated_modes attribute.",
+            DeprecationWarning,
+        )
         return self.number_of_integrated_modes
 
     @property
     def number_of_modes(self):
-        """Number of phonon modes on sampling mesh"""
+        """Return total number of phonon modes on mesh sampling grid."""
         return self._num_modes
 
     def get_number_of_modes(self):
-        warnings.warn("ThermalProperties.get_number_of_modes is "
-                      "deprecated. Use number_of_modes attribute.",
-                      DeprecationWarning)
+        """Return total number of phonon modes on mesh sampling grid."""
+        warnings.warn(
+            "ThermalProperties.get_number_of_modes is "
+            "deprecated. Use number_of_modes attribute.",
+            DeprecationWarning,
+        )
         return self.number_of_modes
 
     def set_temperature_range(self, t_min=None, t_max=None, t_step=None):
+        """Set temperature range where thermal properties are calculated."""
         if t_min is None:
             _t_min = 10
         elif t_min < 0:
@@ -255,32 +412,36 @@ class ThermalProperties(ThermalPropertiesBase):
         else:
             _t_step = 10
 
-        self._temperatures = np.arange(_t_min, _t_max + _t_step / 2.0, _t_step,
-                                       dtype='double')
+        self._temperatures = np.arange(
+            _t_min, _t_max + _t_step / 2.0, _t_step, dtype="double"
+        )
 
     def plot(self, plt):
+        """Plot thermal properties using matplotlib."""
         temps, fe, entropy, cv = self._thermal_properties
 
-        plt.plot(temps, fe, 'r-')
-        plt.plot(temps, entropy, 'b-')
-        plt.plot(temps, cv, 'g-')
-        plt.legend(('Free energy [kJ/mol]', 'Entropy [J/K/mol]',
-                    r'C$_\mathrm{V}$ [J/K/mol]'),
-                   loc='best')
+        plt.plot(temps, fe, "r-")
+        plt.plot(temps, entropy, "b-")
+        plt.plot(temps, cv, "g-")
+        plt.legend(
+            ("Free energy [kJ/mol]", "Entropy [J/K/mol]", r"C$_\mathrm{V}$ [J/K/mol]"),
+            loc="best",
+        )
         plt.grid(True)
-        plt.xlabel('Temperature [K]')
+        plt.xlabel("Temperature [K]")
 
-    def run(self, t_step=None, t_max=None, t_min=None, lang='C'):
-        import warnings
-        if (t_step is not None or t_max is not None or t_min is not None):
-            warnings.warn("keywords for this method are depreciated. "
-                          "Use \'set_temperature_range\' or "
-                          "\'set_temperature_range\' method instead.",
-                          DeprecationWarning)
+    def run(self, t_step=None, t_max=None, t_min=None, lang="C"):
+        """Run thermal property calculation."""
+        if t_step is not None or t_max is not None or t_min is not None:
+            warnings.warn(
+                "keywords for this method are depreciated. "
+                "Use 'set_temperature_range' or "
+                "'set_temperature_range' method instead.",
+                DeprecationWarning,
+            )
             self.set_temperature_range(t_min=t_min, t_max=t_max, t_step=t_step)
 
-        if lang == 'C':
-            import phonopy._phonopy as phonoc
+        if lang == "C":
             self._run_c_thermal_properties()
         else:
             self._run_py_thermal_properties()
@@ -291,32 +452,35 @@ class ThermalProperties(ThermalPropertiesBase):
             cv = []
             for t in self._temperatures:
                 fe.append(self.run_free_energy(t))
-                entropy.append(self.run_entropy(t) * 1000,)
+                entropy.append(self.run_entropy(t) * 1000)
                 cv.append(self.run_heat_capacity(t) * 1000)
 
-            self._projected_thermal_properties = [
+            self._projected_thermal_properties = (
                 self._temperatures,
-                np.array(fe, dtype='double'),
-                np.array(entropy, dtype='double'),
-                np.array(cv, dtype='double')]
+                np.array(fe, dtype="double"),
+                np.array(entropy, dtype="double"),
+                np.array(cv, dtype="double"),
+            )
 
-    def write_yaml(self, filename='thermal_properties.yaml', volume=None):
+    def write_yaml(self, filename="thermal_properties.yaml", volume=None):
+        """Write thermal properties in yaml file."""
         lines = self._get_tp_yaml_lines(volume=volume)
         if self._is_projection:
             lines += self._get_projected_tp_yaml_lines()
-        with open(filename, 'w') as f:
-            f.write("\n".join(lines))
+        with open(filename, "w") as w:
+            w.write("\n".join(lines))
 
     def _run_c_thermal_properties(self):
         import phonopy._phonopy as phonoc
 
-        props = np.zeros((len(self._temperatures), 3),
-                         dtype='double', order='C')
-        phonoc.thermal_properties(props,
-                                  self._temperatures,
-                                  self._frequencies,
-                                  self._weights,
-                                  self._cutoff_frequency)
+        props = np.zeros((len(self._temperatures), 3), dtype="double", order="C")
+        phonoc.thermal_properties(
+            props,
+            self._temperatures,
+            self._frequencies,
+            self._weights,
+            self._cutoff_frequency,
+        )
         # for f, w in zip(self._frequencies, self._weights):
         #     phonoc.thermal_properties(
         #         props,
@@ -329,7 +493,7 @@ class ThermalProperties(ThermalPropertiesBase):
         fe = props[:, 0] * EvTokJmol + self._zero_point_energy
         entropy = props[:, 1] * EvTokJmol * 1000
         cv = props[:, 2] * EvTokJmol * 1000
-        self._thermal_properties = [self._temperatures, fe, entropy, cv]
+        self._thermal_properties = (self._temperatures, fe, entropy, cv)
 
     def _run_py_thermal_properties(self):
         fe = []
@@ -340,11 +504,12 @@ class ThermalProperties(ThermalPropertiesBase):
             fe.append(props[0])
             entropy.append(props[1] * 1000)
             cv.append(props[2] * 1000)
-        self._thermal_properties = [
+        self._thermal_properties = (
             self._temperatures,
-            np.array(fe, dtype='double'),
-            np.array(entropy, dtype='double'),
-            np.array(cv, dtype='double')]
+            np.array(fe, dtype="double"),
+            np.array(entropy, dtype="double"),
+            np.array(cv, dtype="double"),
+        )
 
     def _get_tp_yaml_lines(self, volume=None):
         lines = []
@@ -359,17 +524,18 @@ class ThermalProperties(ThermalPropertiesBase):
         lines.append("natom: %-5d" % (self._frequencies[0].shape[0] // 3))
         if volume is not None:
             lines.append("volume: %-20.10f" % volume)
-        lines.append("cutoff_frequency: %8.3f" % self._cutoff_frequency)
+        lines.append("cutoff_frequency: %.5f" % (self._cutoff_frequency / THzToEv))
         lines.append("num_modes: %d" % self._num_modes)
         lines.append("num_integrated_modes: %d" % self._num_integrated_modes)
         if self._band_indices is not None:
             bi = self._band_indices + 1
-            lines.append("band_index: [ " + ("%d, " * (len(bi) - 1)) %
-                         tuple(bi[:-1]) + ("%d ]" % bi[-1]))
+            lines.append(
+                "band_index: [ "
+                + ("%d, " * (len(bi) - 1)) % tuple(bi[:-1])
+                + ("%d ]" % bi[-1])
+            )
         lines.append("")
         lines.append("zero_point_energy: %15.7f" % self._zero_point_energy)
-        lines.append("high_T_entropy:    %15.7f" %
-                     (self._high_T_entropy * 1000))
         lines.append("")
         lines.append("thermal_properties:")
         temperatures, fe, entropy, cv = self._thermal_properties
@@ -382,8 +548,7 @@ class ThermalProperties(ThermalPropertiesBase):
                 lines.append("  heat_capacity: %15.7f" % 0)
             else:
                 lines.append("  heat_capacity: %15.7f" % cv[i])
-            lines.append("  energy:        %15.7f" %
-                         (fe[i] + entropy[i] * t / 1000))
+            lines.append("  energy:        %15.7f" % (fe[i] + entropy[i] * t / 1000))
             lines.append("")
         return lines
 
@@ -424,16 +589,4 @@ class ThermalProperties(ThermalPropertiesBase):
         return lines
 
     def _get_py_thermal_properties(self, t):
-        return (self.run_free_energy(t),
-                self.run_entropy(t),
-                self.run_heat_capacity(t))
-
-    def _set_high_T_entropy_and_zero_point_energy(self):
-        zp_energy = 0.0
-        entropy = 0.0
-        for freqs, w in zip(self._frequencies, self._weights):
-            positive_fs = np.extract(freqs > 0.0, freqs)
-            entropy -= np.sum(np.log(positive_fs)) * w
-            zp_energy += np.sum(positive_fs) * w / 2
-        self._high_T_entropy = entropy * Kb / np.sum(self._weights) * EvTokJmol
-        self._zero_point_energy = zp_energy / np.sum(self._weights) * EvTokJmol
+        return (self.run_free_energy(t), self.run_entropy(t), self.run_heat_capacity(t))

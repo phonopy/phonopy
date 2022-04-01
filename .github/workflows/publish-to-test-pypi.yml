@@ -1,0 +1,40 @@
+name: publish PyPI and TestPyPI
+
+on:
+  push:
+    branches:
+    - master
+    - rc
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9, ]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Make sdist
+      run: |
+        ./get_nanoversion.sh
+        cat __nanoversion__.txt
+        pip install numpy
+        python setup.py sdist
+    - name: Publish package to TestPyPI
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/rc')
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        repository_url: https://test.pypi.org/legacy/
+    - name: Publish package to PyPI
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/master')
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}

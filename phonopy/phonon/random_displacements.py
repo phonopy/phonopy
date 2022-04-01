@@ -1,3 +1,4 @@
+"""Calculate random displacements from phonons at finite temperatures."""
 # Copyright (C) 2018 Atsushi Togo
 # All rights reserved.
 #
@@ -33,18 +34,24 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+
 from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
 from phonopy.harmonic.dynmat_to_fc import (
-    get_commensurate_points_in_integers, DynmatToForceConstants,
-    categorize_commensurate_points)
-from phonopy.units import VaspToTHz, THzToEv, Kb, Hbar, AMU, EV, Angstrom, THz
+    DynmatToForceConstants,
+    categorize_commensurate_points,
+    get_commensurate_points_in_integers,
+)
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import Primitive
+from phonopy.units import AMU, EV, Angstrom, Hbar, Kb, THz, THzToEv, VaspToTHz
 
 
 def bose_einstein_dist(x, t):
+    """Return Bose-Einsetein distribution."""
     return 1.0 / (np.exp(THzToEv * x / (Kb * t)) - 1)
 
 
-class RandomDisplacements(object):
+class RandomDisplacements:
     """Generate random displacements by Canonical ensenmble.
 
     Note
@@ -95,18 +102,20 @@ class RandomDisplacements(object):
 
     """
 
-    def __init__(self,
-                 supercell,
-                 primitive,
-                 force_constants,
-                 dist_func=None,
-                 cutoff_frequency=None,
-                 factor=VaspToTHz):
-        """
+    def __init__(
+        self,
+        supercell: PhonopyAtoms,
+        primitive: Primitive,
+        force_constants,
+        dist_func=None,
+        cutoff_frequency=None,
+        factor=VaspToTHz,
+    ):
+        """Init method.
 
         Parameters
         ----------
-        supercell : Supercell
+        supercell : PhonopyAtoms
             Supercell.
         primitive : Primitive
             Primitive cell
@@ -126,7 +135,6 @@ class RandomDisplacements(object):
             Phonon frequency unit conversion factor to THz
 
         """
-
         if cutoff_frequency is None or cutoff_frequency < 0:
             self._cutoff_frequency = 0.01
         else:
@@ -135,22 +143,20 @@ class RandomDisplacements(object):
         self._T = None
         self._u = None
 
-        if dist_func is None or dist_func == 'quantum':
-            self._dist_func = 'quantum'
-        elif dist_func == 'classical':
-            self._dist_func = 'classical'
+        if dist_func is None or dist_func == "quantum":
+            self._dist_func = "quantum"
+        elif dist_func == "classical":
+            self._dist_func = "classical"
         else:
-            raise RuntimeError(
-                "Either 'quantum' or 'classical' is required.")
+            raise RuntimeError("Either 'quantum' or 'classical' is required.")
 
-        self._unit_conversion = (Hbar * EV / AMU / THz
-                                 / (2 * np.pi) / Angstrom ** 2)
+        self._unit_conversion = Hbar * EV / AMU / THz / (2 * np.pi) / Angstrom**2
         self._unit_conversion_classical = (
-            Kb * EV / AMU / (THz * (2 * np.pi)) ** 2 / Angstrom ** 2)
+            Kb * EV / AMU / (THz * (2 * np.pi)) ** 2 / Angstrom**2
+        )
 
         # Dynamical matrix without NAC because of commensurate points only
-        self._dynmat = get_dynamical_matrix(
-            force_constants, supercell, primitive)
+        self._dynmat = get_dynamical_matrix(force_constants, supercell, primitive)
 
         self._setup_sampling_qpoints(supercell.cell, primitive.cell)
 
@@ -180,7 +186,7 @@ class RandomDisplacements(object):
         self._uu_inv = None
 
     def run(self, T, number_of_snapshots=1, random_seed=None, randn=None):
-        """
+        """Calculate random displacements.
 
         Parameters
         ----------
@@ -197,7 +203,6 @@ class RandomDisplacements(object):
             np.random.normal that can depends on system.
 
         """
-
         np.random.seed(seed=random_seed)
 
         N = len(self._comm_points)
@@ -217,30 +222,33 @@ class RandomDisplacements(object):
             u_ij = 0
 
         mass = self._dynmat.supercell.masses.reshape(-1, 1)
-        u = np.array((u_ii + u_ij) / np.sqrt(mass * N),
-                     dtype='double', order='C')
+        u = np.array((u_ii + u_ij) / np.sqrt(mass * N), dtype="double", order="C")
         self._u = u
 
     @property
     def u(self):
+        """Return random displacements."""
         return self._u
 
     @property
     def uu(self):
+        """Return displacement-displacement correlation matrix."""
         return self._uu
 
     @property
     def uu_inv(self):
+        """Return inversion of displacement-displacement correlation matrix."""
         return self._uu_inv
 
     @property
     def frequencies(self):
+        """Setter and getter of phonon frequencies."""
         if self._ij:
             eigvals = np.vstack((self._eigvals_ii, self._eigvals_ij))
         else:
             eigvals = self._eigvals_ii
         freqs = np.sqrt(np.abs(eigvals)) * np.sign(eigvals) * self._factor
-        return np.array(freqs, dtype='double', order='C')
+        return np.array(freqs, dtype="double", order="C")
 
     @frequencies.setter
     def frequencies(self, freqs):
@@ -248,43 +256,45 @@ class RandomDisplacements(object):
         if len(eigvals) != len(self._eigvals_ii) + len(self._eigvals_ij):
             raise RuntimeError("Dimension of frequencies is wrong.")
 
-        self._eigvals_ii = eigvals[:len(self._eigvals_ii)]
-        self._eigvals_ij = eigvals[len(self._eigvals_ii):]
+        self._eigvals_ii = eigvals[: len(self._eigvals_ii)]
+        self._eigvals_ij = eigvals[len(self._eigvals_ii) :]
 
     @property
     def qpoints(self):
+        """Return commensurate q-points where phonons are computed.."""
         N = len(self._comm_points)
         return self._comm_points[self._ii + self._ij] / float(N)
 
     @property
     def force_constants(self):
+        """Return force constants."""
         return self._force_constants
 
     def run_d2f(self):
+        """Calculate force constants from phonon eigen-solutions."""
         qpoints, eigvals, eigvecs = self._collect_eigensolutions()
-        d2f = DynmatToForceConstants(self._dynmat.primitive,
-                                     self._dynmat.supercell)
+        d2f = DynmatToForceConstants(self._dynmat.primitive, self._dynmat.supercell)
         d2f.commensurate_points = qpoints
         d2f.create_dynamical_matrices(eigvals, eigvecs)
         d2f.run()
         self._force_constants = d2f.force_constants
 
     def run_correlation_matrix(self, T):
+        """Calculate displacement-displacement correlation matrix."""
         qpoints, eigvals, eigvecs = self._collect_eigensolutions()
-        d2f = DynmatToForceConstants(self._dynmat.primitive,
-                                     self._dynmat.supercell)
+        d2f = DynmatToForceConstants(self._dynmat.primitive, self._dynmat.supercell)
         masses = self._dynmat.supercell.masses
         d2f.commensurate_points = qpoints
         freqs = np.sqrt(np.abs(eigvals)) * self._factor
         conditions = freqs > self._cutoff_frequency
         a = self._get_sigma(eigvals, T)
-        a2 = a ** 2
+        a2 = a**2
         _a = np.where(conditions, a, 1)
-        a2_inv = np.where(conditions, 1 / _a ** 2, 0)
+        a2_inv = np.where(conditions, 1 / _a**2, 0)
 
         d2f.create_dynamical_matrices(a2_inv, eigvecs)
         d2f.run()
-        self._uu_inv = np.array(d2f.force_constants, dtype='double', order='C')
+        self._uu_inv = np.array(d2f.force_constants, dtype="double", order="C")
 
         d2f.create_dynamical_matrices(a2, eigvecs)
         d2f.run()
@@ -292,7 +302,7 @@ class RandomDisplacements(object):
         for i, m_i in enumerate(masses):
             for j, m_j in enumerate(masses):
                 matrix[i, j] /= m_i * m_j
-        self._uu = np.array(matrix, dtype='double', order='C')
+        self._uu = np.array(matrix, dtype="double", order="C")
 
     def _collect_eigensolutions(self):
         N = len(self._comm_points)
@@ -306,13 +316,11 @@ class RandomDisplacements(object):
             eigvecs.append((Vd * eigvec.T).T)
 
         if self._ij:
-            eigvals = np.vstack(
-                (eigvals, self._eigvals_ij, self._eigvals_ij))
-            eigvecs = np.vstack(
-                (eigvecs, self._eigvecs_ij, self._eigvecs_ij))
-            eigvecs[-len(self._ij):] = eigvecs[-len(self._ij):].conj()
+            eigvals = np.vstack((eigvals, self._eigvals_ij, self._eigvals_ij))
+            eigvecs = np.vstack((eigvecs, self._eigvecs_ij, self._eigvecs_ij))
+            eigvecs[-len(self._ij) :] = eigvecs[-len(self._ij) :].conj()
             qpoints = self._comm_points[self._ii + self._ij * 2] / float(N)
-            qpoints[-len(self._ij):] = -qpoints[-len(self._ij):]
+            qpoints[-len(self._ij) :] = -qpoints[-len(self._ij) :]
 
         return qpoints, eigvals, eigvecs
 
@@ -322,7 +330,8 @@ class RandomDisplacements(object):
             self._dynmat.run(q)
             dm = self._C_to_D(self._dynmat.dynamical_matrix, q)
             self._phase_ii.append(
-                np.cos(2 * np.pi * np.dot(self._lpos, q)).reshape(-1, 1))
+                np.cos(2 * np.pi * np.dot(self._lpos, q)).reshape(-1, 1)
+            )
             eigvals, eigvecs = np.linalg.eigh(dm)
             self._eigvals_ii.append(eigvals)
             self._eigvecs_ii.append(eigvecs)
@@ -335,10 +344,11 @@ class RandomDisplacements(object):
                 self._eigvals_ij.append(eigvals.real)
                 self._eigvecs_ij.append(eigvecs)
                 self._phase_ij.append(
-                    np.exp(2j * np.pi * np.dot(self._spos, q)).reshape(-1, 1))
+                    np.exp(2j * np.pi * np.dot(self._spos, q)).reshape(-1, 1)
+                )
 
     def _C_to_D(self, dm, q):
-        """Transform C-type dynamical matrix to D-type
+        """Transform C-type dynamical matrix to D-type.
 
         Taking real part is valid only when q is at Gamma or on BZ boundary,
         i.e., q=G-q and q in BZ are assumed.
@@ -346,7 +356,6 @@ class RandomDisplacements(object):
         D(q) = (D(q) + D(G-q)) / 2 -> real matrix.
 
         """
-
         V = np.repeat(np.exp(2j * np.pi * np.dot(self._ppos, q)), 3)
         dm = ((V * (V.conj() * dm).T).T).real  # C-type to D-type
         return dm
@@ -357,25 +366,26 @@ class RandomDisplacements(object):
         self._ii, self._ij = categorize_commensurate_points(self._comm_points)
 
     def _solve_ii(self, T, number_of_snapshots, randn=None):
-        """
+        """Solve ii terms.
 
         randn parameter is used for the test.
 
         """
         natom = len(self._dynmat.supercell)
-        u = np.zeros((number_of_snapshots, natom, 3), dtype='double')
+        u = np.zeros((number_of_snapshots, natom, 3), dtype="double")
 
-        shape = (len(self._eigvals_ii), number_of_snapshots,
-                 len(self._eigvals_ii[0]))
+        shape = (len(self._eigvals_ii), number_of_snapshots, len(self._eigvals_ii[0]))
         if randn is None:
             _randn = np.random.normal(size=shape)
         else:
             _randn = randn
         sigmas = self._get_sigma(self._eigvals_ii, T)
         for norm_dist, sigma, eigvecs, phase in zip(
-                _randn, sigmas, self._eigvecs_ii, self._phase_ii):
+            _randn, sigmas, self._eigvecs_ii, self._phase_ii
+        ):
             u_red = np.dot(norm_dist * sigma, eigvecs.T).reshape(
-                number_of_snapshots, -1, 3)[:, self._s2pp, :]
+                number_of_snapshots, -1, 3
+            )[:, self._s2pp, :]
             # u_red.shape = (snapshots, satoms, 3)
             # phase.shape = (satoms,)
             u += u_red * phase
@@ -383,24 +393,30 @@ class RandomDisplacements(object):
         return u
 
     def _solve_ij(self, T, number_of_snapshots, randn=None):
-        """
+        """Solve ij terms.
 
         randn parameter is used for the test.
 
         """
         natom = len(self._dynmat.supercell)
-        u = np.zeros((number_of_snapshots, natom, 3), dtype='double')
-        shape = (len(self._eigvals_ij), 2, number_of_snapshots,
-                 len(self._eigvals_ij[0]))
+        u = np.zeros((number_of_snapshots, natom, 3), dtype="double")
+        shape = (
+            len(self._eigvals_ij),
+            2,
+            number_of_snapshots,
+            len(self._eigvals_ij[0]),
+        )
         if randn is None:
             _randn = np.random.normal(size=shape)
         else:
             _randn = randn
         sigmas = self._get_sigma(self._eigvals_ij, T)
         for norm_dist, sigma, eigvecs, phase in zip(
-                _randn, sigmas, self._eigvecs_ij, self._phase_ij):
+            _randn, sigmas, self._eigvecs_ij, self._phase_ij
+        ):
             u_red = np.dot(norm_dist * sigma, eigvecs.T).reshape(
-                2, number_of_snapshots, -1, 3)[:, :, self._s2pp, :]
+                2, number_of_snapshots, -1, 3
+            )[:, :, self._s2pp, :]
             # u_red.shape = (2, snapshots, satoms, 3)
             # phase.shape = (satoms,)
             u += (u_red[0] * phase).real
@@ -409,11 +425,11 @@ class RandomDisplacements(object):
         return u * np.sqrt(2)
 
     def _get_sigma(self, eigvals, T):
-        """Returns sigma in sqrt(AMU).Angstrom unit"""
+        """Return sigma in sqrt(AMU).Angstrom unit."""
         freqs = np.sqrt(np.abs(eigvals)) * self._factor
         conditions = freqs > self._cutoff_frequency
         freqs = np.where(conditions, freqs, 1)
-        if self._dist_func == 'classical':
+        if self._dist_func == "classical":
             sigma = np.sqrt(T * self._unit_conversion_classical) / freqs
         else:
             n = bose_einstein_dist(freqs, T)

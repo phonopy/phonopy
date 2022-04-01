@@ -1,3 +1,4 @@
+"""Use first Brillouin zone (Wigner–Seitz cell) to locate q-points."""
 # Copyright (C) 2013 Atsushi Togo
 # All rights reserved.
 #
@@ -33,9 +34,11 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+
 from phonopy.structure.cells import get_reduced_bases
 
-search_space = np.array([
+search_space = np.array(
+    [
         [0, 0, 0],
         [0, 0, 1],
         [0, 1, -1],
@@ -62,23 +65,27 @@ search_space = np.array([
         [0, -1, -1],
         [0, -1, 0],
         [0, -1, 1],
-        [0, 0, -1]], dtype='intc')
+        [0, 0, -1],
+    ],
+    dtype="intc",
+)
 
 
-def get_qpoints_in_Brillouin_zone(reciprocal_lattice,
-                                  qpoints,
-                                  only_unique=False,
-                                  tolerance=0.01):
+def get_qpoints_in_Brillouin_zone(
+    reciprocal_lattice, qpoints, only_unique=False, tolerance=0.01
+):
+    """Move qpoints to first Brillouin zone by lattice translation."""
     bz = BrillouinZone(reciprocal_lattice)
     bz.run(qpoints)
     if only_unique:
-        return np.array([pts[0] for pts in bz.shortest_qpoints],
-                        dtype='double', order='C')
+        return np.array(
+            [pts[0] for pts in bz.shortest_qpoints], dtype="double", order="C"
+        )
     else:
         return bz.shortest_qpoints
 
 
-class BrillouinZone(object):
+class BrillouinZone:
     """Move qpoints to first Brillouin zone by lattice translation.
 
     Attributes
@@ -92,7 +99,7 @@ class BrillouinZone(object):
     """
 
     def __init__(self, reciprocal_lattice, tolerance=0.01):
-        """
+        """Init method.
 
         Parameters
         ----------
@@ -104,25 +111,24 @@ class BrillouinZone(object):
             Default = 0.01
 
         """
-
         self._reciprocal_lattice = np.array(reciprocal_lattice)
-        self._tolerance = min(
-            np.sum(reciprocal_lattice ** 2, axis=0)) * tolerance
+        self._tolerance = min(np.sum(reciprocal_lattice**2, axis=0)) * tolerance
         self._reduced_bases = get_reduced_bases(reciprocal_lattice.T)
-        self._tmat = np.dot(np.linalg.inv(self._reciprocal_lattice),
-                            self._reduced_bases.T)
+        self._tmat = np.dot(
+            np.linalg.inv(self._reciprocal_lattice), self._reduced_bases.T
+        )
         self._tmat_inv = np.linalg.inv(self._tmat)
         self.shortest_qpoints = None
 
     def run(self, qpoints):
+        """Find q-points inside Wigner–Seitz cell."""
         reduced_qpoints = np.dot(qpoints, self._tmat_inv.T)
         reduced_qpoints -= np.rint(reduced_qpoints)
         self.shortest_qpoints = []
         for q in reduced_qpoints:
-            distances = (np.dot(q + search_space,
-                                self._reduced_bases) ** 2).sum(axis=1)
+            distances = (np.dot(q + search_space, self._reduced_bases) ** 2).sum(axis=1)
             min_dist = min(distances)
-            shortest_indices = np.where(
-                distances < min_dist + self._tolerance)[0]
+            shortest_indices = np.where(distances < min_dist + self._tolerance)[0]
             self.shortest_qpoints.append(
-                np.dot(search_space[shortest_indices] + q, self._tmat.T))
+                np.dot(search_space[shortest_indices] + q, self._tmat.T)
+            )

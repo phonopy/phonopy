@@ -1,14 +1,13 @@
-import unittest
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-import numpy as np
-from phonopy import Phonopy
-from phonopy.interface.vasp import read_vasp
-from phonopy.file_IO import parse_FORCE_SETS
-from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
+"""Tests for TetrahedronMesh."""
 import os
+from io import StringIO
+
+import numpy as np
+
+from phonopy import Phonopy
+from phonopy.file_IO import parse_FORCE_SETS
+from phonopy.interface.vasp import read_vasp
+from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -25,27 +24,26 @@ dos_str = """-0.672024 0.000000 0.029844 0.005522 0.731712 0.029450 1.433580 0.1
 
 
 def test_Amm2():
+    """Test of DOS calculation using TetrahedronMesh for Amm2 crystal."""
     data = np.loadtxt(StringIO(dos_str))
-    phonon = _get_phonon("Amm2",
-                         [3, 2, 2],
-                         [[1, 0, 0],
-                          [0, 0.5, -0.5],
-                          [0, 0.5, 0.5]])
+    phonon = _get_phonon("Amm2", [3, 2, 2], [[1, 0, 0], [0, 0.5, -0.5], [0, 0.5, 0.5]])
     mesh = [11, 11, 11]
-    primitive = phonon.get_primitive()
+    primitive = phonon.primitive
     phonon.run_mesh([11, 11, 11])
     weights = phonon.mesh.weights
     frequencies = phonon.mesh.frequencies
     grid_address = phonon.mesh.grid_address
     ir_grid_points = phonon.mesh.ir_grid_points
     grid_mapping_table = phonon.mesh.grid_mapping_table
-    thm = TetrahedronMesh(primitive,
-                          frequencies,
-                          mesh,
-                          np.array(grid_address, dtype='int_'),
-                          np.array(grid_mapping_table, dtype='int_'),
-                          ir_grid_points)
-    thm.set(value='I', division_number=40)
+    thm = TetrahedronMesh(
+        primitive,
+        frequencies,
+        mesh,
+        np.array(grid_address, dtype="int_"),
+        np.array(grid_mapping_table, dtype="int_"),
+        ir_grid_points,
+    )
+    thm.set(value="I", division_number=40)
     freq_points = thm.get_frequency_points()
     dos = np.zeros_like(freq_points)
 
@@ -67,11 +65,10 @@ def _show(freq_points, dos):
 
 def _get_phonon(spgtype, dim, pmat):
     cell = read_vasp(os.path.join(data_dir, "POSCAR_%s" % spgtype))
-    phonon = Phonopy(cell,
-                     np.diag(dim),
-                     primitive_matrix=pmat)
+    phonon = Phonopy(cell, np.diag(dim), primitive_matrix=pmat)
     force_sets = parse_FORCE_SETS(
-        filename=os.path.join(data_dir, "FORCE_SETS_%s" % spgtype))
-    phonon.set_displacement_dataset(force_sets)
+        filename=os.path.join(data_dir, "FORCE_SETS_%s" % spgtype)
+    )
+    phonon.dataset = force_sets
     phonon.produce_force_constants()
     return phonon

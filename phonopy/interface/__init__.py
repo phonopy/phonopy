@@ -1,3 +1,4 @@
+"""Routines for user and calculator interfaces to phonopy."""
 # Copyright (C) 2019 Atsushi Togo
 # All rights reserved.
 #

@@ -6,16 +6,16 @@
  Copyright (C) 2018 TURBOMOLE GmbH, Karlsruhe
 
 
-    2019-03-24 01:01:23.088 
+    2019-03-24 01:01:23.088
 
  Number of MKL threads:     12
 
    *************************************************************************
-   supercell-001                                                            
+   supercell-001
    *************************************************************************
 
 
-    
+
     *************************************************************************
     *************************************************************************
     ***            _            _                   _     _               ***
@@ -37,35 +37,35 @@
     ****** Developed by the groups in Jena   (M. Sierka)               ******
     ******                        and Munich (A. Burow)                ******
     *************************************************************************
-    
-    
-                               References:                                  
-    
-    (1) General implementation:                                             
-        R. Lazarski, A. M. Burow, M. Sierka                                 
-        Density Functional Theory for Molecular and Periodic Systems Using  
-        Density Fitting and Continuous Fast Multipole Methods               
-        J. Chem. Theory Comput. 2015, 11, 3029-3041                         
-        R. Lazarski, A. M. Burow, L. Grajciar, M. Sierka                    
-        Density Functional Theory for Molecular and Periodic Systems Using  
-        Density Fitting and Continuous Fast Multipole Methods: Analytical   
-        Gradients                                                           
-        J. Comput. Chem. 2016, 57, 2518–2526                                
-    (2) DFT implementation:                                                 
-        A. M. Burow, M. Sierka                                              
-        Linear Scaling Hierarchical Integration Scheme For the              
-        Exchange-Correlation Term in Molecular and Periodic Systems         
-        J. Chem. Theory Comput. 2011, 7, 3097-3104                          
-    (3) RI/DF approximation:                                                
-        A. M. Burow, M. Sierka, F. Mohamed                                  
-        Resolution of Identity Approximation for the Coulomb Term in        
-        Molecular and Periodic Systems                                      
-        J. Chem. Phys. 2009, 131, 214101/1-214101/6                         
-    (4) Low-Memory Iterative Density Fitting (LMIDF) method:                
-        L. Grajciar                                                         
-        Low-Memory Iterative Density Fitting                                
-        J. Comput. Chem. 2015, 36, 1521-1535                                
-    
+
+
+                               References:
+
+    (1) General implementation:
+        R. Lazarski, A. M. Burow, M. Sierka
+        Density Functional Theory for Molecular and Periodic Systems Using
+        Density Fitting and Continuous Fast Multipole Methods
+        J. Chem. Theory Comput. 2015, 11, 3029-3041
+        R. Lazarski, A. M. Burow, L. Grajciar, M. Sierka
+        Density Functional Theory for Molecular and Periodic Systems Using
+        Density Fitting and Continuous Fast Multipole Methods: Analytical
+        Gradients
+        J. Comput. Chem. 2016, 57, 2518–2526
+    (2) DFT implementation:
+        A. M. Burow, M. Sierka
+        Linear Scaling Hierarchical Integration Scheme For the
+        Exchange-Correlation Term in Molecular and Periodic Systems
+        J. Chem. Theory Comput. 2011, 7, 3097-3104
+    (3) RI/DF approximation:
+        A. M. Burow, M. Sierka, F. Mohamed
+        Resolution of Identity Approximation for the Coulomb Term in
+        Molecular and Periodic Systems
+        J. Chem. Phys. 2009, 131, 214101/1-214101/6
+    (4) Low-Memory Iterative Density Fitting (LMIDF) method:
+        L. Grajciar
+        Low-Memory Iterative Density Fitting
+        J. Comput. Chem. 2015, 36, 1521-1535
+
 
 
               +--------------------------------------------------+
@@ -289,7 +289,7 @@
           0.00000000   25.89490771   25.89490771    si    14.000     0
          10.35796293   25.89490771   25.89490771    si    14.000     0
          20.71592587   25.89490771   25.89490771    si    14.000     0
- 
+
        center of nuclear mass  :   14.24229172   14.24219913   14.24219913
        center of nuclear charge:   14.24229172   14.24219913   14.24219913
 
@@ -586,27 +586,27 @@
    total number of cartesian basis functions :13608
    total number of SCF-basis functions       :11016
 
-               
+
               +--------------------------------------------------+
               |       Summary of SCF and related options         |
               +--------------------------------------------------+
-               
-       Energy and gradient calculation 
-       Translation/rotation projected out of the gradient vector 
+
+       Energy and gradient calculation
+       Translation/rotation projected out of the gradient vector
        Threshold for integrals neglect (differential overlap):    0.2456E-16
-       Diagonalization of overlap matrices 
+       Diagonalization of overlap matrices
        Threshold for neglect of eigenvalues of overlap matrices:   0.1000E-05
        Diagonalization method set to:                                2
        Maximum number of SCF iterations included in the DIIS:        4
        Automatic orbital shift for HOMO-LUMO gap below:           0.2000E+00
 
-       Fractional occupation numbers with Gaussian smearing 
+       Fractional occupation numbers with Gaussian smearing
          width of the smearing:                                   0.2000E-02
-               
+
               +--------------------------------------------------+
               |                 K-POINT MESH                     |
               +--------------------------------------------------+
-               
+
        Total number of k points used for density integration:      8
        Number of symmetry distinct k points used:                  4
 
@@ -627,26 +627,26 @@
        Number of k-points along this vector:     2
        Fractional coordinates:
          -0.2500   0.2500
-               
+
               +--------------------------------------------------+
               |      SCREENING OF BASIS FUNCTION PRODUCTS        |
               +--------------------------------------------------+
-               
+
          Threshold for shell products neglect:          0.2E-16
          Tolerance for shell products extents:          0.1E-09
          Number of {mu,nu,L} shell products:             990826
          Number of primitive basis function products:   1628658
-        
-               
+
+
               +--------------------------------------------------+
               |             INITIAL ORBITALS/BANDS               |
               +--------------------------------------------------+
-               
+
 
  reading orbital data $scfmo  from file mos
  orbital characterization : expanded
 
-  Diagonalization of the overlap matrix requested 
+  Diagonalization of the overlap matrix requested
     Threshold for eigenvalues:    0.1000E-05
     Total number of vectors:        3888
     Largest eigenvalue:          0.4596E+01
@@ -659,35 +659,35 @@
     - for the k-point:                1
 
   BANDS have been orthonormalized
-               
+
               +--------------------------------------------------+
               |           DENSITY FUNCTIONAL THEORY              |
               +--------------------------------------------------+
-               
+
        DFT calculation will be performed
-        
+
  PBE functional
  exchange:    LDA + PBE
  correlation: LDA (PW) + PBE
-               
+
               +--------------------------------------------------+
               |              NUMERICAL INTEGRATION               |
               +--------------------------------------------------+
-               
+
        Will use smaller grid during SCF iterations and a grid
        of size 4 for the last iteration.
-        
+
        Integration of exchange-correlation term is performed with
        Stratmann/Scuseria renormalization.
        Specified sharpness parameter is .64000D+00.
        Calculation of weight derivatives is switched OFF
        Maximum number of grid points per atom:             13610
        Total number of grid points of the system:          2363474
-               
+
               +--------------------------------------------------+
               |        CONTINUOUS FAST MULTIPOLE METHOD          |
               +--------------------------------------------------+
-               
+
    Continuous Fast Multipole Method for the Coulomb term
      order of multipole expansions:         20
      well-separateness criterion:         3.0000
@@ -699,7 +699,7 @@
      max. number of NF boxes per box:    16255
      length of the lowest level box:      1.2380
      length of the highest level box:   158.4582
- 
+
    Periodic boundary conditions - crystal field construction:
      extent of the nuclei:             15.5369
      extent of dipole correction:      15.5369
@@ -707,7 +707,7 @@
      extent of auxiliary density:      31.5660
      final crystal field radius:      136.4756
      number of lattice vectors:          365
- 
+
 
        FULL DIAGONALIZATION THE COULOMB METRICS MATRIX
        Max. eigenvalue of PQ matrix:         0.3594E+02
@@ -719,16 +719,16 @@
            Electrons(/UC)        =           3024.0000000000
            Current HOMO-LUMO gap =     0.22628E+01
          ----------------------------------------------------------
-               
+
               +--------------------------------------------------+
               |                SCF iteration    1                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3023.99999999999591
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.27036327002224
-           
+
          ------------------ Fractional Occupations ----------------
            Fermi level           =              0.9312599569
            Electrons(/UC)        =           3024.0000000000
@@ -737,7 +737,7 @@
           SCF energy change             = -6.244D+04
           Free energy change            = -6.244D+04
           new damping factor            =      1.500
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62374.4238509533    |
               | COULOMB ENERGY       =     -120319.8497142643    |
@@ -748,17 +748,17 @@
               | FREE  ENERGY         =      -62436.1815109815    |
               | ENERGY (sigma->0)    =      -62436.1815109815    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration    2                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3023.99999999999636
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.26078915754533
-           
+
           Norm of current diis error    =  8.648D+00
          ------------------ Fractional Occupations ----------------
            Fermi level           =              1.1725055260
@@ -769,7 +769,7 @@
           SCF energy change             = -2.237D+01
           Free energy change            = -2.237D+01
           new damping factor            =      1.400
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62333.9809315469    |
               | COULOMB ENERGY       =     -120303.5804202594    |
@@ -780,17 +780,17 @@
               | FREE  ENERGY         =      -62458.5499778657    |
               | ENERGY (sigma->0)    =      -62458.5499778657    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration    3                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3024.00000000000182
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.25036747798276
-           
+
           Norm of current diis error    =  5.932D+00
          ------------------ Fractional Occupations ----------------
            Fermi level           =              1.1476397246
@@ -801,7 +801,7 @@
           SCF energy change             = -7.240D+00
           Free energy change            = -7.240D+00
           new damping factor            =      1.200
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62307.2571557206    |
               | COULOMB ENERGY       =     -120284.8866692334    |
@@ -812,17 +812,17 @@
               | FREE  ENERGY         =      -62465.7896082376    |
               | ENERGY (sigma->0)    =      -62465.7896082376    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration    4                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3024.00000000000136
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.24121156432466
-           
+
           Norm of current diis error    =  3.865D+00
          ------------------ Fractional Occupations ----------------
            Fermi level           =              0.9242348351
@@ -833,7 +833,7 @@
           SCF energy change             = -5.936D+00
           Free energy change            = -5.936D+00
           new damping factor            =      1.000
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62286.5312449309    |
               | COULOMB ENERGY       =     -120270.5223818384    |
@@ -844,17 +844,17 @@
               | FREE  ENERGY         =      -62471.7255421954    |
               | ENERGY (sigma->0)    =      -62471.7255421954    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration    5                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3024.00000000000000
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.23345357016660
-           
+
           Norm of current diis error    =  2.803D+00
          ------------------ Fractional Occupations ----------------
            Fermi level           =              0.6050138875
@@ -865,7 +865,7 @@
           SCF energy change             = -4.847D+00
           Free energy change            = -4.848D+00
           new damping factor            =      0.800
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62269.8500736920    |
               | COULOMB ENERGY       =     -120258.9037482440    |
@@ -876,17 +876,17 @@
               | FREE  ENERGY         =      -62476.5738515892    |
               | ENERGY (sigma->0)    =      -62476.5733935653    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration    6                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3023.99999999980537
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.21464210659269
-           
+
           Norm of current diis error    =  3.755D+00
          ------------------ Fractional Occupations ----------------
            Fermi level           =              0.4327977165
@@ -897,7 +897,7 @@
           SCF energy change             = -5.556D+00
           Free energy change            = -5.558D+00
           new damping factor            =      0.600
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62257.0242852989    |
               | COULOMB ENERGY       =     -120250.9046086036    |
@@ -908,17 +908,17 @@
               | FREE  ENERGY         =      -62482.1316480975    |
               | ENERGY (sigma->0)    =      -62482.1305027537    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration    7                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3024.00000000000864
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.20111035788477
-           
+
           Norm of current diis error    =  1.421D+00
          ------------------ Fractional Occupations ----------------
            Fermi level           =              0.0795093402
@@ -929,7 +929,7 @@
           SCF energy change             = -3.819D+00
           Free energy change            = -3.817D+00
           new damping factor            =      0.400
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62253.4171902715    |
               | COULOMB ENERGY       =     -120250.2843448222    |
@@ -940,17 +940,17 @@
               | FREE  ENERGY         =      -62485.9491152692    |
               | ENERGY (sigma->0)    =      -62485.9486108932    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration    8                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3024.00000000001273
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19614770773023
-           
+
           Norm of current diis error    =  1.099D+00
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1150758126
@@ -961,7 +961,7 @@
           SCF energy change             = -1.305D+00
           Free energy change            = -1.306D+00
           new damping factor            =      0.200
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62247.9338824974    |
               | COULOMB ENERGY       =     -120246.0044565499    |
@@ -972,17 +972,17 @@
               | FREE  ENERGY         =      -62487.2546273113    |
               | ENERGY (sigma->0)    =      -62487.2539008831    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration    9                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3024.00000000000955
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19365146840482
-           
+
           Norm of current diis error    =  7.236D-01
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1783325025
@@ -993,7 +993,7 @@
           SCF energy change             = -5.341D-01
           Free energy change            = -5.326D-01
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62245.5278641899    |
               | COULOMB ENERGY       =     -120244.0675457306    |
@@ -1004,17 +1004,17 @@
               | FREE  ENERGY         =      -62487.7872582819    |
               | ENERGY (sigma->0)    =      -62487.7872582819    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   10                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3024.00000000001819
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19284660750782
-           
+
           Norm of current diis error    =  6.654D-01
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1944016464
@@ -1025,7 +1025,7 @@
           SCF energy change             = -1.672D-01
           Free energy change            = -1.672D-01
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.9748695533    |
               | COULOMB ENERGY       =     -120243.6262620799    |
@@ -1036,17 +1036,17 @@
               | FREE  ENERGY         =      -62487.9544350282    |
               | ENERGY (sigma->0)    =      -62487.9544350282    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   11                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3024.00000000001410
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19253446885068
-           
+
           Norm of current diis error    =  5.458D-01
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1842505967
@@ -1057,7 +1057,7 @@
           SCF energy change             = -6.681D-02
           Free energy change            = -6.681D-02
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.9500029181    |
               | COULOMB ENERGY       =     -120243.6325826310    |
@@ -1068,17 +1068,17 @@
               | FREE  ENERGY         =      -62488.0212499568    |
               | ENERGY (sigma->0)    =      -62488.0212499568    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   12                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3024.00000000000546
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19235384578951
-           
+
           Norm of current diis error    =  4.543D-01
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1827696074
@@ -1089,7 +1089,7 @@
           SCF energy change             = -2.690D-02
           Free energy change            = -2.690D-02
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.9463454111    |
               | COULOMB ENERGY       =     -120243.6378639936    |
@@ -1100,17 +1100,17 @@
               | FREE  ENERGY         =      -62488.0481463828    |
               | ENERGY (sigma->0)    =      -62488.0481463828    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   13                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3024.00000000000273
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19230795118528
-           
+
           Norm of current diis error    =  2.229D-01
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1864447897
@@ -1121,7 +1121,7 @@
           SCF energy change             = -2.374D-02
           Free energy change            = -2.374D-02
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.8835665197    |
               | COULOMB ENERGY       =     -120243.5983975455    |
@@ -1132,17 +1132,17 @@
               | FREE  ENERGY         =      -62488.0718849391    |
               | ENERGY (sigma->0)    =      -62488.0718849391    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   14                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3023.99999999999818
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231745318029
-           
+
           Norm of current diis error    =  1.020D-01
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1842398517
@@ -1153,7 +1153,7 @@
           SCF energy change             = -6.818D-03
           Free energy change            = -6.818D-03
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.8044769298    |
               | COULOMB ENERGY       =     -120243.5316618420    |
@@ -1164,17 +1164,17 @@
               | FREE  ENERGY         =      -62488.0787031471    |
               | ENERGY (sigma->0)    =      -62488.0787031471    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   15                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3024.00000000000091
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19232506875778
-           
+
           Norm of current diis error    =  6.848D-02
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1858421103
@@ -1185,7 +1185,7 @@
           SCF energy change             = -1.532D-03
           Free energy change            = -1.532D-03
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7751199261    |
               | COULOMB ENERGY       =     -120243.5060434304    |
@@ -1196,17 +1196,17 @@
               | FREE  ENERGY         =      -62488.0802351692    |
               | ENERGY (sigma->0)    =      -62488.0802351692    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   16                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3023.99999999999500
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19232437960181
-           
+
           Norm of current diis error    =  6.328D-02
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1852388371
@@ -1217,7 +1217,7 @@
           SCF energy change             = -5.105D-04
           Free energy change            = -5.105D-04
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7757745513    |
               | COULOMB ENERGY       =     -120243.5068792626    |
@@ -1228,17 +1228,17 @@
               | FREE  ENERGY         =      -62488.0807456581    |
               | ENERGY (sigma->0)    =      -62488.0807456581    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   17                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3023.99999999999545
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19232184199336
-           
+
           Norm of current diis error    =  2.291D-02
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1854753206
@@ -1249,7 +1249,7 @@
           SCF energy change             = -5.799D-04
           Free energy change            = -5.799D-04
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7781844898    |
               | COULOMB ENERGY       =     -120243.5094151907    |
@@ -1260,17 +1260,17 @@
               | FREE  ENERGY         =      -62488.0813255254    |
               | ENERGY (sigma->0)    =      -62488.0813255254    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   18                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3023.99999999999545
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231970972260
-           
+
           Norm of current diis error    =  2.156D-02
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1853247681
@@ -1281,7 +1281,7 @@
           SCF energy change             = -9.675D-05
           Free energy change            = -9.675D-05
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7819248897    |
               | COULOMB ENERGY       =     -120243.5127826408    |
@@ -1292,17 +1292,17 @@
               | FREE  ENERGY         =      -62488.0814222801    |
               | ENERGY (sigma->0)    =      -62488.0814222801    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   19                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3023.99999999999454
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231875767491
-           
+
           Norm of current diis error    =  1.217D-02
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1849948732
@@ -1313,7 +1313,7 @@
           SCF energy change             = -8.425D-05
           Free energy change            = -8.425D-05
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7818650354    |
               | COULOMB ENERGY       =     -120243.5127249770    |
@@ -1324,17 +1324,17 @@
               | FREE  ENERGY         =      -62488.0815065274    |
               | ENERGY (sigma->0)    =      -62488.0815065274    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   20                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3023.99999999999454
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231843646821
-           
+
           Norm of current diis error    =  1.198D-02
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1851449396
@@ -1345,7 +1345,7 @@
           SCF energy change             = -2.489D-05
           Free energy change            = -2.489D-05
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7809573500    |
               | COULOMB ENERGY       =     -120243.5118774697    |
@@ -1356,17 +1356,17 @@
               | FREE  ENERGY         =      -62488.0815314170    |
               | ENERGY (sigma->0)    =      -62488.0815314170    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   21                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3024.00000000000091
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231823980999
-           
+
           Norm of current diis error    =  6.224D-03
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1851024393
@@ -1377,7 +1377,7 @@
           SCF energy change             = -2.523D-05
           Free energy change            = -2.523D-05
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7806179197    |
               | COULOMB ENERGY       =     -120243.5115706213    |
@@ -1388,17 +1388,17 @@
               | FREE  ENERGY         =      -62488.0815566509    |
               | ENERGY (sigma->0)    =      -62488.0815566509    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   22                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3023.99999999999682
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231813928127
-           
+
           Norm of current diis error    =  4.862D-03
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1849756317
@@ -1409,7 +1409,7 @@
           SCF energy change             = -9.171D-06
           Free energy change            = -9.171D-06
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7804839783    |
               | COULOMB ENERGY       =     -120243.5114469565    |
@@ -1420,17 +1420,17 @@
               | FREE  ENERGY         =      -62488.0815658217    |
               | ENERGY (sigma->0)    =      -62488.0815658217    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   23                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3023.99999999999682
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231805730033
-           
+
           Norm of current diis error    =  5.679D-03
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1850078324
@@ -1441,7 +1441,7 @@
           SCF energy change             = -3.011D-06
           Free energy change            = -3.011D-06
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7805324039    |
               | COULOMB ENERGY       =     -120243.5114882477    |
@@ -1452,17 +1452,17 @@
               | FREE  ENERGY         =      -62488.0815688325    |
               | ENERGY (sigma->0)    =      -62488.0815688325    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   24                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3024.00000000000045
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231799606268
-           
+
           Norm of current diis error    =  2.639D-03
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1850610222
@@ -1473,7 +1473,7 @@
           SCF energy change             = -5.297D-06
           Free energy change            = -5.297D-06
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7805348683    |
               | COULOMB ENERGY       =     -120243.5114914812    |
@@ -1484,17 +1484,17 @@
               | FREE  ENERGY         =      -62488.0815741299    |
               | ENERGY (sigma->0)    =      -62488.0815741299    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   25                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3023.99999999999454
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231796931126
-           
+
           Norm of current diis error    =  4.328D-03
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1850094103
@@ -1505,7 +1505,7 @@
           SCF energy change             =  4.410D-08
           Free energy change            =  4.410D-08
           new damping factor            =      0.200
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7805120578    |
               | COULOMB ENERGY       =     -120243.5114684477    |
@@ -1516,17 +1516,17 @@
               | FREE  ENERGY         =      -62488.0815740858    |
               | ENERGY (sigma->0)    =      -62488.0815740858    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   26                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3024.00000000000227
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231794776078
-           
+
           Norm of current diis error    =  2.795D-03
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1849778073
@@ -1537,7 +1537,7 @@
           SCF energy change             = -2.025D-06
           Free energy change            = -2.025D-06
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7805107043    |
               | COULOMB ENERGY       =     -120243.5114677399    |
@@ -1548,17 +1548,17 @@
               | FREE  ENERGY         =      -62488.0815761107    |
               | ENERGY (sigma->0)    =      -62488.0815761107    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   27                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3024.00000000000318
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231793482686
-           
+
           Norm of current diis error    =  1.417D-03
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1850005932
@@ -1569,7 +1569,7 @@
           SCF energy change             = -1.133D-06
           Free energy change            = -1.133D-06
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7805100980    |
               | COULOMB ENERGY       =     -120243.5114674792    |
@@ -1580,17 +1580,17 @@
               | FREE  ENERGY         =      -62488.0815772441    |
               | ENERGY (sigma->0)    =      -62488.0815772441    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   28                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3023.99999999999636
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231792965411
-           
+
           Norm of current diis error    =  2.346D-03
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1850040668
@@ -1601,7 +1601,7 @@
           SCF energy change             =  1.527D-07
           Free energy change            =  1.527D-07
           new damping factor            =      0.200
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7805053976    |
               | COULOMB ENERGY       =     -120243.5114626661    |
@@ -1612,17 +1612,17 @@
               | FREE  ENERGY         =      -62488.0815770914    |
               | ENERGY (sigma->0)    =      -62488.0815770914    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   29                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3024.00000000000227
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231792439996
-           
+
           Norm of current diis error    =  1.352D-03
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1850085790
@@ -1633,7 +1633,7 @@
           SCF energy change             = -5.977D-07
           Free energy change            = -5.977D-07
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7805069501    |
               | COULOMB ENERGY       =     -120243.5114643686    |
@@ -1644,17 +1644,17 @@
               | FREE  ENERGY         =      -62488.0815776891    |
               | ENERGY (sigma->0)    =      -62488.0815776891    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   30                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3024.00000000000136
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231792170831
-           
+
           Norm of current diis error    =  7.316D-04
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1849771205
@@ -1665,7 +1665,7 @@
           SCF energy change             = -2.345D-07
           Free energy change            = -2.345D-07
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7805063186    |
               | COULOMB ENERGY       =     -120243.5114638731    |
@@ -1676,17 +1676,17 @@
               | FREE  ENERGY         =      -62488.0815779236    |
               | ENERGY (sigma->0)    =      -62488.0815779236    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   31                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3023.99999999999682
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231791995571
-           
+
           Norm of current diis error    =  1.027D-03
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1849923188
@@ -1697,7 +1697,7 @@
           SCF energy change             =  1.029D-08
           Free energy change            =  1.029D-08
           new damping factor            =      0.200
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7805069476    |
               | COULOMB ENERGY       =     -120243.5114643201    |
@@ -1708,17 +1708,17 @@
               | FREE  ENERGY         =      -62488.0815779133    |
               | ENERGY (sigma->0)    =      -62488.0815779133    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   32                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3024.00000000000227
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231791847733
-           
+
           Norm of current diis error    =  5.720D-04
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1849959206
@@ -1729,7 +1729,7 @@
           SCF energy change             = -1.247D-07
           Free energy change            = -1.247D-07
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7805075223    |
               | COULOMB ENERGY       =     -120243.5114648975    |
@@ -1740,17 +1740,17 @@
               | FREE  ENERGY         =      -62488.0815780380    |
               | ENERGY (sigma->0)    =      -62488.0815780380    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   33                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3023.99999999999727
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231791805896
-           
+
           Norm of current diis error    =  6.050D-04
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1849849450
@@ -1761,7 +1761,7 @@
           SCF energy change             = -7.713D-09
           Free energy change            = -7.713D-09
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7805065670    |
               | COULOMB ENERGY       =     -120243.5114640072    |
@@ -1772,17 +1772,17 @@
               | FREE  ENERGY         =      -62488.0815780457    |
               | ENERGY (sigma->0)    =      -62488.0815780457    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   34                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3023.99999999999864
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231791751508
-           
+
           Norm of current diis error    =  7.083D-04
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1849891763
@@ -1793,7 +1793,7 @@
           SCF energy change             =  2.095D-09
           Free energy change            =  2.095D-09
           new damping factor            =      0.200
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7805068594    |
               | COULOMB ENERGY       =     -120243.5114642531    |
@@ -1804,17 +1804,17 @@
               | FREE  ENERGY         =      -62488.0815780436    |
               | ENERGY (sigma->0)    =      -62488.0815780436    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   35                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3023.99999999999955
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231791718721
-           
+
           Norm of current diis error    =  4.280D-04
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1849913809
@@ -1825,7 +1825,7 @@
           SCF energy change             = -3.682D-08
           Free energy change            = -3.682D-08
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7805070445    |
               | COULOMB ENERGY       =     -120243.5114644356    |
@@ -1836,17 +1836,17 @@
               | FREE  ENERGY         =      -62488.0815780804    |
               | ENERGY (sigma->0)    =      -62488.0815780804    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   36                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3023.99999999999909
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231791702032
-           
+
           Norm of current diis error    =  2.574D-04
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1849986629
@@ -1857,7 +1857,7 @@
           SCF energy change             = -1.578D-08
           Free energy change            = -1.578D-08
           new damping factor            =      0.100
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7805069872    |
               | COULOMB ENERGY       =     -120243.5114643909    |
@@ -1868,17 +1868,17 @@
               | FREE  ENERGY         =      -62488.0815780962    |
               | ENERGY (sigma->0)    =      -62488.0815780962    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |                SCF iteration   37                |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3024.00000000000091
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231791700849
-           
+
           Norm of current diis error    =  3.326D-04
          ------------------ Fractional Occupations ----------------
            Fermi level           =             -0.1849878292
@@ -1889,7 +1889,7 @@
           SCF energy change             = -7.276D-12
           Free energy change            = -7.276D-12
           new damping factor            =      0.200
-  
+
               +--------------------------------------------------+
               | KINETIC ENERGY       =       62244.7805069070    |
               | COULOMB ENERGY       =     -120243.5114643127    |
@@ -1900,20 +1900,20 @@
               | FREE  ENERGY         =      -62488.0815780962    |
               | ENERGY (sigma->0)    =      -62488.0815780962    |
               +--------------------------------------------------+
-  
-               
+
+
               +--------------------------------------------------+
               |       SCF converged - final SCF iteration        |
               +--------------------------------------------------+
-  
+
           Number of electrons from P*S  =  3023.99999999999727
-           
+
           Numerical integration of the XC term:
           Number of electrons           =  3024.19231791686116
-           
-  
+
+
               SCF converged within     37 cycles.
-  
+
               +--------------------------------------------------+
               |                FINAL ENERGIES                    |
               +--------------------------------------------------+
@@ -1926,8 +1926,8 @@
               | FREE  ENERGY         =      -62488.0815781078    |
               | ENERGY (sigma->0)    =      -62488.0815781078    |
               +--------------------------------------------------+
-  
-  
+
+
          ------------------ Fermi Level Statistics ----------------
              Lowest unoccupied band =       -0.157293
              Highest occupied band  =       -0.189970
@@ -1936,10 +1936,10 @@
              Fermi level            =       -0.184988
          ----------------------------------------------------------
 
- <geterg> : there is no data group $energy 
+ <geterg> : there is no data group $energy
 
 
- <skperg> : $end is missing 
+ <skperg> : $end is missing
 
 
  orbitals $scfmo  will be written to file mos
@@ -2001,5 +2001,4 @@
    ****  riper : all done  ****
 
 
-    2019-03-24 12:48:27.712 
-
+    2019-03-24 12:48:27.712

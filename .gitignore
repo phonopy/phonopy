@@ -43,3 +43,9 @@ nosetests.xml
 .buildinfo
 .doctrees
 _build
+
+# VSCode
+.vscode
+
+# sphinx
+_sources
