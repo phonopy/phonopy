@@ -441,11 +441,11 @@ is {math}`[\text{hartree}/\text{bohr}^2]`. In the default case for the VASP
 interface, internally {math}`\Omega_0` is given in {math}`\text{Angstrom}^3`,
 while Born charges {math}`Z^{*}` have physical unit of charge ({math}`e_{0}`).
 Normally, physical units of Born charges obtained in many calculators are atomic ones.
-In atomic units Hartree energy is equal to {math}`1 \text{Ha} = e_{0}^{2}/a_{0}` 
-({math}`a_{0}` is Bohr radius), therefore the units of charge squared is 
-{math}`e_{0}^{2}=[\text{hartree}\cdot \text{bohr}]`. In case for the VASP in order 
-to convert the nonanalytical term, one has to convert units of energy (Ha to eV) and 
-units of distance (Bohr to Angstrom). In total, the necessary unit conversion is 
+In atomic units Hartree energy is equal to {math}`1 \text{Ha} = e_{0}^{2}/a_{0}`
+({math}`a_{0}` is Bohr radius), therefore the units of charge squared is
+{math}`e_{0}^{2}=[\text{hartree}\cdot \text{bohr}]`. In case for the VASP in order
+to convert the nonanalytical term, one has to convert units of energy (Ha to eV) and
+units of distance (Bohr to Angstrom). In total, the necessary unit conversion is
 {math}`(\text{hartree} \rightarrow \text{eV}) \times (\text{bohr} \rightarrow \text{Angstrom})=14.4`.
 In the default case of the Wien2k interface, the conversion factor is
 {math}`(\text{hartree} \rightarrow \text{mRy})=2000`. For the other interfaces,
