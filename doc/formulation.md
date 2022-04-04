@@ -426,7 +426,7 @@ This unit conversion factor can be manually specified. See
 
 The unit conversion factor in the `BORN` file is multiplied with the second term
 of the right hand side of the equation in
-{ref}`non_analytical_term_correction_theory` where this equation is written with
+{ref}`non_analytical_term_correction_theory` where this equation is written in
 atomic units ({ref}`Gonze and Lee, 1997 <reference_NAC>`). The physical unit of
 the part of the equation corresponding to force constants:
 
@@ -438,8 +438,14 @@ the part of the equation corresponding to force constants:
 ```
 
 is {math}`[\text{hartree}/\text{bohr}^2]`. In the default case for the VASP
-interface, internally {math}`\Omega_0` is given in {math}`\text{Angstrom}^3`. In
-total, the necessary unit conversion is
+interface, internally {math}`\Omega_0` is given in {math}`\text{Angstrom}^3`,
+while Born charges {math}`Z^{*}` have physical unit of charge ({math}`e_{0}`).
+Normally, physical units of Born charges obtained in many calculators are atomic ones.
+In atomic units Hartree energy is equal to {math}`1 \text{Ha} = e_{0}^{2}/a_{0}` 
+({math}`a_{0}` is Bohr radius), therefore the units of charge squared is 
+{math}`e_{0}^{2}=[\text{hartree}\cdot \text{bohr}]`. In case for the VASP in order 
+to convert the nonanalytical term, one has to convert units of energy (Ha to eV) and 
+units of distance (Bohr to Angstrom). In total, the necessary unit conversion is 
 {math}`(\text{hartree} \rightarrow \text{eV}) \times (\text{bohr} \rightarrow \text{Angstrom})=14.4`.
 In the default case of the Wien2k interface, the conversion factor is
 {math}`(\text{hartree} \rightarrow \text{mRy})=2000`. For the other interfaces,
