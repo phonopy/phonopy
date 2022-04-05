@@ -12,8 +12,10 @@ from phonopy.structure.cells import (
     TrimmedCell,
     compute_all_sg_permutations,
     compute_permutation_for_rotation,
+    convert_to_phonopy_primitive,
     get_primitive,
     get_supercell,
+    isclose,
     sparse_to_dense_svecs,
 )
 
@@ -372,3 +374,28 @@ def test_sparse_to_dense_nacl(ph_nacl: Phonopy):
 
     np.testing.assert_array_equal(dmulti, _dmulti)
     np.testing.assert_allclose(dsvecs, _dsvecs, rtol=0, atol=1e-8)
+
+
+def test_isclose(ph_nacl: Phonopy):
+    """Test for isclose."""
+    scell = ph_nacl.supercell
+    pcell = ph_nacl.primitive
+    assert isclose(pcell, pcell)
+    assert isclose(scell, scell)
+    assert not isclose(scell, pcell)
+
+
+def test_convert_to_phonopy_primitive(ph_nacl: Phonopy):
+    """Test for convert_to_phonopy_primitive."""
+    scell = ph_nacl.supercell
+    pcell = ph_nacl.primitive
+    _pcell = convert_to_phonopy_primitive(scell, pcell)
+    assert isclose(pcell, _pcell)
+
+    # Changing order of atoms is not allowed.
+    points = pcell.scaled_positions[[1, 0]]
+    numbers = pcell.numbers[[1, 0]]
+    cell = pcell.cell
+    pcell_mode = PhonopyAtoms(cell=cell, scaled_positions=points, numbers=numbers)
+    with pytest.raises(RuntimeError):
+        _pcell = convert_to_phonopy_primitive(scell, pcell_mode)
