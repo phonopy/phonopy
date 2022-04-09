@@ -150,9 +150,9 @@ class RandomDisplacements:
         else:
             raise RuntimeError("Either 'quantum' or 'classical' is required.")
 
-        self._unit_conversion = Hbar * EV / AMU / THz / (2 * np.pi) / Angstrom ** 2
+        self._unit_conversion = Hbar * EV / AMU / THz / (2 * np.pi) / Angstrom**2
         self._unit_conversion_classical = (
-            Kb * EV / AMU / (THz * (2 * np.pi)) ** 2 / Angstrom ** 2
+            Kb * EV / AMU / (THz * (2 * np.pi)) ** 2 / Angstrom**2
         )
 
         # Dynamical matrix without NAC because of commensurate points only
@@ -288,9 +288,9 @@ class RandomDisplacements:
         freqs = np.sqrt(np.abs(eigvals)) * self._factor
         conditions = freqs > self._cutoff_frequency
         a = self._get_sigma(eigvals, T)
-        a2 = a ** 2
+        a2 = a**2
         _a = np.where(conditions, a, 1)
-        a2_inv = np.where(conditions, 1 / _a ** 2, 0)
+        a2_inv = np.where(conditions, 1 / _a**2, 0)
 
         d2f.create_dynamical_matrices(a2_inv, eigvecs)
         d2f.run()

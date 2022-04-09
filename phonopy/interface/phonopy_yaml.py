@@ -49,7 +49,7 @@ except ImportError:
 if TYPE_CHECKING:
     from phonopy import Phonopy
 
-from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.atoms import PhonopyAtoms, parse_cell_dict
 
 
 class PhonopyYaml:
@@ -503,71 +503,10 @@ class PhonopyYaml:
             if "lattice" in self._yaml and (
                 "points" in self._yaml or "atoms" in self._yaml
             ):
-                self.unitcell = self._parse_cell(self._yaml)
+                self.unitcell = parse_cell_dict(self._yaml)
 
-    def _parse_cell(self, cell_yaml):
-        lattice = None
-        if "lattice" in cell_yaml:
-            lattice = cell_yaml["lattice"]
-        points = []
-        symbols = []
-        masses = []
-        magnetic_moments = []
-        if "points" in cell_yaml:
-            for x in cell_yaml["points"]:
-                if "coordinates" in x:
-                    points.append(x["coordinates"])
-                if "symbol" in x:
-                    symbols.append(x["symbol"])
-                if "mass" in x:
-                    masses.append(x["mass"])
-                if "magnetic_moment" in x:
-                    magnetic_moments.append(x["magnetic_moment"])
-        # For version < 1.10.9
-        elif "atoms" in cell_yaml:
-            for x in cell_yaml["atoms"]:
-                if "coordinates" not in x and "position" in x:
-                    points.append(x["position"])
-                if "symbol" in x:
-                    symbols.append(x["symbol"])
-                if "mass" in x:
-                    masses.append(x["mass"])
-        return self._get_cell(
-            lattice, points, symbols, masses=masses, magnetic_moments=magnetic_moments
-        )
-
-    def _get_cell(self, lattice, points, symbols, masses=None, magnetic_moments=None):
-        if lattice:
-            _lattice = lattice
-        else:
-            _lattice = None
-        if points:
-            _points = points
-        else:
-            _points = None
-        if symbols:
-            _symbols = symbols
-        else:
-            _symbols = None
-        if masses:
-            _masses = masses
-        else:
-            _masses = None
-        if magnetic_moments:
-            _magnetic_moments = magnetic_moments
-        else:
-            _magnetic_moments = None
-
-        if _lattice and _points and _symbols:
-            return PhonopyAtoms(
-                symbols=_symbols,
-                cell=_lattice,
-                masses=_masses,
-                scaled_positions=_points,
-                magnetic_moments=_magnetic_moments,
-            )
-        else:
-            return None
+    def _parse_cell(self, cell_dict):
+        return parse_cell_dict(cell_dict)
 
     def _parse_force_constants(self):
         if "force_constants" in self._yaml:

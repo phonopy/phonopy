@@ -286,7 +286,7 @@ def _transform_axis(alpha, beta, gamma, a, b, c):
 
     az = np.cos(beta) * a
     ay = (np.cos(gamma) - np.cos(beta) * np.cos(alpha)) / np.sin(alpha) * a
-    ax = np.sqrt(a ** 2 - ay ** 2 - az ** 2)
+    ax = np.sqrt(a**2 - ay**2 - az**2)
 
     return [ax, ay, az], [0, by, bz], [0, 0, cz]
 

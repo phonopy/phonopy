@@ -112,7 +112,7 @@ class BrillouinZone:
 
         """
         self._reciprocal_lattice = np.array(reciprocal_lattice)
-        self._tolerance = min(np.sum(reciprocal_lattice ** 2, axis=0)) * tolerance
+        self._tolerance = min(np.sum(reciprocal_lattice**2, axis=0)) * tolerance
         self._reduced_bases = get_reduced_bases(reciprocal_lattice.T)
         self._tmat = np.dot(
             np.linalg.inv(self._reciprocal_lattice), self._reduced_bases.T

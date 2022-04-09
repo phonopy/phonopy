@@ -208,7 +208,7 @@ class GroupVelocity:
 
         for i, f in enumerate(freqs):
             if f > self._cutoff_frequency:
-                gv[i, :] *= self._factor ** 2 / f / 2
+                gv[i, :] *= self._factor**2 / f / 2
             else:
                 gv[i, :] = 0
 

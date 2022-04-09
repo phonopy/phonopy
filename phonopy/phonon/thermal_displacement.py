@@ -67,7 +67,7 @@ class ThermalMotion:
         return (
             Hbar
             * EV
-            / Angstrom ** 2
+            / Angstrom**2
             * ((self._get_population(freq, t) + 0.5) / (freq * 1e12 * 2 * np.pi))
         )
 

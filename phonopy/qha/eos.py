@@ -83,7 +83,7 @@ def get_eos(eos):
             9
             * p[1]
             * p[3]
-            / (xi ** 2)
+            / (xi**2)
             * (1 + (xi * (1 - x) - 1) * np.exp(xi * (1 - x)))
         )
 

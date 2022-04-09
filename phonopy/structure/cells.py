@@ -34,113 +34,12 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
-from distutils.version import StrictVersion
 
 import numpy as np
 import spglib
 
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.snf import SNF3x3
-
-
-def get_supercell(unitcell, supercell_matrix, is_old_style=True, symprec=1e-5):
-    """Create supercell."""
-    return Supercell(
-        unitcell, supercell_matrix, is_old_style=is_old_style, symprec=symprec
-    )
-
-
-def get_primitive(
-    supercell,
-    primitive_frame,
-    symprec=1e-5,
-    store_dense_svecs=False,
-    positions_to_reorder=None,
-):
-    """Create primitive cell."""
-    return Primitive(
-        supercell,
-        primitive_frame,
-        symprec=symprec,
-        store_dense_svecs=store_dense_svecs,
-        positions_to_reorder=positions_to_reorder,
-    )
-
-
-def print_cell(cell: PhonopyAtoms, mapping=None, stars=None):
-    """Show cell information."""
-    lines = get_cell_lines(cell, mapping=mapping, stars=stars)
-    print("\n".join(lines))
-
-
-def get_cell_lines(cell: PhonopyAtoms, mapping=None, stars=None):
-    """Return cell information text lines."""
-    symbols = cell.symbols
-    masses = cell.masses
-    magmoms = cell.magnetic_moments
-    lattice = cell.cell
-    lines = []
-    lines.append("Lattice vectors:")
-    lines.append("  a %20.15f %20.15f %20.15f" % tuple(lattice[0]))
-    lines.append("  b %20.15f %20.15f %20.15f" % tuple(lattice[1]))
-    lines.append("  c %20.15f %20.15f %20.15f" % tuple(lattice[2]))
-    lines.append("Atomic positions (fractional):")
-    for i, v in enumerate(cell.scaled_positions):
-        num = " "
-        if stars is not None:
-            if i in stars:
-                num = "*"
-        num += "%d" % (i + 1)
-        line = "%5s %-2s%18.14f%18.14f%18.14f" % (num, symbols[i], v[0], v[1], v[2])
-        if masses is not None:
-            line += " %7.3f" % masses[i]
-        if magmoms is not None:
-            if magmoms.ndim == 1:
-                line += "  %5.3f" % magmoms[i]
-            else:
-                line += "  %s" % magmoms[i].ravel()
-        if mapping is None:
-            lines.append(line)
-        else:
-            lines.append(line + " > %d" % (mapping[i] + 1))
-    return lines
-
-
-def isclose(a, b, rtol=1e-5, atol=1e-8):
-    """Check equivalence of two cells."""
-    if len(a) != len(b):
-        return False
-
-    if (a.numbers != b.numbers).any():
-        return False
-
-    if not np.allclose(a.cell, b.cell, rtol=rtol, atol=atol):
-        return False
-
-    diff = a.scaled_positions - b.scaled_positions
-    diff -= np.rint(diff)
-    dist = np.sqrt((np.dot(diff, a.cell) ** 2).sum(axis=1))
-    if (dist > atol).any():
-        return False
-
-    return True
-
-
-def is_primitive_cell(rotations):
-    """Check if single identity operation exists in rotations or not.
-
-    This is used for checking a cell is a primitive cell or not.
-
-    """
-    num_identity = 0
-    identity = np.eye(3, dtype="intc")
-    for r in rotations:
-        if (r == identity).all():
-            num_identity += 1
-            if num_identity > 1:
-                return False
-    else:
-        return True
 
 
 class Supercell(PhonopyAtoms):
@@ -659,7 +558,7 @@ class Primitive(PhonopyAtoms):
             frac_diffs = p2s_positions - s_pos
             frac_diffs -= np.rint(frac_diffs)
             cart_diffs = np.dot(frac_diffs, self.cell)
-            distances = np.sqrt((cart_diffs ** 2).sum(axis=1))
+            distances = np.sqrt((cart_diffs**2).sum(axis=1))
             indices = np.where(distances < self._symprec)[0]
             assert len(indices) == 1
             s2p_map.append(self._p2s_map[indices[0]])
@@ -908,6 +807,122 @@ class TrimmedCell(PhonopyAtoms):
             assert len(overlap_indices) == 1
             reorder_indices.append(overlap_indices[0])
         return reorder_indices
+
+
+def get_supercell(unitcell, supercell_matrix, is_old_style=True, symprec=1e-5):
+    """Create supercell."""
+    return Supercell(
+        unitcell, supercell_matrix, is_old_style=is_old_style, symprec=symprec
+    )
+
+
+def get_primitive(
+    supercell,
+    primitive_frame,
+    symprec=1e-5,
+    store_dense_svecs=False,
+    positions_to_reorder=None,
+):
+    """Create primitive cell."""
+    return Primitive(
+        supercell,
+        primitive_frame,
+        symprec=symprec,
+        store_dense_svecs=store_dense_svecs,
+        positions_to_reorder=positions_to_reorder,
+    )
+
+
+def print_cell(cell: PhonopyAtoms, mapping=None, stars=None):
+    """Show cell information."""
+    lines = get_cell_lines(cell, mapping=mapping, stars=stars)
+    print("\n".join(lines))
+
+
+def get_cell_lines(cell: PhonopyAtoms, mapping=None, stars=None):
+    """Return cell information text lines."""
+    symbols = cell.symbols
+    masses = cell.masses
+    magmoms = cell.magnetic_moments
+    lattice = cell.cell
+    lines = []
+    lines.append("Lattice vectors:")
+    lines.append("  a %20.15f %20.15f %20.15f" % tuple(lattice[0]))
+    lines.append("  b %20.15f %20.15f %20.15f" % tuple(lattice[1]))
+    lines.append("  c %20.15f %20.15f %20.15f" % tuple(lattice[2]))
+    lines.append("Atomic positions (fractional):")
+    for i, v in enumerate(cell.scaled_positions):
+        num = " "
+        if stars is not None:
+            if i in stars:
+                num = "*"
+        num += "%d" % (i + 1)
+        line = "%5s %-2s%18.14f%18.14f%18.14f" % (num, symbols[i], v[0], v[1], v[2])
+        if masses is not None:
+            line += " %7.3f" % masses[i]
+        if magmoms is not None:
+            if magmoms.ndim == 1:
+                line += "  %5.3f" % magmoms[i]
+            else:
+                line += "  %s" % magmoms[i].ravel()
+        if mapping is None:
+            lines.append(line)
+        else:
+            lines.append(line + " > %d" % (mapping[i] + 1))
+    return lines
+
+
+def isclose(
+    a: PhonopyAtoms, b: PhonopyAtoms, rtol: float = 1e-5, atol: float = 1e-8
+) -> bool:
+    """Check equivalence of two cells."""
+    if len(a) != len(b):
+        return False
+
+    if (a.numbers != b.numbers).any():
+        return False
+
+    if not np.allclose(a.cell, b.cell, rtol=rtol, atol=atol):
+        return False
+
+    diff = a.scaled_positions - b.scaled_positions
+    diff -= np.rint(diff)
+    dist = np.sqrt((np.dot(diff, a.cell) ** 2).sum(axis=1))
+    if (dist > atol).any():
+        return False
+
+    return True
+
+
+def is_primitive_cell(rotations):
+    """Check if single identity operation exists in rotations or not.
+
+    This is used for checking a cell is a primitive cell or not.
+
+    """
+    num_identity = 0
+    identity = np.eye(3, dtype="intc")
+    for r in rotations:
+        if (r == identity).all():
+            num_identity += 1
+            if num_identity > 1:
+                return False
+    else:
+        return True
+
+
+def convert_to_phonopy_primitive(
+    supercell: PhonopyAtoms, primitive: PhonopyAtoms
+) -> Primitive:
+    """Convert PhonopyAtoms primitive cell to the Primitive instance."""
+    slat = supercell.cell.T
+    plat = primitive.cell.T
+    pmat = np.dot(np.linalg.inv(slat), plat)
+    _primitive = get_primitive(supercell, pmat)
+    if not isclose(primitive, _primitive):
+        msg = "Input primitive cell and generated one are inconsistent."
+        raise RuntimeError(msg)
+    return _primitive
 
 
 def _trim_cell(relative_axes, cell, symprec=1e-5, positions_to_reorder=None):
@@ -1201,20 +1216,9 @@ class ShortestPairs:
         )
         bases = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [-1, -1, -1]]
         lattice_points = np.dot(lattice_4D, bases)
-        if StrictVersion(np.__version__) >= StrictVersion("1.13.0"):
-            lattice_points = np.array(
-                np.unique(lattice_points, axis=0), dtype=int_dtype, order="C"
-            )
-        else:
-            unique_indices = np.unique(
-                [
-                    np.nonzero(np.abs(lattice_points - point).sum(axis=1) == 0)[0][0]
-                    for point in lattice_points
-                ]
-            )
-            lattice_points = np.array(
-                lattice_points[unique_indices], dtype=int_dtype, order="C"
-            )
+        lattice_points = np.array(
+            np.unique(lattice_points, axis=0), dtype=int_dtype, order="C"
+        )
 
         return (
             lattice_points,
@@ -1327,7 +1331,7 @@ def compute_permutation_for_rotation(
     # We choose distance from the nearest bravais lattice point as our measure.
     def sort_by_lattice_distance(fracs):
         carts = np.dot(fracs - np.rint(fracs), lattice.T)
-        perm = np.argsort(np.sum(carts ** 2, axis=1))
+        perm = np.argsort(np.sum(carts**2, axis=1))
         sorted_fracs = np.array(fracs[perm], dtype="double", order="C")
         return perm, sorted_fracs
 
@@ -1398,7 +1402,7 @@ def _compute_permutation_c(
             diffs -= np.rint(diffs)
             diffs = np.dot(diffs, lattice.T)
 
-            possible_j = np.nonzero(np.sqrt(np.sum(diffs ** 2, axis=1)) < symprec)[0]
+            possible_j = np.nonzero(np.sqrt(np.sum(diffs**2, axis=1)) < symprec)[0]
             if len(possible_j) != 1:
                 permutation_error()
 
@@ -1446,8 +1450,8 @@ def get_cell_matrix(a, b, c, alpha, beta, gamma):
     b2 = np.sin(gamma)
     b3 = 0.0
     c1 = np.cos(beta)
-    c2 = (2 * np.cos(alpha) + b1 ** 2 + b2 ** 2 - 2 * b1 * c1 - 1) / (2 * b2)
-    c3 = np.sqrt(1 - c1 ** 2 - c2 ** 2)
+    c2 = (2 * np.cos(alpha) + b1**2 + b2**2 - 2 * b1 * c1 - 1) / (2 * b2)
+    c3 = np.sqrt(1 - c1**2 - c2**2)
     lattice = np.zeros((3, 3), dtype="double")
     lattice[0, 0] = a
     lattice[1] = np.array([b1, b2, b3]) * b
@@ -1676,7 +1680,7 @@ def _get_multiplicity_a(num_atoms, lengths, max_num_atoms, max_iter=20):
     multi = 1
     for i in range(max_iter):
         multi += 1
-        if num_atoms * multi ** 3 > max_num_atoms:
+        if num_atoms * multi**3 > max_num_atoms:
             multi -= 1
 
     return [multi, multi, multi]

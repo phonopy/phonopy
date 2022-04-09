@@ -304,7 +304,7 @@ class DerivativeOfDynamicalMatrix:
                     dA_j = self._dA(Z, j, xyz)
                     d_nac_q[xyz, i, j] = (
                         np.outer(dA_i, A_j) + np.outer(A_i, dA_j)
-                    ) / B - np.outer(A_i, A_j) * dB / B ** 2
+                    ) / B - np.outer(A_i, A_j) * dB / B**2
 
         num_satom = self._scell.get_number_of_atoms()
         N = num_satom // num_atom

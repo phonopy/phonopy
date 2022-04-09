@@ -769,7 +769,7 @@ def _get_atom_indices_by_symmetry(lattice, positions, rotations, translations, s
     diff -= np.rint(diff)
     diff = np.dot(diff, lattice.T)
     # m[N, K(1), K(2)]
-    m = np.sqrt(np.sum(diff ** 2, axis=3)) < symprec
+    m = np.sqrt(np.sum(diff**2, axis=3)) < symprec
     # index_array[K(1), K(2)]
     index_array = np.tile(np.arange(K, dtype="intc"), (K, 1))
     # Understanding numpy boolean array indexing (extract True elements)

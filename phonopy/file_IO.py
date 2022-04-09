@@ -475,11 +475,13 @@ def check_force_constants_indices(shape, indices, p2s_map, filename):
     """Check consistency of force constants data type."""
     if shape[0] != shape[1] and p2s_map is not None:
         if len(p2s_map) != len(indices) or (p2s_map != indices).any():
-            text = (
-                "%s file is inconsistent with the calculation setting. "
-                "PRIMITIVE_AXIS may not be set correctly."
-            ) % filename
-            raise RuntimeError(text)
+            lines = [
+                f"{filename} file is inconsistent with the calculation setting. "
+                "PRIMITIVE_AXIS may not be set correctly.",
+                "p2s_map in primitive != p2s_map in file",
+                f"{p2s_map} != {indices}",
+            ]
+            raise RuntimeError("\n".join(lines))
 
 
 def parse_disp_yaml(filename="disp.yaml", return_cell=False):

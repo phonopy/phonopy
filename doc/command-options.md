@@ -122,7 +122,9 @@ CRYSTAL mode is invoked with this option.
 
 ### `--elk`
 
-Elk mode is invoked with this option. (fleur_mode)=
+Elk mode is invoked with this option.
+
+(fleur_mode)=
 
 ### `--fleur`
 

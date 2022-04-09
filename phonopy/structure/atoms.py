@@ -493,6 +493,54 @@ class PhonopyAtoms:
         return "\n".join(self.get_yaml_lines())
 
 
+def parse_cell_dict(cell_dict: dict) -> Optional[PhonopyAtoms]:
+    """Parse cell dict."""
+    lattice = None
+    if "lattice" in cell_dict:
+        lattice = cell_dict["lattice"]
+    else:
+        return None
+    points = []
+    symbols = []
+    masses = []
+    magnetic_moments = []
+    if "points" in cell_dict:
+        for x in cell_dict["points"]:
+            if "coordinates" in x:
+                points.append(x["coordinates"])
+            if "symbol" in x:
+                symbols.append(x["symbol"])
+            if "mass" in x:
+                masses.append(x["mass"])
+            if "magnetic_moment" in x:
+                magnetic_moments.append(x["magnetic_moment"])
+    # For version < 1.10.9
+    elif "atoms" in cell_dict:
+        for x in cell_dict["atoms"]:
+            if "coordinates" not in x and "position" in x:
+                points.append(x["position"])
+            if "symbol" in x:
+                symbols.append(x["symbol"])
+            if "mass" in x:
+                masses.append(x["mass"])
+
+    if not masses:
+        masses = None
+    if not magnetic_moments:
+        magnetic_moments = None
+
+    if points and symbols:
+        return PhonopyAtoms(
+            symbols=symbols,
+            cell=lattice,
+            masses=masses,
+            scaled_positions=points,
+            magnetic_moments=magnetic_moments,
+        )
+    else:
+        return None
+
+
 # Pure Appl. Chem., Vol. 83, No. 2, pp. 359-396, 2011. is available
 # but the following list is from 2006.
 

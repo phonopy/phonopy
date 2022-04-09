@@ -99,7 +99,7 @@ class PhononMoment:
             for freq in self._frequencies[i]:
                 if self._fmin < freq and freq < self._fmax:
                     norm0 += w
-                    moment += freq ** order * w
+                    moment += freq**order * w
         self._moment = moment / norm0
 
     def _get_projected_moment(self, order):
@@ -110,7 +110,7 @@ class PhononMoment:
                 if self._fmin < freq and freq < self._fmax:
                     projection = np.abs(eigvec) ** 2
                     norm0 += w * projection
-                    moment += freq ** order * w * projection
+                    moment += freq**order * w * projection
         self._moment = (
             np.array(
                 [
