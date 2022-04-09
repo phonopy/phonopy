@@ -718,9 +718,9 @@ def get_force_constant_conversion_factor(unit, interface_mode):
     factor_to_eVperA2 = {
         "eV/angstrom^2": 1,
         "eV/angstrom.au": 1 / Bohr,
-        "Ry/au^2": Rydberg / Bohr ** 2,
-        "mRy/au^2": Rydberg / Bohr ** 2 / 1000,
-        "hartree/au^2": Hartree / Bohr ** 2,
+        "Ry/au^2": Rydberg / Bohr**2,
+        "mRy/au^2": Rydberg / Bohr**2 / 1000,
+        "hartree/au^2": Hartree / Bohr**2,
         "hartree/angstrom.au": Hartree / Bohr,
     }
     if default_unit not in factor_to_eVperA2:

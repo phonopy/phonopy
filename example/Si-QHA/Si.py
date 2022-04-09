@@ -50,7 +50,7 @@ def main():
         volumes.append(v)
 
     for freq_at_X in np.array(frequencies).T:
-        freq_squared = freq_at_X ** 2 * np.sign(freq_at_X)
+        freq_squared = freq_at_X**2 * np.sign(freq_at_X)
         # np.sign is used to treat imaginary mode, since
         # imaginary frequency is returned as a negative value from phonopy.
         plt.plot(volumes, freq_squared, "o-")

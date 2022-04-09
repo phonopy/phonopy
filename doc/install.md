@@ -84,14 +84,14 @@ export HDF5_USE_FILE_LOCKING=FALSE
 
 The procedure to setup phonopy is explained in this section. It is supposed that
 phonopy is installed on the recent linux distribution like Ubuntu or Fedora with
-Python version 3.6 or later. Mac OS X users may use conda (conda-forge channel)
+Python version 3.7 or later. Mac OS X users may use conda (conda-forge channel)
 packages. Windows users should use conda (conda-forge channel) packages as well.
 
 Prepare the following Python libraries:
 
-- Python (>=3.6) and its header files
-- numpy (>=1.11)
-- matplotlib (>=2.0)
+- Python (>=3.7) and its header files
+- numpy (>=1.15)
+- matplotlib (>=2.2.2)
 - python-yaml (pyyaml)
 - python-h5py (h5py)
 - spglib

@@ -56,7 +56,7 @@ class NormalDistribution:
             1.0
             / np.sqrt(2 * np.pi)
             / self._sigma
-            * np.exp(-(x ** 2) / 2.0 / self._sigma ** 2)
+            * np.exp(-(x**2) / 2.0 / self._sigma**2)
         )
 
 
@@ -69,7 +69,7 @@ class CauchyDistribution:
 
     def calc(self, x):
         """Return Cauchy distribution."""
-        return self._gamma / np.pi / (x ** 2 + self._gamma ** 2)
+        return self._gamma / np.pi / (x**2 + self._gamma**2)
 
 
 class Dos:
@@ -209,7 +209,7 @@ class TotalDos(Dos):
             sys.exit(1)
 
         def Debye_dos(freq, a):
-            return a * freq ** 2
+            return a * freq**2
 
         freq_min = self._frequency_points.min()
         freq_max = self._frequency_points.max()
@@ -551,7 +551,7 @@ def plot_total_dos(
         ax.plot(total_dos, frequency_points, "r-", linewidth=1)
         if freq_Debye:
             ax.plot(
-                np.append(Debye_fit_coef * freqs ** 2, 0),
+                np.append(Debye_fit_coef * freqs**2, 0),
                 np.append(freqs, freq_Debye),
                 "b-",
                 linewidth=1,
@@ -561,7 +561,7 @@ def plot_total_dos(
         if freq_Debye:
             ax.plot(
                 np.append(freqs, freq_Debye),
-                np.append(Debye_fit_coef * freqs ** 2, 0),
+                np.append(Debye_fit_coef * freqs**2, 0),
                 "b-",
                 linewidth=1,
             )

@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Apr-9-2022: Version 2.14.0
+
+- Maintenance release including small bug fixes.
+
 ## Feb-13-2022: Version 2.13.1
 
 - Bug fix of thermal property calculation (PR #184).

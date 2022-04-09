@@ -47,11 +47,11 @@ EV = 1.60217733e-19  # [J]
 Angstrom = 1.0e-10  # [m]
 THz = 1.0e12  # [/s]
 Mu0 = 4.0e-7 * pi  # [Hartree/m]
-Epsilon0 = 1.0 / Mu0 / SpeedOfLight ** 2  # [C^2 / N m^2]
+Epsilon0 = 1.0 / Mu0 / SpeedOfLight**2  # [C^2 / N m^2]
 Me = 9.10938215e-31
 
-Bohr = 4e10 * pi * Epsilon0 * Hbar ** 2 / Me  # Bohr radius [A] 0.5291772
-Hartree = Me * EV / 16 / pi ** 2 / Epsilon0 ** 2 / Hbar ** 2  # Hartree [eV] 27.211398
+Bohr = 4e10 * pi * Epsilon0 * Hbar**2 / Me  # Bohr radius [A] 0.5291772
+Hartree = Me * EV / 16 / pi**2 / Epsilon0**2 / Hbar**2  # Hartree [eV] 27.211398
 Rydberg = Hartree / 2  # Rydberg [eV] 13.6056991
 
 THzToEv = PlanckConstant * 1e12  # [eV]
