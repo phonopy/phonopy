@@ -2,6 +2,8 @@
 import numpy as np
 import pytest
 
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrixGL
+
 dynmat_ref_000 = [
     0.052897,
     0.000000,
@@ -228,6 +230,81 @@ dynmat_gonze_lee_ref_252525 = [
     0.000000,
 ]
 
+dynmat_gonze_lee_full_ref_252525 = [
+    0.076944,
+    0.000000,
+    0.020251,
+    -0.000000,
+    0.020251,
+    0.000000,
+    -0.041523,
+    -0.000000,
+    -0.007221,
+    0.000000,
+    -0.007221,
+    0.000000,
+    0.020251,
+    0.000000,
+    0.076944,
+    0.000000,
+    0.020251,
+    0.000000,
+    -0.007221,
+    0.000000,
+    -0.041523,
+    -0.000000,
+    -0.007221,
+    0.000000,
+    0.020251,
+    -0.000000,
+    0.020251,
+    -0.000000,
+    0.076944,
+    0.000000,
+    -0.007221,
+    0.000000,
+    -0.007221,
+    0.000000,
+    -0.041523,
+    -0.000000,
+    -0.041523,
+    0.000000,
+    -0.007221,
+    -0.000000,
+    -0.007221,
+    -0.000000,
+    0.056774,
+    0.000000,
+    0.013874,
+    -0.000000,
+    0.013874,
+    0.000000,
+    -0.007221,
+    -0.000000,
+    -0.041523,
+    0.000000,
+    -0.007221,
+    -0.000000,
+    0.013874,
+    0.000000,
+    0.056774,
+    0.000000,
+    0.013874,
+    -0.000000,
+    -0.007221,
+    -0.000000,
+    -0.007221,
+    -0.000000,
+    -0.041523,
+    0.000000,
+    0.013874,
+    -0.000000,
+    0.013874,
+    0.000000,
+    0.056774,
+    0.000000,
+]
+
 dynmat_wang_ref_252525 = [
     0.081339,
     -0.000000,
@@ -411,6 +488,19 @@ def test_dynmat_gonze_lee(ph_nacl):
     """Test with NAC by Gonze and Lee."""
     dynmat = ph_nacl.dynamical_matrix
     _test_dynmat_252525(dynmat, dynmat_gonze_lee_ref_252525)
+
+
+def test_dynmat_gonze_lee_full_term(ph_nacl):
+    """Test with NAC by Gonze and Lee."""
+    dynmat = ph_nacl.dynamical_matrix
+    _dynmat = DynamicalMatrixGL(
+        dynmat.supercell,
+        dynmat.primitive,
+        dynmat.force_constants,
+        nac_params=dynmat.nac_params,
+        with_full_terms=True,
+    )
+    _test_dynmat_252525(_dynmat, dynmat_gonze_lee_full_ref_252525)
 
 
 def test_dynmat_wang(ph_nacl):

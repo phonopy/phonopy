@@ -470,7 +470,11 @@ class DynamicalMatrixNAC(DynamicalMatrix):
     @property
     def nac_params(self):
         """Return NAC basic parameters."""
-        return {"born": self.born, "factor": self.factor, "dielectric": self.dielectric}
+        return {
+            "born": self.born,
+            "factor": self.nac_factor,
+            "dielectric": self.dielectric_constant,
+        }
 
     @nac_params.setter
     def nac_params(self, nac_params):
@@ -543,6 +547,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         force_constants,
         nac_params=None,
         num_G_points=None,  # For Gonze NAC
+        with_full_terms=False,
         decimals=None,
         symprec=1e-5,
         log_level=0,
@@ -561,6 +566,9 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             shape=(supercell atoms, supercell atoms, 3, 3) for full FC.
             shape=(primitive atoms, supercell atoms, 3, 3) for compact FC.
             dtype='double'
+        with_full_terms : bool, optional
+            When False, only reciprocal terms are considered for NAC. This is the
+            default and the reasonable choice.
         symprec : float, optional, defualt=1e-5
             Symmetri tolerance.
         decimals : int, optional, default=None
@@ -580,6 +588,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
 
         # For the method by Gonze et al.
         self._Gonze_force_constants = None
+        self._with_full_terms = with_full_terms
         if num_G_points is None:
             self._num_G_points = 300
         else:
@@ -636,7 +645,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             GeG = self._G_cutoff**2 * np.trace(self._dielectric) / 3
             self._Lambda = np.sqrt(-GeG / 4 / np.log(exp_cutoff))
 
-    def make_Gonze_nac_dataset(self, with_full_terms=False):
+    def make_Gonze_nac_dataset(self):
         """Prepare Gonze-Lee force constants.
 
         Dipole-dipole interaction contribution is subtracted from
@@ -654,7 +663,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             )
             sys.exit(1)
 
-        if with_full_terms:
+        if self._with_full_terms:
             self._run_limiting_dipole_dipole()
             self._H = self._get_H()
             self._run_real_dipole_dipole_q0()
@@ -732,7 +741,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             )
             sys.exit(1)
 
-        if self._dd_limiting is not None:
+        if self._with_full_terms:
             for i in range(num_atom):
                 C_recip[i, :, i, :] += self._dd_limiting
             C_recip += self._get_real_dipole_dipole(q_red)
@@ -771,10 +780,10 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         volume = self._pcell.volume
         dd = np.zeros((num_atom, 3, num_atom, 3), dtype=self._dtype_complex, order="C")
 
-        if self._dd_limiting is None:
-            dd_q0 = self._dd_q0
-        else:
+        if self._with_full_terms:
             dd_q0 = np.zeros((len(pos), 3, 3), dtype=self._dtype_complex, order="C")
+        else:
+            dd_q0 = self._dd_q0
 
         phonoc.recip_dipole_dipole(
             dd.view(dtype="double"),
@@ -854,51 +863,6 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             -4.0 / 3 / np.sqrt(np.pi) * inv_eps / sqrt_det_eps * self._Lambda**3
         )
 
-    def _get_py_dipole_dipole(self, K_list, q, q_dir_cart):
-        pos = self._pcell.positions
-        num_atom = len(self._pcell)
-        volume = self._pcell.volume
-        C = np.zeros((num_atom, 3, num_atom, 3), dtype=self._dtype_complex, order="C")
-
-        for q_K in K_list:
-            if np.linalg.norm(q_K) < self._symprec:
-                if q_dir_cart is None:
-                    continue
-                else:
-                    dq_K = q_dir_cart
-            else:
-                dq_K = q_K
-
-            Z_mat = self._get_charge_sum(
-                num_atom, dq_K, self._born
-            ) * self._get_constant_factor(
-                dq_K, self._dielectric, volume, self._unit_conversion
-            )
-            for i in range(num_atom):
-                dpos = -pos + pos[i]
-                phase_factor = np.exp(2j * np.pi * np.dot(dpos, q_K))
-                for j in range(num_atom):
-                    C[i, :, j, :] += Z_mat[i, j] * phase_factor[j]
-
-        for q_K in K_list:
-            q_G = q_K - q
-            if np.linalg.norm(q_G) < self._symprec:
-                continue
-            Z_mat = self._get_charge_sum(
-                num_atom, q_G, self._born
-            ) * self._get_constant_factor(
-                q_G, self._dielectric, volume, self._unit_conversion
-            )
-            for i in range(num_atom):
-                C_i = np.zeros((3, 3), dtype=self._dtype_complex, order="C")
-                dpos = -pos + pos[i]
-                phase_factor = np.exp(2j * np.pi * np.dot(dpos, q_G))
-                for j in range(num_atom):
-                    C_i += Z_mat[i, j] * phase_factor[j]
-                C[i, :, i, :] -= C_i
-
-        return C
-
     def _get_G_list(self, G_cutoff, g_rad=100):
         rec_lat = np.linalg.inv(self._pcell.cell)  # column vectors
         # g_rad must be greater than 0 for broadcasting.
@@ -922,6 +886,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         x = self._Lambda * Delta
         y = self._Lambda * D
         condition = y < 1e-10
+        y[condition] = 1  # dummy to avoid divergence
         y2 = y**2
         y3 = y**3
         exp_y2 = np.exp(-y2)
