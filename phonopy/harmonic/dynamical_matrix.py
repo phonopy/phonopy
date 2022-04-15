@@ -588,6 +588,9 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         self._G_cutoff = None
         self._Lambda = None  # 4*Lambda**2 is stored.
         self._dd_q0 = None
+        self._dd_real_q0 = None
+        self._dd_limiting = None
+        self._H = None
 
         if nac_params is not None:
             self.nac_params = nac_params
@@ -633,9 +636,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             GeG = self._G_cutoff**2 * np.trace(self._dielectric) / 3
             self._Lambda = np.sqrt(-GeG / 4 / np.log(exp_cutoff))
 
-        # self._H = self._get_H()
-
-    def make_Gonze_nac_dataset(self):
+    def make_Gonze_nac_dataset(self, with_full_terms=False):
         """Prepare Gonze-Lee force constants.
 
         Dipole-dipole interaction contribution is subtracted from
@@ -652,6 +653,11 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
                 "implemented."
             )
             sys.exit(1)
+
+        if with_full_terms:
+            self._run_limiting_dipole_dipole()
+            self._H = self._get_H()
+            self._run_real_dipole_dipole_q0()
 
         fc_shape = self._force_constants.shape
         d2f = DynmatToForceConstants(
@@ -707,6 +713,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         self._dynamical_matrix += dm_dd
 
     def _get_Gonze_dipole_dipole(self, q_red, q_direction):
+        num_atom = len(self._pcell)
         rec_lat = np.linalg.inv(self._pcell.cell)  # column vectors
         q_cart = np.array(np.dot(q_red, rec_lat.T), dtype="double")
         if q_direction is None:
@@ -725,9 +732,16 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             )
             sys.exit(1)
 
+        if self._dd_limiting is not None:
+            for i in range(num_atom):
+                C_recip[i, :, i, :] += self._dd_limiting
+            C_recip += self._get_real_dipole_dipole(q_red)
+            drift = self._dd_q0 + self._dd_limiting * num_atom + self._dd_real_q0
+            for i in range(num_atom):
+                C_recip[i, :, i, :] -= drift[i]
+
         # Mass weighted
         mass = self._pcell.masses
-        num_atom = len(self._pcell)
         for i in range(num_atom):
             for j in range(num_atom):
                 C_recip[i, :, j, :] *= 1.0 / np.sqrt(mass[i] * mass[j])
@@ -745,6 +759,10 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         This is added to interpolated short range force constants
         to create full force constants. Called many times.
 
+        Returns
+        -------
+        shape=(num_atom, 3, num_atom, 3), dtype=complex
+
         """
         import phonopy._phonopy as phonoc
 
@@ -753,9 +771,14 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         volume = self._pcell.volume
         dd = np.zeros((num_atom, 3, num_atom, 3), dtype=self._dtype_complex, order="C")
 
+        if self._dd_limiting is None:
+            dd_q0 = self._dd_q0
+        else:
+            dd_q0 = np.zeros((len(pos), 3, 3), dtype=self._dtype_complex, order="C")
+
         phonoc.recip_dipole_dipole(
             dd.view(dtype="double"),
-            self._dd_q0.view(dtype="double"),
+            dd_q0.view(dtype="double"),
             self._G_list,
             q_cart,
             q_dir_cart,
@@ -789,12 +812,47 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             self._symprec,
         )
 
-        # Limiting contribution
-        # inv_eps = np.linalg.inv(self._dielectric)
-        # sqrt_det_eps = np.sqrt(np.linalg.det(self._dielectric))
-        # coef = (4.0 / 3 / np.sqrt(np.pi) * inv_eps
-        #         / sqrt_det_eps * self._Lambda ** 3)
-        # self._dd_q0 -= coef
+    def _get_real_dipole_dipole(self, q_red):
+        num_atom = len(self._pcell)
+        phase_all = np.exp(2j * np.pi * np.dot(self._svecs, q_red))
+        C_real = np.zeros((num_atom, 3, num_atom, 3), dtype=self._dtype_complex)
+        vals = (
+            -self._Lambda**3
+            * self._H
+            * phase_all
+            * np.linalg.det(self._dielectric) ** (-0.5)
+        )
+        for i_s in range(self._multi.shape[0]):
+            for i_p in range(self._multi.shape[1]):
+                m = self._multi[i_s, i_p]
+                C_real[self._s2pp_map[i_s], :, i_p, :] += (
+                    (vals[:, :, m[1]] + vals[:, :, m[1]].conj().T) / 2 / m[0]
+                )
+        return C_real
+
+    def _run_real_dipole_dipole_q0(self):
+        self._dd_real_q0 = np.zeros((len(self._pcell), 3, 3), dtype=self._dtype_complex)
+        vals = -self._Lambda**3 * self._H * np.linalg.det(self._dielectric) ** (-0.5)
+        for i_s in range(self._multi.shape[0]):
+            for i_p in range(self._multi.shape[1]):
+                m = self._multi[i_s, i_p]
+                self._dd_real_q0[self._s2pp_map[i_s], :, :] += (
+                    (vals[:, :, m[1]] + vals[:, :, m[1]].conj().T) / 2 / m[0]
+                )
+
+    def _run_limiting_dipole_dipole(self):
+        """Calculate limiting contribution.
+
+        Calculated only once.
+
+        shape=(3, 3)
+
+        """
+        inv_eps = np.linalg.inv(self._dielectric)
+        sqrt_det_eps = np.sqrt(np.linalg.det(self._dielectric))
+        self._dd_limiting = (
+            -4.0 / 3 / np.sqrt(np.pi) * inv_eps / sqrt_det_eps * self._Lambda**3
+        )
 
     def _get_py_dipole_dipole(self, K_list, q, q_dir_cart):
         pos = self._pcell.positions
@@ -858,10 +916,12 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
     def _get_H(self):
         lat = self._scell.cell
         cart_vecs = np.dot(self._svecs, lat)
-        Delta = np.dot(cart_vecs, np.linalg.inv(self._dielectric).T)
-        D = np.sqrt(cart_vecs * Delta).sum(axis=3)
+        eps_inv = np.linalg.inv(self._dielectric)
+        Delta = np.dot(cart_vecs, eps_inv.T)  # (N, 3)
+        D = np.sqrt((cart_vecs * Delta).sum(axis=1))  # (N,)
         x = self._Lambda * Delta
         y = self._Lambda * D
+        condition = y < 1e-10
         y2 = y**2
         y3 = y**3
         exp_y2 = np.exp(-y2)
@@ -878,16 +938,15 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             for i in np.ndindex(y.shape):
                 erfc_y[i] = erfc(y[i])
 
-        with np.errstate(divide="ignore", invalid="ignore"):
-            A = (3 * erfc_y / y3 + 2 / np.sqrt(np.pi) * exp_y2 * (3 / y2 + 2)) / y2
-            A[A == np.inf] = 0
-            A = np.nan_to_num(A)
-            B = erfc_y / y3 + 2 / np.sqrt(np.pi) * exp_y2 / y2
-            B[B == np.inf] = 0
-            B = np.nan_to_num(B)
+        A = np.where(
+            condition,
+            0,
+            (3 * erfc_y / y3 + 2 / np.sqrt(np.pi) * exp_y2 * (3 / y2 + 2)) / y2,
+        )
+        B = np.where(condition, 0, erfc_y / y3 + 2 / np.sqrt(np.pi) * exp_y2 / y2)
         H = np.zeros((3, 3) + y.shape, dtype="double", order="C")
         for i, j in np.ndindex((3, 3)):
-            H[i, j] = x[:, :, :, i] * x[:, :, :, j] * A - eps_inv[i, j] * B
+            H[i, j, :] = x[:, i] * x[:, j] * A - eps_inv[i, j] * B
         return H
 
 
