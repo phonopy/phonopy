@@ -33,6 +33,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import pathlib
 import sys
 from io import StringIO
 
@@ -921,3 +922,28 @@ def _parse_QHA_data(filename):
             else:
                 data.append([float(x) for x in line.split()])
         return np.array(data)
+
+
+def get_module_to_decompress(filename):
+    """Return module to decompress file.
+
+    lzma and gzip comppressed files.
+
+    """
+    ext = pathlib.Path(filename).suffix
+    if ext == ".xz" or ext == ".lzma":
+        import lzma
+
+        return lzma
+    elif ext == ".gz":
+        import gzip
+
+        return gzip
+    elif ext == ".bz2":
+        import bz2
+
+        return bz2
+    else:
+        import io
+
+        return io

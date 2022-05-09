@@ -33,7 +33,6 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import os
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -49,6 +48,7 @@ except ImportError:
 if TYPE_CHECKING:
     from phonopy import Phonopy
 
+from phonopy.file_IO import get_module_to_decompress
 from phonopy.structure.atoms import PhonopyAtoms, parse_cell_dict
 
 
@@ -646,24 +646,8 @@ def load_yaml(filename):
     lzma and gzip comppressed files can be loaded.
 
     """
-    _, ext = os.path.splitext(filename)
-    if ext == ".xz" or ext == ".lzma":
-        try:
-            import lzma
-        except ImportError:
-            raise (
-                "Reading a lzma compressed file is not supported "
-                "by this python version."
-            )
-        with lzma.open(filename) as f:
-            yaml_data = yaml.load(f, Loader=Loader)
-    elif ext == ".gz":
-        import gzip
-
-        with gzip.open(filename) as f:
-            yaml_data = yaml.load(f, Loader=Loader)
-    else:
-        with open(filename, "r") as f:
-            yaml_data = yaml.load(f, Loader=Loader)
+    mod_to_decomp = get_module_to_decompress(filename)
+    with mod_to_decomp.open(filename) as f:
+        yaml_data = yaml.load(f, Loader=Loader)
 
     return yaml_data
