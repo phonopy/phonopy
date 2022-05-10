@@ -927,7 +927,9 @@ def _parse_QHA_data(filename):
 def get_module_to_decompress(filename):
     """Return module to decompress file.
 
-    lzma and gzip comppressed files.
+    Filename extensions of lzma, xz, gzip, bz2 are supported.
+
+    It is supported to use it like `returned_module.open(filename)`.
 
     """
     ext = pathlib.Path(filename).suffix
