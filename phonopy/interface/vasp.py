@@ -42,7 +42,11 @@ from io import StringIO
 
 import numpy as np
 
-from phonopy.file_IO import write_FORCE_CONSTANTS, write_force_constants_to_hdf5
+from phonopy.file_IO import (
+    get_io_module_to_decompress,
+    write_FORCE_CONSTANTS,
+    write_force_constants_to_hdf5,
+)
 from phonopy.structure.atoms import PhonopyAtoms, atom_data, symbol_map
 from phonopy.structure.symmetry import elaborate_borns_and_epsilon
 from phonopy.units import VaspToTHz
@@ -117,7 +121,8 @@ def parse_set_of_forces(num_atoms, forces_filenames, use_expat=True, verbose=Tru
     force_files = forces_filenames
 
     for filename in force_files:
-        with open(filename, "rb") as fp:
+        myio = get_io_module_to_decompress(filename)
+        with myio.open(filename, "rb") as fp:
             if verbose:
                 sys.stdout.write("%d " % (count + 1))
             vasprun = Vasprun(fp, use_expat=use_expat)
@@ -190,8 +195,11 @@ def parse_force_constants(filename):
         force constants and chemical elements
 
     """
-    vasprun = Vasprun(open(filename, "rb"))
-    return vasprun.read_force_constants()
+    myio = get_io_module_to_decompress(filename)
+    with myio.open(filename, "rb") as f:
+        vasprun = Vasprun(f)
+        fc = vasprun.read_force_constants()
+    return fc
 
 
 #
@@ -399,7 +407,8 @@ def get_born_vasprunxml(
     See elaborate_borns_and_epsilon.
 
     """
-    with open(filename, "rb") as f:
+    myio = get_io_module_to_decompress(filename)
+    with myio.open(filename, "rb") as f:
         vasprun = VasprunxmlExpat(f)
         try:
             vasprun.parse()
@@ -463,7 +472,8 @@ def get_born_OUTCAR(
 
 
 def _read_born_and_epsilon_from_OUTCAR(filename):
-    with open(filename) as outcar:
+    myio = get_io_module_to_decompress(filename)
+    with myio.open(filename, mode="rt") as outcar:
         borns = []
         epsilon = []
 
@@ -1405,7 +1415,9 @@ def parse_vasprunxml(filename):
     if not os.path.exists(filename):
         print("File %s not found." % filename)
         sys.exit(1)
-    with open(filename, "rb") as f:
+
+    myio = get_io_module_to_decompress(filename)
+    with myio.open(filename, "rb") as f:
         vxml = VasprunxmlExpat(f)
         try:
             vxml.parse()
@@ -1437,7 +1449,8 @@ def read_XDATCAR(filename="XDATCAR"):
     lattice = None
     symbols = None
     numbers_of_atoms = None
-    with open(filename) as f:
+    myio = get_io_module_to_decompress(filename)
+    with myio.open(filename) as f:
         f.readline()
         scale = float(f.readline())
         a = [float(x) for x in f.readline().split()[:3]]

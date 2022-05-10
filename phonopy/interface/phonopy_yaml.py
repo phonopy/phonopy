@@ -48,7 +48,7 @@ except ImportError:
 if TYPE_CHECKING:
     from phonopy import Phonopy
 
-from phonopy.file_IO import get_module_to_decompress
+from phonopy.file_IO import get_io_module_to_decompress
 from phonopy.structure.atoms import PhonopyAtoms, parse_cell_dict
 
 
@@ -646,8 +646,8 @@ def load_yaml(filename):
     lzma and gzip comppressed files can be loaded.
 
     """
-    mod_to_decomp = get_module_to_decompress(filename)
-    with mod_to_decomp.open(filename) as f:
+    myio = get_io_module_to_decompress(filename)
+    with myio.open(filename) as f:
         yaml_data = yaml.load(f, Loader=Loader)
 
     return yaml_data

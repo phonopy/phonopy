@@ -924,8 +924,8 @@ def _parse_QHA_data(filename):
         return np.array(data)
 
 
-def get_module_to_decompress(filename):
-    """Return module to decompress file.
+def get_io_module_to_decompress(filename):
+    """Return io-module to decompress file.
 
     Filename extensions of lzma, xz, gzip, bz2 are supported.
 
