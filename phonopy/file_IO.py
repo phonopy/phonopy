@@ -949,3 +949,12 @@ def get_io_module_to_decompress(filename):
         import io
 
         return io
+
+
+def get_supported_file_extensions_for_compression():
+    """Return file extensions for compression.
+
+    This function must be coupled with `get_io_module_to_decompress`.
+
+    """
+    return "", ".xz", ".lzma", ".gz", ".bz2"
