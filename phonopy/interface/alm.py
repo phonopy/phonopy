@@ -189,6 +189,9 @@ def run_alm(
                 optcontrol["l1_alpha"] = alm.cv_l1_alpha
                 alm.optimizer_control = optcontrol
 
+        if alm_options["iconst"] == 0:
+            alm.set_constraint(translation=False)
+
         alm.optimize(solver=alm_options["solver"])
 
         fcs = _extract_fc_from_alm(
@@ -233,6 +236,7 @@ def _update_options(fc_calculator_options):
         "cutoff": None,
         "symmetrization_basis": "Lattice",
         "output_filename_prefix": None,
+        "iconst": 11,
     }
 
     if fc_calculator_options is not None:
@@ -243,10 +247,11 @@ def _update_options(fc_calculator_options):
             "ndata": int,
             "nstart": int,
             "nend": int,
-            "nbody": np.intc,
+            "nbody": np.int_,
             "output_filename_prefix": str,
             "solver": str,
             "symmetrization_basis": str,
+            "iconst": int,
         }
         alm_option_types.update(optimizer_control_data_types)
         for option_str in fc_calculator_options.split(","):
@@ -257,7 +262,7 @@ def _update_options(fc_calculator_options):
                         [float(x) for x in val.split()], dtype="double"
                     )
                 elif alm_option_types[key.lower()] is np.intc:
-                    option_value = np.array([int(x) for x in val.split()], dtype="intc")
+                    option_value = np.array([int(x) for x in val.split()], dtype="int_")
                 else:
                     option_value = alm_option_types[key.lower()](val)
                 alm_options[key] = option_value

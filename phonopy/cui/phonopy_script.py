@@ -51,6 +51,7 @@ from phonopy.cui.settings import PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.file_IO import (
     get_born_parameters,
+    get_supported_file_extensions_for_compression,
     is_file_phonopy_yaml,
     parse_FORCE_CONSTANTS,
     parse_FORCE_SETS,
@@ -172,22 +173,22 @@ def files_exist(filename_list, log_level, is_any=False):
     """Check existence of files."""
     filenames = []
     for filename in filename_list:
-        if file_exists(filename, log_level, is_any=is_any):
-            filenames.append(filename)
+        for ext in get_supported_file_extensions_for_compression():
+            _filename = filename + ext
+            if file_exists(_filename, log_level, is_any=is_any):
+                filenames.append(_filename)
+                break
 
     if filenames:
         return filenames
-    else:
-        if len(filenames) == 2:
-            all_filenames = '"%s" or "%s"' % tuple(filenames)
-        else:
-            all_filenames = ", ".join(['"%s"' % fn for fn in filename_list[:-1]])
-            all_filenames += ' or "%s"' % filename_list[-1]
-        error_text = "Any of %s was not found." % all_filenames
-        print_error_message(error_text)
-        if log_level > 0:
-            print_error()
-        sys.exit(1)
+
+    all_filenames = ", ".join(['"%s"' % fn for fn in filename_list[:-1]])
+    all_filenames += ' or "%s"' % filename_list[-1]
+    error_text = "Any of %s was not found." % all_filenames
+    print_error_message(error_text)
+    if log_level > 0:
+        print_error()
+    sys.exit(1)
 
 
 def finalize_phonopy(log_level, settings, confs, phonon, filename="phonopy.yaml"):
@@ -442,26 +443,14 @@ def create_FORCE_SETS_from_settings(settings, symprec, log_level):
     )
     interface_mode = settings.calculator
 
+    disp_filename = disp_filenames[0]
     if disp_filenames[0] == "phonopy_disp.yaml":
-        try:
-            phpy_yaml = PhonopyYaml()
-            phpy_yaml.read("phonopy_disp.yaml")
-            if phpy_yaml.calculator is not None:
-                interface_mode = phpy_yaml.calculator  # overwrite
-            disp_filename = "phonopy_disp.yaml"
-        except KeyError:
-            file_exists("disp.yaml", log_level)
-            if log_level > 0:
-                print(
-                    '"phonopy_disp.yaml" was found but wasn\'t used '
-                    "because of the old-style format."
-                )
-            disp_filename = "disp.yaml"
-    else:
-        disp_filename = disp_filenames[0]
+        phpy_yaml = PhonopyYaml()
+        phpy_yaml.read(disp_filenames[0])
+        if phpy_yaml.calculator is not None:
+            interface_mode = phpy_yaml.calculator  # overwrite
 
     files_exist(filenames, log_level)
-
     create_FORCE_SETS(
         interface_mode,
         filenames,
