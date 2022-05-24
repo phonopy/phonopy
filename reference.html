@@ -5,10 +5,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>References &#8212; Phonopy v.2.14.0</title>
+    <title>References &#8212; Phonopy v.2.15.0</title>
     
-  <link href="_static/css/theme.css" rel="stylesheet">
-  <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -18,20 +19,17 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    
-      
-
-    
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/sphinx-book-theme.css?digest=84ace793992934648b4de8eed757e5a2" />
+    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
     
-  <link rel="preload" as="script" href="_static/js/index.be7d3bbb2ef33a8344ce.js">
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -45,7 +43,21 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
     
     <div class="container-fluid" id="banner"></div>
 
@@ -54,19 +66,15 @@
     <div class="container-xl">
       <div class="row">
           
-<!-- Checkboxes to toggle the left sidebar -->
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
-<label class="overlay" for="__navigation">
-    <div class="visually-hidden">Toggle navigation sidebar</div>
-</label>
-<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
-    
-        <div class="navbar-brand-box">
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
     <a class="navbar-brand text-wrap" href="index.html">
       
       
       
-      <h1 class="site-logo" id="site-title">Phonopy v.2.14.0</h1>
+      <h1 class="site-logo" id="site-title">Phonopy v.2.15.0</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
@@ -267,74 +275,135 @@
 </ul>
 
     </div>
-</nav> <!-- To handle the deprecated key -->
-
-<div class="navbar_extra_footer">
-  Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
-</div>
-
-</div>
-
-
-          
-
-
-          
-<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
-<div class="sbt-scroll-pixel-helper"></div>
-<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
-    
-    <div class="topbar container-xl fixed-top">
-    <div class="topbar-contents row">
-        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
-        <div class="col pl-md-4 topbar-main">
-            <div class="topbar-left">
-                
-                <label class="nav-toggle-button" for="__navigation">
-                    <div class="visually-hidden">Toggle navigation</div>
-                    <i class="fas fa-bars"></i>
-                </label>
-                
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+            <div class="navbar_extra_footer">
+            Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
             </div>
             
-<div class="dropdown-buttons-trigger">
-    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
-            class="fas fa-download"></i></button>
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
+</div>
 
-    <div class="dropdown-buttons">
-        <!-- ipynb file if we had a myst markdown file -->
+
+          
+
+
+          
+<!-- A tiny helper pixel to detect if we've scrolled -->
+<div class="sbt-scroll-pixel-helper"></div>
+<!-- Main content -->
+<div class="col py-0 content-container">
+    
+    <div class="header-article row sticky-top noprint">
         
-        <!-- Download raw file -->
-        <a class="dropdown-buttons" href="_sources/reference.md.txt"><button type="button"
-                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
-                data-placement="left">.md</button></a>
-        <!-- Download PDF via print -->
-        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
-                onclick="printPdf(this)" data-toggle="tooltip" data-placement="left">.pdf</button>
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<button onclick="toggleFullScreen()"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="bottom"
+title="Fullscreen mode"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+<div class="menu-dropdown menu-dropdown-download-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Download this page">
+      <i class="fas fa-download"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="_sources/reference.md.txt"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Download source file"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="headerbtn__text-container">.md</span>
+</a>
+
+      </li>
+      
+      <li>
+        
+<button onclick="printPdf(this)"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="left"
+title="Print to PDF"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="headerbtn__text-container">.pdf</span>
+</button>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
+
     </div>
 </div>
 
-            <!-- Source interaction buttons -->
-
-            <!-- Full screen (wrap in <a> to have style consistency -->
-
-<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
-        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
-        title="Fullscreen mode"><i
-            class="fas fa-expand"></i></button></a>
-
-            <!-- Launch buttons -->
-
-        </div>
-
-        <!-- Table of contents -->
-        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
-            
-            <div class="tocsection onthispage pt-5 pb-3">
-                <i class="fas fa-list"></i> Contents
-            </div>
-            <nav id="bd-toc-nav" aria-label="Page">
-                <ul class="visible nav section-nav flex-column">
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#method-used-in-phonopy">
    Method used in phonopy
@@ -417,12 +486,11 @@
  </li>
 </ul>
 
-            </nav>
-        </div>
-    </div>
+    </nav>
 </div>
-    <div id="main-content" class="row">
-        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
                 <h1>References</h1>
@@ -521,15 +589,16 @@
                     </div>
                 </div>
             </div>
-            
+            <main id="main-content" role="main">
+                
               <div>
                 
   <div class="tex2jax_ignore mathjax_ignore section" id="references">
-<h1>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h1>
+<h1>References<a class="headerlink" href="#references" title="Permalink to this headline">#</a></h1>
 <div class="section" id="method-used-in-phonopy">
-<h2>Method used in phonopy<a class="headerlink" href="#method-used-in-phonopy" title="Permalink to this headline">¶</a></h2>
+<h2>Method used in phonopy<a class="headerlink" href="#method-used-in-phonopy" title="Permalink to this headline">#</a></h2>
 <div class="section" id="generation-of-force-constants">
-<span id="reference-force-constants"></span><h3>Generation of force constants<a class="headerlink" href="#generation-of-force-constants" title="Permalink to this headline">¶</a></h3>
+<span id="reference-force-constants"></span><h3>Generation of force constants<a class="headerlink" href="#generation-of-force-constants" title="Permalink to this headline">#</a></h3>
 <p>In phonopy, force constants are generated based on finite displacement method.
 Crystal symmetry is used to reduce the calculation cost and numerical noise of
 the force constants. Firstly a symmetry reduced set of atomic displacements is
@@ -544,7 +613,7 @@ details are found in the appendix of the following paper:</p>
 </ul>
 </div>
 <div class="section" id="parlinski-li-kawazoe-method">
-<span id="reference-plk"></span><h3>Parlinski-Li-Kawazoe method<a class="headerlink" href="#parlinski-li-kawazoe-method" title="Permalink to this headline">¶</a></h3>
+<span id="reference-plk"></span><h3>Parlinski-Li-Kawazoe method<a class="headerlink" href="#parlinski-li-kawazoe-method" title="Permalink to this headline">#</a></h3>
 <p>Parlinski-Li-Kawazoe method is based on the supercell approach with the finite
 displacement method.</p>
 <p>Force constants are calculated using Moore–Penrose pseudoinverse by fitting
@@ -557,7 +626,7 @@ existing library, e.g., LAPACK.</p>
 </ul>
 </div>
 <div class="section" id="thermal-expansion-using-quasi-harmonic-approximation">
-<span id="reference-thermal-expansion"></span><h3>Thermal expansion using quasi-harmonic approximation<a class="headerlink" href="#thermal-expansion-using-quasi-harmonic-approximation" title="Permalink to this headline">¶</a></h3>
+<span id="reference-thermal-expansion"></span><h3>Thermal expansion using quasi-harmonic approximation<a class="headerlink" href="#thermal-expansion-using-quasi-harmonic-approximation" title="Permalink to this headline">#</a></h3>
 <p>In <a class="reference internal" href="qha.html#phonopy-qha"><span class="std std-ref">phonopy-qha</span></a>, thermal properties at constant pressure is
 obtained from the thermodynamic definition. To achieve Legendre transformation,
 volume-energy function is generated from a set of Helmholtz free energies and
@@ -574,7 +643,7 @@ paper:</p>
 </ul>
 </div>
 <div class="section" id="non-analytical-term-correction">
-<span id="reference-nac"></span><h3>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction" title="Permalink to this headline">¶</a></h3>
+<span id="reference-nac"></span><h3>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction" title="Permalink to this headline">#</a></h3>
 <p>Non-metallic crystals are polarized by atomic displacements and the generated
 macroscopic field changes force constants near <span class="math notranslate nohighlight">\(\Gamma\)</span> point. This
 contribution is included through non-analytical term correction.</p>
@@ -583,7 +652,7 @@ contribution is included through non-analytical term correction.</p>
 </ul>
 </div>
 <div class="section" id="correction-by-dipole-dipole-interaction">
-<span id="reference-dp-dp-nac"></span><h3>Correction by dipole-dipole interaction<a class="headerlink" href="#correction-by-dipole-dipole-interaction" title="Permalink to this headline">¶</a></h3>
+<span id="reference-dp-dp-nac"></span><h3>Correction by dipole-dipole interaction<a class="headerlink" href="#correction-by-dipole-dipole-interaction" title="Permalink to this headline">#</a></h3>
 <ol class="arabic simple">
 <li><p>P. Giannozzi, S. Degironcoli, P. Pavone, and S. Baroni, Phys. Rev. B 43, 7231
 (1991)</p></li>
@@ -595,7 +664,7 @@ contribution is included through non-analytical term correction.</p>
 two papers (2 and 3) as the default method.</p>
 </div>
 <div class="section" id="interpolation-scheme-at-general-q-points-with-non-analytical-term-correction">
-<span id="reference-wang-nac"></span><h3>Interpolation scheme at general <em>q</em>-points with non-analytical term correction<a class="headerlink" href="#interpolation-scheme-at-general-q-points-with-non-analytical-term-correction" title="Permalink to this headline">¶</a></h3>
+<span id="reference-wang-nac"></span><h3>Interpolation scheme at general <em>q</em>-points with non-analytical term correction<a class="headerlink" href="#interpolation-scheme-at-general-q-points-with-non-analytical-term-correction" title="Permalink to this headline">#</a></h3>
 <p>This is an interpolation scheme using phonons at
 <span class="math notranslate nohighlight">\(\mathbf{q}\rightarrow \mathbf{0}\)</span> with the correction by Pick <em>et al.</em>
 and other commensurate points.</p>
@@ -612,14 +681,14 @@ velocity calculation, is described in the following paper:</p>
 </div>
 </div>
 <div class="section" id="other-methods-and-software-for-calculating-force-constants">
-<h2>Other methods and software for calculating force constants<a class="headerlink" href="#other-methods-and-software-for-calculating-force-constants" title="Permalink to this headline">¶</a></h2>
+<h2>Other methods and software for calculating force constants<a class="headerlink" href="#other-methods-and-software-for-calculating-force-constants" title="Permalink to this headline">#</a></h2>
 <div class="section" id="parlinsk-li-kawazoe-method">
-<span id="reference-small-displacement"></span><h3>Parlinsk-Li-Kawazoe method<a class="headerlink" href="#parlinsk-li-kawazoe-method" title="Permalink to this headline">¶</a></h3>
+<span id="reference-small-displacement"></span><h3>Parlinsk-Li-Kawazoe method<a class="headerlink" href="#parlinsk-li-kawazoe-method" title="Permalink to this headline">#</a></h3>
 <p><a class="reference external" href="http://wolf.ifj.edu.pl/phonon/">PHONON</a> is the original implementation of the
 Parlinsk-Li-Kawazoe method.</p>
 </div>
 <div class="section" id="small-displacement-method">
-<h3>Small displacement method<a class="headerlink" href="#small-displacement-method" title="Permalink to this headline">¶</a></h3>
+<h3>Small displacement method<a class="headerlink" href="#small-displacement-method" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
 <li><p>Dario Alfè, Computer Physics Communications, 180, 2622 (2009)</p></li>
 </ul>
@@ -627,7 +696,7 @@ Parlinsk-Li-Kawazoe method.</p>
 displacement method.</p>
 </div>
 <div class="section" id="dfpt">
-<span id="reference-dfpt"></span><h3>DFPT<a class="headerlink" href="#dfpt" title="Permalink to this headline">¶</a></h3>
+<span id="reference-dfpt"></span><h3>DFPT<a class="headerlink" href="#dfpt" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
 <li><p>Paolo Giannozzi, Stefano de Gironcoli, Pasquale Pavone, and Stefano Baroni,
 Phys. Rev. B, <strong>43</strong>, 7231 (1991)</p></li>
@@ -641,9 +710,9 @@ using DFPT however only at Gamma-point.</p>
 </div>
 </div>
 <div class="section" id="for-the-study-of-basics">
-<h2>For the study of basics<a class="headerlink" href="#for-the-study-of-basics" title="Permalink to this headline">¶</a></h2>
+<h2>For the study of basics<a class="headerlink" href="#for-the-study-of-basics" title="Permalink to this headline">#</a></h2>
 <div class="section" id="phonons">
-<h3>Phonons<a class="headerlink" href="#phonons" title="Permalink to this headline">¶</a></h3>
+<h3>Phonons<a class="headerlink" href="#phonons" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
 <li><p>Introduction to Lattice Dynamics, Martin. T. Dove, Cambridge university press</p></li>
 <li><p>Thermodynamics of Crystals, Duane C. Wallace, Dover Publications</p></li>
@@ -652,7 +721,7 @@ using DFPT however only at Gamma-point.</p>
 </ul>
 </div>
 <div class="section" id="symmetry">
-<h3>Symmetry<a class="headerlink" href="#symmetry" title="Permalink to this headline">¶</a></h3>
+<h3>Symmetry<a class="headerlink" href="#symmetry" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
 <li><p>International Tables for Crystallography - IUCr</p></li>
 <li><p>Symmetry Relationships between Crystal Structures by Ulrich Müller, Oxford
@@ -669,9 +738,11 @@ University Press</p></li>
 
               </div>
               
-            
-                <!-- Previous / next buttons -->
-<div class='prev-next-area'> 
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
     <a class='left-prev' id="prev-link" href="citation.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
@@ -687,22 +758,26 @@ University Press</p></li>
     <i class="fas fa-angle-right"></i>
     </a>
 </div>
-            
+            </footer>
         </div>
     </div>
-    <footer class="footer">
-  <p>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+      &copy; Copyright 2009, Atsushi Togo.<br/>
+</p>
+        </footer>
+    </div>
     
-        &copy; Copyright 2009, Atsushi Togo.<br/>
-  </p>
-</footer>
-</main>
+</div>
 
 
       </div>
     </div>
   
-  <script src="_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
 
   </body>
 </html>

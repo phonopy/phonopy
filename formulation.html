@@ -5,10 +5,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Formulations &#8212; Phonopy v.2.14.0</title>
+    <title>Formulations &#8212; Phonopy v.2.15.0</title>
     
-  <link href="_static/css/theme.css" rel="stylesheet">
-  <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -18,20 +19,17 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    
-      
-
-    
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/sphinx-book-theme.css?digest=84ace793992934648b4de8eed757e5a2" />
+    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
     
-  <link rel="preload" as="script" href="_static/js/index.be7d3bbb2ef33a8344ce.js">
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -45,7 +43,21 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
     
     <div class="container-fluid" id="banner"></div>
 
@@ -54,19 +66,15 @@
     <div class="container-xl">
       <div class="row">
           
-<!-- Checkboxes to toggle the left sidebar -->
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
-<label class="overlay" for="__navigation">
-    <div class="visually-hidden">Toggle navigation sidebar</div>
-</label>
-<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
-    
-        <div class="navbar-brand-box">
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
     <a class="navbar-brand text-wrap" href="index.html">
       
       
       
-      <h1 class="site-logo" id="site-title">Phonopy v.2.14.0</h1>
+      <h1 class="site-logo" id="site-title">Phonopy v.2.15.0</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
@@ -267,74 +275,135 @@
 </ul>
 
     </div>
-</nav> <!-- To handle the deprecated key -->
-
-<div class="navbar_extra_footer">
-  Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
-</div>
-
-</div>
-
-
-          
-
-
-          
-<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
-<div class="sbt-scroll-pixel-helper"></div>
-<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
-    
-    <div class="topbar container-xl fixed-top">
-    <div class="topbar-contents row">
-        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
-        <div class="col pl-md-4 topbar-main">
-            <div class="topbar-left">
-                
-                <label class="nav-toggle-button" for="__navigation">
-                    <div class="visually-hidden">Toggle navigation</div>
-                    <i class="fas fa-bars"></i>
-                </label>
-                
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+            <div class="navbar_extra_footer">
+            Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
             </div>
             
-<div class="dropdown-buttons-trigger">
-    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
-            class="fas fa-download"></i></button>
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
+</div>
 
-    <div class="dropdown-buttons">
-        <!-- ipynb file if we had a myst markdown file -->
+
+          
+
+
+          
+<!-- A tiny helper pixel to detect if we've scrolled -->
+<div class="sbt-scroll-pixel-helper"></div>
+<!-- Main content -->
+<div class="col py-0 content-container">
+    
+    <div class="header-article row sticky-top noprint">
         
-        <!-- Download raw file -->
-        <a class="dropdown-buttons" href="_sources/formulation.md.txt"><button type="button"
-                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
-                data-placement="left">.md</button></a>
-        <!-- Download PDF via print -->
-        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
-                onclick="printPdf(this)" data-toggle="tooltip" data-placement="left">.pdf</button>
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<button onclick="toggleFullScreen()"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="bottom"
+title="Fullscreen mode"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+<div class="menu-dropdown menu-dropdown-download-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Download this page">
+      <i class="fas fa-download"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="_sources/formulation.md.txt"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Download source file"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="headerbtn__text-container">.md</span>
+</a>
+
+      </li>
+      
+      <li>
+        
+<button onclick="printPdf(this)"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="left"
+title="Print to PDF"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="headerbtn__text-container">.pdf</span>
+</button>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
+
     </div>
 </div>
 
-            <!-- Source interaction buttons -->
-
-            <!-- Full screen (wrap in <a> to have style consistency -->
-
-<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
-        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
-        title="Fullscreen mode"><i
-            class="fas fa-expand"></i></button></a>
-
-            <!-- Launch buttons -->
-
-        </div>
-
-        <!-- Table of contents -->
-        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
-            
-            <div class="tocsection onthispage pt-5 pb-3">
-                <i class="fas fa-list"></i> Contents
-            </div>
-            <nav id="bd-toc-nav" aria-label="Page">
-                <ul class="visible nav section-nav flex-column">
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#second-order-force-constants">
    Second-order force constants
@@ -460,12 +529,11 @@
  </li>
 </ul>
 
-            </nav>
-        </div>
-    </div>
+    </nav>
 </div>
-    <div id="main-content" class="row">
-        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
                 <h1>Formulations</h1>
@@ -607,11 +675,12 @@
                     </div>
                 </div>
             </div>
-            
+            <main id="main-content" role="main">
+                
               <div>
                 
   <div class="tex2jax_ignore mathjax_ignore section" id="formulations">
-<span id="id1"></span><h1>Formulations<a class="headerlink" href="#formulations" title="Permalink to this headline">¶</a></h1>
+<span id="id1"></span><h1>Formulations<a class="headerlink" href="#formulations" title="Permalink to this headline">#</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
 <li><p><a class="reference internal" href="#second-order-force-constants" id="id5">Second-order force constants</a></p></li>
@@ -652,7 +721,7 @@
 </ul>
 </div>
 <div class="section" id="second-order-force-constants">
-<h2><a class="toc-backref" href="#id5">Second-order force constants</a><a class="headerlink" href="#second-order-force-constants" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id5">Second-order force constants</a><a class="headerlink" href="#second-order-force-constants" title="Permalink to this headline">#</a></h2>
 <p>Potential energy of phonon system is represented as functions of atomic
 positions:</p>
 <div class="math notranslate nohighlight">
@@ -680,7 +749,7 @@ a finite displacement <span class="math notranslate nohighlight">\(\Delta r_\alp
 <span class="math notranslate nohighlight">\(F_\beta(j'l') \equiv 0\)</span>.</p>
 </div>
 <div class="section" id="modified-parlinski-li-kawazoe-method">
-<span id="force-constants-solver-theory"></span><h2><a class="toc-backref" href="#id6">Modified Parlinski-Li-Kawazoe method</a><a class="headerlink" href="#modified-parlinski-li-kawazoe-method" title="Permalink to this headline">¶</a></h2>
+<span id="force-constants-solver-theory"></span><h2><a class="toc-backref" href="#id6">Modified Parlinski-Li-Kawazoe method</a><a class="headerlink" href="#modified-parlinski-li-kawazoe-method" title="Permalink to this headline">#</a></h2>
 <p>The following is a modified and simplified version of the Parlinski-Li-Kawazoe
 method, which is just a numerical fitting approach to obtain force constants
 from forces and displacements.</p>
@@ -730,10 +799,10 @@ The combined simultaneous equations are built such as</p>
 operations. This is solved by pseudo inverse.</p>
 </div>
 <div class="section" id="dynamical-matrix">
-<span id="dynacmial-matrix-theory"></span><h2><a class="toc-backref" href="#id7">Dynamical matrix</a><a class="headerlink" href="#dynamical-matrix" title="Permalink to this headline">¶</a></h2>
+<span id="dynacmial-matrix-theory"></span><h2><a class="toc-backref" href="#id7">Dynamical matrix</a><a class="headerlink" href="#dynamical-matrix" title="Permalink to this headline">#</a></h2>
 <p>In phonopy, a phase convention of dynamical matrix is used as follows:</p>
 <div class="math notranslate nohighlight" id="equation-eq-dynmat">
-<span class="eqno">(1)<a class="headerlink" href="#equation-eq-dynmat" title="Permalink to this equation">¶</a></span>\[D_{\alpha\beta}(jj',\mathbf{q}) = \frac{1}{\sqrt{m_j m_{j'}}} \sum_{l'}
+<span class="eqno">(1)<a class="headerlink" href="#equation-eq-dynmat" title="Permalink to this equation">#</a></span>\[D_{\alpha\beta}(jj',\mathbf{q}) = \frac{1}{\sqrt{m_j m_{j'}}} \sum_{l'}
 \Phi_{\alpha\beta}(j0, j'l')
 \exp(i\mathbf{q}\cdot[\mathbf{r}(j'l')-\mathbf{r}(j0)]),\]</div>
 <p>where <span class="math notranslate nohighlight">\(m\)</span> is the atomic mass and <span class="math notranslate nohighlight">\(\mathbf{q}\)</span> is the wave vector. An
@@ -759,7 +828,7 @@ annihilation operators of phonon, <span class="math notranslate nohighlight">\(\
 and <span class="math notranslate nohighlight">\(t\)</span> is the time.</p>
 </div>
 <div class="section" id="non-analytical-term-correction">
-<span id="non-analytical-term-correction-theory"></span><h2><a class="toc-backref" href="#id8">Non-analytical term correction</a><a class="headerlink" href="#non-analytical-term-correction" title="Permalink to this headline">¶</a></h2>
+<span id="non-analytical-term-correction-theory"></span><h2><a class="toc-backref" href="#id8">Non-analytical term correction</a><a class="headerlink" href="#non-analytical-term-correction" title="Permalink to this headline">#</a></h2>
 <p>To treat long range interaction of macroscopic electric field induced by
 polarization of collective ionic motions near the <span class="math notranslate nohighlight">\(\Gamma\)</span>-point,
 non-analytical term is added to dynamical matrix (<a class="reference internal" href="reference.html#reference-nac"><span class="std std-ref">Non-analytical term correction</span></a>). At
@@ -777,20 +846,20 @@ interaction are calculated by the method of Gonze <em>et al.</em>
 (<a class="reference internal" href="reference.html#reference-dp-dp-nac"><span class="std std-ref">Correction by dipole-dipole interaction</span></a>).</p>
 </div>
 <div class="section" id="thermodynamic-properties">
-<span id="thermal-properties-expressions"></span><h2><a class="toc-backref" href="#id9">Thermodynamic properties</a><a class="headerlink" href="#thermodynamic-properties" title="Permalink to this headline">¶</a></h2>
+<span id="thermal-properties-expressions"></span><h2><a class="toc-backref" href="#id9">Thermodynamic properties</a><a class="headerlink" href="#thermodynamic-properties" title="Permalink to this headline">#</a></h2>
 <div class="section" id="phonon-number">
-<h3><a class="toc-backref" href="#id10">Phonon number</a><a class="headerlink" href="#phonon-number" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id10">Phonon number</a><a class="headerlink" href="#phonon-number" title="Permalink to this headline">#</a></h3>
 <div class="math notranslate nohighlight">
 \[n = \frac{1}{\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1}\]</div>
 </div>
 <div class="section" id="harmonic-phonon-energy">
-<h3><a class="toc-backref" href="#id11">Harmonic phonon energy</a><a class="headerlink" href="#harmonic-phonon-energy" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id11">Harmonic phonon energy</a><a class="headerlink" href="#harmonic-phonon-energy" title="Permalink to this headline">#</a></h3>
 <div class="math notranslate nohighlight">
 \[E = \sum_{\mathbf{q}\nu}\hbar\omega(\mathbf{q}\nu)\left[\frac{1}{2} +
 \frac{1}{\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1}\right]\]</div>
 </div>
 <div class="section" id="constant-volume-heat-capacity">
-<h3><a class="toc-backref" href="#id12">Constant volume heat capacity</a><a class="headerlink" href="#constant-volume-heat-capacity" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id12">Constant volume heat capacity</a><a class="headerlink" href="#constant-volume-heat-capacity" title="Permalink to this headline">#</a></h3>
 <div class="math notranslate nohighlight">
 \[\begin{split}C_V &amp;= \left(\frac{\partial E}{\partial T} \right)_V \\
       &amp;= \sum_{\mathbf{q}\nu} k_\mathrm{B}
@@ -799,14 +868,14 @@ interaction are calculated by the method of Gonze <em>et al.</em>
    T)}{[\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1]^2}\end{split}\]</div>
 </div>
 <div class="section" id="partition-function">
-<h3><a class="toc-backref" href="#id13">Partition function</a><a class="headerlink" href="#partition-function" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id13">Partition function</a><a class="headerlink" href="#partition-function" title="Permalink to this headline">#</a></h3>
 <div class="math notranslate nohighlight">
 \[Z = \exp(-\varphi/k_\mathrm{B} T) \prod_{\mathbf{q}\nu}
    \frac{\exp(-\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}
    T)}{1-\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)}\]</div>
 </div>
 <div class="section" id="helmholtz-free-energy">
-<h3><a class="toc-backref" href="#id14">Helmholtz free energy</a><a class="headerlink" href="#helmholtz-free-energy" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id14">Helmholtz free energy</a><a class="headerlink" href="#helmholtz-free-energy" title="Permalink to this headline">#</a></h3>
 <div class="math notranslate nohighlight">
 \[\begin{split}F &amp;= -k_\mathrm{B} T \ln Z \\
 &amp;= \varphi + \frac{1}{2} \sum_{\mathbf{q}\nu}
@@ -814,7 +883,7 @@ interaction are calculated by the method of Gonze <em>et al.</em>
 \bigl[1 -\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T) \bigr]\end{split}\]</div>
 </div>
 <div class="section" id="entropy">
-<h3><a class="toc-backref" href="#id15">Entropy</a><a class="headerlink" href="#entropy" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id15">Entropy</a><a class="headerlink" href="#entropy" title="Permalink to this headline">#</a></h3>
 <div class="math notranslate nohighlight">
 \[\begin{split}S &amp;= -\frac{\partial F}{\partial T} \\ &amp;= \frac{1}{2T}
 \sum_{\mathbf{q}\nu} \hbar\omega(\mathbf{q}\nu)
@@ -824,9 +893,9 @@ interaction are calculated by the method of Gonze <em>et al.</em>
 </div>
 </div>
 <div class="section" id="thermal-displacement">
-<span id="id2"></span><h2><a class="toc-backref" href="#id16">Thermal displacement</a><a class="headerlink" href="#thermal-displacement" title="Permalink to this headline">¶</a></h2>
+<span id="id2"></span><h2><a class="toc-backref" href="#id16">Thermal displacement</a><a class="headerlink" href="#thermal-displacement" title="Permalink to this headline">#</a></h2>
 <div class="section" id="mean-square-displacement">
-<h3><a class="toc-backref" href="#id17">Mean square displacement</a><a class="headerlink" href="#mean-square-displacement" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id17">Mean square displacement</a><a class="headerlink" href="#mean-square-displacement" title="Permalink to this headline">#</a></h3>
 <p>From Eq. (10.71) in the book “Thermodynamics of Crystal”, atomic displacement,
 <strong>u</strong>, is written by</p>
 <div class="math notranslate nohighlight">
@@ -867,7 +936,7 @@ combination of the operations, e.g.,</p>
 &amp;= 0.\end{split}\]</div>
 </div>
 <div class="section" id="mean-square-displacement-matrix">
-<span id="thermal-displacement-matrix"></span><h3><a class="toc-backref" href="#id18">Mean square displacement matrix</a><a class="headerlink" href="#mean-square-displacement-matrix" title="Permalink to this headline">¶</a></h3>
+<span id="thermal-displacement-matrix"></span><h3><a class="toc-backref" href="#id18">Mean square displacement matrix</a><a class="headerlink" href="#mean-square-displacement-matrix" title="Permalink to this headline">#</a></h3>
 <p>Mean square displacement matrix is defined as follows:</p>
 <div class="math notranslate nohighlight">
 \[\mathrm{U}_\text{cart}(j, T) = \frac{\hbar}{2Nm_j}
@@ -877,7 +946,7 @@ combination of the operations, e.g.,</p>
 displacement calculated along Cartesian x, y, z directions.</p>
 </div>
 <div class="section" id="projection-to-an-arbitrary-axis">
-<h3><a class="toc-backref" href="#id19">Projection to an arbitrary axis</a><a class="headerlink" href="#projection-to-an-arbitrary-axis" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id19">Projection to an arbitrary axis</a><a class="headerlink" href="#projection-to-an-arbitrary-axis" title="Permalink to this headline">#</a></h3>
 <p>In phonopy, eigenvectors are calculated in the Cartesian axes that are defined
 in the input structure file. Mean square displacement along an arbitrary axis is
 obtained projecting eigenvectors in the Cartesian axes as follows:</p>
@@ -888,7 +957,7 @@ obtained projecting eigenvectors in the Cartesian axes as follows:</p>
 <p>where <span class="math notranslate nohighlight">\(\hat{\mathbf{n}}\)</span> is an arbitrary unit direction.</p>
 </div>
 <div class="section" id="mean-square-displacement-matrix-in-cif-format">
-<h3><a class="toc-backref" href="#id20">Mean square displacement matrix in cif format</a><a class="headerlink" href="#mean-square-displacement-matrix-in-cif-format" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id20">Mean square displacement matrix in cif format</a><a class="headerlink" href="#mean-square-displacement-matrix-in-cif-format" title="Permalink to this headline">#</a></h3>
 <p>According to the paper by Grosse-Kunstleve and Adams [J. Appl. Cryst., 35,
 477-480 (2002)], mean square displacement matrix in the cif definition
 (<code class="docutils literal notranslate"><span class="pre">aniso_U</span></code>), <span class="math notranslate nohighlight">\(\mathrm{U}_\text{cif}\)</span>, is obtained by</p>
@@ -909,9 +978,9 @@ c_z \end{pmatrix}\end{split}\]</div>
 </div>
 </div>
 <div class="section" id="group-velocity">
-<span id="id3"></span><h2><a class="toc-backref" href="#id21">Group velocity</a><a class="headerlink" href="#group-velocity" title="Permalink to this headline">¶</a></h2>
+<span id="id3"></span><h2><a class="toc-backref" href="#id21">Group velocity</a><a class="headerlink" href="#group-velocity" title="Permalink to this headline">#</a></h2>
 <div class="section" id="method">
-<h3><a class="toc-backref" href="#id22">Method</a><a class="headerlink" href="#method" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id22">Method</a><a class="headerlink" href="#method" title="Permalink to this headline">#</a></h3>
 <p>Phonopy calculates group velocity of phonon as follows:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\mathbf{v}_\mathrm{g}(\mathbf{q}\nu) = &amp; \nabla_\mathbf{q} \omega(\mathbf{q}\nu) \\
@@ -924,7 +993,7 @@ c_z \end{pmatrix}\end{split}\]</div>
 <p>where the meanings of the variables are found at <a class="reference internal" href="#formulations"><span class="std std-ref">Formulations</span></a>.</p>
 </div>
 <div class="section" id="finite-difference-method">
-<h3><a class="toc-backref" href="#id23">Finite difference method</a><a class="headerlink" href="#finite-difference-method" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id23">Finite difference method</a><a class="headerlink" href="#finite-difference-method" title="Permalink to this headline">#</a></h3>
 <p>In the previous versions, group velocity was calculated using finite difference
 method:</p>
 <div class="math notranslate nohighlight">
@@ -948,7 +1017,7 @@ difference is employed, and <span class="math notranslate nohighlight">\(+\Delta
 </div>
 </div>
 <div class="section" id="physical-unit-conversion">
-<span id="id4"></span><h2><a class="toc-backref" href="#id24">Physical unit conversion</a><a class="headerlink" href="#physical-unit-conversion" title="Permalink to this headline">¶</a></h2>
+<span id="id4"></span><h2><a class="toc-backref" href="#id24">Physical unit conversion</a><a class="headerlink" href="#physical-unit-conversion" title="Permalink to this headline">#</a></h2>
 <p>Phonopy calculates phonon frequencies based on input values from users. In the
 default case, the physical units of distance, atomic mass, force, and force
 constants are supposed to be <span class="math notranslate nohighlight">\(\text{Angstrom}\)</span>, <span class="math notranslate nohighlight">\(\text{AMU}\)</span>,
@@ -990,9 +1059,9 @@ the conversion factors are similarly calculated following the unit systems
 employed in phonopy (<a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>).</p>
 </div>
 <div class="section" id="crystal-structure">
-<span id="definition-of-commensurate-points"></span><h2><a class="toc-backref" href="#id25">Crystal structure</a><a class="headerlink" href="#crystal-structure" title="Permalink to this headline">¶</a></h2>
+<span id="definition-of-commensurate-points"></span><h2><a class="toc-backref" href="#id25">Crystal structure</a><a class="headerlink" href="#crystal-structure" title="Permalink to this headline">#</a></h2>
 <div class="section" id="coordinates-in-direct-and-reciprocal-spaces">
-<h3><a class="toc-backref" href="#id26">Coordinates in direct and reciprocal spaces</a><a class="headerlink" href="#coordinates-in-direct-and-reciprocal-spaces" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id26">Coordinates in direct and reciprocal spaces</a><a class="headerlink" href="#coordinates-in-direct-and-reciprocal-spaces" title="Permalink to this headline">#</a></h3>
 <p>As usual, in phonopy, the Born-von Karman boundary condition is assumed. Basis
 vectors of a primitive lattice are defined in three column vectors
 <span class="math notranslate nohighlight">\(( \mathbf{a} \; \mathbf{b} \; \mathbf{c} )\)</span>. Coordinates of a point in
@@ -1006,7 +1075,7 @@ vectors of the reciprocal lattice may be given by three row vectors,
 they are defined as three column vectors as
 <span class="math notranslate nohighlight">\(( \mathbf{a}^{*} \; \mathbf{b}^{*} \; \mathbf{c}^{*} )\)</span> with</p>
 <div class="math notranslate nohighlight" id="equation-eq-rec-basis-vectors">
-<span class="eqno">(2)<a class="headerlink" href="#equation-eq-rec-basis-vectors" title="Permalink to this equation">¶</a></span>\[\begin{split}\mathbf{a}^{*} &amp;= \frac{\mathbf{b} \times \mathbf{c}}{\mathbf{a} \cdot
+<span class="eqno">(2)<a class="headerlink" href="#equation-eq-rec-basis-vectors" title="Permalink to this equation">#</a></span>\[\begin{split}\mathbf{a}^{*} &amp;= \frac{\mathbf{b} \times \mathbf{c}}{\mathbf{a} \cdot
 (\mathbf{b} \times \mathbf{c})}, \\ \mathbf{b}^{*} &amp;= \frac{\mathbf{c} \times
 \mathbf{a}}{\mathbf{b} \cdot (\mathbf{c} \times \mathbf{a})}, \\ \mathbf{c}^{*}
 &amp;= \frac{\mathbf{a} \times \mathbf{b}}{\mathbf{c} \cdot (\mathbf{a} \times
@@ -1035,7 +1104,7 @@ those calculated following Eq. <a class="reference internal" href="#equation-eq-
 <span class="math notranslate nohighlight">\(( \mathbf{a} \; \mathbf{b} \; \mathbf{c})\)</span>.</p>
 </div>
 <div class="section" id="commensurate-points">
-<h3><a class="toc-backref" href="#id27">Commensurate points</a><a class="headerlink" href="#commensurate-points" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id27">Commensurate points</a><a class="headerlink" href="#commensurate-points" title="Permalink to this headline">#</a></h3>
 <p>In phonopy, so-called commensurate points mean the q-points whose waves are
 confined in the supercell used in the phonon calculation.</p>
 <p>To explain about the commensurate points, let basis vectors of a primitive cell
@@ -1093,9 +1162,11 @@ elements of <span class="math notranslate nohighlight">\(\boldsymbol{P}^{\mathrm
 
               </div>
               
-            
-                <!-- Previous / next buttons -->
-<div class='prev-next-area'> 
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
     <a class='left-prev' id="prev-link" href="phonopy-load.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
@@ -1111,22 +1182,26 @@ elements of <span class="math notranslate nohighlight">\(\boldsymbol{P}^{\mathrm
     <i class="fas fa-angle-right"></i>
     </a>
 </div>
-            
+            </footer>
         </div>
     </div>
-    <footer class="footer">
-  <p>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+      &copy; Copyright 2009, Atsushi Togo.<br/>
+</p>
+        </footer>
+    </div>
     
-        &copy; Copyright 2009, Atsushi Togo.<br/>
-  </p>
-</footer>
-</main>
+</div>
 
 
       </div>
     </div>
   
-  <script src="_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
 
   </body>
 </html>
