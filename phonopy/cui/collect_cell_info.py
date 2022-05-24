@@ -364,7 +364,7 @@ def _get_error_message(
     )
 
     if final_cell_filename is None:  # No phonopy*.yaml file was found.
-        filenames = ['"%s"' % name for name in phonopy_yaml_cls.default_filenames]
+        filenames = [f"{name}" for name in phonopy_yaml_cls.default_filenames]
         if len(filenames) == 1:
             text = filenames[0]
         elif len(filenames) == 2:

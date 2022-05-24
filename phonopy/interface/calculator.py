@@ -39,6 +39,7 @@ from argparse import ArgumentParser
 import numpy as np
 import yaml
 
+from phonopy.file_IO import get_supported_file_extensions_for_compression
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.vasp import sort_positions_by_symbols
 from phonopy.structure.cells import determinant
@@ -752,7 +753,13 @@ def _read_phonopy_yaml(filename, phonopy_yaml_cls):
 
 def _get_cell_filename(filename, phonopy_yaml_cls):
     cell_filename = None
-    for fname in (filename,) + phonopy_yaml_cls.default_filenames:
+
+    default_filenames = []
+    for fname in phonopy_yaml_cls.default_filenames:
+        for ext in get_supported_file_extensions_for_compression():
+            default_filenames.append(f"{fname}{ext}")
+
+    for fname in [filename] + default_filenames:
         if fname and os.path.isfile(fname):
             cell_filename = fname
             break

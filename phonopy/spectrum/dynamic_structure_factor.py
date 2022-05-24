@@ -62,9 +62,9 @@ class DynamicStructureFactor:
     Atomic form factor
     ------------------
     D. Waasmaier and A. Kirfel, Acta Cryst. A51, 416 (1995)
-    f(Q) = \sum_i a_i \exp((-b_i Q^2) + c
-    Q is in angstron^-1
+    f(s) = \sum_i a_i \exp((-b_i s^2) + c
     a1, b1, a2, b2, a3, b3, a4, b4, a5, b5, c
+    s is defined by |Q|/2 in angstron^-1 where Q without 2pi.
 
     Examples:
      {'Na': [3.148690, 2.594987, 4.073989, 6.046925,
@@ -130,8 +130,8 @@ class DynamicStructureFactor:
                                    35.829404, 0.000436, -34.916604],b|
 
                 def get_func_AFF(f_params):
-                    def func(symbol, Q):
-                        return atomic_form_factor_WK1995(Q, f_params[symbol])
+                    def func(symbol, s):
+                        return atomic_form_factor_WK1995(s, f_params[symbol])
                     return func
 
         scattering_lengths: dictionary
@@ -243,7 +243,7 @@ class DynamicStructureFactor:
         val = 0
         for i, m in enumerate(masses):
             if self._func_AFF is not None:
-                f = self._func_AFF(symbols[i], np.linalg.norm(Q_cart))
+                f = self._func_AFF(symbols[i], np.linalg.norm(Q_cart) / 2)
             elif self._b is not None:
                 f = self._b[symbols[i]]
             else:
@@ -259,7 +259,31 @@ class DynamicStructureFactor:
         self._Gpoints = self._Qpoints - self.qpoints
 
 
-def atomic_form_factor_WK1995(Q, f_x):
-    """Return atomic form factor of WK1995."""
+def atomic_form_factor_WK1995(s, f_x):
+    """Return atomic form factor of WK1995.
+
+    s = sin(theta)/lambda = |k' - k|/2 = |Q|/2
+
+    where k, k', Q are given without 2pi.
+
+    f_x = [a1, b1, a2, b2, a3, b3, a4, b4, a5, b5, c]
+
+    """
     a, b = np.array(f_x[:10]).reshape(-1, 2).T
-    return (a * np.exp(-b * Q**2)).sum() + f_x[10]
+    return (a * np.exp(-b * s**2)).sum() + f_x[10]
+
+
+def atomic_form_factor_ITC(s, f_x):
+    """Return atomic form factor of international tables for crystallography C.
+
+    ITC table 6.1.1.4.
+
+    s = sin(theta)/lambda = |k' - k|/2 = |Q|/2
+
+    where k, k', Q are given without 2pi.
+
+    f_x = [a1, b1, a2, b2, a3, b3, a4, b4, c]
+
+    """
+    a, b = np.array(f_x[:8]).reshape(-1, 2).T
+    return (a * np.exp(-b * s**2)).sum() + f_x[8]

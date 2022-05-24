@@ -2,6 +2,15 @@
 
 # Change Log
 
+## May-24-2022: Version 2.15.0
+
+- Bug fix of atomic form factor in dynamic structure factor calculation.
+- Change in unit of inverse distance used when calling atomic form factor
+  function from dynamic structure factor calculation to s=|Q|/2 (Q without 2pi).
+- Support of compressed `vasprun.xml.{xz,lzma,bz2,gz}` from phonopy command.
+- Support of compressed `phonopy_disp.yaml.{xz,lzma,bz2,gz}` from phonopy
+  command.
+
 ## Apr-9-2022: Version 2.14.0
 
 - Maintenance release including small bug fixes.

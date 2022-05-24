@@ -33,6 +33,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import pathlib
 import sys
 from io import StringIO
 
@@ -921,3 +922,39 @@ def _parse_QHA_data(filename):
             else:
                 data.append([float(x) for x in line.split()])
         return np.array(data)
+
+
+def get_io_module_to_decompress(filename):
+    """Return io-module to decompress file.
+
+    Filename extensions of lzma, xz, gzip, bz2 are supported.
+
+    It is supported to use it like `returned_module.open(filename)`.
+
+    """
+    ext = pathlib.Path(filename).suffix
+    if ext == ".xz" or ext == ".lzma":
+        import lzma
+
+        return lzma
+    elif ext == ".gz":
+        import gzip
+
+        return gzip
+    elif ext == ".bz2":
+        import bz2
+
+        return bz2
+    else:
+        import io
+
+        return io
+
+
+def get_supported_file_extensions_for_compression():
+    """Return file extensions for compression.
+
+    This function must be coupled with `get_io_module_to_decompress`.
+
+    """
+    return "", ".xz", ".lzma", ".gz", ".bz2"
