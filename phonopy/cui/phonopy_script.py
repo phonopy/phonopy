@@ -444,7 +444,7 @@ def create_FORCE_SETS_from_settings(settings, symprec, log_level):
     interface_mode = settings.calculator
 
     disp_filename = disp_filenames[0]
-    if disp_filenames[0] == "phonopy_disp.yaml":
+    if "phonopy_disp.yaml" in disp_filenames[0]:
         phpy_yaml = PhonopyYaml()
         phpy_yaml.read(disp_filenames[0])
         if phpy_yaml.calculator is not None:
