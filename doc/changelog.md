@@ -2,6 +2,11 @@
 
 # Change Log
 
+## May-28-2022: Version 2.15.1
+
+- Bug fix when creating `FORCE_SETS` from `phonopy_disp.yaml` without specifying
+  calculator name option.
+
 ## May-24-2022: Version 2.15.0
 
 - Bug fix of atomic form factor in dynamic structure factor calculation.
