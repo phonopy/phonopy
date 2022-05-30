@@ -245,13 +245,8 @@ def get_random_displacements_dataset(
     num_atoms: int,
     random_seed: Optional[int] = None,
     is_plusminus: bool = False,
-):
+) -> np.ndarray:
     """Return random displacements at constant displacement distance."""
-    if random_seed is not None and random_seed >= 0 and random_seed < 2**32:
-        seed = random_seed
-    else:
-        seed = None
-
     disps = (
         _get_random_directions(num_atoms * num_supercells, random_seed=random_seed)
         * distance
@@ -260,13 +255,12 @@ def get_random_displacements_dataset(
         disps.reshape(num_supercells, num_atoms, 3), dtype="double", order="C"
     )
     if is_plusminus is True:
-        supercell_disps = np.concatenate((supercell_disps, -supercell_disps), axis=0)
-
-    dataset = {"displacements": supercell_disps}
-
-    if seed is not None:
-        dataset["random_seed"] = seed
-    return dataset
+        supercell_disps = np.array(
+            np.concatenate((supercell_disps, -supercell_disps), axis=0),
+            dtype="double",
+            order="C",
+        )
+    return supercell_disps
 
 
 def _get_random_directions(num_atoms, random_seed=None):

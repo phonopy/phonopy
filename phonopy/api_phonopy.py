@@ -947,19 +947,26 @@ class Phonopy:
 
         """
         if number_of_snapshots is not None and number_of_snapshots > 0:
+            if random_seed is not None and random_seed >= 0 and random_seed < 2**32:
+                _random_seed = random_seed
+                displacement_dataset = {"random_seed": _random_seed}
+            else:
+                _random_seed = None
+                displacement_dataset = {}
             if temperature is None:
-                displacement_dataset = get_random_displacements_dataset(
+                d = get_random_displacements_dataset(
                     number_of_snapshots,
                     distance,
                     len(self._supercell),
-                    random_seed=random_seed,
+                    random_seed=_random_seed,
                     is_plusminus=(is_plusminus is True),
                 )
+                displacement_dataset["displacements"] = d
             else:
                 self.run_random_displacements(
                     temperature,
                     number_of_snapshots=number_of_snapshots,
-                    random_seed=random_seed,
+                    random_seed=_random_seed,
                     cutoff_frequency=cutoff_frequency,
                 )
                 units = get_default_physical_units(self._calculator)
@@ -968,7 +975,13 @@ class Phonopy:
                     dtype="double",
                     order="C",
                 )
-                displacement_dataset = {"displacements": d}
+                if is_plusminus is True:
+                    d = np.array(
+                        np.concatenate((d, -d), axis=0),
+                        dtype="double",
+                        order="C",
+                    )
+                displacement_dataset["displacements"] = d
         else:
             displacement_directions = get_least_displacements(
                 self._symmetry,
