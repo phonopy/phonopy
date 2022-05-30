@@ -33,6 +33,8 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from typing import Optional
+
 import numpy as np
 
 directions_axis = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
@@ -238,14 +240,14 @@ def _determinant(a, b, c):
 
 
 def get_random_displacements_dataset(
-    num_supercells, distance, num_atoms, random_seed=None
+    num_supercells: int,
+    distance: float,
+    num_atoms: int,
+    random_seed: Optional[int] = None,
+    is_plusminus: bool = False,
 ):
     """Return random displacements at constant displacement distance."""
-    if (
-        np.issubdtype(type(random_seed), np.integer)
-        and random_seed >= 0
-        and random_seed < 2**32
-    ):
+    if random_seed is not None and random_seed >= 0 and random_seed < 2**32:
         seed = random_seed
     else:
         seed = None
@@ -257,6 +259,9 @@ def get_random_displacements_dataset(
     supercell_disps = np.array(
         disps.reshape(num_supercells, num_atoms, 3), dtype="double", order="C"
     )
+    if is_plusminus is True:
+        supercell_disps = np.concatenate((supercell_disps, -supercell_disps), axis=0)
+
     dataset = {"displacements": supercell_disps}
 
     if seed is not None:
