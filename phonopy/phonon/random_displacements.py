@@ -33,6 +33,8 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from typing import Optional, Tuple
+
 import numpy as np
 
 from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
@@ -185,7 +187,13 @@ class RandomDisplacements:
         self._uu = None
         self._uu_inv = None
 
-    def run(self, T, number_of_snapshots=1, random_seed=None, randn=None):
+    def run(
+        self,
+        T: float,
+        number_of_snapshots: int = 1,
+        random_seed: Optional[int] = None,
+        randn: Optional[Tuple] = None,
+    ):
         """Calculate random displacements.
 
         Parameters

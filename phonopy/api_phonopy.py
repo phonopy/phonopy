@@ -36,6 +36,7 @@
 import sys
 import textwrap
 import warnings
+from typing import Optional, Union
 
 import numpy as np
 
@@ -885,14 +886,14 @@ class Phonopy:
 
     def generate_displacements(
         self,
-        distance=0.01,
-        is_plusminus="auto",
-        is_diagonal=True,
-        is_trigonal=False,
-        number_of_snapshots=None,
-        random_seed=None,
-        temperature=None,
-        cutoff_frequency=None,
+        distance: float = 0.01,
+        is_plusminus: Union[str, bool] = "auto",
+        is_diagonal: bool = True,
+        is_trigonal: bool = False,
+        number_of_snapshots: Optional[int] = None,
+        random_seed: Optional[int] = None,
+        temperature: Optional[float] = None,
+        cutoff_frequency: Optional[float] = None,
     ):
         """Generate displacement dataset.
 
@@ -945,16 +946,14 @@ class Phonopy:
             this value.
 
         """
-        if (
-            np.issubdtype(type(number_of_snapshots), np.integer)
-            and number_of_snapshots > 0
-        ):  # noqa: E129
+        if number_of_snapshots is not None and number_of_snapshots > 0:
             if temperature is None:
                 displacement_dataset = get_random_displacements_dataset(
                     number_of_snapshots,
                     distance,
                     len(self._supercell),
                     random_seed=random_seed,
+                    is_plusminus=(is_plusminus is True),
                 )
             else:
                 self.run_random_displacements(
@@ -3262,11 +3261,11 @@ class Phonopy:
 
     def run_random_displacements(
         self,
-        temperature,
-        number_of_snapshots=1,
-        random_seed=None,
-        dist_func=None,
-        cutoff_frequency=None,
+        temperature: float,
+        number_of_snapshots: int = 1,
+        random_seed: Optional[int] = None,
+        dist_func: Optional[str] = None,
+        cutoff_frequency: Optional[float] = None,
     ):
         """Generate random displacements from phonon structure.
 
@@ -3434,7 +3433,7 @@ class Phonopy:
             self._dynamical_matrix.is_nac()
             and self._dynamical_matrix.nac_method == "gonze"
             and self._gv_delta_q is None
-        ):  # noqa E129
+        ):
             if self._log_level:
                 msg = "Group velocity calculation:\n"
                 text = (
