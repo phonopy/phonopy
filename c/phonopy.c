@@ -57,6 +57,7 @@ static double get_heat_capacity(const double temperature, const double f);
 /* static double get_energy(double temperature, double f); */
 static void distribute_fc2(double (*fc2)[3][3], const int *atom_list,
                            const int len_atom_list,
+                           const int *fc_indices_of_atom_list,
                            PHPYCONST double (*r_carts)[3][3],
                            const int *permutations, const int *map_atoms,
                            const int *map_syms, const int num_rot,
@@ -306,12 +307,14 @@ void phpy_get_thermal_properties(double *thermal_props,
 
 void phpy_distribute_fc2(double (*fc2)[3][3], const int *atom_list,
                          const int len_atom_list,
+                         const int *fc_indices_of_atom_list,
                          PHPYCONST double (*r_carts)[3][3],
                          const int *permutations, const int *map_atoms,
                          const int *map_syms, const int num_rot,
                          const int num_pos) {
-    distribute_fc2(fc2, atom_list, len_atom_list, r_carts, permutations,
-                   map_atoms, map_syms, num_rot, num_pos);
+    distribute_fc2(fc2, atom_list, len_atom_list, fc_indices_of_atom_list,
+                   r_carts, permutations, map_atoms, map_syms, num_rot,
+                   num_pos);
 }
 
 int phpy_compute_permutation(int *rot_atom, PHPYCONST double lat[3][3],
@@ -768,6 +771,7 @@ static double get_heat_capacity(const double temperature, const double f) {
 
 static void distribute_fc2(double (*fc2)[3][3], /* shape[n_pos][n_pos] */
                            const int *atom_list, const int len_atom_list,
+                           const int *fc_indices_of_atom_list,
                            PHPYCONST double (*r_carts)[3][3], /* shape[n_rot] */
                            const int *permutations, /* shape[n_rot][n_pos] */
                            const int *map_atoms,    /* shape [n_pos] */
@@ -810,9 +814,11 @@ static void distribute_fc2(double (*fc2)[3][3], /* shape[n_pos][n_pos] */
 
         /* distribute terms from atom_done to atom_todo */
         for (atom_other = 0; atom_other < num_pos; atom_other++) {
-            fc2_done = fc2[atom_list_reverse[atom_done] * num_pos +
-                           permutation[atom_other]];
-            fc2_todo = fc2[i * num_pos + atom_other];
+            fc2_done =
+                fc2[fc_indices_of_atom_list[atom_list_reverse[atom_done]] *
+                        num_pos +
+                    permutation[atom_other]];
+            fc2_todo = fc2[fc_indices_of_atom_list[i] * num_pos + atom_other];
             for (j = 0; j < 3; j++) {
                 for (k = 0; k < 3; k++) {
                     for (l = 0; l < 3; l++) {

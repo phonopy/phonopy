@@ -46,10 +46,10 @@ except ImportError:
     from yaml import Loader
 
 from phonopy.cui.settings import fracval
-from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.dataset import get_displacements_and_forces
 from phonopy.structure.symmetry import Symmetry, elaborate_borns_and_epsilon
+from phonopy.utils import similarity_transformation
 
 
 #

@@ -1,5 +1,4 @@
 """PhonopyAtoms class and routines related to atoms."""
-# -*- coding: utf-8 -*-
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
