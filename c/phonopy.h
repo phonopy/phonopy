@@ -120,6 +120,7 @@ void phpy_get_thermal_properties(double *thermal_props,
                                  const double cutoff_frequency);
 void phpy_distribute_fc2(double (*fc2)[3][3], const int *atom_list,
                          const int len_atom_list,
+                         const int *fc_indices_of_atom_list,
                          PHPYCONST double (*r_carts)[3][3],
                          const int *permutations, const int *map_atoms,
                          const int *map_syms, const int num_rot,

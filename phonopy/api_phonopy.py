@@ -3397,6 +3397,7 @@ class Phonopy:
                     self._symmetry,
                     self._displacement_dataset,
                     atom_list=distributed_atom_list,
+                    primitive=self._primitive,
                     decimals=decimals,
                 )
 

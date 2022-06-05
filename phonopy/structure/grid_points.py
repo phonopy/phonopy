@@ -44,7 +44,6 @@ from spglib import (
     relocate_BZ_grid_address,
 )
 
-from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
 from phonopy.structure.cells import (
     determinant,
@@ -58,6 +57,7 @@ from phonopy.structure.symmetry import (
     get_lattice_vector_equivalence,
     get_pointgroup_operations,
 )
+from phonopy.utils import similarity_transformation
 from phonopy.version import __version__
 
 

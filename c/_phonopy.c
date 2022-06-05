@@ -757,6 +757,7 @@ static PyObject* py_distribute_fc2(PyObject* self, PyObject* args) {
     PyArrayObject* py_map_atoms;
     PyArrayObject* py_map_syms;
     PyArrayObject* py_atom_list;
+    PyArrayObject* py_fc_indices_of_atom_list;
     PyArrayObject* py_rotations_cart;
 
     double(*r_carts)[3][3];
@@ -765,17 +766,19 @@ static PyObject* py_distribute_fc2(PyObject* self, PyObject* args) {
     int* map_atoms;
     int* map_syms;
     int* atom_list;
+    int* fc_indices_of_atom_list;
     npy_intp num_pos, num_rot, len_atom_list;
 
-    if (!PyArg_ParseTuple(args, "OOOOOO", &py_force_constants, &py_atom_list,
-                          &py_rotations_cart, &py_permutations, &py_map_atoms,
-                          &py_map_syms)) {
+    if (!PyArg_ParseTuple(args, "OOOOOOO", &py_force_constants, &py_atom_list,
+                          &py_fc_indices_of_atom_list, &py_rotations_cart,
+                          &py_permutations, &py_map_atoms, &py_map_syms)) {
         return NULL;
     }
 
     fc2 = (double(*)[3][3])PyArray_DATA(py_force_constants);
     atom_list = (int*)PyArray_DATA(py_atom_list);
     len_atom_list = PyArray_DIMS(py_atom_list)[0];
+    fc_indices_of_atom_list = (int*)PyArray_DATA(py_fc_indices_of_atom_list);
     permutations = (int*)PyArray_DATA(py_permutations);
     map_atoms = (int*)PyArray_DATA(py_map_atoms);
     map_syms = (int*)PyArray_DATA(py_map_syms);
@@ -801,8 +804,9 @@ static PyObject* py_distribute_fc2(PyObject* self, PyObject* args) {
         return NULL;
     }
 
-    phpy_distribute_fc2(fc2, atom_list, len_atom_list, r_carts, permutations,
-                        map_atoms, map_syms, num_rot, num_pos);
+    phpy_distribute_fc2(fc2, atom_list, len_atom_list, fc_indices_of_atom_list,
+                        r_carts, permutations, map_atoms, map_syms, num_rot,
+                        num_pos);
     Py_RETURN_NONE;
 }
 

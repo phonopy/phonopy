@@ -37,29 +37,22 @@ import numpy as np
 
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
+    Primitive,
     compute_permutation_for_rotation,
     get_smallest_vectors,
 )
+from phonopy.structure.symmetry import Symmetry
+from phonopy.utils import similarity_transformation
 
 
-def get_force_constants(
-    set_of_forces, symmetry, supercell, atom_list=None, decimals=None
+def get_fc2(
+    supercell: PhonopyAtoms,
+    symmetry: Symmetry,
+    dataset,
+    atom_list=None,
+    primitive: Primitive = None,
+    decimals=None,
 ):
-    """Calculate force constants from disp-force dataset."""
-    first_atoms = [
-        {
-            "number": x.get_atom_number(),
-            "displacement": x.get_displacement(),
-            "forces": x.get_forces(),
-        }
-        for x in set_of_forces
-    ]
-    dataset = {"natom": supercell.get_number_of_atoms(), "first_atoms": first_atoms}
-    force_constants = get_fc2(supercell, symmetry, dataset, atom_list=atom_list)
-    return force_constants
-
-
-def get_fc2(supercell, symmetry, dataset, atom_list=None, decimals=None):
     """Force constants are computed.
 
     Force constants, Phi, are calculated from sets for forces, F, and
@@ -92,18 +85,33 @@ def get_fc2(supercell, symmetry, dataset, atom_list=None, decimals=None):
     atom_list_done = _get_force_constants_disps(
         force_constants, supercell, dataset, symmetry, atom_list=atom_list
     )
-
     rotations = symmetry.symmetry_operations["rotations"]
     lattice = np.array(supercell.cell.T, dtype="double", order="C")
     permutations = symmetry.atomic_permutations
-    distribute_force_constants(
-        force_constants,
-        atom_list_done,
-        lattice,
-        rotations,
-        permutations,
-        atom_list=atom_list,
-    )
+
+    if atom_list is None and primitive is not None:
+        # Distribute to atoms in primitive cell, then distribute to all.
+        distribute_force_constants(
+            force_constants,
+            atom_list_done,
+            lattice,
+            rotations,
+            permutations,
+            atom_list=primitive.p2s_map,
+            fc_indices_of_atom_list=primitive.p2s_map,
+        )
+        distribute_force_constants_by_translations(
+            force_constants, primitive, supercell
+        )
+    else:
+        distribute_force_constants(
+            force_constants,
+            atom_list_done,
+            lattice,
+            rotations,
+            permutations,
+            atom_list=atom_list,
+        )
 
     if decimals:
         force_constants = force_constants.round(decimals=decimals)
@@ -239,8 +247,17 @@ def distribute_force_constants(
     rotations,  # scaled (fractional)
     permutations,
     atom_list=None,
+    fc_indices_of_atom_list=None,
 ):
-    """Fill force constants elements by symmetry."""
+    """Fill force constants elements by symmetry.
+
+    atom_list : ndarray
+        Indices of target atoms.
+    fc_indices_of_atom_list : ndarray
+        First fc3 indices corresponding to indices of target atoms. Unless
+        specified, `range(len(atom_list))` is used.
+
+    """
     map_atoms, map_syms = _get_sym_mappings_from_permutations(
         permutations, atom_list_done
     )
@@ -253,11 +270,16 @@ def distribute_force_constants(
         targets = np.arange(force_constants.shape[1], dtype="intc")
     else:
         targets = np.array(atom_list, dtype="intc")
+    if fc_indices_of_atom_list is None:
+        _fc_indices_of_atom_list = np.arange(len(targets), dtype="intc")
+    else:
+        _fc_indices_of_atom_list = np.array(fc_indices_of_atom_list, dtype="intc")
     import phonopy._phonopy as phonoc
 
     phonoc.distribute_fc2(
         force_constants,
         targets,
+        _fc_indices_of_atom_list,
         rots_cartesian,
         permutations,
         np.array(map_atoms, dtype="intc"),
@@ -265,7 +287,9 @@ def distribute_force_constants(
     )
 
 
-def distribute_force_constants_by_translations(fc, primitive, supercell):
+def distribute_force_constants_by_translations(
+    fc, primitive: Primitive, supercell: PhonopyAtoms
+):
     """Distribute compact fc data to full fc by pure translations.
 
     For example, the input fc has to be prepared in the following way
@@ -276,16 +300,12 @@ def distribute_force_constants_by_translations(fc, primitive, supercell):
     fc[primitive.p2s_map] = compact_fc
 
     """
-    s2p = primitive.s2p_map
     p2s = primitive.p2s_map
-    positions = supercell.scaled_positions
-    lattice = supercell.cell.T
-    diff = positions - positions[p2s[0]]
-    trans = np.array(diff[np.where(s2p == p2s[0])[0]], dtype="double", order="C")
-    rotations = np.array(
-        [np.eye(3, dtype="intc")] * len(trans), dtype="intc", order="C"
-    )
     permutations = primitive.atomic_permutations
+    lattice = supercell.cell.T
+    rotations = np.array(
+        [np.eye(3, dtype="intc")] * permutations.shape[0], dtype="intc", order="C"
+    )
     distribute_force_constants(fc, p2s, lattice, rotations, permutations)
 
 
@@ -467,11 +487,6 @@ def set_permutation_symmetry(force_constants):
     for i in range(force_constants.shape[0]):
         for j in range(force_constants.shape[1]):
             force_constants[i, j] = (force_constants[i, j] + fc_copy[j, i].T) / 2
-
-
-def similarity_transformation(rot, mat):
-    """Similarity transformation by R x M x R^-1."""
-    return np.dot(rot, np.dot(mat, np.linalg.inv(rot)))
 
 
 def show_drift_force_constants(

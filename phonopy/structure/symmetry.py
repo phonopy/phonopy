@@ -38,13 +38,13 @@ import warnings
 import numpy as np
 import spglib
 
-from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
     compute_all_sg_permutations,
     get_primitive,
     get_supercell,
 )
+from phonopy.utils import similarity_transformation
 
 
 class Symmetry:
