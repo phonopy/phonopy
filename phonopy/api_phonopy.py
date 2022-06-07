@@ -528,9 +528,9 @@ class Phonopy:
             dtype='double'
 
 
-        To set displacements set, only type-2 datast case is allowed.
+        For setter, only type-2 dataset format is allowed.
 
-        displacemens : array_like
+        displacements : array_like
             Atomic displacements of all atoms of all supercells.
             Only all displacements in each supercell case (type-2) is
             supported.
@@ -552,11 +552,11 @@ class Phonopy:
         disp = np.array(displacements, dtype="double", order="C")
         if disp.ndim != 3 or disp.shape[1:] != (len(self._supercell), 3):
             raise RuntimeError("Array shape of displacements is incorrect.")
-
         if "first_atoms" in self._displacement_dataset:
-            raise RuntimeError("This displacement format is not supported.")
+            raise RuntimeError("Displacements are incompatible with dataset.")
 
         self._displacement_dataset["displacements"] = disp
+        self._supercells_with_displacements = None
 
     def get_displacements(self):
         """Return displacements in supercells."""
