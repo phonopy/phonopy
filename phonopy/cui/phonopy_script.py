@@ -426,7 +426,7 @@ def write_displacements_files_then_exit(
     finalize_phonopy(log_level, settings, confs, phonon, filename="phonopy_disp.yaml")
 
 
-def create_FORCE_SETS_from_settings(settings, symprec, log_level):
+def create_FORCE_SETS_from_settings(settings, cell_filename, symprec, log_level):
     """Create FORCE_SETS."""
     if settings.create_force_sets:
         filenames = settings.create_force_sets
@@ -438,22 +438,28 @@ def create_FORCE_SETS_from_settings(settings, symprec, log_level):
         print_error_message("Something wrong for parsing arguments.")
         sys.exit(0)
 
-    disp_filenames = files_exist(
-        ["phonopy_disp.yaml", "disp.yaml"], log_level, is_any=True
-    )
-    interface_mode = settings.calculator
+    if cell_filename is None:
+        disp_filename_candidates = []
+    else:
+        disp_filename_candidates = [cell_filename]
+    disp_filename_candidates += ["phonopy_disp.yaml", "disp.yaml"]
 
+    disp_filenames = files_exist(disp_filename_candidates, log_level, is_any=True)
     disp_filename = disp_filenames[0]
-    if "phonopy_disp.yaml" in disp_filenames[0]:
+
+    interface_mode = settings.calculator
+    phpy_yaml = None
+    if disp_filename != "disp.yaml":
         phpy_yaml = PhonopyYaml()
-        phpy_yaml.read(disp_filenames[0])
+        phpy_yaml.read(disp_filename)
         if phpy_yaml.calculator is not None:
-            interface_mode = phpy_yaml.calculator  # overwrite
+            interface_mode = phpy_yaml.calculator  # overwrite interface_mode
 
     files_exist(filenames, log_level)
     create_FORCE_SETS(
         interface_mode,
         filenames,
+        phpy_yaml=phpy_yaml,
         symmetry_tolerance=symprec,
         force_sets_zero_mode=force_sets_zero_mode,
         disp_filename=disp_filename,
@@ -1665,7 +1671,7 @@ def main(**argparse_control):
     # Create FORCE_SETS (-f or --force_sets) #
     ##########################################
     if settings.create_force_sets or settings.create_force_sets_zero:
-        create_FORCE_SETS_from_settings(settings, symprec, log_level)
+        create_FORCE_SETS_from_settings(settings, cell_filename, symprec, log_level)
         if log_level > 0:
             print_end()
         sys.exit(0)
