@@ -557,6 +557,7 @@ class Phonopy:
             raise RuntimeError("This displacement format is not supported.")
 
         self._displacement_dataset["displacements"] = disp
+        self._supercells_with_displacements = None
 
     def get_displacements(self):
         """Return displacements in supercells."""
