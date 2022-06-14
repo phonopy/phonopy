@@ -792,6 +792,25 @@ symbol_map = {
     "Uuo": 118,
 }
 
+
+isotope_data_CIAAW = {
+    # https://www.ciaaw.org/molybdenum.htm (accessed at 14th Jun. 2022)
+    # Isotope Mo
+    # Adam J. Mayer* and Michael E. Wieser, J. Anal. At. Spectrom., 2014, 29, 85
+    # DOI: 10.1039/c3ja50164g
+    # "The absolute isotopic composition and atomic weight of molybdenum in
+    # SRM 3134 using an isotopic double-spike"
+    "Mo": [
+        [92, 91.906807, 0.14649],
+        [94, 93.905084, 0.09187],
+        [95, 94.9058374, 0.15873],
+        [96, 95.9046748, 0.16673],
+        [97, 96.906017, 0.09582],
+        [98, 97.905404, 0.24292],
+        [100, 99.907468, 0.09744],
+    ]
+}
+
 # This data are obtained from
 # J. R. de Laeter, J. K. Böhlke, P. De Bièvre, H. Hidaka, H. S. Peiser,
 # K. J. R. Rosman and P. D. P. Taylor (2003).
