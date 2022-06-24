@@ -2387,8 +2387,8 @@ class Phonopy:
 
         frequency_points: ndarray
             shape=(frequency_sampling_points, ), dtype='double'
-        partial_dos:
-            shape=(frequency_sampling_points, projections), dtype='double'
+        projected_dos:
+            shape=(projections, frequency_sampling_points), dtype='double'
 
         """
         return {
@@ -2409,7 +2409,7 @@ class Phonopy:
         frequency_points: ndarray
             shape=(frequency_sampling_points, ), dtype='double'
         partial_dos:
-            shape=(frequency_sampling_points, projections), dtype='double'
+            shape=(projections, frequency_sampling_points), dtype='double'
 
         """
         warnings.warn(

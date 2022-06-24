@@ -1148,14 +1148,25 @@ def run(phonon: Phonopy, settings, plot_conf, log_level):
 
             if plot_conf["plot_graph"]:
                 pdos_indices = settings.pdos_indices
-                if is_pdos_auto(settings):
-                    pdos_indices = get_pdos_indices(phonon.primitive_symmetry)
+                if settings.xyz_projection:
+                    legend = []
+                    _pdos_indices = []
+                    for index_set in pdos_indices:
+                        xyz_set = []
+                        for idx in index_set:
+                            xyz_set += list(range(idx * 3, (idx + 1) * 3))
+                        xyz_set = np.array(xyz_set)
+                        legend.append(xyz_set + 1)
+                        _pdos_indices.append(xyz_set)
+                elif is_pdos_auto(settings):
+                    _pdos_indices = get_pdos_indices(phonon.primitive_symmetry)
                     legend = [phonon.primitive.symbols[x[0]] for x in pdos_indices]
                 else:
                     legend = [np.array(x) + 1 for x in pdos_indices]
+                    _pdos_indices = pdos_indices
                 if run_mode != "band_mesh":
                     plot = phonon.plot_projected_dos(
-                        pdos_indices=pdos_indices, legend=legend
+                        pdos_indices=_pdos_indices, legend=legend
                     )
                     if plot_conf["save_graph"]:
                         plot.savefig("partial_dos.pdf")
