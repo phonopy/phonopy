@@ -285,7 +285,18 @@ class TotalDos(Dos):
 
 
 class ProjectedDos(Dos):
-    """Class to calculate projected DOS."""
+    """Class to calculate projected DOS.
+
+    Attributes
+    ----------
+    projected_dos : ndarray
+        Projected DOS.
+        shape=(pdos, frequency_points), dtype="double"
+        The first dimension depends on init argument of `xyz_projection`.
+        With it True, the length is the number of atoms times 3, otherwise
+        the number of atoms.
+
+    """
 
     def __init__(
         self,
