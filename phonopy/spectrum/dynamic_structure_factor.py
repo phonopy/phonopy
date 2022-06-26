@@ -39,9 +39,10 @@ import numpy as np
 
 from phonopy.phonon.mesh import IterMesh, Mesh
 from phonopy.phonon.qpoints import QpointsPhonon
+from phonopy.phonon.random_displacements import bose_einstein_dist
 from phonopy.phonon.thermal_displacement import ThermalDisplacements
 from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
-from phonopy.units import AMU, Kb, THz, THzToEv
+from phonopy.units import AMU, THz
 
 
 class DynamicStructureFactor:
@@ -163,7 +164,6 @@ class DynamicStructureFactor:
 
         self._rec_lat = np.linalg.inv(self._primitive.cell)
         self.qpoints = None
-        self._Gpoints = None
         self._set_qpoints()  # self.qpoints needed in self._set_phonon()
         self.frequencies = None
         self._eigvecs = None
@@ -200,19 +200,24 @@ class DynamicStructureFactor:
         freqs = self.frequencies[self._q_count]
         eigvecs = self._eigvecs[self._q_count]
         Q_cart = np.dot(self._rec_lat, self._Qpoints[self._q_count])
+        G_vector = self._Qpoints[self._q_count] - self.qpoints[self._q_count]
         Q_length = np.linalg.norm(Q_cart)
         if Q_length < 1e-8:
-            DW = np.zeros(len(self._primitive.get_number_of_atoms()), dtype="double")
+            debye_waller = np.zeros(len(self._primitive), dtype="double")
         else:
             _, disps = self._get_thermal_displacements(Q_cart)
-            DW = np.exp(-0.5 * (2 * np.pi * Q_length) ** 2 * disps[0])
+            debye_waller = np.exp(-0.5 * (2 * np.pi * Q_length) ** 2 * disps[0])
         S = np.zeros(len(freqs), dtype="double")
         for i, f in enumerate(freqs):
             if self._fmin < f:
                 F = self._phonon_structure_factor(
-                    Q_cart, self._Gpoints[self._q_count], DW, f, eigvecs[:, i]
+                    Q_cart,
+                    G_vector,
+                    debye_waller,
+                    f,
+                    eigvecs[:, i],
                 )
-                n = 1.0 / (np.exp(f * THzToEv / (Kb * self._T)) - 1)
+                n = bose_einstein_dist(f, self._T)
                 S[i] = abs(F) ** 2 * (n + 1)
         return S * self._unit_convertion_factor
 
@@ -234,12 +239,19 @@ class DynamicStructureFactor:
         td.run()
         return td.temperatures, td.thermal_displacements
 
-    def _phonon_structure_factor(self, Q_cart, G, DW, freq, eigvec):
+    def _phonon_structure_factor(self, Q_cart, G_vector, DW, freq, eigvec):
+        """Return F(Q, q nu).
+
+        The phase factor is different by exp(iq.r) from that of the book
+        "Thermal neutron scattering" because of different difinition of
+        dynamical matrix.
+
+        """
         symbols = self._primitive.symbols
         masses = self._primitive.masses
         pos = self._primitive.scaled_positions
-        phase = np.exp(-2j * np.pi * np.dot(pos, G))
-        W = eigvec.reshape(-1, 3)
+        phase = np.exp(2j * np.pi * np.dot(pos, G_vector))
+        eigvec_atoms = eigvec.reshape(-1, 3)
         val = 0
         for i, m in enumerate(masses):
             if self._func_AFF is not None:
@@ -248,7 +260,7 @@ class DynamicStructureFactor:
                 f = self._b[symbols[i]]
             else:
                 raise RuntimeError
-            QW = np.dot(Q_cart, W[i]) * 2 * np.pi
+            QW = np.dot(Q_cart, eigvec_atoms[i]) * 2 * np.pi
             val += f / np.sqrt(2 * m) * DW[i] * QW * phase[i]
         val /= np.sqrt(freq)
         return val
@@ -256,7 +268,6 @@ class DynamicStructureFactor:
     def _set_qpoints(self):
         qpoints = get_qpoints_in_Brillouin_zone(self._rec_lat, self._Qpoints)
         self.qpoints = np.array([q[0] for q in qpoints], dtype="double", order="C")
-        self._Gpoints = self._Qpoints - self.qpoints
 
 
 def atomic_form_factor_WK1995(s, f_x):
