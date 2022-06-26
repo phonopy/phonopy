@@ -33,7 +33,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 import numpy as np
 
@@ -48,8 +48,24 @@ from phonopy.structure.cells import Primitive
 from phonopy.units import AMU, EV, Angstrom, Hbar, Kb, THz, THzToEv, VaspToTHz
 
 
-def bose_einstein_dist(x, t):
-    """Return Bose-Einsetein distribution."""
+def bose_einstein_dist(
+    x: Union[np.ndarray, float], t: float
+) -> Union[np.ndarray, float]:
+    """Return Bose-Einsetein distribution.
+
+    Parameters
+    ----------
+    x : ndarray or float
+        Phonon frequencies in THz.
+    t : float
+        Temperature in K.
+
+    Returns
+    -------
+    ndarray or float
+        Phonon occupation numbers.
+
+    """
     return 1.0 / (np.exp(THzToEv * x / (Kb * t)) - 1)
 
 
