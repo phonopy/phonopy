@@ -46,6 +46,7 @@ class PhonopyQHA:
         volumes=None,
         electronic_energies=None,
         temperatures=None,
+        pressure=None,
         free_energy=None,
         cv=None,
         entropy=None,
@@ -72,6 +73,8 @@ class PhonopyQHA:
             It is assumed as formar if ndim==1 and latter if ndim==2.
             dtype='double'
             shape=(volumes,) or (temperatuers, volumes)
+        pressure: float
+            Pressure in GPa that is added to energy as PV term.
         temperatures: array_like
             Temperatures ascending order (T) in K.
             dtype='double'
@@ -280,9 +283,9 @@ class PhonopyQHA:
         """Write bulk modulus vs temperature in file."""
         self._qha.write_bulk_modulus_temperature(filename=filename)
 
-    def plot_bulk_modulus(self):
+    def plot_bulk_modulus(self, thin_number=10):
         """Return pyplot of bulk modulus fitting curve."""
-        return self._bulk_modulus.plot()
+        return self._bulk_modulus.plot(thin_number=thin_number)
 
     def plot_qha(self, thin_number=10, volume_temp_exp=None):
         """Return pyplot of QHA fitting curves at temperatures."""

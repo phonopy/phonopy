@@ -56,36 +56,53 @@ class BulkModulus:
             Unit cell volumes where energies are obtained.
             shape=(volumes, ), dtype='double'.
         energies : array_like
-            Energies obtained at volumes.
-            shape=(volumes, ), dtype='double'.
+            Energies obtained at volumes and optionally temperatures.
+            shape=(volumes, ), or shape=(temperatures, volumes) dtype='double'.
         eos : str
             Identifier of equation of states function.
 
         """
         self._volumes = volumes
-        if np.array(energies).ndim == 1:
-            self._energies = energies
-        else:
-            self._energies = energies[0]
-        self._eos = get_eos(eos)
+        self._energies = np.array(energies)
+        self._eos_name = eos
+        self._eos = get_eos(self._eos_name)
 
-        self._energy = None
-        self._bulk_modulus = None
-        self._b_prime = None
-
-        try:
+        if self._energies.ndim == 1:
+            self._energy = None
+            self._bulk_modulus = None
+            self._b_prime = None
+            self._equiv_volume = None
             (
                 self._energy,
                 self._bulk_modulus,
                 self._b_prime,
-                self._volume,
-            ) = fit_to_eos(volumes, self._energies, self._eos)
+                self._equiv_volume,
+            ) = self.fit_to_eos(self._energies)
+        elif self._energies.ndim == 2:
+            self._energy = np.zeros(len(self._energies), dtype="double")
+            self._bulk_modulus = np.zeros_like(self._energy)
+            self._b_prime = np.zeros_like(self._energy)
+            self._equiv_volume = np.zeros_like(self._energy)
+            for i, energies_at_T in enumerate(self._energies):
+                e, b, bp, ev = self.fit_to_eos(energies_at_T)
+                self._energy[i] = e
+                self._bulk_modulus[i] = b
+                self._b_prime[i] = bp
+                self._equiv_volume[i] = ev
+        else:
+            raise TypeError("Array shape of energies is wrong.")
+
+    def fit_to_eos(self, energies):
+        """Fit energy-volume to EOS."""
+        try:
+            e, b, bp, ev = fit_to_eos(self._volumes, energies, self._eos)
         except TypeError:
-            msg = ['Failed to fit to "%s" equation of states.' % eos]
-            if len(volumes) < 4:
+            msg = ['Failed to fit to "%s" equation of states.' % self._eos_name]
+            if len(self._volumes) < 4:
                 msg += ["At least 4 volume points are needed for the fitting."]
             msg += ["Careful choice of volume points is recommended."]
             raise RuntimeError("\n".join(msg))
+        return e, b, bp, ev
 
     @property
     def bulk_modulus(self):
@@ -104,7 +121,7 @@ class BulkModulus:
     @property
     def equilibrium_volume(self):
         """Return volume at equilibrium."""
-        return self._volume
+        return self._equiv_volume
 
     def get_equilibrium_volume(self):
         """Return volume at equilibrium."""
@@ -145,23 +162,30 @@ class BulkModulus:
 
     def get_parameters(self):
         """Return fitted parameters."""
-        return (self._energy, self._bulk_modulus, self._b_prime, self._volume)
+        return (self._energy, self._bulk_modulus, self._b_prime, self._equiv_volume)
 
     def get_eos(self):
         """Return EOS function as a python method."""
         warnings.warn("BulkModulus.get_eos() is deprecated.", DeprecationWarning)
         return self._eos
 
-    def plot(self):
+    def plot(self, thin_number=10):
         """Plot fitted EOS curve."""
         import matplotlib.pyplot as plt
 
-        ep = self.get_parameters()
         vols = self._volumes
         volume_points = np.linspace(min(vols), max(vols), 201)
-        fig, ax = plt.subplots()
-        ax.plot(volume_points, self._eos(volume_points, *ep), "r-")
-        ax.plot(vols, self._energies, "bo", markersize=4)
+        _, ax = plt.subplots()
+        parameters = self.get_parameters()
+        if self._energies.ndim == 1:
+            ax.plot(volume_points, self._eos(volume_points, *parameters), "r-")
+            ax.plot(vols, self._energies, "bo", markersize=4)
+        elif self._energies.ndim == 2:
+            for i, (e_t, b_t, bp_t, ev_t) in enumerate(zip(*parameters)):
+                if i % thin_number == 0:
+                    ep = (e_t, b_t, bp_t, ev_t)
+                    ax.plot(volume_points, self._eos(volume_points, *ep), "-")
+                    ax.plot(vols, self._energies[i], "bo", markersize=4)
         return plt
 
 
