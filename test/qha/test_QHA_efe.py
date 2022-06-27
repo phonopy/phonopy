@@ -359,7 +359,7 @@ def test_QHA_Cu(pressure: Optional[float], index: int):
     np.testing.assert_allclose(
         np.array(phonopy_qha.gruneisen_temperature)[t_indices],
         gruneisen_temperature_Cu[index],
-        atol=1e-5,
+        atol=5e-4,
     )
 
 
