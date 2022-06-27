@@ -1,5 +1,5 @@
 """Tests for QHA calculations."""
-import os
+from pathlib import Path
 from typing import Optional
 
 import numpy as np
@@ -7,7 +7,7 @@ import pytest
 
 from phonopy import PhonopyQHA
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
+current_dir = Path(__file__).resolve().parent
 
 ev_vs_v_Si = np.array(
     [
@@ -25,7 +25,7 @@ ev_vs_v_Si = np.array(
     ]
 )
 temperatures_Si = np.arange(0, 2101, 10)
-tprop_file_Si = os.path.join(current_dir, "tprop-Si.dat")
+tprop_file_Si = current_dir / "tprop-Si.dat"
 cv_Si, entropy_Si, fe_phonon_Si = np.loadtxt(tprop_file_Si).reshape(3, 211, 11)
 
 thermal_expansion_Si = np.array(

@@ -331,7 +331,9 @@ class QHA:
         if self._electronic_energies.ndim == 1:
             return self._cp_polyfit[: self._len]
         else:
-            return None
+            raise NotImplementedError(
+                "QHA.heat_capacity_P_polyfit() unavailable with electronic free energy"
+            )
 
     @property
     def gruneisen_temperature(self):
