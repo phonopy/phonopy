@@ -341,7 +341,7 @@ def test_QHA_Cu(pressure: Optional[float], index: int):
     np.testing.assert_allclose(
         phonopy_qha.bulk_modulus_temperature[t_indices],
         bulkmodulus_temperature_Cu[index],
-        atol=1e-4,
+        atol=5e-4,
     )
 
     # Cp vs temperature by numerical second derivative
