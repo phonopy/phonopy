@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 
 from phonopy import PhonopyQHA
-from phonopy.units import EVAngstromToGPa
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -277,8 +276,6 @@ def test_QHA_Si(pressure: Optional[float], index: int):
     indices = list(range(11))
     volumes = ev_vs_v_Si[indices, 0]
     electronic_energies = ev_vs_v_Si[indices, 1]
-    if pressure is not None:
-        electronic_energies += volumes * pressure / EVAngstromToGPa
 
     phonopy_qha = PhonopyQHA(
         volumes=volumes,
@@ -288,6 +285,7 @@ def test_QHA_Si(pressure: Optional[float], index: int):
         free_energy=fe_phonon_Si[:, indices],
         cv=cv_Si[:, indices],
         entropy=entropy_Si[:, indices],
+        pressure=pressure,
         t_max=1000,
         verbose=True,
     )

@@ -49,7 +49,7 @@ class BulkModulus:
 
     """
 
-    def __init__(self, volumes, energies, eos="vinet"):
+    def __init__(self, volumes, energies, pressure=None, eos="vinet"):
         """Init method.
 
         volumes : array_like
@@ -58,14 +58,19 @@ class BulkModulus:
         energies : array_like
             Energies obtained at volumes and optionally temperatures.
             shape=(volumes, ), or shape=(temperatures, volumes) dtype='double'.
-        eos : str
+        pressure: float, optional
+            Pressure in GPa that is added to energy as PV term.
+        eos : str, optional
             Identifier of equation of states function.
 
         """
-        self._volumes = volumes
+        self._volumes = np.array(volumes)
         self._energies = np.array(energies)
         self._eos_name = eos
         self._eos = get_eos(self._eos_name)
+
+        if pressure is not None:
+            self._energies += self._volumes * pressure / EVAngstromToGPa
 
         if self._energies.ndim == 1:
             self._energy = None
@@ -200,6 +205,7 @@ class QHA:
         cv,  # J/K/mol
         entropy,  # J/K/mol
         fe_phonon,  # kJ/mol
+        pressure=None,
         eos="vinet",
         t_max=None,
         energy_plot_factor=None,
@@ -233,7 +239,9 @@ class QHA:
             Phonon Helmholtz free energy (F_ph) in kJ/mol.
             dtype='double'
             shape=(temperatuers, volumes)
-        eos: str
+        pressure: float, optional
+            Pressure in GPa that is added to energy as PV term.
+        eos: str, optional
             Equation of state used for fitting F vs V.
             'vinet', 'murnaghan' or 'birch_murnaghan'.
         t_max: float
@@ -247,7 +255,8 @@ class QHA:
         """
         self._volumes = np.array(volumes)
         self._electronic_energies = np.array(electronic_energies)
-
+        if pressure is not None:
+            self._electronic_energies += self._volumes * pressure / EVAngstromToGPa
         self._all_temperatures = np.array(temperatures)
         self._cv = np.array(cv)
         self._entropy = np.array(entropy)

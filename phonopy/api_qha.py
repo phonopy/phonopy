@@ -46,10 +46,10 @@ class PhonopyQHA:
         volumes=None,
         electronic_energies=None,
         temperatures=None,
-        pressure=None,
         free_energy=None,
         cv=None,
         entropy=None,
+        pressure=None,
         eos="vinet",
         t_max=None,
         energy_plot_factor=None,
@@ -73,12 +73,12 @@ class PhonopyQHA:
             It is assumed as formar if ndim==1 and latter if ndim==2.
             dtype='double'
             shape=(volumes,) or (temperatuers, volumes)
-        pressure: float
-            Pressure in GPa that is added to energy as PV term.
         temperatures: array_like
             Temperatures ascending order (T) in K.
             dtype='double'
             shape=(temperatures,)
+        pressure: float,
+            Pressure in GPa that is added to energy as PV term.
         free_energy: array_like
             Phonon Helmholtz free energy (F_ph) in kJ/mol.
             dtype='double'
@@ -91,7 +91,9 @@ class PhonopyQHA:
             Phonon entropy at constant volume (S_ph) in J/K/mol.
             dtype='double'
             shape=(temperatuers, volumes)
-        eos: str
+        pressure: float, optional
+            Pressure in GPa that is added to energy as PV term.
+        eos: str, optional
             Equation of state used for fitting F vs V.
             'vinet', 'murnaghan' or 'birch_murnaghan'.
         t_max: float
@@ -105,7 +107,9 @@ class PhonopyQHA:
             Show log or not.
 
         """
-        self._bulk_modulus = BulkModulus(volumes, electronic_energies, eos=eos)
+        self._bulk_modulus = BulkModulus(
+            volumes, electronic_energies, pressure=pressure, eos=eos
+        )
 
         if temperatures is not None:
             self._qha = QHA(
@@ -115,6 +119,7 @@ class PhonopyQHA:
                 cv,
                 entropy,
                 free_energy,
+                pressure=pressure,
                 eos=eos,
                 t_max=t_max,
                 energy_plot_factor=energy_plot_factor,
