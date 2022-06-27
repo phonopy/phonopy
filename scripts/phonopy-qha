@@ -150,13 +150,23 @@ def main(args):
             eos=args.eos,
         )
         parameters = bulk_modulus.get_bulk_modulus_parameters()
-        print(f"Volume: {parameters[3]}")
-        print(f"Energy: {parameters[0]}")
-        print(f"Bulk modulus: {parameters[1] * EVAngstromToGPa}")
-        print(
-            f"Parameters: {parameters[0]} {parameters[1]} "
-            f"{parameters[2]} {parameters[3]}"
-        )
+        if args.efe_file:
+            print(f"Volume: {parameters[3]}")
+            print(f"Energy: {parameters[0]}")
+            print(f"Bulk modulus: {parameters[1] * EVAngstromToGPa}")
+            print(
+                f"Parameters: {parameters[0]} {parameters[1]} "
+                f"{parameters[2]} {parameters[3]}"
+            )
+        else:
+            print(f"Volume: {parameters[3]:.7f}")
+            print(f"Energy: {parameters[0]:.7f}")
+            print(f"Bulk modulus: {parameters[1] * EVAngstromToGPa:.7f}")
+            print(
+                f"Parameters: {parameters[0]:.7f} {parameters[1]:.7f} "
+                f"{parameters[2]:.7f} {parameters[3]:.7f}"
+            )
+
         if args.is_graph_plot:
             bulk_modulus.plot_bulk_modulus(thin_number=args.thin_number).show()
 
