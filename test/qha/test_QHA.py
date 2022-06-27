@@ -26,7 +26,7 @@ ev_vs_v_Si = np.array(
     ]
 )
 temperatures_Si = np.arange(0, 2101, 10)
-tprop_file_Si = os.path.join(current_dir, "tprop.dat")
+tprop_file_Si = os.path.join(current_dir, "tprop-Si.dat")
 cv_Si, entropy_Si, fe_phonon_Si = np.loadtxt(tprop_file_Si).reshape(3, 211, 11)
 
 thermal_expansion_Si = np.array(
