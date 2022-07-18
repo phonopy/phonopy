@@ -1,21 +1,21 @@
-                                                                                     
-                             WELCOME TO ABACUS                                       
-                                                                                     
-               'Atomic-orbital Based Ab-initio Computation at UStc'                  
-                                                                                     
-                     Website: http://abacus.ustc.edu.cn/                             
-                                                                                     
+
+                             WELCOME TO ABACUS
+
+               'Atomic-orbital Based Ab-initio Computation at UStc'
+
+                     Website: http://abacus.ustc.edu.cn/
+
     Version: Parallel, in development
     Processor Number is 8
     Start Time is Mon Jul 18 11:02:22 2022
-                                                                                     
+
  ------------------------------------------------------------------------------------
 
  READING GENERAL INFORMATION
                            global_out_dir = OUT.ABACUS/
                            global_in_card = INPUT
-                               pseudo_dir = 
-                              orbital_dir = 
+                               pseudo_dir =
+                              orbital_dir =
                               pseudo_type = upf201
                                     DRANK = 1
                                     DSIZE = 8
@@ -283,7 +283,7 @@
                                        S4 = 0
                                        S6 = 0
                               POINT GROUP = C_4v
-Warning : If the optimal symmetric configuration is not the input configuration, 
+Warning : If the optimal symmetric configuration is not the input configuration,
 you have to manually change configurations, ABACUS would only calculate the input structure!
  DONE : SYMMETRY Time : 0.152352 (SEC)
 
@@ -1920,4 +1920,4 @@ is_mp : 1
 
  Start  Time  : Mon Jul 18 11:02:22 2022
  Finish Time  : Mon Jul 18 11:10:21 2022
- Total  Time  : 0 h 7 mins 59 secs 
+ Total  Time  : 0 h 7 mins 59 secs
