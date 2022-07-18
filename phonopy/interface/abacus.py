@@ -203,7 +203,7 @@ def read_abacus_output(filename):
             if re.search(r"TOTAL ATOM NUMBER = [0-9]+", line):
                 natom = int(re.search("[0-9]+", line).group())
                 force = np.zeros((natom, 3))
-            if re.search("TOTAL-FORCE \(eV/Angstrom\)", line):
+            if re.search(r"TOTAL-FORCE \(eV/Angstrom\)", line):
                 for i in range(4):
                     file.readline()
                 for i in range(natom):
