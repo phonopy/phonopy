@@ -1,4 +1,4 @@
-"""ABACUS calculator interface"""
+"""ABACUS calculator interface."""
 # Copyright (C) 2022 Yuyang Ji
 # All rights reserved.
 #
@@ -49,10 +49,7 @@ from phonopy.units import Bohr
 # read ABACUS STRU
 #
 def read_abacus(filename, elements=[]):
-    """
-    Parse ABACUS structure, distance in unit au (bohr)
-    """
-
+    """Parse ABACUS structure, distance in unit au (bohr)."""
     pps = []
     orbitals = None
     cell = []
@@ -122,7 +119,7 @@ def read_abacus(filename, elements=[]):
 # write ABACUS STRU
 #
 def write_abacus(filename, atoms, pps, orbitals=None):
-    """Write structure to file"""
+    """Write structure to file."""
     with open(filename, "w") as f:
         f.write(get_abacus_structure(atoms, pps, orbitals))
 
@@ -146,8 +143,7 @@ def write_supercells_with_displacements(
 
 
 def get_abacus_structure(atoms, pps, orbitals=None):
-    """Return ABACUS structure in text"""
-
+    """Return ABACUS structure in text."""
     empty_line = ""
     line = []
     line.append("ATOMIC_SPECIES")
@@ -193,11 +189,7 @@ def get_abacus_structure(atoms, pps, orbitals=None):
 # set Force
 #
 def read_abacus_output(filename):
-    """Read abacus output.
-
-    Read ABACUS forces from last self-consistency iteration.
-
-    """
+    """Read ABACUS forces from last self-consistency iteration."""
     with open(filename, "r") as file:
         for line in file:
             if re.search(r"TOTAL ATOM NUMBER = [0-9]+", line):
@@ -215,7 +207,6 @@ def read_abacus_output(filename):
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
     """Parse forces from output files."""
-
     is_parsed = True
     force_sets = []
 
@@ -249,12 +240,7 @@ def _expand(num_atoms, attr):
 
 
 def _search_sentence(file, sentence):
-    """Search sentence in file
-
-    :params file: file descriptor
-    :params sentence: sentence will be searched
-    """
-
+    """Search sentence in file."""
     if isinstance(sentence, str):
         sentence = sentence.strip()
         for line in file:
@@ -273,10 +259,7 @@ def _search_sentence(file, sentence):
 
 
 def _skip_notes(line):
-    """Delete comments lines with '#' or '//'
-
-    :params line: line will be handled
-    """
+    """Delete comments lines with '#' or '//'."""
     line = re.compile(r"#.*").sub("", line)
     line = re.compile(r"//.*").sub("", line)
     line = line.strip()
@@ -285,7 +268,6 @@ def _skip_notes(line):
 
 def _list_elem2strip(a, ds=string.whitespace):
     """Strip element of list with `str` type"""
-
     def list_strip(s):
         return s.strip(ds)
 
@@ -293,16 +275,10 @@ def _list_elem2strip(a, ds=string.whitespace):
 
 
 def _list_elem_2float(a):
-    """Convert type of list element to float
-
-    :params a: 1-D list
-    """
+    """Convert type of list element to float."""
     return list(map(float, a))
 
 
 def _list_elem2str(a):
-    """Convert type of list element to str
-
-    :params a: 1-D list
-    """
+    """Convert type of list element to str."""
     return list(map(str, a))
