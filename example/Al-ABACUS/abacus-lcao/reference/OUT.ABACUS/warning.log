@@ -1,0 +1,89 @@
+ AUTO_SET ks_solver to genelpa
+ Input  warning : gamma_only_local algorithm is not used.
+ AUTO_SET lcao_ecut to 80
+ In SCAN_BEGIN, can't find: LATTICE_PARAMETERS block.
+ AUTO_SET NBANDS to 0
+ AUTO_SET NBANDS to 58
+                            startmag_type = 2
+                       charge from rho_at = 2.99755
+                         charge should be = 3
+
+ SETUP ATOMIC RHO FOR SPIN 1
+                 Electron number from rho = 96
+           total electron number from rho = 96
+                                should be = 96
+                 charge before normalized = 96
+                  charge after normalized = 96
+ cpu 2D distribution : 2*4
+ but, the number of bands-row-block is 2
+      Processor           Atom
+              1             48
+              2             48
+              3             48
+              4             48
+              5             48
+              6             48
+              7             48
+              8             48
+
+ CHECK UPDATE INPUT INFORMATION
+                 charge before normalized = 96.000061748641
+                  charge after normalized = 96
+
+ CHECK UPDATE INPUT INFORMATION
+                 charge before normalized = 96.0000614083239
+                  charge after normalized = 96.0000000000001
+
+ CHECK UPDATE INPUT INFORMATION
+                 charge before normalized = 96.0000617032261
+                  charge after normalized = 96.0000000000001
+
+ CHECK UPDATE INPUT INFORMATION
+                 charge before normalized = 96.0000617004812
+                  charge after normalized = 96
+
+ CHECK UPDATE INPUT INFORMATION
+                 charge before normalized = 96.0000616881486
+                  charge after normalized = 96
+
+ CHECK UPDATE INPUT INFORMATION
+                 charge before normalized = 96.0000616852643
+                  charge after normalized = 96
+
+ CHECK UPDATE INPUT INFORMATION
+                 charge before normalized = 96.0000616851719
+                  charge after normalized = 96.0000000000001
+
+ CHECK UPDATE INPUT INFORMATION
+                 charge before normalized = 96.000061685274
+                  charge after normalized = 96.0000000000001
+
+ CHECK UPDATE INPUT INFORMATION
+                 charge before normalized = 96.0000616851274
+                  charge after normalized = 96.0000000000001
+
+ CHECK UPDATE INPUT INFORMATION
+                 charge before normalized = 96.0000616850981
+                  charge after normalized = 96
+
+ CHECK UPDATE INPUT INFORMATION
+                 charge before normalized = 96.0000616851286
+                  charge after normalized = 96
+
+ CHECK UPDATE INPUT INFORMATION
+                 charge before normalized = 96.0000616852008
+                  charge after normalized = 96
+
+ CHECK UPDATE INPUT INFORMATION
+                 charge before normalized = 96.0000616852035
+                  charge after normalized = 96
+
+ CHECK UPDATE INPUT INFORMATION
+                 charge before normalized = 96.0000616850972
+                  charge after normalized = 96
+
+ CHECK UPDATE INPUT INFORMATION
+                 charge before normalized = 96.0000616852347
+                  charge after normalized = 96
+                 charge before normalized = 96.0000000000001
+                  charge after normalized = 96

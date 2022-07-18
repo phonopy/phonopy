@@ -1,0 +1,20 @@
+INPUT_PARAMETERS
+# Created by Atomic Simulation Enviroment
+ntype               1
+calculation         scf
+pseudo_rcut         10.0
+pseudo_mesh         1
+ecutwfc             80
+basis_type          pw
+ks_solver           cg
+smearing_method     gaussian
+smearing_sigma      0.01
+mixing_type         pulay
+mixing_beta         0.7
+scf_nmax            100
+scf_thr             1e-08
+cal_force           1
+force_thr           0.001
+cal_stress          1
+out_stru            1
+stru_file ./STRU-001

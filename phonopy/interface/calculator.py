@@ -63,6 +63,7 @@ from phonopy.units import (
 )
 
 calculator_info = {
+    "abacus":{"option": {"name": "--abacus", "help": "Invoke ABACUS mode"}},
     "abinit": {"option": {"name": "--abinit", "help": "Invoke Abinit mode"}},
     "aims": {"option": {"name": "--aims", "help": "Invoke FHI-aims mode"}},
     "cp2k": {"option": {"name": "--cp2k", "help": "Invoke CP2K mode"}},
@@ -193,6 +194,12 @@ def write_crystal_structure(
 
         speci, restlines = optional_structure_info
         fleur.write_fleur(filename, cell, speci, 1, restlines)
+    elif interface_mode == "abacus":
+        import phonopy.interface.abacus as abacus
+
+        pps = optional_structure_info[1]
+        orbitals = optional_structure_info[2]
+        abacus.write_abacus(filename, cell, pps, orbitals)
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -316,6 +323,13 @@ def write_supercells_with_displacements(
         N = abs(determinant(additional_info["supercell_matrix"]))
         fleur_args = args + (speci, N, restlines)
         fleur.write_supercells_with_displacements(*fleur_args, **kwargs)
+    elif interface_mode == "abacus":
+        import phonopy.interface.abacus as abacus
+
+        pps = optional_structure_info[1]
+        orbitals = optional_structure_info[2]
+        abacus_args = args + (pps, orbitals)
+        abacus.write_supercells_with_displacements(*abacus_args, **kwargs)
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -453,6 +467,11 @@ def read_crystal_structure(
 
         unitcell, speci, restlines = read_fleur(cell_filename)
         return unitcell, (cell_filename, speci, restlines)
+    elif interface_mode == "abacus":
+        from phonopy.interface.abacus import read_abacus
+
+        unitcell, pps, orbitals = read_abacus(cell_filename, elements=chemical_symbols)
+        return unitcell, (cell_filename, pps, orbitals)
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -483,6 +502,8 @@ def get_default_cell_filename(interface_mode):
         return "unitcell.cell"
     elif interface_mode == "fleur":
         return "fleur.in"
+    elif interface_mode == "abacus":
+        return "STRU"
     else:
         return None
 
@@ -512,6 +533,8 @@ def get_default_supercell_filename(interface_mode):
         return "geometry.in.supercell"
     elif interface_mode in ("castep"):
         return "supercell.cell"
+    elif interface_mode in ("abacus"):
+        return "sSTRU"
     else:
         return None
 
@@ -526,6 +549,7 @@ def get_default_displacement_distance(interface_mode):
         "siesta",
         "turbomole",
         "fleur",
+        "abacus"
     ):
         displacement_distance = 0.02
     else:  # default or vasp, crystal, cp2k
@@ -550,6 +574,7 @@ def get_default_physical_units(interface_mode=None):
     FHI-aims      : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
     castep        : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
     fleur         : hartree, au,        AMU,         hartree/au,   hartree/au^2
+    abacus        : eV,      au,        AMU,         eV/angstrom,  eV/angstrom.au
 
     units['force_constants_unit'] is used in
     the 'get_force_constant_conversion_factor' method.
@@ -595,7 +620,7 @@ def get_default_physical_units(interface_mode=None):
         units["distance_to_A"] = Bohr
         units["force_constants_unit"] = "hartree/au^2"
         units["length_unit"] = "au"
-    elif interface_mode == "siesta":
+    elif interface_mode in ["siesta", "abacus"]:
         units["factor"] = SiestaToTHz
         units["nac_factor"] = Hartree / Bohr
         units["distance_to_A"] = Bohr
@@ -679,6 +704,8 @@ def get_force_sets(
         from phonopy.interface.castep import parse_set_of_forces
     elif interface_mode == "fleur":
         from phonopy.interface.fleur import parse_set_of_forces
+    elif interface_mode == "abacus":
+        from phonopy.interface.abacus import parse_set_of_forces
 
     else:
         return []
