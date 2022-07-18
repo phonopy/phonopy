@@ -1,21 +1,21 @@
-                                                                                     
-                             WELCOME TO ABACUS                                       
-                                                                                     
-               'Atomic-orbital Based Ab-initio Computation at UStc'                  
-                                                                                     
-                     Website: http://abacus.ustc.edu.cn/                             
-                                                                                     
+
+                             WELCOME TO ABACUS
+
+               'Atomic-orbital Based Ab-initio Computation at UStc'
+
+                     Website: http://abacus.ustc.edu.cn/
+
     Version: Parallel, in development
     Processor Number is 8
     Start Time is Mon Jul 18 11:26:18 2022
-                                                                                     
+
  ------------------------------------------------------------------------------------
 
  READING GENERAL INFORMATION
                            global_out_dir = OUT.ABACUS/
                            global_in_card = INPUT
-                               pseudo_dir = 
-                              orbital_dir = 
+                               pseudo_dir =
+                              orbital_dir =
                               pseudo_type = auto
                                     DRANK = 1
                                     DSIZE = 8
@@ -466,7 +466,7 @@ is_mp : 1
  DONE : LOCAL POTENTIAL Time : 0.264493 (SEC)
 
 
- Init Non-Local PseudoPotential table : 
+ Init Non-Local PseudoPotential table :
  Init Non-Local-Pseudopotential done.
  DONE : NON-LOCAL POTENTIAL Time : 0.274512 (SEC)
 
@@ -2896,4 +2896,4 @@ is_mp : 1
 
  Start  Time  : Mon Jul 18 11:26:18 2022
  Finish Time  : Mon Jul 18 11:46:53 2022
- Total  Time  : 0 h 20 mins 35 secs 
+ Total  Time  : 0 h 20 mins 35 secs

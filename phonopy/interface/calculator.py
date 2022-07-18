@@ -63,7 +63,7 @@ from phonopy.units import (
 )
 
 calculator_info = {
-    "abacus":{"option": {"name": "--abacus", "help": "Invoke ABACUS mode"}},
+    "abacus": {"option": {"name": "--abacus", "help": "Invoke ABACUS mode"}},
     "abinit": {"option": {"name": "--abinit", "help": "Invoke Abinit mode"}},
     "aims": {"option": {"name": "--aims", "help": "Invoke FHI-aims mode"}},
     "cp2k": {"option": {"name": "--cp2k", "help": "Invoke CP2K mode"}},
@@ -549,7 +549,7 @@ def get_default_displacement_distance(interface_mode):
         "siesta",
         "turbomole",
         "fleur",
-        "abacus"
+        "abacus",
     ):
         displacement_distance = 0.02
     else:  # default or vasp, crystal, cp2k
