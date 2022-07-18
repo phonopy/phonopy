@@ -268,6 +268,7 @@ def _skip_notes(line):
 
 def _list_elem2strip(a, ds=string.whitespace):
     """Strip element of list with `str` type."""
+
     def list_strip(s):
         return s.strip(ds)
 
