@@ -176,8 +176,8 @@ class Phonopy:
         self._build_primitive_cell()
 
         # Set supercell and primitive symmetry
-        self._symmetry = None
-        self._primitive_symmetry = None
+        self._symmetry: Optional[Symmetry] = None
+        self._primitive_symmetry: Optional[Symmetry] = None
         self._search_symmetry()
         self._search_primitive_symmetry()
 
@@ -988,6 +988,7 @@ class Phonopy:
                 is_plusminus=is_plusminus,
                 is_diagonal=is_diagonal,
                 is_trigonal=is_trigonal,
+                p2s_map=self._primitive.p2s_map,
                 log_level=self._log_level,
             )
             displacement_dataset = directions_to_displacement_dataset(

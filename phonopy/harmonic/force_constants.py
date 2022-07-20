@@ -204,7 +204,7 @@ def symmetrize_force_constants(force_constants, level=1):
         set_translational_invariance(force_constants)
 
 
-def symmetrize_compact_force_constants(force_constants, primitive, level=1):
+def symmetrize_compact_force_constants(force_constants, primitive: Primitive, level=1):
     """Symmetry force constants by translational and permutation symmetries.
 
     Parameters
