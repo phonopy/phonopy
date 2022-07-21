@@ -988,7 +988,6 @@ class Phonopy:
                 is_plusminus=is_plusminus,
                 is_diagonal=is_diagonal,
                 is_trigonal=is_trigonal,
-                p2s_map=self._primitive.p2s_map,
                 log_level=self._log_level,
             )
             displacement_dataset = directions_to_displacement_dataset(
@@ -3470,7 +3469,12 @@ class Phonopy:
         )
 
     def _search_symmetry(self):
-        self._symmetry = Symmetry(self._supercell, self._symprec, self._is_symmetry)
+        self._symmetry = Symmetry(
+            self._supercell,
+            self._symprec,
+            self._is_symmetry,
+            s2p_map=self._primitive.s2p_map,
+        )
 
     def _search_primitive_symmetry(self):
         self._primitive_symmetry = Symmetry(

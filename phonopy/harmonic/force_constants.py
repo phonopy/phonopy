@@ -33,6 +33,8 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from typing import Optional
+
 import numpy as np
 
 from phonopy.structure.atoms import PhonopyAtoms
@@ -50,7 +52,7 @@ def get_fc2(
     symmetry: Symmetry,
     dataset,
     atom_list=None,
-    primitive: Primitive = None,
+    primitive: Optional[Primitive] = None,
     decimals=None,
 ):
     """Force constants are computed.
