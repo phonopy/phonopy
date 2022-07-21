@@ -176,8 +176,8 @@ class Phonopy:
         self._build_primitive_cell()
 
         # Set supercell and primitive symmetry
-        self._symmetry = None
-        self._primitive_symmetry = None
+        self._symmetry: Optional[Symmetry] = None
+        self._primitive_symmetry: Optional[Symmetry] = None
         self._search_symmetry()
         self._search_primitive_symmetry()
 
@@ -3469,7 +3469,12 @@ class Phonopy:
         )
 
     def _search_symmetry(self):
-        self._symmetry = Symmetry(self._supercell, self._symprec, self._is_symmetry)
+        self._symmetry = Symmetry(
+            self._supercell,
+            self._symprec,
+            self._is_symmetry,
+            s2p_map=self._primitive.s2p_map,
+        )
 
     def _search_primitive_symmetry(self):
         self._primitive_symmetry = Symmetry(

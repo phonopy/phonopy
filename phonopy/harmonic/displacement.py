@@ -78,7 +78,11 @@ def directions_to_displacement_dataset(displacement_directions, distance, superc
 
 
 def get_least_displacements(
-    symmetry, is_plusminus="auto", is_diagonal=True, is_trigonal=False, log_level=0
+    symmetry,
+    is_plusminus="auto",
+    is_diagonal=True,
+    is_trigonal=False,
+    log_level=0,
 ):
     """Return a set of displacements.
 
