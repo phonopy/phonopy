@@ -1160,7 +1160,7 @@ def run(phonon: Phonopy, settings, plot_conf, log_level):
                         _pdos_indices.append(xyz_set)
                 elif is_pdos_auto(settings):
                     _pdos_indices = get_pdos_indices(phonon.primitive_symmetry)
-                    legend = [phonon.primitive.symbols[x[0]] for x in pdos_indices]
+                    legend = [phonon.primitive.symbols[x[0]] for x in _pdos_indices]
                 else:
                     legend = [np.array(x) + 1 for x in pdos_indices]
                     _pdos_indices = pdos_indices
