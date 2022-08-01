@@ -264,36 +264,14 @@ class IrReps:
             for j, p2 in enumerate(pos):
                 diff = p_rot - p2
                 if (abs(diff - np.rint(diff)) < self._symprec).all():
-                    # For this phase factor, see
-                    # Dynamics of perfect crystals by G. Venkataraman et al.,
-                    # pp132 Eq. (3.22).
-                    # It is assumed that dynamical matrix is built without
-                    # considering internal atomic positions, so
-                    # the phase factors of eigenvectors are shifted in
-                    # _get_irreps().
-                    phase_factor = np.dot(self._q, np.dot(np.linalg.inv(r), p2 - p_rot))
-
-                    # This phase factor comes from non-pure-translation of
-                    # each symmetry opration.
+                    phase_factor = -np.dot(np.dot(self._q, np.linalg.inv(r)), t)
                     if self._is_little_cogroup:
                         phase_factor += np.dot(t, self._q)
-
                     matrix[j, i] = np.exp(2j * np.pi * phase_factor)
-
         return matrix
 
     def _get_irreps(self):
-        eigvecs = []
-        phases = np.kron(
-            [
-                np.exp(2j * np.pi * np.dot(self._q, pos))
-                for pos in self._primitive.scaled_positions
-            ],
-            [1, 1, 1],
-        )
-        for vec in self._eigvecs.T:
-            eigvecs.append(vec * phases)
-
+        eigvecs = self._eigvecs.T
         irrep = []
         for band_indices in self._degenerate_sets:
             irrep_Rs = []
