@@ -202,10 +202,7 @@ class IrReps:
         for r, t in zip(
             self._symmetry_dataset["rotations"], self._symmetry_dataset["translations"]
         ):
-
-            # Using r is used instead of np.linalg.inv(r)
             diff = np.dot(self._q, r) - self._q
-
             if (abs(diff - np.rint(diff)) < self._symprec).all():
                 rotations_at_q.append(r)
                 for i in range(3):
@@ -238,10 +235,8 @@ class IrReps:
         matrices = []
 
         for (r, t) in zip(self._rotations_at_q, self._translations_at_q):
-
             lat = self._primitive.cell.T
             r_cart = similarity_transformation(lat, r)
-
             perm_mat = self._get_modified_permutation_matrix(r, t)
             matrices.append(np.kron(perm_mat, r_cart))
 
@@ -260,11 +255,13 @@ class IrReps:
         pos = self._primitive.scaled_positions
         matrix = np.zeros((num_atom, num_atom), dtype=complex)
         for i, p1 in enumerate(pos):
-            p_rot = np.dot(r, p1) + t
+            p_rot = np.dot(r, p1) + t  # i -> j
             for j, p2 in enumerate(pos):
-                diff = p_rot - p2
+                diff = p_rot - p2  # Rx_i + t - x_j
                 if (abs(diff - np.rint(diff)) < self._symprec).all():
-                    phase_factor = -np.dot(np.dot(self._q, np.linalg.inv(r)), t)
+                    phase_factor = np.dot(
+                        self._q, np.dot(np.linalg.inv(r), p2 - t) - p2
+                    )
                     if self._is_little_cogroup:
                         phase_factor += np.dot(t, self._q)
                     matrix[j, i] = np.exp(2j * np.pi * phase_factor)
