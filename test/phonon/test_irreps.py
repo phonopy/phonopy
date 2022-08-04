@@ -851,6 +851,14 @@ def test_pt22_Pbar6():
     phonon.set_irreps([0, 0, 0])
     chars = phonon.get_irreps().characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
+    qpoints = [
+        [0, 0, 0.5],
+        [2.0 / 3, -1.0 / 3, 0],
+        [2.0 / 3, -1.0 / 3, 0.5],
+        [1.0 / 3, 1.0 / 3, 0],
+        [1.0 / 3, 1.0 / 3, 0.5],
+    ]  # A, KA, HA, K, H
+    _check_char_sum(phonon, qpoints)
 
 
 def test_pt24_P6_222():
@@ -860,6 +868,14 @@ def test_pt24_P6_222():
     phonon.set_irreps([0, 0, 0])
     chars = phonon.get_irreps().characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
+    qpoints = [
+        [0, 0, 0.5],
+        [1.0 / 3, 1.0 / 3, 0],
+        [1.0 / 3, 1.0 / 3, 0.5],
+        [0.5, 0, 0],
+        [0.5, 0, 0.5],
+    ]  # A, K, H, M, L
+    _check_char_sum(phonon, qpoints)
 
 
 def test_pt26_Pbar6m2():
@@ -869,6 +885,12 @@ def test_pt26_Pbar6m2():
     phonon.set_irreps([0, 0, 0])
     chars = phonon.get_irreps().characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
+    qpoints = [
+        [0, 0, 0.5],
+        [1.0 / 3, 1.0 / 3, 0],
+        [1.0 / 3, 1.0 / 3, 0.5],
+    ]  # A, K, H
+    _check_char_sum(phonon, qpoints)
 
 
 def test_pt28_P2_13():
@@ -878,6 +900,12 @@ def test_pt28_P2_13():
     phonon.set_irreps([0, 0, 0])
     chars = phonon.get_irreps().characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
+    qpoints = [
+        [0.5, 0.5, 0.5],
+        [0.5, 0.5, 0],
+        [0, 0.5, 0],
+    ]  # R, M, X
+    _check_char_sum(phonon, qpoints)
 
 
 def test_pt29_Pabar3():
@@ -887,6 +915,12 @@ def test_pt29_Pabar3():
     phonon.set_irreps([0, 0, 0])
     chars = phonon.get_irreps().characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
+    qpoints = [
+        [0.5, 0.5, 0.5],
+        [0.5, 0.5, 0],
+        [0, 0.5, 0],
+    ]  # R, M, X
+    _check_char_sum(phonon, qpoints)
 
 
 def test_pt30_P4_332():
@@ -896,6 +930,12 @@ def test_pt30_P4_332():
     phonon.set_irreps([0, 0, 0])
     chars = phonon.get_irreps().characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
+    qpoints = [
+        [0.5, 0.5, 0.5],
+        [0.5, 0.5, 0],
+        [0, 0.5, 0],
+    ]  # R, M, X
+    _check_char_sum(phonon, qpoints)
 
 
 def test_pt31_Pbar43m():
@@ -905,6 +945,12 @@ def test_pt31_Pbar43m():
     phonon.set_irreps([0, 0, 0])
     chars = phonon.get_irreps().characters
     np.testing.assert_allclose(chars, data, atol=1e-5)
+    qpoints = [
+        [0.5, 0.5, 0.5],
+        [0.5, 0.5, 0],
+        [0, 0.5, 0],
+    ]  # R, M, X
+    _check_char_sum(phonon, qpoints)
 
 
 def _get_phonon(spgtype, dim, pmat):
@@ -937,8 +983,8 @@ def _check_char_sum(phonon: Phonopy, qpoints: List):
     print("space-group number:", phonon.symmetry.dataset["number"])
 
     for q in qpoints:
-        print(phonon.get_irreps().qpoint, end="")
         phonon.set_irreps(q)
+        print(phonon.get_irreps().qpoint, end="")
         order = len(phonon.get_irreps().conventional_rotations)
         char_sums = []
         for i, irreps in enumerate(phonon.get_irreps().irreps):
