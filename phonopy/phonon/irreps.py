@@ -33,6 +33,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
 from typing import Union
 
 import numpy as np
@@ -139,7 +140,8 @@ class IrReps:
         self._ddm.run(self._q)
         return deg_sets
 
-    def get_band_indices(self):
+    @property
+    def band_indices(self):
         """Return band indices.
 
         Returns
@@ -149,29 +151,97 @@ class IrReps:
         """
         return self._degenerate_sets
 
-    def get_characters(self):
+    def get_band_indices(self):
+        """Return band indices."""
+        warnings.warn(
+            "IrReps.get_band_indices() is deprecated. "
+            "Use IrReps.band_indices attribute.",
+            DeprecationWarning,
+        )
+        return self.band_indices
+
+    @property
+    def characters(self):
         """Return characters of irreps."""
         return self._characters
 
-    def get_eigenvectors(self):
+    def get_characters(self):
+        """Return characters of irreps."""
+        warnings.warn(
+            "IrReps.get_characters() is deprecated. "
+            "Use IrReps.characters attribute.",
+            DeprecationWarning,
+        )
+        return self.characters
+
+    @property
+    def eigenvectors(self):
         """Return eigenvectors."""
         return self._eigvecs
 
-    def get_irreps(self):
+    def get_eigenvectors(self):
+        """Return eigenvectors."""
+        warnings.warn(
+            "IrReps.get_eigenvectors() is deprecated. "
+            "Use IrReps.eigenvectors attribute.",
+            DeprecationWarning,
+        )
+        return self.eigenvectors
+
+    @property
+    def irreps(self):
         """Return irreps."""
         return self._irreps
 
-    def get_ground_matrices(self):
+    def get_irreps(self):
+        """Return irreps."""
+        warnings.warn(
+            "IrReps.get_irreps() is deprecated. " "Use IrReps.irreps attribute.",
+            DeprecationWarning,
+        )
+        return self.irreps
+
+    @property
+    def ground_matrices(self):
         """Return ground matrices."""
         return self._ground_matrices
 
-    def get_rotation_symbols(self):
+    def get_ground_matrices(self):
+        """Return ground matrices."""
+        warnings.warn(
+            "IrReps.get_ground_matrices() is deprecated. "
+            "Use IrReps.ground_matrices attribute.",
+            DeprecationWarning,
+        )
+        return self.ground_matrices
+
+    @property
+    def rotation_symbols(self):
         """Return symbols assigned to rotation matrices."""
         return self._rotation_symbols
 
-    def get_rotations(self):
+    def get_rotation_symbols(self):
+        """Return symbols assigned to rotation matrices."""
+        warnings.warn(
+            "IrReps.get_rotation_symbols() is deprecated. "
+            "Use IrReps.rotation_symbols attribute.",
+            DeprecationWarning,
+        )
+        return self.rotation_symbols
+
+    @property
+    def conventional_rotations(self):
         """Return rotation matrices."""
         return self._conventional_rotations
+
+    def get_rotations(self):
+        """Return rotation matrices."""
+        warnings.warn(
+            "IrReps.get_rotations() is deprecated. "
+            "Use IrReps.conventional_rotations attribute.",
+            DeprecationWarning,
+        )
+        return self.conventional_rotations
 
     def get_projection_operators(self, idx_irrep, i=None, j=None):
         """Return projection operators."""
@@ -179,6 +249,11 @@ class IrReps:
             return self._get_character_projection_operators(idx_irrep)
         else:
             return self._get_projection_operators(idx_irrep, i, j)
+
+    @property
+    def qpoint(self):
+        """Return q-point."""
+        return self._q
 
     def show(self, show_irreps=False):
         """Show irreps."""
@@ -263,7 +338,7 @@ class IrReps:
                         self._q, np.dot(np.linalg.inv(r), p2 - t) - p2
                     )
                     if self._is_little_cogroup:
-                        phase_factor += np.dot(t, self._q)
+                        phase_factor = np.dot(t, self._q)
                     matrix[j, i] = np.exp(2j * np.pi * phase_factor)
         return matrix
 
