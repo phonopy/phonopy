@@ -987,10 +987,14 @@ def _check_char_sum(phonon: Phonopy, qpoints: List):
         print(phonon.get_irreps().qpoint, end="")
         order = len(phonon.get_irreps().conventional_rotations)
         char_sums = []
-        for i, irreps in enumerate(phonon.get_irreps().irreps):
+        for i, (irreps, chars) in enumerate(
+            zip(phonon.get_irreps().irreps, phonon.get_irreps().characters)
+        ):
             char_sum = 0
-            for irrep in irreps:
-                char_sum += np.trace(irrep) * np.trace(np.linalg.inv(irrep))
+            for irrep, char in zip(irreps, chars):
+                _char = np.trace(irrep)
+                np.testing.assert_almost_equal(_char, char)
+                char_sum += char.conj() * char
             char_sum = abs(char_sum)
             dim = int(np.rint(char_sum / order))
             assert abs(char_sum - dim * order) < 1e-5
