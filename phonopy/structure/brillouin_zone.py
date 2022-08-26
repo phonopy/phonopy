@@ -118,17 +118,22 @@ class BrillouinZone:
             np.linalg.inv(self._reciprocal_lattice), self._reduced_bases.T
         )
         self._tmat_inv = np.linalg.inv(self._tmat)
-        self.shortest_qpoints = None
+        self._shortest_qpoints = None
 
     def run(self, qpoints):
         """Find q-points inside Wigner–Seitz cell."""
         reduced_qpoints = np.dot(qpoints, self._tmat_inv.T)
         reduced_qpoints -= np.rint(reduced_qpoints)
-        self.shortest_qpoints = []
+        self._shortest_qpoints = []
         for q in reduced_qpoints:
             distances = (np.dot(q + search_space, self._reduced_bases) ** 2).sum(axis=1)
             min_dist = min(distances)
             shortest_indices = np.where(distances < min_dist + self._tolerance)[0]
-            self.shortest_qpoints.append(
+            self._shortest_qpoints.append(
                 np.dot(search_space[shortest_indices] + q, self._tmat.T)
             )
+
+    @property
+    def shortest_qpoints(self):
+        """Return shortest qpoints including equivalents."""
+        return self._shortest_qpoints
