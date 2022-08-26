@@ -40,6 +40,7 @@ import numpy as np
 from phonopy.harmonic.force_constants import distribute_force_constants_by_translations
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
+    Primitive,
     get_primitive,
     get_supercell,
     shape_supercell_matrix,
@@ -219,8 +220,8 @@ class DynmatToForceConstants:
 
     def __init__(
         self,
-        primitive,
-        supercell,
+        primitive: Primitive,
+        supercell: PhonopyAtoms,
         eigenvalues=None,
         eigenvectors=None,
         dynamical_matrices=None,
@@ -231,10 +232,10 @@ class DynmatToForceConstants:
 
         Parameters
         ----------
-        supercell : PhonopyAtoms
-            Supercell, not necessarily being an instance of Supercell class.
         primitive : Primitive
             Primitive cell
+        supercell : PhonopyAtoms
+            Supercell, not necessarily being an instance of Supercell class.
         is_full_fc : bool
             This controls the matrix shape of calculated force constants.
             True and False give the full and compact force cosntants,
@@ -437,6 +438,7 @@ class DynmatToForceConstants:
                     self._fc[p_i, s_j] = fc_elem
 
     def _sum_q(self, p_i, s_j, p_j):
+        """Sum over commensurate q-points for a pair of atoms."""
         multi, adrs = self._multi[s_j, p_i]
         pos = self._svecs[adrs : (adrs + multi)]
         sum_q = np.zeros((3, 3), dtype=self._dtype_complex, order="C")

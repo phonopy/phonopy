@@ -42,6 +42,7 @@ import numpy as np
 
 from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
 from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.brillouin_zone import BrillouinZone
 from phonopy.structure.cells import Primitive, sparse_to_dense_svecs
 
 
@@ -385,6 +386,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         super().__init__(supercell, primitive, force_constants, decimals=decimals)
         self._symprec = symprec
         self._log_level = log_level
+        self._rec_lat = np.linalg.inv(self._pcell.cell)  # column vectors
 
     def run(self, q, q_direction=None):
         """Calculate dynamical matrix at q-point.
@@ -399,11 +401,10 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             shape=(3,), dtype='double'
 
         """
-        rec_lat = np.linalg.inv(self._pcell.cell)  # column vectors
         if q_direction is None:
-            q_norm = np.linalg.norm(np.dot(q, rec_lat.T))
+            q_norm = np.linalg.norm(np.dot(q, self._rec_lat.T))
         else:
-            q_norm = np.linalg.norm(np.dot(q_direction, rec_lat.T))
+            q_norm = np.linalg.norm(np.dot(q_direction, self._rec_lat.T))
 
         if q_norm < self._symprec:
             self._run(q)
@@ -600,6 +601,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         self._dd_real_q0 = None
         self._dd_limiting = None
         self._H = None
+        self._bz = BrillouinZone(self._rec_lat)
 
         if nac_params is not None:
             self.nac_params = nac_params
@@ -672,9 +674,18 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         d2f = DynmatToForceConstants(
             self._pcell, self._scell, is_full_fc=(fc_shape[0] == fc_shape[1])
         )
+
+        # Bring commensurate points into first-BZ because
+        # Gonze-dipole-dipole is not, strictly speaking, periodict over G.
+        self._bz.run(d2f.commensurate_points)
+        comm_points_in_BZ = np.array(
+            [pts[0] for pts in self._bz.shortest_qpoints], dtype="double", order="C"
+        )
+        d2f.commensurate_points = comm_points_in_BZ
+
         dynmat = []
         num_q = len(d2f.commensurate_points)
-        for i, q_red in enumerate(d2f.commensurate_points):
+        for i, q_red in enumerate(comm_points_in_BZ):
             if self._log_level > 2:
                 print("%d/%d %s" % (i + 1, num_q, q_red))
             self._run(q_red)
@@ -723,12 +734,11 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
 
     def _get_Gonze_dipole_dipole(self, q_red, q_direction):
         num_atom = len(self._pcell)
-        rec_lat = np.linalg.inv(self._pcell.cell)  # column vectors
-        q_cart = np.array(np.dot(q_red, rec_lat.T), dtype="double")
+        q_cart = np.array(np.dot(q_red, self._rec_lat.T), dtype="double")
         if q_direction is None:
             q_dir_cart = None
         else:
-            q_dir_cart = np.array(np.dot(q_direction, rec_lat.T), dtype="double")
+            q_dir_cart = np.array(np.dot(q_direction, self._rec_lat.T), dtype="double")
 
         try:
             import phonopy._phonopy as phonoc  # noqa F401
@@ -864,18 +874,17 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         )
 
     def _get_G_list(self, G_cutoff, g_rad=100):
-        rec_lat = np.linalg.inv(self._pcell.cell)  # column vectors
         # g_rad must be greater than 0 for broadcasting.
-        G_vec_list = self._get_G_vec_list(g_rad, rec_lat)
+        G_vec_list = self._get_G_vec_list(g_rad)
         G_norm2 = ((G_vec_list) ** 2).sum(axis=1)
         return np.array(G_vec_list[G_norm2 < G_cutoff**2], dtype="double", order="C")
 
-    def _get_G_vec_list(self, g_rad, rec_lat):
+    def _get_G_vec_list(self, g_rad):
         pts = np.arange(-g_rad, g_rad + 1)
         grid = np.meshgrid(pts, pts, pts)
         for i in range(3):
             grid[i] = grid[i].ravel()
-        return np.dot(rec_lat, grid).T
+        return np.dot(self._rec_lat, grid).T
 
     def _get_H(self):
         lat = self._scell.cell
@@ -980,11 +989,10 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
 
     def _compute_dynamical_matrix(self, q_red, q_direction):
         # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
-        rec_lat = np.linalg.inv(self._pcell.cell)  # column vectors
         if q_direction is None:
-            q = np.dot(q_red, rec_lat.T)
+            q = np.dot(q_red, self._rec_lat.T)
         else:
-            q = np.dot(q_direction, rec_lat.T)
+            q = np.dot(q_direction, self._rec_lat.T)
 
         constant = self._get_constant_factor(
             q, self._dielectric, self._pcell.volume, self._unit_conversion
