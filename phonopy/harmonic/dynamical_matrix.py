@@ -368,6 +368,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         symprec=1e-5,
         decimals=None,
         log_level=0,
+        use_openmp=False,
     ):
         """Init method.
 
@@ -391,7 +392,13 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             Log level.
 
         """
-        super().__init__(supercell, primitive, force_constants, decimals=decimals)
+        super().__init__(
+            supercell,
+            primitive,
+            force_constants,
+            decimals=decimals,
+            use_openmp=use_openmp,
+        )
         self._symprec = symprec
         self._log_level = log_level
         self._rec_lat = np.linalg.inv(self._pcell.cell)  # column vectors
@@ -560,6 +567,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         decimals=None,
         symprec=1e-5,
         log_level=0,
+        use_openmp=False,
     ):
         """Init method.
 
@@ -593,6 +601,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             symprec=symprec,
             decimals=decimals,
             log_level=log_level,
+            use_openmp=use_openmp,
         )
 
         # For the method by Gonze et al.
@@ -815,6 +824,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             self._unit_conversion * 4.0 * np.pi / volume,
             self._Lambda,
             self._symprec,
+            self._use_openmp * 1,
         )
         return dd
 
@@ -837,6 +847,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             np.array(pos, dtype="double", order="C"),
             self._Lambda,
             self._symprec,
+            self._use_openmp * 1,
         )
 
     def _get_real_dipole_dipole(self, q_red):
@@ -946,6 +957,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
         decimals=None,
         symprec=1e-5,
         log_level=0,
+        use_openmp=False,
     ):
         """Init method.
 
@@ -976,6 +988,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
             symprec=symprec,
             decimals=decimals,
             log_level=log_level,
+            use_openmp=use_openmp,
         )
 
         self._symprec = symprec
@@ -1082,6 +1095,7 @@ def get_dynamical_matrix(
     decimals=None,
     symprec=1e-5,
     log_level=0,
+    use_openmp=False,
 ):
     """Return dynamical matrix.
 
@@ -1095,7 +1109,13 @@ def get_dynamical_matrix(
         _fc2 = fc2 * frequency_scale_factor**2
 
     if nac_params is None:
-        dm = DynamicalMatrix(supercell, primitive, _fc2, decimals=decimals)
+        dm = DynamicalMatrix(
+            supercell,
+            primitive,
+            _fc2,
+            decimals=decimals,
+            use_openmp=use_openmp,
+        )
     else:
         if "method" not in nac_params:
             method = "gonze"
@@ -1114,6 +1134,7 @@ def get_dynamical_matrix(
             decimals=decimals,
             symprec=symprec,
             log_level=log_level,
+            use_openmp=use_openmp,
         )
         dm.nac_params = nac_params
     return dm

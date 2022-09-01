@@ -3402,6 +3402,8 @@ class Phonopy:
                 )
 
     def _set_dynamical_matrix(self):
+        import phonopy._phonopy as phonoc
+
         self._dynamical_matrix = None
 
         if self._is_symmetry and self._nac_params is not None:
@@ -3431,6 +3433,7 @@ class Phonopy:
             self._dynamical_matrix_decimals,
             symprec=self._symprec,
             log_level=self._log_level,
+            use_openmp=phonoc.use_openmp(),
         )
         # DynamialMatrix instance transforms force constants in correct
         # type of numpy array.

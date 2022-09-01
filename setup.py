@@ -64,6 +64,8 @@ def _get_extensions(build_dir):
                     found_libs[key] = line.split()[3].split(";")
                 if f"{key} flags" in line and len(line.split()) > 3:
                     found_flags[key] = line.split()[3].split(";")
+                    if key == "OpenMP":
+                        define_macros.append(("_OPENMP", None))
         for key, value in found_libs.items():
             found_extra_link_args += value
         for key, value in found_flags.items():

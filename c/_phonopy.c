@@ -67,7 +67,7 @@ static PyObject* py_thm_integration_weight_at_omegas(PyObject* self,
                                                      PyObject* args);
 static PyObject* py_get_tetrahedra_frequenies(PyObject* self, PyObject* args);
 static PyObject* py_tetrahedron_method_dos(PyObject* self, PyObject* args);
-
+static PyObject* py_use_openmp(PyObject* self, PyObject* args);
 struct module_state {
     PyObject* error;
 };
@@ -132,6 +132,7 @@ static PyMethodDef _phonopy_methods[] = {
      "Run tetrahedron method"},
     {"tetrahedron_method_dos", py_tetrahedron_method_dos, METH_VARARGS,
      "Run tetrahedron method"},
+    {"use_openmp", py_use_openmp, METH_VARARGS, "Use OpenMP or not"},
     {NULL, NULL, 0, NULL}};
 
 #if PY_MAJOR_VERSION >= 3
@@ -561,6 +562,7 @@ static PyObject* py_get_recip_dipole_dipole(PyObject* self, PyObject* args) {
     double factor;
     double lambda;
     double tolerance;
+    long use_openmp;
 
     double* dd;
     double* dd_q0;
@@ -572,9 +574,10 @@ static PyObject* py_get_recip_dipole_dipole(PyObject* self, PyObject* args) {
     double(*pos)[3];
     long num_patom, num_G;
 
-    if (!PyArg_ParseTuple(args, "OOOOOOOOddd", &py_dd, &py_dd_q0, &py_G_list,
+    if (!PyArg_ParseTuple(args, "OOOOOOOOdddl", &py_dd, &py_dd_q0, &py_G_list,
                           &py_q_cart, &py_q_direction, &py_born, &py_dielectric,
-                          &py_positions, &factor, &lambda, &tolerance))
+                          &py_positions, &factor, &lambda, &tolerance,
+                          &use_openmp))
         return NULL;
 
     dd = (double*)PyArray_DATA(py_dd);
@@ -599,7 +602,7 @@ static PyObject* py_get_recip_dipole_dipole(PyObject* self, PyObject* args) {
                                  dielectric, pos, /* [natom, 3] */
                                  factor,          /* 4pi/V*unit-conv */
                                  lambda,          /* 4 * Lambda^2 */
-                                 tolerance);
+                                 tolerance, use_openmp);
 
     Py_RETURN_NONE;
 }
@@ -612,6 +615,7 @@ static PyObject* py_get_recip_dipole_dipole_q0(PyObject* self, PyObject* args) {
     PyArrayObject* py_positions;
     double lambda;
     double tolerance;
+    long use_openmp;
 
     double* dd_q0;
     double(*G_list)[3];
@@ -620,8 +624,9 @@ static PyObject* py_get_recip_dipole_dipole_q0(PyObject* self, PyObject* args) {
     double(*pos)[3];
     long num_patom, num_G;
 
-    if (!PyArg_ParseTuple(args, "OOOOOdd", &py_dd_q0, &py_G_list, &py_born,
-                          &py_dielectric, &py_positions, &lambda, &tolerance))
+    if (!PyArg_ParseTuple(args, "OOOOOddl", &py_dd_q0, &py_G_list, &py_born,
+                          &py_dielectric, &py_positions, &lambda, &tolerance,
+                          &use_openmp))
         return NULL;
 
     dd_q0 = (double*)PyArray_DATA(py_dd_q0);
@@ -637,7 +642,7 @@ static PyObject* py_get_recip_dipole_dipole_q0(PyObject* self, PyObject* args) {
                                     num_G, num_patom, born, dielectric,
                                     pos,    /* [natom, 3] */
                                     lambda, /* 4 * Lambda^2 */
-                                    tolerance);
+                                    tolerance, use_openmp);
 
     Py_RETURN_NONE;
 }
@@ -998,4 +1003,12 @@ static PyObject* py_tetrahedron_method_dos(PyObject* self, PyObject* args) {
                                 num_coef, num_gp);
 
     Py_RETURN_NONE;
+}
+
+static PyObject* py_use_openmp(PyObject* self, PyObject* args) {
+    if (phpy_use_openmp()) {
+        Py_RETURN_TRUE;
+    } else {
+        Py_RETURN_FALSE;
+    }
 }
