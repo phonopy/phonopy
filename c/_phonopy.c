@@ -451,6 +451,7 @@ static PyObject* py_get_dynamical_matrix(PyObject* self, PyObject* args) {
     PyArrayObject* py_masses;
     PyArrayObject* py_s2p_map;
     PyArrayObject* py_p2s_map;
+    long use_openmp;
 
     double* dm;
     double* fc;
@@ -463,9 +464,9 @@ static PyObject* py_get_dynamical_matrix(PyObject* self, PyObject* args) {
     long num_patom;
     long num_satom;
 
-    if (!PyArg_ParseTuple(args, "OOOOOOOO", &py_dynamical_matrix,
+    if (!PyArg_ParseTuple(args, "OOOOOOOOl", &py_dynamical_matrix,
                           &py_force_constants, &py_q, &py_svecs, &py_multi,
-                          &py_masses, &py_s2p_map, &py_p2s_map)) {
+                          &py_masses, &py_s2p_map, &py_p2s_map, &use_openmp)) {
         return NULL;
     }
 
@@ -481,7 +482,8 @@ static PyObject* py_get_dynamical_matrix(PyObject* self, PyObject* args) {
     num_satom = PyArray_DIMS(py_s2p_map)[0];
 
     phpy_get_dynamical_matrix_at_q(dm, num_patom, num_satom, fc, q, svecs,
-                                   multi, m, s2p_map, p2s_map, NULL, 1);
+                                   multi, m, s2p_map, p2s_map, NULL,
+                                   use_openmp);
 
     Py_RETURN_NONE;
 }
@@ -498,6 +500,7 @@ static PyObject* py_get_nac_dynamical_matrix(PyObject* self, PyObject* args) {
     PyArrayObject* py_p2s_map;
     PyArrayObject* py_born;
     double factor;
+    long use_openmp;
 
     double* dm;
     double* fc;
@@ -515,10 +518,10 @@ static PyObject* py_get_nac_dynamical_matrix(PyObject* self, PyObject* args) {
     long n;
     double(*charge_sum)[3][3];
 
-    if (!PyArg_ParseTuple(args, "OOOOOOOOOOd", &py_dynamical_matrix,
+    if (!PyArg_ParseTuple(args, "OOOOOOOOOOdl", &py_dynamical_matrix,
                           &py_force_constants, &py_q, &py_svecs, &py_multi,
                           &py_masses, &py_s2p_map, &py_p2s_map, &py_q_cart,
-                          &py_born, &factor))
+                          &py_born, &factor, &use_openmp))
         return NULL;
 
     dm = (double*)PyArray_DATA(py_dynamical_matrix);
@@ -540,7 +543,8 @@ static PyObject* py_get_nac_dynamical_matrix(PyObject* self, PyObject* args) {
 
     phpy_get_charge_sum(charge_sum, num_patom, factor / n, q_cart, born);
     phpy_get_dynamical_matrix_at_q(dm, num_patom, num_satom, fc, q, svecs,
-                                   multi, m, s2p_map, p2s_map, charge_sum, 1);
+                                   multi, m, s2p_map, p2s_map, charge_sum,
+                                   use_openmp);
 
     free(charge_sum);
 
@@ -654,6 +658,7 @@ static PyObject* py_get_derivative_dynmat(PyObject* self, PyObject* args) {
     PyArrayObject* py_dielectric;
     PyArrayObject* py_q_direction;
     double nac_factor;
+    long use_openmp;
 
     double* ddm;
     double* fc;
@@ -671,11 +676,12 @@ static PyObject* py_get_derivative_dynmat(PyObject* self, PyObject* args) {
     double* epsilon;
     double* q_dir;
 
-    if (!PyArg_ParseTuple(
-            args, "OOOOOOOOOdOOO", &py_derivative_dynmat, &py_force_constants,
-            &py_q_vector, &py_lattice, /* column vectors */
-            &py_svecs, &py_multi, &py_masses, &py_s2p_map, &py_p2s_map,
-            &nac_factor, &py_born, &py_dielectric, &py_q_direction)) {
+    if (!PyArg_ParseTuple(args, "OOOOOOOOOdOOOl", &py_derivative_dynmat,
+                          &py_force_constants, &py_q_vector,
+                          &py_lattice, /* column vectors */
+                          &py_svecs, &py_multi, &py_masses, &py_s2p_map,
+                          &py_p2s_map, &nac_factor, &py_born, &py_dielectric,
+                          &py_q_direction, &use_openmp)) {
         return NULL;
     }
 
@@ -707,9 +713,9 @@ static PyObject* py_get_derivative_dynmat(PyObject* self, PyObject* args) {
         q_dir = (double*)PyArray_DATA(py_q_direction);
     }
 
-    phpy_get_derivative_dynmat_at_q(ddm, num_patom, num_satom, fc, q_vector,
-                                    lat, svecs, multi, masses, s2p_map, p2s_map,
-                                    nac_factor, born, epsilon, q_dir);
+    phpy_get_derivative_dynmat_at_q(
+        ddm, num_patom, num_satom, fc, q_vector, lat, svecs, multi, masses,
+        s2p_map, p2s_map, nac_factor, born, epsilon, q_dir, use_openmp);
 
     Py_RETURN_NONE;
 }

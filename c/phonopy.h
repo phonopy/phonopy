@@ -54,7 +54,7 @@ long phpy_get_dynamical_matrix_at_q(double *dynamical_matrix,
                                     const long (*multi)[2], const double *mass,
                                     const long *s2p_map, const long *p2s_map,
                                     const double (*charge_sum)[3][3],
-                                    const long with_openmp);
+                                    const long use_openmp);
 void phpy_get_charge_sum(
     double (*charge_sum)[3][3], const long num_patom,
     const double factor, /* 4pi/V*unit-conv and denominator */
@@ -81,7 +81,8 @@ void phpy_get_derivative_dynmat_at_q(
     const double *lattice, /* column vector */
     const double (*svecs)[3], const long (*multi)[2], const double *mass,
     const long *s2p_map, const long *p2s_map, const double nac_factor,
-    const double *born, const double *dielectric, const double *q_direction);
+    const double *born, const double *dielectric, const double *q_direction,
+    const long use_openmp);
 void phpy_get_neighboring_grid_points(size_t neighboring_grid_points[],
                                       const size_t grid_point,
                                       PHPYCONST int relative_grid_address[][3],

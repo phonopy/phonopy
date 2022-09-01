@@ -4,7 +4,7 @@ import sysconfig
 
 import numpy
 
-with_openmp = False
+use_openmp = False
 
 try:
     from setuptools import Extension, setup
@@ -46,7 +46,7 @@ sources_phonopy = [
     "c/tetrahedron_method.c",
 ]
 
-if with_openmp:
+if use_openmp:
     extra_compile_args_phonopy = [
         "-fopenmp",
     ]
