@@ -41,8 +41,6 @@
 
 #include "phonopy.h"
 
-/* PHPYCONST is defined in dynmat.h */
-
 /* Build dynamical matrix */
 static PyObject* py_transform_dynmat_to_fc(PyObject* self, PyObject* args);
 static PyObject* py_perm_trans_symmetrize_fc(PyObject* self, PyObject* args);
@@ -899,7 +897,9 @@ static PyObject* py_thm_integration_weight_at_omegas(PyObject* self,
     num_omegas = (long)PyArray_DIMS(py_omegas)[0];
     tetrahedra_omegas = (double(*)[4])PyArray_DATA(py_tetrahedra_omegas);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (i = 0; i < num_omegas; i++) {
         iw[i] = phpy_get_integration_weight(omegas[i], tetrahedra_omegas,
                                             function[0]);
