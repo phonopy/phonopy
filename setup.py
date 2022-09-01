@@ -1,21 +1,10 @@
 """Setup script of phonopy."""
 import os
-import sysconfig
 
 import numpy
+from setuptools import Extension, setup
 
 use_openmp = False
-
-try:
-    from setuptools import Extension, setup
-
-    use_setuptools = True
-    print("setuptools is used.")
-except ImportError:
-    from distutils.core import Extension, setup
-
-    use_setuptools = False
-    print("distutils is used.")
 
 include_dirs_numpy = [numpy.get_include()]
 
@@ -25,11 +14,6 @@ if "CC" in os.environ:
         cc = "clang"
     if "gcc" in os.environ["CC"]:
         cc = "gcc"
-
-# Workaround Python issue 21121
-config_var = sysconfig.get_config_var("CFLAGS")
-if config_var is not None and "-Werror=declaration-after-statement" in config_var:
-    os.environ["CFLAGS"] = config_var.replace("-Werror=declaration-after-statement", "")
 
 ######################
 # _phonopy extension #
@@ -135,39 +119,24 @@ if __name__ == "__main__":
         version += "-%d" % version_nums[3]
     print(version)
 
-    if use_setuptools:
-        setup(
-            name="phonopy",
-            version=version,
-            description="This is the phonopy module.",
-            author="Atsushi Togo",
-            author_email="atz.togo@gmail.com",
-            url="https://phonopy.github.io/phonopy/",
-            packages=packages_phonopy,
-            python_requires=">=3.7",
-            install_requires=[
-                "numpy>=1.15.0",
-                "PyYAML",
-                "matplotlib>=2.2.2",
-                "h5py",
-                "spglib",
-            ],
-            extras_require={"cp2k": ["cp2k-input-tools"]},
-            provides=["phonopy"],
-            scripts=scripts_phonopy,
-            ext_modules=ext_modules_phonopy,
-        )
-    else:
-        setup(
-            name="phonopy",
-            version=version,
-            description="This is the phonopy module.",
-            author="Atsushi Togo",
-            author_email="atz.togo@gmail.com",
-            url="https://phonopy.github.io/phonopy/",
-            packages=packages_phonopy,
-            requires=["numpy", "PyYAML", "matplotlib", "h5py", "spglib"],
-            provides=["phonopy"],
-            scripts=scripts_phonopy,
-            ext_modules=ext_modules_phonopy,
-        )
+    setup(
+        name="phonopy",
+        version=version,
+        description="This is the phonopy module.",
+        author="Atsushi Togo",
+        author_email="atz.togo@gmail.com",
+        url="https://phonopy.github.io/phonopy/",
+        packages=packages_phonopy,
+        python_requires=">=3.7",
+        install_requires=[
+            "numpy>=1.15.0",
+            "PyYAML",
+            "matplotlib>=2.2.2",
+            "h5py",
+            "spglib",
+        ],
+        extras_require={"cp2k": ["cp2k-input-tools"]},
+        provides=["phonopy"],
+        scripts=scripts_phonopy,
+        ext_modules=ext_modules_phonopy,
+    )
