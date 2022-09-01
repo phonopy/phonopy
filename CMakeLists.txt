@@ -14,15 +14,6 @@ message(STATUS "CMAKE_SYSTEM_PREFIX_PATH: ${CMAKE_SYSTEM_PREFIX_PATH}")
 include(GNUInstallDirs)
 # set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# Version numbers
-file(READ ${PROJECT_SOURCE_DIR}/phonopy/version.py version_file)
-string(REGEX MATCH "__version__.*([0-9]+)[.]([0-9]+)[.]([0-9]+)" phonopy_version ${version_file})
-set(phonopy_major_version ${CMAKE_MATCH_1})
-set(phonopy_minor_version ${CMAKE_MATCH_2})
-set(phonopy_micro_version ${CMAKE_MATCH_3})
-set(serial "${phonopy_major_version}.${phonopy_minor_version}.${phonopy_micro_version}")
-set(soserial "1")
-
 find_package(OpenMP)
 if (OpenMP_FOUND)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")

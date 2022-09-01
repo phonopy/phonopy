@@ -7,7 +7,13 @@ import subprocess
 import numpy
 import setuptools
 
-use_openmp = False
+if (
+    "PHONOPY_USE_OPENMP" in os.environ
+    and os.environ["PHONOPY_USE_OPENMP"].lower() == "true"
+):
+    use_openmp = True
+else:
+    use_openmp = False
 
 
 def _run_cmake(build_dir):
@@ -18,7 +24,6 @@ def _run_cmake(build_dir):
         ".",
         "-B",
         "_build",
-        "-DPHONOPY=on",
         "-DCMAKE_INSTALL_PREFIX=.",
     ]
     # if "CONDA_PREFIX" in os.environ:
