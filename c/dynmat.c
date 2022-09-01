@@ -71,11 +71,11 @@ long dym_get_dynamical_matrix_at_q(double *dynamical_matrix,
                                    const long (*multi)[2], const double *mass,
                                    const long *s2p_map, const long *p2s_map,
                                    const double (*charge_sum)[3][3],
-                                   const long with_openmp) {
+                                   const long use_openmp) {
     long i, j, ij;
 
-    if (with_openmp) {
-#ifdef PHPYOPENMP
+    if (use_openmp) {
+#ifdef _OPENMP
 #pragma omp parallel for
 #endif
         for (ij = 0; ij < num_patom * num_patom; ij++) {

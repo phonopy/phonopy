@@ -42,7 +42,7 @@ long dym_get_dynamical_matrix_at_q(double *dynamical_matrix,
                                    const long (*multi)[2], const double *mass,
                                    const long *s2p_map, const long *p2s_map,
                                    const double (*charge_sum)[3][3],
-                                   const long with_openmp);
+                                   const long use_openmp);
 void dym_get_recip_dipole_dipole(
     double *dd,                /* [natom, 3, natom, 3, (real,imag)] */
     const double *dd_q0,       /* [natom, 3, 3, (real,imag)] */

@@ -41,6 +41,7 @@ void ddm_get_derivative_dynmat_at_q(
     const double *lattice, /* column vector */
     const double (*svecs)[3], const long (*multi)[2], const double *mass,
     const long *s2p_map, const long *p2s_map, const double nac_factor,
-    const double *born, const double *dielectric, const double *q_direction);
+    const double *born, const double *dielectric, const double *q_direction,
+    const long use_openmp);
 
 #endif

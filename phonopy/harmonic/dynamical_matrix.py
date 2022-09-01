@@ -91,6 +91,7 @@ class DynamicalMatrix:
         primitive: Primitive,
         force_constants,
         decimals=None,
+        use_openmp=False,
     ):
         """Init method.
 
@@ -113,6 +114,7 @@ class DynamicalMatrix:
         self._scell = supercell
         self._pcell = primitive
         self._decimals = decimals
+        self._use_openmp = use_openmp
         self._dynamical_matrix = None
         self._force_constants = None
         self._set_force_constants(force_constants)
@@ -230,6 +232,11 @@ class DynamicalMatrix:
         )
         return self.dynamical_matrix
 
+    @property
+    def use_openmp(self) -> bool:
+        """Return activate OpenMP or not."""
+        return self._use_openmp
+
     def run(self, q, lang="C"):
         """Run dynamical matrix calculation at a q-point.
 
@@ -291,6 +298,7 @@ class DynamicalMatrix:
             mass,
             s2p_map,
             p2s_map,
+            self._use_openmp * 1,
         )
 
         # Data of dm array are stored in memory by the C order of
@@ -1030,6 +1038,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
                 np.array(q, dtype="double"),
                 self._born,
                 factor,
+                self._use_openmp * 1,
             )
         else:
             phonoc.nac_dynamical_matrix(
@@ -1044,6 +1053,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
                 np.array(q, dtype="double"),
                 self._born,
                 factor,
+                self._use_openmp * 1,
             )
 
         self._dynamical_matrix = dm
