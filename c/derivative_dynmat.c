@@ -97,7 +97,7 @@ void ddm_get_derivative_dynmat_at_q(
 
     if (use_openmp) {
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp parallel for private(i, j)
 #endif
         for (ij = 0; ij < num_patom * num_patom; ij++) {
             i = ij / num_patom;
