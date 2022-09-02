@@ -25,6 +25,7 @@ def _run_cmake(build_dir):
         "-B",
         "_build",
         "-DCMAKE_INSTALL_PREFIX=.",
+        "-DPHONOPY=on",
     ]
     # if "CONDA_PREFIX" in os.environ:
     #     args.append("-DUSE_CONDA_PATH=on")
@@ -53,8 +54,16 @@ def _get_extensions(build_dir):
     found_extra_link_args = []
     found_extra_compile_args = []
     if not use_openmp or not shutil.which("cmake") or build_dir.exists():
-        pass
+        sources = [
+            "c/_phonopy.c",
+            "c/phonopy.c",
+            "c/dynmat.c",
+            "c/derivative_dynmat.c",
+            "c/rgrid.c",
+            "c/tetrahedron_method.c",
+        ]
     else:
+        sources = ["c/_phonopy.c"]
         cmake_output = _run_cmake(build_dir)
         found_flags = {}
         found_libs = {}
@@ -64,8 +73,8 @@ def _get_extensions(build_dir):
                     found_libs[key] = line.split()[3].split(";")
                 if f"{key} flags" in line and len(line.split()) > 3:
                     found_flags[key] = line.split()[3].split(";")
-                    if key == "OpenMP":
-                        define_macros.append(("_OPENMP", None))
+                    # if key == "OpenMP":
+                    #     define_macros.append(("_OPENMP", None))
         for key, value in found_libs.items():
             found_extra_link_args += value
         for key, value in found_flags.items():
@@ -76,7 +85,6 @@ def _get_extensions(build_dir):
         print("define_macros: ", define_macros)
         print("=============================================")
         print()
-        _clean_cmake(build_dir)
 
     # Build ext_modules
     extensions = []
@@ -85,17 +93,17 @@ def _get_extensions(build_dir):
     define_macros.append(("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"))
     include_dirs += ["c", numpy.get_include()]
 
+    libphpy = list((pathlib.Path.cwd() / "_build").glob("*phpy.*"))
+    if libphpy:
+        print("=============================================")
+        print(f"Phonopy library: {libphpy[0]}")
+        print("=============================================")
+        extra_link_args += [str(libphpy[0])]
+
     extensions.append(
         setuptools.Extension(
             "phonopy._phonopy",
-            sources=[
-                "c/_phonopy.c",
-                "c/phonopy.c",
-                "c/dynmat.c",
-                "c/derivative_dynmat.c",
-                "c/rgrid.c",
-                "c/tetrahedron_method.c",
-            ],
+            sources=sources,
             extra_compile_args=extra_compile_args,
             extra_link_args=extra_link_args,
             include_dirs=include_dirs,
@@ -191,6 +199,8 @@ def main(build_dir):
         scripts=scripts_phonopy,
         ext_modules=_get_extensions(build_dir),
     )
+
+    _clean_cmake(build_dir)
 
 
 if __name__ == "__main__":
