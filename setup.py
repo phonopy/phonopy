@@ -48,6 +48,7 @@ def _get_extensions(build_dir):
     define_macros = []
     extra_link_args = []
     extra_compile_args = []
+    extra_objects = []
     include_dirs = []
 
     # Libraray search
@@ -89,7 +90,7 @@ def _get_extensions(build_dir):
     # Build ext_modules
     extensions = []
     extra_link_args += found_extra_link_args
-    extra_compile_args += found_extra_link_args
+    extra_compile_args += found_extra_compile_args
     define_macros.append(("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"))
     include_dirs += ["c", numpy.get_include()]
 
@@ -98,7 +99,7 @@ def _get_extensions(build_dir):
         print("=============================================")
         print(f"Phonopy library: {libphpy[0]}")
         print("=============================================")
-        extra_link_args += [str(libphpy[0])]
+        extra_objects += [str(libphpy[0])]
 
     extensions.append(
         setuptools.Extension(
@@ -106,6 +107,7 @@ def _get_extensions(build_dir):
             sources=sources,
             extra_compile_args=extra_compile_args,
             extra_link_args=extra_link_args,
+            extra_objects=extra_objects,
             include_dirs=include_dirs,
             define_macros=define_macros,
         )
