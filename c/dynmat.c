@@ -53,7 +53,7 @@ static void get_dm(double dm_real[3][3], double dm_imag[3][3],
                    const long k);
 static double get_dielectric_part(const double q_cart[3],
                                   const double dielectric[3][3]);
-static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
+static void get_dd(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
                    const double (*G_list)[3], /* [num_G, 3] */
                    const long num_G, const long num_patom,
                    const double q_cart[3], const double *q_direction_cart,
@@ -61,14 +61,11 @@ static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
                    const double (*pos)[3], /* [num_patom, 3] */
                    const double lambda, const double tolerance,
                    const long use_openmp);
-static void get_KK_at_g(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
-                        const long g,
-                        const double (*G_list)[3], /* [num_G, 3] */
-                        const long num_G, const long num_patom,
-                        const double q_cart[3], const double *q_direction_cart,
-                        const double dielectric[3][3],
+static void get_dd_at_g(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
+                        const long i, const long j, const double G[3],
+                        const long num_patom,
                         const double (*pos)[3], /* [num_patom, 3] */
-                        const double lambda, const double tolerance);
+                        const double KK[3][3]);
 static void make_Hermitian(double *mat, const long num_band);
 static void multiply_borns(double *dd, const double *dd_in,
                            const long num_patom, const double (*born)[3][3],
@@ -133,7 +130,7 @@ void dym_get_recip_dipole_dipole(
         dd_tmp[i] = 0;
     }
 
-    get_KK(dd_tmp, G_list, num_G, num_patom, q_cart, q_direction_cart,
+    get_dd(dd_tmp, G_list, num_G, num_patom, q_cart, q_direction_cart,
            dielectric, pos, lambda, tolerance, use_openmp);
 
     multiply_borns(dd, dd_tmp, num_patom, born, use_openmp);
@@ -184,7 +181,7 @@ void dym_get_recip_dipole_dipole_q0(
     zero_vec[1] = 0;
     zero_vec[2] = 0;
 
-    get_KK(dd_tmp1, G_list, num_G, num_patom, zero_vec, NULL, dielectric, pos,
+    get_dd(dd_tmp1, G_list, num_G, num_patom, zero_vec, NULL, dielectric, pos,
            lambda, tolerance, use_openmp);
 
     multiply_borns(dd_tmp2, dd_tmp1, num_patom, born, use_openmp);
@@ -430,7 +427,7 @@ static double get_dielectric_part(const double q_cart[3],
     return sum;
 }
 
-static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
+static void get_dd(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
                    const double (*G_list)[3], /* [num_G, 3] */
                    const long num_G, const long num_patom,
                    const double q_cart[3], const double *q_direction_cart,
@@ -438,89 +435,94 @@ static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
                    const double (*pos)[3], /* [num_patom, 3] */
                    const double lambda, const double tolerance,
                    const long use_openmp) {
-    long g;
+    long i, j, g;
+    double q_K[3];
+    double norm, dielectric_part, L2;
+    double(*KK)[3][3];
+
+    KK = (double(*)[3][3])malloc(sizeof(double[3][3]) * num_G);
+    L2 = 4 * lambda * lambda;
+
     /* sum over K = G + q and over G (i.e. q=0) */
     /* q_direction has values for summation over K at Gamma point. */
     /* q_direction is NULL for summation over G */
-
-    if (use_openmp) {
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp parallel for private(i, j, q_K, norm, \
+                                 dielectric_part) if (use_openmp)
 #endif
-        for (g = 0; g < num_G; g++) {
-            get_KK_at_g(dd_part, g, G_list, num_G, num_patom, q_cart,
-                        q_direction_cart, dielectric, pos, lambda, tolerance);
+    for (g = 0; g < num_G; g++) {
+        norm = 0;
+        for (i = 0; i < 3; i++) {
+            q_K[i] = G_list[g][i] + q_cart[i];
+            norm += q_K[i] * q_K[i];
         }
-    } else {
-        for (g = 0; g < num_G; g++) {
-            get_KK_at_g(dd_part, g, G_list, num_G, num_patom, q_cart,
-                        q_direction_cart, dielectric, pos, lambda, tolerance);
-        }
-    }
-}
 
-static void get_KK_at_g(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
-                        const long g,
-                        const double (*G_list)[3], /* [num_G, 3] */
-                        const long num_G, const long num_patom,
-                        const double q_cart[3], const double *q_direction_cart,
-                        const double dielectric[3][3],
-                        const double (*pos)[3], /* [num_patom, 3] */
-                        const double lambda, const double tolerance) {
-    long i, j, k, l, adrs;
-    double q_K[3];
-    double norm, cos_phase, sin_phase, phase, dielectric_part, exp_damp, L2;
-    double KK[3][3];
-
-    L2 = 4 * lambda * lambda;
-
-    norm = 0;
-    for (i = 0; i < 3; i++) {
-        q_K[i] = G_list[g][i] + q_cart[i];
-        norm += q_K[i] * q_K[i];
-    }
-
-    if (sqrt(norm) < tolerance) {
-        if (!q_direction_cart) {
-            return;
+        if (sqrt(norm) < tolerance) {
+            if (!q_direction_cart) {
+                for (i = 0; i < 3; i++) {
+                    for (j = 0; j < 3; j++) {
+                        KK[g][i][j] = 0;
+                    }
+                }
+                continue;
+            } else {
+                dielectric_part =
+                    get_dielectric_part(q_direction_cart, dielectric);
+                for (i = 0; i < 3; i++) {
+                    for (j = 0; j < 3; j++) {
+                        KK[g][i][j] = q_direction_cart[i] *
+                                      q_direction_cart[j] / dielectric_part;
+                    }
+                }
+            }
         } else {
-            dielectric_part = get_dielectric_part(q_direction_cart, dielectric);
+            dielectric_part = get_dielectric_part(q_K, dielectric);
             for (i = 0; i < 3; i++) {
                 for (j = 0; j < 3; j++) {
-                    KK[i][j] = q_direction_cart[i] * q_direction_cart[j] /
-                               dielectric_part;
+                    KK[g][i][j] = q_K[i] * q_K[j] / dielectric_part *
+                                  exp(-dielectric_part / L2);
                 }
-            }
-        }
-    } else {
-        dielectric_part = get_dielectric_part(q_K, dielectric);
-        exp_damp = exp(-dielectric_part / L2);
-        for (i = 0; i < 3; i++) {
-            for (j = 0; j < 3; j++) {
-                KK[i][j] = q_K[i] * q_K[j] / dielectric_part * exp_damp;
             }
         }
     }
 
-    for (i = 0; i < num_patom; i++) {
-        for (j = 0; j < num_patom; j++) {
-            phase = 0;
-            for (k = 0; k < 3; k++) {
-                /* For D-type dynamical matrix */
-                /* phase += (pos[i][k] - pos[j][k]) * q_K[k]; */
-                /* For C-type dynamical matrix */
-                phase += (pos[i][k] - pos[j][k]) * G_list[g][k];
+    // OpenMP should not be used here.
+    // Due to race condition in dd_part and bad performance.
+    for (g = 0; g < num_G; g++) {
+        for (i = 0; i < num_patom; i++) {
+            for (j = 0; j < num_patom; j++) {
+                get_dd_at_g(dd_part, i, j, G_list[g], num_patom, pos, KK[g]);
             }
-            phase *= 2 * PI;
-            cos_phase = cos(phase);
-            sin_phase = sin(phase);
-            for (k = 0; k < 3; k++) {
-                for (l = 0; l < 3; l++) {
-                    adrs = i * num_patom * 9 + k * num_patom * 3 + j * 3 + l;
-                    dd_part[adrs * 2] += KK[k][l] * cos_phase;
-                    dd_part[adrs * 2 + 1] += KK[k][l] * sin_phase;
-                }
-            }
+        }
+    }
+
+    free(KK);
+    KK = NULL;
+}
+
+static void get_dd_at_g(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
+                        const long i, const long j, const double G[3],
+                        const long num_patom,
+                        const double (*pos)[3], /* [num_patom, 3] */
+                        const double KK[3][3]) {
+    long k, l, adrs;
+    double cos_phase, sin_phase, phase;
+
+    phase = 0;
+    for (k = 0; k < 3; k++) {
+        /* For D-type dynamical matrix */
+        /* phase += (pos[i][k] - pos[j][k]) * q_K[k]; */
+        /* For C-type dynamical matrix */
+        phase += (pos[i][k] - pos[j][k]) * G[k];
+    }
+    phase *= 2 * PI;
+    cos_phase = cos(phase);
+    sin_phase = sin(phase);
+    for (k = 0; k < 3; k++) {
+        for (l = 0; l < 3; l++) {
+            adrs = i * num_patom * 9 + k * num_patom * 3 + j * 3 + l;
+            dd_part[adrs * 2] += KK[k][l] * cos_phase;
+            dd_part[adrs * 2 + 1] += KK[k][l] * sin_phase;
         }
     }
 }
