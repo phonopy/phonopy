@@ -3298,6 +3298,8 @@ class Phonopy:
             to generate random displacements.
 
         """
+        import phonopy._phonopy as phonoc
+
         self._random_displacements = RandomDisplacements(
             self._supercell,
             self._primitive,
@@ -3305,6 +3307,7 @@ class Phonopy:
             dist_func=dist_func,
             cutoff_frequency=cutoff_frequency,
             factor=self._factor,
+            use_openmp=phonoc.use_openmp(),
         )
         self._random_displacements.run(
             temperature,

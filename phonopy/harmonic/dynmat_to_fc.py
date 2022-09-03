@@ -227,6 +227,7 @@ class DynmatToForceConstants:
         dynamical_matrices=None,
         commensurate_points=None,
         is_full_fc=True,
+        use_openmp=False,
     ):
         """Init method.
 
@@ -241,6 +242,8 @@ class DynmatToForceConstants:
             True and False give the full and compact force cosntants,
             respectively. The default is True. See more details in Attributes
             section of this class.
+        use_openmp : bool, optional, default=False
+            Use OpenMP in calculate force constants from dynamical matrix.
 
         """
         self._pcell = primitive
@@ -258,6 +261,8 @@ class DynmatToForceConstants:
             self._multi = multi
         else:
             self._svecs, self._multi = sparse_to_dense_svecs(svecs, multi)
+
+        self._use_openmp = use_openmp
 
         self._dynmat = None
         self._fc = None
@@ -418,6 +423,7 @@ class DynmatToForceConstants:
             self._pcell.masses,
             s2pp,
             fc_index_map,
+            self._use_openmp * 1,
         )
 
     def _py_inverse_transformation(self):

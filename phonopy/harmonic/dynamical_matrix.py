@@ -109,6 +109,8 @@ class DynamicalMatrix:
             dtype='double'
         decimals : int, optional, default=None
             Number of decimals. Use like dm.round(decimals).
+        use_openmp : bool, optional, default=False
+            Use OpenMP in calculate dynamical matrix.
 
         """
         self._scell = supercell
@@ -390,6 +392,8 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             Number of decimals. Use like dm.round(decimals).
         log_levelc : int, optional, defualt=0
             Log level.
+        use_openmp : bool, optional, default=False
+            Use OpenMP in calculate dynamical matrix.
 
         """
         super().__init__(
@@ -592,6 +596,8 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             Number of decimals. Use like dm.round(decimals).
         log_levelc : int, optional, defualt=0
             Log level.
+        use_openmp : bool, optional, default=False
+            Use OpenMP in calculate dynamical matrix.
 
         """
         super().__init__(
@@ -689,7 +695,10 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
 
         fc_shape = self._force_constants.shape
         d2f = DynmatToForceConstants(
-            self._pcell, self._scell, is_full_fc=(fc_shape[0] == fc_shape[1])
+            self._pcell,
+            self._scell,
+            is_full_fc=(fc_shape[0] == fc_shape[1]),
+            use_openmp=self._use_openmp,
         )
 
         # Bring commensurate points into first-BZ because
@@ -979,6 +988,8 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
             Number of decimals. Use like dm.round(decimals).
         log_levelc : int, optional, defualt=0
             Log level.
+        use_openmp : bool, optional, default=False
+            Use OpenMP in calculate dynamical matrix.
 
         """
         super().__init__(

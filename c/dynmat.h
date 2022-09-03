@@ -72,6 +72,7 @@ void dym_transform_dynmat_to_fc(double *fc, const double *dm,
                                 const double (*svecs)[3],
                                 const long (*multi)[2], const double *masses,
                                 const long *s2pp_map, const long *fc_index_map,
-                                const long num_patom, const long num_satom);
+                                const long num_patom, const long num_satom,
+                                const long use_openmp);
 
 #endif

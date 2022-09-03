@@ -190,6 +190,7 @@ static PyObject* py_transform_dynmat_to_fc(PyObject* self, PyObject* args) {
     PyArrayObject* py_masses;
     PyArrayObject* py_s2pp_map;
     PyArrayObject* py_fc_index_map;
+    long use_openmp;
 
     double* fc;
     double* dm;
@@ -202,10 +203,10 @@ static PyObject* py_transform_dynmat_to_fc(PyObject* self, PyObject* args) {
     long num_patom;
     long num_satom;
 
-    if (!PyArg_ParseTuple(args, "OOOOOOOO", &py_force_constants,
+    if (!PyArg_ParseTuple(args, "OOOOOOOOl", &py_force_constants,
                           &py_dynamical_matrices, &py_commensurate_points,
                           &py_svecs, &py_multi, &py_masses, &py_s2pp_map,
-                          &py_fc_index_map)) {
+                          &py_fc_index_map, &use_openmp)) {
         return NULL;
     }
 
@@ -221,7 +222,8 @@ static PyObject* py_transform_dynmat_to_fc(PyObject* self, PyObject* args) {
     num_satom = PyArray_DIMS(py_multi)[0];
 
     phpy_transform_dynmat_to_fc(fc, dm, comm_points, svecs, multi, masses,
-                                s2pp_map, fc_index_map, num_patom, num_satom);
+                                s2pp_map, fc_index_map, num_patom, num_satom,
+                                use_openmp);
 
     Py_RETURN_NONE;
 }
