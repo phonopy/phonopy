@@ -45,6 +45,11 @@ static void get_dynmat_ij(double *dynamical_matrix, const long num_patom,
                           const long *s2p_map, const long *p2s_map,
                           const double (*charge_sum)[3][3], const long i,
                           const long j);
+static void transform_dynmat_to_fc_ij(
+    double *fc, const double *dm, const long i, const long j,
+    const double (*comm_points)[3], const double (*svecs)[3],
+    const long (*multi)[2], const double *masses, const long *s2pp_map,
+    const long *fc_index_map, const long num_patom, const long num_satom);
 static void get_dm(double dm_real[3][3], double dm_imag[3][3],
                    const long num_patom, const long num_satom, const double *fc,
                    const double q[3], const double (*svecs)[3],
@@ -286,45 +291,29 @@ void dym_transform_dynmat_to_fc(double *fc, const double *dm,
                                 const double (*svecs)[3],
                                 const long (*multi)[2], const double *masses,
                                 const long *s2pp_map, const long *fc_index_map,
-                                const long num_patom, const long num_satom) {
-    long i, j, k, l, m, N, adrs, m_pair, i_pair, svecs_adrs;
-    double coef, phase, cos_phase, sin_phase;
+                                const long num_patom, const long num_satom,
+                                const long use_openmp) {
+    long i, j, ij;
 
-    N = num_satom / num_patom;
     for (i = 0; i < num_patom * num_satom * 9; i++) {
         fc[i] = 0;
     }
 
-    for (i = 0; i < num_patom; i++) {
-        for (j = 0; j < num_satom; j++) {
-            i_pair = j * num_patom + i;
-            m_pair = multi[i_pair][0];
-            svecs_adrs = multi[i_pair][1];
-            coef = sqrt(masses[i] * masses[s2pp_map[j]]) / N;
-            for (k = 0; k < N; k++) {
-                cos_phase = 0;
-                sin_phase = 0;
-                for (l = 0; l < m_pair; l++) {
-                    phase = 0;
-                    for (m = 0; m < 3; m++) {
-                        phase -= comm_points[k][m] * svecs[svecs_adrs + l][m];
-                    }
-                    cos_phase += cos(phase * 2 * PI);
-                    sin_phase += sin(phase * 2 * PI);
-                }
-                cos_phase /= m_pair;
-                sin_phase /= m_pair;
-                for (l = 0; l < 3; l++) {
-                    for (m = 0; m < 3; m++) {
-                        adrs = k * num_patom * num_patom * 18 +
-                               i * num_patom * 18 + l * num_patom * 6 +
-                               s2pp_map[j] * 6 + m * 2;
-                        fc[fc_index_map[i] * num_satom * 9 + j * 9 + l * 3 +
-                           m] +=
-                            (dm[adrs] * cos_phase - dm[adrs + 1] * sin_phase) *
-                            coef;
-                    }
-                }
+    if (use_openmp) {
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+        for (ij = 0; ij < num_patom * num_satom; ij++) {
+            transform_dynmat_to_fc_ij(
+                fc, dm, ij / num_satom, ij % num_satom, comm_points, svecs,
+                multi, masses, s2pp_map, fc_index_map, num_patom, num_satom);
+        }
+    } else {
+        for (i = 0; i < num_patom; i++) {
+            for (j = 0; j < num_satom; j++) {
+                transform_dynmat_to_fc_ij(fc, dm, i, j, comm_points, svecs,
+                                          multi, masses, s2pp_map, fc_index_map,
+                                          num_patom, num_satom);
             }
         }
     }
@@ -587,6 +576,43 @@ static void multiply_borns_at_ij(double *dd, const long i, const long j,
                     dd[adrs * 2] += dd_in[adrs_in * 2] * zz;
                     dd[adrs * 2 + 1] += dd_in[adrs_in * 2 + 1] * zz;
                 }
+            }
+        }
+    }
+}
+
+static void transform_dynmat_to_fc_ij(
+    double *fc, const double *dm, const long i, const long j,
+    const double (*comm_points)[3], const double (*svecs)[3],
+    const long (*multi)[2], const double *masses, const long *s2pp_map,
+    const long *fc_index_map, const long num_patom, const long num_satom) {
+    long k, l, m, N, adrs, m_pair, i_pair, svecs_adrs;
+    double coef, phase, cos_phase, sin_phase;
+
+    N = num_satom / num_patom;
+    i_pair = j * num_patom + i;
+    m_pair = multi[i_pair][0];
+    svecs_adrs = multi[i_pair][1];
+    coef = sqrt(masses[i] * masses[s2pp_map[j]]) / N;
+    for (k = 0; k < N; k++) {
+        cos_phase = 0;
+        sin_phase = 0;
+        for (l = 0; l < m_pair; l++) {
+            phase = 0;
+            for (m = 0; m < 3; m++) {
+                phase -= comm_points[k][m] * svecs[svecs_adrs + l][m];
+            }
+            cos_phase += cos(phase * 2 * PI);
+            sin_phase += sin(phase * 2 * PI);
+        }
+        cos_phase /= m_pair;
+        sin_phase /= m_pair;
+        for (l = 0; l < 3; l++) {
+            for (m = 0; m < 3; m++) {
+                adrs = k * num_patom * num_patom * 18 + i * num_patom * 18 +
+                       l * num_patom * 6 + s2pp_map[j] * 6 + m * 2;
+                fc[fc_index_map[i] * num_satom * 9 + j * 9 + l * 3 + m] +=
+                    (dm[adrs] * cos_phase - dm[adrs + 1] * sin_phase) * coef;
             }
         }
     }

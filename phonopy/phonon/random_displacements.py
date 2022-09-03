@@ -128,6 +128,7 @@ class RandomDisplacements:
         dist_func=None,
         cutoff_frequency=None,
         factor=VaspToTHz,
+        use_openmp=False,
     ):
         """Init method.
 
@@ -151,6 +152,8 @@ class RandomDisplacements:
             means 0.01.
         factor : float
             Phonon frequency unit conversion factor to THz
+        use_openmp : bool, optional, default=False
+            Use OpenMP in calculate dynamical matrix and its inverse.
 
         """
         if cutoff_frequency is None or cutoff_frequency < 0:
@@ -174,7 +177,9 @@ class RandomDisplacements:
         )
 
         # Dynamical matrix without NAC because of commensurate points only
-        self._dynmat = get_dynamical_matrix(force_constants, supercell, primitive)
+        self._dynmat = get_dynamical_matrix(
+            force_constants, supercell, primitive, use_openmp=use_openmp
+        )
 
         self._setup_sampling_qpoints(supercell.cell, primitive.cell)
 
@@ -297,7 +302,11 @@ class RandomDisplacements:
     def run_d2f(self):
         """Calculate force constants from phonon eigen-solutions."""
         qpoints, eigvals, eigvecs = self._collect_eigensolutions()
-        d2f = DynmatToForceConstants(self._dynmat.primitive, self._dynmat.supercell)
+        d2f = DynmatToForceConstants(
+            self._dynmat.primitive,
+            self._dynmat.supercell,
+            use_openmp=self._dynmat.use_openmp,
+        )
         d2f.commensurate_points = qpoints
         d2f.create_dynamical_matrices(eigvals, eigvecs)
         d2f.run()
@@ -306,7 +315,11 @@ class RandomDisplacements:
     def run_correlation_matrix(self, T):
         """Calculate displacement-displacement correlation matrix."""
         qpoints, eigvals, eigvecs = self._collect_eigensolutions()
-        d2f = DynmatToForceConstants(self._dynmat.primitive, self._dynmat.supercell)
+        d2f = DynmatToForceConstants(
+            self._dynmat.primitive,
+            self._dynmat.supercell,
+            use_openmp=self._dynmat.use_openmp,
+        )
         masses = self._dynmat.supercell.masses
         d2f.commensurate_points = qpoints
         freqs = np.sqrt(np.abs(eigvals)) * self._factor
