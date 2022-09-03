@@ -293,17 +293,28 @@ void dym_transform_dynmat_to_fc(double *fc, const double *dm,
                                 const long *s2pp_map, const long *fc_index_map,
                                 const long num_patom, const long num_satom,
                                 const long use_openmp) {
-    long i, j;
+    long i, j, ij;
 
     for (i = 0; i < num_patom * num_satom * 9; i++) {
         fc[i] = 0;
     }
 
-    for (i = 0; i < num_patom; i++) {
-        for (j = 0; j < num_satom; j++) {
-            transform_dynmat_to_fc_ij(fc, dm, i, j, comm_points, svecs, multi,
-                                      masses, s2pp_map, fc_index_map, num_patom,
-                                      num_satom);
+    if (use_openmp) {
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+        for (ij = 0; ij < num_patom * num_satom; ij++) {
+            transform_dynmat_to_fc_ij(
+                fc, dm, ij / num_satom, ij % num_satom, comm_points, svecs,
+                multi, masses, s2pp_map, fc_index_map, num_patom, num_satom);
+        }
+    } else {
+        for (i = 0; i < num_patom; i++) {
+            for (j = 0; j < num_satom; j++) {
+                transform_dynmat_to_fc_ij(fc, dm, i, j, comm_points, svecs,
+                                          multi, masses, s2pp_map, fc_index_map,
+                                          num_patom, num_satom);
+            }
         }
     }
 }
