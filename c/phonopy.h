@@ -144,5 +144,5 @@ void phpy_set_index_permutation_symmetry_compact_fc(
     double *fc, const int p2s[], const int s2pp[], const int nsym_list[],
     const int perms[], const int n_satom, const int n_patom,
     const int is_transpose);
-long phpy_use_openmp();
+long phpy_use_openmp(void);
 #endif

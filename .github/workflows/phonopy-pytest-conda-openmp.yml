@@ -1,4 +1,4 @@
-name: phonopy test using conda-forge environment
+name: phonopy test using conda-forge environment with openmp
 
 on: [push]
 
@@ -24,7 +24,7 @@ jobs:
       run: |
         conda activate test
         conda install --yes -c conda-forge python=${{ matrix.python-version }}
-        conda install --yes -c conda-forge c-compiler matplotlib-base pyyaml scipy numpy spglib h5py pip pytest codecov pytest-cov pytest
+        conda install --yes -c conda-forge c-compiler matplotlib-base pyyaml scipy numpy spglib h5py pip pytest codecov pytest-cov pytest cmake
     - name: Install cp2k-input-tools
       run: |
         conda activate test
@@ -32,6 +32,7 @@ jobs:
     - name: Setup phonopy
       run: |
         conda activate test
+        export PHONOPY_USE_OPENMP=true
         pip install -e . -vvv
     - name: Test with pytest
       run: |

@@ -661,7 +661,7 @@ void phpy_set_index_permutation_symmetry_compact_fc(
     done = NULL;
 }
 
-long phpy_use_openmp() {
+long phpy_use_openmp(void) {
 #ifdef _OPENMP
     return 1;
 #else
