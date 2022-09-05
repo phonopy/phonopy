@@ -193,7 +193,7 @@ static PyObject* py_transform_dynmat_to_fc(PyObject* self, PyObject* args) {
     long use_openmp;
 
     double* fc;
-    double* dm;
+    double(*dm)[2];
     double(*comm_points)[3];
     double(*svecs)[3];
     double* masses;
@@ -211,7 +211,7 @@ static PyObject* py_transform_dynmat_to_fc(PyObject* self, PyObject* args) {
     }
 
     fc = (double*)PyArray_DATA(py_force_constants);
-    dm = (double*)PyArray_DATA(py_dynamical_matrices);
+    dm = (double(*)[2])PyArray_DATA(py_dynamical_matrices);
     comm_points = (double(*)[3])PyArray_DATA(py_commensurate_points);
     svecs = (double(*)[3])PyArray_DATA(py_svecs);
     masses = (double*)PyArray_DATA(py_masses);
@@ -454,7 +454,7 @@ static PyObject* py_get_dynamical_matrix(PyObject* self, PyObject* args) {
     PyArrayObject* py_p2s_map;
     long use_openmp;
 
-    double* dm;
+    double(*dm)[2];
     double* fc;
     double* q;
     double(*svecs)[3];
@@ -471,7 +471,7 @@ static PyObject* py_get_dynamical_matrix(PyObject* self, PyObject* args) {
         return NULL;
     }
 
-    dm = (double*)PyArray_DATA(py_dynamical_matrix);
+    dm = (double(*)[2])PyArray_DATA(py_dynamical_matrix);
     fc = (double*)PyArray_DATA(py_force_constants);
     q = (double*)PyArray_DATA(py_q);
     svecs = (double(*)[3])PyArray_DATA(py_svecs);
@@ -503,7 +503,7 @@ static PyObject* py_get_nac_dynamical_matrix(PyObject* self, PyObject* args) {
     double factor;
     long use_openmp;
 
-    double* dm;
+    double(*dm)[2];
     double* fc;
     double* q_cart;
     double* q;
@@ -525,7 +525,7 @@ static PyObject* py_get_nac_dynamical_matrix(PyObject* self, PyObject* args) {
                           &py_born, &factor, &use_openmp))
         return NULL;
 
-    dm = (double*)PyArray_DATA(py_dynamical_matrix);
+    dm = (double(*)[2])PyArray_DATA(py_dynamical_matrix);
     fc = (double*)PyArray_DATA(py_force_constants);
     q_cart = (double*)PyArray_DATA(py_q_cart);
     q = (double*)PyArray_DATA(py_q);
@@ -566,8 +566,8 @@ static PyObject* py_get_recip_dipole_dipole(PyObject* self, PyObject* args) {
     double tolerance;
     long use_openmp;
 
-    double* dd;
-    double* dd_q0;
+    double(*dd)[2];
+    double(*dd_q0)[2];
     double(*G_list)[3];
     double* q_vector;
     double* q_direction;
@@ -582,8 +582,8 @@ static PyObject* py_get_recip_dipole_dipole(PyObject* self, PyObject* args) {
                           &use_openmp))
         return NULL;
 
-    dd = (double*)PyArray_DATA(py_dd);
-    dd_q0 = (double*)PyArray_DATA(py_dd_q0);
+    dd = (double(*)[2])PyArray_DATA(py_dd);
+    dd_q0 = (double(*)[2])PyArray_DATA(py_dd_q0);
     G_list = (double(*)[3])PyArray_DATA(py_G_list);
     if ((PyObject*)py_q_direction == Py_None) {
         q_direction = NULL;
@@ -619,7 +619,7 @@ static PyObject* py_get_recip_dipole_dipole_q0(PyObject* self, PyObject* args) {
     double tolerance;
     long use_openmp;
 
-    double* dd_q0;
+    double(*dd_q0)[2];
     double(*G_list)[3];
     double(*born)[3][3];
     double(*dielectric)[3];
@@ -631,7 +631,7 @@ static PyObject* py_get_recip_dipole_dipole_q0(PyObject* self, PyObject* args) {
                           &use_openmp))
         return NULL;
 
-    dd_q0 = (double*)PyArray_DATA(py_dd_q0);
+    dd_q0 = (double(*)[2])PyArray_DATA(py_dd_q0);
     G_list = (double(*)[3])PyArray_DATA(py_G_list);
     born = (double(*)[3][3])PyArray_DATA(py_born);
     dielectric = (double(*)[3])PyArray_DATA(py_dielectric);
@@ -665,7 +665,7 @@ static PyObject* py_get_derivative_dynmat(PyObject* self, PyObject* args) {
     double nac_factor;
     long use_openmp;
 
-    double* ddm;
+    double(*ddm)[2];
     double* fc;
     double* q_vector;
     double* lat;
@@ -690,7 +690,7 @@ static PyObject* py_get_derivative_dynmat(PyObject* self, PyObject* args) {
         return NULL;
     }
 
-    ddm = (double*)PyArray_DATA(py_derivative_dynmat);
+    ddm = (double(*)[2])PyArray_DATA(py_derivative_dynmat);
     fc = (double*)PyArray_DATA(py_force_constants);
     q_vector = (double*)PyArray_DATA(py_q_vector);
     lat = (double*)PyArray_DATA(py_lattice);

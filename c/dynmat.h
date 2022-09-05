@@ -35,7 +35,7 @@
 #ifndef __dynmat_H__
 #define __dynmat_H__
 
-long dym_get_dynamical_matrix_at_q(double *dynamical_matrix,
+long dym_get_dynamical_matrix_at_q(double (*dynamical_matrix)[2],
                                    const long num_patom, const long num_satom,
                                    const double *fc, const double q[3],
                                    const double (*svecs)[3],
@@ -44,8 +44,8 @@ long dym_get_dynamical_matrix_at_q(double *dynamical_matrix,
                                    const double (*charge_sum)[3][3],
                                    const long use_openmp);
 void dym_get_recip_dipole_dipole(
-    double *dd,                /* [natom, 3, natom, 3, (real,imag)] */
-    const double *dd_q0,       /* [natom, 3, 3, (real,imag)] */
+    double (*dd)[2],           /* [natom, 3, natom, 3, (real,imag)] */
+    const double (*dd_q0)[2],  /* [natom, 3, 3, (real,imag)] */
     const double (*G_list)[3], /* [num_G, 3] */
     const long num_G, const long num_patom, const double q_cart[3],
     const double *q_direction_cart, /* must be pointer */
@@ -54,7 +54,7 @@ void dym_get_recip_dipole_dipole(
     const double factor,    /* 4pi/V*unit-conv */
     const double lambda, const double tolerance, const long use_openmp);
 void dym_get_recip_dipole_dipole_q0(
-    double *dd_q0,             /* [natom, 3, 3, (real,imag)] */
+    double (*dd_q0)[2],        /* [natom, 3, 3, (real,imag)] */
     const double (*G_list)[3], /* [num_G, 3] */
     const long num_G, const long num_patom, const double (*born)[3][3],
     const double dielectric[3][3], const double (*pos)[3], /* [natom, 3] */
@@ -67,7 +67,7 @@ void dym_get_charge_sum(double (*charge_sum)[3][3], const long num_patom,
 /* comm_points[num_satom / num_patom, 3] */
 /* shortest_vectors[:, 3] */
 /* multiplicities[num_satom, num_patom, 2] */
-void dym_transform_dynmat_to_fc(double *fc, const double *dm,
+void dym_transform_dynmat_to_fc(double *fc, const double (*dm)[2],
                                 const double (*comm_points)[3],
                                 const double (*svecs)[3],
                                 const long (*multi)[2], const double *masses,

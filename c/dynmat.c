@@ -38,27 +38,21 @@
 #include <stdlib.h>
 #define PI 3.14159265358979323846
 
-static void get_dynmat_ij(double *dynamical_matrix, const long num_patom,
+static void get_dynmat_ij(double (*dynamical_matrix)[2], const long num_patom,
                           const long num_satom, const double *fc,
                           const double q[3], const double (*svecs)[3],
                           const long (*multi)[2], const double *mass,
                           const long *s2p_map, const long *p2s_map,
                           const double (*charge_sum)[3][3], const long i,
                           const long j);
-static void transform_dynmat_to_fc_ij(
-    double *fc, const double *dm, const long i, const long j,
-    const double (*comm_points)[3], const double (*svecs)[3],
-    const long (*multi)[2], const double *masses, const long *s2pp_map,
-    const long *fc_index_map, const long num_patom, const long num_satom);
-static void get_dm(double dm_real[3][3], double dm_imag[3][3],
-                   const long num_patom, const long num_satom, const double *fc,
-                   const double q[3], const double (*svecs)[3],
-                   const long (*multi)[2], const long *p2s_map,
-                   const double (*charge_sum)[3][3], const long i, const long j,
-                   const long k);
+static void get_dm(double dm[3][3][2], const long num_patom,
+                   const long num_satom, const double *fc, const double q[3],
+                   const double (*svecs)[3], const long (*multi)[2],
+                   const long *p2s_map, const double (*charge_sum)[3][3],
+                   const long i, const long j, const long k);
 static double get_dielectric_part(const double q_cart[3],
                                   const double dielectric[3][3]);
-static void get_dd(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
+static void get_dd(double (*dd_part)[2], /* [natom, 3, natom, 3, (real,imag)] */
                    const double (*G_list)[3], /* [num_G, 3] */
                    const long num_G, const long num_patom,
                    const double q_cart[3], const double *q_direction_cart,
@@ -66,20 +60,25 @@ static void get_dd(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
                    const double (*pos)[3], /* [num_patom, 3] */
                    const double lambda, const double tolerance,
                    const long use_openmp);
-static void get_dd_at_g(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
-                        const long i, const long j, const double G[3],
-                        const long num_patom,
-                        const double (*pos)[3], /* [num_patom, 3] */
-                        const double KK[3][3]);
-static void make_Hermitian(double *mat, const long num_band);
-static void multiply_borns(double *dd, const double *dd_in,
+static void get_dd_at_g(
+    double (*dd_part)[2], /* [natom, 3, natom, 3, (real,imag)] */
+    const long i, const long j, const double G[3], const long num_patom,
+    const double (*pos)[3], /* [num_patom, 3] */
+    const double KK[3][3]);
+static void make_Hermitian(double (*mat)[2], const long num_band);
+static void multiply_borns(double (*dd)[2], const double (*dd_in)[2],
                            const long num_patom, const double (*born)[3][3],
                            const long use_openmp);
-static void multiply_borns_at_ij(double *dd, const long i, const long j,
-                                 const double *dd_in, const long num_patom,
+static void multiply_borns_at_ij(double (*dd)[2], const long i, const long j,
+                                 const double (*dd_in)[2], const long num_patom,
                                  const double (*born)[3][3]);
+static void transform_dynmat_to_fc_ij(
+    double *fc, const double (*dm)[2], const long i, const long j,
+    const double (*comm_points)[3], const double (*svecs)[3],
+    const long (*multi)[2], const double *masses, const long *s2pp_map,
+    const long *fc_index_map, const long num_patom, const long num_satom);
 
-long dym_get_dynamical_matrix_at_q(double *dynamical_matrix,
+long dym_get_dynamical_matrix_at_q(double (*dynamical_matrix)[2],
                                    const long num_patom, const long num_satom,
                                    const double *fc, const double q[3],
                                    const double (*svecs)[3],
@@ -115,8 +114,8 @@ long dym_get_dynamical_matrix_at_q(double *dynamical_matrix,
 }
 
 void dym_get_recip_dipole_dipole(
-    double *dd,                /* [natom, 3, natom, 3, (real,imag)] */
-    const double *dd_q0,       /* [natom, 3, 3, (real,imag)] */
+    double (*dd)[2],           /* [natom, 3, natom, 3, (real,imag)] */
+    const double (*dd_q0)[2],  /* [natom, 3, 3, (real,imag)] */
     const double (*G_list)[3], /* [num_G, 3] */
     const long num_G, const long num_patom, const double q_cart[3],
     const double *q_direction_cart, /* must be pointer */
@@ -125,14 +124,16 @@ void dym_get_recip_dipole_dipole(
     const double factor,    /* 4pi/V*unit-conv */
     const double lambda, const double tolerance, const long use_openmp) {
     long i, k, l, adrs, adrs_sum;
-    double *dd_tmp;
+    double(*dd_tmp)[2];
 
-    dd_tmp = NULL;
-    dd_tmp = (double *)malloc(sizeof(double) * num_patom * num_patom * 18);
+    dd_tmp =
+        (double(*)[2])malloc(sizeof(double[2]) * num_patom * num_patom * 9);
 
-    for (i = 0; i < num_patom * num_patom * 18; i++) {
-        dd[i] = 0;
-        dd_tmp[i] = 0;
+    for (i = 0; i < num_patom * num_patom * 9; i++) {
+        dd[i][0] = 0;
+        dd[i][1] = 0;
+        dd_tmp[i][0] = 0;
+        dd_tmp[i][1] = 0;
     }
 
     get_dd(dd_tmp, G_list, num_G, num_patom, q_cart, q_direction_cart,
@@ -145,14 +146,15 @@ void dym_get_recip_dipole_dipole(
             for (l = 0; l < 3; l++) { /* beta */
                 adrs = i * num_patom * 9 + k * num_patom * 3 + i * 3 + l;
                 adrs_sum = i * 9 + k * 3 + l;
-                dd[adrs * 2] -= dd_q0[adrs_sum * 2];
-                dd[adrs * 2 + 1] -= dd_q0[adrs_sum * 2 + 1];
+                dd[adrs][0] -= dd_q0[adrs_sum][0];
+                dd[adrs][1] -= dd_q0[adrs_sum][1];
             }
         }
     }
 
-    for (i = 0; i < num_patom * num_patom * 18; i++) {
-        dd[i] *= factor;
+    for (i = 0; i < num_patom * num_patom * 9; i++) {
+        dd[i][0] *= factor;
+        dd[i][1] *= factor;
     }
 
     /* This may not be necessary. */
@@ -163,23 +165,25 @@ void dym_get_recip_dipole_dipole(
 }
 
 void dym_get_recip_dipole_dipole_q0(
-    double *dd_q0,             /* [natom, 3, 3, (real,imag)] */
+    double (*dd_q0)[2],        /* [natom, 3, 3, (real,imag)] */
     const double (*G_list)[3], /* [num_G, 3] */
     const long num_G, const long num_patom, const double (*born)[3][3],
     const double dielectric[3][3], const double (*pos)[3], /* [num_patom, 3] */
     const double lambda, const double tolerance, const long use_openmp) {
     long i, j, k, l, adrs_tmp, adrs, adrsT;
     double zero_vec[3];
-    double *dd_tmp1, *dd_tmp2;
+    double(*dd_tmp1)[2], (*dd_tmp2)[2];
 
-    dd_tmp1 = NULL;
-    dd_tmp1 = (double *)malloc(sizeof(double) * num_patom * num_patom * 18);
-    dd_tmp2 = NULL;
-    dd_tmp2 = (double *)malloc(sizeof(double) * num_patom * num_patom * 18);
+    dd_tmp1 =
+        (double(*)[2])malloc(sizeof(double[2]) * num_patom * num_patom * 9);
+    dd_tmp2 =
+        (double(*)[2])malloc(sizeof(double[2]) * num_patom * num_patom * 9);
 
-    for (i = 0; i < num_patom * num_patom * 18; i++) {
-        dd_tmp1[i] = 0;
-        dd_tmp2[i] = 0;
+    for (i = 0; i < num_patom * num_patom * 9; i++) {
+        dd_tmp1[i][0] = 0;
+        dd_tmp1[i][1] = 0;
+        dd_tmp2[i][0] = 0;
+        dd_tmp2[i][1] = 0;
     }
 
     zero_vec[0] = 0;
@@ -191,8 +195,9 @@ void dym_get_recip_dipole_dipole_q0(
 
     multiply_borns(dd_tmp2, dd_tmp1, num_patom, born, use_openmp);
 
-    for (i = 0; i < num_patom * 18; i++) {
-        dd_q0[i] = 0;
+    for (i = 0; i < num_patom * 9; i++) {
+        dd_q0[i][0] = 0;
+        dd_q0[i][1] = 0;
     }
 
     for (i = 0; i < num_patom; i++) {
@@ -202,8 +207,8 @@ void dym_get_recip_dipole_dipole_q0(
                 for (j = 0; j < num_patom; j++) {
                     adrs_tmp =
                         i * num_patom * 9 + k * num_patom * 3 + j * 3 + l;
-                    dd_q0[adrs * 2] += dd_tmp2[adrs_tmp * 2];
-                    dd_q0[adrs * 2 + 1] += dd_tmp2[adrs_tmp * 2 + 1];
+                    dd_q0[adrs][0] += dd_tmp2[adrs_tmp][0];
+                    dd_q0[adrs][1] += dd_tmp2[adrs_tmp][1];
                 }
             }
         }
@@ -216,8 +221,8 @@ void dym_get_recip_dipole_dipole_q0(
     /*       adrs = j * 9 + k * 3 + l; */
     /*       for (i = 0; i < num_patom; i++) { */
     /*         adrs_tmp = i * num_patom * 9 + k * num_patom * 3 + j * 3 + l ; */
-    /*         dd_q0[adrs * 2] += dd_tmp2[adrs_tmp * 2]; */
-    /*         dd_q0[adrs * 2 + 1] += dd_tmp2[adrs_tmp * 2 + 1]; */
+    /*         dd_q0[adrs][0] += dd_tmp2[adrs_tmp][0]; */
+    /*         dd_q0[adrs][1] += dd_tmp2[adrs_tmp][1]; */
     /*       } */
     /*     } */
     /*   } */
@@ -228,12 +233,12 @@ void dym_get_recip_dipole_dipole_q0(
             for (l = 0; l < 3; l++) { /* beta */
                 adrs = i * 9 + k * 3 + l;
                 adrsT = i * 9 + l * 3 + k;
-                dd_q0[adrs * 2] += dd_q0[adrsT * 2];
-                dd_q0[adrs * 2] /= 2;
-                dd_q0[adrsT * 2] = dd_q0[adrs * 2];
-                dd_q0[adrs * 2 + 1] -= dd_q0[adrsT * 2 + 1];
-                dd_q0[adrs * 2 + 1] /= 2;
-                dd_q0[adrsT * 2 + 1] = -dd_q0[adrs * 2 + 1];
+                dd_q0[adrs][0] += dd_q0[adrsT][0];
+                dd_q0[adrs][0] /= 2;
+                dd_q0[adrsT][0] = dd_q0[adrs][0];
+                dd_q0[adrs][1] -= dd_q0[adrsT][1];
+                dd_q0[adrs][1] /= 2;
+                dd_q0[adrsT][1] = -dd_q0[adrs][1];
             }
         }
     }
@@ -286,7 +291,7 @@ void dym_get_charge_sum(
 /* comm_points[num_satom / num_patom, 3] */
 /* shortest_vectors[:, 3] */
 /* multiplicities[num_satom, num_patom, 2] */
-void dym_transform_dynmat_to_fc(double *fc, const double *dm,
+void dym_transform_dynmat_to_fc(double *fc, const double (*dm)[2],
                                 const double (*comm_points)[3],
                                 const double (*svecs)[3],
                                 const long (*multi)[2], const double *masses,
@@ -319,7 +324,7 @@ void dym_transform_dynmat_to_fc(double *fc, const double *dm,
     }
 }
 
-static void get_dynmat_ij(double *dynamical_matrix, const long num_patom,
+static void get_dynmat_ij(double (*dynamical_matrix)[2], const long num_patom,
                           const long num_satom, const double *fc,
                           const double q[3], const double (*svecs)[3],
                           const long (*multi)[2], const double *mass,
@@ -328,14 +333,14 @@ static void get_dynmat_ij(double *dynamical_matrix, const long num_patom,
                           const long j) {
     long k, l, adrs;
     double mass_sqrt;
-    double dm_real[3][3], dm_imag[3][3];
+    double dm[3][3][2];  // [3][3][(real, imag)]
 
     mass_sqrt = sqrt(mass[i] * mass[j]);
 
     for (k = 0; k < 3; k++) {
         for (l = 0; l < 3; l++) {
-            dm_real[k][l] = 0;
-            dm_imag[k][l] = 0;
+            dm[k][l][0] = 0;
+            dm[k][l][1] = 0;
         }
     }
 
@@ -343,25 +348,24 @@ static void get_dynmat_ij(double *dynamical_matrix, const long num_patom,
         if (s2p_map[k] != p2s_map[j]) {
             continue;
         }
-        get_dm(dm_real, dm_imag, num_patom, num_satom, fc, q, svecs, multi,
-               p2s_map, charge_sum, i, j, k);
+        get_dm(dm, num_patom, num_satom, fc, q, svecs, multi, p2s_map,
+               charge_sum, i, j, k);
     }
 
     for (k = 0; k < 3; k++) {
         for (l = 0; l < 3; l++) {
             adrs = (i * 3 + k) * num_patom * 3 + j * 3 + l;
-            dynamical_matrix[adrs * 2] = dm_real[k][l] / mass_sqrt;
-            dynamical_matrix[adrs * 2 + 1] = dm_imag[k][l] / mass_sqrt;
+            dynamical_matrix[adrs][0] = dm[k][l][0] / mass_sqrt;
+            dynamical_matrix[adrs][1] = dm[k][l][1] / mass_sqrt;
         }
     }
 }
 
-static void get_dm(double dm_real[3][3], double dm_imag[3][3],
-                   const long num_patom, const long num_satom, const double *fc,
-                   const double q[3], const double (*svecs)[3],
-                   const long (*multi)[2], const long *p2s_map,
-                   const double (*charge_sum)[3][3], const long i, const long j,
-                   const long k) {
+static void get_dm(double dm[3][3][2], const long num_patom,
+                   const long num_satom, const double *fc, const double q[3],
+                   const double (*svecs)[3], const long (*multi)[2],
+                   const long *p2s_map, const double (*charge_sum)[3][3],
+                   const long i, const long j, const long k) {
     long l, m, i_pair, m_pair, adrs;
     double phase, cos_phase, sin_phase, fc_elem;
 
@@ -389,8 +393,8 @@ static void get_dm(double dm_real[3][3], double dm_imag[3][3],
             } else {
                 fc_elem = fc[p2s_map[i] * num_satom * 9 + k * 9 + l * 3 + m];
             }
-            dm_real[l][m] += fc_elem * cos_phase;
-            dm_imag[l][m] += fc_elem * sin_phase;
+            dm[l][m][0] += fc_elem * cos_phase;
+            dm[l][m][1] += fc_elem * sin_phase;
         }
     }
 }
@@ -416,7 +420,7 @@ static double get_dielectric_part(const double q_cart[3],
     return sum;
 }
 
-static void get_dd(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
+static void get_dd(double (*dd_part)[2], /* [natom, 3, natom, 3, (real,imag)] */
                    const double (*G_list)[3], /* [num_G, 3] */
                    const long num_G, const long num_patom,
                    const double q_cart[3], const double *q_direction_cart,
@@ -489,11 +493,11 @@ static void get_dd(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
     KK = NULL;
 }
 
-static void get_dd_at_g(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
-                        const long i, const long j, const double G[3],
-                        const long num_patom,
-                        const double (*pos)[3], /* [num_patom, 3] */
-                        const double KK[3][3]) {
+static void get_dd_at_g(
+    double (*dd_part)[2], /* [natom, 3, natom, 3, (real,imag)] */
+    const long i, const long j, const double G[3], const long num_patom,
+    const double (*pos)[3], /* [num_patom, 3] */
+    const double KK[3][3]) {
     long k, l, adrs;
     double cos_phase, sin_phase, phase;
 
@@ -510,35 +514,33 @@ static void get_dd_at_g(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
     for (k = 0; k < 3; k++) {
         for (l = 0; l < 3; l++) {
             adrs = i * num_patom * 9 + k * num_patom * 3 + j * 3 + l;
-            dd_part[adrs * 2] += KK[k][l] * cos_phase;
-            dd_part[adrs * 2 + 1] += KK[k][l] * sin_phase;
+            dd_part[adrs][0] += KK[k][l] * cos_phase;
+            dd_part[adrs][1] += KK[k][l] * sin_phase;
         }
     }
 }
 
-static void make_Hermitian(double *mat, const long num_band) {
+static void make_Hermitian(double (*mat)[2], const long num_band) {
     long i, j, adrs, adrsT;
 
     for (i = 0; i < num_band; i++) {
         for (j = i; j < num_band; j++) {
-            adrs = i * num_band + j * 1;
-            adrs *= 2;
-            adrsT = j * num_band + i * 1;
-            adrsT *= 2;
+            adrs = i * num_band + j;
+            adrsT = j * num_band + i;
             /* real part */
-            mat[adrs] += mat[adrsT];
-            mat[adrs] /= 2;
+            mat[adrs][0] += mat[adrsT][0];
+            mat[adrs][0] /= 2;
             /* imaginary part */
-            mat[adrs + 1] -= mat[adrsT + 1];
-            mat[adrs + 1] /= 2;
+            mat[adrs][1] -= mat[adrsT][1];
+            mat[adrs][1] /= 2;
             /* store */
-            mat[adrsT] = mat[adrs];
-            mat[adrsT + 1] = -mat[adrs + 1];
+            mat[adrsT][0] = mat[adrs][0];
+            mat[adrsT][1] = -mat[adrs][1];
         }
     }
 }
 
-static void multiply_borns(double *dd, const double *dd_in,
+static void multiply_borns(double (*dd)[2], const double (*dd_in)[2],
                            const long num_patom, const double (*born)[3][3],
                            const long use_openmp) {
     long i, j, ij;
@@ -560,8 +562,8 @@ static void multiply_borns(double *dd, const double *dd_in,
     }
 }
 
-static void multiply_borns_at_ij(double *dd, const long i, const long j,
-                                 const double *dd_in, const long num_patom,
+static void multiply_borns_at_ij(double (*dd)[2], const long i, const long j,
+                                 const double (*dd_in)[2], const long num_patom,
                                  const double (*born)[3][3]) {
     long k, l, m, n, adrs, adrs_in;
     double zz;
@@ -573,8 +575,8 @@ static void multiply_borns_at_ij(double *dd, const long i, const long j,
                 for (n = 0; n < 3; n++) { /* beta' */
                     adrs_in = i * num_patom * 9 + m * num_patom * 3 + j * 3 + n;
                     zz = born[i][m][k] * born[j][n][l];
-                    dd[adrs * 2] += dd_in[adrs_in * 2] * zz;
-                    dd[adrs * 2 + 1] += dd_in[adrs_in * 2 + 1] * zz;
+                    dd[adrs][0] += dd_in[adrs_in][0] * zz;
+                    dd[adrs][1] += dd_in[adrs_in][1] * zz;
                 }
             }
         }
@@ -582,7 +584,7 @@ static void multiply_borns_at_ij(double *dd, const long i, const long j,
 }
 
 static void transform_dynmat_to_fc_ij(
-    double *fc, const double *dm, const long i, const long j,
+    double *fc, const double (*dm)[2], const long i, const long j,
     const double (*comm_points)[3], const double (*svecs)[3],
     const long (*multi)[2], const double *masses, const long *s2pp_map,
     const long *fc_index_map, const long num_patom, const long num_satom) {
@@ -609,10 +611,10 @@ static void transform_dynmat_to_fc_ij(
         sin_phase /= m_pair;
         for (l = 0; l < 3; l++) {
             for (m = 0; m < 3; m++) {
-                adrs = k * num_patom * num_patom * 18 + i * num_patom * 18 +
-                       l * num_patom * 6 + s2pp_map[j] * 6 + m * 2;
+                adrs = k * num_patom * num_patom * 9 + i * num_patom * 9 +
+                       l * num_patom * 3 + s2pp_map[j] * 3 + m;
                 fc[fc_index_map[i] * num_satom * 9 + j * 9 + l * 3 + m] +=
-                    (dm[adrs] * cos_phase - dm[adrs + 1] * sin_phase) * coef;
+                    (dm[adrs][0] * cos_phase - dm[adrs][1] * sin_phase) * coef;
             }
         }
     }

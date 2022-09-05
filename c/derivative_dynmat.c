@@ -39,10 +39,10 @@
 #define PI 3.14159265358979323846
 
 static void get_derivative_dynmat_at_q(
-    double *derivative_dynmat, const long i, const long j, const double *ddnac,
-    const double *dnac, const long is_nac, const long num_patom,
-    const long num_satom, const double *fc, const double *q,
-    const double *lattice, /* column vector */
+    double (*derivative_dynmat)[2], const long i, const long j,
+    const double *ddnac, const double *dnac, const long is_nac,
+    const long num_patom, const long num_satom, const double *fc,
+    const double *q, const double *lattice, /* column vector */
     const double (*svecs)[3], const long (*multi)[2], const double *mass,
     const long *s2p_map, const long *p2s_map, const double nac_factor,
     const double *born, const double *dielectric, const double *q_direction);
@@ -60,7 +60,7 @@ static double get_dC(const long cart_i, const long cart_j, const long cart_k,
                      const double q[3], const double *dielectric);
 
 void ddm_get_derivative_dynmat_at_q(
-    double *derivative_dynmat, const long num_patom, const long num_satom,
+    double (*derivative_dynmat)[2], const long num_patom, const long num_satom,
     const double *fc, const double *q,
     const double *lattice, /* column vector */
     const double (*svecs)[3], const long (*multi)[2], const double *mass,
@@ -122,16 +122,14 @@ void ddm_get_derivative_dynmat_at_q(
     for (i = 0; i < 3; i++) {
         for (j = i; j < num_patom * 3; j++) {
             for (k = 0; k < num_patom * 3; k++) {
-                adrs =
-                    i * num_patom * num_patom * 18 + j * num_patom * 6 + k * 2;
-                adrsT =
-                    i * num_patom * num_patom * 18 + k * num_patom * 6 + j * 2;
-                derivative_dynmat[adrs] += derivative_dynmat[adrsT];
-                derivative_dynmat[adrs] /= 2;
-                derivative_dynmat[adrs + 1] -= derivative_dynmat[adrsT + 1];
-                derivative_dynmat[adrs + 1] /= 2;
-                derivative_dynmat[adrsT] = derivative_dynmat[adrs];
-                derivative_dynmat[adrsT + 1] = -derivative_dynmat[adrs + 1];
+                adrs = i * num_patom * num_patom * 9 + j * num_patom * 3 + k;
+                adrsT = i * num_patom * num_patom * 9 + k * num_patom * 3 + j;
+                derivative_dynmat[adrs][0] += derivative_dynmat[adrsT][0];
+                derivative_dynmat[adrs][0] /= 2;
+                derivative_dynmat[adrs][1] -= derivative_dynmat[adrsT][1];
+                derivative_dynmat[adrs][1] /= 2;
+                derivative_dynmat[adrsT][0] = derivative_dynmat[adrs][0];
+                derivative_dynmat[adrsT][1] = -derivative_dynmat[adrs][1];
             }
         }
     }
@@ -145,10 +143,10 @@ void ddm_get_derivative_dynmat_at_q(
 }
 
 void get_derivative_dynmat_at_q(
-    double *derivative_dynmat, const long i, const long j, const double *ddnac,
-    const double *dnac, const long is_nac, const long num_patom,
-    const long num_satom, const double *fc, const double *q,
-    const double *lattice, /* column vector */
+    double (*derivative_dynmat)[2], const long i, const long j,
+    const double *ddnac, const double *dnac, const long is_nac,
+    const long num_patom, const long num_satom, const double *fc,
+    const double *q, const double *lattice, /* column vector */
     const double (*svecs)[3], const long (*multi)[2], const double *mass,
     const long *s2p_map, const long *p2s_map, const double nac_factor,
     const double *born, const double *dielectric, const double *q_direction) {
@@ -243,10 +241,10 @@ void get_derivative_dynmat_at_q(
     for (k = 0; k < 3; k++) {
         for (l = 0; l < 3; l++) {
             for (m = 0; m < 3; m++) {
-                adrs = (k * num_patom * num_patom * 18 +
-                        (i * 3 + l) * num_patom * 6 + j * 6 + m * 2);
-                derivative_dynmat[adrs] += ddm_real[k][l][m];
-                derivative_dynmat[adrs + 1] += ddm_imag[k][l][m];
+                adrs = (k * num_patom * num_patom * 9 +
+                        (i * 3 + l) * num_patom * 3 + j * 3 + m * 1);
+                derivative_dynmat[adrs][0] += ddm_real[k][l][m];
+                derivative_dynmat[adrs][1] += ddm_imag[k][l][m];
             }
         }
     }

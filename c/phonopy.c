@@ -64,7 +64,7 @@ static void distribute_fc2(double (*fc2)[3][3], const int *atom_list,
                            const int num_pos);
 static int nint(const double a);
 
-void phpy_transform_dynmat_to_fc(double *fc, const double *dm,
+void phpy_transform_dynmat_to_fc(double *fc, const double (*dm)[2],
                                  const double (*comm_points)[3],
                                  const double (*svecs)[3],
                                  const long (*multi)[2], const double *masses,
@@ -76,7 +76,7 @@ void phpy_transform_dynmat_to_fc(double *fc, const double *dm,
                                use_openmp);
 }
 
-long phpy_get_dynamical_matrix_at_q(double *dynamical_matrix,
+long phpy_get_dynamical_matrix_at_q(double (*dynamical_matrix)[2],
                                     const long num_patom, const long num_satom,
                                     const double *fc, const double q[3],
                                     const double (*svecs)[3],
@@ -97,8 +97,8 @@ void phpy_get_charge_sum(
 }
 
 void phpy_get_recip_dipole_dipole(
-    double *dd,                /* [natom, 3, natom, 3, (real,imag)] */
-    const double *dd_q0,       /* [natom, 3, 3, (real,imag)] */
+    double (*dd)[2],           /* [natom, 3, natom, 3, (real,imag)] */
+    const double (*dd_q0)[2],  /* [natom, 3, 3, (real,imag)] */
     const double (*G_list)[3], /* [num_G, 3] */
     const long num_G, const long num_patom, const double q_cart[3],
     const double *q_direction_cart, /* must be pointer */
@@ -112,7 +112,7 @@ void phpy_get_recip_dipole_dipole(
 }
 
 void phpy_get_recip_dipole_dipole_q0(
-    double *dd_q0,             /* [natom, 3, 3, (real,imag)] */
+    double (*dd_q0)[2],        /* [natom, 3, 3, (real,imag)] */
     const double (*G_list)[3], /* [num_G, 3] */
     const long num_G, const long num_patom, const double (*born)[3][3],
     const double dielectric[3][3], const double (*pos)[3], /* [num_patom, 3] */
@@ -123,7 +123,7 @@ void phpy_get_recip_dipole_dipole_q0(
 }
 
 void phpy_get_derivative_dynmat_at_q(
-    double *derivative_dynmat, const long num_patom, const long num_satom,
+    double (*derivative_dynmat)[2], const long num_patom, const long num_satom,
     const double *fc, const double *q,
     const double *lattice, /* column vector */
     const double (*svecs)[3], const long (*multi)[2], const double *mass,
