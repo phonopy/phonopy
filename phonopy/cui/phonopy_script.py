@@ -343,8 +343,6 @@ def print_settings(
     else:
         if settings.fc_symmetry:
             print("  Force constants symmetrization: on")
-    if settings.lapack_solver:
-        print("  Use Lapack solver via Lapacke: on")
     if settings.symmetry_tolerance is not None:
         print("  Symmetry tolerance: %5.2e" % settings.symmetry_tolerance)
     if run_mode == "mesh" or run_mode == "band_mesh":
@@ -1617,7 +1615,6 @@ def init_phonopy(settings, cell_info, symprec, log_level):
             is_symmetry=settings.is_symmetry,
             store_dense_svecs=settings.store_dense_svecs,
             calculator=cell_info["interface_mode"],
-            use_lapack_solver=settings.lapack_solver,
             log_level=log_level,
         )
 

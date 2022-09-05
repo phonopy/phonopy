@@ -44,6 +44,21 @@ void phpy_transform_dynmat_to_fc(double *fc, const double (*dm)[2],
                                  const long *s2pp_map, const long *fc_index_map,
                                  const long num_patom,
                                  const long num_satomconst, long use_openmp);
+long phpy_dynamical_matrices_with_dd_openmp_over_qpoints(
+    double (*dynamical_matrices)[2], const double (*qpoints)[3],
+    const long n_qpoints, const double *fc, const double (*svecs)[3],
+    const long (*multi)[2], const double (*positions)[3], const long num_patom,
+    const long num_satom, const double *masses, const long *p2s_map,
+    const long *s2p_map, const double (*born)[3][3],
+    const double dielectric[3][3], const double (*reciprocal_lattice)[3],
+    const double *q_direction, const double nac_factor,
+    const double (*dd_q0)[2], const double (*G_list)[3],
+    const long num_G_points, const double lambda, const long use_Wang_NAC);
+long phpy_get_dynamical_matrices_openmp_over_qpoints(
+    double (*dynamical_matrices)[2], const long num_patom, const long num_satom,
+    const double *fc, const double (*qpoints)[3], const long n_qpoints,
+    const double (*svecs)[3], const long (*multi)[2], const double *mass,
+    const long *s2p_map, const long *p2s_map, const double (*charge_sum)[3][3]);
 long phpy_get_dynamical_matrix_at_q(double (*dynamical_matrix)[2],
                                     const long num_patom, const long num_satom,
                                     const double *fc, const double q[3],

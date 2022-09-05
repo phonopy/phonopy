@@ -538,19 +538,6 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         )
         self.run(q, q_direction=q_direction)
 
-    def _get_charge_sum(self, num_atom, q, born):
-        nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype="double", order="C")
-        A = np.dot(q, born)
-        for i in range(num_atom):
-            for j in range(num_atom):
-                nac_q[i, j] = np.outer(A[i], A[j])
-        return nac_q
-
-    def _get_constant_factor(self, q, dielectric, volume, unit_conversion):
-        return (
-            unit_conversion * 4.0 * np.pi / volume / np.dot(q.T, np.dot(dielectric, q))
-        )
-
     def _compute_dynamical_matrix(self, q_red, q_direction):
         raise NotImplementedError()
 
@@ -1022,26 +1009,26 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
     def _compute_dynamical_matrix(self, q_red, q_direction):
         # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
         if q_direction is None:
-            q = np.dot(q_red, self._rec_lat.T)
+            q_cart = np.dot(q_red, self._rec_lat.T)
         else:
-            q = np.dot(q_direction, self._rec_lat.T)
+            q_cart = np.dot(q_direction, self._rec_lat.T)
 
         constant = self._get_constant_factor(
-            q, self._dielectric, self._pcell.volume, self._unit_conversion
+            q_cart, self._dielectric, self._pcell.volume, self._unit_conversion
         )
         try:
             import phonopy._phonopy as phonoc  # noqa F401
 
-            self._run_c_Wang_dynamical_matrix(q_red, q, constant)
+            self._run_c_Wang_dynamical_matrix(q_red, q_cart, constant)
         except ImportError:
             num_atom = len(self._pcell)
             fc_backup = self._force_constants.copy()
-            nac_q = self._get_charge_sum(num_atom, q, self._born) * constant
+            nac_q = self._get_charge_sum(num_atom, q_cart, self._born) * constant
             self._run_py_Wang_force_constants(self._force_constants, nac_q)
             self._run(q_red)
             self._force_constants = fc_backup
 
-    def _run_c_Wang_dynamical_matrix(self, q_red, q, factor):
+    def _run_c_Wang_dynamical_matrix(self, q_red, q_cart, factor):
         import phonopy._phonopy as phonoc
 
         fc = self._force_constants
@@ -1059,7 +1046,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
                 mass,
                 self._s2p_map,
                 self._p2s_map,
-                np.array(q, dtype="double"),
+                np.array(q_cart, dtype="double"),
                 self._born,
                 factor,
                 self._use_openmp * 1,
@@ -1074,13 +1061,26 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
                 mass,
                 self._s2pp_map,
                 np.arange(len(self._p2s_map), dtype="int_"),
-                np.array(q, dtype="double"),
+                np.array(q_cart, dtype="double"),
                 self._born,
                 factor,
                 self._use_openmp * 1,
             )
 
         self._dynamical_matrix = dm
+
+    def _get_charge_sum(self, num_atom, q, born):
+        nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype="double", order="C")
+        A = np.dot(q, born)
+        for i in range(num_atom):
+            for j in range(num_atom):
+                nac_q[i, j] = np.outer(A[i], A[j])
+        return nac_q
+
+    def _get_constant_factor(self, q, dielectric, volume, unit_conversion):
+        return (
+            unit_conversion * 4.0 * np.pi / volume / np.dot(q.T, np.dot(dielectric, q))
+        )
 
     def _run_py_Wang_force_constants(self, fc, nac_q):
         N = len(self._scell) // len(self._pcell)
@@ -1149,3 +1149,133 @@ def get_dynamical_matrix(
         )
         dm.nac_params = nac_params
     return dm
+
+
+def run_dynamical_matrix_solver_c(
+    dm: Union[DynamicalMatrix, DynamicalMatrixWang, DynamicalMatrixGL],
+    qpoints,
+    nac_q_direction=None,  # in reduced coordinates
+):
+    """Bulid and solve dynamical matrices on grid in C-API.
+
+    dm : DynamicalMatrix
+        DynamicalMatrix instance.
+    qpoints : array_like,
+        q-points in crystallographic coordinates.
+        shape=(n_qpoints, 3), dtype='double', order='C'
+    nac_q_direction : array_like, optional
+        See Interaction.nac_q_direction. Default is None.
+
+    """
+    import phonopy._phonopy as phonoc
+
+    (
+        svecs,
+        multi,
+        masses,
+        rec_lattice,  # column vectors
+        positions,  # primitive cell positions
+        born,
+        nac_factor,
+        dielectric,
+    ) = _extract_params(dm)
+
+    use_Wang_NAC = False
+    if dm.is_nac() and dm.nac_method == "gonze":
+        gonze_nac_dataset = dm.Gonze_nac_dataset
+        if gonze_nac_dataset[0] is None:
+            dm.make_Gonze_nac_dataset()
+            gonze_nac_dataset = dm.Gonze_nac_dataset
+        (
+            gonze_fc,  # fc where the dipole-diple contribution is removed.
+            dd_q0,  # second term of dipole-dipole expression.
+            G_cutoff,  # Cutoff radius in reciprocal space. This will not be used.
+            G_list,  # List of G points where d-d interactions are integrated.
+            Lambda,
+        ) = gonze_nac_dataset  # Convergence parameter
+        fc = gonze_fc
+    else:
+        positions = None
+        dd_q0 = None
+        G_list = None
+        Lambda = 0
+        fc = dm.force_constants
+        if dm.is_nac() and dm.nac_method == "wang":
+            use_Wang_NAC = True
+
+    p2s, s2p = _get_fc_elements_mapping(dm, fc)
+
+    dtype_complex = "c%d" % (np.dtype("double").itemsize * 2)
+    dynmat = np.zeros((len(qpoints), len(p2s) * 3, len(p2s) * 3), dtype=dtype_complex)
+    phonoc.dynamical_matrices_with_dd_openmp_over_qpoints(
+        dynmat.view(dtype="double"),
+        np.array(qpoints, dtype="double", order="C"),
+        fc,
+        svecs,
+        multi,
+        positions,
+        masses,
+        s2p,
+        p2s,
+        nac_q_direction,
+        born,
+        dielectric,
+        rec_lattice,
+        nac_factor,
+        dd_q0,
+        G_list,
+        Lambda,
+        use_Wang_NAC * 1,  # use_Wang_NAC
+    )
+
+    return dynmat
+
+
+def _extract_params(dm: Union[DynamicalMatrix, DynamicalMatrixNAC]):
+    svecs, multi = dm.primitive.get_smallest_vectors()
+    if dm.primitive.store_dense_svecs:
+        _svecs = svecs
+        _multi = multi
+    else:
+        _svecs, _multi = sparse_to_dense_svecs(svecs, multi)
+
+    masses = np.array(dm.primitive.masses, dtype="double")
+    rec_lattice = np.array(np.linalg.inv(dm.primitive.cell), dtype="double", order="C")
+    positions = np.array(dm.primitive.positions, dtype="double", order="C")
+    if dm.is_nac():
+        born = dm.born
+        nac_factor = dm.nac_factor
+        dielectric = dm.dielectric_constant
+    else:
+        born = None
+        nac_factor = 0
+        dielectric = None
+
+    return (
+        _svecs,
+        _multi,
+        masses,
+        rec_lattice,
+        positions,
+        born,
+        nac_factor,
+        dielectric,
+    )
+
+
+def _get_fc_elements_mapping(dm, fc):
+    p2s_map = dm.primitive.p2s_map
+    s2p_map = dm.primitive.s2p_map
+    if fc.shape[0] == fc.shape[1]:  # full fc
+        fc_p2s = p2s_map
+        fc_s2p = s2p_map
+    else:  # compact fc
+        primitive = dm.primitive
+        p2p_map = primitive.p2p_map
+        s2pp_map = np.array(
+            [p2p_map[s2p_map[i]] for i in range(len(s2p_map))], dtype="intc"
+        )
+        fc_p2s = np.arange(len(p2s_map), dtype="intc")
+        fc_s2p = s2pp_map
+
+    return np.array(fc_p2s, dtype="int_"), np.array(fc_s2p, dtype="int_")

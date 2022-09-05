@@ -146,7 +146,6 @@ class Phonopy:
         is_symmetry=True,
         store_dense_svecs=False,
         calculator=None,
-        use_lapack_solver=False,
         log_level=0,
     ):
         """Init Phonopy API."""
@@ -156,7 +155,6 @@ class Phonopy:
         self._is_symmetry = is_symmetry
         self._calculator = calculator
         self._store_dense_svecs = store_dense_svecs
-        self._use_lapack_solver = use_lapack_solver
         self._log_level = log_level
 
         # Create supercell and primitive cell
@@ -1642,7 +1640,6 @@ class Phonopy:
                 group_velocity=group_velocity,
                 rotations=self._primitive_symmetry.pointgroup_operations,
                 factor=self._factor,
-                use_lapack_solver=self._use_lapack_solver,
             )
 
     def run_mesh(
