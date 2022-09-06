@@ -194,7 +194,7 @@ def main(build_dir):
             "PyYAML",
             "matplotlib>=2.2.2",
             "h5py",
-            "spglib>=2.01",
+            "spglib",
         ],
         extras_require={"cp2k": ["cp2k-input-tools"]},
         provides=["phonopy"],
