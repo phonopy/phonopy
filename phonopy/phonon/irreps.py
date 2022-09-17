@@ -33,18 +33,19 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
 from typing import Union
 
 import numpy as np
 
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
-from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.phonon.character_table import character_table
 from phonopy.phonon.degeneracy import degenerate_sets as get_degenerate_sets
 from phonopy.structure.cells import is_primitive_cell
 from phonopy.structure.symmetry import Symmetry
 from phonopy.units import VaspToTHz
+from phonopy.utils import similarity_transformation
 
 
 class IrReps:
@@ -139,7 +140,8 @@ class IrReps:
         self._ddm.run(self._q)
         return deg_sets
 
-    def get_band_indices(self):
+    @property
+    def band_indices(self):
         """Return band indices.
 
         Returns
@@ -149,29 +151,97 @@ class IrReps:
         """
         return self._degenerate_sets
 
-    def get_characters(self):
+    def get_band_indices(self):
+        """Return band indices."""
+        warnings.warn(
+            "IrReps.get_band_indices() is deprecated. "
+            "Use IrReps.band_indices attribute.",
+            DeprecationWarning,
+        )
+        return self.band_indices
+
+    @property
+    def characters(self):
         """Return characters of irreps."""
         return self._characters
 
-    def get_eigenvectors(self):
+    def get_characters(self):
+        """Return characters of irreps."""
+        warnings.warn(
+            "IrReps.get_characters() is deprecated. "
+            "Use IrReps.characters attribute.",
+            DeprecationWarning,
+        )
+        return self.characters
+
+    @property
+    def eigenvectors(self):
         """Return eigenvectors."""
         return self._eigvecs
 
-    def get_irreps(self):
+    def get_eigenvectors(self):
+        """Return eigenvectors."""
+        warnings.warn(
+            "IrReps.get_eigenvectors() is deprecated. "
+            "Use IrReps.eigenvectors attribute.",
+            DeprecationWarning,
+        )
+        return self.eigenvectors
+
+    @property
+    def irreps(self):
         """Return irreps."""
         return self._irreps
 
-    def get_ground_matrices(self):
+    def get_irreps(self):
+        """Return irreps."""
+        warnings.warn(
+            "IrReps.get_irreps() is deprecated. " "Use IrReps.irreps attribute.",
+            DeprecationWarning,
+        )
+        return self.irreps
+
+    @property
+    def ground_matrices(self):
         """Return ground matrices."""
         return self._ground_matrices
 
-    def get_rotation_symbols(self):
+    def get_ground_matrices(self):
+        """Return ground matrices."""
+        warnings.warn(
+            "IrReps.get_ground_matrices() is deprecated. "
+            "Use IrReps.ground_matrices attribute.",
+            DeprecationWarning,
+        )
+        return self.ground_matrices
+
+    @property
+    def rotation_symbols(self):
         """Return symbols assigned to rotation matrices."""
         return self._rotation_symbols
 
-    def get_rotations(self):
+    def get_rotation_symbols(self):
+        """Return symbols assigned to rotation matrices."""
+        warnings.warn(
+            "IrReps.get_rotation_symbols() is deprecated. "
+            "Use IrReps.rotation_symbols attribute.",
+            DeprecationWarning,
+        )
+        return self.rotation_symbols
+
+    @property
+    def conventional_rotations(self):
         """Return rotation matrices."""
         return self._conventional_rotations
+
+    def get_rotations(self):
+        """Return rotation matrices."""
+        warnings.warn(
+            "IrReps.get_rotations() is deprecated. "
+            "Use IrReps.conventional_rotations attribute.",
+            DeprecationWarning,
+        )
+        return self.conventional_rotations
 
     def get_projection_operators(self, idx_irrep, i=None, j=None):
         """Return projection operators."""
@@ -179,6 +249,11 @@ class IrReps:
             return self._get_character_projection_operators(idx_irrep)
         else:
             return self._get_projection_operators(idx_irrep, i, j)
+
+    @property
+    def qpoint(self):
+        """Return q-point."""
+        return self._q
 
     def show(self, show_irreps=False):
         """Show irreps."""
@@ -202,10 +277,7 @@ class IrReps:
         for r, t in zip(
             self._symmetry_dataset["rotations"], self._symmetry_dataset["translations"]
         ):
-
-            # Using r is used instead of np.linalg.inv(r)
             diff = np.dot(self._q, r) - self._q
-
             if (abs(diff - np.rint(diff)) < self._symprec).all():
                 rotations_at_q.append(r)
                 for i in range(3):
@@ -238,10 +310,8 @@ class IrReps:
         matrices = []
 
         for (r, t) in zip(self._rotations_at_q, self._translations_at_q):
-
             lat = self._primitive.cell.T
             r_cart = similarity_transformation(lat, r)
-
             perm_mat = self._get_modified_permutation_matrix(r, t)
             matrices.append(np.kron(perm_mat, r_cart))
 
@@ -260,40 +330,20 @@ class IrReps:
         pos = self._primitive.scaled_positions
         matrix = np.zeros((num_atom, num_atom), dtype=complex)
         for i, p1 in enumerate(pos):
-            p_rot = np.dot(r, p1) + t
+            p_rot = np.dot(r, p1) + t  # i -> j
             for j, p2 in enumerate(pos):
-                diff = p_rot - p2
+                diff = p_rot - p2  # Rx_i + t - x_j
                 if (abs(diff - np.rint(diff)) < self._symprec).all():
-                    # For this phase factor, see
-                    # Dynamics of perfect crystals by G. Venkataraman et al.,
-                    # pp132 Eq. (3.22).
-                    # It is assumed that dynamical matrix is built without
-                    # considering internal atomic positions, so
-                    # the phase factors of eigenvectors are shifted in
-                    # _get_irreps().
-                    phase_factor = np.dot(self._q, np.dot(np.linalg.inv(r), p2 - p_rot))
-
-                    # This phase factor comes from non-pure-translation of
-                    # each symmetry opration.
+                    phase_factor = np.dot(
+                        self._q, np.dot(np.linalg.inv(r), p2 - t) - p2
+                    )
                     if self._is_little_cogroup:
-                        phase_factor += np.dot(t, self._q)
-
+                        phase_factor = np.dot(t, self._q)
                     matrix[j, i] = np.exp(2j * np.pi * phase_factor)
-
         return matrix
 
     def _get_irreps(self):
-        eigvecs = []
-        phases = np.kron(
-            [
-                np.exp(2j * np.pi * np.dot(self._q, pos))
-                for pos in self._primitive.scaled_positions
-            ],
-            [1, 1, 1],
-        )
-        for vec in self._eigvecs.T:
-            eigvecs.append(vec * phases)
-
+        eigvecs = self._eigvecs.T
         irrep = []
         for band_indices in self._degenerate_sets:
             irrep_Rs = []

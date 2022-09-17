@@ -33,6 +33,8 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from typing import Optional, Tuple, Union
+
 import numpy as np
 
 from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
@@ -46,8 +48,24 @@ from phonopy.structure.cells import Primitive
 from phonopy.units import AMU, EV, Angstrom, Hbar, Kb, THz, THzToEv, VaspToTHz
 
 
-def bose_einstein_dist(x, t):
-    """Return Bose-Einsetein distribution."""
+def bose_einstein_dist(
+    x: Union[np.ndarray, float], t: float
+) -> Union[np.ndarray, float]:
+    """Return Bose-Einsetein distribution.
+
+    Parameters
+    ----------
+    x : ndarray or float
+        Phonon frequencies in THz.
+    t : float
+        Temperature in K.
+
+    Returns
+    -------
+    ndarray or float
+        Phonon occupation numbers.
+
+    """
     return 1.0 / (np.exp(THzToEv * x / (Kb * t)) - 1)
 
 
@@ -110,6 +128,7 @@ class RandomDisplacements:
         dist_func=None,
         cutoff_frequency=None,
         factor=VaspToTHz,
+        use_openmp=False,
     ):
         """Init method.
 
@@ -133,6 +152,8 @@ class RandomDisplacements:
             means 0.01.
         factor : float
             Phonon frequency unit conversion factor to THz
+        use_openmp : bool, optional, default=False
+            Use OpenMP in calculate dynamical matrix and its inverse.
 
         """
         if cutoff_frequency is None or cutoff_frequency < 0:
@@ -156,7 +177,9 @@ class RandomDisplacements:
         )
 
         # Dynamical matrix without NAC because of commensurate points only
-        self._dynmat = get_dynamical_matrix(force_constants, supercell, primitive)
+        self._dynmat = get_dynamical_matrix(
+            force_constants, supercell, primitive, use_openmp=use_openmp
+        )
 
         self._setup_sampling_qpoints(supercell.cell, primitive.cell)
 
@@ -185,7 +208,13 @@ class RandomDisplacements:
         self._uu = None
         self._uu_inv = None
 
-    def run(self, T, number_of_snapshots=1, random_seed=None, randn=None):
+    def run(
+        self,
+        T: float,
+        number_of_snapshots: int = 1,
+        random_seed: Optional[int] = None,
+        randn: Optional[Tuple] = None,
+    ):
         """Calculate random displacements.
 
         Parameters
@@ -273,7 +302,11 @@ class RandomDisplacements:
     def run_d2f(self):
         """Calculate force constants from phonon eigen-solutions."""
         qpoints, eigvals, eigvecs = self._collect_eigensolutions()
-        d2f = DynmatToForceConstants(self._dynmat.primitive, self._dynmat.supercell)
+        d2f = DynmatToForceConstants(
+            self._dynmat.primitive,
+            self._dynmat.supercell,
+            use_openmp=self._dynmat.use_openmp,
+        )
         d2f.commensurate_points = qpoints
         d2f.create_dynamical_matrices(eigvals, eigvecs)
         d2f.run()
@@ -282,7 +315,11 @@ class RandomDisplacements:
     def run_correlation_matrix(self, T):
         """Calculate displacement-displacement correlation matrix."""
         qpoints, eigvals, eigvecs = self._collect_eigensolutions()
-        d2f = DynmatToForceConstants(self._dynmat.primitive, self._dynmat.supercell)
+        d2f = DynmatToForceConstants(
+            self._dynmat.primitive,
+            self._dynmat.supercell,
+            use_openmp=self._dynmat.use_openmp,
+        )
         masses = self._dynmat.supercell.masses
         d2f.commensurate_points = qpoints
         freqs = np.sqrt(np.abs(eigvals)) * self._factor

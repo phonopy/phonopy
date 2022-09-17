@@ -36,6 +36,7 @@
 import sys
 import textwrap
 import warnings
+from typing import Optional, Union
 
 import numpy as np
 
@@ -145,7 +146,6 @@ class Phonopy:
         is_symmetry=True,
         store_dense_svecs=False,
         calculator=None,
-        use_lapack_solver=False,
         log_level=0,
     ):
         """Init Phonopy API."""
@@ -155,7 +155,6 @@ class Phonopy:
         self._is_symmetry = is_symmetry
         self._calculator = calculator
         self._store_dense_svecs = store_dense_svecs
-        self._use_lapack_solver = use_lapack_solver
         self._log_level = log_level
 
         # Create supercell and primitive cell
@@ -175,8 +174,8 @@ class Phonopy:
         self._build_primitive_cell()
 
         # Set supercell and primitive symmetry
-        self._symmetry = None
-        self._primitive_symmetry = None
+        self._symmetry: Optional[Symmetry] = None
+        self._primitive_symmetry: Optional[Symmetry] = None
         self._search_symmetry()
         self._search_primitive_symmetry()
 
@@ -527,9 +526,9 @@ class Phonopy:
             dtype='double'
 
 
-        To set displacements set, only type-2 datast case is allowed.
+        For setter, only type-2 dataset format is allowed.
 
-        displacemens : array_like
+        displacements : array_like
             Atomic displacements of all atoms of all supercells.
             Only all displacements in each supercell case (type-2) is
             supported.
@@ -551,11 +550,11 @@ class Phonopy:
         disp = np.array(displacements, dtype="double", order="C")
         if disp.ndim != 3 or disp.shape[1:] != (len(self._supercell), 3):
             raise RuntimeError("Array shape of displacements is incorrect.")
-
         if "first_atoms" in self._displacement_dataset:
-            raise RuntimeError("This displacement format is not supported.")
+            raise RuntimeError("Displacements are incompatible with dataset.")
 
         self._displacement_dataset["displacements"] = disp
+        self._supercells_with_displacements = None
 
     def get_displacements(self):
         """Return displacements in supercells."""
@@ -885,14 +884,14 @@ class Phonopy:
 
     def generate_displacements(
         self,
-        distance=0.01,
-        is_plusminus="auto",
-        is_diagonal=True,
-        is_trigonal=False,
-        number_of_snapshots=None,
-        random_seed=None,
-        temperature=None,
-        cutoff_frequency=None,
+        distance: float = 0.01,
+        is_plusminus: Union[str, bool] = "auto",
+        is_diagonal: bool = True,
+        is_trigonal: bool = False,
+        number_of_snapshots: Optional[int] = None,
+        random_seed: Optional[int] = None,
+        temperature: Optional[float] = None,
+        cutoff_frequency: Optional[float] = None,
     ):
         """Generate displacement dataset.
 
@@ -945,22 +944,27 @@ class Phonopy:
             this value.
 
         """
-        if (
-            np.issubdtype(type(number_of_snapshots), np.integer)
-            and number_of_snapshots > 0
-        ):  # noqa: E129
+        if number_of_snapshots is not None and number_of_snapshots > 0:
+            if random_seed is not None and random_seed >= 0 and random_seed < 2**32:
+                _random_seed = random_seed
+                displacement_dataset = {"random_seed": _random_seed}
+            else:
+                _random_seed = None
+                displacement_dataset = {}
             if temperature is None:
-                displacement_dataset = get_random_displacements_dataset(
+                d = get_random_displacements_dataset(
                     number_of_snapshots,
                     distance,
                     len(self._supercell),
-                    random_seed=random_seed,
+                    random_seed=_random_seed,
+                    is_plusminus=(is_plusminus is True),
                 )
+                displacement_dataset["displacements"] = d
             else:
                 self.run_random_displacements(
                     temperature,
                     number_of_snapshots=number_of_snapshots,
-                    random_seed=random_seed,
+                    random_seed=_random_seed,
                     cutoff_frequency=cutoff_frequency,
                 )
                 units = get_default_physical_units(self._calculator)
@@ -969,7 +973,13 @@ class Phonopy:
                     dtype="double",
                     order="C",
                 )
-                displacement_dataset = {"displacements": d}
+                if is_plusminus is True:
+                    d = np.array(
+                        np.concatenate((d, -d), axis=0),
+                        dtype="double",
+                        order="C",
+                    )
+                displacement_dataset["displacements"] = d
         else:
             displacement_directions = get_least_displacements(
                 self._symmetry,
@@ -1630,7 +1640,6 @@ class Phonopy:
                 group_velocity=group_velocity,
                 rotations=self._primitive_symmetry.pointgroup_operations,
                 factor=self._factor,
-                use_lapack_solver=self._use_lapack_solver,
             )
 
     def run_mesh(
@@ -2375,8 +2384,8 @@ class Phonopy:
 
         frequency_points: ndarray
             shape=(frequency_sampling_points, ), dtype='double'
-        partial_dos:
-            shape=(frequency_sampling_points, projections), dtype='double'
+        projected_dos:
+            shape=(projections, frequency_sampling_points), dtype='double'
 
         """
         return {
@@ -2397,7 +2406,7 @@ class Phonopy:
         frequency_points: ndarray
             shape=(frequency_sampling_points, ), dtype='double'
         partial_dos:
-            shape=(frequency_sampling_points, projections), dtype='double'
+            shape=(projections, frequency_sampling_points), dtype='double'
 
         """
         warnings.warn(
@@ -3262,11 +3271,11 @@ class Phonopy:
 
     def run_random_displacements(
         self,
-        temperature,
-        number_of_snapshots=1,
-        random_seed=None,
-        dist_func=None,
-        cutoff_frequency=None,
+        temperature: float,
+        number_of_snapshots: int = 1,
+        random_seed: Optional[int] = None,
+        dist_func: Optional[str] = None,
+        cutoff_frequency: Optional[float] = None,
     ):
         """Generate random displacements from phonon structure.
 
@@ -3286,6 +3295,8 @@ class Phonopy:
             to generate random displacements.
 
         """
+        import phonopy._phonopy as phonoc
+
         self._random_displacements = RandomDisplacements(
             self._supercell,
             self._primitive,
@@ -3293,6 +3304,7 @@ class Phonopy:
             dist_func=dist_func,
             cutoff_frequency=cutoff_frequency,
             factor=self._factor,
+            use_openmp=phonoc.use_openmp(),
         )
         self._random_displacements.run(
             temperature,
@@ -3385,10 +3397,13 @@ class Phonopy:
                     self._symmetry,
                     self._displacement_dataset,
                     atom_list=distributed_atom_list,
+                    primitive=self._primitive,
                     decimals=decimals,
                 )
 
     def _set_dynamical_matrix(self):
+        import phonopy._phonopy as phonoc
+
         self._dynamical_matrix = None
 
         if self._is_symmetry and self._nac_params is not None:
@@ -3418,6 +3433,7 @@ class Phonopy:
             self._dynamical_matrix_decimals,
             symprec=self._symprec,
             log_level=self._log_level,
+            use_openmp=phonoc.use_openmp(),
         )
         # DynamialMatrix instance transforms force constants in correct
         # type of numpy array.
@@ -3434,7 +3450,7 @@ class Phonopy:
             self._dynamical_matrix.is_nac()
             and self._dynamical_matrix.nac_method == "gonze"
             and self._gv_delta_q is None
-        ):  # noqa E129
+        ):
             if self._log_level:
                 msg = "Group velocity calculation:\n"
                 text = (
@@ -3456,7 +3472,12 @@ class Phonopy:
         )
 
     def _search_symmetry(self):
-        self._symmetry = Symmetry(self._supercell, self._symprec, self._is_symmetry)
+        self._symmetry = Symmetry(
+            self._supercell,
+            self._symprec,
+            self._is_symmetry,
+            s2p_map=self._primitive.s2p_map,
+        )
 
     def _search_primitive_symmetry(self):
         self._primitive_symmetry = Symmetry(

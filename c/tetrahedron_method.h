@@ -35,15 +35,14 @@
 #ifndef __tetrahedron_method_H__
 #define __tetrahedron_method_H__
 
-#ifndef THMCONST
-#define THMCONST
-#endif
+#include <stddef.h>
 
 void thm_get_relative_grid_address(long relative_grid_address[24][4][3],
-                                   THMCONST double rec_lattice[3][3]);
+                                   const double rec_lattice[3][3]);
 void thm_get_all_relative_grid_address(long relative_grid_address[4][24][4][3]);
 double thm_get_integration_weight(const double omega,
-                                  THMCONST double tetrahedra_omegas[24][4],
+                                  const double tetrahedra_omegas[24][4],
                                   const char function);
+long thm_in_tetrahedra(const double f0, const double freq_vertices[24][4]);
 
 #endif

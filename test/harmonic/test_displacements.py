@@ -70,6 +70,51 @@ def test_tio2(ph_tio2: Phonopy):
     ph_tio2.dataset = dataset
 
 
+def test_tio2_random_disp(ph_tio2: Phonopy):
+    """Test random displacements of TiO2."""
+    dataset = deepcopy(ph_tio2.dataset)
+    disp_ref = [
+        [0, 0.01, 0.0, 0.0],
+        [0, 0.0, 0.01, 0.0],
+        [0, 0.0, 0.0, 0.01],
+        [0, 0.0, 0.0, -0.01],
+        [72, 0.01, 0.0, 0.0],
+        [72, 0.0, 0.0, 0.01],
+    ]
+    np.testing.assert_allclose(ph_tio2.displacements, disp_ref, atol=1e-8)
+    ph_tio2.generate_displacements(number_of_snapshots=4, distance=0.03)
+    d = ph_tio2.displacements
+    np.testing.assert_allclose(np.linalg.norm(d, axis=2).ravel(), 0.03, atol=1e-8)
+    ph_tio2.dataset = dataset
+
+
+def test_tio2_random_disp_plusminus(ph_tio2: Phonopy):
+    """Test random plus-minus displacements of TiO2.
+
+    Note
+    ----
+    Displacements of last 4 supercells are minus of those of first 4 supercells.
+
+    """
+    dataset = deepcopy(ph_tio2.dataset)
+    disp_ref = [
+        [0, 0.01, 0.0, 0.0],
+        [0, 0.0, 0.01, 0.0],
+        [0, 0.0, 0.0, 0.01],
+        [0, 0.0, 0.0, -0.01],
+        [72, 0.01, 0.0, 0.0],
+        [72, 0.0, 0.0, 0.01],
+    ]
+    np.testing.assert_allclose(ph_tio2.displacements, disp_ref, atol=1e-8)
+    ph_tio2.generate_displacements(
+        number_of_snapshots=4, distance=0.03, is_plusminus=True
+    )
+    d = ph_tio2.displacements
+    np.testing.assert_allclose(d[:4], -d[4:], atol=1e-8)
+    np.testing.assert_allclose(np.linalg.norm(d, axis=2).ravel(), 0.03, atol=1e-8)
+    ph_tio2.dataset = dataset
+
+
 def test_zr3n4(ph_zr3n4: Phonopy):
     """Test displacements of Zr3N4."""
     dataset = deepcopy(ph_zr3n4.dataset)

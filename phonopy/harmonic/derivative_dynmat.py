@@ -167,6 +167,7 @@ class DerivativeOfDynamicalMatrix:
                 born,
                 dielectric,
                 q_dir,
+                self._dynmat.use_openmp * 1,
             )
         else:
             phonoc.derivative_dynmat(
@@ -183,6 +184,7 @@ class DerivativeOfDynamicalMatrix:
                 born,
                 dielectric,
                 q_dir,
+                self._dynmat.use_openmp * 1,
             )
 
         self._ddm = ddm

@@ -38,24 +38,39 @@ import warnings
 import numpy as np
 import spglib
 
-from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
     compute_all_sg_permutations,
     get_primitive,
     get_supercell,
 )
+from phonopy.utils import similarity_transformation
 
 
 class Symmetry:
     """Class to find and store crystal symmetry information."""
 
-    def __init__(self, cell: PhonopyAtoms, symprec=1e-5, is_symmetry=True):
-        """Init method."""
+    def __init__(
+        self, cell: PhonopyAtoms, symprec=1e-5, is_symmetry=True, s2p_map=None
+    ):
+        """Init method.
+
+        cell : PhonopyAtoms
+            Crystal structure whose symmetry is analyzed.
+        symprec : float, optional
+            Tolerance used to find crystal symmetry. Default is 1e-5.
+        is_symmetry : bool, optional
+            With or without symmetry analysis. When `is_symmetry=False` and
+            `p2s_map` is given, pure translations inside `cell` is registered
+            as symmetry operations. Default is True.
+        s2p_map : ndarray, optional
+            This is equivalent to `Primitive.s2p_map`.
+
+        """
         self._cell = cell
         self._symprec = symprec
 
-        self._symmetry_operations = None
+        self._symmetry_operations: dict
         self._international_table = None
         self._dataset = None
         self._wyckoff_letters = None
@@ -72,7 +87,7 @@ class Symmetry:
                 magmom = None
 
         if not is_symmetry:
-            self._set_nosym()
+            self._set_nosym(s2p_map)
         elif magmom is None:
             self._set_symmetry_dataset()
         else:
@@ -315,9 +330,14 @@ class Symmetry:
         self._map_atoms = self._dataset["equivalent_atoms"]
 
     def _set_symmetry_operations_with_magmoms(self):
-        self._symmetry_operations = spglib.get_symmetry(
-            self._cell.totuple(), symprec=self._symprec
-        )
+        if int(spglib.__version__.split(".")[0]) > 1:
+            self._symmetry_operations = spglib.get_magnetic_symmetry(
+                self._cell.totuple(), symprec=self._symprec
+            )
+        else:
+            self._symmetry_operations = spglib.get_symmetry(
+                self._cell.totuple(), symprec=self._symprec
+            )
         self._map_atoms = self._symmetry_operations["equivalent_atoms"]
 
     def _set_independent_atoms(self):
@@ -359,32 +379,27 @@ class Symmetry:
             map_operations[i] = match[0]
         return map_operations
 
-    def _set_nosym(self):
+    def _set_nosym(self, s2p_map):
         translations = []
         rotations = []
 
-        if "get_supercell_to_unitcell_map" in dir(self._cell):
-            s2u_map = self._cell.s2u_map
+        if s2p_map is None:
+            rotations.append(np.eye(3, dtype="intc"))
+            translations.append(np.zeros(3, dtype="double"))
+            self._map_atoms = range(len(self._cell))
+        else:
             positions = self._cell.scaled_positions
-
-            for i, j in enumerate(s2u_map):
+            for i, j in enumerate(s2p_map):
                 if j == 0:
                     ipos0 = i
                     break
-
-            for i, p in zip(s2u_map, positions):
+            for i, p in zip(s2p_map, positions):
                 if i == 0:
                     trans = p - positions[ipos0]
                     trans -= np.floor(trans)
                     translations.append(trans)
                     rotations.append(np.eye(3, dtype="intc"))
-
-            self._map_atoms = s2u_map
-        else:
-            rotations.append(np.eye(3, dtype="intc"))
-            translations.append(np.zeros(3, dtype="double"))
-            self._map_atoms = range(len(self._cell))
-
+            self._map_atoms = s2p_map
         self._symmetry_operations = {
             "rotations": np.array(rotations, dtype="intc"),
             "translations": np.array(translations, dtype="double"),

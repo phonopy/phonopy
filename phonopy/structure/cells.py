@@ -809,7 +809,9 @@ class TrimmedCell(PhonopyAtoms):
         return reorder_indices
 
 
-def get_supercell(unitcell, supercell_matrix, is_old_style=True, symprec=1e-5):
+def get_supercell(
+    unitcell, supercell_matrix, is_old_style=True, symprec=1e-5
+) -> Supercell:
     """Create supercell."""
     return Supercell(
         unitcell, supercell_matrix, is_old_style=is_old_style, symprec=symprec

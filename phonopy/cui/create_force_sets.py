@@ -34,6 +34,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
+from typing import Optional
+
 import numpy as np
 
 from phonopy.file_IO import parse_disp_yaml, write_FORCE_SETS
@@ -44,6 +46,7 @@ from phonopy.interface.phonopy_yaml import PhonopyYaml
 def create_FORCE_SETS(
     interface_mode,
     force_filenames,
+    phpy_yaml: Optional[PhonopyYaml] = None,
     symmetry_tolerance=None,
     wien2k_P1_mode=False,
     force_sets_zero_mode=False,
@@ -87,11 +90,11 @@ def create_FORCE_SETS(
             )
         else:
             disp_dataset = parse_disp_yaml(filename=disp_filename)
-    else:
-        phpy_yaml = PhonopyYaml()
-        phpy_yaml.read(disp_filename)
+    elif phpy_yaml is not None:
         supercell = phpy_yaml.supercell
         disp_dataset = phpy_yaml.dataset
+    else:
+        raise RuntimeError("Could not read displacement dataset.")
 
     if "natom" in disp_dataset:  # type-1 dataset
         num_atoms = disp_dataset["natom"]

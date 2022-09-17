@@ -48,7 +48,7 @@ def get_options():
 
     parser = argparse.ArgumentParser(description="Phonopy-QHA command-line-tool")
     parser.set_defaults(
-        pressure=0.0,
+        pressure=None,
         is_graph_plot=False,
         is_graph_save=False,
         is_bulk_modulus_only=False,
@@ -130,24 +130,45 @@ def main(args):
     else:
         print("# Vinet EOS")
 
+    ########################
+    # Read data from files #
+    ########################
+    volumes, electronic_energies = read_v_e(args.filenames[0])
+    if args.efe_file:
+        _temperatures, electronic_energies = read_efe(args.efe_file[0])
+    # electronic_energies += volumes * args.pressure / EVAngstromToGPa
+
     # Show bulk modulus of v-e data
     if args.is_bulk_modulus_only:
-        if args.efe_file:
-            print("--efe optin can't be used with -b option")
-            sys.exit(1)
-
-        volumes, electronic_energies = read_v_e(args.filenames[0])
-        electronic_energies += volumes * args.pressure / EVAngstromToGPa
+        # if args.efe_file:
+        #     print("--efe optin can't be used with -b option")
+        #     sys.exit(1)
         bulk_modulus = PhonopyQHA(
-            volumes, electronic_energies=electronic_energies, eos=args.eos
+            volumes,
+            electronic_energies=electronic_energies,
+            pressure=args.pressure,
+            eos=args.eos,
         )
         parameters = bulk_modulus.get_bulk_modulus_parameters()
-        print("Volume: %f" % parameters[3])
-        print("Energy: %f" % parameters[0])
-        print("Bulk modulus: %f" % (parameters[1] * EVAngstromToGPa))
-        print("Parameters: %f %f %f %f" % tuple(parameters))
+        if args.efe_file:
+            print(f"Volume: {parameters[3]}")
+            print(f"Energy: {parameters[0]}")
+            print(f"Bulk modulus: {parameters[1] * EVAngstromToGPa}")
+            print(
+                f"Parameters: {parameters[0]} {parameters[1]} "
+                f"{parameters[2]} {parameters[3]}"
+            )
+        else:
+            print(f"Volume: {parameters[3]:.7f}")
+            print(f"Energy: {parameters[0]:.7f}")
+            print(f"Bulk modulus: {parameters[1] * EVAngstromToGPa:.7f}")
+            print(
+                f"Parameters: {parameters[0]:.7f} {parameters[1]:.7f} "
+                f"{parameters[2]:.7f} {parameters[3]:.7f}"
+            )
+
         if args.is_graph_plot:
-            bulk_modulus.plot_bulk_modulus().show()
+            bulk_modulus.plot_bulk_modulus(thin_number=args.thin_number).show()
 
         # These lines commented out are to print E-V points on the curve fitted.
         # def eos(v):
@@ -161,11 +182,6 @@ def main(args):
 
         sys.exit(0)
 
-    ########################
-    # Read data from files #
-    ########################
-    volumes, electronic_energies = read_v_e(args.filenames[0])
-    electronic_energies += volumes * args.pressure / EVAngstromToGPa
     # Check number of files in e-v.dat case
     if len(volumes) != len(args.filenames[1:]):
         print(
@@ -176,7 +192,6 @@ def main(args):
         sys.exit(1)
 
     if args.efe_file:
-        _temperatures, electronic_energies = read_efe(args.efe_file[0])
         if len(volumes) != electronic_energies.shape[1]:
             print(
                 "%s and %s are inconsistent for the volume points."
@@ -234,6 +249,7 @@ def main(args):
         electronic_energies=electronic_energies,
         eos=args.eos,
         temperatures=temperatures,
+        pressure=args.pressure,
         free_energy=fe_phonon[:, indices],
         cv=cv[:, indices],
         entropy=entropy[:, indices],

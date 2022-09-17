@@ -42,6 +42,7 @@ import numpy as np
 
 from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
 from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.brillouin_zone import BrillouinZone
 from phonopy.structure.cells import Primitive, sparse_to_dense_svecs
 
 
@@ -90,6 +91,7 @@ class DynamicalMatrix:
         primitive: Primitive,
         force_constants,
         decimals=None,
+        use_openmp=False,
     ):
         """Init method.
 
@@ -107,11 +109,14 @@ class DynamicalMatrix:
             dtype='double'
         decimals : int, optional, default=None
             Number of decimals. Use like dm.round(decimals).
+        use_openmp : bool, optional, default=False
+            Use OpenMP in calculate dynamical matrix.
 
         """
         self._scell = supercell
         self._pcell = primitive
         self._decimals = decimals
+        self._use_openmp = use_openmp
         self._dynamical_matrix = None
         self._force_constants = None
         self._set_force_constants(force_constants)
@@ -229,6 +234,11 @@ class DynamicalMatrix:
         )
         return self.dynamical_matrix
 
+    @property
+    def use_openmp(self) -> bool:
+        """Return activate OpenMP or not."""
+        return self._use_openmp
+
     def run(self, q, lang="C"):
         """Run dynamical matrix calculation at a q-point.
 
@@ -290,6 +300,7 @@ class DynamicalMatrix:
             mass,
             s2p_map,
             p2s_map,
+            self._use_openmp * 1,
         )
 
         # Data of dm array are stored in memory by the C order of
@@ -359,6 +370,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         symprec=1e-5,
         decimals=None,
         log_level=0,
+        use_openmp=False,
     ):
         """Init method.
 
@@ -380,11 +392,20 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             Number of decimals. Use like dm.round(decimals).
         log_levelc : int, optional, defualt=0
             Log level.
+        use_openmp : bool, optional, default=False
+            Use OpenMP in calculate dynamical matrix.
 
         """
-        super().__init__(supercell, primitive, force_constants, decimals=decimals)
+        super().__init__(
+            supercell,
+            primitive,
+            force_constants,
+            decimals=decimals,
+            use_openmp=use_openmp,
+        )
         self._symprec = symprec
         self._log_level = log_level
+        self._rec_lat = np.linalg.inv(self._pcell.cell)  # column vectors
 
     def run(self, q, q_direction=None):
         """Calculate dynamical matrix at q-point.
@@ -399,11 +420,10 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             shape=(3,), dtype='double'
 
         """
-        rec_lat = np.linalg.inv(self._pcell.cell)  # column vectors
         if q_direction is None:
-            q_norm = np.linalg.norm(np.dot(q, rec_lat.T))
+            q_norm = np.linalg.norm(np.dot(q, self._rec_lat.T))
         else:
-            q_norm = np.linalg.norm(np.dot(q_direction, rec_lat.T))
+            q_norm = np.linalg.norm(np.dot(q_direction, self._rec_lat.T))
 
         if q_norm < self._symprec:
             self._run(q)
@@ -518,19 +538,6 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         )
         self.run(q, q_direction=q_direction)
 
-    def _get_charge_sum(self, num_atom, q, born):
-        nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype="double", order="C")
-        A = np.dot(q, born)
-        for i in range(num_atom):
-            for j in range(num_atom):
-                nac_q[i, j] = np.outer(A[i], A[j])
-        return nac_q
-
-    def _get_constant_factor(self, q, dielectric, volume, unit_conversion):
-        return (
-            unit_conversion * 4.0 * np.pi / volume / np.dot(q.T, np.dot(dielectric, q))
-        )
-
     def _compute_dynamical_matrix(self, q_red, q_direction):
         raise NotImplementedError()
 
@@ -551,6 +558,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         decimals=None,
         symprec=1e-5,
         log_level=0,
+        use_openmp=False,
     ):
         """Init method.
 
@@ -575,6 +583,8 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             Number of decimals. Use like dm.round(decimals).
         log_levelc : int, optional, defualt=0
             Log level.
+        use_openmp : bool, optional, default=False
+            Use OpenMP in calculate dynamical matrix.
 
         """
         super().__init__(
@@ -584,6 +594,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             symprec=symprec,
             decimals=decimals,
             log_level=log_level,
+            use_openmp=use_openmp,
         )
 
         # For the method by Gonze et al.
@@ -600,6 +611,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         self._dd_real_q0 = None
         self._dd_limiting = None
         self._H = None
+        self._bz = BrillouinZone(self._rec_lat)
 
         if nac_params is not None:
             self.nac_params = nac_params
@@ -670,11 +682,23 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
 
         fc_shape = self._force_constants.shape
         d2f = DynmatToForceConstants(
-            self._pcell, self._scell, is_full_fc=(fc_shape[0] == fc_shape[1])
+            self._pcell,
+            self._scell,
+            is_full_fc=(fc_shape[0] == fc_shape[1]),
+            use_openmp=self._use_openmp,
         )
+
+        # Bring commensurate points into first-BZ because
+        # Gonze-dipole-dipole is not, strictly speaking, periodict over G.
+        self._bz.run(d2f.commensurate_points)
+        comm_points_in_BZ = np.array(
+            [pts[0] for pts in self._bz.shortest_qpoints], dtype="double", order="C"
+        )
+        d2f.commensurate_points = comm_points_in_BZ
+
         dynmat = []
         num_q = len(d2f.commensurate_points)
-        for i, q_red in enumerate(d2f.commensurate_points):
+        for i, q_red in enumerate(comm_points_in_BZ):
             if self._log_level > 2:
                 print("%d/%d %s" % (i + 1, num_q, q_red))
             self._run(q_red)
@@ -723,12 +747,11 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
 
     def _get_Gonze_dipole_dipole(self, q_red, q_direction):
         num_atom = len(self._pcell)
-        rec_lat = np.linalg.inv(self._pcell.cell)  # column vectors
-        q_cart = np.array(np.dot(q_red, rec_lat.T), dtype="double")
+        q_cart = np.array(np.dot(q_red, self._rec_lat.T), dtype="double")
         if q_direction is None:
             q_dir_cart = None
         else:
-            q_dir_cart = np.array(np.dot(q_direction, rec_lat.T), dtype="double")
+            q_dir_cart = np.array(np.dot(q_direction, self._rec_lat.T), dtype="double")
 
         try:
             import phonopy._phonopy as phonoc  # noqa F401
@@ -797,6 +820,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             self._unit_conversion * 4.0 * np.pi / volume,
             self._Lambda,
             self._symprec,
+            self._use_openmp * 1,
         )
         return dd
 
@@ -819,6 +843,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             np.array(pos, dtype="double", order="C"),
             self._Lambda,
             self._symprec,
+            self._use_openmp * 1,
         )
 
     def _get_real_dipole_dipole(self, q_red):
@@ -864,18 +889,17 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         )
 
     def _get_G_list(self, G_cutoff, g_rad=100):
-        rec_lat = np.linalg.inv(self._pcell.cell)  # column vectors
         # g_rad must be greater than 0 for broadcasting.
-        G_vec_list = self._get_G_vec_list(g_rad, rec_lat)
+        G_vec_list = self._get_G_vec_list(g_rad)
         G_norm2 = ((G_vec_list) ** 2).sum(axis=1)
         return np.array(G_vec_list[G_norm2 < G_cutoff**2], dtype="double", order="C")
 
-    def _get_G_vec_list(self, g_rad, rec_lat):
+    def _get_G_vec_list(self, g_rad):
         pts = np.arange(-g_rad, g_rad + 1)
         grid = np.meshgrid(pts, pts, pts)
         for i in range(3):
             grid[i] = grid[i].ravel()
-        return np.dot(rec_lat, grid).T
+        return np.dot(self._rec_lat, grid).T
 
     def _get_H(self):
         lat = self._scell.cell
@@ -929,6 +953,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
         decimals=None,
         symprec=1e-5,
         log_level=0,
+        use_openmp=False,
     ):
         """Init method.
 
@@ -950,6 +975,8 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
             Number of decimals. Use like dm.round(decimals).
         log_levelc : int, optional, defualt=0
             Log level.
+        use_openmp : bool, optional, default=False
+            Use OpenMP in calculate dynamical matrix.
 
         """
         super().__init__(
@@ -959,6 +986,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
             symprec=symprec,
             decimals=decimals,
             log_level=log_level,
+            use_openmp=use_openmp,
         )
 
         self._symprec = symprec
@@ -980,28 +1008,27 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
 
     def _compute_dynamical_matrix(self, q_red, q_direction):
         # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
-        rec_lat = np.linalg.inv(self._pcell.cell)  # column vectors
         if q_direction is None:
-            q = np.dot(q_red, rec_lat.T)
+            q_cart = np.dot(q_red, self._rec_lat.T)
         else:
-            q = np.dot(q_direction, rec_lat.T)
+            q_cart = np.dot(q_direction, self._rec_lat.T)
 
         constant = self._get_constant_factor(
-            q, self._dielectric, self._pcell.volume, self._unit_conversion
+            q_cart, self._dielectric, self._pcell.volume, self._unit_conversion
         )
         try:
             import phonopy._phonopy as phonoc  # noqa F401
 
-            self._run_c_Wang_dynamical_matrix(q_red, q, constant)
+            self._run_c_Wang_dynamical_matrix(q_red, q_cart, constant)
         except ImportError:
             num_atom = len(self._pcell)
             fc_backup = self._force_constants.copy()
-            nac_q = self._get_charge_sum(num_atom, q, self._born) * constant
+            nac_q = self._get_charge_sum(num_atom, q_cart, self._born) * constant
             self._run_py_Wang_force_constants(self._force_constants, nac_q)
             self._run(q_red)
             self._force_constants = fc_backup
 
-    def _run_c_Wang_dynamical_matrix(self, q_red, q, factor):
+    def _run_c_Wang_dynamical_matrix(self, q_red, q_cart, factor):
         import phonopy._phonopy as phonoc
 
         fc = self._force_constants
@@ -1019,9 +1046,10 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
                 mass,
                 self._s2p_map,
                 self._p2s_map,
-                np.array(q, dtype="double"),
+                np.array(q_cart, dtype="double"),
                 self._born,
                 factor,
+                self._use_openmp * 1,
             )
         else:
             phonoc.nac_dynamical_matrix(
@@ -1033,12 +1061,26 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
                 mass,
                 self._s2pp_map,
                 np.arange(len(self._p2s_map), dtype="int_"),
-                np.array(q, dtype="double"),
+                np.array(q_cart, dtype="double"),
                 self._born,
                 factor,
+                self._use_openmp * 1,
             )
 
         self._dynamical_matrix = dm
+
+    def _get_charge_sum(self, num_atom, q, born):
+        nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype="double", order="C")
+        A = np.dot(q, born)
+        for i in range(num_atom):
+            for j in range(num_atom):
+                nac_q[i, j] = np.outer(A[i], A[j])
+        return nac_q
+
+    def _get_constant_factor(self, q, dielectric, volume, unit_conversion):
+        return (
+            unit_conversion * 4.0 * np.pi / volume / np.dot(q.T, np.dot(dielectric, q))
+        )
 
     def _run_py_Wang_force_constants(self, fc, nac_q):
         N = len(self._scell) // len(self._pcell)
@@ -1064,6 +1106,7 @@ def get_dynamical_matrix(
     decimals=None,
     symprec=1e-5,
     log_level=0,
+    use_openmp=False,
 ):
     """Return dynamical matrix.
 
@@ -1077,7 +1120,13 @@ def get_dynamical_matrix(
         _fc2 = fc2 * frequency_scale_factor**2
 
     if nac_params is None:
-        dm = DynamicalMatrix(supercell, primitive, _fc2, decimals=decimals)
+        dm = DynamicalMatrix(
+            supercell,
+            primitive,
+            _fc2,
+            decimals=decimals,
+            use_openmp=use_openmp,
+        )
     else:
         if "method" not in nac_params:
             method = "gonze"
@@ -1096,6 +1145,137 @@ def get_dynamical_matrix(
             decimals=decimals,
             symprec=symprec,
             log_level=log_level,
+            use_openmp=use_openmp,
         )
         dm.nac_params = nac_params
     return dm
+
+
+def run_dynamical_matrix_solver_c(
+    dm: Union[DynamicalMatrix, DynamicalMatrixWang, DynamicalMatrixGL],
+    qpoints,
+    nac_q_direction=None,  # in reduced coordinates
+):
+    """Bulid and solve dynamical matrices on grid in C-API.
+
+    dm : DynamicalMatrix
+        DynamicalMatrix instance.
+    qpoints : array_like,
+        q-points in crystallographic coordinates.
+        shape=(n_qpoints, 3), dtype='double', order='C'
+    nac_q_direction : array_like, optional
+        See Interaction.nac_q_direction. Default is None.
+
+    """
+    import phonopy._phonopy as phonoc
+
+    (
+        svecs,
+        multi,
+        masses,
+        rec_lattice,  # column vectors
+        positions,  # primitive cell positions
+        born,
+        nac_factor,
+        dielectric,
+    ) = _extract_params(dm)
+
+    use_Wang_NAC = False
+    if dm.is_nac() and dm.nac_method == "gonze":
+        gonze_nac_dataset = dm.Gonze_nac_dataset
+        if gonze_nac_dataset[0] is None:
+            dm.make_Gonze_nac_dataset()
+            gonze_nac_dataset = dm.Gonze_nac_dataset
+        (
+            gonze_fc,  # fc where the dipole-diple contribution is removed.
+            dd_q0,  # second term of dipole-dipole expression.
+            G_cutoff,  # Cutoff radius in reciprocal space. This will not be used.
+            G_list,  # List of G points where d-d interactions are integrated.
+            Lambda,
+        ) = gonze_nac_dataset  # Convergence parameter
+        fc = gonze_fc
+    else:
+        positions = None
+        dd_q0 = None
+        G_list = None
+        Lambda = 0
+        fc = dm.force_constants
+        if dm.is_nac() and dm.nac_method == "wang":
+            use_Wang_NAC = True
+
+    p2s, s2p = _get_fc_elements_mapping(dm, fc)
+
+    dtype_complex = "c%d" % (np.dtype("double").itemsize * 2)
+    dynmat = np.zeros((len(qpoints), len(p2s) * 3, len(p2s) * 3), dtype=dtype_complex)
+    phonoc.dynamical_matrices_with_dd_openmp_over_qpoints(
+        dynmat.view(dtype="double"),
+        np.array(qpoints, dtype="double", order="C"),
+        fc,
+        svecs,
+        multi,
+        positions,
+        masses,
+        s2p,
+        p2s,
+        nac_q_direction,
+        born,
+        dielectric,
+        rec_lattice,
+        nac_factor,
+        dd_q0,
+        G_list,
+        Lambda,
+        use_Wang_NAC * 1,  # use_Wang_NAC
+    )
+
+    return dynmat
+
+
+def _extract_params(dm: Union[DynamicalMatrix, DynamicalMatrixNAC]):
+    svecs, multi = dm.primitive.get_smallest_vectors()
+    if dm.primitive.store_dense_svecs:
+        _svecs = svecs
+        _multi = multi
+    else:
+        _svecs, _multi = sparse_to_dense_svecs(svecs, multi)
+
+    masses = np.array(dm.primitive.masses, dtype="double")
+    rec_lattice = np.array(np.linalg.inv(dm.primitive.cell), dtype="double", order="C")
+    positions = np.array(dm.primitive.positions, dtype="double", order="C")
+    if dm.is_nac():
+        born = dm.born
+        nac_factor = dm.nac_factor
+        dielectric = dm.dielectric_constant
+    else:
+        born = None
+        nac_factor = 0
+        dielectric = None
+
+    return (
+        _svecs,
+        _multi,
+        masses,
+        rec_lattice,
+        positions,
+        born,
+        nac_factor,
+        dielectric,
+    )
+
+
+def _get_fc_elements_mapping(dm, fc):
+    p2s_map = dm.primitive.p2s_map
+    s2p_map = dm.primitive.s2p_map
+    if fc.shape[0] == fc.shape[1]:  # full fc
+        fc_p2s = p2s_map
+        fc_s2p = s2p_map
+    else:  # compact fc
+        primitive = dm.primitive
+        p2p_map = primitive.p2p_map
+        s2pp_map = np.array(
+            [p2p_map[s2p_map[i]] for i in range(len(s2p_map))], dtype="intc"
+        )
+        fc_p2s = np.arange(len(p2s_map), dtype="intc")
+        fc_s2p = s2pp_map
+
+    return np.array(fc_p2s, dtype="int_"), np.array(fc_s2p, dtype="int_")

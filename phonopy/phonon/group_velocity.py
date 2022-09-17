@@ -40,10 +40,10 @@ import numpy as np
 
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
-from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.phonon.degeneracy import degenerate_sets
 from phonopy.structure.symmetry import Symmetry
 from phonopy.units import VaspToTHz
+from phonopy.utils import similarity_transformation
 
 
 class GroupVelocity:

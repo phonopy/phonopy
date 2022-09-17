@@ -1,6 +1,7 @@
 """Tests for symmetry tools."""
 import numpy as np
 
+from phonopy import Phonopy
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_supercell
 from phonopy.structure.symmetry import (
@@ -63,7 +64,7 @@ def test_magmom(convcell_cr: PhonopyAtoms):
     assert len_sym_nonspin != len_sym_brokenspin
 
 
-def test_symmetrize_borns_and_epsilon_nacl(ph_nacl):
+def test_symmetrize_borns_and_epsilon_nacl(ph_nacl: Phonopy):
     """Test symmetrization of Born charges and dielectric tensors by NaCl."""
     nac_params = ph_nacl.nac_params
     borns, epsilon = symmetrize_borns_and_epsilon(
@@ -73,7 +74,7 @@ def test_symmetrize_borns_and_epsilon_nacl(ph_nacl):
     np.testing.assert_allclose(epsilon, nac_params["dielectric"], atol=1e-8)
 
 
-def test_symmetrize_borns_and_epsilon_tio2(ph_tio2):
+def test_symmetrize_borns_and_epsilon_tio2(ph_tio2: Phonopy):
     """Test symmetrization of Born charges and dielectric tensors by TiO2."""
     nac_params = ph_tio2.nac_params
     borns, epsilon = symmetrize_borns_and_epsilon(
@@ -83,12 +84,66 @@ def test_symmetrize_borns_and_epsilon_tio2(ph_tio2):
     np.testing.assert_allclose(epsilon, nac_params["dielectric"], atol=1e-8)
 
 
-def test_Symmetry_pointgroup(ph_tio2):
+def test_Symmetry_pointgroup(ph_tio2: Phonopy):
     """Test for point group symbol."""
     assert ph_tio2.symmetry.pointgroup_symbol == r"4/mmm"
 
 
-def test_with_pmat_and_smat(ph_nacl):
+def test_Symmetry_nosym_s2p_map(convcell_nacl: PhonopyAtoms):
+    """Test Symmetry with is_symmetry=False and s2p_map.
+
+    This situation happens when making Symmetry with nosym for supercell in
+    the Phonopy class.
+
+    """
+    ph = Phonopy(
+        convcell_nacl,
+        supercell_matrix=[2, 2, 2],
+        primitive_matrix="F",
+        is_symmetry=False,
+    )
+    # for i, v in enumerate(ph.symmetry.symmetry_operations["translations"]):
+    #     print("[", ", ".join(f"{x}" for x in v), "],")
+    np.testing.assert_equal(
+        ph.symmetry.symmetry_operations["translations"],
+        [
+            [0.0, 0.0, 0.0],
+            [0.5, 0.0, 0.0],
+            [0.0, 0.5, 0.0],
+            [0.5, 0.5, 0.0],
+            [0.0, 0.0, 0.5],
+            [0.5, 0.0, 0.5],
+            [0.0, 0.5, 0.5],
+            [0.5, 0.5, 0.5],
+            [0.0, 0.25, 0.25],
+            [0.5, 0.25, 0.25],
+            [0.0, 0.75, 0.25],
+            [0.5, 0.75, 0.25],
+            [0.0, 0.25, 0.75],
+            [0.5, 0.25, 0.75],
+            [0.0, 0.75, 0.75],
+            [0.5, 0.75, 0.75],
+            [0.25, 0.0, 0.25],
+            [0.75, 0.0, 0.25],
+            [0.25, 0.5, 0.25],
+            [0.75, 0.5, 0.25],
+            [0.25, 0.0, 0.75],
+            [0.75, 0.0, 0.75],
+            [0.25, 0.5, 0.75],
+            [0.75, 0.5, 0.75],
+            [0.25, 0.25, 0.0],
+            [0.75, 0.25, 0.0],
+            [0.25, 0.75, 0.0],
+            [0.75, 0.75, 0.0],
+            [0.25, 0.25, 0.5],
+            [0.75, 0.25, 0.5],
+            [0.25, 0.75, 0.5],
+            [0.75, 0.75, 0.5],
+        ],
+    )
+
+
+def test_with_pmat_and_smat(ph_nacl: Phonopy):
     """Test Born charges and dielectric tensor symmetrization with pmat and smat."""
     pcell = ph_nacl.primitive
     scell = ph_nacl.supercell
@@ -105,7 +160,7 @@ def test_with_pmat_and_smat(ph_nacl):
     np.testing.assert_allclose(epsilon, uepsilon, atol=1e-8)
 
 
-def test_with_pcell(ph_nacl):
+def test_with_pcell(ph_nacl: Phonopy):
     """Test Born charges and dielectric tensor symmetrization with pcell."""
     pcell = ph_nacl.primitive
     scell = ph_nacl.supercell
@@ -121,7 +176,7 @@ def test_with_pcell(ph_nacl):
     np.testing.assert_allclose(epsilon, uepsilon, atol=1e-8)
 
 
-def test_site_symmetry(ph_sno2):
+def test_site_symmetry(ph_sno2: Phonopy):
     """Test site symmetry operations."""
     site_sym0 = ph_sno2.symmetry.get_site_symmetry(0)
     ref0 = [
@@ -205,7 +260,7 @@ def test_site_symmetry(ph_sno2):
     np.testing.assert_array_equal(site_sym36.ravel(), ref36)
 
 
-def test_collect_unique_rotations(ph_nacl):
+def test_collect_unique_rotations(ph_nacl: Phonopy):
     """Test collect_unique_rotations function."""
     rotations = ph_nacl.symmetry.symmetry_operations["rotations"]
     ptg = collect_unique_rotations(rotations)
@@ -214,7 +269,7 @@ def test_collect_unique_rotations(ph_nacl):
     assert len(ptg) == len(ph_nacl.symmetry.pointgroup_operations)
 
 
-def test_reciprocal_operations(ph_zr3n4):
+def test_reciprocal_operations(ph_zr3n4: Phonopy):
     """Test reciprocal operations.
 
     Zr3N4 is a non-centrosymmetric crystal.
@@ -237,7 +292,7 @@ def test_reciprocal_operations(ph_zr3n4):
     assert found_inv
 
 
-def _get_nac_params_in_unitcell(ph):
+def _get_nac_params_in_unitcell(ph: Phonopy):
     nac_params = ph.nac_params
     uepsilon = nac_params["dielectric"]
     pborns = nac_params["born"]
