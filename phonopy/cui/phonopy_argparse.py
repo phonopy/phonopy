@@ -457,12 +457,6 @@ def get_parser(
         default=None,
         help="Include all output file data in phonopy.yaml",
     )
-    # parser.add_argument(
-    #     "--lapack-solver", dest="lapack_solver", action="store_true",
-    #     default=False,
-    #     help=("Use Lapack via Lapacke for solving phonons. This "
-    #           "option can be used only when phonopy is compiled "
-    #           "specially."))
     parser.add_argument(
         "--legend",
         dest="is_legend",

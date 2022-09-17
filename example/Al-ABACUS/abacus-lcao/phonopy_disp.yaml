@@ -1,0 +1,251 @@
+phonopy:
+  version: 2.15.1
+  calculator: abacus
+  frequency_unit_conversion_factor: 15.633302
+  symmetry_tolerance: 1.00000e-05
+  configuration:
+    dim: "2 2 2"
+    atom_name: "Al"
+    create_displacements: ".true."
+    calculator: "abacus"
+
+physical_unit:
+  atomic_mass: "AMU"
+  length: "au"
+  force_constants: "eV/angstrom.au"
+
+space_group:
+  type: "Fm-3m"
+  number: 225
+  Hall_symbol: "-F 4 2 3"
+
+supercell_matrix:
+- [   2,   0,   0 ]
+- [   0,   2,   0 ]
+- [   0,   0,   2 ]
+
+primitive_cell:
+  lattice:
+  - [     7.643847691170642,     0.000000000000000,     0.000000000000000 ] # a
+  - [     0.000000000000000,     7.643847691170642,     0.000000000000000 ] # b
+  - [     0.000000000000000,     0.000000000000000,     7.643847691170642 ] # c
+  points:
+  - symbol: Al # 1
+    coordinates: [  0.000000000000000,  0.000000000000000,  0.000000000000000 ]
+    mass: 26.981539
+    magnetic_moment: 0.00000000
+  - symbol: Al # 2
+    coordinates: [  0.500000000000000,  0.500000000000000,  0.000000000000000 ]
+    mass: 26.981539
+    magnetic_moment: 0.00000000
+  - symbol: Al # 3
+    coordinates: [  0.500000000000000,  0.000000000000000,  0.500000000000000 ]
+    mass: 26.981539
+    magnetic_moment: 0.00000000
+  - symbol: Al # 4
+    coordinates: [  0.000000000000000,  0.500000000000000,  0.500000000000000 ]
+    mass: 26.981539
+    magnetic_moment: 0.00000000
+  reciprocal_lattice: # without 2pi
+  - [     0.130824166100941,     0.000000000000000,     0.000000000000000 ] # a*
+  - [     0.000000000000000,     0.130824166100941,     0.000000000000000 ] # b*
+  - [     0.000000000000000,     0.000000000000000,     0.130824166100941 ] # c*
+
+unit_cell:
+  lattice:
+  - [     7.643847691170642,     0.000000000000000,     0.000000000000000 ] # a
+  - [     0.000000000000000,     7.643847691170642,     0.000000000000000 ] # b
+  - [     0.000000000000000,     0.000000000000000,     7.643847691170642 ] # c
+  points:
+  - symbol: Al # 1
+    coordinates: [  0.000000000000000,  0.000000000000000,  0.000000000000000 ]
+    mass: 26.981539
+    reduced_to: 1
+    magnetic_moment: 0.00000000
+  - symbol: Al # 2
+    coordinates: [  0.500000000000000,  0.500000000000000,  0.000000000000000 ]
+    mass: 26.981539
+    reduced_to: 2
+    magnetic_moment: 0.00000000
+  - symbol: Al # 3
+    coordinates: [  0.500000000000000,  0.000000000000000,  0.500000000000000 ]
+    mass: 26.981539
+    reduced_to: 3
+    magnetic_moment: 0.00000000
+  - symbol: Al # 4
+    coordinates: [  0.000000000000000,  0.500000000000000,  0.500000000000000 ]
+    mass: 26.981539
+    reduced_to: 4
+    magnetic_moment: 0.00000000
+
+supercell:
+  lattice:
+  - [    15.287695382341283,     0.000000000000000,     0.000000000000000 ] # a
+  - [     0.000000000000000,    15.287695382341283,     0.000000000000000 ] # b
+  - [     0.000000000000000,     0.000000000000000,    15.287695382341283 ] # c
+  points:
+  - symbol: Al # 1
+    coordinates: [  0.000000000000000,  0.000000000000000,  0.000000000000000 ]
+    mass: 26.981539
+    reduced_to: 1
+    magnetic_moment: 0.00000000
+  - symbol: Al # 2
+    coordinates: [  0.500000000000000,  0.000000000000000,  0.000000000000000 ]
+    mass: 26.981539
+    reduced_to: 1
+    magnetic_moment: 0.00000000
+  - symbol: Al # 3
+    coordinates: [  0.000000000000000,  0.500000000000000,  0.000000000000000 ]
+    mass: 26.981539
+    reduced_to: 1
+    magnetic_moment: 0.00000000
+  - symbol: Al # 4
+    coordinates: [  0.500000000000000,  0.500000000000000,  0.000000000000000 ]
+    mass: 26.981539
+    reduced_to: 1
+    magnetic_moment: 0.00000000
+  - symbol: Al # 5
+    coordinates: [  0.000000000000000,  0.000000000000000,  0.500000000000000 ]
+    mass: 26.981539
+    reduced_to: 1
+    magnetic_moment: 0.00000000
+  - symbol: Al # 6
+    coordinates: [  0.500000000000000,  0.000000000000000,  0.500000000000000 ]
+    mass: 26.981539
+    reduced_to: 1
+    magnetic_moment: 0.00000000
+  - symbol: Al # 7
+    coordinates: [  0.000000000000000,  0.500000000000000,  0.500000000000000 ]
+    mass: 26.981539
+    reduced_to: 1
+    magnetic_moment: 0.00000000
+  - symbol: Al # 8
+    coordinates: [  0.500000000000000,  0.500000000000000,  0.500000000000000 ]
+    mass: 26.981539
+    reduced_to: 1
+    magnetic_moment: 0.00000000
+  - symbol: Al # 9
+    coordinates: [  0.250000000000000,  0.250000000000000,  0.000000000000000 ]
+    mass: 26.981539
+    reduced_to: 9
+    magnetic_moment: 0.00000000
+  - symbol: Al # 10
+    coordinates: [  0.750000000000000,  0.250000000000000,  0.000000000000000 ]
+    mass: 26.981539
+    reduced_to: 9
+    magnetic_moment: 0.00000000
+  - symbol: Al # 11
+    coordinates: [  0.250000000000000,  0.750000000000000,  0.000000000000000 ]
+    mass: 26.981539
+    reduced_to: 9
+    magnetic_moment: 0.00000000
+  - symbol: Al # 12
+    coordinates: [  0.750000000000000,  0.750000000000000,  0.000000000000000 ]
+    mass: 26.981539
+    reduced_to: 9
+    magnetic_moment: 0.00000000
+  - symbol: Al # 13
+    coordinates: [  0.250000000000000,  0.250000000000000,  0.500000000000000 ]
+    mass: 26.981539
+    reduced_to: 9
+    magnetic_moment: 0.00000000
+  - symbol: Al # 14
+    coordinates: [  0.750000000000000,  0.250000000000000,  0.500000000000000 ]
+    mass: 26.981539
+    reduced_to: 9
+    magnetic_moment: 0.00000000
+  - symbol: Al # 15
+    coordinates: [  0.250000000000000,  0.750000000000000,  0.500000000000000 ]
+    mass: 26.981539
+    reduced_to: 9
+    magnetic_moment: 0.00000000
+  - symbol: Al # 16
+    coordinates: [  0.750000000000000,  0.750000000000000,  0.500000000000000 ]
+    mass: 26.981539
+    reduced_to: 9
+    magnetic_moment: 0.00000000
+  - symbol: Al # 17
+    coordinates: [  0.250000000000000,  0.000000000000000,  0.250000000000000 ]
+    mass: 26.981539
+    reduced_to: 17
+    magnetic_moment: 0.00000000
+  - symbol: Al # 18
+    coordinates: [  0.750000000000000,  0.000000000000000,  0.250000000000000 ]
+    mass: 26.981539
+    reduced_to: 17
+    magnetic_moment: 0.00000000
+  - symbol: Al # 19
+    coordinates: [  0.250000000000000,  0.500000000000000,  0.250000000000000 ]
+    mass: 26.981539
+    reduced_to: 17
+    magnetic_moment: 0.00000000
+  - symbol: Al # 20
+    coordinates: [  0.750000000000000,  0.500000000000000,  0.250000000000000 ]
+    mass: 26.981539
+    reduced_to: 17
+    magnetic_moment: 0.00000000
+  - symbol: Al # 21
+    coordinates: [  0.250000000000000,  0.000000000000000,  0.750000000000000 ]
+    mass: 26.981539
+    reduced_to: 17
+    magnetic_moment: 0.00000000
+  - symbol: Al # 22
+    coordinates: [  0.750000000000000,  0.000000000000000,  0.750000000000000 ]
+    mass: 26.981539
+    reduced_to: 17
+    magnetic_moment: 0.00000000
+  - symbol: Al # 23
+    coordinates: [  0.250000000000000,  0.500000000000000,  0.750000000000000 ]
+    mass: 26.981539
+    reduced_to: 17
+    magnetic_moment: 0.00000000
+  - symbol: Al # 24
+    coordinates: [  0.750000000000000,  0.500000000000000,  0.750000000000000 ]
+    mass: 26.981539
+    reduced_to: 17
+    magnetic_moment: 0.00000000
+  - symbol: Al # 25
+    coordinates: [  0.000000000000000,  0.250000000000000,  0.250000000000000 ]
+    mass: 26.981539
+    reduced_to: 25
+    magnetic_moment: 0.00000000
+  - symbol: Al # 26
+    coordinates: [  0.500000000000000,  0.250000000000000,  0.250000000000000 ]
+    mass: 26.981539
+    reduced_to: 25
+    magnetic_moment: 0.00000000
+  - symbol: Al # 27
+    coordinates: [  0.000000000000000,  0.750000000000000,  0.250000000000000 ]
+    mass: 26.981539
+    reduced_to: 25
+    magnetic_moment: 0.00000000
+  - symbol: Al # 28
+    coordinates: [  0.500000000000000,  0.750000000000000,  0.250000000000000 ]
+    mass: 26.981539
+    reduced_to: 25
+    magnetic_moment: 0.00000000
+  - symbol: Al # 29
+    coordinates: [  0.000000000000000,  0.250000000000000,  0.750000000000000 ]
+    mass: 26.981539
+    reduced_to: 25
+    magnetic_moment: 0.00000000
+  - symbol: Al # 30
+    coordinates: [  0.500000000000000,  0.250000000000000,  0.750000000000000 ]
+    mass: 26.981539
+    reduced_to: 25
+    magnetic_moment: 0.00000000
+  - symbol: Al # 31
+    coordinates: [  0.000000000000000,  0.750000000000000,  0.750000000000000 ]
+    mass: 26.981539
+    reduced_to: 25
+    magnetic_moment: 0.00000000
+  - symbol: Al # 32
+    coordinates: [  0.500000000000000,  0.750000000000000,  0.750000000000000 ]
+    mass: 26.981539
+    reduced_to: 25
+    magnetic_moment: 0.00000000
+
+displacements:
+- atom:    1
+  displacement:
+    [   0.0200000000000000,  0.0000000000000000,  0.0000000000000000 ]

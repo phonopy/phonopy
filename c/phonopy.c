@@ -57,33 +57,64 @@ static double get_heat_capacity(const double temperature, const double f);
 /* static double get_energy(double temperature, double f); */
 static void distribute_fc2(double (*fc2)[3][3], const int *atom_list,
                            const int len_atom_list,
-                           PHPYCONST double (*r_carts)[3][3],
+                           const int *fc_indices_of_atom_list,
+                           const double (*r_carts)[3][3],
                            const int *permutations, const int *map_atoms,
                            const int *map_syms, const int num_rot,
                            const int num_pos);
 static int nint(const double a);
 
-void phpy_transform_dynmat_to_fc(double *fc, const double *dm,
+void phpy_transform_dynmat_to_fc(double *fc, const double (*dm)[2],
                                  const double (*comm_points)[3],
                                  const double (*svecs)[3],
                                  const long (*multi)[2], const double *masses,
                                  const long *s2pp_map, const long *fc_index_map,
-                                 const long num_patom, const long num_satom) {
+                                 const long num_patom, const long num_satom,
+                                 const long use_openmp) {
     dym_transform_dynmat_to_fc(fc, dm, comm_points, svecs, multi, masses,
-                               s2pp_map, fc_index_map, num_patom, num_satom);
+                               s2pp_map, fc_index_map, num_patom, num_satom,
+                               use_openmp);
 }
 
-long phpy_get_dynamical_matrix_at_q(double *dynamical_matrix,
+long phpy_dynamical_matrices_with_dd_openmp_over_qpoints(
+    double (*dynamical_matrices)[2], const double (*qpoints)[3],
+    const long n_qpoints, const double *fc, const double (*svecs)[3],
+    const long (*multi)[2], const double (*positions)[3], const long num_patom,
+    const long num_satom, const double *masses, const long *p2s_map,
+    const long *s2p_map, const double (*born)[3][3],
+    const double dielectric[3][3], const double (*reciprocal_lattice)[3],
+    const double *q_direction, const double nac_factor,
+    const double (*dd_q0)[2], const double (*G_list)[3],
+    const long num_G_points, const double lambda, const long use_Wang_NAC) {
+    return dym_dynamical_matrices_with_dd_openmp_over_qpoints(
+        dynamical_matrices, qpoints, n_qpoints, fc, svecs, multi, positions,
+        num_patom, num_satom, masses, p2s_map, s2p_map, born, dielectric,
+        reciprocal_lattice, q_direction, nac_factor, dd_q0, G_list,
+        num_G_points, lambda, use_Wang_NAC);
+}
+
+long phpy_get_dynamical_matrices_openmp_over_qpoints(
+    double (*dynamical_matrices)[2], const long num_patom, const long num_satom,
+    const double *fc, const double (*qpoints)[3], const long n_qpoints,
+    const double (*svecs)[3], const long (*multi)[2], const double *mass,
+    const long *s2p_map, const long *p2s_map,
+    const double (*charge_sum)[3][3]) {
+    return dym_get_dynamical_matrices_openmp_over_qpoints(
+        dynamical_matrices, num_patom, num_satom, fc, qpoints, n_qpoints, svecs,
+        multi, mass, s2p_map, p2s_map, charge_sum);
+}
+
+long phpy_get_dynamical_matrix_at_q(double (*dynamical_matrix)[2],
                                     const long num_patom, const long num_satom,
                                     const double *fc, const double q[3],
                                     const double (*svecs)[3],
                                     const long (*multi)[2], const double *mass,
                                     const long *s2p_map, const long *p2s_map,
                                     const double (*charge_sum)[3][3],
-                                    const long with_openmp) {
+                                    const long use_openmp) {
     return dym_get_dynamical_matrix_at_q(dynamical_matrix, num_patom, num_satom,
                                          fc, q, svecs, multi, mass, s2p_map,
-                                         p2s_map, charge_sum, 1);
+                                         p2s_map, charge_sum, use_openmp);
 }
 
 void phpy_get_charge_sum(
@@ -94,44 +125,47 @@ void phpy_get_charge_sum(
 }
 
 void phpy_get_recip_dipole_dipole(
-    double *dd,                /* [natom, 3, natom, 3, (real,imag)] */
-    const double *dd_q0,       /* [natom, 3, 3, (real,imag)] */
+    double (*dd)[2],           /* [natom, 3, natom, 3, (real,imag)] */
+    const double (*dd_q0)[2],  /* [natom, 3, 3, (real,imag)] */
     const double (*G_list)[3], /* [num_G, 3] */
     const long num_G, const long num_patom, const double q_cart[3],
     const double *q_direction_cart, /* must be pointer */
     const double (*born)[3][3], const double dielectric[3][3],
     const double (*pos)[3], /* [num_patom, 3] */
     const double factor,    /* 4pi/V*unit-conv */
-    const double lambda, const double tolerance) {
+    const double lambda, const double tolerance, const long use_openmp) {
     dym_get_recip_dipole_dipole(dd, dd_q0, G_list, num_G, num_patom, q_cart,
                                 q_direction_cart, born, dielectric, pos, factor,
-                                lambda, tolerance);
+                                lambda, tolerance, use_openmp);
 }
 
 void phpy_get_recip_dipole_dipole_q0(
-    double *dd_q0,             /* [natom, 3, 3, (real,imag)] */
+    double (*dd_q0)[2],        /* [natom, 3, 3, (real,imag)] */
     const double (*G_list)[3], /* [num_G, 3] */
     const long num_G, const long num_patom, const double (*born)[3][3],
     const double dielectric[3][3], const double (*pos)[3], /* [num_patom, 3] */
-    const double lambda, const double tolerance) {
+    const double lambda, const double tolerance, const long use_openmp) {
     dym_get_recip_dipole_dipole_q0(dd_q0, G_list, num_G, num_patom, born,
-                                   dielectric, pos, lambda, tolerance);
+                                   dielectric, pos, lambda, tolerance,
+                                   use_openmp);
 }
 
 void phpy_get_derivative_dynmat_at_q(
-    double *derivative_dynmat, const long num_patom, const long num_satom,
+    double (*derivative_dynmat)[2], const long num_patom, const long num_satom,
     const double *fc, const double *q,
     const double *lattice, /* column vector */
     const double (*svecs)[3], const long (*multi)[2], const double *mass,
     const long *s2p_map, const long *p2s_map, const double nac_factor,
-    const double *born, const double *dielectric, const double *q_direction) {
-    ddm_get_derivative_dynmat_at_q(
-        derivative_dynmat, num_patom, num_satom, fc, q, lattice, svecs, multi,
-        mass, s2p_map, p2s_map, nac_factor, born, dielectric, q_direction);
+    const double *born, const double *dielectric, const double *q_direction,
+    const long use_openmp) {
+    ddm_get_derivative_dynmat_at_q(derivative_dynmat, num_patom, num_satom, fc,
+                                   q, lattice, svecs, multi, mass, s2p_map,
+                                   p2s_map, nac_factor, born, dielectric,
+                                   q_direction, use_openmp);
 }
 
 void phpy_get_relative_grid_address(long relative_grid_address[24][4][3],
-                                    PHPYCONST double reciprocal_lattice[3][3]) {
+                                    const double reciprocal_lattice[3][3]) {
     thm_get_relative_grid_address(relative_grid_address, reciprocal_lattice);
 }
 
@@ -141,15 +175,15 @@ void phpy_get_all_relative_grid_address(
 }
 
 double phpy_get_integration_weight(const double omega,
-                                   PHPYCONST double tetrahedra_omegas[24][4],
+                                   const double tetrahedra_omegas[24][4],
                                    const char function) {
     return thm_get_integration_weight(omega, tetrahedra_omegas, function);
 }
 
 void phpy_get_tetrahedra_frequenies(double *freq_tetras, const long mesh[3],
                                     const long *grid_points,
-                                    PHPYCONST long (*grid_address)[3],
-                                    PHPYCONST long (*relative_grid_address)[3],
+                                    const long (*grid_address)[3],
+                                    const long (*relative_grid_address)[3],
                                     const long *gp_ir_index,
                                     const double *frequencies,
                                     const long num_band, const long num_gp) {
@@ -160,7 +194,9 @@ void phpy_get_tetrahedra_frequenies(double *freq_tetras, const long mesh[3],
 
     /* relative_grid_address[4, 24, 3] is viewed as [96, 3]. */
     for (i = 0; i < num_gp; i++) {
+#ifdef _OPENMP
 #pragma omp parallel for private(k, g_addr, gp, address_double)
+#endif
         for (j = 0; j < num_band * 96; j++) {
             for (k = 0; k < 3; k++) {
                 g_addr[k] = grid_address[grid_points[i]][k] +
@@ -174,15 +210,12 @@ void phpy_get_tetrahedra_frequenies(double *freq_tetras, const long mesh[3],
     }
 }
 
-void phpy_tetrahedron_method_dos(double *dos, const long mesh[3],
-                                 PHPYCONST long (*grid_address)[3],
-                                 PHPYCONST long (*relative_grid_address)[4][3],
-                                 const long *grid_mapping_table,
-                                 const double *freq_points,
-                                 const double *frequencies, const double *coef,
-                                 const long num_freq_points,
-                                 const long num_ir_gp, const long num_band,
-                                 const long num_coef, const long num_gp) {
+void phpy_tetrahedron_method_dos(
+    double *dos, const long mesh[3], const long (*grid_address)[3],
+    const long (*relative_grid_address)[4][3], const long *grid_mapping_table,
+    const double *freq_points, const double *frequencies, const double *coef,
+    const long num_freq_points, const long num_ir_gp, const long num_band,
+    const long num_coef, const long num_gp) {
     long is_shift[3] = {0, 0, 0};
     long i, j, k, l, m, q, r, count;
     long ir_gps[24][4];
@@ -218,8 +251,10 @@ void phpy_tetrahedron_method_dos(double *dos, const long mesh[3],
         printf("Something is wrong!\n");
     }
 
+#ifdef _OPENMP
 #pragma omp parallel for private(j, k, l, m, q, r, iw, ir_gps, g_addr, \
                                  tetrahedra, address_double)
+#endif
     for (i = 0; i < num_ir_gp; i++) {
         /* set 24 tetrahedra */
         for (l = 0; l < 24; l++) {
@@ -277,7 +312,9 @@ void phpy_get_thermal_properties(double *thermal_props,
         tp[i] = 0;
     }
 
+#ifdef _OPENMP
 #pragma omp parallel for private(j, k, f)
+#endif
     for (i = 0; i < num_qpoints; i++) {
         for (j = 0; j < num_temp; j++) {
             for (k = 0; k < num_bands; k++) {
@@ -306,18 +343,18 @@ void phpy_get_thermal_properties(double *thermal_props,
 
 void phpy_distribute_fc2(double (*fc2)[3][3], const int *atom_list,
                          const int len_atom_list,
-                         PHPYCONST double (*r_carts)[3][3],
-                         const int *permutations, const int *map_atoms,
-                         const int *map_syms, const int num_rot,
-                         const int num_pos) {
-    distribute_fc2(fc2, atom_list, len_atom_list, r_carts, permutations,
-                   map_atoms, map_syms, num_rot, num_pos);
+                         const int *fc_indices_of_atom_list,
+                         const double (*r_carts)[3][3], const int *permutations,
+                         const int *map_atoms, const int *map_syms,
+                         const int num_rot, const int num_pos) {
+    distribute_fc2(fc2, atom_list, len_atom_list, fc_indices_of_atom_list,
+                   r_carts, permutations, map_atoms, map_syms, num_rot,
+                   num_pos);
 }
 
-int phpy_compute_permutation(int *rot_atom, PHPYCONST double lat[3][3],
-                             PHPYCONST double (*pos)[3],
-                             PHPYCONST double (*rot_pos)[3], const int num_pos,
-                             const double symprec) {
+int phpy_compute_permutation(int *rot_atom, const double lat[3][3],
+                             const double (*pos)[3], const double (*rot_pos)[3],
+                             const int num_pos, const double symprec) {
     int i, j, k, l;
     int search_start;
     double distance2, diff_cart;
@@ -332,7 +369,8 @@ int phpy_compute_permutation(int *rot_atom, PHPYCONST double lat[3][3],
     /*  Then track the first unassigned index. */
     /* */
     /* This works best if the permutation is close to the identity. */
-    /* (more specifically, if the max value of 'rot_atom[i] - i' is small) */
+    /* (more specifically, if the max value of 'rot_atom[i] - i' is small)
+     */
     search_start = 0;
     for (i = 0; i < num_pos; i++) {
         while (rot_atom[search_start] >= 0) {
@@ -373,10 +411,10 @@ int phpy_compute_permutation(int *rot_atom, PHPYCONST double lat[3][3],
 
 void phpy_set_smallest_vectors_sparse(
     double (*smallest_vectors)[27][3], int *multiplicity,
-    PHPYCONST double (*pos_to)[3], const int num_pos_to,
-    PHPYCONST double (*pos_from)[3], const int num_pos_from,
-    PHPYCONST int (*lattice_points)[3], const int num_lattice_points,
-    PHPYCONST double reduced_basis[3][3], PHPYCONST int trans_mat[3][3],
+    const double (*pos_to)[3], const int num_pos_to,
+    const double (*pos_from)[3], const int num_pos_from,
+    const int (*lattice_points)[3], const int num_lattice_points,
+    const double reduced_basis[3][3], const int trans_mat[3][3],
     const double symprec) {
     int i, j, k, l, count;
     double length_tmp, minimum, vec_xyz;
@@ -442,10 +480,10 @@ void phpy_set_smallest_vectors_sparse(
 
 void phpy_set_smallest_vectors_dense(
     double (*smallest_vectors)[3], long (*multiplicity)[2],
-    PHPYCONST double (*pos_to)[3], const long num_pos_to,
-    PHPYCONST double (*pos_from)[3], const long num_pos_from,
-    PHPYCONST long (*lattice_points)[3], const long num_lattice_points,
-    PHPYCONST double reduced_basis[3][3], PHPYCONST long trans_mat[3][3],
+    const double (*pos_to)[3], const long num_pos_to,
+    const double (*pos_from)[3], const long num_pos_from,
+    const long (*lattice_points)[3], const long num_lattice_points,
+    const double reduced_basis[3][3], const long trans_mat[3][3],
     const long initialize, const double symprec) {
     long i, j, k, l, count, adrs;
     double length_tmp, minimum, vec_xyz;
@@ -654,6 +692,14 @@ void phpy_set_index_permutation_symmetry_compact_fc(
     done = NULL;
 }
 
+long phpy_use_openmp(void) {
+#ifdef _OPENMP
+    return 1;
+#else
+    return 0;
+#endif
+}
+
 static void set_index_permutation_symmetry_fc(double *fc, const int natom) {
     int i, j, k, l, m, n;
 
@@ -768,7 +814,8 @@ static double get_heat_capacity(const double temperature, const double f) {
 
 static void distribute_fc2(double (*fc2)[3][3], /* shape[n_pos][n_pos] */
                            const int *atom_list, const int len_atom_list,
-                           PHPYCONST double (*r_carts)[3][3], /* shape[n_rot] */
+                           const int *fc_indices_of_atom_list,
+                           const double (*r_carts)[3][3], /* shape[n_rot] */
                            const int *permutations, /* shape[n_rot][n_pos] */
                            const int *map_atoms,    /* shape [n_pos] */
                            const int *map_syms,     /* shape [n_pos] */
@@ -779,7 +826,7 @@ static void distribute_fc2(double (*fc2)[3][3], /* shape[n_pos][n_pos] */
     int *atom_list_reverse;
     double(*fc2_done)[3];
     double(*fc2_todo)[3];
-    double(*r_cart)[3];
+    const double(*r_cart)[3];
     const int *permutation;
 
     atom_list_reverse = NULL;
@@ -810,9 +857,11 @@ static void distribute_fc2(double (*fc2)[3][3], /* shape[n_pos][n_pos] */
 
         /* distribute terms from atom_done to atom_todo */
         for (atom_other = 0; atom_other < num_pos; atom_other++) {
-            fc2_done = fc2[atom_list_reverse[atom_done] * num_pos +
-                           permutation[atom_other]];
-            fc2_todo = fc2[i * num_pos + atom_other];
+            fc2_done =
+                fc2[fc_indices_of_atom_list[atom_list_reverse[atom_done]] *
+                        num_pos +
+                    permutation[atom_other]];
+            fc2_todo = fc2[fc_indices_of_atom_list[i] * num_pos + atom_other];
             for (j = 0; j < 3; j++) {
                 for (k = 0; k < 3; k++) {
                     for (l = 0; l < 3; l++) {

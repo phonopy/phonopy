@@ -6,7 +6,7 @@ import numpy as np
 
 from phonopy.file_IO import parse_FORCE_SETS
 from phonopy.interface.phonopy_yaml import read_cell_yaml
-from phonopy.interface.vasp import Vasprun, read_vasp
+from phonopy.interface.vasp import Vasprun, VasprunxmlExpat, read_vasp
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -37,3 +37,19 @@ def test_parse_vasprun_xml():
         # print("")
         ref = dataset["first_atoms"][i]["forces"]
         np.testing.assert_allclose(ref, vr.read_forces(), atol=1e-8)
+
+
+def test_VasprunxmlExpat():
+    """Test VasprunxmlExpat."""
+    filename_vasprun = os.path.join(data_dir, "vasprun.xml.tar.bz2")
+    _tar = tarfile.open(filename_vasprun)
+    for i, member in enumerate(_tar.getmembers()):
+        vasprun = VasprunxmlExpat(_tar.extractfile(member))
+        vasprun.parse()
+        np.testing.assert_equal(vasprun.fft_grid, [64, 64, 64])
+        np.testing.assert_equal(vasprun.fft_fine_grid, [128, 128, 128])
+        assert vasprun.efermi is None
+        assert vasprun.symbols == ["Na"] * 32 + ["Cl"] * 32
+        np.testing.assert_almost_equal(vasprun.NELECT, 448)
+        np.testing.assert_almost_equal(vasprun.volume, 1473.99433936)
+        break

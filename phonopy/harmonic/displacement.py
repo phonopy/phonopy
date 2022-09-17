@@ -33,6 +33,8 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from typing import Optional
+
 import numpy as np
 
 directions_axis = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
@@ -76,7 +78,11 @@ def directions_to_displacement_dataset(displacement_directions, distance, superc
 
 
 def get_least_displacements(
-    symmetry, is_plusminus="auto", is_diagonal=True, is_trigonal=False, log_level=0
+    symmetry,
+    is_plusminus="auto",
+    is_diagonal=True,
+    is_trigonal=False,
+    log_level=0,
 ):
     """Return a set of displacements.
 
@@ -238,18 +244,13 @@ def _determinant(a, b, c):
 
 
 def get_random_displacements_dataset(
-    num_supercells, distance, num_atoms, random_seed=None
-):
+    num_supercells: int,
+    distance: float,
+    num_atoms: int,
+    random_seed: Optional[int] = None,
+    is_plusminus: bool = False,
+) -> np.ndarray:
     """Return random displacements at constant displacement distance."""
-    if (
-        np.issubdtype(type(random_seed), np.integer)
-        and random_seed >= 0
-        and random_seed < 2**32
-    ):
-        seed = random_seed
-    else:
-        seed = None
-
     disps = (
         _get_random_directions(num_atoms * num_supercells, random_seed=random_seed)
         * distance
@@ -257,11 +258,13 @@ def get_random_displacements_dataset(
     supercell_disps = np.array(
         disps.reshape(num_supercells, num_atoms, 3), dtype="double", order="C"
     )
-    dataset = {"displacements": supercell_disps}
-
-    if seed is not None:
-        dataset["random_seed"] = seed
-    return dataset
+    if is_plusminus is True:
+        supercell_disps = np.array(
+            np.concatenate((supercell_disps, -supercell_disps), axis=0),
+            dtype="double",
+            order="C",
+        )
+    return supercell_disps
 
 
 def _get_random_directions(num_atoms, random_seed=None):

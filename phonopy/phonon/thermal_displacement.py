@@ -149,7 +149,17 @@ class ThermalMotion:
 
 
 class ThermalDisplacements(ThermalMotion):
-    """Class to calculate thermal displacements (mean square displacements)."""
+    """Class to calculate thermal displacements (mean square displacements).
+
+    Attributes
+    ----------
+    thermal_displacements : ndarray
+        With `projection_direction` is `None`
+            shape=(temps, natoms * 3), dtype=float
+        otherwise
+            shape=(temps, natoms), dtype=float
+
+    """
 
     def __init__(
         self,

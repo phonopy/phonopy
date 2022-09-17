@@ -732,6 +732,8 @@ class VasprunxmlExpat:
         self._is_generation = False
         self._is_divisions = False
         self._is_NELECT = False
+        self._is_NGXYZ = [False, False, False]
+        self._is_NGXYZF = [False, False, False]
 
         self._is_v = False
         self._is_i = False
@@ -740,6 +742,8 @@ class VasprunxmlExpat:
         self._is_set = False
         self._is_r = False
         self._is_field = False
+        self._is_separator = False
+        self._is_grids = False
 
         self._is_scstep = False
         self._is_structure = False
@@ -772,16 +776,17 @@ class VasprunxmlExpat:
         self._field_val = None
         self._pseudopotentials = []
         self._ps_atom = None
+        self._fft_grid = [0, 0, 0]
+        self._fft_fine_grid = [0, 0, 0]
+        self._efermi = None
+        self._symbols = None
+        self._NELECT = None
 
         self._p = xml.parsers.expat.ParserCreate()
         self._p.buffer_text = True
         self._p.StartElementHandler = self._start_element
         self._p.EndElementHandler = self._end_element
         self._p.CharacterDataHandler = self._char_data
-
-        self.efermi = None
-        self.symbols = None
-        self.NELECT = None
 
         self._cbuf = None
 
@@ -831,6 +836,11 @@ class VasprunxmlExpat:
         )
         return self.epsilon
 
+    @property
+    def efermi(self):
+        """Return Fermi energy."""
+        return self._efermi
+
     def get_efermi(self):
         """Return efermi."""
         warnings.warn(
@@ -838,7 +848,7 @@ class VasprunxmlExpat:
             "Use VasprunxmlExpat.efermi attribute.",
             DeprecationWarning,
         )
-        return self.efermi
+        return self._efermi
 
     @property
     def born(self):
@@ -886,6 +896,11 @@ class VasprunxmlExpat:
         """Return all cell volumes of structure optimization steps."""
         return np.array(self._all_volumes, dtype="double")
 
+    @property
+    def symbols(self):
+        """Return atomic symbols."""
+        return self._symbols
+
     def get_symbols(self):
         """Return atomic symbols."""
         warnings.warn(
@@ -893,7 +908,7 @@ class VasprunxmlExpat:
             "Use VasprunxmlExpat.symbols attribute.",
             DeprecationWarning,
         )
-        return self.symbols
+        return self._symbols
 
     @property
     def energies(self):
@@ -1031,10 +1046,25 @@ class VasprunxmlExpat:
     def cell(self):
         """Return cell in PhonopyAtoms."""
         return PhonopyAtoms(
-            symbols=self.symbols,
+            symbols=self._symbols,
             scaled_positions=self.points[-1],
             cell=self.lattice[-1],
         )
+
+    @property
+    def fft_grid(self):
+        """Return FFT gird [NGX, NGY, NGZ]."""
+        return self._fft_grid
+
+    @property
+    def fft_fine_grid(self):
+        """Return fine FFT gird [NGXF, NGYF, NGZF]."""
+        return self._fft_fine_grid
+
+    @property
+    def NELECT(self):
+        """Return number of electrons, NELECT."""
+        return self._NELECT
 
     def _start_element(self, name, attrs):
         # Used not to collect energies in <scstep>
@@ -1124,6 +1154,24 @@ class VasprunxmlExpat:
                 if not self._is_structure and attrs["name"] == "volume":
                     self._is_i = True
                     self._is_volume = True
+                if attrs["name"] == "NGX":
+                    self._is_i = True
+                    self._is_NGXYZ[0] = True
+                if attrs["name"] == "NGY":
+                    self._is_i = True
+                    self._is_NGXYZ[1] = True
+                if attrs["name"] == "NGZ":
+                    self._is_i = True
+                    self._is_NGXYZ[2] = True
+                if attrs["name"] == "NGXF":
+                    self._is_i = True
+                    self._is_NGXYZF[0] = True
+                if attrs["name"] == "NGYF":
+                    self._is_i = True
+                    self._is_NGXYZF[1] = True
+                if attrs["name"] == "NGZF":
+                    self._is_i = True
+                    self._is_NGXYZF[2] = True
 
         if self._is_energy and name == "i":
             self._cbuf = ""
@@ -1158,7 +1206,7 @@ class VasprunxmlExpat:
             if "name" in attrs.keys():
                 if attrs["name"] == "atoms":
                     self._is_symbols = True
-                    self.symbols = []
+                    self._symbols = []
 
                 if attrs["name"] == "born_charges":
                     self._is_born = True
@@ -1208,6 +1256,11 @@ class VasprunxmlExpat:
             else:
                 self._is_eigenvalues = True
                 self._eigenvalues = []
+
+        if name == "separator":
+            self._is_separator = True
+            if attrs["name"] == "grids":
+                self._is_grids = True
 
     def _end_element(self, name):
         if name == "scstep":
@@ -1270,17 +1323,11 @@ class VasprunxmlExpat:
         if name == "i":
             self._run_i()
             self._is_i = False
-            if self._is_efermi:
-                self._is_efermi = False
-            if self._is_NELECT:
-                self._is_NELECT = False
-            if self._is_volume:
-                self._is_volume = False
 
         if name == "rc":
             self._is_rc = False
             if self._is_symbols:
-                self.symbols.pop(-1)
+                self._symbols.pop(-1)
 
         if name == "c":
             self._run_c()
@@ -1319,6 +1366,11 @@ class VasprunxmlExpat:
             if name == "c":
                 self._is_c = False
 
+        if name == "separator":
+            if self._is_grids:
+                self._is_grids = False
+            self._is_separator = False
+
     def _run_v(self):
         if self._is_v:
             if self._is_forces:
@@ -1350,17 +1402,29 @@ class VasprunxmlExpat:
             if self._is_energy:
                 self._energies.append(self._to_float(self._cbuf.strip()))
             if self._is_efermi:
-                self.efermi = self._to_float(self._cbuf.strip())
+                self._efermi = self._to_float(self._cbuf.strip())
+                self._is_efermi = False
             if self._is_NELECT:
-                self.NELECT = self._to_float(self._cbuf.strip())
+                self._NELECT = self._to_float(self._cbuf.strip())
+                self._is_NELECT = False
             if self._is_volume:
                 self._all_volumes.append(self._to_float(self._cbuf.strip()))
+                self._is_volume = False
+            if self._is_grids:
+                for i, b in enumerate(self._is_NGXYZ):
+                    if b:
+                        self._fft_grid[i] = self._to_int(self._cbuf.strip())
+                        self._is_NGXYZ[i] = False
+                for i, b in enumerate(self._is_NGXYZF):
+                    if b:
+                        self._fft_fine_grid[i] = self._to_int(self._cbuf.strip())
+                        self._is_NGXYZF[i] = False
             self._cbuf = None
 
     def _run_c(self):
         if self._is_c:
             if self._is_symbols:
-                self.symbols.append(str(self._cbuf.strip()))
+                self._symbols.append(str(self._cbuf.strip()))
             if self._field_val == "pseudopotential" and self._is_set and self._is_rc:
                 if len(self._ps_atom) == 0:
                     self._ps_atom.append(self._to_int(self._cbuf.strip()))

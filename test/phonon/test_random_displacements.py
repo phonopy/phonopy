@@ -1,8 +1,11 @@
 """Tests for generation of random displacements at finite temperatures."""
 import os
+from copy import deepcopy
 
 import numpy as np
+import pytest
 
+from phonopy import Phonopy
 from phonopy.phonon.random_displacements import RandomDisplacements
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -818,6 +821,37 @@ def test_random_displacements_all_atoms_TiPN3(ph_tipn3):
     _uu_inv = _mass_sand(uu_inv_bare, sqrt_masses)
 
     np.testing.assert_allclose(_uu_inv, uu_inv, atol=1e-5, rtol=1e-5)
+
+
+@pytest.mark.parametrize("is_plusminus", [True, False])
+def test_tio2_random_disp_plusminus(ph_tio2: Phonopy, is_plusminus: bool):
+    """Test random plus-minus displacements of TiO2.
+
+    Note
+    ----
+    Displacements of last 4 supercells are minus of those of first 4 supercells.
+
+    """
+    dataset = deepcopy(ph_tio2.dataset)
+    disp_ref = [
+        [0, 0.01, 0.0, 0.0],
+        [0, 0.0, 0.01, 0.0],
+        [0, 0.0, 0.0, 0.01],
+        [0, 0.0, 0.0, -0.01],
+        [72, 0.01, 0.0, 0.0],
+        [72, 0.0, 0.0, 0.01],
+    ]
+    np.testing.assert_allclose(ph_tio2.displacements, disp_ref, atol=1e-8)
+    ph_tio2.generate_displacements(
+        number_of_snapshots=4, distance=0.03, is_plusminus=is_plusminus, temperature=300
+    )
+    d = ph_tio2.displacements
+    if is_plusminus:
+        assert len(d) == 8
+        np.testing.assert_allclose(d[:4], -d[4:], atol=1e-8)
+    else:
+        assert len(d) == 4
+    ph_tio2.dataset = dataset
 
 
 def _mass_sand(matrix, mass):

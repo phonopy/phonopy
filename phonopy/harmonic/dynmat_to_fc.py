@@ -40,6 +40,7 @@ import numpy as np
 from phonopy.harmonic.force_constants import distribute_force_constants_by_translations
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
+    Primitive,
     get_primitive,
     get_supercell,
     shape_supercell_matrix,
@@ -219,27 +220,30 @@ class DynmatToForceConstants:
 
     def __init__(
         self,
-        primitive,
-        supercell,
+        primitive: Primitive,
+        supercell: PhonopyAtoms,
         eigenvalues=None,
         eigenvectors=None,
         dynamical_matrices=None,
         commensurate_points=None,
         is_full_fc=True,
+        use_openmp=False,
     ):
         """Init method.
 
         Parameters
         ----------
-        supercell : PhonopyAtoms
-            Supercell, not necessarily being an instance of Supercell class.
         primitive : Primitive
             Primitive cell
+        supercell : PhonopyAtoms
+            Supercell, not necessarily being an instance of Supercell class.
         is_full_fc : bool
             This controls the matrix shape of calculated force constants.
             True and False give the full and compact force cosntants,
             respectively. The default is True. See more details in Attributes
             section of this class.
+        use_openmp : bool, optional, default=False
+            Use OpenMP in calculate force constants from dynamical matrix.
 
         """
         self._pcell = primitive
@@ -257,6 +261,8 @@ class DynmatToForceConstants:
             self._multi = multi
         else:
             self._svecs, self._multi = sparse_to_dense_svecs(svecs, multi)
+
+        self._use_openmp = use_openmp
 
         self._dynmat = None
         self._fc = None
@@ -417,6 +423,7 @@ class DynmatToForceConstants:
             self._pcell.masses,
             s2pp,
             fc_index_map,
+            self._use_openmp * 1,
         )
 
     def _py_inverse_transformation(self):
@@ -437,6 +444,7 @@ class DynmatToForceConstants:
                     self._fc[p_i, s_j] = fc_elem
 
     def _sum_q(self, p_i, s_j, p_j):
+        """Sum over commensurate q-points for a pair of atoms."""
         multi, adrs = self._multi[s_j, p_i]
         pos = self._svecs[adrs : (adrs + multi)]
         sum_q = np.zeros((3, 3), dtype=self._dtype_complex, order="C")

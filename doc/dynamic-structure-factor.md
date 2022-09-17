@@ -8,25 +8,25 @@ one-phonon dynamic structure factor is given as
 ```{math}
 S(\mathbf{Q}, \nu, \omega)^{+1\text{ph}} =
 \frac{k'}{k} \frac{N}{\hbar}
-\sum_\mathbf{q} |F(\mathbf{Q}, \mathbf{q}\nu)|^2
+\sum_\mathbf{q} |F(\mathbf{Q}, -\mathbf{q}\nu)|^2
 (n_{\mathbf{q}\nu} + 1) \delta(\omega - \omega_{\mathbf{q}\nu})
-\Delta(\mathbf{Q-q}),
+\Delta(\mathbf{Q} - \mathbf{q}),
 ```
 
 ```{math}
 S(\mathbf{Q}, \nu, \omega)^{-1\text{ph}} = \frac{k'}{k} \frac{N}{\hbar}
 \sum_\mathbf{q} |F(\mathbf{Q}, \mathbf{q}\nu)|^2 n_{\mathbf{q}\nu}
-\delta(\omega + \omega_{\mathbf{q}\nu}) \Delta(\mathbf{Q-q}),
+\delta(\omega + \omega_{\mathbf{q}\nu}) \Delta(\mathbf{Q} + \mathbf{q}),
 ```
 
 with
 
 ```{math}
 F(\mathbf{Q}, \mathbf{q}\nu) = \sum_j \sqrt{\frac{\hbar}{2 m_j
-\omega_{\mathbf{q}\nu}}} \bar{b}_j \exp\left( -\frac{1}{2} \langle
-|\mathbf{Q}\cdot\mathbf{u}(j0)|^2 \rangle \right)
-\exp[-i(\mathbf{Q-q})\cdot\mathbf{r}(j0)] \mathbf{Q}\cdot\mathbf{e}(j,
-\mathbf{q}\nu).
+\omega_{\mathbf{q}\nu}}} \bar{b}_j \exp\left[ -\frac{1}{2} \langle
+|\mathbf{Q}\cdot\mathbf{u}(j0)|^2 \rangle \right]
+e^{i(\mathbf{Q} + \mathbf{q}) \cdot \mathbf{r}_{j0}}
+\mathbf{Q} \cdot\mathbf{e}(j, \mathbf{q}\nu).
 ```
 
 where {math}`\mathbf{Q}` is the scattering vector defined as
@@ -44,7 +44,7 @@ page. Note that the phase convention of the dynamical matrix given
 {ref}`here <dynacmial_matrix_theory>` is used. This changes the representation
 of the phase factor in {math}`F(\mathbf{Q}, \mathbf{q}\nu)` from that given in
 the book "Thermal of Neutron Scattering", but the additional term
-{math}`\exp(i\mathbf{q}\cdot\mathbf{r})` comes from the different phase
+{math}`\exp(i\mathbf{q}\cdot\mathbf{r}_{j0})` comes from the different phase
 convention of the dynamical matrix or equivalently the eigenvector. For
 inelastic neutron scattering, {math}`\bar{b}_j` is the average scattering length
 over isotopes and spins. For inelastic X-ray scattering, {math}`\bar{b}_j` is
@@ -88,7 +88,7 @@ def run(
         freq_min=1e-3,
     )
     dsf = phonon.dynamic_structure_factor
-    q_cartesian = np.dot(dsf.qpoints, np.linalg.inv(phonon.primitive.get_cell()).T)
+    q_cartesian = np.dot(dsf.qpoints, np.linalg.inv(phonon.primitive.cell).T)
     distances = np.sqrt((q_cartesian ** 2).sum(axis=1))
 
     print("# [1] Distance from Gamma point,")

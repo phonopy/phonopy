@@ -1,0 +1,28 @@
+INPUT_PARAMETERS
+#Parameters (1.General)
+suffix                  ABACUS
+calculation     	scf
+ntype                   1
+symmetry                1
+pseudo_type     	upf201
+
+#Parameters (2.Iteration)
+ecutwfc                 80
+scf_thr                 1e-8
+scf_nmax                100
+cal_force               1
+cal_stress              1
+#Parameters (3.Basis)
+basis_type              lcao
+#kspacing                0.06
+#Parameters (4.Smearing)
+smearing_method         gauss
+smearing_sigma          0.01
+
+#Parameters (5.Mixing)
+mixing_type             pulay
+mixing_beta             0.7
+
+pseudo_mesh     	1
+pseudo_rcut     	10.0
+stru_file ./STRU-001

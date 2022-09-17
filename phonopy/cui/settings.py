@@ -1527,11 +1527,11 @@ class PhonopyConfParser(ConfParser):
                 self._confs["debye_model"] = ".true."
 
         if "fmax" in arg_list:
-            if self._args.fmax:
+            if self._args.fmax is not None:
                 self._confs["fmax"] = self._args.fmax
 
         if "fmin" in arg_list:
-            if self._args.fmin:
+            if self._args.fmin is not None:
                 self._confs["fmin"] = self._args.fmin
 
         if "is_thermal_properties" in arg_list:

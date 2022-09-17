@@ -41,14 +41,14 @@
 
 #include "phonopy.h"
 
-/* PHPYCONST is defined in dynmat.h */
-
 /* Build dynamical matrix */
 static PyObject* py_transform_dynmat_to_fc(PyObject* self, PyObject* args);
 static PyObject* py_perm_trans_symmetrize_fc(PyObject* self, PyObject* args);
 static PyObject* py_perm_trans_symmetrize_compact_fc(PyObject* self,
                                                      PyObject* args);
 static PyObject* py_transpose_compact_fc(PyObject* self, PyObject* args);
+static PyObject* py_get_dynamical_matrices_with_dd_openmp_over_qpoints(
+    PyObject* self, PyObject* args);
 static PyObject* py_get_dynamical_matrix(PyObject* self, PyObject* args);
 static PyObject* py_get_nac_dynamical_matrix(PyObject* self, PyObject* args);
 static PyObject* py_get_recip_dipole_dipole(PyObject* self, PyObject* args);
@@ -69,7 +69,7 @@ static PyObject* py_thm_integration_weight_at_omegas(PyObject* self,
                                                      PyObject* args);
 static PyObject* py_get_tetrahedra_frequenies(PyObject* self, PyObject* args);
 static PyObject* py_tetrahedron_method_dos(PyObject* self, PyObject* args);
-
+static PyObject* py_use_openmp(PyObject* self, PyObject* args);
 struct module_state {
     PyObject* error;
 };
@@ -99,6 +99,9 @@ static PyMethodDef _phonopy_methods[] = {
      "constants"},
     {"transpose_compact_fc", py_transpose_compact_fc, METH_VARARGS,
      "Transpose compact force constants"},
+    {"dynamical_matrices_with_dd_openmp_over_qpoints",
+     py_get_dynamical_matrices_with_dd_openmp_over_qpoints, METH_VARARGS,
+     "Get dynamical matrices plus dd with openmp over qpoints"},
     {"dynamical_matrix", py_get_dynamical_matrix, METH_VARARGS,
      "Dynamical matrix"},
     {"nac_dynamical_matrix", py_get_nac_dynamical_matrix, METH_VARARGS,
@@ -134,6 +137,7 @@ static PyMethodDef _phonopy_methods[] = {
      "Run tetrahedron method"},
     {"tetrahedron_method_dos", py_tetrahedron_method_dos, METH_VARARGS,
      "Run tetrahedron method"},
+    {"use_openmp", py_use_openmp, METH_VARARGS, "Use OpenMP or not"},
     {NULL, NULL, 0, NULL}};
 
 #if PY_MAJOR_VERSION >= 3
@@ -191,9 +195,10 @@ static PyObject* py_transform_dynmat_to_fc(PyObject* self, PyObject* args) {
     PyArrayObject* py_masses;
     PyArrayObject* py_s2pp_map;
     PyArrayObject* py_fc_index_map;
+    long use_openmp;
 
     double* fc;
-    double* dm;
+    double(*dm)[2];
     double(*comm_points)[3];
     double(*svecs)[3];
     double* masses;
@@ -203,15 +208,15 @@ static PyObject* py_transform_dynmat_to_fc(PyObject* self, PyObject* args) {
     long num_patom;
     long num_satom;
 
-    if (!PyArg_ParseTuple(args, "OOOOOOOO", &py_force_constants,
+    if (!PyArg_ParseTuple(args, "OOOOOOOOl", &py_force_constants,
                           &py_dynamical_matrices, &py_commensurate_points,
                           &py_svecs, &py_multi, &py_masses, &py_s2pp_map,
-                          &py_fc_index_map)) {
+                          &py_fc_index_map, &use_openmp)) {
         return NULL;
     }
 
     fc = (double*)PyArray_DATA(py_force_constants);
-    dm = (double*)PyArray_DATA(py_dynamical_matrices);
+    dm = (double(*)[2])PyArray_DATA(py_dynamical_matrices);
     comm_points = (double(*)[3])PyArray_DATA(py_commensurate_points);
     svecs = (double(*)[3])PyArray_DATA(py_svecs);
     masses = (double*)PyArray_DATA(py_masses);
@@ -222,7 +227,8 @@ static PyObject* py_transform_dynmat_to_fc(PyObject* self, PyObject* args) {
     num_satom = PyArray_DIMS(py_multi)[0];
 
     phpy_transform_dynmat_to_fc(fc, dm, comm_points, svecs, multi, masses,
-                                s2pp_map, fc_index_map, num_patom, num_satom);
+                                s2pp_map, fc_index_map, num_patom, num_satom,
+                                use_openmp);
 
     Py_RETURN_NONE;
 }
@@ -451,8 +457,9 @@ static PyObject* py_get_dynamical_matrix(PyObject* self, PyObject* args) {
     PyArrayObject* py_masses;
     PyArrayObject* py_s2p_map;
     PyArrayObject* py_p2s_map;
+    long use_openmp;
 
-    double* dm;
+    double(*dm)[2];
     double* fc;
     double* q;
     double(*svecs)[3];
@@ -463,13 +470,13 @@ static PyObject* py_get_dynamical_matrix(PyObject* self, PyObject* args) {
     long num_patom;
     long num_satom;
 
-    if (!PyArg_ParseTuple(args, "OOOOOOOO", &py_dynamical_matrix,
+    if (!PyArg_ParseTuple(args, "OOOOOOOOl", &py_dynamical_matrix,
                           &py_force_constants, &py_q, &py_svecs, &py_multi,
-                          &py_masses, &py_s2p_map, &py_p2s_map)) {
+                          &py_masses, &py_s2p_map, &py_p2s_map, &use_openmp)) {
         return NULL;
     }
 
-    dm = (double*)PyArray_DATA(py_dynamical_matrix);
+    dm = (double(*)[2])PyArray_DATA(py_dynamical_matrix);
     fc = (double*)PyArray_DATA(py_force_constants);
     q = (double*)PyArray_DATA(py_q);
     svecs = (double(*)[3])PyArray_DATA(py_svecs);
@@ -480,8 +487,15 @@ static PyObject* py_get_dynamical_matrix(PyObject* self, PyObject* args) {
     num_patom = PyArray_DIMS(py_p2s_map)[0];
     num_satom = PyArray_DIMS(py_s2p_map)[0];
 
-    phpy_get_dynamical_matrix_at_q(dm, num_patom, num_satom, fc, q, svecs,
-                                   multi, m, s2p_map, p2s_map, NULL, 1);
+    if (PyArray_NDIM(py_q) == 1) {
+        phpy_get_dynamical_matrix_at_q(dm, num_patom, num_satom, fc, q, svecs,
+                                       multi, m, s2p_map, p2s_map, NULL,
+                                       use_openmp);
+    } else {
+        phpy_get_dynamical_matrices_openmp_over_qpoints(
+            dm, num_patom, num_satom, fc, (double(*)[3])q,
+            PyArray_DIMS(py_q)[0], svecs, multi, m, s2p_map, p2s_map, NULL);
+    }
 
     Py_RETURN_NONE;
 }
@@ -498,8 +512,9 @@ static PyObject* py_get_nac_dynamical_matrix(PyObject* self, PyObject* args) {
     PyArrayObject* py_p2s_map;
     PyArrayObject* py_born;
     double factor;
+    long use_openmp;
 
-    double* dm;
+    double(*dm)[2];
     double* fc;
     double* q_cart;
     double* q;
@@ -515,13 +530,13 @@ static PyObject* py_get_nac_dynamical_matrix(PyObject* self, PyObject* args) {
     long n;
     double(*charge_sum)[3][3];
 
-    if (!PyArg_ParseTuple(args, "OOOOOOOOOOd", &py_dynamical_matrix,
+    if (!PyArg_ParseTuple(args, "OOOOOOOOOOdl", &py_dynamical_matrix,
                           &py_force_constants, &py_q, &py_svecs, &py_multi,
                           &py_masses, &py_s2p_map, &py_p2s_map, &py_q_cart,
-                          &py_born, &factor))
+                          &py_born, &factor, &use_openmp))
         return NULL;
 
-    dm = (double*)PyArray_DATA(py_dynamical_matrix);
+    dm = (double(*)[2])PyArray_DATA(py_dynamical_matrix);
     fc = (double*)PyArray_DATA(py_force_constants);
     q_cart = (double*)PyArray_DATA(py_q_cart);
     q = (double*)PyArray_DATA(py_q);
@@ -539,10 +554,128 @@ static PyObject* py_get_nac_dynamical_matrix(PyObject* self, PyObject* args) {
     n = num_satom / num_patom;
 
     phpy_get_charge_sum(charge_sum, num_patom, factor / n, q_cart, born);
-    phpy_get_dynamical_matrix_at_q(dm, num_patom, num_satom, fc, q, svecs,
-                                   multi, m, s2p_map, p2s_map, charge_sum, 1);
+
+    if (PyArray_NDIM(py_q) == 1) {
+        phpy_get_dynamical_matrix_at_q(dm, num_patom, num_satom, fc, q, svecs,
+                                       multi, m, s2p_map, p2s_map, charge_sum,
+                                       use_openmp);
+    } else {
+        phpy_get_dynamical_matrices_openmp_over_qpoints(
+            dm, num_patom, num_satom, fc, (double(*)[3])q,
+            PyArray_DIMS(py_q)[0], svecs, multi, m, s2p_map, p2s_map,
+            charge_sum);
+    }
 
     free(charge_sum);
+    charge_sum = NULL;
+
+    Py_RETURN_NONE;
+}
+
+static PyObject* py_get_dynamical_matrices_with_dd_openmp_over_qpoints(
+    PyObject* self, PyObject* args) {
+    PyArrayObject* py_dynamical_matrix;
+    PyArrayObject* py_qpoints;
+    PyArrayObject* py_force_constants;
+    PyArrayObject* py_svecs;
+    PyArrayObject* py_multi;
+    PyArrayObject* py_positions;
+    PyArrayObject* py_q_direction;
+    PyArrayObject* py_masses;
+    PyArrayObject* py_s2p_map;
+    PyArrayObject* py_p2s_map;
+    PyArrayObject* py_born;
+    PyArrayObject* py_dielectric;
+    PyArrayObject* py_reciprocal_lattice;
+    PyArrayObject* py_dd_q0;
+    PyArrayObject* py_G_list;
+    double nac_factor;
+    double lambda;
+    long use_Wang_NAC;
+
+    double(*dm)[2];
+    double* fc;
+    double* q_direction;
+    double(*qpoints)[3];
+    double(*svecs)[3];
+    long(*multi)[2];
+    double(*positions)[3];
+    double* masses;
+    double(*born)[3][3];
+    double(*dielectric)[3];
+    double(*reciprocal_lattice)[3];
+    double(*dd_q0)[2];
+    double(*G_list)[3];
+
+    long* s2p_map;
+    long* p2s_map;
+    long num_patom;
+    long num_satom;
+    long n_qpoints;
+    long n_Gpoints;
+
+    if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOOdOOdl", &py_dynamical_matrix,
+                          &py_qpoints, &py_force_constants, &py_svecs,
+                          &py_multi, &py_positions, &py_masses, &py_s2p_map,
+                          &py_p2s_map, &py_q_direction, &py_born,
+                          &py_dielectric, &py_reciprocal_lattice, &nac_factor,
+                          &py_dd_q0, &py_G_list, &lambda, &use_Wang_NAC))
+        return NULL;
+
+    dm = (double(*)[2])PyArray_DATA(py_dynamical_matrix);
+    qpoints = (double(*)[3])PyArray_DATA(py_qpoints);
+    n_qpoints = PyArray_DIMS(py_qpoints)[0];
+    fc = (double*)PyArray_DATA(py_force_constants);
+    svecs = (double(*)[3])PyArray_DATA(py_svecs);
+    multi = (long(*)[2])PyArray_DATA(py_multi);
+    if ((PyObject*)py_positions == Py_None) {
+        positions = NULL;
+    } else {
+        positions = (double(*)[3])PyArray_DATA(py_positions);
+    }
+    masses = (double*)PyArray_DATA(py_masses);
+    s2p_map = (long*)PyArray_DATA(py_s2p_map);
+    p2s_map = (long*)PyArray_DATA(py_p2s_map);
+    if ((PyObject*)py_q_direction == Py_None) {
+        q_direction = NULL;
+    } else {
+        q_direction = (double*)PyArray_DATA(py_q_direction);
+    }
+    if ((PyObject*)py_born == Py_None) {
+        born = NULL;
+    } else {
+        born = (double(*)[3][3])PyArray_DATA(py_born);
+    }
+    if ((PyObject*)py_dielectric == Py_None) {
+        dielectric = NULL;
+    } else {
+        dielectric = (double(*)[3])PyArray_DATA(py_dielectric);
+    }
+    if ((PyObject*)py_reciprocal_lattice == Py_None) {
+        reciprocal_lattice = NULL;
+    } else {
+        reciprocal_lattice = (double(*)[3])PyArray_DATA(py_reciprocal_lattice);
+    }
+    if ((PyObject*)py_dd_q0 == Py_None) {
+        dd_q0 = NULL;
+    } else {
+        dd_q0 = (double(*)[2])PyArray_DATA(py_dd_q0);
+    }
+    if ((PyObject*)py_G_list == Py_None) {
+        G_list = NULL;
+        n_Gpoints = 0;
+    } else {
+        G_list = (double(*)[3])PyArray_DATA(py_G_list);
+        n_Gpoints = PyArray_DIMS(py_G_list)[0];
+    }
+    num_patom = PyArray_DIMS(py_p2s_map)[0];
+    num_satom = PyArray_DIMS(py_s2p_map)[0];
+
+    phpy_dynamical_matrices_with_dd_openmp_over_qpoints(
+        dm, qpoints, n_qpoints, fc, svecs, multi, positions, num_patom,
+        num_satom, masses, p2s_map, s2p_map, born, dielectric,
+        reciprocal_lattice, q_direction, nac_factor, dd_q0, G_list, n_Gpoints,
+        lambda, use_Wang_NAC);
 
     Py_RETURN_NONE;
 }
@@ -559,9 +692,10 @@ static PyObject* py_get_recip_dipole_dipole(PyObject* self, PyObject* args) {
     double factor;
     double lambda;
     double tolerance;
+    long use_openmp;
 
-    double* dd;
-    double* dd_q0;
+    double(*dd)[2];
+    double(*dd_q0)[2];
     double(*G_list)[3];
     double* q_vector;
     double* q_direction;
@@ -570,13 +704,14 @@ static PyObject* py_get_recip_dipole_dipole(PyObject* self, PyObject* args) {
     double(*pos)[3];
     long num_patom, num_G;
 
-    if (!PyArg_ParseTuple(args, "OOOOOOOOddd", &py_dd, &py_dd_q0, &py_G_list,
+    if (!PyArg_ParseTuple(args, "OOOOOOOOdddl", &py_dd, &py_dd_q0, &py_G_list,
                           &py_q_cart, &py_q_direction, &py_born, &py_dielectric,
-                          &py_positions, &factor, &lambda, &tolerance))
+                          &py_positions, &factor, &lambda, &tolerance,
+                          &use_openmp))
         return NULL;
 
-    dd = (double*)PyArray_DATA(py_dd);
-    dd_q0 = (double*)PyArray_DATA(py_dd_q0);
+    dd = (double(*)[2])PyArray_DATA(py_dd);
+    dd_q0 = (double(*)[2])PyArray_DATA(py_dd_q0);
     G_list = (double(*)[3])PyArray_DATA(py_G_list);
     if ((PyObject*)py_q_direction == Py_None) {
         q_direction = NULL;
@@ -597,7 +732,7 @@ static PyObject* py_get_recip_dipole_dipole(PyObject* self, PyObject* args) {
                                  dielectric, pos, /* [natom, 3] */
                                  factor,          /* 4pi/V*unit-conv */
                                  lambda,          /* 4 * Lambda^2 */
-                                 tolerance);
+                                 tolerance, use_openmp);
 
     Py_RETURN_NONE;
 }
@@ -610,19 +745,21 @@ static PyObject* py_get_recip_dipole_dipole_q0(PyObject* self, PyObject* args) {
     PyArrayObject* py_positions;
     double lambda;
     double tolerance;
+    long use_openmp;
 
-    double* dd_q0;
+    double(*dd_q0)[2];
     double(*G_list)[3];
     double(*born)[3][3];
     double(*dielectric)[3];
     double(*pos)[3];
     long num_patom, num_G;
 
-    if (!PyArg_ParseTuple(args, "OOOOOdd", &py_dd_q0, &py_G_list, &py_born,
-                          &py_dielectric, &py_positions, &lambda, &tolerance))
+    if (!PyArg_ParseTuple(args, "OOOOOddl", &py_dd_q0, &py_G_list, &py_born,
+                          &py_dielectric, &py_positions, &lambda, &tolerance,
+                          &use_openmp))
         return NULL;
 
-    dd_q0 = (double*)PyArray_DATA(py_dd_q0);
+    dd_q0 = (double(*)[2])PyArray_DATA(py_dd_q0);
     G_list = (double(*)[3])PyArray_DATA(py_G_list);
     born = (double(*)[3][3])PyArray_DATA(py_born);
     dielectric = (double(*)[3])PyArray_DATA(py_dielectric);
@@ -635,7 +772,7 @@ static PyObject* py_get_recip_dipole_dipole_q0(PyObject* self, PyObject* args) {
                                     num_G, num_patom, born, dielectric,
                                     pos,    /* [natom, 3] */
                                     lambda, /* 4 * Lambda^2 */
-                                    tolerance);
+                                    tolerance, use_openmp);
 
     Py_RETURN_NONE;
 }
@@ -654,8 +791,9 @@ static PyObject* py_get_derivative_dynmat(PyObject* self, PyObject* args) {
     PyArrayObject* py_dielectric;
     PyArrayObject* py_q_direction;
     double nac_factor;
+    long use_openmp;
 
-    double* ddm;
+    double(*ddm)[2];
     double* fc;
     double* q_vector;
     double* lat;
@@ -671,15 +809,16 @@ static PyObject* py_get_derivative_dynmat(PyObject* self, PyObject* args) {
     double* epsilon;
     double* q_dir;
 
-    if (!PyArg_ParseTuple(
-            args, "OOOOOOOOOdOOO", &py_derivative_dynmat, &py_force_constants,
-            &py_q_vector, &py_lattice, /* column vectors */
-            &py_svecs, &py_multi, &py_masses, &py_s2p_map, &py_p2s_map,
-            &nac_factor, &py_born, &py_dielectric, &py_q_direction)) {
+    if (!PyArg_ParseTuple(args, "OOOOOOOOOdOOOl", &py_derivative_dynmat,
+                          &py_force_constants, &py_q_vector,
+                          &py_lattice, /* column vectors */
+                          &py_svecs, &py_multi, &py_masses, &py_s2p_map,
+                          &py_p2s_map, &nac_factor, &py_born, &py_dielectric,
+                          &py_q_direction, &use_openmp)) {
         return NULL;
     }
 
-    ddm = (double*)PyArray_DATA(py_derivative_dynmat);
+    ddm = (double(*)[2])PyArray_DATA(py_derivative_dynmat);
     fc = (double*)PyArray_DATA(py_force_constants);
     q_vector = (double*)PyArray_DATA(py_q_vector);
     lat = (double*)PyArray_DATA(py_lattice);
@@ -707,9 +846,9 @@ static PyObject* py_get_derivative_dynmat(PyObject* self, PyObject* args) {
         q_dir = (double*)PyArray_DATA(py_q_direction);
     }
 
-    phpy_get_derivative_dynmat_at_q(ddm, num_patom, num_satom, fc, q_vector,
-                                    lat, svecs, multi, masses, s2p_map, p2s_map,
-                                    nac_factor, born, epsilon, q_dir);
+    phpy_get_derivative_dynmat_at_q(
+        ddm, num_patom, num_satom, fc, q_vector, lat, svecs, multi, masses,
+        s2p_map, p2s_map, nac_factor, born, epsilon, q_dir, use_openmp);
 
     Py_RETURN_NONE;
 }
@@ -757,6 +896,7 @@ static PyObject* py_distribute_fc2(PyObject* self, PyObject* args) {
     PyArrayObject* py_map_atoms;
     PyArrayObject* py_map_syms;
     PyArrayObject* py_atom_list;
+    PyArrayObject* py_fc_indices_of_atom_list;
     PyArrayObject* py_rotations_cart;
 
     double(*r_carts)[3][3];
@@ -765,17 +905,19 @@ static PyObject* py_distribute_fc2(PyObject* self, PyObject* args) {
     int* map_atoms;
     int* map_syms;
     int* atom_list;
+    int* fc_indices_of_atom_list;
     npy_intp num_pos, num_rot, len_atom_list;
 
-    if (!PyArg_ParseTuple(args, "OOOOOO", &py_force_constants, &py_atom_list,
-                          &py_rotations_cart, &py_permutations, &py_map_atoms,
-                          &py_map_syms)) {
+    if (!PyArg_ParseTuple(args, "OOOOOOO", &py_force_constants, &py_atom_list,
+                          &py_fc_indices_of_atom_list, &py_rotations_cart,
+                          &py_permutations, &py_map_atoms, &py_map_syms)) {
         return NULL;
     }
 
     fc2 = (double(*)[3][3])PyArray_DATA(py_force_constants);
     atom_list = (int*)PyArray_DATA(py_atom_list);
     len_atom_list = PyArray_DIMS(py_atom_list)[0];
+    fc_indices_of_atom_list = (int*)PyArray_DATA(py_fc_indices_of_atom_list);
     permutations = (int*)PyArray_DATA(py_permutations);
     map_atoms = (int*)PyArray_DATA(py_map_atoms);
     map_syms = (int*)PyArray_DATA(py_map_syms);
@@ -801,8 +943,9 @@ static PyObject* py_distribute_fc2(PyObject* self, PyObject* args) {
         return NULL;
     }
 
-    phpy_distribute_fc2(fc2, atom_list, len_atom_list, r_carts, permutations,
-                        map_atoms, map_syms, num_rot, num_pos);
+    phpy_distribute_fc2(fc2, atom_list, len_atom_list, fc_indices_of_atom_list,
+                        r_carts, permutations, map_atoms, map_syms, num_rot,
+                        num_pos);
     Py_RETURN_NONE;
 }
 
@@ -889,7 +1032,9 @@ static PyObject* py_thm_integration_weight_at_omegas(PyObject* self,
     num_omegas = (long)PyArray_DIMS(py_omegas)[0];
     tetrahedra_omegas = (double(*)[4])PyArray_DATA(py_tetrahedra_omegas);
 
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (i = 0; i < num_omegas; i++) {
         iw[i] = phpy_get_integration_weight(omegas[i], tetrahedra_omegas,
                                             function[0]);
@@ -988,4 +1133,12 @@ static PyObject* py_tetrahedron_method_dos(PyObject* self, PyObject* args) {
                                 num_coef, num_gp);
 
     Py_RETURN_NONE;
+}
+
+static PyObject* py_use_openmp(PyObject* self, PyObject* args) {
+    if (phpy_use_openmp()) {
+        Py_RETURN_TRUE;
+    } else {
+        Py_RETURN_FALSE;
+    }
 }

@@ -37,11 +37,11 @@ import sys
 
 import numpy as np
 
-from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.interface.vasp import check_forces, get_drift_forces
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.cells import get_angles, get_cell_parameters
 from phonopy.structure.symmetry import Symmetry
+from phonopy.utils import similarity_transformation
 
 
 def parse_set_of_forces(
