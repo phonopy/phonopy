@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Spe-18-2022: Version 2.16.1
+
+- Update for conda-forge packaging.
+
 ## Spe-18-2022: Version 2.16.0
 
 - Maintenance release including small bug fixes.
