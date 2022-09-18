@@ -38,7 +38,11 @@ from typing import Optional, Union
 
 import numpy as np
 
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
+from phonopy.harmonic.dynamical_matrix import (
+    DynamicalMatrix,
+    DynamicalMatrixNAC,
+    run_dynamical_matrix_solver_c,
+)
 from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.structure.cells import Primitive
 from phonopy.units import VaspToTHz
@@ -217,6 +221,8 @@ class QpointsPhonon:
             w.write("\n")
 
     def _run(self):
+        import phonopy._phonopy as phonoc
+
         if self._gv_obj is not None:
             self._gv_obj.run(self._qpoints, perturbation=self._nac_q_direction)
             self._group_velocities = self._gv_obj.group_velocities
@@ -224,31 +230,49 @@ class QpointsPhonon:
         if self._with_dynamical_matrices:
             dynamical_matrices = []
 
-        frequencies = []
-        eigenvalues = []
-        if self._with_eigenvectors:
-            eigenvectors = []
+        num_band = self._natom * 3
+        num_qpoints = len(self._qpoints)
+        self._frequencies = np.zeros((num_qpoints, num_band), dtype="double")
+        self._eigenvalues = np.zeros((num_qpoints, num_band), dtype="double")
+        if phonoc.use_openmp():
+            dynmat = run_dynamical_matrix_solver_c(
+                self._dynamical_matrix, self._qpoints
+            )
+            eigenvectors = dynmat
+        elif self._with_eigenvectors:
+            dtype = "c%d" % (np.dtype("double").itemsize * 2)
+            eigenvectors = np.zeros(
+                (
+                    num_qpoints,
+                    num_band,
+                    num_band,
+                ),
+                dtype=dtype,
+                order="C",
+            )
 
-        for q in self._qpoints:
-            dm = self._get_dynamical_matrix(q)
+        for i, q in enumerate(self._qpoints):
+            if phonoc.use_openmp():
+                dm = dynmat[i]
+            else:
+                dm = self._get_dynamical_matrix(q)
             if self._with_dynamical_matrices:
                 dynamical_matrices.append(dm)
             if self._with_eigenvectors:
                 eigvals, eigvecs = np.linalg.eigh(dm)
-                eigenvectors.append(eigvecs)
+                eigenvectors[i] = eigvecs
             else:
                 eigvals = np.linalg.eigvalsh(dm)
             eigvals = eigvals.real
-            eigenvalues.append(eigvals)
-            frequencies.append(
+            self._eigenvalues[i] = eigvals
+            self._frequencies[i] = (
                 np.sqrt(np.abs(eigvals)) * np.sign(eigvals) * self._factor
             )
 
-        self._eigenvalues = np.array(eigenvalues, dtype="double", order="C")
-        self._frequencies = np.array(frequencies, dtype="double", order="C")
-        dtype = "c%d" % (np.dtype("double").itemsize * 2)
         if self._with_eigenvectors:
-            self._eigenvectors = np.array(eigenvectors, dtype=dtype, order="C")
+            self._eigenvectors = eigenvectors
+
+        dtype = "c%d" % (np.dtype("double").itemsize * 2)
         if self._with_dynamical_matrices:
             self._dynamical_matrices = np.array(
                 dynamical_matrices, dtype=dtype, order="C"
