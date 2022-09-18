@@ -80,10 +80,12 @@ def _get_params_from_site_cfg():
             if key not in params:
                 continue
             if key == "define_macros":
-                elems = val.split()[:2]
-                if elems[1].lower() == "none":
-                    elems[1] = None
-                params[key].append(tuple(elems))
+                elems = val.split()
+                for i in range(len(elems) // 2):
+                    pair = elems[i * 2 : i * 2 + 2]
+                    if pair[1].lower() == "none":
+                        pair[1] = None
+                    params[key].append(tuple(pair))
             else:
                 params[key] += val.split()
 
