@@ -73,6 +73,8 @@ def _get_params_from_site_cfg():
         lines = [line.strip().split("=", maxsplit=1) for line in f]
 
         for line in lines:
+            if len(line) < 2:
+                continue
             key = line[0].strip()
             val = line[1]
             if key not in params:
@@ -110,7 +112,7 @@ def _get_extensions(build_dir):
     # Libraray search
     found_extra_link_args = []
     found_extra_compile_args = []
-    if not use_openmp or not shutil.which("cmake") or build_dir.exists():
+    if not use_openmp or not shutil.which("cmake"):
         sources = [
             "c/_phonopy.c",
             "c/phonopy.c",
