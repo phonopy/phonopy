@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Formulations &#8212; Phonopy v.2.15.0</title>
+    <title>Formulations &#8212; Phonopy v.2.16.0</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -74,7 +74,7 @@
       
       
       
-      <h1 class="site-logo" id="site-title">Phonopy v.2.15.0</h1>
+      <h1 class="site-logo" id="site-title">Phonopy v.2.16.0</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
@@ -808,7 +808,7 @@ operations. This is solved by pseudo inverse.</p>
 <p>where <span class="math notranslate nohighlight">\(m\)</span> is the atomic mass and <span class="math notranslate nohighlight">\(\mathbf{q}\)</span> is the wave vector. An
 equation of motion is written as</p>
 <div class="math notranslate nohighlight">
-\[\sum_{j'\beta} D_{\alpha\beta}(jj',\mathbf{q}) e_\beta(j', \mathbf{q}\nu) = m_j
+\[\sum_{j'\beta} D_{\alpha\beta}(jj',\mathbf{q}) e_\beta(j', \mathbf{q}\nu) =
 [ \omega(\mathbf{q}\nu) ]^2 e_\alpha(j, \mathbf{q}\nu).\]</div>
 <p>where the eigenvector of the band index <span class="math notranslate nohighlight">\(\nu\)</span> at <span class="math notranslate nohighlight">\(\mathbf{q}\)</span> is
 obtained by the diagonalization of <span class="math notranslate nohighlight">\(\mathbf{D}(\mathbf{q})\)</span>:</p>
@@ -1046,12 +1046,14 @@ the part of the equation corresponding to force constants:</p>
 <p>is <span class="math notranslate nohighlight">\([\text{hartree}/\text{bohr}^2]\)</span>. In the default case for the VASP
 interface, internally <span class="math notranslate nohighlight">\(\Omega_0\)</span> is given in <span class="math notranslate nohighlight">\(\text{Angstrom}^3\)</span>,
 while Born charges <span class="math notranslate nohighlight">\(Z^{*}\)</span> have physical unit of charge (<span class="math notranslate nohighlight">\(e_{0}\)</span>).
-Normally, physical units of Born charges obtained in many calculators are atomic ones.
-In atomic units Hartree energy is equal to <span class="math notranslate nohighlight">\(1 \text{Ha} = e_{0}^{2}/a_{0}\)</span>
-(<span class="math notranslate nohighlight">\(a_{0}\)</span> is Bohr radius), therefore the units of charge squared is
-<span class="math notranslate nohighlight">\(e_{0}^{2}=[\text{hartree}\cdot \text{bohr}]\)</span>. In case for the VASP in order
-to convert the nonanalytical term, one has to convert units of energy (Ha to eV) and
-units of distance (Bohr to Angstrom). In total, the necessary unit conversion is
+Normally, physical units of Born charges obtained in many calculators are atomic
+ones. In atomic units Hartree energy is equal to
+<span class="math notranslate nohighlight">\(1 \text{Ha} = e_{0}^{2}/a_{0}\)</span> (<span class="math notranslate nohighlight">\(a_{0}\)</span> is Bohr radius), therefore
+the units of charge squared is
+<span class="math notranslate nohighlight">\(e_{0}^{2}=[\text{hartree}\cdot \text{bohr}]\)</span>. In case for the VASP in
+order to convert the nonanalytical term, one has to convert units of energy (Ha
+to eV) and units of distance (Bohr to Angstrom). In total, the necessary unit
+conversion is
 <span class="math notranslate nohighlight">\((\text{hartree} \rightarrow \text{eV}) \times (\text{bohr} \rightarrow \text{Angstrom})=14.4\)</span>.
 In the default case of the Wien2k interface, the conversion factor is
 <span class="math notranslate nohighlight">\((\text{hartree} \rightarrow \text{mRy})=2000\)</span>. For the other interfaces,

@@ -1141,7 +1141,7 @@ eigenvectors with amplitudes and phase factors as
 
 ```{math}
 \frac{A} { \sqrt{N_\mathrm{a}m_j} } \operatorname{Re} \left[ \exp(i\phi)
-\mathbf{e}_j \exp( \mathbf{q} \cdot \mathbf{r}_{jl} ) \right],
+\mathbf{e}_j \exp( i \mathbf{q} \cdot \mathbf{r}_{jl} ) \right],
 ```
 
 where {math}`A` is the amplitude, {math}`\phi` is the phase,

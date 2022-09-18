@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dynamic structure factor &#8212; Phonopy v.2.15.0</title>
+    <title>Dynamic structure factor &#8212; Phonopy v.2.16.0</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -74,7 +74,7 @@
       
       
       
-      <h1 class="site-logo" id="site-title">Phonopy v.2.15.0</h1>
+      <h1 class="site-logo" id="site-title">Phonopy v.2.16.0</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
@@ -450,20 +450,20 @@ one-phonon dynamic structure factor is given as</p>
 <div class="math notranslate nohighlight">
 \[S(\mathbf{Q}, \nu, \omega)^{+1\text{ph}} =
 \frac{k'}{k} \frac{N}{\hbar}
-\sum_\mathbf{q} |F(\mathbf{Q}, \mathbf{q}\nu)|^2
+\sum_\mathbf{q} |F(\mathbf{Q}, -\mathbf{q}\nu)|^2
 (n_{\mathbf{q}\nu} + 1) \delta(\omega - \omega_{\mathbf{q}\nu})
-\Delta(\mathbf{Q-q}),\]</div>
+\Delta(\mathbf{Q} - \mathbf{q}),\]</div>
 <div class="math notranslate nohighlight">
 \[S(\mathbf{Q}, \nu, \omega)^{-1\text{ph}} = \frac{k'}{k} \frac{N}{\hbar}
 \sum_\mathbf{q} |F(\mathbf{Q}, \mathbf{q}\nu)|^2 n_{\mathbf{q}\nu}
-\delta(\omega + \omega_{\mathbf{q}\nu}) \Delta(\mathbf{Q-q}),\]</div>
+\delta(\omega + \omega_{\mathbf{q}\nu}) \Delta(\mathbf{Q} + \mathbf{q}),\]</div>
 <p>with</p>
 <div class="math notranslate nohighlight">
 \[F(\mathbf{Q}, \mathbf{q}\nu) = \sum_j \sqrt{\frac{\hbar}{2 m_j
-\omega_{\mathbf{q}\nu}}} \bar{b}_j \exp\left( -\frac{1}{2} \langle
-|\mathbf{Q}\cdot\mathbf{u}(j0)|^2 \rangle \right)
-\exp[-i(\mathbf{Q-q})\cdot\mathbf{r}(j0)] \mathbf{Q}\cdot\mathbf{e}(j,
-\mathbf{q}\nu).\]</div>
+\omega_{\mathbf{q}\nu}}} \bar{b}_j \exp\left[ -\frac{1}{2} \langle
+|\mathbf{Q}\cdot\mathbf{u}(j0)|^2 \rangle \right]
+e^{i(\mathbf{Q} + \mathbf{q}) \cdot \mathbf{r}_{j0}}
+\mathbf{Q} \cdot\mathbf{e}(j, \mathbf{q}\nu).\]</div>
 <p>where <span class="math notranslate nohighlight">\(\mathbf{Q}\)</span> is the scattering vector defined as
 <span class="math notranslate nohighlight">\(\mathbf{Q} = \mathbf{k} - \mathbf{k}'\)</span> with incident wave vector
 <span class="math notranslate nohighlight">\(\mathbf{k}\)</span> and final wavevector <span class="math notranslate nohighlight">\(\mathbf{k}'\)</span>. Similarly,
@@ -479,7 +479,7 @@ page. Note that the phase convention of the dynamical matrix given
 <a class="reference internal" href="formulation.html#dynacmial-matrix-theory"><span class="std std-ref">here</span></a> is used. This changes the representation
 of the phase factor in <span class="math notranslate nohighlight">\(F(\mathbf{Q}, \mathbf{q}\nu)\)</span> from that given in
 the book “Thermal of Neutron Scattering”, but the additional term
-<span class="math notranslate nohighlight">\(\exp(i\mathbf{q}\cdot\mathbf{r})\)</span> comes from the different phase
+<span class="math notranslate nohighlight">\(\exp(i\mathbf{q}\cdot\mathbf{r}_{j0})\)</span> comes from the different phase
 convention of the dynamical matrix or equivalently the eigenvector. For
 inelastic neutron scattering, <span class="math notranslate nohighlight">\(\bar{b}_j\)</span> is the average scattering length
 over isotopes and spins. For inelastic X-ray scattering, <span class="math notranslate nohighlight">\(\bar{b}_j\)</span> is
@@ -519,7 +519,7 @@ the input files in <code class="docutils literal notranslate"><span class="pre">
         <span class="n">freq_min</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">dsf</span> <span class="o">=</span> <span class="n">phonon</span><span class="o">.</span><span class="n">dynamic_structure_factor</span>
-    <span class="n">q_cartesian</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dsf</span><span class="o">.</span><span class="n">qpoints</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">phonon</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">get_cell</span><span class="p">())</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">q_cartesian</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dsf</span><span class="o">.</span><span class="n">qpoints</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">phonon</span><span class="o">.</span><span class="n">primitive</span><span class="o">.</span><span class="n">cell</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
     <span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">q_cartesian</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;# [1] Distance from Gamma point,&quot;</span><span class="p">)</span>

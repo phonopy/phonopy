@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; Phonopy v.2.16.0</title>
+    <title>ABACUS &amp; phonopy calculation &#8212; Phonopy v.2.16.0</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -30,7 +30,7 @@
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
-    <link rel="index" title="Index" href="#" />
+    <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
@@ -333,22 +333,105 @@ title="Fullscreen mode"
 
 </button>
 
+<div class="menu-dropdown menu-dropdown-download-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Download this page">
+      <i class="fas fa-download"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="_sources/abacus.rst.txt"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Download source file"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="headerbtn__text-container">.rst</span>
+</a>
+
+      </li>
+      
+      <li>
+        
+<button onclick="printPdf(this)"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="left"
+title="Print to PDF"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="headerbtn__text-container">.pdf</span>
+</button>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
+
     </div>
 </div>
 
 <!-- Table of contents -->
 <div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#how-to-run">
+   How to run
+  </a>
+ </li>
+</ul>
+
+    </nav>
 </div>
     </div>
     <div class="article row">
         <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
-                <h1></h1>
+                <h1>ABACUS & phonopy calculation</h1>
                 <!-- Table of contents -->
                 <div id="print-main-content">
                     <div id="jb-print-toc">
                         
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#how-to-run">
+   How to run
+  </a>
+ </li>
+</ul>
+
+                        </nav>
                     </div>
                 </div>
             </div>
@@ -356,11 +439,43 @@ title="Fullscreen mode"
                 
               <div>
                 
-
-<h1 id="index">Index</h1>
-
-<div class="genindex-jumpbox">
- 
+  <div class="section" id="abacus-phonopy-calculation">
+<span id="abacus-interface"></span><h1>ABACUS &amp; phonopy calculation<a class="headerlink" href="#abacus-phonopy-calculation" title="Permalink to this headline">#</a></h1>
+<div class="section" id="how-to-run">
+<h2>How to run<a class="headerlink" href="#how-to-run" title="Permalink to this headline">#</a></h2>
+<p>A procedure of ABACUS-phonopy calculation is as follows:</p>
+<ol class="arabic">
+<li><p>Prepare a ‘setting.conf’ with following tags:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DIM</span> <span class="o">=</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span>
+<span class="n">ATOM_NAME</span> <span class="o">=</span> <span class="n">Al</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>when three integers are specified after <code class="docutils literal notranslate"><span class="pre">DIM</span> <span class="pre">=</span></code>, a supercell elongated along axes of unit cell is created</p></li>
+<li><p>chemical symbols are specified after <code class="docutils literal notranslate"><span class="pre">ATOM_NAME</span> <span class="pre">=</span></code>, and number of symbols should match <code class="docutils literal notranslate"><span class="pre">ntype</span></code> in ABACUS INPUT file.
+The interface reads ABACUS <code class="docutils literal notranslate"><span class="pre">STRU</span></code> file according to the settings of this tag.</p></li>
+</ul>
+</li>
+<li><p>To obtain supercells with displacements, run phonopy:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="n">setting</span><span class="o">.</span><span class="n">conf</span> <span class="o">--</span><span class="n">abacus</span> <span class="o">-</span><span class="n">d</span>
+</pre></div>
+</div>
+<p>In this example, 2x2x2 supercells are created. <code class="docutils literal notranslate"><span class="pre">STRU.in</span></code> and
+<code class="docutils literal notranslate"><span class="pre">STRU-{number}</span></code> give the perfect supercell and supercells
+with displacements, respectively. <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> is also created.
+This file contains information on displacements. Perhaps the supercell files are
+stored in <code class="docutils literal notranslate"><span class="pre">disp-{number}</span></code> directories, then ABACUS calculations are
+executed in these directories.</p>
+</li>
+<li><p>Calculate forces on atoms in the supercells with displacements. For each SCF calculation, you should specify <code class="docutils literal notranslate"><span class="pre">stru_file</span></code> with <code class="docutils literal notranslate"><span class="pre">STRU-{number}</span></code> and <code class="docutils literal notranslate"><span class="pre">cal_force=1</span></code> in INPUT in order to calculate force using ABACUS. Be careful not to relax the structures</p></li>
+<li><p>Then create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file using ABACUS inteface:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="o">./</span><span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">//</span><span class="n">OUT</span><span class="o">*/</span><span class="n">running</span><span class="o">*.</span><span class="n">log</span> <span class="o">./</span><span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">//</span><span class="n">OUT</span><span class="o">*/</span><span class="n">running</span><span class="o">*.</span><span class="n">log</span> <span class="o">...</span>
+</pre></div>
+</div>
+<p>Two examples with different settings of basis sets are found in <code class="docutils literal notranslate"><span class="pre">example/Al-ABACUS</span></code>.</p>
+</li>
+</ol>
+</div>
 </div>
 
 

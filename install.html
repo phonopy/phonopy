@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Installation &#8212; Phonopy v.2.15.0</title>
+    <title>Installation &#8212; Phonopy v.2.16.0</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -72,7 +72,7 @@
       
       
       
-      <h1 class="site-logo" id="site-title">Phonopy v.2.15.0</h1>
+      <h1 class="site-logo" id="site-title">Phonopy v.2.16.0</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
@@ -687,7 +687,7 @@ If specific one is expected, it is installed by (e.g. <code class="docutils lite
 </pre></div>
 </div>
 <p>If you need a compiler,</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="n">complilers</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="n">c</span><span class="o">-</span><span class="n">compliler</span>
 </pre></div>
 </div>
 </div>
@@ -704,13 +704,18 @@ manual modification of <code class="docutils literal notranslate"><span class="p
 </pre></div>
 </div>
 </li>
-<li><p>Run <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> script</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">build</span>
-<span class="o">%</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="o">.</span>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> script via <code class="docutils literal notranslate"><span class="pre">pip</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="o">.</span> <span class="o">-</span><span class="n">vvv</span>
 </pre></div>
 </div>
 </li>
 </ol>
+<p>Under the system with OpenMP library, setting environment variable</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">PHONOPY_USE_OPENMP</span><span class="o">=</span><span class="n">true</span>
+</pre></div>
+</div>
+<p>before <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span> <span class="pre">-vvv</span></code> will build phonopy with OpenMP support thought
+the performance improvement is limited for many cases.</p>
 </div>
 </div>
 <div class="section" id="trouble-shooting">
