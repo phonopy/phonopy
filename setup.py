@@ -80,14 +80,15 @@ def _get_params_from_site_cfg():
             if key not in params:
                 continue
             if key == "define_macros":
-                elems = val.split()
-                for i in range(len(elems) // 2):
-                    pair = elems[i * 2 : i * 2 + 2]
-                    if pair[1].lower() == "none":
-                        pair[1] = None
-                    params[key].append(tuple(pair))
+                pair = val.split(maxsplit=1)
+                if pair[1].lower() == "none":
+                    pair[1] = None
+                params[key].append(tuple(pair))
             else:
                 params[key] += val.split()
+
+    if "THM_EPSILON" not in [macro[0] for macro in params["define_macros"]]:
+        params["define_macros"].append(("THM_EPSILON", "1e-10"))
 
     print("=============================================")
     print("Parameters found in site.cfg")
