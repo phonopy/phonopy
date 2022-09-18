@@ -1145,23 +1145,7 @@ def run(phonon: Phonopy, settings, plot_conf, log_level):
             phonon.write_projected_dos()
 
             if plot_conf["plot_graph"]:
-                pdos_indices = settings.pdos_indices
-                if settings.xyz_projection:
-                    legend = []
-                    _pdos_indices = []
-                    for index_set in pdos_indices:
-                        xyz_set = []
-                        for idx in index_set:
-                            xyz_set += list(range(idx * 3, (idx + 1) * 3))
-                        xyz_set = np.array(xyz_set)
-                        legend.append(xyz_set + 1)
-                        _pdos_indices.append(xyz_set)
-                elif is_pdos_auto(settings):
-                    _pdos_indices = get_pdos_indices(phonon.primitive_symmetry)
-                    legend = [phonon.primitive.symbols[x[0]] for x in _pdos_indices]
-                else:
-                    legend = [np.array(x) + 1 for x in pdos_indices]
-                    _pdos_indices = pdos_indices
+                _pdos_indices, legend = get_pdos_indices_and_legend(settings, phonon)
                 if run_mode != "band_mesh":
                     plot = phonon.plot_projected_dos(
                         pdos_indices=_pdos_indices, legend=legend
@@ -1274,9 +1258,10 @@ def run(phonon: Phonopy, settings, plot_conf, log_level):
             and not settings.is_thermal_displacements
             and not settings.is_thermal_displacement_matrices
             and not settings.is_thermal_distances
-        ):  # noqa E129
+        ):
             if settings.pdos_indices is not None:
-                plot = phonon.plot_band_structure_and_dos(pdos_indices=pdos_indices)
+                _pdos_indices, legend = get_pdos_indices_and_legend(settings, phonon)
+                plot = phonon.plot_band_structure_and_dos(pdos_indices=_pdos_indices)
             else:
                 plot = phonon.plot_band_structure_and_dos()
             if plot_conf["save_graph"]:
@@ -1492,6 +1477,30 @@ def is_band_auto(settings):
 def is_pdos_auto(settings):
     """Check whether automatic PDOS setting or not."""
     return settings.pdos_indices == "auto"
+
+
+def get_pdos_indices_and_legend(settings, phonon: Phonopy):
+    """Return pdos_indices and legend from settings."""
+    pdos_indices = settings.pdos_indices
+    if settings.xyz_projection:
+        legend = []
+        if is_pdos_auto(settings):
+            pdos_indices = get_pdos_indices(phonon.primitive_symmetry)
+        _pdos_indices = []
+        for index_set in pdos_indices:
+            xyz_set = []
+            for idx in index_set:
+                xyz_set += list(range(idx * 3, (idx + 1) * 3))
+            xyz_set = np.array(xyz_set)
+            legend.append(xyz_set + 1)
+            _pdos_indices.append(xyz_set)
+    elif is_pdos_auto(settings):
+        _pdos_indices = get_pdos_indices(phonon.primitive_symmetry)
+        legend = [phonon.primitive.symbols[x[0]] for x in _pdos_indices]
+    else:
+        legend = [np.array(x) + 1 for x in pdos_indices]
+        _pdos_indices = pdos_indices
+    return _pdos_indices, legend
 
 
 def auto_primitive_axes(primitive_matrix):

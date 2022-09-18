@@ -348,7 +348,7 @@ def test_QHA_Cu(pressure: Optional[float], index: int):
     np.testing.assert_allclose(
         np.array(phonopy_qha.heat_capacity_P_numerical)[t_indices],
         cp_temperature_Cu[index],
-        atol=0.2,
+        atol=0.3,
     )
 
     # Should raise NotImplementedError
