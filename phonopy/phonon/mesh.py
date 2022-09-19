@@ -432,9 +432,14 @@ class Mesh(MeshBase):
         num_qpoints = len(self._qpoints)
 
         self._frequencies = np.zeros((num_qpoints, num_band), dtype="double")
-        if self._with_eigenvectors:
+        if phonoc.use_openmp():
+            dynmat = run_dynamical_matrix_solver_c(
+                self._dynamical_matrix, self._qpoints
+            )
+            eigenvectors = dynmat
+        elif self._with_eigenvectors:
             dtype = "c%d" % (np.dtype("double").itemsize * 2)
-            self._eigenvectors = np.zeros(
+            eigenvectors = np.zeros(
                 (
                     num_qpoints,
                     num_band,
@@ -444,11 +449,6 @@ class Mesh(MeshBase):
                 order="C",
             )
 
-        if phonoc.use_openmp():
-            dynmat = run_dynamical_matrix_solver_c(
-                self._dynamical_matrix, self._qpoints
-            )
-            self._eigenvectors = dynmat
         for i, q in enumerate(self._qpoints):
             if phonoc.use_openmp():
                 dm = dynmat[i]
@@ -456,7 +456,7 @@ class Mesh(MeshBase):
                 self._dynamical_matrix.run(q)
                 dm = self._dynamical_matrix.dynamical_matrix
             if self._with_eigenvectors:
-                eigvals, self._eigenvectors[i] = np.linalg.eigh(dm)
+                eigvals, eigenvectors[i] = np.linalg.eigh(dm)
                 eigenvalues = eigvals.real
             else:
                 eigenvalues = np.linalg.eigvalsh(dm).real
@@ -468,6 +468,9 @@ class Mesh(MeshBase):
                 )
                 * self._factor
             )
+
+        if self._with_eigenvectors:
+            self._eigenvectors = eigenvectors
 
     def _set_group_velocities(self, group_velocity):
         group_velocity.run(self._qpoints)

@@ -1,4 +1,12 @@
-"""Setup script of phonopy."""
+"""Setup script of phonopy.
+
+Automatic library search for OpenMP using cmake is invoked by
+PHONOPY_USE_OPENMP=true.
+
+Custom parameter setting can be written in site.cfg.
+Examples are written at _get_params_from_site_cfg().
+
+"""
 import os
 import pathlib
 import shutil
@@ -27,11 +35,6 @@ def _run_cmake(build_dir):
         "-DCMAKE_INSTALL_PREFIX=.",
         "-DPHONOPY=on",
     ]
-    # if "CONDA_PREFIX" in os.environ:
-    #     args.append("-DUSE_CONDA_PATH=on")
-    # if "CC" in os.environ:
-    #     args.append(f'-DCMAKE_C_COMPILER={os.environ["CC"]}')
-
     cmake_output = subprocess.check_output(args)
     print(cmake_output.decode("utf-8"))
     subprocess.check_call(["cmake", "--build", "_build", "-v"])
@@ -43,18 +46,79 @@ def _clean_cmake(build_dir):
         shutil.rmtree(build_dir)
 
 
+def _get_params_from_site_cfg():
+    """Read extra_compile_args and extra_link_args.
+
+    Examples
+    --------
+    # For macOS
+    extra_compile_args = -fopenmp=libomp
+    extra_link_args = -lomp
+
+    # For linux
+    extra_compile_args = -fopenmp
+    extra_link_args = -lgomp -lpthread
+
+    """
+    params = {
+        "define_macros": [],
+        "extra_link_args": [],
+        "extra_compile_args": [],
+        "extra_objects": [],
+        "include_dirs": [],
+    }
+
+    site_cfg_file = pathlib.Path.cwd() / "site.cfg"
+    if not site_cfg_file.exists():
+        return params
+
+    with open(site_cfg_file) as f:
+        lines = [line.strip().split("=", maxsplit=1) for line in f]
+
+        for line in lines:
+            if len(line) < 2:
+                continue
+            key = line[0].strip()
+            val = line[1]
+            if key not in params:
+                continue
+            if key == "define_macros":
+                pair = val.split(maxsplit=1)
+                if pair[1].lower() == "none":
+                    pair[1] = None
+                params[key].append(tuple(pair))
+            else:
+                params[key] += val.split()
+
+    if "THM_EPSILON" not in [macro[0] for macro in params["define_macros"]]:
+        params["define_macros"].append(("THM_EPSILON", "1e-10"))
+
+    print("=============================================")
+    print("Parameters found in site.cfg")
+    for key, val in params.items():
+        print(f"{key}: {val}")
+    print("=============================================")
+    return params
+
+
 def _get_extensions(build_dir):
-    # Initialization of parameters
-    define_macros = []
-    extra_link_args = []
-    extra_compile_args = []
-    extra_objects = []
-    include_dirs = []
+    """Return python extension setting.
+
+    User customization by site.cfg file
+    -----------------------------------
+    See _get_params_from_site_cfg().
+
+    Automatic search using cmake
+    ----------------------------
+    Invoked by environment variable PHONOPY_USE_OPENMP=true.
+
+    """
+    params = _get_params_from_site_cfg()
 
     # Libraray search
     found_extra_link_args = []
     found_extra_compile_args = []
-    if not use_openmp or not shutil.which("cmake") or build_dir.exists():
+    if not use_openmp or not shutil.which("cmake"):
         sources = [
             "c/_phonopy.c",
             "c/phonopy.c",
@@ -74,43 +138,33 @@ def _get_extensions(build_dir):
                     found_libs[key] = line.split()[3].split(";")
                 if f"{key} flags" in line and len(line.split()) > 3:
                     found_flags[key] = line.split()[3].split(";")
-                    # if key == "OpenMP":
-                    #     define_macros.append(("_OPENMP", None))
         for key, value in found_libs.items():
             found_extra_link_args += value
         for key, value in found_flags.items():
             found_extra_compile_args += value
         print("=============================================")
+        print("Parameters found by cmake")
         print("extra_compile_args: ", found_extra_compile_args)
         print("extra_link_args: ", found_extra_link_args)
-        print("define_macros: ", define_macros)
         print("=============================================")
         print()
 
     # Build ext_modules
     extensions = []
-    extra_link_args += found_extra_link_args
-    extra_compile_args += found_extra_compile_args
-    define_macros.append(("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"))
-    include_dirs += ["c", numpy.get_include()]
+    params["extra_link_args"] += found_extra_link_args
+    params["extra_compile_args"] += found_extra_compile_args
+    params["define_macros"].append(("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION"))
+    params["include_dirs"] += ["c", numpy.get_include()]
 
     libphpy = list((pathlib.Path.cwd() / "_build").glob("*phpy.*"))
     if libphpy:
         print("=============================================")
         print(f"Phonopy library: {libphpy[0]}")
         print("=============================================")
-        extra_objects += [str(libphpy[0])]
+        params["extra_objects"] += [str(libphpy[0])]
 
     extensions.append(
-        setuptools.Extension(
-            "phonopy._phonopy",
-            sources=sources,
-            extra_compile_args=extra_compile_args,
-            extra_link_args=extra_link_args,
-            extra_objects=extra_objects,
-            include_dirs=include_dirs,
-            define_macros=define_macros,
-        )
+        setuptools.Extension("phonopy._phonopy", sources=sources, **params)
     )
 
     return extensions
