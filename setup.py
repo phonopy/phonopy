@@ -1,4 +1,12 @@
-"""Setup script of phonopy."""
+"""Setup script of phonopy.
+
+Automatic library search for OpenMP using cmake is invoked by
+PHONOPY_USE_OPENMP=true.
+
+Custom parameter setting can be written in site.cfg.
+Examples are written at _get_params_from_site_cfg().
+
+"""
 import os
 import pathlib
 import shutil
@@ -27,11 +35,6 @@ def _run_cmake(build_dir):
         "-DCMAKE_INSTALL_PREFIX=.",
         "-DPHONOPY=on",
     ]
-    # if "CONDA_PREFIX" in os.environ:
-    #     args.append("-DUSE_CONDA_PATH=on")
-    # if "CC" in os.environ:
-    #     args.append(f'-DCMAKE_C_COMPILER={os.environ["CC"]}')
-
     cmake_output = subprocess.check_output(args)
     print(cmake_output.decode("utf-8"))
     subprocess.check_call(["cmake", "--build", "_build", "-v"])
