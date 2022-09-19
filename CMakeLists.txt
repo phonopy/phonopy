@@ -30,7 +30,7 @@ if (OpenMP_FOUND)
 endif()
 
 if (PHONOPY)
-  set(SOURCES_PHONO3PY
+  set(SOURCES_PHONOPY
     ${PROJECT_SOURCE_DIR}/c/phonopy.c
     ${PROJECT_SOURCE_DIR}/c/dynmat.c
     ${PROJECT_SOURCE_DIR}/c/derivative_dynmat.c
@@ -50,7 +50,7 @@ if (PHONOPY)
   endif()
 
   # Static link library
-  add_library(phpy_static STATIC ${SOURCES_PHONO3PY})
+  add_library(phpy_static STATIC ${SOURCES_PHONOPY})
   target_link_libraries(phpy_static m ${OpenMP_C_LIBRARIES})
   target_include_directories(phpy_static PRIVATE ${MY_INCLUDES})
   target_compile_options(phpy_static PRIVATE ${OpenMP_C_FLAGS})
