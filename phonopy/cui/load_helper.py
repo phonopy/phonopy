@@ -37,11 +37,16 @@ import os
 
 import numpy as np
 
+from phonopy import Phonopy
 from phonopy.file_IO import (
     parse_BORN,
     parse_FORCE_CONSTANTS,
     parse_FORCE_SETS,
     read_force_constants_hdf5,
+)
+from phonopy.harmonic.force_constants import (
+    compact_fc_to_full_fc,
+    full_fc_to_compact_fc,
 )
 from phonopy.interface.calculator import (
     get_force_constant_conversion_factor,
@@ -163,7 +168,7 @@ def read_force_constants_from_hdf5(
 
 
 def set_dataset_and_force_constants(
-    phonon,
+    phonon: Phonopy,
     dataset,
     fc,  # From phonopy_yaml
     force_constants_filename=None,
@@ -187,7 +192,12 @@ def set_dataset_and_force_constants(
     _fc = None
     _dataset = None
     if force_constants_filename is not None:
-        _fc = _read_force_constants_file(phonon, force_constants_filename)
+        _fc = _read_force_constants_file(
+            phonon,
+            force_constants_filename,
+            is_compact_fc=is_compact_fc,
+            log_level=log_level,
+        )
         _force_constants_filename = force_constants_filename
     elif force_sets_filename is not None:
         _dataset = parse_FORCE_SETS(natom=natom, filename=force_sets_filename)
@@ -195,10 +205,20 @@ def set_dataset_and_force_constants(
     elif phonon.forces is None and phonon.force_constants is None:
         # unless provided these from phonopy_yaml.
         if os.path.isfile("FORCE_CONSTANTS"):
-            _fc = _read_force_constants_file(phonon, "FORCE_CONSTANTS")
+            _fc = _read_force_constants_file(
+                phonon,
+                "FORCE_CONSTANTS",
+                is_compact_fc=is_compact_fc,
+                log_level=log_level,
+            )
             _force_constants_filename = "FORCE_CONSTANTS"
         elif os.path.isfile("force_constants.hdf5"):
-            _fc = _read_force_constants_file(phonon, "force_constants.hdf5")
+            _fc = _read_force_constants_file(
+                phonon,
+                "force_constants.hdf5",
+                is_compact_fc=is_compact_fc,
+                log_level=log_level,
+            )
             _force_constants_filename = "force_constants.hdf5"
         elif os.path.isfile("FORCE_SETS"):
             _dataset = parse_FORCE_SETS(natom=natom)
@@ -226,7 +246,9 @@ def set_dataset_and_force_constants(
             )
 
 
-def _read_force_constants_file(phonon, force_constants_filename):
+def _read_force_constants_file(
+    phonon: Phonopy, force_constants_filename, is_compact_fc=True, log_level=0
+):
     dot_split = force_constants_filename.split(".")
     p2s_map = phonon.primitive.p2s_map
     if len(dot_split) > 1 and dot_split[-1] == "hdf5":
@@ -237,6 +259,12 @@ def _read_force_constants_file(phonon, force_constants_filename):
         )
     else:
         _fc = parse_FORCE_CONSTANTS(filename=force_constants_filename, p2s_map=p2s_map)
+
+    if is_compact_fc and _fc.shape[0] == _fc.shape[1]:
+        _fc = full_fc_to_compact_fc(phonon, _fc, log_level=log_level)
+    elif not is_compact_fc and _fc.shape[0] != _fc.shape[1]:
+        _fc = compact_fc_to_full_fc(phonon, _fc, log_level=log_level)
+
     return _fc
 
 

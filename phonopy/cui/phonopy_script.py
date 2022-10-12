@@ -59,7 +59,10 @@ from phonopy.file_IO import (
     write_FORCE_CONSTANTS,
     write_force_constants_to_hdf5,
 )
-from phonopy.harmonic.force_constants import compact_fc_to_full_fc
+from phonopy.harmonic.force_constants import (
+    compact_fc_to_full_fc,
+    full_fc_to_compact_fc,
+)
 from phonopy.interface.calculator import (
     get_default_displacement_distance,
     get_default_physical_units,
@@ -465,7 +468,9 @@ def create_FORCE_SETS_from_settings(settings, cell_filename, symprec, log_level)
     )
 
 
-def produce_force_constants(phonon, settings, phpy_yaml, unitcell_filename, log_level):
+def produce_force_constants(
+    phonon: Phonopy, settings, phpy_yaml, unitcell_filename, log_level
+):
     """Run force constants calculation."""
     num_satom = len(phonon.supercell)
     p2s_map = phonon.primitive.p2s_map
@@ -517,6 +522,8 @@ def produce_force_constants(phonon, settings, phpy_yaml, unitcell_filename, log_
         # Compact fc is expanded to full fc when full fc is required.
         if is_full_fc and fc.shape[0] != fc.shape[1]:
             fc = compact_fc_to_full_fc(phonon, fc, log_level=log_level)
+        elif not is_full_fc and fc.shape[0] == fc.shape[1]:
+            fc = full_fc_to_compact_fc(phonon, fc, log_level=log_level)
 
         phonon.force_constants = fc
     else:
@@ -598,7 +605,12 @@ def produce_force_constants(phonon, settings, phpy_yaml, unitcell_filename, log_
 
 
 def store_force_constants(
-    phonon, settings, phpy_yaml, unitcell_filename, load_phonopy_yaml, log_level
+    phonon: Phonopy,
+    settings,
+    phpy_yaml: PhonopyYaml,
+    unitcell_filename,
+    load_phonopy_yaml,
+    log_level,
 ):
     """Calculate or read force constants."""
     physical_units = get_default_physical_units(phonon.calculator)
@@ -626,6 +638,8 @@ def store_force_constants(
             # Compact fc is expanded to full fc when full fc is required.
             if is_full_fc and fc.shape[0] != fc.shape[1]:
                 fc = compact_fc_to_full_fc(phonon, fc, log_level=log_level)
+            elif not is_full_fc and fc.shape[0] == fc.shape[1]:
+                fc = full_fc_to_compact_fc(phonon, fc, log_level=log_level)
 
             phonon.set_force_constants(fc, show_drift=(log_level > 0))
 
