@@ -261,7 +261,7 @@ def _update_options(fc_calculator_options):
                     option_value = np.array(
                         [float(x) for x in val.split()], dtype="double"
                     )
-                elif alm_option_types[key.lower()] is np.intc:
+                elif alm_option_types[key.lower()] is np.int_:
                     option_value = np.array([int(x) for x in val.split()], dtype="int_")
                 else:
                     option_value = alm_option_types[key.lower()](val)
