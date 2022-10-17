@@ -271,6 +271,13 @@ def get_parser(
         ),
     )
     parser.add_argument(
+        "--fc-calc",
+        "--fc-calculator",
+        dest="fc_calculator",
+        default=None,
+        help=("Force constants calculator"),
+    )
+    parser.add_argument(
         "--fc-calc-opt",
         "--fc-calculator-options",
         dest="fc_calculator_options",
@@ -279,13 +286,6 @@ def get_parser(
             "Options for force constants calculator as comma separated "
             "string with the style of key = values"
         ),
-    )
-    parser.add_argument(
-        "--fc-calc",
-        "--fc-calculator",
-        dest="fc_calculator",
-        default=None,
-        help=("Force constants calculator"),
     )
     parser.add_argument(
         "--fc-decimals",
