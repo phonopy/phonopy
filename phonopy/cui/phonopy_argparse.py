@@ -281,6 +281,13 @@ def get_parser(
         ),
     )
     parser.add_argument(
+        "--fc-calc",
+        "--fc-calculator",
+        dest="fc_calculator",
+        default=None,
+        help=("Force constants calculator"),
+    )
+    parser.add_argument(
         "--fc-decimals",
         dest="force_constants_decimals",
         type=int,
