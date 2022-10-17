@@ -1415,6 +1415,14 @@ def start_phonopy(**argparse_control):
     if log_level:
         print_phonopy()
         print_version(__version__)
+
+        import phonopy._phonopy as phonoc
+
+        if phonoc.omp_max_threads() > 0:
+            print(
+                f"Compiled with OpenMP support (max {phonoc.omp_max_threads()} threads)"
+            )
+
         if argparse_control.get("load_phonopy_yaml", False):
             print("Running in phonopy.load mode.")
         print("Python version %d.%d.%d" % sys.version_info[:3])

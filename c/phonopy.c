@@ -44,6 +44,10 @@
 #include "rgrid.h"
 #include "tetrahedron_method.h"
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #define KB 8.6173382568083159E-05
 
 static void set_index_permutation_symmetry_fc(double *fc, const int natom);
@@ -695,6 +699,14 @@ void phpy_set_index_permutation_symmetry_compact_fc(
 long phpy_use_openmp(void) {
 #ifdef _OPENMP
     return 1;
+#else
+    return 0;
+#endif
+}
+
+long phpy_get_max_threads(void) {
+#ifdef _OPENMP
+    return omp_get_max_threads();
 #else
     return 0;
 #endif

@@ -161,4 +161,5 @@ void phpy_set_index_permutation_symmetry_compact_fc(
     const int perms[], const int n_satom, const int n_patom,
     const int is_transpose);
 long phpy_use_openmp(void);
+long phpy_get_max_threads(void);
 #endif
