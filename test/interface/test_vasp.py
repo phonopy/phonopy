@@ -64,7 +64,8 @@ def test_VasprunxmlExpat():
 
 def test_read_XDATCAR():
     """Test read_XDATCAR."""
-    lattice, positions = read_XDATCAR("XDATCAR-NaCl")
+    filename_xdatcar = os.path.join(data_dir, "XDATCAR-NaCl")
+    lattice, positions = read_XDATCAR(filename_xdatcar)
 
     np.testing.assert_allclose(lattice, np.eye(3) * 22.562240, atol=1e-8)
     np.testing.assert_allclose(
