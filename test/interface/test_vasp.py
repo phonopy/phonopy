@@ -10,7 +10,9 @@ from phonopy.interface.phonopy_yaml import read_cell_yaml
 from phonopy.interface.vasp import (
     Vasprun,
     VasprunxmlExpat,
+    get_vasp_structure_lines,
     read_vasp,
+    read_vasp_from_strings,
     read_XDATCAR,
     write_XDATCAR,
 )
@@ -29,6 +31,15 @@ def test_read_vasp():
     assert (np.abs(diff_pos) < 1e-5).all()
     for s, s_r in zip(cell.symbols, cell_ref.symbols):
         assert s == s_r
+
+
+def test_get_vasp_structure_lines(helper_methods):
+    """Test get_vasp_structure_lines (almost write_vasp)."""
+    filename = os.path.join(data_dir, "NaCl-vasp.yaml")
+    cell_ref = read_cell_yaml(filename)
+    lines = get_vasp_structure_lines(cell_ref, direct=True)
+    cell = read_vasp_from_strings("\n".join(lines))
+    helper_methods.compare_cells_with_order(cell, cell_ref)
 
 
 def test_parse_vasprun_xml():
