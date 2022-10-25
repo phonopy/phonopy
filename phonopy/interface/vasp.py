@@ -1501,8 +1501,14 @@ def parse_vasprunxml(filename):
 #
 # XDATCAR
 #
-def read_XDATCAR(filename="XDATCAR"):
+def read_XDATCAR(filename: str = "XDATCAR", fileptr=None):
     """Read XDATCAR.
+
+    filename : str, optional
+        Input filename in `XDATCAR` format. Default is `XDATCAR`. This is used
+        unless fileptr is specified.
+    fileptr : readable file pointer, optional
+        File pointer used to read `XDATCAR`.
 
     Returns
     -------
@@ -1517,23 +1523,22 @@ def read_XDATCAR(filename="XDATCAR"):
 
     """
     lattice = None
-    symbols = None
     numbers_of_atoms = None
-    myio = get_io_module_to_decompress(filename)
-    with myio.open(filename) as f:
-        f.readline()
-        scale = float(f.readline())
-        a = [float(x) for x in f.readline().split()[:3]]
-        b = [float(x) for x in f.readline().split()[:3]]
-        c = [float(x) for x in f.readline().split()[:3]]
-        lattice = np.transpose([a, b, c]) * scale
-        symbols = f.readline().split()
-        numbers_of_atoms = np.array(
-            [int(x) for x in f.readline().split()[: len(symbols)]], dtype="intc"
-        )
+
+    if fileptr is None:
+        myio = get_io_module_to_decompress(filename)
+        with myio.open(filename) as f:
+            lattice, numbers_of_atoms = _read_XDATCAR_fileptr(f)
+    else:
+        lattice, numbers_of_atoms = _read_XDATCAR_fileptr(fileptr)
 
     if lattice is not None:
-        data = np.loadtxt(filename, skiprows=7, comments="D", dtype="double")
+        if fileptr is None:
+            _file = filename
+        else:
+            _file = fileptr
+            _file.seek(0)
+        data = np.loadtxt(_file, skiprows=7, comments="D", dtype="double")
         pos = data.reshape((-1, numbers_of_atoms.sum(), 3), order="C")
         lat = np.array(lattice, dtype="double", order="C")
         return lat, pos
@@ -1541,10 +1546,25 @@ def read_XDATCAR(filename="XDATCAR"):
         return None
 
 
+def _read_XDATCAR_fileptr(f):
+    f.readline()
+    scale = float(f.readline())
+    a = [float(x) for x in f.readline().split()[:3]]
+    b = [float(x) for x in f.readline().split()[:3]]
+    c = [float(x) for x in f.readline().split()[:3]]
+    lattice = np.transpose([a, b, c]) * scale
+    symbols = f.readline().split()
+    numbers_of_atoms = np.array(
+        [int(x) for x in f.readline().split()[: len(symbols)]], dtype="intc"
+    )
+    return lattice, numbers_of_atoms
+
+
 def write_XDATCAR(
     vasprunxml_filename: str = "vasprun.xml",
     vasprunxml_expat: Optional[VasprunxmlExpat] = None,
     filename: str = "XDATCAR",
+    fileptr=None,
     shift=None,
 ):
     """Write XDATCAR from vasprun.xml or VasprunxmlExpat instance.
@@ -1556,7 +1576,10 @@ def write_XDATCAR(
         Instalce of `VasprunxmlExpat`. It is assumed that this instance is
         already parsed. Default is None.
     filename : str, optional
-        Output filename in `XDATCAR` format. Default is `XDATCAR`.
+        Output filename in `XDATCAR` format. Default is `XDATCAR`. This is used
+        unless fileptr is specified.
+    fileptr : writable file pointer, optional
+        File pointer used to write `XDATCAR`.
     shift : array_like, optional
         All atoms are uniformly translated in reduced coordinates. Default is
         None. shape=(3,), dtype='double'.
@@ -1576,8 +1599,11 @@ def write_XDATCAR(
         lines.append(f"Direct configuration=    {i}")
         lines += _get_scaled_positions_lines(scaled_positions)
 
-    with open(filename, "w") as w:
-        w.write("\n".join(lines))
+    if fileptr is None:
+        with open(filename, "w") as w:
+            w.write("\n".join(lines))
+    else:
+        fileptr.write(("\n".join(lines)).encode("utf-8"))
 
 
 #
