@@ -11,7 +11,7 @@ from phonopy import Phonopy
 from phonopy.structure.atoms import PhonopyAtoms
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-cwd = Path.cwd()
+cwd = Path(__file__).parent
 
 
 @pytest.fixture(scope="session")
