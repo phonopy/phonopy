@@ -341,6 +341,26 @@ class RandomDisplacements:
                 matrix[i, j] /= m_i * m_j
         self._uu = np.array(matrix, dtype="double", order="C")
 
+    def treat_imaginary_modes(self, freq_from=0.01, freq_to=0.5, freq_shift=1.0):
+        """Apply treatment to imaginary modes.
+
+        This method modifies force constants to make phonon frequencies
+        be real from imaginary. This treatment is expected to be finally
+        forgotten after many iterations. Therefore it is unnecessary
+        to be physical and can be physically dirty. If it works, it is OK,
+        though good treatment may contribute to quick convergence.
+
+        1) All frequencies at commensurate points are converted to their
+        absolute values. freqs -> |freqs|.
+        2) Phonon frequencies in the interval freq_from < |freqs| < freq_to
+        are shifted by |freqs| + 1.
+
+        """
+        freqs = np.abs(self.frequencies)
+        condition = np.logical_and(freqs > freq_from, freqs < freq_to)
+        self.frequencies = np.where(condition, freqs + freq_shift, freqs)
+        self.run_d2f()
+
     def _collect_eigensolutions(self):
         N = len(self._comm_points)
 

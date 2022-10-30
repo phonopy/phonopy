@@ -854,5 +854,135 @@ def test_tio2_random_disp_plusminus(ph_tio2: Phonopy, is_plusminus: bool):
     ph_tio2.dataset = dataset
 
 
+def test_treat_imaginary_modes(ph_srtio3: Phonopy):
+    """Test imaginary mode treatment of force constants.
+
+    RandomDisplacements.treat_imaginary_modes method modified imaginary
+    phonon frequenceis to have read-positive frequences.
+
+    """
+    ph = ph_srtio3
+    rd = RandomDisplacements(ph.supercell, ph.primitive, ph.force_constants)
+    # for freqs in (rd.frequencies[0], rd.frequencies[-1]):
+    #     print(", ".join([f"{v:10.7f}" for v in freqs]))
+    ref0 = [
+        -2.3769150,
+        -2.3769150,
+        -2.3769150,
+        -0.0000003,
+        -0.0000003,
+        -0.0000001,
+        4.6902115,
+        4.6902115,
+        4.6902115,
+        6.7590219,
+        6.7590219,
+        6.7590219,
+        16.0075351,
+        16.0075351,
+        16.0075351,
+    ]
+    ref13 = [
+        3.2707508,
+        3.3132392,
+        3.4395550,
+        3.4395550,
+        3.6676862,
+        3.6676862,
+        10.7490284,
+        10.7970960,
+        10.7970960,
+        12.0900533,
+        12.0900533,
+        13.8508135,
+        15.0638793,
+        15.0638793,
+        24.6446671,
+    ]
+    np.testing.assert_allclose(ref0, rd.frequencies[0], atol=1e-5)
+    np.testing.assert_allclose(ref13, rd.frequencies[-1], atol=1e-5)
+
+    rd.treat_imaginary_modes()
+    # for freqs in (rd.frequencies[0], rd.frequencies[-1]):
+    #     print(", ".join([f"{v:10.7f}" for v in freqs]))
+    ref0 = [
+        2.3769150,
+        2.3769150,
+        2.3769150,
+        0.0000003,
+        0.0000003,
+        0.0000001,
+        4.6902115,
+        4.6902115,
+        4.6902115,
+        6.7590219,
+        6.7590219,
+        6.7590219,
+        16.0075351,
+        16.0075351,
+        16.0075351,
+    ]
+    ref13 = [
+        3.2707508,
+        3.3132392,
+        3.4395550,
+        3.4395550,
+        3.6676862,
+        3.6676862,
+        10.7490284,
+        10.7970960,
+        10.7970960,
+        12.0900533,
+        12.0900533,
+        13.8508135,
+        15.0638793,
+        15.0638793,
+        24.6446671,
+    ]
+    np.testing.assert_allclose(ref0, rd.frequencies[0], atol=1e-5)
+    np.testing.assert_allclose(ref13, rd.frequencies[-1], atol=1e-5)
+
+    # Test frequency shifts
+    rd.treat_imaginary_modes(freq_to=3)
+    # for freqs in (rd.frequencies[0], rd.frequencies[-1]):
+    #     print(", ".join([f"{v:10.7f}" for v in freqs]))
+    ref0 = [
+        3.3769150,
+        3.3769150,
+        3.3769150,
+        0.0000003,
+        0.0000003,
+        0.0000001,
+        4.6902115,
+        4.6902115,
+        4.6902115,
+        6.7590219,
+        6.7590219,
+        6.7590219,
+        16.0075351,
+        16.0075351,
+        16.0075351,
+    ]
+    ref13 = [
+        3.2707508,
+        3.3132392,
+        3.4395550,
+        3.4395550,
+        3.6676862,
+        3.6676862,
+        10.7490284,
+        10.7970960,
+        10.7970960,
+        12.0900533,
+        12.0900533,
+        13.8508135,
+        15.0638793,
+        15.0638793,
+        24.6446671,
+    ]
+    np.testing.assert_allclose(ref0, rd.frequencies[0], atol=1e-5)
+    np.testing.assert_allclose(ref13, rd.frequencies[-1], atol=1e-5)
+
+
 def _mass_sand(matrix, mass):
     return ((matrix * mass).T * mass).T
