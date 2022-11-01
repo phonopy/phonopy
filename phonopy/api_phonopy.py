@@ -963,27 +963,13 @@ class Phonopy:
                 displacement_dataset["displacements"] = d
             else:
                 self.init_random_displacements(cutoff_frequency=cutoff_frequency)
-                self.run_random_displacements(
+                d = self.run_random_displacements(
                     temperature,
-                    number_of_snapshots=number_of_snapshots,
+                    number_of_snapshots,
+                    is_plusminus=(is_plusminus is True),
                     random_seed=_random_seed,
                 )
-                if number_of_snapshots is None:
-                    displacement_dataset = None
-                else:
-                    units = get_default_physical_units(self._calculator)
-                    d = np.array(
-                        self._random_displacements.u / units["distance_to_A"],
-                        dtype="double",
-                        order="C",
-                    )
-                    if is_plusminus is True:
-                        d = np.array(
-                            np.concatenate((d, -d), axis=0),
-                            dtype="double",
-                            order="C",
-                        )
-                    displacement_dataset["displacements"] = d
+                displacement_dataset["displacements"] = d
         else:
             displacement_directions = get_least_displacements(
                 self._symmetry,
@@ -3305,6 +3291,7 @@ class Phonopy:
         self,
         temperature: float,
         number_of_snapshots: int,
+        is_plusminus: bool = False,
         random_seed: Optional[int] = None,
     ):
         """Generate random displacements from phonon structure.
@@ -3329,6 +3316,19 @@ class Phonopy:
             number_of_snapshots=number_of_snapshots,
             random_seed=random_seed,
         )
+        units = get_default_physical_units(self._calculator)
+        d = np.array(
+            self._random_displacements.u / units["distance_to_A"],
+            dtype="double",
+            order="C",
+        )
+        if is_plusminus is True:
+            d = np.array(
+                np.concatenate((d, -d), axis=0),
+                dtype="double",
+                order="C",
+            )
+        return d
 
     def save(self, filename="phonopy_params.yaml", settings=None, hdf5_settings=None):
         """Save phonopy parameters into file.
