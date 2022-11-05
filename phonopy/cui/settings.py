@@ -791,8 +791,13 @@ class ConfParser:
                     self.set_parameter("mesh_numbers", float(vals[0]))
                 elif len(vals) < 3:
                     self.setting_error("Mesh numbers are incorrectly set.")
-                elif len(vals) == 3 or len(vals) == 9:
+                elif len(vals) == 3:
                     self.set_parameter("mesh_numbers", [int(x) for x in vals])
+                elif len(vals) == 9:
+                    mesh_array = []
+                    for row in np.reshape([int(x) for x in vals], (3, 3)):
+                        mesh_array.append(row.tolist())
+                    self.set_parameter("mesh_numbers", mesh_array)
                 else:
                     self.setting_error(f"{conf_key.upper()} is incorrectly set.")
 
