@@ -791,8 +791,10 @@ class ConfParser:
                     self.set_parameter("mesh_numbers", float(vals[0]))
                 elif len(vals) < 3:
                     self.setting_error("Mesh numbers are incorrectly set.")
+                elif len(vals) == 3 or len(vals) == 9:
+                    self.set_parameter("mesh_numbers", [int(x) for x in vals])
                 else:
-                    self.set_parameter("mesh_numbers", [int(x) for x in vals[:3]])
+                    self.setting_error(f"{conf_key.upper()} is incorrectly set.")
 
             if conf_key == "band_points":
                 self.set_parameter("band_points", int(confs["band_points"]))
