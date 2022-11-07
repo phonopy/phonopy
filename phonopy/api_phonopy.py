@@ -3405,7 +3405,7 @@ class Phonopy:
                 if "displacements" in self._displacement_dataset:
                     lines = [
                         "Type-II dataset for displacements and forces was "
-                        "given. fc_calculator",
+                        "given. Setting fc_calculator",
                         "(external force constants calculator) is required "
                         "to produce force constants.",
                     ]

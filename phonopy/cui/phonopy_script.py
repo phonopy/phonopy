@@ -35,6 +35,7 @@
 
 import os
 import sys
+from typing import Union
 
 import numpy as np
 
@@ -473,59 +474,12 @@ def produce_force_constants(
 ):
     """Run force constants calculation."""
     num_satom = len(phonon.supercell)
-    p2s_map = phonon.primitive.p2s_map
     is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
 
     if settings.read_force_constants:
-        if settings.is_hdf5 or settings.readfc_format == "hdf5":
-            try:
-                import h5py  # noqa F401
-            except ImportError:
-                print_error_message("You need to install python-h5py.")
-                if log_level:
-                    print_error()
-                sys.exit(1)
-
-            file_exists("force_constants.hdf5", log_level)
-            fc = read_force_constants_from_hdf5(
-                filename="force_constants.hdf5",
-                p2s_map=p2s_map,
-                calculator=phonon.calculator,
-            )
-            fc_filename = "force_constants.hdf5"
-        else:
-            file_exists("FORCE_CONSTANTS", log_level)
-            fc = parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS", p2s_map=p2s_map)
-            fc_filename = "FORCE_CONSTANTS"
-
-        if log_level:
-            print('Force constants are read from "%s".' % fc_filename)
-
-        if fc.shape[1] != num_satom:
-            error_text = (
-                "Number of atoms in supercell is not consistent "
-                "with the matrix shape of\nforce constants read "
-                "from "
-            )
-            if settings.is_hdf5 or settings.readfc_format == "hdf5":
-                error_text += "force_constants.hdf5.\n"
-            else:
-                error_text += "FORCE_CONSTANTS.\n"
-            error_text += (
-                "Please carefully check DIM, FORCE_CONSTANTS, " "and %s."
-            ) % unitcell_filename
-            print_error_message(error_text)
-            if log_level:
-                print_error()
-            sys.exit(1)
-
-        # Compact fc is expanded to full fc when full fc is required.
-        if is_full_fc and fc.shape[0] != fc.shape[1]:
-            fc = compact_fc_to_full_fc(phonon, fc, log_level=log_level)
-        elif not is_full_fc and fc.shape[0] == fc.shape[1]:
-            fc = full_fc_to_compact_fc(phonon, fc, log_level=log_level)
-
-        phonon.force_constants = fc
+        _read_force_constants_from_file(
+            settings, phonon, unitcell_filename, is_full_fc, log_level
+        )
     else:
 
         def read_force_sets_from_phonopy_yaml(phpy_yaml):
@@ -589,19 +543,86 @@ def produce_force_constants(
             else:
                 print("Computing force constants...")
 
-        if is_full_fc:
-            # Need to calculate full force constant tensors
-            phonon.produce_force_constants(
-                fc_calculator=fc_calculator, fc_calculator_options=fc_calculator_options
+        try:
+            if is_full_fc:
+                # Need to calculate full force constant tensors
+                phonon.produce_force_constants(
+                    fc_calculator=fc_calculator,
+                    fc_calculator_options=fc_calculator_options,
+                )
+            else:
+                # Only force constants between atoms in primitive cell and
+                # supercell
+                phonon.produce_force_constants(
+                    calculate_full_force_constants=False,
+                    fc_calculator=fc_calculator,
+                    fc_calculator_options=fc_calculator_options,
+                )
+        except RuntimeError as e:
+            print_error_message(str(e))
+            if log_level:
+                print_error()
+            sys.exit(1)
+
+
+def _read_force_constants_from_file(
+    settings,
+    phonon: Phonopy,
+    unitcell_filename: str,
+    is_full_fc: bool,
+    log_level: Union[bool, int],
+):
+    num_satom = len(phonon.supercell)
+    p2s_map = phonon.primitive.p2s_map
+    if settings.is_hdf5 or settings.readfc_format == "hdf5":
+        try:
+            import h5py  # noqa F401
+        except ImportError:
+            print_error_message("You need to install python-h5py.")
+            if log_level:
+                print_error()
+            sys.exit(1)
+
+        file_exists("force_constants.hdf5", log_level)
+        fc = read_force_constants_from_hdf5(
+            filename="force_constants.hdf5",
+            p2s_map=p2s_map,
+            calculator=phonon.calculator,
+        )
+        fc_filename = "force_constants.hdf5"
+    else:
+        file_exists("FORCE_CONSTANTS", log_level)
+        fc = parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS", p2s_map=p2s_map)
+        fc_filename = "FORCE_CONSTANTS"
+
+        if log_level:
+            print('Force constants are read from "%s".' % fc_filename)
+
+        if fc.shape[1] != num_satom:
+            error_text = (
+                "Number of atoms in supercell is not consistent "
+                "with the matrix shape of\nforce constants read "
+                "from "
             )
-        else:
-            # Only force constants between atoms in primitive cell and
-            # supercell
-            phonon.produce_force_constants(
-                calculate_full_force_constants=False,
-                fc_calculator=fc_calculator,
-                fc_calculator_options=fc_calculator_options,
-            )
+            if settings.is_hdf5 or settings.readfc_format == "hdf5":
+                error_text += "force_constants.hdf5.\n"
+            else:
+                error_text += "FORCE_CONSTANTS.\n"
+            error_text += (
+                "Please carefully check DIM, FORCE_CONSTANTS, " "and %s."
+            ) % unitcell_filename
+            print_error_message(error_text)
+            if log_level:
+                print_error()
+            sys.exit(1)
+
+        # Compact fc is expanded to full fc when full fc is required.
+        if is_full_fc and fc.shape[0] != fc.shape[1]:
+            fc = compact_fc_to_full_fc(phonon, fc, log_level=log_level)
+        elif not is_full_fc and fc.shape[0] == fc.shape[1]:
+            fc = full_fc_to_compact_fc(phonon, fc, log_level=log_level)
+
+    phonon.force_constants = fc
 
 
 def store_force_constants(
@@ -643,34 +664,42 @@ def store_force_constants(
 
             phonon.set_force_constants(fc, show_drift=(log_level > 0))
 
-        if forces_in_dataset(phpy_yaml.dataset):
-            if log_level:
-                text = 'Force sets were read from "%s"' % unitcell_filename
-                if phpy_yaml.force_constants is not None:
-                    text += " but not to be used."
-                else:
-                    text += "."
-                print(text)
-
-        if phpy_yaml.force_constants is None:
-            (fc_calculator, fc_calculator_options) = get_fc_calculator_params(settings)
-            try:
-                set_dataset_and_force_constants(
-                    phonon,
-                    phpy_yaml.dataset,
-                    None,
-                    fc_calculator=fc_calculator,
-                    fc_calculator_options=fc_calculator_options,
-                    produce_fc=True,
-                    symmetrize_fc=False,
-                    is_compact_fc=(not is_full_fc),
-                    log_level=log_level,
-                )
-            except RuntimeError as e:
-                print_error_message(str(e))
+        if settings.read_force_constants:
+            _read_force_constants_from_file(
+                settings, phonon, unitcell_filename, is_full_fc, log_level
+            )
+        else:
+            if forces_in_dataset(phpy_yaml.dataset):
                 if log_level:
-                    print_error()
-                sys.exit(1)
+                    text = 'Force sets were read from "%s"' % unitcell_filename
+                    if phpy_yaml.force_constants is not None:
+                        text += " but not to be used."
+                    else:
+                        text += "."
+                    print(text)
+
+            if phpy_yaml.force_constants is None:
+                (fc_calculator, fc_calculator_options) = get_fc_calculator_params(
+                    settings
+                )
+
+                try:
+                    set_dataset_and_force_constants(
+                        phonon,
+                        phpy_yaml.dataset,
+                        None,
+                        fc_calculator=fc_calculator,
+                        fc_calculator_options=fc_calculator_options,
+                        produce_fc=True,
+                        symmetrize_fc=False,
+                        is_compact_fc=(not is_full_fc),
+                        log_level=log_level,
+                    )
+                except RuntimeError as e:
+                    print_error_message(str(e))
+                    if log_level:
+                        print_error()
+                    sys.exit(1)
     else:
         produce_force_constants(
             phonon, settings, phpy_yaml, unitcell_filename, log_level
