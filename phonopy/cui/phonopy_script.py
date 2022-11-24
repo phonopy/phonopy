@@ -313,7 +313,7 @@ def print_settings(
             print("  With group velocity calculation (dq=%3.1e)" % gv_delta_q)
         else:
             print("")
-    if settings.create_displacements:
+    if settings.create_displacements or settings.random_displacements:
         print("Displacements creation mode")
         if not settings.is_plusminus_displacement == "auto":
             if settings.is_plusminus_displacement:
@@ -322,13 +322,23 @@ def print_settings(
                 print("  Plus Minus displacement: only one direction")
         if not settings.is_diagonal_displacement:
             print("  Diagonal displacement: off")
-        if settings.random_displacements:
+
+        if settings.random_displacements is not None:
             print(
                 "  Number of supercells with random displacements: %d"
                 % settings.random_displacements
             )
+            if settings.random_displacement_temperature is not None:
+                print(
+                    "  Temperatuere to generate random displacements: "
+                    f"{settings.random_displacement_temperature}"
+                )
+            elif settings.displacement_distance is not None:
+                print(f"  Displacement distance: {settings.displacement_distance}")
             if settings.random_seed is not None:
                 print("  Random seed: %d" % settings.random_seed)
+        elif settings.displacement_distance is not None:
+            print(f"Displacement distance: {settings.displacement_distance}")
 
     print("Settings:")
     if load_phonopy_yaml:
@@ -1826,7 +1836,7 @@ def main(**argparse_control):
     #########################################################
     if (
         settings.create_displacements or settings.random_displacements
-    ) and settings.temperatures is None:
+    ) and settings.random_displacement_temperature is None:
         if settings.displacement_distance is None:
             displacement_distance = get_default_displacement_distance(phonon.calculator)
         else:
@@ -1871,11 +1881,14 @@ def main(**argparse_control):
     ###################################################################
     # Create random displacements at finite temperature and then exit #
     ###################################################################
-    if settings.random_displacements and settings.temperatures is not None:
+    if (
+        settings.random_displacements
+        and settings.random_displacement_temperature is not None
+    ):
         phonon.generate_displacements(
             number_of_snapshots=settings.random_displacements,
             random_seed=settings.random_seed,
-            temperature=settings.temperatures[0],
+            temperature=settings.random_displacement_temperature,
         )
         write_displacements_files_then_exit(
             phonon, settings, confs, cell_info["optional_structure_info"], log_level

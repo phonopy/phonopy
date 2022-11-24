@@ -232,9 +232,17 @@ def set_dataset_and_force_constants(
     if phonon.force_constants is None:
         # Overwrite dataset
         if _dataset is not None:
+            is_overwritten = (
+                "first_atoms" in phonon.dataset or "displacements" in phonon.dataset
+            )
             phonon.dataset = _dataset
             if log_level:
                 print('Force sets were read from "%s".' % _force_sets_filename)
+                if is_overwritten:
+                    print(
+                        f'Displacements were overwritten by "{_force_sets_filename}".'
+                    )
+
         if produce_fc:
             _produce_force_constants(
                 phonon,
