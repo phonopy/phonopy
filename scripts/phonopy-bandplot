@@ -702,6 +702,10 @@ def _plot(args):
         else:
             band_plot.plot(d, _f, p, fmt=fmt)
 
+    # Bring legend in front.
+    if args.show_legend:
+        axs[0].set_zorder(1)
+
     if args.output_filename is not None:
         _savefig(plt, args.output_filename)
     else:
