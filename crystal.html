@@ -4,8 +4,9 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CRYSTAL &amp; phonopy calculation &#8212; Phonopy v.2.16.3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>CRYSTAL &amp; phonopy calculation &#8212; Phonopy v.2.17.0</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -20,7 +21,7 @@
     href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
+    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -29,7 +30,7 @@
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="DFTB+ &amp; phonopy calculation" href="dftb%2B.html" />
@@ -72,7 +73,7 @@
       
       
       
-      <h1 class="site-logo" id="site-title">Phonopy v.2.16.3</h1>
+      <h1 class="site-logo" id="site-title">Phonopy v.2.17.0</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
@@ -465,13 +466,13 @@ title="Print to PDF"
                 
               <div>
                 
-  <div class="section" id="crystal-phonopy-calculation">
+  <section id="crystal-phonopy-calculation">
 <span id="crystal-interface"></span><h1>CRYSTAL &amp; phonopy calculation<a class="headerlink" href="#crystal-phonopy-calculation" title="Permalink to this headline">#</a></h1>
 <p>CRYSTAL program package has a robust built-in phonon calculation
 workflow. However, the Phonopy interface enables convenient access
 to many phonon-related properties, such as subsequent Phono3py
 calculations of lattice thermal conductivity.</p>
-<div class="section" id="supported-features">
+<section id="supported-features">
 <h2>Supported features<a class="headerlink" href="#supported-features" title="Permalink to this headline">#</a></h2>
 <p>The CRYSTAL interface reads the unit cell from a CRYSTAL output file
 (lattice vectors, conventional atomic numbers, fractional atomic positions).
@@ -485,8 +486,8 @@ required quantities and also confirms that the structure optimization has
 converged to a true local minimum.</p>
 <p>If ATOMSPIN keyword is present, magnetic moments are read from it. There
 is very little experience on using this feature, so be careful.</p>
-</div>
-<div class="section" id="how-to-run">
+</section>
+<section id="how-to-run">
 <h2>How to run<a class="headerlink" href="#how-to-run" title="Permalink to this headline">#</a></h2>
 <p>The workflow for a CRYSTAL-Phonopy calculation is outlined here using the
 Si example found in <code class="docutils literal notranslate"><span class="pre">example/Si-CRYSTAL</span></code>.</p>
@@ -587,7 +588,7 @@ automatically read in. Create phonon dispersion plot with:</p>
 for examples, see <a class="reference internal" href="examples.html#examples-link"><span class="std std-ref">Examples</span></a>.</p>
 </li>
 </ol>
-<div class="section" id="non-analytical-term-correction-optional">
+<section id="non-analytical-term-correction-optional">
 <h3>Non-analytical term correction (Optional)<a class="headerlink" href="#non-analytical-term-correction-optional" title="Permalink to this headline">#</a></h3>
 <p>The workflow for a CRYSTAL-Phonopy calculation with <a class="reference internal" href="setting-tags.html#nac-tag"><span class="std std-ref">Non-analytical term correction</span></a> is outlined here
 using the NaCl example found in <code class="docutils literal notranslate"><span class="pre">example/NaCl-CRYSTAL</span></code>.</p>
@@ -651,9 +652,9 @@ using non-analytical correction <code class="docutils literal notranslate"><span
 <p><a class="reference internal" href="_images/NaCl-crystal-band-NAC.png"><img alt="crystal-band-nac" src="_images/NaCl-crystal-band-NAC.png" style="width: 33%;" /></a></p>
 </li>
 </ol>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
               </div>

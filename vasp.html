@@ -4,8 +4,9 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>VASP &amp; phonopy calculation &#8212; Phonopy v.2.16.3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>VASP &amp; phonopy calculation &#8212; Phonopy v.2.17.0</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -20,7 +21,7 @@
     href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
+    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -29,7 +30,7 @@
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -74,7 +75,7 @@
       
       
       
-      <h1 class="site-logo" id="site-title">Phonopy v.2.16.3</h1>
+      <h1 class="site-logo" id="site-title">Phonopy v.2.17.0</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
@@ -473,9 +474,9 @@ title="Print to PDF"
                 
               <div>
                 
-  <div class="section" id="vasp-phonopy-calculation">
+  <section id="vasp-phonopy-calculation">
 <span id="vasp-interface"></span><h1>VASP &amp; phonopy calculation<a class="headerlink" href="#vasp-phonopy-calculation" title="Permalink to this headline">#</a></h1>
-<div class="section" id="pre-process">
+<section id="pre-process">
 <h2>Pre-process<a class="headerlink" href="#pre-process" title="Permalink to this headline">#</a></h2>
 <p>The input structure of <code class="docutils literal notranslate"><span class="pre">POSCAR</span></code> (<a class="reference internal" href="input-files.html#example-poscar1"><span class="std std-ref">this</span></a>) is
 used as an example here. Most files are found at <a class="reference external" href="https://github.com/phonopy/phonopy/tree/master/example/SiO2-HP/">SiO2-HP example</a>.</p>
@@ -498,8 +499,8 @@ contains the information on displacements, and <code class="docutils literal not
 the supercells with atomic displacements. <code class="docutils literal notranslate"><span class="pre">POSCAR-{number}</span></code>
 corresponds to the different atomic displacements written in
 <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>.</p>
-</div>
-<div class="section" id="calculation-of-sets-of-forces">
+</section>
+<section id="calculation-of-sets-of-forces">
 <h2>Calculation of sets of forces<a class="headerlink" href="#calculation-of-sets-of-forces" title="Permalink to this headline">#</a></h2>
 <p>Force constants are calculated using the structure files
 <code class="docutils literal notranslate"><span class="pre">POSCAR-{number}</span></code> (from forces on atoms) or using the <code class="docutils literal notranslate"><span class="pre">SPOSCAR</span></code>
@@ -529,8 +530,8 @@ file using <a class="reference internal" href="command-options.html#vasp-force-s
 </div>
 <p>If you want to calculate force constants by VASP-DFPT directory, see
 <a class="reference internal" href="vasp-dfpt.html#vasp-dfpt-interface"><span class="std std-ref">VASP-DFPT &amp; phonopy calculation</span></a>.</p>
-</div>
-<div class="section" id="post-process">
+</section>
+<section id="post-process">
 <h2>Post-process<a class="headerlink" href="#post-process" title="Permalink to this headline">#</a></h2>
 <p>In the post-process,</p>
 <ol class="arabic simple">
@@ -585,8 +586,8 @@ e.g., <cite>band.conf</cite> by:</p>
 <p>In either case, by setting the <code class="docutils literal notranslate"><span class="pre">-s</span></code> option, the plot is going to be
 saved in the PDF format. If you don’t need to plot DOS, the (partial)
 DOS is just calculated using the <code class="docutils literal notranslate"><span class="pre">--dos</span></code> option.</p>
-</div>
-<div class="section" id="non-analytical-term-correction-optional">
+</section>
+<section id="non-analytical-term-correction-optional">
 <h2>Non-analytical term correction (Optional)<a class="headerlink" href="#non-analytical-term-correction-optional" title="Permalink to this headline">#</a></h2>
 <p>To activate non-analytical term correction, <a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a> is
 required. This file contains the information of Born effective charge
@@ -641,8 +642,8 @@ original values obtained directly from VASP was already very good.</p>
 </div>
 <p>Please watch the example of NaCl with and without <code class="docutils literal notranslate"><span class="pre">--nac</span></code> option shown in
 <a class="reference internal" href="examples.html#examples-link"><span class="std std-ref">Examples</span></a>.</p>
-</div>
-</div>
+</section>
+</section>
 
 
               </div>

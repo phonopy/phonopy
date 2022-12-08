@@ -250,8 +250,10 @@ direction with a constant displacement distance specified by
 {ref}`displacement_distance_tag` tag. The random seed can be specified by
 {ref}`random_seed_tag` tag.
 
-To obtain force constants with random displacements and respective forces,
-external force constants calculator is necessary.
+To obtain force constants with random displacements and respective forces, an
+external force constants calculator is necessary. See {ref}`fc_calculator_tag`.
+See also {ref}`f_force_sets_option` for creating `FORCE_SETS` from a series of
+sueprcell calculation.
 
 ```
 CREATE_DISPLACEMENTS = .TRUE.
@@ -259,6 +261,78 @@ DIM = 2 2 2
 RANDOM_DISPLACEMENTS = 20
 DISPLACEMENT_DISTANCE = 0.03
 ```
+
+### `RANDOM_DISPLACEMENT_TEMPERATURE`
+
+**New in v2.17**
+This invokes generation of random displacements at a temperature specified by
+this tag. Collective displacements are randomly sampled from harmonic oscillator
+distribution functions of phonon modes.
+
+An example of configure file for 2x2x2 supercell of NaCl conventional unit cell
+is as follows.
+```
+CREATE_DISPLACEMENTS = .TRUE.
+DIM = 2 2 2
+PRIMITIVE_AXES = AUTO
+RANDOM_DISPLACEMENTS = 1000
+RANDOM_DISPLACEMENT_TEMPERATURE = 300
+FC_SYMMETRY = .TRUE.
+```
+
+The random displacements at a specified temperature are generated after phonon
+calculation, therefore a set of data for the phonon calculation is necessary. In
+the following example, `POSCAR-unitcell` and `FORCE_SETS` of NaCl example is
+copied to an empty directory. Running following command, `phonopy_disp.yaml` is
+generated.
+```bash
+mkdir rd && cd rd
+cp <somewhere>/example/NaCl/POSCAR-unitcell .
+cp <somewhere>/example/NaCl/FORCE_SETS .
+cat <<EOL > rd.conf
+CREATE_DISPLACEMENTS = .TRUE.
+DIM = 2 2 2
+PRIMITIVE_AXES = AUTO
+RANDOM_DISPLACEMENTS = 1000
+RANDOM_DISPLACEMENT_TEMPERATURE = 300
+FC_SYMMETRY = .TRUE.
+EOL
+phonopy -c POSCAR-unitcell -- rd.conf
+```
+
+See also {ref}`f_force_sets_option` for creating `FORCE_SETS` from a series of
+sueprcell calculation. Be careful that if `FORCE_SETS` exists in the current
+directory, it will be overwritten by creating new `FORCE_SETS`.
+
+ To obtain force constants with random displacements and
+respective forces, an external force constants calculator is necessary. See
+{ref}`fc_calculator_tag`.
+
+Displacements thus generated are sensitive to acoustic sum rule. Tiny phonon
+frequency at Gamma point due to violation of acoustic sum rule can induce very
+large displacements. Therefore, it is safer to use this feature with
+`FC_SYMMETRY = .TRUE.` or a force constants calculator (see
+{ref}`fc_calculator_tag`) that enforces acoustic sum rule. It is also possible
+to ignore phonons with frequencies below cutoff frequency specified
+by {ref}`cutoff_frequency_tags` tag. Phonon frequencies of
+imaginary modes are treated as their absolute values.
+
+Distribution of displacement distances may be visualized and checked by a python
+script like below.
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+from phonopy.interface.phonopy_yaml import PhonopyYaml
+phyml = PhonopyYaml()
+phyml.read("phonopy_disp.yaml")
+plt.hist(np.linalg.norm(phyml.dataset['displacements'].reshape(-1, 3), axis=1), 100)
+plt.show()
+```
+
+```{image} NaCl-disp-dist.png
+:scale: 50
+```
+
 
 (random_seed_tag)=
 

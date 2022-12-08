@@ -4,8 +4,9 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Work flow &#8212; Phonopy v.2.16.3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Work flow &#8212; Phonopy v.2.17.0</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -20,7 +21,7 @@
     href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
+    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -29,7 +30,7 @@
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Examples" href="examples.html" />
@@ -72,7 +73,7 @@
       
       
       
-      <h1 class="site-logo" id="site-title">Phonopy v.2.16.3</h1>
+      <h1 class="site-logo" id="site-title">Phonopy v.2.17.0</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
@@ -451,9 +452,9 @@ title="Print to PDF"
                 
               <div>
                 
-  <div class="tex2jax_ignore mathjax_ignore section" id="work-flow">
+  <section class="tex2jax_ignore mathjax_ignore" id="work-flow">
 <span id="workflow"></span><h1>Work flow<a class="headerlink" href="#work-flow" title="Permalink to this headline">#</a></h1>
-<div class="section" id="phonon-calculations-at-constant-volume">
+<section id="phonon-calculations-at-constant-volume">
 <h2>Phonon calculations at constant volume<a class="headerlink" href="#phonon-calculations-at-constant-volume" title="Permalink to this headline">#</a></h2>
 <p>Work flow of phonopy is shown schematically. There are two ways to calculate,
 (1) atomic forces from finite displacements and (2) given force constants. You
@@ -461,12 +462,14 @@ can choose one of them. Forces on atoms or force constants are calculated by
 your favorite calculator (shown by the octagons in the work flow). The boxes are
 jobs being done by phonopy, and the circles are input and intermediate output
 data structures.</p>
-<div class="figure align-center" id="id1">
+<figure class="align-center" id="id1">
 <a class="reference internal image-reference" href="_images/procedure.png"><img alt="_images/procedure.png" src="_images/procedure.png" style="width: 719.2px; height: 741.6px;" /></a>
-<p class="caption"><span class="caption-text">Work flow of phonon calculation</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
-</div>
-</div>
-<div class="section" id="combinations-of-phonon-calculations-at-different-volumes">
+<figcaption>
+<p><span class="caption-text">Work flow of phonon calculation</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+</section>
+<section id="combinations-of-phonon-calculations-at-different-volumes">
 <h2>Combinations of phonon calculations at different volumes<a class="headerlink" href="#combinations-of-phonon-calculations-at-different-volumes" title="Permalink to this headline">#</a></h2>
 <p>Mode Grüneisen parameters can be calculated from two or three phonon calculation
 results obtained at slightly different volume points. See the details at
@@ -474,8 +477,8 @@ results obtained at slightly different volume points. See the details at
 <p>With more volume points and fitting the thermal properties, thermal properties
 at constant pressure are obtained under the (so-called) quasi-harmonic
 approximation. See more details at <a class="reference internal" href="qha.html#phonopy-qha"><span class="std std-ref">Quasi harmonic approximation</span></a>.</p>
-</div>
-</div>
+</section>
+</section>
 
 
               </div>

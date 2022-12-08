@@ -4,8 +4,9 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>References &#8212; Phonopy v.2.16.3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>References &#8212; Phonopy v.2.17.0</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -20,7 +21,7 @@
     href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
+    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -29,7 +30,7 @@
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -74,7 +75,7 @@
       
       
       
-      <h1 class="site-logo" id="site-title">Phonopy v.2.16.3</h1>
+      <h1 class="site-logo" id="site-title">Phonopy v.2.17.0</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
@@ -593,11 +594,11 @@ title="Print to PDF"
                 
               <div>
                 
-  <div class="tex2jax_ignore mathjax_ignore section" id="references">
+  <section class="tex2jax_ignore mathjax_ignore" id="references">
 <h1>References<a class="headerlink" href="#references" title="Permalink to this headline">#</a></h1>
-<div class="section" id="method-used-in-phonopy">
+<section id="method-used-in-phonopy">
 <h2>Method used in phonopy<a class="headerlink" href="#method-used-in-phonopy" title="Permalink to this headline">#</a></h2>
-<div class="section" id="generation-of-force-constants">
+<section id="generation-of-force-constants">
 <span id="reference-force-constants"></span><h3>Generation of force constants<a class="headerlink" href="#generation-of-force-constants" title="Permalink to this headline">#</a></h3>
 <p>In phonopy, force constants are generated based on finite displacement method.
 Crystal symmetry is used to reduce the calculation cost and numerical noise of
@@ -611,8 +612,8 @@ details are found in the appendix of the following paper:</p>
 <ul class="simple">
 <li><p>L. Chaput, A. Togo, I. Tanaka, and G. Hug, Phys. Rev. B, 84, 094302 (2011)</p></li>
 </ul>
-</div>
-<div class="section" id="parlinski-li-kawazoe-method">
+</section>
+<section id="parlinski-li-kawazoe-method">
 <span id="reference-plk"></span><h3>Parlinski-Li-Kawazoe method<a class="headerlink" href="#parlinski-li-kawazoe-method" title="Permalink to this headline">#</a></h3>
 <p>Parlinski-Li-Kawazoe method is based on the supercell approach with the finite
 displacement method.</p>
@@ -624,8 +625,8 @@ existing library, e.g., LAPACK.</p>
 <ul class="simple">
 <li><p>K. Parlinski, Z. Q. Li, and Y. Kawazoe, Phys. Rev. Lett. 78, 4063 (1997)</p></li>
 </ul>
-</div>
-<div class="section" id="thermal-expansion-using-quasi-harmonic-approximation">
+</section>
+<section id="thermal-expansion-using-quasi-harmonic-approximation">
 <span id="reference-thermal-expansion"></span><h3>Thermal expansion using quasi-harmonic approximation<a class="headerlink" href="#thermal-expansion-using-quasi-harmonic-approximation" title="Permalink to this headline">#</a></h3>
 <p>In <a class="reference internal" href="qha.html#phonopy-qha"><span class="std std-ref">phonopy-qha</span></a>, thermal properties at constant pressure is
 obtained from the thermodynamic definition. To achieve Legendre transformation,
@@ -641,8 +642,8 @@ paper:</p>
 <ul class="simple">
 <li><p>A. Togo, L. Chaput, I. Tanaka, G. Hug, Phys. Rev. B, 81, 174301-1-6 (2010)</p></li>
 </ul>
-</div>
-<div class="section" id="non-analytical-term-correction">
+</section>
+<section id="non-analytical-term-correction">
 <span id="reference-nac"></span><h3>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction" title="Permalink to this headline">#</a></h3>
 <p>Non-metallic crystals are polarized by atomic displacements and the generated
 macroscopic field changes force constants near <span class="math notranslate nohighlight">\(\Gamma\)</span> point. This
@@ -650,8 +651,8 @@ contribution is included through non-analytical term correction.</p>
 <ul class="simple">
 <li><p>R. M. Pick, M. H. Cohen, and R. M. Martin, Phys. Rev. B 1, 910, (1970)</p></li>
 </ul>
-</div>
-<div class="section" id="correction-by-dipole-dipole-interaction">
+</section>
+<section id="correction-by-dipole-dipole-interaction">
 <span id="reference-dp-dp-nac"></span><h3>Correction by dipole-dipole interaction<a class="headerlink" href="#correction-by-dipole-dipole-interaction" title="Permalink to this headline">#</a></h3>
 <ol class="arabic simple">
 <li><p>P. Giannozzi, S. Degironcoli, P. Pavone, and S. Baroni, Phys. Rev. B 43, 7231
@@ -662,8 +663,8 @@ contribution is included through non-analytical term correction.</p>
 </ol>
 <p>Currently phonopy implements the method by Gonze <em>et al.</em> written in the above
 two papers (2 and 3) as the default method.</p>
-</div>
-<div class="section" id="interpolation-scheme-at-general-q-points-with-non-analytical-term-correction">
+</section>
+<section id="interpolation-scheme-at-general-q-points-with-non-analytical-term-correction">
 <span id="reference-wang-nac"></span><h3>Interpolation scheme at general <em>q</em>-points with non-analytical term correction<a class="headerlink" href="#interpolation-scheme-at-general-q-points-with-non-analytical-term-correction" title="Permalink to this headline">#</a></h3>
 <p>This is an interpolation scheme using phonons at
 <span class="math notranslate nohighlight">\(\mathbf{q}\rightarrow \mathbf{0}\)</span> with the correction by Pick <em>et al.</em>
@@ -678,24 +679,24 @@ velocity calculation, is described in the following paper:</p>
 <li><p>Atsushi Togo, Laurent Chaput, and Isao Tanaka, Phys. Rev. B, 91, 094306-1-31
 (2015)</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="other-methods-and-software-for-calculating-force-constants">
+</section>
+</section>
+<section id="other-methods-and-software-for-calculating-force-constants">
 <h2>Other methods and software for calculating force constants<a class="headerlink" href="#other-methods-and-software-for-calculating-force-constants" title="Permalink to this headline">#</a></h2>
-<div class="section" id="parlinsk-li-kawazoe-method">
+<section id="parlinsk-li-kawazoe-method">
 <span id="reference-small-displacement"></span><h3>Parlinsk-Li-Kawazoe method<a class="headerlink" href="#parlinsk-li-kawazoe-method" title="Permalink to this headline">#</a></h3>
 <p><a class="reference external" href="http://wolf.ifj.edu.pl/phonon/">PHONON</a> is the original implementation of the
 Parlinsk-Li-Kawazoe method.</p>
-</div>
-<div class="section" id="small-displacement-method">
+</section>
+<section id="small-displacement-method">
 <h3>Small displacement method<a class="headerlink" href="#small-displacement-method" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
 <li><p>Dario Alfè, Computer Physics Communications, 180, 2622 (2009)</p></li>
 </ul>
 <p><a class="reference external" href="http://www.homepages.ucl.ac.uk/~ucfbdxa/phon/">PHON</a> is based on the small
 displacement method.</p>
-</div>
-<div class="section" id="dfpt">
+</section>
+<section id="dfpt">
 <span id="reference-dfpt"></span><h3>DFPT<a class="headerlink" href="#dfpt" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
 <li><p>Paolo Giannozzi, Stefano de Gironcoli, Pasquale Pavone, and Stefano Baroni,
@@ -707,11 +708,11 @@ Phys. Rev. B, <strong>43</strong>, 7231 (1991)</p></li>
 <a class="reference external" href="http://www.quantum-espresso.org/">Quantum espresso</a>
 <a class="reference external" href="http://elk.sourceforge.net/">Elk</a>, etc. VASP can calculate force constants
 using DFPT however only at Gamma-point.</p>
-</div>
-</div>
-<div class="section" id="for-the-study-of-basics">
+</section>
+</section>
+<section id="for-the-study-of-basics">
 <h2>For the study of basics<a class="headerlink" href="#for-the-study-of-basics" title="Permalink to this headline">#</a></h2>
-<div class="section" id="phonons">
+<section id="phonons">
 <h3>Phonons<a class="headerlink" href="#phonons" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
 <li><p>Introduction to Lattice Dynamics, Martin. T. Dove, Cambridge university press</p></li>
@@ -719,8 +720,8 @@ using DFPT however only at Gamma-point.</p>
 <li><p>Electrons and Phonons by J. M. Ziman, Oxford University Press</p></li>
 <li><p>The Physics of Phonons by G. P. Srivastava, CRC Press</p></li>
 </ul>
-</div>
-<div class="section" id="symmetry">
+</section>
+<section id="symmetry">
 <h3>Symmetry<a class="headerlink" href="#symmetry" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
 <li><p>International Tables for Crystallography - IUCr</p></li>
@@ -731,9 +732,9 @@ University Press</p></li>
 <a class="reference external" href="https://www.cryst.ehu.es/html/lekeitio.html">https://www.cryst.ehu.es/html/lekeitio.html</a>, the presentation by B. Mihailova
 (phonons) is considered nice for beginners.</p></li>
 </ul>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
               </div>

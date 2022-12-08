@@ -4,8 +4,9 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Quasi harmonic approximation &#8212; Phonopy v.2.16.3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Quasi harmonic approximation &#8212; Phonopy v.2.17.0</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -20,7 +21,7 @@
     href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=62ba249389abaaa9ffc34bf36a076bdc1d65ee18" type="text/css" />
+    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -29,7 +30,7 @@
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/scripts/sphinx-book-theme.js?digest=f31d14ad54b65d19161ba51d4ffff3a77ae00456"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -74,7 +75,7 @@
       
       
       
-      <h1 class="site-logo" id="site-title">Phonopy v.2.16.3</h1>
+      <h1 class="site-logo" id="site-title">Phonopy v.2.17.0</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
@@ -669,7 +670,7 @@ title="Print to PDF"
                 
               <div>
                 
-  <div class="tex2jax_ignore mathjax_ignore section" id="quasi-harmonic-approximation">
+  <section class="tex2jax_ignore mathjax_ignore" id="quasi-harmonic-approximation">
 <span id="phonopy-qha"></span><h1>Quasi harmonic approximation<a class="headerlink" href="#quasi-harmonic-approximation" title="Permalink to this headline">#</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
@@ -682,7 +683,7 @@ title="Print to PDF"
 <li><p><a class="reference internal" href="#thermal-properties-in-t-p-space-calculated-under-qha" id="id4">Thermal properties in (<em>T</em>, <em>p</em>) space calculated under QHA</a></p></li>
 </ul>
 </div>
-<div class="section" id="usage-of-phonopy-qha">
+<section id="usage-of-phonopy-qha">
 <h2><a class="toc-backref" href="#id1">Usage of <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code></a><a class="headerlink" href="#usage-of-phonopy-qha" title="Permalink to this headline">#</a></h2>
 <p>Using phonopy results of thermal properties, thermal expansion and heat capacity
 at constant pressure can be calculated under the quasi-harmonic approximation.
@@ -693,9 +694,9 @@ that at leave 5 volume points are needed to run <code class="docutils literal no
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">qha</span> <span class="o">-</span><span class="n">p</span> <span class="n">e</span><span class="o">-</span><span class="n">v</span><span class="o">.</span><span class="n">dat</span> <span class="n">thermal_properties</span><span class="o">.</span><span class="n">yaml</span><span class="o">-</span><span class="p">{</span><span class="o">-</span><span class="p">{</span><span class="mf">5..1</span><span class="p">},{</span><span class="mf">0..5</span><span class="p">}}</span>
 </pre></div>
 </div>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="_images/Si-QHA.png" src="_images/Si-QHA.png" />
-</div>
+</figure>
 <p>Without plots:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">qha</span> <span class="n">e</span><span class="o">-</span><span class="n">v</span><span class="o">.</span><span class="n">dat</span> <span class="n">thermal_properties</span><span class="o">.</span><span class="n">yaml</span><span class="o">-</span><span class="p">{</span><span class="o">-</span><span class="p">{</span><span class="mf">5..1</span><span class="p">},{</span><span class="mf">0..5</span><span class="p">}}</span>
 </pre></div>
@@ -739,57 +740,57 @@ the energies, or equivalent effect is applied using <code class="docutils litera
 <p>Experimentally, temperature dependent energies are supported by <code class="docutils literal notranslate"><span class="pre">--efe</span></code> option.
 The usage is written at
 <a class="reference external" href="https://github.com/phonopy/phonopy/blob/develop/example/Cu-QHA/README">https://github.com/phonopy/phonopy/blob/develop/example/Cu-QHA/README</a>.</p>
-<div class="section" id="options">
+<section id="options">
 <span id="phonopy-qha-options"></span><h3><a class="toc-backref" href="#id2">Options</a><a class="headerlink" href="#options" title="Permalink to this headline">#</a></h3>
-<div class="section" id="h">
+<section id="h">
 <h4><code class="docutils literal notranslate"><span class="pre">-h</span></code><a class="headerlink" href="#h" title="Permalink to this headline">#</a></h4>
 <p>Show help. The available options are shown. Without any option, the results are
 saved into text files in simple data format.</p>
-</div>
-<div class="section" id="tmax">
+</section>
+<section id="tmax">
 <h4><code class="docutils literal notranslate"><span class="pre">--tmax</span></code><a class="headerlink" href="#tmax" title="Permalink to this headline">#</a></h4>
 <p>The maximum temperature calculated is specified. This temperature has to be
 lower than the maximum temperature calculated in <code class="docutils literal notranslate"><span class="pre">thermal_properties.yaml</span></code> to
 let at least one temperature points fewer. The default value is <code class="docutils literal notranslate"><span class="pre">--tmax=1000</span></code>.</p>
-</div>
-<div class="section" id="pressure">
+</section>
+<section id="pressure">
 <h4><code class="docutils literal notranslate"><span class="pre">--pressure</span></code><a class="headerlink" href="#pressure" title="Permalink to this headline">#</a></h4>
 <p>Pressure is specified in GPa. This corresponds to the <span class="math notranslate nohighlight">\(pV\)</span> term described
 in the following section <a class="reference internal" href="#theory-of-qha"><span class="std std-ref">Thermal properties in (T, p) space calculated under QHA</span></a>. Note that bulk modulus obtained
 with this option than 0 GPa is incorrect.</p>
-</div>
-<div class="section" id="b">
+</section>
+<section id="b">
 <h4><code class="docutils literal notranslate"><span class="pre">-b</span></code><a class="headerlink" href="#b" title="Permalink to this headline">#</a></h4>
 <p>Fitting volume-energy data to an EOS, and show bulk modulus (without considering
 phonons). This is made by:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">qha</span> <span class="o">-</span><span class="n">b</span> <span class="n">e</span><span class="o">-</span><span class="n">v</span><span class="o">.</span><span class="n">dat</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="eos">
+</section>
+<section id="eos">
 <h4><code class="docutils literal notranslate"><span class="pre">--eos</span></code><a class="headerlink" href="#eos" title="Permalink to this headline">#</a></h4>
 <p>EOS is chosen among <code class="docutils literal notranslate"><span class="pre">vinet</span></code>, <code class="docutils literal notranslate"><span class="pre">birch_murnaghan</span></code>, and <code class="docutils literal notranslate"><span class="pre">murnaghan</span></code>. The default EOS
 is <code class="docutils literal notranslate"><span class="pre">vinet</span></code>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">qha</span> <span class="o">--</span><span class="n">eos</span><span class="o">=</span><span class="s1">&#39;birch_murnaghan&#39;</span> <span class="o">-</span><span class="n">b</span> <span class="n">e</span><span class="o">-</span><span class="n">v</span><span class="o">.</span><span class="n">dat</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="p">
+</section>
+<section id="p">
 <h4><code class="docutils literal notranslate"><span class="pre">-p</span></code><a class="headerlink" href="#p" title="Permalink to this headline">#</a></h4>
 <p>The fitting results, volume-temperature relation, and thermal expansion
 coefficient are plotted on the display.</p>
-</div>
-<div class="section" id="s">
+</section>
+<section id="s">
 <h4><code class="docutils literal notranslate"><span class="pre">-s</span></code><a class="headerlink" href="#s" title="Permalink to this headline">#</a></h4>
 <p>The calculated values are written into files.</p>
-</div>
-<div class="section" id="sparse">
+</section>
+<section id="sparse">
 <h4><code class="docutils literal notranslate"><span class="pre">--sparse</span></code><a class="headerlink" href="#sparse" title="Permalink to this headline">#</a></h4>
 <p>This is used with <code class="docutils literal notranslate"><span class="pre">-s</span></code> or <code class="docutils literal notranslate"><span class="pre">-p</span></code> to thin out the number of plots of the fitting
 results at temperatures. For example with <code class="docutils literal notranslate"><span class="pre">--sparse=10</span></code>, 1 in 10 temperature
 curves is only plotted.</p>
-</div>
-<div class="section" id="efe">
+</section>
+<section id="efe">
 <span id="phonopy-qha-efe-option"></span><h4><code class="docutils literal notranslate"><span class="pre">--efe</span></code><a class="headerlink" href="#efe" title="Permalink to this headline">#</a></h4>
 <p><strong>Experimental</strong></p>
 <p>Temperature dependent energies other than phonon free energy are included with
@@ -797,9 +798,9 @@ this option. This is used such as:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">qha</span> <span class="o">-</span><span class="n">p</span> <span class="o">--</span><span class="n">tmax</span><span class="o">=</span><span class="mi">1300</span> <span class="o">--</span><span class="n">efe</span> <span class="n">fe</span><span class="o">-</span><span class="n">v</span><span class="o">.</span><span class="n">dat</span> <span class="n">e</span><span class="o">-</span><span class="n">v</span><span class="o">.</span><span class="n">dat</span> <span class="n">thermal_properties</span><span class="o">.</span><span class="n">yaml</span><span class="o">-</span><span class="p">{</span><span class="mf">00..10</span><span class="p">}</span>
 </pre></div>
 </div>
-<div class="figure align-default">
+<figure class="align-default">
 <img alt="_images/Cu-QHA.png" src="_images/Cu-QHA.png" />
-</div>
+</figure>
 <p>The temperature dependent energies are stored in <code class="docutils literal notranslate"><span class="pre">fe-v.dat</span></code>. The file format is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># volume:       43.08047896     43.97798894     44.87549882     45.77300889     46.67051887     47.56802885     48.46553883     49.36304881     50.26055878     51.15806876     52.05557874</span>
 <span class="c1">#    T(K)     Free energies</span>
@@ -842,9 +843,9 @@ those used for <code class="docutils literal notranslate"><span class="pre">ther
 <code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code> or <code class="docutils literal notranslate"><span class="pre">--pa</span></code> option, the unit cells for computing electronic
 eigenvalues have to be carefully chosen to agree with those after applying
 <code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code>, or energies are scaled a posteriori.</p>
-</div>
-</div>
-<div class="section" id="output-files">
+</section>
+</section>
+<section id="output-files">
 <span id="phonopy-qha-output-files"></span><h3><a class="toc-backref" href="#id3">Output files</a><a class="headerlink" href="#output-files" title="Permalink to this headline">#</a></h3>
 <p>The physical units of V and T are <span class="math notranslate nohighlight">\(\text{Angstrom}^3\)</span> and K, respectively.
 The unit of eV for Helmholtz and Gibbs energies, J/K/mol for <span class="math notranslate nohighlight">\(C_V\)</span> and
@@ -871,9 +872,9 @@ vs <span class="math notranslate nohighlight">\(T\)</span> (<code class="docutil
 option is specified, energy offset of <span class="math notranslate nohighlight">\(pV\)</span> is added. See also the
 following section (<a class="reference internal" href="#theory-of-qha"><span class="std std-ref">Thermal properties in (T, p) space calculated under QHA</span></a>).</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="thermal-properties-in-t-p-space-calculated-under-qha">
+</section>
+</section>
+<section id="thermal-properties-in-t-p-space-calculated-under-qha">
 <span id="theory-of-qha"></span><h2><a class="toc-backref" href="#id4">Thermal properties in (<em>T</em>, <em>p</em>) space calculated under QHA</a><a class="headerlink" href="#thermal-properties-in-t-p-space-calculated-under-qha" title="Permalink to this headline">#</a></h2>
 <p>Here the word ‘quasi-harmonic approximation’ is used for an approximation that
 introduces volume dependence of phonon frequencies as a part of anharmonic
@@ -897,8 +898,8 @@ changes, then the equilibrium volume at temperatures changes. This is considered
 as thermal expansion under this approximation.</p>
 <p><code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> collects the values at volumes and transforms into the thermal
 properties at constant pressure.</p>
-</div>
-</div>
+</section>
+</section>
 
 
               </div>
