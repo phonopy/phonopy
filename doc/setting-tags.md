@@ -312,7 +312,9 @@ Displacements thus generated are sensitive to acoustic sum rule. Tiny phonon
 frequency at Gamma point due to violation of acoustic sum rule can induce very
 large displacements. Therefore, it is safer to use this feature with
 `FC_SYMMETRY = .TRUE.` or a force constants calculator (see
-{ref}`fc_calculator_tag`) that enforces acoustic sum rule. Frequencies of
+{ref}`fc_calculator_tag`) that enforces acoustic sum rule. It is also possible
+to ignore phonons with frequencies below cutoff frequency specified
+by {ref}`cutoff_frequency_tags` tag. Phonon frequencies of
 imaginary modes are treated as their absolute values.
 
 Distribution of displacement distances may be visualized and checked by a python
