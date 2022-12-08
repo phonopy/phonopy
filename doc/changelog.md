@@ -2,6 +2,14 @@
 
 # Change Log
 
+## Dec-8-2022: Version 2.17.0
+
+- `RANDOM_DISPLACEMENT_TEMPERATURE` tag (`--rd-temperature` option) is
+  implemented. This enables, from command line interface, to generate random
+  displacements at finite temperature randomly sampling harmonic oscillator distribution
+  functions of phonons at commensurate points. This requires input that can run
+  phonon calculation such as force constants and displacement-force dataset.
+
 ## Oct-5-2022: Version 2.16.3
 
 - Fix CMakeLists.txt.

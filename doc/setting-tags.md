@@ -301,18 +301,19 @@ phonopy -c POSCAR-unitcell -- rd.conf
 ```
 
 See also {ref}`f_force_sets_option` for creating `FORCE_SETS` from a series of
-sueprcell calculation. Be carefult that if `FORCE_SETS` exists in the current
+sueprcell calculation. Be careful that if `FORCE_SETS` exists in the current
 directory, it will be overwritten by creating new `FORCE_SETS`.
 
  To obtain force constants with random displacements and
 respective forces, an external force constants calculator is necessary. See
 {ref}`fc_calculator_tag`.
 
-Dispalcements thus generated are sensitive to acoustic sum rule. Tiny phonon
+Displacements thus generated are sensitive to acoustic sum rule. Tiny phonon
 frequency at Gamma point due to violation of acoustic sum rule can induce very
-large dispalcements. Therefore, it is safer to use this feature with
+large displacements. Therefore, it is safer to use this feature with
 `FC_SYMMETRY = .TRUE.` or a force constants calculator (see
-{ref}`fc_calculator_tag`) that enforces acoustic sum rule.
+{ref}`fc_calculator_tag`) that enforces acoustic sum rule. Frequencies of
+imaginary modes are treated as their absolute values.
 
 Distribution of displacement distances may be visualized and checked by a python
 script like below.

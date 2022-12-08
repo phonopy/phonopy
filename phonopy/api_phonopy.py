@@ -963,7 +963,7 @@ class Phonopy:
                 displacement_dataset["displacements"] = d
             else:
                 self.init_random_displacements(cutoff_frequency=cutoff_frequency)
-                d = self.run_random_displacements(
+                d = self.get_random_displacements_at_temperature(
                     temperature,
                     number_of_snapshots,
                     is_plusminus=(is_plusminus is True),
@@ -3264,7 +3264,7 @@ class Phonopy:
         dist_func: Optional[str] = None,
         cutoff_frequency: Optional[float] = None,
     ):
-        """Initialize random displacements.
+        """Initialize random displacements at finite temperature.
 
         dist_func : str or None, optional
             Harmonic oscillator distribution function either by 'quantum'
@@ -3287,7 +3287,7 @@ class Phonopy:
             use_openmp=phonoc.use_openmp(),
         )
 
-    def run_random_displacements(
+    def get_random_displacements_at_temperature(
         self,
         temperature: float,
         number_of_snapshots: int,
