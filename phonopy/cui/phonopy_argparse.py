@@ -696,12 +696,19 @@ def get_parser(
     )
     parser.add_argument(
         "--rd-temperature",
-        "--temperature",
         dest="rd_temperature",
         type=float,
         default=None,
         metavar="TEMPERATURE",
         help="A temperature used to generate random displacements.",
+    )
+    parser.add_argument(
+        "--temperature",
+        dest="temperature",
+        type=float,
+        default=None,
+        metavar="TEMPERATURE",
+        help="(Deprecated) A temperature used to generate random displacements.",
     )
     parser.add_argument(
         "--readfc",

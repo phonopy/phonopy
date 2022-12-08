@@ -81,7 +81,7 @@ from phonopy.structure.dataset import forces_in_dataset
 from phonopy.units import THzToEv
 
 
-# AA is created at http://www.network-science.de/ascii/.
+# AA is created at http://www.network-science.de/ascii/ with standard.
 def print_phonopy():
     """Show phonopy logo."""
     print(
@@ -140,6 +140,19 @@ def print_error():
  / _ \ '__| '__/ _ \| '__|
 |  __/ |  | | | (_) | |
  \___|_|  |_|  \___/|_|
+"""
+    )
+
+
+def print_warning():
+    """Show warning banner."""
+    print(
+        r"""                          _
+__      ____ _ _ __ _ __ (_)_ __   __ _
+\ \ /\ / / _` | '__| '_ \| | '_ \ / _` |
+ \ V  V / (_| | |  | | | | | | | | (_| |
+  \_/\_/ \__,_|_|  |_| |_|_|_| |_|\__, |
+                                  |___/
 """
     )
 
@@ -1889,6 +1902,7 @@ def main(**argparse_control):
             number_of_snapshots=settings.random_displacements,
             random_seed=settings.random_seed,
             temperature=settings.random_displacement_temperature,
+            cutoff_frequency=settings.cutoff_frequency,
         )
         write_displacements_files_then_exit(
             phonon, settings, confs, cell_info["optional_structure_info"], log_level
