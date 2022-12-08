@@ -35,6 +35,7 @@
 
 import os
 import sys
+from typing import Union
 
 import numpy as np
 
@@ -59,7 +60,10 @@ from phonopy.file_IO import (
     write_FORCE_CONSTANTS,
     write_force_constants_to_hdf5,
 )
-from phonopy.harmonic.force_constants import compact_fc_to_full_fc
+from phonopy.harmonic.force_constants import (
+    compact_fc_to_full_fc,
+    full_fc_to_compact_fc,
+)
 from phonopy.interface.calculator import (
     get_default_displacement_distance,
     get_default_physical_units,
@@ -77,7 +81,7 @@ from phonopy.structure.dataset import forces_in_dataset
 from phonopy.units import THzToEv
 
 
-# AA is created at http://www.network-science.de/ascii/.
+# AA is created at http://www.network-science.de/ascii/ with standard.
 def print_phonopy():
     """Show phonopy logo."""
     print(
@@ -136,6 +140,19 @@ def print_error():
  / _ \ '__| '__/ _ \| '__|
 |  __/ |  | | | (_) | |
  \___|_|  |_|  \___/|_|
+"""
+    )
+
+
+def print_warning():
+    """Show warning banner."""
+    print(
+        r"""                          _
+__      ____ _ _ __ _ __ (_)_ __   __ _
+\ \ /\ / / _` | '__| '_ \| | '_ \ / _` |
+ \ V  V / (_| | |  | | | | | | | | (_| |
+  \_/\_/ \__,_|_|  |_| |_|_|_| |_|\__, |
+                                  |___/
 """
     )
 
@@ -309,7 +326,7 @@ def print_settings(
             print("  With group velocity calculation (dq=%3.1e)" % gv_delta_q)
         else:
             print("")
-    if settings.create_displacements:
+    if settings.create_displacements or settings.random_displacements:
         print("Displacements creation mode")
         if not settings.is_plusminus_displacement == "auto":
             if settings.is_plusminus_displacement:
@@ -318,13 +335,23 @@ def print_settings(
                 print("  Plus Minus displacement: only one direction")
         if not settings.is_diagonal_displacement:
             print("  Diagonal displacement: off")
-        if settings.random_displacements:
+
+        if settings.random_displacements is not None:
             print(
                 "  Number of supercells with random displacements: %d"
                 % settings.random_displacements
             )
+            if settings.random_displacement_temperature is not None:
+                print(
+                    "  Temperatuere to generate random displacements: "
+                    f"{settings.random_displacement_temperature}"
+                )
+            elif settings.displacement_distance is not None:
+                print(f"  Displacement distance: {settings.displacement_distance}")
             if settings.random_seed is not None:
                 print("  Random seed: %d" % settings.random_seed)
+        elif settings.displacement_distance is not None:
+            print(f"Displacement distance: {settings.displacement_distance}")
 
     print("Settings:")
     if load_phonopy_yaml:
@@ -465,60 +492,17 @@ def create_FORCE_SETS_from_settings(settings, cell_filename, symprec, log_level)
     )
 
 
-def produce_force_constants(phonon, settings, phpy_yaml, unitcell_filename, log_level):
+def produce_force_constants(
+    phonon: Phonopy, settings, phpy_yaml, unitcell_filename, log_level
+):
     """Run force constants calculation."""
     num_satom = len(phonon.supercell)
-    p2s_map = phonon.primitive.p2s_map
     is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
 
     if settings.read_force_constants:
-        if settings.is_hdf5 or settings.readfc_format == "hdf5":
-            try:
-                import h5py  # noqa F401
-            except ImportError:
-                print_error_message("You need to install python-h5py.")
-                if log_level:
-                    print_error()
-                sys.exit(1)
-
-            file_exists("force_constants.hdf5", log_level)
-            fc = read_force_constants_from_hdf5(
-                filename="force_constants.hdf5",
-                p2s_map=p2s_map,
-                calculator=phonon.calculator,
-            )
-            fc_filename = "force_constants.hdf5"
-        else:
-            file_exists("FORCE_CONSTANTS", log_level)
-            fc = parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS", p2s_map=p2s_map)
-            fc_filename = "FORCE_CONSTANTS"
-
-        if log_level:
-            print('Force constants are read from "%s".' % fc_filename)
-
-        if fc.shape[1] != num_satom:
-            error_text = (
-                "Number of atoms in supercell is not consistent "
-                "with the matrix shape of\nforce constants read "
-                "from "
-            )
-            if settings.is_hdf5 or settings.readfc_format == "hdf5":
-                error_text += "force_constants.hdf5.\n"
-            else:
-                error_text += "FORCE_CONSTANTS.\n"
-            error_text += (
-                "Please carefully check DIM, FORCE_CONSTANTS, " "and %s."
-            ) % unitcell_filename
-            print_error_message(error_text)
-            if log_level:
-                print_error()
-            sys.exit(1)
-
-        # Compact fc is expanded to full fc when full fc is required.
-        if is_full_fc and fc.shape[0] != fc.shape[1]:
-            fc = compact_fc_to_full_fc(phonon, fc, log_level=log_level)
-
-        phonon.force_constants = fc
+        _read_force_constants_from_file(
+            settings, phonon, unitcell_filename, is_full_fc, log_level
+        )
     else:
 
         def read_force_sets_from_phonopy_yaml(phpy_yaml):
@@ -582,23 +566,95 @@ def produce_force_constants(phonon, settings, phpy_yaml, unitcell_filename, log_
             else:
                 print("Computing force constants...")
 
-        if is_full_fc:
-            # Need to calculate full force constant tensors
-            phonon.produce_force_constants(
-                fc_calculator=fc_calculator, fc_calculator_options=fc_calculator_options
+        try:
+            if is_full_fc:
+                # Need to calculate full force constant tensors
+                phonon.produce_force_constants(
+                    fc_calculator=fc_calculator,
+                    fc_calculator_options=fc_calculator_options,
+                )
+            else:
+                # Only force constants between atoms in primitive cell and
+                # supercell
+                phonon.produce_force_constants(
+                    calculate_full_force_constants=False,
+                    fc_calculator=fc_calculator,
+                    fc_calculator_options=fc_calculator_options,
+                )
+        except RuntimeError as e:
+            print_error_message(str(e))
+            if log_level:
+                print_error()
+            sys.exit(1)
+
+
+def _read_force_constants_from_file(
+    settings,
+    phonon: Phonopy,
+    unitcell_filename: str,
+    is_full_fc: bool,
+    log_level: Union[bool, int],
+):
+    num_satom = len(phonon.supercell)
+    p2s_map = phonon.primitive.p2s_map
+    if settings.is_hdf5 or settings.readfc_format == "hdf5":
+        try:
+            import h5py  # noqa F401
+        except ImportError:
+            print_error_message("You need to install python-h5py.")
+            if log_level:
+                print_error()
+            sys.exit(1)
+
+        file_exists("force_constants.hdf5", log_level)
+        fc = read_force_constants_from_hdf5(
+            filename="force_constants.hdf5",
+            p2s_map=p2s_map,
+            calculator=phonon.calculator,
+        )
+        fc_filename = "force_constants.hdf5"
+    else:
+        file_exists("FORCE_CONSTANTS", log_level)
+        fc = parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS", p2s_map=p2s_map)
+        fc_filename = "FORCE_CONSTANTS"
+
+        if log_level:
+            print('Force constants are read from "%s".' % fc_filename)
+
+        if fc.shape[1] != num_satom:
+            error_text = (
+                "Number of atoms in supercell is not consistent "
+                "with the matrix shape of\nforce constants read "
+                "from "
             )
-        else:
-            # Only force constants between atoms in primitive cell and
-            # supercell
-            phonon.produce_force_constants(
-                calculate_full_force_constants=False,
-                fc_calculator=fc_calculator,
-                fc_calculator_options=fc_calculator_options,
-            )
+            if settings.is_hdf5 or settings.readfc_format == "hdf5":
+                error_text += "force_constants.hdf5.\n"
+            else:
+                error_text += "FORCE_CONSTANTS.\n"
+            error_text += (
+                "Please carefully check DIM, FORCE_CONSTANTS, " "and %s."
+            ) % unitcell_filename
+            print_error_message(error_text)
+            if log_level:
+                print_error()
+            sys.exit(1)
+
+        # Compact fc is expanded to full fc when full fc is required.
+        if is_full_fc and fc.shape[0] != fc.shape[1]:
+            fc = compact_fc_to_full_fc(phonon, fc, log_level=log_level)
+        elif not is_full_fc and fc.shape[0] == fc.shape[1]:
+            fc = full_fc_to_compact_fc(phonon, fc, log_level=log_level)
+
+    phonon.force_constants = fc
 
 
 def store_force_constants(
-    phonon, settings, phpy_yaml, unitcell_filename, load_phonopy_yaml, log_level
+    phonon: Phonopy,
+    settings,
+    phpy_yaml: PhonopyYaml,
+    unitcell_filename,
+    load_phonopy_yaml,
+    log_level,
 ):
     """Calculate or read force constants."""
     physical_units = get_default_physical_units(phonon.calculator)
@@ -626,37 +682,47 @@ def store_force_constants(
             # Compact fc is expanded to full fc when full fc is required.
             if is_full_fc and fc.shape[0] != fc.shape[1]:
                 fc = compact_fc_to_full_fc(phonon, fc, log_level=log_level)
+            elif not is_full_fc and fc.shape[0] == fc.shape[1]:
+                fc = full_fc_to_compact_fc(phonon, fc, log_level=log_level)
 
             phonon.set_force_constants(fc, show_drift=(log_level > 0))
 
-        if forces_in_dataset(phpy_yaml.dataset):
-            if log_level:
-                text = 'Force sets were read from "%s"' % unitcell_filename
-                if phpy_yaml.force_constants is not None:
-                    text += " but not to be used."
-                else:
-                    text += "."
-                print(text)
-
-        if phpy_yaml.force_constants is None:
-            (fc_calculator, fc_calculator_options) = get_fc_calculator_params(settings)
-            try:
-                set_dataset_and_force_constants(
-                    phonon,
-                    phpy_yaml.dataset,
-                    None,
-                    fc_calculator=fc_calculator,
-                    fc_calculator_options=fc_calculator_options,
-                    produce_fc=True,
-                    symmetrize_fc=False,
-                    is_compact_fc=(not is_full_fc),
-                    log_level=log_level,
-                )
-            except RuntimeError as e:
-                print_error_message(str(e))
+        if settings.read_force_constants:
+            _read_force_constants_from_file(
+                settings, phonon, unitcell_filename, is_full_fc, log_level
+            )
+        else:
+            if forces_in_dataset(phpy_yaml.dataset):
                 if log_level:
-                    print_error()
-                sys.exit(1)
+                    text = 'Force sets were read from "%s"' % unitcell_filename
+                    if phpy_yaml.force_constants is not None:
+                        text += " but not to be used."
+                    else:
+                        text += "."
+                    print(text)
+
+            if phpy_yaml.force_constants is None:
+                (fc_calculator, fc_calculator_options) = get_fc_calculator_params(
+                    settings
+                )
+
+                try:
+                    set_dataset_and_force_constants(
+                        phonon,
+                        phpy_yaml.dataset,
+                        None,
+                        fc_calculator=fc_calculator,
+                        fc_calculator_options=fc_calculator_options,
+                        produce_fc=True,
+                        symmetrize_fc=False,
+                        is_compact_fc=(not is_full_fc),
+                        log_level=log_level,
+                    )
+                except RuntimeError as e:
+                    print_error_message(str(e))
+                    if log_level:
+                        print_error()
+                    sys.exit(1)
     else:
         produce_force_constants(
             phonon, settings, phpy_yaml, unitcell_filename, log_level
@@ -1401,6 +1467,13 @@ def start_phonopy(**argparse_control):
     if log_level:
         print_phonopy()
         print_version(__version__)
+
+        import phonopy._phonopy as phonoc
+
+        max_threads = phonoc.omp_max_threads()
+        if max_threads > 0:
+            print(f"Compiled with OpenMP support (max {max_threads} threads).")
+
         if argparse_control.get("load_phonopy_yaml", False):
             print("Running in phonopy.load mode.")
         print("Python version %d.%d.%d" % sys.version_info[:3])
@@ -1776,7 +1849,7 @@ def main(**argparse_control):
     #########################################################
     if (
         settings.create_displacements or settings.random_displacements
-    ) and settings.temperatures is None:
+    ) and settings.random_displacement_temperature is None:
         if settings.displacement_distance is None:
             displacement_distance = get_default_displacement_distance(phonon.calculator)
         else:
@@ -1821,11 +1894,15 @@ def main(**argparse_control):
     ###################################################################
     # Create random displacements at finite temperature and then exit #
     ###################################################################
-    if settings.random_displacements and settings.temperatures is not None:
+    if (
+        settings.random_displacements
+        and settings.random_displacement_temperature is not None
+    ):
         phonon.generate_displacements(
             number_of_snapshots=settings.random_displacements,
             random_seed=settings.random_seed,
-            temperature=settings.temperatures[0],
+            temperature=settings.random_displacement_temperature,
+            cutoff_frequency=settings.cutoff_frequency,
         )
         write_displacements_files_then_exit(
             phonon, settings, confs, cell_info["optional_structure_info"], log_level

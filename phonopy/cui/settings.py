@@ -602,14 +602,6 @@ class ConfParser:
                 symtol = self._args.symmetry_tolerance
                 self._confs["symmetry_tolerance"] = symtol
 
-        if "temperature" in arg_list:
-            if self._args.temperature is not None:
-                self._confs["temperature"] = self._args.temperature
-
-        if "temperatures" in arg_list:
-            if self._args.temperatures is not None:
-                self._confs["temperatures"] = " ".join(self._args.temperatures)
-
         if "tmax" in arg_list:
             if self._args.tmax:
                 self._confs["tmax"] = self._args.tmax
@@ -791,8 +783,15 @@ class ConfParser:
                     self.set_parameter("mesh_numbers", float(vals[0]))
                 elif len(vals) < 3:
                     self.setting_error("Mesh numbers are incorrectly set.")
+                elif len(vals) == 3:
+                    self.set_parameter("mesh_numbers", [int(x) for x in vals])
+                elif len(vals) == 9:
+                    mesh_array = []
+                    for row in np.reshape([int(x) for x in vals], (3, 3)):
+                        mesh_array.append(row.tolist())
+                    self.set_parameter("mesh_numbers", mesh_array)
                 else:
-                    self.set_parameter("mesh_numbers", [int(x) for x in vals[:3]])
+                    self.setting_error(f"{conf_key.upper()} is incorrectly set.")
 
             if conf_key == "band_points":
                 self.set_parameter("band_points", int(confs["band_points"]))
@@ -891,15 +890,6 @@ class ConfParser:
                     self.setting_error("Temperatures are incorrectly set.")
                 else:
                     self.set_parameter("temperatures", vals)
-
-            # For single T value.
-            if conf_key == "temperature":
-                self.set_parameter(
-                    "temperatures",
-                    [
-                        confs["temperature"],
-                    ],
-                )
 
             if conf_key == "tmin":
                 val = float(confs["tmin"])
@@ -1172,12 +1162,13 @@ class PhonopySettings(Settings):
         "mesh_format": "yaml",
         "modulation": None,
         "moment_order": None,
-        "random_displacements": None,
         "pdos_indices": None,
         "pretend_real": False,
         "projection_direction": None,
-        "random_seed": None,
         "qpoints_format": "yaml",
+        "random_displacements": None,
+        "random_seed": None,
+        "random_displacement_temperature": None,
         "read_force_constants": False,
         "readfc_format": "text",
         "run_mode": None,
@@ -1388,6 +1379,10 @@ class PhonopySettings(Settings):
     def set_random_seed(self, val):
         """Set random_seed."""
         self._v["random_seed"] = val
+
+    def set_random_displacement_temperature(self, val):
+        """Set random_displacement_temperature."""
+        self._v["random_displacement_temperature"] = val
 
     def set_read_force_constants(self, val):
         """Set read_force_constants."""
@@ -1656,6 +1651,26 @@ class PhonopyConfParser(ConfParser):
             nrand = self._args.random_displacements
             if nrand:
                 self._confs["random_displacements"] = nrand
+
+        if "rd_temperature" in arg_list:
+            if self._args.rd_temperature is not None:
+                self._confs[
+                    "random_displacement_temperature"
+                ] = self._args.rd_temperature
+
+        if "temperature" in arg_list:
+            if self._args.temperature is not None:
+                print(
+                    "*****************************************************************"
+                )
+                print(
+                    "--temperature option is deprecated. Use --rd-temperature instead."
+                )
+                print(
+                    "*****************************************************************"
+                )
+                print()
+                self._confs["random_displacement_temperature"] = self._args.temperature
 
         if "random_seed" in arg_list:
             if self._args.random_seed:
@@ -1996,6 +2011,10 @@ class PhonopyConfParser(ConfParser):
                 self.set_parameter(
                     "random_displacements", int(confs["random_displacements"])
                 )
+
+            if conf_key == "random_displacement_temperature":
+                val = confs["random_displacement_temperature"]
+                self.set_parameter("random_displacement_temperature", float(val))
 
             if conf_key == "random_seed":
                 self.set_parameter("random_seed", int(confs["random_seed"]))
@@ -2346,6 +2365,11 @@ class PhonopyConfParser(ConfParser):
         # Number of supercells with random displacements
         if "random_displacements" in params:
             self._settings.set_random_displacements(params["random_displacements"])
+
+        if "random_displacement_temperature" in params:
+            self._settings.set_random_displacement_temperature(
+                params["random_displacement_temperature"]
+            )
 
         if "random_seed" in params:
             self._settings.set_random_seed(params["random_seed"])

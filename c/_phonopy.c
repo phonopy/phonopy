@@ -70,6 +70,7 @@ static PyObject* py_thm_integration_weight_at_omegas(PyObject* self,
 static PyObject* py_get_tetrahedra_frequenies(PyObject* self, PyObject* args);
 static PyObject* py_tetrahedron_method_dos(PyObject* self, PyObject* args);
 static PyObject* py_use_openmp(PyObject* self, PyObject* args);
+static PyObject* py_get_omp_max_threads(PyObject* self, PyObject* args);
 struct module_state {
     PyObject* error;
 };
@@ -138,6 +139,9 @@ static PyMethodDef _phonopy_methods[] = {
     {"tetrahedron_method_dos", py_tetrahedron_method_dos, METH_VARARGS,
      "Run tetrahedron method"},
     {"use_openmp", py_use_openmp, METH_VARARGS, "Use OpenMP or not"},
+    {"omp_max_threads", py_get_omp_max_threads, METH_VARARGS,
+     "Return openmp max number of threads. Return 0 unless openmp is "
+     "activated. "},
     {NULL, NULL, 0, NULL}};
 
 #if PY_MAJOR_VERSION >= 3
@@ -1141,4 +1145,8 @@ static PyObject* py_use_openmp(PyObject* self, PyObject* args) {
     } else {
         Py_RETURN_FALSE;
     }
+}
+
+static PyObject* py_get_omp_max_threads(PyObject* self, PyObject* args) {
+    return PyLong_FromLong(phpy_get_max_threads());
 }
