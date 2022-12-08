@@ -1,5 +1,6 @@
 """Pytest configuration."""
 import os
+from pathlib import Path
 from typing import Tuple
 
 import numpy as np
@@ -10,6 +11,7 @@ from phonopy import Phonopy
 from phonopy.structure.atoms import PhonopyAtoms
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
+cwd = Path(__file__).parent
 
 
 @pytest.fixture(scope="session")
@@ -163,6 +165,15 @@ def ph_zr3n4() -> Phonopy:
 def ph_tipn3() -> Phonopy:
     """Return Phonopy class instance of anataze TiPN3 4x2x1."""
     yaml_filename = os.path.join(current_dir, "phonopy_params_TiPN3.yaml.xz")
+    return phonopy.load(
+        yaml_filename, is_compact_fc=False, log_level=1, produce_fc=True
+    )
+
+
+@pytest.fixture(scope="session")
+def ph_srtio3() -> Phonopy:
+    """Return Phonopy class instance of anataze SrTiO3 3x3x3."""
+    yaml_filename = cwd / "phonopy_SrTiO3.yaml.xz"
     return phonopy.load(
         yaml_filename, is_compact_fc=False, log_level=1, produce_fc=True
     )

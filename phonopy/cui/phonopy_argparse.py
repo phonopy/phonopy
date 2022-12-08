@@ -271,6 +271,13 @@ def get_parser(
         ),
     )
     parser.add_argument(
+        "--fc-calc",
+        "--fc-calculator",
+        dest="fc_calculator",
+        default=None,
+        help=("Force constants calculator"),
+    )
+    parser.add_argument(
         "--fc-calc-opt",
         "--fc-calculator-options",
         dest="fc_calculator_options",
@@ -688,6 +695,22 @@ def get_parser(
         help="Number of supercells with random displacements",
     )
     parser.add_argument(
+        "--rd-temperature",
+        dest="rd_temperature",
+        type=float,
+        default=None,
+        metavar="TEMPERATURE",
+        help="A temperature used to generate random displacements.",
+    )
+    parser.add_argument(
+        "--temperature",
+        dest="temperature",
+        type=float,
+        default=None,
+        metavar="TEMPERATURE",
+        help="(Deprecated) A temperature used to generate random displacements.",
+    )
+    parser.add_argument(
         "--readfc",
         dest="read_force_constants",
         action="store_true",
@@ -772,14 +795,6 @@ def get_parser(
         type=float,
         default=None,
         help="Write cif with aniso_U for which temperature is specified",
-    )
-    parser.add_argument(
-        "--temperature",
-        dest="temperature",
-        type=float,
-        default=None,
-        metavar="TEMPERATURE",
-        help="A temperature point",
     )
     parser.add_argument(
         "--tmax",

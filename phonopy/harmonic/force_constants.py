@@ -33,9 +33,12 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from phonopy import Phonopy
 
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
@@ -121,7 +124,7 @@ def get_fc2(
     return force_constants
 
 
-def compact_fc_to_full_fc(phonon, compact_fc, log_level=0):
+def compact_fc_to_full_fc(phonon: "Phonopy", compact_fc, log_level=0):
     """Transform compact fc to full fc."""
     fc = np.zeros(
         (compact_fc.shape[1], compact_fc.shape[1], 3, 3), dtype="double", order="C"
@@ -130,6 +133,17 @@ def compact_fc_to_full_fc(phonon, compact_fc, log_level=0):
     distribute_force_constants_by_translations(fc, phonon.primitive, phonon.supercell)
     if log_level:
         print("Force constants were expanded to full format.")
+
+    return fc
+
+
+def full_fc_to_compact_fc(phonon: "Phonopy", full_fc, log_level=0):
+    """Transform full fc to compact fc."""
+    p2s_map = phonon.primitive.p2s_map
+    fc = np.zeros((len(p2s_map), full_fc.shape[1], 3, 3), dtype="double", order="C")
+    fc[:] = full_fc[p2s_map]
+    if log_level:
+        print("Force constants format was transformed to compact format.")
 
     return fc
 

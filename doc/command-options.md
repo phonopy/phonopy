@@ -61,6 +61,8 @@ Some of command-line options are equivalent to respective setting tags:
 - `--q-direction` (`Q_DIRECTION`)
 - `--qpoints` (`QPOINTS`)
 - `--qpoints-format` (`QPOINTS_FORMAT`)
+- `--rd` (`RANDOM_DISPLACEMENTS`)
+- `--rd-temperature` (`RANDOM_DISPLACEMENT_TEMPERATURE`)
 - `--readfc` (`READ_FORCE_CONSTANTS = .TRUE.`)
 - `--readfc-format` (`READFC_FORMAT`)
 - `--read-qpoints` (`QPOINTS = .TRUE.`)
