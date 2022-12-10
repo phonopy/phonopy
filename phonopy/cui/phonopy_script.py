@@ -1904,6 +1904,33 @@ def main(**argparse_control):
             temperature=settings.random_displacement_temperature,
             cutoff_frequency=settings.cutoff_frequency,
         )
+
+        if log_level:
+            rd_comm_points = phonon.random_displacements.qpoints
+            rd_integrated_modes = phonon.random_displacements.integrated_modes
+            rd_frequencies = phonon.random_displacements.frequencies
+            print(
+                "Sampled q-points for generating displacements "
+                "(number of integrated modes):"
+            )
+            for q, integrated_modes, freqs in zip(
+                rd_comm_points, rd_integrated_modes, rd_frequencies
+            ):
+                print(f"{q} ({integrated_modes.sum()})")
+                if log_level > 1:
+                    print("  ", " ".join([f"{f:.3f}" for f in freqs]))
+            if np.prod(rd_integrated_modes.shape) - rd_integrated_modes.sum() != 3:
+                msg_lines = [
+                    "*****************************************************************",
+                    "* Tiny frequencies can induce unexpectedly large displacements. *",
+                    "* Please check force constants symmetry, e.g., --sym-fc option. *",
+                    "*****************************************************************",
+                ]
+                print("\n".join(msg_lines))
+            if log_level < 2:
+                print('Phonon frequencies can be shown by "-v" option.')
+            print()
+
         write_displacements_files_then_exit(
             phonon, settings, confs, cell_info["optional_structure_info"], log_level
         )
