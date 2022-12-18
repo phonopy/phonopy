@@ -33,6 +33,8 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import sys
 import textwrap
 import warnings
@@ -46,6 +48,7 @@ from phonopy.harmonic.displacement import (
     get_random_displacements_dataset,
 )
 from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
+from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
 from phonopy.harmonic.force_constants import cutoff_force_constants
 from phonopy.harmonic.force_constants import get_fc2 as get_phonopy_fc2
 from phonopy.harmonic.force_constants import (
@@ -80,6 +83,7 @@ from phonopy.structure.cells import (
     get_primitive_matrix,
     get_supercell,
     guess_primitive_matrix,
+    isclose,
     shape_supercell_matrix,
 )
 from phonopy.structure.dataset import forces_in_dataset, get_displacements_and_forces
@@ -113,7 +117,7 @@ class Phonopy:
     displacements : ndarray or list of list (getter) and array-like (setter).
     forces : ndarray (getter) or array_like (setter).
     force_constants : ndarray (getter) and array_like (setter).
-    nac_params : dict
+    nac_params : dict (Deprecated)
     supercells_with_displacements : list of PhonopyAtoms.
     dynamical_matrix : DynamicalMatrix
 
@@ -189,6 +193,14 @@ class Phonopy:
 
         # set_dynamical_matrix
         self._dynamical_matrix = None
+        if nac_params is not None:
+            warnings.warn(
+                (
+                    "Phonopy class instanciation with nac_params is deprecated. "
+                    "Use Phonopy.nac_params attribute instead."
+                ),
+                DeprecationWarning,
+            )
         self._nac_params = nac_params
         self._dynamical_matrix_decimals = dynamical_matrix_decimals
 
@@ -3377,9 +3389,80 @@ class Phonopy:
         with open(filename, "w") as w:
             w.write(str(phpy_yaml))
 
+    def ph2ph(self, supercell_matrix):
+        """Transform force constants in Phonopy class instance to other shape.
+
+        Fourier interpolation of force constants is performed. This Phonopy
+        class instance has to have force constants in it. Returned init
+        parameters of this Phonopy class instance are copied to returned
+        Phonopy class instance. In addition, NAC parameters are also copied.
+
+        Parameters
+        ----------
+        supercell_matrix : array_like
+            This specifies array shape of the force constants.
+
+        Returns
+        -------
+        ph : Phonopy
+            Phonopy class instance with init parameters of this Phonopy class
+            instance and transformed force constants of `supercell_matrix`.
+
+        """
+        if self._force_constants is None:
+            raise RuntimeError("Force constants are not prepared.")
+
+        ph_copy = self._copy()
+        ph_copy.nac_params = self._nac_params
+        ph_copy.force_constants = self._force_constants
+        ph = self._copy(supercell_matrix)
+        assert isclose(ph.primitive, ph_copy.primitive)
+        d2f = DynmatToForceConstants(ph.primitive, ph.supercell)
+        ph_copy.run_qpoints(d2f.commensurate_points, with_dynamical_matrices=True)
+        ph_dict = ph_copy.get_qpoints_dict()
+        d2f.dynamical_matrices = ph_dict["dynamical_matrices"]
+        d2f.run()
+        ph.force_constants = d2f.force_constants
+        return ph
+
     ###################
     # private methods #
     ###################
+    def _copy(self, supercell_matrix=None) -> Phonopy:
+        """Copy this Phonopy class instance with init parameters.
+
+        Parameters
+        ----------
+        supercell_matrix : array_like or None, optional
+            Supercell matrix can be specified. None gives the same supercell
+            matrix as this Phonopy class instance.
+
+        Returns
+        -------
+        ph : Phonopy
+            Copied phonopy class instace.
+
+        """
+        if supercell_matrix is None:
+            smat = self._supercell_matrix
+        else:
+            smat = supercell_matrix
+        return Phonopy(
+            self._unitcell,
+            supercell_matrix=smat,
+            primitive_matrix=self._primitive_matrix,
+            factor=self._factor,
+            frequency_scale_factor=self._frequency_scale_factor,
+            dynamical_matrix_decimals=self._dynamical_matrix_decimals,
+            force_constants_decimals=self._force_constants_decimals,
+            group_velocity_delta_q=self._gv_delta_q,
+            symprec=self._symprec,
+            is_symmetry=self._is_symmetry,
+            store_dense_svecs=self._store_dense_svecs,
+            calculator=self._calculator,
+            log_level=self._log_level,
+        )
+
     def _run_force_constants_from_forces(
         self,
         distributed_atom_list=None,

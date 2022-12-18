@@ -34,19 +34,17 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from phonopy.harmonic.force_constants import distribute_force_constants_by_translations
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import (
-    Primitive,
-    get_primitive,
-    get_supercell,
-    shape_supercell_matrix,
-    sparse_to_dense_svecs,
-)
+from phonopy.structure.cells import Primitive, get_supercell, sparse_to_dense_svecs
 from phonopy.structure.snf import SNF3x3
+
+if TYPE_CHECKING:
+    from phonopy import Phonopy
 
 
 def get_commensurate_points(supercell_matrix):  # wrt primitive cell
@@ -137,7 +135,7 @@ def categorize_commensurate_points(comm_points):
     return ii, ij
 
 
-def ph2fc(ph_orig, supercell_matrix):
+def ph2fc(ph_orig: "Phonopy", supercell_matrix):
     """Transform force constants in Phonopy instance to other shape.
 
     For example, ph_orig.supercell_matrix is np.diag([2, 2, 2]) and
@@ -148,20 +146,13 @@ def ph2fc(ph_orig, supercell_matrix):
     this operation at commensurate points of the later supercell_matrix
     should agree.
 
+    Returns
+    -------
+    force_constants : ndarray
+        Transformed force constants of ``supercell_matrix``.
+
     """
-    smat = shape_supercell_matrix(supercell_matrix)
-    scell = get_supercell(ph_orig.unitcell, smat)
-    pcell = get_primitive(
-        scell,
-        np.dot(np.linalg.inv(smat), ph_orig.primitive_matrix),
-        positions_to_reorder=ph_orig.primitive.scaled_positions,
-    )
-    d2f = DynmatToForceConstants(pcell, scell)
-    ph_orig.run_qpoints(d2f.commensurate_points, with_dynamical_matrices=True)
-    ph_dict = ph_orig.get_qpoints_dict()
-    d2f.dynamical_matrices = ph_dict["dynamical_matrices"]
-    d2f.run()
-    return d2f.force_constants
+    return ph_orig.ph2ph(supercell_matrix).force_constants
 
 
 class DynmatToForceConstants:
