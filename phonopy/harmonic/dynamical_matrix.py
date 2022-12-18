@@ -627,6 +627,21 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             self._Lambda,
         )
 
+    @property
+    def short_range_force_constants(self):
+        """Getter and setter of short-range force constants.
+
+        Initial short range force constants are computed at
+        make_Gonze_nac_dataset.
+
+        """
+        return self._Gonze_force_constants
+
+    @short_range_force_constants.setter
+    def short_range_force_constants(self, short_range_force_constants):
+        """Set short-range force constants."""
+        self._Gonze_force_constants = short_range_force_constants
+
     def get_Gonze_nac_dataset(self):
         """Return Gonze-Lee NAC dataset."""
         warnings.warn(

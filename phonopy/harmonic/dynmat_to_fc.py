@@ -135,16 +135,18 @@ def categorize_commensurate_points(comm_points):
     return ii, ij
 
 
-def ph2fc(ph_orig: "Phonopy", supercell_matrix):
+def ph2fc(ph_orig: "Phonopy", supercell_matrix, with_nac=True):
     """Transform force constants in Phonopy instance to other shape.
 
-    For example, ph_orig.supercell_matrix is np.diag([2, 2, 2]) and
-    supercell_matrix is np.diag([4, 4, 4]), force constants having the
-    later shape are returned. This is considered useful when ph_orig
-    has non-analytical correction (NAC). The effect of this correction
-    is included in the returned force constants. Phonons before and after
-    this operation at commensurate points of the later supercell_matrix
-    should agree.
+    This function is deprecated. Use ph2ph or Phonopy.ph2ph.
+
+    Parameters
+    ----------
+    supercell_matrix : array_like
+        This specifies array shape of the force constants.
+    with_nac : bool, optional
+        Use non-analytical term correction if NAC paramerters exist. Default is
+        True.
 
     Returns
     -------
@@ -152,7 +154,32 @@ def ph2fc(ph_orig: "Phonopy", supercell_matrix):
         Transformed force constants of ``supercell_matrix``.
 
     """
-    return ph_orig.ph2ph(supercell_matrix).force_constants
+    warnings.warn(
+        "ph2fc function is deprecated. Use Phonopy.ph2ph instead.", DeprecationWarning
+    )
+    return ph2ph(ph_orig, supercell_matrix, with_nac=with_nac).force_constants
+
+
+def ph2ph(ph_orig: "Phonopy", supercell_matrix, with_nac=False) -> "Phonopy":
+    """Transform force constants in Phonopy instance to other shape.
+
+    Parameters
+    ----------
+    supercell_matrix : array_like
+        This specifies array shape of the force constants.
+    with_nac : bool, optional
+        Non-analytical term correction (NAC) is used under the Fourier
+        interpolation and NAC parameters are copied to Phonopy class
+        instance if they exist. Default is False.
+
+    Returns
+    -------
+    ph : Phonopy
+        Phonopy class instance with init parameters of this Phonopy class
+        instance and transformed force constants of `supercell_matrix`.
+
+    """
+    return ph_orig.ph2ph(supercell_matrix, with_nac=with_nac)
 
 
 class DynmatToForceConstants:

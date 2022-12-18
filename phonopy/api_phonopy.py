@@ -3389,18 +3389,30 @@ class Phonopy:
         with open(filename, "w") as w:
             w.write(str(phpy_yaml))
 
-    def ph2ph(self, supercell_matrix):
+    def ph2ph(self, supercell_matrix, with_nac=False):
         """Transform force constants in Phonopy class instance to other shape.
 
         Fourier interpolation of force constants is performed. This Phonopy
         class instance has to have force constants in it. Returned init
-        parameters of this Phonopy class instance are copied to returned
-        Phonopy class instance. In addition, NAC parameters are also copied.
+        parameters of this Phonopy class instance are copied to returned Phonopy
+        class instance.
+
+        For example, if self._supercell_matrix is [2, 2, 2] and given
+        supercell_matrix is [4, 4, 4], the former force constants are Fourier
+        interpolated sampling at the commensurate points of the supercell of
+        the latter and new Phonopy class instance with the Fourier
+        interpolated force constants is returned.
 
         Parameters
         ----------
         supercell_matrix : array_like
             This specifies array shape of the force constants.
+        with_nac : bool, optional
+            Non-analytical term correction (NAC) is used under the Fourier
+            interpolation, i.e., dynamical matricies at commensurate points
+            are computed with NAC, then they are Fourier transform back to
+            force constants of supercell_matrix. NAC parameters are not
+            copied to returned Phonopy class instance.
 
         Returns
         -------
@@ -3412,17 +3424,29 @@ class Phonopy:
         if self._force_constants is None:
             raise RuntimeError("Force constants are not prepared.")
 
+        import phonopy._phonopy as phonoc
+
+        fc_shape = self._force_constants.shape
         ph_copy = self._copy()
-        ph_copy.nac_params = self._nac_params
         ph_copy.force_constants = self._force_constants
+
+        if with_nac and self._nac_params is not None:
+            ph_copy.nac_params = self._nac_params
+
         ph = self._copy(supercell_matrix)
         assert isclose(ph.primitive, ph_copy.primitive)
-        d2f = DynmatToForceConstants(ph.primitive, ph.supercell)
+        d2f = DynmatToForceConstants(
+            ph.primitive,
+            ph.supercell,
+            is_full_fc=(fc_shape[0] == fc_shape[1]),
+            use_openmp=phonoc.use_openmp(),
+        )
         ph_copy.run_qpoints(d2f.commensurate_points, with_dynamical_matrices=True)
         ph_dict = ph_copy.get_qpoints_dict()
         d2f.dynamical_matrices = ph_dict["dynamical_matrices"]
         d2f.run()
         ph.force_constants = d2f.force_constants
+
         return ph
 
     ###################
