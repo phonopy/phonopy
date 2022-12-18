@@ -34,19 +34,17 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from phonopy.harmonic.force_constants import distribute_force_constants_by_translations
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import (
-    Primitive,
-    get_primitive,
-    get_supercell,
-    shape_supercell_matrix,
-    sparse_to_dense_svecs,
-)
+from phonopy.structure.cells import Primitive, get_supercell, sparse_to_dense_svecs
 from phonopy.structure.snf import SNF3x3
+
+if TYPE_CHECKING:
+    from phonopy import Phonopy
 
 
 def get_commensurate_points(supercell_matrix):  # wrt primitive cell
@@ -137,31 +135,51 @@ def categorize_commensurate_points(comm_points):
     return ii, ij
 
 
-def ph2fc(ph_orig, supercell_matrix):
+def ph2fc(ph_orig: "Phonopy", supercell_matrix, with_nac=True):
     """Transform force constants in Phonopy instance to other shape.
 
-    For example, ph_orig.supercell_matrix is np.diag([2, 2, 2]) and
-    supercell_matrix is np.diag([4, 4, 4]), force constants having the
-    later shape are returned. This is considered useful when ph_orig
-    has non-analytical correction (NAC). The effect of this correction
-    is included in the returned force constants. Phonons before and after
-    this operation at commensurate points of the later supercell_matrix
-    should agree.
+    This function is deprecated. Use ph2ph or Phonopy.ph2ph.
+
+    Parameters
+    ----------
+    supercell_matrix : array_like
+        This specifies array shape of the force constants.
+    with_nac : bool, optional
+        Use non-analytical term correction if NAC paramerters exist. Default is
+        True.
+
+    Returns
+    -------
+    force_constants : ndarray
+        Transformed force constants of ``supercell_matrix``.
 
     """
-    smat = shape_supercell_matrix(supercell_matrix)
-    scell = get_supercell(ph_orig.unitcell, smat)
-    pcell = get_primitive(
-        scell,
-        np.dot(np.linalg.inv(smat), ph_orig.primitive_matrix),
-        positions_to_reorder=ph_orig.primitive.scaled_positions,
+    warnings.warn(
+        "ph2fc function is deprecated. Use Phonopy.ph2ph instead.", DeprecationWarning
     )
-    d2f = DynmatToForceConstants(pcell, scell)
-    ph_orig.run_qpoints(d2f.commensurate_points, with_dynamical_matrices=True)
-    ph_dict = ph_orig.get_qpoints_dict()
-    d2f.dynamical_matrices = ph_dict["dynamical_matrices"]
-    d2f.run()
-    return d2f.force_constants
+    return ph2ph(ph_orig, supercell_matrix, with_nac=with_nac).force_constants
+
+
+def ph2ph(ph_orig: "Phonopy", supercell_matrix, with_nac=False) -> "Phonopy":
+    """Transform force constants in Phonopy instance to other shape.
+
+    Parameters
+    ----------
+    supercell_matrix : array_like
+        This specifies array shape of the force constants.
+    with_nac : bool, optional
+        Non-analytical term correction (NAC) is used under the Fourier
+        interpolation and NAC parameters are copied to Phonopy class
+        instance if they exist. Default is False.
+
+    Returns
+    -------
+    ph : Phonopy
+        Phonopy class instance with init parameters of this Phonopy class
+        instance and transformed force constants of `supercell_matrix`.
+
+    """
+    return ph_orig.ph2ph(supercell_matrix, with_nac=with_nac)
 
 
 class DynmatToForceConstants:
