@@ -1670,7 +1670,10 @@ def check_supercell_in_yaml(cell_info, ph, log_level):
 
 def init_phonopy(settings, cell_info, symprec, log_level):
     """Prepare phonopy object."""
-    if settings.create_displacements and settings.temperatures is None:
+    if (
+        settings.create_displacements
+        and settings.random_displacement_temperature is None
+    ):
         phonon = Phonopy(
             cell_info["unitcell"],
             cell_info["supercell_matrix"],
