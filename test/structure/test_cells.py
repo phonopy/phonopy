@@ -377,12 +377,22 @@ def test_sparse_to_dense_nacl(ph_nacl: Phonopy):
 
 
 def test_isclose(ph_nacl: Phonopy):
-    """Test for isclose."""
+    """Test for isclose wit same order of atoms.."""
     scell = ph_nacl.supercell
     pcell = ph_nacl.primitive
     assert isclose(pcell, pcell)
     assert isclose(scell, scell)
     assert not isclose(scell, pcell)
+
+
+def test_isclose_with_arbitrary_order(
+    ph_nacl_unitcell_order1: Phonopy, ph_nacl_unitcell_order2: Phonopy
+):
+    """Test for isclose with different order."""
+    cell1 = ph_nacl_unitcell_order1.unitcell
+    cell2 = ph_nacl_unitcell_order2.unitcell
+    assert not isclose(cell1, cell2)
+    assert isclose(cell1, cell2, with_arbitrary_order=True)
 
 
 def test_convert_to_phonopy_primitive(ph_nacl: Phonopy):

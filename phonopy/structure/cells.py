@@ -875,24 +875,61 @@ def get_cell_lines(cell: PhonopyAtoms, mapping=None, stars=None):
 
 
 def isclose(
-    a: PhonopyAtoms, b: PhonopyAtoms, rtol: float = 1e-5, atol: float = 1e-8
+    a: PhonopyAtoms,
+    b: PhonopyAtoms,
+    rtol: float = 1e-5,
+    atol: float = 1e-8,
+    with_arbitrary_order: bool = False,
 ) -> bool:
-    """Check equivalence of two cells."""
-    if len(a) != len(b):
-        return False
+    """Check equivalence of two cells.
 
-    if (a.numbers != b.numbers).any():
+    Cell-b is compared with respect to cell-a.
+
+    Parameters
+    ----------
+    a : PhonopyAtoms
+        Reference cell.
+    b : PhonopyAtoms
+        Cell to be compared.
+    rtol : float, optional
+        Relative tolerance in Cartesian coordinates. Default is 1e-5.
+    atol : float, optional
+        Tolerance in Cartesian distance. Default is 1e-8.
+    with_arbitrary_order : bool, optional
+        PosDefault is False.
+
+    """
+    if len(a) != len(b):
         return False
 
     if not np.allclose(a.cell, b.cell, rtol=rtol, atol=atol):
         return False
 
-    diff = a.scaled_positions - b.scaled_positions
-    diff -= np.rint(diff)
-    dist = np.sqrt((np.dot(diff, a.cell) ** 2).sum(axis=1))
-    if (dist > atol).any():
-        return False
+    if with_arbitrary_order:
+        indices = []
+        for pos in b.scaled_positions:
+            diff = a.scaled_positions - pos
+            diff -= np.rint(diff)
+            dist = (np.dot(diff, a.cell) ** 2).sum(axis=1)
+            matches = np.where(dist < atol)[0]
+            if len(matches) != 1:
+                return False
+            indices.append(matches[0])
+        if (np.sort(indices) == np.arange(len(indices))).all() and (
+            a.numbers[indices] == b.numbers
+        ).all():
+            pass
+        else:
+            return False
+    else:
+        if (a.numbers != b.numbers).any():
+            return False
 
+        diff = a.scaled_positions - b.scaled_positions
+        diff -= np.rint(diff)
+        dist = np.sqrt((np.dot(diff, a.cell) ** 2).sum(axis=1))
+        if (dist > atol).any():
+            return False
     return True
 
 

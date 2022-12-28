@@ -187,6 +187,13 @@ def ph_nacl_unitcell_order1() -> Phonopy:
 
 
 @pytest.fixture(scope="session")
+def ph_nacl_unitcell_order2() -> Phonopy:
+    """Return Phonopy class instance of only NaCl unitcell with order-2."""
+    yaml_filename = cwd / "phonopy_NaCl_unitcell2.yaml"
+    return phonopy.load(yaml_filename, log_level=1, produce_fc=False)
+
+
+@pytest.fixture(scope="session")
 def ph_nacl_gruneisen() -> Tuple[Phonopy, Phonopy, Phonopy]:
     """Return Phonopy class instances of NaCl 2x2x2 at three volumes."""
     ph0 = phonopy.load(
