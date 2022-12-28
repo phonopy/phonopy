@@ -70,15 +70,15 @@ def load(
 ) -> Phonopy:
     """Create Phonopy instance from parameters and/or input files.
 
-    "phonopy_yaml"-like file is parsed unless crystal structure information
-    is given by unitcell_filename, supercell_filename, unitcell
-    (PhonopyAtoms-like), or supercell (PhonopyAtoms-like).
-    Even when "phonopy_yaml"-like file is parse, parameters except for
-    crystal structure can be overwritten.
+    "phonopy_yaml"-like file is parsed unless crystal structure information is
+    given by unitcell_filename, supercell_filename, unitcell
+    (PhonopyAtoms-like), or supercell (PhonopyAtoms-like). Even when
+    "phonopy_yaml"-like file is parse, parameters except for crystal structure
+    can be overwritten.
 
-    Phonopy default files of 'FORCE_SETS' and 'BORN' are parsed when they
-    are found in current directory and those data are not yet provided by
-    other means.
+    Phonopy default files of 'FORCE_SETS' and 'BORN' are parsed when they are
+    found in current directory and those data are not yet provided by other
+    means.
 
     Crystal structure
     -----------------
@@ -91,8 +91,8 @@ def load(
 
     Force sets or force constants
     -----------------------------
-    Optional. Means to provide information to generate force constants
-    and their priority:
+    Optional. Means to provide information to generate force constants and their
+    priority:
         1. force_constants_filename
         2. force_sets_filename
         3. phonopy_yaml if force constants are found in phonoy_yaml.
@@ -101,8 +101,8 @@ def load(
         6. 'force_constants.hdf5' is searched in current directory.
         7. 'FORCE_SETS' is searched in current directory.
     When both of 3 and 4 are satisfied but not others, force constants and
-    dataset are stored in Phonopy instance, but force constants are not
-    produced from dataset.
+    dataset are stored in Phonopy instance, but force constants are not produced
+    from dataset.
 
     Parameters for non-analytical term correctiion (NAC)
     ----------------------------------------------------
@@ -115,36 +115,32 @@ def load(
     Parameters
     ----------
     phonopy_yaml : str, optional
-        Filename of "phonopy.yaml"-like file. If this is given, the data
-        in the file are parsed. Default is None.
+        Filename of "phonopy.yaml"-like file. If this is given, the data in the
+        file are parsed. Default is None.
     supercell_matrix : array_like, optional
-        Supercell matrix multiplied to input cell basis vectors.
-        shape=(3, ) or (3, 3), where the former is considered a diagonal
-        matrix. Default is the unit matrix.
-        dtype=int
+        Supercell matrix multiplied to input cell basis vectors. shape=(3, ) or
+        (3, 3), where the former is considered a diagonal matrix. Default is the
+        unit matrix. dtype=int
     primitive_matrix : array_like or str, optional
         Primitive matrix multiplied to input cell basis vectors. Default is
-        None, which is equivalent to 'auto'.
-        For array_like, shape=(3, 3), dtype=float.
-        When 'F', 'I', 'A', 'C', or 'R' is given instead of a 3x3 matrix,
-        the primitive matrix for the character found at
-        https://spglib.github.io/spglib/definition.html
-        is used.
+        None, which is equivalent to 'auto'. For array_like, shape=(3, 3),
+        dtype=float. When 'F', 'I', 'A', 'C', or 'R' is given instead of a 3x3
+        matrix, the primitive matrix for the character found at
+        https://spglib.github.io/spglib/definition.html is used.
     is_nac : bool, optional
-        If True, look for 'BORN' file. If False, NAS is turned off.
-        Default is True.
+        If True, look for 'BORN' file. If False, NAS is turned off. Default is
+        True.
     calculator : str, optional.
-        Calculator used for computing forces. This is used to switch the set
-        of physical units. Default is None, which is equivalent to "vasp".
+        Calculator used for computing forces. This is used to switch the set of
+        physical units. Default is None, which is equivalent to "vasp".
     unitcell : PhonopyAtoms, optional
         Input unit cell. Default is None.
     supercell : PhonopyAtoms, optional
-        Input supercell. With given, default value of primitive_matrix is set
-        to 'auto' (can be overwitten). supercell_matrix is ignored. Default is
+        Input supercell. With given, default value of primitive_matrix is set to
+        'auto' (can be overwitten). supercell_matrix is ignored. Default is
         None.
     nac_params : dict, optional
-        Parameters required for non-analytical term correction. Default is
-        None.
+        Parameters required for non-analytical term correction. Default is None.
         {'born': Born effective charges
                  (array_like, shape=(primitive cell atoms, 3, 3), dtype=float),
          'dielectric': Dielectric constant matrix
@@ -168,34 +164,32 @@ def load(
     fc_calculator : str, optional
         Force constants calculator. Currently only 'alm'. Default is None.
     fc_calculator_options : str, optional
-        Optional parameters that are passed to the external fc-calculator.
-        This is given as one text string. How to parse this depends on the
-        fc-calculator. For alm, each parameter is splitted by comma ',',
-        and each set of key and value pair is written in 'key = value'.
+        Optional parameters that are passed to the external fc-calculator. This
+        is given as one text string. How to parse this depends on the
+        fc-calculator. For alm, each parameter is splitted by comma ',', and
+        each set of key and value pair is written in 'key = value'.
     factor : float, optional
-        Phonon frequency unit conversion factor. Unless specified, default
-        unit conversion factor for each calculator is used.
+        Phonon frequency unit conversion factor. Unless specified, default unit
+        conversion factor for each calculator is used.
     frequency_scale_factor : float, optional
-        Factor multiplied to calculated phonon frequency. Default is None,
-        i.e., effectively 1.
+        Factor multiplied to calculated phonon frequency. Default is None, i.e.,
+        effectively 1.
     produce_fc : bool, optional
-        Setting False, force constants are not calculated from displacements
-        and forces. Default is True.
+        Setting False, force constants are not calculated from dataset of
+        displacements and forces even if the dataset exists. Default is True.
     is_symmetry : bool, optional
         Setting False, crystal symmetry except for lattice translation is not
         considered. Default is True.
     symmetrize_fc : bool, optional
-        Setting False, force constants are not symmetrized when creating
-        force constants from displacements and forces. Default is True.
+        Setting False, force constants are not symmetrized when creating force
+        constants from displacements and forces. Default is True.
     is_compact_fc : bool, optional
         Force constants are produced in the array whose shape is
-            True: (primitive, supecell, 3, 3)
-            False: (supercell, supecell, 3, 3)
+            True: (primitive, supecell, 3, 3) False: (supercell, supecell, 3, 3)
         where 'supercell' and 'primitive' indicate number of atoms in these
         cells. Default is True.
     store_dense_svecs : bool, optional
-        This is for the test use. Do not set True.
-        Default is False.
+        This is for the test use. Do not set True. Default is False.
     symprec : float, optional
         Tolerance used to find crystal symmetry. Default is 1e-5.
     log_level : int, optional
