@@ -2016,7 +2016,7 @@ class Phonopy:
             nac_q_direction=nac_q_direction,
         )
 
-    def get_qpoints_dict(self):
+    def get_qpoints_dict(self) -> dict:
         """Return calculated phonon properties at q-points.
 
         Returns

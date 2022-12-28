@@ -3,8 +3,12 @@ import numpy as np
 import pytest
 
 from phonopy import Phonopy
-from phonopy.harmonic.force_constants import cutoff_force_constants
-from phonopy.structure.cells import get_primitive
+from phonopy.harmonic.force_constants import (
+    cutoff_force_constants,
+    rearrange_force_constants_array,
+)
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import get_primitive, isclose
 
 fc_1_10_ref = [
     -0.037549,
@@ -110,3 +114,28 @@ def test_fc_cutoff_radius_svecs(
         assert np.sum(changed) == 534
     else:
         assert np.sum(changed) == 17088
+
+
+def test_rearrange_force_constants_array(
+    nacl_unitcell_order1: PhonopyAtoms,
+    nacl_unitcell_order2: PhonopyAtoms,
+    ph_nacl: Phonopy,
+):
+    """Test of rearrange_force_constants_array."""
+    ph1 = ph_nacl
+    assert isclose(nacl_unitcell_order1, ph1.unitcell)
+    fc = ph1.force_constants
+    assert fc.shape[0] == fc.shape[1]
+    ph2 = Phonopy(
+        nacl_unitcell_order2,
+        supercell_matrix=[2, 2, 2],
+        primitive_matrix="F",
+    )
+    re_fc, indices = rearrange_force_constants_array(fc, ph1.supercell, ph2.supercell)
+    ph1.run_qpoints([[0.5, 0.5, 0.5]])
+    freq1 = ph1.get_qpoints_dict()["frequencies"]
+    ph2.force_constants = re_fc
+    ph2.run_qpoints([[0.5, 0.5, 0.5]])
+    freq2 = ph2.get_qpoints_dict()["frequencies"]
+    np.testing.assert_allclose(fc[indices[3], indices[3]], re_fc[3, 3])
+    np.testing.assert_allclose(freq1, freq2)

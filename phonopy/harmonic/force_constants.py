@@ -45,6 +45,7 @@ from phonopy.structure.cells import (
     Primitive,
     compute_permutation_for_rotation,
     get_smallest_vectors,
+    isclose,
 )
 from phonopy.structure.symmetry import Symmetry
 from phonopy.utils import similarity_transformation
@@ -146,6 +147,34 @@ def full_fc_to_compact_fc(phonon: "Phonopy", full_fc, log_level=0):
         print("Force constants format was transformed to compact format.")
 
     return fc
+
+
+def rearrange_force_constants_array(
+    full_fc: np.ndarray, a: PhonopyAtoms, b: PhonopyAtoms
+) -> tuple[np.ndarray, list]:
+    """Rearrange force constants array of cell-a to those of cell-b.
+
+    Parameters
+    ----------
+    full_fc : ndarray
+        Force constants in full array format.
+    a : PhonopyAtoms
+        Cell of input force constants.
+    b : PhonopyAtoms
+        Cell of rearranged force constants.
+
+    Returns
+    -------
+    ndarray
+        Rearranged force constants array.
+
+    """
+    assert full_fc.shape[0] == full_fc.shape[1]
+    indices: list = isclose(a, b, with_arbitrary_order=True, return_order=True)
+    re_fc = np.zeros_like(full_fc)
+    for i, j in enumerate(indices):
+        re_fc[i] = full_fc[j][indices]
+    return re_fc, indices
 
 
 def cutoff_force_constants(
