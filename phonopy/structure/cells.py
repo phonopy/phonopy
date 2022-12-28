@@ -32,8 +32,10 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+from __future__ import annotations
 
 import warnings
+from typing import Union
 
 import numpy as np
 import spglib
@@ -880,7 +882,8 @@ def isclose(
     rtol: float = 1e-5,
     atol: float = 1e-8,
     with_arbitrary_order: bool = False,
-) -> bool:
+    return_order: bool = False,
+) -> Union[bool, list]:
     """Check equivalence of two cells.
 
     Cell-b is compared with respect to cell-a.
@@ -897,6 +900,20 @@ def isclose(
         Tolerance in Cartesian distance. Default is 1e-8.
     with_arbitrary_order : bool, optional
         PosDefault is False.
+    return_order : bool, optional
+        See ``Returns`` below. Default is False. This can be only usable with
+        ``with_arbitrary_order=True``.
+
+    Returns
+    -------
+    bool (``return_order=False``)
+        Whether two cells agree upto lattice translation of each atom.
+
+    or
+
+    list (``return_order=True``).
+        A list of atom indices of cell-b in the index of cell-a.
+        This means ``a.numbers[indices] == b.numbers``.
 
     """
     if len(a) != len(b):
@@ -918,7 +935,9 @@ def isclose(
         if (np.sort(indices) == np.arange(len(indices))).all() and (
             a.numbers[indices] == b.numbers
         ).all():
-            pass
+            if return_order:
+                return indices
+            return True
         else:
             return False
     else:
