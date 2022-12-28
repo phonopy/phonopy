@@ -1,0 +1,51 @@
+phonopy:
+  version: 2.7.0
+
+physical_unit:
+  atomic_mass: "AMU"
+  length: "angstrom"
+  force_constants: "eV/angstrom^2"
+
+space_group:
+  type: "Fm-3m"
+  number: 225
+  Hall_symbol: "-F 4 2 3"
+
+unit_cell:
+  lattice:
+  - [     5.690301476175671,     0.000000000000000,     0.000000000000000 ] # a
+  - [     0.000000000000000,     5.690301476175671,     0.000000000000000 ] # b
+  - [     0.000000000000000,     0.000000000000000,     5.690301476175671 ] # c
+  points:
+  - symbol: Na # 1
+    coordinates: [  0.000000000000000,  0.000000000000000,  0.000000000000000 ]
+    mass: 22.989769
+    reduced_to: 1
+  - symbol: Na # 2
+    coordinates: [  0.000000000000000,  0.500000000000000,  0.500000000000000 ]
+    mass: 22.989769
+    reduced_to: 1
+  - symbol: Na # 3
+    coordinates: [  0.500000000000000,  0.000000000000000,  0.500000000000000 ]
+    mass: 22.989769
+    reduced_to: 1
+  - symbol: Na # 4
+    coordinates: [  0.500000000000000,  0.500000000000000,  0.000000000000000 ]
+    mass: 22.989769
+    reduced_to: 1
+  - symbol: Cl # 5
+    coordinates: [  0.500000000000000,  0.500000000000000,  0.500000000000000 ]
+    mass: 35.453000
+    reduced_to: 5
+  - symbol: Cl # 6
+    coordinates: [  0.500000000000000,  0.000000000000000,  0.000000000000000 ]
+    mass: 35.453000
+    reduced_to: 5
+  - symbol: Cl # 7
+    coordinates: [  0.000000000000000,  0.500000000000000,  0.000000000000000 ]
+    mass: 35.453000
+    reduced_to: 5
+  - symbol: Cl # 8
+    coordinates: [  0.000000000000000,  0.000000000000000,  0.500000000000000 ]
+    mass: 35.453000
+    reduced_to: 5

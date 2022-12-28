@@ -42,6 +42,7 @@ from typing import Optional, Union
 
 import numpy as np
 
+from phonopy.exception import ForcesetsNotFoundError
 from phonopy.harmonic.displacement import (
     directions_to_displacement_dataset,
     get_least_displacements,
@@ -1035,9 +1036,9 @@ class Phonopy:
         if "first_atoms" in self._displacement_dataset:
             for disp in self._displacement_dataset["first_atoms"]:
                 if "forces" not in disp:
-                    raise RuntimeError("Forces are not yet set.")
+                    raise ForcesetsNotFoundError("Force sets are not yet set.")
         elif "forces" not in self._displacement_dataset:
-            raise RuntimeError("Forces are not yet set.")
+            raise ForcesetsNotFoundError("Force sets are not yet set.")
 
         if calculate_full_force_constants:
             self._run_force_constants_from_forces(
