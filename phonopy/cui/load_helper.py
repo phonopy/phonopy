@@ -38,6 +38,7 @@ import os
 import numpy as np
 
 from phonopy import Phonopy
+from phonopy.exception import ForcesetsNotFoundError
 from phonopy.file_IO import (
     parse_BORN,
     parse_FORCE_CONSTANTS,
@@ -284,15 +285,19 @@ def _produce_force_constants(
     is_compact_fc,
     log_level,
 ):
-    phonon.produce_force_constants(
-        calculate_full_force_constants=(not is_compact_fc),
-        fc_calculator=fc_calculator,
-        fc_calculator_options=fc_calculator_options,
-    )
-    if symmetrize_fc:
-        phonon.symmetrize_force_constants(show_drift=(log_level > 0))
+    try:
+        phonon.produce_force_constants(
+            calculate_full_force_constants=(not is_compact_fc),
+            fc_calculator=fc_calculator,
+            fc_calculator_options=fc_calculator_options,
+        )
+        if symmetrize_fc:
+            phonon.symmetrize_force_constants(show_drift=(log_level > 0))
+            if log_level:
+                print("Force constants were symmetrized.")
+    except ForcesetsNotFoundError:
         if log_level:
-            print("Force constants were symmetrized.")
+            print("Force constants not produced due to force set not found.")
 
 
 def _read_crystal_structure(filename=None, interface_mode=None):

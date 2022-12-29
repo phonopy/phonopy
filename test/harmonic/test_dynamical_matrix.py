@@ -2,6 +2,7 @@
 import numpy as np
 import pytest
 
+from phonopy import Phonopy
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrixGL
 
 dynmat_ref_000 = [
@@ -476,7 +477,7 @@ def test_dynmat(ph_nacl_nonac, ph_nacl_nonac_compact_fc, is_compact_fc, lang):
 
 
 @pytest.mark.parametrize("lang", ["C", "Py"])
-def test_dynmat_dense_svecs(ph_nacl_nonac_dense_svecs, lang):
+def test_dynmat_dense_svecs(ph_nacl_nonac_dense_svecs: Phonopy, lang):
     """Test with dense svecs."""
     ph = ph_nacl_nonac_dense_svecs
     dynmat = ph.dynamical_matrix
@@ -484,10 +485,36 @@ def test_dynmat_dense_svecs(ph_nacl_nonac_dense_svecs, lang):
     _test_dynmat_252525(dynmat, dynmat_ref_252525, lang=lang)
 
 
-def test_dynmat_gonze_lee(ph_nacl):
+def test_dynmat_gonze_lee(ph_nacl: Phonopy):
     """Test with NAC by Gonze and Lee."""
     dynmat = ph_nacl.dynamical_matrix
     _test_dynmat_252525(dynmat, dynmat_gonze_lee_ref_252525)
+
+
+def test_dynmat_gonze_lee_short_range_fc(ph_nacl: Phonopy):
+    """Test force constants in dynamical matrix with NAC by Gonze and Lee."""
+    # Test getter
+    ph_nacl.dynamical_matrix.make_Gonze_nac_dataset()
+    fc = ph_nacl.dynamical_matrix.force_constants
+    sr_fc = ph_nacl.dynamical_matrix.short_range_force_constants
+    np.testing.assert_allclose(
+        np.diag(fc[0, 1]), [-0.3017767, 0.0049673, 0.0049673], atol=1e-5
+    )
+    np.testing.assert_allclose(
+        np.diag(sr_fc[0, 1]), [-0.13937495, -0.04645899, -0.04645899], atol=1e-5
+    )
+
+    # Test setter.
+    ph_nacl.dynamical_matrix.short_range_force_constants = fc
+    sr_fc = ph_nacl.dynamical_matrix.short_range_force_constants
+    np.testing.assert_allclose(
+        np.diag(sr_fc[0, 1]), [-0.3017767, 0.0049673, 0.0049673], atol=1e-5
+    )
+    ph_nacl.dynamical_matrix.make_Gonze_nac_dataset()
+    sr_fc = ph_nacl.dynamical_matrix.short_range_force_constants
+    np.testing.assert_allclose(
+        np.diag(sr_fc[0, 1]), [-0.13937495, -0.04645899, -0.04645899], atol=1e-5
+    )
 
 
 def test_dynmat_gonze_lee_full_term(ph_nacl):

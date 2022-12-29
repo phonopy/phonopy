@@ -495,7 +495,7 @@ def create_FORCE_SETS_from_settings(settings, cell_filename, symprec, log_level)
 def produce_force_constants(
     phonon: Phonopy, settings, phpy_yaml, unitcell_filename, log_level
 ):
-    """Run force constants calculation."""
+    """Run force constants calculation (non-phonopy-yaml mode)."""
     num_satom = len(phonon.supercell)
     is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
 
@@ -618,32 +618,37 @@ def _read_force_constants_from_file(
         fc = parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS", p2s_map=p2s_map)
         fc_filename = "FORCE_CONSTANTS"
 
+    if log_level:
+        print('Force constants are read from "%s".' % fc_filename)
+
+    if fc.shape[1] != num_satom:
+        error_text = "\n".join(
+            [
+                f"Number of atoms in supercell ({num_satom}) is not consistent with "
+                "the matrix shape of ",
+                f"force constants {fc.shape[:2]} read from ",
+            ]
+        )
+        if settings.is_hdf5 or settings.readfc_format == "hdf5":
+            error_text += "force_constants.hdf5.\n"
+        else:
+            error_text += "FORCE_CONSTANTS.\n"
+        error_text += (
+            "Please carefully check DIM, FORCE_CONSTANTS, " "and %s."
+        ) % unitcell_filename
+        print_error_message(error_text)
         if log_level:
-            print('Force constants are read from "%s".' % fc_filename)
+            print_error()
+        sys.exit(1)
 
-        if fc.shape[1] != num_satom:
-            error_text = (
-                "Number of atoms in supercell is not consistent "
-                "with the matrix shape of\nforce constants read "
-                "from "
-            )
-            if settings.is_hdf5 or settings.readfc_format == "hdf5":
-                error_text += "force_constants.hdf5.\n"
-            else:
-                error_text += "FORCE_CONSTANTS.\n"
-            error_text += (
-                "Please carefully check DIM, FORCE_CONSTANTS, " "and %s."
-            ) % unitcell_filename
-            print_error_message(error_text)
-            if log_level:
-                print_error()
-            sys.exit(1)
+    # Compact fc is expanded to full fc when full fc is required.
+    if is_full_fc and fc.shape[0] != fc.shape[1]:
+        fc = compact_fc_to_full_fc(phonon, fc, log_level=log_level)
+    elif not is_full_fc and fc.shape[0] == fc.shape[1]:
+        fc = full_fc_to_compact_fc(phonon, fc, log_level=log_level)
 
-        # Compact fc is expanded to full fc when full fc is required.
-        if is_full_fc and fc.shape[0] != fc.shape[1]:
-            fc = compact_fc_to_full_fc(phonon, fc, log_level=log_level)
-        elif not is_full_fc and fc.shape[0] == fc.shape[1]:
-            fc = full_fc_to_compact_fc(phonon, fc, log_level=log_level)
+    if log_level:
+        print(f"Array shape of force constants: {fc.shape}")
 
     phonon.force_constants = fc
 
@@ -1665,7 +1670,10 @@ def check_supercell_in_yaml(cell_info, ph, log_level):
 
 def init_phonopy(settings, cell_info, symprec, log_level):
     """Prepare phonopy object."""
-    if settings.create_displacements and settings.temperatures is None:
+    if (
+        settings.create_displacements
+        and settings.random_displacement_temperature is None
+    ):
         phonon = Phonopy(
             cell_info["unitcell"],
             cell_info["supercell_matrix"],
@@ -1904,6 +1912,33 @@ def main(**argparse_control):
             temperature=settings.random_displacement_temperature,
             cutoff_frequency=settings.cutoff_frequency,
         )
+
+        if log_level:
+            rd_comm_points = phonon.random_displacements.qpoints
+            rd_integrated_modes = phonon.random_displacements.integrated_modes
+            rd_frequencies = phonon.random_displacements.frequencies
+            print(
+                "Sampled q-points for generating displacements "
+                "(number of integrated modes):"
+            )
+            for q, integrated_modes, freqs in zip(
+                rd_comm_points, rd_integrated_modes, rd_frequencies
+            ):
+                print(f"{q} ({integrated_modes.sum()})")
+                if log_level > 1:
+                    print("  ", " ".join([f"{f:.3f}" for f in freqs]))
+            if np.prod(rd_integrated_modes.shape) - rd_integrated_modes.sum() != 3:
+                msg_lines = [
+                    "*****************************************************************",
+                    "* Tiny frequencies can induce unexpectedly large displacements. *",
+                    "* Please check force constants symmetry, e.g., --sym-fc option. *",
+                    "*****************************************************************",
+                ]
+                print("\n".join(msg_lines))
+            if log_level < 2:
+                print('Phonon frequencies can be shown by "-v" option.')
+            print()
+
         write_displacements_files_then_exit(
             phonon, settings, confs, cell_info["optional_structure_info"], log_level
         )

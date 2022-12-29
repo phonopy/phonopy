@@ -207,9 +207,9 @@ def test_get_supercell_primcell_si(primcell_si: PhonopyAtoms, nosnf, helper_meth
     _test_get_supercell_primcell_si(primcell_si, helper_methods, is_old_style=nosnf)
 
 
-def test_get_supercell_nacl_snf(convcell_nacl: PhonopyAtoms, helper_methods):
+def test_get_supercell_nacl_snf(nacl_unitcell_order1: PhonopyAtoms, helper_methods):
     """Test of get_supercell using SNF by NaCl."""
-    cell = convcell_nacl
+    cell = nacl_unitcell_order1
     smat = [[-1, 1, 1], [1, -1, 1], [1, 1, -1]]
     scell = get_supercell(cell, smat, is_old_style=True)
     scell_snf = get_supercell(cell, smat, is_old_style=False)
@@ -258,10 +258,10 @@ def _test_get_supercell_primcell_si(
 
 
 def test_get_primitive_convcell_nacl(
-    convcell_nacl: PhonopyAtoms, primcell_nacl: PhonopyAtoms, helper_methods
+    nacl_unitcell_order1: PhonopyAtoms, primcell_nacl: PhonopyAtoms, helper_methods
 ):
     """Test get_primitive by NaCl."""
-    pcell = get_primitive(convcell_nacl, primitive_matrix_nacl)
+    pcell = get_primitive(nacl_unitcell_order1, primitive_matrix_nacl)
     helper_methods.compare_cells_with_order(pcell, primcell_nacl)
 
 
@@ -278,11 +278,11 @@ def test_get_primitive_convcell_Cr(convcell_cr: PhonopyAtoms, helper_methods):
 
 @pytest.mark.parametrize("store_dense_svecs", [True, False])
 def test_get_primitive_convcell_nacl_svecs(
-    convcell_nacl: PhonopyAtoms, store_dense_svecs
+    nacl_unitcell_order1: PhonopyAtoms, store_dense_svecs
 ):
     """Test shortest vectors by NaCl."""
     pcell = get_primitive(
-        convcell_nacl, primitive_matrix_nacl, store_dense_svecs=store_dense_svecs
+        nacl_unitcell_order1, primitive_matrix_nacl, store_dense_svecs=store_dense_svecs
     )
     svecs, multi = pcell.get_smallest_vectors()
     if store_dense_svecs:
@@ -295,7 +295,7 @@ def test_get_primitive_convcell_nacl_svecs(
         assert multi.shape == (8, 2)
 
 
-def test_TrimmedCell(convcell_nacl: PhonopyAtoms, helper_methods):
+def test_TrimmedCell(nacl_unitcell_order1: PhonopyAtoms, helper_methods):
     """Test TrimmedCell by NaCl."""
     pmat = [[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]]
     smat2 = np.eye(3, dtype="intc") * 2
@@ -303,7 +303,7 @@ def test_TrimmedCell(convcell_nacl: PhonopyAtoms, helper_methods):
     smat3 = np.eye(3, dtype="intc") * 3
     pmat3 = np.dot(np.linalg.inv(smat3), pmat)
 
-    cell = convcell_nacl
+    cell = nacl_unitcell_order1
     scell2 = get_supercell(cell, smat2)
     scell3 = get_supercell(cell, smat3)
     n = len(scell3) // 2
@@ -377,12 +377,26 @@ def test_sparse_to_dense_nacl(ph_nacl: Phonopy):
 
 
 def test_isclose(ph_nacl: Phonopy):
-    """Test for isclose."""
+    """Test of isclose wit same order of atoms.."""
     scell = ph_nacl.supercell
     pcell = ph_nacl.primitive
     assert isclose(pcell, pcell)
     assert isclose(scell, scell)
     assert not isclose(scell, pcell)
+
+
+def test_isclose_with_arbitrary_order(
+    nacl_unitcell_order1: PhonopyAtoms, nacl_unitcell_order2: PhonopyAtoms
+):
+    """Test of isclose with different order."""
+    cell1 = nacl_unitcell_order1
+    cell2 = nacl_unitcell_order2
+    assert not isclose(cell1, cell2)
+    _isclose = isclose(cell1, cell2, with_arbitrary_order=True)
+    assert isinstance(_isclose, bool)
+    assert _isclose
+    order = isclose(cell1, cell2, with_arbitrary_order=True, return_order=True)
+    np.testing.assert_array_equal(order, [0, 4, 1, 5, 2, 6, 3, 7])
 
 
 def test_convert_to_phonopy_primitive(ph_nacl: Phonopy):
