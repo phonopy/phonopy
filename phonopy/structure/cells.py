@@ -32,8 +32,10 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+from __future__ import annotations
 
 import warnings
+from typing import Union
 
 import numpy as np
 import spglib
@@ -875,24 +877,78 @@ def get_cell_lines(cell: PhonopyAtoms, mapping=None, stars=None):
 
 
 def isclose(
-    a: PhonopyAtoms, b: PhonopyAtoms, rtol: float = 1e-5, atol: float = 1e-8
-) -> bool:
-    """Check equivalence of two cells."""
-    if len(a) != len(b):
-        return False
+    a: PhonopyAtoms,
+    b: PhonopyAtoms,
+    rtol: float = 1e-5,
+    atol: float = 1e-8,
+    with_arbitrary_order: bool = False,
+    return_order: bool = False,
+) -> Union[bool, list]:
+    """Check equivalence of two cells.
 
-    if (a.numbers != b.numbers).any():
+    Cell-b is compared with respect to cell-a.
+
+    Parameters
+    ----------
+    a : PhonopyAtoms
+        Reference cell.
+    b : PhonopyAtoms
+        Cell to be compared.
+    rtol : float, optional
+        Relative tolerance in Cartesian coordinates. Default is 1e-5.
+    atol : float, optional
+        Tolerance in Cartesian distance. Default is 1e-8.
+    with_arbitrary_order : bool, optional
+        PosDefault is False.
+    return_order : bool, optional
+        See ``Returns`` below. Default is False. This can be only usable with
+        ``with_arbitrary_order=True``.
+
+    Returns
+    -------
+    bool (``return_order=False``)
+        Whether two cells agree upto lattice translation of each atom.
+
+    or
+
+    list (``return_order=True``).
+        A list of atom indices of cell-b in the index of cell-a.
+        This means ``a.numbers[indices] == b.numbers``.
+
+    """
+    if len(a) != len(b):
         return False
 
     if not np.allclose(a.cell, b.cell, rtol=rtol, atol=atol):
         return False
 
-    diff = a.scaled_positions - b.scaled_positions
-    diff -= np.rint(diff)
-    dist = np.sqrt((np.dot(diff, a.cell) ** 2).sum(axis=1))
-    if (dist > atol).any():
-        return False
+    if with_arbitrary_order:
+        indices = []
+        for pos in b.scaled_positions:
+            diff = a.scaled_positions - pos
+            diff -= np.rint(diff)
+            dist = (np.dot(diff, a.cell) ** 2).sum(axis=1)
+            matches = np.where(dist < atol)[0]
+            if len(matches) != 1:
+                return False
+            indices.append(matches[0])
+        if (np.sort(indices) == np.arange(len(indices))).all() and (
+            a.numbers[indices] == b.numbers
+        ).all():
+            if return_order:
+                return indices
+            return True
+        else:
+            return False
+    else:
+        if (a.numbers != b.numbers).any():
+            return False
 
+        diff = a.scaled_positions - b.scaled_positions
+        diff -= np.rint(diff)
+        dist = np.sqrt((np.dot(diff, a.cell) ** 2).sum(axis=1))
+        if (dist > atol).any():
+            return False
     return True
 
 

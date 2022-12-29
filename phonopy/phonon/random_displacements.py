@@ -98,7 +98,7 @@ class RandomDisplacements:
         Phonon frequencies at commensurate q-points as explained above
         qpoints attribute. Both of getter and setter are implemented.
         The aim of this is to modify random displacements by modifying
-        frequencies by users.
+        frequencies by users. The unit is in THz.
         shape=(len(qpoints), num_band), dtype='double', order='C'
         where num_band is 3 * number of atoms in primitive cell.
     force_constants : ndarray
@@ -181,6 +181,9 @@ class RandomDisplacements:
             force_constants, supercell, primitive, use_openmp=use_openmp
         )
 
+        self._comm_points = None
+        self._ii = []
+        self._ij = []
         self._setup_sampling_qpoints(supercell.cell, primitive.cell)
 
         s2p = primitive.s2p_map
@@ -207,6 +210,10 @@ class RandomDisplacements:
         # Displacement correlation matrix (nsatom, nsatom, 3, 3)
         self._uu = None
         self._uu_inv = None
+
+        # Phonon bands included in integration of dispalcements.
+        self._conditions_ii = None
+        self._conditions_ij = None
 
     def run(
         self,
@@ -244,11 +251,16 @@ class RandomDisplacements:
             randn_ii = randn[0]
             randn_ij = randn[1]
 
-        u_ii = self._solve_ii(T, number_of_snapshots, randn=randn_ii)
+        u_ii, self._conditions_ii = self._solve_ii(
+            T, number_of_snapshots, randn=randn_ii
+        )
         if self._ij:
-            u_ij = self._solve_ij(T, number_of_snapshots, randn=randn_ij)
+            u_ij, self._conditions_ij = self._solve_ij(
+                T, number_of_snapshots, randn=randn_ij
+            )
         else:
             u_ij = 0
+            self._conditions_ij = None
 
         mass = self._dynmat.supercell.masses.reshape(-1, 1)
         u = np.array((u_ii + u_ij) / np.sqrt(mass * N), dtype="double", order="C")
@@ -281,7 +293,7 @@ class RandomDisplacements:
 
     @frequencies.setter
     def frequencies(self, freqs):
-        eigvals = (freqs / self._factor) ** 2
+        eigvals = (freqs / self._factor) ** 2 * np.sign(freqs)
         if len(eigvals) != len(self._eigvals_ii) + len(self._eigvals_ij):
             raise RuntimeError("Dimension of frequencies is wrong.")
 
@@ -293,6 +305,14 @@ class RandomDisplacements:
         """Return commensurate q-points where phonons are computed.."""
         N = len(self._comm_points)
         return self._comm_points[self._ii + self._ij] / float(N)
+
+    @property
+    def integrated_modes(self):
+        """Return commensurate q-points where phonons are computed.."""
+        if self._conditions_ij is None:
+            return self._conditions_ii
+        else:
+            return np.vstack((self._conditions_ii, self._conditions_ij))
 
     @property
     def force_constants(self):
@@ -324,7 +344,7 @@ class RandomDisplacements:
         d2f.commensurate_points = qpoints
         freqs = np.sqrt(np.abs(eigvals)) * self._factor
         conditions = freqs > self._cutoff_frequency
-        a = self._get_sigma(eigvals, T)
+        a, _ = self._get_sigma(eigvals, T)
         a2 = a**2
         _a = np.where(conditions, a, 1)
         a2_inv = np.where(conditions, 1 / _a**2, 0)
@@ -436,7 +456,7 @@ class RandomDisplacements:
             _randn = np.random.normal(size=shape)
         else:
             _randn = randn
-        sigmas = self._get_sigma(self._eigvals_ii, T)
+        sigmas, conditions = self._get_sigma(self._eigvals_ii, T)
         for norm_dist, sigma, eigvecs, phase in zip(
             _randn, sigmas, self._eigvecs_ii, self._phase_ii
         ):
@@ -447,7 +467,7 @@ class RandomDisplacements:
             # phase.shape = (satoms,)
             u += u_red * phase
 
-        return u
+        return u, conditions
 
     def _solve_ij(self, T, number_of_snapshots, randn=None):
         """Solve ij terms.
@@ -467,7 +487,7 @@ class RandomDisplacements:
             _randn = np.random.normal(size=shape)
         else:
             _randn = randn
-        sigmas = self._get_sigma(self._eigvals_ij, T)
+        sigmas, conditions = self._get_sigma(self._eigvals_ij, T)
         for norm_dist, sigma, eigvecs, phase in zip(
             _randn, sigmas, self._eigvecs_ij, self._phase_ij
         ):
@@ -479,7 +499,7 @@ class RandomDisplacements:
             u += (u_red[0] * phase).real
             u -= (u_red[1] * phase).imag
 
-        return u * np.sqrt(2)
+        return u * np.sqrt(2), conditions
 
     def _get_sigma(self, eigvals, T):
         """Return sigma in sqrt(AMU).Angstrom unit."""
@@ -492,4 +512,4 @@ class RandomDisplacements:
             n = bose_einstein_dist(freqs, T)
             sigma = np.sqrt(self._unit_conversion / freqs * (0.5 + n))
         sigma = np.where(conditions, sigma, 0)
-        return sigma
+        return sigma, conditions

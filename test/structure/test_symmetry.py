@@ -12,10 +12,10 @@ from phonopy.structure.symmetry import (
 )
 
 
-def test_get_map_operations(convcell_nacl):
+def test_get_map_operations(nacl_unitcell_order1):
     """Test get_map_operations()."""
     symprec = 1e-5
-    cell = convcell_nacl
+    cell = nacl_unitcell_order1
     scell = get_supercell(cell, np.diag([2, 2, 2]), symprec=symprec)
     symmetry = Symmetry(scell, symprec=symprec)
     map_ops = symmetry.get_map_operations().copy()
@@ -89,7 +89,7 @@ def test_Symmetry_pointgroup(ph_tio2: Phonopy):
     assert ph_tio2.symmetry.pointgroup_symbol == r"4/mmm"
 
 
-def test_Symmetry_nosym_s2p_map(convcell_nacl: PhonopyAtoms):
+def test_Symmetry_nosym_s2p_map(nacl_unitcell_order1: PhonopyAtoms):
     """Test Symmetry with is_symmetry=False and s2p_map.
 
     This situation happens when making Symmetry with nosym for supercell in
@@ -97,7 +97,7 @@ def test_Symmetry_nosym_s2p_map(convcell_nacl: PhonopyAtoms):
 
     """
     ph = Phonopy(
-        convcell_nacl,
+        nacl_unitcell_order1,
         supercell_matrix=[2, 2, 2],
         primitive_matrix="F",
         is_symmetry=False,

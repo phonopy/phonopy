@@ -1,5 +1,5 @@
-"""Phonopy version number only."""
-# Copyright (C) 2013 Atsushi Togo
+"""Phonopy exceptions."""
+# Copyright (C) 2022 Atsushi Togo
 # All rights reserved.
 #
 # This file is part of phonopy.
@@ -33,4 +33,8 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-__version__ = "2.17.1"
+
+class ForcesetsNotFoundError(RuntimeError):
+    """Exception when forces not found in Phonopy class instance."""
+
+    pass

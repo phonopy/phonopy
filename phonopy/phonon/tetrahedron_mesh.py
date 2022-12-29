@@ -199,30 +199,31 @@ def get_tetrahedra_frequencies(
 ):
     """Return frequencies on the relative_grid_addresses.
 
+    Note
+    ----
+    This implementation is based on GR-grid.
+
     Parameters
     ----------
     gp : float
         Grid index
     mesh : ndarray
-        Mesh numbers.
-        shape=(3, ), dtype='int_'
+        Mesh numbers. shape=(3, ), dtype='int_'
     grid_address : ndarray
-        Grid address in integers.
-        shape=(prod(mesh), 3), dtype='int_', order='C'
+        Grid address in integers. shape=(prod(mesh), 3), dtype='int_', order='C'
     relative_grid_addresses : ndarray
-        Relative grid addresses from the centre (i.e., gp)
-        shape=(24, 4, 3), dtype='int_', order='C'
+        Relative grid addresses from the centre (i.e., gp) shape=(24, 4, 3),
+        dtype='int_', order='C'
     gp_ir_index : ndarray
-        Grid index to ir-grid index. The ir-grid index is
-        range(len(ir-grid-points)).
-        shape=(prod(mesh), ), dtype='int_'
+        Mapping table from grid index in GR-grid to index corresponding to first
+        dimension of frequencies. The ir-grid index is
+        range(len(ir-grid-points)). shape=(prod(mesh), ), dtype='int_'
     frequencies : ndarray
-        Phonon frequences on ir-grid points.
-        shape=(ir-grid-points, num_band)
+        Phonon frequences on ir-grid points. shape=(ir-grid-points, num_band)
         dtype='double'
     grid_order : list of int, optional
-        This controls how grid addresses are stored either C style or
-        Fortran style. This is only valid when lang != 'C'.
+        This controls how grid addresses are stored either C style or Fortran
+        style. This is only valid when lang != 'C'.
     lang : str, 'C' or else, optional
         With 'C', C implementation is used. Otherwise Python implementation
         runs.
@@ -230,8 +231,8 @@ def get_tetrahedra_frequencies(
     Returns
     -------
     ndarray
-        Frequencies at tetheredra tertices.
-        shape=(num_bands, 24, 4), dtype='double', order='C'
+        Frequencies at tetheredra tertices. shape=(num_bands, 24, 4),
+        dtype='double', order='C'
 
     """
     if lang == "C":
