@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Dec-29-2022: Version 2.17.1
+
+- Maintenance release.
+
 ## Dec-8-2022: Version 2.17.0
 
 - `RANDOM_DISPLACEMENT_TEMPERATURE` tag (`--rd-temperature` option) is
@@ -14,6 +18,7 @@
 ## Oct-5-2022: Version 2.16.3
 
 - Fix CMakeLists.txt.
+
 ## Spe-19-2022: Version 2.16.2
 
 - Update again for conda-forge packaging.
@@ -30,6 +35,7 @@
 
 - Bug fix when creating `FORCE_SETS` from `phonopy_disp.yaml` without specifying
   calculator name option.
+
 ## May-24-2022: Version 2.15.0
 
 - Bug fix of atomic form factor in dynamic structure factor calculation.
