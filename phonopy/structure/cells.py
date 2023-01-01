@@ -210,7 +210,6 @@ class Supercell(PhonopyAtoms):
             )
         else:
             # In the new style, it is unnecessary to trim atoms,
-            print("SNF")
             if (np.diag(np.diagonal(mat)) != mat).any():
                 snf = SNF3x3(mat)
                 snf.run()
