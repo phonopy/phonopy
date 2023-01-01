@@ -65,6 +65,7 @@ def load(
     symmetrize_fc=True,
     is_compact_fc=True,
     store_dense_svecs=False,
+    use_SNF_supercell=False,
     symprec=1e-5,
     log_level=0,
 ) -> Phonopy:
@@ -189,7 +190,15 @@ def load(
         where 'supercell' and 'primitive' indicate number of atoms in these
         cells. Default is True.
     store_dense_svecs : bool, optional
-        This is for the test use. Do not set True. Default is False.
+        Dataset of shortest vectors between atoms in primitive cell and
+        supercell is stored in the dense format when this is True. Default is
+        False.
+    use_SNF_supercell : bool, optional
+        Supercell is built by SNF algorithm when True. Default is False. SNF
+        algorithm is faster than the original one, but the order of atoms in the
+        supercell can be different from the original one. So the backward
+        compatibility to the old data (e.g., force constants) may not be
+        preserved.
     symprec : float, optional
         Tolerance used to find crystal symmetry. Default is 1e-5.
     log_level : int, optional
@@ -266,6 +275,7 @@ def load(
         symprec=symprec,
         is_symmetry=is_symmetry,
         store_dense_svecs=store_dense_svecs,
+        use_SNF_supercell=use_SNF_supercell,
         calculator=_calculator,
         log_level=log_level,
     )
