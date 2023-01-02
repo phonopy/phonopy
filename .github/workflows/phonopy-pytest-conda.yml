@@ -1,6 +1,11 @@
 name: phonopy test using conda-forge environment
 
-on: [push]
+on:
+  push:
+    branches-ignore:
+    - publish-gh-pages
+    - master
+    - rc
 
 jobs:
   build-linux:
