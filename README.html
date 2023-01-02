@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Welcome to phonopy &#8212; Phonopy v.2.17.1</title>
+    <title>How to write phonopy documentation &#8212; Phonopy v.2.17.1</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -33,7 +33,6 @@
     <script src="_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Installation" href="install.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
     
@@ -68,7 +67,7 @@
 <div class="bd-sidebar noprint" id="site-navigation">
     <div class="bd-sidebar__content">
         <div class="bd-sidebar__top"><div class="navbar-brand-box">
-    <a class="navbar-brand text-wrap" href="#">
+    <a class="navbar-brand text-wrap" href="index.html">
       
       
       
@@ -343,7 +342,7 @@ title="Fullscreen mode"
   <div class="menu-dropdown__content">
     <ul>
       <li>
-        <a href="_sources/index.md.txt"
+        <a href="_sources/README.md.txt"
    class="headerbtn"
    data-toggle="tooltip"
 data-placement="left"
@@ -402,34 +401,19 @@ title="Print to PDF"
     </div>
     <nav id="bd-toc-nav" aria-label="Page">
         <ul class="visible nav section-nav flex-column">
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#">
-   Welcome to phonopy
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#how-to-compile">
+   How to compile
   </a>
  </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#documentation">
-   Documentation
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#source-files">
+   Source files
   </a>
  </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#mailing-list">
-   Mailing list
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#license">
-   License
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#contact">
-   Contact
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#indices-and-tables">
-   Indices and tables
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#how-to-publish">
+   How to publish
   </a>
  </li>
 </ul>
@@ -441,7 +425,7 @@ title="Print to PDF"
         <div class="col pl-md-3 pl-lg-5 content-container">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
-                <h1>Welcome to phonopy</h1>
+                <h1>How to write phonopy documentation</h1>
                 <!-- Table of contents -->
                 <div id="print-main-content">
                     <div id="jb-print-toc">
@@ -451,34 +435,19 @@ title="Print to PDF"
                         </div>
                         <nav aria-label="Page">
                             <ul class="visible nav section-nav flex-column">
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#">
-   Welcome to phonopy
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#how-to-compile">
+   How to compile
   </a>
  </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#documentation">
-   Documentation
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#source-files">
+   Source files
   </a>
  </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#mailing-list">
-   Mailing list
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#license">
-   License
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#contact">
-   Contact
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#indices-and-tables">
-   Indices and tables
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#how-to-publish">
+   How to publish
   </a>
  </li>
 </ul>
@@ -491,108 +460,41 @@ title="Print to PDF"
                 
               <div>
                 
-  <section class="tex2jax_ignore mathjax_ignore" id="welcome-to-phonopy">
-<h1>Welcome to phonopy<a class="headerlink" href="#welcome-to-phonopy" title="Permalink to this headline">#</a></h1>
-<p><strong>Phonopy</strong> is an open source package for phonon calculations at harmonic and
-quasi-harmonic levels.</p>
-<p><strong>Phono3py</strong> is another open source package for phonon-phonon interaction and
-lattice thermal conductivity calculations. See the documentation at
-<a class="reference external" href="http://phonopy.github.io/phono3py/">http://phonopy.github.io/phono3py/</a></p>
-<p><strong>Phonon database</strong>: A collection of first principles phonon calculations is
-available as open data at <a class="reference external" href="http://phonondb.mtl.kyoto-u.ac.jp/">http://phonondb.mtl.kyoto-u.ac.jp/</a> , where the raw
-data of phonopy &amp; VASP results are downloaded.</p>
-<p>The following features of phonopy are highlighted:</p>
-<ul class="simple">
-<li><p><a class="reference internal" href="setting-tags.html#band-structure-related-tags"><span class="std std-ref">Phonon band structure</span></a>,
-<a class="reference internal" href="setting-tags.html#dos-related-tags"><span class="std std-ref">phonon DOS and partial-DOS</span></a></p></li>
-<li><p><a class="reference internal" href="setting-tags.html#thermal-properties-tag"><span class="std std-ref">Phonon thermal properties</span></a>: Free energy, heat
-capacity (Cv), and entropy</p></li>
-<li><p><a class="reference internal" href="formulation.html#group-velocity"><span class="std std-ref">Phonon group velocity</span></a></p></li>
-<li><p><a class="reference internal" href="setting-tags.html#thermal-displacement-matrices-tag"><span class="std std-ref">Thermal ellipsoids</span></a> /
-<a class="reference internal" href="setting-tags.html#thermal-displacements-tag"><span class="std std-ref">Mean square displacements</span></a></p></li>
-<li><p><a class="reference internal" href="setting-tags.html#irreducible-representation-related-tags"><span class="std std-ref">Irreducible representations of normal modes</span></a></p></li>
-<li><p><a class="reference internal" href="dynamic-structure-factor.html#dynamic-structure-factor"><span class="std std-ref">Dynamic structure factor for INS and IXS</span></a></p></li>
-<li><p><a class="reference internal" href="setting-tags.html#nac-tag"><span class="std std-ref">Non-analytical-term correction</span></a>: LO-TO splitting
-(<a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">Born effective charges and dielectric constant are required.</span></a>)</p></li>
-<li><p><a class="reference internal" href="gruneisen.html#phonopy-gruneisen"><span class="std std-ref">Mode Grüneisen parameters</span></a></p></li>
-<li><p><a class="reference internal" href="qha.html#phonopy-qha"><span class="std std-ref">Quasi-harmonic approximation</span></a>: Thermal expansion, heat
-capacity at constant pressure (Cp)</p></li>
-<li><p><a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>:
-<a class="reference internal" href="vasp.html#vasp-interface"><span class="std std-ref">VASP</span></a>, <a class="reference internal" href="vasp-dfpt.html#vasp-dfpt-interface"><span class="std std-ref">VASP DFPT</span></a>,
-<a class="reference internal" href="abinit.html#abinit-interface"><span class="std std-ref">ABINIT</span></a>, <a class="reference internal" href="qe.html#qe-interface"><span class="std std-ref">Quantu ESPRESSO</span></a>,
-<a class="reference internal" href="siesta.html#siesta-interface"><span class="std std-ref">SIESTA</span></a>, <a class="reference internal" href="elk.html#elk-interface"><span class="std std-ref">Elk</span></a>,
-<a class="reference internal" href="wien2k.html#wien2k-interface"><span class="std std-ref">WIEN2k</span></a>, <a class="reference internal" href="crystal.html#crystal-interface"><span class="std std-ref">CRYSTAL</span></a>,
-<a class="reference internal" href="dftb%2B.html#dftbp-interface"><span class="std std-ref">DFTB+</span></a>, <a class="reference internal" href="turbomole.html#turbomole-interface"><span class="std std-ref">TURBOMOLE</span></a>,
-<a class="reference internal" href="cp2k.html#cp2k-interface"><span class="std std-ref">CP2K</span></a>, <a class="reference internal" href="aims.html#fhi-aims-interface"><span class="std std-ref">FHI-aims</span></a>,
-<a class="reference internal" href="castep.html#castep-interface"><span class="std std-ref">CASTEP</span></a>, <a class="reference internal" href="Fleur.html#fleur-interface"><span class="std std-ref">Fleur</span></a>,
-<a class="reference internal" href="external-tools.html#external-tools-phonolammps"><span class="std std-ref">LAMMPS (external)</span></a></p></li>
-<li><p><a class="reference internal" href="phonopy-module.html#phonopy-module"><span class="std std-ref">Phonopy API for Python</span></a></p></li>
-</ul>
-<p>A presentation in pdf for introduction to phonopy is downloaded
-<a class="reference external" href="https://sf.net/projects/phonopy/files/phonopy.pdf/download">here</a>.</p>
-<a class="reference internal image-reference" href="_images/band.png"><img alt="_images/band.png" src="_images/band.png" style="width: 15%;" /></a>
-<a class="reference internal image-reference" href="_images/pdos.png"><img alt="_images/pdos.png" src="_images/pdos.png" style="width: 15%;" /></a>
-<a class="reference internal image-reference" href="_images/thermalprop.png"><img alt="_images/thermalprop.png" src="_images/thermalprop.png" style="width: 15%;" /></a>
-<a class="reference internal image-reference" href="_images/QHA.png"><img alt="_images/QHA.png" src="_images/QHA.png" style="width: 15%;" /></a>
-</section>
-<section class="tex2jax_ignore mathjax_ignore" id="documentation">
-<h1>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">#</a></h1>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
-<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
-<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
-<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
-<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-load.html">phonopy-load command</a></li>
-<li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
-</ul>
+  <section class="tex2jax_ignore mathjax_ignore" id="how-to-write-phonopy-documentation">
+<h1>How to write phonopy documentation<a class="headerlink" href="#how-to-write-phonopy-documentation" title="Permalink to this headline">#</a></h1>
+<p>This directory contains python-sphinx documentation source.</p>
+<section id="how-to-compile">
+<h2>How to compile<a class="headerlink" href="#how-to-compile" title="Permalink to this headline">#</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">html</span>
+</pre></div>
 </div>
-<!-- Latex master doc is documentation.md. But documentation.md is not included
-for html. Uncomment below when generating latex documentation. -->
-<!-- ```{toctree}
-:hidden:
-documentation
-``` -->
 </section>
-<section class="tex2jax_ignore mathjax_ignore" id="mailing-list">
-<span id="mailinglist"></span><h1>Mailing list<a class="headerlink" href="#mailing-list" title="Permalink to this headline">#</a></h1>
-<p>For questions, bug reports, and comments, please visit
-<a class="reference external" href="https://lists.sourceforge.net/lists/listinfo/phonopy-users">https://lists.sourceforge.net/lists/listinfo/phonopy-users</a> to subscribe the
-phonopy mailing list and send them to <a class="reference external" href="mailto:phonopy-users&#37;&#52;&#48;lists&#46;sourceforge&#46;net">phonopy-users<span>&#64;</span>lists<span>&#46;</span>sourceforge<span>&#46;</span>net</a>.
-Message body including attached files has to be smaller than 300 KB.</p>
-</section>
-<section class="tex2jax_ignore mathjax_ignore" id="license">
-<h1>License<a class="headerlink" href="#license" title="Permalink to this headline">#</a></h1>
-<p>New BSD from version 1.3.</p>
-<p>(LGPL from ver. 0.9.3 to version 1.2.1., GPL to version 0.9.2.)</p>
-</section>
-<section class="tex2jax_ignore mathjax_ignore" id="contact">
-<h1>Contact<a class="headerlink" href="#contact" title="Permalink to this headline">#</a></h1>
+<section id="source-files">
+<h2>Source files<a class="headerlink" href="#source-files" title="Permalink to this headline">#</a></h2>
 <ul class="simple">
-<li><p>Author: <a class="reference external" href="http://atztogo.github.io/">Atsushi Togo</a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">conf.py</span></code> contains the sphinx setting confiuration.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">*.rst</span></code> are the usual sphinx documentation source and the filenames without <code class="docutils literal notranslate"><span class="pre">.rst</span></code> are the keys to link from toctree mainly in <code class="docutils literal notranslate"><span class="pre">index.rst</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">*.inc</span></code> are the files included in the other <code class="docutils literal notranslate"><span class="pre">*.rst</span></code> files.</p></li>
 </ul>
 </section>
-<section class="tex2jax_ignore mathjax_ignore" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">#</a></h1>
-<ul class="simple">
-<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
-<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
-<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
-</ul>
+<section id="how-to-publish">
+<h2>How to publish<a class="headerlink" href="#how-to-publish" title="Permalink to this headline">#</a></h2>
+<p>Web page files are copied to <code class="docutils literal notranslate"><span class="pre">gh-pages</span></code> branch. At the phonopy github top directory,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">checkout</span> <span class="n">gh</span><span class="o">-</span><span class="n">pages</span>
+<span class="n">rm</span> <span class="o">-</span><span class="n">r</span> <span class="o">.</span><span class="n">buildinfo</span> <span class="o">.</span><span class="n">doctrees</span> <span class="o">*</span>
+</pre></div>
+</div>
+<p>From the directory the sphinx doc is complied,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rsync</span> <span class="o">-</span><span class="n">avh</span> <span class="n">_build</span><span class="o">/</span> <span class="o">&lt;</span><span class="n">phonopy</span><span class="o">-</span><span class="n">repository</span><span class="o">-</span><span class="n">directory</span><span class="o">&gt;/</span>
+</pre></div>
+</div>
+<p>Again, at the phonopy github top directory,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">add</span> <span class="o">.</span>
+<span class="n">git</span> <span class="n">commit</span> <span class="o">-</span><span class="n">a</span> <span class="o">-</span><span class="n">m</span> <span class="s2">&quot;Update documentation ...&quot;</span>
+<span class="n">git</span> <span class="n">push</span>
+</pre></div>
+</div>
+</section>
 </section>
 
 
@@ -603,13 +505,6 @@ Message body including attached files has to be smaller than 300 KB.</p>
                 
     <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-    <a class='right-next' id="next-link" href="install.html" title="next page">
-    <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Installation</p>
-    </div>
-    <i class="fas fa-angle-right"></i>
-    </a>
 </div>
             </footer>
         </div>
