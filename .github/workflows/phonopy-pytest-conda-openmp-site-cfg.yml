@@ -3,6 +3,7 @@ name: phonopy test using conda-forge environment with openmp triggered by site.c
 on:
   push:
     branches-ignore:
+    - publish-gh-pages
     - master
     - rc
 

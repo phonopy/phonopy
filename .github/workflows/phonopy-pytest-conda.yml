@@ -3,6 +3,7 @@ name: phonopy test using conda-forge environment
 on:
   push:
     branches-ignore:
+    - publish-gh-pages
     - master
     - rc
 
