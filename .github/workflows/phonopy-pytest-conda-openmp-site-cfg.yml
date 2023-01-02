@@ -1,6 +1,10 @@
 name: phonopy test using conda-forge environment with openmp triggered by site.cfg
 
-on: [push]
+on:
+  push:
+    branches-ignore:
+    - master
+    - rc
 
 jobs:
   build-linux:
