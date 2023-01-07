@@ -586,7 +586,7 @@ title="Print to PDF"
 (see <a class="reference external" href="https://github.com/conda-forge/miniforge">miniforge</a>), the installation of
 phonopy is super easy for any of Linux, MacOSX, and Windows. Phonopy is
 installed using conda by</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% conda install -c conda-forge phonopy
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>phonopy
 </pre></div>
 </div>
 <p>This phonopy’s conda package is prepared and maintained by Paweł T. Jochym at
@@ -596,13 +596,13 @@ conda-forge channel (please be aware that this is not a trivial job).</p>
 <p>In the following procedure, conda’s environment (see
 <a class="reference external" href="https://github.com/conda-forge/miniforge">miniforge</a>) is used not to interfere
 existing environment (mainly python environment).</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% conda create -n phonopy -c conda-forge
-% conda activate phonopy
-% conda install -c conda-forge phonopy
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>phonopy<span class="w"> </span>-c<span class="w"> </span>conda-forge
+%<span class="w"> </span>conda<span class="w"> </span>activate<span class="w"> </span>phonopy
+%<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>phonopy
 </pre></div>
 </div>
 <p>To exit from this conda’s environment:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% conda deactivate
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>conda<span class="w"> </span>deactivate
 </pre></div>
 </div>
 <p>To use this phonopy, entering this environment is necessary like below.</p>
@@ -635,7 +635,7 @@ existing environment (mainly python environment).</p>
 <span id="install-from-source"></span><h2><a class="toc-backref" href="#id3">Using HDF5 on NFS mounted file system</a><a class="headerlink" href="#using-hdf5-on-nfs-mounted-file-system" title="Permalink to this headline">#</a></h2>
 <p>Recent hdf5 versions just as installed may not work on NFS mounted file systems.
 In this case, setting the following environment variable may solve the problem:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">HDF5_USE_FILE_LOCKING</span><span class="o">=</span>FALSE
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">HDF5_USE_FILE_LOCKING</span><span class="o">=</span>FALSE
 </pre></div>
 </div>
 </section>
@@ -679,7 +679,7 @@ which is downloaded at <a class="reference external" href="https://github.com/co
 recommended to create conda’s virtual environment by
 <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">create</span> <span class="pre">-n</span> <span class="pre">&lt;venvname&gt;</span></code> as written above. The installation of necessary
 libraries is done as follows:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% conda install -c conda-forge numpy scipy h5py pyyaml matplotlib-base seekpath spglib
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>numpy<span class="w"> </span>scipy<span class="w"> </span>h5py<span class="w"> </span>pyyaml<span class="w"> </span>matplotlib-base<span class="w"> </span>seekpath<span class="w"> </span>spglib
 </pre></div>
 </div>
 <p>A libblas library installed can be chosen among <code class="docutils literal notranslate"><span class="pre">[openblas,</span> <span class="pre">mkl,</span> <span class="pre">blis,</span> <span class="pre">netlib]</span></code>.
@@ -699,9 +699,9 @@ compiler or special options, phonopy is built using <code class="docutils litera
 manual modification of <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> may be needed.</p>
 <ol class="arabic">
 <li><p>Get the source code from github</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% git clone https://github.com/phonopy/phonopy.git
-% <span class="nb">cd</span> phonopy
-% git checkout master
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/phonopy/phonopy.git
+%<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>phonopy
+%<span class="w"> </span>git<span class="w"> </span>checkout<span class="w"> </span>master
 </pre></div>
 </div>
 </li>

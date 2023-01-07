@@ -1194,7 +1194,7 @@ by those with dashes <code class="docutils literal notranslate"><span class="pre
 simultaneously, the command-line option supersedes the setting tag. The
 configuration file is recommended to place at the first position for the mixed
 use of setting tags and command-line options, i.e.,</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy setting.conf <span class="o">[</span>command-line-options<span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>setting.conf<span class="w"> </span><span class="o">[</span>command-line-options<span class="o">]</span>
 </pre></div>
 </div>
 <section id="choice-of-force-calculator">
@@ -1254,7 +1254,7 @@ files.</p>
 <section id="c-or-cell">
 <h3><a class="toc-backref" href="#id14"><code class="docutils literal notranslate"><span class="pre">-c</span></code> or <code class="docutils literal notranslate"><span class="pre">--cell</span></code></a><a class="headerlink" href="#c-or-cell" title="Permalink to this headline">#</a></h3>
 <p>Unit cell crystal structure file is specified with this tag.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy --cell<span class="o">=</span>POSCAR-unitcell band.conf
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--cell<span class="o">=</span>POSCAR-unitcell<span class="w"> </span>band.conf
 </pre></div>
 </div>
 <p>Without specifying this tag, default file name is searched in current directory.
@@ -1312,7 +1312,7 @@ when creating supercells with displacements, and <code class="docutils literal n
 VASP output files. <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> in the current directory is automatically
 read. The order of displacements written in <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> file has to
 correpond to that of <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> files .</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy -f disp-001/vasprun.xml disp-002/vasprun.xml ...
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-f<span class="w"> </span>disp-001/vasprun.xml<span class="w"> </span>disp-002/vasprun.xml<span class="w"> </span>...
 </pre></div>
 </div>
 <div class="admonition note">
@@ -1332,14 +1332,14 @@ expansions are useful, e.g., <code class="docutils literal notranslate"><span cl
 <p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and ABINIT output files
 (<code class="docutils literal notranslate"><span class="pre">*.out</span></code>). In the reading of forces in ABINIT output files, forces in
 eV/Angstrom are read. The unit conversion factor is determined with this unit.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy -f disp-001/supercell.out disp-002/supercell.out ...
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-f<span class="w"> </span>disp-001/supercell.out<span class="w"> </span>disp-002/supercell.out<span class="w"> </span>...
 </pre></div>
 </div>
 </section>
 <section id="quantum-espresso-interface">
 <span id="qe-force-sets-option"></span><h4><a class="toc-backref" href="#id19">Quantum ESPRESSO interface</a><a class="headerlink" href="#quantum-espresso-interface" title="Permalink to this headline">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and QE-PW output files.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy -f disp-001/supercell.out disp-002/supercell.out ...
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-f<span class="w"> </span>disp-001/supercell.out<span class="w"> </span>disp-002/supercell.out<span class="w"> </span>...
 </pre></div>
 </div>
 <p>Here <code class="docutils literal notranslate"><span class="pre">*.out</span></code> files are the saved texts of standard outputs of PWscf
@@ -1355,7 +1355,7 @@ when creating supercell with displacements, and <code class="docutils literal no
 WIEN2k output files. The order of displacements in <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> file and
 the order of <code class="docutils literal notranslate"><span class="pre">case.scf</span></code>’s have to be same. <strong>For WIEN2k struct file, only
 negative atom index with the P lattice format is supported.</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy -f case_001/case_001.scf case_002/case_002.scf ...
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-f<span class="w"> </span>case_001/case_001.scf<span class="w"> </span>case_002/case_002.scf<span class="w"> </span>...
 </pre></div>
 </div>
 <p>For more information, <a class="reference internal" href="wien2k.html#wien2k-interface"><span class="std std-ref">Wien2k &amp; phonopy calculation</span></a>.</p>
@@ -1370,7 +1370,7 @@ negative atom index with the P lattice format is supported.</strong></p>
 <section id="crystal-interface">
 <span id="crystal-force-sets-option"></span><h4><a class="toc-backref" href="#id22">CRYSTAL interface</a><a class="headerlink" href="#crystal-interface" title="Permalink to this headline">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and CRYSTAL output files.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy -f supercell-001.o supercell-002.o ...
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-f<span class="w"> </span>supercell-001.o<span class="w"> </span>supercell-002.o<span class="w"> </span>...
 </pre></div>
 </div>
 </section>
@@ -1378,7 +1378,7 @@ negative atom index with the P lattice format is supported.</strong></p>
 <span id="turbomole-force-sets-option"></span><h4><a class="toc-backref" href="#id23">TURBOMOLE interface</a><a class="headerlink" href="#turbomole-interface" title="Permalink to this headline">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and TURBOMOLE output
 files.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy -f supercell-001 supercell-002 ...
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-f<span class="w"> </span>supercell-001<span class="w"> </span>supercell-002<span class="w"> </span>...
 </pre></div>
 </div>
 </section>
@@ -1386,7 +1386,7 @@ files.</p>
 <span id="fleur-force-sets-option"></span><h4><a class="toc-backref" href="#id24">Fleur interface</a><a class="headerlink" href="#fleur-interface" title="Permalink to this headline">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and special Fleur FORCES
 output files.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy -f disp-001/FORCES disp-002/FORCES ...
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-f<span class="w"> </span>disp-001/FORCES<span class="w"> </span>disp-002/FORCES<span class="w"> </span>...
 </pre></div>
 </div>
 </section>
@@ -1394,7 +1394,7 @@ output files.</p>
 <span id="cp2k-force-sets-option"></span><h4><a class="toc-backref" href="#id25">CP2K interface</a><a class="headerlink" href="#cp2k-interface" title="Permalink to this headline">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and CP2K output files,
 with:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy -f supercell-001-forces-1_0.xyz supercell-002-forces-1_0.xyz ...
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-f<span class="w"> </span>supercell-001-forces-1_0.xyz<span class="w"> </span>supercell-002-forces-1_0.xyz<span class="w"> </span>...
 </pre></div>
 </div>
 <p>Please note: the files containing the forces can be prefixed with the
@@ -1414,7 +1414,7 @@ useful when <code class="docutils literal notranslate"><span class="pre">PM</spa
 <p>The usage of this option is almost the same as that of <code class="docutils literal notranslate"><span class="pre">-f</span></code> option except that
 one more argument is inserted at the front. Mind that <code class="docutils literal notranslate"><span class="pre">--fz</span></code> is exclusively used
 with <code class="docutils literal notranslate"><span class="pre">-f</span></code> option. The example for the VASP interface is shown below:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy --fz sposcar/vasprun.xml disp-001/vasprun.xml ...
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--fz<span class="w"> </span>sposcar/vasprun.xml<span class="w"> </span>disp-001/vasprun.xml<span class="w"> </span>...
 </pre></div>
 </div>
 <p>where <code class="docutils literal notranslate"><span class="pre">sposcar/vasprun.xml</span></code> assumes the output file for the perfect supercell
@@ -1432,7 +1432,7 @@ calculator interfaces.</p>
 <p><strong>Currently this option supports only VASP output.</strong></p>
 <p>VASP output of force constants is imported from <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> and
 <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> is created.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy --fc vasprun.xml
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--fc<span class="w"> </span>vasprun.xml
 </pre></div>
 </div>
 <p>This <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> can be used instead of <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>. For more details,
@@ -1444,14 +1444,14 @@ please refer <a class="reference internal" href="vasp-dfpt.html#vasp-dfpt-interf
 <section id="p">
 <h3><a class="toc-backref" href="#id30"><code class="docutils literal notranslate"><span class="pre">-p</span></code></a><a class="headerlink" href="#p" title="Permalink to this headline">#</a></h3>
 <p>Result is plotted.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy -p
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-p
 </pre></div>
 </div>
 </section>
 <section id="p-s">
 <span id="graph-save-option"></span><h3><a class="toc-backref" href="#id31"><code class="docutils literal notranslate"><span class="pre">-p</span> <span class="pre">-s</span></code></a><a class="headerlink" href="#p-s" title="Permalink to this headline">#</a></h3>
 <p>Result is plotted (saved) to PDF file.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy -p -s
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-p<span class="w"> </span>-s
 </pre></div>
 </div>
 </section>
@@ -1473,7 +1473,7 @@ please refer <a class="reference internal" href="vasp-dfpt.html#vasp-dfpt-interf
 <span id="symmetry-option"></span><h3><a class="toc-backref" href="#id36"><code class="docutils literal notranslate"><span class="pre">--symmetry</span></code></a><a class="headerlink" href="#symmetry" title="Permalink to this headline">#</a></h3>
 <p>Using this option, various crystal symmetry information is just printed out and
 phonopy stops without going to phonon analysis.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy --symmetry
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--symmetry
 </pre></div>
 </div>
 <p>This tag can be used together with the <code class="docutils literal notranslate"><span class="pre">--cell</span></code> (<code class="docutils literal notranslate"><span class="pre">-c</span></code>), <code class="docutils literal notranslate"><span class="pre">--abinit</span></code>, <code class="docutils literal notranslate"><span class="pre">--qe</span></code>,

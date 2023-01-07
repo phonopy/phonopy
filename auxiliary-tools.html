@@ -617,11 +617,11 @@ as <code class="docutils literal notranslate"><span class="pre">phonopy</span></
 option with a file name is used to save the plot into a file in PDF format. A
 few more options are prepared and shown by <code class="docutils literal notranslate"><span class="pre">-h</span></code> option. If you specify more than
 two yaml files, they are plotted together.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy-bandplot band.yaml
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-bandplot<span class="w"> </span>band.yaml
 </pre></div>
 </div>
 <p>To obtain a simple text format data:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy-bandplot --gnuplot band.yaml
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-bandplot<span class="w"> </span>--gnuplot<span class="w"> </span>band.yaml
 </pre></div>
 </div>
 </section>
@@ -629,7 +629,7 @@ two yaml files, they are plotted together.</p>
 <span id="pdosplot-tool"></span><h2><a class="toc-backref" href="#id3"><code class="docutils literal notranslate"><span class="pre">phonopy-pdosplot</span></code></a><a class="headerlink" href="#phonopy-pdosplot" title="Permalink to this headline">#</a></h2>
 <p>Partial density of states (PDOS) are plotted.</p>
 <p><code class="docutils literal notranslate"><span class="pre">-i</span></code> option is used as</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy-pdosplot -i <span class="s1">&#39;1 2 4 5, 3 6&#39;</span> -o <span class="s1">&#39;pdos.pdf&#39;</span> partial_dos.dat
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-pdosplot<span class="w"> </span>-i<span class="w"> </span><span class="s1">&#39;1 2 4 5, 3 6&#39;</span><span class="w"> </span>-o<span class="w"> </span><span class="s1">&#39;pdos.pdf&#39;</span><span class="w"> </span>partial_dos.dat
 </pre></div>
 </div>
 <p>The indices and comma in <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">2</span> <span class="pre">3</span> <span class="pre">4,</span> <span class="pre">5</span> <span class="pre">6</span></code> mean as follows. The indices are
@@ -653,10 +653,10 @@ If you specify more than two yaml files, they are plotted together.</p>
 <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> at current directory are read. The Born effective charges and
 dielectric tensor are symmetrized as default. To prevent symmetrization,
 <code class="docutils literal notranslate"><span class="pre">--nost</span></code> option has to be specified.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy-vasp-born
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-vasp-born
 </pre></div>
 </div>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy-vasp-born --nost
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-vasp-born<span class="w"> </span>--nost
 </pre></div>
 </div>
 <section id="pa-primitive-axes">
@@ -677,10 +677,10 @@ dielectric tensor are symmetrized as default. To prevent symmetrization,
 and <code class="docutils literal notranslate"><span class="pre">POSCAR</span></code> at current directory are read. <code class="docutils literal notranslate"><span class="pre">POSCAR</span></code> information is necessary in
 contrast to reading <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> where the unit cell structure is also read
 from it.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy-vasp-born --outcar
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-vasp-born<span class="w"> </span>--outcar
 </pre></div>
 </div>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy-vasp-born --nost --outcar OUTCAR POSCAR
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-vasp-born<span class="w"> </span>--nost<span class="w"> </span>--outcar<span class="w"> </span>OUTCAR<span class="w"> </span>POSCAR
 </pre></div>
 </div>
 </section>

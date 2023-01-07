@@ -477,14 +477,14 @@ When displacement-force dataset didn’t exist, force constants are written.</p>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h2>
 <p>In the NaCl-qe example,</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy --qe -d --dim <span class="m">2</span> <span class="m">2</span> <span class="m">2</span> --pa auto -c NaCl.in
-% phonopy-load -f NaCl-00<span class="o">{</span><span class="m">1</span>,2<span class="o">}</span>.out
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--qe<span class="w"> </span>-d<span class="w"> </span>--dim<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">2</span><span class="w"> </span>--pa<span class="w"> </span>auto<span class="w"> </span>-c<span class="w"> </span>NaCl.in
+%<span class="w"> </span>phonopy-load<span class="w"> </span>-f<span class="w"> </span>NaCl-00<span class="o">{</span><span class="m">1</span>,2<span class="o">}</span>.out
 </pre></div>
 </div>
 <p>With these commands, <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> are created. After
 this step, it is unnecessary to specify <code class="docutils literal notranslate"><span class="pre">--qe</span></code> option to run with
 <code class="docutils literal notranslate"><span class="pre">phonopy-load</span></code>. The following command works to draw band structure.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy-load --band auto -p
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>--band<span class="w"> </span>auto<span class="w"> </span>-p
 </pre></div>
 </div>
 <p>Data in <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> and <code class="docutils literal notranslate"><span class="pre">BORN</span></code> can be saved in <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code> using
