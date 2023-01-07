@@ -1502,7 +1502,21 @@ def start_phonopy(**argparse_control):
 
 
 def read_phonopy_settings(args, argparse_control, log_level):
-    """Read phonopy settings."""
+    """Read phonopy settings.
+
+    Returns
+    -------
+    tuple
+        settings : PhonopySettings
+            Configurations set by user to run phonopy.
+        confs : dict
+            Raw phonopy configurations in str (value) for each configuration
+            tag (key).
+        cell_filename : str or None
+            Filename that contains crystal structure information. When
+            unspecified in command line tool, this is None.
+
+    """
     load_phonopy_yaml = argparse_control.get("load_phonopy_yaml", False)
     conf_filename = None
 
