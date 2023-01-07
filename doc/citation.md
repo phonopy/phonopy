@@ -2,7 +2,8 @@
 
 ## Citation of phonopy
 
-If you have used phonopy, please cite the following article:
+If you have used phonopy, please cite the following articles, which
+indeed helps the phonopy project to continue:
 
 - "First principles phonon calculations in materials science",
 
@@ -11,7 +12,7 @@ If you have used phonopy, please cite the following article:
   http://dx.doi.org/10.1016/j.scriptamat.2015.07.021 (Open access)
 
   ```
-  @article {phonopy,
+  @article{phonopy,
      Journal = {Scr. Mater.},
      Year = {2015},
      Title = {First principles phonon calculations in materials science},
@@ -19,6 +20,25 @@ If you have used phonopy, please cite the following article:
      Pages = {1--5},
      Volume = {108},
      Month = {Nov}
+  }
+  ```
+
+- "First-principles Phonon Calculations with Phonopy and Phono3py",
+
+  Atsushi Togo, J. Phys. Soc. Jpn., **92**, 012001-1-21 (2023)
+
+  https://doi.org/10.7566/JPSJ.92.012001 (Open access)
+
+  ```
+  @article{phonopy-phono3py-JPSJ,
+    author  = {Togo ,Atsushi},
+    title   = {First-principles Phonon Calculations with Phonopy and Phono3py},
+    journal = {J. Phys. Soc. Jpn.},
+    volume  = {92},
+    number  = {1},
+    pages   = {012001},
+    year    = {2023},
+    doi     = {10.7566/JPSJ.92.012001}
   }
   ```
 
