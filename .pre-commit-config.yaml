@@ -42,7 +42,7 @@ repos:
     - --line-length=88
 
 - repo: https://github.com/pycqa/pydocstyle
-  rev: 6.2.0
+  rev: 6.2.3
   hooks:
   - id: pydocstyle
 
