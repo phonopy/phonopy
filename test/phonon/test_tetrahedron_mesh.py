@@ -3,6 +3,7 @@ import os
 from io import StringIO
 
 import numpy as np
+import pytest
 
 from phonopy import Phonopy
 from phonopy.file_IO import parse_FORCE_SETS
@@ -23,7 +24,8 @@ dos_str = """-0.672024 0.000000 0.029844 0.005522 0.731712 0.029450 1.433580 0.1
 24.595217 0.204422 25.297085 0.252177 25.998953 0.676881 26.700820 0.000000"""
 
 
-def test_Amm2():
+@pytest.mark.parametrize("langs", [("C", "C"), ("Py", "C"), ("C", "Py")])
+def test_Amm2(langs):
     """Test of DOS calculation using TetrahedronMesh for Amm2 crystal."""
     data = np.loadtxt(StringIO(dos_str))
     phonon = _get_phonon("Amm2", [3, 2, 2], [[1, 0, 0], [0, 0.5, -0.5], [0, 0.5, 0.5]])
@@ -35,19 +37,20 @@ def test_Amm2():
     grid_address = phonon.mesh.grid_address
     ir_grid_points = phonon.mesh.ir_grid_points
     grid_mapping_table = phonon.mesh.grid_mapping_table
-    thm = TetrahedronMesh(
+    th_mesh = TetrahedronMesh(
         primitive,
         frequencies,
         mesh,
         np.array(grid_address, dtype="int_"),
         np.array(grid_mapping_table, dtype="int_"),
         ir_grid_points,
+        lang=langs[0],
     )
-    thm.set(value="I", division_number=40)
-    freq_points = thm.get_frequency_points()
+    th_mesh.set(value="I", division_number=40, lang=langs[1])
+    freq_points = th_mesh.get_frequency_points()
     dos = np.zeros_like(freq_points)
 
-    for i, iw in enumerate(thm):
+    for i, iw in enumerate(th_mesh):
         dos += np.sum(iw * weights[i], axis=1)
 
     dos_comp = np.transpose([freq_points, dos]).reshape(10, 8)

@@ -275,7 +275,7 @@ class TotalDos(Dos):
             self._frequencies,
             self._mesh_object.grid_address,
             self._mesh_object.grid_mapping_table,
-            tm.get_tetrahedra(),
+            tm.tetrahedra,
         )
 
     def _get_density_of_states_at_freq(self, f):
@@ -460,7 +460,7 @@ class ProjectedDos(Dos):
             self._frequencies,
             self._mesh_object.grid_address,
             self._mesh_object.grid_mapping_table,
-            tm.get_tetrahedra(),
+            tm.tetrahedra,
             coef=self._eigvecs2,
         )
         self._projected_dos = pdos.T
