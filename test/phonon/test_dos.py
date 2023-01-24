@@ -54,7 +54,7 @@ pdos_thm_str = """-0.750122 0.000000 0.000000
 7.249878 0.000000 0.000000"""
 
 
-def testTotalDOS(ph_nacl_nofcsym):
+def testTotalDOS(ph_nacl_nofcsym: Phonopy):
     """Test of total DOS with smearing method."""
     phonon = ph_nacl_nofcsym
     phonon.run_mesh([5, 5, 5])
@@ -67,7 +67,7 @@ def testTotalDOS(ph_nacl_nofcsym):
     #     print("%f %f" % (f, d))
 
 
-def testTotalDOSTetrahedron(ph_nacl_nofcsym):
+def testTotalDOSTetrahedron(ph_nacl_nofcsym: Phonopy):
     """Test of total DOS with tetrahedron method."""
     phonon = ph_nacl_nofcsym
     phonon.run_mesh([5, 5, 5])
@@ -80,7 +80,7 @@ def testTotalDOSTetrahedron(ph_nacl_nofcsym):
     #     print("%f %f" % (f, d))
 
 
-def testProjectedlDOS(ph_nacl_nofcsym):
+def testProjectedlDOS(ph_nacl_nofcsym: Phonopy):
     """Test projected DOS with smearing method."""
     phonon = ph_nacl_nofcsym
     phonon.run_mesh([5, 5, 5], is_mesh_symmetry=False, with_eigenvectors=True)
@@ -93,7 +93,7 @@ def testProjectedlDOS(ph_nacl_nofcsym):
     #     print(("%f" + " %f" * len(d)) % ((f, ) + tuple(d)))
 
 
-def testPartialDOSTetrahedron(ph_nacl_nofcsym):
+def testPartialDOSTetrahedron(ph_nacl_nofcsym: Phonopy):
     """Test projected DOS with tetrahedron method."""
     phonon = ph_nacl_nofcsym
     phonon.run_mesh([5, 5, 5], is_mesh_symmetry=False, with_eigenvectors=True)
