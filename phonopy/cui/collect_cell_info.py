@@ -108,7 +108,7 @@ def collect_cell_info(
     _cell_filename = cell_filename
     if fallback_reason:
         _interface_mode = "phonopy_yaml"
-        if not is_file_phonopy_yaml(cell_filename):
+        if cell_filename is None or not is_file_phonopy_yaml(cell_filename):
             _cell_filename = None
     elif interface_mode is None:
         _interface_mode = None
