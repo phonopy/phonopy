@@ -464,7 +464,7 @@ class PhonopyYaml:
                 lines.append('  format: "compact"')
             lines.append("  shape: [ %d, %d ]" % shape)
             lines.append("  elements:")
-            for (i, j) in list(np.ndindex(shape)):
+            for i, j in list(np.ndindex(shape)):
                 lines.append("  - # (%d, %d)" % (i + 1, j + 1))
                 for v in self.force_constants[i, j]:
                     lines.append("    - [ %21.15f, %21.15f, %21.15f ]" % tuple(v))

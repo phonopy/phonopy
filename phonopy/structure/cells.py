@@ -1359,7 +1359,7 @@ def compute_all_sg_permutations(
 
     """
     out = []  # Finally the shape is fixed as (num_sym, num_pos_of_supercell).
-    for (sym, t) in zip(rotations, translations):
+    for sym, t in zip(rotations, translations):
         rotated_positions = np.dot(positions, sym.T) + t
         out.append(
             compute_permutation_for_rotation(
@@ -1404,6 +1404,7 @@ def compute_permutation_for_rotation(
         shape=(len(positions), ), dtype=int
 
     """
+
     # Sort both sides by some measure which is likely to produce a small
     # maximum value of (sorted_rotated_index - sorted_original_index).
     # The C code is optimized for this case, reducing an O(n^2)

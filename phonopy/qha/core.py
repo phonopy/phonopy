@@ -531,7 +531,6 @@ class QHA:
         _data_eos = []
         for i, t in enumerate(self._temperatures[: self._len]):
             if i % thin_number == 0:
-
                 _data_vol_points.append(
                     np.array(self._free_energies[i]) * _energy_plot_factor - e0
                 )
@@ -547,20 +546,20 @@ class QHA:
 
         with open(filename, "w") as w:
             w.write("# Volume points\n")
-            for (j, k) in zip(self._volumes, data_vol_points):
+            for j, k in zip(self._volumes, data_vol_points):
                 w.write("%10.5f " % j)
                 for ll in k:
                     w.write("%10.5f" % ll)
                 w.write("\n")
             w.write("\n# Fitted data\n")
 
-            for (m, n) in zip(volume_points, data_eos):
+            for m, n in zip(volume_points, data_eos):
                 w.write("%10.5f " % m)
                 for ll in n:
                     w.write("%10.5f" % ll)
                 w.write("\n")
             w.write("\n# Minimas\n")
-            for (a, b) in zip(selected_volumes, data_min):
+            for a, b in zip(selected_volumes, data_min):
                 w.write("%10.5f %10.5f %s" % (a, b, "\n"))
             w.write("\n")
 
