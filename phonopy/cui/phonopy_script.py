@@ -1056,7 +1056,6 @@ def run(phonon: Phonopy, settings, plot_conf, log_level):
         # Thermal property
         #
         if settings.is_thermal_properties:
-
             if log_level:
                 if settings.is_projected_thermal_properties:
                     print("Calculating projected thermal properties...")
