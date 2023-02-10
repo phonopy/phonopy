@@ -60,7 +60,7 @@ def read_abacus(filename, elements=[]):
         if _search_sentence(file, "ATOMIC_SPECIES"):
             for it, elem in enumerate(elements):
                 line = _skip_notes(file.readline())
-                _, _, pseudo = line.split()
+                pseudo = line.split()[2]
                 pps.append(pseudo)
 
         if _search_sentence(file, "NUMERICAL_ORBITAL"):
