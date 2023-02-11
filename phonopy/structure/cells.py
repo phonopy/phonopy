@@ -1404,11 +1404,13 @@ def compute_permutation_for_rotation(
         shape=(len(positions), ), dtype=int
 
     """
+
     def sort_by_lattice_distance(fracs):
         carts = np.dot(fracs - np.rint(fracs), lattice.T)
         perm = np.argsort(np.sum(carts**2, axis=1))
         sorted_fracs = np.array(fracs[perm], dtype="double", order="C")
         return perm, sorted_fracs
+
     # Sort both sides by some measure which is likely to produce a small
     # maximum value of (sorted_rotated_index - sorted_original_index).
     # The C code is optimized for this case, reducing an O(n^2)
