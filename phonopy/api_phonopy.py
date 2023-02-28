@@ -2137,6 +2137,8 @@ class Phonopy:
         is_mesh_symmetry=True,
         is_gamma_center=False,
         plot=False,
+        xlabel=None,
+        ylabel=None,
         write_dat=False,
         filename="total_dos.dat",
     ):
@@ -2151,7 +2153,7 @@ class Phonopy:
         if write_dat:
             self.write_total_dos(filename=filename)
         if plot:
-            return self.plot_total_dos()
+            return self.plot_total_dos(xlabel=xlabel, ylabel=ylabel)
 
     def get_total_dos_dict(self):
         """Return total DOS.
@@ -2214,7 +2216,7 @@ class Phonopy:
         )
         return self.plot_total_dos()
 
-    def plot_total_dos(self):
+    def plot_total_dos(self, xlabel=None, ylabel=None):
         """Plot total DOS."""
         if self._total_dos is None:
             msg = "run_total_dos has to be done before plotting " "total DOS."
@@ -2223,7 +2225,7 @@ class Phonopy:
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
-        self._total_dos.plot(ax, draw_grid=False)
+        self._total_dos.plot(ax, xlabel=xlabel, ylabel=ylabel, draw_grid=False)
         ax.set_ylim((0, None))
 
         return plt
@@ -2337,6 +2339,8 @@ class Phonopy:
         plot=False,
         pdos_indices=None,
         legend=None,
+        xlabel=None,
+        ylabel=None,
         write_dat=False,
         filename="projected_dos.dat",
     ):
@@ -2374,7 +2378,9 @@ class Phonopy:
         if write_dat:
             self.write_projected_dos(filename=filename)
         if plot:
-            return self.plot_projected_dos(pdos_indices=pdos_indices, legend=legend)
+            return self.plot_projected_dos(
+                pdos_indices=pdos_indices, legend=legend, xlabel=xlabel, ylabel=ylabel
+            )
 
     def get_projected_dos_dict(self):
         """Return projected DOS.
@@ -2434,7 +2440,9 @@ class Phonopy:
 
         return self.plot_projected_dos(pdos_indices=pdos_indices, legend=legend)
 
-    def plot_projected_dos(self, pdos_indices=None, legend=None):
+    def plot_projected_dos(
+        self, pdos_indices=None, legend=None, xlabel=None, ylabel=None
+    ):
         """Plot projected DOS.
 
         Parameters
@@ -2459,7 +2467,14 @@ class Phonopy:
         ax.xaxis.set_tick_params(which="both", direction="in")
         ax.yaxis.set_tick_params(which="both", direction="in")
 
-        self._pdos.plot(ax, indices=pdos_indices, legend=legend, draw_grid=False)
+        self._pdos.plot(
+            ax,
+            indices=pdos_indices,
+            legend=legend,
+            xlabel=xlabel,
+            ylabel=ylabel,
+            draw_grid=False,
+        )
 
         ax.set_ylim((0, None))
 
