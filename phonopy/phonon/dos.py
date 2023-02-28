@@ -708,3 +708,28 @@ def run_tetrahedron_method_dos(
         return dos[:, :, :, 0].sum(axis=0).sum(axis=0) / np.prod(mesh)
     else:
         return dos.sum(axis=0).sum(axis=0) / np.prod(mesh)
+
+
+def get_dos_frequency_range(freqs, dos):
+    """Return reasonable frequency range."""
+    i_min = 0
+    i_max = 1000
+
+    for i, (f, d) in enumerate(zip(freqs, dos)):
+        if d > 1e-5:
+            i_min = i
+            break
+
+    for i, (f, d) in enumerate(zip(freqs[::-1], dos[::-1])):
+        if d > 1e-5:
+            i_max = len(freqs) - 1 - i
+            break
+
+    f_min = freqs[i_min]
+    if f_min > 0:
+        f_min = 0
+
+    f_max = freqs[i_max]
+    f_max += (f_max - f_min) * 0.05
+
+    return f_min, f_max
