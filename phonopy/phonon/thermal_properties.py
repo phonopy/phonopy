@@ -449,7 +449,10 @@ class ThermalProperties(ThermalPropertiesBase):
 
         """
         if xlabel is None:
-            _xlabel = "Temperature [K]"
+            if legend_style == "compact":
+                _xlabel = "Temperature (K)"
+            else:
+                _xlabel = "Temperature [K]"
         else:
             _xlabel = xlabel
 
