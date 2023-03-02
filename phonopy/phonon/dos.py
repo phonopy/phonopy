@@ -383,6 +383,8 @@ class ProjectedDos(Dos):
         ax,
         indices=None,
         legend=None,
+        legend_prop=None,
+        legend_frameon=True,
         xlabel=None,
         ylabel=None,
         draw_grid=True,
@@ -407,6 +409,8 @@ class ProjectedDos(Dos):
             self._projected_dos,
             indices=indices,
             legend=legend,
+            legend_prop=legend_prop,
+            legend_frameon=legend_frameon,
             xlabel=_xlabel,
             ylabel=_ylabel,
             draw_grid=draw_grid,
@@ -591,6 +595,8 @@ def plot_partial_dos(
     partial_dos,
     indices=None,
     legend=None,
+    legend_prop=None,
+    legend_frameon=True,
     xlabel=None,
     ylabel=None,
     draw_grid=True,
@@ -607,6 +613,8 @@ def plot_partial_dos(
         partial_dos,
         indices=indices,
         legend=legend,
+        legend_prop=legend_prop,
+        legend_frameon=legend_frameon,
         xlabel=xlabel,
         ylabel=ylabel,
         draw_grid=draw_grid,
@@ -620,6 +628,8 @@ def plot_projected_dos(
     projected_dos,
     indices=None,
     legend=None,
+    legend_prop=None,
+    legend_frameon=True,
     xlabel=None,
     ylabel=None,
     draw_grid=True,
@@ -659,7 +669,7 @@ def plot_projected_dos(
             plots.append(ax.plot(frequency_points, pdos_sum, linewidth=1))
 
     if legend is not None:
-        ax.legend(legend)
+        ax.legend(legend, prop=legend_prop, frameon=legend_frameon)
 
     if xlabel:
         ax.set_xlabel(xlabel)

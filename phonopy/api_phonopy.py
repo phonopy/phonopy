@@ -2360,6 +2360,8 @@ class Phonopy:
         plot=False,
         pdos_indices=None,
         legend=None,
+        legend_prop=None,
+        legend_frameon=True,
         xlabel=None,
         ylabel=None,
         with_tight_frequency_range=False,
@@ -2403,6 +2405,8 @@ class Phonopy:
             return self.plot_projected_dos(
                 pdos_indices=pdos_indices,
                 legend=legend,
+                legend_prop=legend_prop,
+                legend_frameon=legend_frameon,
                 xlabel=xlabel,
                 ylabel=ylabel,
                 with_tight_frequency_range=with_tight_frequency_range,
@@ -2470,6 +2474,8 @@ class Phonopy:
         self,
         pdos_indices=None,
         legend=None,
+        legend_prop=None,
+        legend_frameon=True,
         xlabel=None,
         ylabel=None,
         with_tight_frequency_range=False,
@@ -2488,6 +2494,10 @@ class Phonopy:
             The str(instance) are shown in legend.
             It has to be len(pdos_indices)==len(legend). Default is None.
             When None, legend is not shown.
+        legend_prop : dict, optional
+            Legend properties of matplotlib. Default is None.
+        legend_frameon : bool, optional
+            Legend with frame or not. Default is True.
         xlabel : str, optional
             x-label of plot. Default is None, which puts a default x-label.
         ylabel : str, optional
@@ -2508,6 +2518,8 @@ class Phonopy:
             ax,
             indices=pdos_indices,
             legend=legend,
+            legend_prop=legend_prop,
+            legend_frameon=legend_frameon,
             xlabel=xlabel,
             ylabel=ylabel,
             draw_grid=False,
