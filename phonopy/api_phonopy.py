@@ -2669,9 +2669,36 @@ class Phonopy:
             tp["heat_capacity"],
         )
 
-    def plot_thermal_properties(self):
-        """Plot thermal properties."""
+    def plot_thermal_properties(
+        self,
+        xlabel: Optional[str] = None,
+        ylabel: Optional[str] = None,
+        with_grid: bool = True,
+        divide_by_Z: bool = False,
+        legend_style: Optional[str] = "normal",
+    ):
+        """Plot thermal properties.
+
+        Parameters
+        ----------
+        xlabel : str, optional
+            Label used for x-axis.
+        ylabel : str, optional
+            Label used for y-axis.
+        with_grid : bool, optional
+            With grid or not. Default is True.
+        divide_by_Z : bool, optional
+            Divide thermal properties by number of formula units of primitive
+            cell. Default is False.
+        legend_style : str, optional
+            "normal", "compact", None. None will not show legend.
+
+        """
         import matplotlib.pyplot as plt
+
+        if self._thermal_properties is None:
+            msg = "run_thermal_properties has to be done."
+            raise RuntimeError(msg)
 
         plt.rcParams["pdf.fonttype"] = 42
         plt.rcParams["font.family"] = "serif"
@@ -2682,7 +2709,14 @@ class Phonopy:
         ax.xaxis.set_tick_params(which="both", direction="in")
         ax.yaxis.set_tick_params(which="both", direction="in")
 
-        self._thermal_properties.plot(plt)
+        self._thermal_properties.plot(
+            ax,
+            xlabel=xlabel,
+            ylabel=ylabel,
+            with_grid=with_grid,
+            divide_by_Z=divide_by_Z,
+            legend_style=legend_style,
+        )
 
         temps = self._thermal_properties.temperatures
         ax.set_xlim((0, temps[-1]))

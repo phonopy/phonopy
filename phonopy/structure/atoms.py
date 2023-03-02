@@ -34,6 +34,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
+from math import gcd
 from typing import Optional
 
 import numpy as np
@@ -359,6 +360,21 @@ class PhonopyAtoms:
             DeprecationWarning,
         )
         return self.volume
+
+    @property
+    def Z(self):
+        """Return number of formula units in this cell."""
+        count = {}
+        for n in self._numbers:
+            if n in count:
+                count[n] += 1
+            else:
+                count[n] = 1
+        values = list(count.values())
+        x = values[0]
+        for v in values[1:]:
+            x = gcd(x, v)
+        return x
 
     def get_number_of_atoms(self):
         """Return number of atoms."""
