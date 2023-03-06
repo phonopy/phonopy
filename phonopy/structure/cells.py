@@ -222,7 +222,7 @@ class Supercell(PhonopyAtoms):
 
         sur_cell, u2sur_map = self._get_simple_supercell(unitcell, multi, P)
         supercell, sur2s_map, mapping_table = _trim_cell(
-            trim_frame, sur_cell, symprec=symprec
+            trim_frame, sur_cell, check_overlap=self._is_old_style, symprec=symprec
         )
         num_satom = len(supercell)
         num_uatom = len(unitcell)
@@ -635,7 +635,12 @@ class TrimmedCell(PhonopyAtoms):
     """
 
     def __init__(
-        self, relative_axes, cell: PhonopyAtoms, positions_to_reorder=None, symprec=1e-5
+        self,
+        relative_axes,
+        cell: PhonopyAtoms,
+        positions_to_reorder=None,
+        check_overlap=True,
+        symprec=1e-5,
     ):
         """Init method.
 
@@ -652,12 +657,15 @@ class TrimmedCell(PhonopyAtoms):
             Expected positions after trimming. This is used to fix the order
             of atoms in trimmed cell. This may be used to get the same
             primitive cell generated from supercells having different shapes.
+        check_overlap : bool, optional
+            This flag can be set False, if the determinant of relative_axis
+            is 1, e.g., when using SNF. Default is True.
         symprec: float, optional
             Tolerance to find overlapping atoms in the trimmed cell.
             Default is 1e-5.
 
         """
-        self._run(cell, relative_axes, positions_to_reorder, symprec)
+        self._run(cell, relative_axes, positions_to_reorder, check_overlap, symprec)
 
     @property
     def mapping_table(self):
@@ -685,7 +693,14 @@ class TrimmedCell(PhonopyAtoms):
         """
         return self._extracted_atoms
 
-    def _run(self, cell: PhonopyAtoms, relative_axes, positions_to_reorder, symprec):
+    def _run(
+        self,
+        cell: PhonopyAtoms,
+        relative_axes,
+        positions_to_reorder,
+        check_overlap,
+        symprec,
+    ):
         trimmed_lattice = np.dot(relative_axes.T, cell.cell)
         positions_in_new_lattice = np.dot(
             cell.scaled_positions, np.linalg.inv(relative_axes).T
@@ -705,6 +720,7 @@ class TrimmedCell(PhonopyAtoms):
             cell.numbers,
             cell.masses,
             cell.magnetic_moments,
+            check_overlap,
             symprec,
         )
 
@@ -743,6 +759,7 @@ class TrimmedCell(PhonopyAtoms):
         numbers,
         masses,
         magmoms,
+        check_overlap,
         symprec,
     ):
         num_atoms = 0
@@ -761,7 +778,7 @@ class TrimmedCell(PhonopyAtoms):
 
         for i, pos in enumerate(positions_in_new_lattice):
             found_overlap = False
-            if num_atoms > 0:
+            if check_overlap and num_atoms > 0:
                 diff = trimmed_positions[:num_atoms] - pos
                 diff -= np.rint(diff)
                 # Older numpy doesn't support axis argument.
@@ -983,10 +1000,16 @@ def convert_to_phonopy_primitive(
     return _primitive
 
 
-def _trim_cell(relative_axes, cell, symprec=1e-5, positions_to_reorder=None):
+def _trim_cell(
+    relative_axes, cell, check_overlap=True, symprec=1e-5, positions_to_reorder=None
+):
     """Trim overlapping atoms."""
     tcell = TrimmedCell(
-        relative_axes, cell, symprec=symprec, positions_to_reorder=positions_to_reorder
+        relative_axes,
+        cell,
+        check_overlap=check_overlap,
+        symprec=symprec,
+        positions_to_reorder=positions_to_reorder,
     )
     return (PhonopyAtoms(atoms=tcell), tcell.extracted_atoms, tcell.mapping_table)
 
@@ -1336,7 +1359,7 @@ def compute_all_sg_permutations(
 
     """
     out = []  # Finally the shape is fixed as (num_sym, num_pos_of_supercell).
-    for (sym, t) in zip(rotations, translations):
+    for sym, t in zip(rotations, translations):
         rotated_positions = np.dot(positions, sym.T) + t
         out.append(
             compute_permutation_for_rotation(
@@ -1381,13 +1404,18 @@ def compute_permutation_for_rotation(
         shape=(len(positions), ), dtype=int
 
     """
-    # Sort both sides by some measure which is likely to produce a small
-    # maximum value of (sorted_rotated_index - sorted_original_index).
-    # The C code is optimized for this case, reducing an O(n^2)
-    # search down to ~O(n). (for O(n log n) work overall, including the sort)
-    #
-    # We choose distance from the nearest bravais lattice point as our measure.
+
     def sort_by_lattice_distance(fracs):
+        """Sort atoms by distance.
+
+        Sort both sides by some measure which is likely to produce a small
+        maximum value of (sorted_rotated_index - sorted_original_index).
+        The C code is optimized for this case, reducing an O(n^2)
+        search down to ~O(n). (for O(n log n) work overall, including the sort)
+
+        We choose distance from the nearest bravais lattice point as our measure.
+
+        """
         carts = np.dot(fracs - np.rint(fracs), lattice.T)
         perm = np.argsort(np.sum(carts**2, axis=1))
         sorted_fracs = np.array(fracs[perm], dtype="double", order="C")

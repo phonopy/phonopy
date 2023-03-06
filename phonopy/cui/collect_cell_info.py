@@ -35,6 +35,7 @@
 
 import numpy as np
 
+from phonopy.file_IO import is_file_phonopy_yaml
 from phonopy.interface.calculator import (
     get_default_cell_filename,
     read_crystal_structure,
@@ -104,8 +105,11 @@ def collect_cell_info(
         supercell_matrix, interface_mode, cell_filename
     )
 
+    _cell_filename = cell_filename
     if fallback_reason:
         _interface_mode = "phonopy_yaml"
+        if cell_filename is None or not is_file_phonopy_yaml(cell_filename):
+            _cell_filename = None
     elif interface_mode is None:
         _interface_mode = None
     else:
@@ -117,7 +121,7 @@ def collect_cell_info(
         _phonopy_yaml_cls = phonopy_yaml_cls
 
     unitcell, optional_structure_info = read_crystal_structure(
-        filename=cell_filename,
+        filename=_cell_filename,
         interface_mode=_interface_mode,
         chemical_symbols=chemical_symbols,
         phonopy_yaml_cls=_phonopy_yaml_cls,
@@ -128,7 +132,7 @@ def collect_cell_info(
         err_msg = _get_error_message(
             optional_structure_info,
             fallback_reason,
-            cell_filename,
+            cell_filename,  # original cell_filename can be needed for error message.
             _phonopy_yaml_cls,
         )
         return {"error_message": err_msg}
@@ -150,7 +154,7 @@ def collect_cell_info(
     unitcell_filename = optional_structure_info[0]
     if supercell_matrix_out is None:
         err_msg.append("Supercell matrix (DIM or --dim) information was not found.")
-        if cell_filename is None and (
+        if _cell_filename is None and (
             unitcell_filename == get_default_cell_filename(interface_mode_out)
         ):
             err_msg += [
@@ -321,16 +325,19 @@ def _get_error_message(
     cell_filename,
     phonopy_yaml_cls,
 ):
+    """Show error message for failure of getting crystal structure."""
     final_cell_filename = optional_structure_info[0]
 
+    # No fallback to phonopy_yaml mode.
     if fallback_reason is None:
         msg_list = []
-        if cell_filename != final_cell_filename:
-            msg_list.append(
-                'Crystal structure file "%s" was not found.' % cell_filename
-            )
+        if cell_filename is None:
+            msg_list += [
+                "Crystal structure file was not specified.",
+                "Tried to find default crystal structure file.",
+            ]
         msg_list.append(
-            'Crystal structure file "%s" was not found.' % final_cell_filename
+            f'Crystal structure file "{final_cell_filename}" was not found.'
         )
         return "\n".join(msg_list)
 
@@ -346,38 +353,37 @@ def _get_error_message(
             vasp_filename = get_default_cell_filename("vasp")
 
         if fallback_reason == "read_vasp parsing failed":
-            msg_list.append(
-                'Parsing crystal structure file of "%s" failed.' % vasp_filename
-            )
+            msg_list += [
+                f'Parsing crystal structure file "{vasp_filename}" '
+                "as in VASP format failed.",
+                "(Calculator option is needed for parsing different crystal "
+                "structure format.)",
+            ]
         else:
-            msg_list.append(
-                'Crystal structure file of "%s" was not found.' % vasp_filename
-            )
+            msg_list.append(f'Crystal structure file "{vasp_filename}" was not found.')
 
     elif fallback_reason == "no supercell matrix given":
-        msg_list.append(
-            "Supercell matrix (DIM or --dim) was not explicitly " "specified."
-        )
+        msg_list.append("Supercell matrix (DIM or --dim) was not explicitly specified.")
 
     msg_list.append(
-        "By this reason, %s_yaml mode was invoked." % phonopy_yaml_cls.command_name
+        f"By this reason, {phonopy_yaml_cls.command_name}_yaml mode was invoked."
     )
 
     if final_cell_filename is None:  # No phonopy*.yaml file was found.
-        filenames = [f"{name}" for name in phonopy_yaml_cls.default_filenames]
+        filenames = [f'"{name}"' for name in phonopy_yaml_cls.default_filenames]
         if len(filenames) == 1:
             text = filenames[0]
         elif len(filenames) == 2:
-            text = " and ".join(filenames)
+            text = " or ".join(filenames)
         else:
-            tail = " and ".join(filenames[-2:])
+            tail = " or ".join(filenames[-2:])
             head = ", ".join(filenames[:-2])
             text = head + ", " + tail
-        msg_list.append("But %s could not be found." % text)
+        msg_list.append(f"But {text} could not be found.")
         return "\n".join(msg_list)
 
     phpy = optional_structure_info[1]
     if phpy is None:  # Failed to parse phonopy*.yaml.
-        msg_list.append('But parsing "%s" failed.' % final_cell_filename)
+        msg_list.append(f'But parsing "{final_cell_filename}" failed.')
 
     return "\n".join(msg_list)
