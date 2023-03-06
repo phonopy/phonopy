@@ -51,6 +51,7 @@ def load(
     unitcell=None,
     supercell=None,
     nac_params=None,
+    nac_method=None,
     unitcell_filename=None,
     supercell_filename=None,
     born_filename=None,
@@ -228,6 +229,7 @@ def load(
         )
         _calculator = calculator
         _nac_params = nac_params
+        _nac_method = nac_method
         _dataset = None
         _fc = None
     elif phonopy_yaml is not None:
@@ -277,6 +279,7 @@ def load(
         store_dense_svecs=store_dense_svecs,
         use_SNF_supercell=use_SNF_supercell,
         calculator=_calculator,
+        nac_method=_nac_method,
         log_level=log_level,
     )
 

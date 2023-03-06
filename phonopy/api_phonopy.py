@@ -142,6 +142,7 @@ class Phonopy:
         supercell_matrix=None,
         primitive_matrix=None,
         nac_params=None,
+        nac_method=None,
         factor=VaspToTHz,
         frequency_scale_factor=None,
         dynamical_matrix_decimals=None,
@@ -205,6 +206,7 @@ class Phonopy:
                 DeprecationWarning,
             )
         self._nac_params = nac_params
+        self._nac_method = nac_method
         self._dynamical_matrix_decimals = dynamical_matrix_decimals
 
         # set_band_structure
@@ -3646,6 +3648,8 @@ class Phonopy:
             )
             nac_params = self._nac_params.copy()
             nac_params.update({"born": borns, "dielectric": epsilon})
+            if self._nac_method is not None:
+                nac_params.update({'method': self._nac_method})
         else:
             nac_params = self._nac_params
 
