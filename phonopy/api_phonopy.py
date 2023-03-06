@@ -3649,7 +3649,7 @@ class Phonopy:
             nac_params = self._nac_params.copy()
             nac_params.update({"born": borns, "dielectric": epsilon})
             if self._nac_method is not None:
-                nac_params.update({'method': self._nac_method})
+                nac_params.update({"method": self._nac_method})
         else:
             nac_params = self._nac_params
 
