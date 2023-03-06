@@ -284,13 +284,13 @@ def print_settings(
     interface_mode = phonon.calculator
     run_mode = settings.run_mode
     if interface_mode:
-        print("Calculator interface: %s" % interface_mode)
+        print(f"Calculator interface: {interface_mode}")
+    print(f'Crystal structure was read from "{unitcell_filename}".')
     if (
         settings.cell_filename is not None
         and settings.cell_filename != unitcell_filename
-    ):  # noqa E129
-        print('"%s" was not able to be used.' % settings.cell_filename)
-    print('Crystal structure was read from "%s".' % unitcell_filename)
+    ):
+        print(f'("{settings.cell_filename}" was not used though specified.)')
     physical_units = get_default_physical_units(interface_mode)
     print("Unit of length: %s" % physical_units["length_unit"])
     if is_band_auto(settings) and not is_primitive_axes_auto:
@@ -1056,7 +1056,6 @@ def run(phonon: Phonopy, settings, plot_conf, log_level):
         # Thermal property
         #
         if settings.is_thermal_properties:
-
             if log_level:
                 if settings.is_projected_thermal_properties:
                     print("Calculating projected thermal properties...")
@@ -1502,7 +1501,21 @@ def start_phonopy(**argparse_control):
 
 
 def read_phonopy_settings(args, argparse_control, log_level):
-    """Read phonopy settings."""
+    """Read phonopy settings.
+
+    Returns
+    -------
+    tuple
+        settings : PhonopySettings
+            Configurations set by user to run phonopy.
+        confs : dict
+            Raw phonopy configurations in str (value) for each configuration
+            tag (key).
+        cell_filename : str or None
+            Filename that contains crystal structure information. When
+            unspecified in command line tool, this is None.
+
+    """
     load_phonopy_yaml = argparse_control.get("load_phonopy_yaml", False)
     conf_filename = None
 
@@ -1525,6 +1538,7 @@ def read_phonopy_settings(args, argparse_control, log_level):
             cell_filename = phonopy_conf_parser.settings.cell_filename
     else:
         if len(args.filename) > 0:
+            file_exists(args.filename[0], log_level)
             if is_file_phonopy_yaml(args.filename[0]):
                 phonopy_conf_parser = PhonopyConfParser(args=args)
                 cell_filename = args.filename[0]
@@ -1542,7 +1556,7 @@ def read_phonopy_settings(args, argparse_control, log_level):
     settings = phonopy_conf_parser.settings
 
     if log_level > 0 and conf_filename is not None:
-        print('Phonopy configuration was read from "%s".' % conf_filename)
+        print(f'"{conf_filename}" was read as phonopy configuration file.')
 
     return settings, confs, cell_filename
 

@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Mar-6-2023: Version 2.17.2
+
+- Bug fixes of user interface.
+
 ## Dec-29-2022: Version 2.17.1
 
 - Maintenance release.
