@@ -141,7 +141,7 @@ def plot_hdf5_mesh(data, is_fg, cutoff_frequency=None):
 def plot_mesh(x, y, is_fg, cutoff_frequency=None):
     import matplotlib.pyplot as plt
 
-    for (g, freqs) in zip(np.transpose(y), np.transpose(x)):
+    for g, freqs in zip(np.transpose(y), np.transpose(x)):
         if cutoff_frequency:
             g = np.extract(freqs > cutoff_frequency, g)
             freqs = np.extract(freqs > cutoff_frequency, freqs)

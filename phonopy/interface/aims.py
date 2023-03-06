@@ -92,7 +92,7 @@ def read_aims(filename):
         elif fields[0] == "initial_moment":
             magmoms[-1] = float(fields[1])
 
-    for (n, frac) in enumerate(is_frac):
+    for n, frac in enumerate(is_frac):
         if frac:
             pos = [
                 sum([positions[n][ll] * cell[ll][i] for ll in range(3)])

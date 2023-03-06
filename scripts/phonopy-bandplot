@@ -453,7 +453,6 @@ def _old_plot(args):
             filenames = args.filenames
 
     else:
-
         if len(args.filenames) == 0:
             filenames = ["band.yaml"]
         else:
@@ -732,7 +731,6 @@ def _write_gnuplot_data(args):
         bands_data = [_read_band_yaml(fname) for fname in filenames]
 
     if args.is_gnuplot:
-
         distances = bands_data[0][0]
         frequencies = bands_data[0][1]
         segment_nqpoint = bands_data[0][3]

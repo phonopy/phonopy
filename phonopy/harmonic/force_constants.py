@@ -890,7 +890,7 @@ def _get_sym_mappings_from_permutations(permutations, atom_list_done):
 
     atom_list_done = set(atom_list_done)
     for atom_todo in range(num_pos):
-        for (sym_index, permutation) in enumerate(permutations):
+        for sym_index, permutation in enumerate(permutations):
             if permutation[atom_todo] in atom_list_done:
                 map_atoms[atom_todo] = permutation[atom_todo]
                 map_syms[atom_todo] = sym_index

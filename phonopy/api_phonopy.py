@@ -63,7 +63,7 @@ from phonopy.interface.fc_calculator import get_fc2
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.phonon.animation import write_animation
 from phonopy.phonon.band_structure import BandStructure, get_band_qpoints_by_seekpath
-from phonopy.phonon.dos import ProjectedDos, TotalDos
+from phonopy.phonon.dos import ProjectedDos, TotalDos, get_dos_frequency_range
 from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.phonon.irreps import IrReps
 from phonopy.phonon.mesh import IterMesh, Mesh
@@ -150,6 +150,7 @@ class Phonopy:
         symprec=1e-5,
         is_symmetry=True,
         store_dense_svecs=False,
+        use_SNF_supercell=False,
         calculator=None,
         log_level=0,
     ):
@@ -160,6 +161,7 @@ class Phonopy:
         self._is_symmetry = is_symmetry
         self._calculator = calculator
         self._store_dense_svecs = store_dense_svecs
+        self._use_SNF_supercell = use_SNF_supercell
         self._log_level = log_level
 
         # Create supercell and primitive cell
@@ -2135,6 +2137,9 @@ class Phonopy:
         is_mesh_symmetry=True,
         is_gamma_center=False,
         plot=False,
+        xlabel=None,
+        ylabel=None,
+        with_tight_frequency_range=False,
         write_dat=False,
         filename="total_dos.dat",
     ):
@@ -2149,7 +2154,11 @@ class Phonopy:
         if write_dat:
             self.write_total_dos(filename=filename)
         if plot:
-            return self.plot_total_dos()
+            return self.plot_total_dos(
+                xlabel=xlabel,
+                ylabel=ylabel,
+                with_tight_frequency_range=with_tight_frequency_range,
+            )
 
     def get_total_dos_dict(self):
         """Return total DOS.
@@ -2212,8 +2221,19 @@ class Phonopy:
         )
         return self.plot_total_dos()
 
-    def plot_total_dos(self):
-        """Plot total DOS."""
+    def plot_total_dos(
+        self, xlabel=None, ylabel=None, with_tight_frequency_range=False
+    ):
+        """Plot total DOS.
+
+        xlabel : str, optional
+            x-label of plot. Default is None, which puts a default x-label.
+        ylabel : str, optional
+            y-label of plot. Default is None, which puts a default y-label.
+        with_tight_frequency_range : bool, optional
+            Plot with tight frequency range. Default is False.
+
+        """
         if self._total_dos is None:
             msg = "run_total_dos has to be done before plotting " "total DOS."
             raise RuntimeError(msg)
@@ -2221,7 +2241,12 @@ class Phonopy:
         import matplotlib.pyplot as plt
 
         fig, ax = plt.subplots()
-        self._total_dos.plot(ax, draw_grid=False)
+        self._total_dos.plot(ax, xlabel=xlabel, ylabel=ylabel, draw_grid=False)
+        if with_tight_frequency_range:
+            fmin, fmax = get_dos_frequency_range(
+                self._pdos.frequency_points, self._total_dos.dos
+            )
+            ax.set_xlim(fmin, fmax)
         ax.set_ylim((0, None))
 
         return plt
@@ -2335,6 +2360,11 @@ class Phonopy:
         plot=False,
         pdos_indices=None,
         legend=None,
+        legend_prop=None,
+        legend_frameon=True,
+        xlabel=None,
+        ylabel=None,
+        with_tight_frequency_range=False,
         write_dat=False,
         filename="projected_dos.dat",
     ):
@@ -2343,22 +2373,22 @@ class Phonopy:
         Parameters
         ----------
         See docstring of ``Phonopy.init_mesh`` for the parameters of ``mesh``
-        (default is 100.0), ``is_time_reversal`` (default is True),
-        and ``is_gamma_center`` (default is False).
-        See docstring of ``Phonopy.plot_projected_dos`` for the parameters
-        ``pdos_indices`` and ``legend``.
+        (default is 100.0), ``is_time_reversal`` (default is True), and
+        ``is_gamma_center`` (default is False). See docstring of
+        ``Phonopy.plot_projected_dos`` for the parameters ``pdos_indices``,
+        ``legend``, ``xlabel``, ``ylabel``, ``with_tight_frequency_range``.
 
         plot : Bool, optional
-            With setting True, PDOS is plotted using matplotlib and
-            the matplotlib module (plt) is returned. To watch the result,
-            usually ``show()`` has to be called. Default is False.
+            With setting True, PDOS is plotted using matplotlib and the
+            matplotlib module (plt) is returned. To watch the result, usually
+            ``show()`` has to be called. Default is False.
         write_dat : Bool
             With setting True, ``projected_dos.dat`` like file is written out.
             The  file name can be specified with the ``filename`` parameter.
             Default is False.
         filename : str, optional
-            File name used to write ``projected_dos.dat`` like file. Default
-            is ``projected_dos.dat``.
+            File name used to write ``projected_dos.dat`` like file. Default is
+            ``projected_dos.dat``.
 
         """
         self.run_mesh(
@@ -2372,7 +2402,15 @@ class Phonopy:
         if write_dat:
             self.write_projected_dos(filename=filename)
         if plot:
-            return self.plot_projected_dos(pdos_indices=pdos_indices, legend=legend)
+            return self.plot_projected_dos(
+                pdos_indices=pdos_indices,
+                legend=legend,
+                legend_prop=legend_prop,
+                legend_frameon=legend_frameon,
+                xlabel=xlabel,
+                ylabel=ylabel,
+                with_tight_frequency_range=with_tight_frequency_range,
+            )
 
     def get_projected_dos_dict(self):
         """Return projected DOS.
@@ -2432,7 +2470,16 @@ class Phonopy:
 
         return self.plot_projected_dos(pdos_indices=pdos_indices, legend=legend)
 
-    def plot_projected_dos(self, pdos_indices=None, legend=None):
+    def plot_projected_dos(
+        self,
+        pdos_indices=None,
+        legend=None,
+        legend_prop=None,
+        legend_frameon=True,
+        xlabel=None,
+        ylabel=None,
+        with_tight_frequency_range=False,
+    ):
         """Plot projected DOS.
 
         Parameters
@@ -2441,12 +2488,22 @@ class Phonopy:
             Sets of indices of atoms whose projected DOS are summed over.
             The indices start with 0. An example is as follwos:
                 pdos_indices=[[0, 1], [2, 3, 4, 5]]
-             Default is None, which means
+            Default is None, which means
                 pdos_indices=[[i] for i in range(natom)]
         legend : list of instances such as str or int, optional
-             The str(instance) are shown in legend.
-             It has to be len(pdos_indices)==len(legend). Default is None.
-             When None, legend is not shown.
+            The str(instance) are shown in legend.
+            It has to be len(pdos_indices)==len(legend). Default is None.
+            When None, legend is not shown.
+        legend_prop : dict, optional
+            Legend properties of matplotlib. Default is None.
+        legend_frameon : bool, optional
+            Legend with frame or not. Default is True.
+        xlabel : str, optional
+            x-label of plot. Default is None, which puts a default x-label.
+        ylabel : str, optional
+            y-label of plot. Default is None, which puts a default y-label.
+        with_tight_frequency_range : bool, optional
+            Plot with tight frequency range. Default is False.
 
         """
         import matplotlib.pyplot as plt
@@ -2457,8 +2514,22 @@ class Phonopy:
         ax.xaxis.set_tick_params(which="both", direction="in")
         ax.yaxis.set_tick_params(which="both", direction="in")
 
-        self._pdos.plot(ax, indices=pdos_indices, legend=legend, draw_grid=False)
+        self._pdos.plot(
+            ax,
+            indices=pdos_indices,
+            legend=legend,
+            legend_prop=legend_prop,
+            legend_frameon=legend_frameon,
+            xlabel=xlabel,
+            ylabel=ylabel,
+            draw_grid=False,
+        )
 
+        if with_tight_frequency_range:
+            fmin, fmax = get_dos_frequency_range(
+                self._pdos.frequency_points, self._pdos.projected_dos.sum(axis=0)
+            )
+            ax.set_xlim(fmin, fmax)
         ax.set_ylim((0, None))
 
         return plt
@@ -2610,9 +2681,36 @@ class Phonopy:
             tp["heat_capacity"],
         )
 
-    def plot_thermal_properties(self):
-        """Plot thermal properties."""
+    def plot_thermal_properties(
+        self,
+        xlabel: Optional[str] = None,
+        ylabel: Optional[str] = None,
+        with_grid: bool = True,
+        divide_by_Z: bool = False,
+        legend_style: Optional[str] = "normal",
+    ):
+        """Plot thermal properties.
+
+        Parameters
+        ----------
+        xlabel : str, optional
+            Label used for x-axis.
+        ylabel : str, optional
+            Label used for y-axis.
+        with_grid : bool, optional
+            With grid or not. Default is True.
+        divide_by_Z : bool, optional
+            Divide thermal properties by number of formula units of primitive
+            cell. Default is False.
+        legend_style : str, optional
+            "normal", "compact", None. None will not show legend.
+
+        """
         import matplotlib.pyplot as plt
+
+        if self._thermal_properties is None:
+            msg = "run_thermal_properties has to be done."
+            raise RuntimeError(msg)
 
         plt.rcParams["pdf.fonttype"] = 42
         plt.rcParams["font.family"] = "serif"
@@ -2623,7 +2721,14 @@ class Phonopy:
         ax.xaxis.set_tick_params(which="both", direction="in")
         ax.yaxis.set_tick_params(which="both", direction="in")
 
-        self._thermal_properties.plot(plt)
+        self._thermal_properties.plot(
+            ax,
+            xlabel=xlabel,
+            ylabel=ylabel,
+            with_grid=with_grid,
+            divide_by_Z=divide_by_Z,
+            legend_style=legend_style,
+        )
 
         temps = self._thermal_properties.temperatures
         ax.set_xlim((0, temps[-1]))
@@ -3620,7 +3725,10 @@ class Phonopy:
 
     def _build_supercell(self):
         self._supercell = get_supercell(
-            self._unitcell, self._supercell_matrix, self._symprec
+            self._unitcell,
+            self._supercell_matrix,
+            is_old_style=(not self._use_SNF_supercell),
+            symprec=self._symprec,
         )
 
     def _build_supercells_with_displacements(self):

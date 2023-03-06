@@ -145,7 +145,7 @@ class TetrahedronMesh:
         """Return frequency points."""
         return self._frequency_points
 
-    def set(self, value="I", division_number=201, frequency_points=None):
+    def set(self, value="I", division_number=201, frequency_points=None, lang="C"):
         """Prepare environment to peform linear tetrahedron method."""
         self._grid_point_count = 0
         self._value = value
@@ -162,8 +162,8 @@ class TetrahedronMesh:
         num_freqs = len(self._frequency_points)
         self._integration_weights = np.zeros((num_freqs, num_band), dtype="double")
         reciprocal_lattice = np.linalg.inv(self._cell.cell)
-        self._tm = TetrahedronMethod(reciprocal_lattice, mesh=self._mesh)
-        self._relative_grid_address = self._tm.get_tetrahedra()
+        self._tm = TetrahedronMethod(reciprocal_lattice, mesh=self._mesh, lang=lang)
+        self._relative_grid_address = self._tm.tetrahedra
 
     def _prepare(self):
         ir_gp_indices = {}
