@@ -1,2309 +1,460 @@
 
+
 <!DOCTYPE html>
 
-<html>
+
+<html >
+
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Setting tags &#8212; Phonopy v.2.17.1</title>
-    
+    <title>Setting tags &#8212; Phonopy v.2.17.2</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-<link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <link href="_static/styles/theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
 
-    
-  <link rel="stylesheet"
-    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
-    
+    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+  
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d" />
 
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'setting-tags';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="How to watch animation" href="animation.html" />
     <link rel="prev" title="Output files" href="output-files.html" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
-    
-
-    <!-- Google Analytics -->
-    
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="None"/>
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
-<!-- Checkboxes to toggle the left sidebar -->
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
-<label class="overlay overlay-navbar" for="__navigation">
-    <div class="visually-hidden">Toggle navigation sidebar</div>
-</label>
-<!-- Checkboxes to toggle the in-page toc -->
-<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
-<label class="overlay overlay-pagetoc" for="__page-toc">
-    <div class="visually-hidden">Toggle in-page Table of Contents</div>
-</label>
-<!-- Headers at the top -->
-<div class="announcement header-item noprint"></div>
-<div class="header header-item noprint"></div>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
 
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
     
-    <div class="container-fluid" id="banner"></div>
-
     
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
 
-    <div class="container-xl">
-      <div class="row">
-          
-<!-- Sidebar -->
-<div class="bd-sidebar noprint" id="site-navigation">
-    <div class="bd-sidebar__content">
-        <div class="bd-sidebar__top"><div class="navbar-brand-box">
-    <a class="navbar-brand text-wrap" href="index.html">
-      
-      
-      
-      <h1 class="site-logo" id="site-title">Phonopy v.2.17.1</h1>
-      
-    </a>
-</div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
-    <div class="bd-toc-item active">
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Phonopy v.2.17.2</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="install.html">
-   Installation
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="symmetry.html">
-   Crystal symmetry
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="workflow.html">
-   Work flow
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="examples.html">
-   Examples
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="input-files.html">
-   Input files
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="output-files.html">
-   Output files
-  </a>
- </li>
- <li class="toctree-l1 current active has-children">
-  <a class="current reference internal" href="#">
-   Setting tags
-  </a>
-  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
-  <label for="toctree-checkbox-1">
-   <i class="fas fa-chevron-down">
-   </i>
-  </label>
-  <ul>
-   <li class="toctree-l2">
-    <a class="reference internal" href="animation.html">
-     How to watch animation
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="command-options.html">
-   Command options
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="dynamic-structure-factor.html">
-   Dynamic structure factor
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="gruneisen.html">
-   Mode Grüneisen parameters
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="qha.html">
-   Quasi harmonic approximation
-  </a>
- </li>
- <li class="toctree-l1 has-children">
-  <a class="reference internal" href="interfaces.html">
-   Interfaces to calculators
-  </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
-  <label for="toctree-checkbox-2">
-   <i class="fas fa-chevron-down">
-   </i>
-  </label>
-  <ul>
-   <li class="toctree-l2">
-    <a class="reference internal" href="vasp.html">
-     VASP &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="wien2k.html">
-     Wien2k &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="qe.html">
-     Quantum ESPRESSO (QE) &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="abinit.html">
-     Abinit &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="siesta.html">
-     Siesta &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="elk.html">
-     Elk &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="crystal.html">
-     CRYSTAL &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="dftb%2B.html">
-     DFTB+ &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="turbomole.html">
-     TURBOMOLE &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="cp2k.html">
-     CP2K &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="aims.html">
-     FHI-aims &amp; phonopy calculations
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="castep.html">
-     CASTEP &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="Fleur.html">
-     Fleur &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="vasp-dfpt.html">
-     VASP-DFPT &amp; phonopy calculation
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="auxiliary-tools.html">
-   Auxiliary tools
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="external-tools.html">
-   External tools
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="phonopy-module.html">
-   Phonopy API for Python
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="phonopy-load.html">
-   phonopy-load command
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="formulation.html">
-   Formulations
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="citation.html">
-   How to cite phonopy
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="reference.html">
-   References
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="changelog.html">
-   Change Log
-  </a>
- </li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">Setting tags</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="animation.html">How to watch animation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="vasp.html">VASP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wien2k.html">Wien2k &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qe.html">Quantum ESPRESSO (QE) &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abinit.html">Abinit &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="siesta.html">Siesta &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elk.html">Elk &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="crystal.html">CRYSTAL &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dftb%2B.html">DFTB+ &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbomole.html">TURBOMOLE &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cp2k.html">CP2K &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aims.html">FHI-aims &amp; phonopy calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="castep.html">CASTEP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Fleur.html">Fleur &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-load.html">phonopy-load command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
     </div>
 </nav></div>
-        <div class="bd-sidebar__bottom">
-             <!-- To handle the deprecated key -->
-            
-            <div class="navbar_extra_footer">
-            Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
-            </div>
-            
-        </div>
     </div>
-    <div id="rtd-footer-container"></div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/setting-tags.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
 </div>
 
 
-          
 
 
-          
-<!-- A tiny helper pixel to detect if we've scrolled -->
-<div class="sbt-scroll-pixel-helper"></div>
-<!-- Main content -->
-<div class="col py-0 content-container">
-    
-    <div class="header-article row sticky-top noprint">
-        
-
-
-
-<div class="col py-1 d-flex header-article-main">
-    <div class="header-article__left">
-        
-        <label for="__navigation"
-  class="headerbtn"
-  data-toggle="tooltip"
-data-placement="right"
-title="Toggle navigation"
->
-  
-
-<span class="headerbtn__icon-container">
-  <i class="fas fa-bars"></i>
-  </span>
-
-</label>
-
-        
-    </div>
-    <div class="header-article__right">
 <button onclick="toggleFullScreen()"
-  class="headerbtn"
-  data-toggle="tooltip"
-data-placement="bottom"
-title="Fullscreen mode"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
 >
   
 
-<span class="headerbtn__icon-container">
+<span class="btn__icon-container">
   <i class="fas fa-expand"></i>
   </span>
 
 </button>
 
-<div class="menu-dropdown menu-dropdown-download-buttons">
-  <button class="headerbtn menu-dropdown__trigger"
-      aria-label="Download this page">
-      <i class="fas fa-download"></i>
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
   </button>
-  <div class="menu-dropdown__content">
-    <ul>
-      <li>
-        <a href="_sources/setting-tags.md.txt"
-   class="headerbtn"
-   data-toggle="tooltip"
-data-placement="left"
-title="Download source file"
->
-  
+`);
+</script>
 
-<span class="headerbtn__icon-container">
-  <i class="fas fa-file"></i>
-  </span>
-<span class="headerbtn__text-container">.md</span>
-</a>
-
-      </li>
-      
-      <li>
-        
-<button onclick="printPdf(this)"
-  class="headerbtn"
-  data-toggle="tooltip"
-data-placement="left"
-title="Print to PDF"
->
-  
-
-<span class="headerbtn__icon-container">
-  <i class="fas fa-file-pdf"></i>
-  </span>
-<span class="headerbtn__text-container">.pdf</span>
-</button>
-
-      </li>
-      
-    </ul>
-  </div>
-</div>
-<label for="__page-toc"
-  class="headerbtn headerbtn-page-toc"
-  
->
-  
-
-<span class="headerbtn__icon-container">
-  <i class="fas fa-list"></i>
-  </span>
-
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
 </label>
-
+</div></div>
+      
     </div>
+  
 </div>
-
-<!-- Table of contents -->
-<div class="col-md-3 bd-toc show noprint">
-    <div class="tocsection onthispage pt-5 pb-3">
-        <i class="fas fa-list"></i> Contents
-    </div>
-    <nav id="bd-toc-nav" aria-label="Page">
-        <ul class="visible nav section-nav flex-column">
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#basic-tags">
-   Basic tags
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#dim">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       DIM
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#primitive-axes-or-primitive-axis">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       PRIMITIVE_AXES
-      </span>
-     </code>
-     or
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       PRIMITIVE_AXIS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#atom-name">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       ATOM_NAME
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#eigenvectors">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       EIGENVECTORS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#mass">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MASS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#magmom">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MAGMOM
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#cell-filename">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       CELL_FILENAME
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#frequency-conversion-factor">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       FREQUENCY_CONVERSION_FACTOR
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#displacement-creation-tags">
-   Displacement creation tags
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#create-displacements">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       CREATE_DISPLACEMENTS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#displacement-distance">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       DISPLACEMENT_DISTANCE
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#diag">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       DIAG
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#pm">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       PM
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#random-displacements">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       RANDOM_DISPLACEMENTS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#random-displacement-temperature">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       RANDOM_DISPLACEMENT_TEMPERATURE
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#random-seed">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       RANDOM_SEED
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#band-structure-tags">
-   Band structure tags
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#band-and-band-points">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       BAND
-      </span>
-     </code>
-     and
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       BAND_POINTS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#band-labels">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       BAND_LABELS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#band-connection">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       BAND_CONNECTION
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#mesh-sampling-tags">
-   Mesh sampling tags
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#mesh-mp-or-mesh-numbers">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MESH
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MP
-      </span>
-     </code>
-     , or
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MESH_NUMBERS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#mp-shift">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MP_SHIFT
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#gamma-center">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       GAMMA_CENTER
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#write-mesh">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       WRITE_MESH
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#phonon-density-of-states-dos-tags">
-   Phonon density of states (DOS) tags
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#dos">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       DOS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#dos-range">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       DOS_RANGE
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#fmin-fmax-and-fpitch">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       FMIN
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       FMAX
-      </span>
-     </code>
-     , and
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       FPITCH
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#pdos">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       PDOS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#projection-direction">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       PROJECTION_DIRECTION
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#xyz-projection">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       XYZ_PROJECTION
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#sigma">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       SIGMA
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#debye-model">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       DEBYE_MODEL
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#momemt-and-moment-order">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MOMEMT
-      </span>
-     </code>
-     and
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MOMENT_ORDER
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#thermal-properties-related-tags">
-   Thermal properties related tags
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#tprop-tmin-tmax-and-tstep">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TPROP
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TMIN
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TMAX
-      </span>
-     </code>
-     , and
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TSTEP
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#pretend-real">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       PRETEND_REAL
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#cutoff-frequency">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       CUTOFF_FREQUENCY
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#thermal-displacements">
-   Thermal displacements
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#tdisp-tmax-tmin-and-tstep">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TDISP
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TMAX
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TMIN
-      </span>
-     </code>
-     , and
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TSTEP
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#tdispmat-tmax-tmin-and-tstep">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TDISPMAT
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TMAX
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TMIN
-      </span>
-     </code>
-     , and
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TSTEP
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#tdispmat-cif">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TDISPMAT_CIF
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#specific-q-points">
-   Specific q-points
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qpoints">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       QPOINTS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#writedm">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       WRITEDM
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#non-analytical-term-correction">
-   Non-analytical term correction
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#nac">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       NAC
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#nac-method">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       NAC_METHOD
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#q-direction">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       Q_DIRECTION
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#group-velocity">
-   Group velocity
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id3">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       GROUP_VELOCITY
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#gv-delta-q">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       GV_DELTA_Q
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#symmetry">
-   Symmetry
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#symmetry-tolerance">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       SYMMETRY_TOLERANCE
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#symmetry-tag">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       SYMMETRY
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#mesh-symmetry">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MESH_SYMMETRY
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#fc-symmetry">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       FC_SYMMETRY
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#force-constants">
-   Force constants
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id5">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       FORCE_CONSTANTS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#full-force-constants">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       FULL_FORCE_CONSTANTS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#read-force-constants">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       READ_FORCE_CONSTANTS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#write-force-constants">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       WRITE_FORCE_CONSTANTS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#fc-calculator">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       FC_CALCULATOR
-      </span>
-     </code>
-    </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#alm">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         ALM
-        </span>
-       </code>
-      </a>
-     </li>
-    </ul>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#create-animation-file">
-   Create animation file
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#anime-type">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       ANIME_TYPE
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#anime">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       ANIME
-      </span>
-     </code>
-    </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#for-v-sim">
-       For v_sim
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#for-the-other-animation-formats">
-       For the other animation formats
-      </a>
-     </li>
-    </ul>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#create-modulated-structure">
-   Create modulated structure
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#modulation">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MODULATION
-      </span>
-     </code>
-    </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#usage">
-       Usage
-      </a>
-     </li>
-    </ul>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#characters-of-irreducible-representations">
-   Characters of irreducible representations
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#irreps">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       IRREPS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#show-irreps">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       SHOW_IRREPS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#little-cogroup">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       LITTLE_COGROUP
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#input-output-file-control">
-   Input/Output file control
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#fc-format-readfc-format-writefc-format">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       FC_FORMAT
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       READFC_FORMAT
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       WRITEFC_FORMAT
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#band-format-mesh-format-qpoints-format">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       BAND_FORMAT
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MESH_FORMAT
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       QPOINTS_FORMAT
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#hdf5">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       HDF5
-      </span>
-     </code>
-    </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#force-constants-hdf5">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         force_constants.hdf5
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#mesh-hdf5">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         mesh.hdf5
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#qpoints-hdf5">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         qpoints.hdf5
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#band-hdf5">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         band.hdf5
-        </span>
-       </code>
-      </a>
-     </li>
-    </ul>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#summary">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       summary
-      </span>
-     </code>
-    </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#id6">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         force
-        </span>
-        <span class="pre">
-         constants
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#force-sets">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         force
-        </span>
-        <span class="pre">
-         sets
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#dielectric-constant-and-born-effective-charge">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         dielectric
-        </span>
-        <span class="pre">
-         constant
-        </span>
-       </code>
-       and
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         born
-        </span>
-        <span class="pre">
-         effective
-        </span>
-        <span class="pre">
-         charge
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#displacements">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         displacements
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#all">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         all
-        </span>
-       </code>
-      </a>
-     </li>
-    </ul>
-   </li>
-  </ul>
- </li>
-</ul>
-
-    </nav>
 </div>
-    </div>
-    <div class="article row">
-        <div class="col pl-md-3 pl-lg-5 content-container">
-            <!-- Table of contents that is only displayed when printing the page -->
-            <div id="jb-print-docs-body" class="onlyprint">
-                <h1>Setting tags</h1>
-                <!-- Table of contents -->
-                <div id="print-main-content">
-                    <div id="jb-print-toc">
-                        
-                        <div>
-                            <h2> Contents </h2>
-                        </div>
-                        <nav aria-label="Page">
-                            <ul class="visible nav section-nav flex-column">
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#basic-tags">
-   Basic tags
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#dim">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       DIM
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#primitive-axes-or-primitive-axis">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       PRIMITIVE_AXES
-      </span>
-     </code>
-     or
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       PRIMITIVE_AXIS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#atom-name">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       ATOM_NAME
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#eigenvectors">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       EIGENVECTORS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#mass">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MASS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#magmom">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MAGMOM
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#cell-filename">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       CELL_FILENAME
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#frequency-conversion-factor">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       FREQUENCY_CONVERSION_FACTOR
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#displacement-creation-tags">
-   Displacement creation tags
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#create-displacements">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       CREATE_DISPLACEMENTS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#displacement-distance">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       DISPLACEMENT_DISTANCE
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#diag">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       DIAG
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#pm">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       PM
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#random-displacements">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       RANDOM_DISPLACEMENTS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#random-displacement-temperature">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       RANDOM_DISPLACEMENT_TEMPERATURE
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#random-seed">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       RANDOM_SEED
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#band-structure-tags">
-   Band structure tags
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#band-and-band-points">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       BAND
-      </span>
-     </code>
-     and
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       BAND_POINTS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#band-labels">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       BAND_LABELS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#band-connection">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       BAND_CONNECTION
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#mesh-sampling-tags">
-   Mesh sampling tags
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#mesh-mp-or-mesh-numbers">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MESH
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MP
-      </span>
-     </code>
-     , or
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MESH_NUMBERS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#mp-shift">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MP_SHIFT
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#gamma-center">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       GAMMA_CENTER
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#write-mesh">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       WRITE_MESH
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#phonon-density-of-states-dos-tags">
-   Phonon density of states (DOS) tags
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#dos">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       DOS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#dos-range">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       DOS_RANGE
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#fmin-fmax-and-fpitch">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       FMIN
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       FMAX
-      </span>
-     </code>
-     , and
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       FPITCH
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#pdos">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       PDOS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#projection-direction">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       PROJECTION_DIRECTION
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#xyz-projection">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       XYZ_PROJECTION
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#sigma">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       SIGMA
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#debye-model">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       DEBYE_MODEL
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#momemt-and-moment-order">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MOMEMT
-      </span>
-     </code>
-     and
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MOMENT_ORDER
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#thermal-properties-related-tags">
-   Thermal properties related tags
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#tprop-tmin-tmax-and-tstep">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TPROP
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TMIN
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TMAX
-      </span>
-     </code>
-     , and
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TSTEP
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#pretend-real">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       PRETEND_REAL
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#cutoff-frequency">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       CUTOFF_FREQUENCY
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#thermal-displacements">
-   Thermal displacements
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#tdisp-tmax-tmin-and-tstep">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TDISP
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TMAX
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TMIN
-      </span>
-     </code>
-     , and
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TSTEP
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#tdispmat-tmax-tmin-and-tstep">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TDISPMAT
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TMAX
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TMIN
-      </span>
-     </code>
-     , and
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TSTEP
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#tdispmat-cif">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       TDISPMAT_CIF
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#specific-q-points">
-   Specific q-points
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qpoints">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       QPOINTS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#writedm">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       WRITEDM
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#non-analytical-term-correction">
-   Non-analytical term correction
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#nac">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       NAC
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#nac-method">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       NAC_METHOD
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#q-direction">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       Q_DIRECTION
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#group-velocity">
-   Group velocity
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id3">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       GROUP_VELOCITY
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#gv-delta-q">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       GV_DELTA_Q
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#symmetry">
-   Symmetry
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#symmetry-tolerance">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       SYMMETRY_TOLERANCE
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#symmetry-tag">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       SYMMETRY
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#mesh-symmetry">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MESH_SYMMETRY
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#fc-symmetry">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       FC_SYMMETRY
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#force-constants">
-   Force constants
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#id5">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       FORCE_CONSTANTS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#full-force-constants">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       FULL_FORCE_CONSTANTS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#read-force-constants">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       READ_FORCE_CONSTANTS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#write-force-constants">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       WRITE_FORCE_CONSTANTS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#fc-calculator">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       FC_CALCULATOR
-      </span>
-     </code>
-    </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#alm">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         ALM
-        </span>
-       </code>
-      </a>
-     </li>
-    </ul>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#create-animation-file">
-   Create animation file
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#anime-type">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       ANIME_TYPE
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#anime">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       ANIME
-      </span>
-     </code>
-    </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#for-v-sim">
-       For v_sim
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#for-the-other-animation-formats">
-       For the other animation formats
-      </a>
-     </li>
-    </ul>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#create-modulated-structure">
-   Create modulated structure
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#modulation">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MODULATION
-      </span>
-     </code>
-    </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#usage">
-       Usage
-      </a>
-     </li>
-    </ul>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#characters-of-irreducible-representations">
-   Characters of irreducible representations
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#irreps">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       IRREPS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#show-irreps">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       SHOW_IRREPS
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#little-cogroup">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       LITTLE_COGROUP
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#input-output-file-control">
-   Input/Output file control
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#fc-format-readfc-format-writefc-format">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       FC_FORMAT
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       READFC_FORMAT
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       WRITEFC_FORMAT
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#band-format-mesh-format-qpoints-format">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       BAND_FORMAT
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       MESH_FORMAT
-      </span>
-     </code>
-     ,
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       QPOINTS_FORMAT
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#hdf5">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       HDF5
-      </span>
-     </code>
-    </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#force-constants-hdf5">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         force_constants.hdf5
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#mesh-hdf5">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         mesh.hdf5
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#qpoints-hdf5">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         qpoints.hdf5
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#band-hdf5">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         band.hdf5
-        </span>
-       </code>
-      </a>
-     </li>
-    </ul>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#summary">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       summary
-      </span>
-     </code>
-    </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#id6">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         force
-        </span>
-        <span class="pre">
-         constants
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#force-sets">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         force
-        </span>
-        <span class="pre">
-         sets
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#dielectric-constant-and-born-effective-charge">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         dielectric
-        </span>
-        <span class="pre">
-         constant
-        </span>
-       </code>
-       and
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         born
-        </span>
-        <span class="pre">
-         effective
-        </span>
-        <span class="pre">
-         charge
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#displacements">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         displacements
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#all">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         all
-        </span>
-       </code>
-      </a>
-     </li>
-    </ul>
-   </li>
-  </ul>
- </li>
-</ul>
+              
+              
 
-                        </nav>
-                    </div>
-                </div>
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Setting tags</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
             </div>
-            <main id="main-content" role="main">
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-tags">Basic tags</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dim"><code class="docutils literal notranslate"><span class="pre">DIM</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-axes-or-primitive-axis"><code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code> or <code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXIS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#atom-name"><code class="docutils literal notranslate"><span class="pre">ATOM_NAME</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#eigenvectors"><code class="docutils literal notranslate"><span class="pre">EIGENVECTORS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mass"><code class="docutils literal notranslate"><span class="pre">MASS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#magmom"><code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cell-filename"><code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#frequency-conversion-factor"><code class="docutils literal notranslate"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#displacement-creation-tags">Displacement creation tags</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-displacements"><code class="docutils literal notranslate"><span class="pre">CREATE_DISPLACEMENTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#displacement-distance"><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diag"><code class="docutils literal notranslate"><span class="pre">DIAG</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pm"><code class="docutils literal notranslate"><span class="pre">PM</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacements"><code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacement-temperature"><code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENT_TEMPERATURE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-seed"><code class="docutils literal notranslate"><span class="pre">RANDOM_SEED</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#band-structure-tags">Band structure tags</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-and-band-points"><code class="docutils literal notranslate"><span class="pre">BAND</span></code> and <code class="docutils literal notranslate"><span class="pre">BAND_POINTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-labels"><code class="docutils literal notranslate"><span class="pre">BAND_LABELS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-connection"><code class="docutils literal notranslate"><span class="pre">BAND_CONNECTION</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-sampling-tags">Mesh sampling tags</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-mp-or-mesh-numbers"><code class="docutils literal notranslate"><span class="pre">MESH</span></code>, <code class="docutils literal notranslate"><span class="pre">MP</span></code>, or <code class="docutils literal notranslate"><span class="pre">MESH_NUMBERS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mp-shift"><code class="docutils literal notranslate"><span class="pre">MP_SHIFT</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gamma-center"><code class="docutils literal notranslate"><span class="pre">GAMMA_CENTER</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#write-mesh"><code class="docutils literal notranslate"><span class="pre">WRITE_MESH</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonon-density-of-states-dos-tags">Phonon density of states (DOS) tags</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos"><code class="docutils literal notranslate"><span class="pre">DOS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos-range"><code class="docutils literal notranslate"><span class="pre">DOS_RANGE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fmin-fmax-and-fpitch"><code class="docutils literal notranslate"><span class="pre">FMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">FMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">FPITCH</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pdos"><code class="docutils literal notranslate"><span class="pre">PDOS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#projection-direction"><code class="docutils literal notranslate"><span class="pre">PROJECTION_DIRECTION</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#xyz-projection"><code class="docutils literal notranslate"><span class="pre">XYZ_PROJECTION</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sigma"><code class="docutils literal notranslate"><span class="pre">SIGMA</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#debye-model"><code class="docutils literal notranslate"><span class="pre">DEBYE_MODEL</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#momemt-and-moment-order"><code class="docutils literal notranslate"><span class="pre">MOMEMT</span></code> and <code class="docutils literal notranslate"><span class="pre">MOMENT_ORDER</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-properties-related-tags">Thermal properties related tags</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tprop-tmin-tmax-and-tstep"><code class="docutils literal notranslate"><span class="pre">TPROP</span></code>, <code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pretend-real"><code class="docutils literal notranslate"><span class="pre">PRETEND_REAL</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cutoff-frequency"><code class="docutils literal notranslate"><span class="pre">CUTOFF_FREQUENCY</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-displacements">Thermal displacements</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tdisp-tmax-tmin-and-tstep"><code class="docutils literal notranslate"><span class="pre">TDISP</span></code>, <code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, <code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, and <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tdispmat-tmax-tmin-and-tstep"><code class="docutils literal notranslate"><span class="pre">TDISPMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, <code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, and <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tdispmat-cif"><code class="docutils literal notranslate"><span class="pre">TDISPMAT_CIF</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#specific-q-points">Specific q-points</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qpoints"><code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#writedm"><code class="docutils literal notranslate"><span class="pre">WRITEDM</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nac"><code class="docutils literal notranslate"><span class="pre">NAC</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nac-method"><code class="docutils literal notranslate"><span class="pre">NAC_METHOD</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#q-direction"><code class="docutils literal notranslate"><span class="pre">Q_DIRECTION</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#group-velocity">Group velocity</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3"><code class="docutils literal notranslate"><span class="pre">GROUP_VELOCITY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gv-delta-q"><code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetry">Symmetry</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetry-tolerance"><code class="docutils literal notranslate"><span class="pre">SYMMETRY_TOLERANCE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetry-tag"><code class="docutils literal notranslate"><span class="pre">SYMMETRY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-symmetry"><code class="docutils literal notranslate"><span class="pre">MESH_SYMMETRY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-symmetry"><code class="docutils literal notranslate"><span class="pre">FC_SYMMETRY</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#force-constants">Force constants</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5"><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#full-force-constants"><code class="docutils literal notranslate"><span class="pre">FULL_FORCE_CONSTANTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#read-force-constants"><code class="docutils literal notranslate"><span class="pre">READ_FORCE_CONSTANTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#write-force-constants"><code class="docutils literal notranslate"><span class="pre">WRITE_FORCE_CONSTANTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-calculator"><code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#alm"><code class="docutils literal notranslate"><span class="pre">ALM</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-animation-file">Create animation file</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anime-type"><code class="docutils literal notranslate"><span class="pre">ANIME_TYPE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anime"><code class="docutils literal notranslate"><span class="pre">ANIME</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#for-v-sim">For v_sim</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#for-the-other-animation-formats">For the other animation formats</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-modulated-structure">Create modulated structure</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modulation"><code class="docutils literal notranslate"><span class="pre">MODULATION</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#usage">Usage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#characters-of-irreducible-representations">Characters of irreducible representations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#irreps"><code class="docutils literal notranslate"><span class="pre">IRREPS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#show-irreps"><code class="docutils literal notranslate"><span class="pre">SHOW_IRREPS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#little-cogroup"><code class="docutils literal notranslate"><span class="pre">LITTLE_COGROUP</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#input-output-file-control">Input/Output file control</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-format-readfc-format-writefc-format"><code class="docutils literal notranslate"><span class="pre">FC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">READFC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">WRITEFC_FORMAT</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-format-mesh-format-qpoints-format"><code class="docutils literal notranslate"><span class="pre">BAND_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">MESH_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hdf5"><code class="docutils literal notranslate"><span class="pre">HDF5</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#force-constants-hdf5"><code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-hdf5"><code class="docutils literal notranslate"><span class="pre">mesh.hdf5</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qpoints-hdf5"><code class="docutils literal notranslate"><span class="pre">qpoints.hdf5</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#band-hdf5"><code class="docutils literal notranslate"><span class="pre">band.hdf5</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#summary"><code class="docutils literal notranslate"><span class="pre">summary</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id6"><code class="docutils literal notranslate"><span class="pre">force</span> <span class="pre">constants</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#force-sets"><code class="docutils literal notranslate"><span class="pre">force</span> <span class="pre">sets</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#dielectric-constant-and-born-effective-charge"><code class="docutils literal notranslate"><span class="pre">dielectric</span> <span class="pre">constant</span></code> and <code class="docutils literal notranslate"><span class="pre">born</span> <span class="pre">effective</span> <span class="pre">charge</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#displacements"><code class="docutils literal notranslate"><span class="pre">displacements</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#all"><code class="docutils literal notranslate"><span class="pre">all</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
                 
-              <div>
-                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
   <section class="tex2jax_ignore mathjax_ignore" id="setting-tags">
 <span id="id1"></span><h1>Setting tags<a class="headerlink" href="#setting-tags" title="Permalink to this headline">#</a></h1>
 <div class="contents local topic" id="contents">
@@ -2700,6 +851,38 @@ script like below.</p>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/NaCl-disp-dist.png"><img alt="_images/NaCl-disp-dist.png" src="_images/NaCl-disp-dist.png" style="width: 320.0px; height: 240.0px;" /></a>
+<p>An example case using this tag is as follows.</p>
+<ol class="arabic">
+<li><p>Compute supercell force sets in the usual manner with small displacements.
+Generate <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> in the current directory.</p></li>
+<li><p>Create new directory and copy <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> and input crystal structure, or
+<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> to the new directory, then change to the new directory.</p></li>
+<li><p>Using <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>, generate supercells with random displacements at finite
+temperature using this tag. <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> is generated at this step.
+Therefore, if <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> already exists in this directory, it is
+overwritten. The required number of supercells depends on your system and
+also the purpose. It can be 10, or can be 1000.</p></li>
+<li><p>Using those supercells with random displacements, calculate supercell forces
+with some force calculator with VASP, QE, etc.</p></li>
+<li><p>Generate <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> in this directory, which overwrites previous
+<code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>.</p></li>
+<li><p>Run the force constants calculation, e.g., with ALM. ALM does the fitting
+force constants using the dataset of displacements and forces stored in
+<code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>. Run also phonon calculation. This is done for example,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonopy</span> <span class="o">-</span><span class="n">v</span> <span class="o">--</span><span class="n">alm</span> <span class="o">--</span><span class="n">mesh</span> <span class="mi">10</span> <span class="mi">10</span> <span class="mi">10</span> <span class="o">-</span><span class="n">p</span>
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy<span class="w"> </span>-v<span class="w"> </span>--alm<span class="w"> </span>--writefc
+phonopy<span class="w"> </span>--readfc<span class="w"> </span>--mesh<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="m">10</span><span class="w"> </span>-p
+</pre></div>
+</div>
+<p>Normally the force constants calculation with ALM will not take much time,
+but for some cases it can be. So it may be a good idea to store force constants like the second example.</p>
+</li>
+</ol>
+<p>To perform above procedure more systematically, it is recommended to write a
+python script using phonopy API.</p>
 </section>
 <section id="random-seed">
 <span id="random-seed-tag"></span><h3><a class="toc-backref" href="#id23"><code class="docutils literal notranslate"><span class="pre">RANDOM_SEED</span></code></a><a class="headerlink" href="#random-seed" title="Permalink to this headline">#</a></h3>
@@ -3320,7 +1503,7 @@ systematically. The following is the list of the force constants calculator
 currently possible to be invoked from phonopy.</p>
 <section id="alm">
 <span id="fc-calculator-alm-tag"></span><h4><code class="docutils literal notranslate"><span class="pre">ALM</span></code><a class="headerlink" href="#alm" title="Permalink to this headline">#</a></h4>
-<p><strong>New in v2.3</strong> ALM (<a class="reference external" href="https://github.com/ttadano/ALM">https://github.com/ttadano/ALM</a>) is based on fitting
+<p><strong>New in v2.3</strong> ALM (<a class="github reference external" href="https://github.com/ttadano/ALM">ttadano/ALM</a>) is based on fitting
 approach and any displacements set of atoms in supercell can be handled. For
 example, random displacements generated by <a class="reference internal" href="#random-displacements-tag"><span class="std std-ref">RANDOM_DISPLACEMENTS</span></a> can
 be used to compute force constants. To use ALM, its python module has to be
@@ -3620,48 +1803,228 @@ stored.</p>
 </section>
 
 
-              </div>
+                </article>
               
-            </main>
-            <footer class="footer-article noprint">
-                
-    <!-- Previous / next buttons -->
-<div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="output-files.html" title="previous page">
-        <i class="fas fa-angle-left"></i>
-        <div class="prev-next-info">
-            <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">Output files</p>
-        </div>
+
+              
+              
+                <footer class="bd-footer-article">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="output-files.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Output files</p>
+      </div>
     </a>
-    <a class='right-next' id="next-link" href="animation.html" title="next page">
-    <div class="prev-next-info">
+    <a class="right-next"
+       href="animation.html"
+       title="next page">
+      <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
         <p class="prev-next-title">How to watch animation</p>
-    </div>
-    <i class="fas fa-angle-right"></i>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
-            </footer>
-        </div>
-    </div>
-    <div class="footer-content row">
-        <footer class="col footer"><p>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-tags">Basic tags</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dim"><code class="docutils literal notranslate"><span class="pre">DIM</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-axes-or-primitive-axis"><code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code> or <code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXIS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#atom-name"><code class="docutils literal notranslate"><span class="pre">ATOM_NAME</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#eigenvectors"><code class="docutils literal notranslate"><span class="pre">EIGENVECTORS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mass"><code class="docutils literal notranslate"><span class="pre">MASS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#magmom"><code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cell-filename"><code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#frequency-conversion-factor"><code class="docutils literal notranslate"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#displacement-creation-tags">Displacement creation tags</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-displacements"><code class="docutils literal notranslate"><span class="pre">CREATE_DISPLACEMENTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#displacement-distance"><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diag"><code class="docutils literal notranslate"><span class="pre">DIAG</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pm"><code class="docutils literal notranslate"><span class="pre">PM</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacements"><code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacement-temperature"><code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENT_TEMPERATURE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-seed"><code class="docutils literal notranslate"><span class="pre">RANDOM_SEED</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#band-structure-tags">Band structure tags</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-and-band-points"><code class="docutils literal notranslate"><span class="pre">BAND</span></code> and <code class="docutils literal notranslate"><span class="pre">BAND_POINTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-labels"><code class="docutils literal notranslate"><span class="pre">BAND_LABELS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-connection"><code class="docutils literal notranslate"><span class="pre">BAND_CONNECTION</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-sampling-tags">Mesh sampling tags</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-mp-or-mesh-numbers"><code class="docutils literal notranslate"><span class="pre">MESH</span></code>, <code class="docutils literal notranslate"><span class="pre">MP</span></code>, or <code class="docutils literal notranslate"><span class="pre">MESH_NUMBERS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mp-shift"><code class="docutils literal notranslate"><span class="pre">MP_SHIFT</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gamma-center"><code class="docutils literal notranslate"><span class="pre">GAMMA_CENTER</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#write-mesh"><code class="docutils literal notranslate"><span class="pre">WRITE_MESH</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonon-density-of-states-dos-tags">Phonon density of states (DOS) tags</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos"><code class="docutils literal notranslate"><span class="pre">DOS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos-range"><code class="docutils literal notranslate"><span class="pre">DOS_RANGE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fmin-fmax-and-fpitch"><code class="docutils literal notranslate"><span class="pre">FMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">FMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">FPITCH</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pdos"><code class="docutils literal notranslate"><span class="pre">PDOS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#projection-direction"><code class="docutils literal notranslate"><span class="pre">PROJECTION_DIRECTION</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#xyz-projection"><code class="docutils literal notranslate"><span class="pre">XYZ_PROJECTION</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sigma"><code class="docutils literal notranslate"><span class="pre">SIGMA</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#debye-model"><code class="docutils literal notranslate"><span class="pre">DEBYE_MODEL</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#momemt-and-moment-order"><code class="docutils literal notranslate"><span class="pre">MOMEMT</span></code> and <code class="docutils literal notranslate"><span class="pre">MOMENT_ORDER</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-properties-related-tags">Thermal properties related tags</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tprop-tmin-tmax-and-tstep"><code class="docutils literal notranslate"><span class="pre">TPROP</span></code>, <code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, and <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pretend-real"><code class="docutils literal notranslate"><span class="pre">PRETEND_REAL</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cutoff-frequency"><code class="docutils literal notranslate"><span class="pre">CUTOFF_FREQUENCY</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-displacements">Thermal displacements</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tdisp-tmax-tmin-and-tstep"><code class="docutils literal notranslate"><span class="pre">TDISP</span></code>, <code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, <code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, and <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tdispmat-tmax-tmin-and-tstep"><code class="docutils literal notranslate"><span class="pre">TDISPMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">TMAX</span></code>, <code class="docutils literal notranslate"><span class="pre">TMIN</span></code>, and <code class="docutils literal notranslate"><span class="pre">TSTEP</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tdispmat-cif"><code class="docutils literal notranslate"><span class="pre">TDISPMAT_CIF</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#specific-q-points">Specific q-points</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qpoints"><code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#writedm"><code class="docutils literal notranslate"><span class="pre">WRITEDM</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nac"><code class="docutils literal notranslate"><span class="pre">NAC</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nac-method"><code class="docutils literal notranslate"><span class="pre">NAC_METHOD</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#q-direction"><code class="docutils literal notranslate"><span class="pre">Q_DIRECTION</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#group-velocity">Group velocity</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3"><code class="docutils literal notranslate"><span class="pre">GROUP_VELOCITY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gv-delta-q"><code class="docutils literal notranslate"><span class="pre">GV_DELTA_Q</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetry">Symmetry</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetry-tolerance"><code class="docutils literal notranslate"><span class="pre">SYMMETRY_TOLERANCE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetry-tag"><code class="docutils literal notranslate"><span class="pre">SYMMETRY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-symmetry"><code class="docutils literal notranslate"><span class="pre">MESH_SYMMETRY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-symmetry"><code class="docutils literal notranslate"><span class="pre">FC_SYMMETRY</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#force-constants">Force constants</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5"><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#full-force-constants"><code class="docutils literal notranslate"><span class="pre">FULL_FORCE_CONSTANTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#read-force-constants"><code class="docutils literal notranslate"><span class="pre">READ_FORCE_CONSTANTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#write-force-constants"><code class="docutils literal notranslate"><span class="pre">WRITE_FORCE_CONSTANTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-calculator"><code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#alm"><code class="docutils literal notranslate"><span class="pre">ALM</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-animation-file">Create animation file</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anime-type"><code class="docutils literal notranslate"><span class="pre">ANIME_TYPE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#anime"><code class="docutils literal notranslate"><span class="pre">ANIME</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#for-v-sim">For v_sim</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#for-the-other-animation-formats">For the other animation formats</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-modulated-structure">Create modulated structure</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#modulation"><code class="docutils literal notranslate"><span class="pre">MODULATION</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#usage">Usage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#characters-of-irreducible-representations">Characters of irreducible representations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#irreps"><code class="docutils literal notranslate"><span class="pre">IRREPS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#show-irreps"><code class="docutils literal notranslate"><span class="pre">SHOW_IRREPS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#little-cogroup"><code class="docutils literal notranslate"><span class="pre">LITTLE_COGROUP</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#input-output-file-control">Input/Output file control</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-format-readfc-format-writefc-format"><code class="docutils literal notranslate"><span class="pre">FC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">READFC_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">WRITEFC_FORMAT</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-format-mesh-format-qpoints-format"><code class="docutils literal notranslate"><span class="pre">BAND_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">MESH_FORMAT</span></code>, <code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hdf5"><code class="docutils literal notranslate"><span class="pre">HDF5</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#force-constants-hdf5"><code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-hdf5"><code class="docutils literal notranslate"><span class="pre">mesh.hdf5</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qpoints-hdf5"><code class="docutils literal notranslate"><span class="pre">qpoints.hdf5</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#band-hdf5"><code class="docutils literal notranslate"><span class="pre">band.hdf5</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#summary"><code class="docutils literal notranslate"><span class="pre">summary</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id6"><code class="docutils literal notranslate"><span class="pre">force</span> <span class="pre">constants</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#force-sets"><code class="docutils literal notranslate"><span class="pre">force</span> <span class="pre">sets</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#dielectric-constant-and-born-effective-charge"><code class="docutils literal notranslate"><span class="pre">dielectric</span> <span class="pre">constant</span></code> and <code class="docutils literal notranslate"><span class="pre">born</span> <span class="pre">effective</span> <span class="pre">charge</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#displacements"><code class="docutils literal notranslate"><span class="pre">displacements</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#all"><code class="docutils literal notranslate"><span class="pre">all</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            <div class="bd-footer-content__inner">
+<div class="bd-footer-content__inner container">
   
-      &copy; Copyright 2009, Atsushi Togo.<br/>
-</p>
-        </footer>
-    </div>
+  <div class="footer-item">
     
-</div>
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2009, Atsushi Togo.
+      <br/>
+    
+  </p>
 
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div></div>
+          </footer>
+        
 
-      </div>
+      </main>
     </div>
+  </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <script src="_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d"></script>
 
-
+  <footer class="bd-footer">
+  </footer>
   </body>
 </html>
