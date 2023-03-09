@@ -602,16 +602,15 @@ class Vasprun:
                 # Get Hessian matrix (normalized by masses)
                 v_elements = element.findall("./varray[@name='hessian']/v")
                 if v_elements is not None:
-                    fc_tmp = np.array([
-                        [float(x) for x in v.text.strip().split()]
-                        for v in v_elements
-                    ])
+                    fc_tmp = np.array(
+                        [[float(x) for x in v.text.strip().split()] for v in v_elements]
+                    )
 
                 # Get physical units of Hessian
                 unit_element = element.find("./i[@name='unit']")
                 if unit_element is not None:
                     hessian_units = unit_element.text.strip()
-            
+
             # Stop parsing when we have all the information
             if num_atom > 0 and fc_tmp is not None:
                 break
