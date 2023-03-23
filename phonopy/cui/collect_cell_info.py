@@ -105,20 +105,22 @@ def collect_cell_info(
         supercell_matrix, interface_mode, cell_filename
     )
 
+    if phonopy_yaml_cls is None:
+        _phonopy_yaml_cls = PhonopyYaml
+    else:
+        _phonopy_yaml_cls = phonopy_yaml_cls
+
     _cell_filename = cell_filename
     if fallback_reason:
         _interface_mode = "phonopy_yaml"
-        if cell_filename is None or not is_file_phonopy_yaml(cell_filename):
+        if cell_filename is None or not is_file_phonopy_yaml(
+            cell_filename, keyword=_phonopy_yaml_cls.command_name
+        ):
             _cell_filename = None
     elif interface_mode is None:
         _interface_mode = None
     else:
         _interface_mode = interface_mode.lower()
-
-    if phonopy_yaml_cls is None:
-        _phonopy_yaml_cls = PhonopyYaml
-    else:
-        _phonopy_yaml_cls = phonopy_yaml_cls
 
     unitcell, optional_structure_info = read_crystal_structure(
         filename=_cell_filename,
