@@ -6,7 +6,7 @@ import numpy as np
 import yaml
 
 from phonopy import Phonopy
-from phonopy.interface.phonopy_yaml import PhonopyYaml
+from phonopy.interface.phonopy_yaml import PhonopyYaml, load_phonopy_yaml
 from phonopy.interface.vasp import read_vasp
 from phonopy.structure.dataset import get_displacements_and_forces
 
@@ -33,8 +33,9 @@ def test_write_phonopy_yaml(ph_nacl_nofcsym: Phonopy, helper_methods):
     phpy_yaml = PhonopyYaml(calculator="vasp")
     phpy_yaml.set_phonon_info(phonon)
     phpy_yaml_test = PhonopyYaml()
-    phpy_yaml_test.yaml_data = yaml.safe_load(StringIO(str(phpy_yaml)))
-    phpy_yaml_test.parse()
+    phpy_yaml_test._data = load_phonopy_yaml(
+        yaml.safe_load(StringIO(str(phpy_yaml))), calculator=phpy_yaml.calculator
+    )
     helper_methods.compare_cells_with_order(
         phpy_yaml.primitive, phpy_yaml_test.primitive
     )
@@ -69,8 +70,9 @@ def test_write_phonopy_yaml_extra(ph_nacl_nofcsym: Phonopy):
     phpy_yaml = PhonopyYaml(calculator="vasp", settings=settings)
     phpy_yaml.set_phonon_info(phonon)
     phpy_yaml_test = PhonopyYaml()
-    phpy_yaml_test.yaml_data = yaml.safe_load(StringIO(str(phpy_yaml)))
-    phpy_yaml_test.parse()
+    phpy_yaml_test._data = load_phonopy_yaml(
+        yaml.safe_load(StringIO(str(phpy_yaml))), calculator=phpy_yaml.calculator
+    )
     np.testing.assert_allclose(
         phpy_yaml.force_constants, phpy_yaml_test.force_constants, atol=1e-8
     )
