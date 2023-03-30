@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Mar-30-2023: Version 2.18.0
+
+- Maintenance release. Refactoring of `PhonopyYaml` class.
+
 ## Mar-6-2023: Version 2.17.2
 
 - Bug fixes of user interface.

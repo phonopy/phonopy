@@ -585,16 +585,9 @@ class Vasprun:
 
         """
         fc_tmp = None
-        version_nums = None
+        hessian_units = ""
         num_atom = 0
         for event, element in vasprun_etree:
-            # VASP version
-            if element.tag == "generator":
-                for element_i in element.findall("./i"):
-                    if element_i.attrib["name"] == "version":
-                        version_str = element_i.text.strip()
-                        version_nums = version_str.split("-")[0].split(".")
-
             if num_atom == 0:
                 atomtypes = self._get_atomtypes(element)
                 if atomtypes:
@@ -604,17 +597,27 @@ class Vasprun:
                     for n, m in zip(num_atoms, elem_masses):
                         masses += [m] * n
 
-            # Get Hessian matrix (normalized by masses)
-            if element.tag == "varray":
-                if element.attrib["name"] == "hessian":
-                    fc_tmp = []
-                    for v in element.findall("./v"):
-                        fc_tmp.append([float(x) for x in v.text.strip().split()])
+            # Get dynmat node
+            if element.tag == "dynmat":
+                # Get Hessian matrix (normalized by masses)
+                v_elements = element.findall("./varray[@name='hessian']/v")
+                if v_elements is not None:
+                    fc_tmp = np.array(
+                        [[float(x) for x in v.text.strip().split()] for v in v_elements]
+                    )
+
+                # Get physical units of Hessian
+                unit_element = element.find("./i[@name='unit']")
+                if unit_element is not None:
+                    hessian_units = unit_element.text.strip()
+
+            # Stop parsing when we have all the information
+            if num_atom > 0 and fc_tmp is not None:
+                break
 
         if fc_tmp is None:
             return None, None
         else:
-            fc_tmp = np.array(fc_tmp)
             if fc_tmp.shape != (num_atom * 3, num_atom * 3):
                 return False
 
@@ -631,9 +634,8 @@ class Vasprun:
                     force_constants[i, j] *= -np.sqrt(masses[i] * masses[j])
 
             # Recover the unit of eV/Angstrom^2 for VASP-6.
-            if version_nums is not None and len(version_nums) > 1:
-                if int(version_nums[0]) == 6 and int(version_nums[1]) > 1:
-                    force_constants /= VaspToTHz**2
+            if hessian_units == "THz^2":
+                force_constants /= VaspToTHz**2
 
             return force_constants, elements
 
@@ -644,18 +646,15 @@ class Vasprun:
         num_atoms = []
 
         if element.tag == "atominfo":
-            for element_array in element.findall("./array"):
-                if (
-                    "name" in element_array.attrib
-                    and element_array.attrib["name"] == "atomtypes"
-                ):
-                    for rc in element_array.findall("./set/rc"):
-                        atom_info = [x.text for x in rc.findall("./c")]
-                        num_atoms.append(int(atom_info[0]))
-                        atom_types.append(atom_info[1].strip())
-                        masses.append(float(atom_info[2]))
-                        valences.append(float(atom_info[3]))
-                    return num_atoms, atom_types, masses, valences
+            rc_elements = element.findall("./array[@name='atomtypes']/set/rc")
+            if rc_elements is not None:
+                for rc in rc_elements:
+                    atom_info = [x.text for x in rc.findall("./c")]
+                    num_atoms.append(int(atom_info[0]))
+                    atom_types.append(atom_info[1].strip())
+                    masses.append(float(atom_info[2]))
+                    valences.append(float(atom_info[3]))
+                return num_atoms, atom_types, masses, valences
 
         return None
 
