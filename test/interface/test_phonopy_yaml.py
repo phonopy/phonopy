@@ -127,6 +127,5 @@ def _compare(cell):
 
 
 def _get_unitcell(filename):
-    phpy_yaml = PhonopyYaml()
-    phpy_yaml.read(filename)
+    phpy_yaml = PhonopyYaml().read(filename)
     return phpy_yaml.unitcell

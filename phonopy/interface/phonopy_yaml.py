@@ -682,6 +682,7 @@ class PhonopyYaml:
             calculator=self._data.calculator,
             physical_units=self._data.physical_units,
         )
+        return self
 
     def set_phonon_info(self, phonopy: "Phonopy"):
         """Collect data from Phonopy instance."""
