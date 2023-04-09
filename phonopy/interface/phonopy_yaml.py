@@ -97,6 +97,14 @@ class PhonopyYamlLoader:
         Parameters
         ----------
         yaml_data : dict
+            Data in dict, which is normally obtained parsing ``phonopy.yaml``
+            like file using pyyaml.
+        configuration : dict, optional
+            Phonopy calculation configuration. Default is None.
+        calculator : str, optional
+            Force calculator. Default is None.
+        physical_units : dict, optional
+            Physical units used for the phonopy calculation.
 
         """
         self._yaml = yaml_data
@@ -120,6 +128,7 @@ class PhonopyYamlLoader:
         self._parse_dataset()
         self._parse_nac()
         self._parse_calculator()
+        return self
 
     def _parse_command_header(self):
         if self._data.command_name in self._yaml:
@@ -246,6 +255,8 @@ class PhonopyYamlLoader:
             ]
         if "unit_conversion_factor" in nac_yaml:
             nac_params["factor"] = nac_yaml["unit_conversion_factor"]
+        if "nac" in self._yaml and "method" in nac_yaml:
+            nac_params["method"] = nac_yaml["method"].lower()
         return nac_params
 
     def _parse_calculator(self):
@@ -281,9 +292,10 @@ class PhonopyYamlDumper:
         if self._data.version is None:
             from phonopy.version import __version__
 
-            lines.append("  version: %s" % __version__)
+            version = __version__
         else:
-            lines.append("  version: %s" % self._data.version)
+            version = self._data.version
+        lines.append(f'  version: "{version}"')
         if self._data.calculator:
             lines.append("  calculator: %s" % self._data.calculator)
         if self._data.frequency_unit_conversion_factor:
@@ -415,11 +427,6 @@ class PhonopyYamlDumper:
     def _nac_yaml_lines_given_symbols(self, symbols):
         lines = []
         if self._data.nac_params is not None:
-            if "method" in self._data.nac_params:
-                if self._data.nac_params["method"].lower() == "gonze":
-                    lines.append('  method: "Gonze"')
-                if self._data.nac_params["method"].lower() == "wang":
-                    lines.append('  method: "Wang"')
             if self._dumper_settings["born_effective_charge"]:
                 lines.append("  born_effective_charge:")
                 for i, z in enumerate(self._data.nac_params["born"]):
@@ -433,11 +440,16 @@ class PhonopyYamlDumper:
                 lines.append("  dielectric_constant:")
                 for v in self._data.nac_params["dielectric"]:
                     lines.append("    - [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
-            if "factor" in self._data.nac_params:
-                lines.append(
-                    "  unit_conversion_factor: %f" % self._data.nac_params["factor"]
-                )
             if lines:
+                if "method" in self._data.nac_params:
+                    if self._data.nac_params["method"].lower() == "gonze":
+                        lines.append('  method: "Gonze"')
+                    if self._data.nac_params["method"].lower() == "wang":
+                        lines.append('  method: "Wang"')
+                if "factor" in self._data.nac_params:
+                    lines.append(
+                        "  unit_conversion_factor: %f" % self._data.nac_params["factor"]
+                    )
                 lines.insert(0, "nac:")
                 lines.append("")
         return lines
