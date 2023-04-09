@@ -97,6 +97,14 @@ class PhonopyYamlLoader:
         Parameters
         ----------
         yaml_data : dict
+            Data in dict, which is normally obtained parsing ``phonopy.yaml``
+            like file using pyyaml.
+        configuration : dict, optional
+            Phonopy calculation configuration. Default is None.
+        calculator : str, optional
+            Force calculator. Default is None.
+        physical_units : dict, optional
+            Physical units used for the phonopy calculation.
 
         """
         self._yaml = yaml_data
@@ -120,6 +128,7 @@ class PhonopyYamlLoader:
         self._parse_dataset()
         self._parse_nac()
         self._parse_calculator()
+        return self
 
     def _parse_command_header(self):
         if self._data.command_name in self._yaml:
@@ -246,6 +255,8 @@ class PhonopyYamlLoader:
             ]
         if "unit_conversion_factor" in nac_yaml:
             nac_params["factor"] = nac_yaml["unit_conversion_factor"]
+        if "nac" in self._yaml and "method" in nac_yaml:
+            nac_params["method"] = nac_yaml["method"].lower()
         return nac_params
 
     def _parse_calculator(self):
@@ -259,10 +270,18 @@ class PhonopyYamlLoader:
 class PhonopyYamlDumper:
     """PhonopyYaml dumper."""
 
-    def __init__(self, data: PhonopyYamlData, dumper_settings):
+    _default_dumper_settings = {
+        "force_sets": True,
+        "displacements": True,
+        "force_constants": False,
+        "born_effective_charge": True,
+        "dielectric_constant": True,
+    }
+
+    def __init__(self, data: PhonopyYamlData, dumper_settings=None):
         """Init method."""
         self._data = data
-        self._dumper_settings = dumper_settings
+        self._init_dumper_settings(dumper_settings)
 
     def get_yaml_lines(self):
         """Return yaml string lines as a list."""
@@ -281,9 +300,10 @@ class PhonopyYamlDumper:
         if self._data.version is None:
             from phonopy.version import __version__
 
-            lines.append("  version: %s" % __version__)
+            version = __version__
         else:
-            lines.append("  version: %s" % self._data.version)
+            version = self._data.version
+        lines.append(f'  version: "{version}"')
         if self._data.calculator:
             lines.append("  calculator: %s" % self._data.calculator)
         if self._data.frequency_unit_conversion_factor:
@@ -305,10 +325,10 @@ class PhonopyYamlDumper:
 
     def _physical_units_yaml_lines(self):
         lines = []
-        lines.append("physical_unit:")
-        lines.append('  atomic_mass: "AMU"')
         units = self._data.physical_units
         if units is not None:
+            lines.append("physical_unit:")
+            lines.append('  atomic_mass: "AMU"')
             if units["length_unit"] is not None:
                 lines.append('  length: "%s"' % units["length_unit"])
             if (
@@ -316,7 +336,7 @@ class PhonopyYamlDumper:
                 and units["force_constants_unit"] is not None
             ):
                 lines.append('  force_constants: "%s"' % units["force_constants_unit"])
-        lines.append("")
+            lines.append("")
         return lines
 
     def _symmetry_yaml_lines(self):
@@ -408,18 +428,14 @@ class PhonopyYamlDumper:
 
     def _nac_yaml_lines(self):
         if self._data.primitive is None:
-            return []
+            symbols = []
         else:
-            return self._nac_yaml_lines_given_symbols(self._data.primitive.symbols)
+            symbols = self._data.primitive.symbols
+        return self._nac_yaml_lines_given_symbols(symbols)
 
-    def _nac_yaml_lines_given_symbols(self, symbols):
+    def _nac_yaml_lines_given_symbols(self, symbols=None):
         lines = []
         if self._data.nac_params is not None:
-            if "method" in self._data.nac_params:
-                if self._data.nac_params["method"].lower() == "gonze":
-                    lines.append('  method: "Gonze"')
-                if self._data.nac_params["method"].lower() == "wang":
-                    lines.append('  method: "Wang"')
             if self._dumper_settings["born_effective_charge"]:
                 lines.append("  born_effective_charge:")
                 for i, z in enumerate(self._data.nac_params["born"]):
@@ -433,11 +449,16 @@ class PhonopyYamlDumper:
                 lines.append("  dielectric_constant:")
                 for v in self._data.nac_params["dielectric"]:
                     lines.append("    - [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
-            if "factor" in self._data.nac_params:
-                lines.append(
-                    "  unit_conversion_factor: %f" % self._data.nac_params["factor"]
-                )
             if lines:
+                if "method" in self._data.nac_params:
+                    if self._data.nac_params["method"].lower() == "gonze":
+                        lines.append('  method: "Gonze"')
+                    if self._data.nac_params["method"].lower() == "wang":
+                        lines.append('  method: "Wang"')
+                if "factor" in self._data.nac_params:
+                    lines.append(
+                        "  unit_conversion_factor: %f" % self._data.nac_params["factor"]
+                    )
                 lines.insert(0, "nac:")
                 lines.append("")
         return lines
@@ -548,6 +569,11 @@ class PhonopyYamlDumper:
                     lines.append("    - [ %21.15f, %21.15f, %21.15f ]" % tuple(v))
         return lines
 
+    def _init_dumper_settings(self, dumper_settings):
+        self._dumper_settings = self._default_dumper_settings.copy()
+        if type(dumper_settings) is dict:
+            self._dumper_settings.update(dumper_settings)
+
 
 class PhonopyYaml:
     """PhonopyYaml is a container of phonopy setting.
@@ -598,13 +624,6 @@ class PhonopyYaml:
     """
 
     default_filenames = ("phonopy_params.yaml", "phonopy_disp.yaml", "phonopy.yaml")
-    _default_dumper_settings = {
-        "force_sets": True,
-        "displacements": True,
-        "force_constants": False,
-        "born_effective_charge": True,
-        "dielectric_constant": True,
-    }
     command_name = "phonopy"
 
     configuration = phonopy_yaml_property_factory("configuration")
@@ -646,11 +665,13 @@ class PhonopyYaml:
             calculator=calculator,
             physical_units=physical_units,
         )
-        self._init_dumper_settings(settings)
+        self._dumper_settings = settings
 
     def __str__(self):
         """Return string text of yaml output."""
-        phyml_dumper = PhonopyYamlDumper(self._data, self._dumper_settings)
+        phyml_dumper = PhonopyYamlDumper(
+            self._data, dumper_settings=self._dumper_settings
+        )
         return "\n".join(phyml_dumper.get_yaml_lines())
 
     def read(self, filename):
@@ -677,15 +698,10 @@ class PhonopyYaml:
         self._data.force_constants = phonopy.force_constants
         self._data.dataset = phonopy.dataset
 
-    def _init_dumper_settings(self, settings):
-        self._dumper_settings = self._default_dumper_settings.copy()
-        if type(settings) is dict:
-            self._dumper_settings.update(settings)
-
 
 def read_phonopy_yaml(
     filename, configuration=None, calculator=None, physical_units=None
-):
+) -> PhonopyYamlData:
     """Read phonopy.yaml like file."""
     yaml_data = load_yaml(filename)
     if type(yaml_data) is str:
@@ -701,7 +717,7 @@ def read_phonopy_yaml(
 
 def load_phonopy_yaml(
     yaml_data, configuration=None, calculator=None, physical_units=None
-):
+) -> PhonopyYamlData:
     """Return PhonopyYamlData instance loading yaml data.
 
     Parameters
