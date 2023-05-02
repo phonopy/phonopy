@@ -1518,10 +1518,17 @@ def get_angles(lattice):
 
 
 def get_cell_parameters(lattice):
-    """Return lenghts are basis vectors.
+    """Return basis vector lengths.
 
-    lattice : Array-like
-        (a, b, c)^T, i.e., basis vectors are given as row vectors.
+    Parameters
+    ----------
+    lattice : array_like
+        Basis vectors given as row vectors
+        shape=(3, 3), dtype='double'
+
+    Returns
+    -------
+    ndarray, shape=(3,), dtype='double'
 
     """
     return np.sqrt(np.dot(lattice, np.transpose(lattice)).diagonal())
@@ -1666,8 +1673,7 @@ def estimate_supercell_matrix(spglib_dataset, max_num_atoms=120, max_iter=100):
     """
     spg_num = spglib_dataset["number"]
     num_atoms = len(spglib_dataset["std_types"])
-    lengths = _get_lattice_parameters(spglib_dataset["std_lattice"])
-
+    lengths = get_cell_parameters(spglib_dataset["std_lattice"])
     if spg_num <= 74:  # Triclinic, monoclinic, and orthorhombic
         multi = _get_multiplicity_abc(
             num_atoms, lengths, max_num_atoms, max_iter=max_iter
@@ -1705,7 +1711,7 @@ def estimate_supercell_matrix_from_pointgroup(
         Multiplicities for a, b, c basis vectors, respectively.
 
     """
-    abc_lengths = _get_lattice_parameters(lattice.T)
+    abc_lengths = get_cell_parameters(lattice)
 
     if pointgroup_number <= 8:  # Triclinic, monoclinic, and orthorhombic
         multi = _get_multiplicity_abc(1, abc_lengths, max_num_cells, max_iter=max_iter)
@@ -1715,23 +1721,6 @@ def estimate_supercell_matrix_from_pointgroup(
         multi = _get_multiplicity_a(1, abc_lengths, max_num_cells, max_iter=max_iter)
 
     return multi
-
-
-def _get_lattice_parameters(lattice):
-    """Return basis vector lengths.
-
-    Parameters
-    ----------
-    lattice : array_like
-        Basis vectors given as column vectors
-        shape=(3, 3), dtype='double'
-
-    Returns
-    -------
-    ndarray, shape=(3,), dtype='double'
-
-    """
-    return np.array(np.sqrt(np.dot(lattice.T, lattice).diagonal()), dtype="double")
 
 
 def _get_multiplicity_abc(num_atoms, lengths, max_num_atoms, max_iter=20):
