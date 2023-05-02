@@ -1503,21 +1503,34 @@ def _compute_permutation_c(
 #
 # Other tiny tools
 #
-def get_angles(lattice):
+def get_angles(lattice, is_radian: bool = False) -> tuple:
     """Return angles between basis vectors.
 
-    lattice : Array-like
-        (a, b, c)^T, i.e., basis vectors are given as row vectors.
+    Parameters
+    ----------
+    lattice : array_like
+        Basis vectors given as row vectors.
+    is_radian : bool
+        Angles are return in radian when True. Otherwise in degree.
+
+    Returns
+    -------
+    tuple[float, float, float]
+        alpha, beta, gamma in either degree or radian.
 
     """
     a, b, c = get_cell_parameters(lattice)
-    alpha = np.arccos(np.vdot(lattice[1], lattice[2]) / b / c) / np.pi * 180
-    beta = np.arccos(np.vdot(lattice[2], lattice[0]) / c / a) / np.pi * 180
-    gamma = np.arccos(np.vdot(lattice[0], lattice[1]) / a / b) / np.pi * 180
-    return alpha, beta, gamma
+    alpha = np.arccos(np.vdot(lattice[1], lattice[2]) / b / c)
+    beta = np.arccos(np.vdot(lattice[2], lattice[0]) / c / a)
+    gamma = np.arccos(np.vdot(lattice[0], lattice[1]) / a / b)
+
+    if is_radian:
+        return alpha, beta, gamma
+    else:
+        return alpha / np.pi * 180, beta / np.pi * 180, gamma / np.pi * 180
 
 
-def get_cell_parameters(lattice):
+def get_cell_parameters(lattice) -> np.ndarray:
     """Return basis vector lengths.
 
     Parameters
@@ -1534,22 +1547,63 @@ def get_cell_parameters(lattice):
     return np.sqrt(np.dot(lattice, np.transpose(lattice)).diagonal())
 
 
-def get_cell_matrix(a, b, c, alpha, beta, gamma):
-    """Return basis vectors as row vectors."""
-    alpha *= np.pi / 180
-    beta *= np.pi / 180
-    gamma *= np.pi / 180
+def get_cell_matrix(a, b, c, alpha, beta, gamma, is_radian=False) -> np.ndarray:
+    """Return basis vectors in another orientation.
+
+    Parameters
+    ----------
+    a, b, c : float
+        Basis vector lengths.
+    alpha, beta, gamm : float
+        Angles between basis vectors in radian.
+
+    Returns
+    -------
+    ndarray
+        shape=(3, 3), dtype='double', order='C'.
+        [[a_x,   0,   0],
+         [b_x, b_y,   0],
+         [c_x, c_y, c_z]]
+
+    """
+    if not is_radian:
+        alpha *= np.pi / 180
+        beta *= np.pi / 180
+        gamma *= np.pi / 180
     b1 = np.cos(gamma)
     b2 = np.sin(gamma)
     b3 = 0.0
     c1 = np.cos(beta)
     c2 = (2 * np.cos(alpha) + b1**2 + b2**2 - 2 * b1 * c1 - 1) / (2 * b2)
     c3 = np.sqrt(1 - c1**2 - c2**2)
-    lattice = np.zeros((3, 3), dtype="double")
+    lattice = np.zeros((3, 3), dtype="double", order="C")
     lattice[0, 0] = a
     lattice[1] = np.array([b1, b2, b3]) * b
     lattice[2] = np.array([c1, c2, c3]) * c
     return lattice
+
+
+def get_cell_matrix_from_lattice(lattice) -> np.ndarray:
+    """Return basis vectors in another orientation.
+
+    Parameters
+    ----------
+    lattice : array_like
+        Basis vectors given as row vectors
+        shape=(3, 3), dtype='double'
+
+    Returns
+    -------
+    ndarray
+        shape=(3, 3), dtype='double', order='C'.
+        [[a_x,   0,   0],
+         [b_x, b_y,   0],
+         [c_x, c_y, c_z]]
+
+    """
+    alpha, beta, gamma = get_angles(lattice, is_radian=True)
+    a, b, c = get_cell_parameters(lattice)
+    return get_cell_matrix(a, b, c, alpha, beta, gamma, is_radian=True)
 
 
 def determinant(m):
