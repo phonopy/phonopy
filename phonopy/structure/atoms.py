@@ -72,7 +72,7 @@ class PhonopyAtoms:
         atoms: Optional["PhonopyAtoms"] = None,
         magmoms=None,
         pbc=True,
-    ):  # pbc is dummy argument, and never used.
+    ):  # pbc is now used for using correctly LO/TO splitting.
         """Init method."""
         if magmoms is not None:
             warnings.warn(
@@ -87,7 +87,7 @@ class PhonopyAtoms:
                 magnetic_moments=atoms.magnetic_moments,
                 scaled_positions=atoms.scaled_positions,
                 cell=atoms.cell,
-                pbc=True,
+                pbc=atoms.pbc,
             )
         else:
             self._set_parameters(
@@ -98,7 +98,7 @@ class PhonopyAtoms:
                 scaled_positions=scaled_positions,
                 positions=positions,
                 cell=cell,
-                pbc=True,
+                pbc=pbc,
             )
 
     def _set_parameters(
@@ -128,6 +128,10 @@ class PhonopyAtoms:
         # (initial) magnetic moments
         self._magmoms = None
         self._set_magnetic_moments(magnetic_moments)
+
+        # periodic boundary conditions (pbc)
+        self._pbc = None
+        self._set_pbc(pbc)
 
         # numbers and symbols
         if self._numbers is not None:  # number --> symbol
@@ -209,6 +213,16 @@ class PhonopyAtoms:
         self._set_scaled_positions(scaled_positions)
         self._check()
 
+    @property
+    def pbc(self):
+        """Setter and getter of pbc. For getter, copy is returned."""
+        return self._pbc.copy()
+
+    @pbc.setter
+    def pbc(self, pbc):
+        self._set_pbc(pbc)
+        self._check()
+
     def get_scaled_positions(self):
         """Return scaled positions."""
         warnings.warn(
@@ -272,8 +286,7 @@ class PhonopyAtoms:
     def get_atomic_numbers(self):
         """Return atomic numbers."""
         warnings.warn(
-            "PhonopyAtoms.get_atomic_numbers() is deprecated. "
-            "Use numbers attribute instead.",
+            "PhonopyAtoms.numbers is deprecated. " "Use numbers attribute instead.",
             DeprecationWarning,
         )
         return self.numbers
@@ -391,6 +404,12 @@ class PhonopyAtoms:
         else:
             self._magmoms = np.array(magmoms, dtype="double")
 
+    def _set_pbc(self, pbc):
+        _pbc = np.array(pbc, dtype="bool")
+        if _pbc.shape == ():
+            _pbc = np.array([_pbc, _pbc, _pbc], dtype="bool")
+        self._pbc = _pbc
+
     def _set_cell_and_positions(self, cell, positions=None, scaled_positions=None):
         self._set_cell(cell)
         if positions is not None:
@@ -428,6 +447,8 @@ class PhonopyAtoms:
         if self._magmoms is not None:
             if len(self._numbers) != len(self._magmoms):
                 raise RuntimeError("len(numbers) != len(magmoms).")
+        if not self._pbc.shape == (3,):
+            raise RuntimeError("len(pbc) != 3.")
 
     def copy(self):
         """Return copy of itself."""

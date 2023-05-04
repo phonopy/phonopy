@@ -52,14 +52,18 @@ static void get_dm(double dm_real[3][3], double dm_imag[3][3],
                    const double (*charge_sum)[3][3], const long i, const long j,
                    const long k);
 static double get_dielectric_part(const double q_cart[3],
-                                  const double dielectric[3][3]);
+                                  const double dielectric[3][3],
+                                  const double diel_ext,
+                                  const double vacuum_size,
+                                  const long dim);
 static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
                    const double (*G_list)[3], /* [num_G, 3] */
                    const long num_G, const long num_patom,
                    const double q_cart[3], const double *q_direction_cart,
                    const double dielectric[3][3],
                    const double (*pos)[3], /* [num_patom, 3] */
-                   const double lambda, const double tolerance);
+                   const double lambda, const double tolerance,
+                   const double diel_ext, const double vacuum_size, const long dim);
 static void make_Hermitian(double *mat, const long num_band);
 static void multiply_borns(double *dd, const double *dd_in,
                            const long num_patom, const double (*born)[3][3]);
@@ -108,7 +112,11 @@ void dym_get_recip_dipole_dipole(
     const double (*born)[3][3], const double dielectric[3][3],
     const double (*pos)[3], /* [num_patom, 3] */
     const double factor,    /* 4pi/V*unit-conv */
-    const double lambda, const double tolerance) {
+    const double lambda, const double tolerance,
+    const double diel_ext, /* in low-D, can be different than 1 */
+    const double vacuum_size, /* in 2D the height, in 1D the area of vacuum */
+    const long dim
+    ) {
     long i, k, l, adrs, adrs_sum;
     double *dd_tmp;
 
@@ -121,7 +129,7 @@ void dym_get_recip_dipole_dipole(
     }
 
     get_KK(dd_tmp, G_list, num_G, num_patom, q_cart, q_direction_cart,
-           dielectric, pos, lambda, tolerance);
+           dielectric, pos, lambda, tolerance, diel_ext, vacuum_size, dim);
 
     multiply_borns(dd, dd_tmp, num_patom, born);
 
@@ -152,7 +160,11 @@ void dym_get_recip_dipole_dipole_q0(
     const double (*G_list)[3], /* [num_G, 3] */
     const long num_G, const long num_patom, const double (*born)[3][3],
     const double dielectric[3][3], const double (*pos)[3], /* [num_patom, 3] */
-    const double lambda, const double tolerance) {
+    const double lambda, const double tolerance,
+    const double diel_ext, /* in low-D, can be different than 1 */
+    const double vacuum_size, /* in 2D the height, in 1D the area of vacuum */
+    const long dim
+    ) {
     long i, j, k, l, adrs_tmp, adrs, adrsT;
     double zero_vec[3];
     double *dd_tmp1, *dd_tmp2;
@@ -172,7 +184,7 @@ void dym_get_recip_dipole_dipole_q0(
     zero_vec[2] = 0;
 
     get_KK(dd_tmp1, G_list, num_G, num_patom, zero_vec, NULL, dielectric, pos,
-           lambda, tolerance);
+           lambda, tolerance, diel_ext, vacuum_size, dim);
 
     multiply_borns(dd_tmp2, dd_tmp1, num_patom, born);
 
@@ -378,8 +390,8 @@ static void get_dm(double dm_real[3][3], double dm_imag[3][3],
         for (m = 0; m < 3; m++) {
             phase += q[m] * svecs[adrs + l][m];
         }
-        cos_phase += cos(phase * 2 * PI) / m_pair;
-        sin_phase += sin(phase * 2 * PI) / m_pair;
+        cos_phase += cos(phase * 2. * PI) / m_pair;
+        sin_phase += sin(phase * 2. * PI) / m_pair;
     }
 
     for (l = 0; l < 3; l++) {
@@ -397,10 +409,12 @@ static void get_dm(double dm_real[3][3], double dm_imag[3][3],
 }
 
 static double get_dielectric_part(const double q_cart[3],
-                                  const double dielectric[3][3]) {
+                                  const double dielectric[3][3],
+                                  const double diel_ext,
+                                  const double vacuum_size, const long dim){
     long i, j;
     double x[3];
-    double sum;
+    double sum, dim_factor, q_norm;
 
     for (i = 0; i < 3; i++) {
         x[i] = 0;
@@ -414,6 +428,12 @@ static double get_dielectric_part(const double q_cart[3],
         sum += q_cart[i] * x[i];
     }
 
+    if (dim == 2){
+        q_norm =  2*PI*sqrt(q_cart[0]*q_cart[0] + q_cart[1]*q_cart[1] + q_cart[2]*q_cart[2]);
+        dim_factor = (2./vacuum_size)*q_norm*diel_ext;
+        sum += dim_factor + sum/4.;
+    }
+
     return sum;
 }
 
@@ -423,7 +443,8 @@ static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
                    const double q_cart[3], const double *q_direction_cart,
                    const double dielectric[3][3],
                    const double (*pos)[3], /* [num_patom, 3] */
-                   const double lambda, const double tolerance) {
+                   const double lambda, const double tolerance,
+                   const double diel_ext, const double vacuum_size, const long dim) {
     long i, j, k, l, g, adrs;
     double q_K[3];
     double norm, cos_phase, sin_phase, phase, dielectric_part, exp_damp, L2;
@@ -446,20 +467,22 @@ static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
                 continue;
             } else {
                 dielectric_part =
-                    get_dielectric_part(q_direction_cart, dielectric);
+                    get_dielectric_part(q_direction_cart, dielectric, diel_ext, vacuum_size, dim);
                 for (i = 0; i < 3; i++) {
                     for (j = 0; j < 3; j++) {
                         KK[i][j] = q_direction_cart[i] * q_direction_cart[j] /
                                    dielectric_part;
+                        // KK[i][j] *= 4. * PI * PI
                     }
                 }
             }
         } else {
-            dielectric_part = get_dielectric_part(q_K, dielectric);
+            dielectric_part = get_dielectric_part(q_K, dielectric, diel_ext, vacuum_size, dim);
             exp_damp = exp(-dielectric_part / L2);
             for (i = 0; i < 3; i++) {
                 for (j = 0; j < 3; j++) {
                     KK[i][j] = q_K[i] * q_K[j] / dielectric_part * exp_damp;
+                    // KK[i][j] *= 4. * PI * PI
                 }
             }
         }

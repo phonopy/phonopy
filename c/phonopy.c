@@ -103,10 +103,11 @@ void phpy_get_recip_dipole_dipole(
     const double (*born)[3][3], const double dielectric[3][3],
     const double (*pos)[3], /* [num_patom, 3] */
     const double factor,    /* 4pi/V*unit-conv */
-    const double lambda, const double tolerance) {
+    const double lambda, const double tolerance,
+    const double diel_ext, const double vacuum_size, const long dim) {
     dym_get_recip_dipole_dipole(dd, dd_q0, G_list, num_G, num_patom, q_cart,
                                 q_direction_cart, born, dielectric, pos, factor,
-                                lambda, tolerance);
+                                lambda, tolerance, diel_ext, vacuum_size, dim);
 }
 
 void phpy_get_recip_dipole_dipole_q0(
@@ -114,9 +115,10 @@ void phpy_get_recip_dipole_dipole_q0(
     const double (*G_list)[3], /* [num_G, 3] */
     const long num_G, const long num_patom, const double (*born)[3][3],
     const double dielectric[3][3], const double (*pos)[3], /* [num_patom, 3] */
-    const double lambda, const double tolerance) {
+    const double lambda, const double tolerance,
+    const double diel_ext, const double vacuum_size, const long dim) {
     dym_get_recip_dipole_dipole_q0(dd_q0, G_list, num_G, num_patom, born,
-                                   dielectric, pos, lambda, tolerance);
+                                   dielectric, pos, lambda, tolerance, diel_ext, vacuum_size, dim);
 }
 
 void phpy_get_derivative_dynmat_at_q(

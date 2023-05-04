@@ -795,6 +795,19 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         else:
             dd_q0 = self._dd_q0
 
+        cell = self._pcell.cell
+        pbc = self._pcell.pbc
+        dim = int(pbc.sum())
+        conversion = self._unit_conversion ** (dim / 3.0)
+
+        if dim == 3:
+            vacuum_size = volume
+        elif dim == 2:
+            vacuum_size = np.linalg.norm(cell[np.invert(pbc)]) * conversion
+        else:
+            vectors = cell[np.invert(pbc)]
+            vacuum_size = np.dot(vectors[0], vectors[1]) * conversion
+
         phonoc.recip_dipole_dipole(
             dd.view(dtype="double"),
             dd_q0.view(dtype="double"),
@@ -807,7 +820,11 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             self._unit_conversion * 4.0 * np.pi / volume,
             self._Lambda,
             self._symprec,
+            1.0,
+            vacuum_size,
+            dim,
         )
+        # print(dim)
         return dd
 
     def _run_c_recip_dipole_dipole_q0(self):
@@ -821,6 +838,19 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         pos = self._pcell.positions
         self._dd_q0 = np.zeros((len(pos), 3, 3), dtype=self._dtype_complex, order="C")
 
+        cell = self._pcell.cell
+        pbc = self._pcell.pbc
+        dim = int(pbc.sum())
+        conversion = self._unit_conversion ** (dim / 3.0)
+
+        if dim == 3:
+            vacuum_size = self._pcell.volume
+        elif dim == 2:
+            vacuum_size = np.linalg.norm(cell[np.invert(pbc)]) * conversion
+        else:
+            vectors = cell[np.invert(pbc)]
+            vacuum_size = np.dot(vectors[0], vectors[1]) * conversion
+
         phonoc.recip_dipole_dipole_q0(
             self._dd_q0.view(dtype="double"),
             self._G_list,
@@ -829,6 +859,9 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             np.array(pos, dtype="double", order="C"),
             self._Lambda,
             self._symprec,
+            1.0,
+            vacuum_size,
+            dim,
         )
 
     def _get_real_dipole_dipole(self, q_red):

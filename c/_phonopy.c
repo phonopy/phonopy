@@ -559,6 +559,9 @@ static PyObject* py_get_recip_dipole_dipole(PyObject* self, PyObject* args) {
     double factor;
     double lambda;
     double tolerance;
+    double diel_ext;
+    double vacuum_size;
+    long dim;
 
     double* dd;
     double* dd_q0;
@@ -570,9 +573,10 @@ static PyObject* py_get_recip_dipole_dipole(PyObject* self, PyObject* args) {
     double(*pos)[3];
     long num_patom, num_G;
 
-    if (!PyArg_ParseTuple(args, "OOOOOOOOddd", &py_dd, &py_dd_q0, &py_G_list,
+    if (!PyArg_ParseTuple(args, "OOOOOOOOdddddl", &py_dd, &py_dd_q0, &py_G_list,
                           &py_q_cart, &py_q_direction, &py_born, &py_dielectric,
-                          &py_positions, &factor, &lambda, &tolerance))
+                          &py_positions, &factor, &lambda, &tolerance,
+                          &diel_ext, &vacuum_size, &dim))
         return NULL;
 
     dd = (double*)PyArray_DATA(py_dd);
@@ -597,7 +601,10 @@ static PyObject* py_get_recip_dipole_dipole(PyObject* self, PyObject* args) {
                                  dielectric, pos, /* [natom, 3] */
                                  factor,          /* 4pi/V*unit-conv */
                                  lambda,          /* 4 * Lambda^2 */
-                                 tolerance);
+                                 tolerance,
+                                 diel_ext,
+                                 vacuum_size,
+                                 dim);
 
     Py_RETURN_NONE;
 }
@@ -610,6 +617,9 @@ static PyObject* py_get_recip_dipole_dipole_q0(PyObject* self, PyObject* args) {
     PyArrayObject* py_positions;
     double lambda;
     double tolerance;
+    double diel_ext;
+    double vacuum_size;
+    long dim;
 
     double* dd_q0;
     double(*G_list)[3];
@@ -618,8 +628,9 @@ static PyObject* py_get_recip_dipole_dipole_q0(PyObject* self, PyObject* args) {
     double(*pos)[3];
     long num_patom, num_G;
 
-    if (!PyArg_ParseTuple(args, "OOOOOdd", &py_dd_q0, &py_G_list, &py_born,
-                          &py_dielectric, &py_positions, &lambda, &tolerance))
+    if (!PyArg_ParseTuple(args, "OOOOOddddl", &py_dd_q0, &py_G_list, &py_born,
+                          &py_dielectric, &py_positions, &lambda, &tolerance,
+                          &diel_ext, &vacuum_size, &dim))
         return NULL;
 
     dd_q0 = (double*)PyArray_DATA(py_dd_q0);
@@ -635,7 +646,10 @@ static PyObject* py_get_recip_dipole_dipole_q0(PyObject* self, PyObject* args) {
                                     num_G, num_patom, born, dielectric,
                                     pos,    /* [natom, 3] */
                                     lambda, /* 4 * Lambda^2 */
-                                    tolerance);
+                                    tolerance,
+                                    diel_ext,
+                                    vacuum_size,
+                                    dim);
 
     Py_RETURN_NONE;
 }
