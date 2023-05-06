@@ -31,6 +31,14 @@ def test_read_phonopy_yaml():
     _compare(cell)
 
 
+def test_read_phonopy_yaml_with_stream():
+    """Test to parse phonopy.yaml like file."""
+    filename = cwd / "phonopy.yaml"
+    with open(filename) as fp:
+        cell = _get_unitcell(fp)
+        _compare(cell)
+
+
 def test_write_phonopy_yaml(ph_nacl_nofcsym: Phonopy, helper_methods):
     """Test PhonopyYaml.set_phonon_info, __str__, yaml_data, parse."""
     phonon = ph_nacl_nofcsym
