@@ -45,6 +45,26 @@ from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_cell_matrix_from_lattice
 
 
+def write_supercells_with_displacements(
+    supercell,
+    cells_with_displacements,
+    ids,
+    pre_filename="supercell",
+    width=3,
+):
+    """Write supercells with displacements to files."""
+    write_lammps(pre_filename, supercell)
+    for i, cell in zip(ids, cells_with_displacements):
+        filename = f"{pre_filename}-{i:0{width}d}"
+        write_lammps(filename, cell)
+
+
+def write_lammps(filename, cell):
+    """Write LAMMPS structure to file."""
+    with open(filename, "w") as w:
+        w.write("\n".join(LammpsStructureDumper(cell).get_lines()))
+
+
 class LammpsStructureDumper:
     """Class to create LAMMPS input structure file.
 
