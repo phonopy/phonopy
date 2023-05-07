@@ -36,7 +36,9 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import TYPE_CHECKING, Optional
+import io
+import os
+from typing import TYPE_CHECKING, Optional, Union
 
 import numpy as np
 import yaml
@@ -772,14 +774,22 @@ def read_cell_yaml(filename, cell_type="unitcell"):
         return None
 
 
-def load_yaml(filename):
+def load_yaml(fp: Union[str, bytes, os.PathLike, io.IOBase]):
     """Load yaml file.
 
-    lzma and gzip comppressed files can be loaded.
+    Parameters
+    ----------
+    fp : str, bytes, os.PathLike or io.IOBase
+        Filename, file path, or file stream.
+
+    lzma and gzip comppressed non-stream files can be loaded.
 
     """
-    myio = get_io_module_to_decompress(filename)
-    with myio.open(filename) as f:
-        yaml_data = yaml.load(f, Loader=Loader)
+    if isinstance(fp, io.IOBase):
+        yaml_data = yaml.load(fp, Loader=Loader)
+    else:
+        myio = get_io_module_to_decompress(fp)
+        with myio.open(fp) as f:
+            yaml_data = yaml.load(f, Loader=Loader)
 
     return yaml_data
