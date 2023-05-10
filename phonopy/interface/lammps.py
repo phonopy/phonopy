@@ -41,6 +41,7 @@ from typing import Union
 
 import numpy as np
 
+from phonopy.interface.vasp import check_forces, get_drift_forces
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_cell_matrix_from_lattice
 
@@ -63,6 +64,57 @@ def write_lammps(filename, cell):
     """Write LAMMPS structure to file."""
     with open(filename, "w") as w:
         w.write("\n".join(LammpsStructureDumper(cell).get_lines()))
+
+
+def read_lammps(cell_filename) -> PhonopyAtoms:
+    """Read LAMMPS structure file and return cell."""
+    return LammpsStructureLoader().load(cell_filename).cell
+
+
+def parse_set_of_forces(num_atoms: int, forces_filenames: list, verbose: bool = True):
+    """Parse forces from output files."""
+    is_parsed = True
+    force_sets = []
+
+    for i, filename in enumerate(forces_filenames):
+        if verbose:
+            print(f"{i + 1}. ", end="")
+        forces = LammpsForcesLoader().load(filename).forces
+        if check_forces(forces, num_atoms, filename, verbose=verbose):
+            drift_force = get_drift_forces(forces, filename=filename, verbose=verbose)
+            force_sets.append(np.array(forces) - drift_force)
+        else:
+            is_parsed = False
+
+    if is_parsed:
+        return force_sets
+    else:
+        return []
+
+
+def rotate_lammps_forces(force_sets: list, lattice: np.ndarray, verbose: bool = True):
+    """Rotate forces of LAMMPS output.
+
+    Parameters
+    ----------
+    force_sets : list
+        Sets of supercell forces obtained by ``parse_set_of_forces``.
+    lattice : ndarray
+        Basis vectors in row vectors.
+    verbose : bool
+        Verbosity.
+
+    """
+    lat = lattice
+    rot_lat = get_cell_matrix_from_lattice(lat)
+    r = np.dot(np.linalg.inv(lat), rot_lat).T
+    for forces in force_sets:
+        # (Rinv.f)^T = f^T.Rinv^T = f^T.R
+        forces[:] = np.dot(forces, r)
+    if verbose:
+        print("Forces parsed from LAMMPS output were rotated by F=R.F(lammps) with R:")
+        for v in r.T:
+            print(f"  {v[0]:7.5f} {v[2]:7.5f} {v[2]:7.5f}")
 
 
 class LammpsStructureDumper:
@@ -122,6 +174,75 @@ class LammpsStructureDumper:
         self._lines = lines
 
 
+class LammpsForcesLoader:
+    """Class to load LAMMPS output file to get forces.
+
+    Configuration by following three lines is assumed in the LAMMPS input script.
+
+    dump phonopy all custom 1 forces.* id type x y z fx fy fz
+    dump_modify phonopy format line "%d %d %15.8f %15.8f %15.8f %15.8f %15.8f %15.8f"
+    run 0
+
+    Then ``forces.0`` file is created as the result of LAMMPS calculation. Forces
+    are parsed from lines after:
+
+    ITEM: ATOMS id type x y z fx fy fz
+
+    The values of 6-8th columns are the forces in Cartesian coordinates.
+
+    """
+
+    _hooks = {
+        "forces": r"ITEM:\s+ATOMS\s+id\s+type",
+        "num_atoms": r"ITEM:\s+NUMBER\s+OF\s+ATOMS",
+    }
+
+    def __init__(self):
+        """Init method."""
+        self._forces = None
+
+    def load(self, fp: Union[str, bytes, os.PathLike, io.IOBase]):
+        """Load and parse LAMMPS structure file.
+
+        Parameters
+        ----------
+        fp : filename or stream
+            filename or stream.
+
+        """
+        return _load(self, fp, return_lines=False)
+
+    @property
+    def forces(self) -> np.ndarray:
+        """Return forces."""
+        return self._forces
+
+    def _parse(self, fp: io.IOBase, column_start=5, column_end=8):
+        """Parse lines of LAMMPS output file."""
+        num_atoms = -1
+        for line in fp:
+            regex = re.compile(self._hooks["num_atoms"])
+            if regex.search(line):
+                num_atoms = int(fp.readline().strip())
+                break
+
+        forces = np.zeros((num_atoms, 3), dtype="double")
+
+        for line in fp:
+            regex = re.compile(self._hooks["forces"])
+            if regex.search(line):
+                break
+
+        for i, line in enumerate(fp):
+            if i == num_atoms:
+                break
+            ary = line.split()
+            assert int(ary[0]) == i + 1
+            forces[i] = np.array(ary[column_start:column_end], dtype="double")
+
+        self._forces = forces
+
+
 class LammpsStructureLoader:
     """Class to load LAMMPS input structure file.
 
@@ -163,12 +284,7 @@ class LammpsStructureLoader:
             filename or stream.
 
         """
-        if isinstance(fp, io.IOBase):
-            self._parse(fp.readlines())
-        else:
-            with open(fp) as f:
-                self._parse(f.readlines())
-        return self
+        return _load(self, fp)
 
     def _parse(self, lines):
         """Parse LAMMPS structure file."""
@@ -263,3 +379,26 @@ class LammpsStructureLoader:
 
     def _set_number_of_atoms(self, key, line):
         self._header_tags[key] = int(line.split("#")[0])
+
+
+def _load(self, fp: Union[str, bytes, os.PathLike, io.IOBase], return_lines=True):
+    """Load and parse LAMMPS structure file.
+
+    Parameters
+    ----------
+    fp : filename or stream
+        filename or stream.
+
+    """
+    if isinstance(fp, io.IOBase):
+        if return_lines:
+            self._parse(fp.readlines())
+        else:
+            self._parse(fp)
+    else:
+        with open(fp) as f:
+            if return_lines:
+                self._parse(f.readlines())
+            else:
+                self._parse(f)
+    return self
