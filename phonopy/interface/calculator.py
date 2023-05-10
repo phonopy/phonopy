@@ -66,17 +66,18 @@ calculator_info = {
     "abacus": {"option": {"name": "--abacus", "help": "Invoke ABACUS mode"}},
     "abinit": {"option": {"name": "--abinit", "help": "Invoke Abinit mode"}},
     "aims": {"option": {"name": "--aims", "help": "Invoke FHI-aims mode"}},
+    "castep": {"option": {"name": "--castep", "help": "Invoke CASTEP mode"}},
     "cp2k": {"option": {"name": "--cp2k", "help": "Invoke CP2K mode"}},
     "crystal": {"option": {"name": "--crystal", "help": "Invoke CRYSTAL mode"}},
     "dftbp": {"option": {"name": "--dftb+", "help": "Invoke dftb+ mode"}},
     "elk": {"option": {"name": "--elk", "help": "Invoke elk mode"}},
+    "fleur": {"option": {"name": "--fleur", "help": "Invoke Fleur mode"}},
+    "lammps": {"option": {"name": "--lammps", "help": "Invoke Lammps mode"}},
     "qe": {"option": {"name": "--qe", "help": "Invoke Quantum espresso (QE) mode"}},
     "siesta": {"option": {"name": "--siesta", "help": "Invoke Siesta mode"}},
     "turbomole": {"option": {"name": "--turbomole", "help": "Invoke TURBOMOLE mode"}},
     "vasp": {"option": {"name": "--vasp", "help": "Invoke Vasp mode"}},
     "wien2k": {"option": {"name": "--wien2k", "help": "Invoke Wien2k mode"}},
-    "castep": {"option": {"name": "--castep", "help": "Invoke CASTEP mode"}},
-    "fleur": {"option": {"name": "--fleur", "help": "Invoke Fleur mode"}},
 }
 
 
@@ -200,6 +201,10 @@ def write_crystal_structure(
         pps = optional_structure_info[1]
         orbitals = optional_structure_info[2]
         abacus.write_abacus(filename, cell, pps, orbitals)
+    elif interface_mode == "lammps":
+        import phonopy.interface.lammps as lammps
+
+        lammps.write_lammps(filename, cell)
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -330,6 +335,10 @@ def write_supercells_with_displacements(
         orbitals = optional_structure_info[2]
         abacus_args = args + (pps, orbitals)
         abacus.write_supercells_with_displacements(*abacus_args, **kwargs)
+    elif interface_mode == "lammps":
+        import phonopy.interface.lammps as lammps
+
+        lammps.write_supercells_with_displacements(*args, **kwargs)
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -472,6 +481,11 @@ def read_crystal_structure(
 
         unitcell, pps, orbitals = read_abacus(cell_filename, elements=chemical_symbols)
         return unitcell, (cell_filename, pps, orbitals)
+    elif interface_mode == "lammps":
+        from phonopy.interface.lammps import read_lammps
+
+        unitcell = read_lammps(cell_filename)
+        return unitcell, (cell_filename,)
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -504,6 +518,8 @@ def get_default_cell_filename(interface_mode):
         return "fleur.in"
     elif interface_mode == "abacus":
         return "STRU"
+    elif interface_mode == "lammps":
+        return "unitcell"
     else:
         return None
 
@@ -531,10 +547,12 @@ def get_default_supercell_filename(interface_mode):
         return None  # TURBOMOLE interface generates directories with inputs
     elif interface_mode == "aims":
         return "geometry.in.supercell"
-    elif interface_mode in ("castep"):
+    elif interface_mode == "castep":
         return "supercell.cell"
-    elif interface_mode in ("abacus"):
+    elif interface_mode == "abacus":
         return "sSTRU"
+    elif interface_mode == "lammps":
+        return "supercell"
     else:
         return None
 
@@ -575,6 +593,7 @@ def get_default_physical_units(interface_mode=None):
     castep        : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
     fleur         : hartree, au,        AMU,         hartree/au,   hartree/au^2
     abacus        : eV,      au,        AMU,         eV/angstrom,  eV/angstrom.au
+    lammps        : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
 
     units['force_constants_unit'] is used in
     the 'get_force_constant_conversion_factor' method.
@@ -589,7 +608,7 @@ def get_default_physical_units(interface_mode=None):
         "length_unit": None,
     }
 
-    if interface_mode is None or interface_mode in ("vasp", "aims"):
+    if interface_mode is None or interface_mode in ("vasp", "aims", "lammps"):
         units["factor"] = VaspToTHz
         units["nac_factor"] = Hartree * Bohr
         units["distance_to_A"] = 1.0
@@ -706,6 +725,8 @@ def get_force_sets(
         from phonopy.interface.fleur import parse_set_of_forces
     elif interface_mode == "abacus":
         from phonopy.interface.abacus import parse_set_of_forces
+    elif interface_mode == "lammps":
+        from phonopy.interface.lammps import parse_set_of_forces
 
     else:
         return []

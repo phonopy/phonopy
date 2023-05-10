@@ -2,9 +2,14 @@
 import io
 from pathlib import Path
 
+import numpy as np
 import pytest
 
-from phonopy.interface.lammps import LammpsStructureDumper, LammpsStructureLoader
+from phonopy.interface.lammps import (
+    LammpsForcesLoader,
+    LammpsStructureDumper,
+    LammpsStructureLoader,
+)
 from phonopy.interface.phonopy_yaml import read_phonopy_yaml
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_cell_matrix_from_lattice
@@ -67,3 +72,21 @@ def test_LammpsStructureDumper_Ti(symbol, helper_methods):
     cell_stream = io.StringIO("\n".join(lmpsd.get_lines()))
     lmpsd_cell = LammpsStructureLoader().load(cell_stream).cell
     helper_methods.compare_cells_with_order(cell, lmpsd_cell)
+
+
+def test_LammpsForcesLoader():
+    """Test of LammpsForcesLoader with HCP Ti.
+
+    This is forces of 4x4x3 supercell of lammps_structure_Ti with a displacement
+    [ 0.0064452834123435,  0.0000000000000000,  0.0076458041914876 ].
+
+    """
+    forces = LammpsForcesLoader().load(cwd / "lammps_forces_Ti.0").forces
+    # print("%15.10f %15.10f %15.10f" % tuple(forces[0]))
+    # print("%15.10f %15.10f %15.10f" % tuple(forces[-1]))
+    np.testing.assert_allclose(
+        forces[0], [-0.0337045900, -0.0000210300, -0.0399063800], atol=1e-8
+    )
+    np.testing.assert_allclose(
+        forces[-1], [-0.0000369000, -0.0000003300, 0.0001166000], atol=1e-8
+    )
