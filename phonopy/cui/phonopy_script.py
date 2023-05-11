@@ -423,7 +423,7 @@ def print_settings(
 
 
 def write_displacements_files_then_exit(
-    phonon, settings, confs, optional_structure_info, log_level
+    phonon: Phonopy, settings, confs, optional_structure_info, log_level
 ):
     """Write supercells with displacements and displacement dataset.
 
@@ -439,7 +439,7 @@ def write_displacements_files_then_exit(
         phonon.calculator,
         phonon.supercell,
         cells_with_disps,
-        optional_structure_info,
+        optional_structure_info=optional_structure_info,
         additional_info=additional_info,
     )
 
