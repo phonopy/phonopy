@@ -32,6 +32,7 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+from __future__ import annotations
 
 import os
 from argparse import ArgumentParser
@@ -213,7 +214,7 @@ def write_supercells_with_displacements(
     interface_mode,
     supercell,
     cells_with_disps,
-    optional_structure_info,
+    optional_structure_info=None,
     displacement_ids=None,
     zfill_width=3,
     additional_info=None,
@@ -248,7 +249,7 @@ def write_supercells_with_displacements(
 
     args = (supercell, cells_with_disps, ids)
     kwargs = {"width": zfill_width}
-    if "pre_filename" in additional_info:
+    if additional_info is not None and "pre_filename" in additional_info:
         kwargs["pre_filename"] = additional_info["pre_filename"]
 
     if interface_mode is None or interface_mode == "vasp":
@@ -363,7 +364,10 @@ def write_magnetic_moments(cell, sort_by_elements=False):
 
 
 def read_crystal_structure(
-    filename=None, interface_mode=None, chemical_symbols=None, phonopy_yaml_cls=None
+    filename=None,
+    interface_mode=None,
+    chemical_symbols=None,
+    phonopy_yaml_cls: type[PhonopyYaml] = PhonopyYaml,
 ):
     """Return crystal structure from file in each calculator format.
 
@@ -394,10 +398,7 @@ def read_crystal_structure(
 
     """
     if interface_mode == "phonopy_yaml":
-        if phonopy_yaml_cls is None:
-            return _read_phonopy_yaml(filename, PhonopyYaml)
-        else:
-            return _read_phonopy_yaml(filename, phonopy_yaml_cls)
+        return _read_phonopy_yaml(filename, phonopy_yaml_cls)
 
     if filename is None:
         cell_filename = get_default_cell_filename(interface_mode)
@@ -512,7 +513,7 @@ def get_default_cell_filename(interface_mode):
         return "control"
     elif interface_mode == "aims":
         return "geometry.in"
-    elif interface_mode in ("castep"):
+    elif interface_mode == "castep":
         return "unitcell.cell"
     elif interface_mode == "fleur":
         return "fleur.in"
@@ -782,7 +783,7 @@ def get_force_constant_conversion_factor(unit, interface_mode):
         return 1.0
 
 
-def _read_phonopy_yaml(filename, phonopy_yaml_cls):
+def _read_phonopy_yaml(filename, phonopy_yaml_cls: type[PhonopyYaml]):
     cell_filename = _get_cell_filename(filename, phonopy_yaml_cls)
     if cell_filename is None:
         return None, (None, None)
@@ -799,7 +800,7 @@ def _read_phonopy_yaml(filename, phonopy_yaml_cls):
     return cell, (cell_filename, phpy)
 
 
-def _get_cell_filename(filename, phonopy_yaml_cls):
+def _get_cell_filename(filename, phonopy_yaml_cls: type[PhonopyYaml]):
     cell_filename = None
 
     default_filenames = []
