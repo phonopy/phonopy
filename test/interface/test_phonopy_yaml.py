@@ -1,30 +1,42 @@
 """Tests of PhonopyYaml."""
-import os
 from io import StringIO
+from pathlib import Path
 
 import numpy as np
 import yaml
 
 from phonopy import Phonopy
-from phonopy.interface.phonopy_yaml import PhonopyYaml, load_phonopy_yaml
+from phonopy.interface.phonopy_yaml import (
+    PhonopyYaml,
+    PhonopyYamlLoader,
+    load_phonopy_yaml,
+)
 from phonopy.interface.vasp import read_vasp
 from phonopy.structure.dataset import get_displacements_and_forces
 
-data_dir = os.path.dirname(os.path.abspath(__file__))
+cwd = Path(__file__).parent
 
 
 def test_read_poscar_yaml():
     """Test to parse PhonopyAtoms.__str__ output."""
-    filename = os.path.join(data_dir, "NaCl-vasp.yaml")
+    filename = cwd / "NaCl-vasp.yaml"
     cell = _get_unitcell(filename)
     _compare(cell)
 
 
 def test_read_phonopy_yaml():
     """Test to parse phonopy.yaml like file."""
-    filename = os.path.join(data_dir, "phonopy.yaml")
+    filename = cwd / "phonopy.yaml"
     cell = _get_unitcell(filename)
     _compare(cell)
+
+
+def test_read_phonopy_yaml_with_stream():
+    """Test to parse phonopy.yaml like file."""
+    filename = cwd / "phonopy.yaml"
+    with open(filename) as fp:
+        cell = _get_unitcell(fp)
+        _compare(cell)
 
 
 def test_write_phonopy_yaml(ph_nacl_nofcsym: Phonopy, helper_methods):
@@ -95,8 +107,25 @@ def test_write_phonopy_yaml_extra(ph_nacl_nofcsym: Phonopy):
     np.testing.assert_allclose(disps, disps_test, atol=1e-8)
 
 
+def test_load_nac_yaml():
+    """Test to read NAC params using PhonopyYamlLoader."""
+    pyl = PhonopyYamlLoader(yaml.safe_load(open(cwd / "nac.yaml"))).parse()
+    assert pyl.data.nac_params
+    for key in (
+        "dielectric",
+        "born",
+        "factor",
+        "method",
+    ):
+        assert key in pyl.data.nac_params
+    assert pyl.data.nac_params["dielectric"].shape == (3, 3)
+    assert pyl.data.nac_params["born"].shape == (2, 3, 3)
+    assert isinstance(pyl.data.nac_params["factor"], float)
+    assert isinstance(pyl.data.nac_params["method"], str)
+
+
 def _compare(cell):
-    cell_ref = read_vasp(os.path.join(data_dir, "..", "POSCAR_NaCl"))
+    cell_ref = read_vasp(cwd / ".." / "POSCAR_NaCl")
     assert (np.abs(cell.cell - cell_ref.cell) < 1e-5).all()
     diff_pos = cell.scaled_positions - cell_ref.scaled_positions
     diff_pos -= np.rint(diff_pos)
@@ -106,6 +135,5 @@ def _compare(cell):
 
 
 def _get_unitcell(filename):
-    phpy_yaml = PhonopyYaml()
-    phpy_yaml.read(filename)
+    phpy_yaml = PhonopyYaml().read(filename)
     return phpy_yaml.unitcell
