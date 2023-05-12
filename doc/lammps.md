@@ -180,12 +180,8 @@ unit_cell:
   points:
     - symbol: Si # 1
       coordinates: [0.875000000000000, 0.875000000000000, 0.875000000000000]
-      mass: 28.085500
-      reduced_to: 1
     - symbol: Si # 2
       coordinates: [0.125000000000000, 0.125000000000000, 0.125000000000000]
-      mass: 28.085500
-      reduced_to: 2
 ```
 
 With this saved in `phonopy_unitcell.yaml` file, we can generate 2x2x2 supercell
