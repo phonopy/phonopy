@@ -1,3 +1,13 @@
+# HCP Ti example using LAMMPS interface
+
+The `pair_style` of `polymlp` is a LAMMPS module of the polynomial machine
+learning potentials provided at https://sekocha.github.io/lammps/index-e.html.
+For the HCP Ti calculation found in the [example
+directory](https://github.com/phonopy/phonopy/tree/develop/example), `mlp.lammp`
+of gtinv-294 was obtained from [Polynomial Machine Learning Potential Repository
+at Kyoto
+University](http://cms.mtl.kyoto-u.ac.jp/seko/mlp-repository/index.html).
+
 1. Read a lammps input structure file and create supercells with
 
    ```
@@ -34,6 +44,10 @@
    ```
 
 2. Run LAMMPS
+
+   ```bash
+   % lmp_serial -in in.polymlp
+   ```
 
    Suppose that the LAMMPS output file name is removed to `lammps_forces_Ti.0`
    after the LAMMPS calculation.
