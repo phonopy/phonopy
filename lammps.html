@@ -1,0 +1,736 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>LAMMPS &amp; phonopy calculation &#8212; Phonopy v.2.19.0</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="VASP-DFPT &amp; phonopy calculation" href="vasp-dfpt.html" />
+    <link rel="prev" title="ABACUS &amp; phonopy calculation" href="abacus.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="index.html">
+      
+      
+      
+      <h1 class="site-logo" id="site-title">Phonopy v.2.19.0</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item active">
+        <ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="install.html">
+   Installation
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="symmetry.html">
+   Crystal symmetry
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="workflow.html">
+   Work flow
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="examples.html">
+   Examples
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="input-files.html">
+   Input files
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="output-files.html">
+   Output files
+  </a>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="setting-tags.html">
+   Setting tags
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="animation.html">
+     How to watch animation
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="command-options.html">
+   Command options
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="dynamic-structure-factor.html">
+   Dynamic structure factor
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="gruneisen.html">
+   Mode Grüneisen parameters
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="qha.html">
+   Quasi harmonic approximation
+  </a>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="interfaces.html">
+   Interfaces to calculators
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2">
+    <a class="reference internal" href="vasp.html">
+     VASP &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="wien2k.html">
+     Wien2k &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="qe.html">
+     Quantum ESPRESSO (QE) &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="abinit.html">
+     Abinit &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="siesta.html">
+     Siesta &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="elk.html">
+     Elk &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="crystal.html">
+     CRYSTAL &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="dftb%2B.html">
+     DFTB+ &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="turbomole.html">
+     TURBOMOLE &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="cp2k.html">
+     CP2K &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="aims.html">
+     FHI-aims &amp; phonopy calculations
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="castep.html">
+     CASTEP &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Fleur.html">
+     Fleur &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="abacus.html">
+     ABACUS &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     LAMMPS &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="vasp-dfpt.html">
+     VASP-DFPT &amp; phonopy calculation
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="auxiliary-tools.html">
+   Auxiliary tools
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="external-tools.html">
+   External tools
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="phonopy-module.html">
+   Phonopy API for Python
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="phonopy-load.html">
+   phonopy-load command
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="formulation.html">
+   Formulations
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="citation.html">
+   How to cite phonopy
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="reference.html">
+   References
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="changelog.html">
+   Change Log
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+            <div class="navbar_extra_footer">
+            Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
+            </div>
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
+</div>
+
+
+          
+
+
+          
+<!-- A tiny helper pixel to detect if we've scrolled -->
+<div class="sbt-scroll-pixel-helper"></div>
+<!-- Main content -->
+<div class="col py-0 content-container">
+    
+    <div class="header-article row sticky-top noprint">
+        
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<button onclick="toggleFullScreen()"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="bottom"
+title="Fullscreen mode"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+<div class="menu-dropdown menu-dropdown-download-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Download this page">
+      <i class="fas fa-download"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="_sources/lammps.md.txt"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Download source file"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="headerbtn__text-container">.md</span>
+</a>
+
+      </li>
+      
+      <li>
+        
+<button onclick="printPdf(this)"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="left"
+title="Print to PDF"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="headerbtn__text-container">.pdf</span>
+</button>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
+
+    </div>
+</div>
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#how-to-handle-lammps-input-and-output-files-in-phonopy">
+   How to handle LAMMPS input and output files in phonopy
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#lammps-structure-input-format">
+   LAMMPS structure input format
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#lammps-input-script-for-force-calculation">
+   LAMMPS input script for force calculation
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#how-to-run-ti-lammps-example">
+   How to run Ti-lammps example
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#supercell-generation-from-unit-cell-defined-in-yaml">
+   Supercell generation from unit cell defined in yaml
+  </a>
+ </li>
+</ul>
+
+    </nav>
+</div>
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>LAMMPS & phonopy calculation</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#how-to-handle-lammps-input-and-output-files-in-phonopy">
+   How to handle LAMMPS input and output files in phonopy
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#lammps-structure-input-format">
+   LAMMPS structure input format
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#lammps-input-script-for-force-calculation">
+   LAMMPS input script for force calculation
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#how-to-run-ti-lammps-example">
+   How to run Ti-lammps example
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#supercell-generation-from-unit-cell-defined-in-yaml">
+   Supercell generation from unit cell defined in yaml
+  </a>
+ </li>
+</ul>
+
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            <main id="main-content" role="main">
+                
+              <div>
+                
+  <section class="tex2jax_ignore mathjax_ignore" id="lammps-phonopy-calculation">
+<span id="lammps-interface"></span><h1>LAMMPS &amp; phonopy calculation<a class="headerlink" href="#lammps-phonopy-calculation" title="Permalink to this headline">#</a></h1>
+<div class="contents local topic" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#how-to-handle-lammps-input-and-output-files-in-phonopy" id="id2">How to handle LAMMPS input and output files in phonopy</a></p></li>
+<li><p><a class="reference internal" href="#lammps-structure-input-format" id="id3">LAMMPS structure input format</a></p></li>
+<li><p><a class="reference internal" href="#lammps-input-script-for-force-calculation" id="id4">LAMMPS input script for force calculation</a></p></li>
+<li><p><a class="reference internal" href="#how-to-run-ti-lammps-example" id="id5">How to run Ti-lammps example</a></p></li>
+<li><p><a class="reference internal" href="#supercell-generation-from-unit-cell-defined-in-yaml" id="id6">Supercell generation from unit cell defined in yaml</a></p></li>
+</ul>
+</div>
+<section id="how-to-handle-lammps-input-and-output-files-in-phonopy">
+<h2><a class="toc-backref" href="#id2">How to handle LAMMPS input and output files in phonopy</a><a class="headerlink" href="#how-to-handle-lammps-input-and-output-files-in-phonopy" title="Permalink to this headline">#</a></h2>
+<ul class="simple">
+<li><p>Phonopy assumes the LAMMPS calculation is performed in <code class="docutils literal notranslate"><span class="pre">units</span> <span class="pre">metal</span></code>.</p></li>
+<li><p>Force calculation has to performed by a specific setting as presented at
+<a class="reference internal" href="#lammps-input-script-format"><span class="std std-ref">LAMMPS input script for force calculation</span></a>.</p></li>
+<li><p>Basis vectors are rotated to match the structure file format shown at
+<a class="reference internal" href="#lammps-structure-input-format"><span class="std std-ref">LAMMPS structure input format</span></a>.</p></li>
+</ul>
+</section>
+<section id="lammps-structure-input-format">
+<span id="id1"></span><h2><a class="toc-backref" href="#id3">LAMMPS structure input format</a><a class="headerlink" href="#lammps-structure-input-format" title="Permalink to this headline">#</a></h2>
+<p>The crystal structure is converted to the LAMMPS structure format of <a class="reference external" href="https://docs.lammps.org/Howto_triclinic.html">triclinic
+simulation box</a>.</p>
+<p>LAMMPS triclinic simulation box requires basis vectors to be described in the
+following way</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="p">(</span><span class="n">a_x</span> <span class="mi">0</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">b_x</span> <span class="n">b_y</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="n">c_x</span> <span class="n">c_y</span> <span class="n">c_z</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>An example of HCP crystal structure is given as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#</span>
+
+<span class="mi">2</span> <span class="n">atoms</span>
+<span class="mi">1</span> <span class="n">atom</span> <span class="n">types</span>
+
+<span class="mf">0.0</span> <span class="mf">2.923479689273095</span> <span class="n">xlo</span> <span class="n">xhi</span>   <span class="c1"># xx</span>
+<span class="mf">0.0</span> <span class="mf">2.531807678358337</span> <span class="n">ylo</span> <span class="n">yhi</span>   <span class="c1"># yy</span>
+<span class="mf">0.0</span> <span class="mf">4.624022835916574</span> <span class="n">zlo</span> <span class="n">zhi</span>   <span class="c1"># zz</span>
+
+<span class="o">-</span><span class="mf">1.461739844636547</span> <span class="mf">0.000000000000000</span> <span class="mf">0.000000000000000</span> <span class="n">xy</span> <span class="n">xz</span> <span class="n">yz</span>
+
+<span class="n">Atom</span> <span class="n">Type</span> <span class="n">Labels</span>
+
+<span class="mi">1</span> <span class="n">Ti</span>
+
+<span class="n">Atoms</span>
+
+<span class="mi">1</span> <span class="n">Ti</span> <span class="mf">0.000000000000001</span> <span class="mf">1.687871785572226</span> <span class="mf">3.468017126937431</span>
+<span class="mi">2</span> <span class="n">Ti</span> <span class="mf">1.461739844636549</span> <span class="mf">0.843935892786111</span> <span class="mf">1.156005708979144</span>
+</pre></div>
+</div>
+</section>
+<section id="lammps-input-script-for-force-calculation">
+<span id="lammps-input-script-format"></span><h2><a class="toc-backref" href="#id4">LAMMPS input script for force calculation</a><a class="headerlink" href="#lammps-input-script-for-force-calculation" title="Permalink to this headline">#</a></h2>
+<p>Phonopy can reads forces only from LAMMPS output file written in a specific text
+format. An example of LAMMPS input script for phonopy force calculation is shown
+below.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">units</span> <span class="n">metal</span>
+
+<span class="n">read_data</span> <span class="n">supercell</span><span class="o">-</span><span class="mi">001</span>
+
+<span class="n">pair_style</span>  <span class="n">polymlp</span>
+<span class="n">pair_coeff</span> <span class="o">*</span> <span class="o">*</span> <span class="n">mlp</span><span class="o">.</span><span class="n">lammps</span> <span class="n">dummy</span>
+
+<span class="n">dump</span> <span class="n">phonopy</span> <span class="nb">all</span> <span class="n">custom</span> <span class="mi">1</span> <span class="n">force</span><span class="o">.*</span> <span class="nb">id</span> <span class="nb">type</span> <span class="n">x</span> <span class="n">y</span> <span class="n">z</span> <span class="n">fx</span> <span class="n">fy</span> <span class="n">fz</span>
+<span class="n">dump_modify</span> <span class="n">phonopy</span> <span class="nb">format</span> <span class="n">line</span> <span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> </span><span class="si">%d</span><span class="s2"> </span><span class="si">%15.8f</span><span class="s2"> </span><span class="si">%15.8f</span><span class="s2"> </span><span class="si">%15.8f</span><span class="s2"> </span><span class="si">%15.8f</span><span class="s2"> </span><span class="si">%15.8f</span><span class="s2"> </span><span class="si">%15.8f</span><span class="s2">&quot;</span>
+<span class="n">run</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">supercell-001</span></code> is that generated by phonopy. The <code class="docutils literal notranslate"><span class="pre">pair_style</span></code> of
+<code class="docutils literal notranslate"><span class="pre">polymlp</span></code> is a LAMMPS module of the polynomial machine learning potentials
+provided at <a class="reference external" href="https://sekocha.github.io/lammps/index-e.html">https://sekocha.github.io/lammps/index-e.html</a>. For the HCP Ti
+calculation found in the <a class="reference external" href="https://github.com/phonopy/phonopy/tree/develop/example">example
+directory</a>, <code class="docutils literal notranslate"><span class="pre">mlp.lammp</span></code>
+of gtinv-294 was obtained from <a class="reference external" href="http://cms.mtl.kyoto-u.ac.jp/seko/mlp-repository/index.html">Polynomial Machine Learning Potential Repository
+at Kyoto
+University</a>.</p>
+</section>
+<section id="how-to-run-ti-lammps-example">
+<h2><a class="toc-backref" href="#id5">How to run Ti-lammps example</a><a class="headerlink" href="#how-to-run-ti-lammps-example" title="Permalink to this headline">#</a></h2>
+<ol class="arabic">
+<li><p>Read a lammps input structure file and create supercells with</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy --lammps -c lammps_structure_Ti -d --dim 4 4 3
+        _
+  _ __ | |__   ___  _ __   ___   _ __  _   _
+ | &#39;_ \| &#39;_ \ / _ \| &#39;_ \ / _ \ | &#39;_ \| | | |
+ | |_) | | | | (_) | | | | (_) || |_) | |_| |
+ | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
+ |_|                            |_|    |___/
+                                      2.18.0
+
+Compiled with OpenMP support (max 10 threads).
+Python version 3.10.8
+Spglib version 2.0.2
+
+Calculator interface: lammps
+Crystal structure was read from &quot;lammps_structure_Ti&quot;.
+Unit of length: angstrom
+Displacements creation mode
+Settings:
+  Supercell: [4 4 3]
+Spacegroup: P6_3/mmc (194)
+Use -v option to watch primitive cell, unit cell, and supercell structures.
+
+&quot;phonopy_disp.yaml&quot; and supercells have been created.
+
+Summary of calculation was written in &quot;phonopy_disp.yaml&quot;.
+                 _
+   ___ _ __   __| |
+  / _ \ &#39;_ \ / _` |
+ |  __/ | | | (_| |
+  \___|_| |_|\__,_|
+</pre></div>
+</div>
+</li>
+<li><p>Run LAMMPS</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% lmp_serial -in <span class="k">in</span>.polymlp
+</pre></div>
+</div>
+<p>Suppose that the LAMMPS output file name is renamed to <code class="docutils literal notranslate"><span class="pre">lammps_forces_Ti.0</span></code>
+after the LAMMPS calculation.</p>
+</li>
+<li><p>Make <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy -f lammps_forces_Ti.0
+        _
+  _ __ | |__   ___  _ __   ___   _ __  _   _
+ | &#39;_ \| &#39;_ \ / _ \| &#39;_ \ / _ \ | &#39;_ \| | | |
+ | |_) | | | | (_) | | | | (_) || |_) | |_| |
+ | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
+ |_|                            |_|    |___/
+                                      2.18.0
+
+Compiled with OpenMP support (max 10 threads).
+Python version 3.10.8
+Spglib version 2.0.2
+
+Calculator interface: lammps
+Displacements were read from &quot;phonopy_disp.yaml&quot;.
+1. Drift force of &quot;lammps_forces_Ti.0&quot; to be subtracted
+ -0.00000000  -0.00000000   0.00000000
+Forces parsed from LAMMPS output were rotated by F=R.F(lammps) with R:
+  1.00000 0.00000 0.00000
+  0.00000 0.00000 0.00000
+  0.00000 1.00000 1.00000
+&quot;FORCE_SETS&quot; has been created.
+                 _
+   ___ _ __   __| |
+  / _ \ &#39;_ \ / _` |
+ |  __/ | | | (_| |
+  \___|_| |_|\__,_|
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="supercell-generation-from-unit-cell-defined-in-yaml">
+<h2><a class="toc-backref" href="#id6">Supercell generation from unit cell defined in yaml</a><a class="headerlink" href="#supercell-generation-from-unit-cell-defined-in-yaml" title="Permalink to this headline">#</a></h2>
+<p>LAMMPS input structure that phonopy can read must follow the convention of the
+basis vector orientation in Cartesian coordinates. If it is unconformable for
+the phonon calculation setting, we can generate supercells with displacements
+from a structure format in yaml. A silicon primitive cell example is given as
+follows:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">unit_cell</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">lattice</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.000000000000000</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2.733099421887393</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2.733099421887393</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># a</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">2.733099421887393</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.000000000000000</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2.733099421887393</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># b</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">2.733099421887393</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2.733099421887393</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.000000000000000</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># c</span><span class="w"></span>
+<span class="w">  </span><span class="nt">points</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">symbol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Si</span><span class="w"> </span><span class="c1"># 1</span><span class="w"></span>
+<span class="w">      </span><span class="nt">coordinates</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.875000000000000</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.875000000000000</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.875000000000000</span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">symbol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Si</span><span class="w"> </span><span class="c1"># 2</span><span class="w"></span>
+<span class="w">      </span><span class="nt">coordinates</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.125000000000000</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.125000000000000</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.125000000000000</span><span class="p p-Indicator">]</span><span class="w"></span>
+</pre></div>
+</div>
+<p>With this saved in <code class="docutils literal notranslate"><span class="pre">phonopy_unitcell.yaml</span></code> file, we can generate 2x2x2 supercell
+of this primitive cell orientation by using a python script:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">phonopy</span>
+<span class="kn">from</span> <span class="nn">phonopy.interface.phonopy_yaml</span> <span class="kn">import</span> <span class="n">read_cell_yaml</span>
+<span class="kn">from</span> <span class="nn">phonopy.interface.calculator</span> <span class="kn">import</span> <span class="n">write_supercells_with_displacements</span>
+
+<span class="n">cell</span> <span class="o">=</span> <span class="n">read_cell_yaml</span><span class="p">(</span><span class="s2">&quot;phonopy_unitcell.yaml&quot;</span><span class="p">)</span>
+<span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">unitcell</span><span class="o">=</span><span class="n">cell</span><span class="p">,</span> <span class="n">primitive_matrix</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">calculator</span><span class="o">=</span><span class="s1">&#39;lammps&#39;</span><span class="p">)</span>
+<span class="n">ph</span><span class="o">.</span><span class="n">generate_displacements</span><span class="p">()</span>
+<span class="n">ph</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;phonopy_disp.yaml&quot;</span><span class="p">)</span>
+<span class="n">write_supercells_with_displacements</span><span class="p">(</span><span class="s2">&quot;lammps&quot;</span><span class="p">,</span> <span class="n">ph</span><span class="o">.</span><span class="n">supercell</span><span class="p">,</span> <span class="n">ph</span><span class="o">.</span><span class="n">supercells_with_displacements</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The primitive and supercell structures are stored in <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> in the
+original orientation. But <code class="docutils literal notranslate"><span class="pre">supercell-001</span></code> follows the convention of the LAMMPS
+input structure file format.</p>
+</section>
+</section>
+
+
+              </div>
+              
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="abacus.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">ABACUS &amp; phonopy calculation</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="vasp-dfpt.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">VASP-DFPT &amp; phonopy calculation</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+            </footer>
+        </div>
+    </div>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+      &copy; Copyright 2009, Atsushi Togo.<br/>
+</p>
+        </footer>
+    </div>
+    
+</div>
+
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+
+
+  </body>
+</html>

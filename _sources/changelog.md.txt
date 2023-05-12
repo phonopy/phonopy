@@ -2,6 +2,10 @@
 
 # Change Log
 
+## May-12-2023: Version 2.19.0
+
+- Experimental release of built-in LAMMPS interface.
+
 ## Mar-30-2023: Version 2.18.0
 
 - Maintenance release. Refactoring of `PhonopyYaml` class.

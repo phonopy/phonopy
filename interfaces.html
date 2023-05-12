@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Interfaces to calculators &#8212; Phonopy v.2.18.0</title>
+    <title>Interfaces to calculators &#8212; Phonopy v.2.19.0</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -73,7 +73,7 @@
       
       
       
-      <h1 class="site-logo" id="site-title">Phonopy v.2.18.0</h1>
+      <h1 class="site-logo" id="site-title">Phonopy v.2.19.0</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
@@ -222,6 +222,16 @@
    <li class="toctree-l2">
     <a class="reference internal" href="Fleur.html">
      Fleur &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="abacus.html">
+     ABACUS &amp; phonopy calculation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="lammps.html">
+     LAMMPS &amp; phonopy calculation
     </a>
    </li>
    <li class="toctree-l2">
@@ -527,10 +537,9 @@ title="Print to PDF"
 </ul>
 </div>
 <p>The interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT, Elk, SIESTA,
-CRYSTAL, DFTB+, TURBOMOLE, FHI-AIMS, and CASTEP are built in to the usual
-phonopy command. See the command options and how to invoke each of them at
-<a class="reference internal" href="command-options.html#force-calculators"><span class="std std-ref">Choice of force calculator</span></a>. <a class="reference internal" href="external-tools.html#external-tools-phonolammps"><span class="std std-ref">LAMMPS interface</span></a>
-is provided as an external tool by Abel Carreras.</p>
+CRYSTAL, DFTB+, TURBOMOLE, FHI-AIMS, CASTEP, ABACUS, and LAMMPS are built in to
+the usual phonopy command. See the command options and how to invoke each of
+them at <a class="reference internal" href="command-options.html#force-calculators"><span class="std std-ref">Choice of force calculator</span></a>. <a class="reference internal" href="external-tools.html#external-tools-phonolammps"><span class="std std-ref">LAMMPS interface</span></a> is provided as an external tool by Abel Carreras.</p>
 <section id="list-of-force-calculators">
 <span id="interfaces-to-force-calculators"></span><h2><a class="toc-backref" href="#id1">List of force calculators</a><a class="headerlink" href="#list-of-force-calculators" title="Permalink to this headline">#</a></h2>
 <p>Short tutorials for the force calculators are found in the following pages.</p>
@@ -549,6 +558,8 @@ is provided as an external tool by Abel Carreras.</p>
 <li class="toctree-l1"><a class="reference internal" href="aims.html">FHI-aims &amp; phonopy calculations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="castep.html">CASTEP &amp; phonopy calculation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Fleur.html">Fleur &amp; phonopy calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="abacus.html">ABACUS &amp; phonopy calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lammps.html">LAMMPS &amp; phonopy calculation</a></li>
 </ul>
 </div>
 <p>The VASP DFPT interface reads <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> and creates <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> file.</p>
@@ -574,6 +585,9 @@ is provided as an external tool by Abel Carreras.</p>
 <span class="n">CP2K</span>      <span class="o">|</span> <span class="n">Angstrom</span>   <span class="n">AMU</span>           <span class="n">hartree</span><span class="o">/</span><span class="n">au</span>    <span class="n">hartree</span><span class="o">/</span><span class="n">Angstrom</span><span class="o">.</span><span class="n">au</span>
 <span class="n">FHI</span><span class="o">-</span><span class="n">AIMS</span>  <span class="o">|</span> <span class="n">Angstrom</span>   <span class="n">AMU</span>           <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span>   <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span><span class="o">^</span><span class="mi">2</span>
 <span class="n">Fleur</span>     <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">hartree</span><span class="o">/</span><span class="n">au</span>    <span class="n">hartree</span><span class="o">/</span><span class="n">au</span><span class="o">^</span><span class="mi">2</span>
+<span class="n">CASTEP</span>    <span class="o">|</span> <span class="n">Angstrom</span>   <span class="n">AMU</span>           <span class="n">eV</span><span class="o">/</span><span class="n">angstrom</span>   <span class="n">eV</span><span class="o">/</span><span class="n">angstrom</span><span class="o">^</span><span class="mi">2</span>
+<span class="n">ABACUS</span>    <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">eV</span><span class="o">/</span><span class="n">angstrom</span>   <span class="n">eV</span><span class="o">/</span><span class="n">angstrom</span><span class="o">.</span><span class="n">au</span>
+<span class="n">LAMMPS</span>    <span class="o">|</span> <span class="n">Angstrom</span>   <span class="n">AMU</span>           <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span>   <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span><span class="o">^</span><span class="mi">2</span>
 </pre></div>
 </div>
 <p>For these sets of physical properties, phonon frequency is calculated in THz.</p>
@@ -582,20 +596,24 @@ is provided as an external tool by Abel Carreras.</p>
 <h2><a class="toc-backref" href="#id3">Default file name, value, and conversion factor</a><a class="headerlink" href="#default-file-name-value-and-conversion-factor" title="Permalink to this headline">#</a></h2>
 <section id="default-unit-cell-file-name-for-calculator">
 <h3><a class="toc-backref" href="#id4">Default unit cell file name for calculator</a><a class="headerlink" href="#default-unit-cell-file-name-for-calculator" title="Permalink to this headline">#</a></h3>
-<p>Without specifying <code class="docutils literal notranslate"><span class="pre">-c</span></code> option, default file name for unit cell is used as shown
-below:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VASP</span>      <span class="o">|</span> <span class="n">POSCAR</span>
-<span class="n">WIEN2k</span>    <span class="o">|</span> <span class="n">case</span><span class="o">.</span><span class="n">struct</span>
-<span class="n">QE</span>        <span class="o">|</span> <span class="n">unitcell</span><span class="o">.</span><span class="ow">in</span>
-<span class="n">ABINIT</span>    <span class="o">|</span> <span class="n">unitcell</span><span class="o">.</span><span class="ow">in</span>
-<span class="n">SIESTA</span>    <span class="o">|</span> <span class="nb">input</span><span class="o">.</span><span class="n">fdf</span>
-<span class="n">Elk</span>       <span class="o">|</span> <span class="n">elk</span><span class="o">.</span><span class="ow">in</span>
-<span class="n">CRYSTAL</span>   <span class="o">|</span> <span class="n">crystal</span><span class="o">.</span><span class="n">o</span>
-<span class="n">DFTB</span><span class="o">+</span>     <span class="o">|</span> <span class="n">geo</span><span class="o">.</span><span class="n">gen</span>
-<span class="n">TURBOMOLE</span> <span class="o">|</span> <span class="n">control</span>
-<span class="n">CP2K</span>      <span class="o">|</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">inp</span>
-<span class="n">FHI</span><span class="o">-</span><span class="n">AIMS</span>  <span class="o">|</span> <span class="n">geometry</span><span class="o">.</span><span class="ow">in</span>
-<span class="n">Fleur</span>     <span class="o">|</span> <span class="n">fleur</span><span class="o">.</span><span class="ow">in</span>
+<p>Without specifying <code class="docutils literal notranslate"><span class="pre">-c</span></code> option, default file names of unit cell shown below is
+searched in current directory. When generating supercells with <code class="docutils literal notranslate"><span class="pre">-c</span></code> option,
+the default supercell file names based on those shown below are used.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VASP</span>      <span class="o">|</span> <span class="n">POSCAR</span>        <span class="o">|</span> <span class="n">SPOSCAR</span>
+<span class="n">WIEN2k</span>    <span class="o">|</span> <span class="n">case</span><span class="o">.</span><span class="n">struct</span>   <span class="o">|</span> <span class="n">case</span><span class="o">.</span><span class="n">structS</span>
+<span class="n">QE</span>        <span class="o">|</span> <span class="n">unitcell</span><span class="o">.</span><span class="ow">in</span>   <span class="o">|</span> <span class="n">supercell</span><span class="o">.</span><span class="ow">in</span>
+<span class="n">ABINIT</span>    <span class="o">|</span> <span class="n">unitcell</span><span class="o">.</span><span class="ow">in</span>   <span class="o">|</span> <span class="n">supercell</span><span class="o">.</span><span class="ow">in</span>
+<span class="n">SIESTA</span>    <span class="o">|</span> <span class="nb">input</span><span class="o">.</span><span class="n">fdf</span>     <span class="o">|</span> <span class="n">supercell</span><span class="o">.</span><span class="n">fdf</span>
+<span class="n">Elk</span>       <span class="o">|</span> <span class="n">elk</span><span class="o">.</span><span class="ow">in</span>        <span class="o">|</span> <span class="n">supercell</span><span class="o">.</span><span class="ow">in</span>
+<span class="n">CRYSTAL</span>   <span class="o">|</span> <span class="n">crystal</span><span class="o">.</span><span class="n">o</span>     <span class="o">|</span> <span class="o">-</span>
+<span class="n">DFTB</span><span class="o">+</span>     <span class="o">|</span> <span class="n">geo</span><span class="o">.</span><span class="n">gen</span>       <span class="o">|</span> <span class="n">geo</span><span class="o">.</span><span class="n">genS</span>
+<span class="n">TURBOMOLE</span> <span class="o">|</span> <span class="n">control</span>       <span class="o">|</span> <span class="o">-</span>
+<span class="n">CP2K</span>      <span class="o">|</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">inp</span>  <span class="o">|</span> <span class="o">-</span>
+<span class="n">FHI</span><span class="o">-</span><span class="n">AIMS</span>  <span class="o">|</span> <span class="n">geometry</span><span class="o">.</span><span class="ow">in</span>   <span class="o">|</span> <span class="n">geometry</span><span class="o">.</span><span class="ow">in</span><span class="o">.</span><span class="n">supercell</span>
+<span class="n">Fleur</span>     <span class="o">|</span> <span class="n">fleur</span><span class="o">.</span><span class="ow">in</span>      <span class="o">|</span> <span class="n">supercell</span><span class="o">.</span><span class="ow">in</span>
+<span class="n">CASTEP</span>    <span class="o">|</span> <span class="n">unitcell</span><span class="o">.</span><span class="n">cell</span> <span class="o">|</span> <span class="n">supercell</span><span class="o">.</span><span class="n">cell</span>
+<span class="n">ABACUS</span>    <span class="o">|</span> <span class="n">STRU</span>          <span class="o">|</span> <span class="n">sSTRU</span>
+<span class="n">LAMMPS</span>    <span class="o">|</span> <span class="n">unitcell</span>      <span class="o">|</span> <span class="n">supercell</span>
 </pre></div>
 </div>
 </section>
@@ -617,6 +635,9 @@ on calculator, and the list is shown below:</p>
 <span class="n">CP2K</span>      <span class="o">|</span> <span class="mf">0.01</span> <span class="n">Angstrom</span>
 <span class="n">FHI</span><span class="o">-</span><span class="n">AIMS</span>  <span class="o">|</span> <span class="mf">0.01</span> <span class="n">Angstrom</span>
 <span class="n">Fleur</span>     <span class="o">|</span> <span class="mf">0.02</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
+<span class="n">CASTEP</span>    <span class="o">|</span> <span class="mf">0.01</span> <span class="n">Angstrom</span>
+<span class="n">ABACUS</span>    <span class="o">|</span> <span class="mf">0.02</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
+<span class="n">LAMMPS</span>    <span class="o">|</span> <span class="mf">0.01</span> <span class="n">Angstrom</span>
 </pre></div>
 </div>
 </section>
@@ -634,6 +655,9 @@ on calculator, and the list is shown below:</p>
 <span class="n">CP2K</span>      <span class="o">|</span> <span class="mf">112.10516</span>
 <span class="n">FHI</span><span class="o">-</span><span class="n">AIMS</span>  <span class="o">|</span> <span class="mf">15.633302</span>
 <span class="n">Fleur</span>     <span class="o">|</span> <span class="mf">154.10794</span>
+<span class="n">CASTEP</span>    <span class="o">|</span> <span class="mf">15.633302</span>
+<span class="n">ABACUS</span>    <span class="o">|</span> <span class="mf">21.49068</span>
+<span class="n">LAMMPS</span>    <span class="o">|</span> <span class="mf">15.633302</span>
 </pre></div>
 </div>
 </section>
@@ -651,6 +675,9 @@ on calculator, and the list is shown below:</p>
 <span class="n">CP2K</span>      <span class="o">|</span> <span class="kc">None</span> <span class="p">(</span><span class="n">N</span><span class="o">/</span><span class="n">A</span><span class="p">)</span>
 <span class="n">FHI</span><span class="o">-</span><span class="n">AIMS</span>  <span class="o">|</span> <span class="mf">14.399652</span>
 <span class="n">Fleur</span>     <span class="o">|</span> <span class="mi">1</span> <span class="p">(</span><span class="n">but</span> <span class="n">feature</span> <span class="n">N</span><span class="o">/</span><span class="n">A</span><span class="p">)</span>
+<span class="n">CASTEP</span>    <span class="o">|</span> <span class="mf">14.399652</span>
+<span class="n">ABACUS</span>    <span class="o">|</span> <span class="mf">51.422090</span>
+<span class="n">LAMMPS</span>    <span class="o">|</span> <span class="mf">14.399652</span>
 </pre></div>
 </div>
 </section>
