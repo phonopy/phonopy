@@ -202,3 +202,31 @@ write_supercells_with_displacements("lammps", ph.supercell, ph.supercells_with_d
 The primitive and supercell structures are stored in `phonopy_disp.yaml` in the
 original orientation. But `supercell-001` follows the convention of the LAMMPS
 input structure file format.
+
+## Appendix: Structure optimization using LAMMPS
+
+It is necessary to relax crystal structure before starting phonon calculation.
+At least vanishing residual forces on atoms are expected. Using LAMMPS, crystal
+structure can be optimized under different constraints. The following is the
+simplest optimization where only internal atomic positions are relaxed.
+
+```
+units metal
+
+read_data unitcell
+
+pair_style  polymlp
+pair_coeff * * mlp.lammps dummy
+
+variable etol equal 0.0
+variable ftol equal 1e-8
+variable maxiter equal 1000
+variable maxeval equal 100000
+
+minimize ${etol} ${ftol} ${maxiter} ${maxeval}
+
+write_data dump.unitcell
+```
+
+More instruction is found at
+https://gist.github.com/lan496/e9dff8449cd7489f6722b276282e66a0.
