@@ -1406,17 +1406,20 @@ def compute_permutation_for_rotation(
     """
 
     def sort_by_lattice_distance(fracs):
+        """Sort atoms by distance.
+
+        Sort both sides by some measure which is likely to produce a small
+        maximum value of (sorted_rotated_index - sorted_original_index).
+        The C code is optimized for this case, reducing an O(n^2)
+        search down to ~O(n). (for O(n log n) work overall, including the sort)
+
+        We choose distance from the nearest bravais lattice point as our measure.
+
+        """
         carts = np.dot(fracs - np.rint(fracs), lattice.T)
         perm = np.argsort(np.sum(carts**2, axis=1))
         sorted_fracs = np.array(fracs[perm], dtype="double", order="C")
         return perm, sorted_fracs
-
-    # Sort both sides by some measure which is likely to produce a small
-    # maximum value of (sorted_rotated_index - sorted_original_index).
-    # The C code is optimized for this case, reducing an O(n^2)
-    # search down to ~O(n). (for O(n log n) work overall, including the sort)
-    #
-    # We choose distance from the nearest bravais lattice point as our measure.
 
     (perm_a, sorted_a) = sort_by_lattice_distance(positions_a)
     (perm_b, sorted_b) = sort_by_lattice_distance(positions_b)
@@ -1500,46 +1503,107 @@ def _compute_permutation_c(
 #
 # Other tiny tools
 #
-def get_angles(lattice):
+def get_angles(lattice, is_radian: bool = False) -> tuple:
     """Return angles between basis vectors.
 
-    lattice : Array-like
-        (a, b, c)^T, i.e., basis vectors are given as row vectors.
+    Parameters
+    ----------
+    lattice : array_like
+        Basis vectors given as row vectors.
+    is_radian : bool
+        Angles are return in radian when True. Otherwise in degree.
+
+    Returns
+    -------
+    tuple[float, float, float]
+        alpha, beta, gamma in either degree or radian.
 
     """
     a, b, c = get_cell_parameters(lattice)
-    alpha = np.arccos(np.vdot(lattice[1], lattice[2]) / b / c) / np.pi * 180
-    beta = np.arccos(np.vdot(lattice[2], lattice[0]) / c / a) / np.pi * 180
-    gamma = np.arccos(np.vdot(lattice[0], lattice[1]) / a / b) / np.pi * 180
-    return alpha, beta, gamma
+    alpha = np.arccos(np.vdot(lattice[1], lattice[2]) / b / c)
+    beta = np.arccos(np.vdot(lattice[2], lattice[0]) / c / a)
+    gamma = np.arccos(np.vdot(lattice[0], lattice[1]) / a / b)
+
+    if is_radian:
+        return alpha, beta, gamma
+    else:
+        return alpha / np.pi * 180, beta / np.pi * 180, gamma / np.pi * 180
 
 
-def get_cell_parameters(lattice):
-    """Return lenghts are basis vectors.
+def get_cell_parameters(lattice) -> np.ndarray:
+    """Return basis vector lengths.
 
-    lattice : Array-like
-        (a, b, c)^T, i.e., basis vectors are given as row vectors.
+    Parameters
+    ----------
+    lattice : array_like
+        Basis vectors given as row vectors
+        shape=(3, 3), dtype='double'
+
+    Returns
+    -------
+    ndarray, shape=(3,), dtype='double'
 
     """
     return np.sqrt(np.dot(lattice, np.transpose(lattice)).diagonal())
 
 
-def get_cell_matrix(a, b, c, alpha, beta, gamma):
-    """Return basis vectors as row vectors."""
-    alpha *= np.pi / 180
-    beta *= np.pi / 180
-    gamma *= np.pi / 180
+def get_cell_matrix(a, b, c, alpha, beta, gamma, is_radian=False) -> np.ndarray:
+    """Return basis vectors in another orientation.
+
+    Parameters
+    ----------
+    a, b, c : float
+        Basis vector lengths.
+    alpha, beta, gamm : float
+        Angles between basis vectors in radian.
+
+    Returns
+    -------
+    ndarray
+        shape=(3, 3), dtype='double', order='C'.
+        [[a_x,   0,   0],
+         [b_x, b_y,   0],
+         [c_x, c_y, c_z]]
+
+    """
+    if not is_radian:
+        alpha *= np.pi / 180
+        beta *= np.pi / 180
+        gamma *= np.pi / 180
     b1 = np.cos(gamma)
     b2 = np.sin(gamma)
     b3 = 0.0
     c1 = np.cos(beta)
     c2 = (2 * np.cos(alpha) + b1**2 + b2**2 - 2 * b1 * c1 - 1) / (2 * b2)
     c3 = np.sqrt(1 - c1**2 - c2**2)
-    lattice = np.zeros((3, 3), dtype="double")
+    lattice = np.zeros((3, 3), dtype="double", order="C")
     lattice[0, 0] = a
     lattice[1] = np.array([b1, b2, b3]) * b
     lattice[2] = np.array([c1, c2, c3]) * c
     return lattice
+
+
+def get_cell_matrix_from_lattice(lattice) -> np.ndarray:
+    """Return basis vectors in another orientation.
+
+    Parameters
+    ----------
+    lattice : array_like
+        Basis vectors given as row vectors
+        shape=(3, 3), dtype='double'
+
+    Returns
+    -------
+    ndarray
+        shape=(3, 3), dtype='double', order='C'.
+        [[a_x,   0,   0],
+         [b_x, b_y,   0],
+         [c_x, c_y, c_z]]
+
+    """
+    alpha, beta, gamma = get_angles(lattice, is_radian=True)
+    a, b, c = get_cell_parameters(lattice)
+    return get_cell_matrix(a, b, c, alpha, beta, gamma, is_radian=True)
 
 
 def determinant(m):
@@ -1663,8 +1727,7 @@ def estimate_supercell_matrix(spglib_dataset, max_num_atoms=120, max_iter=100):
     """
     spg_num = spglib_dataset["number"]
     num_atoms = len(spglib_dataset["std_types"])
-    lengths = _get_lattice_parameters(spglib_dataset["std_lattice"])
-
+    lengths = get_cell_parameters(spglib_dataset["std_lattice"])
     if spg_num <= 74:  # Triclinic, monoclinic, and orthorhombic
         multi = _get_multiplicity_abc(
             num_atoms, lengths, max_num_atoms, max_iter=max_iter
@@ -1702,7 +1765,7 @@ def estimate_supercell_matrix_from_pointgroup(
         Multiplicities for a, b, c basis vectors, respectively.
 
     """
-    abc_lengths = _get_lattice_parameters(lattice.T)
+    abc_lengths = get_cell_parameters(lattice)
 
     if pointgroup_number <= 8:  # Triclinic, monoclinic, and orthorhombic
         multi = _get_multiplicity_abc(1, abc_lengths, max_num_cells, max_iter=max_iter)
@@ -1712,23 +1775,6 @@ def estimate_supercell_matrix_from_pointgroup(
         multi = _get_multiplicity_a(1, abc_lengths, max_num_cells, max_iter=max_iter)
 
     return multi
-
-
-def _get_lattice_parameters(lattice):
-    """Return basis vector lengths.
-
-    Parameters
-    ----------
-    lattice : array_like
-        Basis vectors given as column vectors
-        shape=(3, 3), dtype='double'
-
-    Returns
-    -------
-    ndarray, shape=(3,), dtype='double'
-
-    """
-    return np.array(np.sqrt(np.dot(lattice.T, lattice).diagonal()), dtype="double")
 
 
 def _get_multiplicity_abc(num_atoms, lengths, max_num_atoms, max_iter=20):

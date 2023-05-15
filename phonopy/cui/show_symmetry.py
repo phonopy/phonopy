@@ -64,7 +64,7 @@ def check_symmetry(phonon: Phonopy, optional_structure_info):
             numbers=bravais_numbers, scaled_positions=bravais_pos, cell=bravais_lattice
         )
         filename = "B" + base_fname
-        print("# Symmetrized conventional unit cell is written into %s." % filename)
+        print(f'# Symmetrized conventional unit cell is written into "{filename}" and')
         trans_mat = guess_primitive_matrix(bravais, symprec=symprec)
         primitive = get_primitive(bravais, trans_mat, symprec=symprec)
         write_crystal_structure(
@@ -73,15 +73,26 @@ def check_symmetry(phonon: Phonopy, optional_structure_info):
             interface_mode=phonon.calculator,
             optional_structure_info=optional_structure_info,
         )
+        print('# "phonopy_convcell.yaml".')
+        with open("phonopy_convcell.yaml", "w") as w:
+            w.write("\n".join(bravais.get_yaml_lines()))
 
         filename = "P" + base_fname
-        print("# Symmetrized primitive is written into %s." % filename)
+        print(f'# Symmetrized primitive is written into "{filename}" and ')
         write_crystal_structure(
             filename,
             primitive,
             interface_mode=phonon.calculator,
             optional_structure_info=optional_structure_info,
         )
+        print('# "phonopy_primcell.yaml".')
+        with open("phonopy_primcell.yaml", "w") as w:
+            w.write("\n".join(primitive.get_yaml_lines()))
+
+        print("# These yaml files can be read in python script by:")
+        print("#")
+        print("# from phonopy.interface.phonopy_yaml import read_cell_yaml")
+        print('# cell = read_cell_yaml("phonopy_convcell.yaml")')
 
 
 def _get_symmetry_yaml(cell: PhonopyAtoms, symmetry: Symmetry, phonopy_version=None):

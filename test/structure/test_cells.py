@@ -13,6 +13,9 @@ from phonopy.structure.cells import (
     compute_all_sg_permutations,
     compute_permutation_for_rotation,
     convert_to_phonopy_primitive,
+    get_angles,
+    get_cell_matrix_from_lattice,
+    get_cell_parameters,
     get_primitive,
     get_supercell,
     isclose,
@@ -413,3 +416,31 @@ def test_convert_to_phonopy_primitive(ph_nacl: Phonopy):
     pcell_mode = PhonopyAtoms(cell=cell, scaled_positions=points, numbers=numbers)
     with pytest.raises(RuntimeError):
         _pcell = convert_to_phonopy_primitive(scell, pcell_mode)
+
+
+def test_get_cell_matrix_from_lattice(primcell_nacl: PhonopyAtoms):
+    """Test for test_get_cell_matrix_from_lattice."""
+    pcell = primcell_nacl
+    lattice = get_cell_matrix_from_lattice(pcell.cell)
+    np.testing.assert_allclose(
+        get_angles(lattice, is_radian=False),
+        get_angles(pcell.cell, is_radian=False),
+        atol=1e-8,
+    )
+    np.testing.assert_allclose(
+        get_angles(lattice, is_radian=True),
+        get_angles(pcell.cell, is_radian=True),
+        atol=1e-8,
+    )
+    np.testing.assert_allclose(
+        get_cell_parameters(lattice), get_cell_parameters(pcell.cell), atol=1e-8
+    )
+    np.testing.assert_allclose(
+        [
+            [4.02365076, 0.0, 0.0],
+            [2.01182538, 3.48458377, 0.0],
+            [2.01182538, 1.16152792, 3.28529709],
+        ],
+        lattice,
+        atol=1e-7,
+    )
