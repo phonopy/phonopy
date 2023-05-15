@@ -2,22 +2,41 @@
 
 # LAMMPS & phonopy calculation
 
-```{contents}
-:depth: 2
-:local:
-```
-
 ## How to handle LAMMPS input and output files in phonopy
 
-- Phonopy assumes the LAMMPS calculation is performed in `units metal`.
+- Phonopy assumes the LAMMPS calculation is performed in `units metal` and `atom_style atomic`.
 - Force calculation has to performed by a specific setting as presented at
   {ref}`lammps_input_script_format`.
-- Basis vectors are rotated to match the structure file format shown at
-  {ref}`lammps_structure_input_format`.
 
 (lammps_structure_input_format)=
 
-## LAMMPS structure input format
+## Supported LAMMPS structure input format
+
+Two important limitations are:
+- Crystal structure has to be described in the similar format for
+  [read_data](https://docs.lammps.org/read_data.html).
+- Basis vectors are rotated to match the LAMMPS structure file format of
+  [triclinic simulation box](https://docs.lammps.org/Howto_triclinic.html).
+
+### Supported `read_data` keywords in the header
+```
+atoms
+atom types
+xlo xhi
+ylo yhi
+zlo zhi
+xy xz yz
+```
+
+### Supported `read_data` keywords in the body
+```
+Atoms
+Atom Type Labels
+```
+
+`Masses` has not been supported yet.
+
+### Example
 
 The crystal structure is converted to the LAMMPS structure format of [triclinic
 simulation box](https://docs.lammps.org/Howto_triclinic.html).
