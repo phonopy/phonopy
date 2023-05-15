@@ -49,6 +49,7 @@ _re_float = r'[-+]?\d+\.*\d*(?:[Ee][-+]\d+)?'
 # read ABACUS STRU
 #
 
+
 def read_abacus(filename):
     """Read structure information from abacus structure file, distance in unit au (bohr)."""
     fd = open(filename, 'r')
@@ -225,7 +226,7 @@ def read_abacus(filename):
                              magnetic_moments=atom_magnetism)
 
     fd.close()
-    return atoms, atom_potential, atom_basis
+    return atoms, atom_potential, atom_basis, atom_offsite_basis
 # READ ABACUS STRU -END-
 
 
@@ -234,10 +235,10 @@ def read_abacus(filename):
 #
 
 
-def write_abacus(filename, atoms, pps, orbitals=None):
+def write_abacus(filename, atoms, pps, orbitals=None, abfs=None):
     """Write structure to file."""
     with open(filename, "w") as f:
-        f.write(get_abacus_structure(atoms, pps, orbitals))
+        f.write(get_abacus_structure(atoms, pps, orbitals, abfs))
 
 
 def write_supercells_with_displacements(
@@ -246,19 +247,20 @@ def write_supercells_with_displacements(
     ids,
     pps,
     orbitals,
+    abfs=None,
     pre_filename="STRU",
     width=3,
 ):
     """Write supercells with displacements to files."""
-    write_abacus("%s.in" % pre_filename, supercell, pps)
+    write_abacus("%s.in" % pre_filename, supercell, pps, orbitals, abfs)
     for i, cell in zip(ids, cells_with_displacements):
         filename = "{pre_filename}-{0:0{width}}".format(
             i, pre_filename=pre_filename, width=width
         )
-        write_abacus(filename, cell, pps, orbitals)
+        write_abacus(filename, cell, pps, orbitals, abfs)
 
 
-def get_abacus_structure(atoms, pps, orbitals=None):
+def get_abacus_structure(atoms, pps, orbitals=None, abfs=None):
     """Return ABACUS structure in text."""
     empty_line = ""
     line = []
@@ -274,6 +276,12 @@ def get_abacus_structure(atoms, pps, orbitals=None):
         line.append("NUMERICAL_ORBITAL")
         for i in range(len(elements)):
             line.append(f"{orbitals[i]}")
+        line.append(empty_line)
+
+    if abfs:
+        line.append("ABFS_ORBITAL")
+        for i in range(len(elements)):
+            line.append(f"{abfs[i]}")
         line.append(empty_line)
 
     line.append("LATTICE_CONSTANT")

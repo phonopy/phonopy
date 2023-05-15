@@ -200,7 +200,8 @@ def write_crystal_structure(
 
         pps = optional_structure_info[1]
         orbitals = optional_structure_info[2]
-        abacus.write_abacus(filename, cell, pps, orbitals)
+        abfs = optional_structure_info[3]
+        abacus.write_abacus(filename, cell, pps, orbitals, abfs)
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -330,7 +331,8 @@ def write_supercells_with_displacements(
 
         pps = optional_structure_info[1]
         orbitals = optional_structure_info[2]
-        abacus_args = args + (pps, orbitals)
+        abfs = optional_structure_info[3]
+        abacus_args = args + (pps, orbitals, abfs)
         abacus.write_supercells_with_displacements(*abacus_args, **kwargs)
     else:
         raise RuntimeError("No calculator interface was found.")
@@ -473,8 +475,8 @@ def read_crystal_structure(
         from phonopy.interface.abacus import read_abacus
 
         # , elements=chemical_symbols)
-        unitcell, pps, orbitals = read_abacus(cell_filename)
-        return unitcell, (cell_filename, pps, orbitals)
+        unitcell, pps, orbitals, abfs = read_abacus(cell_filename)
+        return unitcell, (cell_filename, pps, orbitals, abfs)
     else:
         raise RuntimeError("No calculator interface was found.")
 
