@@ -356,9 +356,14 @@ class LammpsStructureLoader:
                 continue
             ary = _line.split()
             ids[num_atoms] = int(ary[0])
+
+            # ary[1] can be chemical symbol (key) or id (val).
+            # Supporting id is useful for "write_data" LAMMPS command.
             if self._atom_type_labels:
-                assert ary[1] in self._atom_type_labels
-                lables.append(ary[1])
+                for key, val in self._atom_type_labels.items():
+                    if ary[1] in (key, f"{val}"):
+                        lables.append(key)
+                        break
             else:
                 lables[num_atoms] = int(ary[1])
             positions[num_atoms] = [float(v) for v in ary[2:5]]

@@ -64,7 +64,7 @@ def test_LammpsStructureDumper(primcell_nacl: PhonopyAtoms, helper_methods):
     helper_methods.compare_cells_with_order(pcell_rot, lmpsd_cell)
 
 
-@pytest.mark.parametrize("symbol", ["H", "Ti"])
+@pytest.mark.parametrize("symbol", ["H", "Ti", "Ti_id"])
 def test_LammpsStructureDumper_Ti(symbol, helper_methods):
     """Test of LammpsStructureDumper with Ti (with and without Atom Type Labels)."""
     cell = LammpsStructureLoader().load(cwd / f"lammps_structure_{symbol}").cell
