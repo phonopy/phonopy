@@ -48,75 +48,8 @@ _re_float = r'[-+]?\d+\.*\d*(?:[Ee][-+]\d+)?'
 #
 # read ABACUS STRU
 #
-# def read_abacus(filename, elements=[]):
-#     """Parse ABACUS structure, distance in unit au (bohr)."""
-#     pps = []
-#     orbitals = None
-#     cell = []
-#     magmoms = []
-#     numbers = []
-#     positions = []
-#     with open(filename, "r") as file:
-#         if _search_sentence(file, "ATOMIC_SPECIES"):
-#             for it, elem in enumerate(elements):
-#                 line = _skip_notes(file.readline())
-#                 pseudo = line.split()[2]
-#                 pps.append(pseudo)
 
-#         if _search_sentence(file, "NUMERICAL_ORBITAL"):
-#             orbitals = []
-#             for elem in elements:
-#                 orbitals.append(_skip_notes(file.readline()))
-
-#         if _search_sentence(file, "LATTICE_CONSTANT"):
-#             lat0 = float(_skip_notes(file.readline()).split()[0])
-
-#         if _search_sentence(file, "LATTICE_VECTORS"):
-#             for i in range(3):
-#                 cell.append(_list_elem_2float(
-#                     _skip_notes(file.readline()).split()))
-#         cell = np.array(cell) * lat0
-
-#         if _search_sentence(file, "ATOMIC_POSITIONS"):
-#             ctype = _skip_notes(file.readline())
-
-#         for elem in elements:
-#             if _search_sentence(file, elem):
-#                 magmoms.append(float(_skip_notes(file.readline()).split()[0]))
-#                 na = int(_skip_notes(file.readline()).split()[0])
-#                 numbers.append(na)
-#                 for i in range(na):
-#                     line = _skip_notes(file.readline())
-#                     positions.append(_list_elem_2float(line.split()[:3]))
-
-#     expanded_symbols = _expand(numbers, elements)
-#     magnetic_moments = _expand(numbers, magmoms)
-#     if ctype == "Direct":
-#         atoms = PhonopyAtoms(
-#             symbols=expanded_symbols,
-#             cell=cell,
-#             scaled_positions=positions,
-#             magnetic_moments=magnetic_moments,
-#         )
-#     elif ctype == "Cartesian":
-#         atoms = PhonopyAtoms(
-#             symbols=expanded_symbols,
-#             cell=cell,
-#             positions=positions,
-#             magnetic_moments=magnetic_moments,
-#         )
-#     elif ctype == "Cartesian_angstrom":
-#         atoms = PhonopyAtoms(
-#             symbols=expanded_symbols,
-#             cell=cell,
-#             positions=np.array(positions) / Bohr,
-#             magnetic_moments=magnetic_moments,
-#         )
-
-#     return atoms, pps, orbitals
-
-
-def read_abacus(filename, latname=None):
+def read_abacus(filename):
     """Read structure information from abacus structure file, distance in unit au (bohr)."""
     fd = open(filename, 'r')
     contents = fd.read()
@@ -188,9 +121,6 @@ def read_abacus(filename, latname=None):
     if vec_lines:
         atom_lattice = np.array([line.split() for line in vec_pattern.search(
             contents).group(1).split('\n')]).astype(float)
-    else:
-        raise Exception(
-            f"Parameter `latname` or `LATTICE_VECTORS` in {fd.name} must be set.")
     atom_lattice = atom_lattice * atom_lattice_scale
 
     aim_title = 'ATOMIC_POSITIONS'
