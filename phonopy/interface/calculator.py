@@ -110,7 +110,8 @@ def get_interface_mode(args_dict):
 
 def convert_crystal_structure(filename_in, interface_in, filename_out, interface_out):
     """Convert crystal structures between different calculator interfaces."""
-    cell, _ = read_crystal_structure(filename=filename_in, interface_mode=interface_in)
+    cell, _ = read_crystal_structure(
+        filename=filename_in, interface_mode=interface_in)
     units_in = get_default_physical_units(interface_in)
     units_out = get_default_physical_units(interface_out)
     factor = units_in["distance_to_A"] / units_out["distance_to_A"]
@@ -294,7 +295,8 @@ def write_supercells_with_displacements(
         if additional_info is None:
             kwargs["template_file"] = "TEMPLATE"
         else:
-            kwargs["template_file"] = additional_info.get("template_file", "TEMPLATE")
+            kwargs["template_file"] = additional_info.get(
+                "template_file", "TEMPLATE")
         conv_numbers = optional_structure_info[1]
         N = abs(determinant(additional_info["supercell_matrix"]))
         cst_args = args + (conv_numbers, N)
@@ -470,7 +472,8 @@ def read_crystal_structure(
     elif interface_mode == "abacus":
         from phonopy.interface.abacus import read_abacus
 
-        unitcell, pps, orbitals = read_abacus(cell_filename, elements=chemical_symbols)
+        # , elements=chemical_symbols)
+        unitcell, pps, orbitals = read_abacus(cell_filename)
         return unitcell, (cell_filename, pps, orbitals)
     else:
         raise RuntimeError("No calculator interface was found.")
@@ -710,7 +713,8 @@ def get_force_sets(
     else:
         return []
 
-    force_sets = parse_set_of_forces(num_atoms, force_filenames, verbose=verbose)
+    force_sets = parse_set_of_forces(
+        num_atoms, force_filenames, verbose=verbose)
 
     return force_sets
 
