@@ -42,7 +42,6 @@ import numpy as np
 
 from phonopy.interface.vasp import check_forces, get_drift_forces
 from phonopy.structure.atoms import PhonopyAtoms, atom_data, symbol_map
-from phonopy.units import Bohr
 
 _re_float = r"[-+]?\d+\.*\d*(?:[Ee][-+]\d+)?"
 
@@ -55,7 +54,7 @@ def read_abacus(filename):
     """Read structure information from abacus structure file, distance in unit au (bohr)."""
     fd = open(filename, "r")
     contents = fd.read()
-    title_str = r"(?:LATTICE_CONSTANT|NUMERICAL_DESCRIPTOR|NUMERICAL_ORBITAL|ABFS_ORBITAL|LATTICE_VECTORS|LATTICE_PARAMETERS|ATOMIC_POSITIONS)"
+    title_str = r"(?:LATTICE_CONSTANT|NUMERICAL_ORBITAL|ABFS_ORBITAL|LATTICE_VECTORS|LATTICE_PARAMETERS|ATOMIC_POSITIONS)"
 
     # remove comments and empty lines
     contents = re.compile(r"#.*|//.*").sub("", contents)
@@ -93,16 +92,6 @@ def read_abacus(filename):
         offsite_basis = dict(zip(symbols, abf_lines.group(1).split("\n")))
     else:
         offsite_basis = None
-
-    # deepks for ABACUS
-    aim_title = "NUMERICAL_DESCRIPTOR"
-    aim_title_sub = title_str.replace("|" + aim_title, "")
-    deep_pattern = re.compile(rf"{aim_title}\s*\n([\s\S]+?)\s*\n{aim_title_sub}")
-    deep_lines = deep_pattern.search(contents)
-    if deep_lines:
-        descriptor = deep_lines.group(1)
-    else:
-        descriptor = None
 
     # lattice constant
     aim_title = "LATTICE_CONSTANT"
@@ -149,7 +138,6 @@ def read_abacus(filename):
 
         # symbols, magnetism
         sym = [symbol] * number
-        masses = [mass] * number
         atom_mags = [float(sub_block.group(1))] * number
         for j in range(number):
             atom_symbol.append(sym[j])
@@ -178,12 +166,6 @@ def read_abacus(filename):
     # position
     atom_positions = atom_block[:, 0:3].astype(float)
     natoms = len(atom_positions)
-
-    # fix_cart
-    if (atom_block[:, 3] == ["m"] * natoms).all():
-        atom_xyz = ~atom_block[:, 4:7].astype(bool)
-    else:
-        atom_xyz = ~atom_block[:, 3:6].astype(bool)
 
     def _get_index(labels, num):
         index = None
