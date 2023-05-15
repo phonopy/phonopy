@@ -315,17 +315,20 @@ def get_abacus_structure(atoms, pps, orbitals=None, abfs=None):
 #
 def read_abacus_output(filename):
     """Read ABACUS forces from last self-consistency iteration."""
+    force = None
     with open(filename, "r") as file:
         for line in file:
             if re.search(r"TOTAL ATOM NUMBER = [0-9]+", line):
                 natom = int(re.search("[0-9]+", line).group())
-                force = np.zeros((natom, 3))
             if re.search(r"TOTAL-FORCE \(eV/Angstrom\)", line):
+                force = np.zeros((natom, 3))
                 for i in range(4):
                     file.readline()
                 for i in range(natom):
                     _, fx, fy, fz = file.readline().split()
                     force[i] = (float(fx), float(fy), float(fz))
+    if force is None:
+        raise ValueError("Force data not found.")
 
     return force
 
