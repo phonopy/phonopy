@@ -54,8 +54,10 @@ def read_abacus(filename):
     """Read structure information, distance in unit au (bohr)."""
     fd = open(filename, "r")
     contents = fd.read()
-    title_str = r"(?:LATTICE_CONSTANT|NUMERICAL_ORBITAL|ABFS_ORBITAL|" \ 
-              + "LATTICE_VECTORS|LATTICE_PARAMETERS|ATOMIC_POSITIONS)"
+    title_str = (
+        r"(?:LATTICE_CONSTANT|NUMERICAL_ORBITAL|ABFS_ORBITAL|"
+        + "LATTICE_VECTORS|LATTICE_PARAMETERS|ATOMIC_POSITIONS)"
+    )
 
     # remove comments and empty lines
     contents = re.compile(r"#.*|//.*").sub("", contents)
@@ -155,7 +157,7 @@ def read_abacus(filename):
             )
         else:
             lines_pattern = re.compile(
-                rf"{symbol}\s*\n{_re_float}\s*\n\d+\s*\n([\s\S]+?)" \
+                rf"{symbol}\s*\n{_re_float}\s*\n\d+\s*\n([\s\S]+?)"
                 + "\s*\n\w+\s*\n{_re_float}"
             )
         lines = lines_pattern.search(block)
