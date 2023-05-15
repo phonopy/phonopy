@@ -51,10 +51,11 @@ _re_float = r"[-+]?\d+\.*\d*(?:[Ee][-+]\d+)?"
 
 
 def read_abacus(filename):
-    """Read structure information from abacus structure file, distance in unit au (bohr)."""
+    """Read structure information, distance in unit au (bohr)."""
     fd = open(filename, "r")
     contents = fd.read()
-    title_str = r"(?:LATTICE_CONSTANT|NUMERICAL_ORBITAL|ABFS_ORBITAL|LATTICE_VECTORS|LATTICE_PARAMETERS|ATOMIC_POSITIONS)"
+    title_str = r"(?:LATTICE_CONSTANT|NUMERICAL_ORBITAL|ABFS_ORBITAL|" \ 
+              + "LATTICE_VECTORS|LATTICE_PARAMETERS|ATOMIC_POSITIONS)"
 
     # remove comments and empty lines
     contents = re.compile(r"#.*|//.*").sub("", contents)
@@ -67,7 +68,6 @@ def read_abacus(filename):
     )
     symbols = specie_lines[:, 0]
     ntype = len(symbols)
-    mass = specie_lines[:, 1].astype(float)
     try:
         potential = dict(zip(symbols, specie_lines[:, 2].tolist()))
     except IndexError:
@@ -155,7 +155,8 @@ def read_abacus(filename):
             )
         else:
             lines_pattern = re.compile(
-                rf"{symbol}\s*\n{_re_float}\s*\n\d+\s*\n([\s\S]+?)\s*\n\w+\s*\n{_re_float}"
+                rf"{symbol}\s*\n{_re_float}\s*\n\d+\s*\n([\s\S]+?)" \
+                + "\s*\n\w+\s*\n{_re_float}"
             )
         lines = lines_pattern.search(block)
         for j in [line.split() for line in lines.group(1).split("\n")]:
@@ -165,14 +166,13 @@ def read_abacus(filename):
 
     # position
     atom_positions = atom_block[:, 0:3].astype(float)
-    natoms = len(atom_positions)
 
     def _get_index(labels, num):
         index = None
         res = []
-        for l in labels:
-            if l in atom_block:
-                index = np.where(atom_block == l)[-1][0]
+        for label in labels:
+            if label in atom_block:
+                index = np.where(atom_block == label)[-1][0]
         if index is not None:
             res = atom_block[:, index + 1 : index + 1 + num].astype(float)
 
