@@ -34,7 +34,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import re
-import string
 import sys
 from collections import Counter
 
