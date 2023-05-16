@@ -11,8 +11,8 @@ data_dir = os.path.dirname(os.path.abspath(__file__))
 
 def test_read_abacus():
     """Test of read_ABACUS."""
-    cell, pps, orbitals = read_abacus(
-        os.path.join(data_dir, "NaCl-abacus.stru"), elements=["Na", "Cl"]
+    cell, pps, orbitals, abfs = read_abacus(
+        os.path.join(data_dir, "NaCl-abacus.stru")
     )
     filename = os.path.join(data_dir, "NaCl-abinit-pwscf.yaml")
     cell_ref = read_cell_yaml(filename)
