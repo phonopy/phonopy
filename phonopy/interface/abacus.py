@@ -64,11 +64,9 @@ def read_abacus(filename):
     contents = re.compile(r"\n{2,}").sub("\n", contents)
 
     # specie, mass, pps
-    specie_pattern = re.compile(
-        rf"ATOMIC_SPECIES\s*\n([\s\S]+?)\s*\n{title_str}")
+    specie_pattern = re.compile(rf"ATOMIC_SPECIES\s*\n([\s\S]+?)\s*\n{title_str}")
     specie_lines = np.array(
-        [line.split() for line in specie_pattern.search(
-            contents).group(1).split("\n")]
+        [line.split() for line in specie_pattern.search(contents).group(1).split("\n")]
     )
     symbols = specie_lines[:, 0]
     ntype = len(symbols)
@@ -80,8 +78,7 @@ def read_abacus(filename):
     # basis
     aim_title = "NUMERICAL_ORBITAL"
     aim_title_sub = title_str.replace("|" + aim_title, "")
-    orb_pattern = re.compile(
-        rf"{aim_title}\s*\n([\s\S]+?)\s*\n{aim_title_sub}")
+    orb_pattern = re.compile(rf"{aim_title}\s*\n([\s\S]+?)\s*\n{aim_title_sub}")
     orb_lines = orb_pattern.search(contents)
     if orb_lines:
         basis = dict(zip(symbols, orb_lines.group(1).split("\n")))
@@ -91,8 +88,7 @@ def read_abacus(filename):
     # ABFs basis
     aim_title = "ABFS_ORBITAL"
     aim_title_sub = title_str.replace("|" + aim_title, "")
-    abf_pattern = re.compile(
-        rf"{aim_title}\s*\n([\s\S]+?)\s*\n{aim_title_sub}")
+    abf_pattern = re.compile(rf"{aim_title}\s*\n([\s\S]+?)\s*\n{aim_title_sub}")
     abf_lines = abf_pattern.search(contents)
     if abf_lines:
         offsite_basis = dict(zip(symbols, abf_lines.group(1).split("\n")))
@@ -109,13 +105,11 @@ def read_abacus(filename):
     # lattice vector
     aim_title = "LATTICE_VECTORS"
     aim_title_sub = title_str.replace("|" + aim_title, "")
-    vec_pattern = re.compile(
-        rf"{aim_title}\s*\n([\s\S]+?)\s*\n{aim_title_sub}")
+    vec_pattern = re.compile(rf"{aim_title}\s*\n([\s\S]+?)\s*\n{aim_title_sub}")
     vec_lines = vec_pattern.search(contents)
     if vec_lines:
         atom_lattice = np.array(
-            [line.split() for line in vec_pattern.search(
-                contents).group(1).split("\n")]
+            [line.split() for line in vec_pattern.search(contents).group(1).split("\n")]
         ).astype(float)
     atom_lattice = atom_lattice * atom_lattice_scale
 
@@ -182,7 +176,7 @@ def read_abacus(filename):
             if label in atom_block:
                 index = np.where(atom_block == label)[-1][0]
         if index is not None:
-            res = atom_block[:, index + 1: index + 1 + num].astype(float)
+            res = atom_block[:, index + 1 : index + 1 + num].astype(float)
 
         return res, index
 
@@ -201,8 +195,7 @@ def read_abacus(filename):
     mags, m_index = _get_index(m_labels, 1)
     try:  # non-colinear
         if m_index:
-            atom_magnetism = atom_block[:,
-                                        m_index + 1: m_index + 4].astype(float)
+            atom_magnetism = atom_block[:, m_index + 1 : m_index + 4].astype(float)
     except IndexError:  # colinear
         if m_index:
             atom_magnetism = mags
