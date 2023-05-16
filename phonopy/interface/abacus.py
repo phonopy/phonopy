@@ -64,36 +64,40 @@ def read_abacus(filename):
     contents = re.compile(r"\n{2,}").sub("\n", contents)
 
     # specie, mass, pps
-    specie_pattern = re.compile(rf"ATOMIC_SPECIES\s*\n([\s\S]+?)\s*\n{title_str}")
+    specie_pattern = re.compile(
+        rf"ATOMIC_SPECIES\s*\n([\s\S]+?)\s*\n{title_str}")
     specie_lines = np.array(
-        [line.split() for line in specie_pattern.search(contents).group(1).split("\n")]
+        [line.split() for line in specie_pattern.search(
+            contents).group(1).split("\n")]
     )
     symbols = specie_lines[:, 0]
     ntype = len(symbols)
     try:
-        potential = dict(zip(symbols, specie_lines[:, 2].tolist()))
+        atom_potential = dict(zip(symbols, specie_lines[:, 2].tolist()))
     except IndexError:
-        potential = None
+        atom_potential = None
 
     # basis
     aim_title = "NUMERICAL_ORBITAL"
     aim_title_sub = title_str.replace("|" + aim_title, "")
-    orb_pattern = re.compile(rf"{aim_title}\s*\n([\s\S]+?)\s*\n{aim_title_sub}")
+    orb_pattern = re.compile(
+        rf"{aim_title}\s*\n([\s\S]+?)\s*\n{aim_title_sub}")
     orb_lines = orb_pattern.search(contents)
     if orb_lines:
-        basis = dict(zip(symbols, orb_lines.group(1).split("\n")))
+        atom_basis = dict(zip(symbols, orb_lines.group(1).split("\n")))
     else:
-        basis = None
+        atom_basis = None
 
     # ABFs basis
     aim_title = "ABFS_ORBITAL"
     aim_title_sub = title_str.replace("|" + aim_title, "")
-    abf_pattern = re.compile(rf"{aim_title}\s*\n([\s\S]+?)\s*\n{aim_title_sub}")
+    abf_pattern = re.compile(
+        rf"{aim_title}\s*\n([\s\S]+?)\s*\n{aim_title_sub}")
     abf_lines = abf_pattern.search(contents)
     if abf_lines:
-        offsite_basis = dict(zip(symbols, abf_lines.group(1).split("\n")))
+        atom_offsite_basis = dict(zip(symbols, abf_lines.group(1).split("\n")))
     else:
-        offsite_basis = None
+        atom_offsite_basis = None
 
     # lattice constant
     aim_title = "LATTICE_CONSTANT"
@@ -105,11 +109,13 @@ def read_abacus(filename):
     # lattice vector
     aim_title = "LATTICE_VECTORS"
     aim_title_sub = title_str.replace("|" + aim_title, "")
-    vec_pattern = re.compile(rf"{aim_title}\s*\n([\s\S]+?)\s*\n{aim_title_sub}")
+    vec_pattern = re.compile(
+        rf"{aim_title}\s*\n([\s\S]+?)\s*\n{aim_title_sub}")
     vec_lines = vec_pattern.search(contents)
     if vec_lines:
         atom_lattice = np.array(
-            [line.split() for line in vec_pattern.search(contents).group(1).split("\n")]
+            [line.split() for line in vec_pattern.search(
+                contents).group(1).split("\n")]
         ).astype(float)
     atom_lattice = atom_lattice * atom_lattice_scale
 
@@ -128,10 +134,6 @@ def read_abacus(filename):
         block += "\n"
     atom_magnetism = []
     atom_symbol = []
-    atom_potential = []
-    atom_basis = []
-    atom_offsite_basis = []
-    # atom_mass = []
     atom_block = []
     for i, symbol in enumerate(symbols):
         pattern = re.compile(rf"{symbol}\s*\n({_re_float})\s*\n(\d+)")
@@ -143,11 +145,6 @@ def read_abacus(filename):
         atom_mags = [float(sub_block.group(1))] * number
         for j in range(number):
             atom_symbol.append(sym[j])
-            atom_potential.append(potential[symbol])
-            if basis:
-                atom_basis.append(basis[symbol])
-            if offsite_basis:
-                atom_offsite_basis.append(offsite_basis[symbol])
             # atom_mass.append(masses[j])
             atom_magnetism.append(atom_mags[j])
 
@@ -176,13 +173,9 @@ def read_abacus(filename):
             if label in atom_block:
                 index = np.where(atom_block == label)[-1][0]
         if index is not None:
-            res = atom_block[:, index + 1 : index + 1 + num].astype(float)
+            res = atom_block[:, index + 1: index + 1 + num].astype(float)
 
         return res, index
-
-    # velocity
-    v_labels = ["v", "vel", "velocity"]
-    atom_vel, v_index = _get_index(v_labels, 3)
 
     # magnetism
     m_labels = ["mag", "magmom"]
@@ -195,7 +188,8 @@ def read_abacus(filename):
     mags, m_index = _get_index(m_labels, 1)
     try:  # non-colinear
         if m_index:
-            atom_magnetism = atom_block[:, m_index + 1 : m_index + 4].astype(float)
+            atom_magnetism = atom_block[:,
+                                        m_index + 1: m_index + 4].astype(float)
     except IndexError:  # colinear
         if m_index:
             atom_magnetism = mags
@@ -239,7 +233,7 @@ def write_supercells_with_displacements(
     cells_with_displacements,
     ids,
     pps,
-    orbitals,
+    orbitals=None,
     abfs=None,
     pre_filename="STRU",
     width=3,
@@ -262,19 +256,19 @@ def get_abacus_structure(atoms, pps, orbitals=None, abfs=None):
     numbers = list(Counter(atoms.symbols).values())
 
     for i, elem in enumerate(elements):
-        line.append(f"{elem}\t{atom_data[symbol_map[elem]][3]}\t{pps[i]}")
+        line.append(f"{elem}\t{atom_data[symbol_map[elem]][3]}\t{pps[elem]}")
     line.append(empty_line)
 
     if orbitals:
         line.append("NUMERICAL_ORBITAL")
-        for i in range(len(elements)):
-            line.append(f"{orbitals[i]}")
+        for i, elem in enumerate(elements):
+            line.append(f"{orbitals[elem]}")
         line.append(empty_line)
 
     if abfs:
         line.append("ABFS_ORBITAL")
-        for i in range(len(elements)):
-            line.append(f"{abfs[i]}")
+        for i, elem in enumerate(elements):
+            line.append(f"{abfs[elem]}")
         line.append(empty_line)
 
     line.append("LATTICE_CONSTANT")
@@ -356,53 +350,6 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
 #
 # tools
 #
-def _expand(num_atoms, attr):
-    expanded_attr = []
-    for s, num in zip(attr, num_atoms):
-        expanded_attr += [s] * num
-    return expanded_attr
-
-
-def _search_sentence(file, sentence):
-    """Search sentence in file."""
-    if isinstance(sentence, str):
-        sentence = sentence.strip()
-        for line in file:
-            line = _skip_notes(line).strip()
-            if line == sentence:
-                return line
-    elif isinstance(sentence, list):
-        sentence = _list_elem2strip(sentence)
-        for line in file:
-            line = _skip_notes(line).strip()
-            if line in sentence:
-                return line
-
-    file.seek(0, 0)
-    return False
-
-
-def _skip_notes(line):
-    """Delete comments lines with '#' or '//'."""
-    line = re.compile(r"#.*").sub("", line)
-    line = re.compile(r"//.*").sub("", line)
-    line = line.strip()
-    return line
-
-
-def _list_elem2strip(a, ds=string.whitespace):
-    """Strip element of list with `str` type."""
-
-    def list_strip(s):
-        return s.strip(ds)
-
-    return list(map(list_strip, a))
-
-
-def _list_elem_2float(a):
-    """Convert type of list element to float."""
-    return list(map(float, a))
-
 
 def _list_elem2str(a):
     """Convert type of list element to str."""
