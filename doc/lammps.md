@@ -2,22 +2,41 @@
 
 # LAMMPS & phonopy calculation
 
-```{contents}
-:depth: 2
-:local:
-```
-
 ## How to handle LAMMPS input and output files in phonopy
 
-- Phonopy assumes the LAMMPS calculation is performed in `units metal`.
+- Phonopy assumes the LAMMPS calculation is performed in `units metal` and `atom_style atomic`.
 - Force calculation has to performed by a specific setting as presented at
   {ref}`lammps_input_script_format`.
-- Basis vectors are rotated to match the structure file format shown at
-  {ref}`lammps_structure_input_format`.
 
 (lammps_structure_input_format)=
 
-## LAMMPS structure input format
+## Supported LAMMPS structure input format
+
+Two important limitations are:
+- Crystal structure has to be described in the similar format for
+  [read_data](https://docs.lammps.org/read_data.html).
+- Basis vectors are rotated to match the LAMMPS structure file format of
+  [triclinic simulation box](https://docs.lammps.org/Howto_triclinic.html).
+
+### Supported `read_data` keywords in the header
+```
+atoms
+atom types
+xlo xhi
+ylo yhi
+zlo zhi
+xy xz yz
+```
+
+### Supported `read_data` keywords in the body
+```
+Atoms
+Atom Type Labels
+```
+
+`Masses` has not been supported yet.
+
+### Example
 
 The crystal structure is converted to the LAMMPS structure format of [triclinic
 simulation box](https://docs.lammps.org/Howto_triclinic.html).
@@ -172,16 +191,15 @@ from a structure format in yaml. A silicon primitive cell example is given as
 follows:
 
 ```yaml
-unit_cell:
-  lattice:
-    - [0.000000000000000, 2.733099421887393, 2.733099421887393] # a
-    - [2.733099421887393, 0.000000000000000, 2.733099421887393] # b
-    - [2.733099421887393, 2.733099421887393, 0.000000000000000] # c
-  points:
-    - symbol: Si # 1
-      coordinates: [0.875000000000000, 0.875000000000000, 0.875000000000000]
-    - symbol: Si # 2
-      coordinates: [0.125000000000000, 0.125000000000000, 0.125000000000000]
+lattice:
+- [0.000000000000000, 2.733099421887393, 2.733099421887393] # a
+- [2.733099421887393, 0.000000000000000, 2.733099421887393] # b
+- [2.733099421887393, 2.733099421887393, 0.000000000000000] # c
+points:
+- symbol: Si # 1
+  coordinates: [0.875000000000000, 0.875000000000000, 0.875000000000000]
+- symbol: Si # 2
+  coordinates: [0.125000000000000, 0.125000000000000, 0.125000000000000]
 ```
 
 With this saved in `phonopy_unitcell.yaml` file, we can generate 2x2x2 supercell
@@ -202,3 +220,31 @@ write_supercells_with_displacements("lammps", ph.supercell, ph.supercells_with_d
 The primitive and supercell structures are stored in `phonopy_disp.yaml` in the
 original orientation. But `supercell-001` follows the convention of the LAMMPS
 input structure file format.
+
+## Appendix: Structure optimization using LAMMPS
+
+It is necessary to relax crystal structure before starting phonon calculation.
+At least vanishing residual forces on atoms are expected. Using LAMMPS, crystal
+structure can be optimized under different constraints. The following is the
+simplest optimization where only internal atomic positions are relaxed.
+
+```
+units metal
+
+read_data unitcell
+
+pair_style  polymlp
+pair_coeff * * mlp.lammps dummy
+
+variable etol equal 0.0
+variable ftol equal 1e-8
+variable maxiter equal 1000
+variable maxeval equal 100000
+
+minimize ${etol} ${ftol} ${maxiter} ${maxeval}
+
+write_data dump.unitcell
+```
+
+More instruction is found at
+https://gist.github.com/lan496/e9dff8449cd7489f6722b276282e66a0.

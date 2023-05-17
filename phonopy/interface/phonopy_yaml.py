@@ -676,7 +676,7 @@ class PhonopyYaml:
         )
         return "\n".join(phyml_dumper.get_yaml_lines())
 
-    def read(self, filename):
+    def read(self, filename: Union[str, bytes, os.PathLike, io.IOBase]):
         """Read PhonopyYaml file."""
         self._data = read_phonopy_yaml(
             filename,
@@ -703,13 +703,20 @@ class PhonopyYaml:
 
 
 def read_phonopy_yaml(
-    filename, configuration=None, calculator=None, physical_units=None
+    filename: Union[str, bytes, os.PathLike, io.IOBase],
+    configuration=None,
+    calculator=None,
+    physical_units=None,
 ) -> PhonopyYamlData:
     """Read phonopy.yaml like file."""
     yaml_data = load_yaml(filename)
     if type(yaml_data) is str:
-        msg = f'Could not load "{filename}" properly.'
+        if isinstance(filename, io.IOBase):
+            msg = "Could not load stream properly."
+        else:
+            msg = f'Could not load "{filename}" properly.'
         raise TypeError(msg)
+
     return load_phonopy_yaml(
         yaml_data,
         configuration=configuration,
@@ -738,7 +745,9 @@ def load_phonopy_yaml(
     return phyml_loader.data
 
 
-def read_cell_yaml(filename, cell_type="unitcell"):
+def read_cell_yaml(
+    filename: Union[str, bytes, os.PathLike, io.IOBase], cell_type: str = "unitcell"
+) -> PhonopyAtoms:
     """Read crystal structure from a phonopy.yaml or PhonopyAtoms.__str__ like file.
 
     phonopy.yaml like file can contain several different cells, e.g., unit cell,
@@ -761,6 +770,13 @@ def read_cell_yaml(filename, cell_type="unitcell"):
       coordinates: [  0.500000000000000,  0.500000000000000,  0.500000000000000 ]
       mass: 35.453000
 
+    Parameters
+    ----------
+    filename : str, bytes, os.PathLike, io.IOBase
+        File name or file stream.
+    cell_type : str
+        "unitcell", "primitive", or "supercell". Default is "unitcell".
+
     """
     ph_yaml = PhonopyYaml()
     ph_yaml.read(filename)
@@ -771,7 +787,10 @@ def read_cell_yaml(filename, cell_type="unitcell"):
     elif ph_yaml.supercell and cell_type == "supercell":
         return ph_yaml.supercell
     else:
-        return None
+        if isinstance(filename, io.IOBase):
+            raise RuntimeError("Crystal structure data was not found in stream.")
+        else:
+            raise RuntimeError(f'Crystal structure data was not found in "{filename}".')
 
 
 def load_yaml(fp: Union[str, bytes, os.PathLike, io.IOBase]):

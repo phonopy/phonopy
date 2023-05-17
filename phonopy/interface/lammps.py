@@ -114,7 +114,7 @@ def rotate_lammps_forces(force_sets: list, lattice: np.ndarray, verbose: bool = 
     if verbose:
         print("Forces parsed from LAMMPS output were rotated by F=R.F(lammps) with R:")
         for v in r.T:
-            print(f"  {v[0]:7.5f} {v[2]:7.5f} {v[2]:7.5f}")
+            print(f"  {v[0]:7.5f} {v[1]:7.5f} {v[2]:7.5f}")
 
 
 class LammpsStructureDumper:
@@ -226,20 +226,22 @@ class LammpsForcesLoader:
                 num_atoms = int(fp.readline().strip())
                 break
 
-        forces = np.zeros((num_atoms, 3), dtype="double")
-
         for line in fp:
             regex = re.compile(self._hooks["forces"])
             if regex.search(line):
                 break
 
+        forces = np.zeros((num_atoms, 3), dtype="double")
+        indices_found = [False] * num_atoms
         for i, line in enumerate(fp):
             if i == num_atoms:
                 break
             ary = line.split()
-            assert int(ary[0]) == i + 1
-            forces[i] = np.array(ary[column_start:column_end], dtype="double")
+            atom_id = int(ary[0])
+            indices_found[atom_id - 1] = True
+            forces[atom_id - 1] = np.array(ary[column_start:column_end], dtype="double")
 
+        assert all(indices_found)
         self._forces = forces
 
 
@@ -356,9 +358,14 @@ class LammpsStructureLoader:
                 continue
             ary = _line.split()
             ids[num_atoms] = int(ary[0])
+
+            # ary[1] can be chemical symbol (key) or id (val).
+            # Supporting id is useful for "write_data" LAMMPS command.
             if self._atom_type_labels:
-                assert ary[1] in self._atom_type_labels
-                lables.append(ary[1])
+                for key, val in self._atom_type_labels.items():
+                    if ary[1] in (key, f"{val}"):
+                        lables.append(key)
+                        break
             else:
                 lables[num_atoms] = int(ary[1])
             positions[num_atoms] = [float(v) for v in ary[2:5]]

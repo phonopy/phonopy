@@ -35,7 +35,8 @@
 from __future__ import annotations
 
 import warnings
-from typing import Union
+from collections.abc import Sequence
+from typing import Optional, Union
 
 import numpy as np
 import spglib
@@ -838,8 +839,8 @@ def get_supercell(
 
 
 def get_primitive(
-    supercell,
-    primitive_frame,
+    supercell: PhonopyAtoms,
+    primitive_matrix: Optional[Union[str, np.ndarray, Sequence]] = None,
     symprec=1e-5,
     store_dense_svecs=False,
     positions_to_reorder=None,
@@ -847,7 +848,7 @@ def get_primitive(
     """Create primitive cell."""
     return Primitive(
         supercell,
-        primitive_frame,
+        get_primitive_matrix(primitive_matrix),
         symprec=symprec,
         store_dense_svecs=store_dense_svecs,
         positions_to_reorder=positions_to_reorder,
@@ -1618,9 +1619,22 @@ def determinant(m):
     )
 
 
-def get_primitive_matrix(pmat, symprec=1e-5):
-    """Find primitive matrix from primitive cell."""
-    if type(pmat) is str and pmat in ("P", "F", "I", "A", "C", "R", "auto"):
+def get_primitive_matrix(
+    pmat: Optional[Union[str, np.ndarray, Sequence]] = None,
+    symprec=1e-5,
+):
+    """Find primitive matrix from primitive cell.
+
+    None is equivalent to "P" but None is returned.
+
+    ``pmat`` can be
+
+    - a symbol of centring type: "P", "F", "I", "A", "C", "R"
+    - "auto" : estimates a centring type.
+    - 3x3 matrix (can be flattened, i.e., 9 elements)
+
+    """
+    if isinstance(pmat, str) and pmat in ("P", "F", "I", "A", "C", "R", "auto"):
         if pmat == "auto":
             _pmat = pmat
         else:
