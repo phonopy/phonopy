@@ -90,10 +90,11 @@ def check_symmetry(phonon: Phonopy, optional_structure_info):
             print("unit_cell:", file=w)
             print("\n".join(["  " + line for line in bravais.get_yaml_lines()]), file=w)
 
-        print("# These yaml files can be read in python script by:")
+        print("# These yaml files can be read in a python script as follows:")
         print("#")
         print("# from phonopy.interface.phonopy_yaml import read_cell_yaml")
-        print('# cell = read_cell_yaml("phonopy_convcell.yaml")')
+        print('# unitcell = read_cell_yaml("phonopy_symcells.yaml", "unitcell")')
+        print('# primitive_cell = read_cell_yaml("phonopy_symcells.yaml", "primitive")')
 
 
 def _get_symmetry_yaml(cell: PhonopyAtoms, symmetry: Symmetry, phonopy_version=None):
