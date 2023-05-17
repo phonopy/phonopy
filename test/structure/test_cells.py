@@ -264,7 +264,15 @@ def test_get_primitive_convcell_nacl(
     nacl_unitcell_order1: PhonopyAtoms, primcell_nacl: PhonopyAtoms, helper_methods
 ):
     """Test get_primitive by NaCl."""
-    pcell = get_primitive(nacl_unitcell_order1, primitive_matrix_nacl)
+    pcell = get_primitive(nacl_unitcell_order1, primitive_matrix=primitive_matrix_nacl)
+    helper_methods.compare_cells_with_order(pcell, primcell_nacl)
+
+
+def test_get_primitive_convcell_nacl_with_cetring_symbol(
+    nacl_unitcell_order1: PhonopyAtoms, primcell_nacl: PhonopyAtoms, helper_methods
+):
+    """Test get_primitive by NaCl."""
+    pcell = get_primitive(nacl_unitcell_order1, primitive_matrix="F")
     helper_methods.compare_cells_with_order(pcell, primcell_nacl)
 
 
@@ -274,7 +282,7 @@ def test_get_primitive_convcell_Cr(convcell_cr: PhonopyAtoms, helper_methods):
     smat = [[2, 0, 0], [0, 2, 0], [0, 0, 2]]
     scell = get_supercell(convcell_cr, smat, is_old_style=True)
     pmat = np.linalg.inv(smat)
-    pcell = get_primitive(scell, pmat)
+    pcell = get_primitive(scell, primitive_matrix=pmat)
     helper_methods.compare_cells(convcell_cr, pcell)
     convcell_cr.magnetic_moments = None
 
@@ -285,7 +293,9 @@ def test_get_primitive_convcell_nacl_svecs(
 ):
     """Test shortest vectors by NaCl."""
     pcell = get_primitive(
-        nacl_unitcell_order1, primitive_matrix_nacl, store_dense_svecs=store_dense_svecs
+        nacl_unitcell_order1,
+        primitive_matrix=primitive_matrix_nacl,
+        store_dense_svecs=store_dense_svecs,
     )
     svecs, multi = pcell.get_smallest_vectors()
     if store_dense_svecs:
