@@ -1,4 +1,5 @@
 """Pytest configuration."""
+from collections.abc import Callable
 from pathlib import Path
 from typing import Tuple
 
@@ -265,7 +266,7 @@ def helper_methods():
         @classmethod
         def compare_cells_with_order(
             cls, cell: PhonopyAtoms, cell_ref: PhonopyAtoms, symprec=1e-5
-        ):
+        ) -> Callable:
             """Compare two cells with the same orders of positions."""
             np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=symprec)
             cls.compare_positions_with_order(
@@ -281,7 +282,9 @@ def helper_methods():
                 )
 
         @classmethod
-        def compare_positions_with_order(cls, pos, pos_ref, lattice, symprec=1e-5):
+        def compare_positions_with_order(
+            cls, pos, pos_ref, lattice, symprec=1e-5
+        ) -> Callable:
             """Compare two lists of positions and orders.
 
             lattice :
@@ -296,7 +299,7 @@ def helper_methods():
         @classmethod
         def compare_cells(
             cls, cell: PhonopyAtoms, cell_ref: PhonopyAtoms, symprec=1e-5
-        ):
+        ) -> Callable:
             """Compare two cells where position orders can be different."""
             np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=symprec)
 
@@ -319,7 +322,7 @@ def helper_methods():
         @classmethod
         def compare_positions_in_arbitrary_order(
             cls, pos_in, pos_ref, lattice, symprec=1e-5
-        ):
+        ) -> Callable:
             """Compare two sets of positions irrespective of orders.
 
             lattice :

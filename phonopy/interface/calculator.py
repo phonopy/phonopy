@@ -201,7 +201,8 @@ def write_crystal_structure(
 
         pps = optional_structure_info[1]
         orbitals = optional_structure_info[2]
-        abacus.write_abacus(filename, cell, pps, orbitals)
+        abfs = optional_structure_info[3]
+        abacus.write_abacus(filename, cell, pps, orbitals, abfs)
     elif interface_mode == "lammps":
         import phonopy.interface.lammps as lammps
 
@@ -334,7 +335,8 @@ def write_supercells_with_displacements(
 
         pps = optional_structure_info[1]
         orbitals = optional_structure_info[2]
-        abacus_args = args + (pps, orbitals)
+        abfs = optional_structure_info[3]
+        abacus_args = args + (pps, orbitals, abfs)
         abacus.write_supercells_with_displacements(*abacus_args, **kwargs)
     elif interface_mode == "lammps":
         import phonopy.interface.lammps as lammps
@@ -480,8 +482,8 @@ def read_crystal_structure(
     elif interface_mode == "abacus":
         from phonopy.interface.abacus import read_abacus
 
-        unitcell, pps, orbitals = read_abacus(cell_filename, elements=chemical_symbols)
-        return unitcell, (cell_filename, pps, orbitals)
+        unitcell, pps, orbitals, abfs = read_abacus(cell_filename)
+        return unitcell, (cell_filename, pps, orbitals, abfs)
     elif interface_mode == "lammps":
         from phonopy.interface.lammps import read_lammps
 
