@@ -2,6 +2,12 @@
 
 # Change Log
 
+## May-12-2023: Version 2.19.1
+
+- Improvement of parsing forces of the built-in LAMMPS interface.
+- Update of the ABACUS interface.
+- `--symmetry` option writes `phonopy_primcell.yaml` and
+
 ## May-12-2023: Version 2.19.0
 
 - Experimental release of built-in LAMMPS interface.

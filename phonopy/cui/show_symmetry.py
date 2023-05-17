@@ -73,10 +73,6 @@ def check_symmetry(phonon: Phonopy, optional_structure_info):
             interface_mode=phonon.calculator,
             optional_structure_info=optional_structure_info,
         )
-        print('# "phonopy_convcell.yaml".')
-        with open("phonopy_convcell.yaml", "w") as w:
-            w.write("\n".join(bravais.get_yaml_lines()))
-
         filename = "P" + base_fname
         print(f'# Symmetrized primitive is written into "{filename}" and ')
         write_crystal_structure(
@@ -85,9 +81,14 @@ def check_symmetry(phonon: Phonopy, optional_structure_info):
             interface_mode=phonon.calculator,
             optional_structure_info=optional_structure_info,
         )
-        print('# "phonopy_primcell.yaml".')
-        with open("phonopy_primcell.yaml", "w") as w:
-            w.write("\n".join(primitive.get_yaml_lines()))
+        print('# "phonopy_symcells.yaml".')
+        with open("phonopy_symcells.yaml", "w") as w:
+            print("primitive_cell:", file=w)
+            print(
+                "\n".join(["  " + line for line in primitive.get_yaml_lines()]), file=w
+            )
+            print("unit_cell:", file=w)
+            print("\n".join(["  " + line for line in bravais.get_yaml_lines()]), file=w)
 
         print("# These yaml files can be read in python script by:")
         print("#")

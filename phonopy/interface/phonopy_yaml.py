@@ -738,7 +738,9 @@ def load_phonopy_yaml(
     return phyml_loader.data
 
 
-def read_cell_yaml(filename, cell_type="unitcell"):
+def read_cell_yaml(
+    filename: Union[str, bytes, os.PathLike], cell_type: str = "unitcell"
+) -> PhonopyAtoms:
     """Read crystal structure from a phonopy.yaml or PhonopyAtoms.__str__ like file.
 
     phonopy.yaml like file can contain several different cells, e.g., unit cell,
@@ -761,6 +763,13 @@ def read_cell_yaml(filename, cell_type="unitcell"):
       coordinates: [  0.500000000000000,  0.500000000000000,  0.500000000000000 ]
       mass: 35.453000
 
+    Parameters
+    ----------
+    filename : str, bytes, os.PathLike
+        File name.
+    cell_type : str
+        "unitcell", "primitive", or "supercell". Default is "unitcell".
+
     """
     ph_yaml = PhonopyYaml()
     ph_yaml.read(filename)
@@ -771,7 +780,7 @@ def read_cell_yaml(filename, cell_type="unitcell"):
     elif ph_yaml.supercell and cell_type == "supercell":
         return ph_yaml.supercell
     else:
-        return None
+        raise RuntimeError(f'Crystal structure data was not found in "{filename}".')
 
 
 def load_yaml(fp: Union[str, bytes, os.PathLike, io.IOBase]):
