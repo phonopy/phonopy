@@ -6,6 +6,9 @@ on:
     - publish-gh-pages
     - master
     - rc
+  pull_request:
+    branches: [ develop ]
+
 
 jobs:
   build-linux:

@@ -40,6 +40,7 @@ import numpy as np
 
 from phonopy.file_IO import parse_disp_yaml, write_FORCE_SETS
 from phonopy.interface.calculator import get_force_sets, get_force_sets_wien2k
+from phonopy.interface.lammps import rotate_lammps_forces
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 
 
@@ -131,6 +132,8 @@ def create_FORCE_SETS(
             force_filenames,
             verbose=(log_level > 0),
         )
+    if interface_mode == "lammps":
+        rotate_lammps_forces(force_sets, supercell.cell, verbose=(log_level > 0))
 
     if force_sets:
         if force_sets_zero_mode:

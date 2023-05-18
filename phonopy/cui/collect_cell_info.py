@@ -32,6 +32,7 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+from __future__ import annotations
 
 import numpy as np
 
@@ -51,7 +52,7 @@ def collect_cell_info(
     cell_filename=None,
     chemical_symbols=None,
     enforce_primitive_matrix_auto=False,
-    phonopy_yaml_cls=None,
+    phonopy_yaml_cls: type[PhonopyYaml] = PhonopyYaml,
 ):
     """Collect crystal structure information from input file and parameters.
 
@@ -120,11 +121,6 @@ def collect_cell_info(
             string.
 
     """
-    if phonopy_yaml_cls is None:
-        _phonopy_yaml_cls = PhonopyYaml
-    else:
-        _phonopy_yaml_cls = phonopy_yaml_cls
-
     # In some cases, interface mode falls back to phonopy_yaml mode.
     fallback_reason = _fallback_to_phonopy_yaml(
         supercell_matrix, interface_mode, cell_filename
@@ -134,7 +130,7 @@ def collect_cell_info(
     if fallback_reason:
         _interface_mode = "phonopy_yaml"
         if cell_filename is None or not is_file_phonopy_yaml(
-            cell_filename, keyword=_phonopy_yaml_cls.command_name
+            cell_filename, keyword=phonopy_yaml_cls.command_name
         ):
             _cell_filename = None
     elif interface_mode is None:
@@ -146,7 +142,7 @@ def collect_cell_info(
         filename=_cell_filename,
         interface_mode=_interface_mode,
         chemical_symbols=chemical_symbols,
-        phonopy_yaml_cls=_phonopy_yaml_cls,
+        phonopy_yaml_cls=phonopy_yaml_cls,
     )
 
     # Error check
@@ -155,7 +151,7 @@ def collect_cell_info(
             optional_structure_info,
             fallback_reason,
             cell_filename,  # original cell_filename can be needed for error message.
-            _phonopy_yaml_cls,
+            phonopy_yaml_cls,
         )
         return {"error_message": err_msg}
 
@@ -186,15 +182,15 @@ def collect_cell_info(
                 "of each calculator. In this case, supercell matrix has to be "
                 "specified.",
                 "Because this is the old style way of using %s,"
-                % _phonopy_yaml_cls.command_name,
+                % phonopy_yaml_cls.command_name,
             ]
             filenames = [
-                '"%s"' % name for name in _phonopy_yaml_cls.default_filenames[:-1]
+                '"%s"' % name for name in phonopy_yaml_cls.default_filenames[:-1]
             ]
             err_msg += [
                 '"%s" was read being prefered to files such as ' % unitcell_filename,
                 '%s, or "%s".'
-                % (", ".join(filenames), _phonopy_yaml_cls.default_filenames[-1]),
+                % (", ".join(filenames), phonopy_yaml_cls.default_filenames[-1]),
             ]
             err_msg += [
                 "",
@@ -345,7 +341,7 @@ def _get_error_message(
     optional_structure_info,
     fallback_reason,
     cell_filename,
-    phonopy_yaml_cls,
+    phonopy_yaml_cls: type[PhonopyYaml],
 ):
     """Show error message for failure of getting crystal structure."""
     final_cell_filename = optional_structure_info[0]
