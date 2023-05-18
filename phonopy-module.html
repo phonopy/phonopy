@@ -1,892 +1,377 @@
 
+
 <!DOCTYPE html>
 
-<html>
+
+<html lang="en" >
+
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Phonopy API for Python &#8212; Phonopy v.2.19.0</title>
-    
+    <title>Phonopy API for Python &#8212; Phonopy v.2.19.1</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-<link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <link href="_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
 
-    
-  <link rel="stylesheet"
-    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
-    
+    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+  
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'phonopy-module';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="phonopy-load command" href="phonopy-load.html" />
     <link rel="prev" title="External tools" href="external-tools.html" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
-    
-
-    <!-- Google Analytics -->
-    
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
-<!-- Checkboxes to toggle the left sidebar -->
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
-<label class="overlay overlay-navbar" for="__navigation">
-    <div class="visually-hidden">Toggle navigation sidebar</div>
-</label>
-<!-- Checkboxes to toggle the in-page toc -->
-<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
-<label class="overlay overlay-pagetoc" for="__page-toc">
-    <div class="visually-hidden">Toggle in-page Table of Contents</div>
-</label>
-<!-- Headers at the top -->
-<div class="announcement header-item noprint"></div>
-<div class="header header-item noprint"></div>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
 
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
     
-    <div class="container-fluid" id="banner"></div>
-
     
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
 
-    <div class="container-xl">
-      <div class="row">
-          
-<!-- Sidebar -->
-<div class="bd-sidebar noprint" id="site-navigation">
-    <div class="bd-sidebar__content">
-        <div class="bd-sidebar__top"><div class="navbar-brand-box">
-    <a class="navbar-brand text-wrap" href="index.html">
-      
-      
-      
-      <h1 class="site-logo" id="site-title">Phonopy v.2.19.0</h1>
-      
-    </a>
-</div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
-    <div class="bd-toc-item active">
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Phonopy v.2.19.1</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="install.html">
-   Installation
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="symmetry.html">
-   Crystal symmetry
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="workflow.html">
-   Work flow
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="examples.html">
-   Examples
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="input-files.html">
-   Input files
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="output-files.html">
-   Output files
-  </a>
- </li>
- <li class="toctree-l1 has-children">
-  <a class="reference internal" href="setting-tags.html">
-   Setting tags
-  </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
-  <label for="toctree-checkbox-1">
-   <i class="fas fa-chevron-down">
-   </i>
-  </label>
-  <ul>
-   <li class="toctree-l2">
-    <a class="reference internal" href="animation.html">
-     How to watch animation
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="command-options.html">
-   Command options
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="dynamic-structure-factor.html">
-   Dynamic structure factor
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="gruneisen.html">
-   Mode Grüneisen parameters
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="qha.html">
-   Quasi harmonic approximation
-  </a>
- </li>
- <li class="toctree-l1 has-children">
-  <a class="reference internal" href="interfaces.html">
-   Interfaces to calculators
-  </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
-  <label for="toctree-checkbox-2">
-   <i class="fas fa-chevron-down">
-   </i>
-  </label>
-  <ul>
-   <li class="toctree-l2">
-    <a class="reference internal" href="vasp.html">
-     VASP &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="wien2k.html">
-     Wien2k &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="qe.html">
-     Quantum ESPRESSO (QE) &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="abinit.html">
-     Abinit &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="siesta.html">
-     Siesta &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="elk.html">
-     Elk &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="crystal.html">
-     CRYSTAL &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="dftb%2B.html">
-     DFTB+ &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="turbomole.html">
-     TURBOMOLE &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="cp2k.html">
-     CP2K &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="aims.html">
-     FHI-aims &amp; phonopy calculations
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="castep.html">
-     CASTEP &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="Fleur.html">
-     Fleur &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="abacus.html">
-     ABACUS &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="lammps.html">
-     LAMMPS &amp; phonopy calculation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="vasp-dfpt.html">
-     VASP-DFPT &amp; phonopy calculation
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="auxiliary-tools.html">
-   Auxiliary tools
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="external-tools.html">
-   External tools
-  </a>
- </li>
- <li class="toctree-l1 current active">
-  <a class="current reference internal" href="#">
-   Phonopy API for Python
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="phonopy-load.html">
-   phonopy-load command
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="formulation.html">
-   Formulations
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="citation.html">
-   How to cite phonopy
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="reference.html">
-   References
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="changelog.html">
-   Change Log
-  </a>
- </li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="setting-tags.html">Setting tags</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="animation.html">How to watch animation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dynamic-structure-factor.html">Dynamic structure factor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="vasp.html">VASP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wien2k.html">Wien2k &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qe.html">Quantum ESPRESSO (QE) &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abinit.html">Abinit &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="siesta.html">Siesta &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elk.html">Elk &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="crystal.html">CRYSTAL &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dftb%2B.html">DFTB+ &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turbomole.html">TURBOMOLE &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cp2k.html">CP2K &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aims.html">FHI-aims &amp; phonopy calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="castep.html">CASTEP &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Fleur.html">Fleur &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abacus.html">ABACUS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lammps.html">LAMMPS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Phonopy API for Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-load.html">phonopy-load command</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 
     </div>
 </nav></div>
-        <div class="bd-sidebar__bottom">
-             <!-- To handle the deprecated key -->
-            
-            <div class="navbar_extra_footer">
-            Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
-            </div>
-            
-        </div>
     </div>
-    <div id="rtd-footer-container"></div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/phonopy-module.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
 </div>
 
 
-          
 
 
-          
-<!-- A tiny helper pixel to detect if we've scrolled -->
-<div class="sbt-scroll-pixel-helper"></div>
-<!-- Main content -->
-<div class="col py-0 content-container">
-    
-    <div class="header-article row sticky-top noprint">
-        
-
-
-
-<div class="col py-1 d-flex header-article-main">
-    <div class="header-article__left">
-        
-        <label for="__navigation"
-  class="headerbtn"
-  data-toggle="tooltip"
-data-placement="right"
-title="Toggle navigation"
->
-  
-
-<span class="headerbtn__icon-container">
-  <i class="fas fa-bars"></i>
-  </span>
-
-</label>
-
-        
-    </div>
-    <div class="header-article__right">
 <button onclick="toggleFullScreen()"
-  class="headerbtn"
-  data-toggle="tooltip"
-data-placement="bottom"
-title="Fullscreen mode"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
 >
   
 
-<span class="headerbtn__icon-container">
+<span class="btn__icon-container">
   <i class="fas fa-expand"></i>
   </span>
 
 </button>
 
-<div class="menu-dropdown menu-dropdown-download-buttons">
-  <button class="headerbtn menu-dropdown__trigger"
-      aria-label="Download this page">
-      <i class="fas fa-download"></i>
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
   </button>
-  <div class="menu-dropdown__content">
-    <ul>
-      <li>
-        <a href="_sources/phonopy-module.md.txt"
-   class="headerbtn"
-   data-toggle="tooltip"
-data-placement="left"
-title="Download source file"
->
-  
+`);
+</script>
 
-<span class="headerbtn__icon-container">
-  <i class="fas fa-file"></i>
-  </span>
-<span class="headerbtn__text-container">.md</span>
-</a>
-
-      </li>
-      
-      <li>
-        
-<button onclick="printPdf(this)"
-  class="headerbtn"
-  data-toggle="tooltip"
-data-placement="left"
-title="Print to PDF"
->
-  
-
-<span class="headerbtn__icon-container">
-  <i class="fas fa-file-pdf"></i>
-  </span>
-<span class="headerbtn__text-container">.pdf</span>
-</button>
-
-      </li>
-      
-    </ul>
-  </div>
-</div>
-<label for="__page-toc"
-  class="headerbtn headerbtn-page-toc"
-  
->
-  
-
-<span class="headerbtn__icon-container">
-  <i class="fas fa-list"></i>
-  </span>
-
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
 </label>
-
+</div></div>
+      
     </div>
+  
 </div>
-
-<!-- Table of contents -->
-<div class="col-md-3 bd-toc show noprint">
-    <div class="tocsection onthispage pt-5 pb-3">
-        <i class="fas fa-list"></i> Contents
-    </div>
-    <nav id="bd-toc-nav" aria-label="Page">
-        <ul class="visible nav section-nav flex-column">
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#import-modules">
-   Import modules
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#work-flow">
-   Work flow
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#pre-process">
-     Pre-process
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#post-process">
-     Post process
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#phonon-calculation">
-   Phonon calculation
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#save-parameters-phonopy-save">
-     Save parameters (
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       phonopy.save
-      </span>
-     </code>
-     )
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#shortcut-to-load-input-files-phonopy-load">
-     Shortcut to load input files (
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       phonopy.load
-      </span>
-     </code>
-     )
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#band-structure">
-     Band structure
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#mesh-sampling">
-     Mesh sampling
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#dos-and-pdos">
-     DOS and PDOS
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#thermal-properties">
-     Thermal properties
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#non-analytical-term-correction">
-     Non-analytical term correction
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#data-structure">
-   Data structure
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#eigenvectors">
-     Eigenvectors
-    </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#id1">
-       Band structure
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#id2">
-       Mesh sampling
-      </a>
-     </li>
-    </ul>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#phonopyatoms-class">
-   <code class="docutils literal notranslate">
-    <span class="pre">
-     PhonopyAtoms
-    </span>
-   </code>
-   class
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#initialization">
-     Initialization
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#variables">
-     Variables
-    </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#cell">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         cell
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#scaled-positions">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         scaled_positions
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#positions">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         positions
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#symbols">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         symbols
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#numbers">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         numbers
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#masses">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         masses
-        </span>
-       </code>
-      </a>
-     </li>
-    </ul>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#attributes">
-     Attributes
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#methods">
-     Methods
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#definitions-of-variables">
-   Definitions of variables
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#primitive-matrix">
-     Primitive matrix
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#supercell-matrix">
-     Supercell matrix
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#symmetry-search-tolerance">
-     Symmetry search tolerance
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#getting-parameters-for-non-analytical-term-correction">
-   Getting parameters for non-analytical term correction
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#phonondb-at-kyoto-university">
-   PhononDB at Kyoto university
-  </a>
- </li>
-</ul>
-
-    </nav>
 </div>
-    </div>
-    <div class="article row">
-        <div class="col pl-md-3 pl-lg-5 content-container">
-            <!-- Table of contents that is only displayed when printing the page -->
-            <div id="jb-print-docs-body" class="onlyprint">
-                <h1>Phonopy API for Python</h1>
-                <!-- Table of contents -->
-                <div id="print-main-content">
-                    <div id="jb-print-toc">
-                        
-                        <div>
-                            <h2> Contents </h2>
-                        </div>
-                        <nav aria-label="Page">
-                            <ul class="visible nav section-nav flex-column">
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#import-modules">
-   Import modules
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#work-flow">
-   Work flow
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#pre-process">
-     Pre-process
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#post-process">
-     Post process
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#phonon-calculation">
-   Phonon calculation
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#save-parameters-phonopy-save">
-     Save parameters (
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       phonopy.save
-      </span>
-     </code>
-     )
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#shortcut-to-load-input-files-phonopy-load">
-     Shortcut to load input files (
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       phonopy.load
-      </span>
-     </code>
-     )
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#band-structure">
-     Band structure
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#mesh-sampling">
-     Mesh sampling
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#dos-and-pdos">
-     DOS and PDOS
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#thermal-properties">
-     Thermal properties
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#non-analytical-term-correction">
-     Non-analytical term correction
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#data-structure">
-   Data structure
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#eigenvectors">
-     Eigenvectors
-    </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#id1">
-       Band structure
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#id2">
-       Mesh sampling
-      </a>
-     </li>
-    </ul>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#phonopyatoms-class">
-   <code class="docutils literal notranslate">
-    <span class="pre">
-     PhonopyAtoms
-    </span>
-   </code>
-   class
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#initialization">
-     Initialization
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#variables">
-     Variables
-    </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#cell">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         cell
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#scaled-positions">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         scaled_positions
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#positions">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         positions
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#symbols">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         symbols
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#numbers">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         numbers
-        </span>
-       </code>
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#masses">
-       <code class="docutils literal notranslate">
-        <span class="pre">
-         masses
-        </span>
-       </code>
-      </a>
-     </li>
-    </ul>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#attributes">
-     Attributes
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#methods">
-     Methods
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#definitions-of-variables">
-   Definitions of variables
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#primitive-matrix">
-     Primitive matrix
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#supercell-matrix">
-     Supercell matrix
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#symmetry-search-tolerance">
-     Symmetry search tolerance
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#getting-parameters-for-non-analytical-term-correction">
-   Getting parameters for non-analytical term correction
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#phonondb-at-kyoto-university">
-   PhononDB at Kyoto university
-  </a>
- </li>
-</ul>
+              
+              
 
-                        </nav>
-                    </div>
-                </div>
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Phonopy API for Python</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
             </div>
-            <main id="main-content" role="main">
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#import-modules">Import modules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#work-flow">Work flow</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-process">Pre-process</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-process">Post process</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonon-calculation">Phonon calculation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save-parameters-phonopy-save">Save parameters (<code class="docutils literal notranslate"><span class="pre">phonopy.save</span></code>)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#shortcut-to-load-input-files-phonopy-load">Shortcut to load input files (<code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code>)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-structure">Band structure</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-sampling">Mesh sampling</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos-and-pdos">DOS and PDOS</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-properties">Thermal properties</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-structure">Data structure</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#eigenvectors">Eigenvectors</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Band structure</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Mesh sampling</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopyatoms-class"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#initialization">Initialization</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#variables">Variables</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cell"><code class="docutils literal notranslate"><span class="pre">cell</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#scaled-positions"><code class="docutils literal notranslate"><span class="pre">scaled_positions</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#positions"><code class="docutils literal notranslate"><span class="pre">positions</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#symbols"><code class="docutils literal notranslate"><span class="pre">symbols</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#numbers"><code class="docutils literal notranslate"><span class="pre">numbers</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#masses"><code class="docutils literal notranslate"><span class="pre">masses</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#methods">Methods</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#definitions-of-variables">Definitions of variables</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-matrix">Primitive matrix</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supercell-matrix">Supercell matrix</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetry-search-tolerance">Symmetry search tolerance</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-parameters-for-non-analytical-term-correction">Getting parameters for non-analytical term correction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonondb-at-kyoto-university">PhononDB at Kyoto university</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
                 
-              <div>
-                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
   <section class="tex2jax_ignore mathjax_ignore" id="phonopy-api-for-python">
-<span id="phonopy-module"></span><h1>Phonopy API for Python<a class="headerlink" href="#phonopy-api-for-python" title="Permalink to this headline">#</a></h1>
-<div class="contents local topic" id="contents">
+<span id="phonopy-module"></span><h1>Phonopy API for Python<a class="headerlink" href="#phonopy-api-for-python" title="Permalink to this heading">#</a></h1>
+<nav class="contents local" id="contents">
 <ul class="simple">
 <li><p><a class="reference internal" href="#import-modules" id="id3">Import modules</a></p></li>
 <li><p><a class="reference internal" href="#work-flow" id="id4">Work flow</a></p>
@@ -929,11 +414,11 @@ title="Print to PDF"
 <li><p><a class="reference internal" href="#getting-parameters-for-non-analytical-term-correction" id="id26">Getting parameters for non-analytical term correction</a></p></li>
 <li><p><a class="reference internal" href="#phonondb-at-kyoto-university" id="id27">PhononDB at Kyoto university</a></p></li>
 </ul>
-</div>
+</nav>
 <p><strong>This is under development. Configurations may alter.</strong> Requests or suggestions
 are very welcome.</p>
 <section id="import-modules">
-<h2><a class="toc-backref" href="#id3">Import modules</a><a class="headerlink" href="#import-modules" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Import modules</a><a class="headerlink" href="#import-modules" title="Permalink to this heading">#</a></h2>
 <p>After setting the phonopy python path, the phonopy module is imported by:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy</span> <span class="kn">import</span> <span class="n">Phonopy</span>
 </pre></div>
@@ -958,10 +443,10 @@ QE,</p>
 <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> instance.</p>
 </section>
 <section id="work-flow">
-<h2><a class="toc-backref" href="#id4">Work flow</a><a class="headerlink" href="#work-flow" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Work flow</a><a class="headerlink" href="#work-flow" title="Permalink to this heading">#</a></h2>
 <p>The work flow is schematically shown in <a class="reference internal" href="workflow.html#workflow"><span class="std std-ref">Work flow</span></a>.</p>
 <section id="pre-process">
-<h3><a class="toc-backref" href="#id5">Pre-process</a><a class="headerlink" href="#pre-process" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id5" role="doc-backlink">Pre-process</a><a class="headerlink" href="#pre-process" title="Permalink to this heading">#</a></h3>
 <p>The first step is to create a <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> object with at least two arguments, a
 unit cell (<code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> object, see <a class="reference internal" href="#phonopy-atoms"><span class="std std-ref">PhonopyAtoms class</span></a>) and a supercell
 matrix (3x3 array, see <a class="reference internal" href="#variable-supercell-matrix"><span class="std std-ref">Supercell matrix</span></a>). In the following
@@ -1018,7 +503,7 @@ example:</p>
 <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.</p>
 </section>
 <section id="post-process">
-<h3><a class="toc-backref" href="#id6">Post process</a><a class="headerlink" href="#post-process" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Post process</a><a class="headerlink" href="#post-process" title="Permalink to this heading">#</a></h3>
 <p>Forces on atoms are supposed to be obtained by running force calculator (e.g.
 VASP) with each supercell with a displacement. Then the forces in the
 calculation outputs have to be collected by users. However output parsers for
@@ -1071,9 +556,9 @@ details at <a class="reference internal" href="input-files.html#file-force-const
 </section>
 </section>
 <section id="phonon-calculation">
-<h2><a class="toc-backref" href="#id7">Phonon calculation</a><a class="headerlink" href="#phonon-calculation" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Phonon calculation</a><a class="headerlink" href="#phonon-calculation" title="Permalink to this heading">#</a></h2>
 <section id="save-parameters-phonopy-save">
-<span id="phonopy-save-parameters"></span><h3><a class="toc-backref" href="#id8">Save parameters (<code class="docutils literal notranslate"><span class="pre">phonopy.save</span></code>)</a><a class="headerlink" href="#save-parameters-phonopy-save" title="Permalink to this headline">#</a></h3>
+<span id="phonopy-save-parameters"></span><h3><a class="toc-backref" href="#id8" role="doc-backlink">Save parameters (<code class="docutils literal notranslate"><span class="pre">phonopy.save</span></code>)</a><a class="headerlink" href="#save-parameters-phonopy-save" title="Permalink to this heading">#</a></h3>
 <p>Basic information and parameters needed for phonon calculation are saved into a
 file by <code class="docutils literal notranslate"><span class="pre">phonopy.save</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
@@ -1088,7 +573,7 @@ If force constants are needed to be written in the yaml file, the argument
 </div>
 </section>
 <section id="shortcut-to-load-input-files-phonopy-load">
-<span id="phonopy-load"></span><h3><a class="toc-backref" href="#id9">Shortcut to load input files (<code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code>)</a><a class="headerlink" href="#shortcut-to-load-input-files-phonopy-load" title="Permalink to this headline">#</a></h3>
+<span id="phonopy-load"></span><h3><a class="toc-backref" href="#id9" role="doc-backlink">Shortcut to load input files (<code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code>)</a><a class="headerlink" href="#shortcut-to-load-input-files-phonopy-load" title="Permalink to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code> is a convenient python method to create <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> instance
 loading forces, displacements, and parameters for non-analytical term
 correction. The details are found in the docstring that can be seen by (e.g., in
@@ -1163,7 +648,7 @@ easily plotted by</p>
 </div>
 </section>
 <section id="band-structure">
-<h3><a class="toc-backref" href="#id10">Band structure</a><a class="headerlink" href="#band-structure" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Band structure</a><a class="headerlink" href="#band-structure" title="Permalink to this heading">#</a></h3>
 <p>Set band paths (<code class="docutils literal notranslate"><span class="pre">run_band_structure()</span></code>) and get the results
 (<code class="docutils literal notranslate"><span class="pre">get_band_structure_dict()</span></code>).</p>
 <p>A dictionary with <code class="docutils literal notranslate"><span class="pre">qpoints</span></code>, <code class="docutils literal notranslate"><span class="pre">distances</span></code>, <code class="docutils literal notranslate"><span class="pre">frequencies</span></code>, <code class="docutils literal notranslate"><span class="pre">eigenvectors</span></code>,
@@ -1219,7 +704,7 @@ eigenvectors by:</p>
 <p>To use this method, <code class="docutils literal notranslate"><span class="pre">seekpath</span></code> python module is needed.</p>
 </section>
 <section id="mesh-sampling">
-<h3><a class="toc-backref" href="#id11">Mesh sampling</a><a class="headerlink" href="#mesh-sampling" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Mesh sampling</a><a class="headerlink" href="#mesh-sampling" title="Permalink to this heading">#</a></h3>
 <p>Set sampling mesh (<code class="docutils literal notranslate"><span class="pre">set_mesh</span></code>) in reciprocal space. The irreducible <em>q</em>-points
 and corresponding <em>q</em>-point weights, eigenvalues, and eigenvectors are obtained
 by <code class="docutils literal notranslate"><span class="pre">get_mesh_dict()</span></code>. <code class="docutils literal notranslate"><span class="pre">mesh</span></code> gives the sampling mesh with Monkhorst-Pack scheme.
@@ -1250,7 +735,7 @@ measure as explained at <a class="reference internal" href="setting-tags.html#mp
 </div>
 </section>
 <section id="dos-and-pdos">
-<h3><a class="toc-backref" href="#id12">DOS and PDOS</a><a class="headerlink" href="#dos-and-pdos" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">DOS and PDOS</a><a class="headerlink" href="#dos-and-pdos" title="Permalink to this heading">#</a></h3>
 <p>Before starting mesh sampling has to be finished. Then set parameters
 (<code class="docutils literal notranslate"><span class="pre">run_total_dos()</span></code> or <code class="docutils literal notranslate"><span class="pre">run_projected_dos()</span></code>) and write the results into files
 (<code class="docutils literal notranslate"><span class="pre">write_total_dos()</span></code> and <code class="docutils literal notranslate"><span class="pre">write_projected_dos()</span></code>). In the case of PDOS, the
@@ -1277,7 +762,7 @@ eigenvectors have to be calculated in the mesh sampling. To get the results
 </div>
 </section>
 <section id="thermal-properties">
-<h3><a class="toc-backref" href="#id13">Thermal properties</a><a class="headerlink" href="#thermal-properties" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Thermal properties</a><a class="headerlink" href="#thermal-properties" title="Permalink to this heading">#</a></h3>
 <p>Before starting the thermal property calculation, the mesh sampling calculation
 has to be done in the <strong>THz unit</strong>. The unit conversion factor for phonon
 frequency is set in the pre-process of Phonopy with the <code class="docutils literal notranslate"><span class="pre">factor</span></code> keyword.
@@ -1305,7 +790,7 @@ energy, entropy, and heat capacity with keys <code class="docutils literal notra
 </div>
 </section>
 <section id="non-analytical-term-correction">
-<h3><a class="toc-backref" href="#id14">Non-analytical term correction</a><a class="headerlink" href="#non-analytical-term-correction" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">Non-analytical term correction</a><a class="headerlink" href="#non-analytical-term-correction" title="Permalink to this heading">#</a></h3>
 <p>To apply non-analytical term correction, Born effective charge tensors for all
 atoms in <strong>primitive</strong> cell, dielectric constant tensor, and the unit conversion
 factor have to be correctly set. The tensors are given in Cartesian coordinates.</p>
@@ -1327,16 +812,16 @@ factor have to be correctly set. The tensors are given in Cartesian coordinates.
 </section>
 </section>
 <section id="data-structure">
-<h2><a class="toc-backref" href="#id15">Data structure</a><a class="headerlink" href="#data-structure" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id15" role="doc-backlink">Data structure</a><a class="headerlink" href="#data-structure" title="Permalink to this heading">#</a></h2>
 <section id="eigenvectors">
-<h3><a class="toc-backref" href="#id16">Eigenvectors</a><a class="headerlink" href="#eigenvectors" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">Eigenvectors</a><a class="headerlink" href="#eigenvectors" title="Permalink to this heading">#</a></h3>
 <p>Eigenvectors are given as the column vectors. Internally phonopy uses
 <code class="docutils literal notranslate"><span class="pre">numpy.linalg.eigh</span></code> and <code class="docutils literal notranslate"><span class="pre">eigh</span></code> is a wrapper of LAPACK. So eigenvectors follow
 the convention of LAPACK, which can be shown at
 <a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.eigh.html">http://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.eigh.html</a></p>
 <p>Eigenvectors corresponding to phonopy yaml output are obtained as follows.</p>
 <section id="id1">
-<h4>Band structure<a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h4>
+<h4>Band structure<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">eigvecs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">eigvecs_on_path</span> <span class="ow">in</span> <span class="n">eigvecs</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">eigvecs_at_q</span> <span class="ow">in</span> <span class="n">eigvecs_on_path</span><span class="p">:</span>
@@ -1346,7 +831,7 @@ the convention of LAPACK, which can be shown at
 </div>
 </section>
 <section id="id2">
-<h4>Mesh sampling<a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h4>
+<h4>Mesh sampling<a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">eigvecs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">eigvecs_at_q</span> <span class="ow">in</span> <span class="n">eigvecs</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="n">eigvecs_at_q</span><span class="o">.</span><span class="n">T</span><span class="p">:</span>
@@ -1357,9 +842,9 @@ the convention of LAPACK, which can be shown at
 </section>
 </section>
 <section id="phonopyatoms-class">
-<span id="phonopy-atoms"></span><h2><a class="toc-backref" href="#id17"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class</a><a class="headerlink" href="#phonopyatoms-class" title="Permalink to this headline">#</a></h2>
+<span id="phonopy-atoms"></span><h2><a class="toc-backref" href="#id17" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class</a><a class="headerlink" href="#phonopyatoms-class" title="Permalink to this heading">#</a></h2>
 <section id="initialization">
-<h3><a class="toc-backref" href="#id18">Initialization</a><a class="headerlink" href="#initialization" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id18" role="doc-backlink">Initialization</a><a class="headerlink" href="#initialization" title="Permalink to this heading">#</a></h3>
 <p>The usable keywords in the initialization are:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cell</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="n">scaled_positions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1378,25 +863,25 @@ the convention of LAPACK, which can be shown at
 </ul>
 </section>
 <section id="variables">
-<span id="phonopy-atoms-variables"></span><h3><a class="toc-backref" href="#id19">Variables</a><a class="headerlink" href="#variables" title="Permalink to this headline">#</a></h3>
+<span id="phonopy-atoms-variables"></span><h3><a class="toc-backref" href="#id19" role="doc-backlink">Variables</a><a class="headerlink" href="#variables" title="Permalink to this heading">#</a></h3>
 <p>The following variables are implemented in the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class in
 <code class="docutils literal notranslate"><span class="pre">phonopy/structure/atoms.py</span></code>.</p>
 <section id="cell">
-<span id="phonopy-atoms-cell"></span><h4><code class="docutils literal notranslate"><span class="pre">cell</span></code><a class="headerlink" href="#cell" title="Permalink to this headline">#</a></h4>
+<span id="phonopy-atoms-cell"></span><h4><code class="docutils literal notranslate"><span class="pre">cell</span></code><a class="headerlink" href="#cell" title="Permalink to this heading">#</a></h4>
 <p>Basis vectors are given in the matrix form in Cartesian coordinates.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span> <span class="p">[</span> <span class="n">a_x</span><span class="p">,</span> <span class="n">a_y</span><span class="p">,</span> <span class="n">a_z</span> <span class="p">],</span> <span class="p">[</span> <span class="n">b_x</span><span class="p">,</span> <span class="n">b_y</span><span class="p">,</span> <span class="n">b_z</span> <span class="p">],</span> <span class="p">[</span> <span class="n">c_x</span><span class="p">,</span> <span class="n">c_y</span><span class="p">,</span> <span class="n">c_z</span> <span class="p">]</span> <span class="p">]</span>
 </pre></div>
 </div>
 </section>
 <section id="scaled-positions">
-<h4><code class="docutils literal notranslate"><span class="pre">scaled_positions</span></code><a class="headerlink" href="#scaled-positions" title="Permalink to this headline">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">scaled_positions</span></code><a class="headerlink" href="#scaled-positions" title="Permalink to this heading">#</a></h4>
 <p>Atomic positions in fractional coordinates.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span> <span class="p">[</span> <span class="n">x1_a</span><span class="p">,</span> <span class="n">x1_b</span><span class="p">,</span> <span class="n">x1_c</span> <span class="p">],</span> <span class="p">[</span> <span class="n">x2_a</span><span class="p">,</span> <span class="n">x2_b</span><span class="p">,</span> <span class="n">x2_c</span> <span class="p">],</span> <span class="p">[</span> <span class="n">x3_a</span><span class="p">,</span> <span class="n">x3_b</span><span class="p">,</span> <span class="n">x3_c</span> <span class="p">],</span> <span class="o">...</span> <span class="p">]</span>
 </pre></div>
 </div>
 </section>
 <section id="positions">
-<h4><code class="docutils literal notranslate"><span class="pre">positions</span></code><a class="headerlink" href="#positions" title="Permalink to this headline">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">positions</span></code><a class="headerlink" href="#positions" title="Permalink to this heading">#</a></h4>
 <p>Cartesian positions of atoms.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">scaled_positions</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
 </pre></div>
@@ -1404,7 +889,7 @@ the convention of LAPACK, which can be shown at
 <p>where <code class="docutils literal notranslate"><span class="pre">np</span></code> means the numpy module (<code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">numpy</span> <span class="pre">as</span> <span class="pre">np</span></code>).</p>
 </section>
 <section id="symbols">
-<h4><code class="docutils literal notranslate"><span class="pre">symbols</span></code><a class="headerlink" href="#symbols" title="Permalink to this headline">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">symbols</span></code><a class="headerlink" href="#symbols" title="Permalink to this heading">#</a></h4>
 <p>Chemical symbols, e.g.,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="s1">&#39;Zn&#39;</span><span class="p">,</span> <span class="s1">&#39;Zn&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">]</span>
 </pre></div>
@@ -1412,7 +897,7 @@ the convention of LAPACK, which can be shown at
 <p>for the ZnO unit cell.</p>
 </section>
 <section id="numbers">
-<h4><code class="docutils literal notranslate"><span class="pre">numbers</span></code><a class="headerlink" href="#numbers" title="Permalink to this headline">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">numbers</span></code><a class="headerlink" href="#numbers" title="Permalink to this heading">#</a></h4>
 <p>Atomic numbers, e.g.,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">]</span>
 </pre></div>
@@ -1420,7 +905,7 @@ the convention of LAPACK, which can be shown at
 <p>for the ZnO unit cell.</p>
 </section>
 <section id="masses">
-<h4><code class="docutils literal notranslate"><span class="pre">masses</span></code><a class="headerlink" href="#masses" title="Permalink to this headline">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">masses</span></code><a class="headerlink" href="#masses" title="Permalink to this heading">#</a></h4>
 <p>Atomic masses, e.g.,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mf">65.38</span><span class="p">,</span> <span class="mf">65.38</span><span class="p">,</span> <span class="mf">15.9994</span><span class="p">,</span> <span class="mf">15.9994</span><span class="p">]</span>
 </pre></div>
@@ -1429,7 +914,7 @@ the convention of LAPACK, which can be shown at
 </section>
 </section>
 <section id="attributes">
-<h3><a class="toc-backref" href="#id20">Attributes</a><a class="headerlink" href="#attributes" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id20" role="doc-backlink">Attributes</a><a class="headerlink" href="#attributes" title="Permalink to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cell</span>
 <span class="n">positions</span>
 <span class="n">scaled_positions</span>
@@ -1443,7 +928,7 @@ the convention of LAPACK, which can be shown at
 <p>where <code class="docutils literal notranslate"><span class="pre">volume</span></code> is the getter only.</p>
 </section>
 <section id="methods">
-<h3><a class="toc-backref" href="#id21">Methods</a><a class="headerlink" href="#methods" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id21" role="doc-backlink">Methods</a><a class="headerlink" href="#methods" title="Permalink to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">unitcell.get_number_of_atoms()</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">len(unitcell)</span></code>. An instance
 can be deep-copied by <code class="docutils literal notranslate"><span class="pre">unitcell.copy()</span></code>. Human-readable crystal structure in
 Yaml format is shown by <code class="docutils literal notranslate"><span class="pre">print(unitcell)</span></code>. <code class="docutils literal notranslate"><span class="pre">unitcell.to_tuple</span></code> converts to
@@ -1452,9 +937,9 @@ spglib crystal structure
 </section>
 </section>
 <section id="definitions-of-variables">
-<h2><a class="toc-backref" href="#id22">Definitions of variables</a><a class="headerlink" href="#definitions-of-variables" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id22" role="doc-backlink">Definitions of variables</a><a class="headerlink" href="#definitions-of-variables" title="Permalink to this heading">#</a></h2>
 <section id="primitive-matrix">
-<span id="variable-primitive-matrix"></span><h3><a class="toc-backref" href="#id23">Primitive matrix</a><a class="headerlink" href="#primitive-matrix" title="Permalink to this headline">#</a></h3>
+<span id="variable-primitive-matrix"></span><h3><a class="toc-backref" href="#id23" role="doc-backlink">Primitive matrix</a><a class="headerlink" href="#primitive-matrix" title="Permalink to this heading">#</a></h3>
 <p>Primitive matrix <span class="math notranslate nohighlight">\(M_\mathrm{p}\)</span> is a tranformation matrix from lattice
 vectors to those of a primitive cell if there exists the primitive cell in the
 lattice vectors. Following a crystallography convention, the transformation is
@@ -1479,7 +964,7 @@ relies on the <code class="docutils literal notranslate"><span class="pre">Phono
 </div>
 </section>
 <section id="supercell-matrix">
-<span id="variable-supercell-matrix"></span><h3><a class="toc-backref" href="#id24">Supercell matrix</a><a class="headerlink" href="#supercell-matrix" title="Permalink to this headline">#</a></h3>
+<span id="variable-supercell-matrix"></span><h3><a class="toc-backref" href="#id24" role="doc-backlink">Supercell matrix</a><a class="headerlink" href="#supercell-matrix" title="Permalink to this heading">#</a></h3>
 <p>Supercell matrix <span class="math notranslate nohighlight">\(M_\mathrm{s}\)</span> is a transformation matrix from lattice
 vectors to those of a super cell. Following a crystallography convention, the
 transformation is given by</p>
@@ -1503,14 +988,14 @@ relies on the <code class="docutils literal notranslate"><span class="pre">Phono
 </div>
 </section>
 <section id="symmetry-search-tolerance">
-<h3><a class="toc-backref" href="#id25">Symmetry search tolerance</a><a class="headerlink" href="#symmetry-search-tolerance" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id25" role="doc-backlink">Symmetry search tolerance</a><a class="headerlink" href="#symmetry-search-tolerance" title="Permalink to this heading">#</a></h3>
 <p>Symmetry search tolerance (often the name <code class="docutils literal notranslate"><span class="pre">symprec</span></code> is used in phonopy) is used
 to determine symmetry operations of the crystal structures. The physical unit
 follows that of input crystal structure.</p>
 </section>
 </section>
 <section id="getting-parameters-for-non-analytical-term-correction">
-<h2><a class="toc-backref" href="#id26">Getting parameters for non-analytical term correction</a><a class="headerlink" href="#getting-parameters-for-non-analytical-term-correction" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id26" role="doc-backlink">Getting parameters for non-analytical term correction</a><a class="headerlink" href="#getting-parameters-for-non-analytical-term-correction" title="Permalink to this heading">#</a></h2>
 <p>Parameters for non-analytical term correction may be made as follows. This
 example assumes that the user knows what are the unit cell and primitive cell
 and that the Born effective charge and dielectric constant were calculated using
@@ -1545,7 +1030,7 @@ VASP code by the unit cell.</p>
 </div>
 </section>
 <section id="phonondb-at-kyoto-university">
-<h2><a class="toc-backref" href="#id27">PhononDB at Kyoto university</a><a class="headerlink" href="#phonondb-at-kyoto-university" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id27" role="doc-backlink">PhononDB at Kyoto university</a><a class="headerlink" href="#phonondb-at-kyoto-university" title="Permalink to this heading">#</a></h2>
 <p>The phonon calculation database at
 <a class="reference external" href="http://phonondb.mtl.kyoto-u.ac.jp/ph20180417/index.html">http://phonondb.mtl.kyoto-u.ac.jp/ph20180417/index.html</a> can be easily used from
 phonopy-API. Downloading the raw data, e.g., <code class="docutils literal notranslate"><span class="pre">mp-361-20180417.tar.lzma</span></code> and
@@ -1571,48 +1056,147 @@ expand it. In the directory <code class="docutils literal notranslate"><span cla
 </section>
 
 
-              </div>
+                </article>
               
-            </main>
-            <footer class="footer-article noprint">
-                
-    <!-- Previous / next buttons -->
-<div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="external-tools.html" title="previous page">
-        <i class="fas fa-angle-left"></i>
-        <div class="prev-next-info">
-            <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">External tools</p>
-        </div>
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="external-tools.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">External tools</p>
+      </div>
     </a>
-    <a class='right-next' id="next-link" href="phonopy-load.html" title="next page">
-    <div class="prev-next-info">
+    <a class="right-next"
+       href="phonopy-load.html"
+       title="next page">
+      <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
         <p class="prev-next-title">phonopy-load command</p>
-    </div>
-    <i class="fas fa-angle-right"></i>
-    </a>
-</div>
-            </footer>
-        </div>
-    </div>
-    <div class="footer-content row">
-        <footer class="col footer"><p>
-  
-      &copy; Copyright 2009, Atsushi Togo.<br/>
-</p>
-        </footer>
-    </div>
-    
-</div>
-
-
       </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#import-modules">Import modules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#work-flow">Work flow</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-process">Pre-process</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#post-process">Post process</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonon-calculation">Phonon calculation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#save-parameters-phonopy-save">Save parameters (<code class="docutils literal notranslate"><span class="pre">phonopy.save</span></code>)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#shortcut-to-load-input-files-phonopy-load">Shortcut to load input files (<code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code>)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#band-structure">Band structure</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mesh-sampling">Mesh sampling</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dos-and-pdos">DOS and PDOS</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-properties">Thermal properties</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-structure">Data structure</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#eigenvectors">Eigenvectors</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Band structure</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Mesh sampling</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopyatoms-class"><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#initialization">Initialization</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#variables">Variables</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cell"><code class="docutils literal notranslate"><span class="pre">cell</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#scaled-positions"><code class="docutils literal notranslate"><span class="pre">scaled_positions</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#positions"><code class="docutils literal notranslate"><span class="pre">positions</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#symbols"><code class="docutils literal notranslate"><span class="pre">symbols</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#numbers"><code class="docutils literal notranslate"><span class="pre">numbers</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#masses"><code class="docutils literal notranslate"><span class="pre">masses</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#methods">Methods</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#definitions-of-variables">Definitions of variables</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-matrix">Primitive matrix</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supercell-matrix">Supercell matrix</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetry-search-tolerance">Symmetry search tolerance</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-parameters-for-non-analytical-term-correction">Getting parameters for non-analytical term correction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonondb-at-kyoto-university">PhononDB at Kyoto university</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2009, Atsushi Togo.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
     </div>
+  </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <script src="_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
 
-
+  <footer class="bd-footer">
+  </footer>
   </body>
 </html>
