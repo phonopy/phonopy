@@ -10,33 +10,73 @@ from phonopy.interface.phonopy_yaml import (
     PhonopyYaml,
     PhonopyYamlLoader,
     load_phonopy_yaml,
+    read_cell_yaml,
+    read_phonopy_yaml,
 )
 from phonopy.interface.vasp import read_vasp
+from phonopy.structure.cells import get_primitive
 from phonopy.structure.dataset import get_displacements_and_forces
 
 cwd = Path(__file__).parent
 
 
-def test_read_poscar_yaml():
+def test_read_poscar_yaml(helper_methods):
     """Test to parse PhonopyAtoms.__str__ output."""
     filename = cwd / "NaCl-vasp.yaml"
     cell = _get_unitcell(filename)
-    _compare(cell)
+
+    _compare_NaCl_convcell(cell, helper_methods.compare_cells_with_order)
 
 
-def test_read_phonopy_yaml():
+def test_read_phonopy_yaml(helper_methods):
     """Test to parse phonopy.yaml like file."""
     filename = cwd / "phonopy.yaml"
+    cell = read_phonopy_yaml(filename).unitcell
+    _compare_NaCl_convcell(cell, helper_methods.compare_cells_with_order)
+
+
+def test_read_phonopy_yaml_with_stream(helper_methods):
+    """Test to parse phonopy.yaml like file stream."""
+    filename = cwd / "phonopy.yaml"
+    with open(filename) as fp:
+        cell = read_phonopy_yaml(fp).unitcell
+        _compare_NaCl_convcell(cell, helper_methods.compare_cells_with_order)
+
+
+def test_PhonopyYaml_read(helper_methods):
+    """Test to parse phonopy.yaml like file using PhonopyYaml.read()."""
+    filename = cwd / "phonopy.yaml"
     cell = _get_unitcell(filename)
-    _compare(cell)
+    _compare_NaCl_convcell(cell, helper_methods.compare_cells_with_order)
 
 
-def test_read_phonopy_yaml_with_stream():
-    """Test to parse phonopy.yaml like file."""
+def test_PhonopyYaml_read_with_stream(helper_methods):
+    """Test to parse phonopy.yaml like file stream using PhonopyYaml.read()."""
     filename = cwd / "phonopy.yaml"
     with open(filename) as fp:
         cell = _get_unitcell(fp)
-        _compare(cell)
+        _compare_NaCl_convcell(cell, helper_methods.compare_cells_with_order)
+
+
+def test_read_cell_yaml(helper_methods):
+    """Test to parse phonopy_symcells.yaml like file."""
+    filename = cwd / "phonopy_symcells_NaCl.yaml"
+    cell = read_cell_yaml(filename)
+    _compare_NaCl_convcell(cell, helper_methods.compare_cells)
+
+    pcell = read_cell_yaml(filename, cell_type="primitive")
+    helper_methods.compare_cells(pcell, get_primitive(cell, "F"))
+
+
+def test_read_cell_yaml_with_stream(helper_methods):
+    """Test to parse phonopy_symcells.yaml like file."""
+    filename = cwd / "phonopy_symcells_NaCl.yaml"
+    with open(filename) as fp:
+        cell = _get_unitcell(fp)
+        _compare_NaCl_convcell(cell, helper_methods.compare_cells)
+        fp.seek(0)
+        pcell = read_cell_yaml(fp, cell_type="primitive")
+        helper_methods.compare_cells(pcell, get_primitive(cell, "F"))
 
 
 def test_write_phonopy_yaml(ph_nacl_nofcsym: Phonopy, helper_methods):
@@ -124,14 +164,9 @@ def test_load_nac_yaml():
     assert isinstance(pyl.data.nac_params["method"], str)
 
 
-def _compare(cell):
+def _compare_NaCl_convcell(cell, compare_cells):
     cell_ref = read_vasp(cwd / ".." / "POSCAR_NaCl")
-    assert (np.abs(cell.cell - cell_ref.cell) < 1e-5).all()
-    diff_pos = cell.scaled_positions - cell_ref.scaled_positions
-    diff_pos -= np.rint(diff_pos)
-    assert (np.abs(diff_pos) < 1e-5).all()
-    for s, s_r in zip(cell.symbols, cell_ref.symbols):
-        assert s == s_r
+    compare_cells(cell, cell_ref)
 
 
 def _get_unitcell(filename):
