@@ -32,7 +32,8 @@ jobs:
       run: |
         conda activate test
         conda install --yes -c conda-forge python=${{ matrix.python-version }}
-        conda install --yes -c conda-forge c-compiler matplotlib-base pyyaml scipy numpy spglib h5py pip pytest codecov pytest-cov
+        # conda install --yes -c conda-forge c-compiler
+        conda install --yes -c conda-forge matplotlib-base pyyaml scipy numpy spglib h5py pip pytest codecov pytest-cov
     - name: Install cp2k-input-tools
       run: |
         conda activate test
