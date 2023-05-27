@@ -4,6 +4,7 @@ on:
   push:
     branches-ignore:
     - publish-gh-pages
+    - develop
     - master
     - rc
   pull_request:
@@ -17,7 +18,7 @@ jobs:
         shell: bash -l {0}
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
 
     steps:
     - uses: actions/checkout@v2
@@ -46,6 +47,6 @@ jobs:
         conda activate test
         pytest --cov=./ --cov-report=xml
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v3
       with:
         verbose: true
