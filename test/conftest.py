@@ -259,14 +259,14 @@ def convcell_cr() -> PhonopyAtoms:
 
 
 @pytest.fixture(scope="session")
-def helper_methods():
+def helper_methods() -> Callable:
     """Return methods to compare cells."""
 
     class HelperMethods:
         @classmethod
         def compare_cells_with_order(
             cls, cell: PhonopyAtoms, cell_ref: PhonopyAtoms, symprec=1e-5
-        ) -> Callable:
+        ):
             """Compare two cells with the same orders of positions."""
             np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=symprec)
             cls.compare_positions_with_order(
@@ -282,9 +282,7 @@ def helper_methods():
                 )
 
         @classmethod
-        def compare_positions_with_order(
-            cls, pos, pos_ref, lattice, symprec=1e-5
-        ) -> Callable:
+        def compare_positions_with_order(cls, pos, pos_ref, lattice, symprec=1e-5):
             """Compare two lists of positions and orders.
 
             lattice :
@@ -299,7 +297,7 @@ def helper_methods():
         @classmethod
         def compare_cells(
             cls, cell: PhonopyAtoms, cell_ref: PhonopyAtoms, symprec=1e-5
-        ) -> Callable:
+        ):
             """Compare two cells where position orders can be different."""
             np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=symprec)
 
@@ -322,7 +320,7 @@ def helper_methods():
         @classmethod
         def compare_positions_in_arbitrary_order(
             cls, pos_in, pos_ref, lattice, symprec=1e-5
-        ) -> Callable:
+        ):
             """Compare two sets of positions irrespective of orders.
 
             lattice :

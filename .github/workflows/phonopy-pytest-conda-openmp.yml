@@ -21,19 +21,15 @@ jobs:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: conda-incubator/setup-miniconda@v2
       with:
-        auto-update-conda: true
-        channels: conda-forge
-        channel-priority: strict
-        python-version: ${{ matrix.python-version }}
+        miniforge-version: latest
     - name: Install dependencies
       run: |
         conda activate test
         conda install --yes -c conda-forge python=${{ matrix.python-version }}
-        # conda install --yes -c conda-forge c-compiler
-        conda install --yes -c conda-forge matplotlib-base pyyaml scipy numpy spglib h5py pip pytest codecov pytest-cov pytest cmake
+        conda install --yes -c conda-forge matplotlib-base pyyaml scipy numpy spglib h5py pip pytest codecov pytest-cov pytest cmake c-compiler
     - name: Install cp2k-input-tools
       run: |
         conda activate test
