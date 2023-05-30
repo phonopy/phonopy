@@ -38,6 +38,7 @@ import sys
 import warnings
 import xml.etree.cElementTree as etree
 import xml.parsers.expat
+from collections import Counter, abc
 from io import StringIO
 from typing import Optional
 
@@ -90,20 +91,49 @@ def get_scaled_positions_lines(scaled_positions):
     return "\n".join(_get_scaled_positions_lines(scaled_positions))
 
 
-def sort_positions_by_symbols(symbols, positions):
-    """Sort atomic positions by symbols."""
-    from collections import Counter
+def sort_positions_by_symbols(symbols: abc.Sequence, positions: np.ndarray):
+    """Sort atomic positions by symbols.
 
-    # unique symbols in order of first appearance in 'symbols'
-    reduced_symbols = _unique_stable(symbols)
+    Sort positions by symbols (using the order defined by reduced_symbols)
+    using a stable sort algorithm. Written by @ExpHP, refactored by @atztogo.
 
-    # counts of each symbol
+    symbols = ["A", "B", "A", "B"]
+    reduced_symbols = ["A", "B"]
+    sort_keys = [0, 1, 0, 1]
+    perm = [0, 2, 1, 3]
+    counts_dict = {'A': 2, 'B': 2}
+    counts_list = [2, 2]
+
+    Parameters
+    ----------
+    symbols : list[str] or list[int] or np.ndarray[int]
+        Sequence of hashable objects. This may be a list of chemical symbols
+        or numbers.
+    positions : np.ndarray
+        Atomic positions.
+
+    Returns
+    -------
+    sorted_positions = positions[perm]
+    For the others, see the example above.
+
+    Functions
+    ---------
+    _argsort_stable :
+        Alternative to `np.argsort(keys)` that uses a stable sorting algorithm
+        so that indices tied for the same value are listed in increasing order.
+
+    """
+
+    def _argsort_stable(keys):
+        # Python's built-in sort algorithm is a stable sort
+        return sorted(range(len(keys)), key=keys.__getitem__)
+
+    # dict in Python 3.7 or later is ordered dict.
+    reduced_symbols = list(dict.fromkeys(symbols))
     counts_dict = Counter(symbols)
+    # list(counts_dict.values()) may be used...
     counts_list = [counts_dict[s] for s in reduced_symbols]
-
-    # sort positions by symbol (using the order defined by reduced_symbols).
-    # using a stable sort algorithm matches the behavior of previous versions
-    #  of phonopy (but is not otherwise necessary)
     sort_keys = [reduced_symbols.index(i) for i in symbols]
     perm = _argsort_stable(sort_keys)
     sorted_positions = positions[perm]
@@ -341,7 +371,7 @@ def write_supercells_with_displacements(
 
 
 def _get_vasp_structure_header_lines(cell: PhonopyAtoms, is_vasp5=True):
-    (num_atoms, symbols, scaled_positions, sort_list) = sort_positions_by_symbols(
+    (num_atoms, symbols, scaled_positions, _) = sort_positions_by_symbols(
         cell.symbols, cell.scaled_positions
     )
     lines = []
@@ -368,26 +398,6 @@ def _get_scaled_positions_lines(scaled_positions):
         " %19.16f %19.16f %19.16f" % tuple(vec)
         for vec in unit_positions.tolist()  # lists are faster for iteration
     ]
-
-
-# Get all unique values from a iterable.
-# Unlike `list(set(iterable))`, this is a stable algorithm;
-# items are returned in order of their first appearance.
-def _unique_stable(iterable):
-    seen_list = []
-    seen_set = set()
-    for x in iterable:
-        if x not in seen_set:
-            seen_set.add(x)
-            seen_list.append(x)
-    return seen_list
-
-
-# Alternative to `np.argsort(keys)` that uses a stable sorting algorithm
-# so that indices tied for the same value are listed in increasing order
-def _argsort_stable(keys):
-    # Python's built-in sort algorithm is a stable sort
-    return sorted(range(len(keys)), key=keys.__getitem__)
 
 
 #
