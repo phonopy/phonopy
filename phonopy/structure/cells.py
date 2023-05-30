@@ -1686,21 +1686,20 @@ def get_primitive_matrix_by_centring(centring):
         return None
 
 
-def guess_primitive_matrix(unitcell, symprec=1e-5):
+def guess_primitive_matrix(unitcell: PhonopyAtoms, symprec: float = 1e-5):
     """Guess primitive matrix from crystal symmetry."""
     if unitcell.magnetic_moments is not None:
         msg = "Can not be used with the unit cell having magnetic moments."
         raise RuntimeError(msg)
 
-    cell = (unitcell.cell, unitcell.scaled_positions, unitcell.numbers)
-    dataset = spglib.get_symmetry_dataset(cell, symprec=1e-5)
+    dataset = spglib.get_symmetry_dataset(unitcell.totuple(), symprec=symprec)
     tmat = dataset["transformation_matrix"]
     centring = dataset["international"][0]
     pmat = get_primitive_matrix_by_centring(centring)
     return np.array(np.dot(np.linalg.inv(tmat), pmat), dtype="double", order="C")
 
 
-def shape_supercell_matrix(smat):
+def shape_supercell_matrix(smat: Optional[Union[int, float, np.ndarray]]):
     """Reshape supercell matrix."""
     if smat is None:
         _smat = np.eye(3, dtype="intc", order="C")
@@ -1794,7 +1793,7 @@ def estimate_supercell_matrix_from_pointgroup(
 def _get_multiplicity_abc(num_atoms, lengths, max_num_atoms, max_iter=20):
     multi = [1, 1, 1]
 
-    for i in range(max_iter):
+    for _ in range(max_iter):
         l_super = np.multiply(multi, lengths)
         min_index = np.argmin(l_super)
         multi[min_index] += 1
@@ -1809,7 +1808,7 @@ def _get_multiplicity_ac(num_atoms, lengths, max_num_atoms, max_iter=20):
     a = lengths[0]
     c = lengths[2]
 
-    for i in range(max_iter):
+    for _ in range(max_iter):
         l_super = np.multiply(multi, [a, c])
         min_index = np.argmin(l_super)
         multi[min_index] += 1
@@ -1821,7 +1820,7 @@ def _get_multiplicity_ac(num_atoms, lengths, max_num_atoms, max_iter=20):
 
 def _get_multiplicity_a(num_atoms, lengths, max_num_atoms, max_iter=20):
     multi = 1
-    for i in range(max_iter):
+    for _ in range(max_iter):
         multi += 1
         if num_atoms * multi**3 > max_num_atoms:
             multi -= 1
