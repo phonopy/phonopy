@@ -166,7 +166,7 @@ class GruneisenBandStructure(GruneisenBase):
                 self._write_yaml(w, comment, is_binary=True)
 
     def _write_yaml(self, w, comment, is_binary=False):
-        natom = self._cell.get_number_of_atoms()
+        natom = len(self._cell)
         rec_lattice = np.linalg.inv(self._cell.cell)  # column vecs
         nq_paths = []
         for qpoints in self._paths:
@@ -201,33 +201,129 @@ class GruneisenBandStructure(GruneisenBase):
         text.append("natom: %-7d" % (natom))
         text.append(str(self._cell))
         text.append("")
-        text.append("path:")
+        text.append("phonon:")
+        text.append("")
+        self._write_lines(w, text, is_binary)
+
+        for i in range(len(self._paths)):
+            qpoints = self.get_qpoints()[i]
+            distances = self.get_distances()[i]
+            frequencies = self.get_frequencies()[i]
+            gruneisen = self.get_gruneisen()[i]
+            group_velocities = None
+            if self.get_eigenvectors() is None:
+                eigenvectors = None
+            else:
+                eigenvectors = self.get_eigenvectors()[i]
+
+            text = self._get_q_segment_yaml(
+                qpoints, distances, frequencies, eigenvectors, group_velocities, gruneisen
+            )
+            self._write_lines(w, text, is_binary)
+        # natom = self._cell.get_number_of_atoms()
+        # rec_lattice = np.linalg.inv(self._cell.cell)  # column vecs
+        # nq_paths = []
+        # for qpoints in self._paths:
+        #     nq_paths.append(len(qpoints))
+        # text = []
+        # if comment is not None:
+        #     text.append(yaml.dump(comment, default_flow_style=False).rstrip())
+        # text.append("nqpoint: %-7d" % np.sum(nq_paths))
+        # text.append("npath: %-7d" % len(self._paths))
+        # text.append("segment_nqpoint:")
+        # text += ["- %d" % nq for nq in nq_paths]
+        # if self._labels:
+        #     text.append("labels:")
+        #     if self._is_legacy_plot:
+        #         for i in range(len(self._paths)):
+        #             text.append(
+        #                 "- [ '%s', '%s' ]" % (self._labels[i], self._labels[i + 1])
+        #             )
+        #     else:
+        #         i = 0
+        #         for c in self._path_connections:
+        #             text.append(
+        #                 "- [ '%s', '%s' ]" % (self._labels[i], self._labels[i + 1])
+        #             )
+        #             if c:
+        #                 i += 1
+        #             else:
+        #                 i += 2
+        # text.append("reciprocal_lattice:")
+        # for vec, axis in zip(rec_lattice.T, ("a*", "b*", "c*")):
+        #     text.append("- [ %12.8f, %12.8f, %12.8f ] # %2s" % (tuple(vec) + (axis,)))
+        # text.append("natom: %-7d" % (natom))
+        # text.append(str(self._cell))
+        # text.append("")
+        # text.append("path:")
+        # text.append("")
+        #
+        # for band_structure in self._paths:
+        #     (
+        #         qpoints,
+        #         distances,
+        #         gamma,
+        #         eigenvalues,
+        #         _,
+        #         frequencies,
+        #         distances_with_shift,
+        #     ) = band_structure
+        #
+        #     text.append("- nqpoint: %d" % len(qpoints))
+        #     text.append("  phonon:")
+        #     for q, d, gs, freqs in zip(qpoints, distances, gamma, frequencies):
+        #         text.append("  - q-position: [ %10.7f, %10.7f, %10.7f ]" % tuple(q))
+        #         text.append("    distance: %10.7f" % d)
+        #         text.append("    band:")
+        #         for i, (g, freq) in enumerate(zip(gs, freqs)):
+        #             text.append("    - # %d" % (i + 1))
+        #             text.append("      gruneisen: %15.10f" % g)
+        #             text.append("      frequency: %15.10f" % freq)
+        #         text.append("")
+        #
+        # self._write_lines(w, text, is_binary)
+
+    def _get_q_segment_yaml(
+        self, qpoints, distances, frequencies, eigenvectors, group_velocities, gruneisen
+    ):
+        natom = len(self._cell)
+        text = []
+        for j in range(len(qpoints)):
+            q = qpoints[j]
+            text.append("- q-position: [ %12.7f, %12.7f, %12.7f ]" % tuple(q))
+            text.append("  distance: %12.7f" % distances[j])
+            text.append("  band:")
+            for k, freq in enumerate(frequencies[j]):
+                text.append("  - # %d" % (k + 1))
+                text.append("    frequency: %15.10f" % freq)
+
+                if group_velocities is not None:
+                    gv = group_velocities[j, k]
+                    text.append(
+                        "    group_velocity: " "[ %13.7f, %13.7f, %13.7f ]" % tuple(gv)
+                    )
+
+                if eigenvectors is not None:
+                    text.append("    eigenvector:")
+                    for ll in range(natom):
+                        text.append("    - # atom %d" % (ll + 1))
+                        for m in (0, 1, 2):
+                            text.append(
+                                "      - [ %17.14f, %17.14f ]"
+                                % (
+                                    eigenvectors[j, ll * 3 + m, k].real,
+                                    eigenvectors[j, ll * 3 + m, k].imag,
+                                )
+                            )
+                if gruneisen is not None:
+                    grun= gruneisen[j, k]
+                    text.append("    gruneisen: %15.10f" % grun)
+
+            text.append("")
         text.append("")
 
-        for band_structure in self._paths:
-            (
-                qpoints,
-                distances,
-                gamma,
-                eigenvalues,
-                _,
-                frequencies,
-                distances_with_shift,
-            ) = band_structure
+        return text
 
-            text.append("- nqpoint: %d" % len(qpoints))
-            text.append("  phonon:")
-            for q, d, gs, freqs in zip(qpoints, distances, gamma, frequencies):
-                text.append("  - q-position: [ %10.7f, %10.7f, %10.7f ]" % tuple(q))
-                text.append("    distance: %10.7f" % d)
-                text.append("    band:")
-                for i, (g, freq) in enumerate(zip(gs, freqs)):
-                    text.append("    - # %d" % (i + 1))
-                    text.append("      gruneisen: %15.10f" % g)
-                    text.append("      frequency: %15.10f" % freq)
-                text.append("")
-
-        self._write_lines(w, text, is_binary)
 
     def _write_lines(self, w, lines, is_binary):
         text = "\n".join(lines)
