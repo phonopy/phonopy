@@ -100,6 +100,7 @@ class GruneisenBandStructure(GruneisenBase):
             distance_shift = distances_with_shift[-1]
         self._labels = None
         self._path_connections = None
+        print(path_connections)
         if path_connections is None:
             self._path_connections = [
                 True,

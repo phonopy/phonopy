@@ -232,7 +232,7 @@ def main(args):
 
     primitive_matrix = None
     if args.primitive_axes:
-        if args.primitive_axes == "auto":
+        if args.primitive_axes == "auto" or args.band_paths=="auto":
             primitive_matrix = "auto"
         else:
             vals = [fracval(x) for x in args.primitive_axes.split()]
@@ -336,6 +336,11 @@ def main(args):
     if args.band_paths:
         from phonopy.phonon.band_structure import get_band_qpoints
         if args.band_paths=="auto":
+            print("SeeK-path is used to generate band paths.")
+            print(
+                "  About SeeK-path https://seekpath.readthedocs.io/ "
+                "(citation there-in)"
+            )
             bands, labels, path_connections = get_band_qpoints_by_seekpath(
                 phonon.primitive,
                 51,
