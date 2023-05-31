@@ -444,7 +444,23 @@ def collect_unique_rotations(rotations):
 
 
 def get_lattice_vector_equivalence(point_symmetry):
-    """Return (b==c, c==a, a==b)."""
+    """Return equivalences of basis vector length pairs, (b==c, c==a, a==b).
+
+    Change of basis is defined by
+
+    (a', b', c') = (a, b, c) R.
+
+    Then, check rotation matrices if
+        a -> b, b -> c, c -> a, a -> -b, b -> -c, and c -> -a,
+    can happen.
+
+    Parameters
+    ----------
+    point_symmetry : array_like
+        Rotation matrices.
+        shape=(n_rot, 3, 3), dtype=int.
+
+    """
     # primitive_vectors: column vectors
 
     equivalence = [False, False, False]

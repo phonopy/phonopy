@@ -49,6 +49,7 @@ from phonopy.structure.cells import (
     determinant,
     estimate_supercell_matrix,
     estimate_supercell_matrix_from_pointgroup,
+    get_cell_parameters,
     get_primitive_matrix_by_centring,
 )
 from phonopy.structure.snf import SNF3x3
@@ -87,7 +88,7 @@ def length2mesh(length, lattice, rotations=None):
 
     """
     rec_lattice = np.linalg.inv(lattice)
-    rec_lat_lengths = np.sqrt(np.diagonal(np.dot(rec_lattice.T, rec_lattice)))
+    rec_lat_lengths = get_cell_parameters(rec_lattice.T)
     mesh_numbers = np.rint(rec_lat_lengths * length).astype(int)
 
     if rotations is not None:
@@ -96,8 +97,9 @@ def length2mesh(length, lattice, rotations=None):
         )
         m = mesh_numbers
         mesh_equiv = [m[1] == m[2], m[2] == m[0], m[0] == m[1]]
+        # Follow symmetry when distorted, and align to larger one.
         for i, pair in enumerate(([1, 2], [2, 0], [0, 1])):
-            if reclat_equiv[i] and not mesh_equiv:
+            if reclat_equiv[i] and not mesh_equiv[i]:
                 m[pair] = max(m[pair])
 
     return np.maximum(mesh_numbers, [1, 1, 1])
