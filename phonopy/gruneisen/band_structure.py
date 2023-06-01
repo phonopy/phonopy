@@ -218,7 +218,12 @@ class GruneisenBandStructure(GruneisenBase):
                 eigenvectors = self.get_eigenvectors()[i]
 
             text = self._get_q_segment_yaml(
-                qpoints, distances, frequencies, eigenvectors, group_velocities, gruneisen
+                qpoints,
+                distances,
+                frequencies,
+                eigenvectors,
+                group_velocities,
+                gruneisen,
             )
             self._write_lines(w, text, is_binary)
         # natom = self._cell.get_number_of_atoms()
@@ -317,14 +322,13 @@ class GruneisenBandStructure(GruneisenBase):
                                 )
                             )
                 if gruneisen is not None:
-                    grun= gruneisen[j, k]
+                    grun = gruneisen[j, k]
                     text.append("    gruneisen: %15.10f" % grun)
 
             text.append("")
         text.append("")
 
         return text
-
 
     def _write_lines(self, w, lines, is_binary):
         text = "\n".join(lines)
