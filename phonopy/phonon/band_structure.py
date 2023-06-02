@@ -429,6 +429,36 @@ class BandStructure:
             self._plot(ax)
 
     def _plot(self, axs):
+        ### This is my addition
+        # Write frequencies to file
+        out_file = open('phonopy_frequencies.dat', 'w+')
+
+        out_file.write("Frequencies " + str(len(self._frequencies)) + "x" + str(len(self._frequencies[0])) + "x" + str(len(self._frequencies[0][0])) + "\n\n")
+
+        for counter_1 in range(len(self._frequencies[0])):
+            for counter_2 in range(len(self._frequencies)):
+                for counter_3 in range(len(self._frequencies[0][0])):
+                    out_file.write(str(self._frequencies[counter_2][counter_1][counter_3]) + "\t")
+                out_file.write("\t")
+            out_file.write("\n")
+
+        out_file.close()
+
+
+       # Write distances in reciprocal space to file
+        out_file = open('phonopy_distances.dat', 'w+')
+
+        out_file.write("Distances " + str(len(self._distances)) + "x" + str(len(self._distances[0])) + "\n\n")
+
+        for counter_1 in range(len(self._distances[0])):
+            for counter_2 in range(len(self._distances)):
+                out_file.write(str(self._distances[counter_2][counter_1]) + "\t")
+            out_file.write("\n")
+
+        out_file.close()
+
+
+        ### This is the original code again
         if self._is_band_connection:
             fmt = "-"
         else:
