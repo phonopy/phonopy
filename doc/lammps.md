@@ -5,6 +5,7 @@
 ## How to handle LAMMPS input and output files in phonopy
 
 - Phonopy assumes the LAMMPS calculation is performed in `units metal` and `atom_style atomic`.
+- Format of version 15Sep2022 or later of LAMMPS is assumed.
 - Force calculation has to performed by a specific setting as presented at
   {ref}`lammps_input_script_format`.
 
@@ -29,10 +30,14 @@ xy xz yz
 ```
 
 ### Supported `read_data` keywords in the body
+
 ```
 Atoms
 Atom Type Labels
 ```
+
+`Atom Type Labels` is the keyword new in version 15Sep2022 of LAMMPS. See
+[Type labels](https://docs.lammps.org/Howto_type_labels.html).
 
 `Masses` has not been supported yet.
 
