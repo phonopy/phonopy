@@ -337,6 +337,7 @@ document.write(`
 <h2>How to handle LAMMPS input and output files in phonopy<a class="headerlink" href="#how-to-handle-lammps-input-and-output-files-in-phonopy" title="Permalink to this heading">#</a></h2>
 <ul class="simple">
 <li><p>Phonopy assumes the LAMMPS calculation is performed in <code class="docutils literal notranslate"><span class="pre">units</span> <span class="pre">metal</span></code> and <code class="docutils literal notranslate"><span class="pre">atom_style</span> <span class="pre">atomic</span></code>.</p></li>
+<li><p>Format of version 15Sep2022 or later of LAMMPS is assumed.</p></li>
 <li><p>Force calculation has to performed by a specific setting as presented at
 <a class="reference internal" href="#lammps-input-script-format"><span class="std std-ref">LAMMPS input script for force calculation</span></a>.</p></li>
 </ul>
@@ -367,6 +368,8 @@ document.write(`
 <span class="n">Atom</span> <span class="n">Type</span> <span class="n">Labels</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">Atom</span> <span class="pre">Type</span> <span class="pre">Labels</span></code> is the keyword new in version 15Sep2022 of LAMMPS. See
+<a class="reference external" href="https://docs.lammps.org/Howto_type_labels.html">Type labels</a>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">Masses</span></code> has not been supported yet.</p>
 </section>
 <section id="example">
