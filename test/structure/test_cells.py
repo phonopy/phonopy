@@ -13,6 +13,9 @@ from phonopy.structure.cells import (
     compute_all_sg_permutations,
     compute_permutation_for_rotation,
     convert_to_phonopy_primitive,
+    get_angles,
+    get_cell_matrix_from_lattice,
+    get_cell_parameters,
     get_primitive,
     get_supercell,
     isclose,
@@ -261,7 +264,15 @@ def test_get_primitive_convcell_nacl(
     nacl_unitcell_order1: PhonopyAtoms, primcell_nacl: PhonopyAtoms, helper_methods
 ):
     """Test get_primitive by NaCl."""
-    pcell = get_primitive(nacl_unitcell_order1, primitive_matrix_nacl)
+    pcell = get_primitive(nacl_unitcell_order1, primitive_matrix=primitive_matrix_nacl)
+    helper_methods.compare_cells_with_order(pcell, primcell_nacl)
+
+
+def test_get_primitive_convcell_nacl_with_cetring_symbol(
+    nacl_unitcell_order1: PhonopyAtoms, primcell_nacl: PhonopyAtoms, helper_methods
+):
+    """Test get_primitive by NaCl."""
+    pcell = get_primitive(nacl_unitcell_order1, primitive_matrix="F")
     helper_methods.compare_cells_with_order(pcell, primcell_nacl)
 
 
@@ -271,7 +282,7 @@ def test_get_primitive_convcell_Cr(convcell_cr: PhonopyAtoms, helper_methods):
     smat = [[2, 0, 0], [0, 2, 0], [0, 0, 2]]
     scell = get_supercell(convcell_cr, smat, is_old_style=True)
     pmat = np.linalg.inv(smat)
-    pcell = get_primitive(scell, pmat)
+    pcell = get_primitive(scell, primitive_matrix=pmat)
     helper_methods.compare_cells(convcell_cr, pcell)
     convcell_cr.magnetic_moments = None
 
@@ -282,7 +293,9 @@ def test_get_primitive_convcell_nacl_svecs(
 ):
     """Test shortest vectors by NaCl."""
     pcell = get_primitive(
-        nacl_unitcell_order1, primitive_matrix_nacl, store_dense_svecs=store_dense_svecs
+        nacl_unitcell_order1,
+        primitive_matrix=primitive_matrix_nacl,
+        store_dense_svecs=store_dense_svecs,
     )
     svecs, multi = pcell.get_smallest_vectors()
     if store_dense_svecs:
@@ -413,3 +426,31 @@ def test_convert_to_phonopy_primitive(ph_nacl: Phonopy):
     pcell_mode = PhonopyAtoms(cell=cell, scaled_positions=points, numbers=numbers)
     with pytest.raises(RuntimeError):
         _pcell = convert_to_phonopy_primitive(scell, pcell_mode)
+
+
+def test_get_cell_matrix_from_lattice(primcell_nacl: PhonopyAtoms):
+    """Test for test_get_cell_matrix_from_lattice."""
+    pcell = primcell_nacl
+    lattice = get_cell_matrix_from_lattice(pcell.cell)
+    np.testing.assert_allclose(
+        get_angles(lattice, is_radian=False),
+        get_angles(pcell.cell, is_radian=False),
+        atol=1e-8,
+    )
+    np.testing.assert_allclose(
+        get_angles(lattice, is_radian=True),
+        get_angles(pcell.cell, is_radian=True),
+        atol=1e-8,
+    )
+    np.testing.assert_allclose(
+        get_cell_parameters(lattice), get_cell_parameters(pcell.cell), atol=1e-8
+    )
+    np.testing.assert_allclose(
+        [
+            [4.02365076, 0.0, 0.0],
+            [2.01182538, 3.48458377, 0.0],
+            [2.01182538, 1.16152792, 3.28529709],
+        ],
+        lattice,
+        atol=1e-7,
+    )
