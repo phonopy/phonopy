@@ -758,7 +758,7 @@ def _generate_random_displacements(ph, d_max, nbins):
     return h_1, h_2
 
 
-def test_random_displacements_all_atoms_TiPN3(ph_tipn3):
+def test_random_displacements_all_atoms_TiPN3(ph_tipn3: Phonopy):
     """Test by fixed random numbers of np.random.normal.
 
     randn_ii and randn_ij were created by
@@ -774,30 +774,7 @@ def test_random_displacements_all_atoms_TiPN3(ph_tipn3):
 
     """
     ph = ph_tipn3
-    rd = RandomDisplacements(ph.supercell, ph.primitive, ph.force_constants)
-
-    num_band = len(ph.primitive) * 3
-    N = len(ph.supercell) // len(ph.primitive)
-    # N = N_ii + N_ij * 2
-    # len(rd.qpoints) = N_ii + N_ij
-    N_ij = N - len(rd.qpoints)
-    N_ii = N - N_ij * 2
-    shape_ii = (N_ii, 1, num_band)
-    shape_ij = (N_ij, 2, 1, num_band)
-    randn_ii = np.reshape(randn_ii_TiPN3, shape_ii)
-    randn_ij = np.reshape(randn_ij_TiPN3, shape_ij)
-
-    eigvecs_ii = np.reshape(
-        np.loadtxt(os.path.join(current_dir, "eigvecs_ii_TiPN3.txt")),
-        (N_ii, num_band, num_band),
-    )
-    eigvecs_ij = np.reshape(
-        np.loadtxt(os.path.join(current_dir, "eigvecs_ij_TiPN3.txt"), dtype=complex),
-        (N_ij, num_band, num_band),
-    )
-    rd._eigvecs_ii = eigvecs_ii
-    rd._eigvecs_ij = eigvecs_ij
-    rd.run(500, randn=(randn_ii, randn_ij))
+    rd = _get_random_displacements_all_atoms_TiPN3(ph)
 
     # for line in rd.u.ravel().reshape(-1, 6):
     #     print(("%.7f, " * 6) % tuple(line))
@@ -821,6 +798,49 @@ def test_random_displacements_all_atoms_TiPN3(ph_tipn3):
     _uu_inv = _mass_sand(uu_inv_bare, sqrt_masses)
 
     np.testing.assert_allclose(_uu_inv, uu_inv, atol=1e-5, rtol=1e-5)
+
+
+def test_random_displacements_all_atoms_TiPN3_max_distance(ph_tipn3):
+    """Test max_distance."""
+    rd = _get_random_displacements_all_atoms_TiPN3(ph_tipn3)
+    n_gt_max = (np.linalg.norm(rd.u.reshape(-1, 3), axis=1) > 0.2).sum()
+    assert n_gt_max == 5
+    rd = _get_random_displacements_all_atoms_TiPN3(ph_tipn3, max_distance=0.2)
+    distances = np.linalg.norm(rd.u.reshape(-1, 3), axis=1)
+    distances_gt_max = np.extract(distances > 0.2 - 1e-5, distances)
+    assert len(distances_gt_max) == 5
+    np.testing.assert_almost_equal(distances_gt_max, 0.2)
+
+
+def _get_random_displacements_all_atoms_TiPN3(
+    ph: Phonopy, max_distance=None
+) -> RandomDisplacements:
+    rd = RandomDisplacements(
+        ph.supercell, ph.primitive, ph.force_constants, max_distance=max_distance
+    )
+    num_band = len(ph.primitive) * 3
+    N = len(ph.supercell) // len(ph.primitive)
+    # N = N_ii + N_ij * 2
+    # len(rd.qpoints) = N_ii + N_ij
+    N_ij = N - len(rd.qpoints)
+    N_ii = N - N_ij * 2
+    shape_ii = (N_ii, 1, num_band)
+    shape_ij = (N_ij, 2, 1, num_band)
+    randn_ii = np.reshape(randn_ii_TiPN3, shape_ii)
+    randn_ij = np.reshape(randn_ij_TiPN3, shape_ij)
+
+    eigvecs_ii = np.reshape(
+        np.loadtxt(os.path.join(current_dir, "eigvecs_ii_TiPN3.txt")),
+        (N_ii, num_band, num_band),
+    )
+    eigvecs_ij = np.reshape(
+        np.loadtxt(os.path.join(current_dir, "eigvecs_ij_TiPN3.txt"), dtype=complex),
+        (N_ij, num_band, num_band),
+    )
+    rd._eigvecs_ii = eigvecs_ii
+    rd._eigvecs_ij = eigvecs_ij
+    rd.run(500, randn=(randn_ii, randn_ij))
+    return rd
 
 
 @pytest.mark.parametrize("is_plusminus", [True, False])
