@@ -33,6 +33,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from collections.abc import Sequence
 from typing import Optional, Tuple, Union
 
 import numpy as np
@@ -124,11 +125,12 @@ class RandomDisplacements:
         self,
         supercell: PhonopyAtoms,
         primitive: Primitive,
-        force_constants,
-        dist_func=None,
-        cutoff_frequency=None,
-        factor=VaspToTHz,
-        use_openmp=False,
+        force_constants: Union[np.ndarray, Sequence],
+        dist_func: Optional[str] = None,
+        cutoff_frequency: Optional[float] = None,
+        max_distance: Optional[float] = None,
+        factor: float = VaspToTHz,
+        use_openmp: bool = False,
     ):
         """Init method.
 
@@ -150,6 +152,11 @@ class RandomDisplacements:
             Lowest phonon frequency below which frequency the phonon mode
             is treated specially. See _get_sigma. Default is None, which
             means 0.01.
+        max_distance : float or None, optional
+            In random displacements generation from canonical ensemble of
+            harmonic phonons, displacements larger than max distance are
+            renormalized to the max distance, i.e., a disptalcement d is shorten
+            by d -> d / |d| * max_distance if |d| > max_distance.
         factor : float
             Phonon frequency unit conversion factor to THz
         use_openmp : bool, optional, default=False
@@ -160,6 +167,7 @@ class RandomDisplacements:
             self._cutoff_frequency = 0.01
         else:
             self._cutoff_frequency = cutoff_frequency
+        self._max_distance = max_distance
         self._factor = factor
         self._T = None
         self._u = None
@@ -267,7 +275,17 @@ class RandomDisplacements:
 
         mass = self._dynmat.supercell.masses.reshape(-1, 1)
         u = np.array((u_ii + u_ij) / np.sqrt(mass * N), dtype="double", order="C")
-        self._u = u
+        if self._max_distance:
+            print(self._max_distance)
+            dists = np.linalg.norm(u, axis=2)
+            dists = np.repeat(dists, 3).reshape(dists.shape + (-1,))
+            self._u = np.array(
+                np.where(dists < self._max_distance, u, u / dists * self._max_distance),
+                dtype="double",
+                order="C",
+            )
+        else:
+            self._u = u
 
     @property
     def u(self):
