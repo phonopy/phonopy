@@ -276,7 +276,6 @@ class RandomDisplacements:
         mass = self._dynmat.supercell.masses.reshape(-1, 1)
         u = np.array((u_ii + u_ij) / np.sqrt(mass * N), dtype="double", order="C")
         if self._max_distance:
-            print(self._max_distance)
             dists = np.linalg.norm(u, axis=2)
             dists = np.repeat(dists, 3).reshape(dists.shape + (-1,))
             self._u = np.array(
