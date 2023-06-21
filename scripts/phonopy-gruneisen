@@ -47,6 +47,7 @@ from phonopy.interface.calculator import (
 )
 from phonopy.phonon.band_structure import get_band_qpoints, get_band_qpoints_by_seekpath
 
+
 def fracval(frac):
     if frac.find("/") == -1:
         return float(frac)
@@ -232,7 +233,7 @@ def main(args):
 
     primitive_matrix = None
     if args.primitive_axes:
-        if args.primitive_axes == "auto" or args.band_paths=="auto":
+        if args.primitive_axes == "auto" or args.band_paths == "auto":
             primitive_matrix = "auto"
         else:
             vals = [fracval(x) for x in args.primitive_axes.split()]
@@ -333,35 +334,34 @@ def main(args):
 
             mpl.use("Agg")
 
-    if args.band_paths:
-        if args.band_paths=="auto":
-            print("SeeK-path is used to generate band paths.")
-            print(
-                "  About SeeK-path https://seekpath.readthedocs.io/ "
-                "(citation there-in)"
-            )
-            bands, labels, path_connections = get_band_qpoints_by_seekpath(
-                phonon.primitive,
-                51,
-                is_const_interval=True,
-            )
-        else:
-            band_paths = []
-            for path_str in args.band_paths.split(","):
-                paths = np.array([fracval(x) for x in path_str.split()])
-                if len(paths) % 3 != 0 or len(paths) < 6:
-                    print("Band path is incorrectly set.")
-                    sys.exit(1)
-                band_paths.append(paths.reshape(-1, 3))
-            bands = get_band_qpoints(band_paths, npoints=args.band_points)
-        gruneisen.set_band_structure(bands)
-        gruneisen.write_yaml_band_structure()
-        if args.plot_graph:
-            plt = gruneisen.plot_band_structure(
-                epsilon=args.cutoff_wave_vector, color_scheme=args.color_scheme
-            )
-            if args.title is not None:
-                plt.suptitle(args.title)
+    if args.band_paths=="auto":
+        print("SeeK-path is used to generate band paths.")
+        print(
+            "  About SeeK-path https://seekpath.readthedocs.io/ "
+            "(citation there-in)"
+        )
+        bands, labels, path_connections = get_band_qpoints_by_seekpath(
+            phonon.primitive,
+            51,
+            is_const_interval=True,
+        )
+    else:
+        band_paths = []
+        for path_str in args.band_paths.split(","):
+            paths = np.array([fracval(x) for x in path_str.split()])
+            if len(paths) % 3 != 0 or len(paths) < 6:
+                print("Band path is incorrectly set.")
+                sys.exit(1)
+            band_paths.append(paths.reshape(-1, 3))
+        bands = get_band_qpoints(band_paths, npoints=args.band_points)
+    gruneisen.set_band_structure(bands)
+    gruneisen.write_yaml_band_structure()
+    if args.plot_graph:
+        plt = gruneisen.plot_band_structure(
+            epsilon=args.cutoff_wave_vector, color_scheme=args.color_scheme
+        )
+        if args.title is not None:
+            plt.suptitle(args.title)
 
     elif args.sampling_mesh:
         mesh_numbers = np.array([int(x) for x in args.sampling_mesh.split()])
