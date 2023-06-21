@@ -334,11 +334,10 @@ def main(args):
 
             mpl.use("Agg")
 
-    if args.band_paths=="auto":
+    if args.band_paths == "auto":
         print("SeeK-path is used to generate band paths.")
         print(
-            "  About SeeK-path https://seekpath.readthedocs.io/ "
-            "(citation there-in)"
+            "  About SeeK-path https://seekpath.readthedocs.io/ " "(citation there-in)"
         )
         bands, labels, path_connections = get_band_qpoints_by_seekpath(
             phonon.primitive,
