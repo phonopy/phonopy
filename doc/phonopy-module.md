@@ -2,11 +2,6 @@
 
 # Phonopy API for Python
 
-```{contents}
-:depth: 2
-:local:
-```
-
 **This is under development. Configurations may alter.** Requests or suggestions
 are very welcome.
 
@@ -37,11 +32,80 @@ For VASP format, the keyword argument of `interface_mode` can be omitted. For
 QE,
 
 ```python
-unitcell, _ = read_crystal_structure("NaCl.in", interface_mode='qe')
+unitcell, optional_structure_info = read_crystal_structure("NaCl.in", interface_mode='qe')
 ```
 
-Note that `read_crystal_structure` returns a tuple and the first element is th
-`PhonopyAtoms` instance.
+Note that `read_crystal_structure` returns a tuple and the first element is the
+`PhonopyAtoms` instance. There is a function to write the `PhonopyAtoms`
+instance, `write_crystal_structure`, which works like below.
+
+```python
+In [1]: !cat "NaCl.in"
+ &control
+    calculation = 'scf'
+    tprnfor = .true.
+    tstress = .true.
+    pseudo_dir = '/home/togo/espresso/pseudo/'
+ /
+ &system
+    ibrav = 0
+    nat = 8
+    ntyp = 2
+    ecutwfc = 70.0
+ /
+ &electrons
+    diagonalization = 'david'
+    conv_thr = 1.0d-9
+ /
+ATOMIC_SPECIES
+ Na  22.98976928 Na.pbe-spn-kjpaw_psl.0.2.UPF
+ Cl  35.453      Cl.pbe-n-kjpaw_psl.0.1.UPF
+ATOMIC_POSITIONS crystal
+ Na   0.0000000000000000  0.0000000000000000  0.0000000000000000
+ Na   0.0000000000000000  0.5000000000000000  0.5000000000000000
+ Na   0.5000000000000000  0.0000000000000000  0.5000000000000000
+ Na   0.5000000000000000  0.5000000000000000  0.0000000000000000
+ Cl   0.5000000000000000  0.5000000000000000  0.5000000000000000
+ Cl   0.5000000000000000  0.0000000000000000  0.0000000000000000
+ Cl   0.0000000000000000  0.5000000000000000  0.0000000000000000
+ Cl   0.0000000000000000  0.0000000000000000  0.5000000000000000
+CELL_PARAMETERS angstrom
+ 5.6903014761756712 0 0
+ 0 5.6903014761756712 0
+ 0 0 5.6903014761756712
+K_POINTS automatic
+ 8 8 8 1 1 1
+
+In [2]: from phonopy.interface.calculator import read_crystal_structure, write_crystal_structure
+
+In [3]: cell, optional_structure_info = read_crystal_structure("NaCl.in", interface_mode='qe')
+
+In [4]: optional_info
+Out[4]:
+('NaCl.in',
+ {'Na': 'Na.pbe-spn-kjpaw_psl.0.2.UPF', 'Cl': 'Cl.pbe-n-kjpaw_psl.0.1.UPF'})
+
+In [5]: write_crystal_structure("NaCl-out.in", cell, interface_mode='qe', optional_structure_info=optional_structure_info)
+
+In [6]: !cat "NaCl-out.in"
+!    ibrav = 0, nat = 8, ntyp = 2
+CELL_PARAMETERS bohr
+   10.7531114272216008    0.0000000000000000    0.0000000000000000
+    0.0000000000000000   10.7531114272216008    0.0000000000000000
+    0.0000000000000000    0.0000000000000000   10.7531114272216008
+ATOMIC_SPECIES
+ Na   22.98977   Na.pbe-spn-kjpaw_psl.0.2.UPF
+ Cl   35.45300   Cl.pbe-n-kjpaw_psl.0.1.UPF
+ATOMIC_POSITIONS crystal
+ Na   0.0000000000000000  0.0000000000000000  0.0000000000000000
+ Na   0.0000000000000000  0.5000000000000000  0.5000000000000000
+ Na   0.5000000000000000  0.0000000000000000  0.5000000000000000
+ Na   0.5000000000000000  0.5000000000000000  0.0000000000000000
+ Cl   0.5000000000000000  0.5000000000000000  0.5000000000000000
+ Cl   0.5000000000000000  0.0000000000000000  0.0000000000000000
+ Cl   0.0000000000000000  0.5000000000000000  0.0000000000000000
+ Cl   0.0000000000000000  0.0000000000000000  0.5000000000000000
+```
 
 ## Work flow
 

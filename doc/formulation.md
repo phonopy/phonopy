@@ -2,11 +2,6 @@
 
 # Formulations
 
-```{contents}
-:depth: 2
-:local:
-```
-
 ## Second-order force constants
 
 Potential energy of phonon system is represented as functions of atomic

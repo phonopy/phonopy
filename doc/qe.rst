@@ -7,10 +7,6 @@ Quantum ESPRESSO package itself has a set of the phonon calculation
 system. But the document here explains how to calculate phonons using
 phonopy, i.e., using the finite displacement and supercell approach.
 
-.. contents::
-   :depth: 2
-   :local:
-
 Supported QE-PW tags
 ---------------------------
 
