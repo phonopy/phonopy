@@ -58,10 +58,8 @@ A presentation in pdf for introduction to phonopy is downloaded
 :width: 15%
 ```
 
-# Documentation
-
 ```{toctree}
-:maxdepth: 1
+:hidden:
 install
 symmetry
 workflow
@@ -90,7 +88,8 @@ for html. Uncomment below when generating latex documentation. -->
 <!-- ```{toctree}
 :hidden:
 documentation
-``` -->
+```
+-->
 
 (mailinglist)=
 
