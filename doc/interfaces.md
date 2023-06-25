@@ -2,11 +2,6 @@
 
 # Interfaces to calculators
 
-```{contents}
-:depth: 3
-:local:
-```
-
 The interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT, Elk, SIESTA,
 CRYSTAL, DFTB+, TURBOMOLE, FHI-AIMS, CASTEP, ABACUS, and LAMMPS are built in to
 the usual phonopy command. See the command options and how to invoke each of

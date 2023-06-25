@@ -2,11 +2,6 @@
 
 # Examples
 
-```{contents}
-:depth: 2
-:local:
-```
-
 Phonopy supports various external force calculators (mainly for abinitio codes).
 The examples below are given for the default system that is equivalent to VASP
 style. Most of usage is universal among the force calculators. So it is also

@@ -1,10 +1,5 @@
 # Input files
 
-```{contents}
-:depth: 2
-:local:
-```
-
 ## Setting file
 
 A setting file contains phonopy settings which are summarized at
