@@ -360,43 +360,8 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="input-files">
 <h1>Input files<a class="headerlink" href="#input-files" title="Permalink to this heading">#</a></h1>
-<nav class="contents local" id="contents">
-<ul class="simple">
-<li><p><a class="reference internal" href="#setting-file" id="id5">Setting file</a></p></li>
-<li><p><a class="reference internal" href="#phonopy-yaml-and-phonopy-disp-yaml" id="id6"><code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code></a></p></li>
-<li><p><a class="reference internal" href="#structure-file" id="id7">Structure file</a></p>
-<ul>
-<li><p><a class="reference internal" href="#vasp-poscar-like-format" id="id8">VASP POSCAR like format</a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#force-file-force-sets" id="id9">Force file (<code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>)</a></p>
-<ul>
-<li><p><a class="reference internal" href="#type-1" id="id10">Type 1</a></p></li>
-<li><p><a class="reference internal" href="#type-2" id="id11">Type 2</a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#force-constants-and-force-constants-hdf5" id="id12"><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> and <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code></a></p>
-<ul>
-<li><p><a class="reference internal" href="#format-of-force-constants" id="id13">Format of <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a></p></li>
-<li><p><a class="reference internal" href="#id2" id="id14">Example</a></p></li>
-<li><p><a class="reference internal" href="#format-of-force-constants-hdf5" id="id15">Format of <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code></a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#qpoints-optional" id="id16"><code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code> (optional)</a></p>
-<ul>
-<li><p><a class="reference internal" href="#id3" id="id17">Example</a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#born-optional" id="id18"><code class="docutils literal notranslate"><span class="pre">BORN</span></code> (optional)</a></p>
-<ul>
-<li><p><a class="reference internal" href="#format" id="id19">Format</a></p></li>
-<li><p><a class="reference internal" href="#id4" id="id20">Example</a></p></li>
-</ul>
-</li>
-</ul>
-</nav>
 <section id="setting-file">
-<h2><a class="toc-backref" href="#id5" role="doc-backlink">Setting file</a><a class="headerlink" href="#setting-file" title="Permalink to this heading">#</a></h2>
+<h2>Setting file<a class="headerlink" href="#setting-file" title="Permalink to this heading">#</a></h2>
 <p>A setting file contains phonopy settings which are summarized at
 <a class="reference internal" href="setting-tags.html#setting-tags"><span class="std std-ref">Setting tags</span></a>. This file is passed to phonopy as an argument, e.g.,</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>phonopy.conf
@@ -405,7 +370,7 @@ document.write(`
 <p>where the filename is arbitrary.</p>
 </section>
 <section id="phonopy-yaml-and-phonopy-disp-yaml">
-<h2><a class="toc-backref" href="#id6" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code></a><a class="headerlink" href="#phonopy-yaml-and-phonopy-disp-yaml" title="Permalink to this heading">#</a></h2>
+<h2><code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code><a class="headerlink" href="#phonopy-yaml-and-phonopy-disp-yaml" title="Permalink to this heading">#</a></h2>
 <p>These are output files after the calculation or creating the displacements.
 These files contain the crystal structure information, primitive cell and
 supercell sizes, and also the calculator interface. Therefore with this file,
@@ -421,13 +386,13 @@ format can be used with <a class="reference internal" href="setting-tags.html#ce
 </div>
 </section>
 <section id="structure-file">
-<h2><a class="toc-backref" href="#id7" role="doc-backlink">Structure file</a><a class="headerlink" href="#structure-file" title="Permalink to this heading">#</a></h2>
+<h2>Structure file<a class="headerlink" href="#structure-file" title="Permalink to this heading">#</a></h2>
 <p>Crystal structure is described by a file with specific format for each
 calculator, though the default crystal structure is written in VASP POSCAR
 format. See the detail of the calculator interfaces at
 <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.</p>
 <section id="vasp-poscar-like-format">
-<h3><a class="toc-backref" href="#id8" role="doc-backlink">VASP POSCAR like format</a><a class="headerlink" href="#vasp-poscar-like-format" title="Permalink to this heading">#</a></h3>
+<h3>VASP POSCAR like format<a class="headerlink" href="#vasp-poscar-like-format" title="Permalink to this heading">#</a></h3>
 <p>In the following, the VASP POSCAR format that phonopy can parse is explained.
 The format is simple. The first line is for your comment, where you can write
 anything you want. The second line is the ratio for lattice parameters. You can
@@ -482,10 +447,10 @@ those defined by the <code class="docutils literal notranslate"><span class="pre
 </section>
 </section>
 <section id="force-file-force-sets">
-<span id="file-forces"></span><h2><a class="toc-backref" href="#id9" role="doc-backlink">Force file (<code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>)</a><a class="headerlink" href="#force-file-force-sets" title="Permalink to this heading">#</a></h2>
+<span id="file-forces"></span><h2>Force file (<code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>)<a class="headerlink" href="#force-file-force-sets" title="Permalink to this heading">#</a></h2>
 <p>Two types of <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> formats are supported.</p>
 <section id="type-1">
-<span id="file-forces-type-1"></span><h3><a class="toc-backref" href="#id10" role="doc-backlink">Type 1</a><a class="headerlink" href="#type-1" title="Permalink to this heading">#</a></h3>
+<span id="file-forces-type-1"></span><h3>Type 1<a class="headerlink" href="#type-1" title="Permalink to this heading">#</a></h3>
 <p>This format is the default format of phonopy and force constants can be
 calculated by built-in force constants calculator of phonopy by finite
 difference method, though external force constants calculator can be also used
@@ -528,7 +493,7 @@ repeated until the forces of all the displacements have been written.</p>
 </section>
 </section>
 <section id="type-2">
-<span id="file-forces-type-2"></span><h3><a class="toc-backref" href="#id11" role="doc-backlink">Type 2</a><a class="headerlink" href="#type-2" title="Permalink to this heading">#</a></h3>
+<span id="file-forces-type-2"></span><h3>Type 2<a class="headerlink" href="#type-2" title="Permalink to this heading">#</a></h3>
 <p>Equivalent to <code class="docutils literal notranslate"><span class="pre">DFSET</span></code> of
 <a class="reference external" href="https://alm.readthedocs.io/en/develop/format-dfset.html#format-of-dfset">ALM code</a>.</p>
 <p>Each line has exactly 6 elements. The first three and second three elements give
@@ -557,7 +522,7 @@ option). All the data are used for calculating force constants in the fitting
 </section>
 </section>
 <section id="force-constants-and-force-constants-hdf5">
-<span id="file-force-constants"></span><h2><a class="toc-backref" href="#id12" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> and <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code></a><a class="headerlink" href="#force-constants-and-force-constants-hdf5" title="Permalink to this heading">#</a></h2>
+<span id="file-force-constants"></span><h2><code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> and <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code><a class="headerlink" href="#force-constants-and-force-constants-hdf5" title="Permalink to this heading">#</a></h2>
 <p>If the force constants of a supercell are known, it is not necessary to prepared
 <code class="docutils literal notranslate"><span class="pre">FORCES</span></code>. Phonopy has an interface to read and write <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> or
 <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code>. To read and write these files are controlled by
@@ -573,7 +538,7 @@ create force constants file by followng the instraction shown at <a class="refer
 <p>where <code class="docutils literal notranslate"><span class="pre">n_satom</span></code> and <code class="docutils literal notranslate"><span class="pre">n_patom</span></code> are the numbers of atoms in supercell and
 primitive cell, respectively.</p>
 <section id="format-of-force-constants">
-<h3><a class="toc-backref" href="#id13" role="doc-backlink">Format of <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#format-of-force-constants" title="Permalink to this heading">#</a></h3>
+<h3>Format of <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code><a class="headerlink" href="#format-of-force-constants" title="Permalink to this heading">#</a></h3>
 <p>First line contains the first two elements of the shape of the force constants
 array, i.e., for <code class="docutils literal notranslate"><span class="pre">(n_satom,</span> <span class="pre">n_satom,</span> <span class="pre">3,</span> <span class="pre">3)</span></code>, the first and second numbers are
 the same and are the number of atoms in the supercell, and for
@@ -591,7 +556,7 @@ of force constant in Cartesian coordinates, i.e.:</p>
 </div>
 </section>
 <section id="id2">
-<h3><a class="toc-backref" href="#id14" role="doc-backlink">Example</a><a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h3>
+<h3>Example<a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">32</span>  <span class="mi">32</span>
 <span class="mi">1</span>   <span class="mi">1</span>
   <span class="mf">4.635786969900131</span>    <span class="o">-</span><span class="mf">0.000000000000000</span>    <span class="o">-</span><span class="mf">0.000000000000000</span>
@@ -619,7 +584,7 @@ of force constant in Cartesian coordinates, i.e.:</p>
 </div>
 </section>
 <section id="format-of-force-constants-hdf5">
-<h3><a class="toc-backref" href="#id15" role="doc-backlink">Format of <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code></a><a class="headerlink" href="#format-of-force-constants-hdf5" title="Permalink to this heading">#</a></h3>
+<h3>Format of <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code><a class="headerlink" href="#format-of-force-constants-hdf5" title="Permalink to this heading">#</a></h3>
 <p>This is an alternative of <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> but the data is stored in HDF5
 format. See the detail of how to obtain this file, <a class="reference internal" href="setting-tags.html#fc-format-tag"><span class="std std-ref">FC_FORMAT, READFC_FORMAT, WRITEFC_FORMAT</span></a>.</p>
 <p>The data are stored as follows. <code class="docutils literal notranslate"><span class="pre">p2s_map</span></code> is introduced at version 1.12.6. Force
@@ -644,13 +609,13 @@ atoms in the primitive cell in supercell index system.</p>
 </section>
 </section>
 <section id="qpoints-optional">
-<span id="qpoints-file"></span><h2><a class="toc-backref" href="#id16" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code> (optional)</a><a class="headerlink" href="#qpoints-optional" title="Permalink to this heading">#</a></h2>
+<span id="qpoints-file"></span><h2><code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code> (optional)<a class="headerlink" href="#qpoints-optional" title="Permalink to this heading">#</a></h2>
 <p>Specific q-points are calculated using <code class="docutils literal notranslate"><span class="pre">QPOINTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> tag and <code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code>
 file. The file format of <code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code> is as follows. The first line gives the
 number of q-points. Then the successive lines give q-points in reduced
 coordinate of reciprocal space of the input unit cell.</p>
 <section id="id3">
-<h3><a class="toc-backref" href="#id17" role="doc-backlink">Example</a><a class="headerlink" href="#id3" title="Permalink to this heading">#</a></h3>
+<h3>Example<a class="headerlink" href="#id3" title="Permalink to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">512</span>
 <span class="o">-</span><span class="mf">0.437500000000000</span>  <span class="o">-</span><span class="mf">0.437500000000000</span>  <span class="o">-</span><span class="mf">0.437500000000000</span>
 <span class="o">-</span><span class="mf">0.312500000000000</span>  <span class="o">-</span><span class="mf">0.437500000000000</span>  <span class="o">-</span><span class="mf">0.437500000000000</span>
@@ -661,12 +626,12 @@ coordinate of reciprocal space of the input unit cell.</p>
 </section>
 </section>
 <section id="born-optional">
-<span id="born-file"></span><h2><a class="toc-backref" href="#id18" role="doc-backlink"><code class="docutils literal notranslate"><span class="pre">BORN</span></code> (optional)</a><a class="headerlink" href="#born-optional" title="Permalink to this heading">#</a></h2>
+<span id="born-file"></span><h2><code class="docutils literal notranslate"><span class="pre">BORN</span></code> (optional)<a class="headerlink" href="#born-optional" title="Permalink to this heading">#</a></h2>
 <p>This file is used with the <code class="docutils literal notranslate"><span class="pre">--nac</span></code> option or <code class="docutils literal notranslate"><span class="pre">NAC</span></code> tag.</p>
 <p>The formula implemented is refered to
 <a class="reference internal" href="formulation.html#non-analytical-term-correction-theory"><span class="std std-ref">Non-analytical term correction</span></a>.</p>
 <section id="format">
-<h3><a class="toc-backref" href="#id19" role="doc-backlink">Format</a><a class="headerlink" href="#format" title="Permalink to this heading">#</a></h3>
+<h3>Format<a class="headerlink" href="#format" title="Permalink to this heading">#</a></h3>
 <p>In the first line, unit conversion factor is given. In versions 1.10.4 or later,
 the default value for each calculater can be used if characters than numerical
 number are given. The default values for the calculaters are found at
@@ -760,7 +725,7 @@ unit cell is used for the calculation, the Born effective charge tensors of
 atoms No. 1 and 13 have to be written in <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file.</p>
 </section>
 <section id="id4">
-<h3><a class="toc-backref" href="#id20" role="doc-backlink">Example</a><a class="headerlink" href="#id4" title="Permalink to this heading">#</a></h3>
+<h3>Example<a class="headerlink" href="#id4" title="Permalink to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span> <span class="mf">14.400</span>
  <span class="mf">3.269</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">3.269</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">3.234</span>
  <span class="mf">2.981</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">2.981</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">2.952</span>

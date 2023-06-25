@@ -328,16 +328,8 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="calculation-of-mode-gruneisen-parameters">
 <span id="phonopy-gruneisen"></span><h1>Calculation of mode Grüneisen parameters<a class="headerlink" href="#calculation-of-mode-gruneisen-parameters" title="Permalink to this heading">#</a></h1>
-<nav class="contents local" id="contents">
-<ul class="simple">
-<li><p><a class="reference internal" href="#how-to-run" id="id1">How to run</a></p></li>
-<li><p><a class="reference internal" href="#force-calculator-interfaces" id="id2">Force calculator interfaces</a></p></li>
-<li><p><a class="reference internal" href="#command-options" id="id3">Command options</a></p></li>
-<li><p><a class="reference internal" href="#method-to-calculate-mode-gruneisen-parameters" id="id4">Method to calculate mode Grüneisen parameters</a></p></li>
-</ul>
-</nav>
 <section id="how-to-run">
-<h2><a class="toc-backref" href="#id1" role="doc-backlink">How to run</a><a class="headerlink" href="#how-to-run" title="Permalink to this heading">#</a></h2>
+<h2>How to run<a class="headerlink" href="#how-to-run" title="Permalink to this heading">#</a></h2>
 <p>It is necessary to run three phonon calculations. One is calculated at the
 equilibrium volume and the remaining two are calculated at the slightly larger
 volume and smaller volume than the equilibrium volume. The unit cells at these
@@ -371,7 +363,7 @@ on the plot. Instead the values at the neighboring <strong>q</strong>-points of
 <span class="math notranslate nohighlight">\(\Gamma\)</span>-point are used for the plot.</p>
 </section>
 <section id="force-calculator-interfaces">
-<span id="gruneisen-calculators"></span><h2><a class="toc-backref" href="#id2" role="doc-backlink">Force calculator interfaces</a><a class="headerlink" href="#force-calculator-interfaces" title="Permalink to this heading">#</a></h2>
+<span id="gruneisen-calculators"></span><h2>Force calculator interfaces<a class="headerlink" href="#force-calculator-interfaces" title="Permalink to this heading">#</a></h2>
 <p>Options of force calculator interfaces such as <code class="docutils literal notranslate"><span class="pre">--abinit</span></code>, <code class="docutils literal notranslate"><span class="pre">--qe</span></code>, … can be
 specified for corresponding calculators and the crystal structure file format
 should be different from that of the VASP format. An Abinit example is as
@@ -381,7 +373,7 @@ follows:</p>
 </div>
 </section>
 <section id="command-options">
-<span id="gruneisen-command-options"></span><h2><a class="toc-backref" href="#id3" role="doc-backlink">Command options</a><a class="headerlink" href="#command-options" title="Permalink to this heading">#</a></h2>
+<span id="gruneisen-command-options"></span><h2>Command options<a class="headerlink" href="#command-options" title="Permalink to this heading">#</a></h2>
 <p>If one of the force calculator options is specified, the interface mode is
 changed to it. The unit conversion factor to THz is appropriately selected and
 its crystal structure file format is accepted. If none of them is specified, as
@@ -409,7 +401,7 @@ to band indices. For the mesh-sampling plot, a few more options to control
 matplotlib parameters are prepared.</p>
 </section>
 <section id="method-to-calculate-mode-gruneisen-parameters">
-<h2><a class="toc-backref" href="#id4" role="doc-backlink">Method to calculate mode Grüneisen parameters</a><a class="headerlink" href="#method-to-calculate-mode-gruneisen-parameters" title="Permalink to this heading">#</a></h2>
+<h2>Method to calculate mode Grüneisen parameters<a class="headerlink" href="#method-to-calculate-mode-gruneisen-parameters" title="Permalink to this heading">#</a></h2>
 <p>Mode Grüneisen parameter <span class="math notranslate nohighlight">\(\gamma(\mathbf{q}\nu)\)</span> at the wave vector
 <span class="math notranslate nohighlight">\(\mathbf{q}\)</span> and band index <span class="math notranslate nohighlight">\(\nu\)</span> is given by</p>
 <div class="math notranslate nohighlight">

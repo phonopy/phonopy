@@ -5,11 +5,6 @@
 A few auxiliary tools are prepared. They are stored in `bin` directory as well
 as `phonopy`.
 
-```{contents}
-:depth: 3
-:local:
-```
-
 (bandplot_tool)=
 
 ## `phonopy-bandplot`
