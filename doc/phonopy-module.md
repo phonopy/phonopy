@@ -737,7 +737,7 @@ K_POINTS automatic
 
 In [3]: cell, optional_structure_info = read_crystal_structure("NaCl.in", interface_mode='qe')
 
-In [4]: optional_info
+In [4]: optional_structure_info
 Out[4]:
 ('NaCl.in',
  {'Na': 'Na.pbe-spn-kjpaw_psl.0.2.UPF', 'Cl': 'Cl.pbe-n-kjpaw_psl.0.1.UPF'})
