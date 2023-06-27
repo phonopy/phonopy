@@ -32,10 +32,10 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-
+import warnings
 from phonopy.gruneisen.band_structure import GruneisenBandStructure
 from phonopy.gruneisen.mesh import GruneisenMesh
-
+from phonopy.phonon.band_structure import BandStructure
 
 class PhonopyGruneisen:
     """Class to calculate mode Grueneisen parameters."""
@@ -64,6 +64,8 @@ class PhonopyGruneisen:
         """Return Phonopy class instance at dV=0."""
         return self._phonon
 
+
+    #TODO:  add run_mesh simlar to api phonopy
     def set_mesh(
         self,
         mesh,
@@ -136,8 +138,61 @@ class PhonopyGruneisen:
         )
         return plt
 
+    def run_band_structure(
+        self,
+        paths,
+        with_eigenvectors=False,
+        is_band_connection=False,
+        path_connections=None,
+        labels=None,
+    ):
+        """Run phonon band structure calculation.
+
+        Parameters
+        ----------
+        paths : List of array_like
+            Sets of qpoints that can be passed to phonopy.set_band_structure().
+            Numbers of qpoints can be different.
+            shape of each array_like : (qpoints, 3)
+        with_eigenvectors : bool, optional
+            Flag whether eigenvectors are calculated or not. Default is False.
+        is_band_connection : bool, optional
+            Flag whether each band is connected or not. This is achieved by
+            comparing similarity of eigenvectors of neghboring poins. Sometimes
+            this fails. Default is False.
+        path_connections : List of bool, optional
+            This is only used in graphical plot of band structure and gives
+            whether each path is connected to the next path or not,
+            i.e., if False, there is a jump of q-points. Number of elements is
+            the same at that of paths. Default is None.
+        labels : List of str, optional
+            This is only used in graphical plot of band structure and gives
+            labels of end points of each path. The number of labels is equal
+            to (2 - np.array(path_connections)).sum().
+
+
+        """
+        self._band_structure =GruneisenBandStructure(
+            paths,
+            self._phonon.dynamical_matrix,
+            self._phonon_plus.dynamical_matrix,
+            self._phonon_minus.dynamical_matrix,
+            with_eigenvectors=with_eigenvectors,
+            is_band_connection=is_band_connection,
+            path_connections=path_connections,
+            labels=labels,
+            delta_strain=self._delta_strain,
+            factor=self._phonon.unit_conversion_factor,
+        )
+
+
     def set_band_structure(self, bands):
         """Set band structure paths."""
+        warnings.warn(
+            "PhonopyGruneisen.set_band_structure() is deprecated. "
+            "Use PhonopyGruneisen.run_band_structure().",
+            DeprecationWarning,
+        )
         self._band_structure = GruneisenBandStructure(
             bands,
             self._phonon.dynamical_matrix,
@@ -158,10 +213,12 @@ class PhonopyGruneisen:
             band.get_gruneisen(),
         )
 
+    #TODO: make this more flexible
     def write_yaml_band_structure(self):
         """Write band structure calculation results to file in yaml."""
         self._band_structure.write_yaml()
 
+    #TODO  improve plot including labels
     def plot_band_structure(self, epsilon=1e-4, color_scheme=None):
         """Return pyplot of band structure calculation results."""
         import matplotlib.pyplot as plt
@@ -174,3 +231,4 @@ class PhonopyGruneisen:
             ax.yaxis.set_tick_params(which="both", direction="in")
             self._band_structure.plot(axarr, epsilon=epsilon, color_scheme=color_scheme)
         return plt
+

@@ -52,18 +52,21 @@ class GruneisenBandStructure(GruneisenBase):
         dynmat,
         dynmat_plus,
         dynmat_minus,
+        with_eigenvectors=False,
+        is_band_connection=True,
         delta_strain=None,
         path_connections=None,
         labels=None,
         factor=VaspToTHz,
     ):
+
         """Init method."""
         super().__init__(
             dynmat,
             dynmat_plus,
             dynmat_minus,
             delta_strain=delta_strain,
-            is_band_connection=True,
+            is_band_connection=is_band_connection,
         )
         self._cell = dynmat.primitive
         rec_lattice = np.linalg.inv(self._cell.cell)
@@ -91,7 +94,7 @@ class GruneisenBandStructure(GruneisenBase):
                     distances,
                     self._gruneisen,
                     eigenvalues,
-                    self._eigenvectors,
+                    self._eigenvectors if with_eigenvectors else None,
                     frequencies,
                     distances_with_shift,
                 ]
@@ -100,7 +103,6 @@ class GruneisenBandStructure(GruneisenBase):
             distance_shift = distances_with_shift[-1]
         self._labels = None
         self._path_connections = None
-        print(path_connections)
         if path_connections is None:
             self._path_connections = [
                 True,
