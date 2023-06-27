@@ -33,9 +33,11 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 import warnings
+
 from phonopy.gruneisen.band_structure import GruneisenBandStructure
 from phonopy.gruneisen.mesh import GruneisenMesh
 from phonopy.phonon.band_structure import BandStructure
+
 
 class PhonopyGruneisen:
     """Class to calculate mode Grueneisen parameters."""
@@ -64,8 +66,7 @@ class PhonopyGruneisen:
         """Return Phonopy class instance at dV=0."""
         return self._phonon
 
-
-    #TODO:  add run_mesh simlar to api phonopy
+    # TODO:  add run_mesh simlar to api phonopy
     def set_mesh(
         self,
         mesh,
@@ -172,7 +173,7 @@ class PhonopyGruneisen:
 
 
         """
-        self._band_structure =GruneisenBandStructure(
+        self._band_structure = GruneisenBandStructure(
             paths,
             self._phonon.dynamical_matrix,
             self._phonon_plus.dynamical_matrix,
@@ -184,7 +185,6 @@ class PhonopyGruneisen:
             delta_strain=self._delta_strain,
             factor=self._phonon.unit_conversion_factor,
         )
-
 
     def set_band_structure(self, bands):
         """Set band structure paths."""
@@ -213,12 +213,12 @@ class PhonopyGruneisen:
             band.get_gruneisen(),
         )
 
-    #TODO: make this more flexible
+    # TODO: make this more flexible
     def write_yaml_band_structure(self):
         """Write band structure calculation results to file in yaml."""
         self._band_structure.write_yaml()
 
-    #TODO  improve plot including labels
+    # TODO  improve plot including labels
     def plot_band_structure(self, epsilon=1e-4, color_scheme=None):
         """Return pyplot of band structure calculation results."""
         import matplotlib.pyplot as plt
@@ -231,4 +231,3 @@ class PhonopyGruneisen:
             ax.yaxis.set_tick_params(which="both", direction="in")
             self._band_structure.plot(axarr, epsilon=epsilon, color_scheme=color_scheme)
         return plt
-

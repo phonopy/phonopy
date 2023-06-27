@@ -59,7 +59,6 @@ class GruneisenBandStructure(GruneisenBase):
         labels=None,
         factor=VaspToTHz,
     ):
-
         """Init method."""
         super().__init__(
             dynmat,
