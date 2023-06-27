@@ -286,6 +286,8 @@ class GruneisenBandStructure(GruneisenBase):
             self._plot(axarr, band_structure, epsilon, color_scheme)
 
     def _plot(self, axarr, band_structure, epsilon, color_scheme):
+        # TODO add labels here
+
         (
             qpoints,
             distances,
@@ -295,7 +297,6 @@ class GruneisenBandStructure(GruneisenBase):
             frequencies,
             distances_with_shift,
         ) = band_structure
-
         n = len(gamma.T) - 1
         ax1, ax2 = axarr
 
