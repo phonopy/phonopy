@@ -115,7 +115,8 @@ class GruneisenBandStructure(GruneisenBase):
             and len(labels) == (2 - np.array(self._path_connections)).sum()
         ):
             self._labels = labels
-        self._is_legacy_plot=is_legacy_plot
+        self._is_legacy_plot = is_legacy_plot
+
     def get_qpoints(self):
         """Return q-points."""
         return [path[0] for path in self._paths]
@@ -287,7 +288,6 @@ class GruneisenBandStructure(GruneisenBase):
             self._plot(axarr, band_structure, epsilon, color_scheme)
 
     def _plot(self, axarr, band_structure, epsilon, color_scheme):
-
         (
             qpoints,
             distances,
