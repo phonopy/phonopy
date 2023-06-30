@@ -33,11 +33,12 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 import warnings
+import numpy as np
 
 from phonopy.gruneisen.band_structure import GruneisenBandStructure
 from phonopy.gruneisen.mesh import GruneisenMesh
 from phonopy.phonon.band_structure import BandStructure
-
+from phonopy.structure.grid_points import length2mesh
 
 class PhonopyGruneisen:
     """Class to calculate mode Grueneisen parameters."""
@@ -66,7 +67,88 @@ class PhonopyGruneisen:
         """Return Phonopy class instance at dV=0."""
         return self._phonon
 
-    # TODO:  add run_mesh simlar to api phonopy
+    def run_mesh(self,
+        mesh=100.0,
+        shift=None,
+        is_time_reversal=True,
+        is_mesh_symmetry=True,
+        is_gamma_center=False):
+        """
+
+        Parameters
+        ----------
+        mesh: array_like or float, optional
+            Mesh numbers along a, b, c axes when array_like object is given.
+            dtype='intc', shape=(3,)
+            When float value is given, uniform mesh is generated following
+            VASP convention by
+                N = max(1, nint(l * |a|^*))
+            where 'nint' is the function to return the nearest integer. In this
+            case, it is forced to set is_gamma_center=True.
+            Default value is 100.0.
+        shift: array_like, optional
+            Mesh shifts along a*, b*, c* axes with respect to neighboring grid
+            points from the original mesh (Monkhorst-Pack or Gamma center).
+            0.5 gives half grid shift. Normally 0 or 0.5 is given.
+            Otherwise, q-points symmetry search is not performed.
+            Default is None (no additional shift).
+            dtype='double', shape=(3, )
+        is_time_reversal: bool, optional
+            Time reversal symmetry is considered in symmetry search. By this,
+            inversion symmetry is always included. Default is True.
+        is_mesh_symmetry: bool, optional
+            Wheather symmetry search is done or not. Default is True
+        is_gamma_center: bool, default False
+            Uniform mesh grids are generated centring at Gamma point but not
+            the Monkhorst-Pack scheme. When type(mesh) is float, this parameter
+            setting is ignored and it is forced to set is_gamma_center=True.
+
+        Eigenvectors will always be computed.
+
+        Returns
+        -------
+
+        """
+        for phonon in (self._phonon, self._phonon_plus, self._phonon_minus):
+            if phonon.dynamical_matrix is None:
+                print("Warning: Dynamical matrix has not yet built.")
+                return False
+        _mesh = np.array(mesh)
+        mesh_nums = None
+        if _mesh.shape:
+            if _mesh.shape == (3,):
+                mesh_nums = mesh
+                _is_gamma_center = is_gamma_center
+        else:
+            if self._phonon._primitive_symmetry is not None:
+                rots = self._phonon._primitive_symmetry.pointgroup_operations
+                mesh_nums = length2mesh(mesh, self._phonon._primitive.cell, rotations=rots)
+            else:
+                mesh_nums = length2mesh(mesh, self._phonon._primitive.cell)
+            _is_gamma_center = True
+
+        if mesh_nums is None:
+            msg = "mesh has inappropriate type."
+            raise TypeError(msg)
+
+        symmetry = phonon.primitive_symmetry
+        rotations = symmetry.pointgroup_operations
+        self._mesh = GruneisenMesh(
+            self._phonon.dynamical_matrix,
+            self._phonon_plus.dynamical_matrix,
+            self._phonon_minus.dynamical_matrix,
+            mesh_nums,
+            delta_strain=self._delta_strain,
+            shift=shift,
+            is_time_reversal=is_time_reversal,
+            is_gamma_center=is_gamma_center,
+            is_mesh_symmetry=is_mesh_symmetry,
+            rotations=rotations,
+            factor=self._phonon.unit_conversion_factor,
+        )
+
+
+
     def set_mesh(
         self,
         mesh,
@@ -76,6 +158,11 @@ class PhonopyGruneisen:
         is_mesh_symmetry=True,
     ):
         """Set sampling mesh."""
+        warnings.warn(
+            "PhonopyGruneisen.set_mesh() is deprecated. "
+            "Use PhonopyGruneisen.run_mesh().",
+            DeprecationWarning,
+        )
         for phonon in (self._phonon, self._phonon_plus, self._phonon_minus):
             if phonon.dynamical_matrix is None:
                 print("Warning: Dynamical matrix has not yet built.")
@@ -97,6 +184,8 @@ class PhonopyGruneisen:
             factor=self._phonon.unit_conversion_factor,
         )
         return True
+
+
 
     def get_mesh(self):
         """Return mode Grueneisen parameters calculated on sampling mesh."""
@@ -219,10 +308,10 @@ class PhonopyGruneisen:
         self._band_structure.write_yaml()
 
     # TODO  improve plot including labels
-    def plot_band_structure(self, epsilon=1e-4, color_scheme=None):
+    def plot_band_structure(self, epsilon=1e-4, color_scheme=None, legacy_plot=False):
         """Return pyplot of band structure calculation results."""
         import matplotlib.pyplot as plt
-
+        #if legacy_plot:
         fig, axarr = plt.subplots(2, 1)
         for ax in axarr:
             ax.xaxis.set_ticks_position("both")
@@ -231,3 +320,5 @@ class PhonopyGruneisen:
             ax.yaxis.set_tick_params(which="both", direction="in")
             self._band_structure.plot(axarr, epsilon=epsilon, color_scheme=color_scheme)
         return plt
+        #else:
+        #    pass
