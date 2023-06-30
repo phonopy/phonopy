@@ -333,13 +333,7 @@ def main(args):
             import matplotlib as mpl
 
             mpl.use("Agg")
-
-<<<<<<< HEAD
-    # TODO: make similar to band structure scripts
     if args.band_paths=="auto":
-=======
-    if args.band_paths == "auto":
->>>>>>> d5bacf8225acb8ae4b4b127da97e783a3fbb12cc
         print("SeeK-path is used to generate band paths.")
         print(
             "  About SeeK-path https://seekpath.readthedocs.io/ " "(citation there-in)"
