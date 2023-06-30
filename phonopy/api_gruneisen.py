@@ -115,7 +115,6 @@ class PhonopyGruneisen:
                 print("Warning: Dynamical matrix has not yet built.")
                 return False
 
-
         self._mesh = GruneisenMesh(
             self._phonon.dynamical_matrix,
             self._phonon_plus.dynamical_matrix,
