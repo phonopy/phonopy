@@ -71,7 +71,7 @@ class PhonopyGruneisen:
 
     def run_mesh(
         self,
-        mesh=100.0,
+        mesh,
         shift=None,
         is_time_reversal=True,
         is_mesh_symmetry=True,
@@ -81,15 +81,9 @@ class PhonopyGruneisen:
 
         Parameters
         ----------
-        mesh: array_like or float, optional
+        mesh: array_like , optional
             Mesh numbers along a, b, c axes when array_like object is given.
-            dtype='intc', shape=(3,)
-            When float value is given, uniform mesh is generated following
-            VASP convention by
-                N = max(1, nint(l * |a|^*))
-            where 'nint' is the function to return the nearest integer. In this
-            case, it is forced to set is_gamma_center=True.
-            Default value is 100.0.
+            dtype='intc', shape=(3,).
         shift: array_like, optional
             Mesh shifts along a*, b*, c* axes with respect to neighboring grid
             points from the original mesh (Monkhorst-Pack or Gamma center).
@@ -107,6 +101,9 @@ class PhonopyGruneisen:
             the Monkhorst-Pack scheme. When type(mesh) is float, this parameter
             setting is ignored and it is forced to set is_gamma_center=True.
 
+        Notes:
+        Mesh cannot be set in a similar manner to the phonopy mesh,
+        as the Gamma point has to be avoided.
         Eigenvectors will always be computed.
 
         Returns
@@ -117,39 +114,19 @@ class PhonopyGruneisen:
             if phonon.dynamical_matrix is None:
                 print("Warning: Dynamical matrix has not yet built.")
                 return False
-        _mesh = np.array(mesh)
-        mesh_nums = None
-        if _mesh.shape:
-            if _mesh.shape == (3,):
-                mesh_nums = mesh
-                _is_gamma_center = is_gamma_center
-        else:
-            if self._phonon._primitive_symmetry is not None:
-                rots = self._phonon._primitive_symmetry.pointgroup_operations
-                mesh_nums = length2mesh(
-                    mesh, self._phonon._primitive.cell, rotations=rots
-                )
-            else:
-                mesh_nums = length2mesh(mesh, self._phonon._primitive.cell)
-            _is_gamma_center = True
 
-        if mesh_nums is None:
-            msg = "mesh has inappropriate type."
-            raise TypeError(msg)
 
-        symmetry = phonon.primitive_symmetry
-        rotations = symmetry.pointgroup_operations
         self._mesh = GruneisenMesh(
             self._phonon.dynamical_matrix,
             self._phonon_plus.dynamical_matrix,
             self._phonon_minus.dynamical_matrix,
-            mesh_nums,
+            mesh,
             delta_strain=self._delta_strain,
             shift=shift,
             is_time_reversal=is_time_reversal,
             is_gamma_center=is_gamma_center,
             is_mesh_symmetry=is_mesh_symmetry,
-            rotations=rotations,
+            rotations=self._phonon._primitive_symmetry.pointgroup_operations,
             factor=self._phonon.unit_conversion_factor,
         )
 
