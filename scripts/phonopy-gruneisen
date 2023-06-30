@@ -333,7 +333,7 @@ def main(args):
             import matplotlib as mpl
 
             mpl.use("Agg")
-    if args.band_paths=="auto":
+    if args.band_paths == "auto":
         print("SeeK-path is used to generate band paths.")
         print(
             "  About SeeK-path https://seekpath.readthedocs.io/ " "(citation there-in)"
