@@ -33,12 +33,14 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 import warnings
+
 import numpy as np
 
 from phonopy.gruneisen.band_structure import GruneisenBandStructure
 from phonopy.gruneisen.mesh import GruneisenMesh
 from phonopy.phonon.band_structure import BandStructure
 from phonopy.structure.grid_points import length2mesh
+
 
 class PhonopyGruneisen:
     """Class to calculate mode Grueneisen parameters."""
@@ -67,12 +69,14 @@ class PhonopyGruneisen:
         """Return Phonopy class instance at dV=0."""
         return self._phonon
 
-    def run_mesh(self,
+    def run_mesh(
+        self,
         mesh=100.0,
         shift=None,
         is_time_reversal=True,
         is_mesh_symmetry=True,
-        is_gamma_center=False):
+        is_gamma_center=False,
+    ):
         """
 
         Parameters
@@ -122,7 +126,9 @@ class PhonopyGruneisen:
         else:
             if self._phonon._primitive_symmetry is not None:
                 rots = self._phonon._primitive_symmetry.pointgroup_operations
-                mesh_nums = length2mesh(mesh, self._phonon._primitive.cell, rotations=rots)
+                mesh_nums = length2mesh(
+                    mesh, self._phonon._primitive.cell, rotations=rots
+                )
             else:
                 mesh_nums = length2mesh(mesh, self._phonon._primitive.cell)
             _is_gamma_center = True
@@ -146,8 +152,6 @@ class PhonopyGruneisen:
             rotations=rotations,
             factor=self._phonon.unit_conversion_factor,
         )
-
-
 
     def set_mesh(
         self,
@@ -184,8 +188,6 @@ class PhonopyGruneisen:
             factor=self._phonon.unit_conversion_factor,
         )
         return True
-
-
 
     def get_mesh(self):
         """Return mode Grueneisen parameters calculated on sampling mesh."""
@@ -311,7 +313,8 @@ class PhonopyGruneisen:
     def plot_band_structure(self, epsilon=1e-4, color_scheme=None, legacy_plot=False):
         """Return pyplot of band structure calculation results."""
         import matplotlib.pyplot as plt
-        #if legacy_plot:
+
+        # if legacy_plot:
         fig, axarr = plt.subplots(2, 1)
         for ax in axarr:
             ax.xaxis.set_ticks_position("both")
@@ -320,5 +323,5 @@ class PhonopyGruneisen:
             ax.yaxis.set_tick_params(which="both", direction="in")
             self._band_structure.plot(axarr, epsilon=epsilon, color_scheme=color_scheme)
         return plt
-        #else:
+        # else:
         #    pass
