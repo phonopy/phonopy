@@ -2,11 +2,6 @@
 
 # Setting tags
 
-```{contents}
-:depth: 2
-:local:
-```
-
 Most of the setting tags have respective command-line options
 ({ref}`command_options`). When both of equivalent command-line option and
 setting tag are set simultaneously, the command-line option supersedes the
@@ -183,19 +178,14 @@ See {ref}`cell_filename_option`.
 
 ### `FREQUENCY_CONVERSION_FACTOR`
 
-Unit conversion factor of frequency from input values to your favorite unit can
-be specified, but the use should be limited and it is recommended to use this
-tag to convert the frequency unit to THz in some exceptional case, for example,
-a special force calculator whose physical unit system is different from the
-default setting of phonopy is used. If the frequency unit is different from THz,
-though it works just for seeing results of frequencies, e.g., band structure or
-DOS, it doesn't work for derived values like thermal properties and mean square
-displacements.
-
-The default values for calculators are those to convert frequency units to THz.
-The default conversion factors are shown at
-{ref}`frequency_default_value_interfaces`. These are determined following the
-physical unit systems of the calculators. How to calculated these conversion
+This tag should be used to convert the phonon frequency unit to THz because if
+the frequency unit is different from THz, derived values like thermal properties
+and mean square displacements are wrongly calculated. Normally this tag is
+unnecessary to be specified because the default value is chosen for each force
+calculator, i.e., the default values for calculators are prepared to convert the
+frequency unit to THz. If no calculator is chosen, the factor for VASP is used.
+The default conversion factors are listed at
+{ref}`frequency_default_value_interfaces`. How to calculated these conversion
 factors is explained at {ref}`physical_unit_conversion`.
 
 ## Displacement creation tags
@@ -1016,9 +1006,11 @@ Q_DIRECTION = 1 0 0
 Group velocities at q-points are calculated by using this tag. The group
 velocities are written into a yaml file corresponding to the run mode in
 Cartesian coordinates. The physical unit depends on physical units of input
-files and frequency conversion factor, but if VASP and the default settings
-(e.g., THz for phonon frequency) are simply used, then the physical unit will be
-Angstrom THz.
+files and frequency conversion factor. Usually the phonon frequency is given in
+THz. Therefore, the physical unit of the group velocity written in the output
+files is [unit-of-distance.THz]. The distance units for different force
+calculators are listed at {ref}`interfaces-physical-units`.  For example, VASP
+[Angstrom.THz], and QE [au.THz].
 
 ```
 GROUP_VELOCITY = .TRUE.
