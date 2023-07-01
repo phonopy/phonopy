@@ -40,6 +40,7 @@ The VASP DFPT interface reads `vasprun.xml` and creates `FORCE_CONSTANTS` file.
 vasp-dfpt
 ```
 
+(interfaces-physical-units)=
 ## Physical unit system for calculator
 
 Physical unit systems used for the calculators are as follows:
