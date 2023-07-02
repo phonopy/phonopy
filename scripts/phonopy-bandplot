@@ -516,8 +516,8 @@ def _old_plot(args):
                     plt.plot(
                         distances[q : (q + nq)],
                         frequencies[q : (q + nq)] * args.factor,
-                        color=colors[i][0],
-                        linestyle=colors[i][1:],
+                        color=colors[i % len(colors)][0],
+                        linestyle=colors[i % len(colors)][1:],
                         marker=marker,
                         label=filename,
                     )[0]
@@ -526,9 +526,9 @@ def _old_plot(args):
                 plt.plot(
                     distances[q : (q + nq)],
                     frequencies[q : (q + nq)] * args.factor,
-                    color=colors[i][0],
+                    color=colors[i % len(colors)][0],
                     marker=marker,
-                    linestyle=colors[i][1:],
+                    linestyle=colors[i % len(colors)][1:],
                 )
             q += nq
 
@@ -694,7 +694,9 @@ def _plot(args):
         "y--",
         "k--",
     ]
-    for (l, p, f, d), fmt, label in zip(plots_data, fmts, filenames):
+    for i, label in enumerate(filenames):
+        _, p, f, d = plots_data[i]
+        fmt = fmts[i % len(fmts)]
         _f = [f_seg * args.factor for f_seg in f]
         if args.show_legend:
             band_plot.plot(d, _f, p, fmt=fmt, label=_get_label_for_latex(label))

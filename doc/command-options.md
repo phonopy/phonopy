@@ -2,11 +2,6 @@
 
 # Command options
 
-```{contents}
-:depth: 3
-:local:
-```
-
 From phonopy v1.12.2, the command option names with underscores `_` are replaced
 by those with dashes `-`. Those tag names are unchanged.
 

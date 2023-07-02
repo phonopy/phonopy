@@ -12,7 +12,7 @@ jobs:
         shell: bash -l {0}
     strategy:
       matrix:
-        python-version: ["3.9"]
+        python-version: ["3.11"]
 
     steps:
     - uses: actions/checkout@v2
@@ -26,7 +26,7 @@ jobs:
       run: |
         conda activate test
         conda install --yes -c conda-forge python=${{ matrix.python-version }}
-        conda install --yes -c conda-forge sphinx-book-theme linkify-it-py "myst-parser=0.17.2" sphinxcontrib-bibtex
+        conda install --yes -c conda-forge sphinx-book-theme linkify-it-py myst-parser sphinxcontrib-bibtex ipython
     - name: Build
       run: |
         conda activate test

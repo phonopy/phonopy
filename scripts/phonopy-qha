@@ -219,9 +219,13 @@ def main(args):
             and (np.abs(temperatures - _temperatures[: len(temperatures)]) > 1e-5).any()
         ):
             print(
-                "Inconsistency is found in temperatures in %s and "
-                "thermal_properties.yaml files." % args.filenames[0]
+                f"Inconsistency is found in temperatures in {args.efe_file[0]} and "
+                "thermal_properties.yaml files."
             )
+            print("Temperatures in a thermal_properties.yaml are")
+            print(f"{temperatures}.")
+            print(f"Temperatures in {args.efe_file[0]} are")
+            print(f"{_temperatures.tolist()}.")
             sys.exit(1)
 
     ########################################################

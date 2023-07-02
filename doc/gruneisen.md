@@ -2,11 +2,6 @@
 
 # Calculation of mode Grüneisen parameters
 
-```{contents}
-:depth: 2
-:local:
-```
-
 ## How to run
 
 It is necessary to run three phonon calculations. One is calculated at the

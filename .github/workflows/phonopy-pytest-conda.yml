@@ -4,6 +4,7 @@ on:
   push:
     branches-ignore:
     - publish-gh-pages
+    - develop
     - master
     - rc
   pull_request:
@@ -17,21 +18,18 @@ jobs:
         shell: bash -l {0}
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: conda-incubator/setup-miniconda@v2
       with:
-        auto-update-conda: true
-        channels: conda-forge
-        channel-priority: strict
-        python-version: ${{ matrix.python-version }}
+        miniforge-version: latest
     - name: Install dependencies
       run: |
         conda activate test
         conda install --yes -c conda-forge python=${{ matrix.python-version }}
-        conda install --yes -c conda-forge c-compiler matplotlib-base pyyaml scipy numpy spglib h5py pip pytest codecov pytest-cov pytest
+        conda install --yes -c conda-forge matplotlib-base pyyaml scipy numpy spglib h5py pip pytest codecov pytest-cov c-compiler
     - name: Install cp2k-input-tools
       run: |
         conda activate test
@@ -45,6 +43,6 @@ jobs:
         conda activate test
         pytest --cov=./ --cov-report=xml
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v3
       with:
         verbose: true
