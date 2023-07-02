@@ -33,6 +33,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from collections.abc import Sequence
 from typing import Optional, Tuple, Union
 
 import numpy as np
@@ -124,11 +125,12 @@ class RandomDisplacements:
         self,
         supercell: PhonopyAtoms,
         primitive: Primitive,
-        force_constants,
-        dist_func=None,
-        cutoff_frequency=None,
-        factor=VaspToTHz,
-        use_openmp=False,
+        force_constants: Union[np.ndarray, Sequence],
+        dist_func: Optional[str] = None,
+        cutoff_frequency: Optional[float] = None,
+        max_distance: Optional[float] = None,
+        factor: float = VaspToTHz,
+        use_openmp: bool = False,
     ):
         """Init method.
 
@@ -150,6 +152,11 @@ class RandomDisplacements:
             Lowest phonon frequency below which frequency the phonon mode
             is treated specially. See _get_sigma. Default is None, which
             means 0.01.
+        max_distance : float or None, optional
+            In random displacements generation from canonical ensemble of
+            harmonic phonons, displacements larger than max distance are
+            renormalized to the max distance, i.e., a disptalcement d is shorten
+            by d -> d / |d| * max_distance if |d| > max_distance.
         factor : float
             Phonon frequency unit conversion factor to THz
         use_openmp : bool, optional, default=False
@@ -160,6 +167,7 @@ class RandomDisplacements:
             self._cutoff_frequency = 0.01
         else:
             self._cutoff_frequency = cutoff_frequency
+        self._max_distance = max_distance
         self._factor = factor
         self._T = None
         self._u = None
@@ -182,8 +190,8 @@ class RandomDisplacements:
         )
 
         self._comm_points = None
-        self._ii = []
-        self._ij = []
+        self._ii = None
+        self._ij = None
         self._setup_sampling_qpoints(supercell.cell, primitive.cell)
 
         s2p = primitive.s2p_map
@@ -195,12 +203,12 @@ class RandomDisplacements:
         self._ppos = self._dynmat.primitive.scaled_positions
         self._lpos = self._spos - self._ppos[self._s2pp]
 
-        self._eigvals_ii = []
-        self._eigvecs_ii = []
-        self._phase_ii = []
-        self._eigvals_ij = []
-        self._eigvecs_ij = []
-        self._phase_ij = []
+        self._eigvals_ii = None
+        self._eigvecs_ii = None
+        self._phase_ii = None
+        self._eigvals_ij = None
+        self._eigvecs_ij = None
+        self._phase_ij = None
         self._prepare()
 
         # This is set when running run_d2f.
@@ -223,6 +231,9 @@ class RandomDisplacements:
         randn: Optional[Tuple] = None,
     ):
         """Calculate random displacements.
+
+        Random displacements are calculated from eigensolutions stored by
+        self._prepare() method.
 
         Parameters
         ----------
@@ -264,7 +275,16 @@ class RandomDisplacements:
 
         mass = self._dynmat.supercell.masses.reshape(-1, 1)
         u = np.array((u_ii + u_ij) / np.sqrt(mass * N), dtype="double", order="C")
-        self._u = u
+        if self._max_distance:
+            dists = np.linalg.norm(u, axis=2)
+            dists = np.repeat(dists, 3).reshape(dists.shape + (-1,))
+            self._u = np.array(
+                np.where(dists < self._max_distance, u, u / dists * self._max_distance),
+                dtype="double",
+                order="C",
+            )
+        else:
+            self._u = u
 
     @property
     def u(self):
@@ -283,7 +303,13 @@ class RandomDisplacements:
 
     @property
     def frequencies(self):
-        """Setter and getter of phonon frequencies."""
+        """Setter and getter of phonon frequencies.
+
+        Phonon frequences themselves are not stored in this instance, but are
+        stored in a way of eigenvalues. The eigenvalues can be stored vai
+        frequencies setter attributed.
+
+        """
         if self._ij:
             eigvals = np.vstack((self._eigvals_ii, self._eigvals_ij))
         else:
@@ -378,6 +404,7 @@ class RandomDisplacements:
         """
         freqs = np.abs(self.frequencies)
         condition = np.logical_and(freqs > freq_from, freqs < freq_to)
+        # self.frequencies is a setter attribute that sets eigenvalues.
         self.frequencies = np.where(condition, freqs + freq_shift, freqs)
         self.run_d2f()
 
@@ -402,7 +429,25 @@ class RandomDisplacements:
         return qpoints, eigvals, eigvecs
 
     def _prepare(self):
+        """Calculate eigensolutions and phase factors used for random disps.
+
+        A is a set of q-points where q = -q + G. B is a set of other q-points
+        than A.
+
+        D-type dynamical matrix is used for A to describe displacements by only
+        real values, i.e., eigenvectors and phase factors.
+        However C-type dynamical matrix is used for B in this implementation.
+
+        """
         N = len(self._comm_points)
+        self._eigvals_ii = []
+        self._eigvecs_ii = []
+        self._phase_ii = []
+        self._eigvals_ij = []
+        self._eigvecs_ij = []
+        self._phase_ij = []
+
+        # q in A
         for q in self._comm_points[self._ii] / float(N):
             self._dynmat.run(q)
             dm = self._C_to_D(self._dynmat.dynamical_matrix, q)
@@ -413,6 +458,7 @@ class RandomDisplacements:
             self._eigvals_ii.append(eigvals)
             self._eigvecs_ii.append(eigvecs)
 
+        # q in B
         if self._ij:
             for q in self._comm_points[self._ij] / float(N):
                 self._dynmat.run(q)
@@ -425,14 +471,7 @@ class RandomDisplacements:
                 )
 
     def _C_to_D(self, dm, q):
-        """Transform C-type dynamical matrix to D-type.
-
-        Taking real part is valid only when q is at Gamma or on BZ boundary,
-        i.e., q=G-q and q in BZ are assumed.
-
-        D(q) = (D(q) + D(G-q)) / 2 -> real matrix.
-
-        """
+        """Transform C-type dynamical matrix to D-type."""
         V = np.repeat(np.exp(2j * np.pi * np.dot(self._ppos, q)), 3)
         dm = ((V * (V.conj() * dm).T).T).real  # C-type to D-type
         return dm

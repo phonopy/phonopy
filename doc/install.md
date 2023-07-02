@@ -2,11 +2,6 @@
 
 # Installation
 
-```{contents}
-:depth: 3
-:local:
-```
-
 (install_conda)=
 
 ## Installation via conda
