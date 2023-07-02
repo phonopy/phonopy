@@ -244,7 +244,7 @@ def main(build_dir):
         packages=packages_phonopy,
         python_requires=">=3.8",
         install_requires=[
-            "numpy>=1.15.0",
+            "numpy>=1.17.0",
             "PyYAML>=5.3",
             "matplotlib>=2.2.2",
             "h5py>=3.0",

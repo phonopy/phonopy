@@ -10,7 +10,7 @@
 
 - Improvement of parsing forces of the built-in LAMMPS interface.
 - Update of the ABACUS interface.
-- Changed `--symmetry` option to write also `phonopy_symells.yaml`.
+- Changed `--symmetry` option to write also `phonopy_symcells.yaml`.
 
 ## May-12-2023: Version 2.19.0
 
