@@ -1,5 +1,5 @@
-numpy >= 1.15.0
-PyYAML
+numpy >= 1.17.0
+PyYAML >= 5.3
 matplotlib >= 2.2.2
-h5py
-spglib
+h5py >= 3.0
+spglib >= 2.0

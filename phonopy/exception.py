@@ -38,3 +38,9 @@ class ForcesetsNotFoundError(RuntimeError):
     """Exception when forces not found in Phonopy class instance."""
 
     pass
+
+
+class ForceCalculatorRequiredError(RuntimeError):
+    """Exception when force calculator is required to compute force constants."""
+
+    pass

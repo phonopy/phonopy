@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Jul-2-2023: Version 2.20.0
+
+- Drop support python 3.7
+
 ## May-12-2023: Version 2.19.1
 
 - Improvement of parsing forces of the built-in LAMMPS interface.
