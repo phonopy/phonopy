@@ -4,7 +4,7 @@
 
 ## Jul-2-2023: Version 2.20.0
 
-- Drop support python 3.7
+- Drop python 3.7 support
 
 ## May-12-2023: Version 2.19.1
 
