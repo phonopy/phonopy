@@ -252,6 +252,8 @@ RANDOM_DISPLACEMENTS = 20
 DISPLACEMENT_DISTANCE = 0.03
 ```
 
+(random_displacement_temperature_tag)=
+
 ### `RANDOM_DISPLACEMENT_TEMPERATURE`
 
 **New in v2.17**
@@ -1009,7 +1011,7 @@ Cartesian coordinates. The physical unit depends on physical units of input
 files and frequency conversion factor. Usually the phonon frequency is given in
 THz. Therefore, the physical unit of the group velocity written in the output
 files is [unit-of-distance.THz]. The distance units for different force
-calculators are listed at {ref}`interfaces-physical-units`.  For example, VASP
+calculators are listed at {ref}`interfaces-physical-units`. For example, VASP
 [Angstrom.THz], and QE [au.THz].
 
 ```
@@ -1146,6 +1148,12 @@ is supported. The phonopy's default force constants calculator is based on
 finite difference method, for which atomic displacements are made
 systematically. The following is the list of the force constants calculator
 currently possible to be invoked from phonopy.
+
+(fc_calculator_options_tag)=
+
+### `FC_CALCULATOR_OPTIONS`
+
+To be written.
 
 (fc_calculator_alm_tag)=
 
