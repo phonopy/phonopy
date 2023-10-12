@@ -228,5 +228,4 @@ In the below, a step-by-step example is presented.
    solution corresponds to a stochastic self-consistent harmonic approximation
    ({ref}`reference_sscha`) approach.
 
-To perform above procedure more systematically, it is recommended to write a
-python script using phonopy API. If
+It is also possible to perform the same calculation as above using the phonopy API.
