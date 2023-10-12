@@ -122,6 +122,21 @@ Currently there are several many implementations such as
 [Elk](http://elk.sourceforge.net/), etc. VASP can calculate force constants
 using DFPT however only at Gamma-point.
 
+(reference_sscha)=
+
+### SSCHA
+
+Selected papers of SSCHA:
+- Ion Errea, Matteo Calandra, and Francesco Mauri, Phys. Rev. Lett. **111**,
+  177002 (2013)
+- Lorenzo Monacelli, Raffaello Bianco, Marco Cherubini, Matteo Calandra, Ion
+  Errea, and Francesco Mauri. J. Phys. Condens. Matter **33**, 363001 (2021).
+
+A kind of SSCHA calculation performed using phonopy and ALM is presented in the
+following paper:
+- Atsushi Togo, Hiroyuki Hayashi, Terumasa Tadano, Satoshi Tsutsui, Isao Tanaka,
+  J. Phys.: Condens. Matter **34**, 365401 (2022)
+
 ## For the study of basics
 
 ### Phonons

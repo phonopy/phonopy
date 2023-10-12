@@ -872,7 +872,7 @@ def store_nac_params(
                 print("-" * 76)
 
 
-def run(phonon: Phonopy, settings, plot_conf, log_level):
+def run(phonon: Phonopy, settings, cell_info, plot_conf, log_level):
     """Run phonon calculations."""
     interface_mode = phonon.calculator
     physical_units = get_default_physical_units(interface_mode)
@@ -1424,13 +1424,14 @@ def run(phonon: Phonopy, settings, plot_conf, log_level):
             print_error()
             sys.exit(1)
 
-        phonon.set_modulations(
+        phonon.run_modulations(
             dimension,
             phonon_modes,
             delta_q=delta_q,
             derivative_order=derivative_order,
             nac_q_direction=settings.nac_q_direction,
         )
+
         phonon.write_modulations()
         phonon.write_yaml_modulations()
 
@@ -1986,7 +1987,7 @@ def main(**argparse_control):
             print(" - %s" % mode)
         print("-" * 76)
 
-    run(phonon, settings, plot_conf, log_level)
+    run(phonon, settings, cell_info, plot_conf, log_level)
 
     ########################
     # Phonopy finalization #

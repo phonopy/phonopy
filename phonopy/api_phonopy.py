@@ -3040,6 +3040,27 @@ class Phonopy:
         derivative_order=None,
         nac_q_direction=None,
     ):
+        """Generate atomic displacements of phonon modes."""
+        warnings.warn(
+            "Phonopy.set_modulation() is deprecated. " "Use Phonopy.run_modulation().",
+            DeprecationWarning,
+        )
+        self.run_modulations(
+            dimension,
+            phonon_modes,
+            delta_q=delta_q,
+            derivative_order=derivative_order,
+            nac_q_direction=nac_q_direction,
+        )
+
+    def run_modulations(
+        self,
+        dimension,
+        phonon_modes,
+        delta_q=None,
+        derivative_order=None,
+        nac_q_direction=None,
+    ):
         """Generate atomic displacements of phonon modes.
 
         The design of this feature is not very satisfactory, and thus API.
@@ -3102,9 +3123,12 @@ class Phonopy:
         """
         return self._modulation.get_modulations_and_supercell()
 
-    def write_modulations(self):
+    def write_modulations(self, calculator=None, optional_structure_info=None):
         """Write modulated structures to MPOSCAR's."""
-        self._modulation.write()
+        self._modulation.write(
+            interface_mode=calculator,
+            optional_structure_info=optional_structure_info,
+        )
 
     def write_yaml_modulations(self):
         """Write atomic modulations in yaml format."""
