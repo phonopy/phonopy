@@ -256,10 +256,10 @@ DISPLACEMENT_DISTANCE = 0.03
 
 ### `RANDOM_DISPLACEMENT_TEMPERATURE`
 
-**New in v2.17**
-This invokes generation of random displacements at a temperature specified by
-this tag. Collective displacements are randomly sampled from harmonic oscillator
-distribution functions of phonon modes.
+**New in v2.17** This invokes generation of random displacements at a
+temperature specified by this tag. Collective displacements are randomly sampled
+from harmonic oscillator distribution functions of phonon modes. See more
+details at {ref}`random_displacements_at_temperatures`.
 
 An example of configure file for 2x2x2 supercell of NaCl conventional unit cell
 is as follows.
@@ -311,58 +311,6 @@ to ignore phonons with frequencies below cutoff frequency specified
 by {ref}`cutoff_frequency_tags` tag. Phonon frequencies of
 imaginary modes are treated as their absolute values.
 
-Distribution of displacement distances may be visualized and checked by a python
-script like below.
-
-```python
-import matplotlib.pyplot as plt
-import numpy as np
-from phonopy.interface.phonopy_yaml import PhonopyYaml
-phyml = PhonopyYaml()
-phyml.read("phonopy_disp.yaml")
-plt.hist(np.linalg.norm(phyml.dataset['displacements'].reshape(-1, 3), axis=1), 100)
-plt.show()
-```
-
-```{image} NaCl-disp-dist.png
-:scale: 50
-```
-
-An example case using this tag is as follows.
-
-1. Compute supercell force sets in the usual manner with small displacements.
-   Generate `FORCE_SETS` in the current directory.
-2. Create new directory and copy `FORCE_SETS` and input crystal structure, or
-   `phonopy_disp.yaml` to the new directory, then change to the new directory.
-3. Using `FORCE_SETS`, generate supercells with random displacements at finite
-   temperature using this tag. `phonopy_disp.yaml` is generated at this step.
-   Therefore, if `phonopy_disp.yaml` already exists in this directory, it is
-   overwritten. The required number of supercells depends on your system and
-   also the purpose. It can be 10, or can be 1000.
-4. Using those supercells with random displacements, calculate supercell forces
-   with some force calculator with VASP, QE, etc.
-5. Generate `FORCE_SETS` in this directory, which overwrites previous
-   `FORCE_SETS`.
-6. Run the force constants calculation, e.g., with ALM. ALM does the fitting
-   force constants using the dataset of displacements and forces stored in
-   `FORCE_SETS`. Run also phonon calculation. This is done for example,
-
-   ```
-   phonopy -v --alm --mesh 10 10 10 -p
-   ```
-
-   or
-
-   ```bash
-   phonopy -v --alm --writefc
-   phonopy --readfc --mesh 10 10 10 -p
-   ```
-
-   Normally the force constants calculation with ALM will not take much time,
-   but for some cases it can be. So it may be a good idea to store force constants like the second example.
-
-To perform above procedure more systematically, it is recommended to write a
-python script using phonopy API.
 
 (random_seed_tag)=
 
