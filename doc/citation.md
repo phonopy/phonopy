@@ -1,5 +1,7 @@
 # How to cite phonopy
 
+(citation_of_phonopy)=
+
 ## Citation of phonopy
 
 If you have used phonopy, please cite the following articles, which
