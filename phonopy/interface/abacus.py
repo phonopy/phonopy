@@ -193,20 +193,26 @@ def read_abacus(filename):
         if m_index:
             atom_magnetism = mags
 
+    magnetic_moments = atom_magnetism if atom_magnetism.all() else None
+    
     # to ase
     if atom_pos_type == "Direct":
         atoms = PhonopyAtoms(
             symbols=atom_symbol,
             cell=atom_lattice,
             scaled_positions=atom_positions,
-            magnetic_moments=atom_magnetism,
+            magnetic_moments=magnetic_moments,
         )
     elif atom_pos_type == "Cartesian":
         atoms = PhonopyAtoms(
             symbols=atom_symbol,
             cell=atom_lattice,
             positions=atom_positions * atom_lattice_scale,
-            magnetic_moments=atom_magnetism,
+            magnetic_moments=magnetic_moments,
+        )
+    else:
+        warnings.warn(
+            "Only 'Direct' and 'Cartesian' are supported."
         )
 
     fd.close()
@@ -286,13 +292,20 @@ def get_abacus_structure(atoms, pps, orbitals=None, abfs=None):
     for i, elem in enumerate(elements):
         line.append(f"{elem}\n{0}\n{numbers[i]}")
         for j in range(index, index + numbers[i]):
-            line.append(
-                " ".join(_list_elem2str(atoms.scaled_positions[j]))
-                + " "
-                + "1 1 1"
-                + " mag "
-                + f"{atoms.magnetic_moments[j]}"
-            )
+            if atoms.magnetic_moments:
+                line.append(
+                    " ".join(_list_elem2str(atoms.scaled_positions[j]))
+                    + " "
+                    + "1 1 1"
+                    + " mag "
+                    + f"{atoms.magnetic_moments[j]}"
+                )
+            else:
+                line.append(
+                    " ".join(_list_elem2str(atoms.scaled_positions[j]))
+                    + " "
+                    + "1 1 1"
+                )
         line.append(empty_line)
         index += numbers[i]
 
