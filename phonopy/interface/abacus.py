@@ -187,7 +187,7 @@ def read_abacus(filename):
             atom_magnetism = mags
 
     magnetic_moments = atom_magnetism if atom_magnetism.all() else None
-    
+
     # to ase
     if atom_pos_type == "Direct":
         atoms = PhonopyAtoms(
@@ -204,9 +204,7 @@ def read_abacus(filename):
             magnetic_moments=magnetic_moments,
         )
     else:
-        warnings.warn(
-            "Only 'Direct' and 'Cartesian' are supported."
-        )
+        warnings.warn("Only 'Direct' and 'Cartesian' are supported.")
 
     fd.close()
     return atoms, atom_potential, atom_basis, atom_offsite_basis
@@ -295,9 +293,7 @@ def get_abacus_structure(atoms, pps, orbitals=None, abfs=None):
                 )
             else:
                 line.append(
-                    " ".join(_list_elem2str(atoms.scaled_positions[j]))
-                    + " "
-                    + "1 1 1"
+                    " ".join(_list_elem2str(atoms.scaled_positions[j])) + " " + "1 1 1"
                 )
         line.append(empty_line)
         index += numbers[i]
