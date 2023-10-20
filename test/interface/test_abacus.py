@@ -26,10 +26,13 @@ def test_read_abacus_nomag():
     assert pps["Cl"] == "Cl_ONCV_PBE-1.0.upf"
     assert orbitals["Na"] == "Na_gga_9au_100Ry_4s2p1d.orb"
     assert orbitals["Cl"] == "Cl_gga_8au_100Ry_2s2p1d.orb"
-    
+
+
 def test_read_abacus_mag():
     """Test of read_ABACUS with magnetic moments."""
-    cell, pps, orbitals, abfs = read_abacus(os.path.join(data_dir, "NaCl-abacus-mag.stru"))
+    cell, pps, orbitals, abfs = read_abacus(
+        os.path.join(data_dir, "NaCl-abacus-mag.stru")
+    )
     filename = os.path.join(data_dir, "NaCl-abacus-mag.yaml")
     cell_ref = read_cell_yaml(filename)
     # assert (np.abs(cell.cell - cell_ref.cell) < 1e-5).all()
@@ -43,10 +46,10 @@ def test_read_abacus_mag():
     assert pps["Cl"] == "Cl_ONCV_PBE-1.0.upf"
     assert orbitals["Na"] == "Na_gga_9au_100Ry_4s2p1d.orb"
     assert orbitals["Cl"] == "Cl_gga_8au_100Ry_2s2p1d.orb"
-    
-    diff_mag = cell_ref.magnetic_moments - np.array([1]*4+[2]*4)
+
+    diff_mag = cell_ref.magnetic_moments - np.array([1] * 4 + [2] * 4)
     assert (np.abs(diff_mag) < 1e-5).all()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_read_abacus_mag()
