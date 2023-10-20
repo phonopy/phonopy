@@ -285,7 +285,7 @@ def get_abacus_structure(atoms, pps, orbitals=None, abfs=None):
     for i, elem in enumerate(elements):
         line.append(f"{elem}\n{0}\n{numbers[i]}")
         for j in range(index, index + numbers[i]):
-            if atoms.magnetic_moments:
+            if atoms.magnetic_moments is not None:
                 line.append(
                     " ".join(_list_elem2str(atoms.scaled_positions[j]))
                     + " "
