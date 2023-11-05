@@ -34,6 +34,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import itertools
 import sys
 import warnings
 from typing import Type, Union
@@ -136,7 +137,7 @@ class DynamicalMatrix:
         else:
             self._svecs, self._multi = sparse_to_dense_svecs(svecs, multi)
 
-    def is_nac(self):
+    def is_nac(self) -> bool:
         """Return bool if NAC is considered or not."""
         return self._nac
 
@@ -903,18 +904,34 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             -4.0 / 3 / np.sqrt(np.pi) * inv_eps / sqrt_det_eps * self._Lambda**3
         )
 
-    def _get_G_list(self, G_cutoff, g_rad=100):
-        # g_rad must be greater than 0 for broadcasting.
-        G_vec_list = self._get_G_vec_list(g_rad)
+    def _get_G_list(self, G_cutoff: float, g_rad: int = 100) -> np.ndarray:
+        """Return list of G vectors at which the values are summed.
+
+        Note
+        ----
+        g_rad must be greater than 0 for broadcasting.
+
+        """
+        _g_rad = self._get_minimum_g_rad(G_cutoff, g_rad)
+        G_vec_list = self._get_G_vec_list(_g_rad)
         G_norm2 = ((G_vec_list) ** 2).sum(axis=1)
         return np.array(G_vec_list[G_norm2 < G_cutoff**2], dtype="double", order="C")
 
-    def _get_G_vec_list(self, g_rad):
-        pts = np.arange(-g_rad, g_rad + 1)
-        grid = np.meshgrid(pts, pts, pts)
-        for i in range(3):
-            grid[i] = grid[i].ravel()
-        return np.dot(self._rec_lat, grid).T
+    def _get_minimum_g_rad(self, G_cutoff: float, g_rad: int) -> int:
+        """Return minimum g_rad."""
+        for _g_rad in range(g_rad, 0, -1):
+            for a, b, c in itertools.product((-1, 0, 1), repeat=3):
+                if (a, b, c) == (0, 0, 0):
+                    continue
+                norm = np.linalg.norm(self._rec_lat @ [a, b, c]) * _g_rad
+                if norm < G_cutoff:
+                    return _g_rad + 1
+        return g_rad
+
+    def _get_G_vec_list(self, g_rad: int):
+        pts = np.arange(-g_rad, g_rad + 1, dtype="intc")
+        grid = np.c_[np.meshgrid(pts, pts, pts)].reshape(3, -1)
+        return (self._rec_lat @ grid).T
 
     def _get_H(self):
         lat = self._scell.cell
@@ -1196,7 +1213,7 @@ def run_dynamical_matrix_solver_c(
     ) = _extract_params(dm)
 
     use_Wang_NAC = False
-    if dm.is_nac() and dm.nac_method == "gonze":
+    if isinstance(dm, DynamicalMatrixGL):
         gonze_nac_dataset = dm.Gonze_nac_dataset
         if gonze_nac_dataset[0] is None:
             dm.make_Gonze_nac_dataset()
@@ -1209,13 +1226,13 @@ def run_dynamical_matrix_solver_c(
             Lambda,
         ) = gonze_nac_dataset  # Convergence parameter
         fc = gonze_fc
-    else:
+    elif isinstance(dm, DynamicalMatrixWang):
         positions = None
         dd_q0 = None
         G_list = None
         Lambda = 0
         fc = dm.force_constants
-        if dm.is_nac() and dm.nac_method == "wang":
+        if isinstance(dm, DynamicalMatrixWang):
             use_Wang_NAC = True
 
     p2s, s2p = _get_fc_elements_mapping(dm, fc)
@@ -1257,7 +1274,7 @@ def _extract_params(dm: Union[DynamicalMatrix, DynamicalMatrixNAC]):
     masses = np.array(dm.primitive.masses, dtype="double")
     rec_lattice = np.array(np.linalg.inv(dm.primitive.cell), dtype="double", order="C")
     positions = np.array(dm.primitive.positions, dtype="double", order="C")
-    if dm.is_nac():
+    if isinstance(dm, DynamicalMatrixNAC):
         born = dm.born
         nac_factor = dm.nac_factor
         dielectric = dm.dielectric_constant

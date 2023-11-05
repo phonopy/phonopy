@@ -138,7 +138,7 @@ class DerivativeOfDynamicalMatrix:
             (3, num_patom * 3, num_patom * 3),
             dtype=("c%d" % (np.dtype("double").itemsize * 2)),
         )
-        if self._dynmat.is_nac():
+        if isinstance(self._dynmat, DynamicalMatrixNAC):
             born = self._dynmat.born
             dielectric = self._dynmat.dielectric_constant
             nac_factor = self._dynmat.nac_factor
@@ -190,7 +190,7 @@ class DerivativeOfDynamicalMatrix:
         self._ddm = ddm
 
     def _run_py(self, q, q_direction=None):
-        if self._dynmat.is_nac():
+        if isinstance(self._dynmat, DynamicalMatrixNAC):
             if q_direction is None:
                 fc_nac = self._nac(q)
                 d_nac = self._d_nac(q)
@@ -239,7 +239,7 @@ class DerivativeOfDynamicalMatrix:
                 else:
                     coef = coef_order1
 
-                if self._dynmat.is_nac():
+                if isinstance(self._dynmat, DynamicalMatrixNAC):
                     fc_elem = fc[s_i, k] + fc_nac[i, j]
                 else:
                     fc_elem = fc[s_i, k]
@@ -247,8 +247,9 @@ class DerivativeOfDynamicalMatrix:
                 for ll in range(num_elem):
                     ddm_elem = fc_elem * (coef[:, ll] * phase_multi).sum()
                     if (
-                        self._dynmat.is_nac() and not self._derivative_order == 2
-                    ):  # noqa E129
+                        isinstance(self._dynmat, DynamicalMatrixNAC)
+                        and not self._derivative_order == 2
+                    ):
                         ddm_elem += d_nac[ll, i, j] * phase_multi.sum()
 
                     ddm_local[ll] += ddm_elem / mass / multi
