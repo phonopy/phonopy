@@ -1226,7 +1226,7 @@ def run_dynamical_matrix_solver_c(
             Lambda,
         ) = gonze_nac_dataset  # Convergence parameter
         fc = gonze_fc
-    elif isinstance(dm, DynamicalMatrixWang):
+    else:
         positions = None
         dd_q0 = None
         G_list = None
