@@ -48,7 +48,7 @@ from phonopy.harmonic.displacement import (
     get_least_displacements,
     get_random_displacements_dataset,
 )
-from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrixGL, get_dynamical_matrix
 from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
 from phonopy.harmonic.force_constants import cutoff_force_constants
 from phonopy.harmonic.force_constants import get_fc2 as get_phonopy_fc2
@@ -3715,8 +3715,7 @@ class Phonopy:
             raise RuntimeError("Dynamical matrix has not yet built.")
 
         if (
-            self._dynamical_matrix.is_nac()
-            and self._dynamical_matrix.nac_method == "gonze"
+            isinstance(self._dynamical_matrix, DynamicalMatrixGL)
             and self._gv_delta_q is None
         ):
             if self._log_level:

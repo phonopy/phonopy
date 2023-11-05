@@ -697,7 +697,6 @@ class BandStructure:
         self._set_frequencies()
 
     def _solve_dm_on_path(self, path):
-        is_nac = self._dynamical_matrix.is_nac()
         distances_on_path = []
         eigvals_on_path = []
         eigvecs_on_path = []
@@ -712,7 +711,7 @@ class BandStructure:
             self._shift_point(q)
             distances_on_path.append(self._distance)
 
-            if is_nac:
+            if isinstance(self._dynamical_matrix, DynamicalMatrixNAC):
                 q_direction = None
                 if (np.abs(q) < 0.0001).all():  # For Gamma point
                     q_direction = path[0] - path[-1]
