@@ -587,8 +587,8 @@ def get_default_physical_units(interface_mode=None):
     abinit        : hartree, au,        AMU,         eV/angstrom,  eV/angstrom.au
     elk           : hartree, au,        AMU,         hartree/au,   hartree/au^2
     qe            : Ry,      au,        AMU,         Ry/au,        Ry/au^2
-    siesta        : eV,      au,        AMU,         eV/Angstroem, eV/angstrom.au
-    CRYSTAL       : eV,      angstrom,  AMU,         eV/Angstroem, eV/angstrom^2
+    siesta        : eV,      au,        AMU,         eV/angstrom,  eV/angstrom.au
+    CRYSTAL       : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
     DFTB+         : hartree, au,        AMU          hartree/au,   hartree/au^2
     TURBOMOLE     : hartree, au,        AMU,         hartree/au,   hartree/au^2
     CP2K          : hartree, angstrom,  AMU,         hartree/au,   hartree/angstrom.au
@@ -609,6 +609,7 @@ def get_default_physical_units(interface_mode=None):
         "force_to_eVperA": None,
         "force_constants_unit": None,
         "length_unit": None,
+        "force_unit": None,
     }
 
     if interface_mode is None or interface_mode in ("vasp", "aims", "lammps"):
@@ -617,12 +618,14 @@ def get_default_physical_units(interface_mode=None):
         units["distance_to_A"] = 1.0
         units["force_constants_unit"] = "eV/angstrom^2"
         units["length_unit"] = "angstrom"
+        units["force_unit"] = "eV/angstrom"
     elif interface_mode == "abinit":
         units["factor"] = AbinitToTHz
         units["nac_factor"] = Hartree / Bohr
         units["distance_to_A"] = Bohr
         units["force_constants_unit"] = "eV/angstrom.au"
         units["length_unit"] = "au"
+        units["force_unit"] = "eV/angstrom"
     elif interface_mode == "qe":
         units["factor"] = PwscfToTHz
         units["nac_factor"] = 2.0
@@ -630,42 +633,49 @@ def get_default_physical_units(interface_mode=None):
         units["force_to_eVperA"] = Rydberg / Bohr
         units["force_constants_unit"] = "Ry/au^2"
         units["length_unit"] = "au"
+        units["force_unit"] = "Ry/au"
     elif interface_mode == "wien2k":
         units["factor"] = Wien2kToTHz
         units["nac_factor"] = 2000.0
         units["distance_to_A"] = Bohr
         units["force_constants_unit"] = "mRy/au^2"
         units["length_unit"] = "au"
+        units["force_unit"] = "mRy/au"
     elif interface_mode == "elk":
         units["factor"] = ElkToTHz
         units["nac_factor"] = 1.0
         units["distance_to_A"] = Bohr
         units["force_constants_unit"] = "hartree/au^2"
         units["length_unit"] = "au"
+        units["force_unit"] = "hartree/au"
     elif interface_mode in ["siesta", "abacus"]:
         units["factor"] = SiestaToTHz
         units["nac_factor"] = Hartree / Bohr
         units["distance_to_A"] = Bohr
         units["force_constants_unit"] = "eV/angstrom.au"
         units["length_unit"] = "au"
+        units["force_unit"] = "eV/angstrom"
     elif interface_mode == "cp2k":
         units["factor"] = CP2KToTHz
         units["nac_factor"] = None  # not implemented
         units["distance_to_A"] = 1.0
         units["force_constants_unit"] = "hartree/angstrom.au"
         units["length_unit"] = "angstrom"
+        units["force_unit"] = "hartree/au"
     elif interface_mode == "crystal":
         units["factor"] = CrystalToTHz
         units["nac_factor"] = Hartree * Bohr
         units["distance_to_A"] = 1.0
         units["force_constants_unit"] = "eV/angstrom^2"
         units["length_unit"] = "angstrom"
+        units["force_unit"] = "eV/angstrom"
     elif interface_mode == "dftbp":
         units["factor"] = DftbpToTHz
         units["nac_factor"] = Hartree * Bohr
         units["distance_to_A"] = Bohr
         units["force_constants_unit"] = "hartree/au^2"
         units["length_unit"] = "au"
+        units["force_unit"] = "hartree/au"
     elif interface_mode == "turbomole":
         units["factor"] = TurbomoleToTHz
         units["nac_factor"] = 1.0
@@ -673,18 +683,21 @@ def get_default_physical_units(interface_mode=None):
         units["force_to_eVperA"] = Hartree / Bohr
         units["force_constants_unit"] = "hartree/au^2"
         units["length_unit"] = "au"
+        units["force_unit"] = "hartree/au"
     elif interface_mode == "castep":
         units["factor"] = CastepToTHz
         units["nac_factor"] = Hartree * Bohr
         units["distance_to_A"] = 1.0
         units["force_constants_unit"] = "eV/angstrom^2"
         units["length_unit"] = "angstrom"
+        units["force_unit"] = "eV/angstrom"
     elif interface_mode == "fleur":
         units["factor"] = FleurToTHz
         units["nac_factor"] = 1.0
         units["distance_to_A"] = Bohr
         units["force_constants_unit"] = "hartree/au^2"
         units["length_unit"] = "au"
+        units["force_unit"] = "hartree/au"
 
     return units
 

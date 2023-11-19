@@ -124,6 +124,7 @@ class PhonopyYamlLoader:
     def parse(self):
         """Parse raw yaml data."""
         self._parse_command_header()
+        self._parse_physical_units()
         self._parse_transformation_matrices()
         self._parse_all_cells()
         self._parse_force_constants()
@@ -136,6 +137,10 @@ class PhonopyYamlLoader:
         if self._data.command_name in self._yaml:
             header = self._yaml[self._data.command_name]
             self._data.version = header["version"]
+
+    def _parse_physical_units(self):
+        if "physical_unit" in self._yaml:
+            self._data.physical_units = self._yaml["physical_unit"]
 
     def _parse_transformation_matrices(self):
         if "supercell_matrix" in self._yaml:
