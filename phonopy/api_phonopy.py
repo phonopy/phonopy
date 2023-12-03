@@ -48,7 +48,7 @@ from phonopy.harmonic.displacement import (
     get_least_displacements,
     get_random_displacements_dataset,
 )
-from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrixGL, get_dynamical_matrix
 from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
 from phonopy.harmonic.force_constants import cutoff_force_constants
 from phonopy.harmonic.force_constants import get_fc2 as get_phonopy_fc2
@@ -3040,6 +3040,27 @@ class Phonopy:
         derivative_order=None,
         nac_q_direction=None,
     ):
+        """Generate atomic displacements of phonon modes."""
+        warnings.warn(
+            "Phonopy.set_modulation() is deprecated. " "Use Phonopy.run_modulation().",
+            DeprecationWarning,
+        )
+        self.run_modulations(
+            dimension,
+            phonon_modes,
+            delta_q=delta_q,
+            derivative_order=derivative_order,
+            nac_q_direction=nac_q_direction,
+        )
+
+    def run_modulations(
+        self,
+        dimension,
+        phonon_modes,
+        delta_q=None,
+        derivative_order=None,
+        nac_q_direction=None,
+    ):
         """Generate atomic displacements of phonon modes.
 
         The design of this feature is not very satisfactory, and thus API.
@@ -3102,9 +3123,12 @@ class Phonopy:
         """
         return self._modulation.get_modulations_and_supercell()
 
-    def write_modulations(self):
+    def write_modulations(self, calculator=None, optional_structure_info=None):
         """Write modulated structures to MPOSCAR's."""
-        self._modulation.write()
+        self._modulation.write(
+            interface_mode=calculator,
+            optional_structure_info=optional_structure_info,
+        )
 
     def write_yaml_modulations(self):
         """Write atomic modulations in yaml format."""
@@ -3691,8 +3715,7 @@ class Phonopy:
             raise RuntimeError("Dynamical matrix has not yet built.")
 
         if (
-            self._dynamical_matrix.is_nac()
-            and self._dynamical_matrix.nac_method == "gonze"
+            isinstance(self._dynamical_matrix, DynamicalMatrixGL)
             and self._gv_delta_q is None
         ):
             if self._log_level:
