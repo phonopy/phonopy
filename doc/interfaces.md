@@ -88,7 +88,7 @@ CP2K      | unitcell.inp  | -
 FHI-AIMS  | geometry.in   | geometry.in.supercell
 Fleur     | fleur.in      | supercell.in
 CASTEP    | unitcell.cell | supercell.cell
-ABACUS    | STRU          | sSTRU
+ABACUS    | STRU          | STRU.in
 LAMMPS    | unitcell      | supercell
 ```
 

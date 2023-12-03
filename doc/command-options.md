@@ -22,6 +22,8 @@ Some of command-line options are equivalent to respective setting tags:
 - `--dos` (`DOS = .TRUE.`)
 - `--eigvecs`, `--eigenvectors` (`EIGENVECTORS = .TRUE.`)
 - `--factor` (`FREQUENCY_CONVERSION_FACTOR`)
+- `--fc-calc` (`FC_CALCULATOR`)
+- `--fc-calc-opt` (`FC_CALCULATOR_OPTIONS`)
 - `--fc-symmetry` (`FC_SYMMETRY = .TRUE.`)
 - `--fits-debye-model` (`DEBYE_MODEL = .TRUE.`)
 - `--fmax` (`FMAX`)

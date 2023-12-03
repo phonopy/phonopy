@@ -2,9 +2,13 @@
 
 # Change Log
 
+## Dec-4-2023: Version 2.21.0
+
+- Maintenance release.
+
 ## Jul-2-2023: Version 2.20.0
 
-- Drop support python 3.7
+- Drop python 3.7 support
 
 ## May-12-2023: Version 2.19.1
 
@@ -251,7 +255,7 @@
   Possible usages are:
 
   - For PhononDB at Kyoto-U
-    (http://phonondb.mtl.kyoto-u.ac.jp/ph20180417/index.html) raw data, phonons
+    (<http://phonondb.mtl.kyoto-u.ac.jp/ph20180417/index.html>) raw data, phonons
     are easily calculated, e.g., by
     `% phonopy -c phonon.yaml --band auto --mesh 100 -p`.
   - If `phonopy_params.yaml` is created using API of `phonopy.save()`
@@ -341,7 +345,7 @@
   - Convenient Phonopy instance loader and crystal structure yaml parser
     (`phonopy.load()` and `phonopy.read_cell_yaml()`).
   - Automatic band paths generation using SeeKpath
-    (https://seekpath.readthedocs.io/) (`BAND = AUTO`). Installation of SeekPath
+    (<https://seekpath.readthedocs.io/>) (`BAND = AUTO`). Installation of SeekPath
     is needed.
 
 ## Nov-17-2018: Version 1.14.0
@@ -944,7 +948,7 @@ document is correct.
 ## Sep-22-2010: Version 0.9.1.4
 
 - The new tag `ANIME_TYPE` supports `xyz` and `xyz_jmol` formats by Jörg Meyer
-  and Christian Carbogno, and also `A set of `POSCAR` files corresponding to
+  and Christian Carbogno, and also `A set of`POSCAR` files corresponding to
   animation frames.
 
 - Fix bugs in `trim_cell` and `Primitive.__supercell_to_primitive_map` in
