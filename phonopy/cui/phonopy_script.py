@@ -60,6 +60,7 @@ from phonopy.file_IO import (
     write_FORCE_CONSTANTS,
     write_force_constants_to_hdf5,
 )
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrixNAC
 from phonopy.harmonic.force_constants import (
     compact_fc_to_full_fc,
     full_fc_to_compact_fc,
@@ -852,7 +853,7 @@ def store_nac_params(
             if log_level:
                 dm = phonon.dynamical_matrix
                 if dm is not None:
-                    if dm.is_nac():
+                    if isinstance(dm, DynamicalMatrixNAC):
                         dm.show_nac_message()
                     print("")
 

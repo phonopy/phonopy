@@ -35,13 +35,24 @@ def test_read_vasp():
         assert s == s_r
 
 
-def test_get_vasp_structure_lines(helper_methods):
+@pytest.mark.parametrize(
+    "first_line_str, is_vasp4",
+    [(None, True), (None, False), ("my_comment", True), ("my_comment", False)],
+)
+def test_get_vasp_structure_lines(helper_methods, is_vasp4, first_line_str):
     """Test get_vasp_structure_lines (almost write_vasp)."""
     filename = cwd / "NaCl-vasp.yaml"
     cell_ref = read_cell_yaml(filename)
-    lines = get_vasp_structure_lines(cell_ref, direct=True)
+    lines = get_vasp_structure_lines(
+        cell_ref, direct=True, is_vasp4=is_vasp4, first_line_str=first_line_str
+    )
     cell = read_vasp_from_strings("\n".join(lines))
     helper_methods.compare_cells_with_order(cell, cell_ref)
+    if is_vasp4:
+        # is_vasp4 is True, first_line_str is ignored.
+        assert lines[0] == "Na Cl"
+    elif first_line_str:
+        assert lines[0] == first_line_str
 
 
 def test_get_vasp_structure_lines_shuffled_positions(helper_methods):
