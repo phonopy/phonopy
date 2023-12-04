@@ -3,13 +3,13 @@
 <!DOCTYPE html>
 
 
-<html lang="en" >
+<html lang="en" data-content_root="" >
 
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>LAMMPS &amp; phonopy calculation &#8212; Phonopy v.2.20.0</title>
+    <title>LAMMPS &amp; phonopy calculation &#8212; Phonopy v.2.21.0</title>
   
   
   
@@ -19,12 +19,12 @@
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-<link href="_static/styles/bootstrap.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=5b4479735964841361fd" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
 
   
-  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=5b4479735964841361fd" rel="stylesheet" />
   <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
@@ -33,9 +33,9 @@
     <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=ac02cc09edc035673794" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794" />
-  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=ac02cc09edc035673794"></script>
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=5b4479735964841361fd" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd" />
+  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=5b4479735964841361fd"></script>
 
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/doctools.js"></script>
@@ -118,6 +118,7 @@
   
     <div class="sidebar-primary-items__start sidebar-primary__section">
         <div class="sidebar-primary-item">
+
   
 
 <a class="navbar-brand logo" href="index.html">
@@ -126,7 +127,8 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.20.0</p>
+  
+    <p class="title logo__title">Phonopy v.2.21.0</p>
   
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -280,6 +282,7 @@
 </button>
 
 
+
 <script>
 document.write(`
   <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
@@ -289,6 +292,7 @@ document.write(`
   </button>
 `);
 </script>
+
 
 <script>
 document.write(`
@@ -448,36 +452,36 @@ University</a>.</p>
 <h2>How to run Ti-lammps example<a class="headerlink" href="#how-to-run-ti-lammps-example" title="Permalink to this heading">#</a></h2>
 <ol class="arabic">
 <li><p>Read a lammps input structure file and create supercells with</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy --lammps -c lammps_structure_Ti -d --dim 4 4 3
-        _
-  _ __ | |__   ___  _ __   ___   _ __  _   _
- | &#39;_ \| &#39;_ \ / _ \| &#39;_ \ / _ \ | &#39;_ \| | | |
- | |_) | | | | (_) | | | | (_) || |_) | |_| |
- | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
- |_|                            |_|    |___/
-                                      2.18.0
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">lammps</span> <span class="o">-</span><span class="n">c</span> <span class="n">lammps_structure_Ti</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">3</span>
+        <span class="n">_</span>
+  <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
+ <span class="o">|</span> <span class="s1">&#39;_ \| &#39;</span><span class="n">_</span> \ <span class="o">/</span> <span class="n">_</span> \<span class="o">|</span> <span class="s1">&#39;_ \ / _ \ | &#39;</span><span class="n">_</span> \<span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span>
+ <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">||</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
+ <span class="o">|</span> <span class="o">.</span><span class="n">__</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">.</span><span class="n">__</span><span class="o">/</span> \<span class="n">__</span><span class="p">,</span> <span class="o">|</span>
+ <span class="o">|</span><span class="n">_</span><span class="o">|</span>                            <span class="o">|</span><span class="n">_</span><span class="o">|</span>    <span class="o">|</span><span class="n">___</span><span class="o">/</span>
+                                      <span class="mf">2.18.0</span>
 
-Compiled with OpenMP support (max 10 threads).
-Python version 3.10.8
-Spglib version 2.0.2
+<span class="n">Compiled</span> <span class="k">with</span> <span class="n">OpenMP</span> <span class="n">support</span> <span class="p">(</span><span class="nb">max</span> <span class="mi">10</span> <span class="n">threads</span><span class="p">)</span><span class="o">.</span>
+<span class="n">Python</span> <span class="n">version</span> <span class="mf">3.10.8</span>
+<span class="n">Spglib</span> <span class="n">version</span> <span class="mf">2.0.2</span>
 
-Calculator interface: lammps
-Crystal structure was read from &quot;lammps_structure_Ti&quot;.
-Unit of length: angstrom
-Displacements creation mode
-Settings:
-  Supercell: [4 4 3]
-Spacegroup: P6_3/mmc (194)
-Use -v option to watch primitive cell, unit cell, and supercell structures.
+<span class="n">Calculator</span> <span class="n">interface</span><span class="p">:</span> <span class="n">lammps</span>
+<span class="n">Crystal</span> <span class="n">structure</span> <span class="n">was</span> <span class="n">read</span> <span class="kn">from</span> <span class="s2">&quot;lammps_structure_Ti&quot;</span><span class="o">.</span>
+<span class="n">Unit</span> <span class="n">of</span> <span class="n">length</span><span class="p">:</span> <span class="n">angstrom</span>
+<span class="n">Displacements</span> <span class="n">creation</span> <span class="n">mode</span>
+<span class="n">Settings</span><span class="p">:</span>
+  <span class="n">Supercell</span><span class="p">:</span> <span class="p">[</span><span class="mi">4</span> <span class="mi">4</span> <span class="mi">3</span><span class="p">]</span>
+<span class="n">Spacegroup</span><span class="p">:</span> <span class="n">P6_3</span><span class="o">/</span><span class="n">mmc</span> <span class="p">(</span><span class="mi">194</span><span class="p">)</span>
+<span class="n">Use</span> <span class="o">-</span><span class="n">v</span> <span class="n">option</span> <span class="n">to</span> <span class="n">watch</span> <span class="n">primitive</span> <span class="n">cell</span><span class="p">,</span> <span class="n">unit</span> <span class="n">cell</span><span class="p">,</span> <span class="ow">and</span> <span class="n">supercell</span> <span class="n">structures</span><span class="o">.</span>
 
-&quot;phonopy_disp.yaml&quot; and supercells have been created.
+<span class="s2">&quot;phonopy_disp.yaml&quot;</span> <span class="ow">and</span> <span class="n">supercells</span> <span class="n">have</span> <span class="n">been</span> <span class="n">created</span><span class="o">.</span>
 
-Summary of calculation was written in &quot;phonopy_disp.yaml&quot;.
-                 _
-   ___ _ __   __| |
-  / _ \ &#39;_ \ / _` |
- |  __/ | | | (_| |
-  \___|_| |_|\__,_|
+<span class="n">Summary</span> <span class="n">of</span> <span class="n">calculation</span> <span class="n">was</span> <span class="n">written</span> <span class="ow">in</span> <span class="s2">&quot;phonopy_disp.yaml&quot;</span><span class="o">.</span>
+                 <span class="n">_</span>
+   <span class="n">___</span> <span class="n">_</span> <span class="n">__</span>   <span class="n">__</span><span class="o">|</span> <span class="o">|</span>
+  <span class="o">/</span> <span class="n">_</span> \ <span class="s1">&#39;_ \ / _` |</span>
+ <span class="o">|</span>  <span class="n">__</span><span class="o">/</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
+  \<span class="n">___</span><span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">__</span><span class="p">,</span><span class="n">_</span><span class="o">|</span>
 </pre></div>
 </div>
 </li>
@@ -489,33 +493,33 @@ Summary of calculation was written in &quot;phonopy_disp.yaml&quot;.
 after the LAMMPS calculation.</p>
 </li>
 <li><p>Make <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>% phonopy -f lammps_forces_Ti.0
-        _
-  _ __ | |__   ___  _ __   ___   _ __  _   _
- | &#39;_ \| &#39;_ \ / _ \| &#39;_ \ / _ \ | &#39;_ \| | | |
- | |_) | | | | (_) | | | | (_) || |_) | |_| |
- | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
- |_|                            |_|    |___/
-                                      2.18.0
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">lammps_forces_Ti</span><span class="mf">.0</span>
+        <span class="n">_</span>
+  <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
+ <span class="o">|</span> <span class="s1">&#39;_ \| &#39;</span><span class="n">_</span> \ <span class="o">/</span> <span class="n">_</span> \<span class="o">|</span> <span class="s1">&#39;_ \ / _ \ | &#39;</span><span class="n">_</span> \<span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span>
+ <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">||</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
+ <span class="o">|</span> <span class="o">.</span><span class="n">__</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">.</span><span class="n">__</span><span class="o">/</span> \<span class="n">__</span><span class="p">,</span> <span class="o">|</span>
+ <span class="o">|</span><span class="n">_</span><span class="o">|</span>                            <span class="o">|</span><span class="n">_</span><span class="o">|</span>    <span class="o">|</span><span class="n">___</span><span class="o">/</span>
+                                      <span class="mf">2.18.0</span>
 
-Compiled with OpenMP support (max 10 threads).
-Python version 3.10.8
-Spglib version 2.0.2
+<span class="n">Compiled</span> <span class="k">with</span> <span class="n">OpenMP</span> <span class="n">support</span> <span class="p">(</span><span class="nb">max</span> <span class="mi">10</span> <span class="n">threads</span><span class="p">)</span><span class="o">.</span>
+<span class="n">Python</span> <span class="n">version</span> <span class="mf">3.10.8</span>
+<span class="n">Spglib</span> <span class="n">version</span> <span class="mf">2.0.2</span>
 
-Calculator interface: lammps
-Displacements were read from &quot;phonopy_disp.yaml&quot;.
-1. Drift force of &quot;lammps_forces_Ti.0&quot; to be subtracted
- -0.00000000  -0.00000000   0.00000000
-Forces parsed from LAMMPS output were rotated by F=R.F(lammps) with R:
-  1.00000 0.00000 0.00000
-  0.00000 0.00000 0.00000
-  0.00000 1.00000 1.00000
-&quot;FORCE_SETS&quot; has been created.
-                 _
-   ___ _ __   __| |
-  / _ \ &#39;_ \ / _` |
- |  __/ | | | (_| |
-  \___|_| |_|\__,_|
+<span class="n">Calculator</span> <span class="n">interface</span><span class="p">:</span> <span class="n">lammps</span>
+<span class="n">Displacements</span> <span class="n">were</span> <span class="n">read</span> <span class="kn">from</span> <span class="s2">&quot;phonopy_disp.yaml&quot;</span><span class="o">.</span>
+<span class="mf">1.</span> <span class="n">Drift</span> <span class="n">force</span> <span class="n">of</span> <span class="s2">&quot;lammps_forces_Ti.0&quot;</span> <span class="n">to</span> <span class="n">be</span> <span class="n">subtracted</span>
+ <span class="o">-</span><span class="mf">0.00000000</span>  <span class="o">-</span><span class="mf">0.00000000</span>   <span class="mf">0.00000000</span>
+<span class="n">Forces</span> <span class="n">parsed</span> <span class="kn">from</span> <span class="nn">LAMMPS</span> <span class="n">output</span> <span class="n">were</span> <span class="n">rotated</span> <span class="n">by</span> <span class="n">F</span><span class="o">=</span><span class="n">R</span><span class="o">.</span><span class="n">F</span><span class="p">(</span><span class="n">lammps</span><span class="p">)</span> <span class="k">with</span> <span class="n">R</span><span class="p">:</span>
+  <span class="mf">1.00000</span> <span class="mf">0.00000</span> <span class="mf">0.00000</span>
+  <span class="mf">0.00000</span> <span class="mf">0.00000</span> <span class="mf">0.00000</span>
+  <span class="mf">0.00000</span> <span class="mf">1.00000</span> <span class="mf">1.00000</span>
+<span class="s2">&quot;FORCE_SETS&quot;</span> <span class="n">has</span> <span class="n">been</span> <span class="n">created</span><span class="o">.</span>
+                 <span class="n">_</span>
+   <span class="n">___</span> <span class="n">_</span> <span class="n">__</span>   <span class="n">__</span><span class="o">|</span> <span class="o">|</span>
+  <span class="o">/</span> <span class="n">_</span> \ <span class="s1">&#39;_ \ / _` |</span>
+ <span class="o">|</span>  <span class="n">__</span><span class="o">/</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
+  \<span class="n">___</span><span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">__</span><span class="p">,</span><span class="n">_</span><span class="o">|</span>
 </pre></div>
 </div>
 </li>
@@ -593,7 +597,7 @@ write_data dump.unitcell
               
               
                 <footer class="prev-next-footer">
-                  <!-- Previous / next buttons -->
+                  
 <div class="prev-next-area">
     <a class="left-prev"
        href="abacus.html"
@@ -656,6 +660,7 @@ write_data dump.unitcell
   
   <div class="footer-item">
     
+
   <p class="copyright">
     
       © Copyright 2009, Atsushi Togo.
@@ -682,8 +687,8 @@ write_data dump.unitcell
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/bootstrap.js?digest=ac02cc09edc035673794"></script>
-<script src="_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794"></script>
+  <script src="_static/scripts/bootstrap.js?digest=5b4479735964841361fd"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd"></script>
 
   <footer class="bd-footer">
   </footer>
