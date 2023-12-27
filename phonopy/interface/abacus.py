@@ -313,8 +313,10 @@ def read_abacus_output(filename):
                 natom = int(re.search("[0-9]+", line).group())
             if re.search(r"TOTAL-FORCE \(eV/Angstrom\)", line):
                 force = np.zeros((natom, 3))
-                for i in range(4):
-                    file.readline()
+                ver_diff = file.readline()
+                if '---' not in ver_diff:
+                    for i in range(3):
+                        file.readline()
                 for i in range(natom):
                     _, fx, fy, fz = file.readline().split()
                     force[i] = (float(fx), float(fy), float(fz))
