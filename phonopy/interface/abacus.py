@@ -314,7 +314,7 @@ def read_abacus_output(filename):
             if re.search(r"TOTAL-FORCE \(eV/Angstrom\)", line):
                 force = np.zeros((natom, 3))
                 ver_diff = file.readline()
-                if '---' not in ver_diff:
+                if "---" not in ver_diff:
                     for i in range(3):
                         file.readline()
                 for i in range(natom):
