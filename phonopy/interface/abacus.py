@@ -313,13 +313,24 @@ def read_abacus_output(filename):
                 natom = int(re.search("[0-9]+", line).group())
             if re.search(r"TOTAL-FORCE \(eV/Angstrom\)", line):
                 force = np.zeros((natom, 3))
-                ver_diff = file.readline()
-                if "---" not in ver_diff:
-                    for i in range(3):
-                        file.readline()
-                for i in range(natom):
-                    _, fx, fy, fz = file.readline().split()
-                    force[i] = (float(fx), float(fy), float(fz))
+                _match_pattern = (
+                    r"^(\s*)([A-Za-z]*[0-9]+)((\s*[-]?[0-9]+\.[0-9]+){3})(.*)$"
+                )
+                _match = re.match(_match_pattern, line)
+                while not _match:
+                    line = file.readline()
+                    _match = re.match(_match_pattern, line)
+                iatom = 0
+                while _match:
+                    fx, fy, fz = (_match.group(3).split()[i].strip() for i in range(3))
+                    force[iatom] = (float(fx), float(fy), float(fz))
+                    iatom += 1
+                    if iatom == natom:
+                        break
+                    else:
+                        line = file.readline()
+                        _match = re.match(_match_pattern, line)
+
     if force is None:
         raise ValueError("Force data not found.")
 
