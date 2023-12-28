@@ -49,13 +49,14 @@ def test_read_abacus_mag():
 
     diff_mag = cell_ref.magnetic_moments - np.array([1] * 4 + [2] * 4)
     assert (np.abs(diff_mag) < 1e-5).all()
-    
+
 
 def test_read_abacus_output():
     """Test of read abacus output"""
-    force = read_abacus_output('./NaCl-abacus.out')
-    assert(force.mean() < 1e-10)
-    assert(force[0][0] + 1.85537138e-02 < 1e-5)
+    force = read_abacus_output("./NaCl-abacus.out")
+    assert force.mean() < 1e-10
+    assert force[0][0] + 1.85537138e-02 < 1e-5
+
 
 if __name__ == "__main__":
     test_read_abacus_mag()

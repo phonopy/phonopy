@@ -1,23 +1,23 @@
-                                                                                     
+
                               ABACUS v3.4.4
 
-               Atomic-orbital Based Ab-initio Computation at UStc                    
+               Atomic-orbital Based Ab-initio Computation at UStc
 
-                     Website: http://abacus.ustc.edu.cn/                             
-               Documentation: https://abacus.deepmodeling.com/                       
-                  Repository: https://github.com/abacusmodeling/abacus-develop       
-                              https://github.com/deepmodeling/abacus-develop         
+                     Website: http://abacus.ustc.edu.cn/
+               Documentation: https://abacus.deepmodeling.com/
+                  Repository: https://github.com/abacusmodeling/abacus-develop
+                              https://github.com/deepmodeling/abacus-develop
                       Commit: unknown
 
     Start Time is Wed Dec 27 21:30:14 2023
-                                                                                     
+
  ------------------------------------------------------------------------------------
 
  READING GENERAL INFORMATION
                            global_out_dir = OUT.ABACUS/
                            global_in_card = INPUT
-                               pseudo_dir = 
-                              orbital_dir = 
+                               pseudo_dir =
+                              orbital_dir =
                                     DRANK = 1
                                     DSIZE = 10
                                    DCOLOR = 1
@@ -68,7 +68,7 @@
 
                         TOTAL ATOM NUMBER = 64
 DIRECT COORDINATES
-   atom           x                y                z           mag          vx               vy               vz       
+   atom           x                y                z           mag          vx               vy               vz
 taud_Na1       0.0009299634     0.0000000000     0.0000000000 +1.0000     0.0000000000     0.0000000000     0.0000000000
 taud_Na2       0.5000000000     0.0000000000     0.0000000000 +1.0000     0.0000000000     0.0000000000     0.0000000000
 taud_Na3       0.0000000000     0.5000000000     0.0000000000 +1.0000     0.0000000000     0.0000000000     0.0000000000
@@ -204,7 +204,7 @@ taud_Cl32      0.5000000000     0.5000000000     0.7500000000 +2.0000     0.0000
  Pseudopotentials with additional electrons can yield (more) accurate outcomes, but may be less efficient.
  If you're confident that your chosen pseudopotential is appropriate, you can safely ignore this warning.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                  
+
 
 
 
@@ -501,9 +501,9 @@ mixing_ndim: 8
                              nRow_in_proc = 448
                              nCol_in_proc = 160
 receiver_size is 802816 ; receiver_size of each process is:
-86016 86016 86016 71680 71680 86016 86016 86016 71680 71680 
+86016 86016 86016 71680 71680 86016 86016 86016 71680 71680
 sender_size is 709120 ; sender_size of each process is:
-86016 86016 50912 86016 52480 86016 37152 86016 86016 52480 
+86016 86016 50912 86016 52480 86016 37152 86016 86016 52480
 
  Warning_Memory_Consuming allocated:  LOC::A2A_receiv 12.3 MB
 
@@ -520,7 +520,7 @@ eigenvalues were copied to ekb
 
  Density error is 0.066745338659
 ------------------------------------------------------
-  Energy         Rydberg                 eV         
+  Energy         Rydberg                 eV
 ------------------------------------------------------
 E_KohnSham     -3697.9497065022    -50313.1869258577
 E_Harris       -3699.9776863846    -50340.7790076874
@@ -535,7 +535,7 @@ eigenvalues were copied to ekb
 
  Density error is 0.0304396377733
 ------------------------------------------------------
-  Energy         Rydberg                 eV         
+  Energy         Rydberg                 eV
 ------------------------------------------------------
 E_KohnSham     -3698.6044066481    -50322.0945783234
 E_Harris       -3707.8278349670    -50447.5857585552
@@ -550,7 +550,7 @@ eigenvalues were copied to ekb
 
  Density error is 0.00944238363116
 ------------------------------------------------------
-  Energy         Rydberg                 eV         
+  Energy         Rydberg                 eV
 ------------------------------------------------------
 E_KohnSham     -3698.6383219192    -50322.5560192597
 E_Harris       -3705.1409344013    -50411.0286009018
@@ -565,7 +565,7 @@ eigenvalues were copied to ekb
 
  Density error is 0.00242122997103
 ------------------------------------------------------
-  Energy         Rydberg                 eV         
+  Energy         Rydberg                 eV
 ------------------------------------------------------
 E_KohnSham     -3698.6385004277    -50322.5584479921
 E_Harris       -3699.6520006572    -50336.3478260382
@@ -580,7 +580,7 @@ eigenvalues were copied to ekb
 
  Density error is 0.000109844390463
 ------------------------------------------------------
-  Energy         Rydberg                 eV         
+  Energy         Rydberg                 eV
 ------------------------------------------------------
 E_KohnSham     -3698.6386393107    -50322.5603375924
 E_Harris       -3698.8873363531    -50325.9440344449
@@ -595,7 +595,7 @@ eigenvalues were copied to ekb
 
  Density error is 6.84992499544e-06
 ------------------------------------------------------
-  Energy         Rydberg                 eV         
+  Energy         Rydberg                 eV
 ------------------------------------------------------
 E_KohnSham     -3698.6386393756    -50322.5603384754
 E_Harris       -3698.6462832656    -50322.6643389343
@@ -610,7 +610,7 @@ eigenvalues were copied to ekb
 
  Density error is 9.83954623706e-07
 ----------------------------------------------------------
-    Energy           Rydberg                 eV         
+    Energy           Rydberg                 eV
 ----------------------------------------------------------
 E_KohnSham         -3698.6386393787    -50322.5603385169
 E_KS(sigma->0)     -3698.6386393787    -50322.5603385169
@@ -945,7 +945,7 @@ E_Fermi                0.0826552011         1.1245817049
  correction force for each atom along direction 2 is 2.31640e-15
  correction force for each atom along direction 3 is 1.75151e-16
 ------------------------------------------------------------------------------------------
-TOTAL-FORCE (eV/Angstrom)                                                               
+TOTAL-FORCE (eV/Angstrom)
 ------------------------------------------------------------------------------------------
 Na1                              -0.0185537138         0.0000000000         0.0000000000
 Na2                               0.0016310833         0.0000000000         0.0000000000
@@ -1162,4 +1162,4 @@ TwoCenterTable: Nonlocal          14.79
 
  Start  Time  : Wed Dec 27 21:30:14 2023
  Finish Time  : Wed Dec 27 21:30:40 2023
- Total  Time  : 0 h 0 mins 26 secs 
+ Total  Time  : 0 h 0 mins 26 secs
