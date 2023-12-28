@@ -3,7 +3,7 @@ import os
 
 import numpy as np
 
-from phonopy.interface.abacus import read_abacus
+from phonopy.interface.abacus import read_abacus, read_abacus_output
 from phonopy.interface.phonopy_yaml import read_cell_yaml
 from phonopy.structure import cells
 
@@ -51,5 +51,13 @@ def test_read_abacus_mag():
     assert (np.abs(diff_mag) < 1e-5).all()
 
 
+def test_read_abacus_output():
+    """Test of read abacus output"""
+    force = read_abacus_output(os.path.join(data_dir, "NaCl-abacus.out"))
+    assert force.mean() < 1e-10
+    assert force[0][0] + 1.85537138e-02 < 1e-5
+
+
 if __name__ == "__main__":
     test_read_abacus_mag()
+    test_read_abacus_output()
