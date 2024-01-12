@@ -899,7 +899,7 @@ class Phonopy:
 
     def generate_displacements(
         self,
-        distance: float = 0.01,
+        distance: Optional[float] = None,
         is_plusminus: Union[str, bool] = "auto",
         is_diagonal: bool = True,
         is_trigonal: bool = False,
@@ -908,6 +908,8 @@ class Phonopy:
         temperature: Optional[float] = None,
         cutoff_frequency: Optional[float] = None,
         max_distance: Optional[float] = None,
+        is_random_distance: bool = False,
+        min_distance: Optional[float] = None,
     ):
         """Generate displacement dataset.
 
@@ -926,7 +928,9 @@ class Phonopy:
         ----------
         distance : float, optional
             Displacement distance. Unit is the same as that used for crystal
-            structure. Default is 0.01.
+            structure. Default is 0.01. For random direction and distance
+            displacements generation, this value is used when `max_distance` is
+            unspecified.
         is_plusminus : 'auto', True, or False, optional
             For each atom, displacement of one direction (False), both
             direction, i.e., one directiona and its opposite direction (True),
@@ -944,7 +948,7 @@ class Phonopy:
             'distance' parameter, i.e., all atoms in supercell are displaced
             with the same displacement distance in direct space. Default is
             None.
-        random_seed : 32bit unsigned int or None, optional
+        random_seed : int or None, optional
             Random seed for random displacements generation. Default is None.
         temperature : float or None, optional
             With given temperature, random displacements at temperature is
@@ -961,7 +965,17 @@ class Phonopy:
             In random displacements generation from canonical ensemble of
             harmonic phonons, displacements larger than max distance are
             renormalized to the max distance, i.e., a disptalcement d is shorten
-            by d -> d / |d| * max_distance if |d| > max_distance.
+            by d -> d / |d| * max_distance if |d| > max_distance. In random
+            direction and distance displacements generation, this value is is
+            specified.
+        is_random_distance : bool, optional
+            Random direction displacements are generated also with random
+            amplitudes. The maximum value is defined by `distance` and minimum
+            value is given by `min_distance`. Default is False.
+        min_distance : float or None, optional
+            In random direction displacements generation with random distance
+            (`is_random_distance=True`), the minimum distance is given by this
+            value.
 
         """
         if number_of_snapshots is not None and number_of_snapshots > 0:
@@ -972,12 +986,21 @@ class Phonopy:
                 _random_seed = None
                 displacement_dataset = {}
             if temperature is None:
+                if max_distance is None:
+                    if distance is None:
+                        _distance = 0.01
+                    else:
+                        _distance = distance
+                else:
+                    _distance = max_distance
                 d = get_random_displacements_dataset(
                     number_of_snapshots,
-                    distance,
                     len(self._supercell),
+                    _distance,
                     random_seed=_random_seed,
                     is_plusminus=(is_plusminus is True),
+                    is_random_distance=is_random_distance,
+                    min_distance=min_distance,
                 )
                 displacement_dataset["displacements"] = d
             else:
@@ -992,6 +1015,10 @@ class Phonopy:
                 )
                 displacement_dataset["displacements"] = d
         else:
+            if distance is None:
+                _distance = 0.01
+            else:
+                _distance = distance
             displacement_directions = get_least_displacements(
                 self._symmetry,
                 is_plusminus=is_plusminus,
@@ -1000,7 +1027,7 @@ class Phonopy:
                 log_level=self._log_level,
             )
             displacement_dataset = directions_to_displacement_dataset(
-                displacement_directions, distance, self._supercell
+                displacement_directions, _distance, self._supercell
             )
         self.dataset = displacement_dataset
 
