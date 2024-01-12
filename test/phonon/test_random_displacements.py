@@ -863,7 +863,10 @@ def test_tio2_random_disp_plusminus(ph_tio2: Phonopy, is_plusminus: bool):
     ]
     np.testing.assert_allclose(ph_tio2.displacements, disp_ref, atol=1e-8)
     ph_tio2.generate_displacements(
-        number_of_snapshots=4, distance=0.03, is_plusminus=is_plusminus, temperature=300
+        number_of_snapshots=4,
+        distance=0.03,
+        is_plusminus=is_plusminus,
+        temperature=300,
     )
     d = ph_tio2.displacements
     if is_plusminus:
