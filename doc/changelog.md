@@ -2,6 +2,11 @@
 
 # Change Log
 
+##
+
+- `np.random.randn` is replaced by `np.random.Generator.standard_normal`. Note
+  that by this chang, random seed became incompatible.
+
 ## Dec-4-2023: Version 2.21.0
 
 - Maintenance release.

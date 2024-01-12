@@ -736,9 +736,9 @@ def _test_random_displacements(ph, answer, ntimes=30, d_max=1, nbins=51):
         hist[0] += h_1
         hist[1] += h_2
         argmaxs = (np.argmax(hist[0]), np.argmax(hist[1]))
-        # print(hist[0])
-        # print(hist[1])
-        # print(i, argmaxs)
+        print(hist[0])
+        print(hist[1])
+        print(i, argmaxs)
         if i >= ntimes and argmaxs == answer:
             break
     return argmaxs

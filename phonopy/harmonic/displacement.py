@@ -267,15 +267,16 @@ def get_random_displacements_dataset(
     return supercell_disps
 
 
-def _get_random_directions(num_atoms, random_seed=None):
+def _get_random_directions(
+    num_atoms: int, random_seed: Optional[int] = None
+) -> np.ndarray:
     """Return random directions in sphere with radius 1."""
-    if (
-        np.issubdtype(type(random_seed), np.integer)
-        and random_seed >= 0
-        and random_seed < 2**32
-    ):
-        np.random.seed(random_seed)
+    if np.issubdtype(type(random_seed), np.integer):
+        rng = np.random.default_rng(seed=random_seed)
+    else:
+        rng = np.random.default_rng()
 
-    xy = np.random.randn(3, num_atoms)
-    r = np.sqrt((xy**2).sum(axis=0))
-    return (xy / r).T
+    xy = rng.standard_normal(size=(3, num_atoms * 2))
+    r = np.linalg.norm(xy, axis=0)
+    condition = r > 1e-10
+    return (xy[:, condition][:, :num_atoms] / r[condition][:num_atoms]).T
