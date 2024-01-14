@@ -37,7 +37,7 @@
 import itertools
 import sys
 import warnings
-from typing import Type, Union
+from typing import Optional, Type, Union
 
 import numpy as np
 
@@ -205,7 +205,7 @@ class DynamicalMatrix:
         return self.force_constants
 
     @property
-    def dynamical_matrix(self):
+    def dynamical_matrix(self) -> Optional[np.ndarray]:
         """Return dynamcial matrix calculated at q.
 
         Returns
@@ -230,7 +230,7 @@ class DynamicalMatrix:
         warnings.warn(
             "DynamicalMatrix.get_get_dynamical_matrix() is "
             "deprecated."
-            "Use DynamicalMatrix.get_dynamical_matrix attribute.",
+            "Use DynamicalMatrix.dynamical_matrix attribute.",
             DeprecationWarning,
         )
         return self.dynamical_matrix
