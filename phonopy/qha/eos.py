@@ -152,7 +152,7 @@ class EOSFit:
         except RuntimeError:
             logging.exception("Fitting to EOS failed.")
             raise
-        except (RuntimeWarning, scipy.optimize.optimize.OptimizeWarning):
+        except (RuntimeWarning, scipy.optimize.OptimizeWarning):
             logging.exception("Difficulty in fitting to EOS.")
             raise
         else:
