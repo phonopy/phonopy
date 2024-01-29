@@ -1,4 +1,5 @@
 """phonopy.yaml reader and writer."""
+
 # Copyright (C) 2018 Atsushi Togo
 # All rights reserved.
 #

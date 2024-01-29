@@ -1,4 +1,5 @@
 """Tests of VASP calculator interface."""
+
 import tarfile
 import tempfile
 from io import StringIO

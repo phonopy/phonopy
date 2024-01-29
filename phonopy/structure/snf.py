@@ -1,4 +1,5 @@
 """Calculation of Smith normal form of 3x3 matrix."""
+
 # Copyright (C) 2020 Atsushi Togo
 # All rights reserved.
 #

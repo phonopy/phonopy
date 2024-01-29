@@ -1,4 +1,5 @@
 """Tests for phonon calculation on sampling mesh."""
+
 import numpy as np
 
 from phonopy import Phonopy

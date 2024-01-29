@@ -1,4 +1,5 @@
 """Crystal symmetry routines."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #

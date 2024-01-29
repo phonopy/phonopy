@@ -1,4 +1,5 @@
 """Core routines for QHA."""
+
 # Copyright (C) 2012 Atsushi Togo
 # All rights reserved.
 #
@@ -1123,9 +1124,7 @@ class QHA:
                     msg += ["At least 5 volume points are needed for the fitting."]
                 raise RuntimeError("\n".join(msg))
 
-            dsdv_t = np.dot(
-                parameters[:4], np.array([4 * x**3, 3 * x**2, 2 * x, 1])
-            )
+            dsdv_t = np.dot(parameters[:4], np.array([4 * x**3, 3 * x**2, 2 * x, 1]))
             self._volume_entropy_parameters.append(parameters)
 
             try:

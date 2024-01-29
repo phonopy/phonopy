@@ -1,4 +1,5 @@
 """Tests for dynamical matrix classes."""
+
 import numpy as np
 import pytest
 

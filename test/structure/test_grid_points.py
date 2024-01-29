@@ -1,4 +1,5 @@
 """Tests for routines in grid_points.py."""
+
 import os
 
 import numpy as np

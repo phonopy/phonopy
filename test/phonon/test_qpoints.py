@@ -1,4 +1,5 @@
 """Tests for phonon calculation at specific q-points."""
+
 import numpy as np
 
 from phonopy import Phonopy

@@ -1,4 +1,5 @@
 """Sphinx configuration of phonopy documentation."""
+
 # -*- coding: utf-8 -*-
 #
 # phonopy documentation build configuration file, created by

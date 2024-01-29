@@ -1,4 +1,5 @@
 """Tests for displacements."""
+
 import itertools
 from copy import deepcopy
 from typing import Optional

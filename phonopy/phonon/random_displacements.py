@@ -1,4 +1,5 @@
 """Calculate random displacements from phonons at finite temperatures."""
+
 # Copyright (C) 2018 Atsushi Togo
 # All rights reserved.
 #

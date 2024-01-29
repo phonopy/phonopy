@@ -1,4 +1,5 @@
 """Character table datasets of point groups."""
+
 # Copyright (C) 2020 Atsushi Togo
 # All rights reserved.
 #

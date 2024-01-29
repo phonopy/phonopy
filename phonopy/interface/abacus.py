@@ -1,4 +1,5 @@
 """ABACUS calculator interface."""
+
 # Copyright (C) 2022 Yuyang Ji
 # All rights reserved.
 #

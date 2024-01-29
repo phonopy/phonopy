@@ -1,4 +1,5 @@
 """Routines to handle displacements in supercells."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #

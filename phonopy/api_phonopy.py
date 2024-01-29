@@ -1,4 +1,5 @@
 """Phonopy class."""
+
 # Copyright (C) 2015 Atsushi Togo
 # All rights reserved.
 #

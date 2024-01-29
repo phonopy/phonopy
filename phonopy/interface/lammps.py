@@ -1,4 +1,5 @@
 """LAMMPS calculator interface."""
+
 # Copyright (C) 2023 Atsushi Togo
 # All rights reserved.
 #

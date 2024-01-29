@@ -1,4 +1,5 @@
 """Tests for irreducible representation calculations."""
+
 import os
 from io import StringIO
 from typing import List

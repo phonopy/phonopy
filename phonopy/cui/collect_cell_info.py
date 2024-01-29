@@ -1,4 +1,5 @@
 """Routines to collect crystal structure information."""
+
 # Copyright (C) 2018 Atsushi Togo
 # All rights reserved.
 #
