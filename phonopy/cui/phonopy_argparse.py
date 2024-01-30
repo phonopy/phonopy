@@ -1,4 +1,5 @@
 """Phonopy command line argument parser."""
+
 # Copyright (C) 2016 Atsushi Togo
 # All rights reserved.
 #

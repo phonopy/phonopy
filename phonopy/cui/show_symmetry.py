@@ -1,4 +1,5 @@
 """Show symmetry information invoked by --symmetry command option."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #

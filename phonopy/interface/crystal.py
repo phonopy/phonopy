@@ -1,4 +1,5 @@
 """CRYSTAL calculator interface."""
+
 # Copyright (C) 2016 Antti J. Karttunen (antti.j.karttunen@iki.fi)
 # All rights reserved.
 #

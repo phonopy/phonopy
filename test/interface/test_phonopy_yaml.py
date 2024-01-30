@@ -1,4 +1,5 @@
 """Tests of PhonopyYaml."""
+
 from io import StringIO
 from pathlib import Path
 

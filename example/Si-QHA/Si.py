@@ -1,4 +1,5 @@
 """QHA example of Si."""
+
 import tarfile
 
 import matplotlib.pyplot as plt

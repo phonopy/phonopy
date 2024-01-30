@@ -1,4 +1,5 @@
 """Group velocity calculation."""
+
 # Copyright (C) 2013 Atsushi Togo
 # All rights reserved.
 #

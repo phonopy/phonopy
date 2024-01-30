@@ -1,4 +1,5 @@
 """Tests for symmetry tools."""
+
 import numpy as np
 
 from phonopy import Phonopy

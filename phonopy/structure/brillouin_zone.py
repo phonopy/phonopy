@@ -1,4 +1,5 @@
 """Use first Brillouin zone (Wigner–Seitz cell) to locate q-points."""
+
 # Copyright (C) 2013 Atsushi Togo
 # All rights reserved.
 #

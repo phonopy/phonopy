@@ -1,4 +1,5 @@
 """Tests for QE calculater interface."""
+
 import io
 from pathlib import Path
 

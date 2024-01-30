@@ -1,4 +1,5 @@
 """Tests for PhonopyAtoms."""
+
 from io import StringIO
 
 import numpy as np

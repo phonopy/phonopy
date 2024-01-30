@@ -1,4 +1,5 @@
 """Abinit calculator interface."""
+
 # Copyright (C) 2014 Atsushi Togo
 # All rights reserved.
 #

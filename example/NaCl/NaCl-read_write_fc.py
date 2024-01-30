@@ -1,4 +1,5 @@
 """Example to read and write FORCE_CONSTANTS file."""
+
 import phonopy
 from phonopy.file_IO import parse_FORCE_CONSTANTS, write_FORCE_CONSTANTS
 

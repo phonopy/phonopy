@@ -1,4 +1,5 @@
 """API of mode Grueneisen parameter calculation."""
+
 # Copyright (C) 2015 Atsushi Togo
 # All rights reserved.
 #

@@ -1,4 +1,5 @@
 """Tests of routines in cells.py."""
+
 import os
 
 import numpy as np

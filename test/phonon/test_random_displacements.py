@@ -1,4 +1,5 @@
 """Tests for generation of random displacements at finite temperatures."""
+
 import os
 from copy import deepcopy
 

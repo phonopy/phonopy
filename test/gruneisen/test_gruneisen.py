@@ -1,4 +1,5 @@
 """Tests for mode Grueneisen parameter calculations."""
+
 import numpy as np
 
 from phonopy.api_gruneisen import PhonopyGruneisen

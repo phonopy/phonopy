@@ -1,4 +1,5 @@
 """Linear tetrahedron method on regular grid."""
+
 # copyright (C) 2013 Atsushi Togo
 # All rights reserved.
 #

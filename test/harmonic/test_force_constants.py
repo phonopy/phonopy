@@ -1,4 +1,5 @@
 """Tests for routines in force_constants.py."""
+
 import numpy as np
 import pytest
 

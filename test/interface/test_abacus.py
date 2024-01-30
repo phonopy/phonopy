@@ -1,4 +1,5 @@
 """Tests for ABACUS calculater interface."""
+
 import os
 
 import numpy as np
