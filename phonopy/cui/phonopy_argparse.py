@@ -66,9 +66,7 @@ def show_deprecated_option_warnings(deprecated):
     print("")
 
 
-def get_parser(
-    fc_symmetry=False, is_nac=False, include_born=False, load_phonopy_yaml=False
-):
+def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
     """Return ArgumentParser instance."""
     deprecated = fix_deprecated_option_names(sys.argv)
     import argparse
