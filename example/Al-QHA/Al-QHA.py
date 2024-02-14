@@ -1,4 +1,5 @@
 """Example of QHA calculation by Al."""
+
 import numpy as np
 import yaml
 from yaml import CLoader as Loader

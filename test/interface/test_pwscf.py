@@ -1,4 +1,5 @@
 """Tests for QE calculater interface."""
+
 import os
 
 import numpy as np

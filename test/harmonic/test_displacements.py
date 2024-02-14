@@ -1,7 +1,11 @@
 """Tests for displacements."""
+
+import itertools
 from copy import deepcopy
+from typing import Optional
 
 import numpy as np
+import pytest
 
 from phonopy import Phonopy
 
@@ -50,15 +54,6 @@ def test_sno2(ph_sno2: Phonopy):
 def test_tio2(ph_tio2: Phonopy):
     """Test displacements of TiO2."""
     dataset = deepcopy(ph_tio2.dataset)
-    disp_ref = [
-        [0, 0.01, 0.0, 0.0],
-        [0, 0.0, 0.01, 0.0],
-        [0, 0.0, 0.0, 0.01],
-        [0, 0.0, 0.0, -0.01],
-        [72, 0.01, 0.0, 0.0],
-        [72, 0.0, 0.0, 0.01],
-    ]
-    np.testing.assert_allclose(ph_tio2.displacements, disp_ref, atol=1e-8)
     ph_tio2.generate_displacements()
     disp_gen = [
         [0, 0.0060687317141537135, 0.0060687317141537135, 0.0051323474905008],
@@ -70,21 +65,113 @@ def test_tio2(ph_tio2: Phonopy):
     ph_tio2.dataset = dataset
 
 
-def test_tio2_random_disp(ph_tio2: Phonopy):
-    """Test random displacements of TiO2."""
+@pytest.mark.parametrize(
+    "is_plusminus,distance", itertools.product([False, True], [None, 0.03])
+)
+def test_tio2_random_disp(
+    ph_tio2: Phonopy, is_plusminus: bool, distance: Optional[float]
+):
+    """Test random displacements of TiO2.
+
+    Currently default displacement distance = 0.01.
+
+    """
     dataset = deepcopy(ph_tio2.dataset)
-    disp_ref = [
-        [0, 0.01, 0.0, 0.0],
-        [0, 0.0, 0.01, 0.0],
-        [0, 0.0, 0.0, 0.01],
-        [0, 0.0, 0.0, -0.01],
-        [72, 0.01, 0.0, 0.0],
-        [72, 0.0, 0.0, 0.01],
-    ]
-    np.testing.assert_allclose(ph_tio2.displacements, disp_ref, atol=1e-8)
-    ph_tio2.generate_displacements(number_of_snapshots=4, distance=0.03)
+    ph_tio2.generate_displacements(
+        number_of_snapshots=4, distance=distance, is_plusminus=is_plusminus
+    )
     d = ph_tio2.displacements
-    np.testing.assert_allclose(np.linalg.norm(d, axis=2).ravel(), 0.03, atol=1e-8)
+    assert len(d) == 4 * (is_plusminus + 1)
+    if distance is None:
+        np.testing.assert_allclose(np.linalg.norm(d, axis=2).ravel(), 0.01, atol=1e-8)
+    else:
+        np.testing.assert_allclose(np.linalg.norm(d, axis=2).ravel(), 0.03, atol=1e-8)
+    if is_plusminus:
+        np.testing.assert_allclose(d[:4], -d[4:], atol=1e-8)
+    ph_tio2.dataset = dataset
+
+
+@pytest.mark.parametrize("min_distance", [None, 0.05, 0.2])
+def test_tio2_random_disp_with_random_dist(
+    ph_tio2: Phonopy, min_distance: Optional[float]
+):
+    """Test random displacements with random distance of TiO2."""
+    dataset = deepcopy(ph_tio2.dataset)
+
+    if min_distance is not None and min_distance > 0.1:
+        with pytest.raises(RuntimeError):
+            ph_tio2.generate_displacements(
+                number_of_snapshots=1,
+                distance=0.1,
+                is_random_distance=True,
+                min_distance=min_distance,
+            )
+    else:
+        n_snapshots = 100
+        ph_tio2.generate_displacements(
+            number_of_snapshots=n_snapshots,
+            distance=0.1,
+            is_random_distance=True,
+            min_distance=min_distance,
+        )
+        d = ph_tio2.displacements
+        assert len(d) == n_snapshots
+        dists = np.linalg.norm(d, axis=2).ravel()
+        assert (dists < 0.1 + 1e-8).all()
+        if min_distance is not None:
+            assert (dists > min_distance - 1e-8).all()
+
+    ph_tio2.dataset = dataset
+
+
+@pytest.mark.parametrize("max_distance", [None, 0.1])
+def test_tio2_random_disp_with_random_dist_defualt(
+    ph_tio2: Phonopy, max_distance: Optional[float]
+):
+    """Test random displacements with random distance of TiO2.
+
+    Combination of default distance and max_distance.
+
+    """
+    dataset = deepcopy(ph_tio2.dataset)
+
+    n_snapshots = 100
+    ph_tio2.generate_displacements(
+        number_of_snapshots=n_snapshots,
+        is_random_distance=True,
+        max_distance=max_distance,
+    )
+    d = ph_tio2.displacements
+    assert len(d) == n_snapshots
+    dists = np.linalg.norm(d, axis=2).ravel()
+    if max_distance is None:
+        assert (dists < 0.01 + 1e-8).all()
+    else:
+        assert (dists < max_distance + 1e-8).all()
+
+    ph_tio2.dataset = dataset
+
+
+def test_tio2_random_disp_with_random_max_distance(ph_tio2: Phonopy):
+    """Test random displacements with random distance of TiO2.
+
+    Combination of distance and max_distance parameters.
+
+    """
+    dataset = deepcopy(ph_tio2.dataset)
+
+    n_snapshots = 100
+    ph_tio2.generate_displacements(
+        number_of_snapshots=n_snapshots,
+        distance=0.01,
+        max_distance=0.1,
+        is_random_distance=True,
+    )
+    d = ph_tio2.displacements
+    assert len(d) == n_snapshots
+    dists = np.linalg.norm(d, axis=2).ravel()
+    assert (dists < 0.1 + 1e-8).all()
+
     ph_tio2.dataset = dataset
 
 

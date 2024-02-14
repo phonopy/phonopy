@@ -1,4 +1,5 @@
 """ALM force constants interface."""
+
 # Copyright (C) 2018 Atsushi Togo
 # All rights reserved.
 #

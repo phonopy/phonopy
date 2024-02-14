@@ -1,4 +1,5 @@
 """Calculation of derivative of dynamical matrix with respect to q."""
+
 # Copyright (C) 2013 Atsushi Togo
 # All rights reserved.
 #

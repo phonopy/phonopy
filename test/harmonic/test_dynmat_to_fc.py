@@ -1,4 +1,5 @@
 """Tests for dynmat_to_fc, inverse phonon transformation."""
+
 import os
 from io import StringIO
 

@@ -1,4 +1,5 @@
 """Tests for CP2K calculator interface."""
+
 import os
 
 import numpy as np

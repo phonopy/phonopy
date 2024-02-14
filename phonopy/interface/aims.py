@@ -1,4 +1,5 @@
 """FHIaims calculator interface."""
+
 # FHIaims.py - IO routines for phonopy-FHI-aims
 # methods compatible with the corresponding ones from ase.io.aims
 # only minimal subset of functionality required within phonopy context is implemented

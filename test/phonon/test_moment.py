@@ -1,4 +1,5 @@
 """Tests for PhononMoment."""
+
 from io import StringIO
 
 import numpy as np

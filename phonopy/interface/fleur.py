@@ -1,4 +1,5 @@
 """Fleur calculator interface."""
+
 # Copyright (C) 2021 Alexander Neukirchen
 # All rights reserved.
 #

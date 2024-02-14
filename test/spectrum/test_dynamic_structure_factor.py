@@ -1,4 +1,5 @@
 """Tests for dynamic structure factor."""
+
 import numpy as np
 
 from phonopy.spectrum.dynamic_structure_factor import atomic_form_factor_WK1995

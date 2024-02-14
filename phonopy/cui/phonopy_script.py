@@ -1,4 +1,5 @@
 """Phonopy command user interface."""
+
 # Copyright (C) 2020 Atsushi Togo
 # All rights reserved.
 #
@@ -873,7 +874,7 @@ def store_nac_params(
                 print("-" * 76)
 
 
-def run(phonon: Phonopy, settings, cell_info, plot_conf, log_level):
+def run_calculation(phonon: Phonopy, settings, plot_conf, log_level):
     """Run phonon calculations."""
     interface_mode = phonon.calculator
     physical_units = get_default_physical_units(interface_mode)
@@ -1491,15 +1492,7 @@ def start_phonopy(**argparse_control):
         if deprecated:
             show_deprecated_option_warnings(deprecated)
 
-    return (
-        args,
-        log_level,
-        {
-            "plot_graph": args.is_graph_plot,
-            "save_graph": args.is_graph_save,
-            "with_legend": args.is_legend,
-        },
-    )
+    return args, log_level
 
 
 def read_phonopy_settings(args, argparse_control, log_level):
@@ -1760,7 +1753,17 @@ def main(**argparse_control):
     ############################################
     load_phonopy_yaml = argparse_control.get("load_phonopy_yaml", False)
 
-    args, log_level, plot_conf = start_phonopy(**argparse_control)
+    if "args" in argparse_control:  # For pytest
+        args = argparse_control["args"]
+        log_level = args.log_level
+    else:
+        args, log_level = start_phonopy(**argparse_control)
+
+    plot_conf = {
+        "plot_graph": args.is_graph_plot,
+        "save_graph": args.is_graph_save,
+        "with_legend": args.is_legend,
+    }
 
     settings, confs, cell_filename = read_phonopy_settings(
         args, argparse_control, log_level
@@ -1988,7 +1991,7 @@ def main(**argparse_control):
             print(" - %s" % mode)
         print("-" * 76)
 
-    run(phonon, settings, cell_info, plot_conf, log_level)
+    run_calculation(phonon, settings, plot_conf, log_level)
 
     ########################
     # Phonopy finalization #

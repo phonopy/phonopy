@@ -1,4 +1,5 @@
 """Example of NaCl calculation."""
+
 from typing import List
 
 import numpy as np

@@ -1,4 +1,5 @@
 """Utilities to create force sets for main CUI script."""
+
 # Copyright (C) 2020 Atsushi Togo
 # All rights reserved.
 #

@@ -1,4 +1,5 @@
 """Primitive cell and supercell, and related utilities."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -480,10 +481,30 @@ class Primitive(PhonopyAtoms):
         )
         return self.p2p_map
 
-    def get_smallest_vectors(self):
+    def get_smallest_vectors(self) -> tuple[np.ndarray, np.ndarray]:
         """Return shortest vectors and multiplicities.
 
-        See the docstring of `Primitive_get_smallest_vectors()`.
+        See also the docstring of `ShortestPairs`. The older less densen format
+        is deprecated. The detailed explaination is found in `ShortestPairs`
+        class.
+
+        Returns
+        -------
+        tuple
+            shortest_vectors : np.ndarray
+                Shortest vectors of atomic pairs in supercell from an atom in
+                the primitive cell to an atom in the supercell. The vectors are
+                given in the coordinates with respect to the primitive cell
+                basis vectors. In the dense format
+                shape=(sum(multiplicities[:,:, 0], 3), dtype='double',
+                dtype='double', order='C'.
+            multiplicities : np.ndarray
+                Number of equidistance shortest vectors. The last dimension
+                indicates [0] multipliticy at the pair of atoms in the supercell
+                and primitive cell, and [1] integral of multiplicities to this
+                pair, i.e., which indicates address used in `shortest_vectors`.
+                In the dense format, shape=(size_super, size_prim, 2),
+                dtype='int_' dtype='intc', order='C'.
 
         """
         return self._smallest_vectors, self._multiplicity
@@ -592,7 +613,9 @@ class Primitive(PhonopyAtoms):
 
         return atomic_permutations
 
-    def _get_smallest_vectors(self, supercell):
+    def _get_smallest_vectors(
+        self, supercell: PhonopyAtoms
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Find shortest vectors.
 
         See the docstring of `ShortestPairs`.
@@ -1622,7 +1645,7 @@ def determinant(m):
 def get_primitive_matrix(
     pmat: Optional[Union[str, np.ndarray, Sequence]] = None,
     symprec=1e-5,
-):
+) -> Optional[Union[str, list, np.ndarray]]:
     """Find primitive matrix from primitive cell.
 
     None is equivalent to "P" but None is returned.
@@ -1699,7 +1722,7 @@ def guess_primitive_matrix(unitcell: PhonopyAtoms, symprec: float = 1e-5):
     return np.array(np.dot(np.linalg.inv(tmat), pmat), dtype="double", order="C")
 
 
-def shape_supercell_matrix(smat: Optional[Union[int, float, np.ndarray]]):
+def shape_supercell_matrix(smat: Optional[Union[int, float, np.ndarray]]) -> np.ndarray:
     """Reshape supercell matrix."""
     if smat is None:
         _smat = np.eye(3, dtype="intc", order="C")

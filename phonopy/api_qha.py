@@ -1,4 +1,5 @@
 """API for QHA calculation."""
+
 # Copyright (C) 2015 Atsushi Togo
 # All rights reserved.
 #

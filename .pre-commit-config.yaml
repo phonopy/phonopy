@@ -11,7 +11,7 @@ repos:
   - id: check-added-large-files
 
 - repo: https://github.com/pycqa/flake8
-  rev: 6.1.0
+  rev: 7.0.0
   hooks:
   - id: flake8
     exclude: |
@@ -35,7 +35,7 @@ repos:
     - "--ignore=E203,W503,E501"
 
 - repo: https://github.com/psf/black
-  rev: 23.10.1
+  rev: 24.2.0
   hooks:
   - id: black
     args:
@@ -47,7 +47,7 @@ repos:
   - id: pydocstyle
 
 - repo: https://github.com/pycqa/isort
-  rev: 5.12.0
+  rev: 5.13.2
   hooks:
     - id: isort
       name: isort (python)

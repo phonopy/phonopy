@@ -1,4 +1,5 @@
 """Elk calculator interface."""
+
 # Copyright (C) 2015 Atsushi Togo
 # All rights reserved.
 #

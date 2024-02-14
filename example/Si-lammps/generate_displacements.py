@@ -1,4 +1,5 @@
 """A script to generate supercells with displacements for LAMMPS."""
+
 import phonopy
 from phonopy.interface.calculator import write_supercells_with_displacements
 from phonopy.interface.phonopy_yaml import read_cell_yaml
