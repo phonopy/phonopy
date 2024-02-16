@@ -1,4 +1,5 @@
 """Calculate random displacements from phonons at finite temperatures."""
+
 # Copyright (C) 2018 Atsushi Togo
 # All rights reserved.
 #
@@ -242,33 +243,42 @@ class RandomDisplacements:
         number_of_snapshots : int
             Number of snapshots to be generated.
         random_seed : int or None, optional
-            Random seed passed to np.random.seed. Default is None. Integer
-            number has to be positive.
+            Random seed passed to np.random.default_rng(seed). Default is None.
         randn : tuple
-            (randn_ii, randn_ij).
-            Used for testing purpose for the fixed random numbers of
-            np.random.normal that can depends on system.
+            (randn_ii, randn_ij). Used for testing purpose for the fixed random
+            numbers of random.Generator.standard_normal that can depends on
+            system.
 
         """
-        np.random.seed(seed=random_seed)
+        if np.issubdtype(type(random_seed), np.integer):
+            rng = np.random.default_rng(seed=random_seed)
+        else:
+            rng = np.random.default_rng()
 
         N = len(self._comm_points)
 
         # This randn is used only for testing purpose.
         if randn is None:
-            randn_ii = None
-            randn_ij = None
+            shape = (
+                len(self._eigvals_ii),
+                number_of_snapshots,
+                len(self._eigvals_ii[0]),
+            )
+            randn_ii = rng.standard_normal(size=shape)
+            shape = (
+                len(self._eigvals_ij),
+                2,
+                number_of_snapshots,
+                len(self._eigvals_ij[0]),
+            )
+            randn_ij = rng.standard_normal(size=shape)
         else:
             randn_ii = randn[0]
             randn_ij = randn[1]
 
-        u_ii, self._conditions_ii = self._solve_ii(
-            T, number_of_snapshots, randn=randn_ii
-        )
+        u_ii, self._conditions_ii = self._solve_ii(T, number_of_snapshots, randn_ii)
         if self._ij:
-            u_ij, self._conditions_ij = self._solve_ij(
-                T, number_of_snapshots, randn=randn_ij
-            )
+            u_ij, self._conditions_ij = self._solve_ij(T, number_of_snapshots, randn_ij)
         else:
             u_ij = 0
             self._conditions_ij = None
@@ -481,7 +491,12 @@ class RandomDisplacements:
         self._comm_points = get_commensurate_points_in_integers(smat)
         self._ii, self._ij = categorize_commensurate_points(self._comm_points)
 
-    def _solve_ii(self, T, number_of_snapshots, randn=None):
+    def _solve_ii(
+        self,
+        T: float,
+        number_of_snapshots: int,
+        randn: np.ndarray,
+    ):
         """Solve ii terms.
 
         randn parameter is used for the test.
@@ -490,14 +505,9 @@ class RandomDisplacements:
         natom = len(self._dynmat.supercell)
         u = np.zeros((number_of_snapshots, natom, 3), dtype="double")
 
-        shape = (len(self._eigvals_ii), number_of_snapshots, len(self._eigvals_ii[0]))
-        if randn is None:
-            _randn = np.random.normal(size=shape)
-        else:
-            _randn = randn
         sigmas, conditions = self._get_sigma(self._eigvals_ii, T)
         for norm_dist, sigma, eigvecs, phase in zip(
-            _randn, sigmas, self._eigvecs_ii, self._phase_ii
+            randn, sigmas, self._eigvecs_ii, self._phase_ii
         ):
             u_red = np.dot(norm_dist * sigma, eigvecs.T).reshape(
                 number_of_snapshots, -1, 3
@@ -508,7 +518,12 @@ class RandomDisplacements:
 
         return u, conditions
 
-    def _solve_ij(self, T, number_of_snapshots, randn=None):
+    def _solve_ij(
+        self,
+        T: float,
+        number_of_snapshots: int,
+        randn: Optional[np.ndarray] = None,
+    ):
         """Solve ij terms.
 
         randn parameter is used for the test.
@@ -516,19 +531,9 @@ class RandomDisplacements:
         """
         natom = len(self._dynmat.supercell)
         u = np.zeros((number_of_snapshots, natom, 3), dtype="double")
-        shape = (
-            len(self._eigvals_ij),
-            2,
-            number_of_snapshots,
-            len(self._eigvals_ij[0]),
-        )
-        if randn is None:
-            _randn = np.random.normal(size=shape)
-        else:
-            _randn = randn
         sigmas, conditions = self._get_sigma(self._eigvals_ij, T)
         for norm_dist, sigma, eigvecs, phase in zip(
-            _randn, sigmas, self._eigvecs_ij, self._phase_ij
+            randn, sigmas, self._eigvecs_ij, self._phase_ij
         ):
             u_red = np.dot(norm_dist * sigma, eigvecs.T).reshape(
                 2, number_of_snapshots, -1, 3

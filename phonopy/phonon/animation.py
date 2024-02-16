@@ -1,4 +1,5 @@
 """Convert phonon results to animation formats."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #

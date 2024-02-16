@@ -1,4 +1,5 @@
 """Tests for thermal property calculation."""
+
 import numpy as np
 
 temps = [

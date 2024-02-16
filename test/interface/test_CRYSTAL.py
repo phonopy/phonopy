@@ -1,4 +1,5 @@
 """Tests for CRYSTAL calculator interface."""
+
 import os
 
 import numpy as np

@@ -1,4 +1,5 @@
 """Transform dynamical matrix to force constants."""
+
 # Copyright (C) 2014 Atsushi Togo
 # All rights reserved.
 #

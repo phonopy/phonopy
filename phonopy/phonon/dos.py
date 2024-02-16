@@ -1,4 +1,5 @@
 """Calculation of density of states."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #

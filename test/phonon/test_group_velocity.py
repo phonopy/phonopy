@@ -1,4 +1,5 @@
 """Tests for group velocity calculation."""
+
 import numpy as np
 
 from phonopy import Phonopy

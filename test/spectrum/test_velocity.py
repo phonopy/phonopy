@@ -1,4 +1,5 @@
 """Tests for velocity calculation from MD data."""
+
 import os
 
 import numpy as np

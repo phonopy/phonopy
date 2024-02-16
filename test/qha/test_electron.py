@@ -1,4 +1,5 @@
 """Tests of electronic free energy calculations."""
+
 import numpy as np
 
 from phonopy.qha.electron import ElectronFreeEnergy, get_free_energy_at_T

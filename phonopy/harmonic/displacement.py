@@ -1,4 +1,5 @@
 """Routines to handle displacements in supercells."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -245,16 +246,70 @@ def _determinant(a, b, c):
 
 def get_random_displacements_dataset(
     num_supercells: int,
-    distance: float,
     num_atoms: int,
+    distance: float,
     random_seed: Optional[int] = None,
     is_plusminus: bool = False,
+    is_random_distance: bool = False,
+    min_distance: Optional[float] = None,
 ) -> np.ndarray:
-    """Return random displacements at constant displacement distance."""
-    disps = (
-        _get_random_directions(num_atoms * num_supercells, random_seed=random_seed)
-        * distance
-    )
+    """Return random displacements at constant displacement distance.
+
+    num_supercells : int
+        Number of snapshots of supercells with random displacements. Random
+        displacements are generated displacing all atoms in random directions
+        with a fixed displacement distance specified by 'distance' parameter,
+        i.e., all atoms in supercell are displaced with the same displacement
+        distance in direct space.
+    num_atoms : int
+        Number of atoms in supercell.
+    distance : float
+        Displacement distance. Unit is the same as that used for crystal
+        structure.
+    random_seed : int or None, optional
+        Random seed for random displacements generation. Default is None.
+    is_plusminus : True, or False, optional
+        In addition to sets of usual random displacements for supercell, sets
+        of the opposite displacements for supercell are concatenated.
+        Therefore, total number of sets of displacements is `2 *
+        num_supercells`. Default is False.
+    is_random_distance : bool, optional
+        Random direction displacements are generated also with random
+        amplitudes. The maximum value is defined by `distance` and minimum value
+        is given by `min_distance`. Default is False. Random distance is given
+        by `sqrt(random(distance - min_distance) + min_distance)`.
+    min_distance : float or None, optional
+        In random direction displacements generation with random distance
+        (`is_random_distance=True`), the minimum distance is given by this
+        value.
+
+    """
+    if is_random_distance:
+        if min_distance is None:
+            _min_distance = 0.0
+        else:
+            _min_distance = min_distance
+
+    if np.issubdtype(type(random_seed), np.integer):
+        rng = np.random.default_rng(seed=random_seed)
+    else:
+        rng = np.random.default_rng()
+
+    if is_random_distance:
+        if distance < _min_distance:
+            raise RuntimeError(
+                "Random displacements generation failed. min_distance is too large."
+            )
+        directions = _get_random_directions(num_atoms * num_supercells, rng)
+        rand_dists = np.array([])
+        while len(rand_dists) < num_atoms * num_supercells:
+            rd = np.sqrt(rng.random(num_atoms * num_supercells)) * distance
+            rand_dists = np.r_[rand_dists, rd[rd > _min_distance]]
+        disps = rand_dists[: num_atoms * num_supercells, None] * directions
+    else:
+        directions = _get_random_directions(num_atoms * num_supercells, rng)
+        disps = directions * distance
+
     supercell_disps = np.array(
         disps.reshape(num_supercells, num_atoms, 3), dtype="double", order="C"
     )
@@ -267,15 +322,9 @@ def get_random_displacements_dataset(
     return supercell_disps
 
 
-def _get_random_directions(num_atoms, random_seed=None):
+def _get_random_directions(num_atoms: int, rng: np.random.Generator) -> np.ndarray:
     """Return random directions in sphere with radius 1."""
-    if (
-        np.issubdtype(type(random_seed), np.integer)
-        and random_seed >= 0
-        and random_seed < 2**32
-    ):
-        np.random.seed(random_seed)
-
-    xy = np.random.randn(3, num_atoms)
-    r = np.sqrt((xy**2).sum(axis=0))
-    return (xy / r).T
+    xy = rng.standard_normal(size=(3, num_atoms * 2))
+    r = np.linalg.norm(xy, axis=0)
+    condition = r > 1e-10
+    return (xy[:, condition][:, :num_atoms] / r[condition][:num_atoms]).T

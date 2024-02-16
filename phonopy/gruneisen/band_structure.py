@@ -1,4 +1,5 @@
 """Mode Grueneisen parameter band structure calculation."""
+
 # Copyright (C) 2012 Atsushi Togo
 # All rights reserved.
 #

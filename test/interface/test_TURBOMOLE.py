@@ -1,4 +1,5 @@
 """Tests for TURBOMOLE cauclator interface."""
+
 import os
 
 import numpy as np

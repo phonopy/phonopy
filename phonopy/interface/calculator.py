@@ -1,4 +1,5 @@
 """Routines to handle various calculator interfaces."""
+
 # Copyright (C) 2014 Atsushi Togo
 # All rights reserved.
 #

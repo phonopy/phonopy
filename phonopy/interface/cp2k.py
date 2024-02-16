@@ -1,4 +1,5 @@
 """CP2K calculator interface."""
+
 # vim: set fileencoding=utf-8 :
 # Copyright (C) 2017-2019 Tiziano Müller
 # All rights reserved.

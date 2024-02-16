@@ -1,4 +1,5 @@
 """Phonopy input and command option tools."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -1639,9 +1640,9 @@ class PhonopyConfParser(ConfParser):
 
         if "rd_temperature" in arg_list:
             if self._args.rd_temperature is not None:
-                self._confs[
-                    "random_displacement_temperature"
-                ] = self._args.rd_temperature
+                self._confs["random_displacement_temperature"] = (
+                    self._args.rd_temperature
+                )
 
         if "temperature" in arg_list:
             if self._args.temperature is not None:
@@ -1660,11 +1661,7 @@ class PhonopyConfParser(ConfParser):
         if "random_seed" in arg_list:
             if self._args.random_seed:
                 seed = self._args.random_seed
-                if (
-                    np.issubdtype(type(seed), np.integer)
-                    and seed >= 0
-                    and seed < 2**32
-                ):
+                if np.issubdtype(type(seed), np.integer) and seed >= 0 and seed < 2**32:
                     self._confs["random_seed"] = seed
 
         if "include_fc" in arg_list:

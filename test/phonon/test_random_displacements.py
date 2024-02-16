@@ -1,4 +1,5 @@
 """Tests for generation of random displacements at finite temperatures."""
+
 import os
 from copy import deepcopy
 
@@ -736,9 +737,9 @@ def _test_random_displacements(ph, answer, ntimes=30, d_max=1, nbins=51):
         hist[0] += h_1
         hist[1] += h_2
         argmaxs = (np.argmax(hist[0]), np.argmax(hist[1]))
-        # print(hist[0])
-        # print(hist[1])
-        # print(i, argmaxs)
+        print(hist[0])
+        print(hist[1])
+        print(i, argmaxs)
         if i >= ntimes and argmaxs == answer:
             break
     return argmaxs
@@ -863,7 +864,10 @@ def test_tio2_random_disp_plusminus(ph_tio2: Phonopy, is_plusminus: bool):
     ]
     np.testing.assert_allclose(ph_tio2.displacements, disp_ref, atol=1e-8)
     ph_tio2.generate_displacements(
-        number_of_snapshots=4, distance=0.03, is_plusminus=is_plusminus, temperature=300
+        number_of_snapshots=4,
+        distance=0.03,
+        is_plusminus=is_plusminus,
+        temperature=300,
     )
     d = ph_tio2.displacements
     if is_plusminus:

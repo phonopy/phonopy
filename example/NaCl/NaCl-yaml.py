@@ -1,4 +1,5 @@
 """Example to obtain PhonopyYaml instance."""
+
 import phonopy
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 

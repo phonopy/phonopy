@@ -1,4 +1,5 @@
 """Tests for wien2k interface."""
+
 import os
 
 import numpy as np

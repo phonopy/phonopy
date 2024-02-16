@@ -1,4 +1,5 @@
 """Tests for QHA calculations."""
+
 from pathlib import Path
 from typing import Optional
 
