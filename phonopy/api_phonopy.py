@@ -39,6 +39,7 @@ from __future__ import annotations
 import sys
 import textwrap
 import warnings
+from collections.abc import Sequence
 from typing import Optional, Union
 
 import numpy as np
@@ -145,8 +146,8 @@ class Phonopy:
     def __init__(
         self,
         unitcell,
-        supercell_matrix=None,
-        primitive_matrix=None,
+        supercell_matrix: Optional[Union[Sequence, np.ndarray]] = None,
+        primitive_matrix: Optional[Union[str, Sequence, np.ndarray]] = None,
         nac_params=None,
         factor=VaspToTHz,
         frequency_scale_factor=None,
@@ -3869,7 +3870,7 @@ class Phonopy:
 
     def _set_primitive_matrix(
         self, primitive_matrix
-    ) -> Optional[Union[str, list, np.ndarray]]:
+    ) -> Optional[Union[str, np.ndarray]]:
         pmat = get_primitive_matrix(primitive_matrix, symprec=self._symprec)
         if isinstance(pmat, str) and pmat == "auto":
             return guess_primitive_matrix(self._unitcell, symprec=self._symprec)

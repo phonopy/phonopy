@@ -1644,17 +1644,24 @@ def determinant(m):
 
 def get_primitive_matrix(
     pmat: Optional[Union[str, np.ndarray, Sequence]] = None,
-    symprec=1e-5,
-) -> Optional[Union[str, list, np.ndarray]]:
+    symprec: float = 1e-5,
+) -> Optional[Union[str, np.ndarray]]:
     """Find primitive matrix from primitive cell.
 
     None is equivalent to "P" but None is returned.
 
-    ``pmat`` can be
+    Parameters
+    ----------
+    pmat : str, np.ndarray, Sequency, or None
+        symbol of centring type: "P", "F", "I", "A", "C", "R"
+        "auto" : estimates a centring type.
+        3x3 matrix (can be flattened, i.e., 9 elements)
+    symprec : float
+        Tolerance.
 
-    - a symbol of centring type: "P", "F", "I", "A", "C", "R"
-    - "auto" : estimates a centring type.
-    - 3x3 matrix (can be flattened, i.e., 9 elements)
+    Returns
+    -------
+    None or 3x3 np.ndarray representing transformation matrix to primitive cell.
 
     """
     if isinstance(pmat, str) and pmat in ("P", "F", "I", "A", "C", "R", "auto"):
@@ -1683,28 +1690,43 @@ def get_primitive_matrix(
     return _pmat
 
 
-def get_primitive_matrix_by_centring(centring):
+def get_primitive_matrix_by_centring(centring) -> Optional[np.ndarray]:
     """Return primitive matrix corresponding to centring."""
     if centring == "P":
-        return [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+        return np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="double")
     elif centring == "F":
-        return [[0, 1.0 / 2, 1.0 / 2], [1.0 / 2, 0, 1.0 / 2], [1.0 / 2, 1.0 / 2, 0]]
+        return np.array(
+            [[0.0, 1.0 / 2, 1.0 / 2], [1.0 / 2, 0, 1.0 / 2], [1.0 / 2, 1.0 / 2, 0.0]],
+            dtype="double",
+        )
     elif centring == "I":
-        return [
-            [-1.0 / 2, 1.0 / 2, 1.0 / 2],
-            [1.0 / 2, -1.0 / 2, 1.0 / 2],
-            [1.0 / 2, 1.0 / 2, -1.0 / 2],
-        ]
+        return np.array(
+            [
+                [-1.0 / 2, 1.0 / 2, 1.0 / 2],
+                [1.0 / 2, -1.0 / 2, 1.0 / 2],
+                [1.0 / 2, 1.0 / 2, -1.0 / 2],
+            ],
+            dtype="double",
+        )
     elif centring == "A":
-        return [[1, 0, 0], [0, 1.0 / 2, -1.0 / 2], [0, 1.0 / 2, 1.0 / 2]]
+        return np.array(
+            [[1.0, 0.0, 0.0], [0.0, 1.0 / 2, -1.0 / 2], [0.0, 1.0 / 2, 1.0 / 2]],
+            dtype="double",
+        )
     elif centring == "C":
-        return [[1.0 / 2, 1.0 / 2, 0], [-1.0 / 2, 1.0 / 2, 0], [0, 0, 1]]
+        return np.array(
+            [[1.0 / 2, 1.0 / 2, 0], [-1.0 / 2, 1.0 / 2, 0], [0.0, 0.0, 1.0]],
+            dtype="double",
+        )
     elif centring == "R":
-        return [
-            [2.0 / 3, -1.0 / 3, -1.0 / 3],
-            [1.0 / 3, 1.0 / 3, -2.0 / 3],
-            [1.0 / 3, 1.0 / 3, 1.0 / 3],
-        ]
+        return np.array(
+            [
+                [2.0 / 3, -1.0 / 3, -1.0 / 3],
+                [1.0 / 3, 1.0 / 3, -2.0 / 3],
+                [1.0 / 3, 1.0 / 3, 1.0 / 3],
+            ],
+            dtype="double",
+        )
     else:
         return None
 
@@ -1722,7 +1744,7 @@ def guess_primitive_matrix(unitcell: PhonopyAtoms, symprec: float = 1e-5):
     return np.array(np.dot(np.linalg.inv(tmat), pmat), dtype="double", order="C")
 
 
-def shape_supercell_matrix(smat: Optional[Union[int, float, np.ndarray]]) -> np.ndarray:
+def shape_supercell_matrix(smat: Optional[Union[Sequence, np.ndarray]]) -> np.ndarray:
     """Reshape supercell matrix."""
     if smat is None:
         _smat = np.eye(3, dtype="intc", order="C")
