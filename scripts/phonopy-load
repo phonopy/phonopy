@@ -40,7 +40,6 @@ if __name__ == "__main__":
     argparse_control = {
         "fc_symmetry": True,
         "is_nac": True,
-        "include_born": True,
         "load_phonopy_yaml": True,
     }
     main(**argparse_control)
