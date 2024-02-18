@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Feb-18-2024: Version 2.21.2
+
+- Fix `phonopy-load`.
+
 ## Feb-14-2024: Version 2.21.1
 
 - `np.random.randn` is replaced by `np.random.Generator.standard_normal`. Note
