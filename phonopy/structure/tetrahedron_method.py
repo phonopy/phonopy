@@ -1,4 +1,5 @@
 """Core routine of linear tetrahedon method on regular grid."""
+
 # Copyright (C) 2013 Atsushi Togo
 # All rights reserved.
 #

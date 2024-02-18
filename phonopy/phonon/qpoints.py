@@ -1,4 +1,5 @@
 """Phonon calculation at specific q-points."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #

@@ -1,4 +1,5 @@
 """SIESTA calculator interface."""
+
 # Copyright (C) 2015 Henrique Pereira Coutada Miranda
 # All rights reserved.
 #

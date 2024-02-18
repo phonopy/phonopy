@@ -1,4 +1,5 @@
 """Tests for CIF tools."""
+
 # Copyright (C) 2016 Atsushi Togo
 # All rights reserved.
 #

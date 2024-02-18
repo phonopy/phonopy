@@ -1,4 +1,5 @@
 """Script to plot unfolding result."""
+
 import sys
 
 import matplotlib.pyplot as plt

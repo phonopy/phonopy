@@ -1,4 +1,5 @@
 """Tests of custom exceptions."""
+
 import pytest
 
 from phonopy import Phonopy

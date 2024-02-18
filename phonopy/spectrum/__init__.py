@@ -1,4 +1,5 @@
 """Routines to calculate power spectrum from MD data."""
+
 # Copyright (C) 2021 Atsushi Togo
 # All rights reserved.
 #

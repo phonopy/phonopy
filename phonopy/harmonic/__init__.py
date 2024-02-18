@@ -1,4 +1,5 @@
 """Routines of pre-phonon calculations."""
+
 # Copyright (C) 2021 Atsushi Togo
 # All rights reserved.
 #

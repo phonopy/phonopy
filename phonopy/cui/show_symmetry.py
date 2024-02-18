@@ -1,4 +1,5 @@
 """Show symmetry information invoked by --symmetry command option."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -35,7 +36,6 @@
 
 import numpy as np
 import spglib
-from spglib import get_pointgroup
 
 from phonopy import Phonopy
 from phonopy.interface.calculator import (
@@ -56,9 +56,9 @@ def check_symmetry(phonon: Phonopy, optional_structure_info):
 
     if phonon.unitcell.magnetic_moments is None:
         base_fname = get_default_cell_filename(phonon.calculator)
-        symprec = phonon.primitive_symmetry.get_symmetry_tolerance()
+        symprec = phonon.primitive_symmetry.tolerance
         (bravais_lattice, bravais_pos, bravais_numbers) = spglib.refine_cell(
-            phonon.primitive, symprec
+            phonon.primitive.totuple(), symprec
         )
         bravais = PhonopyAtoms(
             numbers=bravais_numbers, scaled_positions=bravais_pos, cell=bravais_lattice
@@ -115,7 +115,7 @@ def _get_symmetry_yaml(cell: PhonopyAtoms, symmetry: Symmetry, phonopy_version=N
         spg_number = int(spg_number.replace("(", "").replace(")", ""))
         lines.append("space_group_type: '%s'" % spg_symbol)
         lines.append("space_group_number: %d" % spg_number)
-        lines.append("point_group_type: '%s'" % symmetry.get_pointgroup())
+        lines.append("point_group_type: '%s'" % symmetry.pointgroup_symbol)
     lines.append("space_group_operations:")
     for i, (r, t) in enumerate(zip(rotations, translations)):
         lines.append("- rotation: # %d" % (i + 1))
@@ -142,7 +142,7 @@ def _get_symmetry_yaml(cell: PhonopyAtoms, symmetry: Symmetry, phonopy_version=N
 
         if cell.magnetic_moments is None:
             lines.append("  Wyckoff: '%s'" % wyckoffs[i])
-        site_pointgroup = get_pointgroup(sitesym)
+        site_pointgroup = spglib.get_pointgroup(sitesym)
         lines.append("  site_point_group: '%s'" % site_pointgroup[0].strip())
         lines.append("  orientation:")
         for v in site_pointgroup[2]:

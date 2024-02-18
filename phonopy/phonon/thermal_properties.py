@@ -1,4 +1,5 @@
 """Phonon thermal properties at constant volume."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #

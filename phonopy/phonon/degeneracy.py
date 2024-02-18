@@ -1,4 +1,5 @@
 """Utility routines to handle degeneracy."""
+
 # Copyright (C) 2014 Atsushi Togo
 # All rights reserved.
 #

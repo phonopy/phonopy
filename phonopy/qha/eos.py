@@ -1,4 +1,5 @@
 """Equation of states and fitting routine."""
+
 # Copyright (C) 2012 Atsushi Togo
 # All rights reserved.
 #
@@ -80,11 +81,7 @@ def get_eos(eos):
         x = (v / p[3]) ** (1.0 / 3)
         xi = 3.0 / 2 * (p[2] - 1)
         return p[0] + (
-            9
-            * p[1]
-            * p[3]
-            / (xi**2)
-            * (1 + (xi * (1 - x) - 1) * np.exp(xi * (1 - x)))
+            9 * p[1] * p[3] / (xi**2) * (1 + (xi * (1 - x) - 1) * np.exp(xi * (1 - x)))
         )
 
     if eos == "murnaghan":
@@ -152,7 +149,7 @@ class EOSFit:
         except RuntimeError:
             logging.exception("Fitting to EOS failed.")
             raise
-        except (RuntimeWarning, scipy.optimize.optimize.OptimizeWarning):
+        except (RuntimeWarning, scipy.optimize.OptimizeWarning):
             logging.exception("Difficulty in fitting to EOS.")
             raise
         else:

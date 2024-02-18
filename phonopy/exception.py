@@ -1,4 +1,5 @@
 """Phonopy exceptions."""
+
 # Copyright (C) 2022 Atsushi Togo
 # All rights reserved.
 #

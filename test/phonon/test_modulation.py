@@ -1,4 +1,5 @@
 """Tests for Modulation."""
+
 from phonopy import Phonopy
 from phonopy.structure.atoms import PhonopyAtoms
 

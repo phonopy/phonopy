@@ -1,4 +1,5 @@
 """Tests for DOS."""
+
 import numpy as np
 
 from phonopy import Phonopy
