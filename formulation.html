@@ -1,15 +1,14 @@
 
-
 <!DOCTYPE html>
 
 
-<html lang="en" data-content_root="" >
+<html lang="en" data-content_root="./" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Formulations &#8212; Phonopy v.2.21.0</title>
+    <title>Formulations &#8212; Phonopy v.2.21.2</title>
   
   
   
@@ -19,28 +18,28 @@
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
-<link href="_static/styles/bootstrap.css?digest=5b4479735964841361fd" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
 
   
-  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=5b4479735964841361fd" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+  <link href="_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=5b4479735964841361fd" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd" />
-  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=5b4479735964841361fd"></script>
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
-    <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="_static/documentation_options.js?v=725a5c9d"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'formulation';</script>
@@ -57,10 +56,9 @@
 
   
   
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
   
   <div id="pst-scroll-pixel-helper"></div>
-
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
     <i class="fa-solid fa-arrow-up"></i>
@@ -101,11 +99,14 @@
 </form></div>
   </div>
   
-    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
-    </nav>
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
   
+
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
+      
+      
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -130,10 +131,21 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.21.0</p>
+    <p class="title logo__title">Phonopy v.2.21.2</p>
   
 </a></div>
-        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
@@ -366,12 +378,12 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article" role="main">
+                <article class="bd-article">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="formulations">
-<span id="id1"></span><h1>Formulations<a class="headerlink" href="#formulations" title="Permalink to this heading">#</a></h1>
+<span id="id1"></span><h1>Formulations<a class="headerlink" href="#formulations" title="Link to this heading">#</a></h1>
 <section id="second-order-force-constants">
-<h2>Second-order force constants<a class="headerlink" href="#second-order-force-constants" title="Permalink to this heading">#</a></h2>
+<h2>Second-order force constants<a class="headerlink" href="#second-order-force-constants" title="Link to this heading">#</a></h2>
 <p>Potential energy of phonon system is represented as functions of atomic
 positions:</p>
 <div class="math notranslate nohighlight">
@@ -399,7 +411,7 @@ a finite displacement <span class="math notranslate nohighlight">\(\Delta r_\alp
 <span class="math notranslate nohighlight">\(F_\beta(j'l') \equiv 0\)</span>.</p>
 </section>
 <section id="modified-parlinski-li-kawazoe-method">
-<span id="force-constants-solver-theory"></span><h2>Modified Parlinski-Li-Kawazoe method<a class="headerlink" href="#modified-parlinski-li-kawazoe-method" title="Permalink to this heading">#</a></h2>
+<span id="force-constants-solver-theory"></span><h2>Modified Parlinski-Li-Kawazoe method<a class="headerlink" href="#modified-parlinski-li-kawazoe-method" title="Link to this heading">#</a></h2>
 <p>The following is a modified and simplified version of the Parlinski-Li-Kawazoe
 method, which is just a numerical fitting approach to obtain force constants
 from forces and displacements.</p>
@@ -449,10 +461,10 @@ The combined simultaneous equations are built such as</p>
 operations. This is solved by pseudo inverse.</p>
 </section>
 <section id="dynamical-matrix">
-<span id="dynacmial-matrix-theory"></span><h2>Dynamical matrix<a class="headerlink" href="#dynamical-matrix" title="Permalink to this heading">#</a></h2>
+<span id="dynacmial-matrix-theory"></span><h2>Dynamical matrix<a class="headerlink" href="#dynamical-matrix" title="Link to this heading">#</a></h2>
 <p>In phonopy, a phase convention of dynamical matrix is used as follows:</p>
 <div class="math notranslate nohighlight" id="equation-eq-dynmat">
-<span class="eqno">(1)<a class="headerlink" href="#equation-eq-dynmat" title="Permalink to this equation">#</a></span>\[D_{\alpha\beta}(jj',\mathbf{q}) = \frac{1}{\sqrt{m_j m_{j'}}} \sum_{l'}
+<span class="eqno">(1)<a class="headerlink" href="#equation-eq-dynmat" title="Link to this equation">#</a></span>\[D_{\alpha\beta}(jj',\mathbf{q}) = \frac{1}{\sqrt{m_j m_{j'}}} \sum_{l'}
 \Phi_{\alpha\beta}(j0, j'l')
 \exp(i\mathbf{q}\cdot[\mathbf{r}(j'l')-\mathbf{r}(j0)]),\]</div>
 <p>where <span class="math notranslate nohighlight">\(m\)</span> is the atomic mass and <span class="math notranslate nohighlight">\(\mathbf{q}\)</span> is the wave vector. An
@@ -478,7 +490,7 @@ annihilation operators of phonon, <span class="math notranslate nohighlight">\(\
 and <span class="math notranslate nohighlight">\(t\)</span> is the time.</p>
 </section>
 <section id="non-analytical-term-correction">
-<span id="non-analytical-term-correction-theory"></span><h2>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction" title="Permalink to this heading">#</a></h2>
+<span id="non-analytical-term-correction-theory"></span><h2>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction" title="Link to this heading">#</a></h2>
 <p>To treat long range interaction of macroscopic electric field induced by
 polarization of collective ionic motions near the <span class="math notranslate nohighlight">\(\Gamma\)</span>-point,
 non-analytical term is added to dynamical matrix (<a class="reference internal" href="reference.html#reference-nac"><span class="std std-ref">Non-analytical term correction</span></a>). At
@@ -496,20 +508,20 @@ interaction are calculated by the method of Gonze <em>et al.</em>
 (<a class="reference internal" href="reference.html#reference-dp-dp-nac"><span class="std std-ref">Correction by dipole-dipole interaction</span></a>).</p>
 </section>
 <section id="thermodynamic-properties">
-<span id="thermal-properties-expressions"></span><h2>Thermodynamic properties<a class="headerlink" href="#thermodynamic-properties" title="Permalink to this heading">#</a></h2>
+<span id="thermal-properties-expressions"></span><h2>Thermodynamic properties<a class="headerlink" href="#thermodynamic-properties" title="Link to this heading">#</a></h2>
 <section id="phonon-number">
-<h3>Phonon number<a class="headerlink" href="#phonon-number" title="Permalink to this heading">#</a></h3>
+<h3>Phonon number<a class="headerlink" href="#phonon-number" title="Link to this heading">#</a></h3>
 <div class="math notranslate nohighlight">
 \[n = \frac{1}{\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1}\]</div>
 </section>
 <section id="harmonic-phonon-energy">
-<h3>Harmonic phonon energy<a class="headerlink" href="#harmonic-phonon-energy" title="Permalink to this heading">#</a></h3>
+<h3>Harmonic phonon energy<a class="headerlink" href="#harmonic-phonon-energy" title="Link to this heading">#</a></h3>
 <div class="math notranslate nohighlight">
 \[E = \sum_{\mathbf{q}\nu}\hbar\omega(\mathbf{q}\nu)\left[\frac{1}{2} +
 \frac{1}{\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1}\right]\]</div>
 </section>
 <section id="constant-volume-heat-capacity">
-<h3>Constant volume heat capacity<a class="headerlink" href="#constant-volume-heat-capacity" title="Permalink to this heading">#</a></h3>
+<h3>Constant volume heat capacity<a class="headerlink" href="#constant-volume-heat-capacity" title="Link to this heading">#</a></h3>
 <div class="math notranslate nohighlight">
 \[\begin{split}C_V &amp;= \left(\frac{\partial E}{\partial T} \right)_V \\
       &amp;= \sum_{\mathbf{q}\nu} k_\mathrm{B}
@@ -518,14 +530,14 @@ interaction are calculated by the method of Gonze <em>et al.</em>
    T)}{[\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1]^2}\end{split}\]</div>
 </section>
 <section id="partition-function">
-<h3>Partition function<a class="headerlink" href="#partition-function" title="Permalink to this heading">#</a></h3>
+<h3>Partition function<a class="headerlink" href="#partition-function" title="Link to this heading">#</a></h3>
 <div class="math notranslate nohighlight">
 \[Z = \exp(-\varphi/k_\mathrm{B} T) \prod_{\mathbf{q}\nu}
    \frac{\exp(-\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}
    T)}{1-\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)}\]</div>
 </section>
 <section id="helmholtz-free-energy">
-<h3>Helmholtz free energy<a class="headerlink" href="#helmholtz-free-energy" title="Permalink to this heading">#</a></h3>
+<h3>Helmholtz free energy<a class="headerlink" href="#helmholtz-free-energy" title="Link to this heading">#</a></h3>
 <div class="math notranslate nohighlight">
 \[\begin{split}F &amp;= -k_\mathrm{B} T \ln Z \\
 &amp;= \varphi + \frac{1}{2} \sum_{\mathbf{q}\nu}
@@ -533,7 +545,7 @@ interaction are calculated by the method of Gonze <em>et al.</em>
 \bigl[1 -\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T) \bigr]\end{split}\]</div>
 </section>
 <section id="entropy">
-<h3>Entropy<a class="headerlink" href="#entropy" title="Permalink to this heading">#</a></h3>
+<h3>Entropy<a class="headerlink" href="#entropy" title="Link to this heading">#</a></h3>
 <div class="math notranslate nohighlight">
 \[\begin{split}S &amp;= -\frac{\partial F}{\partial T} \\ &amp;= \frac{1}{2T}
 \sum_{\mathbf{q}\nu} \hbar\omega(\mathbf{q}\nu)
@@ -543,9 +555,9 @@ interaction are calculated by the method of Gonze <em>et al.</em>
 </section>
 </section>
 <section id="thermal-displacement">
-<span id="id2"></span><h2>Thermal displacement<a class="headerlink" href="#thermal-displacement" title="Permalink to this heading">#</a></h2>
+<span id="id2"></span><h2>Thermal displacement<a class="headerlink" href="#thermal-displacement" title="Link to this heading">#</a></h2>
 <section id="mean-square-displacement">
-<h3>Mean square displacement<a class="headerlink" href="#mean-square-displacement" title="Permalink to this heading">#</a></h3>
+<h3>Mean square displacement<a class="headerlink" href="#mean-square-displacement" title="Link to this heading">#</a></h3>
 <p>From Eq. (10.71) in the book “Thermodynamics of Crystal”, atomic displacement,
 <strong>u</strong>, is written by</p>
 <div class="math notranslate nohighlight">
@@ -586,7 +598,7 @@ combination of the operations, e.g.,</p>
 &amp;= 0.\end{split}\]</div>
 </section>
 <section id="mean-square-displacement-matrix">
-<span id="thermal-displacement-matrix"></span><h3>Mean square displacement matrix<a class="headerlink" href="#mean-square-displacement-matrix" title="Permalink to this heading">#</a></h3>
+<span id="thermal-displacement-matrix"></span><h3>Mean square displacement matrix<a class="headerlink" href="#mean-square-displacement-matrix" title="Link to this heading">#</a></h3>
 <p>Mean square displacement matrix is defined as follows:</p>
 <div class="math notranslate nohighlight">
 \[\mathrm{U}_\text{cart}(j, T) = \frac{\hbar}{2Nm_j}
@@ -596,7 +608,7 @@ combination of the operations, e.g.,</p>
 displacement calculated along Cartesian x, y, z directions.</p>
 </section>
 <section id="projection-to-an-arbitrary-axis">
-<h3>Projection to an arbitrary axis<a class="headerlink" href="#projection-to-an-arbitrary-axis" title="Permalink to this heading">#</a></h3>
+<h3>Projection to an arbitrary axis<a class="headerlink" href="#projection-to-an-arbitrary-axis" title="Link to this heading">#</a></h3>
 <p>In phonopy, eigenvectors are calculated in the Cartesian axes that are defined
 in the input structure file. Mean square displacement along an arbitrary axis is
 obtained projecting eigenvectors in the Cartesian axes as follows:</p>
@@ -607,7 +619,7 @@ obtained projecting eigenvectors in the Cartesian axes as follows:</p>
 <p>where <span class="math notranslate nohighlight">\(\hat{\mathbf{n}}\)</span> is an arbitrary unit direction.</p>
 </section>
 <section id="mean-square-displacement-matrix-in-cif-format">
-<h3>Mean square displacement matrix in cif format<a class="headerlink" href="#mean-square-displacement-matrix-in-cif-format" title="Permalink to this heading">#</a></h3>
+<h3>Mean square displacement matrix in cif format<a class="headerlink" href="#mean-square-displacement-matrix-in-cif-format" title="Link to this heading">#</a></h3>
 <p>According to the paper by Grosse-Kunstleve and Adams [J. Appl. Cryst., 35,
 477-480 (2002)], mean square displacement matrix in the cif definition
 (<code class="docutils literal notranslate"><span class="pre">aniso_U</span></code>), <span class="math notranslate nohighlight">\(\mathrm{U}_\text{cif}\)</span>, is obtained by</p>
@@ -628,9 +640,9 @@ c_z \end{pmatrix}\end{split}\]</div>
 </section>
 </section>
 <section id="group-velocity">
-<span id="id3"></span><h2>Group velocity<a class="headerlink" href="#group-velocity" title="Permalink to this heading">#</a></h2>
+<span id="id3"></span><h2>Group velocity<a class="headerlink" href="#group-velocity" title="Link to this heading">#</a></h2>
 <section id="method">
-<h3>Method<a class="headerlink" href="#method" title="Permalink to this heading">#</a></h3>
+<h3>Method<a class="headerlink" href="#method" title="Link to this heading">#</a></h3>
 <p>Phonopy calculates group velocity of phonon as follows:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\mathbf{v}_\mathrm{g}(\mathbf{q}\nu) = &amp; \nabla_\mathbf{q} \omega(\mathbf{q}\nu) \\
@@ -643,7 +655,7 @@ c_z \end{pmatrix}\end{split}\]</div>
 <p>where the meanings of the variables are found at <a class="reference internal" href="#formulations"><span class="std std-ref">Formulations</span></a>.</p>
 </section>
 <section id="finite-difference-method">
-<h3>Finite difference method<a class="headerlink" href="#finite-difference-method" title="Permalink to this heading">#</a></h3>
+<h3>Finite difference method<a class="headerlink" href="#finite-difference-method" title="Link to this heading">#</a></h3>
 <p>In the previous versions, group velocity was calculated using finite difference
 method:</p>
 <div class="math notranslate nohighlight">
@@ -667,7 +679,7 @@ by <code class="docutils literal notranslate"><span class="pre">--gv_delta_q</sp
 </section>
 </section>
 <section id="physical-unit-conversion">
-<span id="id4"></span><h2>Physical unit conversion<a class="headerlink" href="#physical-unit-conversion" title="Permalink to this heading">#</a></h2>
+<span id="id4"></span><h2>Physical unit conversion<a class="headerlink" href="#physical-unit-conversion" title="Link to this heading">#</a></h2>
 <p>Phonopy calculates phonon frequencies based on input values from users. In the
 default case, the physical units of distance, atomic mass, force, and force
 constants are supposed to be <span class="math notranslate nohighlight">\(\text{Angstrom}\)</span>, <span class="math notranslate nohighlight">\(\text{AMU}\)</span>,
@@ -711,9 +723,9 @@ the conversion factors are similarly calculated following the unit systems
 employed in phonopy (<a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>).</p>
 </section>
 <section id="crystal-structure">
-<span id="definition-of-commensurate-points"></span><h2>Crystal structure<a class="headerlink" href="#crystal-structure" title="Permalink to this heading">#</a></h2>
+<span id="definition-of-commensurate-points"></span><h2>Crystal structure<a class="headerlink" href="#crystal-structure" title="Link to this heading">#</a></h2>
 <section id="coordinates-in-direct-and-reciprocal-spaces">
-<h3>Coordinates in direct and reciprocal spaces<a class="headerlink" href="#coordinates-in-direct-and-reciprocal-spaces" title="Permalink to this heading">#</a></h3>
+<h3>Coordinates in direct and reciprocal spaces<a class="headerlink" href="#coordinates-in-direct-and-reciprocal-spaces" title="Link to this heading">#</a></h3>
 <p>As usual, in phonopy, the Born-von Karman boundary condition is assumed. Basis
 vectors of a primitive lattice are defined in three column vectors
 <span class="math notranslate nohighlight">\(( \mathbf{a} \; \mathbf{b} \; \mathbf{c} )\)</span>. Coordinates of a point in
@@ -727,7 +739,7 @@ vectors of the reciprocal lattice may be given by three row vectors,
 they are defined as three column vectors as
 <span class="math notranslate nohighlight">\(( \mathbf{a}^{*} \; \mathbf{b}^{*} \; \mathbf{c}^{*} )\)</span> with</p>
 <div class="math notranslate nohighlight" id="equation-eq-rec-basis-vectors">
-<span class="eqno">(2)<a class="headerlink" href="#equation-eq-rec-basis-vectors" title="Permalink to this equation">#</a></span>\[\begin{split}\mathbf{a}^{*} &amp;= \frac{\mathbf{b} \times \mathbf{c}}{\mathbf{a} \cdot
+<span class="eqno">(2)<a class="headerlink" href="#equation-eq-rec-basis-vectors" title="Link to this equation">#</a></span>\[\begin{split}\mathbf{a}^{*} &amp;= \frac{\mathbf{b} \times \mathbf{c}}{\mathbf{a} \cdot
 (\mathbf{b} \times \mathbf{c})}, \\ \mathbf{b}^{*} &amp;= \frac{\mathbf{c} \times
 \mathbf{a}}{\mathbf{b} \cdot (\mathbf{c} \times \mathbf{a})}, \\ \mathbf{c}^{*}
 &amp;= \frac{\mathbf{a} \times \mathbf{b}}{\mathbf{c} \cdot (\mathbf{a} \times
@@ -756,7 +768,7 @@ those calculated following Eq. <a class="reference internal" href="#equation-eq-
 <span class="math notranslate nohighlight">\(( \mathbf{a} \; \mathbf{b} \; \mathbf{c})\)</span>.</p>
 </section>
 <section id="commensurate-points">
-<h3>Commensurate points<a class="headerlink" href="#commensurate-points" title="Permalink to this heading">#</a></h3>
+<h3>Commensurate points<a class="headerlink" href="#commensurate-points" title="Link to this heading">#</a></h3>
 <p>In phonopy, so-called commensurate points mean the q-points whose waves are
 confined in the supercell used in the phonon calculation.</p>
 <p>To explain about the commensurate points, let basis vectors of a primitive cell
@@ -849,6 +861,7 @@ elements of <span class="math notranslate nohighlight">\(\boldsymbol{P}^{\mathrm
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
   <div class="sidebar-secondary-item">
   <div class="page-toc tocsection onthispage">
     <i class="fa-solid fa-list"></i> Contents
@@ -930,8 +943,8 @@ elements of <span class="math notranslate nohighlight">\(\boldsymbol{P}^{\mathrm
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/bootstrap.js?digest=5b4479735964841361fd"></script>
-<script src="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd"></script>
+  <script src="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
 
   <footer class="bd-footer">
   </footer>

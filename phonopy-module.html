@@ -1,15 +1,14 @@
 
-
 <!DOCTYPE html>
 
 
-<html lang="en" data-content_root="" >
+<html lang="en" data-content_root="./" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Phonopy API for Python &#8212; Phonopy v.2.21.0</title>
+    <title>Phonopy API for Python &#8212; Phonopy v.2.21.2</title>
   
   
   
@@ -19,28 +18,28 @@
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
-<link href="_static/styles/bootstrap.css?digest=5b4479735964841361fd" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
 
   
-  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=5b4479735964841361fd" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+  <link href="_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=5b4479735964841361fd" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd" />
-  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=5b4479735964841361fd"></script>
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
-    <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="_static/documentation_options.js?v=725a5c9d"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'phonopy-module';</script>
@@ -57,10 +56,9 @@
 
   
   
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
   
   <div id="pst-scroll-pixel-helper"></div>
-
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
     <i class="fa-solid fa-arrow-up"></i>
@@ -101,11 +99,14 @@
 </form></div>
   </div>
   
-    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
-    </nav>
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
   
+
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
+      
+      
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -130,10 +131,21 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.21.0</p>
+    <p class="title logo__title">Phonopy v.2.21.2</p>
   
 </a></div>
-        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
@@ -383,14 +395,14 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article" role="main">
+                <article class="bd-article">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="phonopy-api-for-python">
-<span id="phonopy-module"></span><h1>Phonopy API for Python<a class="headerlink" href="#phonopy-api-for-python" title="Permalink to this heading">#</a></h1>
+<span id="phonopy-module"></span><h1>Phonopy API for Python<a class="headerlink" href="#phonopy-api-for-python" title="Link to this heading">#</a></h1>
 <p><strong>This is under development. Configurations may alter.</strong> Requests or suggestions
 are very welcome.</p>
 <section id="import-modules">
-<h2>Import modules<a class="headerlink" href="#import-modules" title="Permalink to this heading">#</a></h2>
+<h2>Import modules<a class="headerlink" href="#import-modules" title="Link to this heading">#</a></h2>
 <p>After setting the phonopy python path, the phonopy module is imported by:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy</span> <span class="kn">import</span> <span class="n">Phonopy</span>
 </pre></div>
@@ -415,10 +427,10 @@ QE,</p>
 <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> instance.</p>
 </section>
 <section id="work-flow">
-<h2>Work flow<a class="headerlink" href="#work-flow" title="Permalink to this heading">#</a></h2>
+<h2>Work flow<a class="headerlink" href="#work-flow" title="Link to this heading">#</a></h2>
 <p>The work flow is schematically shown in <a class="reference internal" href="workflow.html#workflow"><span class="std std-ref">Work flow</span></a>.</p>
 <section id="pre-process">
-<h3>Pre-process<a class="headerlink" href="#pre-process" title="Permalink to this heading">#</a></h3>
+<h3>Pre-process<a class="headerlink" href="#pre-process" title="Link to this heading">#</a></h3>
 <p>The first step is to create a <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> object with at least two arguments, a
 unit cell (<code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> object, see <a class="reference internal" href="#phonopy-atoms"><span class="std std-ref">PhonopyAtoms class</span></a>) and a supercell
 matrix (3x3 array, see <a class="reference internal" href="#variable-supercell-matrix"><span class="std std-ref">Supercell matrix</span></a>). In the following
@@ -478,7 +490,7 @@ example:</p>
 <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.</p>
 </section>
 <section id="post-process">
-<h3>Post process<a class="headerlink" href="#post-process" title="Permalink to this heading">#</a></h3>
+<h3>Post process<a class="headerlink" href="#post-process" title="Link to this heading">#</a></h3>
 <p>Forces on atoms are supposed to be obtained by running force calculator (e.g.
 VASP) with each supercell with a displacement. Then the forces in the
 calculation outputs have to be collected by users. However output parsers for
@@ -531,9 +543,9 @@ details at <a class="reference internal" href="input-files.html#file-force-const
 </section>
 </section>
 <section id="phonon-calculation">
-<h2>Phonon calculation<a class="headerlink" href="#phonon-calculation" title="Permalink to this heading">#</a></h2>
+<h2>Phonon calculation<a class="headerlink" href="#phonon-calculation" title="Link to this heading">#</a></h2>
 <section id="save-parameters-phonopy-save">
-<span id="phonopy-save-parameters"></span><h3>Save parameters (<code class="docutils literal notranslate"><span class="pre">phonopy.save</span></code>)<a class="headerlink" href="#save-parameters-phonopy-save" title="Permalink to this heading">#</a></h3>
+<span id="phonopy-save-parameters"></span><h3>Save parameters (<code class="docutils literal notranslate"><span class="pre">phonopy.save</span></code>)<a class="headerlink" href="#save-parameters-phonopy-save" title="Link to this heading">#</a></h3>
 <p>Basic information and parameters needed for phonon calculation are saved into a
 file by <code class="docutils literal notranslate"><span class="pre">phonopy.save</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
@@ -548,7 +560,7 @@ If force constants are needed to be written in the yaml file, the argument
 </div>
 </section>
 <section id="shortcut-to-load-input-files-phonopy-load">
-<span id="phonopy-load"></span><h3>Shortcut to load input files (<code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code>)<a class="headerlink" href="#shortcut-to-load-input-files-phonopy-load" title="Permalink to this heading">#</a></h3>
+<span id="phonopy-load"></span><h3>Shortcut to load input files (<code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code>)<a class="headerlink" href="#shortcut-to-load-input-files-phonopy-load" title="Link to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code> is a convenient python method to create <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> instance
 loading forces, displacements, and parameters for non-analytical term
 correction. The details are found in the docstring that can be seen by (e.g., in
@@ -623,7 +635,7 @@ easily plotted by</p>
 </div>
 </section>
 <section id="band-structure">
-<h3>Band structure<a class="headerlink" href="#band-structure" title="Permalink to this heading">#</a></h3>
+<h3>Band structure<a class="headerlink" href="#band-structure" title="Link to this heading">#</a></h3>
 <p>Set band paths (<code class="docutils literal notranslate"><span class="pre">run_band_structure()</span></code>) and get the results
 (<code class="docutils literal notranslate"><span class="pre">get_band_structure_dict()</span></code>).</p>
 <p>A dictionary with <code class="docutils literal notranslate"><span class="pre">qpoints</span></code>, <code class="docutils literal notranslate"><span class="pre">distances</span></code>, <code class="docutils literal notranslate"><span class="pre">frequencies</span></code>, <code class="docutils literal notranslate"><span class="pre">eigenvectors</span></code>,
@@ -679,7 +691,7 @@ eigenvectors by:</p>
 <p>To use this method, <code class="docutils literal notranslate"><span class="pre">seekpath</span></code> python module is needed.</p>
 </section>
 <section id="mesh-sampling">
-<h3>Mesh sampling<a class="headerlink" href="#mesh-sampling" title="Permalink to this heading">#</a></h3>
+<h3>Mesh sampling<a class="headerlink" href="#mesh-sampling" title="Link to this heading">#</a></h3>
 <p>Set sampling mesh (<code class="docutils literal notranslate"><span class="pre">set_mesh</span></code>) in reciprocal space. The irreducible <em>q</em>-points
 and corresponding <em>q</em>-point weights, eigenvalues, and eigenvectors are obtained
 by <code class="docutils literal notranslate"><span class="pre">get_mesh_dict()</span></code>. <code class="docutils literal notranslate"><span class="pre">mesh</span></code> gives the sampling mesh with Monkhorst-Pack scheme.
@@ -710,7 +722,7 @@ measure as explained at <a class="reference internal" href="setting-tags.html#mp
 </div>
 </section>
 <section id="dos-and-pdos">
-<h3>DOS and PDOS<a class="headerlink" href="#dos-and-pdos" title="Permalink to this heading">#</a></h3>
+<h3>DOS and PDOS<a class="headerlink" href="#dos-and-pdos" title="Link to this heading">#</a></h3>
 <p>Before starting mesh sampling has to be finished. Then set parameters
 (<code class="docutils literal notranslate"><span class="pre">run_total_dos()</span></code> or <code class="docutils literal notranslate"><span class="pre">run_projected_dos()</span></code>) and write the results into files
 (<code class="docutils literal notranslate"><span class="pre">write_total_dos()</span></code> and <code class="docutils literal notranslate"><span class="pre">write_projected_dos()</span></code>). In the case of PDOS, the
@@ -737,7 +749,7 @@ eigenvectors have to be calculated in the mesh sampling. To get the results
 </div>
 </section>
 <section id="thermal-properties">
-<h3>Thermal properties<a class="headerlink" href="#thermal-properties" title="Permalink to this heading">#</a></h3>
+<h3>Thermal properties<a class="headerlink" href="#thermal-properties" title="Link to this heading">#</a></h3>
 <p>Before starting the thermal property calculation, the mesh sampling calculation
 has to be done in the <strong>THz unit</strong>. The unit conversion factor for phonon
 frequency is set in the pre-process of Phonopy with the <code class="docutils literal notranslate"><span class="pre">factor</span></code> keyword.
@@ -765,7 +777,7 @@ energy, entropy, and heat capacity with keys <code class="docutils literal notra
 </div>
 </section>
 <section id="non-analytical-term-correction">
-<h3>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction" title="Permalink to this heading">#</a></h3>
+<h3>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction" title="Link to this heading">#</a></h3>
 <p>To apply non-analytical term correction, Born effective charge tensors for all
 atoms in <strong>primitive</strong> cell, dielectric constant tensor, and the unit conversion
 factor have to be correctly set. The tensors are given in Cartesian coordinates.</p>
@@ -787,16 +799,16 @@ factor have to be correctly set. The tensors are given in Cartesian coordinates.
 </section>
 </section>
 <section id="data-structure">
-<h2>Data structure<a class="headerlink" href="#data-structure" title="Permalink to this heading">#</a></h2>
+<h2>Data structure<a class="headerlink" href="#data-structure" title="Link to this heading">#</a></h2>
 <section id="eigenvectors">
-<h3>Eigenvectors<a class="headerlink" href="#eigenvectors" title="Permalink to this heading">#</a></h3>
+<h3>Eigenvectors<a class="headerlink" href="#eigenvectors" title="Link to this heading">#</a></h3>
 <p>Eigenvectors are given as the column vectors. Internally phonopy uses
 <code class="docutils literal notranslate"><span class="pre">numpy.linalg.eigh</span></code> and <code class="docutils literal notranslate"><span class="pre">eigh</span></code> is a wrapper of LAPACK. So eigenvectors follow
 the convention of LAPACK, which can be shown at
 <a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.eigh.html">http://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.eigh.html</a></p>
 <p>Eigenvectors corresponding to phonopy yaml output are obtained as follows.</p>
 <section id="id1">
-<h4>Band structure<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h4>
+<h4>Band structure<a class="headerlink" href="#id1" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">eigvecs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">eigvecs_on_path</span> <span class="ow">in</span> <span class="n">eigvecs</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">eigvecs_at_q</span> <span class="ow">in</span> <span class="n">eigvecs_on_path</span><span class="p">:</span>
@@ -806,7 +818,7 @@ the convention of LAPACK, which can be shown at
 </div>
 </section>
 <section id="id2">
-<h4>Mesh sampling<a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h4>
+<h4>Mesh sampling<a class="headerlink" href="#id2" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">eigvecs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">eigvecs_at_q</span> <span class="ow">in</span> <span class="n">eigvecs</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="n">eigvecs_at_q</span><span class="o">.</span><span class="n">T</span><span class="p">:</span>
@@ -817,9 +829,9 @@ the convention of LAPACK, which can be shown at
 </section>
 </section>
 <section id="phonopyatoms-class">
-<span id="phonopy-atoms"></span><h2><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class<a class="headerlink" href="#phonopyatoms-class" title="Permalink to this heading">#</a></h2>
+<span id="phonopy-atoms"></span><h2><code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class<a class="headerlink" href="#phonopyatoms-class" title="Link to this heading">#</a></h2>
 <section id="initialization">
-<h3>Initialization<a class="headerlink" href="#initialization" title="Permalink to this heading">#</a></h3>
+<h3>Initialization<a class="headerlink" href="#initialization" title="Link to this heading">#</a></h3>
 <p>The usable keywords in the initialization are:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cell</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="n">scaled_positions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -838,25 +850,25 @@ the convention of LAPACK, which can be shown at
 </ul>
 </section>
 <section id="variables">
-<span id="phonopy-atoms-variables"></span><h3>Variables<a class="headerlink" href="#variables" title="Permalink to this heading">#</a></h3>
+<span id="phonopy-atoms-variables"></span><h3>Variables<a class="headerlink" href="#variables" title="Link to this heading">#</a></h3>
 <p>The following variables are implemented in the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class in
 <code class="docutils literal notranslate"><span class="pre">phonopy/structure/atoms.py</span></code>.</p>
 <section id="cell">
-<span id="phonopy-atoms-cell"></span><h4><code class="docutils literal notranslate"><span class="pre">cell</span></code><a class="headerlink" href="#cell" title="Permalink to this heading">#</a></h4>
+<span id="phonopy-atoms-cell"></span><h4><code class="docutils literal notranslate"><span class="pre">cell</span></code><a class="headerlink" href="#cell" title="Link to this heading">#</a></h4>
 <p>Basis vectors are given in the matrix form in Cartesian coordinates.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span> <span class="p">[</span> <span class="n">a_x</span><span class="p">,</span> <span class="n">a_y</span><span class="p">,</span> <span class="n">a_z</span> <span class="p">],</span> <span class="p">[</span> <span class="n">b_x</span><span class="p">,</span> <span class="n">b_y</span><span class="p">,</span> <span class="n">b_z</span> <span class="p">],</span> <span class="p">[</span> <span class="n">c_x</span><span class="p">,</span> <span class="n">c_y</span><span class="p">,</span> <span class="n">c_z</span> <span class="p">]</span> <span class="p">]</span>
 </pre></div>
 </div>
 </section>
 <section id="scaled-positions">
-<h4><code class="docutils literal notranslate"><span class="pre">scaled_positions</span></code><a class="headerlink" href="#scaled-positions" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">scaled_positions</span></code><a class="headerlink" href="#scaled-positions" title="Link to this heading">#</a></h4>
 <p>Atomic positions in fractional coordinates.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span> <span class="p">[</span> <span class="n">x1_a</span><span class="p">,</span> <span class="n">x1_b</span><span class="p">,</span> <span class="n">x1_c</span> <span class="p">],</span> <span class="p">[</span> <span class="n">x2_a</span><span class="p">,</span> <span class="n">x2_b</span><span class="p">,</span> <span class="n">x2_c</span> <span class="p">],</span> <span class="p">[</span> <span class="n">x3_a</span><span class="p">,</span> <span class="n">x3_b</span><span class="p">,</span> <span class="n">x3_c</span> <span class="p">],</span> <span class="o">...</span> <span class="p">]</span>
 </pre></div>
 </div>
 </section>
 <section id="positions">
-<h4><code class="docutils literal notranslate"><span class="pre">positions</span></code><a class="headerlink" href="#positions" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">positions</span></code><a class="headerlink" href="#positions" title="Link to this heading">#</a></h4>
 <p>Cartesian positions of atoms.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">scaled_positions</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
 </pre></div>
@@ -864,7 +876,7 @@ the convention of LAPACK, which can be shown at
 <p>where <code class="docutils literal notranslate"><span class="pre">np</span></code> means the numpy module (<code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">numpy</span> <span class="pre">as</span> <span class="pre">np</span></code>).</p>
 </section>
 <section id="symbols">
-<h4><code class="docutils literal notranslate"><span class="pre">symbols</span></code><a class="headerlink" href="#symbols" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">symbols</span></code><a class="headerlink" href="#symbols" title="Link to this heading">#</a></h4>
 <p>Chemical symbols, e.g.,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="s1">&#39;Zn&#39;</span><span class="p">,</span> <span class="s1">&#39;Zn&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">]</span>
 </pre></div>
@@ -872,7 +884,7 @@ the convention of LAPACK, which can be shown at
 <p>for the ZnO unit cell.</p>
 </section>
 <section id="numbers">
-<h4><code class="docutils literal notranslate"><span class="pre">numbers</span></code><a class="headerlink" href="#numbers" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">numbers</span></code><a class="headerlink" href="#numbers" title="Link to this heading">#</a></h4>
 <p>Atomic numbers, e.g.,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">]</span>
 </pre></div>
@@ -880,7 +892,7 @@ the convention of LAPACK, which can be shown at
 <p>for the ZnO unit cell.</p>
 </section>
 <section id="masses">
-<h4><code class="docutils literal notranslate"><span class="pre">masses</span></code><a class="headerlink" href="#masses" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">masses</span></code><a class="headerlink" href="#masses" title="Link to this heading">#</a></h4>
 <p>Atomic masses, e.g.,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mf">65.38</span><span class="p">,</span> <span class="mf">65.38</span><span class="p">,</span> <span class="mf">15.9994</span><span class="p">,</span> <span class="mf">15.9994</span><span class="p">]</span>
 </pre></div>
@@ -889,7 +901,7 @@ the convention of LAPACK, which can be shown at
 </section>
 </section>
 <section id="attributes">
-<h3>Attributes<a class="headerlink" href="#attributes" title="Permalink to this heading">#</a></h3>
+<h3>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cell</span>
 <span class="n">positions</span>
 <span class="n">scaled_positions</span>
@@ -903,7 +915,7 @@ the convention of LAPACK, which can be shown at
 <p>where <code class="docutils literal notranslate"><span class="pre">volume</span></code> is the getter only.</p>
 </section>
 <section id="methods">
-<h3>Methods<a class="headerlink" href="#methods" title="Permalink to this heading">#</a></h3>
+<h3>Methods<a class="headerlink" href="#methods" title="Link to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">unitcell.get_number_of_atoms()</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">len(unitcell)</span></code>. An instance
 can be deep-copied by <code class="docutils literal notranslate"><span class="pre">unitcell.copy()</span></code>. Human-readable crystal structure in
 Yaml format is shown by <code class="docutils literal notranslate"><span class="pre">print(unitcell)</span></code>. <code class="docutils literal notranslate"><span class="pre">unitcell.to_tuple</span></code> converts to
@@ -912,9 +924,9 @@ spglib crystal structure
 </section>
 </section>
 <section id="definitions-of-variables">
-<h2>Definitions of variables<a class="headerlink" href="#definitions-of-variables" title="Permalink to this heading">#</a></h2>
+<h2>Definitions of variables<a class="headerlink" href="#definitions-of-variables" title="Link to this heading">#</a></h2>
 <section id="primitive-matrix">
-<span id="variable-primitive-matrix"></span><h3>Primitive matrix<a class="headerlink" href="#primitive-matrix" title="Permalink to this heading">#</a></h3>
+<span id="variable-primitive-matrix"></span><h3>Primitive matrix<a class="headerlink" href="#primitive-matrix" title="Link to this heading">#</a></h3>
 <p>Primitive matrix <span class="math notranslate nohighlight">\(M_\mathrm{p}\)</span> is a tranformation matrix from lattice
 vectors to those of a primitive cell if there exists the primitive cell in the
 lattice vectors. Following a crystallography convention, the transformation is
@@ -939,7 +951,7 @@ relies on the <code class="docutils literal notranslate"><span class="pre">Phono
 </div>
 </section>
 <section id="supercell-matrix">
-<span id="variable-supercell-matrix"></span><h3>Supercell matrix<a class="headerlink" href="#supercell-matrix" title="Permalink to this heading">#</a></h3>
+<span id="variable-supercell-matrix"></span><h3>Supercell matrix<a class="headerlink" href="#supercell-matrix" title="Link to this heading">#</a></h3>
 <p>Supercell matrix <span class="math notranslate nohighlight">\(M_\mathrm{s}\)</span> is a transformation matrix from lattice
 vectors to those of a super cell. Following a crystallography convention, the
 transformation is given by</p>
@@ -963,14 +975,14 @@ relies on the <code class="docutils literal notranslate"><span class="pre">Phono
 </div>
 </section>
 <section id="symmetry-search-tolerance">
-<h3>Symmetry search tolerance<a class="headerlink" href="#symmetry-search-tolerance" title="Permalink to this heading">#</a></h3>
+<h3>Symmetry search tolerance<a class="headerlink" href="#symmetry-search-tolerance" title="Link to this heading">#</a></h3>
 <p>Symmetry search tolerance (often the name <code class="docutils literal notranslate"><span class="pre">symprec</span></code> is used in phonopy) is used
 to determine symmetry operations of the crystal structures. The physical unit
 follows that of input crystal structure.</p>
 </section>
 </section>
 <section id="read-and-write-crystal-structures">
-<span id="phonopy-read-write-structure"></span><h2>Read and write crystal structures<a class="headerlink" href="#read-and-write-crystal-structures" title="Permalink to this heading">#</a></h2>
+<span id="phonopy-read-write-structure"></span><h2>Read and write crystal structures<a class="headerlink" href="#read-and-write-crystal-structures" title="Link to this heading">#</a></h2>
 <p>There is a function to write the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> instance into crystal structure
 formats of different force calculators, <code class="docutils literal notranslate"><span class="pre">write_crystal_structure</span></code>. This works as
 a partner of <code class="docutils literal notranslate"><span class="pre">read_crystal_structure</span></code>. Taking an example of QE interface, how to
@@ -1048,7 +1060,7 @@ how <code class="docutils literal notranslate"><span class="pre">write_crystal_s
 <a class="reference external" href="https://github.com/phonopy/phonopy/blob/develop/phonopy/interface/calculator.py#L123">code</a>.</p>
 </section>
 <section id="getting-parameters-for-non-analytical-term-correction">
-<h2>Getting parameters for non-analytical term correction<a class="headerlink" href="#getting-parameters-for-non-analytical-term-correction" title="Permalink to this heading">#</a></h2>
+<h2>Getting parameters for non-analytical term correction<a class="headerlink" href="#getting-parameters-for-non-analytical-term-correction" title="Link to this heading">#</a></h2>
 <p>Parameters for non-analytical term correction may be made as follows. This
 example assumes that the user knows what are the unit cell and primitive cell
 and that the Born effective charge and dielectric constant were calculated using
@@ -1083,7 +1095,7 @@ VASP code by the unit cell.</p>
 </div>
 </section>
 <section id="phonondb-at-kyoto-university">
-<h2>PhononDB at Kyoto university<a class="headerlink" href="#phonondb-at-kyoto-university" title="Permalink to this heading">#</a></h2>
+<h2>PhononDB at Kyoto university<a class="headerlink" href="#phonondb-at-kyoto-university" title="Link to this heading">#</a></h2>
 <p>The phonon calculation database at
 <a class="reference external" href="http://phonondb.mtl.kyoto-u.ac.jp/ph20180417/index.html">http://phonondb.mtl.kyoto-u.ac.jp/ph20180417/index.html</a> can be easily used from
 phonopy-API. Downloading the raw data, e.g., <code class="docutils literal notranslate"><span class="pre">mp-361-20180417.tar.lzma</span></code> and
@@ -1145,6 +1157,7 @@ expand it. In the directory <code class="docutils literal notranslate"><span cla
             
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
 
   <div class="sidebar-secondary-item">
   <div class="page-toc tocsection onthispage">
@@ -1244,8 +1257,8 @@ expand it. In the directory <code class="docutils literal notranslate"><span cla
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/bootstrap.js?digest=5b4479735964841361fd"></script>
-<script src="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd"></script>
+  <script src="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
 
   <footer class="bd-footer">
   </footer>

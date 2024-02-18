@@ -1,15 +1,14 @@
 
-
 <!DOCTYPE html>
 
 
-<html lang="en" data-content_root="" >
+<html lang="en" data-content_root="./" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Interfaces to calculators &#8212; Phonopy v.2.21.0</title>
+    <title>Interfaces to calculators &#8212; Phonopy v.2.21.2</title>
   
   
   
@@ -19,28 +18,28 @@
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
-<link href="_static/styles/bootstrap.css?digest=5b4479735964841361fd" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
 
   
-  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=5b4479735964841361fd" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+  <link href="_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=5b4479735964841361fd" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd" />
-  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=5b4479735964841361fd"></script>
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
-    <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="_static/documentation_options.js?v=725a5c9d"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'interfaces';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -55,10 +54,9 @@
 
   
   
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
   
   <div id="pst-scroll-pixel-helper"></div>
-
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
     <i class="fa-solid fa-arrow-up"></i>
@@ -99,11 +97,14 @@
 </form></div>
   </div>
   
-    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
-    </nav>
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
   
+
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
+      
+      
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -128,10 +129,21 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.21.0</p>
+    <p class="title logo__title">Phonopy v.2.21.2</p>
   
 </a></div>
-        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
@@ -344,16 +356,16 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article" role="main">
+                <article class="bd-article">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="interfaces-to-calculators">
-<span id="calculator-interfaces"></span><h1>Interfaces to calculators<a class="headerlink" href="#interfaces-to-calculators" title="Permalink to this heading">#</a></h1>
+<span id="calculator-interfaces"></span><h1>Interfaces to calculators<a class="headerlink" href="#interfaces-to-calculators" title="Link to this heading">#</a></h1>
 <p>The interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT, Elk, SIESTA,
 CRYSTAL, DFTB+, TURBOMOLE, FHI-AIMS, CASTEP, ABACUS, and LAMMPS are built in to
 the usual phonopy command. See the command options and how to invoke each of
 them at <a class="reference internal" href="command-options.html#force-calculators"><span class="std std-ref">Choice of force calculator</span></a>. <a class="reference internal" href="external-tools.html#external-tools-phonolammps"><span class="std std-ref">LAMMPS interface</span></a> is provided as an external tool by Abel Carreras.</p>
 <section id="list-of-force-calculators">
-<span id="interfaces-to-force-calculators"></span><h2>List of force calculators<a class="headerlink" href="#list-of-force-calculators" title="Permalink to this heading">#</a></h2>
+<span id="interfaces-to-force-calculators"></span><h2>List of force calculators<a class="headerlink" href="#list-of-force-calculators" title="Link to this heading">#</a></h2>
 <p>Short tutorials for the force calculators are found in the following pages.</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -382,7 +394,7 @@ them at <a class="reference internal" href="command-options.html#force-calculato
 </div>
 </section>
 <section id="physical-unit-system-for-calculator">
-<span id="interfaces-physical-units"></span><h2>Physical unit system for calculator<a class="headerlink" href="#physical-unit-system-for-calculator" title="Permalink to this heading">#</a></h2>
+<span id="interfaces-physical-units"></span><h2>Physical unit system for calculator<a class="headerlink" href="#physical-unit-system-for-calculator" title="Link to this heading">#</a></h2>
 <p>Physical unit systems used for the calculators are as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>          <span class="o">|</span> <span class="n">Distance</span>   <span class="n">Atomic</span> <span class="n">mass</span>   <span class="n">Force</span>         <span class="n">Force</span> <span class="n">constants</span>
 <span class="o">-----------------------------------------------------------------</span>
@@ -405,9 +417,9 @@ them at <a class="reference internal" href="command-options.html#force-calculato
 <p>For these sets of physical properties, phonon frequency is calculated in THz.</p>
 </section>
 <section id="default-file-name-value-and-conversion-factor">
-<h2>Default file name, value, and conversion factor<a class="headerlink" href="#default-file-name-value-and-conversion-factor" title="Permalink to this heading">#</a></h2>
+<h2>Default file name, value, and conversion factor<a class="headerlink" href="#default-file-name-value-and-conversion-factor" title="Link to this heading">#</a></h2>
 <section id="default-unit-cell-file-name-for-calculator">
-<h3>Default unit cell file name for calculator<a class="headerlink" href="#default-unit-cell-file-name-for-calculator" title="Permalink to this heading">#</a></h3>
+<h3>Default unit cell file name for calculator<a class="headerlink" href="#default-unit-cell-file-name-for-calculator" title="Link to this heading">#</a></h3>
 <p>Without specifying <code class="docutils literal notranslate"><span class="pre">-c</span></code> option, default file names of unit cell shown below is
 searched in current directory. When generating supercells with <code class="docutils literal notranslate"><span class="pre">-c</span></code> option,
 the default supercell file names based on those shown below are used.</p>
@@ -430,7 +442,7 @@ the default supercell file names based on those shown below are used.</p>
 </div>
 </section>
 <section id="default-displacement-distances">
-<h3>Default displacement distances<a class="headerlink" href="#default-displacement-distances" title="Permalink to this heading">#</a></h3>
+<h3>Default displacement distances<a class="headerlink" href="#default-displacement-distances" title="Link to this heading">#</a></h3>
 <p>Without specifying <code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE</span></code> tag or <code class="docutils literal notranslate"><span class="pre">--amplitude</span></code> option, default
 displacement distance is used when creating supercells with displacements
 <code class="docutils literal notranslate"><span class="pre">CREATE_DISPLACEMENTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> or <code class="docutils literal notranslate"><span class="pre">-d</span></code> option. The default value is dependent
@@ -454,7 +466,7 @@ on calculator, and the list is shown below:</p>
 </div>
 </section>
 <section id="default-unit-conversion-factor-of-phonon-frequency-to-thz">
-<span id="frequency-default-value-interfaces"></span><h3>Default unit conversion factor of phonon frequency to THz<a class="headerlink" href="#default-unit-conversion-factor-of-phonon-frequency-to-thz" title="Permalink to this heading">#</a></h3>
+<span id="frequency-default-value-interfaces"></span><h3>Default unit conversion factor of phonon frequency to THz<a class="headerlink" href="#default-unit-conversion-factor-of-phonon-frequency-to-thz" title="Link to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VASP</span>      <span class="o">|</span> <span class="mf">15.633302</span>
 <span class="n">WIEN2k</span>    <span class="o">|</span> <span class="mf">3.44595837</span>
 <span class="n">QE</span>        <span class="o">|</span> <span class="mf">108.97077</span>
@@ -474,7 +486,7 @@ on calculator, and the list is shown below:</p>
 </div>
 </section>
 <section id="default-unit-conversion-factor-for-non-analytical-term-correction">
-<span id="nac-default-value-interfaces"></span><h3>Default unit conversion factor for non-analytical term correction<a class="headerlink" href="#default-unit-conversion-factor-for-non-analytical-term-correction" title="Permalink to this heading">#</a></h3>
+<span id="nac-default-value-interfaces"></span><h3>Default unit conversion factor for non-analytical term correction<a class="headerlink" href="#default-unit-conversion-factor-for-non-analytical-term-correction" title="Link to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VASP</span>      <span class="o">|</span> <span class="mf">14.399652</span>
 <span class="n">WIEN2k</span>    <span class="o">|</span> <span class="mi">2000</span>
 <span class="n">QE</span>        <span class="o">|</span> <span class="mi">2</span>
@@ -533,6 +545,7 @@ on calculator, and the list is shown below:</p>
             
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
 
   <div class="sidebar-secondary-item">
   <div class="page-toc tocsection onthispage">
@@ -595,8 +608,8 @@ on calculator, and the list is shown below:</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/bootstrap.js?digest=5b4479735964841361fd"></script>
-<script src="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd"></script>
+  <script src="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
 
   <footer class="bd-footer">
   </footer>

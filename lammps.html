@@ -1,15 +1,14 @@
 
-
 <!DOCTYPE html>
 
 
-<html lang="en" data-content_root="" >
+<html lang="en" data-content_root="./" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>LAMMPS &amp; phonopy calculation &#8212; Phonopy v.2.21.0</title>
+    <title>LAMMPS &amp; phonopy calculation &#8212; Phonopy v.2.21.2</title>
   
   
   
@@ -19,28 +18,28 @@
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
-<link href="_static/styles/bootstrap.css?digest=5b4479735964841361fd" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
 
   
-  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=5b4479735964841361fd" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+  <link href="_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=5b4479735964841361fd" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd" />
-  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=5b4479735964841361fd"></script>
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
-    <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="_static/documentation_options.js?v=725a5c9d"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'lammps';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -55,10 +54,9 @@
 
   
   
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
   
   <div id="pst-scroll-pixel-helper"></div>
-
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
     <i class="fa-solid fa-arrow-up"></i>
@@ -99,11 +97,14 @@
 </form></div>
   </div>
   
-    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
-    </nav>
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
   
+
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
+      
+      
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -128,10 +129,21 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.21.0</p>
+    <p class="title logo__title">Phonopy v.2.21.2</p>
   
 </a></div>
-        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
@@ -344,12 +356,12 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article" role="main">
+                <article class="bd-article">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="lammps-phonopy-calculation">
-<span id="lammps-interface"></span><h1>LAMMPS &amp; phonopy calculation<a class="headerlink" href="#lammps-phonopy-calculation" title="Permalink to this heading">#</a></h1>
+<span id="lammps-interface"></span><h1>LAMMPS &amp; phonopy calculation<a class="headerlink" href="#lammps-phonopy-calculation" title="Link to this heading">#</a></h1>
 <section id="how-to-handle-lammps-input-and-output-files-in-phonopy">
-<h2>How to handle LAMMPS input and output files in phonopy<a class="headerlink" href="#how-to-handle-lammps-input-and-output-files-in-phonopy" title="Permalink to this heading">#</a></h2>
+<h2>How to handle LAMMPS input and output files in phonopy<a class="headerlink" href="#how-to-handle-lammps-input-and-output-files-in-phonopy" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p>Phonopy assumes the LAMMPS calculation is performed in <code class="docutils literal notranslate"><span class="pre">units</span> <span class="pre">metal</span></code> and <code class="docutils literal notranslate"><span class="pre">atom_style</span> <span class="pre">atomic</span></code>.</p></li>
 <li><p>Format of version 15Sep2022 or later of LAMMPS is assumed.</p></li>
@@ -358,7 +370,7 @@ document.write(`
 </ul>
 </section>
 <section id="supported-lammps-structure-input-format">
-<span id="lammps-structure-input-format"></span><h2>Supported LAMMPS structure input format<a class="headerlink" href="#supported-lammps-structure-input-format" title="Permalink to this heading">#</a></h2>
+<span id="lammps-structure-input-format"></span><h2>Supported LAMMPS structure input format<a class="headerlink" href="#supported-lammps-structure-input-format" title="Link to this heading">#</a></h2>
 <p>Two important limitations are:</p>
 <ul class="simple">
 <li><p>Crystal structure has to be described in the similar format for
@@ -367,7 +379,7 @@ document.write(`
 <a class="reference external" href="https://docs.lammps.org/Howto_triclinic.html">triclinic simulation box</a>.</p></li>
 </ul>
 <section id="supported-read-data-keywords-in-the-header">
-<h3>Supported <code class="docutils literal notranslate"><span class="pre">read_data</span></code> keywords in the header<a class="headerlink" href="#supported-read-data-keywords-in-the-header" title="Permalink to this heading">#</a></h3>
+<h3>Supported <code class="docutils literal notranslate"><span class="pre">read_data</span></code> keywords in the header<a class="headerlink" href="#supported-read-data-keywords-in-the-header" title="Link to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">atoms</span>
 <span class="n">atom</span> <span class="n">types</span>
 <span class="n">xlo</span> <span class="n">xhi</span>
@@ -378,7 +390,7 @@ document.write(`
 </div>
 </section>
 <section id="supported-read-data-keywords-in-the-body">
-<h3>Supported <code class="docutils literal notranslate"><span class="pre">read_data</span></code> keywords in the body<a class="headerlink" href="#supported-read-data-keywords-in-the-body" title="Permalink to this heading">#</a></h3>
+<h3>Supported <code class="docutils literal notranslate"><span class="pre">read_data</span></code> keywords in the body<a class="headerlink" href="#supported-read-data-keywords-in-the-body" title="Link to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Atoms</span>
 <span class="n">Atom</span> <span class="n">Type</span> <span class="n">Labels</span>
 </pre></div>
@@ -388,7 +400,7 @@ document.write(`
 <p><code class="docutils literal notranslate"><span class="pre">Masses</span></code> has not been supported yet.</p>
 </section>
 <section id="example">
-<h3>Example<a class="headerlink" href="#example" title="Permalink to this heading">#</a></h3>
+<h3>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h3>
 <p>The crystal structure is converted to the LAMMPS structure format of <a class="reference external" href="https://docs.lammps.org/Howto_triclinic.html">triclinic
 simulation box</a>.</p>
 <p>LAMMPS triclinic simulation box requires basis vectors to be described in the
@@ -423,7 +435,7 @@ following way</p>
 </section>
 </section>
 <section id="lammps-input-script-for-force-calculation">
-<span id="lammps-input-script-format"></span><h2>LAMMPS input script for force calculation<a class="headerlink" href="#lammps-input-script-for-force-calculation" title="Permalink to this heading">#</a></h2>
+<span id="lammps-input-script-format"></span><h2>LAMMPS input script for force calculation<a class="headerlink" href="#lammps-input-script-for-force-calculation" title="Link to this heading">#</a></h2>
 <p>Phonopy can reads forces only from LAMMPS output file written in a specific text
 format. An example of LAMMPS input script for phonopy force calculation is shown
 below.</p>
@@ -449,7 +461,7 @@ at Kyoto
 University</a>.</p>
 </section>
 <section id="how-to-run-ti-lammps-example">
-<h2>How to run Ti-lammps example<a class="headerlink" href="#how-to-run-ti-lammps-example" title="Permalink to this heading">#</a></h2>
+<h2>How to run Ti-lammps example<a class="headerlink" href="#how-to-run-ti-lammps-example" title="Link to this heading">#</a></h2>
 <ol class="arabic">
 <li><p>Read a lammps input structure file and create supercells with</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">lammps</span> <span class="o">-</span><span class="n">c</span> <span class="n">lammps_structure_Ti</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span> <span class="mi">4</span> <span class="mi">4</span> <span class="mi">3</span>
@@ -526,7 +538,7 @@ after the LAMMPS calculation.</p>
 </ol>
 </section>
 <section id="supercell-generation-from-unit-cell-defined-in-yaml">
-<h2>Supercell generation from unit cell defined in yaml<a class="headerlink" href="#supercell-generation-from-unit-cell-defined-in-yaml" title="Permalink to this heading">#</a></h2>
+<h2>Supercell generation from unit cell defined in yaml<a class="headerlink" href="#supercell-generation-from-unit-cell-defined-in-yaml" title="Link to this heading">#</a></h2>
 <p>LAMMPS input structure that phonopy can read must follow the convention of the
 basis vector orientation in Cartesian coordinates. If it is unconformable for
 the phonon calculation setting, we can generate supercells with displacements
@@ -561,7 +573,7 @@ original orientation. But <code class="docutils literal notranslate"><span class
 input structure file format.</p>
 </section>
 <section id="appendix-structure-optimization-using-lammps">
-<h2>Appendix: Structure optimization using LAMMPS<a class="headerlink" href="#appendix-structure-optimization-using-lammps" title="Permalink to this heading">#</a></h2>
+<h2>Appendix: Structure optimization using LAMMPS<a class="headerlink" href="#appendix-structure-optimization-using-lammps" title="Link to this heading">#</a></h2>
 <p>It is necessary to relax crystal structure before starting phonon calculation.
 At least vanishing residual forces on atoms are expected. Using LAMMPS, crystal
 structure can be optimized under different constraints. The following is the
@@ -626,6 +638,7 @@ write_data dump.unitcell
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
   <div class="sidebar-secondary-item">
   <div class="page-toc tocsection onthispage">
     <i class="fa-solid fa-list"></i> Contents
@@ -687,8 +700,8 @@ write_data dump.unitcell
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/bootstrap.js?digest=5b4479735964841361fd"></script>
-<script src="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd"></script>
+  <script src="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
 
   <footer class="bd-footer">
   </footer>

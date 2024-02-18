@@ -1,15 +1,14 @@
 
-
 <!DOCTYPE html>
 
 
-<html lang="en" data-content_root="" >
+<html lang="en" data-content_root="./" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Quantum ESPRESSO (QE) &amp; phonopy calculation &#8212; Phonopy v.2.21.0</title>
+    <title>Quantum ESPRESSO (QE) &amp; phonopy calculation &#8212; Phonopy v.2.21.2</title>
   
   
   
@@ -19,28 +18,28 @@
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
-<link href="_static/styles/bootstrap.css?digest=5b4479735964841361fd" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
 
   
-  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=5b4479735964841361fd" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+  <link href="_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=5b4479735964841361fd" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd" />
-  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=5b4479735964841361fd"></script>
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
-    <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="_static/documentation_options.js?v=725a5c9d"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'qe';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -55,10 +54,9 @@
 
   
   
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
   
   <div id="pst-scroll-pixel-helper"></div>
-
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
     <i class="fa-solid fa-arrow-up"></i>
@@ -99,11 +97,14 @@
 </form></div>
   </div>
   
-    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
-    </nav>
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
   
+
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
+      
+      
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -128,10 +129,21 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.21.0</p>
+    <p class="title logo__title">Phonopy v.2.21.2</p>
   
 </a></div>
-        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
@@ -346,15 +358,15 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article" role="main">
+                <article class="bd-article">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="quantum-espresso-qe-phonopy-calculation">
-<span id="qe-interface"></span><h1>Quantum ESPRESSO (QE) &amp; phonopy calculation<a class="headerlink" href="#quantum-espresso-qe-phonopy-calculation" title="Permalink to this heading">#</a></h1>
+<span id="qe-interface"></span><h1>Quantum ESPRESSO (QE) &amp; phonopy calculation<a class="headerlink" href="#quantum-espresso-qe-phonopy-calculation" title="Link to this heading">#</a></h1>
 <p>Quantum ESPRESSO package itself has a set of the phonon calculation
 system. But the document here explains how to calculate phonons using
 phonopy, i.e., using the finite displacement and supercell approach.</p>
 <section id="supported-qe-pw-tags">
-<h2>Supported QE-PW tags<a class="headerlink" href="#supported-qe-pw-tags" title="Permalink to this heading">#</a></h2>
+<h2>Supported QE-PW tags<a class="headerlink" href="#supported-qe-pw-tags" title="Link to this heading">#</a></h2>
 <p>Currently QE-PW tags that phonopy can read are shown below.  Only
 <code class="docutils literal notranslate"><span class="pre">ibrav</span> <span class="pre">=</span> <span class="pre">0</span></code> type representation of crystal structure is supported.
 More tags may be supported on request.</p>
@@ -363,7 +375,7 @@ More tags may be supported on request.</p>
 </div>
 </section>
 <section id="how-to-run">
-<h2>How to run<a class="headerlink" href="#how-to-run" title="Permalink to this heading">#</a></h2>
+<h2>How to run<a class="headerlink" href="#how-to-run" title="Link to this heading">#</a></h2>
 <p>The procedure of QE-phonopy calculation is shown below using the
 NaCl example found in <code class="docutils literal notranslate"><span class="pre">example/NaCl-QE</span></code> directory.</p>
 <ol class="arabic">
@@ -460,7 +472,7 @@ for examples, see <a class="reference internal" href="examples.html#examples-lin
 </li>
 </ol>
 <section id="non-analytical-term-correction-optional">
-<h3>Non-analytical term correction (Optional)<a class="headerlink" href="#non-analytical-term-correction-optional" title="Permalink to this heading">#</a></h3>
+<h3>Non-analytical term correction (Optional)<a class="headerlink" href="#non-analytical-term-correction-optional" title="Link to this heading">#</a></h3>
 <p>To activate non-analytical term correction, <a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a> is
 required. This file contains the information of Born effective charge
 and dielectric constant. These physical values are also obtained from
@@ -545,7 +557,7 @@ just adding the <code class="docutils literal notranslate"><span class="pre">--n
 </section>
 </section>
 <section id="using-q2r-x-to-create-phonopy-force-constants-file">
-<span id="qe-q2r"></span><h2>Using <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code> to create phonopy force constants file<a class="headerlink" href="#using-q2r-x-to-create-phonopy-force-constants-file" title="Permalink to this heading">#</a></h2>
+<span id="qe-q2r"></span><h2>Using <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code> to create phonopy force constants file<a class="headerlink" href="#using-q2r-x-to-create-phonopy-force-constants-file" title="Link to this heading">#</a></h2>
 <p><strong>Experimental</strong></p>
 <p>A parser of <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code> output is implemented experimentally. Currently
 command-line user interface is not prepared. Using the following
@@ -577,7 +589,7 @@ instead of <code class="docutils literal notranslate"><span class="pre">q2r.run(
 script. <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> file instead of <code class="docutils literal notranslate"><span class="pre">force_constants.hdf5</span></code>
 can be obtained by <code class="docutils literal notranslate"><span class="pre">q2r.write_force_constants(fc_format='text')</span></code>.</p>
 <section id="non-analytical-term-correction">
-<h3>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction" title="Permalink to this heading">#</a></h3>
+<h3>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction" title="Link to this heading">#</a></h3>
 <p>Treatment of non-analytical term correction (NAC) is different between
 phonopy and QE. For insulator, QE automatically calculate dielectric
 constant and Born effective charges at PH calculation when q-point
@@ -595,7 +607,7 @@ constant and Born effective charges data. So it is possible to replace
 the Gamma point file by this Gamma point only file to run <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code>
 for phonopy.</p>
 <section id="creating-born-file">
-<h4>Creating BORN file<a class="headerlink" href="#creating-born-file" title="Permalink to this heading">#</a></h4>
+<h4>Creating BORN file<a class="headerlink" href="#creating-born-file" title="Link to this heading">#</a></h4>
 <p>If the <code class="docutils literal notranslate"><span class="pre">q2r.x</span></code> output contains dielectric constant and Born
 effective charges, the following script can generate <code class="docutils literal notranslate"><span class="pre">BORN</span></code> format
 text.</p>
@@ -630,7 +642,7 @@ text.</p>
 </div>
 </section>
 <section id="nacl-example">
-<h4>NaCl example<a class="headerlink" href="#nacl-example" title="Permalink to this heading">#</a></h4>
+<h4>NaCl example<a class="headerlink" href="#nacl-example" title="Link to this heading">#</a></h4>
 <p>NaCl example is found at
 <a class="github reference external" href="https://github.com/phonopy/phonopy/tree/master/example/NaCl-QE-q2r">phonopy/phonopy</a>.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--qe<span class="w"> </span>-c<span class="w"> </span>NaCl.in<span class="w"> </span>--dim<span class="o">=</span><span class="s2">&quot;8 8 8&quot;</span><span class="w"> </span>--band<span class="o">=</span><span class="s2">&quot;0 0 0  1/2 0 0  1/2 1/2 0  0 0 0  1/2 1/2 1/2&quot;</span><span class="w"> </span>--readfc<span class="w"> </span>--readfc-format<span class="o">=</span>hdf5<span class="w"> </span>--fc-symmetry<span class="w"> </span>--nac<span class="w"> </span>-p
@@ -679,6 +691,7 @@ text.</p>
             
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
 
   <div class="sidebar-secondary-item">
   <div class="page-toc tocsection onthispage">
@@ -743,8 +756,8 @@ text.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/bootstrap.js?digest=5b4479735964841361fd"></script>
-<script src="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd"></script>
+  <script src="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
 
   <footer class="bd-footer">
   </footer>

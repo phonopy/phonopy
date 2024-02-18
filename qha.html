@@ -1,15 +1,14 @@
 
-
 <!DOCTYPE html>
 
 
-<html lang="en" data-content_root="" >
+<html lang="en" data-content_root="./" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Quasi harmonic approximation &#8212; Phonopy v.2.21.0</title>
+    <title>Quasi harmonic approximation &#8212; Phonopy v.2.21.2</title>
   
   
   
@@ -19,28 +18,28 @@
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
-<link href="_static/styles/bootstrap.css?digest=5b4479735964841361fd" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
 
   
-  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=5b4479735964841361fd" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+  <link href="_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=5b4479735964841361fd" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd" />
-  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=5b4479735964841361fd"></script>
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
-    <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="_static/documentation_options.js?v=725a5c9d"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'qha';</script>
@@ -57,10 +56,9 @@
 
   
   
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
   
   <div id="pst-scroll-pixel-helper"></div>
-
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
     <i class="fa-solid fa-arrow-up"></i>
@@ -101,11 +99,14 @@
 </form></div>
   </div>
   
-    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
-    </nav>
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
   
+
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
+      
+      
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -130,10 +131,21 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.21.0</p>
+    <p class="title logo__title">Phonopy v.2.21.2</p>
   
 </a></div>
-        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
@@ -352,12 +364,12 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article" role="main">
+                <article class="bd-article">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="quasi-harmonic-approximation">
-<span id="phonopy-qha"></span><h1>Quasi harmonic approximation<a class="headerlink" href="#quasi-harmonic-approximation" title="Permalink to this heading">#</a></h1>
+<span id="phonopy-qha"></span><h1>Quasi harmonic approximation<a class="headerlink" href="#quasi-harmonic-approximation" title="Link to this heading">#</a></h1>
 <section id="usage-of-phonopy-qha">
-<h2>Usage of <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code><a class="headerlink" href="#usage-of-phonopy-qha" title="Permalink to this heading">#</a></h2>
+<h2>Usage of <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code><a class="headerlink" href="#usage-of-phonopy-qha" title="Link to this heading">#</a></h2>
 <p>Using phonopy results of thermal properties, thermal expansion and heat capacity
 at constant pressure can be calculated under the quasi-harmonic approximation.
 <code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> is the script to run fitting and calculation to perform it. Mind
@@ -414,26 +426,26 @@ the energies, or equivalent effect is applied using <code class="docutils litera
 The usage is written at
 <a class="github reference external" href="https://github.com/phonopy/phonopy/blob/develop/example/Cu-QHA/README">phonopy/phonopy</a>.</p>
 <section id="options">
-<span id="phonopy-qha-options"></span><h3>Options<a class="headerlink" href="#options" title="Permalink to this heading">#</a></h3>
+<span id="phonopy-qha-options"></span><h3>Options<a class="headerlink" href="#options" title="Link to this heading">#</a></h3>
 <section id="h">
-<h4><code class="docutils literal notranslate"><span class="pre">-h</span></code><a class="headerlink" href="#h" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">-h</span></code><a class="headerlink" href="#h" title="Link to this heading">#</a></h4>
 <p>Show help. The available options are shown. Without any option, the results are
 saved into text files in simple data format.</p>
 </section>
 <section id="tmax">
-<h4><code class="docutils literal notranslate"><span class="pre">--tmax</span></code><a class="headerlink" href="#tmax" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">--tmax</span></code><a class="headerlink" href="#tmax" title="Link to this heading">#</a></h4>
 <p>The maximum temperature calculated is specified. This temperature has to be
 lower than the maximum temperature calculated in <code class="docutils literal notranslate"><span class="pre">thermal_properties.yaml</span></code> to
 let at least one temperature points fewer. The default value is <code class="docutils literal notranslate"><span class="pre">--tmax=1000</span></code>.</p>
 </section>
 <section id="pressure">
-<h4><code class="docutils literal notranslate"><span class="pre">--pressure</span></code><a class="headerlink" href="#pressure" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">--pressure</span></code><a class="headerlink" href="#pressure" title="Link to this heading">#</a></h4>
 <p>Pressure is specified in GPa. This corresponds to the <span class="math notranslate nohighlight">\(pV\)</span> term described
 in the following section <a class="reference internal" href="#theory-of-qha"><span class="std std-ref">Thermal properties in (T, p) space calculated under QHA</span></a>. Note that bulk modulus obtained
 with this option than 0 GPa is incorrect.</p>
 </section>
 <section id="b">
-<h4><code class="docutils literal notranslate"><span class="pre">-b</span></code><a class="headerlink" href="#b" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">-b</span></code><a class="headerlink" href="#b" title="Link to this heading">#</a></h4>
 <p>Fitting volume-energy data to an EOS, and show bulk modulus (without considering
 phonons). This is made by:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">qha</span> <span class="o">-</span><span class="n">b</span> <span class="n">e</span><span class="o">-</span><span class="n">v</span><span class="o">.</span><span class="n">dat</span>
@@ -441,7 +453,7 @@ phonons). This is made by:</p>
 </div>
 </section>
 <section id="eos">
-<h4><code class="docutils literal notranslate"><span class="pre">--eos</span></code><a class="headerlink" href="#eos" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">--eos</span></code><a class="headerlink" href="#eos" title="Link to this heading">#</a></h4>
 <p>EOS is chosen among <code class="docutils literal notranslate"><span class="pre">vinet</span></code>, <code class="docutils literal notranslate"><span class="pre">birch_murnaghan</span></code>, and <code class="docutils literal notranslate"><span class="pre">murnaghan</span></code>. The default EOS
 is <code class="docutils literal notranslate"><span class="pre">vinet</span></code>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">qha</span> <span class="o">--</span><span class="n">eos</span><span class="o">=</span><span class="s1">&#39;birch_murnaghan&#39;</span> <span class="o">-</span><span class="n">b</span> <span class="n">e</span><span class="o">-</span><span class="n">v</span><span class="o">.</span><span class="n">dat</span>
@@ -449,22 +461,22 @@ is <code class="docutils literal notranslate"><span class="pre">vinet</span></co
 </div>
 </section>
 <section id="p">
-<h4><code class="docutils literal notranslate"><span class="pre">-p</span></code><a class="headerlink" href="#p" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">-p</span></code><a class="headerlink" href="#p" title="Link to this heading">#</a></h4>
 <p>The fitting results, volume-temperature relation, and thermal expansion
 coefficient are plotted on the display.</p>
 </section>
 <section id="s">
-<h4><code class="docutils literal notranslate"><span class="pre">-s</span></code><a class="headerlink" href="#s" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">-s</span></code><a class="headerlink" href="#s" title="Link to this heading">#</a></h4>
 <p>The calculated values are written into files.</p>
 </section>
 <section id="sparse">
-<h4><code class="docutils literal notranslate"><span class="pre">--sparse</span></code><a class="headerlink" href="#sparse" title="Permalink to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">--sparse</span></code><a class="headerlink" href="#sparse" title="Link to this heading">#</a></h4>
 <p>This is used with <code class="docutils literal notranslate"><span class="pre">-s</span></code> or <code class="docutils literal notranslate"><span class="pre">-p</span></code> to thin out the number of plots of the fitting
 results at temperatures. For example with <code class="docutils literal notranslate"><span class="pre">--sparse=10</span></code>, 1 in 10 temperature
 curves is only plotted.</p>
 </section>
 <section id="efe">
-<span id="phonopy-qha-efe-option"></span><h4><code class="docutils literal notranslate"><span class="pre">--efe</span></code><a class="headerlink" href="#efe" title="Permalink to this heading">#</a></h4>
+<span id="phonopy-qha-efe-option"></span><h4><code class="docutils literal notranslate"><span class="pre">--efe</span></code><a class="headerlink" href="#efe" title="Link to this heading">#</a></h4>
 <p><strong>Experimental</strong></p>
 <p>Temperature dependent energies other than phonon free energy are included with
 this option. This is used such as:</p>
@@ -519,7 +531,7 @@ eigenvalues have to be carefully chosen to agree with those after applying
 </section>
 </section>
 <section id="output-files">
-<span id="phonopy-qha-output-files"></span><h3>Output files<a class="headerlink" href="#output-files" title="Permalink to this heading">#</a></h3>
+<span id="phonopy-qha-output-files"></span><h3>Output files<a class="headerlink" href="#output-files" title="Link to this heading">#</a></h3>
 <p>The physical units of V and T are <span class="math notranslate nohighlight">\(\text{Angstrom}^3\)</span> and K, respectively.
 The unit of eV for Helmholtz and Gibbs energies, J/K/mol for <span class="math notranslate nohighlight">\(C_V\)</span> and
 entropy, GPa for for bulk modulus and pressure are used.</p>
@@ -548,7 +560,7 @@ following section (<a class="reference internal" href="#theory-of-qha"><span cla
 </section>
 </section>
 <section id="thermal-properties-in-t-p-space-calculated-under-qha">
-<span id="theory-of-qha"></span><h2>Thermal properties in (<em>T</em>, <em>p</em>) space calculated under QHA<a class="headerlink" href="#thermal-properties-in-t-p-space-calculated-under-qha" title="Permalink to this heading">#</a></h2>
+<span id="theory-of-qha"></span><h2>Thermal properties in (<em>T</em>, <em>p</em>) space calculated under QHA<a class="headerlink" href="#thermal-properties-in-t-p-space-calculated-under-qha" title="Link to this heading">#</a></h2>
 <p>Here the word ‘quasi-harmonic approximation’ is used for an approximation that
 introduces volume dependence of phonon frequencies as a part of anharmonic
 effect.</p>
@@ -611,6 +623,7 @@ properties at constant pressure.</p>
             
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
 
   <div class="sidebar-secondary-item">
   <div class="page-toc tocsection onthispage">
@@ -679,8 +692,8 @@ properties at constant pressure.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/bootstrap.js?digest=5b4479735964841361fd"></script>
-<script src="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd"></script>
+  <script src="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
 
   <footer class="bd-footer">
   </footer>

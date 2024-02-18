@@ -1,15 +1,14 @@
 
-
 <!DOCTYPE html>
 
 
-<html lang="en" data-content_root="" >
+<html lang="en" data-content_root="./" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Installation &#8212; Phonopy v.2.21.0</title>
+    <title>Installation &#8212; Phonopy v.2.21.2</title>
   
   
   
@@ -19,28 +18,28 @@
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
-<link href="_static/styles/bootstrap.css?digest=5b4479735964841361fd" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
 
   
-  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=5b4479735964841361fd" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+  <link href="_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=5b4479735964841361fd" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd" />
-  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=5b4479735964841361fd"></script>
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
-    <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="_static/documentation_options.js?v=725a5c9d"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'install';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -55,10 +54,9 @@
 
   
   
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
   
   <div id="pst-scroll-pixel-helper"></div>
-
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
     <i class="fa-solid fa-arrow-up"></i>
@@ -99,11 +97,14 @@
 </form></div>
   </div>
   
-    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
-    </nav>
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
   
+
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
+      
+      
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -128,10 +129,21 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.21.0</p>
+    <p class="title logo__title">Phonopy v.2.21.2</p>
   
 </a></div>
-        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Installation</a></li>
@@ -350,12 +362,12 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article" role="main">
+                <article class="bd-article">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="installation">
-<span id="install"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">#</a></h1>
+<span id="install"></span><h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
 <section id="installation-via-conda">
-<span id="install-conda"></span><h2>Installation via conda<a class="headerlink" href="#installation-via-conda" title="Permalink to this heading">#</a></h2>
+<span id="install-conda"></span><h2>Installation via conda<a class="headerlink" href="#installation-via-conda" title="Link to this heading">#</a></h2>
 <p>Conda is a software package management system. Once the conda system is set-up
 (see <a class="reference external" href="https://github.com/conda-forge/miniforge">miniforge</a>), the installation of
 phonopy is super easy for any of Linux, MacOSX, and Windows. Phonopy is
@@ -366,7 +378,7 @@ installed using conda by</p>
 <p>This phonopy’s conda package is prepared and maintained by Paweł T. Jochym at
 conda-forge channel (please be aware that this is not a trivial job).</p>
 <section id="minimum-steps-to-install-and-use-phonopy-via-conda">
-<h3>Minimum steps to install and use phonopy via conda<a class="headerlink" href="#minimum-steps-to-install-and-use-phonopy-via-conda" title="Permalink to this heading">#</a></h3>
+<h3>Minimum steps to install and use phonopy via conda<a class="headerlink" href="#minimum-steps-to-install-and-use-phonopy-via-conda" title="Link to this heading">#</a></h3>
 <p>In the following procedure, conda’s environment (see
 <a class="reference external" href="https://github.com/conda-forge/miniforge">miniforge</a>) is used not to interfere
 existing environment (mainly python environment).</p>
@@ -406,7 +418,7 @@ existing environment (mainly python environment).</p>
 </section>
 </section>
 <section id="using-hdf5-on-nfs-mounted-file-system">
-<span id="install-from-source"></span><h2>Using HDF5 on NFS mounted file system<a class="headerlink" href="#using-hdf5-on-nfs-mounted-file-system" title="Permalink to this heading">#</a></h2>
+<span id="install-from-source"></span><h2>Using HDF5 on NFS mounted file system<a class="headerlink" href="#using-hdf5-on-nfs-mounted-file-system" title="Link to this heading">#</a></h2>
 <p>Recent hdf5 versions just as installed may not work on NFS mounted file systems.
 In this case, setting the following environment variable may solve the problem:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">HDF5_USE_FILE_LOCKING</span><span class="o">=</span>FALSE
@@ -414,9 +426,9 @@ In this case, setting the following environment variable may solve the problem:<
 </div>
 </section>
 <section id="installation-from-source-code">
-<h2>Installation from source code<a class="headerlink" href="#installation-from-source-code" title="Permalink to this heading">#</a></h2>
+<h2>Installation from source code<a class="headerlink" href="#installation-from-source-code" title="Link to this heading">#</a></h2>
 <section id="system-requirement">
-<h3>System requirement<a class="headerlink" href="#system-requirement" title="Permalink to this heading">#</a></h3>
+<h3>System requirement<a class="headerlink" href="#system-requirement" title="Link to this heading">#</a></h3>
 <p>The procedure to setup phonopy is explained in this section. It is supposed that
 phonopy is installed on the recent linux distribution like Ubuntu or Fedora with
 Python version 3.7 or later. Mac OS X users may use conda (conda-forge channel)
@@ -446,7 +458,7 @@ calculation.</p>
 </ul>
 </section>
 <section id="installing-required-packages-by-conda">
-<h3>Installing required packages by conda<a class="headerlink" href="#installing-required-packages-by-conda" title="Permalink to this heading">#</a></h3>
+<h3>Installing required packages by conda<a class="headerlink" href="#installing-required-packages-by-conda" title="Link to this heading">#</a></h3>
 <p>The python libraries can be installed using conda. Conda packages are
 distributed in binary. Minimum setup of conda envrironment is done by miniforge,
 which is downloaded at <a class="github reference external" href="https://github.com/conda-forge/miniforge">conda-forge/miniforge</a>. It is strongly
@@ -467,7 +479,7 @@ If specific one is expected, it is installed by (e.g. <code class="docutils lite
 </div>
 </section>
 <section id="building-using-setup-py">
-<span id="install-setup-py"></span><h3>Building using <a class="reference external" href="http://setup.py">setup.py</a><a class="headerlink" href="#building-using-setup-py" title="Permalink to this heading">#</a></h3>
+<span id="install-setup-py"></span><h3>Building using <a class="reference external" href="http://setup.py">setup.py</a><a class="headerlink" href="#building-using-setup-py" title="Link to this heading">#</a></h3>
 <p>If package installation is not possible or you want to compile with special
 compiler or special options, phonopy is built using <code class="docutils literal notranslate"><span class="pre">setup.py</span></code>. In this case,
 manual modification of <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> may be needed.</p>
@@ -494,9 +506,9 @@ the performance improvement is limited for many cases.</p>
 </section>
 </section>
 <section id="trouble-shooting">
-<span id="install-trouble-shooting"></span><h2>Trouble shooting<a class="headerlink" href="#trouble-shooting" title="Permalink to this heading">#</a></h2>
+<span id="install-trouble-shooting"></span><h2>Trouble shooting<a class="headerlink" href="#trouble-shooting" title="Link to this heading">#</a></h2>
 <section id="remove-previous-phonopy-installations">
-<h3>Remove previous phonopy installations<a class="headerlink" href="#remove-previous-phonopy-installations" title="Permalink to this heading">#</a></h3>
+<h3>Remove previous phonopy installations<a class="headerlink" href="#remove-previous-phonopy-installations" title="Link to this heading">#</a></h3>
 <p>Sometimes previous installations of phonopy prevent from loading newly installed
 phonopy. In this case, it is recommended to uninstall all the older phonopy
 packages by</p>
@@ -514,7 +526,7 @@ remove them if it is found, e.g.:</p>
 <p>Set correct environment variables <code class="docutils literal notranslate"><span class="pre">PATH</span></code> and <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code></p>
 </section>
 <section id="when-using-conda-environment-this-information-is-not-applicable">
-<h3>When using conda environment, this information is not applicable.<a class="headerlink" href="#when-using-conda-environment-this-information-is-not-applicable" title="Permalink to this heading">#</a></h3>
+<h3>When using conda environment, this information is not applicable.<a class="headerlink" href="#when-using-conda-environment-this-information-is-not-applicable" title="Link to this heading">#</a></h3>
 <p>In phonopy, <code class="docutils literal notranslate"><span class="pre">PATH</span></code> and <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code> play important roles. Of course the
 information about them can be easily found in internet (e.g.
 <a class="reference external" href="https://en.wikipedia.org/wiki/PATH_(variable)">https://en.wikipedia.org/wiki/PATH_(variable)</a>), so you really have to find
@@ -535,7 +547,7 @@ really need. Then logout from the current shell (terminal) and open new shell
 (terminal) to confirm that the modification is activated.</p>
 </section>
 <section id="missing-intel-libraries-when-building-from-source-using-icc">
-<h3>Missing Intel libraries when building from source using icc<a class="headerlink" href="#missing-intel-libraries-when-building-from-source-using-icc" title="Permalink to this heading">#</a></h3>
+<h3>Missing Intel libraries when building from source using icc<a class="headerlink" href="#missing-intel-libraries-when-building-from-source-using-icc" title="Link to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">LDSHARED=&quot;icc</span> <span class="pre">-shared&quot;</span></code> may be of help. See this github issues,
 <a class="github reference external" href="https://github.com/phonopy/phonopy/issues/123">phonopy/phonopy#123</a>.</p>
 </section>
@@ -579,6 +591,7 @@ really need. Then logout from the current shell (terminal) and open new shell
             
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
 
   <div class="sidebar-secondary-item">
   <div class="page-toc tocsection onthispage">
@@ -647,8 +660,8 @@ really need. Then logout from the current shell (terminal) and open new shell
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/bootstrap.js?digest=5b4479735964841361fd"></script>
-<script src="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd"></script>
+  <script src="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
 
   <footer class="bd-footer">
   </footer>

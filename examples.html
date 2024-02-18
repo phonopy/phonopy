@@ -1,15 +1,14 @@
 
-
 <!DOCTYPE html>
 
 
-<html lang="en" data-content_root="" >
+<html lang="en" data-content_root="./" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Examples &#8212; Phonopy v.2.21.0</title>
+    <title>Examples &#8212; Phonopy v.2.21.2</title>
   
   
   
@@ -19,28 +18,28 @@
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
-<link href="_static/styles/bootstrap.css?digest=5b4479735964841361fd" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=5b4479735964841361fd" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
 
   
-  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=5b4479735964841361fd" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+  <link href="_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=5b4479735964841361fd" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd" />
-  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=5b4479735964841361fd"></script>
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
-    <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="_static/documentation_options.js?v=725a5c9d"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'examples';</script>
@@ -57,10 +56,9 @@
 
   
   
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
   
   <div id="pst-scroll-pixel-helper"></div>
-
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
     <i class="fa-solid fa-arrow-up"></i>
@@ -101,11 +99,14 @@
 </form></div>
   </div>
   
-    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
-    </nav>
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
   
+
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
+      
+      
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -130,10 +131,21 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.21.0</p>
+    <p class="title logo__title">Phonopy v.2.21.2</p>
   
 </a></div>
-        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
@@ -351,10 +363,10 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article" role="main">
+                <article class="bd-article">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="examples">
-<span id="examples-link"></span><h1>Examples<a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h1>
+<span id="examples-link"></span><h1>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h1>
 <p>Phonopy supports various external force calculators (mainly for abinitio codes).
 The examples below are given for the default system that is equivalent to VASP
 style. Most of usage is universal among the force calculators. So it is also
@@ -369,9 +381,9 @@ some of those examples work. Note that sometimes the followings are outdated
 than the examples in the phonopy package. So the results or displace outputs can
 be different.</p>
 <section id="si">
-<h2>Si<a class="headerlink" href="#si" title="Permalink to this heading">#</a></h2>
+<h2>Si<a class="headerlink" href="#si" title="Link to this heading">#</a></h2>
 <section id="force-sets-file-creation-for-vasp">
-<h3><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file creation for VASP<a class="headerlink" href="#force-sets-file-creation-for-vasp" title="Permalink to this heading">#</a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file creation for VASP<a class="headerlink" href="#force-sets-file-creation-for-vasp" title="Link to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span>
         <span class="n">_</span>
   <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
@@ -397,7 +409,7 @@ be different.</p>
 <p>where <code class="docutils literal notranslate"><span class="pre">vasprun.xml</span></code> is the VASP output.</p>
 </section>
 <section id="dos">
-<h3>DOS<a class="headerlink" href="#dos" title="Permalink to this heading">#</a></h3>
+<h3>DOS<a class="headerlink" href="#dos" title="Link to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span> <span class="n">mesh</span><span class="o">.</span><span class="n">conf</span>
         <span class="n">_</span>
   <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
@@ -444,7 +456,7 @@ be different.</p>
 <a class="reference internal image-reference" href="_images/Si-DOS.png"><img alt="_images/Si-DOS.png" src="_images/Si-DOS.png" style="width: 50%;" /></a>
 </section>
 <section id="thermal-properties">
-<h3>Thermal properties<a class="headerlink" href="#thermal-properties" title="Permalink to this heading">#</a></h3>
+<h3>Thermal properties<a class="headerlink" href="#thermal-properties" title="Link to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">t</span> <span class="o">-</span><span class="n">p</span> <span class="n">mesh</span><span class="o">.</span><span class="n">conf</span>
         <span class="n">_</span>
   <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
@@ -501,9 +513,9 @@ be different.</p>
 </section>
 </section>
 <section id="nacl">
-<h2>NaCl<a class="headerlink" href="#nacl" title="Permalink to this heading">#</a></h2>
+<h2>NaCl<a class="headerlink" href="#nacl" title="Link to this heading">#</a></h2>
 <section id="band-structure">
-<h3>Band structure<a class="headerlink" href="#band-structure" title="Permalink to this heading">#</a></h3>
+<h3>Band structure<a class="headerlink" href="#band-structure" title="Link to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
         <span class="n">_</span>
   <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
@@ -551,7 +563,7 @@ be different.</p>
 <a class="reference internal image-reference" href="_images/NaCl-band.png"><img alt="_images/NaCl-band.png" src="_images/NaCl-band.png" style="width: 50%;" /></a>
 </section>
 <section id="band-structure-with-non-analytical-term-correction">
-<h3>Band structure with non-analytical term correction<a class="headerlink" href="#band-structure-with-non-analytical-term-correction" title="Permalink to this heading">#</a></h3>
+<h3>Band structure with non-analytical term correction<a class="headerlink" href="#band-structure-with-non-analytical-term-correction" title="Link to this heading">#</a></h3>
 <p>This requires to prepare BORN file.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span> <span class="o">--</span><span class="n">nac</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
         <span class="n">_</span>
@@ -607,7 +619,7 @@ be different.</p>
 <a class="reference internal image-reference" href="_images/NaCl-band-NAC.png"><img alt="_images/NaCl-band-NAC.png" src="_images/NaCl-band-NAC.png" style="width: 50%;" /></a>
 </section>
 <section id="pdos">
-<span id="example-pdos"></span><h3>PDOS<a class="headerlink" href="#pdos" title="Permalink to this heading">#</a></h3>
+<span id="example-pdos"></span><h3>PDOS<a class="headerlink" href="#pdos" title="Link to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span> <span class="n">pdos</span><span class="o">.</span><span class="n">conf</span>
         <span class="n">_</span>
   <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
@@ -710,7 +722,7 @@ point.</p>
 <a class="reference internal image-reference" href="_images/NaCl-PDOS-nac.png"><img alt="_images/NaCl-PDOS-nac.png" src="_images/NaCl-PDOS-nac.png" style="width: 50%;" /></a>
 </section>
 <section id="plot-band-structure-and-dos-at-once">
-<h3>Plot band structure and DOS at once<a class="headerlink" href="#plot-band-structure-and-dos-at-once" title="Permalink to this heading">#</a></h3>
+<h3>Plot band structure and DOS at once<a class="headerlink" href="#plot-band-structure-and-dos-at-once" title="Link to this heading">#</a></h3>
 <p>Band structure and DOS or PDOS can be plotted on one figure together by</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="n">band</span><span class="o">-</span><span class="n">pdos</span><span class="o">.</span><span class="n">conf</span> <span class="o">--</span><span class="n">nac</span> <span class="o">-</span><span class="n">p</span>
         <span class="n">_</span>
@@ -772,7 +784,7 @@ point.</p>
 </section>
 </section>
 <section id="mgb2-characters-of-ireducible-representations">
-<h2>MgB2 characters of ireducible representations<a class="headerlink" href="#mgb2-characters-of-ireducible-representations" title="Permalink to this heading">#</a></h2>
+<h2>MgB2 characters of ireducible representations<a class="headerlink" href="#mgb2-characters-of-ireducible-representations" title="Link to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span><span class="o">-</span><span class="p">{</span><span class="mi">001</span><span class="p">,</span><span class="mi">002</span><span class="p">}</span>
 <span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;3 3 2&quot;</span> <span class="o">--</span><span class="n">irreps</span><span class="o">=</span><span class="s2">&quot;0 0 0&quot;</span>
         <span class="n">_</span>
@@ -917,7 +929,7 @@ point.</p>
 </div>
 </section>
 <section id="al-qha">
-<h2>Al-QHA<a class="headerlink" href="#al-qha" title="Permalink to this heading">#</a></h2>
+<h2>Al-QHA<a class="headerlink" href="#al-qha" title="Link to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">qha</span> <span class="n">e</span><span class="o">-</span><span class="n">v</span><span class="o">.</span><span class="n">dat</span> <span class="n">thermal_properties</span><span class="o">.</span><span class="n">yaml</span><span class="o">-</span><span class="p">{</span><span class="o">-</span><span class="p">{</span><span class="mf">5..1</span><span class="p">},{</span><span class="mf">0..5</span><span class="p">}}</span> <span class="o">--</span><span class="n">sparse</span><span class="o">=</span><span class="mi">50</span> <span class="o">-</span><span class="n">p</span>
 <span class="c1"># Vinet EOS</span>
 <span class="c1">#          T           E_0           B_0          B&#39;_0           V_0</span>
@@ -933,7 +945,7 @@ point.</p>
 <a class="reference internal image-reference" href="_images/Al-QHA.png"><img alt="_images/Al-QHA.png" src="_images/Al-QHA.png" style="width: 50%;" /></a>
 </section>
 <section id="si-gruneisen">
-<h2>Si-gruneisen<a class="headerlink" href="#si-gruneisen" title="Permalink to this heading">#</a></h2>
+<h2>Si-gruneisen<a class="headerlink" href="#si-gruneisen" title="Link to this heading">#</a></h2>
 <p>See <a class="reference internal" href="gruneisen.html#phonopy-gruneisen"><span class="std std-ref">Calculation of mode Grüneisen parameters</span></a>.</p>
 </section>
 </section>
@@ -975,6 +987,7 @@ point.</p>
             
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
 
   <div class="sidebar-secondary-item">
   <div class="page-toc tocsection onthispage">
@@ -1042,8 +1055,8 @@ point.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/bootstrap.js?digest=5b4479735964841361fd"></script>
-<script src="_static/scripts/pydata-sphinx-theme.js?digest=5b4479735964841361fd"></script>
+  <script src="_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
 
   <footer class="bd-footer">
   </footer>
