@@ -107,9 +107,12 @@ New BSD from version 1.3.
 
 (LGPL from ver. 0.9.3 to version 1.2.1., GPL to version 0.9.2.)
 
+[License](https://github.com/phonopy/phonopy/blob/develop/LICENSE)
+
 # Contact
 
-- Author: [Atsushi Togo](http://atztogo.github.io/)
+- Author: [Atsushi Togo](http://atztogo.github.io/), National Institute for
+  Materials Science.
 
 # Indices and tables
 
