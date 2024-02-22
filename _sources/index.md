@@ -94,30 +94,30 @@ documentation
 
 (mailinglist)=
 
-# Mailing list
+## Mailing list
 
 For questions, bug reports, and comments, please visit
 <https://lists.sourceforge.net/lists/listinfo/phonopy-users> to subscribe the
 phonopy mailing list and send them to <phonopy-users@lists.sourceforge.net>.
 Message body including attached files has to be smaller than 300 KB.
 
-# License
+## License
 
 New BSD from version 1.3.
 
 (LGPL from ver. 0.9.3 to version 1.2.1., GPL to version 0.9.2.)
 
-# Contributors
+## Contributors
 
 - Atsushi Togo, National Institute for Materials Science
 
-# Acknowledgements
+## Acknowledgements
 
 Phonopy development is supported by:
 
 - National Institute for Materials Science
 
-# Indices and tables
+## Indices and tables
 
 - {ref}`genindex`
 - {ref}`modindex`
