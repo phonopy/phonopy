@@ -5,10 +5,10 @@ quasi-harmonic levels.
 
 **Phono3py** is another open source package for phonon-phonon interaction and
 lattice thermal conductivity calculations. See the documentation at
-http://phonopy.github.io/phono3py/
+<http://phonopy.github.io/phono3py/>
 
 **Phonon database**: A collection of first principles phonon calculations is
-available as open data at http://phonondb.mtl.kyoto-u.ac.jp/ , where the raw
+available as open data at <http://phonondb.mtl.kyoto-u.ac.jp/> , where the raw
 data of phonopy & VASP results are downloaded.
 
 The following features of phonopy are highlighted:
@@ -97,8 +97,8 @@ documentation
 # Mailing list
 
 For questions, bug reports, and comments, please visit
-https://lists.sourceforge.net/lists/listinfo/phonopy-users to subscribe the
-phonopy mailing list and send them to phonopy-users@lists.sourceforge.net.
+<https://lists.sourceforge.net/lists/listinfo/phonopy-users> to subscribe the
+phonopy mailing list and send them to <phonopy-users@lists.sourceforge.net>.
 Message body including attached files has to be smaller than 300 KB.
 
 # License
@@ -107,12 +107,15 @@ New BSD from version 1.3.
 
 (LGPL from ver. 0.9.3 to version 1.2.1., GPL to version 0.9.2.)
 
-[License](https://github.com/phonopy/phonopy/blob/develop/LICENSE)
+# Contributors
 
-# Contact
+- Atsushi Togo, National Institute for Materials Science
 
-- Author: [Atsushi Togo](http://atztogo.github.io/), National Institute for
-  Materials Science.
+# Acknowledgements
+
+Phonopy development is supported by:
+
+- National Institute for Materials Science
 
 # Indices and tables
 
