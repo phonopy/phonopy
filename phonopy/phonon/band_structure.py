@@ -712,9 +712,7 @@ class BandStructure:
             distances_on_path.append(self._distance)
 
             if isinstance(self._dynamical_matrix, DynamicalMatrixNAC):
-                q_direction = None
-                if (np.abs(q) < 0.0001).all():  # For Gamma point
-                    q_direction = path[0] - path[-1]
+                q_direction = path[0] - path[-1]
                 self._dynamical_matrix.run(q, q_direction=q_direction)
             else:
                 self._dynamical_matrix.run(q)
