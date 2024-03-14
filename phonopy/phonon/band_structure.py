@@ -707,14 +707,17 @@ class BandStructure:
             self._group_velocity.run(path)
             gv = self._group_velocity.group_velocities
 
+        if isinstance(self._dynamical_matrix, DynamicalMatrixNAC):
+            q_direction = None
+            # A cross product close to 0 indicates a path crossing or ending at Gamma
+            if (np.abs(np.cross(path[0], path[-1])) < 0.0001).all():
+                q_direction = path[0] - path[-1]
+
         for i, q in enumerate(path):
             self._shift_point(q)
             distances_on_path.append(self._distance)
 
             if isinstance(self._dynamical_matrix, DynamicalMatrixNAC):
-                q_direction = None
-                if (np.abs(q) < 0.0001).all():  # For Gamma point
-                    q_direction = path[0] - path[-1]
                 self._dynamical_matrix.run(q, q_direction=q_direction)
             else:
                 self._dynamical_matrix.run(q)
