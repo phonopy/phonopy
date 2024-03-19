@@ -265,13 +265,14 @@ class RandomDisplacements:
                 len(self._eigvals_ii[0]),
             )
             randn_ii = rng.standard_normal(size=shape)
-            shape = (
-                len(self._eigvals_ij),
-                2,
-                number_of_snapshots,
-                len(self._eigvals_ij[0]),
-            )
-            randn_ij = rng.standard_normal(size=shape)
+            if self._ij:
+                shape = (
+                    len(self._eigvals_ij),
+                    2,
+                    number_of_snapshots,
+                    len(self._eigvals_ij[0]),
+                )
+                randn_ij = rng.standard_normal(size=shape)
         else:
             randn_ii = randn[0]
             randn_ij = randn[1]

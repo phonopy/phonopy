@@ -362,13 +362,13 @@ class DynamicalMatrixNAC(DynamicalMatrix):
     """Dynamical matrix with NAC base class."""
 
     _nac = True
+    Q_DIRECTION_TOLERANCE = 1e-5
 
     def __init__(
         self,
         supercell: PhonopyAtoms,
         primitive: Primitive,
         force_constants,
-        symprec=1e-5,
         decimals=None,
         log_level=0,
         use_openmp=False,
@@ -387,8 +387,6 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             shape=(supercell atoms, supercell atoms, 3, 3) for full FC.
             shape=(primitive atoms, supercell atoms, 3, 3) for compact FC.
             dtype='double'
-        symprec : float, optional, defualt=1e-5
-            Symmetri tolerance.
         decimals : int, optional, default=None
             Number of decimals. Use like dm.round(decimals).
         log_levelc : int, optional, defualt=0
@@ -404,7 +402,6 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             decimals=decimals,
             use_openmp=use_openmp,
         )
-        self._symprec = symprec
         self._log_level = log_level
         self._rec_lat = np.linalg.inv(self._pcell.cell)  # column vectors
 
@@ -422,11 +419,11 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
         """
         if q_direction is None:
-            q_norm = np.linalg.norm(np.dot(q, self._rec_lat.T))
+            q_norm = np.linalg.norm(self._rec_lat @ q)
         else:
-            q_norm = np.linalg.norm(np.dot(q_direction, self._rec_lat.T))
+            q_norm = np.linalg.norm(self._rec_lat @ q_direction)
 
-        if q_norm < self._symprec:
+        if q_norm < self.Q_DIRECTION_TOLERANCE:
             self._run(q)
             return False
 
@@ -512,11 +509,6 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         self.nac_params = nac_params
 
     @property
-    def symprec(self):
-        """Return symmetry tolerance."""
-        return self._symprec
-
-    @property
     def log_level(self):
         """Return log level."""
         return self._log_level
@@ -557,7 +549,6 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         num_G_points=None,  # For Gonze NAC
         with_full_terms=False,
         decimals=None,
-        symprec=1e-5,
         log_level=0,
         use_openmp=False,
     ):
@@ -578,8 +569,6 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         with_full_terms : bool, optional
             When False, only reciprocal terms are considered for NAC. This is the
             default and the reasonable choice.
-        symprec : float, optional, defualt=1e-5
-            Symmetri tolerance.
         decimals : int, optional, default=None
             Number of decimals. Use like dm.round(decimals).
         log_levelc : int, optional, defualt=0
@@ -592,7 +581,6 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             supercell,
             primitive,
             force_constants,
-            symprec=symprec,
             decimals=decimals,
             log_level=log_level,
             use_openmp=use_openmp,
@@ -835,7 +823,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             np.array(pos, dtype="double", order="C"),
             self._unit_conversion * 4.0 * np.pi / volume,
             self._Lambda,
-            self._symprec,
+            self.Q_DIRECTION_TOLERANCE,
             self._use_openmp * 1,
         )
         return dd
@@ -858,7 +846,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             self._dielectric,
             np.array(pos, dtype="double", order="C"),
             self._Lambda,
-            self._symprec,
+            self.Q_DIRECTION_TOLERANCE,
             self._use_openmp * 1,
         )
 
@@ -983,7 +971,6 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
         force_constants,
         nac_params=None,
         decimals=None,
-        symprec=1e-5,
         log_level=0,
         use_openmp=False,
     ):
@@ -1001,8 +988,6 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
             shape=(supercell atoms, supercell atoms, 3, 3) for full FC.
             shape=(primitive atoms, supercell atoms, 3, 3) for compact FC.
             dtype='double'
-        symprec : float, optional, defualt=1e-5
-            Symmetri tolerance.
         decimals : int, optional, default=None
             Number of decimals. Use like dm.round(decimals).
         log_levelc : int, optional, defualt=0
@@ -1015,13 +1000,11 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
             supercell,
             primitive,
             force_constants,
-            symprec=symprec,
             decimals=decimals,
             log_level=log_level,
             use_openmp=use_openmp,
         )
 
-        self._symprec = symprec
         if nac_params is not None:
             self.nac_params = nac_params
 
@@ -1136,7 +1119,6 @@ def get_dynamical_matrix(
     nac_params=None,
     frequency_scale_factor=None,
     decimals=None,
-    symprec=1e-5,
     log_level=0,
     use_openmp=False,
 ):
@@ -1175,7 +1157,6 @@ def get_dynamical_matrix(
             primitive,
             _fc2,
             decimals=decimals,
-            symprec=symprec,
             log_level=log_level,
             use_openmp=use_openmp,
         )
