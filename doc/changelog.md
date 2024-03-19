@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Mar-19-2024: Version 2.22.0
+
+- Maintenance release.
+
 ## Feb-18-2024: Version 2.21.2
 
 - Fix `phonopy-load`.
