@@ -3743,7 +3743,6 @@ class Phonopy:
             nac_params,
             self._frequency_scale_factor,
             self._dynamical_matrix_decimals,
-            symprec=self._symprec,
             log_level=self._log_level,
             use_openmp=phonoc.use_openmp(),
         )

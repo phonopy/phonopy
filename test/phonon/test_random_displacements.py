@@ -729,6 +729,17 @@ def _test_random_displacements_SnO2(ph_sno2):
     assert argmaxs == answer
 
 
+def test_random_displacements_Zr3N4(ph_zr3n4):
+    """Test init and run for Zr3N4 1x1x1.
+
+    This tests q-points only in A part.
+
+    """
+    ph = ph_zr3n4
+    ph.init_random_displacements()
+    ph.get_random_displacements_at_temperature(300, 10)
+
+
 def _test_random_displacements(ph, answer, ntimes=30, d_max=1, nbins=51):
     hist = np.zeros((2, nbins - 1), dtype=int)
     for i in range(100):
