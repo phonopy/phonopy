@@ -45,7 +45,6 @@ from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
     """Parse forces from output files."""
-
     hook = "force (eV/A)"
     is_parsed = True
     force_sets = []
@@ -75,7 +74,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
 
 
 def read_atom_config(filename):
-    """Read structure information from atom.config"""
+    """Read structure information from atom.config."""
     with open(filename) as f:
         lines = f.read().splitlines()
 
@@ -136,6 +135,7 @@ def write_atom_config(filename, cell):
 
 
 def get_pwmat_structure(cell):
+    """Return PWmat structure in text."""
     lattice = cell.cell
     positions = cell.scaled_positions
     numbers = cell.numbers
