@@ -152,7 +152,7 @@ def write_crystal_structure(
 
         pp_filenames = optional_structure_info[1]
         qe.write_pwscf(filename, cell, pp_filenames)
-    
+
     elif interface_mode == "wien2k":
         import phonopy.interface.wien2k as wien2k
 
@@ -212,6 +212,7 @@ def write_crystal_structure(
         lammps.write_lammps(filename, cell)
     elif interface_mode == "pwmat":
         import phonopy.interface.pwmat as pwmat
+
         pwmat.write_atom_config(filename, cell)
     else:
         raise RuntimeError("No calculator interface was found.")
@@ -278,8 +279,8 @@ def write_supercells_with_displacements(
     elif interface_mode == "pwmat":
         import phonopy.interface.pwmat as pwmat
 
-        pwmat.write_supercells_with_displacements(*args , **kwargs)
-        
+        pwmat.write_supercells_with_displacements(*args, **kwargs)
+
     elif interface_mode == "wien2k":
         import phonopy.interface.wien2k as wien2k
 
@@ -633,7 +634,7 @@ def get_default_physical_units(interface_mode=None):
         "force_unit": None,
     }
 
-    if interface_mode is None or interface_mode in ("vasp", "aims", "lammps","pwmat"):
+    if interface_mode is None or interface_mode in ("vasp", "aims", "lammps", "pwmat"):
         units["factor"] = VaspToTHz
         units["nac_factor"] = Hartree * Bohr
         units["distance_to_A"] = 1.0

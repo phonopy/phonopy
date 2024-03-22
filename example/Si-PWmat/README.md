@@ -28,4 +28,3 @@ with `mesh` tag or `--mesh` option and `-t` option:
 ```bash
 % phonopy -t --mesh 31 31 31
 ```
-

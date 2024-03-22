@@ -35,10 +35,13 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
+
 import numpy as np
+
 from phonopy.file_IO import iter_collect_forces
 from phonopy.interface.vasp import check_forces, get_drift_forces
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
+
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
     """Parse forces from output files."""
@@ -51,7 +54,10 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
         if verbose:
             sys.stdout.write("%d. " % (i + 1))
         pwmat_forces = iter_collect_forces(
-            filename, num_atoms, hook, [1, 2, 3],
+            filename,
+            num_atoms,
+            hook,
+            [1, 2, 3],
         )
         pwmat_forces = [[-x for x in sublist] for sublist in pwmat_forces]
         if check_forces(pwmat_forces, num_atoms, filename, verbose=verbose):
@@ -67,6 +73,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
     else:
         return []
 
+
 def read_atom_config(filename):
     """Read structure information from atom.config"""
     with open(filename) as f:
@@ -81,18 +88,18 @@ def read_atom_config(filename):
 
     for line in lines:
         line = line.strip()
-        
+
         # lattice constant
-        if line.lower().startswith('lattice'):
+        if line.lower().startswith("lattice"):
             read_lattice = True
         elif read_lattice:
             try:
                 lattice_vectors.append([float(part) for part in line.split()])
             except ValueError:
                 read_lattice = False
-        
+
         # atom position
-        if line.lower().startswith('position'):
+        if line.lower().startswith("position"):
             read_position = True
         elif read_position:
             try:
@@ -101,9 +108,9 @@ def read_atom_config(filename):
                 atom_position.append(parts[1:4])
             except ValueError:
                 read_position = False
-        
+
         # magnetic_moment
-        if line.lower().startswith('magnetic'):
+        if line.lower().startswith("magnetic"):
             read_magnetic = True
         elif read_magnetic:
             try:
@@ -112,43 +119,45 @@ def read_atom_config(filename):
                 read_magnetic = False
 
     cell_args = {
-        'numbers': element_index,
-        'cell': lattice_vectors,
-        'scaled_positions': atom_position,
+        "numbers": element_index,
+        "cell": lattice_vectors,
+        "scaled_positions": atom_position,
     }
     if element_mag:
-        cell_args['magnetic_moments'] = element_mag
+        cell_args["magnetic_moments"] = element_mag
 
     return Atoms(**cell_args)
-              
+
 
 def write_atom_config(filename, cell):
     """Write atom.config to file."""
     with open(filename, "w") as f:
         f.write(get_pwmat_structure(cell))
 
+
 def get_pwmat_structure(cell):
     lattice = cell.cell
     positions = cell.scaled_positions
     numbers = cell.numbers
     mag_mom = cell.magnetic_moments
-    line=[]
-    line.append(f' {len(positions)}')
-    line.append('Lattice vector (Angstrom)')
+    line = []
+    line.append(f" {len(positions)}")
+    line.append("Lattice vector (Angstrom)")
     for row in lattice:
-        line.append(' '.join(f' {val:.16f}' for val in row)) 
-    line.append('Position, move_x, move_y, move_z')
+        line.append(" ".join(f" {val:.16f}" for val in row))
+    line.append("Position, move_x, move_y, move_z")
     for number, position in zip(numbers, positions):
         line.append(
-            f' {number}  ' 
-            +'   '.join(f'{val:.16f}' for val in position) 
-            + '  1   1   1'
-            )
+            f" {number}  "
+            + "   ".join(f"{val:.16f}" for val in position)
+            + "  1   1   1"
+        )
     if isinstance(mag_mom, np.ndarray) and mag_mom.size > 0:
-        line.append('magnetic')
+        line.append("magnetic")
         for number, mag in zip(numbers, mag_mom):
-            line.append(f' {number}  {mag:.16f}')
-    return '\n'.join(line)
+            line.append(f" {number}  {mag:.16f}")
+    return "\n".join(line)
+
 
 def write_supercells_with_displacements(
     supercell,
@@ -158,10 +167,12 @@ def write_supercells_with_displacements(
     width=3,
 ):
     """Write supercells with displacements to files."""
-    write_atom_config("%s.config" % pre_filename, supercell,)
+    write_atom_config(
+        "%s.config" % pre_filename,
+        supercell,
+    )
     for i, cell in zip(ids, cells_with_displacements):
         filename = "{pre_filename}-{0:0{width}}.config".format(
             i, pre_filename=pre_filename, width=width
         )
         write_atom_config(filename, cell)
-

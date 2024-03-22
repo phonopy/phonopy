@@ -1,10 +1,10 @@
 mesh: [    31,    31,    31 ]
-nqpoint: 816    
+nqpoint: 816
 reciprocal_lattice:
 - [  -0.18280799,   0.18280799,   0.18280799 ] # a*
 - [   0.18280799,  -0.18280799,   0.18280799 ] # b*
 - [   0.18280799,   0.18280799,  -0.18280799 ] # c*
-natom:   2      
+natom:   2
 lattice:
 - [     0.000000000000000,     2.735110190000000,     2.735110190000000 ] # a
 - [     2.735110190000000,     0.000000000000000,     2.735110190000000 ] # b
@@ -20,7 +20,7 @@ points:
 phonon:
 - q-position: [    0.0000000,    0.0000000,    0.0000000 ]
   distance_from_gamma:  0.000000000
-  weight: 1    
+  weight: 1
   band:
   - # 1
     frequency:     0.0000002040
@@ -37,7 +37,7 @@ phonon:
 
 - q-position: [    0.0322581,    0.0000000,    0.0000000 ]
   distance_from_gamma:  0.010213959
-  weight: 8    
+  weight: 8
   band:
   - # 1
     frequency:     0.4448233355
@@ -54,7 +54,7 @@ phonon:
 
 - q-position: [    0.0645161,    0.0000000,    0.0000000 ]
   distance_from_gamma:  0.020427918
-  weight: 8    
+  weight: 8
   band:
   - # 1
     frequency:     0.8795216734
@@ -71,7 +71,7 @@ phonon:
 
 - q-position: [    0.0967742,    0.0000000,    0.0000000 ]
   distance_from_gamma:  0.030641877
-  weight: 8    
+  weight: 8
   band:
   - # 1
     frequency:     1.2940400937
@@ -88,7 +88,7 @@ phonon:
 
 - q-position: [    0.1290323,    0.0000000,    0.0000000 ]
   distance_from_gamma:  0.040855836
-  weight: 8    
+  weight: 8
   band:
   - # 1
     frequency:     1.6785748230
@@ -105,7 +105,7 @@ phonon:
 
 - q-position: [    0.1612903,    0.0000000,    0.0000000 ]
   distance_from_gamma:  0.051069795
-  weight: 8    
+  weight: 8
   band:
   - # 1
     frequency:     2.0239550019
@@ -122,7 +122,7 @@ phonon:
 
 - q-position: [    0.1935484,    0.0000000,    0.0000000 ]
   distance_from_gamma:  0.061283754
-  weight: 8    
+  weight: 8
   band:
   - # 1
     frequency:     2.3222708798
@@ -139,7 +139,7 @@ phonon:
 
 - q-position: [    0.2258065,    0.0000000,    0.0000000 ]
   distance_from_gamma:  0.071497713
-  weight: 8    
+  weight: 8
   band:
   - # 1
     frequency:     2.5677223032
@@ -156,7 +156,7 @@ phonon:
 
 - q-position: [    0.2580645,    0.0000000,    0.0000000 ]
   distance_from_gamma:  0.081711672
-  weight: 8    
+  weight: 8
   band:
   - # 1
     frequency:     2.7575577333
@@ -173,7 +173,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.0000000,    0.0000000 ]
   distance_from_gamma:  0.091925631
-  weight: 8    
+  weight: 8
   band:
   - # 1
     frequency:     2.8928557505
@@ -190,7 +190,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.0000000,    0.0000000 ]
   distance_from_gamma:  0.102139590
-  weight: 8    
+  weight: 8
   band:
   - # 1
     frequency:     2.9788265044
@@ -207,7 +207,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.0000000,    0.0000000 ]
   distance_from_gamma:  0.112353549
-  weight: 8    
+  weight: 8
   band:
   - # 1
     frequency:     3.0243635252
@@ -224,7 +224,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.0000000,    0.0000000 ]
   distance_from_gamma:  0.122567508
-  weight: 8    
+  weight: 8
   band:
   - # 1
     frequency:     3.0407943217
@@ -241,7 +241,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.0000000,    0.0000000 ]
   distance_from_gamma:  0.132781467
-  weight: 8    
+  weight: 8
   band:
   - # 1
     frequency:     3.0400807354
@@ -258,7 +258,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.0000000,    0.0000000 ]
   distance_from_gamma:  0.142995426
-  weight: 8    
+  weight: 8
   band:
   - # 1
     frequency:     3.0329314721
@@ -275,7 +275,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.0000000,    0.0000000 ]
   distance_from_gamma:  0.153209385
-  weight: 8    
+  weight: 8
   band:
   - # 1
     frequency:     3.0272695088
@@ -292,7 +292,7 @@ phonon:
 
 - q-position: [    0.0322581,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.011794064
-  weight: 6    
+  weight: 6
   band:
   - # 1
     frequency:     0.6067911427
@@ -309,7 +309,7 @@ phonon:
 
 - q-position: [    0.0645161,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.019558242
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     0.8922533110
@@ -326,7 +326,7 @@ phonon:
 
 - q-position: [    0.0967742,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.028889439
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     1.2359916722
@@ -343,7 +343,7 @@ phonon:
 
 - q-position: [    0.1290323,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.038669425
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     1.5994229431
@@ -360,7 +360,7 @@ phonon:
 
 - q-position: [    0.1612903,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.048628171
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     1.9480296240
@@ -377,7 +377,7 @@ phonon:
 
 - q-position: [    0.1935484,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.058674727
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.2633296096
@@ -394,7 +394,7 @@ phonon:
 
 - q-position: [    0.2258065,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.068770620
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.5340617430
@@ -411,7 +411,7 @@ phonon:
 
 - q-position: [    0.2580645,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.078896911
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.7536473283
@@ -428,7 +428,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.089043230
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.9198019847
@@ -445,7 +445,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.099203433
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.0156689026
@@ -462,7 +462,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.109373650
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.0626413714
@@ -479,7 +479,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.119551325
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.0801200555
@@ -496,7 +496,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.129734704
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.0803042241
@@ -513,7 +513,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.139922540
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.0740773402
@@ -530,7 +530,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.150113927
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.0693264883
@@ -547,7 +547,7 @@ phonon:
 
 - q-position: [   -0.4838710,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.156909816
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.0699722491
@@ -564,7 +564,7 @@ phonon:
 
 - q-position: [   -0.4516129,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.146716449
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.0756987287
@@ -581,7 +581,7 @@ phonon:
 
 - q-position: [   -0.4193548,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.136526161
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.0821854407
@@ -598,7 +598,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.126339695
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.0816957365
@@ -615,7 +615,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.116158059
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.0640352993
@@ -632,7 +632,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.105982643
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.0179309300
@@ -649,7 +649,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.095815429
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.9327167263
@@ -666,7 +666,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.085659337
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.7999934307
@@ -683,7 +683,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.075518857
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.6148553201
@@ -700,7 +700,7 @@ phonon:
 
 - q-position: [   -0.1935484,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.065401248
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.3764394923
@@ -717,7 +717,7 @@ phonon:
 
 - q-position: [   -0.1612903,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.055319063
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.0878520862
@@ -734,7 +734,7 @@ phonon:
 
 - q-position: [   -0.1290323,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.045295962
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     1.7558282723
@@ -751,7 +751,7 @@ phonon:
 
 - q-position: [   -0.0967742,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.035382192
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     1.3908457639
@@ -768,7 +768,7 @@ phonon:
 
 - q-position: [   -0.0645161,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.025704566
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     1.0096600171
@@ -785,7 +785,7 @@ phonon:
 
 - q-position: [   -0.0322581,    0.0322581,    0.0000000 ]
   distance_from_gamma:  0.016679325
-  weight: 12   
+  weight: 12
   band:
   - # 1
     frequency:     0.6497321725
@@ -802,7 +802,7 @@ phonon:
 
 - q-position: [    0.0645161,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.023588128
-  weight: 6    
+  weight: 6
   band:
   - # 1
     frequency:     1.2027174220
@@ -819,7 +819,7 @@ phonon:
 
 - q-position: [    0.0967742,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.030641877
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     1.4787761604
@@ -836,7 +836,7 @@ phonon:
 
 - q-position: [    0.1290323,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.039116485
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     1.7735914105
@@ -853,7 +853,7 @@ phonon:
 
 - q-position: [    0.1612903,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.048269287
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.0884463575
@@ -870,7 +870,7 @@ phonon:
 
 - q-position: [    0.1935484,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.057778877
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.3975390466
@@ -887,7 +887,7 @@ phonon:
 
 - q-position: [    0.2258065,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.067494616
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.6800717792
@@ -904,7 +904,7 @@ phonon:
 
 - q-position: [    0.2580645,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.077338849
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.8889962505
@@ -921,7 +921,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.087268104
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.0275285377
@@ -938,7 +938,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.097256343
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.1177472421
@@ -955,7 +955,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.107287093
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.1677182702
@@ -972,7 +972,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.117349455
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.1885139602
@@ -989,7 +989,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.127435939
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.1921387924
@@ -1006,7 +1006,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.137541239
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.1892805568
@@ -1023,7 +1023,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.147661492
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.1874984910
@@ -1040,7 +1040,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.157793821
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.1902508715
@@ -1057,7 +1057,7 @@ phonon:
 
 - q-position: [   -0.4516129,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.151037714
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.1967770807
@@ -1074,7 +1074,7 @@ phonon:
 
 - q-position: [   -0.4193548,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.140913154
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.2025605922
@@ -1091,7 +1091,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.130802497
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.2000938682
@@ -1108,7 +1108,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.120709234
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.1798587087
@@ -1125,7 +1125,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.110638127
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.1315718517
@@ -1142,7 +1142,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.100595830
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.0456720096
@@ -1159,7 +1159,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.090591924
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.9148266500
@@ -1176,7 +1176,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.080640699
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.7351296266
@@ -1193,7 +1193,7 @@ phonon:
 
 - q-position: [   -0.1935484,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.070764384
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.5067777249
@@ -1210,7 +1210,7 @@ phonon:
 
 - q-position: [   -0.1612903,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.060999373
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.2343136599
@@ -1227,7 +1227,7 @@ phonon:
 
 - q-position: [   -0.1290323,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.051409133
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     1.9269001915
@@ -1244,7 +1244,7 @@ phonon:
 
 - q-position: [   -0.0967742,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.042113232
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     1.5996154807
@@ -1261,7 +1261,7 @@ phonon:
 
 - q-position: [   -0.0645161,    0.0645161,    0.0000000 ]
   distance_from_gamma:  0.033358650
-  weight: 12   
+  weight: 12
   band:
   - # 1
     frequency:     1.2779326574
@@ -1278,7 +1278,7 @@ phonon:
 
 - q-position: [    0.0967742,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.035382192
-  weight: 6    
+  weight: 6
   band:
   - # 1
     frequency:     1.7764325762
@@ -1295,7 +1295,7 @@ phonon:
 
 - q-position: [    0.1290323,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.042113232
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.0492066530
@@ -1312,7 +1312,7 @@ phonon:
 
 - q-position: [    0.1612903,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.050037976
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.3334664719
@@ -1329,7 +1329,7 @@ phonon:
 
 - q-position: [    0.1935484,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.058674727
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.6211095798
@@ -1346,7 +1346,7 @@ phonon:
 
 - q-position: [    0.2258065,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.067751739
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.8514578932
@@ -1363,7 +1363,7 @@ phonon:
 
 - q-position: [    0.2580645,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.077113699
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.0368247157
@@ -1380,7 +1380,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.086668316
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.1742316972
@@ -1397,7 +1397,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.096358297
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.2660863155
@@ -1414,7 +1414,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.106146576
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.3195453575
@@ -1431,7 +1431,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.116008274
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.3450485721
@@ -1448,7 +1448,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.125926144
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.3541275159
@@ -1465,7 +1465,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.135887886
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.3570057110
@@ -1482,7 +1482,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.145884514
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.3606700063
@@ -1499,7 +1499,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.155909318
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.3678965369
@@ -1516,7 +1516,7 @@ phonon:
 
 - q-position: [   -0.4516129,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.155909318
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.3772747806
@@ -1533,7 +1533,7 @@ phonon:
 
 - q-position: [   -0.4193548,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.145884514
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.3838979735
@@ -1550,7 +1550,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.135887886
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.3803257333
@@ -1567,7 +1567,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.125926144
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.3576331028
@@ -1584,7 +1584,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.116008274
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.3065731783
@@ -1601,7 +1601,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.106146576
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.2188902944
@@ -1618,7 +1618,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.096358297
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.0886607088
@@ -1635,7 +1635,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.086668316
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.9134120615
@@ -1652,7 +1652,7 @@ phonon:
 
 - q-position: [   -0.1935484,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.077113699
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.6948458149
@@ -1669,7 +1669,7 @@ phonon:
 
 - q-position: [   -0.1612903,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.067751739
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.4392496239
@@ -1686,7 +1686,7 @@ phonon:
 
 - q-position: [   -0.1290323,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.058674727
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.1580182802
@@ -1703,7 +1703,7 @@ phonon:
 
 - q-position: [   -0.0967742,    0.0967742,    0.0000000 ]
   distance_from_gamma:  0.050037976
-  weight: 12   
+  weight: 12
   band:
   - # 1
     frequency:     1.8690135835
@@ -1720,7 +1720,7 @@ phonon:
 
 - q-position: [    0.1290323,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.047176256
-  weight: 6    
+  weight: 6
   band:
   - # 1
     frequency:     2.3157277698
@@ -1737,7 +1737,7 @@ phonon:
 
 - q-position: [    0.1612903,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.053724518
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.5746397945
@@ -1754,7 +1754,7 @@ phonon:
 
 - q-position: [    0.1935484,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.061283754
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.8200300617
@@ -1771,7 +1771,7 @@ phonon:
 
 - q-position: [    0.2258065,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.069524982
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.0362066930
@@ -1788,7 +1788,7 @@ phonon:
 
 - q-position: [    0.2580645,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.078232970
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.2132801683
@@ -1805,7 +1805,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.087268104
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.3470264897
@@ -1822,7 +1822,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.096538574
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.4388006222
@@ -1839,7 +1839,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.105982643
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.4949220224
@@ -1856,7 +1856,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.115557755
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.5251851203
@@ -1873,7 +1873,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.125233856
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.5405811039
@@ -1890,7 +1890,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.134989232
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.5507658300
@@ -1907,7 +1907,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.144807861
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.5620208146
@@ -1924,7 +1924,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.154677699
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.5762703935
@@ -1941,7 +1941,7 @@ phonon:
 
 - q-position: [   -0.4516129,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.161281399
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.5912334677
@@ -1958,7 +1958,7 @@ phonon:
 
 - q-position: [   -0.4193548,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.151382680
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.6013365068
@@ -1975,7 +1975,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.141528768
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.5988967018
@@ -1992,7 +1992,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.131729716
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.5752939846
@@ -2009,7 +2009,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.121998746
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.5221175731
@@ -2026,7 +2026,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.112353549
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.4323529627
@@ -2043,7 +2043,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.102818266
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.3015595162
@@ -2060,7 +2060,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.093426557
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.1288605288
@@ -2077,7 +2077,7 @@ phonon:
 
 - q-position: [   -0.1935484,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.084226464
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.9176019690
@@ -2094,7 +2094,7 @@ phonon:
 
 - q-position: [   -0.1612903,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.075288264
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.6757416587
@@ -2111,7 +2111,7 @@ phonon:
 
 - q-position: [   -0.1290323,    0.1290323,    0.0000000 ]
   distance_from_gamma:  0.066717301
-  weight: 12   
+  weight: 12
   band:
   - # 1
     frequency:     2.4162670197
@@ -2128,7 +2128,7 @@ phonon:
 
 - q-position: [    0.1612903,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.058970320
-  weight: 6    
+  weight: 6
   band:
   - # 1
     frequency:     2.8073799974
@@ -2145,7 +2145,7 @@ phonon:
 
 - q-position: [    0.1935484,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.065401248
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.0317908573
@@ -2162,7 +2162,7 @@ phonon:
 
 - q-position: [    0.2258065,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.072703493
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.2323162648
@@ -2179,7 +2179,7 @@ phonon:
 
 - q-position: [    0.2580645,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.080640699
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.3986686955
@@ -2196,7 +2196,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.089043230
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.5260419506
@@ -2213,7 +2213,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.097791212
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.6151952701
@@ -2230,7 +2230,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.106799791
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.6719277393
@@ -2247,7 +2247,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.116008274
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.7056059324
@@ -2264,7 +2264,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.125372620
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.7268211901
@@ -2281,7 +2281,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.134860364
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.7447329103
@@ -2298,7 +2298,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.144447193
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.7649136121
@@ -2315,7 +2315,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.154114618
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.7883433322
@@ -2332,7 +2332,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.163848373
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.8116755815
@@ -2349,7 +2349,7 @@ phonon:
 
 - q-position: [   -0.4193548,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.157352439
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.8283720317
@@ -2366,7 +2366,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.147661492
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.8301295939
@@ -2383,7 +2383,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.138045979
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.8082267694
@@ -2400,7 +2400,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.128522832
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.7547217056
@@ -2417,7 +2417,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.119114207
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.6635718242
@@ -2434,7 +2434,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.109849534
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.5316726732
@@ -2451,7 +2451,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.100768527
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.3596940945
@@ -2468,7 +2468,7 @@ phonon:
 
 - q-position: [   -0.1935484,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.091925631
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.1525994551
@@ -2485,7 +2485,7 @@ phonon:
 
 - q-position: [   -0.1612903,    0.1612903,    0.0000000 ]
   distance_from_gamma:  0.083396626
-  weight: 12   
+  weight: 12
   band:
   - # 1
     frequency:     2.9198864743
@@ -2502,7 +2502,7 @@ phonon:
 
 - q-position: [    0.1935484,    0.1935484,    0.0000000 ]
   distance_from_gamma:  0.070764384
-  weight: 6    
+  weight: 6
   band:
   - # 1
     frequency:     3.2374159323
@@ -2519,7 +2519,7 @@ phonon:
 
 - q-position: [    0.2258065,    0.1935484,    0.0000000 ]
   distance_from_gamma:  0.077113699
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.4221832857
@@ -2536,7 +2536,7 @@ phonon:
 
 - q-position: [    0.2580645,    0.1935484,    0.0000000 ]
   distance_from_gamma:  0.084226464
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.5761218896
@@ -2553,7 +2553,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.1935484,    0.0000000 ]
   distance_from_gamma:  0.091925631
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.6944770071
@@ -2570,7 +2570,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.1935484,    0.0000000 ]
   distance_from_gamma:  0.100075951
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.7779543712
@@ -2587,7 +2587,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.1935484,    0.0000000 ]
   distance_from_gamma:  0.108575874
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.8322933964
@@ -2604,7 +2604,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.1935484,    0.0000000 ]
   distance_from_gamma:  0.117349455
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.8668215466
@@ -2621,7 +2621,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.1935484,    0.0000000 ]
   distance_from_gamma:  0.126339695
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.8920476666
@@ -2638,7 +2638,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.1935484,    0.0000000 ]
   distance_from_gamma:  0.135503479
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.9168680127
@@ -2655,7 +2655,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.1935484,    0.0000000 ]
   distance_from_gamma:  0.144807861
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.9462724702
@@ -2672,7 +2672,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.1935484,    0.0000000 ]
   distance_from_gamma:  0.154227399
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.9802934616
@@ -2689,7 +2689,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.1935484,    0.0000000 ]
   distance_from_gamma:  0.163742219
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0143750132
@@ -2706,7 +2706,7 @@ phonon:
 
 - q-position: [   -0.4193548,    0.1935484,    0.0000000 ]
   distance_from_gamma:  0.163742219
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0407359838
@@ -2723,7 +2723,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.1935484,    0.0000000 ]
   distance_from_gamma:  0.154227399
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0500679393
@@ -2740,7 +2740,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.1935484,    0.0000000 ]
   distance_from_gamma:  0.144807861
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0331022205
@@ -2757,7 +2757,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.1935484,    0.0000000 ]
   distance_from_gamma:  0.135503479
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.9819190841
@@ -2774,7 +2774,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.1935484,    0.0000000 ]
   distance_from_gamma:  0.126339695
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.8910578001
@@ -2791,7 +2791,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.1935484,    0.0000000 ]
   distance_from_gamma:  0.117349455
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.7584542366
@@ -2808,7 +2808,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.1935484,    0.0000000 ]
   distance_from_gamma:  0.108575874
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.5861277079
@@ -2825,7 +2825,7 @@ phonon:
 
 - q-position: [   -0.1935484,    0.1935484,    0.0000000 ]
   distance_from_gamma:  0.100075951
-  weight: 12   
+  weight: 12
   band:
   - # 1
     frequency:     3.3805320267
@@ -2842,7 +2842,7 @@ phonon:
 
 - q-position: [    0.2258065,    0.2258065,    0.0000000 ]
   distance_from_gamma:  0.082558448
-  weight: 6    
+  weight: 6
   band:
   - # 1
     frequency:     3.5920395893
@@ -2859,7 +2859,7 @@ phonon:
 
 - q-position: [    0.2580645,    0.2258065,    0.0000000 ]
   distance_from_gamma:  0.088847745
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.7325853489
@@ -2876,7 +2876,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.2258065,    0.0000000 ]
   distance_from_gamma:  0.095815429
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.8395721778
@@ -2893,7 +2893,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.2258065,    0.0000000 ]
   distance_from_gamma:  0.103324347
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.9141441502
@@ -2910,7 +2910,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.2258065,    0.0000000 ]
   distance_from_gamma:  0.111264977
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.9624796205
@@ -2927,7 +2927,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.2258065,    0.0000000 ]
   distance_from_gamma:  0.119551325
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.9943532178
@@ -2944,7 +2944,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.2258065,    0.0000000 ]
   distance_from_gamma:  0.128116328
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0206416435
@@ -2961,7 +2961,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.2258065,    0.0000000 ]
   distance_from_gamma:  0.136907697
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0503550074
@@ -2978,7 +2978,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.2258065,    0.0000000 ]
   distance_from_gamma:  0.145884514
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0881572177
@@ -2995,7 +2995,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.2258065,    0.0000000 ]
   distance_from_gamma:  0.155014565
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1332308990
@@ -3012,7 +3012,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.2258065,    0.0000000 ]
   distance_from_gamma:  0.164272302
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1797365595
@@ -3029,7 +3029,7 @@ phonon:
 
 - q-position: [   -0.4193548,    0.2258065,    0.0000000 ]
   distance_from_gamma:  0.170504805
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.2184191109
@@ -3046,7 +3046,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.2258065,    0.0000000 ]
   distance_from_gamma:  0.161173554
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.2386102273
@@ -3063,7 +3063,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.2258065,    0.0000000 ]
   distance_from_gamma:  0.151955884
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.2300605505
@@ -3080,7 +3080,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.2258065,    0.0000000 ]
   distance_from_gamma:  0.142873780
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1844102513
@@ -3097,7 +3097,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.2258065,    0.0000000 ]
   distance_from_gamma:  0.133954816
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0963393594
@@ -3114,7 +3114,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.2258065,    0.0000000 ]
   distance_from_gamma:  0.125233856
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.9644436902
@@ -3131,7 +3131,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.2258065,    0.0000000 ]
   distance_from_gamma:  0.116755276
-  weight: 12   
+  weight: 12
   band:
   - # 1
     frequency:     3.7917945499
@@ -3148,7 +3148,7 @@ phonon:
 
 - q-position: [    0.2580645,    0.2580645,    0.0000000 ]
   distance_from_gamma:  0.094352512
-  weight: 6    
+  weight: 6
   band:
   - # 1
     frequency:     3.8594659510
@@ -3165,7 +3165,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.2580645,    0.0000000 ]
   distance_from_gamma:  0.100595830
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.9532429434
@@ -3182,7 +3182,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.2580645,    0.0000000 ]
   distance_from_gamma:  0.107449036
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0158476614
@@ -3199,7 +3199,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.2580645,    0.0000000 ]
   distance_from_gamma:  0.114802961
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0543372357
@@ -3216,7 +3216,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.2580645,    0.0000000 ]
   distance_from_gamma:  0.122567508
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0794363430
@@ -3233,7 +3233,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.2580645,    0.0000000 ]
   distance_from_gamma:  0.130669500
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1029193864
@@ -3250,7 +3250,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.2580645,    0.0000000 ]
   distance_from_gamma:  0.139049963
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1344083612
@@ -3267,7 +3267,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.2580645,    0.0000000 ]
   distance_from_gamma:  0.147661492
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1786308363
@@ -3284,7 +3284,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.2580645,    0.0000000 ]
   distance_from_gamma:  0.156465940
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.2341353775
@@ -3301,7 +3301,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.2580645,    0.0000000 ]
   distance_from_gamma:  0.165432506
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.2938158416
@@ -3318,7 +3318,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.2580645,    0.0000000 ]
   distance_from_gamma:  0.174536208
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.3467798870
@@ -3335,7 +3335,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.2580645,    0.0000000 ]
   distance_from_gamma:  0.168452927
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.3806983796
@@ -3352,7 +3352,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.2580645,    0.0000000 ]
   distance_from_gamma:  0.159438122
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.3839497770
@@ -3369,7 +3369,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.2580645,    0.0000000 ]
   distance_from_gamma:  0.150576529
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.3472961826
@@ -3386,7 +3386,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.2580645,    0.0000000 ]
   distance_from_gamma:  0.141896853
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.2651139315
@@ -3403,7 +3403,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.2580645,    0.0000000 ]
   distance_from_gamma:  0.133434602
-  weight: 12   
+  weight: 12
   band:
   - # 1
     frequency:     4.1362423158
@@ -3420,7 +3420,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.2903226,    0.0000000 ]
   distance_from_gamma:  0.106146576
-  weight: 6    
+  weight: 6
   band:
   - # 1
     frequency:     4.0326859310
@@ -3437,7 +3437,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.2903226,    0.0000000 ]
   distance_from_gamma:  0.112353549
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0807714518
@@ -3454,7 +3454,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.2903226,    0.0000000 ]
   distance_from_gamma:  0.119114207
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1057335244
@@ -3471,7 +3471,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.2903226,    0.0000000 ]
   distance_from_gamma:  0.126339695
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1196805745
@@ -3488,7 +3488,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.2903226,    0.0000000 ]
   distance_from_gamma:  0.133954816
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1358280927
@@ -3505,7 +3505,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.2903226,    0.0000000 ]
   distance_from_gamma:  0.141896853
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1649971329
@@ -3522,7 +3522,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.2903226,    0.0000000 ]
   distance_from_gamma:  0.150113927
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.2125033857
@@ -3539,7 +3539,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.2903226,    0.0000000 ]
   distance_from_gamma:  0.158563284
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.2766172006
@@ -3556,7 +3556,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.2903226,    0.0000000 ]
   distance_from_gamma:  0.167209715
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.3491000206
@@ -3573,7 +3573,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.2903226,    0.0000000 ]
   distance_from_gamma:  0.176024182
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.4173486744
@@ -3590,7 +3590,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.2903226,    0.0000000 ]
   distance_from_gamma:  0.176024182
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.4671432728
@@ -3607,7 +3607,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.2903226,    0.0000000 ]
   distance_from_gamma:  0.167209715
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.4851582248
@@ -3624,7 +3624,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.2903226,    0.0000000 ]
   distance_from_gamma:  0.158563284
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.4608866022
@@ -3641,7 +3641,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.2903226,    0.0000000 ]
   distance_from_gamma:  0.150113927
-  weight: 12   
+  weight: 12
   band:
   - # 1
     frequency:     4.3879834089
@@ -3658,7 +3658,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.3225806,    0.0000000 ]
   distance_from_gamma:  0.117940640
-  weight: 6    
+  weight: 6
   band:
   - # 1
     frequency:     4.1126578333
@@ -3675,7 +3675,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.3225806,    0.0000000 ]
   distance_from_gamma:  0.124118165
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1210084873
@@ -3692,7 +3692,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.3225806,    0.0000000 ]
   distance_from_gamma:  0.130802497
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1195911143
@@ -3709,7 +3709,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.3225806,    0.0000000 ]
   distance_from_gamma:  0.137919967
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1235350984
@@ -3726,7 +3726,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.3225806,    0.0000000 ]
   distance_from_gamma:  0.145406986
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1454850193
@@ -3743,7 +3743,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.3225806,    0.0000000 ]
   distance_from_gamma:  0.153209385
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1919961758
@@ -3760,7 +3760,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.3225806,    0.0000000 ]
   distance_from_gamma:  0.161281399
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.2615819095
@@ -3777,7 +3777,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.3225806,    0.0000000 ]
   distance_from_gamma:  0.169584532
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.3451585324
@@ -3794,7 +3794,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.3225806,    0.0000000 ]
   distance_from_gamma:  0.178086460
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.4284576139
@@ -3811,7 +3811,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.3225806,    0.0000000 ]
   distance_from_gamma:  0.183851262
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.4952287247
@@ -3828,7 +3828,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.3225806,    0.0000000 ]
   distance_from_gamma:  0.175232168
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.5301832822
@@ -3845,7 +3845,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.3225806,    0.0000000 ]
   distance_from_gamma:  0.166793252
-  weight: 12   
+  weight: 12
   band:
   - # 1
     frequency:     4.5212152226
@@ -3862,7 +3862,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.3548387,    0.0000000 ]
   distance_from_gamma:  0.129734704
-  weight: 6    
+  weight: 6
   band:
   - # 1
     frequency:     4.1107752178
@@ -3879,7 +3879,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.3548387,    0.0000000 ]
   distance_from_gamma:  0.135887886
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0904926307
@@ -3896,7 +3896,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.3548387,    0.0000000 ]
   distance_from_gamma:  0.142508217
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0774989196
@@ -3913,7 +3913,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.3548387,    0.0000000 ]
   distance_from_gamma:  0.149533662
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0868345785
@@ -3930,7 +3930,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.3548387,    0.0000000 ]
   distance_from_gamma:  0.156909816
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1270357604
@@ -3947,7 +3947,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.3548387,    0.0000000 ]
   distance_from_gamma:  0.164589533
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1975631155
@@ -3964,7 +3964,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.3548387,    0.0000000 ]
   distance_from_gamma:  0.172532282
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.2889741320
@@ -3981,7 +3981,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.3548387,    0.0000000 ]
   distance_from_gamma:  0.180703381
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.3855444492
@@ -3998,7 +3998,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.3548387,    0.0000000 ]
   distance_from_gamma:  0.189073229
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.4689734713
@@ -4015,7 +4015,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.3548387,    0.0000000 ]
   distance_from_gamma:  0.183472577
-  weight: 12   
+  weight: 12
   band:
   - # 1
     frequency:     4.5218406780
@@ -4032,7 +4032,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.3870968,    0.0000000 ]
   distance_from_gamma:  0.141528768
-  weight: 6    
+  weight: 6
   band:
   - # 1
     frequency:     4.0492631264
@@ -4049,7 +4049,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.3870968,    0.0000000 ]
   distance_from_gamma:  0.147661492
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0154448276
@@ -4066,7 +4066,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.3870968,    0.0000000 ]
   distance_from_gamma:  0.154227399
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0068512179
@@ -4083,7 +4083,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.3870968,    0.0000000 ]
   distance_from_gamma:  0.161173554
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0347293789
@@ -4100,7 +4100,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.3870968,    0.0000000 ]
   distance_from_gamma:  0.168452927
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1003550023
@@ -4117,7 +4117,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.3870968,    0.0000000 ]
   distance_from_gamma:  0.176024182
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1946573109
@@ -4134,7 +4134,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.3870968,    0.0000000 ]
   distance_from_gamma:  0.183851262
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.3008938223
@@ -4151,7 +4151,7 @@ phonon:
 
 - q-position: [   -0.3870968,   -0.6129032,    0.0000000 ]
   distance_from_gamma:  0.191902867
-  weight: 12   
+  weight: 12
   band:
   - # 1
     frequency:     4.3988659900
@@ -4168,7 +4168,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.4193548,    0.0000000 ]
   distance_from_gamma:  0.153322831
-  weight: 6    
+  weight: 6
   band:
   - # 1
     frequency:     3.9587220820
@@ -4185,7 +4185,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.4193548,    0.0000000 ]
   distance_from_gamma:  0.159438122
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.9279171245
@@ -4202,7 +4202,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.4193548,    0.0000000 ]
   distance_from_gamma:  0.165957190
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.9375116212
@@ -4219,7 +4219,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.4193548,    0.0000000 ]
   distance_from_gamma:  0.172834352
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.9915154079
@@ -4236,7 +4236,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.4193548,    0.0000000 ]
   distance_from_gamma:  0.180028573
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0822072271
@@ -4253,7 +4253,7 @@ phonon:
 
 - q-position: [   -0.4193548,   -0.5806452,    0.0000000 ]
   distance_from_gamma:  0.187503363
-  weight: 12   
+  weight: 12
   band:
   - # 1
     frequency:     4.1925644794
@@ -4270,7 +4270,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.4516129,    0.0000000 ]
   distance_from_gamma:  0.165116895
-  weight: 6    
+  weight: 6
   band:
   - # 1
     frequency:     3.8728807407
@@ -4287,7 +4287,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.4516129,    0.0000000 ]
   distance_from_gamma:  0.171217153
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.8595177875
@@ -4304,7 +4304,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.4516129,    0.0000000 ]
   distance_from_gamma:  0.177695491
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.8952914976
@@ -4321,7 +4321,7 @@ phonon:
 
 - q-position: [   -0.4516129,   -0.5483871,    0.0000000 ]
   distance_from_gamma:  0.184512090
-  weight: 12   
+  weight: 12
   band:
   - # 1
     frequency:     3.9749357972
@@ -4338,7 +4338,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.4838710,    0.0000000 ]
   distance_from_gamma:  0.176910959
-  weight: 6    
+  weight: 6
   band:
   - # 1
     frequency:     3.8212438327
@@ -4355,7 +4355,7 @@ phonon:
 
 - q-position: [   -0.4838710,   -0.5161290,    0.0000000 ]
   distance_from_gamma:  0.182998119
-  weight: 12   
+  weight: 12
   band:
   - # 1
     frequency:     3.8337948869
@@ -4372,7 +4372,7 @@ phonon:
 
 - q-position: [    0.0967742,    0.0645161,    0.0322581 ]
   distance_from_gamma:  0.026372329
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     1.1325882283
@@ -4389,7 +4389,7 @@ phonon:
 
 - q-position: [    0.1290323,    0.0645161,    0.0322581 ]
   distance_from_gamma:  0.034887312
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     1.4343249292
@@ -4406,7 +4406,7 @@ phonon:
 
 - q-position: [    0.1612903,    0.0645161,    0.0322581 ]
   distance_from_gamma:  0.044129347
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     1.7642364526
@@ -4423,7 +4423,7 @@ phonon:
 
 - q-position: [    0.1935484,    0.0645161,    0.0322581 ]
   distance_from_gamma:  0.053724518
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.0866570709
@@ -4440,7 +4440,7 @@ phonon:
 
 - q-position: [    0.2258065,    0.0645161,    0.0322581 ]
   distance_from_gamma:  0.063512978
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.3803113849
@@ -4457,7 +4457,7 @@ phonon:
 
 - q-position: [    0.2580645,    0.0645161,    0.0322581 ]
   distance_from_gamma:  0.073417456
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.6319150098
@@ -4474,7 +4474,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.0645161,    0.0322581 ]
   distance_from_gamma:  0.083396626
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.8335722583
@@ -4491,7 +4491,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.0645161,    0.0322581 ]
   distance_from_gamma:  0.093426557
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.9822271082
@@ -4508,7 +4508,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.0645161,    0.0322581 ]
   distance_from_gamma:  0.103492491
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.0799752831
@@ -4525,7 +4525,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.0645161,    0.0322581 ]
   distance_from_gamma:  0.113584858
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.1343206504
@@ -4542,7 +4542,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.0645161,    0.0322581 ]
   distance_from_gamma:  0.123697186
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.1570535864
@@ -4559,7 +4559,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.0645161,    0.0322581 ]
   distance_from_gamma:  0.133824952
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.1612437589
@@ -4576,7 +4576,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.0645161,    0.0322581 ]
   distance_from_gamma:  0.143964898
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.1579822262
@@ -4593,7 +4593,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.0645161,    0.0322581 ]
   distance_from_gamma:  0.154114618
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.1546226175
@@ -4610,7 +4610,7 @@ phonon:
 
 - q-position: [    0.1290323,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.037296105
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     1.7057796070
@@ -4627,7 +4627,7 @@ phonon:
 
 - q-position: [    0.1612903,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.045295962
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     1.9661911370
@@ -4644,7 +4644,7 @@ phonon:
 
 - q-position: [    0.1935484,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.054047191
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.2490981289
@@ -4661,7 +4661,7 @@ phonon:
 
 - q-position: [    0.2258065,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.063238623
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.5251410939
@@ -4678,7 +4678,7 @@ phonon:
 
 - q-position: [    0.2580645,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.072703493
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.7714168407
@@ -4695,7 +4695,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.082347570
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.9724552336
@@ -4712,7 +4712,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.092114584
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.1207922863
@@ -4729,7 +4729,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.101969215
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.2177310688
@@ -4746,7 +4746,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.111888315
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.2721232726
@@ -4763,7 +4763,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.121856141
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.2968355783
@@ -4780,7 +4780,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.131861644
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.3048800335
@@ -4797,7 +4797,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.141896853
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.3066235316
@@ -4814,7 +4814,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.151955884
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.3083807421
@@ -4831,7 +4831,7 @@ phonon:
 
 - q-position: [   -0.4516129,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.158672902
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.3122677053
@@ -4848,7 +4848,7 @@ phonon:
 
 - q-position: [   -0.4193548,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.148600526
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.3168450368
@@ -4865,7 +4865,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.138548881
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.3177763505
@@ -4882,7 +4882,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.128522832
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.3080336548
@@ -4899,7 +4899,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.118528876
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.2781682217
@@ -4916,7 +4916,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.108575874
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.2176027167
@@ -4933,7 +4933,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.098676219
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.1169345137
@@ -4950,7 +4950,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.088847745
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.9701510669
@@ -4967,7 +4967,7 @@ phonon:
 
 - q-position: [   -0.1935484,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.079116986
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.7758984617
@@ -4984,7 +4984,7 @@ phonon:
 
 - q-position: [   -0.1612903,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.069524982
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.5379040980
@@ -5001,7 +5001,7 @@ phonon:
 
 - q-position: [   -0.1290323,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.060138162
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.2651952776
@@ -5018,7 +5018,7 @@ phonon:
 
 - q-position: [   -0.0967742,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.051069795
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     1.9728962046
@@ -5035,7 +5035,7 @@ phonon:
 
 - q-position: [   -0.0645161,    0.0967742,    0.0322581 ]
   distance_from_gamma:  0.042524102
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     1.6844161449
@@ -5052,7 +5052,7 @@ phonon:
 
 - q-position: [    0.1612903,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.048628171
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.2600987640
@@ -5069,7 +5069,7 @@ phonon:
 
 - q-position: [    0.1935484,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.056254100
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.4958881824
@@ -5086,7 +5086,7 @@ phonon:
 
 - q-position: [    0.2258065,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.064598749
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.7420677794
@@ -5103,7 +5103,7 @@ phonon:
 
 - q-position: [    0.2580645,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.073417456
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.9706430099
@@ -5120,7 +5120,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.082558448
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.1599575972
@@ -5137,7 +5137,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.091925631
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.3002270565
@@ -5154,7 +5154,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.101456374
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.3930325122
@@ -5171,7 +5171,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.111108596
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.4473239719
@@ -5188,7 +5188,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.120853193
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.4752474772
@@ -5205,7 +5205,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.130669500
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.4887974242
@@ -5222,7 +5222,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.140542492
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.4973169188
@@ -5239,7 +5239,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.150461012
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.5060562868
@@ -5256,7 +5256,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.160416613
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.5159363564
@@ -5273,7 +5273,7 @@ phonon:
 
 - q-position: [   -0.4193548,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.153775780
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.5242526118
@@ -5290,7 +5290,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.143844071
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.5256970373
@@ -5307,7 +5307,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.133954816
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.5131390007
@@ -5324,7 +5324,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.124118165
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.4782007255
@@ -5341,7 +5341,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.114347693
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.4122122841
@@ -5358,7 +5358,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.104661935
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.3078243837
@@ -5375,7 +5375,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.095086784
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.1607745125
@@ -5392,7 +5392,7 @@ phonon:
 
 - q-position: [   -0.1935484,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.085659337
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.9711498636
@@ -5409,7 +5409,7 @@ phonon:
 
 - q-position: [   -0.1612903,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.076434270
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.7440171827
@@ -5426,7 +5426,7 @@ phonon:
 
 - q-position: [   -0.1290323,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.067494616
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.4897926840
@@ -5443,7 +5443,7 @@ phonon:
 
 - q-position: [   -0.0967742,    0.1290323,    0.0322581 ]
   distance_from_gamma:  0.058970320
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.2248920880
@@ -5460,7 +5460,7 @@ phonon:
 
 - q-position: [    0.1935484,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.060138162
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.7685907125
@@ -5477,7 +5477,7 @@ phonon:
 
 - q-position: [    0.2258065,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.067494616
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.9809428186
@@ -5494,7 +5494,7 @@ phonon:
 
 - q-position: [    0.2580645,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.075518857
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.1872873849
@@ -5511,7 +5511,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.084019773
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.3615806679
@@ -5528,7 +5528,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.092866552
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.4922176176
@@ -5545,7 +5545,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.101969215
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.5804786087
@@ -5562,7 +5562,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.111264977
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.6346910442
@@ -5579,7 +5579,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.120709234
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.6661121882
@@ -5596,7 +5596,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.130269694
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.6858392567
@@ -5613,7 +5613,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.139922540
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7023038917
@@ -5630,7 +5630,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.149649895
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7197302600
@@ -5647,7 +5647,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.159438122
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7378564191
@@ -5664,7 +5664,7 @@ phonon:
 
 - q-position: [   -0.4193548,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.159438122
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7527254373
@@ -5681,7 +5681,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.149649895
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7579627781
@@ -5698,7 +5698,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.139922540
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7459564097
@@ -5715,7 +5715,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.130269694
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7087531926
@@ -5732,7 +5732,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.120709234
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.6389580804
@@ -5749,7 +5749,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.111264977
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.5309450248
@@ -5766,7 +5766,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.101969215
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.3822280465
@@ -5783,7 +5783,7 @@ phonon:
 
 - q-position: [   -0.1935484,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.092866552
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.1945553242
@@ -5800,7 +5800,7 @@ phonon:
 
 - q-position: [   -0.1612903,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.084019773
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.9745193613
@@ -5817,7 +5817,7 @@ phonon:
 
 - q-position: [   -0.1290323,    0.1612903,    0.0322581 ]
   distance_from_gamma:  0.075518857
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.7338632024
@@ -5834,7 +5834,7 @@ phonon:
 
 - q-position: [    0.2258065,    0.1935484,    0.0322581 ]
   distance_from_gamma:  0.071740490
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.2153429519
@@ -5851,7 +5851,7 @@ phonon:
 
 - q-position: [    0.2580645,    0.1935484,    0.0322581 ]
   distance_from_gamma:  0.078896911
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.3982357007
@@ -5868,7 +5868,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.1935484,    0.0322581 ]
   distance_from_gamma:  0.086668316
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.5572512397
@@ -5885,7 +5885,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.1935484,    0.0322581 ]
   distance_from_gamma:  0.094903748
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.6775693047
@@ -5902,7 +5902,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.1935484,    0.0322581 ]
   distance_from_gamma:  0.103492491
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7600852858
@@ -5919,7 +5919,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.1935484,    0.0322581 ]
   distance_from_gamma:  0.112353549
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.8128173761
@@ -5936,7 +5936,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.1935484,    0.0322581 ]
   distance_from_gamma:  0.121427320
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.8465530777
@@ -5953,7 +5953,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.1935484,    0.0322581 ]
   distance_from_gamma:  0.130669500
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.8718476266
@@ -5970,7 +5970,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.1935484,    0.0322581 ]
   distance_from_gamma:  0.140046750
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.8964444993
@@ -5987,7 +5987,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.1935484,    0.0322581 ]
   distance_from_gamma:  0.149533662
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9236328681
@@ -6004,7 +6004,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.1935484,    0.0322581 ]
   distance_from_gamma:  0.159110622
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9519569897
@@ -6021,7 +6021,7 @@ phonon:
 
 - q-position: [   -0.4193548,    0.1935484,    0.0322581 ]
   distance_from_gamma:  0.165537576
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9761234533
@@ -6038,7 +6038,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.1935484,    0.0322581 ]
   distance_from_gamma:  0.155909318
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9885135878
@@ -6055,7 +6055,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.1935484,    0.0322581 ]
   distance_from_gamma:  0.146360485
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9806813251
@@ -6072,7 +6072,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.1935484,    0.0322581 ]
   distance_from_gamma:  0.136907697
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9445418413
@@ -6089,7 +6089,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.1935484,    0.0322581 ]
   distance_from_gamma:  0.127572307
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.8733565239
@@ -6106,7 +6106,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.1935484,    0.0322581 ]
   distance_from_gamma:  0.118382091
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7627558106
@@ -6123,7 +6123,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.1935484,    0.0322581 ]
   distance_from_gamma:  0.109373650
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.6118075845
@@ -6140,7 +6140,7 @@ phonon:
 
 - q-position: [   -0.1935484,    0.1935484,    0.0322581 ]
   distance_from_gamma:  0.100595830
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.4238794218
@@ -6157,7 +6157,7 @@ phonon:
 
 - q-position: [   -0.1612903,    0.1935484,    0.0322581 ]
   distance_from_gamma:  0.092114584
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.2071048725
@@ -6174,7 +6174,7 @@ phonon:
 
 - q-position: [    0.2580645,    0.2258065,    0.0322581 ]
   distance_from_gamma:  0.083396626
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.5866074502
@@ -6191,7 +6191,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.2258065,    0.0322581 ]
   distance_from_gamma:  0.090399788
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7323367832
@@ -6208,7 +6208,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.2258065,    0.0322581 ]
   distance_from_gamma:  0.097968853
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.8417092544
@@ -6225,7 +6225,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.2258065,    0.0322581 ]
   distance_from_gamma:  0.105982643
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9163526528
@@ -6242,7 +6242,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.2258065,    0.0322581 ]
   distance_from_gamma:  0.114347693
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9649920074
@@ -6259,7 +6259,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.2258065,    0.0322581 ]
   distance_from_gamma:  0.122992353
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9985794718
@@ -6276,7 +6276,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.2258065,    0.0322581 ]
   distance_from_gamma:  0.131861644
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.0275942989
@@ -6293,7 +6293,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.2258065,    0.0322581 ]
   distance_from_gamma:  0.140913154
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.0594117839
@@ -6310,7 +6310,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.2258065,    0.0322581 ]
   distance_from_gamma:  0.150113927
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.0965531873
@@ -6327,7 +6327,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.2258065,    0.0322581 ]
   distance_from_gamma:  0.159438122
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1363893870
@@ -6344,7 +6344,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.2258065,    0.0322581 ]
   distance_from_gamma:  0.168865297
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1721872969
@@ -6361,7 +6361,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.2258065,    0.0322581 ]
   distance_from_gamma:  0.162569953
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1948725928
@@ -6378,7 +6378,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.2258065,    0.0322581 ]
   distance_from_gamma:  0.153209385
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1948277165
@@ -6395,7 +6395,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.2258065,    0.0322581 ]
   distance_from_gamma:  0.143964898
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1633546461
@@ -6412,7 +6412,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.2258065,    0.0322581 ]
   distance_from_gamma:  0.134860364
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.0938042141
@@ -6429,7 +6429,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.2258065,    0.0322581 ]
   distance_from_gamma:  0.125926144
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9825429546
@@ -6446,7 +6446,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.2258065,    0.0322581 ]
   distance_from_gamma:  0.117201193
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.8298198639
@@ -6463,7 +6463,7 @@ phonon:
 
 - q-position: [   -0.1935484,    0.2258065,    0.0322581 ]
   distance_from_gamma:  0.108735897
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.6404068472
@@ -6480,7 +6480,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.2580645,    0.0322581 ]
   distance_from_gamma:  0.095086784
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.8708973255
@@ -6497,7 +6497,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.2580645,    0.0322581 ]
   distance_from_gamma:  0.101969215
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9740661688
@@ -6514,7 +6514,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.2580645,    0.0322581 ]
   distance_from_gamma:  0.109373650
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.0386568539
@@ -6531,7 +6531,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.2580645,    0.0322581 ]
   distance_from_gamma:  0.117201193
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.0798517358
@@ -6548,7 +6548,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.2580645,    0.0322581 ]
   distance_from_gamma:  0.125372620
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1098517990
@@ -6565,7 +6565,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.2580645,    0.0322581 ]
   distance_from_gamma:  0.133824952
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1396454250
@@ -6582,7 +6582,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.2580645,    0.0322581 ]
   distance_from_gamma:  0.142508217
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1766681365
@@ -6599,7 +6599,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.2580645,    0.0322581 ]
   distance_from_gamma:  0.151382680
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2229399092
@@ -6616,7 +6616,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.2580645,    0.0322581 ]
   distance_from_gamma:  0.160416613
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2747478020
@@ -6633,7 +6633,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.2580645,    0.0322581 ]
   distance_from_gamma:  0.169584532
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3238469658
@@ -6650,7 +6650,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.2580645,    0.0322581 ]
   distance_from_gamma:  0.169584532
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3595053866
@@ -6667,7 +6667,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.2580645,    0.0322581 ]
   distance_from_gamma:  0.160416613
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3706210088
@@ -6684,7 +6684,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.2580645,    0.0322581 ]
   distance_from_gamma:  0.151382680
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3474622149
@@ -6701,7 +6701,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.2580645,    0.0322581 ]
   distance_from_gamma:  0.142508217
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2829672785
@@ -6718,7 +6718,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.2580645,    0.0322581 ]
   distance_from_gamma:  0.133824952
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1737269226
@@ -6735,7 +6735,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.2580645,    0.0322581 ]
   distance_from_gamma:  0.125372620
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0207292463
@@ -6752,7 +6752,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.2903226,    0.0322581 ]
   distance_from_gamma:  0.106799791
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0613492680
@@ -6769,7 +6769,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.2903226,    0.0322581 ]
   distance_from_gamma:  0.113584858
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1216559023
@@ -6786,7 +6786,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.2903226,    0.0322581 ]
   distance_from_gamma:  0.120853193
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1519540313
@@ -6803,7 +6803,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.2903226,    0.0322581 ]
   distance_from_gamma:  0.128522832
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1742866378
@@ -6820,7 +6820,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.2903226,    0.0322581 ]
   distance_from_gamma:  0.136526161
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2010048047
@@ -6837,7 +6837,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.2903226,    0.0322581 ]
   distance_from_gamma:  0.144807861
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2401507187
@@ -6854,7 +6854,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.2903226,    0.0322581 ]
   distance_from_gamma:  0.153322831
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2936309963
@@ -6871,7 +6871,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.2903226,    0.0322581 ]
   distance_from_gamma:  0.162034301
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3568415184
@@ -6888,7 +6888,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.2903226,    0.0322581 ]
   distance_from_gamma:  0.170912224
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4200243146
@@ -6905,7 +6905,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.2903226,    0.0322581 ]
   distance_from_gamma:  0.176910959
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4706325869
@@ -6922,7 +6922,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.2903226,    0.0322581 ]
   distance_from_gamma:  0.167936041
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4958077876
@@ -6939,7 +6939,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.2903226,    0.0322581 ]
   distance_from_gamma:  0.159110622
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4844212006
@@ -6956,7 +6956,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.2903226,    0.0322581 ]
   distance_from_gamma:  0.150461012
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4285622432
@@ -6973,7 +6973,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.2903226,    0.0322581 ]
   distance_from_gamma:  0.142019337
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.3245738297
@@ -6990,7 +6990,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.3225806,    0.0322581 ]
   distance_from_gamma:  0.118528876
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1587533970
@@ -7007,7 +7007,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.3225806,    0.0322581 ]
   distance_from_gamma:  0.125233856
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1822972476
@@ -7024,7 +7024,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.3225806,    0.0322581 ]
   distance_from_gamma:  0.132388040
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1926542675
@@ -7041,7 +7041,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.3225806,    0.0322581 ]
   distance_from_gamma:  0.139922540
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2117506515
@@ -7058,7 +7058,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.3225806,    0.0322581 ]
   distance_from_gamma:  0.147779198
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2489359184
@@ -7075,7 +7075,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.3225806,    0.0322581 ]
   distance_from_gamma:  0.155909318
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3065305845
@@ -7092,7 +7092,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.3225806,    0.0322581 ]
   distance_from_gamma:  0.164272302
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3793701064
@@ -7109,7 +7109,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.3225806,    0.0322581 ]
   distance_from_gamma:  0.172834352
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4562913923
@@ -7126,7 +7126,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.3225806,    0.0322581 ]
   distance_from_gamma:  0.181567307
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5228535026
@@ -7143,7 +7143,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.3225806,    0.0322581 ]
   distance_from_gamma:  0.175727595
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5642301195
@@ -7160,7 +7160,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.3225806,    0.0322581 ]
   distance_from_gamma:  0.167105697
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5675927440
@@ -7177,7 +7177,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.3225806,    0.0322581 ]
   distance_from_gamma:  0.158672902
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.5238108450
@@ -7194,7 +7194,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.3548387,    0.0322581 ]
   distance_from_gamma:  0.130269694
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1739277696
@@ -7211,7 +7211,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.3548387,    0.0322581 ]
   distance_from_gamma:  0.136907697
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1728732471
@@ -7228,7 +7228,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.3548387,    0.0322581 ]
   distance_from_gamma:  0.143964898
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1794238703
@@ -7245,7 +7245,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.3548387,    0.0322581 ]
   distance_from_gamma:  0.151382680
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2096956784
@@ -7262,7 +7262,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.3548387,    0.0322581 ]
   distance_from_gamma:  0.159110622
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2670979688
@@ -7279,7 +7279,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.3548387,    0.0322581 ]
   distance_from_gamma:  0.167105697
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3464112517
@@ -7296,7 +7296,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.3548387,    0.0322581 ]
   distance_from_gamma:  0.175331366
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4353296008
@@ -7313,7 +7313,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.3548387,    0.0322581 ]
   distance_from_gamma:  0.183756664
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5175533230
@@ -7330,7 +7330,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.3548387,    0.0322581 ]
   distance_from_gamma:  0.183756664
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5761610603
@@ -7347,7 +7347,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.3548387,    0.0322581 ]
   distance_from_gamma:  0.175331366
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.5963922109
@@ -7364,7 +7364,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.3870968,    0.0322581 ]
   distance_from_gamma:  0.142019337
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1281035580
@@ -7381,7 +7381,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.3870968,    0.0322581 ]
   distance_from_gamma:  0.148600526
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1186699126
@@ -7398,7 +7398,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.3870968,    0.0322581 ]
   distance_from_gamma:  0.155574389
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1365148780
@@ -7415,7 +7415,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.3870968,    0.0322581 ]
   distance_from_gamma:  0.162890498
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1882884331
@@ -7432,7 +7432,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.3870968,    0.0322581 ]
   distance_from_gamma:  0.170504805
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2694247265
@@ -7449,7 +7449,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.3870968,    0.0322581 ]
   distance_from_gamma:  0.178379125
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3669467049
@@ -7466,7 +7466,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.3870968,    0.0322581 ]
   distance_from_gamma:  0.186480525
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4628963999
@@ -7483,7 +7483,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.3870968,    0.0322581 ]
   distance_from_gamma:  0.191993451
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.5382472799
@@ -7500,7 +7500,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.4193548,    0.0322581 ]
   distance_from_gamma:  0.153775780
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.0486050682
@@ -7517,7 +7517,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.4193548,    0.0322581 ]
   distance_from_gamma:  0.160308187
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.0495500676
@@ -7534,7 +7534,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.4193548,    0.0322581 ]
   distance_from_gamma:  0.167209715
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.0895044081
@@ -7551,7 +7551,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.4193548,    0.0322581 ]
   distance_from_gamma:  0.174436558
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1664142981
@@ -7568,7 +7568,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.4193548,    0.0322581 ]
   distance_from_gamma:  0.181949957
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2673689635
@@ -7585,7 +7585,7 @@ phonon:
 
 - q-position: [   -0.3870968,   -0.5806452,    0.0322581 ]
   distance_from_gamma:  0.189715868
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.3731868778
@@ -7602,7 +7602,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.4516129,    0.0322581 ]
   distance_from_gamma:  0.165537576
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.9705995729
@@ -7619,7 +7619,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.4516129,    0.0322581 ]
   distance_from_gamma:  0.172027653
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9941023626
@@ -7636,7 +7636,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.4516129,    0.0322581 ]
   distance_from_gamma:  0.178865836
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.0598597312
@@ -7653,7 +7653,7 @@ phonon:
 
 - q-position: [   -0.4193548,   -0.5483871,    0.0322581 ]
   distance_from_gamma:  0.186013739
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1575032491
@@ -7670,7 +7670,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.4838710,    0.0322581 ]
   distance_from_gamma:  0.177303659
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.9245085930
@@ -7687,7 +7687,7 @@ phonon:
 
 - q-position: [   -0.4516129,   -0.5161290,    0.0322581 ]
   distance_from_gamma:  0.183756664
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.9730836388
@@ -7704,7 +7704,7 @@ phonon:
 
 - q-position: [    0.1935484,    0.1290323,    0.0645161 ]
   distance_from_gamma:  0.052744657
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.1870982371
@@ -7721,7 +7721,7 @@ phonon:
 
 - q-position: [    0.2258065,    0.1290323,    0.0645161 ]
   distance_from_gamma:  0.060999373
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.4384343323
@@ -7738,7 +7738,7 @@ phonon:
 
 - q-position: [    0.2580645,    0.1290323,    0.0645161 ]
   distance_from_gamma:  0.069774623
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.6914768758
@@ -7755,7 +7755,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.1290323,    0.0645161 ]
   distance_from_gamma:  0.078896911
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.9235076259
@@ -7772,7 +7772,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.1290323,    0.0645161 ]
   distance_from_gamma:  0.088258693
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.1191216379
@@ -7789,7 +7789,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.1290323,    0.0645161 ]
   distance_from_gamma:  0.097791212
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.2701518269
@@ -7806,7 +7806,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.1290323,    0.0645161 ]
   distance_from_gamma:  0.107449036
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.3756830226
@@ -7823,7 +7823,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.1290323,    0.0645161 ]
   distance_from_gamma:  0.117201193
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.4413764427
@@ -7840,7 +7840,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.1290323,    0.0645161 ]
   distance_from_gamma:  0.127025956
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.4772154207
@@ -7857,7 +7857,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.1290323,    0.0645161 ]
   distance_from_gamma:  0.136907697
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.4941032791
@@ -7874,7 +7874,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.1290323,    0.0645161 ]
   distance_from_gamma:  0.146834912
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.5008974425
@@ -7891,7 +7891,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.1290323,    0.0645161 ]
   distance_from_gamma:  0.156798964
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.5030955505
@@ -7908,7 +7908,7 @@ phonon:
 
 - q-position: [    0.2258065,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.063512978
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.6947609609
@@ -7925,7 +7925,7 @@ phonon:
 
 - q-position: [    0.2580645,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.071497713
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.9158727635
@@ -7942,7 +7942,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.079991234
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.1315705390
@@ -7959,7 +7959,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.088847745
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.3197136869
@@ -7976,7 +7976,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.097968853
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.4674116561
@@ -7993,7 +7993,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.107287093
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.5719628718
@@ -8010,7 +8010,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.116755276
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.6391259680
@@ -8027,7 +8027,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.126339695
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.6792833476
@@ -8044,7 +8044,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.136015781
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7031803572
@@ -8061,7 +8061,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.145765279
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7188210818
@@ -8078,7 +8078,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.155574389
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7302029093
@@ -8095,7 +8095,7 @@ phonon:
 
 - q-position: [   -0.4193548,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.162141573
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7377011741
@@ -8112,7 +8112,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.152298771
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7392373198
@@ -8129,7 +8129,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.142508217
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7310994027
@@ -8146,7 +8146,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.132781467
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7078903324
@@ -8163,7 +8163,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.123133643
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.6623068348
@@ -8180,7 +8180,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.113584858
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.5859906524
@@ -8197,7 +8197,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.104162353
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.4718065608
@@ -8214,7 +8214,7 @@ phonon:
 
 - q-position: [   -0.1935484,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.094903748
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.3165680850
@@ -8231,7 +8231,7 @@ phonon:
 
 - q-position: [   -0.1612903,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.085862082
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.1229513750
@@ -8248,7 +8248,7 @@ phonon:
 
 - q-position: [   -0.1290323,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.077113699
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     2.9002580419
@@ -8265,7 +8265,7 @@ phonon:
 
 - q-position: [   -0.0967742,    0.1612903,    0.0645161 ]
   distance_from_gamma:  0.068770620
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     2.6645437350
@@ -8282,7 +8282,7 @@ phonon:
 
 - q-position: [    0.2580645,    0.1935484,    0.0645161 ]
   distance_from_gamma:  0.074592210
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.1645103785
@@ -8299,7 +8299,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.1935484,    0.0645161 ]
   distance_from_gamma:  0.082347570
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.3586775683
@@ -8316,7 +8316,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.1935484,    0.0645161 ]
   distance_from_gamma:  0.090591924
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.5351471927
@@ -8333,7 +8333,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.1935484,    0.0645161 ]
   distance_from_gamma:  0.099203433
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.6756030800
@@ -8350,7 +8350,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.1935484,    0.0645161 ]
   distance_from_gamma:  0.108094382
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7758527621
@@ -8367,7 +8367,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.1935484,    0.0645161 ]
   distance_from_gamma:  0.117201193
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.8421423131
@@ -8384,7 +8384,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.1935484,    0.0645161 ]
   distance_from_gamma:  0.126477246
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.8852351138
@@ -8401,7 +8401,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.1935484,    0.0645161 ]
   distance_from_gamma:  0.135887886
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9155890142
@@ -8418,7 +8418,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.1935484,    0.0645161 ]
   distance_from_gamma:  0.145406986
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9403463935
@@ -8435,7 +8435,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.1935484,    0.0645161 ]
   distance_from_gamma:  0.155014565
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9621572563
@@ -8452,7 +8452,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.1935484,    0.0645161 ]
   distance_from_gamma:  0.164695140
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9795987575
@@ -8469,7 +8469,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.1935484,    0.0645161 ]
   distance_from_gamma:  0.158233972
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9885425040
@@ -8486,7 +8486,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.1935484,    0.0645161 ]
   distance_from_gamma:  0.148600526
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9835315485
@@ -8503,7 +8503,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.1935484,    0.0645161 ]
   distance_from_gamma:  0.139049963
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9584738453
@@ -8520,7 +8520,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.1935484,    0.0645161 ]
   distance_from_gamma:  0.129600611
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9068243271
@@ -8537,7 +8537,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.1935484,    0.0645161 ]
   distance_from_gamma:  0.120276325
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.8221717487
@@ -8554,7 +8554,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.1935484,    0.0645161 ]
   distance_from_gamma:  0.111108596
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.6998140162
@@ -8571,7 +8571,7 @@ phonon:
 
 - q-position: [   -0.1935484,    0.1935484,    0.0645161 ]
   distance_from_gamma:  0.102139590
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.5388387823
@@ -8588,7 +8588,7 @@ phonon:
 
 - q-position: [   -0.1612903,    0.1935484,    0.0645161 ]
   distance_from_gamma:  0.093426557
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.3437553492
@@ -8605,7 +8605,7 @@ phonon:
 
 - q-position: [   -0.1290323,    0.1935484,    0.0645161 ]
   distance_from_gamma:  0.085048205
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.1252487486
@@ -8622,7 +8622,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.2258065,    0.0645161 ]
   distance_from_gamma:  0.085862082
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.5713297761
@@ -8639,7 +8639,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.2258065,    0.0645161 ]
   distance_from_gamma:  0.093426557
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7372853556
@@ -8656,7 +8656,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.2258065,    0.0645161 ]
   distance_from_gamma:  0.101456374
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.8700920807
@@ -8673,7 +8673,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.2258065,    0.0645161 ]
   distance_from_gamma:  0.109849534
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9641267377
@@ -8690,7 +8690,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.2258065,    0.0645161 ]
   distance_from_gamma:  0.118528876
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.0273366334
@@ -8707,7 +8707,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.2258065,    0.0645161 ]
   distance_from_gamma:  0.127435939
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.0714873372
@@ -8724,7 +8724,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.2258065,    0.0645161 ]
   distance_from_gamma:  0.136526161
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1070295004
@@ -8741,7 +8741,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.2258065,    0.0645161 ]
   distance_from_gamma:  0.145765279
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1404288222
@@ -8758,7 +8758,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.2258065,    0.0645161 ]
   distance_from_gamma:  0.155126692
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1731499712
@@ -8775,7 +8775,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.2258065,    0.0645161 ]
   distance_from_gamma:  0.164589533
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2021456030
@@ -8792,7 +8792,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.2258065,    0.0645161 ]
   distance_from_gamma:  0.164589533
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2213671160
@@ -8809,7 +8809,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.2258065,    0.0645161 ]
   distance_from_gamma:  0.155126692
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2234990509
@@ -8826,7 +8826,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.2258065,    0.0645161 ]
   distance_from_gamma:  0.145765279
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2012272054
@@ -8843,7 +8843,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.2258065,    0.0645161 ]
   distance_from_gamma:  0.136526161
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1479180295
@@ -8860,7 +8860,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.2258065,    0.0645161 ]
   distance_from_gamma:  0.127435939
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.0582352482
@@ -8877,7 +8877,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.2258065,    0.0645161 ]
   distance_from_gamma:  0.118528876
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9292602360
@@ -8894,7 +8894,7 @@ phonon:
 
 - q-position: [   -0.1935484,    0.2258065,    0.0645161 ]
   distance_from_gamma:  0.109849534
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7620188555
@@ -8911,7 +8911,7 @@ phonon:
 
 - q-position: [   -0.1612903,    0.2258065,    0.0645161 ]
   distance_from_gamma:  0.101456374
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.5627908297
@@ -8928,7 +8928,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.2580645,    0.0645161 ]
   distance_from_gamma:  0.097256343
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.8984839395
@@ -8945,7 +8945,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.2580645,    0.0645161 ]
   distance_from_gamma:  0.104661935
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.0323340664
@@ -8962,7 +8962,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.2580645,    0.0645161 ]
   distance_from_gamma:  0.112508200
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1205605827
@@ -8979,7 +8979,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.2580645,    0.0645161 ]
   distance_from_gamma:  0.120709234
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1783901410
@@ -8996,7 +8996,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.2580645,    0.0645161 ]
   distance_from_gamma:  0.129197498
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2210119037
@@ -9013,7 +9013,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.2580645,    0.0645161 ]
   distance_from_gamma:  0.137919967
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2596414200
@@ -9030,7 +9030,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.2580645,    0.0645161 ]
   distance_from_gamma:  0.146834912
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3004224041
@@ -9047,7 +9047,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.2580645,    0.0645161 ]
   distance_from_gamma:  0.155909318
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3438300788
@@ -9064,7 +9064,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.2580645,    0.0645161 ]
   distance_from_gamma:  0.165116895
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3853076225
@@ -9081,7 +9081,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.2580645,    0.0645161 ]
   distance_from_gamma:  0.171318675
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4169528862
@@ -9098,7 +9098,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.2580645,    0.0645161 ]
   distance_from_gamma:  0.162034301
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4295450002
@@ -9115,7 +9115,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.2580645,    0.0645161 ]
   distance_from_gamma:  0.152868541
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4142379602
@@ -9132,7 +9132,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.2580645,    0.0645161 ]
   distance_from_gamma:  0.143844071
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3636742950
@@ -9149,7 +9149,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.2580645,    0.0645161 ]
   distance_from_gamma:  0.134989232
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2727811156
@@ -9166,7 +9166,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.2580645,    0.0645161 ]
   distance_from_gamma:  0.126339695
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1396844498
@@ -9183,7 +9183,7 @@ phonon:
 
 - q-position: [   -0.1935484,    0.2580645,    0.0645161 ]
   distance_from_gamma:  0.117940640
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.9668368004
@@ -9200,7 +9200,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.2903226,    0.0645161 ]
   distance_from_gamma:  0.108735897
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.1361207862
@@ -9217,7 +9217,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.2903226,    0.0645161 ]
   distance_from_gamma:  0.116008274
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2342870760
@@ -9234,7 +9234,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.2903226,    0.0645161 ]
   distance_from_gamma:  0.123697186
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2855980848
@@ -9251,7 +9251,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.2903226,    0.0645161 ]
   distance_from_gamma:  0.131729716
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3235228095
@@ -9268,7 +9268,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.2903226,    0.0645161 ]
   distance_from_gamma:  0.140046750
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3623073604
@@ -9285,7 +9285,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.2903226,    0.0645161 ]
   distance_from_gamma:  0.148600526
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4083613912
@@ -9302,7 +9302,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.2903226,    0.0645161 ]
   distance_from_gamma:  0.157352439
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4614450894
@@ -9319,7 +9319,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.2903226,    0.0645161 ]
   distance_from_gamma:  0.166271206
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5156132693
@@ -9336,7 +9336,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.2903226,    0.0645161 ]
   distance_from_gamma:  0.175331366
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5611345837
@@ -9353,7 +9353,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.2903226,    0.0645161 ]
   distance_from_gamma:  0.169276663
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5868208923
@@ -9370,7 +9370,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.2903226,    0.0645161 ]
   distance_from_gamma:  0.160308187
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5820820273
@@ -9387,7 +9387,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.2903226,    0.0645161 ]
   distance_from_gamma:  0.151497495
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5383958668
@@ -9404,7 +9404,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.2903226,    0.0645161 ]
   distance_from_gamma:  0.142873780
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4503134467
@@ -9421,7 +9421,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.2903226,    0.0645161 ]
   distance_from_gamma:  0.134473019
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.3163154170
@@ -9438,7 +9438,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.3225806,    0.0645161 ]
   distance_from_gamma:  0.120276325
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.2826236678
@@ -9455,7 +9455,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.3225806,    0.0645161 ]
   distance_from_gamma:  0.127435939
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3455776972
@@ -9472,7 +9472,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.3225806,    0.0645161 ]
   distance_from_gamma:  0.134989232
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3757273079
@@ -9489,7 +9489,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.3225806,    0.0645161 ]
   distance_from_gamma:  0.142873780
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4109817280
@@ -9506,7 +9506,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.3225806,    0.0645161 ]
   distance_from_gamma:  0.151037714
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4592940044
@@ -9523,7 +9523,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.3225806,    0.0645161 ]
   distance_from_gamma:  0.159438122
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5201110863
@@ -9540,7 +9540,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.3225806,    0.0645161 ]
   distance_from_gamma:  0.168039545
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5862909237
@@ -9557,7 +9557,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.3225806,    0.0645161 ]
   distance_from_gamma:  0.176812648
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.6463201179
@@ -9574,7 +9574,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.3225806,    0.0645161 ]
   distance_from_gamma:  0.176812648
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.6869844066
@@ -9591,7 +9591,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.3225806,    0.0645161 ]
   distance_from_gamma:  0.168039545
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.6957819185
@@ -9608,7 +9608,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.3225806,    0.0645161 ]
   distance_from_gamma:  0.159438122
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.6627096844
@@ -9625,7 +9625,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.3225806,    0.0645161 ]
   distance_from_gamma:  0.151037714
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.5814664911
@@ -9642,7 +9642,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.3548387,    0.0645161 ]
   distance_from_gamma:  0.131861644
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.3461396072
@@ -9659,7 +9659,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.3548387,    0.0645161 ]
   distance_from_gamma:  0.138924862
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3815550968
@@ -9676,7 +9676,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.3548387,    0.0645161 ]
   distance_from_gamma:  0.146360485
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4090467126
@@ -9693,7 +9693,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.3548387,    0.0645161 ]
   distance_from_gamma:  0.154114618
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4556696762
@@ -9710,7 +9710,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.3548387,    0.0645161 ]
   distance_from_gamma:  0.162141573
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5211828326
@@ -9727,7 +9727,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.3548387,    0.0645161 ]
   distance_from_gamma:  0.170402798
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5975625741
@@ -9744,7 +9744,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.3548387,    0.0645161 ]
   distance_from_gamma:  0.178865836
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.6716479811
@@ -9761,7 +9761,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.3548387,    0.0645161 ]
   distance_from_gamma:  0.184606301
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.7281903692
@@ -9778,7 +9778,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.3548387,    0.0645161 ]
   distance_from_gamma:  0.176024182
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.7526560179
@@ -9795,7 +9795,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.3548387,    0.0645161 ]
   distance_from_gamma:  0.167625144
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.7333297129
@@ -9812,7 +9812,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.3870968,    0.0645161 ]
   distance_from_gamma:  0.143480981
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.3446406012
@@ -9829,7 +9829,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.3870968,    0.0645161 ]
   distance_from_gamma:  0.150461012
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3672739692
@@ -9846,7 +9846,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.3870968,    0.0645161 ]
   distance_from_gamma:  0.157793821
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4073984821
@@ -9863,7 +9863,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.3870968,    0.0645161 ]
   distance_from_gamma:  0.165432506
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4733657940
@@ -9880,7 +9880,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.3870968,    0.0645161 ]
   distance_from_gamma:  0.173336632
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5567515577
@@ -9897,7 +9897,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.3870968,    0.0645161 ]
   distance_from_gamma:  0.181471518
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.6430303661
@@ -9914,7 +9914,7 @@ phonon:
 
 - q-position: [    0.6451613,    0.3870968,    0.0645161 ]
   distance_from_gamma:  0.189807496
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.7150123490
@@ -9931,7 +9931,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.3870968,    0.0645161 ]
   distance_from_gamma:  0.184229168
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.7560826059
@@ -9948,7 +9948,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.4193548,    0.0645161 ]
   distance_from_gamma:  0.155126692
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.3019341530
@@ -9965,7 +9965,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.4193548,    0.0645161 ]
   distance_from_gamma:  0.162034301
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3310859282
@@ -9982,7 +9982,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.4193548,    0.0645161 ]
   distance_from_gamma:  0.169276663
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3921379237
@@ -9999,7 +9999,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.4193548,    0.0645161 ]
   distance_from_gamma:  0.176812648
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4778181748
@@ -10016,7 +10016,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.4193548,    0.0645161 ]
   distance_from_gamma:  0.184606301
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5727381245
@@ -10033,7 +10033,7 @@ phonon:
 
 - q-position: [   -0.3548387,   -0.5806452,    0.0645161 ]
   distance_from_gamma:  0.192626349
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.6580168675
@@ -10050,7 +10050,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.4516129,    0.0645161 ]
   distance_from_gamma:  0.166793252
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.2442440900
@@ -10067,7 +10067,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.4516129,    0.0645161 ]
   distance_from_gamma:  0.173637303
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2980775220
@@ -10084,7 +10084,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.4516129,    0.0645161 ]
   distance_from_gamma:  0.180799577
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3799790215
@@ -10101,7 +10101,7 @@ phonon:
 
 - q-position: [   -0.3870968,   -0.5483871,    0.0645161 ]
   distance_from_gamma:  0.188243754
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.4782324442
@@ -10118,7 +10118,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.4838710,    0.0645161 ]
   distance_from_gamma:  0.178476574
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.2119383047
@@ -10135,7 +10135,7 @@ phonon:
 
 - q-position: [   -0.4193548,   -0.5161290,    0.0645161 ]
   distance_from_gamma:  0.185264436
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.2851126551
@@ -10152,7 +10152,7 @@ phonon:
 
 - q-position: [    0.2903226,    0.1935484,    0.0967742 ]
   distance_from_gamma:  0.079116986
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.1212291208
@@ -10169,7 +10169,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.1935484,    0.0967742 ]
   distance_from_gamma:  0.087268104
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.3307209066
@@ -10186,7 +10186,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.1935484,    0.0967742 ]
   distance_from_gamma:  0.095815429
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.5216236456
@@ -10203,7 +10203,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.1935484,    0.0967742 ]
   distance_from_gamma:  0.104661935
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.6792674415
@@ -10220,7 +10220,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.1935484,    0.0967742 ]
   distance_from_gamma:  0.113737834
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7981249530
@@ -10237,7 +10237,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.1935484,    0.0967742 ]
   distance_from_gamma:  0.122992353
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.8807469366
@@ -10254,7 +10254,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.1935484,    0.0967742 ]
   distance_from_gamma:  0.132388040
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9346135549
@@ -10271,7 +10271,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.1935484,    0.0967742 ]
   distance_from_gamma:  0.141896853
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9681550963
@@ -10288,7 +10288,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.1935484,    0.0967742 ]
   distance_from_gamma:  0.151497495
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9877870356
@@ -10305,7 +10305,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.1935484,    0.0967742 ]
   distance_from_gamma:  0.161173554
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9969810226
@@ -10322,7 +10322,7 @@ phonon:
 
 - q-position: [    0.3225806,    0.2258065,    0.0967742 ]
   distance_from_gamma:  0.089820915
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.5516354669
@@ -10339,7 +10339,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.2258065,    0.0967742 ]
   distance_from_gamma:  0.097791212
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7381415875
@@ -10356,7 +10356,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.2258065,    0.0967742 ]
   distance_from_gamma:  0.106146576
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.8960635902
@@ -10373,7 +10373,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.2258065,    0.0967742 ]
   distance_from_gamma:  0.114802961
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.0163056237
@@ -10390,7 +10390,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.2258065,    0.0967742 ]
   distance_from_gamma:  0.123697186
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1016151241
@@ -10407,7 +10407,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.2258065,    0.0967742 ]
   distance_from_gamma:  0.132781467
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1608000599
@@ -10424,7 +10424,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.2258065,    0.0967742 ]
   distance_from_gamma:  0.142019337
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2029412833
@@ -10441,7 +10441,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.2258065,    0.0967742 ]
   distance_from_gamma:  0.151382680
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2339329018
@@ -10458,7 +10458,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.2258065,    0.0967742 ]
   distance_from_gamma:  0.160849587
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2556064204
@@ -10475,7 +10475,7 @@ phonon:
 
 - q-position: [   -0.3870968,    0.2258065,    0.0967742 ]
   distance_from_gamma:  0.167209715
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2667168980
@@ -10492,7 +10492,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.2258065,    0.0967742 ]
   distance_from_gamma:  0.157683592
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2645513270
@@ -10509,7 +10509,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.2258065,    0.0967742 ]
   distance_from_gamma:  0.148249085
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2458625877
@@ -10526,7 +10526,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.2258065,    0.0967742 ]
   distance_from_gamma:  0.138924862
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2066295850
@@ -10543,7 +10543,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.2258065,    0.0967742 ]
   distance_from_gamma:  0.129734704
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1414765165
@@ -10560,7 +10560,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.2258065,    0.0967742 ]
   distance_from_gamma:  0.120709234
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.0442278447
@@ -10577,7 +10577,7 @@ phonon:
 
 - q-position: [   -0.1935484,    0.2258065,    0.0967742 ]
   distance_from_gamma:  0.111888315
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.9102906772
@@ -10594,7 +10594,7 @@ phonon:
 
 - q-position: [   -0.1612903,    0.2258065,    0.0967742 ]
   distance_from_gamma:  0.103324347
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     3.7400191876
@@ -10611,7 +10611,7 @@ phonon:
 
 - q-position: [   -0.1290323,    0.2258065,    0.0967742 ]
   distance_from_gamma:  0.095086784
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.5413724133
@@ -10628,7 +10628,7 @@ phonon:
 
 - q-position: [    0.3548387,    0.2580645,    0.0967742 ]
   distance_from_gamma:  0.100768527
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.9267914020
@@ -10645,7 +10645,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.2580645,    0.0967742 ]
   distance_from_gamma:  0.108575874
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.0911984155
@@ -10662,7 +10662,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.2580645,    0.0967742 ]
   distance_from_gamma:  0.116755276
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2135288509
@@ -10679,7 +10679,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.2580645,    0.0967742 ]
   distance_from_gamma:  0.125233856
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2989450351
@@ -10696,7 +10696,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.2580645,    0.0967742 ]
   distance_from_gamma:  0.133954816
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3602923008
@@ -10713,7 +10713,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.2580645,    0.0967742 ]
   distance_from_gamma:  0.142873780
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4085132387
@@ -10730,7 +10730,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.2580645,    0.0967742 ]
   distance_from_gamma:  0.151955884
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4494524075
@@ -10747,7 +10747,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.2580645,    0.0967742 ]
   distance_from_gamma:  0.161173554
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4836300476
@@ -10764,7 +10764,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.2580645,    0.0967742 ]
   distance_from_gamma:  0.170504805
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5076011146
@@ -10781,7 +10781,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.2580645,    0.0967742 ]
   distance_from_gamma:  0.164272302
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5159585167
@@ -10798,7 +10798,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.2580645,    0.0967742 ]
   distance_from_gamma:  0.155014565
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5029560232
@@ -10815,7 +10815,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.2580645,    0.0967742 ]
   distance_from_gamma:  0.145884514
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4631132161
@@ -10832,7 +10832,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.2580645,    0.0967742 ]
   distance_from_gamma:  0.136907697
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3911456553
@@ -10849,7 +10849,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.2580645,    0.0967742 ]
   distance_from_gamma:  0.128116328
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2823823273
@@ -10866,7 +10866,7 @@ phonon:
 
 - q-position: [   -0.1935484,    0.2580645,    0.0967742 ]
   distance_from_gamma:  0.119551325
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1345286177
@@ -10883,7 +10883,7 @@ phonon:
 
 - q-position: [   -0.1612903,    0.2580645,    0.0967742 ]
   distance_from_gamma:  0.111264977
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.9503646162
@@ -10900,7 +10900,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.2903226,    0.0967742 ]
   distance_from_gamma:  0.111888315
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.2278379589
@@ -10917,7 +10917,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.2903226,    0.0967742 ]
   distance_from_gamma:  0.119551325
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3682749152
@@ -10934,7 +10934,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.2903226,    0.0967742 ]
   distance_from_gamma:  0.127572307
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4549649198
@@ -10951,7 +10951,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.2903226,    0.0967742 ]
   distance_from_gamma:  0.135887886
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5156506329
@@ -10968,7 +10968,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.2903226,    0.0967742 ]
   distance_from_gamma:  0.144447193
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5670527551
@@ -10985,7 +10985,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.2903226,    0.0967742 ]
   distance_from_gamma:  0.153209385
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.6158714913
@@ -11002,7 +11002,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.2903226,    0.0967742 ]
   distance_from_gamma:  0.162141573
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.6616294524
@@ -11019,7 +11019,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.2903226,    0.0967742 ]
   distance_from_gamma:  0.171217153
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.6989447797
@@ -11036,7 +11036,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.2903226,    0.0967742 ]
   distance_from_gamma:  0.171217153
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.7199358249
@@ -11053,7 +11053,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.2903226,    0.0967742 ]
   distance_from_gamma:  0.162141573
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.7163198809
@@ -11070,7 +11070,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.2903226,    0.0967742 ]
   distance_from_gamma:  0.153209385
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.6806807233
@@ -11087,7 +11087,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.2903226,    0.0967742 ]
   distance_from_gamma:  0.144447193
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.6069795867
@@ -11104,7 +11104,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.2903226,    0.0967742 ]
   distance_from_gamma:  0.135887886
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4910798356
@@ -11121,7 +11121,7 @@ phonon:
 
 - q-position: [   -0.1935484,    0.2903226,    0.0967742 ]
   distance_from_gamma:  0.127572307
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.3320929591
@@ -11138,7 +11138,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.3225806,    0.0967742 ]
   distance_from_gamma:  0.123133643
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.4456513488
@@ -11155,7 +11155,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.3225806,    0.0967742 ]
   distance_from_gamma:  0.130669500
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5586855648
@@ -11172,7 +11172,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.3225806,    0.0967742 ]
   distance_from_gamma:  0.138548881
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.6180049421
@@ -11189,7 +11189,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.3225806,    0.0967742 ]
   distance_from_gamma:  0.146716449
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.6694904379
@@ -11206,7 +11206,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.3225806,    0.0967742 ]
   distance_from_gamma:  0.155126692
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.7236615375
@@ -11223,7 +11223,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.3225806,    0.0967742 ]
   distance_from_gamma:  0.163742219
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.7795045477
@@ -11240,7 +11240,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.3225806,    0.0967742 ]
   distance_from_gamma:  0.172532282
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.8299124048
@@ -11257,7 +11257,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.3225806,    0.0967742 ]
   distance_from_gamma:  0.178476574
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.8647210564
@@ -11274,7 +11274,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.3225806,    0.0967742 ]
   distance_from_gamma:  0.169584532
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.8732117395
@@ -11291,7 +11291,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.3225806,    0.0967742 ]
   distance_from_gamma:  0.160849587
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.8458627799
@@ -11308,7 +11308,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.3225806,    0.0967742 ]
   distance_from_gamma:  0.152298771
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.7753377226
@@ -11325,7 +11325,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.3225806,    0.0967742 ]
   distance_from_gamma:  0.143964898
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.6572072115
@@ -11342,7 +11342,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.3548387,    0.0967742 ]
   distance_from_gamma:  0.134473019
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.5815392685
@@ -11359,7 +11359,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.3548387,    0.0967742 ]
   distance_from_gamma:  0.141896853
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.6661512926
@@ -11376,7 +11376,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.3548387,    0.0967742 ]
   distance_from_gamma:  0.149649895
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.7149051649
@@ -11393,7 +11393,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.3548387,    0.0967742 ]
   distance_from_gamma:  0.157683592
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.7713540866
@@ -11410,7 +11410,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.3548387,    0.0967742 ]
   distance_from_gamma:  0.165957190
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.8351484879
@@ -11427,7 +11427,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.3548387,    0.0967742 ]
   distance_from_gamma:  0.174436558
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.8977063042
@@ -11444,7 +11444,7 @@ phonon:
 
 - q-position: [    0.6451613,    0.3548387,    0.0967742 ]
   distance_from_gamma:  0.183093109
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.9467528223
@@ -11461,7 +11461,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.3548387,    0.0967742 ]
   distance_from_gamma:  0.177303659
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.9692455473
@@ -11478,7 +11478,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.3548387,    0.0967742 ]
   distance_from_gamma:  0.168762299
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.9535191691
@@ -11495,7 +11495,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.3548387,    0.0967742 ]
   distance_from_gamma:  0.160416613
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.8906443596
@@ -11512,7 +11512,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.3870968,    0.0967742 ]
   distance_from_gamma:  0.145884514
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.6469948544
@@ -11529,7 +11529,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.3870968,    0.0967742 ]
   distance_from_gamma:  0.153209385
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.7100430823
@@ -11546,7 +11546,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.3870968,    0.0967742 ]
   distance_from_gamma:  0.160849587
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.7650327203
@@ -11563,7 +11563,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.3870968,    0.0967742 ]
   distance_from_gamma:  0.168762299
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.8337472711
@@ -11580,7 +11580,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.3870968,    0.0967742 ]
   distance_from_gamma:  0.176910959
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.9065393393
@@ -11597,7 +11597,7 @@ phonon:
 
 - q-position: [    0.6451613,    0.3870968,    0.0967742 ]
   distance_from_gamma:  0.185264436
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.9692504641
@@ -11614,7 +11614,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.3870968,    0.0967742 ]
   distance_from_gamma:  0.185264436
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.0066533444
@@ -11631,7 +11631,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.3870968,    0.0967742 ]
   distance_from_gamma:  0.176910959
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.0049633778
@@ -11648,7 +11648,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.4193548,    0.0967742 ]
   distance_from_gamma:  0.157352439
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.6615992558
@@ -11665,7 +11665,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.4193548,    0.0967742 ]
   distance_from_gamma:  0.164589533
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.7176602915
@@ -11682,7 +11682,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.4193548,    0.0967742 ]
   distance_from_gamma:  0.172128697
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.7871562846
@@ -11699,7 +11699,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.4193548,    0.0967742 ]
   distance_from_gamma:  0.179931965
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.8669589495
@@ -11716,7 +11716,7 @@ phonon:
 
 - q-position: [    0.6451613,    0.4193548,    0.0967742 ]
   distance_from_gamma:  0.187966449
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.9413791183
@@ -11733,7 +11733,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.4193548,    0.0967742 ]
   distance_from_gamma:  0.193437031
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.9932186341
@@ -11750,7 +11750,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.4516129,    0.0967742 ]
   distance_from_gamma:  0.168865297
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.6460241298
@@ -11767,7 +11767,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.4516129,    0.0967742 ]
   distance_from_gamma:  0.176024182
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.7126973307
@@ -11784,7 +11784,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.4516129,    0.0967742 ]
   distance_from_gamma:  0.183472577
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.7948298375
@@ -11801,7 +11801,7 @@ phonon:
 
 - q-position: [   -0.3548387,   -0.5483871,    0.0967742 ]
   distance_from_gamma:  0.191176647
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.8773339903
@@ -11818,7 +11818,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.4838710,    0.0967742 ]
   distance_from_gamma:  0.180414487
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.6292824564
@@ -11835,7 +11835,7 @@ phonon:
 
 - q-position: [   -0.3870968,   -0.5161290,    0.0967742 ]
   distance_from_gamma:  0.187503363
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.7095085181
@@ -11852,7 +11852,7 @@ phonon:
 
 - q-position: [    0.3870968,    0.2580645,    0.1290323 ]
   distance_from_gamma:  0.105489315
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     3.9433912328
@@ -11869,7 +11869,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.2580645,    0.1290323 ]
   distance_from_gamma:  0.113584858
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.1256740816
@@ -11886,7 +11886,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.2580645,    0.1290323 ]
   distance_from_gamma:  0.121998746
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.2713253471
@@ -11903,7 +11903,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.2580645,    0.1290323 ]
   distance_from_gamma:  0.130669500
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.3791464596
@@ -11920,7 +11920,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.2580645,    0.1290323 ]
   distance_from_gamma:  0.139549247
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4553406055
@@ -11937,7 +11937,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.2580645,    0.1290323 ]
   distance_from_gamma:  0.148600526
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5074063076
@@ -11954,7 +11954,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.2580645,    0.1290323 ]
   distance_from_gamma:  0.157793821
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5404975078
@@ -11971,7 +11971,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.2580645,    0.1290323 ]
   distance_from_gamma:  0.167105697
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5568122067
@@ -11988,7 +11988,7 @@ phonon:
 
 - q-position: [    0.4193548,    0.2903226,    0.1290323 ]
   distance_from_gamma:  0.116158059
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.3019881516
@@ -12005,7 +12005,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.2903226,    0.1290323 ]
   distance_from_gamma:  0.124118165
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.4699174960
@@ -12022,7 +12022,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.2903226,    0.1290323 ]
   distance_from_gamma:  0.132388040
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5899276643
@@ -12039,7 +12039,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.2903226,    0.1290323 ]
   distance_from_gamma:  0.140913154
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.6745074816
@@ -12056,7 +12056,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.2903226,    0.1290323 ]
   distance_from_gamma:  0.149649895
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.7363075414
@@ -12073,7 +12073,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.2903226,    0.1290323 ]
   distance_from_gamma:  0.158563284
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.7820163289
@@ -12090,7 +12090,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.2903226,    0.1290323 ]
   distance_from_gamma:  0.167625144
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.8127398671
@@ -12107,7 +12107,7 @@ phonon:
 
 - q-position: [   -0.3548387,    0.2903226,    0.1290323 ]
   distance_from_gamma:  0.173737411
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.8262733571
@@ -12124,7 +12124,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.2903226,    0.1290323 ]
   distance_from_gamma:  0.164589533
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.8193398854
@@ -12141,7 +12141,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.2903226,    0.1290323 ]
   distance_from_gamma:  0.155574389
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.7886228938
@@ -12158,7 +12158,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.2903226,    0.1290323 ]
   distance_from_gamma:  0.146716449
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.7302995213
@@ -12175,7 +12175,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.2903226,    0.1290323 ]
   distance_from_gamma:  0.138045979
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.6390997689
@@ -12192,7 +12192,7 @@ phonon:
 
 - q-position: [   -0.1935484,    0.2903226,    0.1290323 ]
   distance_from_gamma:  0.129600611
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.5088311446
@@ -12209,7 +12209,7 @@ phonon:
 
 - q-position: [   -0.1612903,    0.2903226,    0.1290323 ]
   distance_from_gamma:  0.121427320
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.3359669282
@@ -12226,7 +12226,7 @@ phonon:
 
 - q-position: [    0.4516129,    0.3225806,    0.1290323 ]
   distance_from_gamma:  0.127025956
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.5970087689
@@ -12243,7 +12243,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.3225806,    0.1290323 ]
   distance_from_gamma:  0.134860364
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.7495128803
@@ -12260,7 +12260,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.3225806,    0.1290323 ]
   distance_from_gamma:  0.142995426
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.8436406514
@@ -12277,7 +12277,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.3225806,    0.1290323 ]
   distance_from_gamma:  0.151382680
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.9118015952
@@ -12294,7 +12294,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.3225806,    0.1290323 ]
   distance_from_gamma:  0.159982467
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.9670224586
@@ -12311,7 +12311,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.3225806,    0.1290323 ]
   distance_from_gamma:  0.168762299
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.0104850443
@@ -12328,7 +12328,7 @@ phonon:
 
 - q-position: [    0.6451613,    0.3225806,    0.1290323 ]
   distance_from_gamma:  0.177695491
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.0377412435
@@ -12345,7 +12345,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.3225806,    0.1290323 ]
   distance_from_gamma:  0.171724163
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.0423138453
@@ -12362,7 +12362,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.3225806,    0.1290323 ]
   distance_from_gamma:  0.162890498
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.0176373382
@@ -12379,7 +12379,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.3225806,    0.1290323 ]
   distance_from_gamma:  0.154227399
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.9574757844
@@ -12396,7 +12396,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.3225806,    0.1290323 ]
   distance_from_gamma:  0.145765279
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.8556025579
@@ -12413,7 +12413,7 @@ phonon:
 
 - q-position: [   -0.1935484,    0.3225806,    0.1290323 ]
   distance_from_gamma:  0.137541239
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.7064953727
@@ -12430,7 +12430,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.3548387,    0.1290323 ]
   distance_from_gamma:  0.138045979
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.8183772659
@@ -12447,7 +12447,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.3548387,    0.1290323 ]
   distance_from_gamma:  0.145765279
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.9512188196
@@ -12464,7 +12464,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.3548387,    0.1290323 ]
   distance_from_gamma:  0.153775780
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.0248981650
@@ -12481,7 +12481,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.3548387,    0.1290323 ]
   distance_from_gamma:  0.162034301
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.0863670650
@@ -12498,7 +12498,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.3548387,    0.1290323 ]
   distance_from_gamma:  0.170504805
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.1402139185
@@ -12515,7 +12515,7 @@ phonon:
 
 - q-position: [    0.6451613,    0.3548387,    0.1290323 ]
   distance_from_gamma:  0.179157228
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.1803098395
@@ -12532,7 +12532,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.3548387,    0.1290323 ]
   distance_from_gamma:  0.179157228
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.1972975923
@@ -12549,7 +12549,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.3548387,    0.1290323 ]
   distance_from_gamma:  0.170504805
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.1814950927
@@ -12566,7 +12566,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.3548387,    0.1290323 ]
   distance_from_gamma:  0.162034301
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.1240521685
@@ -12583,7 +12583,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.3548387,    0.1290323 ]
   distance_from_gamma:  0.153775780
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.0172718619
@@ -12600,7 +12600,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.3870968,    0.1290323 ]
   distance_from_gamma:  0.149184420
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.9667758576
@@ -12617,7 +12617,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.3870968,    0.1290323 ]
   distance_from_gamma:  0.156798964
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.0763196924
@@ -12634,7 +12634,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.3870968,    0.1290323 ]
   distance_from_gamma:  0.164695140
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.1415372466
@@ -12651,7 +12651,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.3870968,    0.1290323 ]
   distance_from_gamma:  0.172834352
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.2031956322
@@ -12668,7 +12668,7 @@ phonon:
 
 - q-position: [    0.6451613,    0.3870968,    0.1290323 ]
   distance_from_gamma:  0.181183848
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.2548079438
@@ -12685,7 +12685,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.3870968,    0.1290323 ]
   distance_from_gamma:  0.186853114
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.2845221929
@@ -12702,7 +12702,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.3870968,    0.1290323 ]
   distance_from_gamma:  0.178379125
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.2798575333
@@ -12719,7 +12719,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.3870968,    0.1290323 ]
   distance_from_gamma:  0.170096409
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.2294810774
@@ -12736,7 +12736,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.4193548,    0.1290323 ]
   distance_from_gamma:  0.160416613
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.0526225621
@@ -12753,7 +12753,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.4193548,    0.1290323 ]
   distance_from_gamma:  0.167936041
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.1420973793
@@ -12770,7 +12770,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.4193548,    0.1290323 ]
   distance_from_gamma:  0.175727595
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.2086093080
@@ -12787,7 +12787,7 @@ phonon:
 
 - q-position: [    0.6451613,    0.4193548,    0.1290323 ]
   distance_from_gamma:  0.183756664
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.2697560468
@@ -12804,7 +12804,7 @@ phonon:
 
 - q-position: [    0.6774194,    0.4193548,    0.1290323 ]
   distance_from_gamma:  0.191993451
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.3117316490
@@ -12821,7 +12821,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.4193548,    0.1290323 ]
   distance_from_gamma:  0.186480525
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.3196210071
@@ -12838,7 +12838,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.4516129,    0.1290323 ]
   distance_from_gamma:  0.171724163
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.0930294427
@@ -12855,7 +12855,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.4516129,    0.1290323 ]
   distance_from_gamma:  0.179157228
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.1713242912
@@ -12872,7 +12872,7 @@ phonon:
 
 - q-position: [    0.6451613,    0.4516129,    0.1290323 ]
   distance_from_gamma:  0.186853114
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.2388931962
@@ -12889,7 +12889,7 @@ phonon:
 
 - q-position: [   -0.3225806,   -0.5483871,    0.1290323 ]
   distance_from_gamma:  0.194780671
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.2913463684
@@ -12906,7 +12906,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.4838710,    0.1290323 ]
   distance_from_gamma:  0.183093109
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.1074037504
@@ -12923,7 +12923,7 @@ phonon:
 
 - q-position: [   -0.3548387,   -0.5161290,    0.1290323 ]
   distance_from_gamma:  0.190447658
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.1794278596
@@ -12940,7 +12940,7 @@ phonon:
 
 - q-position: [    0.4838710,    0.3225806,    0.1612903 ]
   distance_from_gamma:  0.131861644
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.6909528036
@@ -12957,7 +12957,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.3225806,    0.1612903 ]
   distance_from_gamma:  0.139922540
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.8552912251
@@ -12974,7 +12974,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.3225806,    0.1612903 ]
   distance_from_gamma:  0.148249085
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     4.9685882716
@@ -12991,7 +12991,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.3225806,    0.1612903 ]
   distance_from_gamma:  0.156798964
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.0446281590
@@ -13008,7 +13008,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.3225806,    0.1612903 ]
   distance_from_gamma:  0.165537576
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.0925935490
@@ -13025,7 +13025,7 @@ phonon:
 
 - q-position: [    0.6451613,    0.3225806,    0.1612903 ]
   distance_from_gamma:  0.174436558
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.1161628210
@@ -13042,7 +13042,7 @@ phonon:
 
 - q-position: [    0.5161290,    0.3548387,    0.1612903 ]
   distance_from_gamma:  0.142508217
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     4.9936108723
@@ -13059,7 +13059,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.3548387,    0.1612903 ]
   distance_from_gamma:  0.150461012
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.1493099654
@@ -13076,7 +13076,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.3548387,    0.1612903 ]
   distance_from_gamma:  0.158672902
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.2447121138
@@ -13093,7 +13093,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.3548387,    0.1612903 ]
   distance_from_gamma:  0.167105697
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.3073822777
@@ -13110,7 +13110,7 @@ phonon:
 
 - q-position: [    0.6451613,    0.3548387,    0.1612903 ]
   distance_from_gamma:  0.175727595
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.3457220784
@@ -13127,7 +13127,7 @@ phonon:
 
 - q-position: [   -0.3225806,    0.3548387,    0.1612903 ]
   distance_from_gamma:  0.181567307
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.3591102083
@@ -13144,7 +13144,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.3548387,    0.1612903 ]
   distance_from_gamma:  0.172834352
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.3439040250
@@ -13161,7 +13161,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.3548387,    0.1612903 ]
   distance_from_gamma:  0.164272302
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.2950870690
@@ -13178,7 +13178,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.3548387,    0.1612903 ]
   distance_from_gamma:  0.155909318
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.2050939363
@@ -13195,7 +13195,7 @@ phonon:
 
 - q-position: [   -0.1935484,    0.3548387,    0.1612903 ]
   distance_from_gamma:  0.147779198
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.0622392855
@@ -13212,7 +13212,7 @@ phonon:
 
 - q-position: [    0.5483871,    0.3870968,    0.1612903 ]
   distance_from_gamma:  0.153322831
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.2311159136
@@ -13229,7 +13229,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.3870968,    0.1612903 ]
   distance_from_gamma:  0.161173554
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.3738939191
@@ -13246,7 +13246,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.3870968,    0.1612903 ]
   distance_from_gamma:  0.169276663
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.4506989914
@@ -13263,7 +13263,7 @@ phonon:
 
 - q-position: [    0.6451613,    0.3870968,    0.1612903 ]
   distance_from_gamma:  0.177597614
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.5005803550
@@ -13280,7 +13280,7 @@ phonon:
 
 - q-position: [    0.6774194,    0.3870968,    0.1612903 ]
   distance_from_gamma:  0.186107190
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.5253688482
@@ -13297,7 +13297,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.3870968,    0.1612903 ]
   distance_from_gamma:  0.180414487
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.5183417515
@@ -13314,7 +13314,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.3870968,    0.1612903 ]
   distance_from_gamma:  0.172027653
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.4703114388
@@ -13331,7 +13331,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.3870968,    0.1612903 ]
   distance_from_gamma:  0.163848373
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.3701031701
@@ -13348,7 +13348,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.4193548,    0.1612903 ]
   distance_from_gamma:  0.164272302
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.4008261394
@@ -13365,7 +13365,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.4193548,    0.1612903 ]
   distance_from_gamma:  0.172027653
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.5231367196
@@ -13382,7 +13382,7 @@ phonon:
 
 - q-position: [    0.6451613,    0.4193548,    0.1612903 ]
   distance_from_gamma:  0.180028573
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.5825757431
@@ -13399,7 +13399,7 @@ phonon:
 
 - q-position: [    0.6774194,    0.4193548,    0.1612903 ]
   distance_from_gamma:  0.188243754
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.6167437228
@@ -13416,7 +13416,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.4193548,    0.1612903 ]
   distance_from_gamma:  0.188243754
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.6179780837
@@ -13433,7 +13433,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.4193548,    0.1612903 ]
   distance_from_gamma:  0.180028573
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.5737479608
@@ -13450,7 +13450,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.4516129,    0.1612903 ]
   distance_from_gamma:  0.175331366
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.5095949071
@@ -13467,7 +13467,7 @@ phonon:
 
 - q-position: [    0.6451613,    0.4516129,    0.1612903 ]
   distance_from_gamma:  0.182998119
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.6039303871
@@ -13484,7 +13484,7 @@ phonon:
 
 - q-position: [    0.6774194,    0.4516129,    0.1612903 ]
   distance_from_gamma:  0.190903603
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.6456607514
@@ -13501,7 +13501,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.4516129,    0.1612903 ]
   distance_from_gamma:  0.196292345
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.6552596181
@@ -13518,7 +13518,7 @@ phonon:
 
 - q-position: [    0.6451613,    0.4838710,    0.1612903 ]
   distance_from_gamma:  0.186480525
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.5707282420
@@ -13535,7 +13535,7 @@ phonon:
 
 - q-position: [    0.6774194,    0.4838710,    0.1612903 ]
   distance_from_gamma:  0.194065221
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.6288772748
@@ -13552,7 +13552,7 @@ phonon:
 
 - q-position: [    0.5806452,    0.3870968,    0.1935484 ]
   distance_from_gamma:  0.158233972
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.3761349260
@@ -13569,7 +13569,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.3870968,    0.1935484 ]
   distance_from_gamma:  0.166271206
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.5141493385
@@ -13586,7 +13586,7 @@ phonon:
 
 - q-position: [    0.6451613,    0.3870968,    0.1935484 ]
   distance_from_gamma:  0.174536208
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.5910113424
@@ -13603,7 +13603,7 @@ phonon:
 
 - q-position: [    0.6774194,    0.3870968,    0.1935484 ]
   distance_from_gamma:  0.182998119
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.6261315881
@@ -13620,7 +13620,7 @@ phonon:
 
 - q-position: [    0.6129032,    0.4193548,    0.1935484 ]
   distance_from_gamma:  0.168865297
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.6321146083
@@ -13637,7 +13637,7 @@ phonon:
 
 - q-position: [    0.6451613,    0.4193548,    0.1935484 ]
   distance_from_gamma:  0.176812648
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.7614170431
@@ -13654,7 +13654,7 @@ phonon:
 
 - q-position: [    0.6774194,    0.4193548,    0.1935484 ]
   distance_from_gamma:  0.184982665
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.8167806222
@@ -13671,7 +13671,7 @@ phonon:
 
 - q-position: [   -0.2903226,    0.4193548,    0.1935484 ]
   distance_from_gamma:  0.190538934
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.8260108731
@@ -13688,7 +13688,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.4193548,    0.1935484 ]
   distance_from_gamma:  0.182236417
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.7887985371
@@ -13705,7 +13705,7 @@ phonon:
 
 - q-position: [   -0.2258065,    0.4193548,    0.1935484 ]
   distance_from_gamma:  0.174137268
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.6920708651
@@ -13722,7 +13722,7 @@ phonon:
 
 - q-position: [    0.6451613,    0.4516129,    0.1935484 ]
   distance_from_gamma:  0.179641830
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.8231771707
@@ -13739,7 +13739,7 @@ phonon:
 
 - q-position: [    0.6774194,    0.4516129,    0.1935484 ]
   distance_from_gamma:  0.187503363
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.9278672803
@@ -13756,7 +13756,7 @@ phonon:
 
 - q-position: [    0.7096774,    0.4516129,    0.1935484 ]
   distance_from_gamma:  0.195582425
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     5.9426236900
@@ -13773,7 +13773,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.4516129,    0.1935484 ]
   distance_from_gamma:  0.190173567
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.9004692329
@@ -13790,7 +13790,7 @@ phonon:
 
 - q-position: [    0.6774194,    0.4838710,    0.1935484 ]
   distance_from_gamma:  0.190538934
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.9515330252
@@ -13807,7 +13807,7 @@ phonon:
 
 - q-position: [   -0.2903226,   -0.5161290,    0.1935484 ]
   distance_from_gamma:  0.198319211
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.9893514426
@@ -13824,7 +13824,7 @@ phonon:
 
 - q-position: [    0.6774194,    0.4516129,    0.2258065 ]
   distance_from_gamma:  0.184606301
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     5.9646403254
@@ -13841,7 +13841,7 @@ phonon:
 
 - q-position: [    0.7096774,    0.4516129,    0.2258065 ]
   distance_from_gamma:  0.192626349
-  weight: 48   
+  weight: 48
   band:
   - # 1
     frequency:     6.0526341860
@@ -13858,7 +13858,7 @@ phonon:
 
 - q-position: [    0.7096774,    0.4838710,    0.2258065 ]
   distance_from_gamma:  0.195226496
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     6.1762969516
@@ -13875,7 +13875,7 @@ phonon:
 
 - q-position: [   -0.2580645,    0.4838710,    0.2258065 ]
   distance_from_gamma:  0.200499087
-  weight: 24   
+  weight: 24
   band:
   - # 1
     frequency:     6.1894547628

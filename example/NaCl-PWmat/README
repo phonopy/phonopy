@@ -16,5 +16,4 @@ Band structure is plotted by
 PDOS is plotted by:
 
 % phonopy -p  --dim="2 2 2" --pa="0.0 0.5 0.5  0.5 0.0 0.5  0.5 0.5 0.0" \
-  --mesh="15 15 15" --pdos="1, 2" 
-
+  --mesh="15 15 15" --pdos="1, 2"
