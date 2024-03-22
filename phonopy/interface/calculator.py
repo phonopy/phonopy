@@ -80,6 +80,7 @@ calculator_info = {
     "turbomole": {"option": {"name": "--turbomole", "help": "Invoke TURBOMOLE mode"}},
     "vasp": {"option": {"name": "--vasp", "help": "Invoke Vasp mode"}},
     "wien2k": {"option": {"name": "--wien2k", "help": "Invoke Wien2k mode"}},
+    "pwmat": {"option": {"name": "--pwmat", "help": "Invoke PWmat mode"}},
 }
 
 
@@ -151,6 +152,7 @@ def write_crystal_structure(
 
         pp_filenames = optional_structure_info[1]
         qe.write_pwscf(filename, cell, pp_filenames)
+    
     elif interface_mode == "wien2k":
         import phonopy.interface.wien2k as wien2k
 
@@ -208,6 +210,9 @@ def write_crystal_structure(
         import phonopy.interface.lammps as lammps
 
         lammps.write_lammps(filename, cell)
+    elif interface_mode == "pwmat":
+        import phonopy.interface.pwmat as pwmat
+        pwmat.write_atom_config(filename, cell)
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -270,6 +275,11 @@ def write_supercells_with_displacements(
         qe_args = args + (pp_filenames,)
         qe.write_supercells_with_displacements(*qe_args, **kwargs)
         write_magnetic_moments(supercell, sort_by_elements=False)
+    elif interface_mode == "pwmat":
+        import phonopy.interface.pwmat as pwmat
+
+        pwmat.write_supercells_with_displacements(*args , **kwargs)
+        
     elif interface_mode == "wien2k":
         import phonopy.interface.wien2k as wien2k
 
@@ -430,6 +440,11 @@ def read_crystal_structure(
 
         unitcell, pp_filenames = read_pwscf(cell_filename)
         return unitcell, (cell_filename, pp_filenames)
+    elif interface_mode == "pwmat":
+        from phonopy.interface.pwmat import read_atom_config
+
+        unitcell = read_atom_config(cell_filename)
+        return unitcell, (cell_filename,)
     elif interface_mode == "wien2k":
         from phonopy.interface.wien2k import parse_wien2k_struct
 
@@ -524,6 +539,8 @@ def get_default_cell_filename(interface_mode):
         return "STRU"
     elif interface_mode == "lammps":
         return "unitcell"
+    elif interface_mode == "pwmat":
+        return "atom.config"
     else:
         return None
 
@@ -557,6 +574,8 @@ def get_default_supercell_filename(interface_mode):
         return "sSTRU"
     elif interface_mode == "lammps":
         return "supercell"
+    elif interface_mode == "pwmat":
+        return "supercell.config"
     else:
         return None
 
@@ -574,7 +593,7 @@ def get_default_displacement_distance(interface_mode):
         "abacus",
     ):
         displacement_distance = 0.02
-    else:  # default or vasp, crystal, cp2k
+    else:  # default or vasp, crystal, cp2k, pwmat
         displacement_distance = 0.01
     return displacement_distance
 
@@ -598,6 +617,7 @@ def get_default_physical_units(interface_mode=None):
     fleur         : hartree, au,        AMU,         hartree/au,   hartree/au^2
     abacus        : eV,      au,        AMU,         eV/angstrom,  eV/angstrom.au
     lammps        : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
+    pwmat         : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
 
     units['force_constants_unit'] is used in
     the 'get_force_constant_conversion_factor' method.
@@ -613,7 +633,7 @@ def get_default_physical_units(interface_mode=None):
         "force_unit": None,
     }
 
-    if interface_mode is None or interface_mode in ("vasp", "aims", "lammps"):
+    if interface_mode is None or interface_mode in ("vasp", "aims", "lammps","pwmat"):
         units["factor"] = VaspToTHz
         units["nac_factor"] = Hartree * Bohr
         units["distance_to_A"] = 1.0
@@ -744,7 +764,8 @@ def get_force_sets(
         from phonopy.interface.abacus import parse_set_of_forces
     elif interface_mode == "lammps":
         from phonopy.interface.lammps import parse_set_of_forces
-
+    elif interface_mode == "pwmat":
+        from phonopy.interface.pwmat import parse_set_of_forces
     else:
         return []
 

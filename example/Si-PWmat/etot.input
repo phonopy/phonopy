@@ -1,0 +1,14 @@
+4  1
+job = scf
+in.atom = supercell-001.config
+IN.PSP1 = /share/psp/allpsp/Si.SG15.PBE.UPF
+xcfunctional = PBE
+ecut = 60
+MP_N123 = 1 1 1 0 0 0 1
+spin = 1
+accuracy = high
+convergence = difficult
+out.vatom = T
+out.force = T
+in.rho = F
+in.wg = F
