@@ -37,6 +37,8 @@ from __future__ import annotations
 
 import os
 from argparse import ArgumentParser
+from collections.abc import Sequence
+from typing import Optional, Union
 
 import numpy as np
 import yaml
@@ -44,6 +46,7 @@ import yaml
 from phonopy.file_IO import get_supported_file_extensions_for_compression
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.vasp import sort_positions_by_symbols
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import determinant
 from phonopy.structure.dataset import get_displacements_and_forces
 from phonopy.units import (
@@ -123,7 +126,10 @@ def convert_crystal_structure(filename_in, interface_in, filename_out, interface
 
 
 def write_crystal_structure(
-    filename, cell, interface_mode=None, optional_structure_info=None
+    filename: Optional[str],
+    cell: PhonopyAtoms,
+    interface_mode: Optional[str] = None,
+    optional_structure_info: Optional[tuple] = None,
 ):
     """Write crystal structure to file in each calculator format.
 
@@ -219,19 +225,19 @@ def write_crystal_structure(
 
 
 def write_supercells_with_displacements(
-    interface_mode,
-    supercell,
-    cells_with_disps,
-    optional_structure_info=None,
-    displacement_ids=None,
-    zfill_width=3,
-    additional_info=None,
+    interface_mode: str,
+    supercell: PhonopyAtoms,
+    cells_with_disps: Sequence[PhonopyAtoms],
+    optional_structure_info: Optional[tuple] = None,
+    displacement_ids: Optional[Union[Sequence, np.ndarray]] = None,
+    zfill_width: int = 3,
+    additional_info: Optional[dict] = None,
 ):
     """Write supercell with displacements to files in each calculator format.
 
     interface_mode : str
         Calculator interface such as 'vasp', 'qe', ...
-    supercell : Supercell
+    supercell : PhonopyAtoms
         Supercell.
     cells_with_disps : list of PhonopyAtoms
         Supercells with displacements.
@@ -358,7 +364,7 @@ def write_supercells_with_displacements(
         raise RuntimeError("No calculator interface was found.")
 
 
-def write_magnetic_moments(cell, sort_by_elements=False):
+def write_magnetic_moments(cell: PhonopyAtoms, sort_by_elements=False):
     """Write MAGMOM."""
     magmoms = cell.magnetic_moments
     if magmoms is not None:
@@ -367,14 +373,13 @@ def write_magnetic_moments(cell, sort_by_elements=False):
                 cell.symbols, cell.scaled_positions
             )
         else:
-            sort_list = range(cell.get_number_of_atoms())
+            sort_list = np.arange(len(cell))
 
+        text = " MAGMOM = "
+        text += " ".join([f"{v}" for v in magmoms[sort_list].ravel()])
         with open("MAGMOM", "w") as w:
-            w.write(" MAGMOM = ")
-            for i in sort_list:
-                w.write("%f " % magmoms[i])
+            w.write(text)
             w.write("\n")
-            w.close()
 
 
 def read_crystal_structure(

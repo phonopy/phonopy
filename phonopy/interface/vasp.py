@@ -42,7 +42,7 @@ import sys
 import warnings
 import xml.etree.cElementTree as etree
 import xml.parsers.expat
-from collections import Counter, abc
+from collections import Counter
 from collections.abc import Sequence
 from typing import Optional, Union
 
@@ -95,7 +95,7 @@ def get_scaled_positions_lines(scaled_positions):
     return "\n".join(_get_scaled_positions_lines(scaled_positions))
 
 
-def sort_positions_by_symbols(symbols: abc.Sequence, positions: np.ndarray):
+def sort_positions_by_symbols(symbols: Sequence, positions: np.ndarray):
     """Sort atomic positions by symbols.
 
     Sort positions by symbols (using the order defined by reduced_symbols)
