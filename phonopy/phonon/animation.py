@@ -316,7 +316,6 @@ class Animation:
                 positions=positions,
                 masses=self._masses,
                 symbols=self._symbols,
-                pbc=True,
             )
             write_vasp((filename + "-%03d") % i, atoms, direct=True)
 

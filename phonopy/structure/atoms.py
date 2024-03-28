@@ -33,10 +33,12 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+from __future__ import annotations
 
 import warnings
+from collections.abc import Sequence
 from math import gcd
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
 
@@ -60,26 +62,57 @@ class PhonopyAtoms:
 
     Originally this aimed to be compatible ASE Atoms class, but now not.
 
+    Attributes
+    ----------
+    cell : np.ndarray
+        Basis vectors (a, b, c) given in row vectors.
+    positions : np.ndarray
+        Positions of atoms in Cartesian coordinates.
+        shape=(natom, 3), dtype='double', order='C'
+    scaled_positions : np.ndarray
+        Positions of atoms in fractional (crystallographic) coordinates.
+        shape=(natom, 3), dtype='double', order='C'
+    symbols : list[str]
+        List of chemical symbols of atoms.
+    numbers : np.ndarray
+        Atomic numbers.
+        shape=(natom,), dtype='intc'
+    masses : np.ndarray, optional
+        Atomic masses.
+        shape=(natom,), dtype='double'
+    magnetic_moments : np.ndarray, optional
+        shape=(natom,) or (natom, 3), dtype='double', order='C'
+    volume : float
+        Cell volume.
+    Z : int
+        Number of formula units in this cell.
+
     """
 
     def __init__(
         self,
-        symbols=None,
-        numbers=None,
-        masses=None,
-        magnetic_moments=None,
-        scaled_positions=None,
-        positions=None,
-        cell=None,
+        symbols: Optional[Sequence] = None,
+        numbers: Optional[Union[Sequence, np.ndarray]] = None,
+        masses: Optional[Union[Sequence, np.ndarray]] = None,
+        magnetic_moments: Optional[Union[Sequence, np.ndarray]] = None,
+        scaled_positions: Optional[Union[Sequence, np.ndarray]] = None,
+        positions: Optional[Union[Sequence, np.ndarray]] = None,
+        cell: Optional[Union[Sequence, np.ndarray]] = None,
         atoms: Optional["PhonopyAtoms"] = None,
-        magmoms=None,
-        pbc=True,
+        magmoms: Optional[Union[Sequence, np.ndarray]] = None,
+        pbc: Optional[bool] = None,
     ):  # pbc is dummy argument, and never used.
         """Init method."""
         if magmoms is not None:
             warnings.warn(
                 "PhonopyAtoms.__init__ parameter of magmoms is deprecated. "
                 "Use magnetic_moments instead.",
+                DeprecationWarning,
+            )
+        if pbc is not None:
+            warnings.warn(
+                "PhonopyAtoms.__init__ parameter of pbc is deprecated. "
+                "It is considered always True.",
                 DeprecationWarning,
             )
         if atoms:
@@ -89,7 +122,6 @@ class PhonopyAtoms:
                 magnetic_moments=atoms.magnetic_moments,
                 scaled_positions=atoms.scaled_positions,
                 cell=atoms.cell,
-                pbc=True,
             )
         else:
             self._set_parameters(
@@ -100,20 +132,17 @@ class PhonopyAtoms:
                 scaled_positions=scaled_positions,
                 positions=positions,
                 cell=cell,
-                pbc=True,
             )
 
     def _set_parameters(
         self,
-        symbols=None,
-        numbers=None,
-        masses=None,
-        magnetic_moments=None,
-        scaled_positions=None,
-        positions=None,
-        cell=None,
-        atoms: Optional["PhonopyAtoms"] = None,
-        pbc=True,
+        symbols: Optional[Sequence] = None,
+        numbers: Optional[Union[Sequence, np.ndarray]] = None,
+        masses: Optional[Union[Sequence, np.ndarray]] = None,
+        magnetic_moments: Optional[Union[Sequence, np.ndarray]] = None,
+        scaled_positions: Optional[Union[Sequence, np.ndarray]] = None,
+        positions: Optional[Union[Sequence, np.ndarray]] = None,
+        cell: Optional[Union[Sequence, np.ndarray]] = None,
     ):
         self._cell = None
         self._scaled_positions = None
@@ -330,6 +359,9 @@ class PhonopyAtoms:
     def magnetic_moments(self, magmoms):
         self._set_magnetic_moments(magmoms)
         self._check()
+        # When non collinear magnetic moments is given in a flat array.
+        if len(self.magnetic_moments) == len(self) * 3:
+            self._magmoms = np.reshape(self._magmoms, (-1, 3))
 
     def get_magnetic_moments(self):
         """Return magnetic moments."""
@@ -443,8 +475,10 @@ class PhonopyAtoms:
             if len(self._numbers) != len(self._masses):
                 raise RuntimeError("len(numbers) != len(masses).")
         if self._magmoms is not None:
-            if len(self._numbers) != len(self._magmoms):
-                raise RuntimeError("len(numbers) != len(magmoms).")
+            if len(self._magmoms.ravel()) not in (len(self), len(self) * 3):
+                raise RuntimeError(
+                    "magnetic_moments has to have shape=(natom,) or (natom, 3)."
+                )
 
     def copy(self):
         """Return copy of itself."""

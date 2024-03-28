@@ -334,7 +334,7 @@ def _distribute_forces(supercell, disp, forces, filename, symprec):
     lattice = supercell.get_cell()
     symbols = supercell.get_chemical_symbols()
     positions = supercell.get_positions() + disp
-    cell = Atoms(cell=lattice, positions=positions, symbols=symbols, pbc=True)
+    cell = Atoms(cell=lattice, positions=positions, symbols=symbols)
     symmetry = Symmetry(cell, symprec)
     independent_atoms = symmetry.get_independent_atoms()
 

@@ -245,7 +245,6 @@ class Supercell(PhonopyAtoms):
                 magnetic_moments=supercell.magnetic_moments,
                 scaled_positions=supercell.scaled_positions,
                 cell=supercell.cell,
-                pbc=True,
             )
             self._u2s_map = np.array(np.arange(num_uatom) * N, dtype="int_")
             self._u2u_map = {j: i for i, j in enumerate(self._u2s_map)}
@@ -305,7 +304,6 @@ class Supercell(PhonopyAtoms):
             magnetic_moments=magmoms_multi,
             scaled_positions=positions_multi,
             cell=np.dot(mat, lattice),
-            pbc=True,
         )
 
         return simple_supercell, atom_map
@@ -568,7 +566,6 @@ class Primitive(PhonopyAtoms):
             magnetic_moments=trimmed_cell.magnetic_moments,
             scaled_positions=trimmed_cell.scaled_positions,
             cell=trimmed_cell.cell,
-            pbc=True,
         )
         return p2s_map
 
@@ -769,7 +766,6 @@ class TrimmedCell(PhonopyAtoms):
                 magnetic_moments=trimmed_magmoms,
                 scaled_positions=trimmed_positions,
                 cell=trimmed_lattice,
-                pbc=True,
             )
             self._extracted_atoms = np.array(extracted_atoms, dtype="intc")
             self._mapping_table = mapping_table
