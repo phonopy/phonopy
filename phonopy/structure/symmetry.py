@@ -33,8 +33,10 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+from __future__ import annotations
 
 import warnings
+from typing import Optional
 
 import numpy as np
 import spglib
@@ -52,7 +54,11 @@ class Symmetry:
     """Class to find and store crystal symmetry information."""
 
     def __init__(
-        self, cell: PhonopyAtoms, symprec=1e-5, is_symmetry=True, s2p_map=None
+        self,
+        cell: PhonopyAtoms,
+        symprec: float = 1e-5,
+        is_symmetry: bool = True,
+        s2p_map: Optional[np.ndarray] = None,
     ):
         """Init method.
 

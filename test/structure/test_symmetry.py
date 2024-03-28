@@ -37,24 +37,21 @@ def test_get_map_operations(nacl_unitcell_order1):
         assert (diff < symprec).all()
 
 
-def test_magmom(convcell_cr: PhonopyAtoms):
-    """Test symmetry search with hmagnetic moments."""
+def test_collinear_magnetic_symmetry(convcell_cr: PhonopyAtoms):
+    """Test symmetry search with collinear magnetic moments."""
     symprec = 1e-5
     symmetry_nonspin = Symmetry(convcell_cr, symprec=symprec)
     atom_map_nonspin = symmetry_nonspin.get_map_atoms()
     len_sym_nonspin = len(symmetry_nonspin.symmetry_operations["rotations"])
 
-    spin = [1, -1]
     cell_withspin = convcell_cr.copy()
-    cell_withspin.magnetic_moments = spin
+    cell_withspin.magnetic_moments = [1, -1]
     symmetry_withspin = Symmetry(cell_withspin, symprec=symprec)
     atom_map_withspin = symmetry_withspin.get_map_atoms()
     len_sym_withspin = len(symmetry_withspin.symmetry_operations["rotations"])
 
-    broken_spin = [1, -2]
     cell_brokenspin = convcell_cr.copy()
-    cell_brokenspin = convcell_cr.copy()
-    cell_brokenspin.magnetic_moments = broken_spin
+    cell_brokenspin.magnetic_moments = [1, -2]
     symmetry_brokenspin = Symmetry(cell_brokenspin, symprec=symprec)
     atom_map_brokenspin = symmetry_brokenspin.get_map_atoms()
     len_sym_brokenspin = len(symmetry_brokenspin.symmetry_operations["rotations"])
@@ -63,6 +60,32 @@ def test_magmom(convcell_cr: PhonopyAtoms):
     assert (atom_map_nonspin != atom_map_brokenspin).any()
     assert len_sym_nonspin == len_sym_withspin
     assert len_sym_nonspin != len_sym_brokenspin
+
+
+def test_non_collinear_magnetic_symmetry(convcell_cr: PhonopyAtoms):
+    """Test symmetry search with non-collinear magnetic moments."""
+    symprec = 1e-5
+    symmetry_nonspin = Symmetry(convcell_cr, symprec=symprec)
+    atom_map_nonspin = symmetry_nonspin.get_map_atoms()
+    len_sym_nonspin = len(symmetry_nonspin.symmetry_operations["rotations"])
+
+    cell_withspin = convcell_cr.copy()
+    cell_withspin.magnetic_moments = [[0, 0, 1], [0, 0, -1]]
+    symmetry_withspin = Symmetry(cell_withspin, symprec=symprec)
+    atom_map_withspin = symmetry_withspin.get_map_atoms()
+    len_sym_withspin = len(symmetry_withspin.symmetry_operations["rotations"])
+
+    cell_brokenspin = convcell_cr.copy()
+    cell_brokenspin.magnetic_moments = [[1, 1, 1], [-2, -2, -2]]
+    symmetry_brokenspin = Symmetry(cell_brokenspin, symprec=symprec)
+    atom_map_brokenspin = symmetry_brokenspin.get_map_atoms()
+    len_sym_brokenspin = len(symmetry_brokenspin.symmetry_operations["rotations"])
+
+    assert (atom_map_nonspin == atom_map_withspin).all()
+    assert (atom_map_nonspin == atom_map_brokenspin).any()
+    assert len_sym_nonspin == 96
+    assert len_sym_withspin == 32
+    assert len_sym_brokenspin == 12
 
 
 def test_symmetrize_borns_and_epsilon_nacl(ph_nacl: Phonopy):
