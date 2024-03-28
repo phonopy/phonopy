@@ -540,7 +540,11 @@ class PhonopyAtoms:
             if m is not None:
                 lines.append("  mass: %f" % m)
             if mag is not None:
-                lines.append("  magnetic_moment: %.8f" % mag)
+                if mag.ndim == 0:
+                    mag_str = f"{mag:.8f}"
+                else:
+                    mag_str = f"[{mag[0]:.8f}, {mag[1]:.8f}, {mag[2]:.8f}]"
+                lines.append(f"  magnetic_moment: {mag_str}")
         return lines
 
     def __str__(self):
