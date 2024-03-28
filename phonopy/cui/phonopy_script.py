@@ -1761,7 +1761,22 @@ def init_phonopy(settings, cell_info, symprec, log_level):
 
 
 def main(**argparse_control):
-    """Start phonopy."""
+    """Start phonopy.
+
+    phonopy command:
+        argparse_control = {
+            "fc_symmetry": False,
+            "is_nac": False,
+            "load_phonopy_yaml": False,
+        }
+    phonopy-load command:
+        argparse_control = {
+            "fc_symmetry": True,
+            "is_nac": True,
+            "load_phonopy_yaml": True,
+        }
+
+    """
     # import warnings
 
     # warnings.simplefilter("error")
