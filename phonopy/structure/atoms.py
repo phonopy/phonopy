@@ -171,6 +171,7 @@ class PhonopyAtoms:
             self._symbols_to_masses()
 
         self._check()
+        self._finalize()
 
     def __len__(self):
         """Return number of atoms."""
@@ -359,9 +360,7 @@ class PhonopyAtoms:
     def magnetic_moments(self, magmoms):
         self._set_magnetic_moments(magmoms)
         self._check()
-        # When non collinear magnetic moments is given in a flat array.
-        if len(self.magnetic_moments) == len(self) * 3:
-            self._magmoms = np.reshape(self._magmoms, (-1, 3))
+        self._finalize()
 
     def get_magnetic_moments(self):
         """Return magnetic moments."""
@@ -479,6 +478,12 @@ class PhonopyAtoms:
                 raise RuntimeError(
                     "magnetic_moments has to have shape=(natom,) or (natom, 3)."
                 )
+
+    def _finalize(self):
+        # When non collinear magnetic moments is given in a flat array.
+        if self.magnetic_moments is not None:
+            if len(self.magnetic_moments) == len(self) * 3:
+                self._magmoms = np.reshape(self._magmoms, (-1, 3))
 
     def copy(self):
         """Return copy of itself."""

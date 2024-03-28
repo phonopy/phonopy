@@ -1,6 +1,7 @@
 """Tests for symmetry tools."""
 
 import numpy as np
+import pytest
 
 from phonopy import Phonopy
 from phonopy.structure.atoms import PhonopyAtoms
@@ -62,7 +63,8 @@ def test_collinear_magnetic_symmetry(convcell_cr: PhonopyAtoms):
     assert len_sym_nonspin != len_sym_brokenspin
 
 
-def test_non_collinear_magnetic_symmetry(convcell_cr: PhonopyAtoms):
+@pytest.mark.parametrize("is_flat", [False, True])
+def test_non_collinear_magnetic_symmetry(convcell_cr: PhonopyAtoms, is_flat: bool):
     """Test symmetry search with non-collinear magnetic moments."""
     symprec = 1e-5
     symmetry_nonspin = Symmetry(convcell_cr, symprec=symprec)
@@ -70,13 +72,19 @@ def test_non_collinear_magnetic_symmetry(convcell_cr: PhonopyAtoms):
     len_sym_nonspin = len(symmetry_nonspin.symmetry_operations["rotations"])
 
     cell_withspin = convcell_cr.copy()
-    cell_withspin.magnetic_moments = [[0, 0, 1], [0, 0, -1]]
+    if is_flat:
+        cell_withspin.magnetic_moments = [0, 0, 1, 0, 0, -1]
+    else:
+        cell_withspin.magnetic_moments = [[0, 0, 1], [0, 0, -1]]
     symmetry_withspin = Symmetry(cell_withspin, symprec=symprec)
     atom_map_withspin = symmetry_withspin.get_map_atoms()
     len_sym_withspin = len(symmetry_withspin.symmetry_operations["rotations"])
 
     cell_brokenspin = convcell_cr.copy()
-    cell_brokenspin.magnetic_moments = [[1, 1, 1], [-2, -2, -2]]
+    if is_flat:
+        cell_brokenspin.magnetic_moments = [1, 1, 1, -2, -2, -2]
+    else:
+        cell_brokenspin.magnetic_moments = [[1, 1, 1], [-2, -2, -2]]
     symmetry_brokenspin = Symmetry(cell_brokenspin, symprec=symprec)
     atom_map_brokenspin = symmetry_brokenspin.get_map_atoms()
     len_sym_brokenspin = len(symmetry_brokenspin.symmetry_operations["rotations"])
