@@ -1889,11 +1889,14 @@ def main(**argparse_control):
         )
         if phonon.unitcell.magnetic_moments is None:
             print("Spacegroup: %s" % phonon.symmetry.get_international_table())
-        else:
-            print(
-                "Number of symmetry operations in supercell: %d"
-                % len(phonon.symmetry.symmetry_operations["rotations"])
-            )
+        elif phonon.symmetry.dataset is not None:
+            uni_number = phonon.symmetry.dataset["uni_number"]
+            msg_type = phonon.symmetry.dataset["msg_type"]
+            print(f"Magnetic space group UNI number (type): {uni_number} ({msg_type})")
+        print(
+            "Number of symmetry operations in supercell: %d"
+            % len(phonon.symmetry.symmetry_operations["rotations"])
+        )
         if log_level > 1:
             print_cells(phonon)
         else:
