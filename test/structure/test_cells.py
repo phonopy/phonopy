@@ -1,6 +1,7 @@
 """Tests of routines in cells.py."""
 
 import os
+from collections.abc import Callable
 
 import numpy as np
 import pytest
@@ -206,12 +207,16 @@ def test_get_supercell_convcell_sio2(
 
 
 @pytest.mark.parametrize("nosnf", [True, False])
-def test_get_supercell_primcell_si(primcell_si: PhonopyAtoms, nosnf, helper_methods):
+def test_get_supercell_primcell_si(
+    primcell_si: PhonopyAtoms, nosnf, helper_methods: Callable
+):
     """Test of get_supercell with/without SNF by Si."""
     _test_get_supercell_primcell_si(primcell_si, helper_methods, is_old_style=nosnf)
 
 
-def test_get_supercell_nacl_snf(nacl_unitcell_order1: PhonopyAtoms, helper_methods):
+def test_get_supercell_nacl_snf(
+    nacl_unitcell_order1: PhonopyAtoms, helper_methods: Callable
+):
     """Test of get_supercell using SNF by NaCl."""
     cell = nacl_unitcell_order1
     smat = [[-1, 1, 1], [1, -1, 1], [1, 1, -1]]
@@ -220,14 +225,24 @@ def test_get_supercell_nacl_snf(nacl_unitcell_order1: PhonopyAtoms, helper_metho
     helper_methods.compare_cells(scell, scell_snf)
 
 
-def test_get_supercell_Cr(convcell_cr: PhonopyAtoms, helper_methods):
+@pytest.mark.parametrize("is_ncl", [False, True])
+def test_get_supercell_Cr_with_magmoms(
+    convcell_cr: PhonopyAtoms, is_ncl: bool, helper_methods: Callable
+):
     """Test of get_supercell using SNF by Cr with magnetic moments."""
-    convcell_cr.magnetic_moments = [1, -1]
+    if is_ncl:
+        convcell_cr.magnetic_moments = [[0, 0, 1], [0, 0, -1]]
+        ref_magmoms = [[0, 0, 1]] * 4 + [[0, 0, -1]] * 4
+    else:
+        convcell_cr.magnetic_moments = [1, -1]
+        ref_magmoms = [1.0] * 4 + [-1.0] * 4
+
     smat = [[-1, 1, 1], [1, -1, 1], [1, 1, -1]]
     scell = get_supercell(convcell_cr, smat, is_old_style=True)
+
     np.testing.assert_allclose(
         scell.magnetic_moments,
-        [1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0],
+        ref_magmoms,
         atol=1e-8,
     )
     scell_snf = get_supercell(convcell_cr, smat, is_old_style=False)
@@ -277,9 +292,15 @@ def test_get_primitive_convcell_nacl_with_cetring_symbol(
     helper_methods.compare_cells_with_order(pcell, primcell_nacl)
 
 
-def test_get_primitive_convcell_Cr(convcell_cr: PhonopyAtoms, helper_methods):
-    """Test get_primitive by NaCl."""
-    convcell_cr.magnetic_moments = [1, -1]
+@pytest.mark.parametrize("is_ncl", [False, True])
+def test_get_primitive_convcell_Cr_with_magmoms(
+    convcell_cr: PhonopyAtoms, is_ncl: bool, helper_methods: Callable
+):
+    """Test get_primitive by Cr with magmoms."""
+    if is_ncl:
+        convcell_cr.magnetic_moments = [[0, 0, 1], [0, 0, -1]]
+    else:
+        convcell_cr.magnetic_moments = [1, -1]
     smat = [[2, 0, 0], [0, 2, 0], [0, 0, 2]]
     scell = get_supercell(convcell_cr, smat, is_old_style=True)
     pmat = np.linalg.inv(smat)
@@ -309,7 +330,7 @@ def test_get_primitive_convcell_nacl_svecs(
         assert multi.shape == (8, 2)
 
 
-def test_TrimmedCell(nacl_unitcell_order1: PhonopyAtoms, helper_methods):
+def test_TrimmedCell(nacl_unitcell_order1: PhonopyAtoms, helper_methods: Callable):
     """Test TrimmedCell by NaCl."""
     pmat = [[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]]
     smat2 = np.eye(3, dtype="intc") * 2
@@ -335,7 +356,7 @@ def test_TrimmedCell(nacl_unitcell_order1: PhonopyAtoms, helper_methods):
     helper_methods.compare_cells_with_order(tcell2, tcell3)
 
 
-def test_ShortestPairs_sparse_nacl(ph_nacl: Phonopy, helper_methods):
+def test_ShortestPairs_sparse_nacl(ph_nacl: Phonopy, helper_methods: Callable):
     """Test ShortestPairs (parse) by NaCl."""
     scell = ph_nacl.supercell
     pcell = ph_nacl.primitive
@@ -350,7 +371,7 @@ def test_ShortestPairs_sparse_nacl(ph_nacl: Phonopy, helper_methods):
     helper_methods.compare_positions_with_order(pos_from_svecs, pos, scell.cell)
 
 
-def test_ShortestPairs_dense_nacl(ph_nacl: Phonopy, helper_methods):
+def test_ShortestPairs_dense_nacl(ph_nacl: Phonopy, helper_methods: Callable):
     """Test ShortestPairs (dense) by NaCl."""
     scell = ph_nacl.supercell
     pcell = ph_nacl.primitive

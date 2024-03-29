@@ -33,8 +33,10 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+from __future__ import annotations
 
 import warnings
+from typing import Optional
 
 import numpy as np
 import spglib
@@ -52,7 +54,11 @@ class Symmetry:
     """Class to find and store crystal symmetry information."""
 
     def __init__(
-        self, cell: PhonopyAtoms, symprec=1e-5, is_symmetry=True, s2p_map=None
+        self,
+        cell: PhonopyAtoms,
+        symprec: float = 1e-5,
+        is_symmetry: bool = True,
+        s2p_map: Optional[np.ndarray] = None,
     ):
         """Init method.
 
@@ -331,15 +337,14 @@ class Symmetry:
         self._map_atoms = self._dataset["equivalent_atoms"]
 
     def _set_symmetry_operations_with_magmoms(self):
-        if int(spglib.__version__.split(".")[0]) > 1:
-            self._symmetry_operations = spglib.get_magnetic_symmetry(
-                self._cell.totuple(), symprec=self._symprec
-            )
-        else:
-            self._symmetry_operations = spglib.get_symmetry(
-                self._cell.totuple(), symprec=self._symprec
-            )
-        self._map_atoms = self._symmetry_operations["equivalent_atoms"]
+        self._dataset = spglib.get_magnetic_symmetry_dataset(
+            self._cell.totuple(), symprec=self._symprec
+        )
+        self._symmetry_operations = {
+            "rotations": self._dataset["rotations"],
+            "translations": self._dataset["translations"],
+        }
+        self._map_atoms = self._dataset["equivalent_atoms"]
 
     def _set_independent_atoms(self):
         indep_atoms = []

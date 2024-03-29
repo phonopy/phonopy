@@ -349,15 +349,26 @@ class PhonopyYamlDumper:
 
     def _symmetry_yaml_lines(self):
         lines = []
-        if self._data.symmetry is not None and self._data.symmetry.dataset is not None:
-            lines.append("space_group:")
-            lines.append('  type: "%s"' % self._data.symmetry.dataset["international"])
-            lines.append("  number: %d" % self._data.symmetry.dataset["number"])
-            hall_symbol = self._data.symmetry.dataset["hall"]
-            if '"' in hall_symbol:
-                hall_symbol = hall_symbol.replace('"', '\\"')
-            lines.append('  Hall_symbol: "%s"' % hall_symbol)
-            lines.append("")
+        if self._data.symmetry is None:
+            return lines
+
+        dataset = self._data.symmetry.dataset
+        if dataset is not None:
+            if "uni_number" in dataset:
+                lines.append("magnetic_space_group:")
+                lines.append(f'  uni_number: {dataset["uni_number"]}')
+                lines.append(f'  msg_type: {dataset["msg_type"]}')
+                lines.append("")
+            else:
+                lines.append("space_group:")
+                spg_type = dataset["international"]
+                lines.append(f'  type: "{spg_type}"')
+                lines.append(f'  number: {dataset["number"]}')
+                hall_symbol = dataset["hall"]
+                if '"' in hall_symbol:
+                    hall_symbol = hall_symbol.replace('"', '\\"')
+                lines.append(f'  Hall_symbol: "{hall_symbol}"')
+                lines.append("")
         return lines
 
     def _cell_info_yaml_lines(self):

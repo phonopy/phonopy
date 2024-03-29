@@ -2,6 +2,15 @@
 
 # Change Log
 
+## Mar-29-2024: Version 2.22.1
+
+- Update spglib depndency >= 2.3.
+- Experimental support of non-collinear-like magnetic moments activated using
+  `MAGMOM` tag or `--magmom` options. The values are defined by a `(number of
+  atoms, 3)` array for API, but specified with a 1D flattened list from the
+  command user interface. At least it is expected to work with the VASP
+  interface, but each specific calculator interface may not support it.
+
 ## Mar-19-2024: Version 2.22.0
 
 - Maintenance release.

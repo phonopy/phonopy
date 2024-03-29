@@ -613,9 +613,7 @@ def get_cell_from_disp_yaml(dataset):
             )
             raise RuntimeError(msg)
         symbols = [x["symbol"] for x in dataset[data_key]]
-        cell = PhonopyAtoms(
-            cell=lattice, scaled_positions=positions, symbols=symbols, pbc=True
-        )
+        cell = PhonopyAtoms(cell=lattice, scaled_positions=positions, symbols=symbols)
         return cell
     else:
         return get_cell_from_disp_yaml(dataset["supercell"])
