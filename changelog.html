@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Change Log &#8212; Phonopy v.2.22.0</title>
+    <title>Change Log &#8212; Phonopy v.2.22.1</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="_static/documentation_options.js?v=00cd0693"></script>
+    <script src="_static/documentation_options.js?v=bb31848e"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -128,7 +128,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.22.0</p>
+    <p class="title logo__title">Phonopy v.2.22.1</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -335,6 +335,7 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mar-29-2024-version-2-22-1">Mar-29-2024: Version 2.22.1</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mar-19-2024-version-2-22-0">Mar-19-2024: Version 2.22.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#feb-18-2024-version-2-21-2">Feb-18-2024: Version 2.21.2</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#feb-14-2024-version-2-21-1">Feb-14-2024: Version 2.21.1</a></li>
@@ -483,6 +484,16 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h1>
+<section id="mar-29-2024-version-2-22-1">
+<h2>Mar-29-2024: Version 2.22.1<a class="headerlink" href="#mar-29-2024-version-2-22-1" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Update spglib depndency &gt;= 2.3.</p></li>
+<li><p>Experimental support of non-collinear-like magnetic moments activated using
+<code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code> tag or <code class="docutils literal notranslate"><span class="pre">--magmom</span></code> options. The values are defined by a <code class="docutils literal notranslate"><span class="pre">(number</span> <span class="pre">of</span> <span class="pre">atoms,</span> <span class="pre">3)</span></code> array for API, but specified with a 1D flattened list from the
+command user interface. At least it is expected to work with the VASP
+interface, but each specific calculator interface may not support it.</p></li>
+</ul>
+</section>
 <section id="mar-19-2024-version-2-22-0">
 <h2>Mar-19-2024: Version 2.22.0<a class="headerlink" href="#mar-19-2024-version-2-22-0" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -1856,6 +1867,7 @@ structure with atomic displacements.</p></li>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mar-29-2024-version-2-22-1">Mar-29-2024: Version 2.22.1</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mar-19-2024-version-2-22-0">Mar-19-2024: Version 2.22.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#feb-18-2024-version-2-21-2">Feb-18-2024: Version 2.21.2</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#feb-14-2024-version-2-21-1">Feb-14-2024: Version 2.21.1</a></li>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Setting tags &#8212; Phonopy v.2.22.0</title>
+    <title>Setting tags &#8212; Phonopy v.2.22.1</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="_static/documentation_options.js?v=00cd0693"></script>
+    <script src="_static/documentation_options.js?v=bb31848e"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -131,7 +131,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.22.0</p>
+    <p class="title logo__title">Phonopy v.2.22.1</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -598,16 +598,22 @@ follows :</p>
 </section>
 <section id="magmom">
 <span id="magmom-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code><a class="headerlink" href="#magmom" title="Link to this heading">#</a></h3>
-<p>Symmetry of spin such as collinear magnetic moments is considered using this
-tag. The number of values has to be equal to the number of atoms in the unit
-cell, not the primitive cell or supercell. If this tag is used with <code class="docutils literal notranslate"><span class="pre">-d</span></code> option
-(<code class="docutils literal notranslate"><span class="pre">CREATE_DISPLACEMENTS</span></code> tag), <code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code> file is created. This file contains the
-<code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code> information of the supercell used for VASP. Unlike <code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code> in VASP,
-<code class="docutils literal notranslate"><span class="pre">*</span></code> can not be used, i.e., all the values (the same number of times to the
-number of atoms in unit cell) have to be explicitly written.</p>
+<p>Symmetry of spin such as magnetic moments is specified using this tag. The
+number of values has to be equal to the number of atoms, or its three times for
+non-collinear-like case, in <strong>the input unit cell</strong>, not the primitive cell or
+supercell. If this tag is used with <code class="docutils literal notranslate"><span class="pre">-d</span></code> option (<code class="docutils literal notranslate"><span class="pre">CREATE_DISPLACEMENTS</span></code> tag),
+<code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code> file is created. This file contains the <code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code> information of the
+supercell used for VASP. Unlike <code class="docutils literal notranslate"><span class="pre">MAGMOM</span></code> in VASP, <code class="docutils literal notranslate"><span class="pre">*</span></code> can not be used, i.e., all
+the values (the same number of times to the number of atoms in unit cell) have
+to be explicitly written.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MAGMOM</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="mf">1.0</span> <span class="o">-</span><span class="mf">1.0</span> <span class="o">-</span><span class="mf">1.0</span>
 </pre></div>
 </div>
+<p>For non-collinear-like case,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MAGMOM</span> <span class="o">=</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="o">-</span><span class="mi">1</span>
+</pre></div>
+</div>
+<p>where the first three values as a vector is for the first atom, and so on.</p>
 </section>
 <section id="cell-filename">
 <span id="cell-filename-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">CELL_FILENAME</span></code><a class="headerlink" href="#cell-filename" title="Link to this heading">#</a></h3>
