@@ -249,7 +249,7 @@ def main(build_dir):
             "PyYAML>=5.3",
             "matplotlib>=2.2.2",
             "h5py>=3.0",
-            "spglib>=2.0",
+            "spglib>=2.3",
         ],
         extras_require={"cp2k": ["cp2k-input-tools"]},
         provides=["phonopy"],

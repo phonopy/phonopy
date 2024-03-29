@@ -8,6 +8,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, fields
 from typing import Optional, Union
 
+import numpy as np
 import pytest
 
 from phonopy.cui.phonopy_script import main
@@ -20,7 +21,7 @@ cwd_called = pathlib.Path.cwd()
 class MockArgs:
     """Mock args of ArgumentParser."""
 
-    filename: Optional[Sequence[os.PathLike]] = None
+    filename: Optional[Sequence[Union[os.PathLike, str]]] = None
     conf_filename: Optional[os.PathLike] = None
     log_level: Optional[int] = None
     fc_symmetry: bool = True
@@ -29,6 +30,9 @@ class MockArgs:
     is_graph_plot: Optional[bool] = None
     is_graph_save: Optional[bool] = None
     is_legend: Optional[bool] = None
+    is_displacement: Optional[bool] = None
+    supercell_dimension: Optional[str] = None
+    magmoms: Optional[str] = None
 
     def __iter__(self):
         """Make self iterable to support in."""
@@ -36,6 +40,40 @@ class MockArgs:
 
     def __contains__(self, item):
         return item in (field.name for field in fields(self))
+
+
+@pytest.mark.parametrize("is_ncl", [False, True])
+def test_phonopy_disp_Cr(is_ncl: bool):
+    cell_filename = cwd / "POSCAR-unitcell_Cr"
+    if is_ncl:
+        magmoms = "0 0 1 0 0 -1"
+    else:
+        magmoms = "1 -1"
+
+    argparse_control = _get_phonopy_args(
+        cell_filename=cell_filename,
+        supercell_dimension="2 2 2",
+        is_displacement=True,
+        magmoms=magmoms,
+    )
+    with pytest.raises(SystemExit) as excinfo:
+        main(**argparse_control)
+    assert excinfo.value.code == 0
+
+    magmom_file_path = pathlib.Path(cwd_called / "MAGMOM")
+    assert magmom_file_path.exists()
+    with open(magmom_file_path) as f:
+        vals = [float(v) for v in f.readline().split()[2:]]
+
+    if is_ncl:
+        np.testing.assert_allclose(vals, np.ravel([[0, 0, 1]] * 8 + [[0, 0, -1]] * 8))
+    else:
+        np.testing.assert_allclose(vals, [1.0] * 8 + [-1.0] * 8)
+
+    for created_filename in ["MAGMOM", "POSCAR-001", "SPOSCAR", "phonopy_disp.yaml"]:
+        file_path = pathlib.Path(cwd_called / created_filename)
+        assert file_path.exists()
+        file_path.unlink()
 
 
 def test_phonopy_load():
@@ -72,6 +110,31 @@ def test_phonopy_is_check_symmetry():
         file_path = pathlib.Path(cwd_called / created_filename)
         assert file_path.exists()
         file_path.unlink()
+
+
+def _get_phonopy_args(
+    cell_filename: str,
+    supercell_dimension: Optional[str],
+    is_displacement: Optional[bool],
+    magmoms: Optional[str],
+):
+    mockargs = MockArgs(
+        filename=[],
+        log_level=1,
+        cell_filename=cell_filename,
+        supercell_dimension=supercell_dimension,
+        is_displacement=is_displacement,
+        magmoms=magmoms,
+    )
+
+    # See phonopy-load script.
+    argparse_control = {
+        "fc_symmetry": False,
+        "is_nac": False,
+        "load_phonopy_yaml": False,
+        "args": mockargs,
+    }
+    return argparse_control
 
 
 def _get_phonopy_load_args(
