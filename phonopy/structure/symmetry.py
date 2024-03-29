@@ -337,15 +337,14 @@ class Symmetry:
         self._map_atoms = self._dataset["equivalent_atoms"]
 
     def _set_symmetry_operations_with_magmoms(self):
-        if int(spglib.__version__.split(".")[0]) > 1:
-            self._symmetry_operations = spglib.get_magnetic_symmetry(
-                self._cell.totuple(), symprec=self._symprec
-            )
-        else:
-            self._symmetry_operations = spglib.get_symmetry(
-                self._cell.totuple(), symprec=self._symprec
-            )
-        self._map_atoms = self._symmetry_operations["equivalent_atoms"]
+        self._dataset = spglib.get_magnetic_symmetry_dataset(
+            self._cell.totuple(), symprec=self._symprec
+        )
+        self._symmetry_operations = {
+            "rotations": self._dataset["rotations"],
+            "translations": self._dataset["translations"],
+        }
+        self._map_atoms = self._dataset["equivalent_atoms"]
 
     def _set_independent_atoms(self):
         indep_atoms = []

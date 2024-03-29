@@ -157,7 +157,7 @@ class PhonopyAtoms:
         self._set_masses(masses)
 
         # (initial) magnetic moments
-        self._magmoms = None
+        self._magnetic_moments = None
         self._set_magnetic_moments(magnetic_moments)
 
         # numbers and symbols
@@ -350,15 +350,23 @@ class PhonopyAtoms:
 
     @property
     def magnetic_moments(self):
-        """Setter and getter of magnetic moments. For getter, copy is returned."""
-        if self._magmoms is None:
+        """Setter and getter of magnetic moments. For getter, copy is returned.
+
+        shape=(natom,) or (natom, 3), dtype='double', order='C'
+
+        For setter, the formar can be specified by (natom, 1), which will be
+        recognized as (natom,) and the latter can be specified by (natom * 3,),
+        which will be converted to (natom, 3).
+
+        """
+        if self._magnetic_moments is None:
             return None
         else:
-            return self._magmoms.copy()
+            return self._magnetic_moments.copy()
 
     @magnetic_moments.setter
-    def magnetic_moments(self, magmoms):
-        self._set_magnetic_moments(magmoms)
+    def magnetic_moments(self, magnetic_moments):
+        self._set_magnetic_moments(magnetic_moments)
         self._check()
         self._finalize()
 
@@ -435,9 +443,9 @@ class PhonopyAtoms:
 
     def _set_magnetic_moments(self, magmoms):
         if magmoms is None:
-            self._magmoms = None
+            self._magnetic_moments = None
         else:
-            self._magmoms = np.array(magmoms, dtype="double")
+            self._magnetic_moments = np.array(np.ravel(magmoms), dtype="double")
 
     def _set_cell_and_positions(self, cell, positions=None, scaled_positions=None):
         self._set_cell(cell)
@@ -460,6 +468,12 @@ class PhonopyAtoms:
             self._masses = np.array(masses, dtype="double")
 
     def _check(self):
+        """Check number of eleemnts in arrays.
+
+        Do not modify the arrays. Modification of array shapes should be done in
+        ``self._finalize()``.
+
+        """
         if self._cell is None:
             raise RuntimeError("cell is not set.")
         if self._scaled_positions is None:
@@ -473,17 +487,18 @@ class PhonopyAtoms:
         if self._masses is not None:
             if len(self._numbers) != len(self._masses):
                 raise RuntimeError("len(numbers) != len(masses).")
-        if self._magmoms is not None:
-            if len(self._magmoms.ravel()) not in (len(self), len(self) * 3):
+        if self._magnetic_moments is not None:
+            if len(self._magnetic_moments.ravel()) not in (len(self), len(self) * 3):
                 raise RuntimeError(
                     "magnetic_moments has to have shape=(natom,) or (natom, 3)."
                 )
 
     def _finalize(self):
+        """Modify array shapes to those expeted to be exposed."""
         # When non collinear magnetic moments is given in a flat array.
         if self.magnetic_moments is not None:
-            if len(self.magnetic_moments) == len(self) * 3:
-                self._magmoms = np.reshape(self._magmoms, (-1, 3))
+            if len(self.magnetic_moments.ravel()) == len(self) * 3:
+                self._magnetic_moments = np.reshape(self._magnetic_moments, (-1, 3))
 
     def copy(self):
         """Return copy of itself."""
@@ -491,7 +506,7 @@ class PhonopyAtoms:
             cell=self._cell,
             scaled_positions=self._scaled_positions,
             masses=self._masses,
-            magnetic_moments=self._magmoms,
+            magnetic_moments=self._magnetic_moments,
             symbols=self._symbols,
         )
 
@@ -501,10 +516,15 @@ class PhonopyAtoms:
         If magmams is set, (cell, scaled_position, numbers, magmoms) is returned.
 
         """
-        if self._magmoms is None:
+        if self._magnetic_moments is None:
             return (self._cell, self._scaled_positions, self._numbers)
         else:
-            return (self._cell, self._scaled_positions, self._numbers, self._magmoms)
+            return (
+                self._cell,
+                self._scaled_positions,
+                self._numbers,
+                self._magnetic_moments,
+            )
 
     def to_tuple(self):
         """Return (cell, scaled_position, numbers).
@@ -528,10 +548,10 @@ class PhonopyAtoms:
             masses = [None] * len(self._symbols)
         else:
             masses = self._masses
-        if self._magmoms is None:
+        if self._magnetic_moments is None:
             magmoms = [None] * len(self._symbols)
         else:
-            magmoms = self._magmoms
+            magmoms = self._magnetic_moments
         for i, (s, v, m, mag) in enumerate(
             zip(self._symbols, self._scaled_positions, masses, magmoms)
         ):
