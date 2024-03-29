@@ -34,9 +34,11 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import os
 import sys
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 
@@ -49,7 +51,7 @@ from phonopy.cui.load_helper import (
     set_dataset_and_force_constants,
 )
 from phonopy.cui.phonopy_argparse import get_parser, show_deprecated_option_warnings
-from phonopy.cui.settings import PhonopyConfParser
+from phonopy.cui.settings import PhonopyConfParser, Settings
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.file_IO import (
     get_born_parameters,
@@ -210,7 +212,9 @@ def files_exist(filename_list, log_level, is_any=False):
     sys.exit(1)
 
 
-def finalize_phonopy(log_level, settings, confs, phonon, filename="phonopy.yaml"):
+def finalize_phonopy(
+    log_level, settings: Settings, confs, phonon, filename="phonopy.yaml"
+):
     """Finalize phonopy."""
     units = get_default_physical_units(phonon.calculator)
 
@@ -278,7 +282,11 @@ def print_cells(phonon: Phonopy):
 
 
 def print_settings(
-    settings, phonon, is_primitive_axes_auto, unitcell_filename, load_phonopy_yaml
+    settings: Settings,
+    phonon: Phonopy,
+    is_primitive_axes_auto: bool,
+    unitcell_filename: str,
+    load_phonopy_yaml: bool,
 ):
     """Show setting info."""
     primitive_matrix = phonon.primitive_matrix
@@ -425,7 +433,11 @@ def print_settings(
 
 
 def write_displacements_files_then_exit(
-    phonon: Phonopy, settings, confs, optional_structure_info, log_level
+    phonon: Phonopy,
+    settings: Settings,
+    confs: dict,
+    optional_structure_info: Optional[tuple],
+    log_level: int,
 ):
     """Write supercells with displacements and displacement dataset.
 
@@ -453,7 +465,9 @@ def write_displacements_files_then_exit(
     finalize_phonopy(log_level, settings, confs, phonon, filename="phonopy_disp.yaml")
 
 
-def create_FORCE_SETS_from_settings(settings, cell_filename, symprec, log_level):
+def create_FORCE_SETS_from_settings(
+    settings: Settings, cell_filename: Optional[str], symprec: float, log_level: int
+):
     """Create FORCE_SETS."""
     if settings.create_force_sets:
         filenames = settings.create_force_sets
@@ -495,7 +509,11 @@ def create_FORCE_SETS_from_settings(settings, cell_filename, symprec, log_level)
 
 
 def produce_force_constants(
-    phonon: Phonopy, settings, phpy_yaml, unitcell_filename, log_level
+    phonon: Phonopy,
+    settings: Settings,
+    phpy_yaml: dict,
+    unitcell_filename: str,
+    log_level: int,
 ):
     """Run force constants calculation (non-phonopy-yaml mode)."""
     num_satom = len(phonon.supercell)
@@ -1631,13 +1649,13 @@ def get_cell_info(settings, cell_filename, log_level):
     return cell_info
 
 
-def set_magnetic_moments(cell_info, settings, log_level):
+def set_magnetic_moments(cell_info: dict, settings: Settings, log_level):
     """Set magnetic moments to unitcell in cell_info."""
     # Set magnetic moments
     magmoms = settings.magnetic_moments
     if magmoms is not None:
         unitcell = cell_info["unitcell"]
-        if len(magmoms) == len(unitcell):
+        if len(magmoms) in (len(unitcell), len(unitcell) * 3):
             unitcell.magnetic_moments = magmoms
         else:
             error_text = "Invalid MAGMOM setting"
@@ -1743,7 +1761,22 @@ def init_phonopy(settings, cell_info, symprec, log_level):
 
 
 def main(**argparse_control):
-    """Start phonopy."""
+    """Start phonopy.
+
+    phonopy command:
+        argparse_control = {
+            "fc_symmetry": False,
+            "is_nac": False,
+            "load_phonopy_yaml": False,
+        }
+    phonopy-load command:
+        argparse_control = {
+            "fc_symmetry": True,
+            "is_nac": True,
+            "load_phonopy_yaml": True,
+        }
+
+    """
     # import warnings
 
     # warnings.simplefilter("error")
@@ -1856,11 +1889,14 @@ def main(**argparse_control):
         )
         if phonon.unitcell.magnetic_moments is None:
             print("Spacegroup: %s" % phonon.symmetry.get_international_table())
-        else:
-            print(
-                "Number of symmetry operations in supercell: %d"
-                % len(phonon.symmetry.symmetry_operations["rotations"])
-            )
+        elif phonon.symmetry.dataset is not None:
+            uni_number = phonon.symmetry.dataset["uni_number"]
+            msg_type = phonon.symmetry.dataset["msg_type"]
+            print(f"Magnetic space group UNI number (type): {uni_number} ({msg_type})")
+        print(
+            "Number of symmetry operations in supercell: %d"
+            % len(phonon.symmetry.symmetry_operations["rotations"])
+        )
         if log_level > 1:
             print_cells(phonon)
         else:

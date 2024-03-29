@@ -19,7 +19,7 @@ See https://phonopy.github.io/phonopy/install.html.
 - PyYAML>=5.3
 - matplotlib>=2.2.2
 - h5py>=3.0
-- spglib>=2.0
+- spglib>=2.3
 - scipy (optional)
 - seekpath (optional)
 

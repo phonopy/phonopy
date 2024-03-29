@@ -245,7 +245,6 @@ class Supercell(PhonopyAtoms):
                 magnetic_moments=supercell.magnetic_moments,
                 scaled_positions=supercell.scaled_positions,
                 cell=supercell.cell,
-                pbc=True,
             )
             self._u2s_map = np.array(np.arange(num_uatom) * N, dtype="int_")
             self._u2u_map = {j: i for i, j in enumerate(self._u2s_map)}
@@ -296,8 +295,10 @@ class Supercell(PhonopyAtoms):
             masses_multi = np.repeat(masses, n_l)
         if magmoms is None:
             magmoms_multi = None
-        else:
+        elif magmoms.ndim == 1:
             magmoms_multi = np.repeat(magmoms, n_l)
+        else:  # non-collinear
+            magmoms_multi = [v for v in magmoms for _ in range(n_l)]
 
         simple_supercell = PhonopyAtoms(
             numbers=numbers_multi,
@@ -305,7 +306,6 @@ class Supercell(PhonopyAtoms):
             magnetic_moments=magmoms_multi,
             scaled_positions=positions_multi,
             cell=np.dot(mat, lattice),
-            pbc=True,
         )
 
         return simple_supercell, atom_map
@@ -568,7 +568,6 @@ class Primitive(PhonopyAtoms):
             magnetic_moments=trimmed_cell.magnetic_moments,
             scaled_positions=trimmed_cell.scaled_positions,
             cell=trimmed_cell.cell,
-            pbc=True,
         )
         return p2s_map
 
@@ -769,7 +768,6 @@ class TrimmedCell(PhonopyAtoms):
                 magnetic_moments=trimmed_magmoms,
                 scaled_positions=trimmed_positions,
                 cell=trimmed_lattice,
-                pbc=True,
             )
             self._extracted_atoms = np.array(extracted_atoms, dtype="intc")
             self._mapping_table = mapping_table
@@ -909,7 +907,7 @@ def get_cell_lines(cell: PhonopyAtoms, mapping=None, stars=None):
             if magmoms.ndim == 1:
                 line += "  %5.3f" % magmoms[i]
             else:
-                line += "  %s" % magmoms[i].ravel()
+                line += "  %s" % magmoms[i]
         if mapping is None:
             lines.append(line)
         else:
