@@ -41,6 +41,7 @@ Some of command-line options are equivalent to respective setting tags:
 - `--include-disp` (`INCLUDE_DISP = .TRUE.`)
 - `--include-all` (`INCLUDE_ALL = .TRUE.`)
 - `--lcg`, `--little_cogroup` (`LITTLE_COGROUP`)
+- `--magmom` (`MAGMOM`)
 - `--modulation` (`MODULATION`)
 - `--moment` (`MOMENT = .TRUE.`)
 - `--moment_order` (`MOMENT_ORDER`)

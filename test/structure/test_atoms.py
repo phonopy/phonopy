@@ -1,8 +1,10 @@
 """Tests for PhonopyAtoms."""
 
+from collections.abc import Callable
 from io import StringIO
 
 import numpy as np
+import pytest
 import yaml
 
 from phonopy.structure.atoms import PhonopyAtoms, parse_cell_dict
@@ -27,13 +29,13 @@ def test_SiO2():
     _test_cell(cell_SiO2, _lattice, _points, symbols_SiO2)
 
 
-def test_SiO2_copy(helper_methods):
+def test_SiO2_copy(helper_methods: Callable):
     """Test of PhonopyAtoms.copy() by SiO2."""
     helper_methods.compare_cells(cell_SiO2, cell_SiO2.copy())
     helper_methods.compare_cells_with_order(cell_SiO2, cell_SiO2.copy())
 
 
-def test_AcO2(helper_methods):
+def test_AcO2(helper_methods: Callable):
     """Test of attributes by AcO2."""
     _test_cell(cell_AcO2, _lattice, _points, symbols_AcO2)
     helper_methods.compare_cells(cell_AcO2, cell_AcO2.copy())
@@ -64,22 +66,45 @@ def test_phonopy_atoms_AcO2():
     _test_phonopy_atoms(cell_AcO2)
 
 
-def test_Cr_magnetic_moments(convcell_cr: PhonopyAtoms):
-    """Test by Cr with [1, -1] magnetic moments."""
-    convcell_cr.magnetic_moments = [1, -1]
+@pytest.mark.parametrize(
+    "is_ncl,is_flat", [(False, False), (False, True), (True, False), (True, True)]
+)
+def test_Cr_magnetic_moments(convcell_cr: PhonopyAtoms, is_ncl: bool, is_flat: bool):
+    """Test by Cr with magnetic moments."""
+    print(len(convcell_cr))
+    if is_ncl:
+        if is_flat:
+            convcell_cr.magnetic_moments = [0, 0, 1, 0, 0, -1]
+        else:
+            convcell_cr.magnetic_moments = [[0, 0, 1], [0, 0, -1]]
+        np.testing.assert_allclose(
+            convcell_cr.magnetic_moments, [[0, 0, 1], [0, 0, -1]]
+        )
+    else:
+        if is_flat:
+            convcell_cr.magnetic_moments = [1, -1]
+        else:
+            convcell_cr.magnetic_moments = [[1], [-1]]
+        np.testing.assert_allclose(convcell_cr.magnetic_moments, [1, -1])
     _test_phonopy_atoms(convcell_cr)
     convcell_cr.magnetic_moments = None
 
 
-def test_Cr_copy_magnetic_moments(convcell_cr: PhonopyAtoms, helper_methods):
-    """Test by Cr with [1, -1] magnetic moments."""
-    convcell_cr.magnetic_moments = [1, -1]
+@pytest.mark.parametrize("is_ncl", [False, True])
+def test_Cr_copy_magnetic_moments(
+    convcell_cr: PhonopyAtoms, is_ncl: bool, helper_methods
+):
+    """Test by Cr with magnetic moments."""
+    if is_ncl:
+        convcell_cr.magnetic_moments = [[0, 0, 1], [0, 0, -1]]
+    else:
+        convcell_cr.magnetic_moments = [1, -1]
     helper_methods.compare_cells(convcell_cr, convcell_cr.copy())
     helper_methods.compare_cells_with_order(convcell_cr, convcell_cr.copy())
     convcell_cr.magnetic_moments = None
 
 
-def test_parse_cell_dict(helper_methods):
+def test_parse_cell_dict(helper_methods: Callable):
     """Test parse_cell_dict."""
     cell = cell_SiO2
     points = []
