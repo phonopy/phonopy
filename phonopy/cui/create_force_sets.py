@@ -40,7 +40,7 @@ from typing import Optional
 import numpy as np
 
 from phonopy.file_IO import parse_disp_yaml, write_FORCE_SETS
-from phonopy.interface.calculator import get_force_sets, get_force_sets_wien2k
+from phonopy.interface.calculator import get_calc_dataset, get_calc_dataset_wien2k
 from phonopy.interface.lammps import rotate_lammps_forces
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 
@@ -118,7 +118,7 @@ def create_FORCE_SETS(
     ):
         force_sets = []
     elif interface_mode == "wien2k":
-        force_sets = get_force_sets_wien2k(
+        calc_dataset = get_calc_dataset_wien2k(
             force_filenames,
             supercell,
             disp_dataset,
@@ -126,13 +126,16 @@ def create_FORCE_SETS(
             symmetry_tolerance=symmetry_tolerance,
             verbose=(log_level > 0),
         )
+        force_sets = calc_dataset["forces"]
     else:
-        force_sets = get_force_sets(
+        calc_dataset = get_calc_dataset(
             interface_mode,
             num_atoms,
             force_filenames,
             verbose=(log_level > 0),
         )
+        force_sets = calc_dataset["forces"]
+
     if interface_mode == "lammps":
         rotate_lammps_forces(force_sets, supercell.cell, verbose=(log_level > 0))
 

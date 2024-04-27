@@ -463,7 +463,8 @@ class Phonopy:
                  'first_atoms': [
                    {'number': atom index of displaced atom,
                     'displacement': displacement in Cartesian coordinates,
-                    'forces': forces on atoms in supercell},
+                    'forces': forces on atoms in supercell,
+                    'energy': energy of supercell},
                    {...}, ...]}
             Elements of the list accessed by 'first_atoms' corresponds to each
             displaced supercell. Each displaced supercell contains only one
@@ -473,8 +474,9 @@ class Phonopy:
             Type 2. All atomic displacements in each supercell:
                 {'displacements': ndarray, dtype='double', order='C',
                                   shape=(supercells, natom, 3)
-                 'forces': ndarray, dtype='double',, order='C',
-                                  shape=(supercells, natom, 3)}
+                 'forces': ndarray, dtype='double', order='C',
+                                  shape=(supercells, natom, 3),
+                 'energies': ndarray, dtype='double'}
 
             To set in type 2, displacements and forces can be given by numpy
             array with different shape but that can be reshaped to

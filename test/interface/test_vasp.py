@@ -115,6 +115,7 @@ def test_parse_vasprun_xml():
     _tar = tarfile.open(filename_vasprun)
     filename = cwd / ".." / "FORCE_SETS_NaCl"
     dataset = parse_FORCE_SETS(filename=filename)
+    energy_ref = [-216.82820693, -216.82817843]
     for i, member in enumerate(_tar.getmembers()):
         vr = Vasprun(_tar.extractfile(member), use_expat=True)
         # for force in vr.read_forces():
@@ -122,6 +123,7 @@ def test_parse_vasprun_xml():
         # print("")
         ref = dataset["first_atoms"][i]["forces"]
         np.testing.assert_allclose(ref, vr.read_forces(), atol=1e-8)
+        np.testing.assert_allclose(energy_ref[i], vr.read_energy(), atol=1e-8)
 
 
 def test_VasprunxmlExpat():

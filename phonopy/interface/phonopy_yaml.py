@@ -194,9 +194,7 @@ class PhonopyYamlLoader:
         return dataset
 
     def _parse_force_sets_type1(self, natom=None, key="displacements"):
-        with_forces = False
         if "forces" in self._yaml[key][0]:
-            with_forces = True
             dataset = {"natom": len(self._yaml[key][0]["forces"])}
         elif natom is not None:
             dataset = {"natom": natom}
@@ -211,8 +209,10 @@ class PhonopyYamlLoader:
                 "number": d["atom"] - 1,
                 "displacement": np.array(d["displacement"], dtype="double"),
             }
-            if with_forces:
+            if "forces" in d:
                 data["forces"] = np.array(d["forces"], dtype="double", order="C")
+            if "energy" in d:
+                data["energy"] = d["energy"]
             first_atoms.append(data)
         dataset["first_atoms"] = first_atoms
 
@@ -227,15 +227,22 @@ class PhonopyYamlLoader:
         else:
             with_forces = False
         displacements = np.zeros((nsets, natom, 3), dtype="double", order="C")
+        energies = []
         for i, dfset in enumerate(self._yaml[key]):
             for j, df in enumerate(dfset):
                 if with_forces:
                     forces[i, j] = df["force"]
                 displacements[i, j] = df["displacement"]
+                if "energy" in self._yaml[key][0][0]:
+                    energies.append(df["energy"])
+
         if with_forces:
-            return {"forces": forces, "displacements": displacements}
+            dataset = {"forces": forces, "displacements": displacements}
         else:
-            return {"displacements": displacements}
+            dataset = {"displacements": displacements}
+        if energies:
+            dataset["energies"] = np.array(energies, dtype="double")
+        return dataset
 
     def _parse_nac(self):
         nac_params = self._parse_nac_params(self._yaml)  # older than v2.18
@@ -537,6 +544,8 @@ class PhonopyYamlDumper:
                 lines.append("  forces:")
                 for f in d["forces"]:
                     lines.append("  - [ %20.16f,%20.16f,%20.16f ]" % tuple(f))
+            if "energy" in d:
+                lines.append("  energy: {energy:.8f}".format(energy=d["energy"]))
         lines.append("")
         return lines
 
@@ -563,6 +572,8 @@ class PhonopyYamlDumper:
                     f = dataset["forces"][i][j]
                     lines.append("    force:")
                     lines.append("      [ %20.16f,%20.16f,%20.16f ]" % tuple(f))
+                if "energy" in d:
+                    lines.append("    energy: {energy:.8f}".format(energy=d["energy"]))
         lines.append("")
         return lines
 
