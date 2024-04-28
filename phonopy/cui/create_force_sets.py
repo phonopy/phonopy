@@ -34,11 +34,13 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
 
 from typing import Optional
 
 import numpy as np
 
+from phonopy.cui.load_helper import get_nac_params
 from phonopy.file_IO import parse_disp_yaml, write_FORCE_SETS
 from phonopy.interface.calculator import get_calc_dataset, get_calc_dataset_wien2k
 from phonopy.interface.lammps import rotate_lammps_forces
@@ -46,15 +48,15 @@ from phonopy.interface.phonopy_yaml import PhonopyYaml
 
 
 def create_FORCE_SETS(
-    interface_mode,
-    force_filenames,
+    interface_mode: str,
+    force_filenames: list[str],
     phpy_yaml: Optional[PhonopyYaml] = None,
-    symmetry_tolerance=None,
-    wien2k_P1_mode=False,
-    force_sets_zero_mode=False,
-    disp_filename="disp.yaml",
-    force_sets_filename="FORCE_SETS",
-    write_forcesets_yaml=False,
+    symmetry_tolerance: Optional[float] = None,
+    wien2k_P1_mode: bool = False,
+    force_sets_zero_mode: bool = False,
+    disp_filename: str = "disp.yaml",
+    force_sets_filename: str = "FORCE_SETS",
+    save_params: bool = False,
     log_level=0,
 ):
     """Create FORCE_SETS from phonopy_disp.yaml and calculator output files.
@@ -77,7 +79,7 @@ def create_FORCE_SETS(
                 '  "disp.yaml" is still supported for reading except for '
                 "Wien2k interface, "
             )
-            print("  but is deprecated.")
+            print("  and this supported will be removed at version 3.")
             print("")
         if force_sets_zero_mode:
             print(
@@ -148,19 +150,30 @@ def create_FORCE_SETS(
         elif dataset_type == 2:
             disp_dataset["forces"] = np.array(force_sets, dtype="double", order="C")
         else:
-            raise RuntimeError("FORCE_SETS could not be created.")
+            raise RuntimeError("Force sets could not be found.")
 
-        write_FORCE_SETS(disp_dataset, filename=force_sets_filename)
+        if "energies" in calc_dataset:
+            energies = np.array(calc_dataset["energies"], dtype="double")
+            if dataset_type == 1:
+                for energy, disp in zip(energies, disp_dataset["first_atoms"]):
+                    disp["energy"] = energy
+            elif dataset_type == 2:
+                disp_dataset["energy"] = energies
 
-        if log_level > 0:
-            print('"%s" has been created.' % force_sets_filename)
-
-        if disp_filename != "disp.yaml" and write_forcesets_yaml:
+        if save_params:
             phpy_yaml.dataset = disp_dataset
-            with open("phonopy_force_sets.yaml", "w") as w:
+            nac_params = get_nac_params(primitive=phpy_yaml.primitive)
+            if nac_params:
+                phpy_yaml.nac_params = nac_params
+            yaml_filename = "phonopy_params.yaml"
+            with open(yaml_filename, "w") as w:
                 w.write(str(phpy_yaml))
             if log_level > 0:
-                print('"%s" has been created.' % "phonopy_force_sets.yaml")
+                print(f'"{yaml_filename}" has been created.')
+        else:
+            write_FORCE_SETS(disp_dataset, filename=force_sets_filename)
+            if log_level > 0:
+                print(f'"{force_sets_filename}" has been created.')
 
     else:
         if log_level > 0:

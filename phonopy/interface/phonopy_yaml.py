@@ -57,6 +57,7 @@ if TYPE_CHECKING:
 
 from phonopy.file_IO import get_io_module_to_decompress
 from phonopy.structure.atoms import PhonopyAtoms, parse_cell_dict
+from phonopy.structure.dataset import forces_in_dataset
 
 
 @dataclasses.dataclass
@@ -67,8 +68,8 @@ class PhonopyYamlData:
     calculator: Optional[str] = None
     physical_units: Optional[dict] = None
     unitcell: Optional[PhonopyAtoms] = None
-    primitive: Optional[Primitive] = None
-    supercell: Optional[Supercell] = None
+    primitive: Optional[Union[Primitive, PhonopyAtoms]] = None
+    supercell: Optional[Union[Supercell, PhonopyAtoms]] = None
     dataset: Optional[dict] = None
     supercell_matrix: Optional[np.ndarray] = None
     primitive_matrix: Optional[np.ndarray] = None
@@ -86,7 +87,10 @@ def phonopy_yaml_property_factory(name):
     def getter(instance):
         return instance._data.__dict__[name]
 
-    return property(getter)
+    def setter(instance, value):
+        instance._data.__dict__[name] = value
+
+    return property(getter, setter)
 
 
 class PhonopyYamlLoader:
@@ -141,7 +145,14 @@ class PhonopyYamlLoader:
 
     def _parse_physical_units(self):
         if "physical_unit" in self._yaml:
-            self._data.physical_units = self._yaml["physical_unit"]
+            self._data.physical_units = {}
+            for key, val in self._yaml["physical_unit"].items():
+                if key == "atomic_mass":
+                    continue
+                if key in ["length", "force", "force_constants"]:
+                    self._data.physical_units[key + "_unit"] = val
+                else:
+                    self._data.physical_units[key] = val
 
     def _parse_transformation_matrices(self):
         if "supercell_matrix" in self._yaml:
@@ -344,13 +355,16 @@ class PhonopyYamlDumper:
         if units is not None:
             lines.append("physical_unit:")
             lines.append('  atomic_mass: "AMU"')
-            if units["length_unit"] is not None:
-                lines.append('  length: "%s"' % units["length_unit"])
-            if (
-                self._data.command_name == "phonopy"
-                and units["force_constants_unit"] is not None
-            ):
-                lines.append('  force_constants: "%s"' % units["force_constants_unit"])
+            length_unit = units.get("length_unit", None)
+            if length_unit is not None:
+                lines.append(f'  length: "{length_unit}"')
+            force_unit = units.get("force_unit", None)
+            if force_unit is not None and forces_in_dataset(self._data.dataset):
+                lines.append(f'  force: "{force_unit}"')
+            if self._data.command_name == "phonopy":
+                fc_unit = units.get("force_constants_unit", None)
+                if fc_unit is not None and self._data.force_constants is not None:
+                    lines.append(f'  force_constants: "{fc_unit}"')
             lines.append("")
         return lines
 
@@ -424,11 +438,16 @@ class PhonopyYamlDumper:
     def _unitcell_yaml_lines(self):
         lines = []
         if self._data.unitcell is not None:
-            s2p_map = self._data.primitive.s2p_map
-            u2s_map = self._data.supercell.u2s_map
-            u2u_map = self._data.supercell.u2u_map
-            s2u_map = self._data.supercell.s2u_map
-            u2p_map = [u2u_map[i] for i in (s2u_map[s2p_map])[u2s_map]]
+            if isinstance(self._data.primitive, Primitive) and isinstance(
+                self._data.supercell, Supercell
+            ):
+                s2p_map = self._data.primitive.s2p_map
+                u2s_map = self._data.supercell.u2s_map
+                u2u_map = self._data.supercell.u2u_map
+                s2u_map = self._data.supercell.s2u_map
+                u2p_map = [u2u_map[i] for i in (s2u_map[s2p_map])[u2s_map]]
+            else:
+                u2p_map = None
             lines += self._cell_yaml_lines(self._data.unitcell, "unit_cell", u2p_map)
             lines.append("")
         return lines
@@ -441,7 +460,9 @@ class PhonopyYamlDumper:
             lines.append("")
         return lines
 
-    def _cell_yaml_lines(self, cell: PhonopyAtoms, name, map_to_primitive):
+    def _cell_yaml_lines(
+        self, cell: PhonopyAtoms, name, map_to_primitive: Optional[list] = None
+    ):
         lines = []
         lines.append("%s:" % name)
         count = 0
