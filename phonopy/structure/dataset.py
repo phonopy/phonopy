@@ -34,10 +34,16 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
+from typing import Optional
+
 import numpy as np
 
 
-def get_displacements_and_forces(disp_dataset):
+def get_displacements_and_forces(
+    disp_dataset: dict,
+) -> tuple[np.ndarray, Optional[np.ndarray]]:
     """Return displacements and forces of all atoms from displacement dataset.
 
     This is used to extract displacements and forces from displacement dataset.

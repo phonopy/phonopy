@@ -495,6 +495,14 @@ def create_FORCE_SETS_from_settings(
         phpy_yaml.read(disp_filename)
         if phpy_yaml.calculator is not None:
             interface_mode = phpy_yaml.calculator  # overwrite interface_mode
+        physical_units = get_default_physical_units(interface_mode)
+        if all(
+            [
+                physical_units.get(key, None) == val
+                for key, val in phpy_yaml.physical_units.items()
+            ]
+        ):
+            phpy_yaml.physical_units = physical_units
 
     files_exist(filenames, log_level)
     create_FORCE_SETS(
@@ -504,6 +512,7 @@ def create_FORCE_SETS_from_settings(
         symmetry_tolerance=symprec,
         force_sets_zero_mode=force_sets_zero_mode,
         disp_filename=disp_filename,
+        save_params=settings.save_params,
         log_level=log_level,
     )
 
