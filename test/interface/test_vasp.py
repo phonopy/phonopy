@@ -154,7 +154,9 @@ def test_parse_set_of_forces():
     force_sets = [dataset["first_atoms"][i]["forces"] for i in (0, 1)]
     energy_ref = [-216.82820693, -216.82817843]
     np.testing.assert_allclose(force_sets, calc_dataset["forces"], atol=1e-8)
-    np.testing.assert_allclose(energy_ref, calc_dataset["energies"], atol=1e-8)
+    np.testing.assert_allclose(
+        energy_ref, calc_dataset["supercell_energies"], atol=1e-8
+    )
 
 
 def test_read_XDATCAR():
