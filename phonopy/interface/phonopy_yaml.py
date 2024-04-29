@@ -238,21 +238,20 @@ class PhonopyYamlLoader:
         else:
             with_forces = False
         displacements = np.zeros((nsets, natom, 3), dtype="double", order="C")
-        energies = []
         for i, dfset in enumerate(self._yaml[key]):
             for j, df in enumerate(dfset):
                 if with_forces:
                     forces[i, j] = df["force"]
                 displacements[i, j] = df["displacement"]
-                if "energy" in self._yaml[key][0][0]:
-                    energies.append(df["energy"])
 
         if with_forces:
             dataset = {"forces": forces, "displacements": displacements}
         else:
             dataset = {"displacements": displacements}
-        if energies:
-            dataset["energies"] = np.array(energies, dtype="double")
+        if "supercell_energies" in self._yaml:
+            dataset["supercell_energies"] = np.array(
+                self._yaml["supercell_energies"], dtype="double"
+            )
         return dataset
 
     def _parse_nac(self):
@@ -582,20 +581,24 @@ class PhonopyYamlDumper:
             lines = ["random_seed: %d" % dataset["random_seed"], "displacements:"]
         else:
             lines = [
-                "%s:" % key,
+                f"{key}:",
             ]
         for i, dset in enumerate(dataset["displacements"]):
-            lines.append("- # %4d" % (i + 1))
+            lines.append(f"- # {i + 1}")
             for j, d in enumerate(dset):
-                lines.append("  - displacement: # %d" % (j + 1))
+                lines.append(f"  - displacement: # {j + 1}")
                 lines.append("      [ %20.16f,%20.16f,%20.16f ]" % tuple(d))
                 if with_forces and "forces" in dataset:
                     f = dataset["forces"][i][j]
                     lines.append("    force:")
                     lines.append("      [ %20.16f,%20.16f,%20.16f ]" % tuple(f))
-                if "energy" in d:
-                    lines.append("    energy: {energy:.8f}".format(energy=d["energy"]))
         lines.append("")
+
+        if "supercell_energies" in dataset:
+            lines.append("supercell_energies:")
+            for i, energy in enumerate(dataset["supercell_energies"]):
+                lines.append(f"- {energy:.8f} # {i + 1}")
+
         return lines
 
     def _force_constants_yaml_lines(self):

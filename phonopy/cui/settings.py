@@ -96,6 +96,7 @@ class Settings:
         "primitive_matrix": None,
         "qpoints": None,
         "read_qpoints": False,
+        "save_params": False,
         "sigma": None,
         "supercell_matrix": None,
         "symmetry_tolerance": None,
@@ -276,6 +277,10 @@ class Settings:
     def set_read_qpoints(self, val):
         """Set read_qpoints."""
         self._v["read_qpoints"] = val
+
+    def set_save_params(self, val):
+        """Set save_params."""
+        self._v["save_params"] = val
 
     def set_sigma(self, val):
         """Set sigma."""
@@ -554,6 +559,10 @@ class ConfParser:
                     self._confs["primitive_axes"] = primitive_axes
                 else:
                     self._confs["primitive_axes"] = self._args.primitive_axes
+
+        if "save_params" in arg_list:
+            if self._args.save_params:
+                self._confs["save_params"] = ".true."
 
         if "supercell_dimension" in arg_list:
             dim = self._args.supercell_dimension
@@ -908,6 +917,13 @@ class ConfParser:
                     compression = hdf5_compression
                 self.set_parameter("hdf5_compression", compression)
 
+            # Select yaml summary contents
+            if conf_key == "save_params":
+                if confs["save_params"].lower() == ".true.":
+                    self.set_parameter("save_params", True)
+                elif confs["save_params"].lower() == ".false.":
+                    self.set_parameter("save_params", False)
+
     def set_parameter(self, key, val):
         """Pass to another data structure."""
         self._parameters[key] = val
@@ -1090,6 +1106,10 @@ class ConfParser:
         if "hdf5_compression" in params:
             self._settings.set_hdf5_compression(params["hdf5_compression"])
 
+        # Select yaml summary contents
+        if "save_params" in params:
+            self._settings.set_save_params(params["save_params"])
+
 
 #
 # For phonopy
@@ -1158,7 +1178,6 @@ class PhonopySettings(Settings):
         "read_force_constants": False,
         "readfc_format": "text",
         "run_mode": None,
-        "save_params": False,
         "show_irreps": False,
         "store_dense_svecs": False,
         "thermal_atom_pairs": None,
@@ -1390,10 +1409,6 @@ class PhonopySettings(Settings):
         """Set thermal_displacement_matrix_temperatue."""
         self._v["thermal_displacement_matrix_temperatue"] = val
 
-    def set_save_params(self, val):
-        """Set save_params."""
-        self._v["save_params"] = val
-
     def set_show_irreps(self, val):
         """Set show_irreps."""
         self._v["show_irreps"] = val
@@ -1588,10 +1603,6 @@ class PhonopyConfParser(ConfParser):
         if "irreps_qpoint" in arg_list:
             if self._args.irreps_qpoint is not None:
                 self._confs["irreps"] = " ".join(self._args.irreps_qpoint)
-
-        if "save_params" in arg_list:
-            if self._args.save_params:
-                self._confs["save_params"] = ".true."
 
         if "show_irreps" in arg_list:
             if self._args.show_irreps:
@@ -2008,13 +2019,6 @@ class PhonopyConfParser(ConfParser):
                 elif confs["lapack_solver"].lower() == ".false.":
                     self.set_parameter("lapack_solver", False)
 
-            # Select yaml summary contents
-            if conf_key == "save_params":
-                if confs["save_params"].lower() == ".true.":
-                    self.set_parameter("save_params", True)
-                elif confs["save_params"].lower() == ".false.":
-                    self.set_parameter("save_params", False)
-
             if conf_key == "include_fc":
                 if confs["include_fc"].lower() == ".true.":
                     self.set_parameter("include_fc", True)
@@ -2359,10 +2363,6 @@ class PhonopyConfParser(ConfParser):
         # Use Lapack solver via Lapacke
         if "lapack_solver" in params:
             self._settings.set_lapack_solver(params["lapack_solver"])
-
-        # Select yaml summary contents
-        if "save_params" in params:
-            self._settings.set_save_params(params["save_params"])
 
         if "include_fc" in params:
             self._settings.set_include_force_constants(params["include_fc"])
