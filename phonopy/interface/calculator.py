@@ -741,6 +741,12 @@ def get_calc_dataset(
     ----
     Wien2k output is treated by ``get_calc_datasets_wien2k``.
 
+    Returns
+    -------
+    dict:
+        "forces": Set of forces in supercells.
+        "supercell_energies": Set of supercell energies.
+
     """
     if interface_mode is None or interface_mode == "vasp":
         from phonopy.interface.vasp import parse_set_of_forces

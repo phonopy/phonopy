@@ -189,8 +189,11 @@ class PhonopyYamlLoader:
     def _parse_dataset(self):
         self._data.dataset = self._get_dataset(self._data.supercell)
 
-    def _get_dataset(self, supercell, key="displacements"):
+    def _get_dataset(
+        self, supercell: PhonopyAtoms, key_prefix: str = ""
+    ) -> Optional[dict]:
         dataset = None
+        key = f"{key_prefix}displacements"
         if key in self._yaml:
             if supercell is not None:
                 natom = len(supercell)
@@ -198,13 +201,16 @@ class PhonopyYamlLoader:
                 natom = None
             disp = self._yaml[key][0]
             if type(disp) is dict:  # type1
-                dataset = self._parse_force_sets_type1(natom=natom, key=key)
+                dataset = self._parse_force_sets_type1(
+                    natom=natom, key_prefix=key_prefix
+                )
             elif type(disp) is list:  # type2
                 if "displacement" in disp[0]:
-                    dataset = self._parse_force_sets_type2(key=key)
+                    dataset = self._parse_force_sets_type2(key_prefix=key_prefix)
         return dataset
 
-    def _parse_force_sets_type1(self, natom=None, key="displacements"):
+    def _parse_force_sets_type1(self, natom=None, key_prefix=""):
+        key = f"{key_prefix}displacements"
         if "forces" in self._yaml[key][0]:
             dataset = {"natom": len(self._yaml[key][0]["forces"])}
         elif natom is not None:
@@ -222,14 +228,15 @@ class PhonopyYamlLoader:
             }
             if "forces" in d:
                 data["forces"] = np.array(d["forces"], dtype="double", order="C")
-            if "energy" in d:
-                data["energy"] = d["energy"]
+            if "supercell_energy" in d:
+                data["supercell_energy"] = d["supercell_energy"]
             first_atoms.append(data)
         dataset["first_atoms"] = first_atoms
 
         return dataset
 
-    def _parse_force_sets_type2(self, key="displacements"):
+    def _parse_force_sets_type2(self, key_prefix=""):
+        key = f"{key_prefix}displacements"
         nsets = len(self._yaml[key])
         natom = len(self._yaml[key][0])
         if "force" in self._yaml[key][0][0]:
@@ -521,14 +528,14 @@ class PhonopyYamlDumper:
             lines += disp_yaml_lines
         return lines
 
-    def _displacements_yaml_lines(self, with_forces=False):
+    def _displacements_yaml_lines(self, with_forces=False) -> list:
         return self._displacements_yaml_lines_2types(
             self._data.dataset, with_forces=with_forces
         )
 
     def _displacements_yaml_lines_2types(
-        self, dataset, with_forces=False, key="displacements"
-    ):
+        self, dataset: dict, with_forces: bool = False, key_prefix: str = ""
+    ) -> list:
         """Choose yaml writer depending on the dataset type.
 
         See type1 and type2 at Phonopy.dataset.
@@ -537,24 +544,24 @@ class PhonopyYamlDumper:
         if dataset is not None:
             if "first_atoms" in dataset:
                 return self._displacements_yaml_lines_type1(
-                    dataset, with_forces=with_forces, key=key
+                    dataset, with_forces=with_forces, key_prefix=key_prefix
                 )
             elif "displacements" in dataset:
                 return self._displacements_yaml_lines_type2(
-                    dataset, with_forces=with_forces, key=key
+                    dataset, with_forces=with_forces, key_prefix=key_prefix
                 )
         return []
 
     def _displacements_yaml_lines_type1(
-        self, dataset, with_forces=False, key="displacements"
-    ):
+        self, dataset: dict, with_forces: bool = False, key_prefix: str = ""
+    ) -> list:
         """Return type1 dataset in yaml.
 
         See data structure at Phonopy.dataset.
 
         """
         lines = [
-            "%s:" % key,
+            f"{key_prefix}displacements:",
         ]
         for d in dataset["first_atoms"]:
             lines.append("- atom: %4d" % (d["number"] + 1))
@@ -564,24 +571,31 @@ class PhonopyYamlDumper:
                 lines.append("  forces:")
                 for f in d["forces"]:
                     lines.append("  - [ %20.16f,%20.16f,%20.16f ]" % tuple(f))
-            if "energy" in d:
-                lines.append("  energy: {energy:.8f}".format(energy=d["energy"]))
+            if "supercell_energy" in d:
+                lines.append(
+                    "  supercell_energy: {energy:.8f}".format(
+                        energy=d["supercell_energy"]
+                    )
+                )
         lines.append("")
         return lines
 
     def _displacements_yaml_lines_type2(
-        self, dataset, with_forces=False, key="displacements"
-    ):
+        self, dataset: dict, with_forces: bool = False, key_prefix: str = ""
+    ) -> list:
         """Return type2 dataset in yaml.
 
         See data structure at Phonopy.dataset.
 
         """
         if "random_seed" in dataset:
-            lines = ["random_seed: %d" % dataset["random_seed"], "displacements:"]
+            lines = [
+                "random_seed: %d" % dataset["random_seed"],
+                f"{key_prefix}displacements:",
+            ]
         else:
             lines = [
-                f"{key}:",
+                f"{key_prefix}displacements:",
             ]
         for i, dset in enumerate(dataset["displacements"]):
             lines.append(f"- # {i + 1}")
@@ -595,9 +609,10 @@ class PhonopyYamlDumper:
         lines.append("")
 
         if "supercell_energies" in dataset:
-            lines.append("supercell_energies:")
+            lines.append(f"{key_prefix}supercell_energies:")
             for i, energy in enumerate(dataset["supercell_energies"]):
                 lines.append(f"- {energy:.8f} # {i + 1}")
+            lines.append("")
 
         return lines
 

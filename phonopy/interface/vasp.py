@@ -202,7 +202,7 @@ def parse_set_of_forces(
         print("")
 
     if is_parsed:
-        return {"forces": force_sets, "energies": energy_sets}
+        return {"forces": force_sets, "supercell_energies": energy_sets}
     else:
         return {}
 

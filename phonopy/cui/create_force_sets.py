@@ -152,13 +152,13 @@ def create_FORCE_SETS(
         else:
             raise RuntimeError("Force sets could not be found.")
 
-        if "energies" in calc_dataset:
-            energies = np.array(calc_dataset["energies"], dtype="double")
+        if "supercell_energies" in calc_dataset:
+            energies = np.array(calc_dataset["supercell_energies"], dtype="double")
             if dataset_type == 1:
                 for energy, disp in zip(energies, disp_dataset["first_atoms"]):
-                    disp["energy"] = energy
+                    disp["supercell_energy"] = energy
             elif dataset_type == 2:
-                disp_dataset["energies"] = energies
+                disp_dataset["supercell_energies"] = energies
 
         if save_params:
             phpy_yaml.dataset = disp_dataset
