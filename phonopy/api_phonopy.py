@@ -3882,6 +3882,11 @@ class Phonopy:
     def _get_forces_energies(
         self, target: Literal["forces", "supercell_energies"]
     ) -> Optional[list]:
+        """Return forces and supercell energies.
+
+        Return None if tagert data is not found.
+
+        """
         if target in self._displacement_dataset:  # type-2
             return self._displacement_dataset[target]
         elif "first_atoms" in self._displacement_dataset:  # type-1
@@ -3895,9 +3900,7 @@ class Phonopy:
                         values.append(disp["supercell_energy"])
             if values:
                 return np.array(values, dtype="double", order="C")
-            return None
-        else:
-            raise RuntimeError("Displacement dataset is in wrong format.")
+        return None
 
     def _set_forces_energies(
         self, values, target: Literal["forces", "supercell_energies"]

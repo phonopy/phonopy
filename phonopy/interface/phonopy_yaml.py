@@ -257,7 +257,7 @@ class PhonopyYamlLoader:
             dataset = {"displacements": displacements}
         if "supercell_energies" in self._yaml:
             dataset["supercell_energies"] = np.array(
-                self._yaml["supercell_energies"], dtype="double"
+                self._yaml[f"{key_prefix}supercell_energies"], dtype="double"
             )
         return dataset
 
