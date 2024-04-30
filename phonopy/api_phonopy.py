@@ -3879,10 +3879,12 @@ class Phonopy:
     def _shape_supercell_matrix(self, smat) -> np.ndarray:
         return shape_supercell_matrix(smat)
 
-    def _get_forces_energies(self, target: Literal["forces", "supercell_energies"]):
-        if target in self._displacement_dataset:
+    def _get_forces_energies(
+        self, target: Literal["forces", "supercell_energies"]
+    ) -> Optional[list]:
+        if target in self._displacement_dataset:  # type-2
             return self._displacement_dataset[target]
-        elif "first_atoms" in self._displacement_dataset:
+        elif "first_atoms" in self._displacement_dataset:  # type-1
             values = []
             for disp in self._displacement_dataset["first_atoms"]:
                 if target == "forces":
@@ -3893,21 +3895,20 @@ class Phonopy:
                         values.append(disp["supercell_energy"])
             if values:
                 return np.array(values, dtype="double", order="C")
-            else:
-                None
-        else:
             return None
+        else:
+            raise RuntimeError("Displacement dataset is in wrong format.")
 
     def _set_forces_energies(
         self, values, target: Literal["forces", "supercell_energies"]
     ):
-        if "first_atoms" in self._displacement_dataset:
+        if "first_atoms" in self._displacement_dataset:  # type-1
             for disp, v in zip(self._displacement_dataset["first_atoms"], values):
                 if target == "forces":
                     disp[target] = np.array(v, dtype="double", order="C")
                 elif target == "supercell_energies":
                     disp["supercell_energy"] = float(v)
-        elif "displacements" in self._displacement_dataset:
+        elif "displacements" in self._displacement_dataset:  # type-2
             _values = np.array(values, dtype="double", order="C")
             natom = len(self._supercell)
             ndisps = len(self._displacement_dataset["displacements"])
