@@ -14,6 +14,7 @@ from phonopy.interface.vasp import (
     Vasprun,
     VasprunxmlExpat,
     get_vasp_structure_lines,
+    parse_set_of_forces,
     read_vasp,
     read_vasp_from_strings,
     read_XDATCAR,
@@ -115,6 +116,7 @@ def test_parse_vasprun_xml():
     _tar = tarfile.open(filename_vasprun)
     filename = cwd / ".." / "FORCE_SETS_NaCl"
     dataset = parse_FORCE_SETS(filename=filename)
+    energy_ref = [-216.82820693, -216.82817843]
     for i, member in enumerate(_tar.getmembers()):
         vr = Vasprun(_tar.extractfile(member), use_expat=True)
         # for force in vr.read_forces():
@@ -122,6 +124,7 @@ def test_parse_vasprun_xml():
         # print("")
         ref = dataset["first_atoms"][i]["forces"]
         np.testing.assert_allclose(ref, vr.read_forces(), atol=1e-8)
+        np.testing.assert_allclose(energy_ref[i], vr.read_energy(), atol=1e-8)
 
 
 def test_VasprunxmlExpat():
@@ -138,6 +141,22 @@ def test_VasprunxmlExpat():
         np.testing.assert_almost_equal(vasprun.NELECT, 448)
         np.testing.assert_almost_equal(vasprun.volume, 1473.99433936)
         break
+
+
+def test_parse_set_of_forces():
+    """Test parse_set_of_forces."""
+    filename_vasprun = cwd / "vasprun.xml.tar.bz2"
+    _tar = tarfile.open(filename_vasprun)
+    fps = [_tar.extractfile(member) for member in _tar.getmembers()]
+    calc_dataset = parse_set_of_forces(64, fps)
+    filename = cwd / ".." / "FORCE_SETS_NaCl"
+    dataset = parse_FORCE_SETS(filename=filename)
+    force_sets = [dataset["first_atoms"][i]["forces"] for i in (0, 1)]
+    energy_ref = [-216.82820693, -216.82817843]
+    np.testing.assert_allclose(force_sets, calc_dataset["forces"], atol=1e-8)
+    np.testing.assert_allclose(
+        energy_ref, calc_dataset["supercell_energies"], atol=1e-8
+    )
 
 
 def test_read_XDATCAR():
