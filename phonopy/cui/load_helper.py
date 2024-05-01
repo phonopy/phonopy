@@ -34,7 +34,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import os
+import pathlib
 
 import numpy as np
 
@@ -130,7 +130,7 @@ def get_nac_params(
             print('NAC parameters were read from "%s".' % born_filename)
     elif nac_params is not None:  # nac_params input or phonopy_yaml.nac_params
         _nac_params = nac_params
-    elif is_nac and os.path.isfile("BORN"):
+    elif is_nac and pathlib.Path("BORN").exists():
         _nac_params = parse_BORN(primitive, filename="BORN")
         if log_level:
             print('NAC params were read from "BORN".')
@@ -206,7 +206,7 @@ def set_dataset_and_force_constants(
         _force_sets_filename = force_sets_filename
     elif phonon.forces is None and phonon.force_constants is None:
         # unless provided these from phonopy_yaml.
-        if os.path.isfile("FORCE_CONSTANTS"):
+        if pathlib.Path("FORCE_CONSTANTS").exists():
             _fc = _read_force_constants_file(
                 phonon,
                 "FORCE_CONSTANTS",
@@ -214,7 +214,7 @@ def set_dataset_and_force_constants(
                 log_level=log_level,
             )
             _force_constants_filename = "FORCE_CONSTANTS"
-        elif os.path.isfile("force_constants.hdf5"):
+        elif pathlib.Path("force_constants.hdf5").exists():
             _fc = _read_force_constants_file(
                 phonon,
                 "force_constants.hdf5",
@@ -222,7 +222,7 @@ def set_dataset_and_force_constants(
                 log_level=log_level,
             )
             _force_constants_filename = "force_constants.hdf5"
-        elif os.path.isfile("FORCE_SETS"):
+        elif pathlib.Path("FORCE_SETS").exists():
             _dataset = parse_FORCE_SETS(natom=natom)
             _force_sets_filename = "FORCE_SETS"
 

@@ -364,6 +364,14 @@ interface, but it is not tested yet. It would be appreciated if you report it to
 the phonopy mailing list when you find it does/doesn't work for any other
 calculator interfaces.
 
+(save_params_option)=
+
+### `--sp` or `--save-params`
+
+Using together with `-f`, force sets are stored in `phonopy_params.yaml` instead
+of `FORCE_SETS`. When `BORN` file is found in the current directory, the
+parameters are also stored in `phonopy_params.yaml`.
+
 ## Create `FORCE_CONSTANTS`
 
 (vasp_force_constants)=
@@ -381,6 +389,7 @@ VASP output of force constants is imported from `vasprun.xml` and
 
 This `FORCE_CONSTANTS` can be used instead of `FORCE_SETS`. For more details,
 please refer {ref}`vasp_dfpt_interface`.
+
 
 (graph_option)=
 

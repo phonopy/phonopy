@@ -93,7 +93,8 @@ def read_atom_config(filename):
             read_lattice = True
         elif read_lattice:
             try:
-                lattice_vectors.append([float(part) for part in line.split()])
+                parts = [float(part) for part in line.split()[:3]]
+                lattice_vectors.append(parts[0:3])
             except ValueError:
                 read_lattice = False
 
