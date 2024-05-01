@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Command options &#8212; Phonopy v.2.22.1</title>
+    <title>Command options &#8212; Phonopy v.2.23.0</title>
   
   
   
@@ -36,8 +36,8 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="_static/documentation_options.js?v=bb31848e"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/documentation_options.js?v=fc17337f"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'command-options';</script>
@@ -129,7 +129,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.22.1</p>
+    <p class="title logo__title">Phonopy v.2.23.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -367,6 +367,7 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fz"><code class="docutils literal notranslate"><span class="pre">--fz</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sp-or-save-params"><code class="docutils literal notranslate"><span class="pre">--sp</span></code> or <code class="docutils literal notranslate"><span class="pre">--save-params</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-force-constants">Create <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a><ul class="nav section-nav flex-column">
@@ -710,6 +711,12 @@ interface, but it is not tested yet. It would be appreciated if you report it to
 the phonopy mailing list when you find it does/doesn’t work for any other
 calculator interfaces.</p>
 </section>
+<section id="sp-or-save-params">
+<span id="save-params-option"></span><h3><code class="docutils literal notranslate"><span class="pre">--sp</span></code> or <code class="docutils literal notranslate"><span class="pre">--save-params</span></code><a class="headerlink" href="#sp-or-save-params" title="Link to this heading">#</a></h3>
+<p>Using together with <code class="docutils literal notranslate"><span class="pre">-f</span></code>, force sets are stored in <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code> instead
+of <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>. When <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file is found in the current directory, the
+parameters are also stored in <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code>.</p>
+</section>
 </section>
 <section id="create-force-constants">
 <h2>Create <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code><a class="headerlink" href="#create-force-constants" title="Link to this heading">#</a></h2>
@@ -847,6 +854,7 @@ style format.</p>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fz"><code class="docutils literal notranslate"><span class="pre">--fz</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sp-or-save-params"><code class="docutils literal notranslate"><span class="pre">--sp</span></code> or <code class="docutils literal notranslate"><span class="pre">--save-params</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-force-constants">Create <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a><ul class="nav section-nav flex-column">

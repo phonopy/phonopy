@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Calculation of mode Grüneisen parameters &#8212; Phonopy v.2.22.1</title>
+    <title>Calculation of mode Grüneisen parameters &#8212; Phonopy v.2.23.0</title>
   
   
   
@@ -36,8 +36,8 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="_static/documentation_options.js?v=bb31848e"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/documentation_options.js?v=fc17337f"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
@@ -131,7 +131,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.22.1</p>
+    <p class="title logo__title">Phonopy v.2.23.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -370,7 +370,8 @@ calculation along paths in reciprocal space can be made by</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">gruneisen</span> <span class="n">orig</span> <span class="n">plus</span> <span class="n">minus</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">--</span><span class="n">pa</span><span class="o">=</span><span class="s2">&quot;0 1/2 1/2 1/2 0 1/2 1/2 1/2 0&quot;</span> <span class="o">--</span><span class="n">band</span><span class="o">=</span><span class="s2">&quot;1/2 1/4 3/4 0 0 0 1/2 1/2 1/2 1/2 0.0 1/2&quot;</span> <span class="o">-</span><span class="n">p</span> <span class="o">-</span><span class="n">c</span> <span class="n">POSCAR</span><span class="o">-</span><span class="n">unitcell</span>
 </pre></div>
 </div>
-<a class="reference internal image-reference" href="_images/Si-gruneisen-band.png"><img alt="_images/Si-gruneisen-band.png" src="_images/Si-gruneisen-band.png" style="width: 406.0px; height: 306.0px;" /></a>
+<a class="reference internal image-reference" href="_images/Si-gruneisen-band.png"><img alt="_images/Si-gruneisen-band.png" src="_images/Si-gruneisen-band.png" style="width: 406.0px; height: 306.0px;" />
+</a>
 <p>In this calculation, neighboring <strong>q</strong>-points in each band segment are connected
 considering their phonon symmetry to treat band crossing correctly. Therefore
 the phonon frequencies may not be ordered in <code class="docutils literal notranslate"><span class="pre">gruneisen.yaml</span></code>. In the plot (<code class="docutils literal notranslate"><span class="pre">-p</span></code>
@@ -380,7 +381,8 @@ parameters.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">gruneisen</span> <span class="n">orig</span> <span class="n">plus</span> <span class="n">minus</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">--</span><span class="n">pa</span><span class="o">=</span><span class="s2">&quot;0 1/2 1/2 1/2 0 1/2 1/2 1/2 0&quot;</span> <span class="o">--</span><span class="n">mesh</span><span class="o">=</span><span class="s2">&quot;20 20 20&quot;</span> <span class="o">-</span><span class="n">p</span> <span class="o">-</span><span class="n">c</span> <span class="n">POSCAR</span><span class="o">-</span><span class="n">unitcell</span> <span class="o">--</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;RB&quot;</span>
 </pre></div>
 </div>
-<a class="reference internal image-reference" href="_images/Si-gruneisen-mesh.png"><img alt="_images/Si-gruneisen-mesh.png" src="_images/Si-gruneisen-mesh.png" style="width: 406.0px; height: 306.0px;" /></a>
+<a class="reference internal image-reference" href="_images/Si-gruneisen-mesh.png"><img alt="_images/Si-gruneisen-mesh.png" src="_images/Si-gruneisen-mesh.png" style="width: 406.0px; height: 306.0px;" />
+</a>
 <p>In the plot (<code class="docutils literal notranslate"><span class="pre">-p</span></code> option), the colors of mode Grüneinen parameters are set for
 band indices with ascending order of phonon frequencies.</p>
 <p>Mode Grüneinen parameter may diverge around <span class="math notranslate nohighlight">\(\Gamma\)</span>-point. In the above
