@@ -729,17 +729,23 @@ def get_default_physical_units(interface_mode=None):
     return units
 
 
-def get_force_sets(
-    interface_mode,
-    num_atoms,
-    force_filenames,
-    verbose=True,
-):
+def get_calc_dataset(
+    interface_mode: str,
+    num_atoms: int,
+    force_filenames: str,
+    verbose: bool = True,
+) -> dict:
     """Read calculator output files and parse force sets.
 
     Note
     ----
-    Wien2k output is treated by ``get_force_sets_wien2k``.
+    Wien2k output is treated by ``get_calc_datasets_wien2k``.
+
+    Returns
+    -------
+    dict:
+        "forces": Set of forces in supercells.
+        "supercell_energies": Set of supercell energies.
 
     """
     if interface_mode is None or interface_mode == "vasp":
@@ -775,12 +781,14 @@ def get_force_sets(
     else:
         return []
 
-    force_sets = parse_set_of_forces(num_atoms, force_filenames, verbose=verbose)
+    data_sets = parse_set_of_forces(num_atoms, force_filenames, verbose=verbose)
+    if isinstance(data_sets, dict):
+        return data_sets
+    else:
+        return {"forces": data_sets}
 
-    return force_sets
 
-
-def get_force_sets_wien2k(
+def get_calc_dataset_wien2k(
     force_filenames,
     supercell,
     disp_dataset,
@@ -800,7 +808,7 @@ def get_force_sets_wien2k(
         symmetry_tolerance=symmetry_tolerance,
         verbose=verbose,
     )
-    return force_sets
+    return {"forces": force_sets}
 
 
 def get_force_constant_conversion_factor(unit, interface_mode):

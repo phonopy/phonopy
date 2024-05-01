@@ -2,6 +2,13 @@
 
 # Change Log
 
+## May-1-2024: Version 2.23.0
+
+- Maintenance release.
+- Supercell energy can be included in phonopy-yaml format.
+- Added {ref}`save_params_option`. By this option, `phonopy_params.yaml` file is
+  created. This file is readily used by phonopy-load.
+
 ## Mar-29-2024: Version 2.22.1
 
 - Update spglib depndency >= 2.3.

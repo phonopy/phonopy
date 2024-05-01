@@ -123,6 +123,28 @@ def ph_nacl_nonac_dense_svecs() -> Phonopy:
 
 
 @pytest.fixture(scope="session")
+def ph_nacl_rd() -> Phonopy:
+    """Return Phonopy class instance of NaCl 2x2x2 with RD results.
+
+    This data contains supercell energies.
+
+    """
+    yaml_filename = cwd / "phonopy_params_NaCl-rd.yaml.xz"
+    return phonopy.load(yaml_filename, log_level=1, produce_fc=False)
+
+
+@pytest.fixture(scope="session")
+def ph_nacl_fd() -> Phonopy:
+    """Return Phonopy class instance of NaCl 2x2x2 with RD results.
+
+    This data contains supercell energies.
+
+    """
+    yaml_filename = cwd / "phonopy_params_NaCl-fd.yaml.xz"
+    return phonopy.load(yaml_filename, log_level=1, produce_fc=False)
+
+
+@pytest.fixture(scope="session")
 def ph_sno2() -> Phonopy:
     """Return Phonopy class instance of rutile SnO2 2x2x3."""
     yaml_filename = cwd / "phonopy_disp_SnO2.yaml"
