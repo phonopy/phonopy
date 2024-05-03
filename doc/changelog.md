@@ -2,6 +2,10 @@
 
 # Change Log
 
+## May-3-2024: Version 2.23.1
+
+- Release for creating conda-forge package.
+
 ## May-1-2024: Version 2.23.0
 
 - Maintenance release.
