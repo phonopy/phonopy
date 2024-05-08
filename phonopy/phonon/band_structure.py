@@ -716,6 +716,9 @@ class BandStructure:
                 q_direction = None
                 if (np.abs(q) < 0.0001).all():  # For Gamma point
                     q_direction = path[0] - path[-1]
+                    # For 1-2D systems, |q| matters, so we take q -> 0 literally
+                    # The threshold should be compatible to the other part of the code
+                    q_direction *= 1.0e-4 / np.linalg.norm(q_direction)
                 self._dynamical_matrix.run(q, q_direction=q_direction)
             else:
                 self._dynamical_matrix.run(q)
