@@ -1,4 +1,5 @@
 """Tests for routines in grid_points.py."""
+
 import os
 
 import numpy as np
@@ -7,7 +8,11 @@ import pytest
 from phonopy import Phonopy
 from phonopy.interface.phonopy_yaml import read_cell_yaml
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.grid_points import GeneralizedRegularGridPoints, GridPoints
+from phonopy.structure.grid_points import (
+    GeneralizedRegularGridPoints,
+    GridPoints,
+    length2mesh,
+)
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -723,3 +728,15 @@ def test_watch_GeneralizedRegularGridPoints(ph_tio2: Phonopy, helper_methods):
     yaml_filename = os.path.join(current_dir, "tio2_qpoints.yaml")
     cell_ref = read_cell_yaml(yaml_filename)
     helper_methods.compare_cells(cell, cell_ref)
+
+
+def test_length2mesh(ph_nacl: Phonopy):
+    """Test of length2mesh."""
+    length = 50.0
+    mesh_numbers = length2mesh(length, ph_nacl.primitive.cell)
+    np.testing.assert_array_equal(mesh_numbers, [15, 15, 15])
+
+    mesh_numbers = length2mesh(
+        length, ph_nacl.primitive.cell, ph_nacl.primitive_symmetry.pointgroup_operations
+    )
+    np.testing.assert_array_equal(mesh_numbers, [15, 15, 15])

@@ -1,4 +1,5 @@
 """Primitive cell and supercell, and related utilities."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -32,8 +33,11 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+from __future__ import annotations
 
 import warnings
+from collections.abc import Sequence
+from typing import Optional, Union
 
 import numpy as np
 import spglib
@@ -220,7 +224,7 @@ class Supercell(PhonopyAtoms):
 
         sur_cell, u2sur_map = self._get_simple_supercell(unitcell, multi, P)
         supercell, sur2s_map, mapping_table = _trim_cell(
-            trim_frame, sur_cell, symprec=symprec
+            trim_frame, sur_cell, check_overlap=self._is_old_style, symprec=symprec
         )
         num_satom = len(supercell)
         num_uatom = len(unitcell)
@@ -241,7 +245,6 @@ class Supercell(PhonopyAtoms):
                 magnetic_moments=supercell.magnetic_moments,
                 scaled_positions=supercell.scaled_positions,
                 cell=supercell.cell,
-                pbc=True,
             )
             self._u2s_map = np.array(np.arange(num_uatom) * N, dtype="int_")
             self._u2u_map = {j: i for i, j in enumerate(self._u2s_map)}
@@ -292,8 +295,10 @@ class Supercell(PhonopyAtoms):
             masses_multi = np.repeat(masses, n_l)
         if magmoms is None:
             magmoms_multi = None
-        else:
+        elif magmoms.ndim == 1:
             magmoms_multi = np.repeat(magmoms, n_l)
+        else:  # non-collinear
+            magmoms_multi = [v for v in magmoms for _ in range(n_l)]
 
         simple_supercell = PhonopyAtoms(
             numbers=numbers_multi,
@@ -301,7 +306,6 @@ class Supercell(PhonopyAtoms):
             magnetic_moments=magmoms_multi,
             scaled_positions=positions_multi,
             cell=np.dot(mat, lattice),
-            pbc=True,
         )
 
         return simple_supercell, atom_map
@@ -477,10 +481,30 @@ class Primitive(PhonopyAtoms):
         )
         return self.p2p_map
 
-    def get_smallest_vectors(self):
+    def get_smallest_vectors(self) -> tuple[np.ndarray, np.ndarray]:
         """Return shortest vectors and multiplicities.
 
-        See the docstring of `Primitive_get_smallest_vectors()`.
+        See also the docstring of `ShortestPairs`. The older less densen format
+        is deprecated. The detailed explaination is found in `ShortestPairs`
+        class.
+
+        Returns
+        -------
+        tuple
+            shortest_vectors : np.ndarray
+                Shortest vectors of atomic pairs in supercell from an atom in
+                the primitive cell to an atom in the supercell. The vectors are
+                given in the coordinates with respect to the primitive cell
+                basis vectors. In the dense format
+                shape=(sum(multiplicities[:,:, 0], 3), dtype='double',
+                dtype='double', order='C'.
+            multiplicities : np.ndarray
+                Number of equidistance shortest vectors. The last dimension
+                indicates [0] multipliticy at the pair of atoms in the supercell
+                and primitive cell, and [1] integral of multiplicities to this
+                pair, i.e., which indicates address used in `shortest_vectors`.
+                In the dense format, shape=(size_super, size_prim, 2),
+                dtype='int_' dtype='intc', order='C'.
 
         """
         return self._smallest_vectors, self._multiplicity
@@ -544,7 +568,6 @@ class Primitive(PhonopyAtoms):
             magnetic_moments=trimmed_cell.magnetic_moments,
             scaled_positions=trimmed_cell.scaled_positions,
             cell=trimmed_cell.cell,
-            pbc=True,
         )
         return p2s_map
 
@@ -589,7 +612,9 @@ class Primitive(PhonopyAtoms):
 
         return atomic_permutations
 
-    def _get_smallest_vectors(self, supercell):
+    def _get_smallest_vectors(
+        self, supercell: PhonopyAtoms
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Find shortest vectors.
 
         See the docstring of `ShortestPairs`.
@@ -633,7 +658,12 @@ class TrimmedCell(PhonopyAtoms):
     """
 
     def __init__(
-        self, relative_axes, cell: PhonopyAtoms, positions_to_reorder=None, symprec=1e-5
+        self,
+        relative_axes,
+        cell: PhonopyAtoms,
+        positions_to_reorder=None,
+        check_overlap=True,
+        symprec=1e-5,
     ):
         """Init method.
 
@@ -650,12 +680,15 @@ class TrimmedCell(PhonopyAtoms):
             Expected positions after trimming. This is used to fix the order
             of atoms in trimmed cell. This may be used to get the same
             primitive cell generated from supercells having different shapes.
+        check_overlap : bool, optional
+            This flag can be set False, if the determinant of relative_axis
+            is 1, e.g., when using SNF. Default is True.
         symprec: float, optional
             Tolerance to find overlapping atoms in the trimmed cell.
             Default is 1e-5.
 
         """
-        self._run(cell, relative_axes, positions_to_reorder, symprec)
+        self._run(cell, relative_axes, positions_to_reorder, check_overlap, symprec)
 
     @property
     def mapping_table(self):
@@ -683,7 +716,14 @@ class TrimmedCell(PhonopyAtoms):
         """
         return self._extracted_atoms
 
-    def _run(self, cell: PhonopyAtoms, relative_axes, positions_to_reorder, symprec):
+    def _run(
+        self,
+        cell: PhonopyAtoms,
+        relative_axes,
+        positions_to_reorder,
+        check_overlap,
+        symprec,
+    ):
         trimmed_lattice = np.dot(relative_axes.T, cell.cell)
         positions_in_new_lattice = np.dot(
             cell.scaled_positions, np.linalg.inv(relative_axes).T
@@ -703,6 +743,7 @@ class TrimmedCell(PhonopyAtoms):
             cell.numbers,
             cell.masses,
             cell.magnetic_moments,
+            check_overlap,
             symprec,
         )
 
@@ -727,7 +768,6 @@ class TrimmedCell(PhonopyAtoms):
                 magnetic_moments=trimmed_magmoms,
                 scaled_positions=trimmed_positions,
                 cell=trimmed_lattice,
-                pbc=True,
             )
             self._extracted_atoms = np.array(extracted_atoms, dtype="intc")
             self._mapping_table = mapping_table
@@ -741,6 +781,7 @@ class TrimmedCell(PhonopyAtoms):
         numbers,
         masses,
         magmoms,
+        check_overlap,
         symprec,
     ):
         num_atoms = 0
@@ -759,7 +800,7 @@ class TrimmedCell(PhonopyAtoms):
 
         for i, pos in enumerate(positions_in_new_lattice):
             found_overlap = False
-            if num_atoms > 0:
+            if check_overlap and num_atoms > 0:
                 diff = trimmed_positions[:num_atoms] - pos
                 diff -= np.rint(diff)
                 # Older numpy doesn't support axis argument.
@@ -819,8 +860,8 @@ def get_supercell(
 
 
 def get_primitive(
-    supercell,
-    primitive_frame,
+    supercell: PhonopyAtoms,
+    primitive_matrix: Optional[Union[str, np.ndarray, Sequence]] = None,
     symprec=1e-5,
     store_dense_svecs=False,
     positions_to_reorder=None,
@@ -828,7 +869,7 @@ def get_primitive(
     """Create primitive cell."""
     return Primitive(
         supercell,
-        primitive_frame,
+        get_primitive_matrix(primitive_matrix),
         symprec=symprec,
         store_dense_svecs=store_dense_svecs,
         positions_to_reorder=positions_to_reorder,
@@ -866,7 +907,7 @@ def get_cell_lines(cell: PhonopyAtoms, mapping=None, stars=None):
             if magmoms.ndim == 1:
                 line += "  %5.3f" % magmoms[i]
             else:
-                line += "  %s" % magmoms[i].ravel()
+                line += "  %s" % magmoms[i]
         if mapping is None:
             lines.append(line)
         else:
@@ -875,24 +916,78 @@ def get_cell_lines(cell: PhonopyAtoms, mapping=None, stars=None):
 
 
 def isclose(
-    a: PhonopyAtoms, b: PhonopyAtoms, rtol: float = 1e-5, atol: float = 1e-8
-) -> bool:
-    """Check equivalence of two cells."""
-    if len(a) != len(b):
-        return False
+    a: PhonopyAtoms,
+    b: PhonopyAtoms,
+    rtol: float = 1e-5,
+    atol: float = 1e-8,
+    with_arbitrary_order: bool = False,
+    return_order: bool = False,
+) -> Union[bool, list]:
+    """Check equivalence of two cells.
 
-    if (a.numbers != b.numbers).any():
+    Cell-b is compared with respect to cell-a.
+
+    Parameters
+    ----------
+    a : PhonopyAtoms
+        Reference cell.
+    b : PhonopyAtoms
+        Cell to be compared.
+    rtol : float, optional
+        Relative tolerance in Cartesian coordinates. Default is 1e-5.
+    atol : float, optional
+        Tolerance in Cartesian distance. Default is 1e-8.
+    with_arbitrary_order : bool, optional
+        PosDefault is False.
+    return_order : bool, optional
+        See ``Returns`` below. Default is False. This can be only usable with
+        ``with_arbitrary_order=True``.
+
+    Returns
+    -------
+    bool (``return_order=False``)
+        Whether two cells agree upto lattice translation of each atom.
+
+    or
+
+    list (``return_order=True``).
+        A list of atom indices of cell-b in the index of cell-a.
+        This means ``a.numbers[indices] == b.numbers``.
+
+    """
+    if len(a) != len(b):
         return False
 
     if not np.allclose(a.cell, b.cell, rtol=rtol, atol=atol):
         return False
 
-    diff = a.scaled_positions - b.scaled_positions
-    diff -= np.rint(diff)
-    dist = np.sqrt((np.dot(diff, a.cell) ** 2).sum(axis=1))
-    if (dist > atol).any():
-        return False
+    if with_arbitrary_order:
+        indices = []
+        for pos in b.scaled_positions:
+            diff = a.scaled_positions - pos
+            diff -= np.rint(diff)
+            dist = (np.dot(diff, a.cell) ** 2).sum(axis=1)
+            matches = np.where(dist < atol)[0]
+            if len(matches) != 1:
+                return False
+            indices.append(matches[0])
+        if (np.sort(indices) == np.arange(len(indices))).all() and (
+            a.numbers[indices] == b.numbers
+        ).all():
+            if return_order:
+                return indices
+            return True
+        else:
+            return False
+    else:
+        if (a.numbers != b.numbers).any():
+            return False
 
+        diff = a.scaled_positions - b.scaled_positions
+        diff -= np.rint(diff)
+        dist = np.sqrt((np.dot(diff, a.cell) ** 2).sum(axis=1))
+        if (dist > atol).any():
+            return False
     return True
 
 
@@ -927,10 +1022,16 @@ def convert_to_phonopy_primitive(
     return _primitive
 
 
-def _trim_cell(relative_axes, cell, symprec=1e-5, positions_to_reorder=None):
+def _trim_cell(
+    relative_axes, cell, check_overlap=True, symprec=1e-5, positions_to_reorder=None
+):
     """Trim overlapping atoms."""
     tcell = TrimmedCell(
-        relative_axes, cell, symprec=symprec, positions_to_reorder=positions_to_reorder
+        relative_axes,
+        cell,
+        check_overlap=check_overlap,
+        symprec=symprec,
+        positions_to_reorder=positions_to_reorder,
     )
     return (PhonopyAtoms(atoms=tcell), tcell.extracted_atoms, tcell.mapping_table)
 
@@ -1280,7 +1381,7 @@ def compute_all_sg_permutations(
 
     """
     out = []  # Finally the shape is fixed as (num_sym, num_pos_of_supercell).
-    for (sym, t) in zip(rotations, translations):
+    for sym, t in zip(rotations, translations):
         rotated_positions = np.dot(positions, sym.T) + t
         out.append(
             compute_permutation_for_rotation(
@@ -1325,13 +1426,18 @@ def compute_permutation_for_rotation(
         shape=(len(positions), ), dtype=int
 
     """
-    # Sort both sides by some measure which is likely to produce a small
-    # maximum value of (sorted_rotated_index - sorted_original_index).
-    # The C code is optimized for this case, reducing an O(n^2)
-    # search down to ~O(n). (for O(n log n) work overall, including the sort)
-    #
-    # We choose distance from the nearest bravais lattice point as our measure.
+
     def sort_by_lattice_distance(fracs):
+        """Sort atoms by distance.
+
+        Sort both sides by some measure which is likely to produce a small
+        maximum value of (sorted_rotated_index - sorted_original_index).
+        The C code is optimized for this case, reducing an O(n^2)
+        search down to ~O(n). (for O(n log n) work overall, including the sort)
+
+        We choose distance from the nearest bravais lattice point as our measure.
+
+        """
         carts = np.dot(fracs - np.rint(fracs), lattice.T)
         perm = np.argsort(np.sum(carts**2, axis=1))
         sorted_fracs = np.array(fracs[perm], dtype="double", order="C")
@@ -1419,46 +1525,107 @@ def _compute_permutation_c(
 #
 # Other tiny tools
 #
-def get_angles(lattice):
+def get_angles(lattice, is_radian: bool = False) -> tuple:
     """Return angles between basis vectors.
 
-    lattice : Array-like
-        (a, b, c)^T, i.e., basis vectors are given as row vectors.
+    Parameters
+    ----------
+    lattice : array_like
+        Basis vectors given as row vectors.
+    is_radian : bool
+        Angles are return in radian when True. Otherwise in degree.
+
+    Returns
+    -------
+    tuple[float, float, float]
+        alpha, beta, gamma in either degree or radian.
 
     """
     a, b, c = get_cell_parameters(lattice)
-    alpha = np.arccos(np.vdot(lattice[1], lattice[2]) / b / c) / np.pi * 180
-    beta = np.arccos(np.vdot(lattice[2], lattice[0]) / c / a) / np.pi * 180
-    gamma = np.arccos(np.vdot(lattice[0], lattice[1]) / a / b) / np.pi * 180
-    return alpha, beta, gamma
+    alpha = np.arccos(np.vdot(lattice[1], lattice[2]) / b / c)
+    beta = np.arccos(np.vdot(lattice[2], lattice[0]) / c / a)
+    gamma = np.arccos(np.vdot(lattice[0], lattice[1]) / a / b)
+
+    if is_radian:
+        return alpha, beta, gamma
+    else:
+        return alpha / np.pi * 180, beta / np.pi * 180, gamma / np.pi * 180
 
 
-def get_cell_parameters(lattice):
-    """Return lenghts are basis vectors.
+def get_cell_parameters(lattice) -> np.ndarray:
+    """Return basis vector lengths.
 
-    lattice : Array-like
-        (a, b, c)^T, i.e., basis vectors are given as row vectors.
+    Parameters
+    ----------
+    lattice : array_like
+        Basis vectors given as row vectors
+        shape=(3, 3), dtype='double'
+
+    Returns
+    -------
+    ndarray, shape=(3,), dtype='double'
 
     """
     return np.sqrt(np.dot(lattice, np.transpose(lattice)).diagonal())
 
 
-def get_cell_matrix(a, b, c, alpha, beta, gamma):
-    """Return basis vectors as row vectors."""
-    alpha *= np.pi / 180
-    beta *= np.pi / 180
-    gamma *= np.pi / 180
+def get_cell_matrix(a, b, c, alpha, beta, gamma, is_radian=False) -> np.ndarray:
+    """Return basis vectors in another orientation.
+
+    Parameters
+    ----------
+    a, b, c : float
+        Basis vector lengths.
+    alpha, beta, gamm : float
+        Angles between basis vectors in radian.
+
+    Returns
+    -------
+    ndarray
+        shape=(3, 3), dtype='double', order='C'.
+        [[a_x,   0,   0],
+         [b_x, b_y,   0],
+         [c_x, c_y, c_z]]
+
+    """
+    if not is_radian:
+        alpha *= np.pi / 180
+        beta *= np.pi / 180
+        gamma *= np.pi / 180
     b1 = np.cos(gamma)
     b2 = np.sin(gamma)
     b3 = 0.0
     c1 = np.cos(beta)
     c2 = (2 * np.cos(alpha) + b1**2 + b2**2 - 2 * b1 * c1 - 1) / (2 * b2)
     c3 = np.sqrt(1 - c1**2 - c2**2)
-    lattice = np.zeros((3, 3), dtype="double")
+    lattice = np.zeros((3, 3), dtype="double", order="C")
     lattice[0, 0] = a
     lattice[1] = np.array([b1, b2, b3]) * b
     lattice[2] = np.array([c1, c2, c3]) * c
     return lattice
+
+
+def get_cell_matrix_from_lattice(lattice) -> np.ndarray:
+    """Return basis vectors in another orientation.
+
+    Parameters
+    ----------
+    lattice : array_like
+        Basis vectors given as row vectors
+        shape=(3, 3), dtype='double'
+
+    Returns
+    -------
+    ndarray
+        shape=(3, 3), dtype='double', order='C'.
+        [[a_x,   0,   0],
+         [b_x, b_y,   0],
+         [c_x, c_y, c_z]]
+
+    """
+    alpha, beta, gamma = get_angles(lattice, is_radian=True)
+    a, b, c = get_cell_parameters(lattice)
+    return get_cell_matrix(a, b, c, alpha, beta, gamma, is_radian=True)
 
 
 def determinant(m):
@@ -1473,9 +1640,29 @@ def determinant(m):
     )
 
 
-def get_primitive_matrix(pmat, symprec=1e-5):
-    """Find primitive matrix from primitive cell."""
-    if type(pmat) is str and pmat in ("P", "F", "I", "A", "C", "R", "auto"):
+def get_primitive_matrix(
+    pmat: Optional[Union[str, np.ndarray, Sequence]] = None,
+    symprec: float = 1e-5,
+) -> Optional[Union[str, np.ndarray]]:
+    """Find primitive matrix from primitive cell.
+
+    None is equivalent to "P" but None is returned.
+
+    Parameters
+    ----------
+    pmat : str, np.ndarray, Sequency, or None
+        symbol of centring type: "P", "F", "I", "A", "C", "R"
+        "auto" : estimates a centring type.
+        3x3 matrix (can be flattened, i.e., 9 elements)
+    symprec : float
+        Tolerance.
+
+    Returns
+    -------
+    None or 3x3 np.ndarray representing transformation matrix to primitive cell.
+
+    """
+    if isinstance(pmat, str) and pmat in ("P", "F", "I", "A", "C", "R", "auto"):
         if pmat == "auto":
             _pmat = pmat
         else:
@@ -1501,47 +1688,61 @@ def get_primitive_matrix(pmat, symprec=1e-5):
     return _pmat
 
 
-def get_primitive_matrix_by_centring(centring):
+def get_primitive_matrix_by_centring(centring) -> Optional[np.ndarray]:
     """Return primitive matrix corresponding to centring."""
     if centring == "P":
-        return [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+        return np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype="double")
     elif centring == "F":
-        return [[0, 1.0 / 2, 1.0 / 2], [1.0 / 2, 0, 1.0 / 2], [1.0 / 2, 1.0 / 2, 0]]
+        return np.array(
+            [[0.0, 1.0 / 2, 1.0 / 2], [1.0 / 2, 0, 1.0 / 2], [1.0 / 2, 1.0 / 2, 0.0]],
+            dtype="double",
+        )
     elif centring == "I":
-        return [
-            [-1.0 / 2, 1.0 / 2, 1.0 / 2],
-            [1.0 / 2, -1.0 / 2, 1.0 / 2],
-            [1.0 / 2, 1.0 / 2, -1.0 / 2],
-        ]
+        return np.array(
+            [
+                [-1.0 / 2, 1.0 / 2, 1.0 / 2],
+                [1.0 / 2, -1.0 / 2, 1.0 / 2],
+                [1.0 / 2, 1.0 / 2, -1.0 / 2],
+            ],
+            dtype="double",
+        )
     elif centring == "A":
-        return [[1, 0, 0], [0, 1.0 / 2, -1.0 / 2], [0, 1.0 / 2, 1.0 / 2]]
+        return np.array(
+            [[1.0, 0.0, 0.0], [0.0, 1.0 / 2, -1.0 / 2], [0.0, 1.0 / 2, 1.0 / 2]],
+            dtype="double",
+        )
     elif centring == "C":
-        return [[1.0 / 2, 1.0 / 2, 0], [-1.0 / 2, 1.0 / 2, 0], [0, 0, 1]]
+        return np.array(
+            [[1.0 / 2, 1.0 / 2, 0], [-1.0 / 2, 1.0 / 2, 0], [0.0, 0.0, 1.0]],
+            dtype="double",
+        )
     elif centring == "R":
-        return [
-            [2.0 / 3, -1.0 / 3, -1.0 / 3],
-            [1.0 / 3, 1.0 / 3, -2.0 / 3],
-            [1.0 / 3, 1.0 / 3, 1.0 / 3],
-        ]
+        return np.array(
+            [
+                [2.0 / 3, -1.0 / 3, -1.0 / 3],
+                [1.0 / 3, 1.0 / 3, -2.0 / 3],
+                [1.0 / 3, 1.0 / 3, 1.0 / 3],
+            ],
+            dtype="double",
+        )
     else:
         return None
 
 
-def guess_primitive_matrix(unitcell, symprec=1e-5):
+def guess_primitive_matrix(unitcell: PhonopyAtoms, symprec: float = 1e-5):
     """Guess primitive matrix from crystal symmetry."""
     if unitcell.magnetic_moments is not None:
         msg = "Can not be used with the unit cell having magnetic moments."
         raise RuntimeError(msg)
 
-    cell = (unitcell.cell, unitcell.scaled_positions, unitcell.numbers)
-    dataset = spglib.get_symmetry_dataset(cell, symprec=1e-5)
+    dataset = spglib.get_symmetry_dataset(unitcell.totuple(), symprec=symprec)
     tmat = dataset["transformation_matrix"]
     centring = dataset["international"][0]
     pmat = get_primitive_matrix_by_centring(centring)
     return np.array(np.dot(np.linalg.inv(tmat), pmat), dtype="double", order="C")
 
 
-def shape_supercell_matrix(smat):
+def shape_supercell_matrix(smat: Optional[Union[Sequence, np.ndarray]]) -> np.ndarray:
     """Reshape supercell matrix."""
     if smat is None:
         _smat = np.eye(3, dtype="intc", order="C")
@@ -1582,8 +1783,7 @@ def estimate_supercell_matrix(spglib_dataset, max_num_atoms=120, max_iter=100):
     """
     spg_num = spglib_dataset["number"]
     num_atoms = len(spglib_dataset["std_types"])
-    lengths = _get_lattice_parameters(spglib_dataset["std_lattice"])
-
+    lengths = get_cell_parameters(spglib_dataset["std_lattice"])
     if spg_num <= 74:  # Triclinic, monoclinic, and orthorhombic
         multi = _get_multiplicity_abc(
             num_atoms, lengths, max_num_atoms, max_iter=max_iter
@@ -1621,7 +1821,7 @@ def estimate_supercell_matrix_from_pointgroup(
         Multiplicities for a, b, c basis vectors, respectively.
 
     """
-    abc_lengths = _get_lattice_parameters(lattice.T)
+    abc_lengths = get_cell_parameters(lattice)
 
     if pointgroup_number <= 8:  # Triclinic, monoclinic, and orthorhombic
         multi = _get_multiplicity_abc(1, abc_lengths, max_num_cells, max_iter=max_iter)
@@ -1633,27 +1833,10 @@ def estimate_supercell_matrix_from_pointgroup(
     return multi
 
 
-def _get_lattice_parameters(lattice):
-    """Return basis vector lengths.
-
-    Parameters
-    ----------
-    lattice : array_like
-        Basis vectors given as column vectors
-        shape=(3, 3), dtype='double'
-
-    Returns
-    -------
-    ndarray, shape=(3,), dtype='double'
-
-    """
-    return np.array(np.sqrt(np.dot(lattice.T, lattice).diagonal()), dtype="double")
-
-
 def _get_multiplicity_abc(num_atoms, lengths, max_num_atoms, max_iter=20):
     multi = [1, 1, 1]
 
-    for i in range(max_iter):
+    for _ in range(max_iter):
         l_super = np.multiply(multi, lengths)
         min_index = np.argmin(l_super)
         multi[min_index] += 1
@@ -1668,7 +1851,7 @@ def _get_multiplicity_ac(num_atoms, lengths, max_num_atoms, max_iter=20):
     a = lengths[0]
     c = lengths[2]
 
-    for i in range(max_iter):
+    for _ in range(max_iter):
         l_super = np.multiply(multi, [a, c])
         min_index = np.argmin(l_super)
         multi[min_index] += 1
@@ -1680,7 +1863,7 @@ def _get_multiplicity_ac(num_atoms, lengths, max_num_atoms, max_iter=20):
 
 def _get_multiplicity_a(num_atoms, lengths, max_num_atoms, max_iter=20):
     multi = 1
-    for i in range(max_iter):
+    for _ in range(max_iter):
         multi += 1
         if num_atoms * multi**3 > max_num_atoms:
             multi -= 1

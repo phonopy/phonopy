@@ -1,0 +1,19 @@
+NaCl example. Details are presented on the phonopy document at http://phonopy.github.io/phonopy/examples.html. Shortly the usage is shown here, too.
+
+The supercells with displacements were created by
+
+% phonopy --pwmat -d --dim 2 2 2 --pa auto -c atom.config
+
+FORSE_SETS is obtained by
+
+% phonopy --pwmat -f force-001/OUT.FORCE force-002/OUT.FORCE
+
+Band structure is plotted by
+
+% phonopy -p  --dim="2 2 2" --pa="0.0 0.5 0.5  0.5 0.0 0.5  0.5 0.5 0.0" \
+  --band="0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5"
+
+PDOS is plotted by:
+
+% phonopy -p  --dim="2 2 2" --pa="0.0 0.5 0.5  0.5 0.0 0.5  0.5 0.5 0.0" \
+  --mesh="15 15 15" --pdos="1, 2"

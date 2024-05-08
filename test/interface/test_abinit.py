@@ -1,4 +1,5 @@
 """Tests of Abinit calculator interface."""
+
 import os
 
 import numpy as np

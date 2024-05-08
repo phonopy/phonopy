@@ -8,6 +8,21 @@
 Phonon code. Phonopy user documentation is found at
 http://phonopy.github.io/phonopy/
 
+## Installation
+
+See https://phonopy.github.io/phonopy/install.html.
+
+## Dependency
+
+- python>=3.8
+- numpy>=1.17.0
+- PyYAML>=5.3
+- matplotlib>=2.2.2
+- h5py>=3.0
+- spglib>=2.3
+- scipy (optional)
+- seekpath (optional)
+
 ## Mailing list for questions
 
 Usual phonopy questions should be sent to phonopy mailing list
@@ -20,8 +35,25 @@ repository.
 
 - Github issues is the place to discuss about phonopy issues.
 - Github pull request is the place to request merging source code.
-- Python 3.7 will be the minimum requirement soon.
-- Formatting is written in `pyproject.toml`.
+
+### Formatting
+
+Formatting rule is written in `pyproject.toml`.
+
+### pre-commit
+
+Pre-commit (https://pre-commit.com/) is mainly used for applying the formatting
+rule automatically. Therefore, the use is strongly encouraged at or before
+git-commit. Pre-commit is set-up and used in the following way:
+
+- Installed by `pip install pre-commit`, `conda install pre_commit` or see
+  https://pre-commit.com/#install.
+- pre-commit hook is installed by `pre-commit install`.
+- pre-commit hook is run by `pre-commit run --all-files`.
+
+Unless running pre-commit, pre-commit.ci may push the fix at PR by github
+action. In this case, the fix should be merged by the contributor's repository.
+### VSCode setting
 - Not strictly, but VSCode's `settings.json` may be written like
 
   ```json
@@ -42,21 +74,16 @@ repository.
   }
   ```
 
-- Use of pre-commit (https://pre-commit.com/) is encouraged.
-  - Installed by `pip install pre-commit`, `conda install pre_commit` or see
-    https://pre-commit.com/#install.
-  - pre-commit hook is installed by `pre-commit install`.
-  - pre-commit hook is run by `pre-commit run --all-files`.
-
 ## Documentation
 
 Phonopy user documentation is written using python sphinx. The source files are
 stored in `doc` directory. Please see how to write the documentation at
 `doc/README.md`.
 
-## How to run tests
+## Tests
 
-You need pytest. At home directory of phonopy after setup,
+Tests are written using pytest. To run tests, pytest has to be installed. The
+tests can be run by
 
 ```bash
 % pytest

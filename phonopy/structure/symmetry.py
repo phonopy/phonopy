@@ -1,4 +1,5 @@
 """Crystal symmetry routines."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -32,8 +33,10 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+from __future__ import annotations
 
 import warnings
+from typing import Optional
 
 import numpy as np
 import spglib
@@ -51,7 +54,11 @@ class Symmetry:
     """Class to find and store crystal symmetry information."""
 
     def __init__(
-        self, cell: PhonopyAtoms, symprec=1e-5, is_symmetry=True, s2p_map=None
+        self,
+        cell: PhonopyAtoms,
+        symprec: float = 1e-5,
+        is_symmetry: bool = True,
+        s2p_map: Optional[np.ndarray] = None,
     ):
         """Init method.
 
@@ -330,10 +337,14 @@ class Symmetry:
         self._map_atoms = self._dataset["equivalent_atoms"]
 
     def _set_symmetry_operations_with_magmoms(self):
-        self._symmetry_operations = spglib.get_symmetry(
+        self._dataset = spglib.get_magnetic_symmetry_dataset(
             self._cell.totuple(), symprec=self._symprec
         )
-        self._map_atoms = self._symmetry_operations["equivalent_atoms"]
+        self._symmetry_operations = {
+            "rotations": self._dataset["rotations"],
+            "translations": self._dataset["translations"],
+        }
+        self._map_atoms = self._dataset["equivalent_atoms"]
 
     def _set_independent_atoms(self):
         indep_atoms = []
@@ -439,7 +450,23 @@ def collect_unique_rotations(rotations):
 
 
 def get_lattice_vector_equivalence(point_symmetry):
-    """Return (b==c, c==a, a==b)."""
+    """Return equivalences of basis vector length pairs, (b==c, c==a, a==b).
+
+    Change of basis is defined by
+
+    (a', b', c') = (a, b, c) R.
+
+    Then, check rotation matrices if
+        a -> b, b -> c, c -> a, a -> -b, b -> -c, and c -> -a,
+    can happen.
+
+    Parameters
+    ----------
+    point_symmetry : array_like
+        Rotation matrices.
+        shape=(n_rot, 3, 3), dtype=int.
+
+    """
     # primitive_vectors: column vectors
 
     equivalence = [False, False, False]

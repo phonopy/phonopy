@@ -1,4 +1,5 @@
 """Example by corundum Al2O3."""
+
 import numpy as np
 
 import phonopy
@@ -38,10 +39,9 @@ distances = bs["distances"]
 frequencies = bs["frequencies"]
 qpoints = bs["qpoints"]
 
-for (qs_at_segments, dists_at_segments, freqs_at_segments) in zip(
+for qs_at_segments, dists_at_segments, freqs_at_segments in zip(
     qpoints, distances, frequencies
 ):
-
     for q, d, f in zip(qs_at_segments, dists_at_segments, freqs_at_segments):
         print("# %f %f %f" % tuple(q))
         print(("%s " + "%f " * len(f)) % ((d,) + tuple(f)))

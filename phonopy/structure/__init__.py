@@ -1,4 +1,5 @@
 """Crystal structure routines in direct and reciprocal spaces."""
+
 # Copyright (C) 2021 Atsushi Togo
 # All rights reserved.
 #

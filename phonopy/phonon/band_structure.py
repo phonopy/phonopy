@@ -34,15 +34,18 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import gzip
 import sys
 import warnings
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 import yaml
 
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
+from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.units import VaspToTHz
 
 
@@ -235,15 +238,15 @@ class BandStructure:
 
     def __init__(
         self,
-        paths,
+        paths: list,
         dynamical_matrix: Union[DynamicalMatrix, DynamicalMatrixNAC],
-        with_eigenvectors=False,
-        is_band_connection=False,
-        group_velocity=None,
-        path_connections=None,
-        labels=None,
-        is_legacy_plot=False,
-        factor=VaspToTHz,
+        with_eigenvectors: bool = False,
+        is_band_connection: bool = False,
+        group_velocity: Optional[GroupVelocity] = None,
+        path_connections: Optional[Union[list, bool]] = None,
+        labels: Optional[list[str]] = None,
+        is_legacy_plot: bool = False,
+        factor: float = VaspToTHz,
     ):
         """Init method.
 
@@ -316,7 +319,7 @@ class BandStructure:
         self._set_band()
 
     @property
-    def distances(self):
+    def distances(self) -> list:
         """Return distances of band segments."""
         return self._distances
 
@@ -330,7 +333,7 @@ class BandStructure:
         return self.distances
 
     @property
-    def qpoints(self):
+    def qpoints(self) -> list:
         """Return qpoints of band segments."""
         return self._paths
 
@@ -344,7 +347,7 @@ class BandStructure:
         return self.qpoints
 
     @property
-    def eigenvectors(self):
+    def eigenvectors(self) -> Optional[list]:
         """Return phonon eigenvectors of band segments."""
         return self._eigenvectors
 
@@ -358,7 +361,7 @@ class BandStructure:
         return self.eigenvectors
 
     @property
-    def frequencies(self):
+    def frequencies(self) -> Optional[list]:
         """Return phonon frequencies of band segments."""
         return self._frequencies
 
@@ -372,7 +375,7 @@ class BandStructure:
         return self.frequencies
 
     @property
-    def group_velocities(self):
+    def group_velocities(self) -> Optional[list]:
         """Return phonon group velocities of band segments."""
         return self._group_velocities
 
@@ -401,7 +404,7 @@ class BandStructure:
         return self._factor
 
     @property
-    def labels(self):
+    def labels(self) -> Optional[list]:
         """Return special point symbols."""
         return self._labels
 
@@ -411,7 +414,7 @@ class BandStructure:
         return self._path_connections
 
     @property
-    def is_legacy_plot(self):
+    def is_legacy_plot(self) -> bool:
         """Identify legacy plot or not."""
         return self._is_legacy_plot
 
@@ -697,7 +700,6 @@ class BandStructure:
         self._set_frequencies()
 
     def _solve_dm_on_path(self, path):
-        is_nac = self._dynamical_matrix.is_nac()
         distances_on_path = []
         eigvals_on_path = []
         eigvecs_on_path = []
@@ -708,17 +710,26 @@ class BandStructure:
             self._group_velocity.run(path)
             gv = self._group_velocity.group_velocities
 
+        if isinstance(self._dynamical_matrix, DynamicalMatrixNAC):
+            q_direction = None
+            # A cross product close to 0 indicates a path crossing or ending at Gamma
+            rec_lat = np.linalg.inv(self._dynamical_matrix.primitive.cell)
+            dist_from_Gamma = np.linalg.norm(
+                np.cross(rec_lat @ path[0], rec_lat @ path[-1])
+            )
+            if dist_from_Gamma < DynamicalMatrixNAC.Q_DIRECTION_TOLERANCE:
+                q_direction = np.array(path[0] - path[-1])
+                q_direction *= (
+                    10
+                    * DynamicalMatrixNAC.Q_DIRECTION_TOLERANCE
+                    / np.linalg.norm(q_direction)
+                )
+
         for i, q in enumerate(path):
             self._shift_point(q)
             distances_on_path.append(self._distance)
 
-            if is_nac:
-                q_direction = None
-                if (np.abs(q) < 0.0001).all():  # For Gamma point
-                    q_direction = path[0] - path[-1]
-                    # For 1-2D systems, |q| matters, so we take q -> 0 literally
-                    # The threshold should be compatible to the other part of the code
-                    q_direction *= 1.0e-4 / np.linalg.norm(q_direction)
+            if isinstance(self._dynamical_matrix, DynamicalMatrixNAC):
                 self._dynamical_matrix.run(q, q_direction=q_direction)
             else:
                 self._dynamical_matrix.run(q)

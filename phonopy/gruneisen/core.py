@@ -1,4 +1,5 @@
 """Mode Grueneisen parameter calculation."""
+
 # Copyright (C) 2012 Atsushi Togo
 # All rights reserved.
 #
@@ -101,7 +102,9 @@ class GruneisenBase:
         eigvals = []
         eigvecs = []
         for i, q in enumerate(self._qpoints):
-            if self._is_band_connection and self._dynmat.is_nac():
+            if self._is_band_connection and isinstance(
+                self._dynmat, DynamicalMatrixNAC
+            ):
                 self._dynmat.run(q, q_direction=self._q_direction)
             else:
                 self._dynmat.run(q)
@@ -140,7 +143,11 @@ class GruneisenBase:
         d_a: Union[DynamicalMatrix, DynamicalMatrixNAC],
         d_b: Union[DynamicalMatrix, DynamicalMatrixNAC],
     ):
-        if self._is_band_connection and d_a.is_nac() and d_b.is_nac():
+        if (
+            self._is_band_connection
+            and isinstance(d_a, DynamicalMatrixNAC)
+            and isinstance(d_b, DynamicalMatrixNAC)
+        ):
             d_a.run(q, q_direction=self._q_direction)
             d_b.run(q, q_direction=self._q_direction)
         else:

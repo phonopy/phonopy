@@ -2,11 +2,6 @@
 
 # Quasi harmonic approximation
 
-```{contents}
-:depth: 2
-:local:
-```
-
 ## Usage of `phonopy-qha`
 
 Using phonopy results of thermal properties, thermal expansion and heat capacity

@@ -1,4 +1,5 @@
 """Phonon calculation code: Phonopy."""
+
 # Copyright (C) 2015 Atsushi Togo
 # All rights reserved.
 #

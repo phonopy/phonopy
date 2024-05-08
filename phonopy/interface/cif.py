@@ -1,4 +1,5 @@
 """Tests for CIF tools."""
+
 # Copyright (C) 2016 Atsushi Togo
 # All rights reserved.
 #
@@ -94,7 +95,6 @@ _atom_site_occupancy\n""" % (
         )
 
     if U_cif is not None:
-
         aniso_U = """loop_
 _atom_site_aniso_label
 _atom_site_aniso_U_11

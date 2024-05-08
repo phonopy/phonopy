@@ -2,11 +2,6 @@
 
 # Output files
 
-```{contents}
-:depth: 2
-:local:
-```
-
 The output data are stored in the following files on the current directory.
 
 ## List of files

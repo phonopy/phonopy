@@ -1,4 +1,5 @@
 """Example to calculate mode Grueneisen parameters."""
+
 from typing import List
 
 import numpy as np

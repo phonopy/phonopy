@@ -1,4 +1,5 @@
 """CRYSTAL calculator interface."""
+
 # Copyright (C) 2016 Antti J. Karttunen (antti.j.karttunen@iki.fi)
 # All rights reserved.
 #
@@ -137,7 +138,7 @@ def write_crystal(
     lines += "10\n"
     # For magnetic structures, create ATOMSPIN entry
     # Only spins != 0 are written
-    magmoms = cell.get_magnetic_moments()
+    magmoms = cell.magnetic_moments
     if magmoms is not None:
         atomspins = ""
         N_spins = 0
@@ -204,8 +205,8 @@ def write_supercells_with_displacements(
 
 def get_crystal_structure(cell, conv_numbers, write_symmetry=False):
     """Return CRYSTAL structure in text."""
-    lattice = cell.get_cell()
-    positions = cell.get_positions()
+    lattice = cell.cell
+    positions = cell.positions
 
     # Create and EXTERNAL file (fort.34)
     # Dimensionality, centring, crystal type

@@ -1,24 +1,47 @@
 # How to cite phonopy
 
+(citation_of_phonopy)=
+
 ## Citation of phonopy
 
-If you have used phonopy, please cite the following article:
+If you have used phonopy, please cite the following articles, which
+indeed helps the phonopy project to continue:
 
-- "First principles phonon calculations in materials science",
+- "Implementation strategies in phonopy and phono3py",
 
-  Atsushi Togo and Isao Tanaka, Scr. Mater., **108**, 1-5 (2015)
+  Atsushi Togo, Laurent Chaput, Terumasa Tadano, and Isao Tanaka, J. Phys. Condens. Matter **35**, 353001-1-22 (2023)
 
-  http://dx.doi.org/10.1016/j.scriptamat.2015.07.021 (Open access)
+  https://dx.doi.org/10.1088/1361-648X/acd831 (Open access)
 
   ```
-  @article {phonopy,
-     Journal = {Scr. Mater.},
-     Year = {2015},
-     Title = {First principles phonon calculations in materials science},
-     Author = {Togo, A and Tanaka, I},
-     Pages = {1--5},
-     Volume = {108},
-     Month = {Nov}
+  @article{phonopy-phono3py-JPCM,
+    author  = {Togo, Atsushi and Chaput, Laurent and Tadano, Terumasa and Tanaka, Isao},
+    title   = {Implementation strategies in phonopy and phono3py},
+    journal = {J. Phys. Condens. Matter},
+    volume  = {35},
+    number  = {35},
+    pages   = {353001},
+    year    = {2023},
+    doi     = {10.1088/1361-648X/acd831}
+  }
+  ```
+
+- "First-principles Phonon Calculations with Phonopy and Phono3py",
+
+  Atsushi Togo, J. Phys. Soc. Jpn., **92**, 012001-1-21 (2023)
+
+  https://doi.org/10.7566/JPSJ.92.012001 (Open access)
+
+  ```
+  @article{phonopy-phono3py-JPSJ,
+    author  = {Togo, Atsushi},
+    title   = {First-principles Phonon Calculations with Phonopy and Phono3py},
+    journal = {J. Phys. Soc. Jpn.},
+    volume  = {92},
+    number  = {1},
+    pages   = {012001},
+    year    = {2023},
+    doi     = {10.7566/JPSJ.92.012001}
   }
   ```
 

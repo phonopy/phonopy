@@ -1,4 +1,5 @@
 """Tests for CASTEP calculator interface."""
+
 import os
 
 import numpy as np

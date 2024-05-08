@@ -2,11 +2,6 @@
 
 # Installation
 
-```{contents}
-:depth: 3
-:local:
-```
-
 (install_conda)=
 
 ## Installation via conda
@@ -133,7 +128,7 @@ If specific one is expected, it is installed by (e.g. `openblas`)
 If you need a compiler,
 
 ```
-% conda install -c conda-forge complilers
+% conda install -c conda-forge c-compliler
 ```
 
 (install_setup_py)=
@@ -152,12 +147,20 @@ manual modification of `setup.py` may be needed.
    % git checkout master
    ```
 
-2. Run `setup.py` script
+2. Run `setup.py` script via `pip`
 
    ```
-   % python setup.py build
-   % pip install -e .
+   % pip install -e . -vvv
    ```
+
+Under the system with OpenMP library, setting environment variable
+
+```
+export PHONOPY_USE_OPENMP=true
+```
+
+before `pip install -e . -vvv` will build phonopy with OpenMP support thought
+the performance improvement is limited for many cases.
 
 (install_trouble_shooting)=
 

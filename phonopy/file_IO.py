@@ -1,4 +1,5 @@
 """File I/O related routines."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -612,9 +613,7 @@ def get_cell_from_disp_yaml(dataset):
             )
             raise RuntimeError(msg)
         symbols = [x["symbol"] for x in dataset[data_key]]
-        cell = PhonopyAtoms(
-            cell=lattice, scaled_positions=positions, symbols=symbols, pbc=True
-        )
+        cell = PhonopyAtoms(cell=lattice, scaled_positions=positions, symbols=symbols)
         return cell
     else:
         return get_cell_from_disp_yaml(dataset["supercell"])
@@ -831,7 +830,8 @@ def is_file_phonopy_yaml(filename, keyword="phonopy"):
         ...
 
     """
-    with open(filename, "r") as f:
+    myio = get_io_module_to_decompress(filename)
+    with myio.open(filename, "r") as f:
         try:
             data = yaml.load(f, Loader=Loader)
             if data is None:

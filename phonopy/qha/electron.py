@@ -1,4 +1,5 @@
 """Calculation of free energy of one-electronic states."""
+
 # Copyright (C) 2018 Atsushi Togo
 # All rights reserved.
 #

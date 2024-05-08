@@ -1,4 +1,5 @@
 """Create atomic displacements."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -39,7 +40,10 @@ import numpy as np
 
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
-from phonopy.interface.vasp import write_vasp
+from phonopy.interface.calculator import (
+    get_default_cell_filename,
+    write_crystal_structure,
+)
 from phonopy.phonon.degeneracy import get_eigenvectors
 from phonopy.structure.cells import get_supercell
 from phonopy.units import VaspToTHz
@@ -110,20 +114,37 @@ class Modulation:
         """Return modulations and perfect supercell."""
         return self._u, self._supercell
 
-    def write(self, filename="MPOSCAR"):
-        """Write supercells with modulations to MPOSCARs."""
+    def write(self, interface_mode=None, optional_structure_info=None):
+        """Write supercells with modulations."""
+        base_fname = get_default_cell_filename(interface_mode)
+
         deltas = []
         for i, u in enumerate(self._u):
             cell = self._get_cell_with_modulation(u)
-            write_vasp((filename + "-%03d") % (i + 1), cell, direct=True)
+            write_crystal_structure(
+                f"M{base_fname}-{(i + 1):03d}",
+                cell,
+                interface_mode=interface_mode,
+                optional_structure_info=optional_structure_info,
+            )
             deltas.append(u)
 
         sum_of_deltas = np.sum(deltas, axis=0)
         cell = self._get_cell_with_modulation(sum_of_deltas)
-        write_vasp(filename, cell, direct=True)
+        write_crystal_structure(
+            f"M{base_fname}",
+            cell,
+            interface_mode=interface_mode,
+            optional_structure_info=optional_structure_info,
+        )
         no_modulations = np.zeros(sum_of_deltas.shape, dtype=complex)
         cell = self._get_cell_with_modulation(no_modulations)
-        write_vasp(filename + "-orig", cell, direct=True)
+        write_crystal_structure(
+            f"M{base_fname}-orig",
+            cell,
+            interface_mode=interface_mode,
+            optional_structure_info=optional_structure_info,
+        )
 
     def write_yaml(self, filename="modulation.yaml"):
         """Write modulations to file in yaml."""

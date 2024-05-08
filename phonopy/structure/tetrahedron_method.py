@@ -1,4 +1,5 @@
 """Core routine of linear tetrahedon method on regular grid."""
+
 # Copyright (C) 2013 Atsushi Togo
 # All rights reserved.
 #
@@ -33,6 +34,8 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
+
 import numpy as np
 
 try:
@@ -43,23 +46,8 @@ except ImportError:
     print("Phonopy C-extension has to be built properly.")
     sys.exit(1)
 
-parallelepiped_vertices = np.array(
-    [
-        [0, 0, 0],
-        [1, 0, 0],
-        [0, 1, 0],
-        [1, 1, 0],
-        [0, 0, 1],
-        [1, 0, 1],
-        [0, 1, 1],
-        [1, 1, 1],
-    ],
-    dtype="int_",
-    order="C",
-)
 
-
-def get_tetrahedra_relative_grid_address(microzone_lattice):
+def get_tetrahedra_relative_grid_address(microzone_lattice, lang="C"):
     """Return relative (differences of) grid addresses from the central.
 
     Parameter
@@ -70,21 +58,32 @@ def get_tetrahedra_relative_grid_address(microzone_lattice):
 
     """
     relative_grid_address = np.zeros((24, 4, 3), dtype="int_", order="C")
-    phonoc.tetrahedra_relative_grid_address(
-        relative_grid_address, np.array(microzone_lattice, dtype="double", order="C")
-    )
-
+    if lang == "C":
+        phonoc.tetrahedra_relative_grid_address(
+            relative_grid_address,
+            np.array(microzone_lattice, dtype="double", order="C"),
+        )
+    else:
+        relative_grid_address = _get_relative_grid_addresses_from_microzone_lattice(
+            microzone_lattice
+        )[0]
     return relative_grid_address
 
 
-def get_all_tetrahedra_relative_grid_address():
+def get_all_tetrahedra_relative_grid_address(lang="C"):
     """Return relative grid addresses dataset.
 
     This exists only for the test.
 
     """
-    relative_grid_address = np.zeros((4, 24, 4, 3), dtype="int_")
-    phonoc.all_tetrahedra_relative_grid_address(relative_grid_address)
+    relative_grid_address = np.zeros((4, 24, 4, 3), dtype="int_", order="C")
+    if lang == "C":
+        phonoc.all_tetrahedra_relative_grid_address(relative_grid_address)
+    else:
+        for i in range(4):
+            relative_grid_address[i] = _get_relative_grid_addresses_from_main_diagonal(
+                i
+            )[0]
 
     return relative_grid_address
 
@@ -122,13 +121,15 @@ def get_tetrahedra_integration_weight(omegas, tetrahedra_omegas, function="I"):
 class TetrahedronMethod:
     """Class to perform linear tetrahedron method on regular grid locally."""
 
-    def __init__(self, primitive_vectors=None, mesh=None, lang="C"):
+    def __init__(self, primitive_vectors, mesh=None, lang="C"):
         """Init method.
 
         Parameters
         ----------
         primitive_vectors : ndarray
-            a, b, c in column vectors.
+            a, b, c in column vectors in reciprocal space. This is only used to
+            determine a main diagonal of parallelepiped. If None, the first
+            main diagonal in the dataset is chosen.
             shape=(3, 3)
         mesh : array_like
             Mesh numbers.
@@ -143,15 +144,14 @@ class TetrahedronMethod:
                 np.array(primitive_vectors, dtype="double", order="C") / mesh
             )
         self._lang = lang
-
         self._vertices = None
         self._relative_grid_addresses = None
         self._central_indices = None
         self._tetrahedra_omegas = None
         self._sort_indices = None
         self._omegas = None
-        self._set_relative_grid_addresses()
         self._integration_weight = None
+        self._set_relative_grid_addresses(lang=self._lang)
 
     def run(self, omegas, value="I"):
         """Perform tetrahedron method.
@@ -159,8 +159,13 @@ class TetrahedronMethod:
         Parameters
         ----------
         value : str of "I" or "J"
-            "I": Imaginary part (delta function).
-            "J": Integral function of imaginary part.
+            "I": Imaginary part (delta function). "J": Integral function of
+            imaginary part.
+
+        Note
+        ----
+        "C" or "Py" here has to be consistent with that of
+        self._set_relative_grid_addresses().
 
         """
         if self._lang == "C":
@@ -168,9 +173,21 @@ class TetrahedronMethod:
         else:
             self._run_py(omegas, value=value)
 
-    def get_tetrahedra(self):
+    @property
+    def tetrahedra(self):
         """Return relative grid addresses at vertices of tetrahedra."""
         return self._relative_grid_addresses
+
+    def get_tetrahedra(self):
+        """Return relative grid addresses at vertices of tetrahedra."""
+        warnings.warn(
+            (
+                "TetrahedronMethod.get_tetrahedra() is deprecated. "
+                "Use TetrahedronMethod.tetrahedra attribute instead."
+            ),
+            DeprecationWarning,
+        )
+        return self.tetrahedra
 
     def get_unique_tetrahedra_vertices(self):
         """Return unique grid indices in neighboring tetrahedra."""
@@ -196,6 +213,34 @@ class TetrahedronMethod:
     def get_integration_weight(self):
         """Return integration weights."""
         return self._integration_weight
+
+    def _set_relative_grid_addresses(self, lang="C"):
+        """Set dataset of relative grid addresses."""
+        if lang == "C":
+            if self._primitive_vectors is None:
+                rga = np.array(
+                    get_all_tetrahedra_relative_grid_address()[0],
+                    dtype="int_",
+                    order="C",
+                )
+            else:
+                rga = get_tetrahedra_relative_grid_address(self._primitive_vectors)
+            self._relative_grid_addresses = rga
+        else:
+            if self._primitive_vectors is None:
+                (
+                    relative_grid_addresses,
+                    central_indices,
+                ) = _get_relative_grid_addresses_from_main_diagonal(0)
+            else:
+                (
+                    relative_grid_addresses,
+                    central_indices,
+                ) = _get_relative_grid_addresses_from_microzone_lattice(
+                    self._primitive_vectors
+                )
+            self._relative_grid_addresses = relative_grid_addresses
+            self._central_indices = central_indices
 
     def _run_c(self, omegas, value="I"):
         self._integration_weight = get_tetrahedra_integration_weight(
@@ -244,68 +289,6 @@ class TetrahedronMethod:
                 sum_value += IJ(4, np.where(indices == ci)[0][0]) * gn(4)
 
         return sum_value / 6
-
-    def _create_tetrahedra(self):
-        #
-        #     6-------7
-        #    /|      /|
-        #   / |     / |
-        #  4-------5  |
-        #  |  2----|--3
-        #  | /     | /
-        #  |/      |/
-        #  0-------1
-        #
-        # i: vec        neighbours
-        # 0: O          1, 2, 4
-        # 1: a          0, 3, 5
-        # 2: b          0, 3, 6
-        # 3: a + b      1, 2, 7
-        # 4: c          0, 5, 6
-        # 5: c + a      1, 4, 7
-        # 6: c + b      2, 4, 7
-        # 7: c + a + b  3, 5, 6
-        a, b, c = self._primitive_vectors.T
-        diag_vecs = np.array(
-            [a + b + c, -a + b + c, a - b + c, a + b - c]  # 0-7  # 1-6  # 2-5
-        )  # 3-4
-        shortest_index = np.argmin(np.sum(diag_vecs**2, axis=1))
-        # vertices = [np.zeros(3), a, b, a + b, c, c + a, c + b, c + a + b]
-        if shortest_index == 0:
-            pairs = ((1, 3), (1, 5), (2, 3), (2, 6), (4, 5), (4, 6))
-            tetras = np.sort([[0, 7] + list(x) for x in pairs])
-        elif shortest_index == 1:
-            pairs = ((0, 2), (0, 4), (2, 3), (3, 7), (4, 5), (5, 7))
-            tetras = np.sort([[1, 6] + list(x) for x in pairs])
-        elif shortest_index == 2:
-            pairs = ((0, 1), (0, 4), (1, 3), (3, 7), (4, 6), (6, 7))
-            tetras = np.sort([[2, 5] + list(x) for x in pairs])
-        elif shortest_index == 3:
-            pairs = ((0, 1), (0, 2), (1, 5), (2, 6), (5, 7), (6, 7))
-            tetras = np.sort([[3, 4] + list(x) for x in pairs])
-        else:
-            assert False
-
-        self._vertices = tetras
-
-    def _set_relative_grid_addresses(self):
-        if self._lang == "C":
-            rga = get_tetrahedra_relative_grid_address(self._primitive_vectors)
-            self._relative_grid_addresses = rga
-        else:
-            self._create_tetrahedra()
-            relative_grid_addresses = np.zeros((24, 4, 3), dtype="int_")
-            central_indices = np.zeros(24, dtype="int_")
-            pos = 0
-            for i in range(8):
-                ppd_shifted = parallelepiped_vertices - parallelepiped_vertices[i]
-                for tetra in self._vertices:
-                    if i in tetra:
-                        central_indices[pos] = np.where(tetra == i)[0][0]
-                        relative_grid_addresses[pos, :, :] = ppd_shifted[tetra]
-                        pos += 1
-            self._relative_grid_addresses = relative_grid_addresses
-            self._central_indices = central_indices
 
     def _f(self, n, m):
         return (self._omega - self._vertices_omegas[m]) / (
@@ -687,3 +670,92 @@ class TetrahedronMethod:
 
     def _I_4(self):
         return 0.0
+
+
+def _create_tetrahedra(shortest_main_diagonal):
+    """Create dataset of six vertices.
+
+        6-------7
+        /|      /|
+        / |     / |
+        4-------5  |
+        |  2----|--3
+        | /     | /
+        |/      |/
+        0-------1
+
+    i: vec        neighbours
+    0: O          1, 2, 4
+    1: a          0, 3, 5
+    2: b          0, 3, 6
+    3: a + b      1, 2, 7
+    4: c          0, 5, 6
+    5: c + a      1, 4, 7
+    6: c + b      2, 4, 7
+    7: c + a + b  3, 5, 6
+
+    Four main diagonals: 0-7, 1-6, 2-5, 3-4
+
+    """
+    if shortest_main_diagonal == 0:
+        pairs = ((1, 3), (1, 5), (2, 3), (2, 6), (4, 5), (4, 6))
+        six_tetras = np.sort([[0, 7] + list(x) for x in pairs])
+    elif shortest_main_diagonal == 1:
+        pairs = ((0, 2), (0, 4), (2, 3), (3, 7), (4, 5), (5, 7))
+        six_tetras = np.sort([[1, 6] + list(x) for x in pairs])
+    elif shortest_main_diagonal == 2:
+        pairs = ((0, 1), (0, 4), (1, 3), (3, 7), (4, 6), (6, 7))
+        six_tetras = np.sort([[2, 5] + list(x) for x in pairs])
+    elif shortest_main_diagonal == 3:
+        pairs = ((0, 1), (0, 2), (1, 5), (2, 6), (5, 7), (6, 7))
+        six_tetras = np.sort([[3, 4] + list(x) for x in pairs])
+    else:
+        assert False
+
+    return six_tetras
+
+
+def _get_relative_grid_addresses_from_six_tetrahedra(six_tetras):
+    parallelepiped_vertices = np.array(
+        [
+            [0, 0, 0],
+            [1, 0, 0],
+            [0, 1, 0],
+            [1, 1, 0],
+            [0, 0, 1],
+            [1, 0, 1],
+            [0, 1, 1],
+            [1, 1, 1],
+        ],
+        dtype="int_",
+        order="C",
+    )
+    relative_grid_addresses = np.zeros((24, 4, 3), dtype="int_", order="C")
+    central_indices = np.zeros(24, dtype="int_")
+    pos = 0
+    for i in range(8):
+        ppd_shifted = parallelepiped_vertices - parallelepiped_vertices[i]
+        for tetra in six_tetras:
+            if i in tetra:
+                central_indices[pos] = np.where(tetra == i)[0][0]
+                relative_grid_addresses[pos, :, :] = ppd_shifted[tetra]
+                pos += 1
+    return relative_grid_addresses, central_indices
+
+
+def _get_relative_grid_addresses_from_microzone_lattice(microzone_lattice):
+    """Return relative grid addresses of given microzone lattice.
+
+    microzone lattice is given by column vectors.
+
+    """
+    a, b, c = microzone_lattice.T
+    main_diagonals = np.array([a + b + c, -a + b + c, a - b + c, a + b - c])
+    shortest_main_diagonal = np.argmin(np.sum(main_diagonals**2, axis=1))
+    return _get_relative_grid_addresses_from_main_diagonal(shortest_main_diagonal)
+
+
+def _get_relative_grid_addresses_from_main_diagonal(main_diagonal):
+    """Return relative grid addresses of given main diagonal."""
+    six_tetras = _create_tetrahedra(main_diagonal)
+    return _get_relative_grid_addresses_from_six_tetrahedra(six_tetras)

@@ -1,4 +1,5 @@
 """Tests for dynmat_to_fc, inverse phonon transformation."""
+
 import os
 from io import StringIO
 
@@ -10,7 +11,7 @@ from phonopy.harmonic.dynmat_to_fc import (
     DynmatToForceConstants,
     get_commensurate_points,
     get_commensurate_points_in_integers,
-    ph2fc,
+    ph2ph,
 )
 from phonopy.units import VaspToTHz
 
@@ -95,18 +96,21 @@ def _write(comm_points, filename="comm_points.dat"):
         w.write("\n".join(lines))
 
 
-def test_ph2fc(ph_nacl, ph_nacl_nonac):
-    """Test transformation of phonon to force constants.
-
-    Here effectively the interpolation in reciprocal space is performed.
-
-    """
-    for ph in (ph_nacl_nonac, ph_nacl):
-        fc333 = ph2fc(ph, np.diag([3, 3, 3]))
-        _phonons_allclose(ph, fc333)
+def test_ph2ph_with_nac(ph_nacl):
+    """Test transformation of phonon to force constants with NAC."""
+    ph = ph_nacl
+    fc333 = ph2ph(ph, np.diag([3, 3, 3]), with_nac=True).force_constants
+    _phonons_allclose(ph, fc333)
 
 
-def _phonons_allclose(ph, fc333):
+def test_ph2ph_without_nac(ph_nacl_nonac):
+    """Test transformation of phonon to force constants without NAC."""
+    ph = ph_nacl_nonac
+    fc333 = ph2ph(ph, np.diag([3, 3, 3]), with_nac=False).force_constants
+    _phonons_allclose(ph, fc333)
+
+
+def _phonons_allclose(ph: Phonopy, fc333):
     ph333 = Phonopy(
         ph.unitcell, supercell_matrix=[3, 3, 3], primitive_matrix=ph.primitive_matrix
     )

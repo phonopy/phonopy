@@ -11,11 +11,6 @@ current style of phonopy development. However useful tools should be known. If
 developers want to use here to notify their tools, please contact via the
 phonopy mailing list.
 
-```{contents}
-:depth: 2
-:local:
-```
-
 ## Phonopy-Spectroscopy
 
 Phonopy-Spectroscopy is a project to add the capability to simulate vibrational

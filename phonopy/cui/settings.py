@@ -1,4 +1,5 @@
 """Phonopy input and command option tools."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -95,10 +96,10 @@ class Settings:
         "primitive_matrix": None,
         "qpoints": None,
         "read_qpoints": False,
+        "save_params": False,
         "sigma": None,
         "supercell_matrix": None,
         "symmetry_tolerance": None,
-        "temperatures": None,
         "max_temperature": 1000,
         "min_temperature": 0,
         "temperature_step": 10,
@@ -277,6 +278,10 @@ class Settings:
         """Set read_qpoints."""
         self._v["read_qpoints"] = val
 
+    def set_save_params(self, val):
+        """Set save_params."""
+        self._v["save_params"] = val
+
     def set_sigma(self, val):
         """Set sigma."""
         self._v["sigma"] = val
@@ -288,10 +293,6 @@ class Settings:
     def set_symmetry_tolerance(self, val):
         """Set symmetry_tolerance."""
         self._v["symmetry_tolerance"] = val
-
-    def set_temperatures(self, val):
-        """Set temperatures."""
-        self._v["temperatures"] = val
 
     def set_temperature_step(self, val):
         """Set temperature_step."""
@@ -559,6 +560,10 @@ class ConfParser:
                 else:
                     self._confs["primitive_axes"] = self._args.primitive_axes
 
+        if "save_params" in arg_list:
+            if self._args.save_params:
+                self._confs["save_params"] = ".true."
+
         if "supercell_dimension" in arg_list:
             dim = self._args.supercell_dimension
             if dim is not None:
@@ -601,14 +606,6 @@ class ConfParser:
             if self._args.symmetry_tolerance:
                 symtol = self._args.symmetry_tolerance
                 self._confs["symmetry_tolerance"] = symtol
-
-        if "temperature" in arg_list:
-            if self._args.temperature is not None:
-                self._confs["temperature"] = self._args.temperature
-
-        if "temperatures" in arg_list:
-            if self._args.temperatures is not None:
-                self._confs["temperatures"] = " ".join(self._args.temperatures)
 
         if "tmax" in arg_list:
             if self._args.tmax:
@@ -791,8 +788,15 @@ class ConfParser:
                     self.set_parameter("mesh_numbers", float(vals[0]))
                 elif len(vals) < 3:
                     self.setting_error("Mesh numbers are incorrectly set.")
+                elif len(vals) == 3:
+                    self.set_parameter("mesh_numbers", [int(x) for x in vals])
+                elif len(vals) == 9:
+                    mesh_array = []
+                    for row in np.reshape([int(x) for x in vals], (3, 3)):
+                        mesh_array.append(row.tolist())
+                    self.set_parameter("mesh_numbers", mesh_array)
                 else:
-                    self.set_parameter("mesh_numbers", [int(x) for x in vals[:3]])
+                    self.setting_error(f"{conf_key.upper()} is incorrectly set.")
 
             if conf_key == "band_points":
                 self.set_parameter("band_points", int(confs["band_points"]))
@@ -884,23 +888,6 @@ class ConfParser:
                 val = float(confs["symmetry_tolerance"])
                 self.set_parameter("symmetry_tolerance", val)
 
-            # For multiple T values.
-            if conf_key == "temperatures":
-                vals = [fracval(x) for x in confs["temperatures"].split()]
-                if len(vals) < 1:
-                    self.setting_error("Temperatures are incorrectly set.")
-                else:
-                    self.set_parameter("temperatures", vals)
-
-            # For single T value.
-            if conf_key == "temperature":
-                self.set_parameter(
-                    "temperatures",
-                    [
-                        confs["temperature"],
-                    ],
-                )
-
             if conf_key == "tmin":
                 val = float(confs["tmin"])
                 self.set_parameter("tmin", val)
@@ -929,6 +916,13 @@ class ConfParser:
                 except TypeError:  # None (this will not happen)
                     compression = hdf5_compression
                 self.set_parameter("hdf5_compression", compression)
+
+            # Select yaml summary contents
+            if conf_key == "save_params":
+                if confs["save_params"].lower() == ".true.":
+                    self.set_parameter("save_params", True)
+                elif confs["save_params"].lower() == ".false.":
+                    self.set_parameter("save_params", False)
 
     def set_parameter(self, key, val):
         """Pass to another data structure."""
@@ -1090,8 +1084,6 @@ class ConfParser:
             self._settings.set_supercell_matrix(params["supercell_matrix"])
 
         # Temperatures or temerature range
-        if "temperatures" in params:
-            self._settings.set_temperatures(params["temperatures"])
         if "tmax" in params:
             self._settings.set_max_temperature(params["tmax"])
         if "tmin" in params:
@@ -1113,6 +1105,10 @@ class ConfParser:
         # Compression option for writing int hdf5
         if "hdf5_compression" in params:
             self._settings.set_hdf5_compression(params["hdf5_compression"])
+
+        # Select yaml summary contents
+        if "save_params" in params:
+            self._settings.set_save_params(params["save_params"])
 
 
 #
@@ -1172,16 +1168,16 @@ class PhonopySettings(Settings):
         "mesh_format": "yaml",
         "modulation": None,
         "moment_order": None,
-        "random_displacements": None,
         "pdos_indices": None,
         "pretend_real": False,
         "projection_direction": None,
-        "random_seed": None,
         "qpoints_format": "yaml",
+        "random_displacements": None,
+        "random_seed": None,
+        "random_displacement_temperature": None,
         "read_force_constants": False,
         "readfc_format": "text",
         "run_mode": None,
-        "save_params": False,
         "show_irreps": False,
         "store_dense_svecs": False,
         "thermal_atom_pairs": None,
@@ -1389,6 +1385,10 @@ class PhonopySettings(Settings):
         """Set random_seed."""
         self._v["random_seed"] = val
 
+    def set_random_displacement_temperature(self, val):
+        """Set random_displacement_temperature."""
+        self._v["random_displacement_temperature"] = val
+
     def set_read_force_constants(self, val):
         """Set read_force_constants."""
         self._v["read_force_constants"] = val
@@ -1408,10 +1408,6 @@ class PhonopySettings(Settings):
     def set_thermal_displacement_matrix_temperature(self, val):
         """Set thermal_displacement_matrix_temperatue."""
         self._v["thermal_displacement_matrix_temperatue"] = val
-
-    def set_save_params(self, val):
-        """Set save_params."""
-        self._v["save_params"] = val
 
     def set_show_irreps(self, val):
         """Set show_irreps."""
@@ -1608,10 +1604,6 @@ class PhonopyConfParser(ConfParser):
             if self._args.irreps_qpoint is not None:
                 self._confs["irreps"] = " ".join(self._args.irreps_qpoint)
 
-        if "save_params" in arg_list:
-            if self._args.save_params:
-                self._confs["save_params"] = ".true."
-
         if "show_irreps" in arg_list:
             if self._args.show_irreps:
                 self._confs["show_irreps"] = ".true."
@@ -1657,14 +1649,30 @@ class PhonopyConfParser(ConfParser):
             if nrand:
                 self._confs["random_displacements"] = nrand
 
+        if "rd_temperature" in arg_list:
+            if self._args.rd_temperature is not None:
+                self._confs["random_displacement_temperature"] = (
+                    self._args.rd_temperature
+                )
+
+        if "temperature" in arg_list:
+            if self._args.temperature is not None:
+                print(
+                    "*****************************************************************"
+                )
+                print(
+                    "--temperature option is deprecated. Use --rd-temperature instead."
+                )
+                print(
+                    "*****************************************************************"
+                )
+                print()
+                self._confs["random_displacement_temperature"] = self._args.temperature
+
         if "random_seed" in arg_list:
             if self._args.random_seed:
                 seed = self._args.random_seed
-                if (
-                    np.issubdtype(type(seed), np.integer)
-                    and seed >= 0
-                    and seed < 2**32
-                ):
+                if np.issubdtype(type(seed), np.integer) and seed >= 0 and seed < 2**32:
                     self._confs["random_seed"] = seed
 
         if "include_fc" in arg_list:
@@ -1997,6 +2005,10 @@ class PhonopyConfParser(ConfParser):
                     "random_displacements", int(confs["random_displacements"])
                 )
 
+            if conf_key == "random_displacement_temperature":
+                val = confs["random_displacement_temperature"]
+                self.set_parameter("random_displacement_temperature", float(val))
+
             if conf_key == "random_seed":
                 self.set_parameter("random_seed", int(confs["random_seed"]))
 
@@ -2006,13 +2018,6 @@ class PhonopyConfParser(ConfParser):
                     self.set_parameter("lapack_solver", True)
                 elif confs["lapack_solver"].lower() == ".false.":
                     self.set_parameter("lapack_solver", False)
-
-            # Select yaml summary contents
-            if conf_key == "save_params":
-                if confs["save_params"].lower() == ".true.":
-                    self.set_parameter("save_params", True)
-                elif confs["save_params"].lower() == ".false.":
-                    self.set_parameter("save_params", False)
 
             if conf_key == "include_fc":
                 if confs["include_fc"].lower() == ".true.":
@@ -2347,16 +2352,17 @@ class PhonopyConfParser(ConfParser):
         if "random_displacements" in params:
             self._settings.set_random_displacements(params["random_displacements"])
 
+        if "random_displacement_temperature" in params:
+            self._settings.set_random_displacement_temperature(
+                params["random_displacement_temperature"]
+            )
+
         if "random_seed" in params:
             self._settings.set_random_seed(params["random_seed"])
 
         # Use Lapack solver via Lapacke
         if "lapack_solver" in params:
             self._settings.set_lapack_solver(params["lapack_solver"])
-
-        # Select yaml summary contents
-        if "save_params" in params:
-            self._settings.set_save_params(params["save_params"])
 
         if "include_fc" in params:
             self._settings.set_include_force_constants(params["include_fc"])

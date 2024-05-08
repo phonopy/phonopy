@@ -1,4 +1,5 @@
 """Example of band structure and group velocity calculation by NaCl."""
+
 from typing import List
 
 import numpy as np

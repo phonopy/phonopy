@@ -2,11 +2,6 @@
 
 # Setting tags
 
-```{contents}
-:depth: 2
-:local:
-```
-
 Most of the setting tags have respective command-line options
 ({ref}`command_options`). When both of equivalent command-line option and
 setting tag are set simultaneously, the command-line option supersedes the
@@ -157,17 +152,26 @@ MASS = 28.085 28.085 16.000 16.000 16.000 16.000
 
 ### `MAGMOM`
 
-Symmetry of spin such as collinear magnetic moments is considered using this
-tag. The number of values has to be equal to the number of atoms in the unit
-cell, not the primitive cell or supercell. If this tag is used with `-d` option
-(`CREATE_DISPLACEMENTS` tag), `MAGMOM` file is created. This file contains the
-`MAGMOM` information of the supercell used for VASP. Unlike `MAGMOM` in VASP,
-`*` can not be used, i.e., all the values (the same number of times to the
-number of atoms in unit cell) have to be explicitly written.
+Symmetry of spin such as magnetic moments is specified using this tag. The
+number of values has to be equal to the number of atoms, or its three times for
+non-collinear-like case, in **the input unit cell**, not the primitive cell or
+supercell. If this tag is used with `-d` option (`CREATE_DISPLACEMENTS` tag),
+`MAGMOM` file is created. This file contains the `MAGMOM` information of the
+supercell used for VASP. Unlike `MAGMOM` in VASP, `*` can not be used, i.e., all
+the values (the same number of times to the number of atoms in unit cell) have
+to be explicitly written.
 
 ```
 MAGMOM = 1.0 1.0 -1.0 -1.0
 ```
+
+For non-collinear-like case,
+
+```
+MAGMOM = 0 0 1 0 0 1 0 0 -1 0 0 -1
+```
+
+where the first three values as a vector is for the first atom, and so on.
 
 (cell_filename_tag)=
 
@@ -183,19 +187,14 @@ See {ref}`cell_filename_option`.
 
 ### `FREQUENCY_CONVERSION_FACTOR`
 
-Unit conversion factor of frequency from input values to your favorite unit can
-be specified, but the use should be limited and it is recommended to use this
-tag to convert the frequency unit to THz in some exceptional case, for example,
-a special force calculator whose physical unit system is different from the
-default setting of phonopy is used. If the frequency unit is different from THz,
-though it works just for seeing results of frequencies, e.g., band structure or
-DOS, it doesn't work for derived values like thermal properties and mean square
-displacements.
-
-The default values for calculators are those to convert frequency units to THz.
-The default conversion factors are shown at
-{ref}`frequency_default_value_interfaces`. These are determined following the
-physical unit systems of the calculators. How to calculated these conversion
+This tag should be used to convert the phonon frequency unit to THz because if
+the frequency unit is different from THz, derived values like thermal properties
+and mean square displacements are wrongly calculated. Normally this tag is
+unnecessary to be specified because the default value is chosen for each force
+calculator, i.e., the default values for calculators are prepared to convert the
+frequency unit to THz. If no calculator is chosen, the factor for VASP is used.
+The default conversion factors are listed at
+{ref}`frequency_default_value_interfaces`. How to calculated these conversion
 factors is explained at {ref}`physical_unit_conversion`.
 
 ## Displacement creation tags
@@ -250,8 +249,10 @@ direction with a constant displacement distance specified by
 {ref}`displacement_distance_tag` tag. The random seed can be specified by
 {ref}`random_seed_tag` tag.
 
-To obtain force constants with random displacements and respective forces,
-external force constants calculator is necessary.
+To obtain force constants with random displacements and respective forces, an
+external force constants calculator is necessary. See {ref}`fc_calculator_tag`.
+See also {ref}`f_force_sets_option` for creating `FORCE_SETS` from a series of
+sueprcell calculation.
 
 ```
 CREATE_DISPLACEMENTS = .TRUE.
@@ -259,6 +260,66 @@ DIM = 2 2 2
 RANDOM_DISPLACEMENTS = 20
 DISPLACEMENT_DISTANCE = 0.03
 ```
+
+(random_displacement_temperature_tag)=
+
+### `RANDOM_DISPLACEMENT_TEMPERATURE`
+
+**New in v2.17** This invokes generation of random displacements at a
+temperature specified by this tag. Collective displacements are randomly sampled
+from harmonic oscillator distribution functions of phonon modes. See more
+details at {ref}`random_displacements_at_temperatures`.
+
+An example of configure file for 2x2x2 supercell of NaCl conventional unit cell
+is as follows.
+
+```
+CREATE_DISPLACEMENTS = .TRUE.
+DIM = 2 2 2
+PRIMITIVE_AXES = AUTO
+RANDOM_DISPLACEMENTS = 1000
+RANDOM_DISPLACEMENT_TEMPERATURE = 300
+FC_SYMMETRY = .TRUE.
+```
+
+The random displacements at a specified temperature are generated after phonon
+calculation, therefore a set of data for the phonon calculation is necessary. In
+the following example, `POSCAR-unitcell` and `FORCE_SETS` of NaCl example is
+copied to an empty directory. Running following command, `phonopy_disp.yaml` is
+generated.
+
+```bash
+mkdir rd && cd rd
+cp <somewhere>/example/NaCl/POSCAR-unitcell .
+cp <somewhere>/example/NaCl/FORCE_SETS .
+cat <<EOL > rd.conf
+CREATE_DISPLACEMENTS = .TRUE.
+DIM = 2 2 2
+PRIMITIVE_AXES = AUTO
+RANDOM_DISPLACEMENTS = 1000
+RANDOM_DISPLACEMENT_TEMPERATURE = 300
+FC_SYMMETRY = .TRUE.
+EOL
+phonopy -c POSCAR-unitcell -- rd.conf
+```
+
+See also {ref}`f_force_sets_option` for creating `FORCE_SETS` from a series of
+sueprcell calculation. Be careful that if `FORCE_SETS` exists in the current
+directory, it will be overwritten by creating new `FORCE_SETS`.
+
+To obtain force constants with random displacements and
+respective forces, an external force constants calculator is necessary. See
+{ref}`fc_calculator_tag`.
+
+Displacements thus generated are sensitive to acoustic sum rule. Tiny phonon
+frequency at Gamma point due to violation of acoustic sum rule can induce very
+large displacements. Therefore, it is safer to use this feature with
+`FC_SYMMETRY = .TRUE.` or a force constants calculator (see
+{ref}`fc_calculator_tag`) that enforces acoustic sum rule. It is also possible
+to ignore phonons with frequencies below cutoff frequency specified
+by {ref}`cutoff_frequency_tags` tag. Phonon frequencies of
+imaginary modes are treated as their absolute values.
+
 
 (random_seed_tag)=
 
@@ -904,9 +965,11 @@ Q_DIRECTION = 1 0 0
 Group velocities at q-points are calculated by using this tag. The group
 velocities are written into a yaml file corresponding to the run mode in
 Cartesian coordinates. The physical unit depends on physical units of input
-files and frequency conversion factor, but if VASP and the default settings
-(e.g., THz for phonon frequency) are simply used, then the physical unit will be
-Angstrom THz.
+files and frequency conversion factor. Usually the phonon frequency is given in
+THz. Therefore, the physical unit of the group velocity written in the output
+files is [unit-of-distance.THz]. The distance units for different force
+calculators are listed at {ref}`interfaces-physical-units`. For example, VASP
+[Angstrom.THz], and QE [au.THz].
 
 ```
 GROUP_VELOCITY = .TRUE.
@@ -1042,6 +1105,12 @@ is supported. The phonopy's default force constants calculator is based on
 finite difference method, for which atomic displacements are made
 systematically. The following is the list of the force constants calculator
 currently possible to be invoked from phonopy.
+
+(fc_calculator_options_tag)=
+
+### `FC_CALCULATOR_OPTIONS`
+
+To be written.
 
 (fc_calculator_alm_tag)=
 

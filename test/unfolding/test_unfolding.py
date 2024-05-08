@@ -1,4 +1,5 @@
 """Tests for band unfolding calculations."""
+
 import os
 
 import numpy as np

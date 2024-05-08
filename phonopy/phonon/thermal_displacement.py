@@ -1,4 +1,5 @@
 """Calculations of thermal displacements."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -137,7 +138,8 @@ class ThermalMotion:
 
         """
         condition = t > 1.0
-        if type(condition) == bool or type(condition) == np.bool_:
+        # Avoid using isinstance with bool to distinguish from int.
+        if type(condition) is bool or type(condition) is np.bool_:
             if condition:
                 return 1.0 / (np.exp(freq * THzToEv / (Kb * t)) - 1)
             else:

@@ -1,5 +1,7 @@
 """Tests of routines in cells.py."""
+
 import os
+from collections.abc import Callable
 
 import numpy as np
 import pytest
@@ -13,6 +15,9 @@ from phonopy.structure.cells import (
     compute_all_sg_permutations,
     compute_permutation_for_rotation,
     convert_to_phonopy_primitive,
+    get_angles,
+    get_cell_matrix_from_lattice,
+    get_cell_parameters,
     get_primitive,
     get_supercell,
     isclose,
@@ -202,28 +207,42 @@ def test_get_supercell_convcell_sio2(
 
 
 @pytest.mark.parametrize("nosnf", [True, False])
-def test_get_supercell_primcell_si(primcell_si: PhonopyAtoms, nosnf, helper_methods):
+def test_get_supercell_primcell_si(
+    primcell_si: PhonopyAtoms, nosnf, helper_methods: Callable
+):
     """Test of get_supercell with/without SNF by Si."""
     _test_get_supercell_primcell_si(primcell_si, helper_methods, is_old_style=nosnf)
 
 
-def test_get_supercell_nacl_snf(convcell_nacl: PhonopyAtoms, helper_methods):
+def test_get_supercell_nacl_snf(
+    nacl_unitcell_order1: PhonopyAtoms, helper_methods: Callable
+):
     """Test of get_supercell using SNF by NaCl."""
-    cell = convcell_nacl
+    cell = nacl_unitcell_order1
     smat = [[-1, 1, 1], [1, -1, 1], [1, 1, -1]]
     scell = get_supercell(cell, smat, is_old_style=True)
     scell_snf = get_supercell(cell, smat, is_old_style=False)
     helper_methods.compare_cells(scell, scell_snf)
 
 
-def test_get_supercell_Cr(convcell_cr: PhonopyAtoms, helper_methods):
+@pytest.mark.parametrize("is_ncl", [False, True])
+def test_get_supercell_Cr_with_magmoms(
+    convcell_cr: PhonopyAtoms, is_ncl: bool, helper_methods: Callable
+):
     """Test of get_supercell using SNF by Cr with magnetic moments."""
-    convcell_cr.magnetic_moments = [1, -1]
+    if is_ncl:
+        convcell_cr.magnetic_moments = [[0, 0, 1], [0, 0, -1]]
+        ref_magmoms = [[0, 0, 1]] * 4 + [[0, 0, -1]] * 4
+    else:
+        convcell_cr.magnetic_moments = [1, -1]
+        ref_magmoms = [1.0] * 4 + [-1.0] * 4
+
     smat = [[-1, 1, 1], [1, -1, 1], [1, 1, -1]]
     scell = get_supercell(convcell_cr, smat, is_old_style=True)
+
     np.testing.assert_allclose(
         scell.magnetic_moments,
-        [1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0],
+        ref_magmoms,
         atol=1e-8,
     )
     scell_snf = get_supercell(convcell_cr, smat, is_old_style=False)
@@ -258,31 +277,47 @@ def _test_get_supercell_primcell_si(
 
 
 def test_get_primitive_convcell_nacl(
-    convcell_nacl: PhonopyAtoms, primcell_nacl: PhonopyAtoms, helper_methods
+    nacl_unitcell_order1: PhonopyAtoms, primcell_nacl: PhonopyAtoms, helper_methods
 ):
     """Test get_primitive by NaCl."""
-    pcell = get_primitive(convcell_nacl, primitive_matrix_nacl)
+    pcell = get_primitive(nacl_unitcell_order1, primitive_matrix=primitive_matrix_nacl)
     helper_methods.compare_cells_with_order(pcell, primcell_nacl)
 
 
-def test_get_primitive_convcell_Cr(convcell_cr: PhonopyAtoms, helper_methods):
+def test_get_primitive_convcell_nacl_with_cetring_symbol(
+    nacl_unitcell_order1: PhonopyAtoms, primcell_nacl: PhonopyAtoms, helper_methods
+):
     """Test get_primitive by NaCl."""
-    convcell_cr.magnetic_moments = [1, -1]
+    pcell = get_primitive(nacl_unitcell_order1, primitive_matrix="F")
+    helper_methods.compare_cells_with_order(pcell, primcell_nacl)
+
+
+@pytest.mark.parametrize("is_ncl", [False, True])
+def test_get_primitive_convcell_Cr_with_magmoms(
+    convcell_cr: PhonopyAtoms, is_ncl: bool, helper_methods: Callable
+):
+    """Test get_primitive by Cr with magmoms."""
+    if is_ncl:
+        convcell_cr.magnetic_moments = [[0, 0, 1], [0, 0, -1]]
+    else:
+        convcell_cr.magnetic_moments = [1, -1]
     smat = [[2, 0, 0], [0, 2, 0], [0, 0, 2]]
     scell = get_supercell(convcell_cr, smat, is_old_style=True)
     pmat = np.linalg.inv(smat)
-    pcell = get_primitive(scell, pmat)
+    pcell = get_primitive(scell, primitive_matrix=pmat)
     helper_methods.compare_cells(convcell_cr, pcell)
     convcell_cr.magnetic_moments = None
 
 
 @pytest.mark.parametrize("store_dense_svecs", [True, False])
 def test_get_primitive_convcell_nacl_svecs(
-    convcell_nacl: PhonopyAtoms, store_dense_svecs
+    nacl_unitcell_order1: PhonopyAtoms, store_dense_svecs
 ):
     """Test shortest vectors by NaCl."""
     pcell = get_primitive(
-        convcell_nacl, primitive_matrix_nacl, store_dense_svecs=store_dense_svecs
+        nacl_unitcell_order1,
+        primitive_matrix=primitive_matrix_nacl,
+        store_dense_svecs=store_dense_svecs,
     )
     svecs, multi = pcell.get_smallest_vectors()
     if store_dense_svecs:
@@ -295,7 +330,7 @@ def test_get_primitive_convcell_nacl_svecs(
         assert multi.shape == (8, 2)
 
 
-def test_TrimmedCell(convcell_nacl: PhonopyAtoms, helper_methods):
+def test_TrimmedCell(nacl_unitcell_order1: PhonopyAtoms, helper_methods: Callable):
     """Test TrimmedCell by NaCl."""
     pmat = [[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]]
     smat2 = np.eye(3, dtype="intc") * 2
@@ -303,7 +338,7 @@ def test_TrimmedCell(convcell_nacl: PhonopyAtoms, helper_methods):
     smat3 = np.eye(3, dtype="intc") * 3
     pmat3 = np.dot(np.linalg.inv(smat3), pmat)
 
-    cell = convcell_nacl
+    cell = nacl_unitcell_order1
     scell2 = get_supercell(cell, smat2)
     scell3 = get_supercell(cell, smat3)
     n = len(scell3) // 2
@@ -321,7 +356,7 @@ def test_TrimmedCell(convcell_nacl: PhonopyAtoms, helper_methods):
     helper_methods.compare_cells_with_order(tcell2, tcell3)
 
 
-def test_ShortestPairs_sparse_nacl(ph_nacl: Phonopy, helper_methods):
+def test_ShortestPairs_sparse_nacl(ph_nacl: Phonopy, helper_methods: Callable):
     """Test ShortestPairs (parse) by NaCl."""
     scell = ph_nacl.supercell
     pcell = ph_nacl.primitive
@@ -336,7 +371,7 @@ def test_ShortestPairs_sparse_nacl(ph_nacl: Phonopy, helper_methods):
     helper_methods.compare_positions_with_order(pos_from_svecs, pos, scell.cell)
 
 
-def test_ShortestPairs_dense_nacl(ph_nacl: Phonopy, helper_methods):
+def test_ShortestPairs_dense_nacl(ph_nacl: Phonopy, helper_methods: Callable):
     """Test ShortestPairs (dense) by NaCl."""
     scell = ph_nacl.supercell
     pcell = ph_nacl.primitive
@@ -377,12 +412,26 @@ def test_sparse_to_dense_nacl(ph_nacl: Phonopy):
 
 
 def test_isclose(ph_nacl: Phonopy):
-    """Test for isclose."""
+    """Test of isclose wit same order of atoms.."""
     scell = ph_nacl.supercell
     pcell = ph_nacl.primitive
     assert isclose(pcell, pcell)
     assert isclose(scell, scell)
     assert not isclose(scell, pcell)
+
+
+def test_isclose_with_arbitrary_order(
+    nacl_unitcell_order1: PhonopyAtoms, nacl_unitcell_order2: PhonopyAtoms
+):
+    """Test of isclose with different order."""
+    cell1 = nacl_unitcell_order1
+    cell2 = nacl_unitcell_order2
+    assert not isclose(cell1, cell2)
+    _isclose = isclose(cell1, cell2, with_arbitrary_order=True)
+    assert isinstance(_isclose, bool)
+    assert _isclose
+    order = isclose(cell1, cell2, with_arbitrary_order=True, return_order=True)
+    np.testing.assert_array_equal(order, [0, 4, 1, 5, 2, 6, 3, 7])
 
 
 def test_convert_to_phonopy_primitive(ph_nacl: Phonopy):
@@ -399,3 +448,31 @@ def test_convert_to_phonopy_primitive(ph_nacl: Phonopy):
     pcell_mode = PhonopyAtoms(cell=cell, scaled_positions=points, numbers=numbers)
     with pytest.raises(RuntimeError):
         _pcell = convert_to_phonopy_primitive(scell, pcell_mode)
+
+
+def test_get_cell_matrix_from_lattice(primcell_nacl: PhonopyAtoms):
+    """Test for test_get_cell_matrix_from_lattice."""
+    pcell = primcell_nacl
+    lattice = get_cell_matrix_from_lattice(pcell.cell)
+    np.testing.assert_allclose(
+        get_angles(lattice, is_radian=False),
+        get_angles(pcell.cell, is_radian=False),
+        atol=1e-8,
+    )
+    np.testing.assert_allclose(
+        get_angles(lattice, is_radian=True),
+        get_angles(pcell.cell, is_radian=True),
+        atol=1e-8,
+    )
+    np.testing.assert_allclose(
+        get_cell_parameters(lattice), get_cell_parameters(pcell.cell), atol=1e-8
+    )
+    np.testing.assert_allclose(
+        [
+            [4.02365076, 0.0, 0.0],
+            [2.01182538, 3.48458377, 0.0],
+            [2.01182538, 1.16152792, 3.28529709],
+        ],
+        lattice,
+        atol=1e-7,
+    )

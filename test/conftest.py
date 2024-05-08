@@ -1,5 +1,9 @@
 """Pytest configuration."""
-import os
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from pathlib import Path
 from typing import Tuple
 
 import numpy as np
@@ -9,13 +13,13 @@ import phonopy
 from phonopy import Phonopy
 from phonopy.structure.atoms import PhonopyAtoms
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
+cwd = Path(__file__).parent
 
 
 @pytest.fixture(scope="session")
 def ph_si() -> Phonopy:
     """Return Phonopy class instance of Si-prim 2x2x2."""
-    yaml_filename = os.path.join(current_dir, "phonopy_params_Si.yaml")
+    yaml_filename = cwd / "phonopy_params_Si.yaml"
     return phonopy.load(
         yaml_filename,
         is_compact_fc=False,
@@ -27,9 +31,9 @@ def ph_si() -> Phonopy:
 @pytest.fixture(scope="session")
 def ph_nacl() -> Phonopy:
     """Return Phonopy class instance of NaCl 2x2x2."""
-    yaml_filename = os.path.join(current_dir, "phonopy_disp_NaCl.yaml")
-    force_sets_filename = os.path.join(current_dir, "FORCE_SETS_NaCl")
-    born_filename = os.path.join(current_dir, "BORN_NaCl")
+    yaml_filename = cwd / "phonopy_disp_NaCl.yaml"
+    force_sets_filename = cwd / "FORCE_SETS_NaCl"
+    born_filename = cwd / "BORN_NaCl"
     return phonopy.load(
         yaml_filename,
         force_sets_filename=force_sets_filename,
@@ -43,9 +47,9 @@ def ph_nacl() -> Phonopy:
 @pytest.fixture(scope="session")
 def ph_nacl_nofcsym() -> Phonopy:
     """Return Phonopy class instance of NaCl 2x2x2 without symmetrizing fc2."""
-    yaml_filename = os.path.join(current_dir, "phonopy_disp_NaCl.yaml")
-    force_sets_filename = os.path.join(current_dir, "FORCE_SETS_NaCl")
-    born_filename = os.path.join(current_dir, "BORN_NaCl")
+    yaml_filename = cwd / "phonopy_disp_NaCl.yaml"
+    force_sets_filename = cwd / "FORCE_SETS_NaCl"
+    born_filename = cwd / "BORN_NaCl"
     return phonopy.load(
         yaml_filename,
         force_sets_filename=force_sets_filename,
@@ -59,9 +63,9 @@ def ph_nacl_nofcsym() -> Phonopy:
 @pytest.fixture(scope="session")
 def ph_nacl_compact_fcsym() -> Phonopy:
     """Return Phonopy class instance of NaCl 2x2x2 with compact fc2."""
-    yaml_filename = os.path.join(current_dir, "phonopy_disp_NaCl.yaml")
-    force_sets_filename = os.path.join(current_dir, "FORCE_SETS_NaCl")
-    born_filename = os.path.join(current_dir, "BORN_NaCl")
+    yaml_filename = cwd / "phonopy_disp_NaCl.yaml"
+    force_sets_filename = cwd / "FORCE_SETS_NaCl"
+    born_filename = cwd / "BORN_NaCl"
     return phonopy.load(
         yaml_filename,
         force_sets_filename=force_sets_filename,
@@ -75,8 +79,8 @@ def ph_nacl_compact_fcsym() -> Phonopy:
 @pytest.fixture(scope="session")
 def ph_nacl_nonac() -> Phonopy:
     """Return Phonopy class instance of NaCl 2x2x2 without NAC."""
-    yaml_filename = os.path.join(current_dir, "phonopy_disp_NaCl.yaml")
-    force_sets_filename = os.path.join(current_dir, "FORCE_SETS_NaCl")
+    yaml_filename = cwd / "phonopy_disp_NaCl.yaml"
+    force_sets_filename = cwd / "FORCE_SETS_NaCl"
     return phonopy.load(
         yaml_filename,
         force_sets_filename=force_sets_filename,
@@ -90,8 +94,8 @@ def ph_nacl_nonac() -> Phonopy:
 @pytest.fixture(scope="session")
 def ph_nacl_nonac_compact_fc() -> Phonopy:
     """Return Phonopy class instance of NaCl 2x2x2 without NAC with compact fc2."""
-    yaml_filename = os.path.join(current_dir, "phonopy_disp_NaCl.yaml")
-    force_sets_filename = os.path.join(current_dir, "FORCE_SETS_NaCl")
+    yaml_filename = cwd / "phonopy_disp_NaCl.yaml"
+    force_sets_filename = cwd / "FORCE_SETS_NaCl"
     return phonopy.load(
         yaml_filename,
         force_sets_filename=force_sets_filename,
@@ -105,8 +109,8 @@ def ph_nacl_nonac_compact_fc() -> Phonopy:
 @pytest.fixture(scope="session")
 def ph_nacl_nonac_dense_svecs() -> Phonopy:
     """Return Phonopy class instance of NaCl 2x2x2 without NAC with dense svecs."""
-    yaml_filename = os.path.join(current_dir, "phonopy_disp_NaCl.yaml")
-    force_sets_filename = os.path.join(current_dir, "FORCE_SETS_NaCl")
+    yaml_filename = cwd / "phonopy_disp_NaCl.yaml"
+    force_sets_filename = cwd / "FORCE_SETS_NaCl"
     return phonopy.load(
         yaml_filename,
         force_sets_filename=force_sets_filename,
@@ -119,11 +123,33 @@ def ph_nacl_nonac_dense_svecs() -> Phonopy:
 
 
 @pytest.fixture(scope="session")
+def ph_nacl_rd() -> Phonopy:
+    """Return Phonopy class instance of NaCl 2x2x2 with RD results.
+
+    This data contains supercell energies.
+
+    """
+    yaml_filename = cwd / "phonopy_params_NaCl-rd.yaml.xz"
+    return phonopy.load(yaml_filename, log_level=1, produce_fc=False)
+
+
+@pytest.fixture(scope="session")
+def ph_nacl_fd() -> Phonopy:
+    """Return Phonopy class instance of NaCl 2x2x2 with RD results.
+
+    This data contains supercell energies.
+
+    """
+    yaml_filename = cwd / "phonopy_params_NaCl-fd.yaml.xz"
+    return phonopy.load(yaml_filename, log_level=1, produce_fc=False)
+
+
+@pytest.fixture(scope="session")
 def ph_sno2() -> Phonopy:
     """Return Phonopy class instance of rutile SnO2 2x2x3."""
-    yaml_filename = os.path.join(current_dir, "phonopy_disp_SnO2.yaml")
-    force_sets_filename = os.path.join(current_dir, "FORCE_SETS_SnO2")
-    born_filename = os.path.join(current_dir, "BORN_SnO2")
+    yaml_filename = cwd / "phonopy_disp_SnO2.yaml"
+    force_sets_filename = cwd / "FORCE_SETS_SnO2"
+    born_filename = cwd / "BORN_SnO2"
     return phonopy.load(
         yaml_filename,
         force_sets_filename=force_sets_filename,
@@ -137,9 +163,9 @@ def ph_sno2() -> Phonopy:
 @pytest.fixture(scope="session")
 def ph_tio2() -> Phonopy:
     """Return Phonopy class instance of anataze TiO2 3x3x1."""
-    yaml_filename = os.path.join(current_dir, "phonopy_disp_TiO2.yaml")
-    force_sets_filename = os.path.join(current_dir, "FORCE_SETS_TiO2")
-    born_filename = os.path.join(current_dir, "BORN_TiO2")
+    yaml_filename = cwd / "phonopy_disp_TiO2.yaml"
+    force_sets_filename = cwd / "FORCE_SETS_TiO2"
+    born_filename = cwd / "BORN_TiO2"
     return phonopy.load(
         yaml_filename,
         force_sets_filename=force_sets_filename,
@@ -153,7 +179,7 @@ def ph_tio2() -> Phonopy:
 @pytest.fixture(scope="session")
 def ph_zr3n4() -> Phonopy:
     """Return Phonopy class instance of anataze Zr3N4 1x1x1."""
-    yaml_filename = os.path.join(current_dir, "phonopy_params_Zr3N4.yaml")
+    yaml_filename = cwd / "phonopy_params_Zr3N4.yaml"
     return phonopy.load(
         yaml_filename, is_compact_fc=False, log_level=1, produce_fc=True
     )
@@ -162,7 +188,16 @@ def ph_zr3n4() -> Phonopy:
 @pytest.fixture(scope="session")
 def ph_tipn3() -> Phonopy:
     """Return Phonopy class instance of anataze TiPN3 4x2x1."""
-    yaml_filename = os.path.join(current_dir, "phonopy_params_TiPN3.yaml.xz")
+    yaml_filename = cwd / "phonopy_params_TiPN3.yaml.xz"
+    return phonopy.load(
+        yaml_filename, is_compact_fc=False, log_level=1, produce_fc=True
+    )
+
+
+@pytest.fixture(scope="session")
+def ph_srtio3() -> Phonopy:
+    """Return Phonopy class instance of anataze SrTiO3 3x3x3."""
+    yaml_filename = cwd / "phonopy_SrTiO3.yaml.xz"
     return phonopy.load(
         yaml_filename, is_compact_fc=False, log_level=1, produce_fc=True
     )
@@ -172,17 +207,17 @@ def ph_tipn3() -> Phonopy:
 def ph_nacl_gruneisen() -> Tuple[Phonopy, Phonopy, Phonopy]:
     """Return Phonopy class instances of NaCl 2x2x2 at three volumes."""
     ph0 = phonopy.load(
-        os.path.join(current_dir, "phonopy_params_NaCl-1.00.yaml.xz"),
+        cwd / "phonopy_params_NaCl-1.00.yaml.xz",
         log_level=1,
         produce_fc=True,
     )
     ph_minus = phonopy.load(
-        os.path.join(current_dir, "phonopy_params_NaCl-0.995.yaml.xz"),
+        cwd / "phonopy_params_NaCl-0.995.yaml.xz",
         log_level=1,
         produce_fc=True,
     )
     ph_plus = phonopy.load(
-        os.path.join(current_dir, "phonopy_params_NaCl-1.005.yaml.xz"),
+        cwd / "phonopy_params_NaCl-1.005.yaml.xz",
         log_level=1,
         produce_fc=True,
     )
@@ -215,22 +250,17 @@ def primcell_si() -> PhonopyAtoms:
 
 
 @pytest.fixture(scope="session")
-def convcell_nacl() -> PhonopyAtoms:
-    """Return PhonopyAtoms instance of conventional unit cell of NaCl."""
-    symbols = ["Na"] * 4 + ["Cl"] * 4
-    a = 5.6903014761756712
-    lattice = [[a, 0, 0], [0, a, 0], [0, 0, a]]
-    points = [
-        [0.0, 0.0, 0.0],
-        [0.0, 0.5, 0.5],
-        [0.5, 0.0, 0.5],
-        [0.5, 0.5, 0.0],
-        [0.5, 0.5, 0.5],
-        [0.5, 0.0, 0.0],
-        [0.0, 0.5, 0.0],
-        [0.0, 0.0, 0.5],
-    ]
-    return PhonopyAtoms(cell=lattice, scaled_positions=points, symbols=symbols)
+def nacl_unitcell_order1() -> PhonopyAtoms:
+    """Return Phonopy class instance of only NaCl unitcell with order-1."""
+    yaml_filename = cwd / "phonopy_NaCl_unitcell1.yaml"
+    return phonopy.load(yaml_filename, log_level=1, produce_fc=False).unitcell
+
+
+@pytest.fixture(scope="session")
+def nacl_unitcell_order2() -> PhonopyAtoms:
+    """Return Phonopy class instance of only NaCl unitcell with order-2."""
+    yaml_filename = cwd / "phonopy_NaCl_unitcell2.yaml"
+    return phonopy.load(yaml_filename, log_level=1, produce_fc=False).unitcell
 
 
 @pytest.fixture(scope="session")
@@ -254,14 +284,14 @@ def convcell_cr() -> PhonopyAtoms:
 
 
 @pytest.fixture(scope="session")
-def helper_methods():
+def helper_methods() -> Callable:
     """Return methods to compare cells."""
 
     class HelperMethods:
         @classmethod
         def compare_cells_with_order(
             cls, cell: PhonopyAtoms, cell_ref: PhonopyAtoms, symprec=1e-5
-        ):
+        ) -> None:
             """Compare two cells with the same orders of positions."""
             np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=symprec)
             cls.compare_positions_with_order(
@@ -277,7 +307,9 @@ def helper_methods():
                 )
 
         @classmethod
-        def compare_positions_with_order(cls, pos, pos_ref, lattice, symprec=1e-5):
+        def compare_positions_with_order(
+            cls, pos, pos_ref, lattice, symprec=1e-5
+        ) -> None:
             """Compare two lists of positions and orders.
 
             lattice :
@@ -292,7 +324,7 @@ def helper_methods():
         @classmethod
         def compare_cells(
             cls, cell: PhonopyAtoms, cell_ref: PhonopyAtoms, symprec=1e-5
-        ):
+        ) -> None:
             """Compare two cells where position orders can be different."""
             np.testing.assert_allclose(cell.cell, cell_ref.cell, atol=symprec)
 
@@ -315,7 +347,7 @@ def helper_methods():
         @classmethod
         def compare_positions_in_arbitrary_order(
             cls, pos_in, pos_ref, lattice, symprec=1e-5
-        ):
+        ) -> list:
             """Compare two sets of positions irrespective of orders.
 
             lattice :

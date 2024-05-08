@@ -1,4 +1,5 @@
 """Calculate irreducible representation from eigenvectors."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -309,7 +310,7 @@ class IrReps:
     def _get_ground_matrix(self):
         matrices = []
 
-        for (r, t) in zip(self._rotations_at_q, self._translations_at_q):
+        for r, t in zip(self._rotations_at_q, self._translations_at_q):
             lat = self._primitive.cell.T
             r_cart = similarity_transformation(lat, r)
             perm_mat = self._get_modified_permutation_matrix(r, t)

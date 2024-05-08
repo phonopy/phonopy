@@ -1,4 +1,5 @@
 """Calculation of density of states."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -275,7 +276,7 @@ class TotalDos(Dos):
             self._frequencies,
             self._mesh_object.grid_address,
             self._mesh_object.grid_mapping_table,
-            tm.get_tetrahedra(),
+            tm.tetrahedra,
         )
 
     def _get_density_of_states_at_freq(self, f):
@@ -383,6 +384,8 @@ class ProjectedDos(Dos):
         ax,
         indices=None,
         legend=None,
+        legend_prop=None,
+        legend_frameon=True,
         xlabel=None,
         ylabel=None,
         draw_grid=True,
@@ -407,6 +410,8 @@ class ProjectedDos(Dos):
             self._projected_dos,
             indices=indices,
             legend=legend,
+            legend_prop=legend_prop,
+            legend_frameon=legend_frameon,
             xlabel=_xlabel,
             ylabel=_ylabel,
             draw_grid=draw_grid,
@@ -460,7 +465,7 @@ class ProjectedDos(Dos):
             self._frequencies,
             self._mesh_object.grid_address,
             self._mesh_object.grid_mapping_table,
-            tm.get_tetrahedra(),
+            tm.tetrahedra,
             coef=self._eigvecs2,
         )
         self._projected_dos = pdos.T
@@ -591,6 +596,8 @@ def plot_partial_dos(
     partial_dos,
     indices=None,
     legend=None,
+    legend_prop=None,
+    legend_frameon=True,
     xlabel=None,
     ylabel=None,
     draw_grid=True,
@@ -607,6 +614,8 @@ def plot_partial_dos(
         partial_dos,
         indices=indices,
         legend=legend,
+        legend_prop=legend_prop,
+        legend_frameon=legend_frameon,
         xlabel=xlabel,
         ylabel=ylabel,
         draw_grid=draw_grid,
@@ -620,6 +629,8 @@ def plot_projected_dos(
     projected_dos,
     indices=None,
     legend=None,
+    legend_prop=None,
+    legend_frameon=True,
     xlabel=None,
     ylabel=None,
     draw_grid=True,
@@ -659,7 +670,7 @@ def plot_projected_dos(
             plots.append(ax.plot(frequency_points, pdos_sum, linewidth=1))
 
     if legend is not None:
-        ax.legend(legend)
+        ax.legend(legend, prop=legend_prop, frameon=legend_frameon)
 
     if xlabel:
         ax.set_xlabel(xlabel)
@@ -708,3 +719,28 @@ def run_tetrahedron_method_dos(
         return dos[:, :, :, 0].sum(axis=0).sum(axis=0) / np.prod(mesh)
     else:
         return dos.sum(axis=0).sum(axis=0) / np.prod(mesh)
+
+
+def get_dos_frequency_range(freqs, dos):
+    """Return reasonable frequency range."""
+    i_min = 0
+    i_max = 1000
+
+    for i, (f, d) in enumerate(zip(freqs, dos)):
+        if d > 1e-5:
+            i_min = i
+            break
+
+    for i, (f, d) in enumerate(zip(freqs[::-1], dos[::-1])):
+        if d > 1e-5:
+            i_max = len(freqs) - 1 - i
+            break
+
+    f_min = freqs[i_min]
+    if f_min > 0:
+        f_min = 0
+
+    f_max = freqs[i_max]
+    f_max += (f_max - f_min) * 0.05
+
+    return f_min, f_max

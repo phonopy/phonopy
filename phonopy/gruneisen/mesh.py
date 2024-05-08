@@ -1,4 +1,5 @@
 """Mode Grueneisen parameters calculation on sampling mesh."""
+
 # Copyright (C) 2012 Atsushi Togo
 # All rights reserved.
 #

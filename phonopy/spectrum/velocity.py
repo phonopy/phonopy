@@ -1,4 +1,5 @@
 """Routines to analyze MD velocity data."""
+
 # Copyright (C) 2016 Atsushi Togo
 # All rights reserved.
 #

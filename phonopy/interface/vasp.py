@@ -1,4 +1,5 @@
 """VASP calculator interface."""
+
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -33,12 +34,17 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
+import io
 import os
 import sys
 import warnings
 import xml.etree.cElementTree as etree
 import xml.parsers.expat
-from io import StringIO
+from collections import Counter
+from collections.abc import Sequence
+from typing import Literal, Optional, Union
 
 import numpy as np
 
@@ -89,20 +95,49 @@ def get_scaled_positions_lines(scaled_positions):
     return "\n".join(_get_scaled_positions_lines(scaled_positions))
 
 
-def sort_positions_by_symbols(symbols, positions):
-    """Sort atomic positions by symbols."""
-    from collections import Counter
+def sort_positions_by_symbols(symbols: Sequence, positions: np.ndarray):
+    """Sort atomic positions by symbols.
 
-    # unique symbols in order of first appearance in 'symbols'
-    reduced_symbols = _unique_stable(symbols)
+    Sort positions by symbols (using the order defined by reduced_symbols)
+    using a stable sort algorithm. Written by @ExpHP, refactored by @atztogo.
 
-    # counts of each symbol
+    symbols = ["A", "B", "A", "B"]
+    reduced_symbols = ["A", "B"]
+    sort_keys = [0, 1, 0, 1]
+    perm = [0, 2, 1, 3]
+    counts_dict = {'A': 2, 'B': 2}
+    counts_list = [2, 2]
+
+    Parameters
+    ----------
+    symbols : list[str] or list[int] or np.ndarray[int]
+        Sequence of hashable objects. This may be a list of chemical symbols
+        or numbers.
+    positions : np.ndarray
+        Atomic positions.
+
+    Returns
+    -------
+    sorted_positions = positions[perm]
+    For the others, see the example above.
+
+    Functions
+    ---------
+    _argsort_stable :
+        Alternative to `np.argsort(keys)` that uses a stable sorting algorithm
+        so that indices tied for the same value are listed in increasing order.
+
+    """
+
+    def _argsort_stable(keys):
+        # Python's built-in sort algorithm is a stable sort
+        return sorted(range(len(keys)), key=keys.__getitem__)
+
+    # dict in Python 3.7 or later is ordered dict.
+    reduced_symbols = list(dict.fromkeys(symbols))
     counts_dict = Counter(symbols)
+    # list(counts_dict.values()) may be used...
     counts_list = [counts_dict[s] for s in reduced_symbols]
-
-    # sort positions by symbol (using the order defined by reduced_symbols).
-    # using a stable sort algorithm matches the behavior of previous versions
-    #  of phonopy (but is not otherwise necessary)
     sort_keys = [reduced_symbols.index(i) for i in symbols]
     perm = _argsort_stable(sort_keys)
     sorted_positions = positions[perm]
@@ -110,45 +145,66 @@ def sort_positions_by_symbols(symbols, positions):
     return counts_list, reduced_symbols, sorted_positions, perm
 
 
-def parse_set_of_forces(num_atoms, forces_filenames, use_expat=True, verbose=True):
+def _get_forces_and_energy(
+    fp: io.IOBase,
+    use_expat: bool = True,
+    filename: Optional[Union[str, os.PathLike]] = None,
+):
+    vasprun = Vasprun(fp, use_expat=use_expat)
+    try:
+        forces = vasprun.read_forces()
+        energy = vasprun.read_energy()
+    except (RuntimeError, ValueError, xml.parsers.expat.ExpatError) as err:
+        msg = (
+            "Probably this vasprun.xml "
+            "is broken or some value diverges. Check this "
+            "calculation carefully before sending questions to the "
+            "phonopy mailing list."
+        )
+        if filename is not None:
+            msg = f'Could not parse "{filename}". ' + msg
+        raise RuntimeError(msg) from err
+    return forces, energy
+
+
+def parse_set_of_forces(
+    num_atoms: int,
+    forces_filenames: Sequence[Union[str, bytes, os.PathLike, io.IOBase]],
+    use_expat: bool = True,
+    verbose: bool = True,
+) -> dict:
     """Parse sets of forces of files."""
     if verbose:
-        sys.stdout.write("counter (file index): ")
+        print("counter (file index): ", end="")
 
-    count = 0
     is_parsed = True
     force_sets = []
-    force_files = forces_filenames
+    energy_sets = []
 
-    for filename in force_files:
-        myio = get_io_module_to_decompress(filename)
-        with myio.open(filename, "rb") as fp:
-            if verbose:
-                sys.stdout.write("%d " % (count + 1))
-            vasprun = Vasprun(fp, use_expat=use_expat)
-            try:
-                forces = vasprun.read_forces()
-            except (RuntimeError, ValueError, xml.parsers.expat.ExpatError) as err:
-                msg = (
-                    'Could not parse "%s". Probably this vasprun.xml '
-                    "is broken or some value diverges. Check this "
-                    "calculation carefully before sending questions to the "
-                    "phonopy mailing list." % filename
+    for i, fp in enumerate(forces_filenames):
+        if verbose:
+            print(f"{i + 1}", end=" ")
+        if isinstance(fp, io.IOBase):
+            forces, energy = _get_forces_and_energy(fp, use_expat=use_expat)
+        else:
+            myio = get_io_module_to_decompress(fp)
+            with myio.open(fp, "rb") as fp:
+                forces, energy = _get_forces_and_energy(
+                    fp, use_expat=use_expat, filename=fp
                 )
-                raise RuntimeError(msg) from err
-            force_sets.append(forces)
-            count += 1
+        force_sets.append(forces)
+        energy_sets.append(energy)
 
-            if not check_forces(force_sets[-1], num_atoms, filename):
-                is_parsed = False
+        if not check_forces(force_sets[-1], num_atoms, fp):
+            is_parsed = False
 
     if verbose:
         print("")
 
     if is_parsed:
-        return force_sets
+        return {"forces": force_sets, "supercell_energies": energy_sets}
     else:
-        return []
+        return {}
 
 
 def create_FORCE_CONSTANTS(filename, is_hdf5, log_level):
@@ -214,7 +270,7 @@ def read_vasp(filename, symbols=None):
 
 def read_vasp_from_strings(strings, symbols=None):
     """Parse POSCAR type string."""
-    return _get_atoms_from_poscar(StringIO(strings).readlines(), symbols)
+    return _get_atoms_from_poscar(io.StringIO(strings).readlines(), symbols)
 
 
 def _get_atoms_from_poscar(lines, symbols):
@@ -314,22 +370,37 @@ def write_vasp(filename, cell, direct=True):
         w.write("\n".join(lines))
 
 
-def get_vasp_structure_lines(cell, direct=True, is_vasp5=True):
-    """Generate POSCAR text lines as a list from PhonopyAtoms instance."""
-    (num_atoms, symbols, scaled_positions, sort_list) = sort_positions_by_symbols(
-        cell.symbols, cell.scaled_positions
+def get_vasp_structure_lines(
+    cell: PhonopyAtoms,
+    direct: bool = True,
+    is_vasp5: bool = True,
+    is_vasp4: bool = False,
+    first_line_str: Optional[str] = None,
+):
+    """Generate POSCAR text lines as a list from PhonopyAtoms instance.
+
+    direct : bool
+        Dummy argument. This doesn nothing.
+    is_vasp5 : bool
+        Deprecated. This is replaced by ``is_vasp4 = not is_vasp5``.
+
+    """
+    _is_vasp4 = is_vasp4
+    if is_vasp5 is False:
+        warnings.warn(
+            "is_vasp5 parameter is deprecated. "
+            "Use is_vasp4=True instead of is_vasp5=False",
+            DeprecationWarning,
+        )
+        _is_vasp4 = True
+    if direct is False:
+        warnings.warn(
+            "direct=False is not supported. ",
+            DeprecationWarning,
+        )
+    lines, scaled_positions = _get_vasp_structure_header_lines(
+        cell, is_vasp4=_is_vasp4, first_line_str=first_line_str
     )
-    lines = []
-    if is_vasp5:
-        lines.append("generated by phonopy")
-    else:
-        lines.append(" ".join(["%s" % s for s in symbols]))
-    lines.append("   1.0")
-    for a in cell.cell:
-        lines.append("  %21.16f %21.16f %21.16f" % tuple(a))
-    if is_vasp5:
-        lines.append(" ".join(["%s" % s for s in symbols]))
-    lines.append(" ".join(["%4d" % n for n in num_atoms]))
     lines.append("Direct")
     lines += _get_scaled_positions_lines(scaled_positions)
 
@@ -352,6 +423,28 @@ def write_supercells_with_displacements(
         write_vasp(filename, cell, direct=True)
 
 
+def _get_vasp_structure_header_lines(
+    cell: PhonopyAtoms, is_vasp4: bool = False, first_line_str: Optional[str] = None
+):
+    (num_atoms, symbols, scaled_positions, _) = sort_positions_by_symbols(
+        cell.symbols, cell.scaled_positions
+    )
+    lines = []
+    if is_vasp4:
+        lines.append(" ".join(["%s" % s for s in symbols]))
+    elif first_line_str is None:
+        lines.append("generated by phonopy")
+    else:
+        lines.append(first_line_str)
+    lines.append("   1.0")
+    for a in cell.cell:
+        lines.append("  %21.16f %21.16f %21.16f" % tuple(a))
+    if not is_vasp4:
+        lines.append(" ".join(["%s" % s for s in symbols]))
+    lines.append(" ".join(["%4d" % n for n in num_atoms]))
+    return lines, scaled_positions
+
+
 def _get_scaled_positions_lines(scaled_positions):
     # map into 0 <= x < 1.
     # (the purpose of the second '% 1' is to handle a surprising
@@ -362,26 +455,6 @@ def _get_scaled_positions_lines(scaled_positions):
         " %19.16f %19.16f %19.16f" % tuple(vec)
         for vec in unit_positions.tolist()  # lists are faster for iteration
     ]
-
-
-# Get all unique values from a iterable.
-# Unlike `list(set(iterable))`, this is a stable algorithm;
-# items are returned in order of their first appearance.
-def _unique_stable(iterable):
-    seen_list = []
-    seen_set = set()
-    for x in iterable:
-        if x not in seen_set:
-            seen_set.add(x)
-            seen_list.append(x)
-    return seen_list
-
-
-# Alternative to `np.argsort(keys)` that uses a stable sorting algorithm
-# so that indices tied for the same value are listed in increasing order
-def _argsort_stable(keys):
-    # Python's built-in sort algorithm is a stable sort
-    return sorted(range(len(keys)), key=keys.__getitem__)
 
 
 #
@@ -540,8 +613,9 @@ class Vasprun:
         """Init method."""
         self._fileptr = fileptr
         self._use_expat = use_expat
+        self._vasprun_expat = None
 
-    def read_forces(self):
+    def read_forces(self) -> Union[np.ndarray, float]:
         """Read forces either using expat or etree."""
         if self._use_expat:
             return self._parse_expat_vasprun_xml()
@@ -553,6 +627,13 @@ class Vasprun:
         """Read force constants using etree."""
         vasprun = self._parse_etree_vasprun_xml()
         return self._get_force_constants(vasprun)
+
+    def read_energy(self) -> Optional[float]:
+        """Read energy using expat and etree is not supported."""
+        if self._use_expat:
+            return self._parse_expat_vasprun_xml(target="energy")
+        else:
+            return None
 
     def _get_forces(self, vasprun_etree):
         """Return forces using etree.
@@ -567,7 +648,9 @@ class Vasprun:
                     forces.append([float(x) for x in v.text.split()])
         return np.array(forces)
 
-    def _get_force_constants(self, vasprun_etree):
+    def _get_force_constants(
+        self, vasprun_etree
+    ) -> tuple[Optional[np.ndarray], Optional[list[str]]]:
         """Read hessian and calculate force constants.
 
         Hessian elements include sqrt(mass_a * mass_b) of two atoms a and b.
@@ -579,16 +662,9 @@ class Vasprun:
 
         """
         fc_tmp = None
-        version_nums = None
+        hessian_units = ""
         num_atom = 0
         for event, element in vasprun_etree:
-            # VASP version
-            if element.tag == "generator":
-                for element_i in element.findall("./i"):
-                    if element_i.attrib["name"] == "version":
-                        version_str = element_i.text.strip()
-                        version_nums = version_str.split("-")[0].split(".")
-
             if num_atom == 0:
                 atomtypes = self._get_atomtypes(element)
                 if atomtypes:
@@ -598,17 +674,27 @@ class Vasprun:
                     for n, m in zip(num_atoms, elem_masses):
                         masses += [m] * n
 
-            # Get Hessian matrix (normalized by masses)
-            if element.tag == "varray":
-                if element.attrib["name"] == "hessian":
-                    fc_tmp = []
-                    for v in element.findall("./v"):
-                        fc_tmp.append([float(x) for x in v.text.strip().split()])
+            # Get dynmat node
+            if element.tag == "dynmat":
+                # Get Hessian matrix (normalized by masses)
+                v_elements = element.findall("./varray[@name='hessian']/v")
+                if v_elements is not None:
+                    fc_tmp = np.array(
+                        [[float(x) for x in v.text.strip().split()] for v in v_elements]
+                    )
+
+                # Get physical units of Hessian
+                unit_element = element.find("./i[@name='unit']")
+                if unit_element is not None:
+                    hessian_units = unit_element.text.strip()
+
+            # Stop parsing when we have all the information
+            if num_atom > 0 and fc_tmp is not None:
+                break
 
         if fc_tmp is None:
             return None, None
         else:
-            fc_tmp = np.array(fc_tmp)
             if fc_tmp.shape != (num_atom * 3, num_atom * 3):
                 return False
 
@@ -625,9 +711,8 @@ class Vasprun:
                     force_constants[i, j] *= -np.sqrt(masses[i] * masses[j])
 
             # Recover the unit of eV/Angstrom^2 for VASP-6.
-            if version_nums is not None and len(version_nums) > 1:
-                if int(version_nums[0]) == 6 and int(version_nums[1]) > 1:
-                    force_constants /= VaspToTHz**2
+            if hessian_units == "THz^2":
+                force_constants /= VaspToTHz**2
 
             return force_constants, elements
 
@@ -638,18 +723,15 @@ class Vasprun:
         num_atoms = []
 
         if element.tag == "atominfo":
-            for element_array in element.findall("./array"):
-                if (
-                    "name" in element_array.attrib
-                    and element_array.attrib["name"] == "atomtypes"
-                ):
-                    for rc in element_array.findall("./set/rc"):
-                        atom_info = [x.text for x in rc.findall("./c")]
-                        num_atoms.append(int(atom_info[0]))
-                        atom_types.append(atom_info[1].strip())
-                        masses.append(float(atom_info[2]))
-                        valences.append(float(atom_info[3]))
-                    return num_atoms, atom_types, masses, valences
+            rc_elements = element.findall("./array[@name='atomtypes']/set/rc")
+            if rc_elements is not None:
+                for rc in rc_elements:
+                    atom_info = [x.text for x in rc.findall("./c")]
+                    num_atoms.append(int(atom_info[0]))
+                    atom_types.append(atom_info[1].strip())
+                    masses.append(float(atom_info[2]))
+                    valences.append(float(atom_info[3]))
+                return num_atoms, atom_types, masses, valences
 
         return None
 
@@ -664,24 +746,32 @@ class Vasprun:
             if tag is None or elem.tag == tag:
                 yield event, elem
 
-    def _parse_expat_vasprun_xml(self):
+    def _parse_expat_vasprun_xml(
+        self, target: Literal["forces", "energy"] = "forces"
+    ) -> Union[np.ndarray, float]:
         if self._is_version528():
-            return self._parse_by_expat(VasprunWrapper(self._fileptr))
+            return self._parse_by_expat(VasprunWrapper(self._fileptr), target=target)
         else:
-            return self._parse_by_expat(self._fileptr)
+            return self._parse_by_expat(self._fileptr, target=target)
 
-    def _parse_by_expat(self, fileptr):
-        vasprun = VasprunxmlExpat(fileptr)
-        try:
-            vasprun.parse()
-        except xml.parsers.expat.ExpatError:
-            raise
-        except ValueError:
-            raise
-        except Exception:
-            raise
+    def _parse_by_expat(
+        self, fileptr: io.IOBase, target: Literal["forces", "energy"] = "forces"
+    ) -> Union[np.ndarray, float]:
+        if self._vasprun_expat is None:
+            self._vasprun_expat = VasprunxmlExpat(fileptr)
+            try:
+                self._vasprun_expat.parse()
+            except xml.parsers.expat.ExpatError:
+                raise
+            except ValueError:
+                raise
+            except Exception:
+                raise
 
-        return vasprun.forces[-1]
+        if target == "forces":
+            return self._vasprun_expat.forces[-1]
+        if target == "energy":
+            return float(self._vasprun_expat.energies[-1][1])
 
     def _is_version528(self):
         for line in self._fileptr:
@@ -702,7 +792,7 @@ class Vasprun:
 class VasprunxmlExpat:
     """Class to parse vasprun.xml by Expat."""
 
-    def __init__(self, fileptr):
+    def __init__(self, fileptr: io.IOBase):
         """Init method.
 
         Parameters
@@ -1495,8 +1585,14 @@ def parse_vasprunxml(filename):
 #
 # XDATCAR
 #
-def read_XDATCAR(filename="XDATCAR"):
+def read_XDATCAR(filename: str = "XDATCAR", fileptr=None):
     """Read XDATCAR.
+
+    filename : str, optional
+        Input filename in `XDATCAR` format. Default is `XDATCAR`. This is used
+        unless fileptr is specified.
+    fileptr : readable file pointer, optional
+        File pointer used to read `XDATCAR`.
 
     Returns
     -------
@@ -1511,28 +1607,104 @@ def read_XDATCAR(filename="XDATCAR"):
 
     """
     lattice = None
-    symbols = None
     numbers_of_atoms = None
-    myio = get_io_module_to_decompress(filename)
-    with myio.open(filename) as f:
-        f.readline()
-        scale = float(f.readline())
-        a = [float(x) for x in f.readline().split()[:3]]
-        b = [float(x) for x in f.readline().split()[:3]]
-        c = [float(x) for x in f.readline().split()[:3]]
-        lattice = np.transpose([a, b, c]) * scale
-        symbols = f.readline().split()
-        numbers_of_atoms = np.array(
-            [int(x) for x in f.readline().split()[: len(symbols)]], dtype="intc"
-        )
+
+    if fileptr is None:
+        myio = get_io_module_to_decompress(filename)
+        with myio.open(filename) as f:
+            lattice, numbers_of_atoms = _read_XDATCAR_fileptr(f)
+    else:
+        lattice, numbers_of_atoms = _read_XDATCAR_fileptr(fileptr)
 
     if lattice is not None:
-        data = np.loadtxt(filename, skiprows=7, comments="D", dtype="double")
+        if fileptr is None:
+            _file = filename
+        else:
+            _file = fileptr
+            _file.seek(0)
+        data = np.loadtxt(_file, skiprows=7, comments="D", dtype="double")
         pos = data.reshape((-1, numbers_of_atoms.sum(), 3), order="C")
         lat = np.array(lattice, dtype="double", order="C")
         return lat, pos
     else:
         return None
+
+
+def _read_XDATCAR_fileptr(f):
+    f.readline()
+    scale = float(f.readline())
+    a = [float(x) for x in f.readline().split()[:3]]
+    b = [float(x) for x in f.readline().split()[:3]]
+    c = [float(x) for x in f.readline().split()[:3]]
+    lattice = np.transpose([a, b, c]) * scale
+    symbols = f.readline().split()
+    numbers_of_atoms = np.array(
+        [int(x) for x in f.readline().split()[: len(symbols)]], dtype="intc"
+    )
+    return lattice, numbers_of_atoms
+
+
+def get_XDATCAR_lines_from_vasprunxml(
+    vasprunxml_filename: str = "vasprun.xml",
+    vasprunxml_expat: Optional[VasprunxmlExpat] = None,
+    shift: Union[Sequence, np.ndarray] = None,
+):
+    """Return XDATCAR lines from vasprun.xml or VasprunxmlExpat instance.
+
+    vasprunxml_filename : str, optional
+        File name of vasprun.xml. Default is "vasprun.xml". This is used unless
+        `vasprunxml_expat` is specified.
+    vasprunxml_expat : VasprunxmlExpat, optional
+        Instalce of `VasprunxmlExpat`. It is assumed that this instance is
+        already parsed. Default is None.
+    filename : str, optional
+        Output filename in `XDATCAR` format. Default is `XDATCAR`. This is used
+        unless fileptr is specified.
+    fileptr : writable file pointer, optional
+        File pointer used to write `XDATCAR`.
+    shift : array_like, optional
+        All atoms are uniformly translated in reduced coordinates. Default is
+        None. shape=(3,), dtype='double'.
+
+    """
+    if vasprunxml_expat is not None:
+        vxml = vasprunxml_expat
+    else:
+        with open(vasprunxml_filename, "rb") as f:
+            vxml = VasprunxmlExpat(f)
+            vxml.parse()
+    lines, _ = _get_vasp_structure_header_lines(vxml.cell)
+    points = vxml.points
+    if shift is not None:
+        points += shift
+    for i, scaled_positions in enumerate(points):
+        lines.append(f"Direct configuration=    {i}")
+        lines += _get_scaled_positions_lines(scaled_positions)
+    return lines
+
+
+def write_XDATCAR(
+    vasprunxml_filename: str = "vasprun.xml",
+    vasprunxml_expat: Optional[VasprunxmlExpat] = None,
+    filename: str = "XDATCAR",
+    fileptr=Union[str, bytes, os.PathLike, io.IOBase],
+    shift: Union[Sequence, np.ndarray] = None,
+):
+    """Write XDATCAR from vasprun.xml or VasprunxmlExpat instance.
+
+    See get_XDATCAR_lines_from_vasprunxml.
+
+    """
+    lines = get_XDATCAR_lines_from_vasprunxml(
+        vasprunxml_filename=vasprunxml_filename,
+        vasprunxml_expat=vasprunxml_expat,
+        shift=shift,
+    )
+    if fileptr is None:
+        with open(filename, "w") as w:
+            w.write("\n".join(lines))
+    else:
+        fileptr.write(("\n".join(lines)).encode("utf-8"))
 
 
 #

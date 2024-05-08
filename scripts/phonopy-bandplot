@@ -453,7 +453,6 @@ def _old_plot(args):
             filenames = args.filenames
 
     else:
-
         if len(args.filenames) == 0:
             filenames = ["band.yaml"]
         else:
@@ -517,8 +516,8 @@ def _old_plot(args):
                     plt.plot(
                         distances[q : (q + nq)],
                         frequencies[q : (q + nq)] * args.factor,
-                        color=colors[i][0],
-                        linestyle=colors[i][1:],
+                        color=colors[i % len(colors)][0],
+                        linestyle=colors[i % len(colors)][1:],
                         marker=marker,
                         label=filename,
                     )[0]
@@ -527,9 +526,9 @@ def _old_plot(args):
                 plt.plot(
                     distances[q : (q + nq)],
                     frequencies[q : (q + nq)] * args.factor,
-                    color=colors[i][0],
+                    color=colors[i % len(colors)][0],
                     marker=marker,
-                    linestyle=colors[i][1:],
+                    linestyle=colors[i % len(colors)][1:],
                 )
             q += nq
 
@@ -695,12 +694,18 @@ def _plot(args):
         "y--",
         "k--",
     ]
-    for (l, p, f, d), fmt, label in zip(plots_data, fmts, filenames):
+    for i, label in enumerate(filenames):
+        _, p, f, d = plots_data[i]
+        fmt = fmts[i % len(fmts)]
         _f = [f_seg * args.factor for f_seg in f]
         if args.show_legend:
             band_plot.plot(d, _f, p, fmt=fmt, label=_get_label_for_latex(label))
         else:
             band_plot.plot(d, _f, p, fmt=fmt)
+
+    # Bring legend in front.
+    if args.show_legend:
+        axs[0].set_zorder(1)
 
     if args.output_filename is not None:
         _savefig(plt, args.output_filename)
@@ -728,7 +733,6 @@ def _write_gnuplot_data(args):
         bands_data = [_read_band_yaml(fname) for fname in filenames]
 
     if args.is_gnuplot:
-
         distances = bands_data[0][0]
         frequencies = bands_data[0][1]
         segment_nqpoint = bands_data[0][3]

@@ -1,4 +1,5 @@
 """Tests for generation of random displacements at finite temperatures."""
+
 import os
 from copy import deepcopy
 
@@ -728,6 +729,17 @@ def _test_random_displacements_SnO2(ph_sno2):
     assert argmaxs == answer
 
 
+def test_random_displacements_Zr3N4(ph_zr3n4):
+    """Test init and run for Zr3N4 1x1x1.
+
+    This tests q-points only in A part.
+
+    """
+    ph = ph_zr3n4
+    ph.init_random_displacements()
+    ph.get_random_displacements_at_temperature(300, 10)
+
+
 def _test_random_displacements(ph, answer, ntimes=30, d_max=1, nbins=51):
     hist = np.zeros((2, nbins - 1), dtype=int)
     for i in range(100):
@@ -736,9 +748,9 @@ def _test_random_displacements(ph, answer, ntimes=30, d_max=1, nbins=51):
         hist[0] += h_1
         hist[1] += h_2
         argmaxs = (np.argmax(hist[0]), np.argmax(hist[1]))
-        # print(hist[0])
-        # print(hist[1])
-        # print(i, argmaxs)
+        print(hist[0])
+        print(hist[1])
+        print(i, argmaxs)
         if i >= ntimes and argmaxs == answer:
             break
     return argmaxs
@@ -758,7 +770,7 @@ def _generate_random_displacements(ph, d_max, nbins):
     return h_1, h_2
 
 
-def test_random_displacements_all_atoms_TiPN3(ph_tipn3):
+def test_random_displacements_all_atoms_TiPN3(ph_tipn3: Phonopy):
     """Test by fixed random numbers of np.random.normal.
 
     randn_ii and randn_ij were created by
@@ -774,30 +786,7 @@ def test_random_displacements_all_atoms_TiPN3(ph_tipn3):
 
     """
     ph = ph_tipn3
-    rd = RandomDisplacements(ph.supercell, ph.primitive, ph.force_constants)
-
-    num_band = len(ph.primitive) * 3
-    N = len(ph.supercell) // len(ph.primitive)
-    # N = N_ii + N_ij * 2
-    # len(rd.qpoints) = N_ii + N_ij
-    N_ij = N - len(rd.qpoints)
-    N_ii = N - N_ij * 2
-    shape_ii = (N_ii, 1, num_band)
-    shape_ij = (N_ij, 2, 1, num_band)
-    randn_ii = np.reshape(randn_ii_TiPN3, shape_ii)
-    randn_ij = np.reshape(randn_ij_TiPN3, shape_ij)
-
-    eigvecs_ii = np.reshape(
-        np.loadtxt(os.path.join(current_dir, "eigvecs_ii_TiPN3.txt")),
-        (N_ii, num_band, num_band),
-    )
-    eigvecs_ij = np.reshape(
-        np.loadtxt(os.path.join(current_dir, "eigvecs_ij_TiPN3.txt"), dtype=complex),
-        (N_ij, num_band, num_band),
-    )
-    rd._eigvecs_ii = eigvecs_ii
-    rd._eigvecs_ij = eigvecs_ij
-    rd.run(500, randn=(randn_ii, randn_ij))
+    rd = _get_random_displacements_all_atoms_TiPN3(ph)
 
     # for line in rd.u.ravel().reshape(-1, 6):
     #     print(("%.7f, " * 6) % tuple(line))
@@ -823,6 +812,49 @@ def test_random_displacements_all_atoms_TiPN3(ph_tipn3):
     np.testing.assert_allclose(_uu_inv, uu_inv, atol=1e-5, rtol=1e-5)
 
 
+def test_random_displacements_all_atoms_TiPN3_max_distance(ph_tipn3):
+    """Test max_distance."""
+    rd = _get_random_displacements_all_atoms_TiPN3(ph_tipn3)
+    n_gt_max = (np.linalg.norm(rd.u.reshape(-1, 3), axis=1) > 0.2).sum()
+    assert n_gt_max == 5
+    rd = _get_random_displacements_all_atoms_TiPN3(ph_tipn3, max_distance=0.2)
+    distances = np.linalg.norm(rd.u.reshape(-1, 3), axis=1)
+    distances_gt_max = np.extract(distances > 0.2 - 1e-5, distances)
+    assert len(distances_gt_max) == 5
+    np.testing.assert_almost_equal(distances_gt_max, 0.2)
+
+
+def _get_random_displacements_all_atoms_TiPN3(
+    ph: Phonopy, max_distance=None
+) -> RandomDisplacements:
+    rd = RandomDisplacements(
+        ph.supercell, ph.primitive, ph.force_constants, max_distance=max_distance
+    )
+    num_band = len(ph.primitive) * 3
+    N = len(ph.supercell) // len(ph.primitive)
+    # N = N_ii + N_ij * 2
+    # len(rd.qpoints) = N_ii + N_ij
+    N_ij = N - len(rd.qpoints)
+    N_ii = N - N_ij * 2
+    shape_ii = (N_ii, 1, num_band)
+    shape_ij = (N_ij, 2, 1, num_band)
+    randn_ii = np.reshape(randn_ii_TiPN3, shape_ii)
+    randn_ij = np.reshape(randn_ij_TiPN3, shape_ij)
+
+    eigvecs_ii = np.reshape(
+        np.loadtxt(os.path.join(current_dir, "eigvecs_ii_TiPN3.txt")),
+        (N_ii, num_band, num_band),
+    )
+    eigvecs_ij = np.reshape(
+        np.loadtxt(os.path.join(current_dir, "eigvecs_ij_TiPN3.txt"), dtype=complex),
+        (N_ij, num_band, num_band),
+    )
+    rd._eigvecs_ii = eigvecs_ii
+    rd._eigvecs_ij = eigvecs_ij
+    rd.run(500, randn=(randn_ii, randn_ij))
+    return rd
+
+
 @pytest.mark.parametrize("is_plusminus", [True, False])
 def test_tio2_random_disp_plusminus(ph_tio2: Phonopy, is_plusminus: bool):
     """Test random plus-minus displacements of TiO2.
@@ -843,7 +875,10 @@ def test_tio2_random_disp_plusminus(ph_tio2: Phonopy, is_plusminus: bool):
     ]
     np.testing.assert_allclose(ph_tio2.displacements, disp_ref, atol=1e-8)
     ph_tio2.generate_displacements(
-        number_of_snapshots=4, distance=0.03, is_plusminus=is_plusminus, temperature=300
+        number_of_snapshots=4,
+        distance=0.03,
+        is_plusminus=is_plusminus,
+        temperature=300,
     )
     d = ph_tio2.displacements
     if is_plusminus:
@@ -852,6 +887,136 @@ def test_tio2_random_disp_plusminus(ph_tio2: Phonopy, is_plusminus: bool):
     else:
         assert len(d) == 4
     ph_tio2.dataset = dataset
+
+
+def test_treat_imaginary_modes(ph_srtio3: Phonopy):
+    """Test imaginary mode treatment of force constants.
+
+    RandomDisplacements.treat_imaginary_modes method modified imaginary
+    phonon frequenceis to have read-positive frequences.
+
+    """
+    ph = ph_srtio3
+    rd = RandomDisplacements(ph.supercell, ph.primitive, ph.force_constants)
+    # for freqs in (rd.frequencies[0], rd.frequencies[-1]):
+    #     print(", ".join([f"{v:10.7f}" for v in freqs]))
+    ref0 = [
+        -2.3769150,
+        -2.3769150,
+        -2.3769150,
+        -0.0000003,
+        -0.0000003,
+        -0.0000001,
+        4.6902115,
+        4.6902115,
+        4.6902115,
+        6.7590219,
+        6.7590219,
+        6.7590219,
+        16.0075351,
+        16.0075351,
+        16.0075351,
+    ]
+    ref13 = [
+        3.2707508,
+        3.3132392,
+        3.4395550,
+        3.4395550,
+        3.6676862,
+        3.6676862,
+        10.7490284,
+        10.7970960,
+        10.7970960,
+        12.0900533,
+        12.0900533,
+        13.8508135,
+        15.0638793,
+        15.0638793,
+        24.6446671,
+    ]
+    np.testing.assert_allclose(ref0, rd.frequencies[0], atol=1e-5)
+    np.testing.assert_allclose(ref13, rd.frequencies[-1], atol=1e-5)
+
+    rd.treat_imaginary_modes()
+    # for freqs in (rd.frequencies[0], rd.frequencies[-1]):
+    #     print(", ".join([f"{v:10.7f}" for v in freqs]))
+    ref0 = [
+        2.3769150,
+        2.3769150,
+        2.3769150,
+        0.0000003,
+        0.0000003,
+        0.0000001,
+        4.6902115,
+        4.6902115,
+        4.6902115,
+        6.7590219,
+        6.7590219,
+        6.7590219,
+        16.0075351,
+        16.0075351,
+        16.0075351,
+    ]
+    ref13 = [
+        3.2707508,
+        3.3132392,
+        3.4395550,
+        3.4395550,
+        3.6676862,
+        3.6676862,
+        10.7490284,
+        10.7970960,
+        10.7970960,
+        12.0900533,
+        12.0900533,
+        13.8508135,
+        15.0638793,
+        15.0638793,
+        24.6446671,
+    ]
+    np.testing.assert_allclose(ref0, rd.frequencies[0], atol=1e-5)
+    np.testing.assert_allclose(ref13, rd.frequencies[-1], atol=1e-5)
+
+    # Test frequency shifts
+    rd.treat_imaginary_modes(freq_to=3)
+    # for freqs in (rd.frequencies[0], rd.frequencies[-1]):
+    #     print(", ".join([f"{v:10.7f}" for v in freqs]))
+    ref0 = [
+        3.3769150,
+        3.3769150,
+        3.3769150,
+        0.0000003,
+        0.0000003,
+        0.0000001,
+        4.6902115,
+        4.6902115,
+        4.6902115,
+        6.7590219,
+        6.7590219,
+        6.7590219,
+        16.0075351,
+        16.0075351,
+        16.0075351,
+    ]
+    ref13 = [
+        3.2707508,
+        3.3132392,
+        3.4395550,
+        3.4395550,
+        3.6676862,
+        3.6676862,
+        10.7490284,
+        10.7970960,
+        10.7970960,
+        12.0900533,
+        12.0900533,
+        13.8508135,
+        15.0638793,
+        15.0638793,
+        24.6446671,
+    ]
+    np.testing.assert_allclose(ref0, rd.frequencies[0], atol=1e-5)
+    np.testing.assert_allclose(ref13, rd.frequencies[-1], atol=1e-5)
 
 
 def _mass_sand(matrix, mass):

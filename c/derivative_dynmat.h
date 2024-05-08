@@ -36,11 +36,12 @@
 #define __derivative_dynmat_H__
 
 void ddm_get_derivative_dynmat_at_q(
-    double *derivative_dynmat, const long num_patom, const long num_satom,
+    double (*derivative_dynmat)[2], const long num_patom, const long num_satom,
     const double *fc, const double *q,
     const double *lattice, /* column vector */
     const double (*svecs)[3], const long (*multi)[2], const double *mass,
     const long *s2p_map, const long *p2s_map, const double nac_factor,
-    const double *born, const double *dielectric, const double *q_direction);
+    const double *born, const double *dielectric, const double *q_direction,
+    const long use_openmp);
 
 #endif

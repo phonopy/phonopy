@@ -1,4 +1,5 @@
 """Band unfolding calculation."""
+
 # Copyright (C) 2015 Atsushi Togo
 # All rights reserved.
 #
@@ -47,51 +48,50 @@ from phonopy.structure.cells import get_supercell
 class Unfolding:
     """Calculation of a phonon unfolding method.
 
-    Implementation of an unfolding method by
-    P. B. Allen et al., Phys. Rev. B 87, 085322 (2013)
+    Implementation of an unfolding method by P. B. Allen et al., Phys. Rev. B
+    87, 085322 (2013)
 
     T(r_i) in this implementation is defined as
 
         T(r_i) f(x) = f(x - r_i).
 
-    The sign is opposite from that written in the Allen's paper.
-    Bloch wave is defined in the same way for phase convention
+    The sign is opposite from that written in the Allen's paper. Bloch wave is
+    defined in the same way for phase convention
 
         Psi_k(x + r) = exp(ikr) Psi_k(x).
 
     By these, sign of phase in Eq.(3) (Eq.(7) as well) is opposite.
 
-    Vacancies are treated as atomic sites where no atoms exist.
-    Interstitials are treated as atomic sites with the interstitial
-    atoms in a specific virtual primitive cell, but the respective
-    atomic sites in the other virtual
+    Vacancies are treated as atomic sites where no atoms exist. Interstitials
+    are treated as atomic sites with the interstitial atoms in a specific
+    virtual primitive cell, but the respective atomic sites in the other virtual
     primitive cells are set as vacancies.
 
     The unfolded band structure may be plotted as
-        x (wave vector): qpoints
-        y (frequency): frequencies
-        z (intencity) : unfolding_weights
+        x (wave vector): qpoints y (frequency): frequencies z (intencity) :
+        unfolding_weights
 
 
     Attributes
     ----------
     unfolding_weights : ndarray
-        Unfolding weights.
-        shape=(qpoints in supercell, supercell atoms * 3), dtype='double', order='C'
+        Unfolding weights. shape=(qpoints in supercell, supercell atoms * 3),
+        dtype='double', order='C'
     frequencies : ndarray
-        Phonon frequencies at Gamma point of the supercell phonon. By
-        unfolding, these are considered at the phonon frequencies at
-        the specified qpoints but with the unfolding weights.
-        shape=(qpoints in supercell, supercell atoms * 3), dtype='double', order='C'
+        Phonon frequencies of the supercell. By unfolding, these are considered
+        as the phonon frequencies at the specified qpoints but with the
+        unfolding weights. shape=(qpoints in supercell, supercell atoms * 3),
+        dtype='double', order='C'
     commensurate_points : ndarray
-        Commensurate points corresponding to ``supercell_matrix``.
-        shape=(N, 3), dtype='double', order='C'
-        where N = det(supercell_matrix)
+        Commensurate points corresponding to ``supercell_matrix``. shape=(N, 3),
+        dtype='double', order='C' where N = det(supercell_matrix)
+    qpoints : ndarray
+        q-points in supercell BZ.
 
     """
 
     def __init__(
-        self, phonon, supercell_matrix, ideal_positions, atom_mapping, qpoints
+        self, phonon: Phonopy, supercell_matrix, ideal_positions, atom_mapping, qpoints
     ):
         """Init method.
 
@@ -106,7 +106,7 @@ class Unfolding:
         ideal_positions : array_like
             Positions of atomic sites in supercell. This corresponds to those
             in a set of virtual primitive cells in the supercell.
-            shape=(3, 3), dtype='intc'
+            shape=(3, 3), dtype='double'
         atom_mapping : list
             Atomic index mapping from ``ideal_positions`` to supercell atoms
             in ``phonon``. The elements of this list are intergers for atoms
@@ -223,6 +223,15 @@ class Unfolding:
         )
         return self.frequencies
 
+    @property
+    def qpoints(self):
+        """Return q-points in supercell BZ.
+
+        See details in Attributes.
+
+        """
+        return self._qpoints_s
+
     def _get_qpoints_in_SBZ(self):
         qpoints = np.dot(self._qpoints_p, self._supercell_matrix)
         qpoints -= np.rint(qpoints)
@@ -250,12 +259,16 @@ class Unfolding:
     def _set_index_map(self, atom_mapping):
         """Set atomic site index mapping.
 
-        T(r_i) in Eq.(3) is given as permutation of atom indices.
+        T(r_i)^-1 in Eq.(3) is given as permutation of atom indices.
 
-        _index_set : ndarray
-            For each translation (shift), atomic indices of the positions
-            (_ideal_positions - shift) are searched and stored. The indices
-            are used to select eigenvectors, by which T(r_i)|KJ> is
+        _index_map_inv : ndarray
+            For each translation (shift), atomic indices of the positions by
+            inverse translation (_ideal_positions - shift) are searched and
+            stored, i.e.,
+
+                (shift, atom): pos[atom] - shift -> atom'
+
+            The indices are used to select eigenvectors, by which T(r_i)|KJ> is
             represented.
             shape=(num_trans, num_sites), dtype='intc'
 
@@ -348,7 +361,7 @@ class Unfolding:
 
         return weights.real
 
-    def _get_supercell_phonon(self, ph_in):
+    def _get_supercell_phonon(self, ph_in: Phonopy):
         """Return Phonopy instance of supercell as the primitive."""
         ph = Phonopy(ph_in.supercell, supercell_matrix=[1, 1, 1], primitive_matrix="P")
         fc_shape = ph_in.force_constants.shape

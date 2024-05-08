@@ -1,4 +1,5 @@
 """Phonopy command line argument parser."""
+
 # Copyright (C) 2016 Atsushi Togo
 # All rights reserved.
 #
@@ -65,9 +66,7 @@ def show_deprecated_option_warnings(deprecated):
     print("")
 
 
-def get_parser(
-    fc_symmetry=False, is_nac=False, include_born=False, load_phonopy_yaml=False
-):
+def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
     """Return ArgumentParser instance."""
     deprecated = fix_deprecated_option_names(sys.argv)
     import argparse
@@ -271,6 +270,13 @@ def get_parser(
         ),
     )
     parser.add_argument(
+        "--fc-calc",
+        "--fc-calculator",
+        dest="fc_calculator",
+        default=None,
+        help=("Force constants calculator"),
+    )
+    parser.add_argument(
         "--fc-calc-opt",
         "--fc-calculator-options",
         dest="fc_calculator_options",
@@ -457,12 +463,6 @@ def get_parser(
         default=None,
         help="Include all output file data in phonopy.yaml",
     )
-    # parser.add_argument(
-    #     "--lapack-solver", dest="lapack_solver", action="store_true",
-    #     default=False,
-    #     help=("Use Lapack via Lapacke for solving phonons. This "
-    #           "option can be used only when phonopy is compiled "
-    #           "specially."))
     parser.add_argument(
         "--legend",
         dest="is_legend",
@@ -694,6 +694,22 @@ def get_parser(
         help="Number of supercells with random displacements",
     )
     parser.add_argument(
+        "--rd-temperature",
+        dest="rd_temperature",
+        type=float,
+        default=None,
+        metavar="TEMPERATURE",
+        help="A temperature used to generate random displacements.",
+    )
+    parser.add_argument(
+        "--temperature",
+        dest="temperature",
+        type=float,
+        default=None,
+        metavar="TEMPERATURE",
+        help="(Deprecated) A temperature used to generate random displacements.",
+    )
+    parser.add_argument(
         "--readfc",
         dest="read_force_constants",
         action="store_true",
@@ -778,14 +794,6 @@ def get_parser(
         type=float,
         default=None,
         help="Write cif with aniso_U for which temperature is specified",
-    )
-    parser.add_argument(
-        "--temperature",
-        dest="temperature",
-        type=float,
-        default=None,
-        metavar="TEMPERATURE",
-        help="A temperature point",
     )
     parser.add_argument(
         "--tmax",

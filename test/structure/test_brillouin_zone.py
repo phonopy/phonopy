@@ -1,4 +1,5 @@
 """Tests for BrillouinZone class."""
+
 import numpy as np
 from spglib import get_stabilized_reciprocal_mesh, relocate_BZ_grid_address
 

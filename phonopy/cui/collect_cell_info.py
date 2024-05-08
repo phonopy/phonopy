@@ -1,4 +1,5 @@
 """Routines to collect crystal structure information."""
+
 # Copyright (C) 2018 Atsushi Togo
 # All rights reserved.
 #
@@ -32,9 +33,11 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+from __future__ import annotations
 
 import numpy as np
 
+from phonopy.file_IO import is_file_phonopy_yaml
 from phonopy.interface.calculator import (
     get_default_cell_filename,
     read_crystal_structure,
@@ -50,24 +53,43 @@ def collect_cell_info(
     cell_filename=None,
     chemical_symbols=None,
     enforce_primitive_matrix_auto=False,
-    phonopy_yaml_cls=None,
+    phonopy_yaml_cls: type[PhonopyYaml] = PhonopyYaml,
 ):
-    """Collect crystal structure information from inputs.
+    """Collect crystal structure information from input file and parameters.
 
-    Note
-    ----
-    When the crystal structure is read from phonopy.yaml like file,
-    ``supercell_matrix`` and ``primitive_matrix`` are ignored.
+    This function returns crystal structure information obtained from an input
+    file and parameters. Although this function is convenient, this function
+    tends to be complicated and error-prone since phonopy has to support various
+    file formats.
+
+    How crystal structure is recognized
+    -----------------------------------
+    Phonopy supports various crystal structure file formats. Most of them are
+    those from force calculators (e.g., VASP, QE). To let phonopy know which
+    calculator format is chosen, usually the calculator interface name is
+    simultaneously given. Otherwise, it is considered as the default interface,
+    i.e., VASP-like format. When a calculator interface is specified, phonopy
+    goes into the calculator interface mode. In this calculator interface mode,
+    when none of crystal structure is provided, the default file name for each
+    calculator interface mode is assumed and the file name is searched in the
+    current directory. The crystal structure information found in this way is
+    recognized as the unit cell. The supercell and primitive matrices
+    information are given by the parameters of this function.
+
+    When srystal structure search explained above failed, phonopy.yaml like file
+    is searched in the current directory. phonopy.yaml like file name can be
+    specified as the input crystal structure. Since phonopy.yaml like file
+    contains supercell and primitive cell matricies information, these
+    parameter inputs of this function are ignored.
 
     Parameters
     ----------
     supercell_matrix : array_like or None
-        3x3 transformation matrix or when it is a diagonal matrix,
-        three diagonal elements. Default is None.
-        See also shape_supercell_matrix.
+        3x3 transformation matrix or when it is a diagonal matrix, three
+        diagonal elements. Default is None. See also shape_supercell_matrix.
     primitive_matrix : array_like, str, or None
-        3x3 transformation matrix or a character representing centring
-        or None. Default is None. See also get_primitive_matrix.
+        3x3 transformation matrix or a character representing centring or None.
+        Default is None. See also get_primitive_matrix.
     interface_mode : str or None
         Force calculator or crystal structure format name.
     cell_filename : str or None
@@ -76,9 +98,10 @@ def collect_cell_info(
         List of chemical symbols or unit cell.
     enforce_primitive_matrix_auto : bool
         Enforce primitive_matrix='auto' when True. Default is False.
-    phonopy_yaml_cls : Class object
-        PhonopyYaml like class name. This is used to return its instance
-        when needed.
+    phonopy_yaml_cls : Class object, optional
+        PhonopyYaml like class name. This is used to return its instance when
+        needed. Default is None, which means PhonopyYaml class type. This can be
+        Phono3pyYaml class type.
 
     Returns
     -------
@@ -104,23 +127,23 @@ def collect_cell_info(
         supercell_matrix, interface_mode, cell_filename
     )
 
+    _cell_filename = cell_filename
     if fallback_reason:
         _interface_mode = "phonopy_yaml"
+        if cell_filename is None or not is_file_phonopy_yaml(
+            cell_filename, keyword=phonopy_yaml_cls.command_name
+        ):
+            _cell_filename = None
     elif interface_mode is None:
         _interface_mode = None
     else:
         _interface_mode = interface_mode.lower()
 
-    if phonopy_yaml_cls is None:
-        _phonopy_yaml_cls = PhonopyYaml
-    else:
-        _phonopy_yaml_cls = phonopy_yaml_cls
-
     unitcell, optional_structure_info = read_crystal_structure(
-        filename=cell_filename,
+        filename=_cell_filename,
         interface_mode=_interface_mode,
         chemical_symbols=chemical_symbols,
-        phonopy_yaml_cls=_phonopy_yaml_cls,
+        phonopy_yaml_cls=phonopy_yaml_cls,
     )
 
     # Error check
@@ -128,8 +151,8 @@ def collect_cell_info(
         err_msg = _get_error_message(
             optional_structure_info,
             fallback_reason,
-            cell_filename,
-            _phonopy_yaml_cls,
+            cell_filename,  # original cell_filename can be needed for error message.
+            phonopy_yaml_cls,
         )
         return {"error_message": err_msg}
 
@@ -150,7 +173,7 @@ def collect_cell_info(
     unitcell_filename = optional_structure_info[0]
     if supercell_matrix_out is None:
         err_msg.append("Supercell matrix (DIM or --dim) information was not found.")
-        if cell_filename is None and (
+        if _cell_filename is None and (
             unitcell_filename == get_default_cell_filename(interface_mode_out)
         ):
             err_msg += [
@@ -160,15 +183,15 @@ def collect_cell_info(
                 "of each calculator. In this case, supercell matrix has to be "
                 "specified.",
                 "Because this is the old style way of using %s,"
-                % _phonopy_yaml_cls.command_name,
+                % phonopy_yaml_cls.command_name,
             ]
             filenames = [
-                '"%s"' % name for name in _phonopy_yaml_cls.default_filenames[:-1]
+                '"%s"' % name for name in phonopy_yaml_cls.default_filenames[:-1]
             ]
             err_msg += [
                 '"%s" was read being prefered to files such as ' % unitcell_filename,
                 '%s, or "%s".'
-                % (", ".join(filenames), _phonopy_yaml_cls.default_filenames[-1]),
+                % (", ".join(filenames), phonopy_yaml_cls.default_filenames[-1]),
             ]
             err_msg += [
                 "",
@@ -319,18 +342,21 @@ def _get_error_message(
     optional_structure_info,
     fallback_reason,
     cell_filename,
-    phonopy_yaml_cls,
+    phonopy_yaml_cls: type[PhonopyYaml],
 ):
+    """Show error message for failure of getting crystal structure."""
     final_cell_filename = optional_structure_info[0]
 
+    # No fallback to phonopy_yaml mode.
     if fallback_reason is None:
         msg_list = []
-        if cell_filename != final_cell_filename:
-            msg_list.append(
-                'Crystal structure file "%s" was not found.' % cell_filename
-            )
+        if cell_filename is None:
+            msg_list += [
+                "Crystal structure file was not specified.",
+                "Tried to find default crystal structure file.",
+            ]
         msg_list.append(
-            'Crystal structure file "%s" was not found.' % final_cell_filename
+            f'Crystal structure file "{final_cell_filename}" was not found.'
         )
         return "\n".join(msg_list)
 
@@ -346,38 +372,37 @@ def _get_error_message(
             vasp_filename = get_default_cell_filename("vasp")
 
         if fallback_reason == "read_vasp parsing failed":
-            msg_list.append(
-                'Parsing crystal structure file of "%s" failed.' % vasp_filename
-            )
+            msg_list += [
+                f'Parsing crystal structure file "{vasp_filename}" '
+                "as in VASP format failed.",
+                "(Calculator option is needed for parsing different crystal "
+                "structure format.)",
+            ]
         else:
-            msg_list.append(
-                'Crystal structure file of "%s" was not found.' % vasp_filename
-            )
+            msg_list.append(f'Crystal structure file "{vasp_filename}" was not found.')
 
     elif fallback_reason == "no supercell matrix given":
-        msg_list.append(
-            "Supercell matrix (DIM or --dim) was not explicitly " "specified."
-        )
+        msg_list.append("Supercell matrix (DIM or --dim) was not explicitly specified.")
 
     msg_list.append(
-        "By this reason, %s_yaml mode was invoked." % phonopy_yaml_cls.command_name
+        f"By this reason, {phonopy_yaml_cls.command_name}_yaml mode was invoked."
     )
 
     if final_cell_filename is None:  # No phonopy*.yaml file was found.
-        filenames = [f"{name}" for name in phonopy_yaml_cls.default_filenames]
+        filenames = [f'"{name}"' for name in phonopy_yaml_cls.default_filenames]
         if len(filenames) == 1:
             text = filenames[0]
         elif len(filenames) == 2:
-            text = " and ".join(filenames)
+            text = " or ".join(filenames)
         else:
-            tail = " and ".join(filenames[-2:])
+            tail = " or ".join(filenames[-2:])
             head = ", ".join(filenames[:-2])
             text = head + ", " + tail
-        msg_list.append("But %s could not be found." % text)
+        msg_list.append(f"But {text} could not be found.")
         return "\n".join(msg_list)
 
     phpy = optional_structure_info[1]
     if phpy is None:  # Failed to parse phonopy*.yaml.
-        msg_list.append('But parsing "%s" failed.' % final_cell_filename)
+        msg_list.append(f'But parsing "{final_cell_filename}" failed.')
 
     return "\n".join(msg_list)
