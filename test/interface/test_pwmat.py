@@ -30,5 +30,5 @@ def test_magmom():
     filename = os.path.join(data_dir, "Si-pwmat.yaml")
     cell_ref = read_cell_yaml(filename)
     assert cells.isclose(cell, cell_ref)
-    diff_mag = cell_ref.magnetic_moments - np.array([1] * 8 )
+    diff_mag = cell_ref.magnetic_moments - np.array([1] * 8)
     assert (np.abs(diff_mag) < 1e-5).all()
