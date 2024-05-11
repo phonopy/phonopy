@@ -118,6 +118,15 @@ def read_atom_config(filename):
             except ValueError:
                 read_magnetic = False
 
+        if line.lower().startswith("magnetic_xyz"):
+            read_magnetic = True
+        elif read_magnetic:
+            try:
+                parts = [float(part) for part in line.split()]
+                element_mag.append(parts[1:4])
+            except ValueError:
+                read_magnetic = False
+
     cell_args = {
         "numbers": element_index,
         "cell": lattice_vectors,
@@ -141,6 +150,7 @@ def get_pwmat_structure(cell):
     positions = cell.scaled_positions
     numbers = cell.numbers
     mag_mom = cell.magnetic_moments
+
     line = []
     line.append(f" {len(positions)}")
     line.append("Lattice vector (Angstrom)")
@@ -153,10 +163,17 @@ def get_pwmat_structure(cell):
             + "   ".join(f"{val:.16f}" for val in position)
             + "  1   1   1"
         )
-    if isinstance(mag_mom, np.ndarray) and mag_mom.size > 0:
-        line.append("magnetic")
-        for number, mag in zip(numbers, mag_mom):
-            line.append(f" {number}  {mag:.16f}")
+    if mag_mom is not None and len(mag_mom) == len(cell.numbers):
+
+        if np.size(mag_mom[0]) == 1:
+            line.append("magnetic")
+            for number, mag in zip(numbers, mag_mom):
+                line.append(f" {number}  {mag:.16f}")
+
+        if np.size(mag_mom[0]) == 3:
+            line.append("magnetic_xyz")
+            for number, mag in zip(numbers, mag_mom):
+                line.append(f" {number}  {mag[0]:.6f} {mag[1]:.6f} {mag[2]:.6f}")
     return "\n".join(line)
 
 
