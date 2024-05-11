@@ -165,12 +165,12 @@ def get_pwmat_structure(cell):
         )
     if mag_mom is not None and len(mag_mom) == len(cell.numbers):
 
-        if len(mag_mom[0]) == 1:
+        if np.size(mag_mom[0]) == 1:
             line.append("magnetic")
             for number, mag in zip(numbers, mag_mom):
                 line.append(f" {number}  {mag:.16f}")
 
-        if len(mag_mom[0]) == 3:
+        if np.size(mag_mom[0]) == 3:
             line.append("magnetic_xyz")
             for number, mag in zip(numbers, mag_mom):
                 line.append(f" {number}  {mag[0]:.6f} {mag[1]:.6f} {mag[2]:.6f}")
