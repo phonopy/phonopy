@@ -150,6 +150,7 @@ def get_pwmat_structure(cell):
     positions = cell.scaled_positions
     numbers = cell.numbers
     mag_mom = cell.magnetic_moments
+
     line = []
     line.append(f" {len(positions)}")
     line.append("Lattice vector (Angstrom)")
@@ -163,10 +164,12 @@ def get_pwmat_structure(cell):
             + "  1   1   1"
         )
     if mag_mom is not None and len(mag_mom) == len(cell.numbers):
+
         if len(mag_mom[0]) == 1:
             line.append("magnetic")
             for number, mag in zip(numbers, mag_mom):
                 line.append(f" {number}  {mag:.16f}")
+
         if len(mag_mom[0]) == 3:
             line.append("magnetic_xyz")
             for number, mag in zip(numbers, mag_mom):
