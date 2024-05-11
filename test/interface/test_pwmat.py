@@ -22,3 +22,13 @@ def test_read_pwmat():
     assert (np.abs(diff_pos) < 1e-5).all()
     for s, s_r in zip(cell.symbols, cell_ref.symbols):
         assert s == s_r
+
+
+def test_magmom():
+    """Test of read_PWmat_magmom."""
+    cell = read_atom_config(os.path.join(data_dir, "Si-pwmat.config"))
+    filename = os.path.join(data_dir, "Si-pwmat.yaml")
+    cell_ref = read_cell_yaml(filename)
+    assert cells.isclose(cell, cell_ref)
+    diff_mag = cell_ref.magnetic_moments - np.array([1] * 8 )
+    assert (np.abs(diff_mag) < 1e-5).all()
