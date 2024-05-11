@@ -32,4 +32,3 @@ def test_magmom():
     assert cells.isclose(cell, cell_ref)
     diff_mag = cell_ref.magnetic_moments - np.array([1] * 8)
     assert (np.abs(diff_mag) < 1e-5).all()
-
