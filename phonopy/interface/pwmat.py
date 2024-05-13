@@ -81,8 +81,6 @@ def read_atom_config(filename):
     element_index = []
     lattice_vectors = []
     atom_position = []
-    element_mag = []
-
     read_lattice = read_position = False
 
     for line in lines:
