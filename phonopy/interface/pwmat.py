@@ -81,9 +81,7 @@ def read_atom_config(filename):
     element_index = []
     lattice_vectors = []
     atom_position = []
-    element_mag = []
-
-    read_lattice = read_position = read_magnetic = False
+    read_lattice = read_position = False
 
     for line in lines:
         line = line.strip()
@@ -109,31 +107,11 @@ def read_atom_config(filename):
             except ValueError:
                 read_position = False
 
-        # magnetic_moment
-        if line.lower().startswith("magnetic"):
-            read_magnetic = True
-        elif read_magnetic:
-            try:
-                element_mag.append(float(line.split()[1]))
-            except ValueError:
-                read_magnetic = False
-
-        if line.lower().startswith("magnetic_xyz"):
-            read_magnetic = True
-        elif read_magnetic:
-            try:
-                parts = [float(part) for part in line.split()]
-                element_mag.append(parts[1:4])
-            except ValueError:
-                read_magnetic = False
-
     cell_args = {
         "numbers": element_index,
         "cell": lattice_vectors,
         "scaled_positions": atom_position,
     }
-    if element_mag:
-        cell_args["magnetic_moments"] = element_mag
 
     return Atoms(**cell_args)
 
