@@ -237,6 +237,23 @@ class PhonopyYamlLoader:
 
     def _parse_force_sets_type2(self, key_prefix=""):
         key = f"{key_prefix}displacements"
+        if isinstance(self._yaml[key][0][0], dict):
+            dataset = self._parse_force_sets_type2_lagacy_format(key_prefix=key_prefix)
+
+        if "supercell_energies" in self._yaml:
+            dataset["supercell_energies"] = np.array(
+                self._yaml[f"{key_prefix}supercell_energies"], dtype="double"
+            )
+
+        return dataset
+
+    def _parse_force_sets_type2_lagacy_format(self, key_prefix=""):
+        """Parse displacements and forces in legacy format.
+
+        This is the format <= v2.23.1.
+
+        """
+        key = f"{key_prefix}displacements"
         nsets = len(self._yaml[key])
         natom = len(self._yaml[key][0])
         if "force" in self._yaml[key][0][0]:
@@ -255,10 +272,6 @@ class PhonopyYamlLoader:
             dataset = {"forces": forces, "displacements": displacements}
         else:
             dataset = {"displacements": displacements}
-        if "supercell_energies" in self._yaml:
-            dataset["supercell_energies"] = np.array(
-                self._yaml[f"{key_prefix}supercell_energies"], dtype="double"
-            )
         return dataset
 
     def _parse_nac(self):
