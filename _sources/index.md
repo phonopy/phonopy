@@ -8,8 +8,10 @@ lattice thermal conductivity calculations. See the documentation at
 <http://phonopy.github.io/phono3py/>
 
 **Phonon database**: A collection of first principles phonon calculations is
-available as open data at <http://phonondb.mtl.kyoto-u.ac.jp/> , where the raw
-data of phonopy & VASP results are downloaded.
+available as open data at <https://doi.org/10.48505/nims.4197> (its list of
+crystals
+<https://github.com/atztogo/phonondb/blob/main/mdr/phonondb/README.md>), where
+the phonopy input (see {ref}`phonopy_yaml_phonondb`) and the force calculation information are downloaded.
 
 The following features of phonopy are highlighted:
 
@@ -76,6 +78,7 @@ interfaces
 auxiliary-tools
 external-tools
 phonopy-module
+phonopy-yaml
 phonopy-load
 formulation
 citation

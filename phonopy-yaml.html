@@ -6,7 +6,9 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Search - Phonopy v.2.23.1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>phonopy-yaml format &#8212; Phonopy v.2.23.1</title>
   
   
   
@@ -38,12 +40,11 @@
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'search';</script>
-  <script src="_static/searchtools.js"></script>
-  <script src="_static/language_data.js"></script>
-  <script src="searchindex.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'phonopy-yaml';</script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="#" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="phonopy-load command" href="phonopy-load.html" />
+    <link rel="prev" title="Phonopy API for Python" href="phonopy-module.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -79,7 +80,7 @@
     <div class="search-button__overlay"></div>
     <div class="search-button__search-container">
 <form class="bd-search d-flex align-items-center"
-      action="#"
+      action="search.html"
       method="get">
   <i class="fa-solid fa-magnifying-glass"></i>
   <input type="search"
@@ -104,8 +105,6 @@
     <div class="bd-container__inner bd-page-width">
       
       
-      
-        
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -146,7 +145,7 @@
  </script></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <ul class="nav bd-sidenav">
+        <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
@@ -184,7 +183,7 @@
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Phonopy API for Python</a></li>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-yaml.html">phonopy-yaml format</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">phonopy-yaml format</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-load.html">phonopy-load command</a></li>
 <li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
@@ -234,6 +233,54 @@
 
 
 
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/phonopy-yaml.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
 <button onclick="toggleFullScreen()"
   class="btn btn-sm btn-fullscreen-button"
   title="Fullscreen mode"
@@ -267,7 +314,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -276,42 +325,75 @@ document.write(`
 </div>
               
               
-  <div class="bd-search-container">
-    <h1>Search</h1>
-    <noscript>
-      <div class="admonition error">
-        <p class="admonition-title">Error</p>
-        <p>Please activate JavaScript to enable the search functionality.</p>
-      </div>
-    </noscript>
-    
-<form class="bd-search d-flex align-items-center"
-      action="#"
-      method="get">
-  <i class="fa-solid fa-magnifying-glass"></i>
-  <input type="search"
-         class="form-control"
-         name="q"
-         id="search-input"
-         placeholder="Search..."
-         aria-label="Search..."
-         autocomplete="off"
-         autocorrect="off"
-         autocapitalize="off"
-         spellcheck="false"/>
-  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form>
-    <div id="search-results"></div>
-  </div>
-  <script>
-    // Activate the search field on page load
-    let searchInput = document.querySelector("form.bd-search input");
-    if (searchInput) {
-        searchInput.focus();
-        searchInput.select();
-        console.log("[PST]: Set focus on search field.");
-    }
-  </script>
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>phonopy-yaml format</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compression-support">Compression support</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-use-phonondb-data">How to use PhononDB data</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="phonopy-yaml-format">
+<span id="id1"></span><h1>phonopy-yaml format<a class="headerlink" href="#phonopy-yaml-format" title="Link to this heading">#</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy_xxx.yaml</span></code> type file is a structure text format in YAML to store data
+for phonopy. This file can contain the following information:</p>
+<ul class="simple">
+<li><p>Unit cell, primitive cell, and supercell crystal structures.</p></li>
+<li><p>Displacement in supercells</p></li>
+<li><p>Forces in supercells</p></li>
+<li><p>Energies of supercells</p></li>
+<li><p>Parameters used for non-analytical term correction</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy-load</span></code> command (<span class="xref std std-ref">phonopy-load</span>) can read this type of file, e.g.,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>phonopy_params.yaml<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy</span></code> command can read this file with <code class="docutils literal notranslate"><span class="pre">-c</span></code> option</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-c<span class="w"> </span>phonopy_params.yaml<span class="w"> </span>CONFIG_FILE<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<section id="compression-support">
+<h2>Compression support<a class="headerlink" href="#compression-support" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy_xxx.yaml.gz</span></code>, <code class="docutils literal notranslate"><span class="pre">phonopy_xxx.yaml.bz2</span></code>, and <code class="docutils literal notranslate"><span class="pre">phonopy_xxx.yaml.xz</span></code> can be
+read in the same way as shown above.</p>
+</section>
+<section id="how-to-use-phonondb-data">
+<span id="phonopy-yaml-phonondb"></span><h2>How to use PhononDB data<a class="headerlink" href="#how-to-use-phonondb-data" title="Link to this heading">#</a></h2>
+<p>PhononDB data downloaded from <a class="reference external" href="https://doi.org/10.48505/nims.4197">https://doi.org/10.48505/nims.4197</a> (its list of
+crystals <a class="github reference external" href="https://github.com/atztogo/phonondb/blob/main/mdr/phonondb/README.md">atztogo/phonondb</a>)
+are given in <code class="docutils literal notranslate"><span class="pre">phonopy_xxx.yaml.xz</span></code>. Therefore these are readily used with
+<code class="docutils literal notranslate"><span class="pre">phonopy-load</span></code> or <code class="docutils literal notranslate"><span class="pre">phonopy</span> <span class="pre">-c</span></code> commands. For example,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>wget<span class="w"> </span>https://mdr.nims.go.jp/download_all/9306t5111.zip
+%<span class="w"> </span>unzip<span class="w"> </span>-d<span class="w"> </span>mp-661<span class="w"> </span>9306t5111.zip
+%<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>mp-661
+%<span class="w"> </span>phonopy-load<span class="w"> </span>phonopy_params.yaml.xz<span class="w"> </span>--band<span class="w"> </span>auto<span class="w"> </span>-p<span class="w"> </span>--pdos<span class="w"> </span>auto
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/phonondb-mp-661.png"><img alt="_images/phonondb-mp-661.png" src="_images/phonondb-mp-661.png" style="width: 50%;" />
+</a>
+</section>
+</section>
+
+
+                </article>
+              
 
               
               
@@ -320,6 +402,24 @@ document.write(`
                 <footer class="prev-next-footer">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="phonopy-module.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Phonopy API for Python</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="phonopy-load.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">phonopy-load command</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
@@ -327,7 +427,21 @@ document.write(`
             
             
               
-                <div class="bd-sidebar-secondary bd-toc"></div>
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compression-support">Compression support</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-use-phonondb-data">How to use PhononDB data</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>
