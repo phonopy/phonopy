@@ -1,5 +1,8 @@
+"""A script to make FORCE_CONSTANTS from QE q2r.x output."""
+
 import sys
-from phonopy.interface.qe import read_pwscf, PH_Q2R
+
+from phonopy.interface.qe import PH_Q2R, read_pwscf
 
 primcell_filename = sys.argv[1]
 q2r_filename = sys.argv[2]
