@@ -81,9 +81,7 @@ def read_atom_config(filename):
     element_index = []
     lattice_vectors = []
     atom_position = []
-    element_mag = []
-
-    read_lattice = read_position = read_magnetic = False
+    read_lattice = read_position = False
 
     for line in lines:
         line = line.strip()
@@ -109,22 +107,11 @@ def read_atom_config(filename):
             except ValueError:
                 read_position = False
 
-        # magnetic_moment
-        if line.lower().startswith("magnetic"):
-            read_magnetic = True
-        elif read_magnetic:
-            try:
-                element_mag.append(float(line.split()[1]))
-            except ValueError:
-                read_magnetic = False
-
     cell_args = {
         "numbers": element_index,
         "cell": lattice_vectors,
         "scaled_positions": atom_position,
     }
-    if element_mag:
-        cell_args["magnetic_moments"] = element_mag
 
     return Atoms(**cell_args)
 
@@ -141,6 +128,7 @@ def get_pwmat_structure(cell):
     positions = cell.scaled_positions
     numbers = cell.numbers
     mag_mom = cell.magnetic_moments
+
     line = []
     line.append(f" {len(positions)}")
     line.append("Lattice vector (Angstrom)")
@@ -153,10 +141,17 @@ def get_pwmat_structure(cell):
             + "   ".join(f"{val:.16f}" for val in position)
             + "  1   1   1"
         )
-    if isinstance(mag_mom, np.ndarray) and mag_mom.size > 0:
-        line.append("magnetic")
-        for number, mag in zip(numbers, mag_mom):
-            line.append(f" {number}  {mag:.16f}")
+    if mag_mom is not None and len(mag_mom) == len(cell.numbers):
+
+        if np.size(mag_mom[0]) == 1:
+            line.append("magnetic")
+            for number, mag in zip(numbers, mag_mom):
+                line.append(f" {number}  {mag:.16f}")
+
+        if np.size(mag_mom[0]) == 3:
+            line.append("magnetic_xyz")
+            for number, mag in zip(numbers, mag_mom):
+                line.append(f" {number}  {mag[0]:.6f} {mag[1]:.6f} {mag[2]:.6f}")
     return "\n".join(line)
 
 

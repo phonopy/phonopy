@@ -11,7 +11,8 @@ will be the same using this command.
 The following default behaviours are different from that of those of `phonopy`
 command:
 
-1. `phonopy_xxx.yaml` type file is always necessary in either of two ways:
+1. `phonopy_xxx.yaml` type file ({ref}`phonopy_yaml_format`) is always necessary
+   in either of two ways:
 
    - `phonopy_xxx.yaml` type file is given as the first argument of the command.
    - `phonopy_xxx.yaml` type file is put in the current directory with one of

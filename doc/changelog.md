@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Jun-7-2024: Version 2.24.0
+
+- Change of phonopy-yaml format for type2 dataset.
+
 ## May-3-2024: Version 2.23.1
 
 - Release for creating conda-forge package.

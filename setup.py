@@ -251,7 +251,7 @@ def main(build_dir):
             "h5py>=3.0",
             "spglib>=2.3",
         ],
-        extras_require={"cp2k": ["cp2k-input-tools"]},
+        extras_require={"cp2k": ["cp2k-input-tools"], "plot": ["seekpath"]},
         provides=["phonopy"],
         scripts=scripts_phonopy,
         ext_modules=_get_extensions(build_dir),

@@ -89,9 +89,6 @@ class Symmetry:
         self._map_operations = None
 
         magmom = cell.magnetic_moments
-        if isinstance(magmom, np.ndarray):
-            if (magmom < symprec).all():
-                magmom = None
 
         if not is_symmetry:
             self._set_nosym(s2p_map)
