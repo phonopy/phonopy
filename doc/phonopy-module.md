@@ -804,34 +804,3 @@ nac_params = {'born': borns_,
               'factor': Hartree * Bohr,
               'dielectric': epsilon_}
 ```
-
-## PhononDB at Kyoto university
-
-The phonon calculation database at
-http://phonondb.mtl.kyoto-u.ac.jp/ph20180417/index.html can be easily used from
-phonopy-API. Downloading the raw data, e.g., `mp-361-20180417.tar.lzma` and
-expand it. In the directory `mp-361-20180417`,
-
-```python
-% ipython
-```
-
-or we can use jupyter notebook. The data is loaded by
-
-```python
-In [1]: import phonopy
-
-In [2]: ph = phonopy.load("phonon.yaml")
-```
-
-For example, the band structure is plotted by
-
-```python
-In [3]: ph.auto_band_structure(plot=True).show()
-```
-
-and similarly for PDOS
-
-```python
-In [4]: ph.auto_projected_dos(plot=True).show()
-```

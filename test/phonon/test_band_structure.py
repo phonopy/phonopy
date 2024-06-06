@@ -16,7 +16,6 @@ def test_band_structure(ph_nacl):
     np.testing.assert_allclose(
         freqs[0][0], [0, 0, 0, 4.61643516, 4.61643516, 7.39632718], atol=1e-3
     )
-    print(ph_nacl.get_band_structure_dict()["frequencies"])
 
 
 def test_band_structure_gv(ph_nacl):

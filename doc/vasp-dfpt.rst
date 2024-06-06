@@ -47,7 +47,7 @@ procedure to calculate phonon properties may be as follows:
       % mv SPOSCAR POSCAR
 
 4) Calculate force constants of the perfect supercell by running VASP
-   with ``IBRION = 8`` and ``NSW = 1``. An example of ``INCAR`` for
+   with ``IBRION = 8``. An example of ``INCAR`` for
    insulator may be such like (**just an example!**)::
 
         PREC = Accurate

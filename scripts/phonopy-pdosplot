@@ -180,7 +180,7 @@ def main(args):
 
     if (args.ymin is not None) and (args.ymax is not None):
         plt.ylim(args.ymin, args.ymax)
-    elif (args.ymin is not None) and (args.ymax is not None):
+    elif (args.ymin is None) and (args.ymax is not None):
         plt.ylim(ymax=args.ymax)
     elif (args.ymin is not None) and (args.ymax is None):
         plt.ylim(ymin=args.ymin)
