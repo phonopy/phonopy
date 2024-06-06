@@ -2,7 +2,7 @@
 
 # Change Log
 
-## May-26-2024: Version 2.24.0
+## Jun-7-2024: Version 2.24.0
 
 - Change of phonopy-yaml format for type2 dataset.
 
