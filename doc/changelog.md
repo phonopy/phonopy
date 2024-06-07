@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Jun-7-2024: Version 2.24.1
+
+- Fix bug in phonopy-yaml dumper for type2 dataset.
+
 ## Jun-7-2024: Version 2.24.0
 
 - Change of phonopy-yaml format for type2 dataset.
