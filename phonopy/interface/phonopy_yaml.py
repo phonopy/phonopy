@@ -663,7 +663,7 @@ class PhonopyYamlDumperBase(ABC):
             if key == "forces" and not with_forces:
                 continue
             lines.append(f"  {key}:")
-            for i, dset in enumerate(dataset["displacements"]):
+            for i, dset in enumerate(dataset[key]):
                 lines.append(f"  - # {i + 1}")
                 for j, d in enumerate(dset):
                     lines.append("    - [ %21.16f, %21.16f, %21.16f ]" % tuple(d))
