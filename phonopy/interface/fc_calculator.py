@@ -1,4 +1,4 @@
-"""Force constants calculator interface."""
+"""Force constants calculator interfaces."""
 
 # Copyright (C) 2019 Atsushi Togo
 # All rights reserved.
@@ -34,23 +34,32 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# Each key has to be lowercase. {fc_calculator: name, ...}
-# name is supporsed to be str and used for text output to stdout.
-fc_calculator_names = {"alm": "ALM", "hiphive": "hiPhive"}
+from __future__ import annotations
+from collections.abc import Sequence
+from typing import Optional, Union
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import Primitive
+
+import numpy as np
+
+from phonopy.structure.symmetry import Symmetry
+
+fc_calculator_names = {"alm": "ALM", "hiphive": "hiPhive", "symfc": "symfc"}
 
 
 # get_fc2 is called from
 # phonopy.api_phonopy.Phonopy._run_force_constants_from_forces.
 def get_fc2(
-    supercell,
-    primitive,
-    displacements,
-    forces,
-    fc_calculator=None,
-    fc_calculator_options=None,
-    atom_list=None,
-    log_level=0,
-    symprec=None,
+    supercell: PhonopyAtoms,
+    primitive: Primitive,
+    displacements: np.ndarray,
+    forces: np.ndarray,
+    fc_calculator: Optional[str] = None,
+    fc_calculator_options: Optional[str] = None,
+    atom_list: Optional[Union[Sequence[int], np.ndarray]] = None,
+    symmetry: Optional[Symmetry] = None,
+    symprec: float = 1e-5,
+    log_level: int = 0,
 ):
     """Supercell 2nd order force constants (fc2) are calculated.
 
@@ -83,6 +92,10 @@ def get_fc2(
         full: atom_list == (0, 1, 2, ..., num_atoms -1) or None,
         compact : atom_list == primitive.p2s_map, i.e.,
         [all atoms in primitive cell in the atomic indices of supercell].
+    symmetry : Symmetry, optional
+        Symmetry of supercell. Default is None.
+    symprec : float, optional
+        Tolerance used in symmetry analysis. Default is 1e-5.
     log_level : integer or bool, optional
         Verbosity level. False or 0 means quiet. True or 1 means normal level
         of log to stdout. 2 gives verbose mode.
@@ -104,6 +117,18 @@ def get_fc2(
             forces,
             atom_list=atom_list,
             options=fc_calculator_options,
+            log_level=log_level,
+        )
+    if fc_calculator == "symfc":
+        from phonopy.interface.symfc import get_fc2
+
+        return get_fc2(
+            supercell,
+            primitive,
+            displacements,
+            forces,
+            atom_list=atom_list,
+            symmetry=symmetry,
             log_level=log_level,
         )
     if fc_calculator == "hiphive":

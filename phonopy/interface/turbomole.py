@@ -40,7 +40,7 @@ import sys
 import numpy as np
 
 from phonopy.interface.vasp import check_forces, get_drift_forces
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.atoms import PhonopyAtoms
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
@@ -91,7 +91,7 @@ def read_turbomole(filename):
     turbomole_in = TurbomoleIn(f_turbomole.readlines())
     f_turbomole.close()
     tags = turbomole_in.get_tags()
-    cell = Atoms(
+    cell = PhonopyAtoms(
         cell=tags["lattice_vectors"],
         symbols=tags["atomic_species"],
         positions=tags["coordinates"],

@@ -1,4 +1,4 @@
-"""ALM force constants interface."""
+"""ALM force constants calculator interface."""
 
 # Copyright (C) 2018 Atsushi Togo
 # All rights reserved.
@@ -34,19 +34,24 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from collections.abc import Sequence
 import sys
+from typing import Optional, Union
 
 import numpy as np
 
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import Primitive
+
 
 def get_fc2(
-    supercell,
-    primitive,
-    displacements,
-    forces,
-    atom_list=None,
-    options=None,
-    log_level=0,
+    supercell: PhonopyAtoms,
+    primitive: Primitive,
+    displacements: np.ndarray,
+    forces: np.ndarray,
+    atom_list: Optional[Union[Sequence[int], np.ndarray]] = None,
+    options: Optional[str] = None,
+    log_level: int = 0,
 ):
     """Calculate fc2 using ALM."""
     p2s_map = primitive.p2s_map

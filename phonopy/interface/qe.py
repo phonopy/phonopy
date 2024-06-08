@@ -50,7 +50,7 @@ from phonopy.interface.vasp import (
     get_drift_forces,
     get_scaled_positions_lines,
 )
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.atoms import symbol_map
 from phonopy.structure.cells import get_primitive, get_supercell
 from phonopy.units import Bohr
@@ -127,11 +127,11 @@ def read_pwscf(filename):
             if n < 1:
                 numbers[i] = available_numbers[-n]
 
-        cell = Atoms(
+        cell = PhonopyAtoms(
             numbers=numbers, masses=masses, cell=lattice, scaled_positions=positions
         )
     else:
-        cell = Atoms(numbers=numbers, cell=lattice, scaled_positions=positions)
+        cell = PhonopyAtoms(numbers=numbers, cell=lattice, scaled_positions=positions)
 
     unique_symbols = []
     pp_filenames = {}

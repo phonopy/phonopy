@@ -46,7 +46,7 @@ from phonopy.interface.vasp import (
     get_drift_forces,
     sort_positions_by_symbols,
 )
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.atoms import symbol_map
 
 
@@ -100,7 +100,7 @@ def read_fleur(filename):
     num_all = [symbol_map[s] for s in symbols]
 
     return (
-        Atoms(numbers=num_all, cell=avec, scaled_positions=pos_all),
+        PhonopyAtoms(numbers=num_all, cell=avec, scaled_positions=pos_all),
         speci,
         fleur_in._restlines,
     )

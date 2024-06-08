@@ -45,7 +45,7 @@ from phonopy.interface.vasp import (
     get_scaled_positions_lines,
     sort_positions_by_symbols,
 )
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.atoms import symbol_map
 
 
@@ -100,7 +100,7 @@ def read_elk(filename):
         pos_all += pos
         num_all += [num] * len(pos)
 
-    return Atoms(numbers=num_all, cell=avec, scaled_positions=pos_all), spfnames
+    return PhonopyAtoms(numbers=num_all, cell=avec, scaled_positions=pos_all), spfnames
 
 
 def write_elk(filename, cell, sp_filenames):
