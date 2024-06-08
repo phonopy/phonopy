@@ -45,8 +45,7 @@ from phonopy.interface.vasp import (
     get_scaled_positions_lines,
     sort_positions_by_symbols,
 )
-from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.atoms import symbol_map
+from phonopy.structure.atoms import PhonopyAtoms, symbol_map
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):

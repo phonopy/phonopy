@@ -50,8 +50,7 @@ from phonopy.interface.vasp import (
     get_drift_forces,
     get_scaled_positions_lines,
 )
-from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.atoms import symbol_map
+from phonopy.structure.atoms import PhonopyAtoms, symbol_map
 from phonopy.structure.cells import get_primitive, get_supercell
 from phonopy.units import Bohr
 

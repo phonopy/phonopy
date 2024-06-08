@@ -35,13 +35,14 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import annotations
+
 from collections.abc import Sequence
 from typing import Optional, Union
-from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import Primitive
 
 import numpy as np
 
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import Primitive
 from phonopy.structure.symmetry import Symmetry
 
 fc_calculator_names = {"alm": "ALM", "hiphive": "hiPhive", "symfc": "symfc"}
