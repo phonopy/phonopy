@@ -66,6 +66,7 @@ Some of command-line options are equivalent to respective setting tags:
 - `--read-qpoints` (`QPOINTS = .TRUE.`)
 - `--show-irreps` (`SHOW_IRREPS`)
 - `--sigma` (`SIGMA`)
+- `--symfc` (`FC_CALCULATOR = SYMFC`)
 - `-t` (`TPROP`)
 - `--td` (`TDISP`)
 - `--tdm` (`TDISPMAT`)
@@ -265,7 +266,7 @@ calculations.
 
 This is experimental support to generage `FORCE_SETS`. Insted of this, you can
 use the external tool called `scf2forces` to generate `FORCE_SETS`. `scf2forces`
-is found at http://www.wien2k.at/reg_user/unsupported/.
+is found at <http://www.wien2k.at/reg_user/unsupported/>.
 
 `FORCE_SETS` file is created from `phonopy_disp.yaml`, which is an output file
 when creating supercell with displacements, and `case.scf`'s, which are the
@@ -389,7 +390,6 @@ VASP output of force constants is imported from `vasprun.xml` and
 
 This `FORCE_CONSTANTS` can be used instead of `FORCE_SETS`. For more details,
 please refer {ref}`vasp_dfpt_interface`.
-
 
 (graph_option)=
 

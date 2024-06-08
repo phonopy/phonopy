@@ -39,7 +39,7 @@ import sys
 import numpy as np
 
 from phonopy.interface.vasp import check_forces, get_drift_forces
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry
 
 
@@ -117,7 +117,7 @@ def read_castep(filename):
     f_castep.close()
     tags = castep_in.get_tags()
     # 1st stage is to create Atoms object ignoring Spin polarization. General case.
-    cell = Atoms(
+    cell = PhonopyAtoms(
         cell=tags["lattice_vectors"],
         symbols=tags["atomic_species"],
         scaled_positions=tags["coordinates"],

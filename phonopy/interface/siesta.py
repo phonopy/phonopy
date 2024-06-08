@@ -41,7 +41,7 @@ import numpy as np
 
 from phonopy.file_IO import iter_collect_forces
 from phonopy.interface.vasp import check_forces, get_drift_forces
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.units import Bohr
 
 
@@ -78,7 +78,7 @@ def read_siesta(filename):
     lattice = siesta_in._tags["latticevectors"]
     positions = siesta_in._tags["atomiccoordinates"]
     atypes = siesta_in._tags["chemicalspecieslabel"]
-    cell = Atoms(numbers=numbers, cell=lattice, scaled_positions=positions)
+    cell = PhonopyAtoms(numbers=numbers, cell=lattice, scaled_positions=positions)
 
     coordformat = siesta_in._tags["atomiccoordinatesformat"]
     if coordformat == "fractional" or coordformat == "scaledbylatticevectors":

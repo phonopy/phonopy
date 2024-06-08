@@ -45,7 +45,7 @@ from phonopy.interface.vasp import (
     get_drift_forces,
     get_scaled_positions_lines,
 )
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.units import Bohr
 
 
@@ -98,7 +98,7 @@ def read_abinit(filename):
 
     numbers = [tags["znucl"][x - 1] for x in tags["typat"]]
 
-    return Atoms(numbers=numbers, cell=lattice.T, scaled_positions=positions)
+    return PhonopyAtoms(numbers=numbers, cell=lattice.T, scaled_positions=positions)
 
 
 def write_abinit(filename, cell):

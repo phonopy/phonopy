@@ -629,6 +629,10 @@ class ConfParser:
             if self._args.use_alm:
                 self._confs["fc_calculator"] = "alm"
 
+        if "use_symfc" in arg_list:
+            if self._args.use_symfc:
+                self._confs["fc_calculator"] = "symfc"
+
         if "use_hiphive" in arg_list:
             if self._args.use_hiphive:
                 self._confs["fc_calculator"] = "hiphive"

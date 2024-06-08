@@ -39,7 +39,7 @@ import sys
 import numpy as np
 
 from phonopy.interface.vasp import check_forces, get_drift_forces
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_angles, get_cell_parameters
 from phonopy.structure.symmetry import Symmetry
 from phonopy.utils import similarity_transformation
@@ -157,7 +157,7 @@ def parse_wien2k_struct(filename):
             for j in range(3):
                 f.readline()
 
-        cell = Atoms(symbols=symbols, scaled_positions=positions, cell=lattice)
+        cell = PhonopyAtoms(symbols=symbols, scaled_positions=positions, cell=lattice)
 
         return cell, npts, r0s, rmts
 
@@ -334,7 +334,7 @@ def _distribute_forces(supercell, disp, forces, filename, symprec):
     lattice = supercell.get_cell()
     symbols = supercell.get_chemical_symbols()
     positions = supercell.get_positions() + disp
-    cell = Atoms(cell=lattice, positions=positions, symbols=symbols)
+    cell = PhonopyAtoms(cell=lattice, positions=positions, symbols=symbols)
     symmetry = Symmetry(cell, symprec)
     independent_atoms = symmetry.get_independent_atoms()
 
