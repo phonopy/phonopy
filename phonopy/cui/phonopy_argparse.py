@@ -756,6 +756,13 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         "--sigma", dest="sigma", default=None, help="Smearing width for DOS"
     )
     parser.add_argument(
+        "--symfc",
+        dest="use_symfc",
+        action="store_true",
+        default=None,
+        help="Use symfc for generating force constants",
+    )
+    parser.add_argument(
         "--symmetry",
         dest="is_check_symmetry",
         action="store_true",

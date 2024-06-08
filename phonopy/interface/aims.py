@@ -45,7 +45,7 @@ import sys
 import numpy as np
 
 from phonopy.interface.vasp import check_forces, get_drift_forces
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.atoms import PhonopyAtoms
 
 
 # FK 2018/07/19
@@ -101,9 +101,11 @@ def read_aims(filename):
             ]
             positions[n] = pos
     if None in magmoms:
-        atoms = Atoms(cell=cell, symbols=symbols, positions=positions)
+        atoms = PhonopyAtoms(cell=cell, symbols=symbols, positions=positions)
     else:
-        atoms = Atoms(cell=cell, symbols=symbols, positions=positions, magmoms=magmoms)
+        atoms = PhonopyAtoms(
+            cell=cell, symbols=symbols, positions=positions, magmoms=magmoms
+        )
 
     return atoms
 
@@ -136,7 +138,7 @@ def write_aims(filename, atoms):
         f.write(lines)
 
 
-class Atoms_with_forces(Atoms):
+class Atoms_with_forces(PhonopyAtoms):
     """Hack to phonopy.atoms to maintain ASE compatibility also for forces."""
 
     def get_forces(self):

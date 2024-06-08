@@ -84,20 +84,21 @@ packages. Windows users should use conda (conda-forge channel) packages as well.
 
 Prepare the following Python libraries:
 
-- Python (>=3.7) and its header files
-- numpy (>=1.15)
+- Python (>=3.8) and its header files
+- numpy (>=1.17)
 - matplotlib (>=2.2.2)
-- python-yaml (pyyaml)
-- python-h5py (h5py)
-- spglib
+- python-yaml (pyyaml >= 5.3)
+- python-h5py (h5py >= 3.0)
+- spglib (>=2.3)
 
 It is recommended to install seekpath to plot phonon band structure:
 
 - seekpath
+- symfc
 
 Scipy is optional because most of features of phonopy can work without scipy,
-but scipy is needed for fitting to equations of states for quasi-harmonic phonon
-calculation.
+but scipy is needed for symfc and fitting to equations of states for
+quasi-harmonic phonon calculation.
 
 - scipy
 
@@ -109,13 +110,13 @@ For the CP2K interface, the following package will be needed to install:
 
 The python libraries can be installed using conda. Conda packages are
 distributed in binary. Minimum setup of conda envrironment is done by miniforge,
-which is downloaded at https://github.com/conda-forge/miniforge. It is strongly
+which is downloaded at <https://github.com/conda-forge/miniforge>. It is strongly
 recommended to create conda's virtual environment by
 `conda create -n <venvname>` as written above. The installation of necessary
 libraries is done as follows:
 
 ```bash
-% conda install -c conda-forge numpy scipy h5py pyyaml matplotlib-base seekpath spglib
+% conda install -c conda-forge numpy scipy h5py pyyaml matplotlib-base seekpath symfc spglib
 ```
 
 A libblas library installed can be chosen among `[openblas, mkl, blis, netlib]`.
@@ -185,11 +186,11 @@ packages by
 
 Set correct environment variables `PATH` and `PYTHONPATH`
 
-### When using conda environment, this information is not applicable.
+### When using conda environment, this information is not applicable
 
 In phonopy, `PATH` and `PYTHONPATH` play important roles. Of course the
 information about them can be easily found in internet (e.g.
-https://en.wikipedia.org/wiki/PATH_(variable)), so you really have to find
+<https://en.wikipedia.org/wiki/PATH_(variable)>), so you really have to find
 information by yourself and read them. Even if you can't understand them, first
 you must ask to your colleagues or people before sending this unnecessary
 question (as a researcher using computer simulation) to the mailing list.
@@ -213,4 +214,4 @@ really need. Then logout from the current shell (terminal) and open new shell
 ### Missing Intel libraries when building from source using icc
 
 `LDSHARED="icc -shared"` may be of help. See this github issues,
-https://github.com/phonopy/phonopy/issues/123.
+<https://github.com/phonopy/phonopy/issues/123>.
