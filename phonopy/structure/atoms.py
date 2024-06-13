@@ -537,6 +537,30 @@ class PhonopyAtoms:
             DeprecationWarning,
         )
         return self.totuple()
+    
+    @classmethod
+    def from_ase_atoms(cls, atoms):
+        """Create PhonopyAtoms object from ASE Atoms object."""
+        return cls(
+            symbols=atoms.get_chemical_symbols(),
+            cell=atoms.cell,
+            masses=atoms.get_masses(),
+            magnetic_moments=atoms.get_initial_magnetic_moments(),
+            scaled_positions=atoms.get_scaled_positions(),
+        )
+    
+    def to_ase_atoms(self):
+        """Return ASE Atoms object."""
+        from ase import Atoms
+
+        return Atoms(
+            symbols=self.symbols,
+            cell=self.cell,
+            masses=self.masses,
+            pbc=True,
+            positions=self.positions,
+            magmoms=self.magnetic_moments,
+        )
 
     def get_yaml_lines(self):
         """Return list of text lines of crystal structure in yaml."""
