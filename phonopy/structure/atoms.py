@@ -537,7 +537,7 @@ class PhonopyAtoms:
             DeprecationWarning,
         )
         return self.totuple()
-    
+
     @classmethod
     def from_ase_atoms(cls, atoms):
         """Create PhonopyAtoms object from ASE Atoms object."""
@@ -548,7 +548,7 @@ class PhonopyAtoms:
             magnetic_moments=atoms.get_initial_magnetic_moments(),
             scaled_positions=atoms.get_scaled_positions(),
         )
-    
+
     def to_ase_atoms(self):
         """Return ASE Atoms object."""
         from ase import Atoms
