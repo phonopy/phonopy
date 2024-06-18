@@ -34,8 +34,10 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 from collections.abc import Sequence
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 
 import numpy as np
 
@@ -229,7 +231,7 @@ class RandomDisplacements:
         T: float,
         number_of_snapshots: int = 1,
         random_seed: Optional[int] = None,
-        randn: Optional[Tuple] = None,
+        randn: Optional[tuple] = None,
     ):
         """Calculate random displacements.
 

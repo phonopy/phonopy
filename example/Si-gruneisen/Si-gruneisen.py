@@ -1,6 +1,6 @@
 """Example to calculate mode Grueneisen parameters."""
 
-from typing import List
+from __future__ import annotations
 
 import numpy as np
 
@@ -9,7 +9,7 @@ from phonopy.file_IO import parse_FORCE_SETS
 from phonopy.interface.vasp import read_vasp
 
 
-def _append_band(bands: List[List], q_start, q_end):
+def _append_band(bands: list[list], q_start, q_end):
     band = []
     for i in range(51):
         points = np.array(q_start) + (np.array(q_end) - np.array(q_start)) / 50 * i
@@ -41,7 +41,7 @@ for q, freq, g in zip(q_points, frequencies, gammas):
     )
     print(((" " * 18) + (" %7.3f" * len(g))) % tuple(g))
 
-bands: List[List] = []
+bands: list[list] = []
 _append_band(bands, [0.5, 0.5, 0.0], [0.0, 0.0, 0.0])
 _append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.5, 0.5])
 gruneisen.set_band_structure(bands)
