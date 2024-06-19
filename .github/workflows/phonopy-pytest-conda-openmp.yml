@@ -21,8 +21,8 @@ jobs:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: conda-incubator/setup-miniconda@v2
+    - uses: actions/checkout@v4
+    - uses: conda-incubator/setup-miniconda@v3
       with:
         miniforge-version: latest
     - name: Install dependencies
@@ -30,10 +30,6 @@ jobs:
         conda activate test
         conda install --yes -c conda-forge python=${{ matrix.python-version }}
         conda install --yes -c conda-forge matplotlib-base pyyaml scipy numpy spglib h5py pip pytest codecov pytest-cov pytest cmake c-compiler
-    - name: Install cp2k-input-tools
-      run: |
-        conda activate test
-        pip install cp2k-input-tools
     - name: Setup phonopy
       run: |
         conda activate test
