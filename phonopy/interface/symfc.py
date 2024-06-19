@@ -120,6 +120,7 @@ def run_symfc(
         spacegroup_operations=symmetry.dataset,
         displacements=displacements,
         forces=forces,
+        log_level=log_level - 1,
     ).run(orders=_orders, is_compact_fc=is_compact_fc)
 
     if log_level:
