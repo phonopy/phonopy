@@ -66,7 +66,7 @@ def get_fc2(
         is_compact_fc=is_compact_fc,
         symmetry=symmetry,
         log_level=log_level,
-    )
+    )[0]
 
     if not is_compact_fc and atom_list is not None:
         fc2 = np.array(fc2[atom_list], dtype="double", order="C")
@@ -79,6 +79,7 @@ def run_symfc(
     primitive: Primitive,
     displacements: np.ndarray,
     forces: np.ndarray,
+    orders: Optional[Sequence[int]] = None,
     is_compact_fc: bool = False,
     symmetry: Optional[Symmetry] = None,
     log_level: int = 0,
@@ -89,6 +90,11 @@ def run_symfc(
         from symfc.utils.utils import SymfcAtoms
     except ImportError:
         raise ImportError("Symfc python module was not found.")
+
+    if orders is None:
+        _orders = [2]
+    else:
+        _orders = orders
 
     if log_level:
         print(
@@ -101,6 +107,8 @@ def run_symfc(
         )
         print("A. Seko and A. Togo, arXiv:2403.03588.")
         print("Symfc is developed at https://github.com/symfc/symfc.")
+        print("")
+        print(f"Computing {_orders} order force constants.")
 
     symfc_supercell = SymfcAtoms(
         cell=supercell.cell,
@@ -112,7 +120,7 @@ def run_symfc(
         spacegroup_operations=symmetry.dataset,
         displacements=displacements,
         forces=forces,
-    ).run(orders=[2], is_compact_fc=is_compact_fc)
+    ).run(orders=_orders, is_compact_fc=is_compact_fc)
 
     if log_level:
         print(
@@ -123,4 +131,5 @@ def run_symfc(
 
     if is_compact_fc:
         assert (symfc.p2s_map == primitive.p2s_map).all()
-    return symfc.force_constants[2]
+
+    return [symfc.force_constants[n] for n in _orders]
