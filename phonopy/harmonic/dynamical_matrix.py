@@ -917,8 +917,8 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         return g_rad
 
     def _get_G_vec_list(self, g_rad: int):
-        pts = np.arange(-g_rad, g_rad + 1, dtype="intc")
-        grid = np.c_[np.meshgrid(pts, pts, pts)].reshape(3, -1)
+        pts = np.arange(-g_rad, g_rad + 1, dtype="int_")
+        grid = np.r_["-1,2,0", np.meshgrid(pts, pts, pts)].reshape(3, -1)
         return (self._rec_lat @ grid).T
 
     def _get_H(self):

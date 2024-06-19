@@ -1,4 +1,4 @@
-name: phonopy test using conda-forge environment
+name: phonopy test using conda-forge environment and numpy 2.0
 
 on:
   push:
@@ -18,7 +18,7 @@ jobs:
         shell: bash -l {0}
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.12"]
 
     steps:
     - uses: actions/checkout@v4
@@ -29,7 +29,14 @@ jobs:
       run: |
         conda activate test
         conda install --yes -c conda-forge python=${{ matrix.python-version }}
-        conda install --yes -c conda-forge matplotlib-base pyyaml scipy numpy spglib h5py pip pytest codecov pytest-cov c-compiler
+        conda install --yes -c conda-forge matplotlib-base pyyaml scipy "numpy=2" h5py pip pytest c-compiler
+    - name: Setup spglib
+      run: |
+        conda activate test
+        git clone --depth 1 https://github.com/spglib/spglib.git
+        cd spglib
+        pip install -e . -vvv
+        cd ..
     - name: Setup phonopy
       run: |
         conda activate test
@@ -37,8 +44,4 @@ jobs:
     - name: Test with pytest
       run: |
         conda activate test
-        pytest --cov=./ --cov-report=xml
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        verbose: true
+        pytest test

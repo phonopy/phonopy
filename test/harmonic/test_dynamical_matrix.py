@@ -496,6 +496,51 @@ def test_dynmat_gonze_lee_short_range_fc(ph_nacl: Phonopy):
     """Test force constants in dynamical matrix with NAC by Gonze and Lee."""
     # Test getter
     ph_nacl.dynamical_matrix.make_Gonze_nac_dataset()
+
+    assert ph_nacl.dynamical_matrix._G_cutoff == pytest.approx(1.1584988384375283)
+    assert ph_nacl.dynamical_matrix._G_list.shape == (307, 3)
+    np.testing.assert_allclose(
+        ph_nacl.dynamical_matrix._dd_q0.view("double").ravel(),
+        [
+            0.5509692730441111,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.5509692730441109,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.5509692730441113,
+            0.0,
+            0.5509692730441111,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.5509692730441109,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.5509692730441113,
+            0.0,
+        ],
+        atol=1e-5,
+    )
     fc = ph_nacl.dynamical_matrix.force_constants
     sr_fc = ph_nacl.dynamical_matrix.short_range_force_constants
     np.testing.assert_allclose(
