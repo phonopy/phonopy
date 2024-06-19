@@ -29,7 +29,14 @@ jobs:
       run: |
         conda activate test
         conda install --yes -c conda-forge python=${{ matrix.python-version }}
-        conda install --yes -c conda-forge matplotlib-base pyyaml scipy numpy spglib h5py pip pytest codecov pytest-cov c-compiler symfc
+        conda install --yes -c conda-forge matplotlib-base pyyaml scipy numpy spglib h5py pip pytest codecov pytest-cov c-compiler
+    - name: Setup symfc
+      run: |
+        conda activate test
+        git clone --depth 1 https://github.com/symfc/symfc.git
+        cd symfc
+        pip install -e . -vvv
+        cd ..
     - name: Setup phonopy
       run: |
         conda activate test
