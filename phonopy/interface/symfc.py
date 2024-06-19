@@ -66,7 +66,7 @@ def get_fc2(
         is_compact_fc=is_compact_fc,
         symmetry=symmetry,
         log_level=log_level,
-    )
+    )[0]
 
     if not is_compact_fc and atom_list is not None:
         fc2 = np.array(fc2[atom_list], dtype="double", order="C")
@@ -131,4 +131,5 @@ def run_symfc(
 
     if is_compact_fc:
         assert (symfc.p2s_map == primitive.p2s_map).all()
-    return symfc.force_constants[2]
+
+    return [symfc.force_constants[n] for n in _orders]

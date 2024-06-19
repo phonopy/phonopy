@@ -76,14 +76,14 @@ def get_fc2(
 
 
 def run_alm(
-    supercell,
-    primitive,
-    displacements,
-    forces,
-    maxorder,
-    is_compact_fc=False,
-    options=None,
-    log_level=0,
+    supercell: PhonopyAtoms,
+    primitive: Primitive,
+    displacements: np.ndarray,
+    forces: np.ndarray,
+    maxorder: int,
+    is_compact_fc: bool = False,
+    options: Optional[str] = None,
+    log_level: int = 0,
 ):
     """Calculate force constants of arbitrary-order using ALM."""
     fcs = None  # This is returned.
