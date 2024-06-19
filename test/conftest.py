@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
-from typing import Tuple
 
 import numpy as np
 import pytest
@@ -204,7 +203,7 @@ def ph_srtio3() -> Phonopy:
 
 
 @pytest.fixture(scope="session")
-def ph_nacl_gruneisen() -> Tuple[Phonopy, Phonopy, Phonopy]:
+def ph_nacl_gruneisen() -> tuple[Phonopy, Phonopy, Phonopy]:
     """Return Phonopy class instances of NaCl 2x2x2 at three volumes."""
     ph0 = phonopy.load(
         cwd / "phonopy_params_NaCl-1.00.yaml.xz",

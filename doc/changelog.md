@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Jun-19-2024: Version 2.24.3
+
+- Treatment for running with numpy 2.0.
+
 ## Jun-8-2024: Version 2.24.2
 
 - Experimental support of force constants calculator option `--symfc`
