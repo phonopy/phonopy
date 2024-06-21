@@ -38,7 +38,7 @@ import sys
 
 
 def get_options():
-    # Parse options
+    """Parse options."""
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -52,6 +52,7 @@ def get_options():
 
 
 def read_crystal_epsilon(epscol, epslines):
+    """Read epsilon in CRYSTAL14 format."""
     # XX, XY, XZ, YY, YZ, ZZ are given (6 rows). YX = XY, ZX = XZ, ZY = YZ
     # Format for CRYSTAL17 (epscol == 4):
     # 0.000   XX      57.1760       0.0000       3.2117       0.0000       2.2117
@@ -71,6 +72,7 @@ def read_crystal_epsilon(epscol, epslines):
 
 
 def main(args):
+    """Run phonopy-crystal-born."""
     if args.filename:
         crystal_filename = args.filename[0]
     else:
@@ -106,7 +108,7 @@ def main(args):
             # Check for each atom if it belongs to the asymmetric unit
             # 1 T  22 TI    4.721218104494E-21  3.307446203077E-21  1.413771901417E-21
             is_asym = []
-            for atom in range(0, N_atoms):
+            for _ in range(0, N_atoms):
                 atomdata = lines[ll].split()
                 is_asym.append(atomdata[1])
                 ll += 1
@@ -126,7 +128,7 @@ def main(args):
             for atom in range(0, N_atoms):
                 if is_asym[atom] == "T":
                     zeffatom = []
-                    for i in range(0, 3):
+                    for _ in range(0, 3):
                         # 1     8.3860E-01  3.4861E-01  3.4861E-01
                         zeffatom += [float(x) for x in lines[ll].split()[1:4]]
                         ll += 1

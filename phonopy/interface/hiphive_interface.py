@@ -41,8 +41,8 @@ def phonopy_atoms_to_ase(atoms_phonopy):
     """Convert PhonopyAtoms to Atoms."""
     try:
         from ase.atoms import Atoms
-    except ImportError:
-        raise ImportError("ASE python module was not found.")
+    except ImportError as exc:
+        raise ImportError("ASE python module was not found.") from exc
 
     ase_atoms = Atoms(
         cell=atoms_phonopy.cell,
@@ -132,8 +132,8 @@ def run_hiphive(
         from hiphive.cutoffs import estimate_maximum_cutoff
         from hiphive.fitting import Optimizer
         from hiphive.input_output.logging_tools import set_config
-    except ImportError:
-        raise ImportError("hiPhive python module was not found.")
+    except ImportError as exc:
+        raise ImportError("hiPhive python module was not found.") from exc
 
     set_config(level=30)
 

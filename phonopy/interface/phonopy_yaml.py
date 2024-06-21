@@ -201,11 +201,11 @@ class PhonopyYamlLoaderBase(ABC):
             else:
                 natom = None
             disp = self._yaml[f"{key_prefix}displacements"][0]
-            if type(disp) is dict:  # type1
+            if isinstance(disp, dict):  # type1
                 dataset = self._parse_force_sets_type1(
                     natom=natom, key_prefix=key_prefix
                 )
-            elif type(disp) is list:  # type2
+            elif isinstance(disp, list):  # type2
                 if "displacement" in disp[0]:
                     dataset = self._parse_force_sets_type2_v223(key_prefix=key_prefix)
         elif f"{key_prefix}dataset" in self._yaml:
@@ -425,7 +425,7 @@ class PhonopyYamlDumperBase(ABC):
             lines.append("  configuration:")
             for key in self._data.configuration:
                 val = self._data.configuration[key]
-                if type(val) is str:
+                if isinstance(val, str):
                     val = val.replace("\\", "\\\\")
                 lines.append('    %s: "%s"' % (key, val))
         lines.append("")
@@ -665,7 +665,7 @@ class PhonopyYamlDumperBase(ABC):
             lines.append(f"  {key}:")
             for i, dset in enumerate(dataset[key]):
                 lines.append(f"  - # {i + 1}")
-                for j, d in enumerate(dset):
+                for _, d in enumerate(dset):
                     lines.append("    - [ %21.16f, %21.16f, %21.16f ]" % tuple(d))
 
         if "supercell_energies" in dataset:
@@ -738,7 +738,7 @@ class PhonopyYamlDumperBase(ABC):
 
     def _init_dumper_settings(self, dumper_settings):
         self._dumper_settings = self._default_dumper_settings.copy()
-        if type(dumper_settings) is dict:
+        if isinstance(dumper_settings, dict):
             self._dumper_settings.update(dumper_settings)
 
 
@@ -903,7 +903,7 @@ def read_phonopy_yaml(
 ) -> PhonopyYamlData:
     """Read phonopy.yaml like file."""
     yaml_data = load_yaml(filename)
-    if type(yaml_data) is str:
+    if isinstance(yaml_data, str):
         if isinstance(filename, io.IOBase):
             msg = "Could not load stream properly."
         else:
@@ -924,7 +924,7 @@ def load_phonopy_yaml(
     """Return PhonopyYamlData instance loading yaml data.
 
     Parameters
-    -----------
+    ----------
     yaml_data : dict
 
     """

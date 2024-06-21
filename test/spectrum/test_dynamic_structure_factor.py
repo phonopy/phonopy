@@ -262,5 +262,5 @@ def _run(
             else:
                 raise SyntaxError
             dsf = phonon.dynamic_structure_factor
-            for i, S in enumerate(dsf):
+            for _, _ in enumerate(dsf):
                 pass

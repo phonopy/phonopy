@@ -35,6 +35,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import gzip
+import lzma
 import sys
 
 import numpy as np
@@ -154,13 +155,6 @@ class GruneisenBandStructure(GruneisenBase):
             with gzip.open(_filename, "wb") as w:
                 self._write_yaml(w, comment, is_binary=True)
         elif compression == "lzma":
-            try:
-                import lzma
-            except ImportError:
-                raise (
-                    "Reading a lzma compressed file is not supported "
-                    "by this python version."
-                )
             if filename is None:
                 _filename = "gruneisen.yaml.xz"
             with lzma.open(_filename, "w") as w:

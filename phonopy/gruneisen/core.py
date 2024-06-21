@@ -101,7 +101,7 @@ class GruneisenBase:
         edDe = []  # <e|dD|e>
         eigvals = []
         eigvecs = []
-        for i, q in enumerate(self._qpoints):
+        for _, q in enumerate(self._qpoints):
             if self._is_band_connection and isinstance(
                 self._dynmat, DynamicalMatrixNAC
             ):

@@ -170,6 +170,7 @@ class GroupVelocity:
             "GroupVelocity.get_q_length() is deprecated. "
             "Use q_length attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.q_length
 
@@ -179,6 +180,7 @@ class GroupVelocity:
             "GroupVelocity.set_q_length() is deprecated. "
             "Use q_length attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.q_length = q_length
 
@@ -193,6 +195,7 @@ class GroupVelocity:
             "GroupVelocity.get_group_velocity() is deprecated. "
             "Use group_velocities attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.group_velocities
 

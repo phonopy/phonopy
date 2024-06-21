@@ -320,7 +320,7 @@ def _get_atoms_from_poscar(lines, symbols):
 
 def _is_exist_symbols(symbols):
     for s in symbols:
-        if not (s in symbol_map):
+        if s not in symbol_map:
             return False
     return True
 
@@ -391,12 +391,12 @@ def get_vasp_structure_lines(
             "is_vasp5 parameter is deprecated. "
             "Use is_vasp4=True instead of is_vasp5=False",
             DeprecationWarning,
+            stacklevel=2,
         )
         _is_vasp4 = True
     if direct is False:
         warnings.warn(
-            "direct=False is not supported. ",
-            DeprecationWarning,
+            "direct=False is not supported. ", DeprecationWarning, stacklevel=2
         )
     lines, scaled_positions = _get_vasp_structure_header_lines(
         cell, is_vasp4=_is_vasp4, first_line_str=first_line_str
@@ -485,14 +485,14 @@ def get_born_vasprunxml(
         vasprun = VasprunxmlExpat(f)
         try:
             vasprun.parse()
-        except xml.parsers.expat.ExpatError:
+        except xml.parsers.expat.ExpatError as exc:
             raise xml.parsers.expat.ExpatError(
                 'Could not parse "%s". Please check the content.' % filename
-            )
-        except ValueError:
+            ) from exc
+        except ValueError as exc:
             raise ValueError(
                 'Could not parse "%s". Please check the content.' % filename
-            )
+            ) from exc
 
     return elaborate_borns_and_epsilon(
         vasprun.cell,
@@ -569,7 +569,7 @@ def _read_born_and_epsilon_from_OUTCAR(filename):
                 outcar.readline()
                 line = outcar.readline()
                 if "ion" in line:
-                    for i in range(num_atom):
+                    for _ in range(num_atom):
                         born = []
                         born.append([float(x) for x in outcar.readline().split()][1:])
                         born.append([float(x) for x in outcar.readline().split()][1:])
@@ -642,7 +642,7 @@ class Vasprun:
 
         """
         forces = []
-        for event, element in vasprun_etree:
+        for _, element in vasprun_etree:
             if element.attrib["name"] == "forces":
                 for v in element:
                     forces.append([float(x) for x in v.text.split()])
@@ -664,7 +664,7 @@ class Vasprun:
         fc_tmp = None
         hessian_units = ""
         num_atom = 0
-        for event, element in vasprun_etree:
+        for _, element in vasprun_etree:
             if num_atom == 0:
                 atomtypes = self._get_atomtypes(element)
                 if atomtypes:
@@ -895,6 +895,7 @@ class VasprunxmlExpat:
             "VasprunxmlExpat.get_forces()) is deprecated. "
             "Use VasprunxmlExpat.forces attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.forces
 
@@ -909,6 +910,7 @@ class VasprunxmlExpat:
             "VasprunxmlExpat.get_stress()) is deprecated. "
             "Use VasprunxmlExpat.stress attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.stress
 
@@ -923,6 +925,7 @@ class VasprunxmlExpat:
             "VasprunxmlExpat.get_epsilon()) is deprecated. "
             "Use VasprunxmlExpat.epsilon attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.epsilon
 
@@ -937,6 +940,7 @@ class VasprunxmlExpat:
             "VasprunxmlExpat.get_efermi()) is deprecated. "
             "Use VasprunxmlExpat.efermi attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self._efermi
 
@@ -960,6 +964,7 @@ class VasprunxmlExpat:
             "VasprunxmlExpat.get_points()) is deprecated. "
             "Use VasprunxmlExpat.points attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.points
 
@@ -978,6 +983,7 @@ class VasprunxmlExpat:
             "VasprunxmlExpat.get_lattice()) is deprecated. "
             "Use VasprunxmlExpat.lattice attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.lattice
 
@@ -997,6 +1003,7 @@ class VasprunxmlExpat:
             "VasprunxmlExpat.get_symbols()) is deprecated. "
             "Use VasprunxmlExpat.symbols attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self._symbols
 
@@ -1020,6 +1027,7 @@ class VasprunxmlExpat:
             "VasprunxmlExpat.get_energies()) is deprecated. "
             "Use VasprunxmlExpat.energies attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.energies
 
@@ -1054,6 +1062,7 @@ class VasprunxmlExpat:
             "VasprunxmlExpat.get_k_weights()) is deprecated. "
             "Use VasprunxmlExpat.k_weights attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.k_weights
 
@@ -1095,6 +1104,7 @@ class VasprunxmlExpat:
             "VasprunxmlExpat.get_eigenvalues()) is deprecated. "
             "Use VasprunxmlExpat.eigenvalues attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.eigenvalues
 
@@ -1109,6 +1119,7 @@ class VasprunxmlExpat:
             "VasprunxmlExpat.get_projectors()) is deprecated. "
             "Use VasprunxmlExpat.projectors attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.projectors
 
@@ -1129,6 +1140,7 @@ class VasprunxmlExpat:
             "VasprunxmlExpat.get_pseudopotentials()) is deprecated. "
             "Use VasprunxmlExpat.pseudopotentials attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.pseudopotentials
 
@@ -1731,7 +1743,7 @@ def get_force_constants_OUTCAR(filename):
     num_atom = int(((file.readline().split())[-1].strip())[:-1])
 
     fc_tmp = []
-    for i in range(num_atom * 3):
+    for _ in range(num_atom * 3):
         fc_tmp.append([float(x) for x in (file.readline().split())[1:]])
 
     fc_tmp = np.array(fc_tmp)

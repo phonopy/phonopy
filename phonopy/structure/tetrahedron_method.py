@@ -186,6 +186,7 @@ class TetrahedronMethod:
                 "Use TetrahedronMethod.tetrahedra attribute instead."
             ),
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.tetrahedra
 
@@ -308,7 +309,7 @@ class TetrahedronMethod:
             elif ci == 3:
                 return self._J_13()
             else:
-                assert False
+                raise RuntimeError("Unexpected condition encountered.")
         elif i == 2:
             if ci == 0:
                 return self._J_20()
@@ -319,7 +320,7 @@ class TetrahedronMethod:
             elif ci == 3:
                 return self._J_23()
             else:
-                assert False
+                raise RuntimeError("Unexpected condition encountered.")
         elif i == 3:
             if ci == 0:
                 return self._J_30()
@@ -330,11 +331,11 @@ class TetrahedronMethod:
             elif ci == 3:
                 return self._J_33()
             else:
-                assert False
+                raise RuntimeError("Unexpected condition encountered.")
         elif i == 4:
             return self._J_4()
         else:
-            assert False
+            raise RuntimeError("Unexpected condition encountered.")
 
     def _I(self, i, ci):
         if i == 0:
@@ -349,7 +350,7 @@ class TetrahedronMethod:
             elif ci == 3:
                 return self._I_13()
             else:
-                assert False
+                raise RuntimeError("Unexpected condition encountered.")
         elif i == 2:
             if ci == 0:
                 return self._I_20()
@@ -360,7 +361,7 @@ class TetrahedronMethod:
             elif ci == 3:
                 return self._I_23()
             else:
-                assert False
+                raise RuntimeError("Unexpected condition encountered.")
         elif i == 3:
             if ci == 0:
                 return self._I_30()
@@ -371,11 +372,11 @@ class TetrahedronMethod:
             elif ci == 3:
                 return self._I_33()
             else:
-                assert False
+                raise RuntimeError("Unexpected condition encountered.")
         elif i == 4:
             return self._I_4()
         else:
-            assert False
+            raise RuntimeError("Unexpected condition encountered.")
 
     def _n(self, i):
         if i == 0:
@@ -389,7 +390,7 @@ class TetrahedronMethod:
         elif i == 4:
             return self._n_4()
         else:
-            assert False
+            raise RuntimeError("Unexpected condition encountered.")
 
     def _g(self, i):
         if i == 0:
@@ -403,7 +404,7 @@ class TetrahedronMethod:
         elif i == 4:
             return self._g_4()
         else:
-            assert False
+            raise RuntimeError("Unexpected condition encountered.")
 
     def _n_0(self):
         """n0.
@@ -710,7 +711,7 @@ def _create_tetrahedra(shortest_main_diagonal):
         pairs = ((0, 1), (0, 2), (1, 5), (2, 6), (5, 7), (6, 7))
         six_tetras = np.sort([[3, 4] + list(x) for x in pairs])
     else:
-        assert False
+        RuntimeError("Unexpected condition encountered.")
 
     return six_tetras
 

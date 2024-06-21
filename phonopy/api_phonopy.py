@@ -57,14 +57,14 @@ from phonopy.harmonic.dynamical_matrix import (
     get_dynamical_matrix,
 )
 from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
-from phonopy.harmonic.force_constants import cutoff_force_constants
-from phonopy.harmonic.force_constants import get_fc2 as get_phonopy_fc2
 from phonopy.harmonic.force_constants import (
+    cutoff_force_constants,
     set_tensor_symmetry_PJ,
     show_drift_force_constants,
     symmetrize_compact_force_constants,
     symmetrize_force_constants,
 )
+from phonopy.harmonic.force_constants import get_fc2 as get_phonopy_fc2
 from phonopy.interface.calculator import get_default_physical_units
 from phonopy.interface.fc_calculator import get_fc2
 from phonopy.interface.phonopy_yaml import PhonopyYaml
@@ -211,6 +211,7 @@ class Phonopy:
                     "Use Phonopy.nac_params attribute instead."
                 ),
                 DeprecationWarning,
+                stacklevel=2,
             )
         self._nac_params = nac_params
         self._dynamical_matrix_decimals = dynamical_matrix_decimals
@@ -267,6 +268,7 @@ class Phonopy:
         warnings.warn(
             "Phonopy.get_version() is deprecated." "Use Phonopy.version attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.version
 
@@ -285,6 +287,7 @@ class Phonopy:
         warnings.warn(
             "Phonopy.get_primitive() is deprecated." "Use Phonopy.primitive attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.primitive
 
@@ -303,6 +306,7 @@ class Phonopy:
         warnings.warn(
             "Phonopy.get_unitcell() is deprecated." "Use Phonopy.unitcell attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.unitcell
 
@@ -312,6 +316,7 @@ class Phonopy:
             "Phonopy.set_unitcell() is deprecated."
             "No way to set unit cell will be provided.",
             DeprecationWarning,
+            stacklevel=2,
         )
         self._unitcell = unitcell
         self._build_supercell()
@@ -335,6 +340,7 @@ class Phonopy:
         warnings.warn(
             "Phonopy.get_supercell() is deprecated." "Use Phonopy.supercell attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.supercell
 
@@ -353,6 +359,7 @@ class Phonopy:
         warnings.warn(
             "Phonopy.get_symmetry() is deprecated." "Use Phonopy.symmetry attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.symmetry
 
@@ -372,6 +379,7 @@ class Phonopy:
             "Phonopy.get_primitive_symmetry() is deprecated."
             "Use Phonopy.primitive_symmetry attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.primitive_symmetry
 
@@ -392,6 +400,7 @@ class Phonopy:
             "Phonopy.get_supercell_matrix() is deprecated."
             "Use Phonopy.supercell_matrix attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.supercell_matrix
 
@@ -412,6 +421,7 @@ class Phonopy:
             "Phonopy.get_primitive_matrix() is deprecated."
             "Use Phonopy.primitive_matrix attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.primitive_matrix
 
@@ -436,6 +446,7 @@ class Phonopy:
             "Phonopy.get_unit_conversion_factor() is deprecated."
             "Use Phonopy.unit_conversion_factor attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.unit_conversion_factor
 
@@ -511,6 +522,7 @@ class Phonopy:
             "Phonopy.displacement_dataset attribute is deprecated."
             "Use Phonopy.dataset attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.dataset
 
@@ -520,6 +532,7 @@ class Phonopy:
             "Phonopy.get_displacement_dataset() is deprecated."
             "Use Phonopy.dataset attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.dataset
 
@@ -529,6 +542,7 @@ class Phonopy:
             "Phonopy.set_displacement_dataset() is deprecated."
             "Use Phonopy.dataset attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.dataset = displacement_dataset
 
@@ -591,6 +605,7 @@ class Phonopy:
             "Phonopy.get_displacements() is deprecated."
             "Use Phonopy.displacements attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.displacements
 
@@ -641,6 +656,7 @@ class Phonopy:
             "Phonopy.get_force_constants() is deprecated."
             "Use Phonopy.force_constants attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.force_constants
 
@@ -650,6 +666,7 @@ class Phonopy:
             "Phonopy.set_force_constants() is deprecated."
             "Use Phonopy.force_constants attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.force_constants = force_constants
         if show_drift and self._log_level:
@@ -711,6 +728,7 @@ class Phonopy:
         warnings.warn(
             "Phonopy.set_forces() is deprecated." "Use Phonopy.forces attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.forces = sets_of_forces
 
@@ -730,6 +748,7 @@ class Phonopy:
             "Phonopy.get_dynamical_matrix() is deprecated."
             "Use Phonopy.dynamical_matrix attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.dynamical_matrix
 
@@ -763,6 +782,7 @@ class Phonopy:
             "Phonopy.get_nac_params() is deprecated."
             "Use Phonopy.nac_params attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.nac_params
 
@@ -772,6 +792,7 @@ class Phonopy:
             "Phonopy.set_nac_params() is deprecated."
             "Use Phonopy.nac_params attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.nac_params = nac_params
 
@@ -797,6 +818,7 @@ class Phonopy:
             "Phonopy.get_supercells_with_displacements() is deprecated."
             "Use Phonopy.supercells_with_displacements attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.supercells_with_displacements
 
@@ -874,6 +896,7 @@ class Phonopy:
         warnings.warn(
             "Phonopy.partial_dos is deprecated." "Use Phonopy.projected_dos.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.projected_dos
 
@@ -1347,6 +1370,7 @@ class Phonopy:
             "Phonopy.set_band_structure() is deprecated. "
             "Use Phonopy.run_band_structure().",
             DeprecationWarning,
+            stacklevel=2,
         )
 
         if self._group_velocity is None:
@@ -1449,6 +1473,7 @@ class Phonopy:
             "Phonopy.get_band_structure() is deprecated. "
             "Use Phonopy.get_band_structure_dict().",
             DeprecationWarning,
+            stacklevel=2,
         )
 
         if self._band_structure is None:
@@ -1758,6 +1783,7 @@ class Phonopy:
         warnings.warn(
             "Phonopy.set_mesh is deprecated. " "Use Phonopy.run_mesh.",
             DeprecationWarning,
+            stacklevel=2,
         )
 
         if self._group_velocity is None:
@@ -1841,6 +1867,7 @@ class Phonopy:
         warnings.warn(
             "Phonopy.get_mesh() is deprecated. " "Use Phonopy.get_mesh_dict().",
             DeprecationWarning,
+            stacklevel=2,
         )
 
         if self._mesh is None:
@@ -1862,6 +1889,7 @@ class Phonopy:
             "Phonopy.get_mesh_grid_info() is deprecated. "
             "Use attributes of phonon.mesh instance.",
             DeprecationWarning,
+            stacklevel=2,
         )
         if self._mesh is None:
             msg = "run_mesh has to be done."
@@ -1901,6 +1929,7 @@ class Phonopy:
             "Phonopy.set_iter_mesh() is deprecated. "
             "Use Phonopy.run_mesh() with use_iter_mesh=True.",
             DeprecationWarning,
+            stacklevel=2,
         )
 
         self.run_mesh(
@@ -2047,6 +2076,7 @@ class Phonopy:
         warnings.warn(
             "Phonopy.set_qpoints_phonon() is deprecated. " "Use Phonopy.run_qpoints().",
             DeprecationWarning,
+            stacklevel=2,
         )
         if self._group_velocity is None:
             with_group_velocities = False
@@ -2103,6 +2133,7 @@ class Phonopy:
             "Phonopy.get_qpoints_phonon() is deprecated. "
             "Use Phonopy.run_get_qpoints_dict().",
             DeprecationWarning,
+            stacklevel=2,
         )
         qpt = self.get_qpoints_dict()
         return (qpt["frequencies"], qpt["eigenvectors"])
@@ -2162,6 +2193,7 @@ class Phonopy:
         warnings.warn(
             "Phonopy.set_total_DOS() is deprecated. " "Use Phonopy.run_total_DOS()",
             DeprecationWarning,
+            stacklevel=2,
         )
 
         self.run_total_dos(
@@ -2238,6 +2270,7 @@ class Phonopy:
             "Phonopy.get_total_DOS() is deprecated. "
             "Use Phonopy.get_total_dos_dict().",
             DeprecationWarning,
+            stacklevel=2,
         )
 
         dos = self.get_total_dos_dict()
@@ -2260,6 +2293,7 @@ class Phonopy:
             "Phonopy.plot_total_DOS() is deprecated. "
             "Use Phonopy.plot_total_dos() (lowercase on DOS).",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.plot_total_dos()
 
@@ -2299,6 +2333,7 @@ class Phonopy:
             "Phonopy.write_total_DOS() is deprecated. "
             "Use Phonopy.write_total_dos() (lowercase on DOS).",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.write_total_dos(filename=filename)
 
@@ -2382,6 +2417,7 @@ class Phonopy:
             "Phonopy.set_partial_DOS() is deprecated. "
             "Use Phonopy.run_projected_dos()",
             DeprecationWarning,
+            stacklevel=2,
         )
 
         self.run_projected_dos(
@@ -2496,6 +2532,7 @@ class Phonopy:
             "Phonopy.get_partial_DOS() is deprecated. "
             "Use Phonopy.get_projected_dos_dict().",
             DeprecationWarning,
+            stacklevel=2,
         )
 
         pdos = self.get_projected_dos_dict()
@@ -2508,6 +2545,7 @@ class Phonopy:
             "Phonopy.plot_partial_DOS() is deprecated. "
             "Use Phonopy.plot_projected_dos() (lowercase on DOS).",
             DeprecationWarning,
+            stacklevel=2,
         )
 
         return self.plot_projected_dos(pdos_indices=pdos_indices, legend=legend)
@@ -2582,6 +2620,7 @@ class Phonopy:
             "Phonopy.write_partial_DOS() is deprecated. "
             "Use Phonopy.write_projected_dos() (lowercase on DOS).",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.write_projected_dos(filename=filename)
 
@@ -2667,6 +2706,7 @@ class Phonopy:
             "Phonopy.set_thermal_properties() is deprecated. "
             "Use Phonopy.run_thermal_properties()",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.run_thermal_properties(
             t_step=t_step,
@@ -2713,6 +2753,7 @@ class Phonopy:
             "Phonopy.get_thermal_properties() is deprecated. "
             "Use Phonopy.get_thermal_properties_dict().",
             DeprecationWarning,
+            stacklevel=2,
         )
 
         tp = self.get_thermal_properties_dict()
@@ -2860,6 +2901,7 @@ class Phonopy:
             "Phonopy.set_thermal_displacements() is deprecated. "
             "Use Phonopy.run_thermal_displacements()",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.run_thermal_displacements(
             t_min=t_min,
@@ -2889,6 +2931,7 @@ class Phonopy:
             "Phonopy.get_thermal_displacements() is deprecated. "
             "Use Phonopy.get_thermal_displacements_dict()",
             DeprecationWarning,
+            stacklevel=2,
         )
         td = self.get_thermal_displacements_dict()
         return (td["temperatures"], td["thermal_displacements"])
@@ -2978,6 +3021,7 @@ class Phonopy:
             "Phonopy.set_thermal_displacement_matrices() is "
             "deprecated. Use Phonopy.run_thermal_displacements()",
             DeprecationWarning,
+            stacklevel=2,
         )
         if t_cif is None:
             temperatures = None
@@ -3014,6 +3058,7 @@ class Phonopy:
             "deprecated. Use "
             "Phonopy.get_thermal_displacement_matrices_dict()",
             DeprecationWarning,
+            stacklevel=2,
         )
         tdm = self.get_thermal_displacement_matrices_dict()
         return (tdm["temperatures"], tdm["thermal_displacement_matrices"])
@@ -3080,6 +3125,7 @@ class Phonopy:
         warnings.warn(
             "Phonopy.set_modulation() is deprecated. " "Use Phonopy.run_modulation().",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.run_modulations(
             dimension,
@@ -3214,6 +3260,7 @@ class Phonopy:
         warnings.warn(
             "Phonopy.get_irreps() is deprecated. " "Use Phonopy.irreps attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self._irreps
 
@@ -3233,6 +3280,7 @@ class Phonopy:
             "No need to call this. gv_delta_q "
             "(q_length) is set at Phonopy.__init__().",
             DeprecationWarning,
+            stacklevel=2,
         )
         self._gv_delta_q = q_length
         self._set_group_velocity()
@@ -3245,6 +3293,7 @@ class Phonopy:
             "Phonopy.get_[mode]_dict()[group_velocities], where "
             "[mode] is band_structure, mesh, or qpoints.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self._group_velocity.get_group_velocity()
 
@@ -3261,6 +3310,7 @@ class Phonopy:
             "Phonopy.get_group_velocities_on_bands is deprecated. "
             "Use Phonopy.get_band_structure_dict()['group_velocities'].",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self._band_structure.group_velocities
 
@@ -3296,6 +3346,7 @@ class Phonopy:
         warnings.warn(
             "Phonopy.set_moment() is deprecated. " "Use Phonopy.run_moment().",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.run_moment(
             order=order,
@@ -3422,6 +3473,7 @@ class Phonopy:
             "Phonopy.set_dynamic_structure_factor() is deprecated. "
             "Use Phonopy.run_dynamic_structure_factor()",
             DeprecationWarning,
+            stacklevel=2,
         )
         if run_immediately:
             self.run_dynamic_structure_factor(
@@ -3861,12 +3913,12 @@ class Phonopy:
                 self._symprec,
                 store_dense_svecs=self._store_dense_svecs,
             )
-        except ValueError:
+        except ValueError as exc:
             msg = (
                 "Creating primitive cell is failed. "
                 "PRIMITIVE_AXIS may be incorrectly specified."
             )
-            raise RuntimeError(msg)
+            raise RuntimeError(msg) from exc
 
     def _set_primitive_matrix(
         self, primitive_matrix
