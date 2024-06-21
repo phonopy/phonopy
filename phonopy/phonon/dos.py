@@ -34,7 +34,6 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import sys
 import warnings
 
 import numpy as np
@@ -206,9 +205,8 @@ class TotalDos(Dos):
         """Calculate a kind of Debye frequency."""
         try:
             from scipy.optimize import curve_fit
-        except ImportError:
-            print("You need to install python-scipy.")
-            sys.exit(1)
+        except ImportError as exc:
+            raise ModuleNotFoundError("You need to install python-scipy.") from exc
 
         def Debye_dos(freq, a):
             return a * freq**2
@@ -698,11 +696,8 @@ def run_tetrahedron_method_dos(
     """Return (P)DOS calculated by tetrahedron method in C."""
     try:
         import phonopy._phonopy as phonoc
-    except ImportError:
-        import sys
-
-        print("Phonopy C-extension has to be built properly.")
-        sys.exit(1)
+    except ImportError as exc:
+        raise RuntimeError("Phonopy C-extension has to be built properly.") from exc
 
     if coef is None:
         _coef = np.ones((frequencies.shape[0], 1, frequencies.shape[1]), dtype="double")
