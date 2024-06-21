@@ -877,7 +877,7 @@ def get_band_qpoints_by_seekpath(primitive, npoints, is_const_interval=False):
     try:
         import seekpath
     except ImportError as exc:
-        raise ImportError("You need to install seekpath.") from exc
+        raise ModuleNotFoundError("You need to install seekpath.") from exc
 
     band_path = seekpath.get_path(primitive.totuple())
     point_coords = band_path["point_coords"]

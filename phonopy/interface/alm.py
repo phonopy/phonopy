@@ -153,7 +153,7 @@ def run_alm(
     try:
         from alm import ALM, optimizer_control_data_types
     except ImportError as exc:
-        raise ImportError("ALM python module was not found.") from exc
+        raise ModuleNotFoundError("ALM python module was not found.") from exc
 
     with ALM(lattice, positions, numbers) as alm:
         if log_level > 0:
@@ -232,7 +232,7 @@ def _update_options(fc_calculator_options):
     try:
         from alm import optimizer_control_data_types
     except ImportError as exc:
-        raise ImportError("ALM python module was not found.") from exc
+        raise ModuleNotFoundError("ALM python module was not found.") from exc
 
     # Default settings.
     alm_options = {
