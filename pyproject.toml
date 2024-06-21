@@ -26,5 +26,5 @@ exclude = [
   "phonopy/interface/cp2k.py",
 ]
 
-
 [tool.ruff.lint.pydocstyle]
+convention = "numpy"
