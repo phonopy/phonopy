@@ -57,14 +57,14 @@ from phonopy.harmonic.dynamical_matrix import (
     get_dynamical_matrix,
 )
 from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
-from phonopy.harmonic.force_constants import cutoff_force_constants
-from phonopy.harmonic.force_constants import get_fc2 as get_phonopy_fc2
 from phonopy.harmonic.force_constants import (
+    cutoff_force_constants,
     set_tensor_symmetry_PJ,
     show_drift_force_constants,
     symmetrize_compact_force_constants,
     symmetrize_force_constants,
 )
+from phonopy.harmonic.force_constants import get_fc2 as get_phonopy_fc2
 from phonopy.interface.calculator import get_default_physical_units
 from phonopy.interface.fc_calculator import get_fc2
 from phonopy.interface.phonopy_yaml import PhonopyYaml

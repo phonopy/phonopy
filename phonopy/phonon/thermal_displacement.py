@@ -139,7 +139,7 @@ class ThermalMotion:
         """
         condition = t > 1.0
         # Avoid using isinstance with bool to distinguish from int.
-        if type(condition) is bool or type(condition) is np.bool_:
+        if isinstance(condition, (bool, np.bool_)):
             if condition:
                 return 1.0 / (np.exp(freq * THzToEv / (Kb * t)) - 1)
             else:

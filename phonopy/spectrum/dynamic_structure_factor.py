@@ -68,7 +68,8 @@ class DynamicStructureFactor:
     a1, b1, a2, b2, a3, b3, a4, b4, a5, b5, c
     s is defined by |Q|/2 in angstron^-1 where Q without 2pi.
 
-    Examples:
+    Examples
+    --------
      {'Na': [3.148690, 2.594987, 4.073989, 6.046925,
              0.767888, 0.070139, 0.995612, 14.1226457,
              0.968249, 0.217037, 0.045300],  # 1+

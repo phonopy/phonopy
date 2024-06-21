@@ -320,7 +320,7 @@ def _get_atoms_from_poscar(lines, symbols):
 
 def _is_exist_symbols(symbols):
     for s in symbols:
-        if not (s in symbol_map):
+        if s not in symbol_map:
             return False
     return True
 

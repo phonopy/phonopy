@@ -1216,9 +1216,7 @@ def run_calculation(phonon: Phonopy, settings, plot_conf, log_level):
         #
         elif settings.pdos_indices is not None and run_mode in ("mesh", "band_mesh"):
             p_direction = settings.projection_direction
-            if (
-                log_level and p_direction is not None and not settings.xyz_projection
-            ):  # noqa E129
+            if log_level and p_direction is not None and not settings.xyz_projection:
                 c_direction = np.dot(p_direction, phonon.primitive.cell)
                 c_direction /= np.linalg.norm(c_direction)
                 print(
@@ -1585,7 +1583,7 @@ def read_phonopy_settings(args, argparse_control, log_level):
 
 def is_band_auto(settings):
     """Check whether automatic band paths setting or not."""
-    return type(settings.band_paths) is str and settings.band_paths == "auto"
+    return isinstance(settings.band_paths, str) and settings.band_paths == "auto"
 
 
 def is_pdos_auto(settings):
@@ -1619,7 +1617,7 @@ def get_pdos_indices_and_legend(settings, phonon: Phonopy):
 
 def auto_primitive_axes(primitive_matrix):
     """Check whether automatic primitive matrix setting or not."""
-    return type(primitive_matrix) is str and primitive_matrix == "auto"
+    return isinstance(primitive_matrix, str) and primitive_matrix == "auto"
 
 
 def get_fc_calculator_params(settings):

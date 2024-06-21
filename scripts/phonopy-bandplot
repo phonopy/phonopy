@@ -33,6 +33,7 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+from __future__ import annotations
 
 import os
 import sys
@@ -129,14 +130,17 @@ def _plot_dos(d, f, dmax):
     return np.transpose(pdos)
 
 
-def _cut_dos(p1, p2, dmax):
-    """Cut DOS at dmax
+def _cut_dos(p1: list[float, float], p2: list[float, float], dmax: float):
+    """Cut DOS at dmax.
 
     ** Cutting by fmin and fmax should be implemented someday. **
 
-    Args:
-        p1: (f1, d1)
-        p2: (f2, d2)
+    Parameters
+    ----------
+    p1 : list[float, float]
+        (f1, d1)
+    p2 : list[float, float]
+        (f2, d2)
 
     When d1 < dmax and d2 < dmax
         p1: (f1, d1)
@@ -280,7 +284,7 @@ def _read_dos_dat(filename, pdos_indices=None, dos_factor=None):
 
 
 def get_options():
-    # Parse options
+    """Parse options."""
     import argparse
 
     parser = argparse.ArgumentParser(description="Phonopy bandplot command-line-tool")
@@ -492,7 +496,7 @@ def _old_plot(args):
 
         if not labels:
             labels_at_ends = None
-        elif type(labels[0]) is list:
+        elif isinstance(labels[0], list):
             labels_at_ends = [
                 labels[0][0],
             ]
@@ -760,6 +764,7 @@ def _write_gnuplot_data(args):
 
 
 def main(args):
+    """Run phonopy-bandplot."""
     if args.is_gnuplot:
         _write_gnuplot_data(args)
         sys.exit(1)

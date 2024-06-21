@@ -514,7 +514,7 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
         except KeyError:
             raise
 
-        if type(displacements[0]) is dict:
+        if isinstance(displacements[0], dict):
             for first_atoms in displacements:
                 first_atoms["atom"] -= 1
                 atom1 = first_atoms["atom"]

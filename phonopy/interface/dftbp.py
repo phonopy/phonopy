@@ -158,7 +158,7 @@ def get_reduced_symbols(symbols):
     reduced_symbols = []
 
     for ss in symbols:
-        if not (ss in reduced_symbols):
+        if ss not in reduced_symbols:
             reduced_symbols.append(ss)
 
     return reduced_symbols

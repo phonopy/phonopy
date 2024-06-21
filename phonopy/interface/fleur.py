@@ -89,7 +89,7 @@ def read_fleur(filename):
     for i, n in enumerate(numbers):
         if n == 0:
             for j in range(1, 119):
-                if not (j in numbers):
+                if j not in numbers:
                     numbers[i] = j
                     break
     pos_all = []

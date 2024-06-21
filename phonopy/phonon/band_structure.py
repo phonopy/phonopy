@@ -978,16 +978,16 @@ def _get_labels(pairs_of_symbols):
     path_connections.append(False)
     labels += list(pairs_of_symbols[-1])
 
-    for i, l in enumerate(labels):
-        if "GAMMA" in l:
-            labels[i] = "$" + l.replace("GAMMA", r"\Gamma") + "$"
-        elif "SIGMA" in l:
-            labels[i] = "$" + l.replace("SIGMA", r"\Sigma") + "$"
-        elif "DELTA" in l:
-            labels[i] = "$" + l.replace("DELTA", r"\Delta") + "$"
-        elif "LAMBDA" in l:
-            labels[i] = "$" + l.replace("LAMBDA", r"\Lambda") + "$"
+    for i, ll in enumerate(labels):
+        if "GAMMA" in ll:
+            labels[i] = "$" + ll.replace("GAMMA", r"\Gamma") + "$"
+        elif "SIGMA" in ll:
+            labels[i] = "$" + ll.replace("SIGMA", r"\Sigma") + "$"
+        elif "DELTA" in ll:
+            labels[i] = "$" + ll.replace("DELTA", r"\Delta") + "$"
+        elif "LAMBDA" in ll:
+            labels[i] = "$" + ll.replace("LAMBDA", r"\Lambda") + "$"
         else:
-            labels[i] = r"$\mathrm{%s}$" % l
+            labels[i] = r"$\mathrm{%s}$" % ll
 
     return labels, path_connections

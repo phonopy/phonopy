@@ -38,7 +38,7 @@ import sys
 
 
 def get_options():
-    # Parse options
+    """Parse options."""
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -52,6 +52,7 @@ def get_options():
 
 
 def read_crystal_epsilon(epscol, epslines):
+    """Read epsilon in CRYSTAL14 format."""
     # XX, XY, XZ, YY, YZ, ZZ are given (6 rows). YX = XY, ZX = XZ, ZY = YZ
     # Format for CRYSTAL17 (epscol == 4):
     # 0.000   XX      57.1760       0.0000       3.2117       0.0000       2.2117
@@ -71,6 +72,7 @@ def read_crystal_epsilon(epscol, epslines):
 
 
 def main(args):
+    """Run phonopy-crystal-born."""
     if args.filename:
         crystal_filename = args.filename[0]
     else:

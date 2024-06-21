@@ -72,8 +72,8 @@ def get_cell_settings(
     """Return crystal structures."""
     optional_structure_info = None
     if primitive_matrix is None or (
-        type(primitive_matrix) is str and primitive_matrix == "auto"
-    ):  # noqa E129
+        isinstance(primitive_matrix, str) and primitive_matrix == "auto"
+    ):
         pmat = "auto"
     else:
         pmat = primitive_matrix

@@ -855,7 +855,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         phase_all = np.exp(2j * np.pi * np.dot(self._svecs, q_red))
         C_real = np.zeros((num_atom, 3, num_atom, 3), dtype=self._dtype_complex)
         vals = (
-            -self._Lambda**3
+            -(self._Lambda**3)
             * self._H
             * phase_all
             * np.linalg.det(self._dielectric) ** (-0.5)
@@ -870,7 +870,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
 
     def _run_real_dipole_dipole_q0(self):
         self._dd_real_q0 = np.zeros((len(self._pcell), 3, 3), dtype=self._dtype_complex)
-        vals = -self._Lambda**3 * self._H * np.linalg.det(self._dielectric) ** (-0.5)
+        vals = -(self._Lambda**3) * self._H * np.linalg.det(self._dielectric) ** (-0.5)
         for i_s in range(self._multi.shape[0]):
             for i_p in range(self._multi.shape[1]):
                 m = self._multi[i_s, i_p]

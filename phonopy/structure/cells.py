@@ -1054,7 +1054,7 @@ def get_reduced_bases(lattice, method="niggli", tolerance=1e-5):
         Tolerance to find shortest basis vecotrs
 
     Returns
-    --------
+    -------
     Reduced basis as row vectors, [a_red, b_red, c_red]^T
         dtype='double'
         shape=(3, 3)
@@ -1392,7 +1392,10 @@ def compute_all_sg_permutations(
 
 
 def compute_permutation_for_rotation(
-    positions_a, positions_b, lattice, symprec  # scaled positions  # column vectors
+    positions_a: np.ndarray,
+    positions_b: np.ndarray,
+    lattice: np.ndarray,
+    symprec: float,
 ):
     """Get the overall permutation such that.
 
@@ -1459,7 +1462,10 @@ def compute_permutation_for_rotation(
 
 
 def _compute_permutation_c(
-    positions_a, positions_b, lattice, symprec  # scaled positions  # column vectors
+    positions_a,
+    positions_b,
+    lattice,
+    symprec,  # scaled positions  # column vectors
 ):
     """Return mapping defined by positions_a[perm[i]] == positions_b[i].
 
