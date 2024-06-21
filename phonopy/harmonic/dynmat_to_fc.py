@@ -156,7 +156,9 @@ def ph2fc(ph_orig: "Phonopy", supercell_matrix, with_nac=True):
 
     """
     warnings.warn(
-        "ph2fc function is deprecated. Use Phonopy.ph2ph instead.", DeprecationWarning
+        "ph2fc function is deprecated. Use Phonopy.ph2ph instead.",
+        DeprecationWarning,
+        stacklevel=2,
     )
     return ph2ph(ph_orig, supercell_matrix, with_nac=with_nac).force_constants
 
@@ -301,6 +303,7 @@ class DynmatToForceConstants:
                 " and commensurate_points are deprecated. Use "
                 "respecitve attributes.",
                 DeprecationWarning,
+                stacklevel=2,
             )
 
         if eigenvalues is not None or eigenvectors is not None:
@@ -309,6 +312,7 @@ class DynmatToForceConstants:
                 "eigenvectors are deprecated. Use "
                 "create_dynamical_matrices method.",
                 DeprecationWarning,
+                stacklevel=2,
             )
 
         if eigenvalues is not None and eigenvectors is not None:
@@ -330,7 +334,9 @@ class DynmatToForceConstants:
 
     def get_force_constants(self):
         """Return force constants."""
-        warnings.warn("Use attribute, force_constants.", DeprecationWarning)
+        warnings.warn(
+            "Use attribute, force_constants.", DeprecationWarning, stacklevel=2
+        )
         return self.force_constants
 
     @property
@@ -355,7 +361,9 @@ class DynmatToForceConstants:
 
     def get_commensurate_points(self):
         """Commensurate points in supercell with respect to primitive cell."""
-        warnings.warn("Use attribute, commensurate_points.", DeprecationWarning)
+        warnings.warn(
+            "Use attribute, commensurate_points.", DeprecationWarning, stacklevel=2
+        )
         return self.commensurate_points
 
     @property
@@ -378,12 +386,16 @@ class DynmatToForceConstants:
 
     def get_dynamical_matrices(self):
         """Return numerical matrices of dynamical matrices."""
-        warnings.warn("Use attribute, dynamical_matrix.", DeprecationWarning)
+        warnings.warn(
+            "Use attribute, dynamical_matrix.", DeprecationWarning, stacklevel=2
+        )
         return self.dynamical_matrices
 
     def set_dynamical_matrices(self, dynmat):
         """Set numerical matrices of dynamical matrices."""
-        warnings.warn("Use attribute, dynamical_matrix.", DeprecationWarning)
+        warnings.warn(
+            "Use attribute, dynamical_matrix.", DeprecationWarning, stacklevel=2
+        )
         self.dynamical_matrices = dynmat
 
     def create_dynamical_matrices(self, eigenvalues, eigenvectors):

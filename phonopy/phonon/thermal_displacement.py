@@ -89,6 +89,7 @@ class ThermalMotion:
             "ThermalMotion.get_temperatures() is deprecated. "
             "Use temperatures attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.temperatures
 
@@ -98,6 +99,7 @@ class ThermalMotion:
             "ThermalMotion.set_temperatures() is deprecated. "
             "Use temperatures attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.temperatures = temperatures
 
@@ -207,6 +209,7 @@ class ThermalDisplacements(ThermalMotion):
             "ThermalDisplacements.get_thermal_displacements() is deprecated. "
             "Use thermal_displacements and temperatures attributes instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return (self._temperatures, self._displacements)
 
@@ -219,7 +222,7 @@ class ThermalDisplacements(ThermalMotion):
         temps = self._temperatures
         disps = np.zeros((len(temps), len(masses)), dtype=float)
 
-        for count, (fs, vecs) in enumerate(self._iter_mesh):
+        for count, (fs, vecs) in enumerate(self._iter_mesh):  # noqa B007
             if self._projection_direction is not None:
                 p_vecs = np.dot(
                     vecs.T.reshape(-1, 3), self._projection_direction
@@ -345,6 +348,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
             "deprecated. Use thermal_displacement_matrices and temperatures "
             "attributes instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return (self._temperatures, self._disp_matrices)
 
@@ -377,7 +381,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
         disps = np.zeros(
             (len(self._temperatures), len(self._masses), 3, 3), dtype=dtype_complex
         )
-        for count, (freqs, eigvecs) in enumerate(self._iter_mesh):
+        for count, (freqs, eigvecs) in enumerate(self._iter_mesh):  # noqa B007
             valid_indices = freqs > self._fmin
             if self._fmax is not None:
                 valid_indices *= freqs < self._fmax

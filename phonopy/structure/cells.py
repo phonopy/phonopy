@@ -124,6 +124,7 @@ class Supercell(PhonopyAtoms):
             "Supercell.get_supercell_matrix() is deprecated."
             "Use Supercell.supercell_matrix attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.supercell_matrix
 
@@ -148,6 +149,7 @@ class Supercell(PhonopyAtoms):
             "Supercell.get_supercell_to_unitcell_map() is deprecated."
             "Use Supercell.s2u_map attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.s2u_map
 
@@ -172,6 +174,7 @@ class Supercell(PhonopyAtoms):
             "Supercell.get_unitcell_to_supercell_map() is deprecated."
             "Use Supercell.u2s_map attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.u2s_map
 
@@ -194,6 +197,7 @@ class Supercell(PhonopyAtoms):
             "Supercell.get_unitcell_to_unitcell_map() is deprecated."
             "Use Supercell.u2s_map attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.u2u_map
 
@@ -409,6 +413,7 @@ class Primitive(PhonopyAtoms):
             "Primitive.get_primitive_matrix() is deprecated."
             "Use Primitive.primitive_matrix attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.primitive_matrix
 
@@ -432,6 +437,7 @@ class Primitive(PhonopyAtoms):
             "Primitive.get_primitive_to_supercell_map() is deprecated."
             "Use Primitive.p2s_map attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.p2s_map
 
@@ -455,6 +461,7 @@ class Primitive(PhonopyAtoms):
             "Primitive.get_supercell_to_primitive_map() is deprecated."
             "Use Primitive.s2p_map attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.s2p_map
 
@@ -478,6 +485,7 @@ class Primitive(PhonopyAtoms):
             "Primitive.get_primitive_to_primitive_map() is deprecated."
             "Use Primitive.p2p_map attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.p2p_map
 
@@ -535,6 +543,7 @@ class Primitive(PhonopyAtoms):
             "Primitive.get_atomic_permutations() is deprecated."
             "Use Primitive.atomic_permutations attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.atomic_permutations
 
@@ -1505,7 +1514,7 @@ def _compute_permutation_c(
                 "It is recommended to symmetrize crystal structure well "
                 "and then re-start phonon calculation from scratch."
             )
-            warnings.warn(msg)
+            warnings.warn(msg, stacklevel=2)
 
         if not is_found:
             permutation_error()

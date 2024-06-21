@@ -88,8 +88,8 @@ def run_symfc(
     try:
         from symfc import Symfc
         from symfc.utils.utils import SymfcAtoms
-    except ImportError:
-        raise ImportError("Symfc python module was not found.")
+    except ImportError as exc:
+        raise ImportError("Symfc python module was not found.") from exc
 
     if orders is None:
         _orders = [2]

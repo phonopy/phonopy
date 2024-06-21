@@ -37,6 +37,7 @@
 from __future__ import annotations
 
 import gzip
+import lzma
 import sys
 import warnings
 from typing import Optional, Union
@@ -329,6 +330,7 @@ class BandStructure:
             "BandStructure.get_distances() is deprecated."
             "Use BandStructure.distances attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.distances
 
@@ -343,6 +345,7 @@ class BandStructure:
             "BandStructure.get_qpoints() is deprecated."
             "Use BandStructure.qpoints attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.qpoints
 
@@ -357,6 +360,7 @@ class BandStructure:
             "BandStructure.get_eigenvectors() is deprecated."
             "Use BandStructure.eigenvectors attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.eigenvectors
 
@@ -371,6 +375,7 @@ class BandStructure:
             "BandStructure.get_frequencies() is deprecated."
             "Use BandStructure.frequencies attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.frequencies
 
@@ -385,13 +390,16 @@ class BandStructure:
             "BandStructure.get_group_velocities() is deprecated."
             "Use BandStructure.group_velocities attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.group_velocities
 
     def get_eigenvalues(self):
         """Return phonon eigenvalues of band segments."""
         warnings.warn(
-            "Bandstructure.get_engenvalues is deprecated.", DeprecationWarning
+            "Bandstructure.get_engenvalues is deprecated.",
+            DeprecationWarning,
+            stacklevel=2,
         )
         return self._eigenvalues
 
@@ -400,6 +408,7 @@ class BandStructure:
         warnings.warn(
             "Bandstructure.get_unit_conversion_factor is deprecated.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self._factor
 
@@ -540,13 +549,6 @@ class BandStructure:
             with gzip.open(_filename, "wb") as w:
                 self._write_yaml(w, comment, is_binary=True)
         elif compression == "lzma":
-            try:
-                import lzma
-            except ImportError:
-                raise (
-                    "Reading a lzma compressed file is not supported "
-                    "by this python version."
-                )
             if filename is None:
                 _filename = "band.yaml.xz"
             with lzma.open(_filename, "w") as w:
@@ -874,8 +876,8 @@ def get_band_qpoints_by_seekpath(primitive, npoints, is_const_interval=False):
     """
     try:
         import seekpath
-    except ImportError:
-        raise ImportError("You need to install seekpath.")
+    except ImportError as exc:
+        raise ImportError("You need to install seekpath.") from exc
 
     band_path = seekpath.get_path(primitive.totuple())
     point_coords = band_path["point_coords"]

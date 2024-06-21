@@ -246,7 +246,7 @@ def symmetrize_force_constants(force_constants, level=1):
 
         phonoc.perm_trans_symmetrize_fc(force_constants, level)
     except ImportError:
-        for i in range(level):
+        for _ in range(level):
             set_translational_invariance(force_constants)
             set_permutation_symmetry(force_constants)
         set_translational_invariance(force_constants)
@@ -280,12 +280,12 @@ def symmetrize_compact_force_constants(force_constants, primitive: Primitive, le
         phonoc.perm_trans_symmetrize_compact_fc(
             force_constants, permutations, s2pp_map, p2s_map, nsym_list, level
         )
-    except ImportError:
+    except ImportError as exc:
         text = (
             "Import error at phonoc.perm_trans_symmetrize_compact_fc. "
             "Corresponding pytono code is not implemented."
         )
-        raise RuntimeError(text)
+        raise RuntimeError(text) from exc
 
 
 def distribute_force_constants(
@@ -570,12 +570,12 @@ def show_drift_force_constants(
             )
             maxval2, jk2 = _get_drift_per_index(force_constants)
 
-        except ImportError:
+        except ImportError as exc:
             text = (
                 "Import error at phonoc.tranpose_compact_fc. "
                 "Corresponding python code is not implemented."
             )
-            raise RuntimeError(text)
+            raise RuntimeError(text) from exc
 
     if values_only:
         text = ""

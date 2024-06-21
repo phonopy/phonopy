@@ -126,6 +126,7 @@ class DerivativeOfDynamicalMatrix:
             "DerivativeOfDynamicalMatrix.get_derivative_of_dynamical_matrix() is "
             "deprecated. Use d_dynamical_matrix attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.d_dynamical_matrix
 

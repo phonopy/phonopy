@@ -193,7 +193,7 @@ class ElectronFreeEnergy:
         emax = np.max(self._eigenvalues)
         mu = (emin + emax) / 2
 
-        for i in range(1000):
+        for _ in range(1000):
             n = self._number_of_electrons(mu)
             if abs(n - self._n_electrons) < 1e-10:
                 break

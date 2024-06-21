@@ -337,6 +337,7 @@ class ConfParser:
         warnings.warn(
             "ConfParser.get_configures() is deprecated." "Use confs attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.confs
 
@@ -350,6 +351,7 @@ class ConfParser:
         warnings.warn(
             "ConfParser.get_settings() is deprecated." "Use settings attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.settings
 

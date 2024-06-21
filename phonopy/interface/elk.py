@@ -195,11 +195,11 @@ class ElkIn:
         nspecies = int(self._lines.pop(0).split()[0])
         spfnames = []
         positions = []
-        for i in range(nspecies):
+        for _ in range(nspecies):
             spfnames.append(self._lines.pop(0).split()[0].strip("'"))
             natoms = int(self._lines.pop(0).split()[0])
             pos_sp = []
-            for j in range(natoms):
+            for _ in range(natoms):
                 pos_sp.append([float(x) for x in self._lines.pop(0).split()[:3]])
             positions.append(pos_sp)
 
@@ -207,7 +207,7 @@ class ElkIn:
 
     def _set_avec(self):
         avec = []
-        for i in range(3):
+        for _ in range(3):
             avec.append([float(x) for x in self._lines.pop(0).split()[:3]])
         self._tags["avec"] = avec
 

@@ -94,7 +94,7 @@ def read_fleur(filename):
                     break
     pos_all = []
     num_all = []
-    for num, pos in zip(numbers, tags["atoms"]["positions"]):
+    for _, pos in zip(numbers, tags["atoms"]["positions"]):
         pos_all += pos
     num_all = [symbol_map[s] for s in symbols]
 
@@ -205,7 +205,7 @@ class FleurIn:
         speci = []
         positions = []
         positions1 = []
-        for i in range(natoms):
+        for _ in range(natoms):
             currentline = self._lines.pop(0).split()
             speci.append(currentline[0])
             currentspeci = [float(x) for x in currentline[1:4]]
@@ -244,7 +244,7 @@ class FleurIn:
 
     def _set_avec(self):
         avec = []
-        for i in range(3):
+        for _ in range(3):
             avec.append([float(x) for x in self._lines.pop(0).split()[:3]])
         lattcon = float(self._lines.pop(0).split()[0])
         scale = [float(x) for x in self._lines.pop(0).split()[:3]]

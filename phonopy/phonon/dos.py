@@ -194,6 +194,7 @@ class TotalDos(Dos):
             "TotalDos.get_dos() is deprecated. "
             "Use frequency_points and dos attributes instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self._frequency_points, self._dos
 
@@ -344,6 +345,7 @@ class ProjectedDos(Dos):
             "PartialDos.partial_dos attribute is deprecated. "
             "Use projected_dos attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self._projected_dos
 
@@ -376,6 +378,7 @@ class ProjectedDos(Dos):
             "ProjectedDos.get_partial_dos() is deprecated. "
             "Use frequency_points and projected_dos attributes instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self._frequency_points, self._projected_dos
 
@@ -486,6 +489,7 @@ class PartialDos(ProjectedDos):
         warnings.warn(
             "PartialDos class is deprecated. Use ProjectedDOS instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         super().__init__(
             mesh_object,
@@ -521,6 +525,7 @@ def write_partial_dos(
     warnings.warn(
         "write_partial_dos() is deprecated. Use write_projected_dos() instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
     write_projected_dos(
         frequency_points, partial_dos, comment=comment, filename=filename
@@ -607,6 +612,7 @@ def plot_partial_dos(
     warnings.warn(
         "plot_partial_dos() is deprecated. Use plot_projected_dos() instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
     plot_projected_dos(
         ax,
@@ -726,12 +732,12 @@ def get_dos_frequency_range(freqs, dos):
     i_min = 0
     i_max = 1000
 
-    for i, (f, d) in enumerate(zip(freqs, dos)):
+    for i, (_, d) in enumerate(zip(freqs, dos)):
         if d > 1e-5:
             i_min = i
             break
 
-    for i, (f, d) in enumerate(zip(freqs[::-1], dos[::-1])):
+    for i, (_, d) in enumerate(zip(freqs[::-1], dos[::-1])):
         if d > 1e-5:
             i_max = len(freqs) - 1 - i
             break

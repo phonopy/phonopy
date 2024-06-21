@@ -665,7 +665,7 @@ class PhonopyYamlDumperBase(ABC):
             lines.append(f"  {key}:")
             for i, dset in enumerate(dataset[key]):
                 lines.append(f"  - # {i + 1}")
-                for j, d in enumerate(dset):
+                for _, d in enumerate(dset):
                     lines.append("    - [ %21.16f, %21.16f, %21.16f ]" % tuple(d))
 
         if "supercell_energies" in dataset:

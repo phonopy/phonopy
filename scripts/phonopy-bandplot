@@ -35,6 +35,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 from __future__ import annotations
 
+import lzma
 import os
 import sys
 
@@ -180,13 +181,6 @@ def _cut_dos(p1: list[float, float], p2: list[float, float], dmax: float):
 def _read_band_yaml(filename):
     _, ext = os.path.splitext(filename)
     if ext == ".xz" or ext == ".lzma":
-        try:
-            import lzma
-        except ImportError:
-            raise (
-                "Reading a lzma compressed file is not supported "
-                "by this python version."
-            )
         with lzma.open(filename) as f:
             data = yaml.load(f, Loader=Loader)
     elif ext == ".gz":
@@ -202,7 +196,7 @@ def _read_band_yaml(filename):
     distances = []
     qpoints = []
     labels = []
-    for j, v in enumerate(data["phonon"]):
+    for v in data["phonon"]:
         if "label" in v:
             labels.append(v["label"])
         else:
@@ -751,7 +745,7 @@ def _write_gnuplot_data(args):
 
         print("# End points of segments: ")
         print("#   " + "%10.8f " * len(segment_positions) % tuple(segment_positions))
-        for j, freqs in enumerate(frequencies.T):
+        for freqs in frequencies.T:
             q = 0
             for nq in segment_nqpoint:
                 for d, f in zip(

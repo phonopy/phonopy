@@ -102,12 +102,12 @@ class BulkModulus:
         """Fit energy-volume to EOS."""
         try:
             e, b, bp, ev = fit_to_eos(self._volumes, energies, self._eos)
-        except TypeError:
+        except TypeError as exc:
             msg = ['Failed to fit to "%s" equation of states.' % self._eos_name]
             if len(self._volumes) < 4:
                 msg += ["At least 4 volume points are needed for the fitting."]
             msg += ["Careful choice of volume points is recommended."]
-            raise RuntimeError("\n".join(msg))
+            raise RuntimeError("\n".join(msg)) from exc
         return e, b, bp, ev
 
     @property
@@ -121,6 +121,7 @@ class BulkModulus:
             "BulkModulus.get_bulk_modulus() is deprecated."
             "Use BulkModulus.bulk_modulus attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.bulk_modulus
 
@@ -135,6 +136,7 @@ class BulkModulus:
             "BulkModulus.get_equilibrium_volume() is deprecated."
             "Use BulkModulus.equilibrium_volume attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.equilibrium_volume
 
@@ -149,6 +151,7 @@ class BulkModulus:
             "BulkModulus.get_b_prime() is deprecated."
             "Use BulkModulus.b_prime attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self._b_prime
 
@@ -163,6 +166,7 @@ class BulkModulus:
             "BulkModulus.get_energy() is deprecated."
             "Use BulkModulus.energy attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self._energy
 
@@ -172,7 +176,9 @@ class BulkModulus:
 
     def get_eos(self):
         """Return EOS function as a python method."""
-        warnings.warn("BulkModulus.get_eos() is deprecated.", DeprecationWarning)
+        warnings.warn(
+            "BulkModulus.get_eos() is deprecated.", DeprecationWarning, stacklevel=2
+        )
         return self._eos
 
     def plot(self, thin_number=10):
@@ -449,6 +455,7 @@ class QHA:
             "QHA.get_helmholtz_volume() is deprecated."
             "Use helmholtz_volume attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.helmholtz_volume
 
@@ -511,7 +518,7 @@ class QHA:
         selected_volumes = []
         selected_energies = []
 
-        for i, t in enumerate(self._temperatures[: self._len]):
+        for i, _ in enumerate(self._temperatures[: self._len]):
             if i % thin_number == 0:
                 selected_volumes.append(self._equiv_volumes[i])
                 selected_energies.append(self._equiv_energies[i])
@@ -530,7 +537,7 @@ class QHA:
         e0 *= _energy_plot_factor
         _data_vol_points = []
         _data_eos = []
-        for i, t in enumerate(self._temperatures[: self._len]):
+        for i, _ in enumerate(self._temperatures[: self._len]):
             if i % thin_number == 0:
                 _data_vol_points.append(
                     np.array(self._free_energies[i]) * _energy_plot_factor - e0
@@ -570,6 +577,7 @@ class QHA:
             "QHA.get_volume_temperature() is deprecated."
             "Use volume_temperature attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.volume_temperature
 
@@ -615,6 +623,7 @@ class QHA:
             "QHA.get_thermal_expansion() is deprecated."
             "Use thermal_expansion attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.thermal_expansion
 
@@ -903,7 +912,7 @@ class QHA:
         selected_energies = []
 
         thin_index = 0
-        for i, t in enumerate(self._temperatures[: self._len]):
+        for i, _ in enumerate(self._temperatures[: self._len]):
             if i % thin_number == 0:
                 selected_volumes.append(self._equiv_volumes[i])
                 selected_energies.append(self._equiv_energies[i])
@@ -921,7 +930,7 @@ class QHA:
                 break
         e0 *= _energy_plot_factor
 
-        for i, t in enumerate(self._temperatures[: self._len]):
+        for i, _ in enumerate(self._temperatures[: self._len]):
             if i % thin_number == 0:
                 ax.plot(
                     self._volumes,
@@ -1107,22 +1116,22 @@ class QHA:
 
             try:
                 parameters = np.polyfit(self._volumes, self._cv[j], 4)
-            except np.lib.polynomial.RankWarning:
+            except np.lib.polynomial.RankWarning as exc:
                 msg = ["Failed to fit heat capacities to polynomial of degree 4."]
                 if len(self._volumes) < 5:
                     msg += ["At least 5 volume points are needed for the fitting."]
-                raise RuntimeError("\n".join(msg))
+                raise RuntimeError("\n".join(msg)) from exc
 
             cv_p = np.dot(parameters, np.array([x**4, x**3, x**2, x, 1]))
             self._volume_cv_parameters.append(parameters)
 
             try:
                 parameters = np.polyfit(self._volumes, self._entropy[j], 4)
-            except np.lib.polynomial.RankWarning:
+            except np.lib.polynomial.RankWarning as exc:
                 msg = ["Failed to fit entropies to polynomial of degree 4."]
                 if len(self._volumes) < 5:
                     msg += ["At least 5 volume points are needed for the fitting."]
-                raise RuntimeError("\n".join(msg))
+                raise RuntimeError("\n".join(msg)) from exc
 
             dsdv_t = np.dot(parameters[:4], np.array([4 * x**3, 3 * x**2, 2 * x, 1]))
             self._volume_entropy_parameters.append(parameters)
@@ -1133,12 +1142,12 @@ class QHA:
                     self._equiv_volumes[j - 1 : j + 2],
                     2,
                 )
-            except np.lib.polynomial.RankWarning:
+            except np.lib.polynomial.RankWarning as exc:
                 msg = (
                     "Failed to fit equilibrium volumes vs T to "
                     "polynomial of degree 2."
                 )
-                raise RuntimeError(msg)
+                raise RuntimeError(msg) from exc
             dvdt = parameters[0] * 2 * t + parameters[1]
 
             cp.append(cv_p + t * dvdt * dsdv_t)
@@ -1158,11 +1167,11 @@ class QHA:
             beta = self._thermal_expansions[i]
             try:
                 parameters = np.polyfit(self._volumes, self._cv[i], 4)
-            except np.lib.polynomial.RankWarning:
+            except np.lib.polynomial.RankWarning as exc:
                 msg = ["Failed to fit heat capacities to polynomial of degree 4."]
                 if len(self._volumes) < 5:
                     msg += ["At least 5 volume points are needed for the fitting."]
-                raise RuntimeError("\n".join(msg))
+                raise RuntimeError("\n".join(msg)) from exc
             cv = (
                 np.dot(parameters, [v**4, v**3, v**2, v, 1])
                 / v

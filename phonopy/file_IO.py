@@ -165,13 +165,13 @@ def _get_dataset_type1(f):
     num_atom = int(_get_line_ignore_blank(f))
     num_displacements = int(_get_line_ignore_blank(f))
 
-    for i in range(num_displacements):
+    for _ in range(num_displacements):
         line = _get_line_ignore_blank(f)
         atom_number = int(line)
         line = _get_line_ignore_blank(f).split()
         displacement = np.array([float(x) for x in line])
         forces_tmp = []
-        for j in range(num_atom):
+        for _ in range(num_atom):
             line = _get_line_ignore_blank(f).split()
             forces_tmp.append(np.array([float(x) for x in line]))
         forces_tmp = np.array(forces_tmp, dtype="double")
@@ -285,7 +285,7 @@ def iter_collect_forces(filename, num_atom, hook, force_pos, word=None, max_iter
         forces = []
         prev_forces = []
 
-        for i in range(max_iter):
+        for i in range(max_iter):  # noqa B007
             forces = collect_forces(f, num_atom, hook, force_pos, word=word)
             if not forces:
                 forces = prev_forces[:]
@@ -377,8 +377,8 @@ def write_force_constants_to_hdf5(
     """
     try:
         import h5py
-    except ImportError:
-        raise ModuleNotFoundError("You need to install python-h5py.")
+    except ImportError as exc:
+        raise ModuleNotFoundError("You need to install python-h5py.") from exc
 
     with h5py.File(filename, "w") as w:
         w.create_dataset(
@@ -418,7 +418,7 @@ def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS", p2s_map=None):
                 if s_i not in idx1:
                     idx1.append(s_i)
                 tensor = []
-                for k in range(3):
+                for _ in range(3):
                     tensor.append([float(x) for x in fcfile.readline().split()])
                 force_constants[i, j] = tensor
 
@@ -445,8 +445,8 @@ def read_force_constants_hdf5(
     """
     try:
         import h5py
-    except ImportError:
-        raise ModuleNotFoundError("You need to install python-h5py.")
+    except ImportError as exc:
+        raise ModuleNotFoundError("You need to install python-h5py.") from exc
 
     with h5py.File(filename, "r") as f:
         if "fc2" in f:
@@ -559,7 +559,7 @@ def write_disp_yaml(displacements, supercell, filename="disp.yaml"):
 def _get_disp_yaml_lines(displacements, supercell):
     lines = []
     lines.append("displacements:")
-    for i, disp in enumerate(displacements):
+    for _, disp in enumerate(displacements):
         lines.append("- atom: %4d" % (disp[0] + 1))
         lines.append("  displacement:")
         lines.append("    [ %20.16f,%20.16f,%20.16f ]" % tuple(disp[1:4]))
@@ -605,13 +605,13 @@ def get_cell_from_disp_yaml(dataset):
 
         try:
             positions = [x[pos_key] for x in dataset[data_key]]
-        except KeyError:
+        except KeyError as exc:
             msg = (
                 '"disp.yaml" format is too old. '
                 'Please re-create it as "phonopy_disp.yaml" to contain '
                 "supercell crystal structure information."
             )
-            raise RuntimeError(msg)
+            raise RuntimeError(msg) from exc
         symbols = [x["symbol"] for x in dataset[data_key]]
         cell = PhonopyAtoms(cell=lattice, scaled_positions=positions, symbols=symbols)
         return cell
@@ -627,7 +627,7 @@ def parse_QPOINTS(filename="QPOINTS"):
     with open(filename, "r") as f:
         num_qpoints = int(f.readline().strip())
         qpoints = []
-        for i in range(num_qpoints):
+        for _ in range(num_qpoints):
             qpoints.append([fracval(x) for x in f.readline().strip().split()])
         return np.array(qpoints)
 
@@ -865,7 +865,7 @@ def read_thermal_properties_yaml(filenames):
     cv = []
     entropy = []
     fe_phonon = []
-    for i, tp in enumerate(thermal_properties):
+    for _, tp in enumerate(thermal_properties):
         temp.append([v["temperature"] for v in tp])
         if not np.allclose(temperatures, temp):
             msg = [

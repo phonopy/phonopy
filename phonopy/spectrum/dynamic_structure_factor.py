@@ -195,7 +195,7 @@ class DynamicStructureFactor:
 
     def run(self):
         """Calculate at all q-points."""
-        for S in self:
+        for _ in self:
             pass
 
     def _run_at_Q(self):
