@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Setting tags &#8212; Phonopy v.2.24.1</title>
+    <title>Setting tags &#8212; Phonopy v.2.24.3</title>
   
   
   
@@ -29,17 +29,17 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=3ee479438cf8b5e0d341" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
-    <script src="_static/documentation_options.js?v=dc7e3225"></script>
+    <script src="_static/documentation_options.js?v=70f6305e"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'setting-tags';</script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.24.1</p>
+    <p class="title logo__title">Phonopy v.2.24.3</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -221,9 +221,9 @@
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -317,9 +317,9 @@ document.write(`
   </button>
 `);
 </script>
-<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
-</label>
+</button>
 </div></div>
       
     </div>
@@ -428,6 +428,7 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#write-force-constants"><code class="docutils literal notranslate"><span class="pre">WRITE_FORCE_CONSTANTS</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-calculator"><code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-calculator-options"><code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR_OPTIONS</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#symfc"><code class="docutils literal notranslate"><span class="pre">SYMFC</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#alm"><code class="docutils literal notranslate"><span class="pre">ALM</span></code></a></li>
 </ul>
 </li>
@@ -1358,17 +1359,30 @@ respectively. The detail is found at <a class="reference internal" href="input-f
 </section>
 <section id="fc-calculator">
 <span id="fc-calculator-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR</span></code><a class="headerlink" href="#fc-calculator" title="Link to this heading">#</a></h3>
-<p>External force constants calculator can be used using this tag. Currently <code class="docutils literal notranslate"><span class="pre">ALM</span></code>
-is supported. The phonopy’s default force constants calculator is based on
-finite difference method, for which atomic displacements are made
-systematically. The following is the list of the force constants calculator
-currently possible to be invoked from phonopy.</p>
+<p>External force constants calculator can be used using this tag. Currently
+<code class="docutils literal notranslate"><span class="pre">symfc</span></code> and <code class="docutils literal notranslate"><span class="pre">ALM</span></code> are supported. The phonopy’s default force constants
+calculator is based on finite difference method, for which atomic displacements
+are made systematically. The following is the list of the force constants
+calculator currently possible to be invoked from phonopy.</p>
 </section>
 <section id="fc-calculator-options">
 <span id="fc-calculator-options-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR_OPTIONS</span></code><a class="headerlink" href="#fc-calculator-options" title="Link to this heading">#</a></h3>
 <p>To be written.</p>
+<section id="symfc">
+<span id="fc-calculator-alm-tag"></span><h4><code class="docutils literal notranslate"><span class="pre">SYMFC</span></code><a class="headerlink" href="#symfc" title="Link to this heading">#</a></h4>
+<p><strong>New in v2.25</strong> Symfc (<a class="github reference external" href="https://github.com/symfc/symfc">symfc/symfc</a>) is based on fitting
+approach and any displacements set of atoms in supercell can be handled. For
+example, random displacements generated by <a class="reference internal" href="#random-displacements-tag"><span class="std std-ref">RANDOM_DISPLACEMENTS</span></a> can
+be used to compute force constants. To use symfc, its python module has to be
+installed via conda-forge or pip.</p>
+<p>When symfc is used, please cite the manuscript:
+A. Seko and A. Togo, arXiv:2403.03588.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>FC_CALCULATOR = SYMFC
+</pre></div>
+</div>
+</section>
 <section id="alm">
-<span id="fc-calculator-alm-tag"></span><h4><code class="docutils literal notranslate"><span class="pre">ALM</span></code><a class="headerlink" href="#alm" title="Link to this heading">#</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">ALM</span></code><a class="headerlink" href="#alm" title="Link to this heading">#</a></h4>
 <p><strong>New in v2.3</strong> ALM (<a class="github reference external" href="https://github.com/ttadano/ALM">ttadano/ALM</a>) is based on fitting
 approach and any displacements set of atoms in supercell can be handled. For
 example, random displacements generated by <a class="reference internal" href="#random-displacements-tag"><span class="std std-ref">RANDOM_DISPLACEMENTS</span></a> can
@@ -1801,6 +1815,7 @@ stored.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#write-force-constants"><code class="docutils literal notranslate"><span class="pre">WRITE_FORCE_CONSTANTS</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-calculator"><code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-calculator-options"><code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR_OPTIONS</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#symfc"><code class="docutils literal notranslate"><span class="pre">SYMFC</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#alm"><code class="docutils literal notranslate"><span class="pre">ALM</span></code></a></li>
 </ul>
 </li>

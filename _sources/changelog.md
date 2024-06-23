@@ -2,6 +2,15 @@
 
 # Change Log
 
+## Jun-19-2024: Version 2.24.3
+
+- Treatment for running with numpy 2.0.
+
+## Jun-8-2024: Version 2.24.2
+
+- Experimental support of force constants calculator option `--symfc`
+  (`FC_CALCULATOR = SYMFC`). Symfc can be installed via conda-force or pip.
+
 ## Jun-7-2024: Version 2.24.1
 
 - Fix bug in phonopy-yaml dumper for type2 dataset.
