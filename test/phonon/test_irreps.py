@@ -1,8 +1,9 @@
 """Tests for irreducible representation calculations."""
 
+from __future__ import annotations
+
 import os
 from io import StringIO
-from typing import List
 
 import numpy as np
 
@@ -1185,7 +1186,7 @@ def _load_data(data_str):
     return data
 
 
-def _check_char_sum(phonon: Phonopy, qpoints: List):
+def _check_char_sum(phonon: Phonopy, qpoints: list):
     print("space-group number:", phonon.symmetry.dataset["number"])
 
     for q in qpoints:

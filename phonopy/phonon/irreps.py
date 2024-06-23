@@ -158,6 +158,7 @@ class IrReps:
             "IrReps.get_band_indices() is deprecated. "
             "Use IrReps.band_indices attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.band_indices
 
@@ -172,6 +173,7 @@ class IrReps:
             "IrReps.get_characters() is deprecated. "
             "Use IrReps.characters attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.characters
 
@@ -186,6 +188,7 @@ class IrReps:
             "IrReps.get_eigenvectors() is deprecated. "
             "Use IrReps.eigenvectors attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.eigenvectors
 
@@ -199,6 +202,7 @@ class IrReps:
         warnings.warn(
             "IrReps.get_irreps() is deprecated. " "Use IrReps.irreps attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.irreps
 
@@ -213,6 +217,7 @@ class IrReps:
             "IrReps.get_ground_matrices() is deprecated. "
             "Use IrReps.ground_matrices attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.ground_matrices
 
@@ -227,6 +232,7 @@ class IrReps:
             "IrReps.get_rotation_symbols() is deprecated. "
             "Use IrReps.rotation_symbols attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.rotation_symbols
 
@@ -241,6 +247,7 @@ class IrReps:
             "IrReps.get_rotations() is deprecated. "
             "Use IrReps.conventional_rotations attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.conventional_rotations
 
@@ -415,7 +422,7 @@ class IrReps:
         ir_labels = []
         rot_list = self._character_table["rotation_list"]
         char_table = self._character_table["character_table"]
-        for chars, deg_set in zip(self._characters, self._degenerate_sets):
+        for chars in self._characters:
             chars_ordered = np.zeros(len(rot_list), dtype=complex)
             for rs, ch in zip(self._rotation_symbols, chars):
                 chars_ordered[rot_list.index(rs)] += ch
@@ -501,9 +508,7 @@ class IrReps:
         print("IR representations:")
         print("")
 
-        for i, (deg_set, irrep_Rs) in enumerate(
-            zip(self._degenerate_sets, self._irreps)
-        ):
+        for deg_set, irrep_Rs in zip(self._degenerate_sets, self._irreps):
             print("%3d (%8.3f):" % (deg_set[0] + 1, self._freqs[deg_set[0]]))
             print("")
             for j, irrep_R in enumerate(irrep_Rs):
@@ -599,7 +604,7 @@ class IrReps:
                     symbol = ""
                 if len(deg_set) > 1:
                     w.write("  - # %d %s\n" % (j + 1, symbol))
-                    for k, v in enumerate(irrep_R):
+                    for _, v in enumerate(irrep_R):
                         w.write("    - [ ")
                         for x in v[:-1]:
                             w.write("%10.7f, %10.7f,   " % (x.real, x.imag))

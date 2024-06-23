@@ -337,6 +337,7 @@ class ConfParser:
         warnings.warn(
             "ConfParser.get_configures() is deprecated." "Use confs attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.confs
 
@@ -350,6 +351,7 @@ class ConfParser:
         warnings.warn(
             "ConfParser.get_settings() is deprecated." "Use settings attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.settings
 
@@ -397,14 +399,14 @@ class ConfParser:
         if "band_indices" in arg_list:
             band_indices = self._args.band_indices
             if band_indices is not None:
-                if type(band_indices) is list:
+                if isinstance(band_indices, list):
                     self._confs["band_indices"] = " ".join(band_indices)
                 else:
                     self._confs["band_indices"] = band_indices
 
         if "band_paths" in arg_list:
             if self._args.band_paths is not None:
-                if type(self._args.band_paths) is list:
+                if isinstance(self._args.band_paths, list):
                     self._confs["band"] = " ".join(self._args.band_paths)
                 else:
                     self._confs["band"] = self._args.band_paths
@@ -518,14 +520,14 @@ class ConfParser:
 
         if "masses" in arg_list:
             if self._args.masses is not None:
-                if type(self._args.masses) is list:
+                if isinstance(self._args.masses, list):
                     self._confs["mass"] = " ".join(self._args.masses)
                 else:
                     self._confs["mass"] = self._args.masses
 
         if "magmoms" in arg_list:
             if self._args.magmoms is not None:
-                if type(self._args.magmoms) is list:
+                if isinstance(self._args.magmoms, list):
                     self._confs["magmom"] = " ".join(self._args.magmoms)
                 else:
                     self._confs["magmom"] = self._args.magmoms
@@ -533,7 +535,7 @@ class ConfParser:
         if "mesh_numbers" in arg_list:
             mesh = self._args.mesh_numbers
             if mesh is not None:
-                if type(mesh) is list:
+                if isinstance(mesh, list):
                     self._confs["mesh_numbers"] = " ".join(mesh)
                 else:
                     self._confs["mesh_numbers"] = mesh
@@ -546,7 +548,7 @@ class ConfParser:
         # For backword compatibility
         if "primitive_axis" in arg_list:
             if self._args.primitive_axis is not None:
-                if type(self._args.primitive_axis) is list:
+                if isinstance(self._args.primitive_axis, list):
                     primitive_axes = " ".join(self._args.primitive_axis)
                     self._confs["primitive_axes"] = primitive_axes
                 else:
@@ -554,7 +556,7 @@ class ConfParser:
 
         if "primitive_axes" in arg_list:
             if self._args.primitive_axes:
-                if type(self._args.primitive_axes) is list:
+                if isinstance(self._args.primitive_axes, list):
                     primitive_axes = " ".join(self._args.primitive_axes)
                     self._confs["primitive_axes"] = primitive_axes
                 else:
@@ -567,14 +569,14 @@ class ConfParser:
         if "supercell_dimension" in arg_list:
             dim = self._args.supercell_dimension
             if dim is not None:
-                if type(dim) is list:
+                if isinstance(dim, list):
                     self._confs["dim"] = " ".join(dim)
                 else:
                     self._confs["dim"] = dim
 
         if "qpoints" in arg_list:
             if self._args.qpoints is not None:
-                if type(self._args.qpoints) is list:
+                if isinstance(self._args.qpoints, list):
                     self._confs["qpoints"] = " ".join(self._args.qpoints)
                 else:
                     self._confs["qpoints"] = self._args.qpoints
@@ -582,7 +584,7 @@ class ConfParser:
         if "nac_q_direction" in arg_list:
             q_dir = self._args.nac_q_direction
             if q_dir is not None:
-                if type(q_dir) is list:
+                if isinstance(q_dir, list):
                     self._confs["q_direction"] = " ".join(q_dir)
                 else:
                     self._confs["q_direction"] = q_dir
@@ -597,7 +599,7 @@ class ConfParser:
 
         if "sigma" in arg_list:
             if self._args.sigma is not None:
-                if type(self._args.sigma) is list:
+                if isinstance(self._args.sigma, list):
                     self._confs["sigma"] = " ".join(self._args.sigma)
                 else:
                     self._confs["sigma"] = self._args.sigma
@@ -628,6 +630,10 @@ class ConfParser:
         if "use_alm" in arg_list:
             if self._args.use_alm:
                 self._confs["fc_calculator"] = "alm"
+
+        if "use_symfc" in arg_list:
+            if self._args.use_symfc:
+                self._confs["fc_calculator"] = "symfc"
 
         if "use_hiphive" in arg_list:
             if self._args.use_hiphive:
@@ -1651,9 +1657,9 @@ class PhonopyConfParser(ConfParser):
 
         if "rd_temperature" in arg_list:
             if self._args.rd_temperature is not None:
-                self._confs["random_displacement_temperature"] = (
-                    self._args.rd_temperature
-                )
+                self._confs[
+                    "random_displacement_temperature"
+                ] = self._args.rd_temperature
 
         if "temperature" in arg_list:
             if self._args.temperature is not None:
@@ -1738,14 +1744,14 @@ class PhonopyConfParser(ConfParser):
                     self.set_parameter("legacy_plot", False)
 
             if conf_key == "create_force_sets":
-                if type(confs["create_force_sets"]) is str:
+                if isinstance(confs["create_force_sets"], str):
                     fnames = confs["create_force_sets"].split()
                 else:
                     fnames = confs["create_force_sets"]
                 self.set_parameter("create_force_sets", fnames)
 
             if conf_key == "create_force_sets_zero":
-                if type(confs["create_force_sets_zero"]) is str:
+                if isinstance(confs["create_force_sets_zero"], str):
                     fnames = confs["create_force_sets_zero"].split()
                 else:
                     fnames = confs["create_force_sets_zero"]

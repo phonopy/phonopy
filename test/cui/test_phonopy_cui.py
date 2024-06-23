@@ -39,11 +39,13 @@ class MockArgs:
         return (getattr(self, field.name) for field in fields(self))
 
     def __contains__(self, item):
+        """Implement in operator."""
         return item in (field.name for field in fields(self))
 
 
 @pytest.mark.parametrize("is_ncl", [False, True])
 def test_phonopy_disp_Cr(is_ncl: bool):
+    """Test phonopy -d option."""
     cell_filename = cwd / "POSCAR-unitcell_Cr"
     if is_ncl:
         magmoms = "0 0 1 0 0 -1"

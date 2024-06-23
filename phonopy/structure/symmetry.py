@@ -36,6 +36,7 @@
 from __future__ import annotations
 
 import warnings
+from collections.abc import Sequence
 from typing import Optional
 
 import numpy as np
@@ -129,6 +130,7 @@ class Symmetry:
             "Symmetry.get_symmetry_operations() is deprecated."
             "Use symmetry_operations attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.symmetry_operations
 
@@ -151,6 +153,7 @@ class Symmetry:
             "Symmetry.get_pointgroup_operations() is deprecated."
             "Use pointgroup_operations attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.pointgroup_operations
 
@@ -165,6 +168,7 @@ class Symmetry:
             "Symmetry.get_pointgroup() is deprecated."
             "Use pointgroup_symbol attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self._pointgroup
 
@@ -190,6 +194,7 @@ class Symmetry:
         warnings.warn(
             "Symmetry.get_dataset() is deprecated." "Use dataset attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.dataset
 
@@ -246,6 +251,7 @@ class Symmetry:
             "Symmetry.get_symmetry_tolerance() is deprecated."
             "Use tolerance attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.tolerance
 
@@ -267,6 +273,7 @@ class Symmetry:
             "Symmetry.get_reciprocal_operations() is deprecated."
             "Use reciprocal_operations attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.reciprocal_operations
 
@@ -287,6 +294,7 @@ class Symmetry:
             "Symmetry.get_atomic_permutations() is deprecated."
             "Use atomic_permutations attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.atomic_permutations
 
@@ -356,6 +364,7 @@ class Symmetry:
             "This was replaced by "
             "_get_map_operations_from_permutations.",
             DeprecationWarning,
+            stacklevel=2,
         )
 
         ops = self._symmetry_operations
@@ -553,14 +562,14 @@ def elaborate_borns_and_epsilon(
 
 
 def symmetrize_borns_and_epsilon(
-    borns,
-    epsilon,
-    ucell,
-    primitive_matrix=None,
-    primitive=None,
-    supercell_matrix=None,
-    symprec=1e-5,
-    is_symmetry=True,
+    borns: Sequence,
+    epsilon: Sequence,
+    ucell: PhonopyAtoms,
+    primitive_matrix: Optional[Sequence] = None,
+    primitive: PhonopyAtoms = None,
+    supercell_matrix: Optional[Sequence] = None,
+    symprec: float = 1e-5,
+    is_symmetry: bool = True,
 ):
     """Symmetrize Born effective charges and dielectric tensor.
 
@@ -618,7 +627,7 @@ def symmetrize_borns_and_epsilon(
         ]
         import warnings
 
-        warnings.warn("\n".join(lines))
+        warnings.warn("\n".join(lines), stacklevel=2)
 
     if primitive_matrix is None and primitive is None:
         return borns_, epsilon_
@@ -665,11 +674,13 @@ def _take_average_of_borns(borns, rotations, translations, cell, symprec):
     return borns_
 
 
-def _get_mapping_between_cells(cell_from, cell_to, symprec=1e-5):
+def _get_mapping_between_cells(
+    cell_from: PhonopyAtoms, cell_to: PhonopyAtoms, symprec: float = 1e-5
+):
     indices = []
     lattice = cell_from.cell
     pos_from = cell_from.scaled_positions
-    for i, p_to in enumerate(cell_to.scaled_positions):
+    for p_to in cell_to.scaled_positions:
         diff = pos_from - p_to
         diff -= np.rint(diff)
         dist = np.sqrt(np.sum(np.dot(diff, lattice) ** 2, axis=1))

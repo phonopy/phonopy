@@ -72,8 +72,8 @@ def get_cell_settings(
     """Return crystal structures."""
     optional_structure_info = None
     if primitive_matrix is None or (
-        type(primitive_matrix) is str and primitive_matrix == "auto"
-    ):  # noqa E129
+        isinstance(primitive_matrix, str) and primitive_matrix == "auto"
+    ):
         pmat = "auto"
     else:
         pmat = primitive_matrix
@@ -306,11 +306,11 @@ def _read_crystal_structure(filename=None, interface_mode=None):
         return read_crystal_structure(filename=filename, interface_mode=interface_mode)
     except FileNotFoundError:
         raise
-    except Exception:
+    except Exception as exc:
         msg = [
             "============================ phonopy.load " "============================",
             "  Reading crystal structure file failed in phonopy.load.",
             "  Maybe phonopy.load(..., calculator='<calculator name>') " "expected?",
             "============================ phonopy.load " "============================",
         ]
-        raise RuntimeError("\n".join(msg))
+        raise RuntimeError("\n".join(msg)) from exc

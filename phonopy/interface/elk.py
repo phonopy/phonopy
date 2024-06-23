@@ -45,8 +45,7 @@ from phonopy.interface.vasp import (
     get_scaled_positions_lines,
     sort_positions_by_symbols,
 )
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
-from phonopy.structure.atoms import symbol_map
+from phonopy.structure.atoms import PhonopyAtoms, symbol_map
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
@@ -91,7 +90,7 @@ def read_elk(filename):
     for i, n in enumerate(numbers):
         if n == 0:
             for j in range(1, 119):
-                if not (j in numbers):
+                if j not in numbers:
                     numbers[i] = j
                     break
     pos_all = []
@@ -100,7 +99,7 @@ def read_elk(filename):
         pos_all += pos
         num_all += [num] * len(pos)
 
-    return Atoms(numbers=num_all, cell=avec, scaled_positions=pos_all), spfnames
+    return PhonopyAtoms(numbers=num_all, cell=avec, scaled_positions=pos_all), spfnames
 
 
 def write_elk(filename, cell, sp_filenames):
@@ -196,11 +195,11 @@ class ElkIn:
         nspecies = int(self._lines.pop(0).split()[0])
         spfnames = []
         positions = []
-        for i in range(nspecies):
+        for _ in range(nspecies):
             spfnames.append(self._lines.pop(0).split()[0].strip("'"))
             natoms = int(self._lines.pop(0).split()[0])
             pos_sp = []
-            for j in range(natoms):
+            for _ in range(natoms):
                 pos_sp.append([float(x) for x in self._lines.pop(0).split()[:3]])
             positions.append(pos_sp)
 
@@ -208,7 +207,7 @@ class ElkIn:
 
     def _set_avec(self):
         avec = []
-        for i in range(3):
+        for _ in range(3):
             avec.append([float(x) for x in self._lines.pop(0).split()[:3]])
         self._tags["avec"] = avec
 

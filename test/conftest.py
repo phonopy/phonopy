@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
-from typing import Tuple
 
 import numpy as np
 import pytest
@@ -126,7 +125,7 @@ def ph_nacl_nonac_dense_svecs() -> Phonopy:
 def ph_nacl_rd() -> Phonopy:
     """Return Phonopy class instance of NaCl 2x2x2 with RD results.
 
-    This data contains supercell energies.
+    This data contains supercell energies and NAC params.
 
     """
     yaml_filename = cwd / "phonopy_params_NaCl-rd.yaml.xz"
@@ -134,10 +133,26 @@ def ph_nacl_rd() -> Phonopy:
 
 
 @pytest.fixture(scope="session")
+def ph_nacl_rd_symfc() -> Phonopy:
+    """Return Phonopy class instance of NaCl 2x2x2 with RD results.
+
+    This data contains supercell energies and NAC params. Symfc is used to
+    compute force constants.
+
+    """
+    pytest.importorskip("symfc")
+
+    yaml_filename = cwd / "phonopy_params_NaCl-rd.yaml.xz"
+    return phonopy.load(
+        yaml_filename, log_level=1, fc_calculator="symfc", is_compact_fc=True
+    )
+
+
+@pytest.fixture(scope="session")
 def ph_nacl_fd() -> Phonopy:
     """Return Phonopy class instance of NaCl 2x2x2 with RD results.
 
-    This data contains supercell energies.
+    This data contains supercell energies and NAC params.
 
     """
     yaml_filename = cwd / "phonopy_params_NaCl-fd.yaml.xz"
@@ -204,7 +219,7 @@ def ph_srtio3() -> Phonopy:
 
 
 @pytest.fixture(scope="session")
-def ph_nacl_gruneisen() -> Tuple[Phonopy, Phonopy, Phonopy]:
+def ph_nacl_gruneisen() -> tuple[Phonopy, Phonopy, Phonopy]:
     """Return Phonopy class instances of NaCl 2x2x2 at three volumes."""
     ph0 = phonopy.load(
         cwd / "phonopy_params_NaCl-1.00.yaml.xz",

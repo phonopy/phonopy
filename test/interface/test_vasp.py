@@ -131,7 +131,7 @@ def test_VasprunxmlExpat():
     """Test VasprunxmlExpat."""
     filename_vasprun = cwd / "vasprun.xml.tar.bz2"
     _tar = tarfile.open(filename_vasprun)
-    for i, member in enumerate(_tar.getmembers()):
+    for member in _tar.getmembers():
         vasprun = VasprunxmlExpat(_tar.extractfile(member))
         vasprun.parse()
         np.testing.assert_equal(vasprun.fft_grid, [64, 64, 64])

@@ -49,7 +49,7 @@ Here the free energy is approximately given by:
 
 
 def get_options():
-    # Parse options
+    """Parse command-line options."""
     import argparse
 
     parser = argparse.ArgumentParser(description="Phonopy vasp-born command-line-tool")
@@ -73,6 +73,7 @@ def get_options():
 
 
 def get_free_energy_lines(temperatures, free_energies):
+    """Return Free energy lines."""
     lines = []
     n_vol = free_energies.shape[1]
     for t, fe in zip(temperatures, free_energies):
@@ -81,6 +82,7 @@ def get_free_energy_lines(temperatures, free_energies):
 
 
 def get_fe_ev_lines(args):
+    """Return Free energy vs volume lines."""
     volumes = []
     energy_sigma0 = []
     free_energies = []
@@ -114,6 +116,7 @@ def get_fe_ev_lines(args):
 
 
 def main(args):
+    """Run phonopy-vasp-efe."""
     lines_fe, lines_ev = get_fe_ev_lines(args)
 
     with open("fe-v.dat", "w") as w:

@@ -53,7 +53,7 @@ def test_read_abacus_mag():
 
 
 def test_read_abacus_output():
-    """Test of read abacus output"""
+    """Test of read abacus output."""
     force = read_abacus_output(os.path.join(data_dir, "NaCl-abacus.out"))
     assert force.mean() < 1e-10
     assert force[0][0] + 1.85537138e-02 < 1e-5

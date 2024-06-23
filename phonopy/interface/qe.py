@@ -50,8 +50,7 @@ from phonopy.interface.vasp import (
     get_drift_forces,
     get_scaled_positions_lines,
 )
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
-from phonopy.structure.atoms import symbol_map
+from phonopy.structure.atoms import PhonopyAtoms, symbol_map
 from phonopy.structure.cells import get_primitive, get_supercell
 from phonopy.units import Bohr
 
@@ -127,11 +126,11 @@ def read_pwscf(filename):
             if n < 1:
                 numbers[i] = available_numbers[-n]
 
-        cell = Atoms(
+        cell = PhonopyAtoms(
             numbers=numbers, masses=masses, cell=lattice, scaled_positions=positions
         )
     else:
-        cell = Atoms(numbers=numbers, cell=lattice, scaled_positions=positions)
+        cell = PhonopyAtoms(numbers=numbers, cell=lattice, scaled_positions=positions)
 
     unique_symbols = []
     pp_filenames = {}
@@ -491,9 +490,9 @@ class PH_Q2R:
         line = f.readline()
         ntype, natom, ibrav = (int(x) for x in line.split()[:3])
         if ibrav == 0:
-            for i in range(3):
+            for _ in range(3):
                 line = f.readline()
-        for i in range(ntype + natom):
+        for _ in range(ntype + natom):
             line = f.readline()
         line = f.readline()
         if line.strip() == "T":
@@ -527,12 +526,12 @@ class PH_Q2R:
         """
         ndim = np.prod(dim)
         fc = np.zeros((natom, natom * ndim, 3, 3), dtype="double", order="C")
-        for k, l, i, j in np.ndindex((3, 3, natom, natom)):
+        for k, ll, i, j in np.ndindex((3, 3, natom, natom)):
             line = f.readline()
             for i_dim in range(ndim):
                 line = f.readline()
                 # fc[i, j * ndim + i_dim, k, l] = float(line.split()[3])
-                fc[j, i * ndim + i_dim, l, k] = float(line.split()[3])
+                fc[j, i * ndim + i_dim, ll, k] = float(line.split()[3])
         return fc
 
     def _arrange_supercell_fc(self, cell, q2r_fc, is_full_fc=False):
@@ -576,7 +575,7 @@ class PH_Q2R:
 
     def _get_site_mapping(self, spos, q2r_spos, lattice):
         site_map = []
-        for i, p in enumerate(spos):
+        for _, p in enumerate(spos):
             diff = q2r_spos - p
             diff -= np.rint(diff)
             distances = np.sqrt(np.sum(np.dot(diff, lattice) ** 2, axis=1))

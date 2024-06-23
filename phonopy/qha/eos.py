@@ -123,15 +123,13 @@ class EOSFit:
     def fit(self, initial_parameters):
         """Fit."""
         import logging
-        import sys
         import warnings
 
         try:
             import scipy
             from scipy.optimize import leastsq
-        except ImportError:
-            print("You need to install python-scipy.")
-            sys.exit(1)
+        except ImportError as exc:
+            raise ModuleNotFoundError("You need to install python-scipy.") from exc
 
         warnings.filterwarnings("error")
 

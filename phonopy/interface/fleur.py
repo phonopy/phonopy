@@ -46,8 +46,7 @@ from phonopy.interface.vasp import (
     get_drift_forces,
     sort_positions_by_symbols,
 )
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
-from phonopy.structure.atoms import symbol_map
+from phonopy.structure.atoms import PhonopyAtoms, symbol_map
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
@@ -90,17 +89,17 @@ def read_fleur(filename):
     for i, n in enumerate(numbers):
         if n == 0:
             for j in range(1, 119):
-                if not (j in numbers):
+                if j not in numbers:
                     numbers[i] = j
                     break
     pos_all = []
     num_all = []
-    for num, pos in zip(numbers, tags["atoms"]["positions"]):
+    for _, pos in zip(numbers, tags["atoms"]["positions"]):
         pos_all += pos
     num_all = [symbol_map[s] for s in symbols]
 
     return (
-        Atoms(numbers=num_all, cell=avec, scaled_positions=pos_all),
+        PhonopyAtoms(numbers=num_all, cell=avec, scaled_positions=pos_all),
         speci,
         fleur_in._restlines,
     )
@@ -206,7 +205,7 @@ class FleurIn:
         speci = []
         positions = []
         positions1 = []
-        for i in range(natoms):
+        for _ in range(natoms):
             currentline = self._lines.pop(0).split()
             speci.append(currentline[0])
             currentspeci = [float(x) for x in currentline[1:4]]
@@ -245,7 +244,7 @@ class FleurIn:
 
     def _set_avec(self):
         avec = []
-        for i in range(3):
+        for _ in range(3):
             avec.append([float(x) for x in self._lines.pop(0).split()[:3]])
         lattcon = float(self._lines.pop(0).split()[0])
         scale = [float(x) for x in self._lines.pop(0).split()[:3]]

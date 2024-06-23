@@ -40,7 +40,7 @@ import numpy as np
 
 from phonopy.file_IO import iter_collect_forces
 from phonopy.interface.vasp import check_forces, get_drift_forces
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.atoms import PhonopyAtoms
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
@@ -113,7 +113,7 @@ def read_atom_config(filename):
         "scaled_positions": atom_position,
     }
 
-    return Atoms(**cell_args)
+    return PhonopyAtoms(**cell_args)
 
 
 def write_atom_config(filename, cell):
@@ -142,7 +142,6 @@ def get_pwmat_structure(cell):
             + "  1   1   1"
         )
     if mag_mom is not None and len(mag_mom) == len(cell.numbers):
-
         if np.size(mag_mom[0]) == 1:
             line.append("magnetic")
             for number, mag in zip(numbers, mag_mom):

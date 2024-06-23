@@ -39,7 +39,7 @@ import sys
 import numpy as np
 
 from phonopy.interface.vasp import check_forces, get_drift_forces
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_angles, get_cell_parameters
 from phonopy.structure.symmetry import Symmetry
 from phonopy.utils import similarity_transformation
@@ -121,7 +121,7 @@ def parse_wien2k_struct(filename):
         r0s = []
         rmts = []
 
-        for i in range(num_site):
+        for _ in range(num_site):
             # 5
             line = f.readline()
             x = float(line[12:22])
@@ -133,7 +133,7 @@ def parse_wien2k_struct(filename):
             line = f.readline()
             multi = int(line[15:17])
 
-            for j in range(multi - 1):
+            for _ in range(multi - 1):
                 line = f.readline()
                 x = float(line[12:22])
                 y = float(line[25:35])
@@ -147,17 +147,17 @@ def parse_wien2k_struct(filename):
             r0 = float(line[25:35])
             rmt = float(line[40:50])
 
-            for j in range(multi):
+            for _ in range(multi):
                 symbols.append(chemical_symbol)
                 npts.append(npt)
                 r0s.append(r0)
                 rmts.append(rmt)
 
             # 8 - 10
-            for j in range(3):
+            for _ in range(3):
                 f.readline()
 
-        cell = Atoms(symbols=symbols, scaled_positions=positions, cell=lattice)
+        cell = PhonopyAtoms(symbols=symbols, scaled_positions=positions, cell=lattice)
 
         return cell, npts, r0s, rmts
 
@@ -334,7 +334,7 @@ def _distribute_forces(supercell, disp, forces, filename, symprec):
     lattice = supercell.get_cell()
     symbols = supercell.get_chemical_symbols()
     positions = supercell.get_positions() + disp
-    cell = Atoms(cell=lattice, positions=positions, symbols=symbols)
+    cell = PhonopyAtoms(cell=lattice, positions=positions, symbols=symbols)
     symmetry = Symmetry(cell, symprec)
     independent_atoms = symmetry.get_independent_atoms()
 

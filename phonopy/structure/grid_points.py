@@ -139,7 +139,7 @@ def extract_ir_grid_points(grid_mapping_table):
     dtype = grid_mapping_table.dtype
     ir_grid_points = np.array(np.unique(grid_mapping_table), dtype=dtype)
     weights = np.zeros_like(grid_mapping_table)
-    for i, gp in enumerate(grid_mapping_table):
+    for gp in grid_mapping_table:
         weights[gp] += 1
     ir_weights = np.array(weights[ir_grid_points], dtype=dtype)
 
@@ -280,6 +280,7 @@ class GridPoints:
             "GridPoints.get_grid_address() is deprecated."
             "Use GridPoints.grid_address attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.grid_address
 
@@ -294,6 +295,7 @@ class GridPoints:
             "GridPoints.get_ir_grid_points() is deprecated."
             "Use GridPoints.ir_grid_points attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.ir_grid_points
 
@@ -308,6 +310,7 @@ class GridPoints:
             "GridPoints.get_ir_qpoints() is deprecated."
             "Use GridPoints.qpoints attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.qpoints
 
@@ -322,6 +325,7 @@ class GridPoints:
             "GridPoints.get_ir_grid_weights() is deprecated."
             "Use GridPoints.weights attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.weights
 
@@ -336,6 +340,7 @@ class GridPoints:
             "GridPoints.get_grid_mapping_table() is deprecated."
             "Use GridPoints.grid_mapping_table attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.grid_mapping_table
 

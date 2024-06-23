@@ -40,7 +40,7 @@ import numpy as np
 
 from phonopy.file_IO import iter_collect_forces
 from phonopy.interface.vasp import check_forces, get_drift_forces
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry
 from phonopy.units import Bohr, Hartree
 
@@ -82,7 +82,7 @@ def read_crystal(filename):
     f_crystal.close()
     tags = crystal_in.get_tags()
 
-    cell = Atoms(
+    cell = PhonopyAtoms(
         cell=tags["lattice_vectors"],
         symbols=tags["atomic_species"],
         scaled_positions=tags["coordinates"],
@@ -171,7 +171,7 @@ def write_supercells_with_displacements(
     """Write supercells with displacements to files."""
     convnum_super = []
     for i in conv_numbers:
-        for j in range(num_unitcells_in_supercell):
+        for _ in range(num_unitcells_in_supercell):
             convnum_super.append(i)
 
     # Currently, symmetry is not used by default
@@ -291,7 +291,7 @@ class CrystalIn:
                 N_atoms = int(lines[ll].split()[12])
                 ll += 3
                 # 1 T  22 TI    4.721218104494E-21  3.307446203077E-21  1.413771901417E-21  # noqa E501
-                for atom in range(0, N_atoms):
+                for _ in range(0, N_atoms):
                     atomdata = lines[ll].split()
                     aspecies.append(atomdata[3].capitalize())
                     coords.append([float(x) for x in atomdata[4:7]])
@@ -301,7 +301,7 @@ class CrystalIn:
                 lattvecs = []
                 ll += 2
                 #          X                    Y                    Z
-                for lattvec in range(1, 4):
+                for _ in range(1, 4):
                     lattvecs.append([float(x) for x in lines[ll].split()])
                     ll += 1
             elif "ATOMSPIN" in line:
