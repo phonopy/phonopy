@@ -1657,9 +1657,9 @@ class PhonopyConfParser(ConfParser):
 
         if "rd_temperature" in arg_list:
             if self._args.rd_temperature is not None:
-                self._confs[
-                    "random_displacement_temperature"
-                ] = self._args.rd_temperature
+                self._confs["random_displacement_temperature"] = (
+                    self._args.rd_temperature
+                )
 
         if "temperature" in arg_list:
             if self._args.temperature is not None:
