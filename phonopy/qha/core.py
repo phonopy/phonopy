@@ -266,7 +266,7 @@ class QHA:
             self._electronic_energies += self._volumes * pressure / EVAngstromToGPa
         self._all_temperatures = np.array(temperatures)
         self._cv = np.array(cv)
-        self._entropy = np.array(entropy)
+        self._entropy = np.array(entropy, dtype="float64")
         self._fe_phonon = np.array(fe_phonon) / EvTokJmol
 
         self._eos = get_eos(eos)
