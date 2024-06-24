@@ -523,6 +523,7 @@ class QHA:
                 selected_volumes.append(self._equiv_volumes[i])
                 selected_energies.append(self._equiv_energies[i])
 
+        e0 = 0
         for i, t in enumerate(self._temperatures[: self._len]):
             if t >= 298:
                 if i > 0:
@@ -917,6 +918,7 @@ class QHA:
                 selected_volumes.append(self._equiv_volumes[i])
                 selected_energies.append(self._equiv_energies[i])
 
+        e0 = 0
         for i, t in enumerate(self._temperatures[: self._len]):
             if t >= 298:
                 if i > 0:
