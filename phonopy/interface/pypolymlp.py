@@ -38,7 +38,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -47,7 +47,7 @@ from phonopy.structure.atoms import PhonopyAtoms
 try:
     from pypolymlp.mlp_dev.pypolymlp import Pypolymlp
 except ImportError:
-    pass
+    Pypolymlp = Any
 
 
 @dataclass
@@ -85,17 +85,17 @@ def develop_polymlp(
     else:
         _params = params
 
-    elements = list(set(supercell.symbols))
     polymlp = Pypolymlp()
+    elements_energies = {s: atom_energies for s in supercell.symbols}
     polymlp.set_params(
-        elements=elements,
+        elements=list(elements_energies.keys()),
         cutoff=_params.cutoff,
         model_type=_params.model_type,
         max_p=_params.max_p,
         gtinv_order=_params.gtinv_order,
         gtinv_maxl=_params.gtinv_maxl,
         gaussian_params2=_params.gaussian_params2,
-        atomic_energy=[atom_energies[elem] for elem in elements],
+        atomic_energy=list(elements_energies.values()),
     )
     polymlp.set_datasets_displacements(
         train_displacements,
@@ -111,7 +111,8 @@ def develop_polymlp(
 
 
 def evalulate_polymlp(
-    polymlp: Pypolymlp, supercells_with_displacements: list[PhonopyAtoms]
+    polymlp: Pypolymlp,  # type: ignore
+    supercells_with_displacements: list[PhonopyAtoms],
 ):
     """Run force calculation using pypolymlp."""
     try:
@@ -120,10 +121,11 @@ def evalulate_polymlp(
     except ImportError as exc:
         raise ModuleNotFoundError("Pypolymlp python module was not found.") from exc
 
-    print("coeffs")
-    print(polymlp.coeffs)
     prop = Properties(params_dict=polymlp.parameters, coeffs=polymlp.coeffs)
     energies, forces, stresses = prop.eval_multiple(
         [phonopy_cell_to_st_dict(scell) for scell in supercells_with_displacements]
     )
-    return energies, np.transpose(forces, (0, 2, 1)), stresses
+    energies = np.array(energies, dtype="double")
+    forces = np.array(np.transpose(forces, (0, 2, 1)), dtype="double", order="C")
+    stresses = np.array(stresses, dtype="double", order="C")
+    return energies, forces, stresses
