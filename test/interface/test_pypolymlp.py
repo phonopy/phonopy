@@ -240,22 +240,24 @@ def test_pypolymlp_develop(ph_nacl_rd: Phonopy):
     polymlp = develop_polymlp(
         ph_nacl_rd.supercell,
         PypolymlpData(
-            displacements=disps[:ndata].transpose((0, 2, 1)),
-            forces=forces[:ndata].transpose((0, 2, 1)),
+            displacements=disps[:ndata],
+            forces=forces[:ndata],
             supercell_energies=energies[:ndata],
         ),
         PypolymlpData(
-            displacements=disps[8:].transpose((0, 2, 1)),
-            forces=forces[8:].transpose((0, 2, 1)),
+            displacements=disps[8:],
+            forces=forces[8:],
             supercell_energies=energies[8:],
         ),
         params=params,
+        verbose=True,
     )
 
     ph = Phonopy(
         ph_nacl_rd.unitcell,
         ph_nacl_rd.supercell_matrix,
         ph_nacl_rd.primitive_matrix,
+        log_level=2,
     )
     ph.nac_params = ph_nacl_rd.nac_params
     # ph.generate_displacements(distance=0.001, number_of_snapshots=2, random_seed=1)

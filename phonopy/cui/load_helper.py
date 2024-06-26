@@ -35,6 +35,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import pathlib
+from typing import Optional
 
 import numpy as np
 
@@ -171,23 +172,27 @@ def read_force_constants_from_hdf5(
 
 def set_dataset_and_force_constants(
     phonon: Phonopy,
-    dataset,
-    fc,  # From phonopy_yaml
-    force_constants_filename=None,
-    force_sets_filename=None,
-    fc_calculator=None,
-    fc_calculator_options=None,
-    produce_fc=True,
-    symmetrize_fc=True,
-    is_compact_fc=True,
-    log_level=0,
+    dataset: dict,
+    fc: Optional[np.ndarray],  # From phonopy_yaml
+    force_constants_filename: Optional[str] = None,
+    force_sets_filename: Optional[str] = None,
+    fc_calculator: Optional[str] = None,
+    fc_calculator_options: Optional[str] = None,
+    produce_fc: bool = True,
+    symmetrize_fc: bool = True,
+    is_compact_fc: bool = True,
+    use_pypolymlp: bool = False,
+    log_level: int = 0,
 ):
     """Set displacement-force dataset and force constants."""
     natom = len(phonon.supercell)
 
     # dataset and fc are those obtained from phonopy_yaml unless None.
     if dataset is not None:
-        phonon.dataset = dataset
+        if use_pypolymlp:
+            phonon.mlp_dataset = dataset
+        else:
+            phonon.dataset = dataset
     if fc is not None:
         phonon.force_constants = fc
 
@@ -234,9 +239,12 @@ def set_dataset_and_force_constants(
     if phonon.force_constants is None:
         # Overwrite dataset
         if _dataset is not None:
-            is_overwritten = (
-                "first_atoms" in phonon.dataset or "displacements" in phonon.dataset
-            )
+            if phonon.dataset is None:
+                is_overwritten = False
+            else:
+                is_overwritten = (
+                    "first_atoms" in phonon.dataset or "displacements" in phonon.dataset
+                )
             phonon.dataset = _dataset
             if log_level:
                 print('Force sets were read from "%s".' % _force_sets_filename)
@@ -279,12 +287,12 @@ def _read_force_constants_file(
 
 
 def _produce_force_constants(
-    phonon,
-    fc_calculator,
-    fc_calculator_options,
-    symmetrize_fc,
-    is_compact_fc,
-    log_level,
+    phonon: Phonopy,
+    fc_calculator: Optional[str],
+    fc_calculator_options: Optional[str],
+    symmetrize_fc: bool,
+    is_compact_fc: bool,
+    log_level: int,
 ):
     try:
         phonon.produce_force_constants(
