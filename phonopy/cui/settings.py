@@ -103,6 +103,7 @@ class Settings:
         "max_temperature": 1000,
         "min_temperature": 0,
         "temperature_step": 10,
+        "use_pypolymlp": False,
     }
 
     def __init__(self, default=None):
@@ -301,6 +302,10 @@ class Settings:
     def set_is_time_reversal_symmetry(self, val):
         """Set is_time_reversal_symmetry."""
         self._v["is_time_reversal_symmetry"] = val
+
+    def set_use_pypolymlp(self, val):
+        """Set use_pypolymlp."""
+        self._v["use_pypolymlp"] = val
 
 
 # Parse phonopy setting filen
@@ -635,9 +640,9 @@ class ConfParser:
             if self._args.use_symfc:
                 self._confs["fc_calculator"] = "symfc"
 
-        if "use_hiphive" in arg_list:
-            if self._args.use_hiphive:
-                self._confs["fc_calculator"] = "hiphive"
+        if "use_pypolymlp" in arg_list:
+            if self._args.use_symfc:
+                self._confs["use_pypolymlp"] = ".true."
 
     def parse_conf(self):
         """Add treatments to settings from conf file or command options.
@@ -930,6 +935,12 @@ class ConfParser:
                 elif confs["save_params"].lower() == ".false.":
                     self.set_parameter("save_params", False)
 
+            if conf_key == "use_pypolymlp":
+                if confs["use_pypolymlp"].lower() == ".true.":
+                    self.set_parameter("use_pypolymlp", True)
+                elif confs["use_pypolymlp"].lower() == ".false.":
+                    self.set_parameter("use_pypolymlp", False)
+
     def set_parameter(self, key, val):
         """Pass to another data structure."""
         self._parameters[key] = val
@@ -1115,6 +1126,10 @@ class ConfParser:
         # Select yaml summary contents
         if "save_params" in params:
             self._settings.set_save_params(params["save_params"])
+
+        # Use pypolymlp
+        if "use_pypolymlp" in params:
+            self._settings.set_use_pypolymlp(params["use_pypolymlp"])
 
 
 #

@@ -101,7 +101,7 @@ class PypolymlpData:
         Displacements of atoms. shape=(n, natoms, 3)
     forces : np.ndarray
         Displacements of atoms. shape=(n, natoms, 3)
-    supercell_energies : np.ndarray
+    supercell_energies : np.ndarray, optional
         Energies of supercells. shape=(n,)
 
     """
@@ -166,11 +166,11 @@ def develop_polymlp(
         atomic_energy=list(elements_energies.values()),
     )
     polymlp.set_datasets_displacements(
-        train_data.displacements,
-        train_data.forces,
+        train_data.displacements.transpose(0, 2, 1),
+        train_data.forces.transpose(0, 2, 1),
         train_data.supercell_energies,
-        test_data.displacements,
-        test_data.forces,
+        test_data.displacements.transpose(0, 2, 1),
+        test_data.forces.transpose(0, 2, 1),
         test_data.supercell_energies,
         phonopy_cell_to_st_dict(supercell),
     )
