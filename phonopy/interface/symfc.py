@@ -121,7 +121,7 @@ def run_symfc(
         displacements=displacements,
         forces=forces,
         log_level=log_level - 1 and log_level,
-    ).run(orders=_orders, is_compact_fc=is_compact_fc)
+    ).run(max_order=int(max(_orders)), is_compact_fc=is_compact_fc)
 
     if log_level:
         print(
