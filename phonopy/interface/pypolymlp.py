@@ -52,28 +52,93 @@ except ImportError:
 
 @dataclass
 class PypolymlpParams:
-    """Parameters for pypolymlp."""
+    """Parameters for pypolymlp.
+
+    cutoff : flaot, optional
+        Cutoff radius. Default is 8.0.
+    model_type : int, optional
+        Polynomial function type. Default is 3. model_type = 1: Linear
+        polynomial of polynomial invariants model_type = 2: Polynomial of
+        polynomial invariants model_type = 3: Polynomial of pair invariants
+                        + linear polynomial of polynomial invariants
+        model_type = 4: Polynomial of pair and second-order invariants
+                        + linear polynomial of polynomial invariants
+    max_p : int, optional
+        Order of polynomial function. Default is 2.
+    gtinv_order : int, optional
+        Maximum order of polynomial invariants. Default is 3.
+    gtinv_maxl: Sequence[int], optional
+        Maximum angular numbers of polynomial invariants. [maxl for order=2,
+        maxl for order=3, ...] Default is (8, 8).
+    gaussian_params1, gaussian_params2 : Sequence[float, float, int], optional
+        Parameters for exp[- param1 * (r - param2)**2]. Parameters are given as
+        np.linspace(p[0], p[1], p[2]), where p[0], p[1], and p[2] are given by
+        gaussian_params1 and gaussian_params2. Normally it is recommended to
+        modify only gaussian_params2. Default is (1.0, 1.0, 1) and (0.0, 7.0,
+        10), respectively.
+    atom_energies: dict[str, float], optional
+        Atomic energies specified by dictionary, e.g., {'Si': -0.35864636, 'O':
+        -0.95743902}, where the order is irrelevant. Default is None, which
+        gives zero energies for all atoms.
+
+    """
 
     cutoff: float = 8.0
     model_type: int = 3
     max_p: int = 2
     gtinv_order: int = 3
     gtinv_maxl: Sequence[int] = (8, 8)
+    gaussian_params1: Sequence[float, float, int] = (1.0, 1.0, 1)
     gaussian_params2: Sequence[float, float, int] = (0.0, 7.0, 10)
+    atom_energies: Optional[dict[str, float]] = None
+
+
+@dataclass
+class PypolymlpData:
+    """Dataset for pypolymlp input.
+
+    displacements : np.ndarray
+        Displacements of atoms. shape=(n, natoms, 3)
+    forces : np.ndarray
+        Displacements of atoms. shape=(n, natoms, 3)
+    supercell_energies : np.ndarray
+        Energies of supercells. shape=(n,)
+
+    """
+
+    displacements: np.ndarray
+    forces: np.ndarray
+    supercell_energies: np.ndarray
 
 
 def develop_polymlp(
     supercell: PhonopyAtoms,
-    atom_energies: dict[str, float],
-    train_displacements: np.ndarray,
-    train_forces: np.ndarray,
-    train_energies: np.ndarray,
-    test_displacements: np.ndarray,
-    test_forces: np.ndarray,
-    test_energies: np.ndarray,
+    train_data: PypolymlpData,
+    test_data: PypolymlpData,
     params: Optional[PypolymlpParams] = None,
+    verbose: bool = False,
 ):
-    """Develop polynomial MLPs of pypolymlp."""
+    """Develop polynomial MLPs of pypolymlp.
+
+    Parameters
+    ----------
+    supercell : PhonopyAtoms
+        Supercell structure.
+    train_data : PyPolymlpData
+        Training dataset.
+    test_data : PyPolymlpData
+        Test dataset.
+    params : PypolymlpParams, optional
+        Parameters for pypolymlp. Default is None.
+    verbose : bool, optional
+        Verbosity. Default is False.
+
+    Returns
+    -------
+    polymlp : Pypolymlp
+        Pypolymlp object.
+
+    """
     try:
         from pypolymlp.mlp_dev.pypolymlp import Pypolymlp
         from pypolymlp.utils.phonopy_utils import phonopy_cell_to_st_dict
@@ -85,8 +150,11 @@ def develop_polymlp(
     else:
         _params = params
 
+    if _params.atom_energies is None:
+        elements_energies = {s: 0.0 for s in supercell.symbols}
+    else:
+        elements_energies = {s: _params.atom_energies[s] for s in supercell.symbols}
     polymlp = Pypolymlp()
-    elements_energies = {s: atom_energies for s in supercell.symbols}
     polymlp.set_params(
         elements=list(elements_energies.keys()),
         cutoff=_params.cutoff,
@@ -98,15 +166,15 @@ def develop_polymlp(
         atomic_energy=list(elements_energies.values()),
     )
     polymlp.set_datasets_displacements(
-        train_displacements,
-        train_forces,
-        train_energies,
-        test_displacements,
-        test_forces,
-        test_energies,
+        train_data.displacements,
+        train_data.forces,
+        train_data.supercell_energies,
+        test_data.displacements,
+        test_data.forces,
+        test_data.supercell_energies,
         phonopy_cell_to_st_dict(supercell),
     )
-    polymlp.run(verbose=True)
+    polymlp.run(verbose=verbose)
     return polymlp
 
 
@@ -114,7 +182,25 @@ def evalulate_polymlp(
     polymlp: Pypolymlp,  # type: ignore
     supercells_with_displacements: list[PhonopyAtoms],
 ):
-    """Run force calculation using pypolymlp."""
+    """Run force calculation using pypolymlp.
+
+    Parameters
+    ----------
+    polymlp : Pypolymlp
+        Pypolymlp object.
+    supercells_with_displacements : Sequence[PhonopyAtoms]
+        Sequence of supercells with displacements.
+
+    Returns
+    -------
+    energies : np.ndarray
+        Energies of supercells. shape=(n,)
+    forces : np.ndarray
+        Forces of supercells. shape=(n, natoms, 3)
+    stresses : np.ndarray
+        Stresses of supercells (xx, yy, zz, xy, yz, zx). shape=(n, 6)
+
+    """
     try:
         from pypolymlp.calculator.properties import Properties
         from pypolymlp.utils.phonopy_utils import phonopy_cell_to_st_dict

@@ -9,6 +9,124 @@ from phonopy import Phonopy
 
 cwd_called = pathlib.Path.cwd()
 
+# POSCAR for atom energy calculation
+#    1.0
+# 15 0 0
+# 0 15.1 0
+# 0 0 15.2
+# element
+# 1
+# Direct
+# 0 0 0
+#       PREC = Accurate
+#     IBRION = -1
+#     NELMIN = 5
+#      ENCUT = 520
+#      EDIFF = 1.000000e-08
+#     ISMEAR = 0
+#      SIGMA = 0.002
+#      IALGO = 38
+#      LREAL = .FALSE.
+#      LWAVE = .FALSE.
+#     LCHARG = .FALSE.
+#       NPAR = 4
+#       ISYM = 0
+#        GGA = PS
+#      ISPIN = 2
+#       NELM = 500
+#       ALGO = D
+#    LSUBROT = .FALSE.
+#       TIME = 0.2
+#    ADDGRID = .TRUE.
+# ps_map = {
+#     "Ac": "Ac",
+#     "Ag": "Ag_pv",
+#     "Al": "Al",
+#     "Ar": "Ar",
+#     "As": "As_d",
+#     "Au": "Au",
+#     "B": "B",
+#     "Ba": "Ba_sv",
+#     "Be": "Be",
+#     "Bi": "Bi",
+#     "Br": "Br",
+#     "C": "C",
+#     "Ca": "Ca_pv",
+#     "Cd": "Cd",
+#     "Ce": "Ce",
+#     "Cl": "Cl",
+#     "Co": "Co",
+#     "Cr": "Cr_pv",
+#     "Cs": "Cs_sv",
+#     "Cu": "Cu_pv",
+#     "Dy": "Dy_3",
+#     "Er": "Er_3",
+#     "Eu": "Eu",
+#     "F": "F",
+#     "Fe": "Fe_pv",
+#     "Ga": "Ga_d",
+#     "Gd": "Gd",
+#     "Ge": "Ge_d",
+#     "H": "H",
+#     "Hf": "Hf_pv",
+#     "Hg": "Hg",
+#     "Ho": "Ho_3",
+#     "I": "I",
+#     "In": "In_d",
+#     "Ir": "Ir",
+#     "K": "K_pv",
+#     "Kr": "Kr",
+#     "La": "La",
+#     "Li": "Li_sv",
+#     "Lu": "Lu_3",
+#     "Mg": "Mg_pv",
+#     "Mn": "Mn_pv",
+#     "Mo": "Mo_pv",
+#     "N": "N",
+#     "Na": "Na_pv",
+#     "Nb": "Nb_pv",
+#     "Nd": "Nd_3",
+#     "Ne": "Ne",
+#     "Ni": "Ni_pv",
+#     "Np": "Np",
+#     "O": "O",
+#     "Os": "Os_pv",
+#     "P": "P",
+#     "Pa": "Pa",
+#     "Pb": "Pb_d",
+#     "Pd": "Pd_pv",
+#     "Pm": "Pm_3",
+#     "Pr": "Pr_3",
+#     "Pt": "Pt",
+#     "Rb": "Rb_pv",
+#     "Re": "Re_pv",
+#     "Rh": "Rh_pv",
+#     "Ru": "Ru_pv",
+#     "S": "S",
+#     "Sb": "Sb",
+#     "Sc": "Sc_sv",
+#     "Se": "Se",
+#     "Si": "Si",
+#     "Sm": "Sm_3",
+#     "Sn": "Sn_d",
+#     "Sr": "Sr_sv",
+#     "Ta": "Ta_pv",
+#     "Tb": "Tb_3",
+#     "Tc": "Tc_pv",
+#     "Te": "Te",
+#     "Th": "Th",
+#     "Ti": "Ti_pv",
+#     "Tl": "Tl_d",
+#     "Tm": "Tm_3",
+#     "U": "U",
+#     "V": "V_pv",
+#     "W": "W_sv",
+#     "Xe": "Xe",
+#     "Y": "Y_sv",
+#     "Yb": "Yb_2",
+#     "Zn": "Zn",
+#     "Zr": "Zr_sv",
+# }
 atom_energies = {
     "Ac": -0.31859431,
     "Ag": -0.23270167,
@@ -105,13 +223,13 @@ def test_pypolymlp_develop(ph_nacl_rd: Phonopy):
     pytest.importorskip("pypolymlp")
     pytest.importorskip("symfc")
     from phonopy.interface.pypolymlp import (
+        PypolymlpData,
         PypolymlpParams,
         develop_polymlp,
         evalulate_polymlp,
     )
 
-    params = PypolymlpParams(gtinv_maxl=(4, 4))
-
+    params = PypolymlpParams(gtinv_maxl=(4, 4), atom_energies=atom_energies)
     disps = ph_nacl_rd.displacements
     forces = ph_nacl_rd.forces
     energies = ph_nacl_rd.supercell_energies
@@ -121,18 +239,23 @@ def test_pypolymlp_develop(ph_nacl_rd: Phonopy):
     ndata = 4
     polymlp = develop_polymlp(
         ph_nacl_rd.supercell,
-        atom_energies,
-        disps[:ndata].transpose((0, 2, 1)),
-        forces[:ndata].transpose((0, 2, 1)),
-        energies[:ndata],
-        disps[8:].transpose((0, 2, 1)),
-        forces[8:].transpose((0, 2, 1)),
-        energies[8:],
+        PypolymlpData(
+            displacements=disps[:ndata].transpose((0, 2, 1)),
+            forces=forces[:ndata].transpose((0, 2, 1)),
+            supercell_energies=energies[:ndata],
+        ),
+        PypolymlpData(
+            displacements=disps[8:].transpose((0, 2, 1)),
+            forces=forces[8:].transpose((0, 2, 1)),
+            supercell_energies=energies[8:],
+        ),
         params=params,
     )
 
     ph = Phonopy(
-        ph_nacl_rd.unitcell, ph_nacl_rd.supercell_matrix, ph_nacl_rd.primitive_matrix
+        ph_nacl_rd.unitcell,
+        ph_nacl_rd.supercell_matrix,
+        ph_nacl_rd.primitive_matrix,
     )
     ph.nac_params = ph_nacl_rd.nac_params
     # ph.generate_displacements(distance=0.001, number_of_snapshots=2, random_seed=1)
@@ -294,25 +417,3 @@ def test_pypolymlp_develop(ph_nacl_rd: Phonopy):
         5.451421819346681,
     ]
     np.testing.assert_allclose(freqs.ravel(), freqs_ref, atol=1e-6)
-
-    # Currently pypolymlp writes files and there is no option to surpress it.
-    for created_filename in [
-        "polymlp.lammps",
-        "polymlp_error.yaml",
-        "polymlp_params.yaml",
-    ]:
-        file_path = cwd_called / created_filename
-        assert file_path.exists()
-        file_path.unlink()
-
-    dir_path = pathlib.Path(cwd_called / "predictions")
-    for created_filename in [
-        "energy.test.dat",
-        "energy.train.dat",
-    ]:
-        file_path = dir_path / created_filename
-        assert file_path.exists()
-        file_path.unlink()
-
-    assert dir_path.exists()
-    dir_path.rmdir()
