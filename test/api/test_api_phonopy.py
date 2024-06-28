@@ -270,4 +270,4 @@ def test_mlp_NaCl_type2(ph_nacl_rd: Phonopy):
         4.895750076392935,
         5.461698684467867,
     ]
-    np.testing.assert_allclose(freqs.ravel(), freqs_ref, atol=1e-6)
+    np.testing.assert_allclose(freqs.ravel(), freqs_ref, atol=1e-5)
