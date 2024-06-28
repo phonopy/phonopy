@@ -273,7 +273,8 @@ def parse_mlp_params(params: Union[str, dict, PypolymlpParams]) -> PypolymlpPara
             elif key == "cutoff":
                 params_dict[key] = float(val)
             else:
-                params_dict[key] = int(val)
+                if key in ("model_type", "max_p", "gtinv_order"):
+                    params_dict[key] = int(val)
         return PypolymlpParams(**params_dict)
     else:
         raise RuntimeError("params has to be dict, str, or PypolymlpParams.")
