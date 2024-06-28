@@ -38,7 +38,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 import numpy as np
 
@@ -215,3 +215,65 @@ def evalulate_polymlp(
     forces = np.array(np.transpose(forces, (0, 2, 1)), dtype="double", order="C")
     stresses = np.array(stresses, dtype="double", order="C")
     return energies, forces, stresses
+
+
+def parse_mlp_params(params: Union[str, dict, PypolymlpParams]) -> PypolymlpParams:
+    """Parse MLP parameters string and return PypolymlpParams.
+
+    Supported MLP parameters
+    ------------------------
+    cutoff: float = 8.0
+    model_type: int = 3
+    max_p: int = 2
+    gtinv_order: int = 3
+    gtinv_maxl: Sequence[int] = (8, 8)
+    gaussian_params1: Sequence[float, float, int] = (1.0, 1.0, 1)
+    gaussian_params2: Sequence[float, float, int] = (0.0, 7.0, 10)
+    atom_energies: Optional[dict[str, float]] = None
+
+    Parameters
+    ----------
+    params : str, dict, PyPolymlpParams
+        Parameters for pypolymlp.
+
+    Note
+    ----
+    When str, it should be written as follows:
+
+        "cutoff = 10.0, gtinv_maxl = 8 8"
+        "atom_energies = Si -0.35864636 O -0.95743902"
+
+
+    """
+    if isinstance(params, dict):
+        return PypolymlpParams(**params)
+    elif isinstance(params, PypolymlpParams):
+        return params
+    elif isinstance(params, str):
+        params_dict = {}
+        for param in params.split(","):
+            key_val = [v.strip().lower() for v in param.split("=")]
+            if len(key_val) != 2:
+                break
+            key, val = key_val
+            if key == "gtinv_maxl":
+                params_dict[key] = tuple(map(int, val.split()))
+            elif key == "gaussian_params1" or key == "gaussian_params2":
+                vals = val.split()
+                params_dict[key] = (float(vals[0]), float(vals[1]), int(vals[2]))
+            elif key == "atom_energies":
+                vals = val.split()
+                if len(vals) % 2 != 0:
+                    raise ValueError(
+                        "The input list must have an even number of elements."
+                    )
+                params_dict[key] = {
+                    vals[i]: float(vals[i + 1]) for i in range(0, len(vals), 2)
+                }
+            elif key == "cutoff":
+                params_dict[key] = float(val)
+            else:
+                params_dict[key] = int(val)
+        return PypolymlpParams(**params_dict)
+    else:
+        raise RuntimeError("params has to be dict, str, or PypolymlpParams.")

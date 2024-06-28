@@ -68,7 +68,12 @@ from phonopy.harmonic.force_constants import get_fc2 as get_phonopy_fc2
 from phonopy.interface.calculator import get_default_physical_units
 from phonopy.interface.fc_calculator import get_fc2
 from phonopy.interface.phonopy_yaml import PhonopyYaml
-from phonopy.interface.pypolymlp import PypolymlpData, PypolymlpParams, develop_polymlp
+from phonopy.interface.pypolymlp import (
+    PypolymlpData,
+    PypolymlpParams,
+    develop_polymlp,
+    evalulate_polymlp,
+)
 from phonopy.phonon.animation import write_animation
 from phonopy.phonon.band_structure import BandStructure, get_band_qpoints_by_seekpath
 from phonopy.phonon.dos import ProjectedDos, TotalDos, get_dos_frequency_range
@@ -838,7 +843,7 @@ class Phonopy:
         self.nac_params = nac_params
 
     @property
-    def supercells_with_displacements(self) -> list[PhonopyAtoms]:
+    def supercells_with_displacements(self) -> Optional[list[PhonopyAtoms]]:
         """Return supercells with displacements.
 
         list of PhonopyAtoms
@@ -1276,23 +1281,16 @@ class Phonopy:
         constants.
 
         """
-        try:
-            from phonopy.interface.pypolymlp import evalulate_polymlp
-        except ImportError as exc:
-            raise ImportError("pypolymlp is not available.") from exc
-
         if self._mlp is None:
             raise RuntimeError("MLP is not developed yet.")
 
-        if self._dataset is None or "displacements" not in self._dataset:
-            raise RuntimeError(
-                "Type 2 displacements are not set. Run generate_displacements."
-            )
+        if self.supercells_with_displacements is None:
+            raise RuntimeError("Displacements are not set. Run generate_displacements.")
 
         energies, forces, _ = evalulate_polymlp(
             self._mlp, self.supercells_with_displacements
         )
-        self.supercell_energy = energies
+        self.supercell_energies = energies
         self.forces = forces
 
     #####################
