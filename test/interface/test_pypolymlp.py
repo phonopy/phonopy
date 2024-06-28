@@ -6,6 +6,12 @@ import numpy as np
 import pytest
 
 from phonopy import Phonopy
+from phonopy.interface.pypolymlp import (
+    PypolymlpData,
+    PypolymlpParams,
+    develop_polymlp,
+    evalulate_polymlp,
+)
 
 cwd_called = pathlib.Path.cwd()
 
@@ -222,13 +228,6 @@ def test_pypolymlp_develop(ph_nacl_rd: Phonopy):
     """Test of pypolymlp-develop using NaCl 2x2x2 with RD results."""
     pytest.importorskip("pypolymlp")
     pytest.importorskip("symfc")
-    from phonopy.interface.pypolymlp import (
-        PypolymlpData,
-        PypolymlpParams,
-        develop_polymlp,
-        evalulate_polymlp,
-    )
-
     params = PypolymlpParams(gtinv_maxl=(4, 4), atom_energies=atom_energies)
     disps = ph_nacl_rd.displacements
     forces = ph_nacl_rd.forces
