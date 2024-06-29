@@ -333,7 +333,7 @@ class LammpsStructureLoader:
 
     def _parse_AtomTypeLabels(self, lines):
         num_types = 0
-        for i, line in enumerate(lines):
+        for i, line in enumerate(lines):  # noqa: B007
             _line = line.split("#")[0].strip()
             if _line == "":
                 continue

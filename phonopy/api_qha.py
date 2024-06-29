@@ -410,6 +410,7 @@ class PhonopyQHA:
             "PhonopyQHA.get_bulk_modulus() is deprecated."
             "Use bulk_modulus attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.bulk_modulus
 
@@ -419,6 +420,7 @@ class PhonopyQHA:
             "PhonopyQHA.get_helmholtz_volume() is deprecated."
             "Use helmholtz_volume attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.helmholtz_volume
 
@@ -428,6 +430,7 @@ class PhonopyQHA:
             "PhonopyQHA.get_volume_temperature() is deprecated."
             "Use volume_temperature attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.volume_temperature
 
@@ -437,6 +440,7 @@ class PhonopyQHA:
             "PhonopyQHA.get_thermal_expansion() is deprecated."
             "Use thermal_expansion attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.thermal_expansion
 
@@ -446,6 +450,7 @@ class PhonopyQHA:
             "PhonopyQHA.get_gibbs_temperature() is deprecated."
             "Use gibbs_temperature attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.gibbs_temperature
 
@@ -455,6 +460,7 @@ class PhonopyQHA:
             "PhonopyQHA.get_bulk_modulus_temperature() is deprecated."
             "Use bulk_modulus_temperature attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.bulk_modulus_temperature
 
@@ -464,6 +470,7 @@ class PhonopyQHA:
             "PhonopyQHA.get_heat_capacity_P_numerical() is deprecated."
             "Use heat_capacity_P_numerical attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.heat_capacity_P_numerical
 
@@ -473,6 +480,7 @@ class PhonopyQHA:
             "PhonopyQHA.get_heat_capacity_P_polyfit() is deprecated."
             "Use heat_capacity_P_polyfit attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.heat_capacity_P_polyfit
 
@@ -482,5 +490,6 @@ class PhonopyQHA:
             "PhonopyQHA.get_gruneisen_temperature() is deprecated."
             "Use gruneisen_temperature attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.gruneisen_temperature

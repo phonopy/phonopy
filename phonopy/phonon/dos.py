@@ -34,7 +34,6 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import sys
 import warnings
 
 import numpy as np
@@ -194,6 +193,7 @@ class TotalDos(Dos):
             "TotalDos.get_dos() is deprecated. "
             "Use frequency_points and dos attributes instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self._frequency_points, self._dos
 
@@ -205,9 +205,8 @@ class TotalDos(Dos):
         """Calculate a kind of Debye frequency."""
         try:
             from scipy.optimize import curve_fit
-        except ImportError:
-            print("You need to install python-scipy.")
-            sys.exit(1)
+        except ImportError as exc:
+            raise ModuleNotFoundError("You need to install python-scipy.") from exc
 
         def Debye_dos(freq, a):
             return a * freq**2
@@ -344,6 +343,7 @@ class ProjectedDos(Dos):
             "PartialDos.partial_dos attribute is deprecated. "
             "Use projected_dos attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self._projected_dos
 
@@ -376,6 +376,7 @@ class ProjectedDos(Dos):
             "ProjectedDos.get_partial_dos() is deprecated. "
             "Use frequency_points and projected_dos attributes instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self._frequency_points, self._projected_dos
 
@@ -486,6 +487,7 @@ class PartialDos(ProjectedDos):
         warnings.warn(
             "PartialDos class is deprecated. Use ProjectedDOS instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         super().__init__(
             mesh_object,
@@ -521,6 +523,7 @@ def write_partial_dos(
     warnings.warn(
         "write_partial_dos() is deprecated. Use write_projected_dos() instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
     write_projected_dos(
         frequency_points, partial_dos, comment=comment, filename=filename
@@ -607,6 +610,7 @@ def plot_partial_dos(
     warnings.warn(
         "plot_partial_dos() is deprecated. Use plot_projected_dos() instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
     plot_projected_dos(
         ax,
@@ -692,11 +696,8 @@ def run_tetrahedron_method_dos(
     """Return (P)DOS calculated by tetrahedron method in C."""
     try:
         import phonopy._phonopy as phonoc
-    except ImportError:
-        import sys
-
-        print("Phonopy C-extension has to be built properly.")
-        sys.exit(1)
+    except ImportError as exc:
+        raise RuntimeError("Phonopy C-extension has to be built properly.") from exc
 
     if coef is None:
         _coef = np.ones((frequencies.shape[0], 1, frequencies.shape[1]), dtype="double")
@@ -726,12 +727,12 @@ def get_dos_frequency_range(freqs, dos):
     i_min = 0
     i_max = 1000
 
-    for i, (f, d) in enumerate(zip(freqs, dos)):
+    for i, (_, d) in enumerate(zip(freqs, dos)):
         if d > 1e-5:
             i_min = i
             break
 
-    for i, (f, d) in enumerate(zip(freqs[::-1], dos[::-1])):
+    for i, (_, d) in enumerate(zip(freqs[::-1], dos[::-1])):
         if d > 1e-5:
             i_max = len(freqs) - 1 - i
             break

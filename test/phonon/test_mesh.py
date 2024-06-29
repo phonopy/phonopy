@@ -206,7 +206,7 @@ def _test_IterMesh(ph_nacl: Phonopy, freqs_ref):
     ph_nacl.init_mesh(mesh=[3, 3, 3], with_eigenvectors=True, use_iter_mesh=True)
     freqs = []
     eigvecs = []
-    for i, (f, e) in enumerate(ph_nacl.mesh):
+    for f, e in ph_nacl.mesh:
         freqs.append(f)
         eigvecs.append(e)
 

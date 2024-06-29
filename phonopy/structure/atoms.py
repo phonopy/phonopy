@@ -53,6 +53,7 @@ def Atoms(*args, **kwargs):
         "phonopy.atoms.Atoms is deprecated. Please use "
         "PhonopyAtoms instead of Atoms.",
         DeprecationWarning,
+        stacklevel=2,
     )
     return PhonopyAtoms(*args, **kwargs)
 
@@ -108,12 +109,14 @@ class PhonopyAtoms:
                 "PhonopyAtoms.__init__ parameter of magmoms is deprecated. "
                 "Use magnetic_moments instead.",
                 DeprecationWarning,
+                stacklevel=2,
             )
         if pbc is not None:
             warnings.warn(
                 "PhonopyAtoms.__init__ parameter of pbc is deprecated. "
                 "It is considered always True.",
                 DeprecationWarning,
+                stacklevel=2,
             )
         if atoms:
             self._set_parameters(
@@ -192,6 +195,7 @@ class PhonopyAtoms:
         warnings.warn(
             "PhonopyAtoms.set_cell() is deprecated. Use cell attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.cell = cell
 
@@ -200,6 +204,7 @@ class PhonopyAtoms:
         warnings.warn(
             "PhonopyAtoms.get_cell() is deprecated. Use cell attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.cell
 
@@ -219,6 +224,7 @@ class PhonopyAtoms:
             "PhonopyAtoms.get_positions() is deprecated. "
             "Use positions attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.positions
 
@@ -228,6 +234,7 @@ class PhonopyAtoms:
             "PhonopyAtoms.set_positions() is deprecated. "
             "Use positions attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.positions = positions
 
@@ -247,6 +254,7 @@ class PhonopyAtoms:
             "PhonopyAtoms.get_scaled_positions() is deprecated. "
             "Use scaled_positions attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.scaled_positions
 
@@ -256,6 +264,7 @@ class PhonopyAtoms:
             "PhonopyAtoms.set_scaled_positions() is deprecated. "
             "Use scaled_positions attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.scaled_positions = scaled_positions
 
@@ -277,6 +286,7 @@ class PhonopyAtoms:
             "PhonopyAtoms.get_chemical_symbols() is deprecated. "
             "Use symbols attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.symbols
 
@@ -286,6 +296,7 @@ class PhonopyAtoms:
             "PhonopyAtoms.set_chemical_symbols() is deprecated. "
             "Use symbols attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.symbols = symbols
 
@@ -307,6 +318,7 @@ class PhonopyAtoms:
             "PhonopyAtoms.get_atomic_numbers() is deprecated. "
             "Use numbers attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.numbers
 
@@ -316,6 +328,7 @@ class PhonopyAtoms:
             "PhonopyAtoms.set_atomic_numbers() is deprecated. "
             "Use numbers attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.numbers = numbers
 
@@ -337,6 +350,7 @@ class PhonopyAtoms:
         warnings.warn(
             "PhonopyAtoms.get_masses() is deprecated. Use masses attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.masses
 
@@ -345,6 +359,7 @@ class PhonopyAtoms:
         warnings.warn(
             "PhonopyAtoms.set_masses() is deprecated. Use masses attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.masses = masses
 
@@ -376,6 +391,7 @@ class PhonopyAtoms:
             "PhonopyAtoms.get_magnetic_moments() is deprecated. "
             "Use magnetic_moments attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.magnetic_moments
 
@@ -385,6 +401,7 @@ class PhonopyAtoms:
             "PhonopyAtoms.set_magnetic_moments() is deprecated. "
             "Use magnetic_moments attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.magnetic_moments = magmoms
 
@@ -398,6 +415,7 @@ class PhonopyAtoms:
         warnings.warn(
             "PhonopyAtoms.get_volume() is deprecated. " "Use volume attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.volume
 
@@ -535,6 +553,7 @@ class PhonopyAtoms:
         warnings.warn(
             "PhonopyAtoms.to_tuple() is deprecated. Use totuple() instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.totuple()
 

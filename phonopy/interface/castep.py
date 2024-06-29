@@ -54,7 +54,7 @@ def collect_forces_castep(f, num_atom, hook, force_pos, word=None, skipafterhook
         if hook in line:
             break
     if skipafterhook > 0:
-        for i in range(skipafterhook):
+        for _ in range(skipafterhook):
             f.readline()
 
     forces = []

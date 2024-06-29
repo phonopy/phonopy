@@ -246,7 +246,7 @@ def symmetrize_force_constants(force_constants, level=1):
 
         phonoc.perm_trans_symmetrize_fc(force_constants, level)
     except ImportError:
-        for i in range(level):
+        for _ in range(level):
             set_translational_invariance(force_constants)
             set_permutation_symmetry(force_constants)
         set_translational_invariance(force_constants)
@@ -280,12 +280,12 @@ def symmetrize_compact_force_constants(force_constants, primitive: Primitive, le
         phonoc.perm_trans_symmetrize_compact_fc(
             force_constants, permutations, s2pp_map, p2s_map, nsym_list, level
         )
-    except ImportError:
+    except ImportError as exc:
         text = (
             "Import error at phonoc.perm_trans_symmetrize_compact_fc. "
             "Corresponding pytono code is not implemented."
         )
-        raise RuntimeError(text)
+        raise RuntimeError(text) from exc
 
 
 def distribute_force_constants(
@@ -388,11 +388,25 @@ def solve_force_constants(
 
 
 def get_positions_sent_by_rot_inv(
-    lattice, positions, site_symmetry, symprec  # column vectors
+    lattice: np.ndarray,
+    positions: np.ndarray,
+    site_symmetry: np.ndarray,
+    symprec: float,
 ):
     """Return atom indices of positions sent by inverse site symmetries.
 
     Rotated_positions[rot_map] == positions.
+
+    Parameters
+    ----------
+    lattice : ndarray
+        Basis vectors in column vectors (like PhonopyAtoms.cell.T)
+    positions : ndarray
+        Scaled positions shifted by a displaced atom as the origin.
+    site_symmetry : ndarray
+        Site symmetry operations of the displaced atom.
+    symprec : float
+        Tolerance of symmetry.
 
     Note
     ----
@@ -423,49 +437,30 @@ def get_rotated_displacement(displacements, site_sym_cart):
     return np.array(np.reshape(rot_disps, (-1, 3)), dtype="double", order="C")
 
 
-def set_tensor_symmetry(
-    force_constants, lattice, positions, symmetry  # column vectors
+def set_tensor_symmetry_PJ(
+    force_constants: np.ndarray,
+    lattice: np.ndarray,
+    positions: np.ndarray,
+    symmetry: Symmetry,
 ):
     """Full force constants are symmetrized using crystal symmetry.
 
     This method extracts symmetrically equivalent sets of atomic pairs and
     take sum of their force constants and average the sum.
 
-    """
-    rotations = symmetry.get_symmetry_operations()["rotations"]
-    translations = symmetry.get_symmetry_operations()["translations"]
-    map_atoms = symmetry.get_map_atoms()
-    symprec = symmetry.tolerance
-    cart_rot = np.array([similarity_transformation(lattice, rot) for rot in rotations])
-
-    mapa = _get_atom_indices_by_symmetry(
-        lattice, positions, rotations, translations, symprec
-    )
-    fc_new = np.zeros_like(force_constants)
-    indep_atoms = symmetry.get_independent_atoms()
-
-    for i in indep_atoms:
-        fc_combined = np.zeros(force_constants.shape[1:], dtype="double")
-        num_equiv_atoms = _combine_force_constants_equivalent_atoms(
-            fc_combined, force_constants, i, cart_rot, map_atoms, mapa
-        )
-        num_sitesym = _average_force_constants_by_sitesym(
-            fc_new, fc_combined, i, cart_rot, mapa
-        )
-
-        assert num_equiv_atoms * num_sitesym == len(rotations)
-
-    permutations = symmetry.atomic_permutations
-    distribute_force_constants(fc_new, indep_atoms, lattice, rotations, permutations)
-
-    force_constants[:] = fc_new
-
-
-def set_tensor_symmetry_PJ(force_constants, lattice, positions, symmetry):
-    """Full force constants are symmetrized using crystal symmetry.
-
-    This method extracts symmetrically equivalent sets of atomic pairs and
-    take sum of their force constants and average the sum.
+    Parameters
+    ----------
+    force_constants : ndarray
+        Force constants.
+        shape=(n_satom, n_satom, 3, 3), dtype='double', order='C'
+    lattice : ndarray
+        Basis vectors in column vectors.
+        shape=(3, 3), dtype='double'
+    positions : ndarray
+        Atomic positions in scaled coordinates.
+        shape=(n_satom, 3), dtype='double', order='C'
+    symmetry : Symmetry
+        Symmetry of the supercell.
 
     """
     rotations = symmetry.get_symmetry_operations()["rotations"]
@@ -575,12 +570,12 @@ def show_drift_force_constants(
             )
             maxval2, jk2 = _get_drift_per_index(force_constants)
 
-        except ImportError:
+        except ImportError as exc:
             text = (
                 "Import error at phonoc.tranpose_compact_fc. "
                 "Corresponding python code is not implemented."
             )
-            raise RuntimeError(text)
+            raise RuntimeError(text) from exc
 
     if values_only:
         text = ""
@@ -729,7 +724,7 @@ def _solve_force_constants_svd(
 
 
 def _get_force_constants_disps(
-    force_constants, supercell, dataset, symmetry, atom_list=None
+    force_constants, supercell, dataset, symmetry: Symmetry, atom_list=None
 ):
     """Calculate force constants Phi = -F / d.
 
@@ -790,8 +785,8 @@ def _combine_force_constants_equivalent_atoms(
 
         num_equiv_atoms += 1
         r_i = (mapa[:, j] == i).nonzero()[0][0]
-        for k, l in enumerate(mapa[r_i]):
-            fc_combined[l] += similarity_transformation(
+        for k, ll in enumerate(mapa[r_i]):
+            fc_combined[ll] += similarity_transformation(
                 cart_rot[r_i], force_constants[j, k]
             )
 

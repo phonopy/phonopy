@@ -2,6 +2,11 @@
 
 # Change Log
 
+## Jun-29-2024: Version 2.25.0
+
+- Migration to ruff.
+- Experimental implementation for using pypolymlp.
+
 ## Jun-19-2024: Version 2.24.3
 
 - Treatment for running with numpy 2.0.

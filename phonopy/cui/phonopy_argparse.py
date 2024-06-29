@@ -647,6 +647,13 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         help="Output projected thermal properties",
     )
     parser.add_argument(
+        "--pypolymlp",
+        dest="use_pypolymlp",
+        action="store_true",
+        default=None,
+        help="Use pypolymlp for generating force constants",
+    )
+    parser.add_argument(
         "--qpoints",
         nargs="+",
         dest="qpoints",

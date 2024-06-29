@@ -37,6 +37,13 @@ jobs:
         cd spglib
         pip install -e . -vvv
         cd ..
+    - name: Setup symfc
+      run: |
+        conda activate test
+        git clone --depth 1 https://github.com/symfc/symfc.git
+        cd symfc
+        pip install -e . -vvv
+        cd ..
     - name: Setup phonopy
       run: |
         conda activate test
