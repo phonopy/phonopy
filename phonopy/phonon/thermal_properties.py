@@ -316,6 +316,7 @@ class ThermalProperties(ThermalPropertiesBase):
             "ThermalProperties.get_temperatures is deprecated."
             "Use temperatures attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.temperatures
 
@@ -325,6 +326,7 @@ class ThermalProperties(ThermalPropertiesBase):
             "ThermalProperties.set_temperatures is deprecated."
             "Use temperatures attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.temperatures = temperatures
 
@@ -349,6 +351,7 @@ class ThermalProperties(ThermalPropertiesBase):
             "ThermalProperties.get_thermal_properties is deprecated."
             "Use thermal_properties attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.thermal_properties
 
@@ -363,6 +366,7 @@ class ThermalProperties(ThermalPropertiesBase):
             "ThermalProperties.get_zero_point_energy is deprecated."
             "Use zero_point_energy attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.zero_point_energy
 
@@ -377,6 +381,7 @@ class ThermalProperties(ThermalPropertiesBase):
             "ThermalProperties.get_number_of_integrated_modes is "
             "deprecated. Use number_of_integrated_modes attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.number_of_integrated_modes
 
@@ -391,6 +396,7 @@ class ThermalProperties(ThermalPropertiesBase):
             "ThermalProperties.get_number_of_modes is "
             "deprecated. Use number_of_modes attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.number_of_modes
 
@@ -504,6 +510,7 @@ class ThermalProperties(ThermalPropertiesBase):
                 "Use 'set_temperature_range' or "
                 "'set_temperature_range' method instead.",
                 DeprecationWarning,
+                stacklevel=2,
             )
             self.set_temperature_range(t_min=t_min, t_max=t_max, t_step=t_step)
 

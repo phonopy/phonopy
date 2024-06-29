@@ -92,7 +92,7 @@ def forces_in_dataset(dataset):
     if dataset is None:
         return False
 
-    if type(dataset) is not dict:
+    if not isinstance(dataset, dict):
         raise RuntimeError("dataset is wrongly made.")
 
     if "first_atoms" in dataset:  # type-1

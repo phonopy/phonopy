@@ -177,7 +177,8 @@ def read_abacus(filename):
         import warnings
 
         warnings.warn(
-            "Non-colinear angle-settings are not yet supported for this interface."
+            "Non-colinear angle-settings are not yet supported for this interface.",
+            stacklevel=2,
         )
     mags, m_index = _get_index(m_labels, 1)
     try:  # non-colinear
@@ -205,7 +206,7 @@ def read_abacus(filename):
             magnetic_moments=magnetic_moments,
         )
     else:
-        warnings.warn("Only 'Direct' and 'Cartesian' are supported.")
+        warnings.warn("Only 'Direct' and 'Cartesian' are supported.", stacklevel=2)
 
     fd.close()
     return atoms, atom_potential, atom_basis, atom_offsite_basis
@@ -252,19 +253,19 @@ def get_abacus_structure(atoms, pps, orbitals=None, abfs=None):
     elements = list(Counter(atoms.symbols).keys())
     numbers = list(Counter(atoms.symbols).values())
 
-    for i, elem in enumerate(elements):
+    for _, elem in enumerate(elements):
         line.append(f"{elem}\t{atom_data[symbol_map[elem]][3]}\t{pps[elem]}")
     line.append(empty_line)
 
     if orbitals:
         line.append("NUMERICAL_ORBITAL")
-        for i, elem in enumerate(elements):
+        for _, elem in enumerate(elements):
             line.append(f"{orbitals[elem]}")
         line.append(empty_line)
 
     if abfs:
         line.append("ABFS_ORBITAL")
-        for i, elem in enumerate(elements):
+        for _, elem in enumerate(elements):
             line.append(f"{abfs[elem]}")
         line.append(empty_line)
 

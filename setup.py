@@ -139,9 +139,9 @@ def _get_extensions(build_dir):
                     found_libs[key] = line.split()[3].split(";")
                 if f"{key} flags" in line and len(line.split()) > 3:
                     found_flags[key] = line.split()[3].split(";")
-        for key, value in found_libs.items():
+        for _, value in found_libs.items():
             found_extra_link_args += value
-        for key, value in found_flags.items():
+        for _, value in found_flags.items():
             found_extra_compile_args += value
         print("=============================================")
         print("Parameters found by cmake")
@@ -176,7 +176,7 @@ def _get_version() -> str:
     with open("phonopy/version.py") as f:
         for line in f:
             if "__version__" in line:
-                for i, num in enumerate(line.split()[2].strip('"').split(".")):
+                for num in line.split()[2].strip('"').split("."):
                     version_nums.append(int(num))
                 break
 

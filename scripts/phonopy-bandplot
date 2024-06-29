@@ -33,7 +33,9 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+from __future__ import annotations
 
+import lzma
 import os
 import sys
 
@@ -129,14 +131,17 @@ def _plot_dos(d, f, dmax):
     return np.transpose(pdos)
 
 
-def _cut_dos(p1, p2, dmax):
-    """Cut DOS at dmax
+def _cut_dos(p1: list[float, float], p2: list[float, float], dmax: float):
+    """Cut DOS at dmax.
 
     ** Cutting by fmin and fmax should be implemented someday. **
 
-    Args:
-        p1: (f1, d1)
-        p2: (f2, d2)
+    Parameters
+    ----------
+    p1 : list[float, float]
+        (f1, d1)
+    p2 : list[float, float]
+        (f2, d2)
 
     When d1 < dmax and d2 < dmax
         p1: (f1, d1)
@@ -176,13 +181,6 @@ def _cut_dos(p1, p2, dmax):
 def _read_band_yaml(filename):
     _, ext = os.path.splitext(filename)
     if ext == ".xz" or ext == ".lzma":
-        try:
-            import lzma
-        except ImportError:
-            raise (
-                "Reading a lzma compressed file is not supported "
-                "by this python version."
-            )
         with lzma.open(filename) as f:
             data = yaml.load(f, Loader=Loader)
     elif ext == ".gz":
@@ -198,7 +196,7 @@ def _read_band_yaml(filename):
     distances = []
     qpoints = []
     labels = []
-    for j, v in enumerate(data["phonon"]):
+    for v in data["phonon"]:
         if "label" in v:
             labels.append(v["label"])
         else:
@@ -280,7 +278,7 @@ def _read_dos_dat(filename, pdos_indices=None, dos_factor=None):
 
 
 def get_options():
-    # Parse options
+    """Parse options."""
     import argparse
 
     parser = argparse.ArgumentParser(description="Phonopy bandplot command-line-tool")
@@ -492,7 +490,7 @@ def _old_plot(args):
 
         if not labels:
             labels_at_ends = None
-        elif type(labels[0]) is list:
+        elif isinstance(labels[0], list):
             labels_at_ends = [
                 labels[0][0],
             ]
@@ -747,7 +745,7 @@ def _write_gnuplot_data(args):
 
         print("# End points of segments: ")
         print("#   " + "%10.8f " * len(segment_positions) % tuple(segment_positions))
-        for j, freqs in enumerate(frequencies.T):
+        for freqs in frequencies.T:
             q = 0
             for nq in segment_nqpoint:
                 for d, f in zip(
@@ -760,6 +758,7 @@ def _write_gnuplot_data(args):
 
 
 def main(args):
+    """Run phonopy-bandplot."""
     if args.is_gnuplot:
         _write_gnuplot_data(args)
         sys.exit(1)

@@ -118,6 +118,7 @@ class QpointsPhonon:
         warnings.warn(
             "QpointsPhonon.get_frequencies() is deprecated. Use frequencies instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.frequencies
 
@@ -136,6 +137,7 @@ class QpointsPhonon:
         warnings.warn(
             "QpointsPhonon.get_eigenvectors() is deprecated. Use eigenvectors instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.eigenvectors
 
@@ -150,6 +152,7 @@ class QpointsPhonon:
             "QpointsPhonon.get_group_velocities() is deprecated. "
             "Use group_velocities instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.group_velocities
 

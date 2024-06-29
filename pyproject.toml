@@ -1,12 +1,24 @@
 [build-system]
 requires = ["setuptools", "wheel", "numpy"]
 
-[tool.flake8]
-max-line-length = 88
-extend-ignore = "E203,W503"
-
-[tool.black]
+[tool.ruff]
 line-length = 88
+lint.select = [
+    "F", # Flake8
+    "B", # Black
+    "I", # isort
+    "E", # pycodestyle-errors
+    "D", # pydocstyle
+]
+lint.extend-ignore = [
+    "D417",
+    "D100",
+]
+exclude = [
+  "test/phonon/test_irreps.py",
+  "test/qha/test_electron.py",
+  "phonopy/interface/cp2k.py",
+]
 
-[tool.isort]
-profile = "black"
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"

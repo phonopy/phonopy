@@ -48,6 +48,7 @@ from phonopy.interface.calculator import (
 
 
 def fracval(frac):
+    """Convert fractional value string to float."""
     if frac.find("/") == -1:
         return float(frac)
     else:
@@ -56,6 +57,7 @@ def fracval(frac):
 
 
 def get_options():
+    """Parse command-line options."""
     import argparse
 
     from phonopy.interface.calculator import (
@@ -224,6 +226,7 @@ def get_options():
 
 
 def main(args):
+    """Run phonopy-gruneisen."""
     if len(args.dirnames) != 3:
         sys.stderr.write(
             "Three directory names (original, plus, minus) " "have to be spefied.\n"

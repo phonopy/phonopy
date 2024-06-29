@@ -11,7 +11,7 @@ def testQpoints(ph_nacl_nofcsym: Phonopy):
     phonon = ph_nacl_nofcsym
     qpoints = [[0, 0, 0], [0, 0, 0.5]]
     phonon.run_qpoints(qpoints, with_dynamical_matrices=True)
-    for i, q in enumerate(qpoints):
+    for i, _ in enumerate(qpoints):
         dm = phonon.qpoints.dynamical_matrices[i]
         dm_eigs = np.linalg.eigvalsh(dm).real
         eigs = phonon.qpoints.eigenvalues[i]

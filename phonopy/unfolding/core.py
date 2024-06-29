@@ -147,7 +147,7 @@ class Unfolding:
     def run(self):
         """Calculate band unfolding at all q-points."""
         self.prepare()
-        for x in self:
+        for _ in self:
             pass
 
     def __next__(self):
@@ -184,6 +184,7 @@ class Unfolding:
             "Unfolding.get_commensurate_points() is deprecated. "
             "Use commensurate_points attribute instaed.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.commensurate_points
 
@@ -202,6 +203,7 @@ class Unfolding:
             "Unfolding.get_unfolding_weights() is deprecated. "
             "Use unfolding_weights attribute instaed.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.unfolding_weights
 
@@ -220,6 +222,7 @@ class Unfolding:
             "Unfolding.get_frequencies() is deprecated. "
             "Use frequencies attribute instaed.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.frequencies
 

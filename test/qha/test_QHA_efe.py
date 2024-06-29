@@ -354,7 +354,7 @@ def test_QHA_Cu(pressure: Optional[float], index: int):
 
     # Should raise NotImplementedError
     with pytest.raises(NotImplementedError):
-        phonopy_qha.heat_capacity_P_polyfit
+        phonopy_qha.heat_capacity_P_polyfit  # noqa B018
 
     # Gruneisen parameters vs temperature
     np.testing.assert_allclose(

@@ -144,7 +144,9 @@ class DynamicalMatrix:
     def get_dimension(self):
         """Return number of bands."""
         warnings.warn(
-            "DynamicalMatrix.get_dimension() is deprecated.", DeprecationWarning
+            "DynamicalMatrix.get_dimension() is deprecated.",
+            DeprecationWarning,
+            stacklevel=2,
         )
         return len(self._pcell) * 3
 
@@ -159,6 +161,7 @@ class DynamicalMatrix:
             "DynamicalMatrix.get_decimals() is deprecated."
             "Use DynamicalMatrix.decimals attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.decimals
 
@@ -173,6 +176,7 @@ class DynamicalMatrix:
             "DynamicalMatrix.get_supercell() is deprecated."
             "Use DynamicalMatrix.supercell attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.supercell
 
@@ -187,6 +191,7 @@ class DynamicalMatrix:
             "DynamicalMatrix.get_primitive() is deprecated."
             "Use DynamicalMatrix.primitive attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.primitive
 
@@ -201,6 +206,7 @@ class DynamicalMatrix:
             "DynamicalMatrix.get_force_constants() is deprecated."
             "Use DynamicalMatrix.force_constants attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.force_constants
 
@@ -232,6 +238,7 @@ class DynamicalMatrix:
             "deprecated."
             "Use DynamicalMatrix.dynamical_matrix attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.dynamical_matrix
 
@@ -256,6 +263,7 @@ class DynamicalMatrix:
             "DynamicalMatrix.set_dynamical_matrix() is deprecated."
             "Use DynamicalMatrix.run().",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.run(q)
 
@@ -440,6 +448,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             "DynamicalMatrixNAC.get_born_effective_charges() is deprecated."
             "Use DynamicalMatrixNAC.born attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.born
 
@@ -454,6 +463,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             "DynamicalMatrixNAC.get_nac_factor() is deprecated."
             "Use DynamicalMatrixNAC.nac_factor attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.nac_factor
 
@@ -468,6 +478,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             "DynamicalMatrixNAC.get_dielectric_constant() is deprecated."
             "Use DynamicalMatrixNAC.dielectric_constant attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.dielectric_constant
 
@@ -482,6 +493,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             "DynamicalMatrixNAC.get_nac_method() is deprecated."
             "Use DynamicalMatrixNAC.nac_method attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.nac_method
 
@@ -505,6 +517,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             "DynamicalMatrixNAC.set_nac_params() is deprecated."
             "Use DynamicalMatrixNAC.nac_params attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.nac_params = nac_params
 
@@ -528,6 +541,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             "DynamicalMatrixNAC.set_dynamical_matrix() is deprecated."
             "Use DynamicalMatrixNAC.run().",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.run(q, q_direction=q_direction)
 
@@ -637,6 +651,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             "DynamicalMatrixGL.get_Gonze_nac_dataset() is deprecated."
             "Use DynamicalMatrixGL.Gonze_nac_dataset attribute instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.Gonze_nac_dataset
 
@@ -732,6 +747,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             "DynamicalMatrixGL.show_Gonze_nac_message() is deprecated."
             "Use DynamicalMatrixGL.show_nac_message instead.",
             DeprecationWarning,
+            stacklevel=2,
         )
         self.show_nac_message()
 
@@ -855,7 +871,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         phase_all = np.exp(2j * np.pi * np.dot(self._svecs, q_red))
         C_real = np.zeros((num_atom, 3, num_atom, 3), dtype=self._dtype_complex)
         vals = (
-            -self._Lambda**3
+            -(self._Lambda**3)
             * self._H
             * phase_all
             * np.linalg.det(self._dielectric) ** (-0.5)
@@ -870,7 +886,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
 
     def _run_real_dipole_dipole_q0(self):
         self._dd_real_q0 = np.zeros((len(self._pcell), 3, 3), dtype=self._dtype_complex)
-        vals = -self._Lambda**3 * self._H * np.linalg.det(self._dielectric) ** (-0.5)
+        vals = -(self._Lambda**3) * self._H * np.linalg.det(self._dielectric) ** (-0.5)
         for i_s in range(self._multi.shape[0]):
             for i_p in range(self._multi.shape[1]):
                 m = self._multi[i_s, i_p]

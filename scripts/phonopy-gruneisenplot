@@ -51,6 +51,7 @@ except ImportError:
 
 
 def print_band(data):
+    """Print band structure in gnuplot style."""
     distance = 0
     text = "#%-9s %-10s %-10s    " % ("    q_a", "    q_b", "    q_c")
     text += "%-12s    " % "   Distance"
@@ -72,6 +73,7 @@ def print_band(data):
 
 
 def print_mesh(data):
+    """Print mesh information."""
     text = "#%-9s %-10s %-10s  " % ("    q_a", "    q_b", "    q_c")
     text += "%-12s  " % "Multiplicity"
     text += "%-12s %-12s     ..." % ("   Gruneisen", "   Frequency")
@@ -90,6 +92,7 @@ def print_mesh(data):
 
 
 def plot_band(data, is_fg, g_max, g_min):
+    """Plot band structure."""
     import matplotlib.pyplot as plt
 
     d = []
@@ -123,6 +126,7 @@ def plot_band(data, is_fg, g_max, g_min):
 
 
 def plot_yaml_mesh(data, is_fg, cutoff_frequency=None):
+    """Plot band structure using data from yaml."""
     x = []
     y = []
     for qpt in data["phonon"]:
@@ -133,12 +137,14 @@ def plot_yaml_mesh(data, is_fg, cutoff_frequency=None):
 
 
 def plot_hdf5_mesh(data, is_fg, cutoff_frequency=None):
+    """Plot band structure using data from hdf5."""
     x = data["frequency"]
     y = data["gruneisen"][:]
     return plot_mesh(x, y, is_fg, cutoff_frequency=cutoff_frequency)
 
 
 def plot_mesh(x, y, is_fg, cutoff_frequency=None):
+    """Plot mesh data."""
     import matplotlib.pyplot as plt
 
     for g, freqs in zip(np.transpose(y), np.transpose(x)):
@@ -155,7 +161,7 @@ def plot_mesh(x, y, is_fg, cutoff_frequency=None):
 
 
 def get_options():
-    # Parse options
+    """Parse command-line options."""
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -225,6 +231,7 @@ def get_options():
 
 
 def main(args):
+    """Run phonopy-gruneisenplot."""
     if args.is_hdf5:
         try:
             import h5py

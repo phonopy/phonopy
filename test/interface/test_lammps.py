@@ -1,4 +1,4 @@
-"""Tests for QE calculater interface."""
+"""Tests for lammps calculater interface."""
 
 import io
 from pathlib import Path

@@ -90,11 +90,14 @@ class Settings:
         "magnetic_moments": None,
         "masses": None,
         "mesh_numbers": None,
+        "mlp_params": None,
         "nac_method": None,
         "nac_q_direction": None,
         "num_frequency_points": None,
         "primitive_matrix": None,
         "qpoints": None,
+        "random_displacements": None,
+        "random_seed": None,
         "read_qpoints": False,
         "save_params": False,
         "sigma": None,
@@ -103,6 +106,7 @@ class Settings:
         "max_temperature": 1000,
         "min_temperature": 0,
         "temperature_step": 10,
+        "use_pypolymlp": False,
     }
 
     def __init__(self, default=None):
@@ -254,6 +258,10 @@ class Settings:
         """Set min_temperature."""
         self._v["min_temperature"] = val
 
+    def set_mlp_params(self, val):
+        """Set mlp_params."""
+        self._v["mlp_params"] = val
+
     def set_nac_method(self, val):
         """Set nac_method."""
         self._v["nac_method"] = val
@@ -273,6 +281,14 @@ class Settings:
     def set_qpoints(self, val):
         """Set qpoints."""
         self._v["qpoints"] = val
+
+    def set_random_displacements(self, val):
+        """Set random_displacements."""
+        self._v["random_displacements"] = val
+
+    def set_random_seed(self, val):
+        """Set random_seed."""
+        self._v["random_seed"] = val
 
     def set_read_qpoints(self, val):
         """Set read_qpoints."""
@@ -301,6 +317,10 @@ class Settings:
     def set_is_time_reversal_symmetry(self, val):
         """Set is_time_reversal_symmetry."""
         self._v["is_time_reversal_symmetry"] = val
+
+    def set_use_pypolymlp(self, val):
+        """Set use_pypolymlp."""
+        self._v["use_pypolymlp"] = val
 
 
 # Parse phonopy setting filen
@@ -337,6 +357,7 @@ class ConfParser:
         warnings.warn(
             "ConfParser.get_configures() is deprecated." "Use confs attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.confs
 
@@ -350,6 +371,7 @@ class ConfParser:
         warnings.warn(
             "ConfParser.get_settings() is deprecated." "Use settings attribute.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return self.settings
 
@@ -397,14 +419,14 @@ class ConfParser:
         if "band_indices" in arg_list:
             band_indices = self._args.band_indices
             if band_indices is not None:
-                if type(band_indices) is list:
+                if isinstance(band_indices, list):
                     self._confs["band_indices"] = " ".join(band_indices)
                 else:
                     self._confs["band_indices"] = band_indices
 
         if "band_paths" in arg_list:
             if self._args.band_paths is not None:
-                if type(self._args.band_paths) is list:
+                if isinstance(self._args.band_paths, list):
                     self._confs["band"] = " ".join(self._args.band_paths)
                 else:
                     self._confs["band"] = self._args.band_paths
@@ -518,14 +540,14 @@ class ConfParser:
 
         if "masses" in arg_list:
             if self._args.masses is not None:
-                if type(self._args.masses) is list:
+                if isinstance(self._args.masses, list):
                     self._confs["mass"] = " ".join(self._args.masses)
                 else:
                     self._confs["mass"] = self._args.masses
 
         if "magmoms" in arg_list:
             if self._args.magmoms is not None:
-                if type(self._args.magmoms) is list:
+                if isinstance(self._args.magmoms, list):
                     self._confs["magmom"] = " ".join(self._args.magmoms)
                 else:
                     self._confs["magmom"] = self._args.magmoms
@@ -533,10 +555,15 @@ class ConfParser:
         if "mesh_numbers" in arg_list:
             mesh = self._args.mesh_numbers
             if mesh is not None:
-                if type(mesh) is list:
+                if isinstance(mesh, list):
                     self._confs["mesh_numbers"] = " ".join(mesh)
                 else:
                     self._confs["mesh_numbers"] = mesh
+
+        if "mlp_params" in arg_list:
+            mlp_params = self._args.mlp_params
+            if mlp_params:
+                self._confs["mlp_params"] = mlp_params
 
         if "num_frequency_points" in arg_list:
             opt_num_freqs = self._args.num_frequency_points
@@ -546,7 +573,7 @@ class ConfParser:
         # For backword compatibility
         if "primitive_axis" in arg_list:
             if self._args.primitive_axis is not None:
-                if type(self._args.primitive_axis) is list:
+                if isinstance(self._args.primitive_axis, list):
                     primitive_axes = " ".join(self._args.primitive_axis)
                     self._confs["primitive_axes"] = primitive_axes
                 else:
@@ -554,27 +581,15 @@ class ConfParser:
 
         if "primitive_axes" in arg_list:
             if self._args.primitive_axes:
-                if type(self._args.primitive_axes) is list:
+                if isinstance(self._args.primitive_axes, list):
                     primitive_axes = " ".join(self._args.primitive_axes)
                     self._confs["primitive_axes"] = primitive_axes
                 else:
                     self._confs["primitive_axes"] = self._args.primitive_axes
 
-        if "save_params" in arg_list:
-            if self._args.save_params:
-                self._confs["save_params"] = ".true."
-
-        if "supercell_dimension" in arg_list:
-            dim = self._args.supercell_dimension
-            if dim is not None:
-                if type(dim) is list:
-                    self._confs["dim"] = " ".join(dim)
-                else:
-                    self._confs["dim"] = dim
-
         if "qpoints" in arg_list:
             if self._args.qpoints is not None:
-                if type(self._args.qpoints) is list:
+                if isinstance(self._args.qpoints, list):
                     self._confs["qpoints"] = " ".join(self._args.qpoints)
                 else:
                     self._confs["qpoints"] = self._args.qpoints
@@ -582,7 +597,7 @@ class ConfParser:
         if "nac_q_direction" in arg_list:
             q_dir = self._args.nac_q_direction
             if q_dir is not None:
-                if type(q_dir) is list:
+                if isinstance(q_dir, list):
                     self._confs["q_direction"] = " ".join(q_dir)
                 else:
                     self._confs["q_direction"] = q_dir
@@ -591,13 +606,36 @@ class ConfParser:
             if self._args.nac_method is not None:
                 self._confs["nac_method"] = self._args.nac_method
 
+        if "random_displacements" in arg_list:
+            nrand = self._args.random_displacements
+            if nrand:
+                self._confs["random_displacements"] = nrand
+
+        if "random_seed" in arg_list:
+            if self._args.random_seed:
+                seed = self._args.random_seed
+                if np.issubdtype(type(seed), np.integer) and seed >= 0 and seed < 2**32:
+                    self._confs["random_seed"] = seed
+
         if "read_qpoints" in arg_list:
             if self._args.read_qpoints:
                 self._confs["read_qpoints"] = ".true."
 
+        if "save_params" in arg_list:
+            if self._args.save_params:
+                self._confs["save_params"] = ".true."
+
+        if "supercell_dimension" in arg_list:
+            dim = self._args.supercell_dimension
+            if dim is not None:
+                if isinstance(dim, list):
+                    self._confs["dim"] = " ".join(dim)
+                else:
+                    self._confs["dim"] = dim
+
         if "sigma" in arg_list:
             if self._args.sigma is not None:
-                if type(self._args.sigma) is list:
+                if isinstance(self._args.sigma, list):
                     self._confs["sigma"] = " ".join(self._args.sigma)
                 else:
                     self._confs["sigma"] = self._args.sigma
@@ -633,9 +671,9 @@ class ConfParser:
             if self._args.use_symfc:
                 self._confs["fc_calculator"] = "symfc"
 
-        if "use_hiphive" in arg_list:
-            if self._args.use_hiphive:
-                self._confs["fc_calculator"] = "hiphive"
+        if "use_pypolymlp" in arg_list:
+            if self._args.use_pypolymlp:
+                self._confs["use_pypolymlp"] = ".true."
 
     def parse_conf(self):
         """Add treatments to settings from conf file or command options.
@@ -928,6 +966,24 @@ class ConfParser:
                 elif confs["save_params"].lower() == ".false.":
                     self.set_parameter("save_params", False)
 
+            if conf_key == "use_pypolymlp":
+                if confs["use_pypolymlp"].lower() == ".true.":
+                    self.set_parameter("use_pypolymlp", True)
+                elif confs["use_pypolymlp"].lower() == ".false.":
+                    self.set_parameter("use_pypolymlp", False)
+
+            if conf_key == "mlp_params":
+                self.set_parameter("mlp_params", confs["mlp_params"])
+
+            # Number of supercells with random displacements
+            if conf_key == "random_displacements":
+                self.set_parameter(
+                    "random_displacements", int(confs["random_displacements"])
+                )
+
+            if conf_key == "random_seed":
+                self.set_parameter("random_seed", int(confs["random_seed"]))
+
     def set_parameter(self, key, val):
         """Pass to another data structure."""
         self._parameters[key] = val
@@ -1114,6 +1170,20 @@ class ConfParser:
         if "save_params" in params:
             self._settings.set_save_params(params["save_params"])
 
+        # Machine learning potential
+        if "use_pypolymlp" in params:
+            self._settings.set_use_pypolymlp(params["use_pypolymlp"])
+
+        if "mlp_params" in params:
+            self._settings.set_mlp_params(params["mlp_params"])
+
+        # Number of supercells with random displacements
+        if "random_displacements" in params:
+            self._settings.set_random_displacements(params["random_displacements"])
+
+        if "random_seed" in params:
+            self._settings.set_random_seed(params["random_seed"])
+
 
 #
 # For phonopy
@@ -1176,8 +1246,6 @@ class PhonopySettings(Settings):
         "pretend_real": False,
         "projection_direction": None,
         "qpoints_format": "yaml",
-        "random_displacements": None,
-        "random_seed": None,
         "random_displacement_temperature": None,
         "read_force_constants": False,
         "readfc_format": "text",
@@ -1365,10 +1433,6 @@ class PhonopySettings(Settings):
         """Set moment_order."""
         self._v["moment_order"] = val
 
-    def set_random_displacements(self, val):
-        """Set random_displacements."""
-        self._v["random_displacements"] = val
-
     def set_pdos_indices(self, val):
         """Set pdos_indices."""
         self._v["pdos_indices"] = val
@@ -1384,10 +1448,6 @@ class PhonopySettings(Settings):
     def set_qpoints_format(self, val):
         """Set qpoints_format."""
         self._v["qpoints_format"] = val
-
-    def set_random_seed(self, val):
-        """Set random_seed."""
-        self._v["random_seed"] = val
 
     def set_random_displacement_temperature(self, val):
         """Set random_displacement_temperature."""
@@ -1648,11 +1708,6 @@ class PhonopyConfParser(ConfParser):
             if self._args.moment_order:
                 self._confs["moment_order"] = self._args.moment_order
 
-        if "random_displacements" in arg_list:
-            nrand = self._args.random_displacements
-            if nrand:
-                self._confs["random_displacements"] = nrand
-
         if "rd_temperature" in arg_list:
             if self._args.rd_temperature is not None:
                 self._confs["random_displacement_temperature"] = (
@@ -1672,12 +1727,6 @@ class PhonopyConfParser(ConfParser):
                 )
                 print()
                 self._confs["random_displacement_temperature"] = self._args.temperature
-
-        if "random_seed" in arg_list:
-            if self._args.random_seed:
-                seed = self._args.random_seed
-                if np.issubdtype(type(seed), np.integer) and seed >= 0 and seed < 2**32:
-                    self._confs["random_seed"] = seed
 
         if "include_fc" in arg_list:
             if self._args.include_fc:
@@ -1742,14 +1791,14 @@ class PhonopyConfParser(ConfParser):
                     self.set_parameter("legacy_plot", False)
 
             if conf_key == "create_force_sets":
-                if type(confs["create_force_sets"]) is str:
+                if isinstance(confs["create_force_sets"], str):
                     fnames = confs["create_force_sets"].split()
                 else:
                     fnames = confs["create_force_sets"]
                 self.set_parameter("create_force_sets", fnames)
 
             if conf_key == "create_force_sets_zero":
-                if type(confs["create_force_sets_zero"]) is str:
+                if isinstance(confs["create_force_sets_zero"], str):
                     fnames = confs["create_force_sets_zero"].split()
                 else:
                     fnames = confs["create_force_sets_zero"]
@@ -2003,18 +2052,9 @@ class PhonopyConfParser(ConfParser):
             if conf_key == "moment_order":
                 self.set_parameter("moment_order", int(confs["moment_order"]))
 
-            # Number of supercells with random displacements
-            if conf_key == "random_displacements":
-                self.set_parameter(
-                    "random_displacements", int(confs["random_displacements"])
-                )
-
             if conf_key == "random_displacement_temperature":
                 val = confs["random_displacement_temperature"]
                 self.set_parameter("random_displacement_temperature", float(val))
-
-            if conf_key == "random_seed":
-                self.set_parameter("random_seed", int(confs["random_seed"]))
 
             # Use Lapack solver via Lapacke
             if conf_key == "lapack_solver":
@@ -2352,17 +2392,10 @@ class PhonopyConfParser(ConfParser):
             if "moment_order" in params:
                 self._settings.set_moment_order(params["moment_order"])
 
-        # Number of supercells with random displacements
-        if "random_displacements" in params:
-            self._settings.set_random_displacements(params["random_displacements"])
-
         if "random_displacement_temperature" in params:
             self._settings.set_random_displacement_temperature(
                 params["random_displacement_temperature"]
             )
-
-        if "random_seed" in params:
-            self._settings.set_random_seed(params["random_seed"])
 
         # Use Lapack solver via Lapacke
         if "lapack_solver" in params:

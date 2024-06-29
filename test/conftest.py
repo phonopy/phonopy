@@ -125,7 +125,7 @@ def ph_nacl_nonac_dense_svecs() -> Phonopy:
 def ph_nacl_rd() -> Phonopy:
     """Return Phonopy class instance of NaCl 2x2x2 with RD results.
 
-    This data contains supercell energies.
+    This data contains supercell energies and NAC params.
 
     """
     yaml_filename = cwd / "phonopy_params_NaCl-rd.yaml.xz"
@@ -133,10 +133,26 @@ def ph_nacl_rd() -> Phonopy:
 
 
 @pytest.fixture(scope="session")
+def ph_nacl_rd_symfc() -> Phonopy:
+    """Return Phonopy class instance of NaCl 2x2x2 with RD results.
+
+    This data contains supercell energies and NAC params. Symfc is used to
+    compute force constants.
+
+    """
+    pytest.importorskip("symfc")
+
+    yaml_filename = cwd / "phonopy_params_NaCl-rd.yaml.xz"
+    return phonopy.load(
+        yaml_filename, log_level=1, fc_calculator="symfc", is_compact_fc=True
+    )
+
+
+@pytest.fixture(scope="session")
 def ph_nacl_fd() -> Phonopy:
     """Return Phonopy class instance of NaCl 2x2x2 with RD results.
 
-    This data contains supercell energies.
+    This data contains supercell energies and NAC params.
 
     """
     yaml_filename = cwd / "phonopy_params_NaCl-fd.yaml.xz"

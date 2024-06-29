@@ -30,6 +30,13 @@ jobs:
         conda activate test
         conda install --yes -c conda-forge python=${{ matrix.python-version }}
         conda install --yes -c conda-forge matplotlib-base pyyaml scipy numpy spglib h5py pip pytest codecov pytest-cov pytest cmake c-compiler
+    - name: Setup symfc
+      run: |
+        conda activate test
+        git clone --depth 1 https://github.com/symfc/symfc.git
+        cd symfc
+        pip install -e . -vvv
+        cd ..
     - name: Setup phonopy
       run: |
         conda activate test
@@ -38,7 +45,7 @@ jobs:
     - name: Test with pytest
       run: |
         conda activate test
-        pytest --cov=./ --cov-report=xml
+        pytest --cov=./ --cov-report=xml test
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
