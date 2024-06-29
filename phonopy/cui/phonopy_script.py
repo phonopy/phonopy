@@ -750,6 +750,7 @@ def store_force_constants(
                         produce_fc=True,
                         symmetrize_fc=False,
                         is_compact_fc=(not is_full_fc),
+                        use_pypolymlp=settings.use_pypolymlp,
                         log_level=log_level,
                     )
                 except RuntimeError as e:

@@ -3,14 +3,14 @@ requires = ["setuptools", "wheel", "numpy"]
 
 [tool.ruff]
 line-length = 88
-select = [
+lint.select = [
     "F", # Flake8
     "B", # Black
     "I", # isort
     "E", # pycodestyle-errors
     "D", # pydocstyle
 ]
-extend-ignore = [
+lint.extend-ignore = [
     "D417",
     "D100",
 ]

@@ -82,6 +82,7 @@ def run_symfc(
     orders: Optional[Sequence[int]] = None,
     is_compact_fc: bool = False,
     symmetry: Optional[Symmetry] = None,
+    options: Optional[Union[str, dict]] = None,
     log_level: int = 0,
 ):
     """Calculate force constants."""
@@ -96,6 +97,11 @@ def run_symfc(
     else:
         _orders = orders
 
+    if options is None:
+        options_dict = {}
+    else:
+        options_dict = parse_symfc_options(options)
+
     if log_level:
         print(
             "--------------------------------"
@@ -107,8 +113,11 @@ def run_symfc(
         )
         print("A. Seko and A. Togo, arXiv:2403.03588.")
         print("Symfc is developed at https://github.com/symfc/symfc.")
-        print("")
-        print(f"Computing {_orders} order force constants.")
+        print(f"Computing {_orders} order force constants.", flush=True)
+        if options_dict:
+            print("Parameters:")
+            for key, val in options_dict.items():
+                print(f"  {key}: {val}", flush=True)
 
     symfc_supercell = SymfcAtoms(
         cell=supercell.cell,
@@ -120,8 +129,9 @@ def run_symfc(
         spacegroup_operations=symmetry.dataset,
         displacements=displacements,
         forces=forces,
-        log_level=log_level - 1,
-    ).run(orders=_orders, is_compact_fc=is_compact_fc)
+        cutoff={int(max(_orders)): options_dict.get("cutoff", None)},
+        log_level=log_level - 1 and log_level,
+    ).run(max_order=int(max(_orders)), is_compact_fc=is_compact_fc)
 
     if log_level:
         print(
@@ -134,3 +144,34 @@ def run_symfc(
         assert (symfc.p2s_map == primitive.p2s_map).all()
 
     return [symfc.force_constants[n] for n in _orders]
+
+
+def parse_symfc_options(options: Union[str, dict]):
+    """Parse symfc options.
+
+    Parameters
+    ----------
+    options : Union[str, dict]
+        Options for symfc.
+
+    Note
+    ----
+    When str, it should be written as follows:
+
+        "cutoff = 10.0"
+
+    """
+    if isinstance(options, dict):
+        return options
+    elif isinstance(options, str):
+        options_dict = {}
+        for option in options.split(","):
+            key_val = [v.strip().lower() for v in option.split("=")]
+            if len(key_val) != 2:
+                break
+            key, val = key_val
+            if key == "cutoff":
+                options_dict[key] = float(val)
+        return options_dict
+    else:
+        raise TypeError(f"options must be str or dict, not {type(options)}.")

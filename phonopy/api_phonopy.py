@@ -41,7 +41,7 @@ import sys
 import textwrap
 import warnings
 from collections.abc import Sequence
-from typing import Literal, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 import numpy as np
 
@@ -68,6 +68,12 @@ from phonopy.harmonic.force_constants import get_fc2 as get_phonopy_fc2
 from phonopy.interface.calculator import get_default_physical_units
 from phonopy.interface.fc_calculator import get_fc2
 from phonopy.interface.phonopy_yaml import PhonopyYaml
+from phonopy.interface.pypolymlp import (
+    PypolymlpData,
+    PypolymlpParams,
+    develop_polymlp,
+    evalulate_polymlp,
+)
 from phonopy.phonon.animation import write_animation
 from phonopy.phonon.band_structure import BandStructure, get_band_qpoints_by_seekpath
 from phonopy.phonon.dos import ProjectedDos, TotalDos, get_dos_frequency_range
@@ -195,7 +201,7 @@ class Phonopy:
         self._search_primitive_symmetry()
 
         # displacements
-        self._displacement_dataset = {"natom": len(self._supercell)}
+        self._dataset = None
         self._supercells_with_displacements = None
 
         # set_force_constants or set_forces
@@ -215,6 +221,10 @@ class Phonopy:
             )
         self._nac_params = nac_params
         self._dynamical_matrix_decimals = dynamical_matrix_decimals
+
+        # MLP
+        self._mlp = None
+        self._mlp_dataset = None
 
         # set_band_structure
         self._band_structure = None
@@ -323,7 +333,7 @@ class Phonopy:
         self._build_primitive_cell()
         self._search_symmetry()
         self._search_primitive_symmetry()
-        self._displacement_dataset = None
+        self._dataset = None
 
     @property
     def supercell(self) -> Supercell:
@@ -462,10 +472,10 @@ class Phonopy:
 
     @property
     def dataset(self) -> dict:
-        """Return dataset to store displacements and forces.
+        """Return displacement-force dataset.
 
         Dataset containing information of displacements in supercells.
-        This optionally contains forces of respective supercells.
+        This optionally contains energies and forces of respective supercells.
 
         dataset : dict
             The format can be either one of two types
@@ -495,16 +505,16 @@ class Phonopy:
             (supercells, natom, 3).
 
         """
-        return self._displacement_dataset
+        return self._dataset
 
     @dataset.setter
     def dataset(self, dataset):
         if dataset is None:
-            self._displacement_dataset = None
+            self._dataset = None
         elif "first_atoms" in dataset:
-            self._displacement_dataset = copy.deepcopy(dataset)
+            self._dataset = copy.deepcopy(dataset)
         elif "displacements" in dataset:
-            self._displacement_dataset = {}
+            self._dataset = {}
             self.displacements = dataset["displacements"]
             if "forces" in dataset:
                 self.forces = dataset["forces"]
@@ -514,6 +524,40 @@ class Phonopy:
             raise RuntimeError("Data format of dataset is wrong.")
 
         self._supercells_with_displacements = None
+
+    @property
+    def mlp_dataset(self) -> Optional[dict]:
+        """Return displacement-force dataset.
+
+        The supercell matrix is equal to that of usual displacement-force
+        dataset. Only type 2 format is supported. "displacements",
+        "forces", and "supercell_energies" should be contained.
+
+        """
+        return self._mlp_dataset
+
+    @mlp_dataset.setter
+    def mlp_dataset(self, mlp_dataset: dict):
+        if not isinstance(mlp_dataset, dict):
+            raise TypeError("mlp_dataset has to be a dictionary.")
+        if "displacements" not in mlp_dataset:
+            raise RuntimeError("Displacements have to be given.")
+        if "forces" not in mlp_dataset:
+            raise RuntimeError("Forces have to be given.")
+        if "supercell_energy" in mlp_dataset:
+            raise RuntimeError("Supercell energies have to be given.")
+        if len(mlp_dataset["displacements"]) != len(mlp_dataset["forces"]):
+            raise RuntimeError("Length of displacements and forces are different.")
+        if len(mlp_dataset["displacements"]) != len(mlp_dataset["supercell_energies"]):
+            raise RuntimeError(
+                "Length of displacements and supercell_energies are different."
+            )
+        self._mlp_dataset = mlp_dataset
+
+    @property
+    def mlp(self) -> Optional[Any]:
+        """Return MLP instance."""
+        return self._mlp
 
     @property
     def displacement_dataset(self):
@@ -577,12 +621,12 @@ class Phonopy:
 
         """
         disps = []
-        if "first_atoms" in self._displacement_dataset:
-            for disp in self._displacement_dataset["first_atoms"]:
+        if "first_atoms" in self._dataset:
+            for disp in self._dataset["first_atoms"]:
                 x = disp["displacement"]
                 disps.append([disp["number"], x[0], x[1], x[2]])
-        elif "displacements" in self._displacement_dataset:
-            disps = self._displacement_dataset["displacements"]
+        elif "displacements" in self._dataset:
+            disps = self._dataset["displacements"]
 
         return disps
 
@@ -591,12 +635,14 @@ class Phonopy:
         disp = np.array(displacements, dtype="double", order="C")
         if disp.ndim != 3 or disp.shape[1:] != (len(self._supercell), 3):
             raise RuntimeError("Array shape of displacements is incorrect.")
-        if "first_atoms" in self._displacement_dataset:
+        if self._dataset is None:
+            self._dataset = {}
+        if "first_atoms" in self._dataset:
             raise RuntimeError(
                 "Setting displacements to type-1 dataset is not supported."
             )
 
-        self._displacement_dataset["displacements"] = disp
+        self._dataset["displacements"] = disp
         self._supercells_with_displacements = None
 
     def get_displacements(self):
@@ -797,7 +843,7 @@ class Phonopy:
         self.nac_params = nac_params
 
     @property
-    def supercells_with_displacements(self) -> list[PhonopyAtoms]:
+    def supercells_with_displacements(self) -> Optional[list[PhonopyAtoms]]:
         """Return supercells with displacements.
 
         list of PhonopyAtoms
@@ -805,7 +851,7 @@ class Phonopy:
             Phonopy.generate_displacements.
 
         """
-        if self._displacement_dataset is None:
+        if self._dataset is None:
             return None
         else:
             if self._supercells_with_displacements is None:
@@ -1098,11 +1144,11 @@ class Phonopy:
             self.forces = forces
 
         # A primitive check if 'forces' key is in displacement_dataset.
-        if "first_atoms" in self._displacement_dataset:
-            for disp in self._displacement_dataset["first_atoms"]:
+        if "first_atoms" in self._dataset:
+            for disp in self._dataset["first_atoms"]:
                 if "forces" not in disp:
                     raise ForcesetsNotFoundError("Force sets are not yet set.")
-        elif "forces" not in self._displacement_dataset:
+        elif "forces" not in self._dataset:
             raise ForcesetsNotFoundError("Force sets are not yet set.")
 
         if calculate_full_force_constants:
@@ -1185,6 +1231,67 @@ class Phonopy:
 
         if self._primitive.masses is not None:
             self._set_dynamical_matrix()
+
+    def develop_mlp(self, params: Optional[Union[PypolymlpParams, dict]] = None):
+        """Develop MLP of pypolymlp.
+
+        Parameters
+        ----------
+        params : PypolymlpParams or dict, optional
+            Parameters for developing MLP. Default is None. When dict is given,
+            PypolymlpParams instance is created from the dict.
+
+        """
+        if self._mlp_dataset is None:
+            raise RuntimeError("MLP dataset is not set.")
+
+        if isinstance(params, dict):
+            _params = PypolymlpParams(**params)
+        else:
+            _params = params
+
+        disps = self._mlp_dataset["displacements"]
+        forces = self._mlp_dataset["forces"]
+        energies = self._mlp_dataset["supercell_energies"]
+        n = int(len(disps) * 0.9)
+        train_data = PypolymlpData(
+            displacements=disps[:n], forces=forces[:n], supercell_energies=energies[:n]
+        )
+        test_data = PypolymlpData(
+            displacements=disps[n:], forces=forces[n:], supercell_energies=energies[n:]
+        )
+        self._mlp = develop_polymlp(
+            self._supercell,
+            train_data,
+            test_data,
+            params=_params,
+            verbose=self._log_level - 1 > 0,
+        )
+
+    def evaluate_mlp(self):
+        """Evaluate the machine learning potential of pypolymlp.
+
+        This method calculates the supercell energies and forces from the MLP
+        for the displacements in self._dataset of type 2. The results are stored
+        in self._dataset.
+
+        The displacements may be generated by the produce_force_constants method
+        with number_of_snapshots > 0. With MLP, a small distance parameter, such
+        as 0.001, can be numerically stable for the computation of force
+        constants.
+
+        """
+        if self._mlp is None:
+            raise RuntimeError("MLP is not developed yet.")
+
+        if self.supercells_with_displacements is None:
+            raise RuntimeError("Displacements are not set. Run generate_displacements.")
+
+        energies, forces, _ = evalulate_polymlp(
+            self._mlp, self.supercells_with_displacements
+        )
+        self.supercell_energies = energies
+        self.forces = forces
 
     #####################
     # Phonon properties #
@@ -3733,9 +3840,9 @@ class Phonopy:
         fc_calculator_options=None,
         decimals=None,
     ) -> None:
-        if self._displacement_dataset is not None:
+        if self._dataset is not None:
             if fc_calculator is not None:
-                disps, forces = get_displacements_and_forces(self._displacement_dataset)
+                disps, forces = get_displacements_and_forces(self._dataset)
                 self._force_constants = get_fc2(
                     self._supercell,
                     self._primitive,
@@ -3749,7 +3856,7 @@ class Phonopy:
                     log_level=self._log_level,
                 )
             else:
-                if "displacements" in self._displacement_dataset:
+                if "displacements" in self._dataset:
                     lines = [
                         "Type-II dataset for displacements and forces was "
                         "given. Setting fc_calculator",
@@ -3760,7 +3867,7 @@ class Phonopy:
                 self._force_constants = get_phonopy_fc2(
                     self._supercell,
                     self._symmetry,
-                    self._displacement_dataset,
+                    self._dataset,
                     atom_list=distributed_atom_list,
                     primitive=self._primitive,
                     decimals=decimals,
@@ -3865,13 +3972,13 @@ class Phonopy:
 
     def _build_supercells_with_displacements(self) -> None:
         all_positions = []
-        if "first_atoms" in self._displacement_dataset:  # type-1
-            for disp in self._displacement_dataset["first_atoms"]:
+        if "first_atoms" in self._dataset:  # type-1
+            for disp in self._dataset["first_atoms"]:
                 positions = self._supercell.positions
                 positions[disp["number"]] += disp["displacement"]
                 all_positions.append(positions)
-        elif "displacements" in self._displacement_dataset:
-            for disp in self._displacement_dataset["displacements"]:
+        elif "displacements" in self._dataset:
+            for disp in self._dataset["displacements"]:
                 all_positions.append(self._supercell.positions + disp)
         else:
             raise RuntimeError("displacement_dataset is not set.")
@@ -3940,11 +4047,13 @@ class Phonopy:
         Return None if tagert data is not found.
 
         """
-        if target in self._displacement_dataset:  # type-2
-            return self._displacement_dataset[target]
-        elif "first_atoms" in self._displacement_dataset:  # type-1
+        if self._dataset is None:
+            return None
+        if target in self._dataset:  # type-2
+            return self._dataset[target]
+        if "first_atoms" in self._dataset:  # type-1
             values = []
-            for disp in self._displacement_dataset["first_atoms"]:
+            for disp in self._dataset["first_atoms"]:
                 if target == "forces":
                     if target in disp:
                         values.append(disp[target])
@@ -3958,16 +4067,16 @@ class Phonopy:
     def _set_forces_energies(
         self, values, target: Literal["forces", "supercell_energies"]
     ):
-        if "first_atoms" in self._displacement_dataset:  # type-1
-            for disp, v in zip(self._displacement_dataset["first_atoms"], values):
+        if "first_atoms" in self._dataset:  # type-1
+            for disp, v in zip(self._dataset["first_atoms"], values):
                 if target == "forces":
                     disp[target] = np.array(v, dtype="double", order="C")
                 elif target == "supercell_energies":
                     disp["supercell_energy"] = float(v)
-        elif "displacements" in self._displacement_dataset:  # type-2
+        elif "displacements" in self._dataset:  # type-2
             _values = np.array(values, dtype="double", order="C")
             natom = len(self._supercell)
-            ndisps = len(self._displacement_dataset["displacements"])
+            ndisps = len(self._dataset["displacements"])
             if target == "forces" and (
                 _values.ndim != 3 or _values.shape != (ndisps, natom, 3)
             ):
@@ -3975,6 +4084,6 @@ class Phonopy:
             elif target == "supercell_energies":
                 if _values.ndim != 1 or _values.shape != (ndisps,):
                     raise RuntimeError(f"Array shape of input {target} is incorrect.")
-            self._displacement_dataset[target] = _values
+            self._dataset[target] = _values
         else:
             raise RuntimeError("Set of displacements is not available.")
