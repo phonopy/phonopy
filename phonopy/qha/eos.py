@@ -152,3 +152,5 @@ class EOSFit:
             raise
         else:
             self.parameters = result[0]
+
+        warnings.resetwarnings()
