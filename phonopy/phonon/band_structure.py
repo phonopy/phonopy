@@ -720,7 +720,12 @@ class BandStructure:
                 np.cross(rec_lat @ path[0], rec_lat @ path[-1])
             )
             if dist_from_Gamma < DynamicalMatrixNAC.Q_DIRECTION_TOLERANCE:
-                q_direction = path[0] - path[-1]
+                q_direction = np.array(path[0] - path[-1])
+                q_direction *= (
+                    10
+                    * DynamicalMatrixNAC.Q_DIRECTION_TOLERANCE
+                    / np.linalg.norm(q_direction)
+                )
 
         for i, q in enumerate(path):
             self._shift_point(q)

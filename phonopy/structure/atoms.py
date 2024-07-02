@@ -101,8 +101,8 @@ class PhonopyAtoms:
         cell: Optional[Union[Sequence, np.ndarray]] = None,
         atoms: Optional["PhonopyAtoms"] = None,
         magmoms: Optional[Union[Sequence, np.ndarray]] = None,
-        pbc: Optional[bool] = None,
-    ):  # pbc is dummy argument, and never used.
+        pbc: Optional[Sequence[bool]] = None,
+    ):  # pbc is now used for using correctly LO/TO splitting.
         """Init method."""
         if magmoms is not None:
             warnings.warn(
@@ -125,6 +125,7 @@ class PhonopyAtoms:
                 magnetic_moments=atoms.magnetic_moments,
                 scaled_positions=atoms.scaled_positions,
                 cell=atoms.cell,
+                pbc=atoms.pbc,
             )
         else:
             self._set_parameters(
@@ -135,6 +136,7 @@ class PhonopyAtoms:
                 scaled_positions=scaled_positions,
                 positions=positions,
                 cell=cell,
+                pbc=pbc,
             )
 
     def _set_parameters(
@@ -146,6 +148,7 @@ class PhonopyAtoms:
         scaled_positions: Optional[Union[Sequence, np.ndarray]] = None,
         positions: Optional[Union[Sequence, np.ndarray]] = None,
         cell: Optional[Union[Sequence, np.ndarray]] = None,
+        pbc: Optional[Sequence[bool]] = None,
     ):
         self._cell = None
         self._scaled_positions = None
@@ -162,6 +165,10 @@ class PhonopyAtoms:
         # (initial) magnetic moments
         self._magnetic_moments = None
         self._set_magnetic_moments(magnetic_moments)
+
+        # periodic boundary conditions (pbc)
+        self._pbc = [True, True, True]
+        self._set_pbc(pbc)
 
         # numbers and symbols
         if self._numbers is not None:  # number --> symbol
@@ -248,6 +255,16 @@ class PhonopyAtoms:
         self._set_scaled_positions(scaled_positions)
         self._check()
 
+    @property
+    def pbc(self):
+        """Setter and getter of pbc. For getter, copy is returned."""
+        return self._pbc.copy()
+
+    @pbc.setter
+    def pbc(self, pbc):
+        self._set_pbc(pbc)
+        self._check()
+
     def get_scaled_positions(self):
         """Return scaled positions."""
         warnings.warn(
@@ -315,8 +332,7 @@ class PhonopyAtoms:
     def get_atomic_numbers(self):
         """Return atomic numbers."""
         warnings.warn(
-            "PhonopyAtoms.get_atomic_numbers() is deprecated. "
-            "Use numbers attribute instead.",
+            "PhonopyAtoms.numbers is deprecated. " "Use numbers attribute instead.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -465,6 +481,12 @@ class PhonopyAtoms:
         else:
             self._magnetic_moments = np.array(np.ravel(magmoms), dtype="double")
 
+    def _set_pbc(self, pbc):
+        _pbc = np.array(pbc, dtype="bool")
+        if _pbc.shape == ():
+            _pbc = np.array([_pbc, _pbc, _pbc], dtype="bool")
+        self._pbc = _pbc
+
     def _set_cell_and_positions(self, cell, positions=None, scaled_positions=None):
         self._set_cell(cell)
         if positions is not None:
@@ -510,6 +532,8 @@ class PhonopyAtoms:
                 raise RuntimeError(
                     "magnetic_moments has to have shape=(natom,) or (natom, 3)."
                 )
+        if not self._pbc.shape == (3,):
+            raise RuntimeError("len(pbc) != 3.")
 
     def _finalize(self):
         """Modify array shapes to those expeted to be exposed."""

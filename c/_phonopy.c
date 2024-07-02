@@ -593,9 +593,13 @@ static PyObject* py_get_dynamical_matrices_with_dd_openmp_over_qpoints(
     PyArrayObject* py_reciprocal_lattice;
     PyArrayObject* py_dd_q0;
     PyArrayObject* py_G_list;
+
     double nac_factor;
     double lambda;
     long use_Wang_NAC;
+    double diel_ext;
+    double vacuum_size;
+    long dim;
 
     double(*dm)[2];
     double* fc;
@@ -623,7 +627,9 @@ static PyObject* py_get_dynamical_matrices_with_dd_openmp_over_qpoints(
                           &py_multi, &py_positions, &py_masses, &py_s2p_map,
                           &py_p2s_map, &py_q_direction, &py_born,
                           &py_dielectric, &py_reciprocal_lattice, &nac_factor,
-                          &py_dd_q0, &py_G_list, &lambda, &use_Wang_NAC))
+                          &py_dd_q0, &py_G_list, &lambda, &use_Wang_NAC,
+                          &diel_ext, &vacuum_size, &dim
+                          ))
         return NULL;
 
     dm = (double(*)[2])PyArray_DATA(py_dynamical_matrix);
@@ -679,7 +685,7 @@ static PyObject* py_get_dynamical_matrices_with_dd_openmp_over_qpoints(
         dm, qpoints, n_qpoints, fc, svecs, multi, positions, num_patom,
         num_satom, masses, p2s_map, s2p_map, born, dielectric,
         reciprocal_lattice, q_direction, nac_factor, dd_q0, G_list, n_Gpoints,
-        lambda, use_Wang_NAC);
+        lambda, use_Wang_NAC, diel_ext, vacuum_size, dim);
 
     Py_RETURN_NONE;
 }
@@ -696,6 +702,9 @@ static PyObject* py_get_recip_dipole_dipole(PyObject* self, PyObject* args) {
     double factor;
     double lambda;
     double tolerance;
+    double diel_ext;
+    double vacuum_size;
+    long dim;
     long use_openmp;
 
     double(*dd)[2];
@@ -708,9 +717,10 @@ static PyObject* py_get_recip_dipole_dipole(PyObject* self, PyObject* args) {
     double(*pos)[3];
     long num_patom, num_G;
 
-    if (!PyArg_ParseTuple(args, "OOOOOOOOdddl", &py_dd, &py_dd_q0, &py_G_list,
+    if (!PyArg_ParseTuple(args, "OOOOOOOOdddddll", &py_dd, &py_dd_q0, &py_G_list,
                           &py_q_cart, &py_q_direction, &py_born, &py_dielectric,
                           &py_positions, &factor, &lambda, &tolerance,
+                          &diel_ext, &vacuum_size, &dim,
                           &use_openmp))
         return NULL;
 
@@ -736,7 +746,12 @@ static PyObject* py_get_recip_dipole_dipole(PyObject* self, PyObject* args) {
                                  dielectric, pos, /* [natom, 3] */
                                  factor,          /* 4pi/V*unit-conv */
                                  lambda,          /* 4 * Lambda^2 */
-                                 tolerance, use_openmp);
+                                 tolerance,
+                                 diel_ext,
+                                 vacuum_size,
+                                 dim,
+                                 use_openmp
+                                 );
 
     Py_RETURN_NONE;
 }
@@ -749,6 +764,9 @@ static PyObject* py_get_recip_dipole_dipole_q0(PyObject* self, PyObject* args) {
     PyArrayObject* py_positions;
     double lambda;
     double tolerance;
+    double diel_ext;
+    double vacuum_size;
+    long dim;
     long use_openmp;
 
     double(*dd_q0)[2];
@@ -758,8 +776,9 @@ static PyObject* py_get_recip_dipole_dipole_q0(PyObject* self, PyObject* args) {
     double(*pos)[3];
     long num_patom, num_G;
 
-    if (!PyArg_ParseTuple(args, "OOOOOddl", &py_dd_q0, &py_G_list, &py_born,
+    if (!PyArg_ParseTuple(args, "OOOOOddddll", &py_dd_q0, &py_G_list, &py_born,
                           &py_dielectric, &py_positions, &lambda, &tolerance,
+                          &diel_ext, &vacuum_size, &dim,
                           &use_openmp))
         return NULL;
 
@@ -776,7 +795,12 @@ static PyObject* py_get_recip_dipole_dipole_q0(PyObject* self, PyObject* args) {
                                     num_G, num_patom, born, dielectric,
                                     pos,    /* [natom, 3] */
                                     lambda, /* 4 * Lambda^2 */
-                                    tolerance, use_openmp);
+                                    tolerance,
+                                    diel_ext,
+                                    vacuum_size,
+                                    dim,
+                                    use_openmp
+                                    );
 
     Py_RETURN_NONE;
 }

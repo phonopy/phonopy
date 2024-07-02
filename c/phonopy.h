@@ -53,7 +53,8 @@ long phpy_dynamical_matrices_with_dd_openmp_over_qpoints(
     const double dielectric[3][3], const double (*reciprocal_lattice)[3],
     const double *q_direction, const double nac_factor,
     const double (*dd_q0)[2], const double (*G_list)[3],
-    const long num_G_points, const double lambda, const long use_Wang_NAC);
+    const long num_G_points, const double lambda, const long use_Wang_NAC,
+    const double diel_ext, const double vacuum_size, const long dim);
 long phpy_get_dynamical_matrices_openmp_over_qpoints(
     double (*dynamical_matrices)[2], const long num_patom, const long num_satom,
     const double *fc, const double (*qpoints)[3], const long n_qpoints,
@@ -80,13 +81,15 @@ void phpy_get_recip_dipole_dipole(
     const double (*born)[3][3], const double dielectric[3][3],
     const double (*pos)[3], /* [num_patom, 3] */
     const double factor,    /* 4pi/V*unit-conv */
-    const double lambda, const double tolerance, const long use_openmp);
+    const double lambda, const double tolerance,
+    const double diel_ext, const double vacuum_size, const long dim, const long use_openmp);
 void phpy_get_recip_dipole_dipole_q0(
     double (*dd_q0)[2],        /* [natom, 3, 3, (real,imag)] */
     const double (*G_list)[3], /* [num_G, 3] */
     const long num_G, const long num_patom, const double (*born)[3][3],
     const double dielectric[3][3], const double (*pos)[3], /* [num_patom, 3] */
-    const double lambda, const double tolerance, const long use_openmp);
+    const double lambda, const double tolerance,
+    const double diel_ext, const double vacuum_size, const long dim, const long use_openmp);
 void phpy_get_derivative_dynmat_at_q(
     double (*derivative_dynmat)[2], const long num_patom, const long num_satom,
     const double *fc, const double *q,

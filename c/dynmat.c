@@ -45,7 +45,7 @@ static void add_dynmat_dd_at_q(
     const double reciprocal_lattice[3][3], const double *q_dir_cart,
     const double nac_factor, const double (*dd_q0)[2],
     const double (*G_list)[3], const long num_G_points, const double lambda,
-    const double tolerance);
+    const double tolerance, const double diel_ext, const double vacuum_size, const long dim);
 static void get_dynmat_ij(double (*dynamical_matrix)[2], const long num_patom,
                           const long num_satom, const double *fc,
                           const double q[3], const double (*svecs)[3],
@@ -59,7 +59,10 @@ static void get_dm(double dm[3][3][2], const long num_patom,
                    const long *p2s_map, const double (*charge_sum)[3][3],
                    const long i, const long j, const long k);
 static double get_dielectric_part(const double q_cart[3],
-                                  const double dielectric[3][3]);
+                                  const double dielectric[3][3],
+                                  const double diel_ext,
+                                  const double vacuum_size,
+                                  const long dim);
 static void get_dd(double (*dd_part)[2], /* [natom, 3, natom, 3, (real,imag)] */
                    const double (*G_list)[3], /* [num_G, 3] */
                    const long num_G, const long num_patom,
@@ -67,6 +70,7 @@ static void get_dd(double (*dd_part)[2], /* [natom, 3, natom, 3, (real,imag)] */
                    const double dielectric[3][3],
                    const double (*pos)[3], /* [num_patom, 3] */
                    const double lambda, const double tolerance,
+                   const double diel_ext, const double vacuum_size, const long dim,
                    const long use_openmp);
 static void get_dd_at_g(
     double (*dd_part)[2], /* [natom, 3, natom, 3, (real,imag)] */
@@ -103,7 +107,8 @@ long dym_dynamical_matrices_with_dd_openmp_over_qpoints(
     const double dielectric[3][3], const double (*reciprocal_lattice)[3],
     const double *q_direction, const double nac_factor,
     const double (*dd_q0)[2], const double (*G_list)[3],
-    const long num_G_points, const double lambda, const long use_Wang_NAC) {
+    const long num_G_points, const double lambda, const long use_Wang_NAC,
+    const double diel_ext, const double vacuum_size, const long dim) {
     long i, n, adrs_shift;
     double(*charge_sum)[3][3];
     double q_cart[3];
@@ -136,7 +141,7 @@ long dym_dynamical_matrices_with_dd_openmp_over_qpoints(
                     dym_get_charge_sum(
                         charge_sum, num_patom,
                         nac_factor / n /
-                            get_dielectric_part(q_direction, dielectric),
+                            get_dielectric_part(q_direction, dielectric, diel_ext, vacuum_size, dim),
                         q_dir_cart, born);
                 } else {
                     free(charge_sum);
@@ -145,7 +150,7 @@ long dym_dynamical_matrices_with_dd_openmp_over_qpoints(
             } else {
                 dym_get_charge_sum(
                     charge_sum, num_patom,
-                    nac_factor / n / get_dielectric_part(q_cart, dielectric),
+                    nac_factor / n / get_dielectric_part(q_cart, dielectric, diel_ext, vacuum_size, dim),
                     q_cart, born);
             }
             dym_get_dynamical_matrix_at_q(dynamical_matrices + adrs_shift * i,
@@ -171,7 +176,7 @@ long dym_dynamical_matrices_with_dd_openmp_over_qpoints(
                                    qpoints[i], fc, positions, num_patom, masses,
                                    born, dielectric, reciprocal_lattice,
                                    q_dir_cart, nac_factor, dd_q0, G_list,
-                                   num_G_points, lambda, q_zero_tolerance);
+                                   num_G_points, lambda, q_zero_tolerance, diel_ext, vacuum_size, dim);
             }
         }
     }
@@ -190,7 +195,7 @@ static void add_dynmat_dd_at_q(
     const double reciprocal_lattice[3][3], const double *q_dir_cart,
     const double nac_factor, const double (*dd_q0)[2],
     const double (*G_list)[3], const long num_G_points, const double lambda,
-    const double tolerance) {
+    const double tolerance, const double diel_ext, const double vacuum_size, const long dim) {
     long i, j, k, l, adrs;
     double(*dd)[2];
     double q_cart[3];
@@ -202,7 +207,7 @@ static void add_dynmat_dd_at_q(
     get_q_cart(q_cart, q, reciprocal_lattice);
     dym_get_recip_dipole_dipole(dd, dd_q0, G_list, num_G_points, num_patom,
                                 q_cart, q_dir_cart, born, dielectric, positions,
-                                nac_factor, lambda, tolerance, 0);
+                                nac_factor, lambda, tolerance, diel_ext, vacuum_size, dim, 0);
 
     for (i = 0; i < num_patom; i++) {
         for (j = 0; j < num_patom; j++) {
@@ -288,7 +293,10 @@ void dym_get_recip_dipole_dipole(
     const double (*born)[3][3], const double dielectric[3][3],
     const double (*pos)[3], /* [num_patom, 3] */
     const double factor,    /* 4pi/V*unit-conv */
-    const double lambda, const double tolerance, const long use_openmp) {
+    const double lambda, const double tolerance,
+    const double diel_ext, /* in low-D, can be different than 1 */
+    const double vacuum_size, /* in 2D the height, in 1D the area of vacuum */
+    const long dim, const long use_openmp) {
     long i, k, l, adrs, adrs_sum;
     double(*dd_tmp)[2];
 
@@ -303,7 +311,7 @@ void dym_get_recip_dipole_dipole(
     }
 
     get_dd(dd_tmp, G_list, num_G, num_patom, q_cart, q_direction_cart,
-           dielectric, pos, lambda, tolerance, use_openmp);
+           dielectric, pos, lambda, tolerance, diel_ext, vacuum_size, dim, use_openmp);
 
     multiply_borns(dd, dd_tmp, num_patom, born, use_openmp);
 
@@ -335,7 +343,11 @@ void dym_get_recip_dipole_dipole_q0(
     const double (*G_list)[3], /* [num_G, 3] */
     const long num_G, const long num_patom, const double (*born)[3][3],
     const double dielectric[3][3], const double (*pos)[3], /* [num_patom, 3] */
-    const double lambda, const double tolerance, const long use_openmp) {
+    const double lambda, const double tolerance,
+    const double diel_ext, /* in low-D, can be different than 1 */
+    const double vacuum_size, /* in 2D the height, in 1D the area of vacuum */
+    const long dim,
+    const long use_openmp) {
     long i, j, k, l, adrs_tmp, adrs, adrsT;
     double zero_vec[3];
     double(*dd_tmp1)[2], (*dd_tmp2)[2];
@@ -357,7 +369,7 @@ void dym_get_recip_dipole_dipole_q0(
     zero_vec[2] = 0;
 
     get_dd(dd_tmp1, G_list, num_G, num_patom, zero_vec, NULL, dielectric, pos,
-           lambda, tolerance, use_openmp);
+           lambda, tolerance, diel_ext, vacuum_size, dim, use_openmp);
 
     multiply_borns(dd_tmp2, dd_tmp1, num_patom, born, use_openmp);
 
@@ -548,8 +560,8 @@ static void get_dm(double dm[3][3][2], const long num_patom,
         for (m = 0; m < 3; m++) {
             phase += q[m] * svecs[adrs + l][m];
         }
-        cos_phase += cos(phase * 2 * PI) / m_pair;
-        sin_phase += sin(phase * 2 * PI) / m_pair;
+        cos_phase += cos(phase * 2. * PI) / m_pair;
+        sin_phase += sin(phase * 2. * PI) / m_pair;
     }
 
     for (l = 0; l < 3; l++) {
@@ -567,9 +579,11 @@ static void get_dm(double dm[3][3][2], const long num_patom,
 }
 
 static double get_dielectric_part(const double q_cart[3],
-                                  const double dielectric[3][3]) {
+                                  const double dielectric[3][3],
+                                  const double diel_ext,
+                                  const double vacuum_size, const long dim){
     long i, j;
-    double sum;
+    double sum, dim_factor, q_norm;
 
     sum = 0;
     for (i = 0; i < 3; i++) {
@@ -577,6 +591,13 @@ static double get_dielectric_part(const double q_cart[3],
             sum += q_cart[i] * dielectric[i][j] * q_cart[j];
         }
     }
+
+    if (dim == 2){
+        q_norm =  2*PI*sqrt(q_cart[0]*q_cart[0] + q_cart[1]*q_cart[1] + q_cart[2]*q_cart[2]);
+        dim_factor = (2./vacuum_size)*q_norm*diel_ext;
+        sum += dim_factor + sum/4.;
+    }
+
     return sum;
 }
 
@@ -587,6 +608,7 @@ static void get_dd(double (*dd_part)[2], /* [natom, 3, natom, 3, (real,imag)] */
                    const double dielectric[3][3],
                    const double (*pos)[3], /* [num_patom, 3] */
                    const double lambda, const double tolerance,
+                   const double diel_ext, const double vacuum_size, const long dim,
                    const long use_openmp) {
     long i, j, g;
     double q_K[3];
@@ -620,7 +642,7 @@ static void get_dd(double (*dd_part)[2], /* [natom, 3, natom, 3, (real,imag)] */
                 continue;
             } else {
                 dielectric_part =
-                    get_dielectric_part(q_direction_cart, dielectric);
+                    get_dielectric_part(q_direction_cart, dielectric, diel_ext, vacuum_size, dim);
                 for (i = 0; i < 3; i++) {
                     for (j = 0; j < 3; j++) {
                         KK[g][i][j] = q_direction_cart[i] *
@@ -629,7 +651,7 @@ static void get_dd(double (*dd_part)[2], /* [natom, 3, natom, 3, (real,imag)] */
                 }
             }
         } else {
-            dielectric_part = get_dielectric_part(q_K, dielectric);
+            dielectric_part = get_dielectric_part(q_K, dielectric, diel_ext, vacuum_size, dim);
             for (i = 0; i < 3; i++) {
                 for (j = 0; j < 3; j++) {
                     KK[g][i][j] = q_K[i] * q_K[j] / dielectric_part *

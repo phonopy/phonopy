@@ -89,12 +89,13 @@ long phpy_dynamical_matrices_with_dd_openmp_over_qpoints(
     const double dielectric[3][3], const double (*reciprocal_lattice)[3],
     const double *q_direction, const double nac_factor,
     const double (*dd_q0)[2], const double (*G_list)[3],
-    const long num_G_points, const double lambda, const long use_Wang_NAC) {
+    const long num_G_points, const double lambda, const long use_Wang_NAC,
+    const double diel_ext, const double vacuum_size, const long dim) {
     return dym_dynamical_matrices_with_dd_openmp_over_qpoints(
         dynamical_matrices, qpoints, n_qpoints, fc, svecs, multi, positions,
         num_patom, num_satom, masses, p2s_map, s2p_map, born, dielectric,
         reciprocal_lattice, q_direction, nac_factor, dd_q0, G_list,
-        num_G_points, lambda, use_Wang_NAC);
+        num_G_points, lambda, use_Wang_NAC, diel_ext, vacuum_size, dim);
 }
 
 long phpy_get_dynamical_matrices_openmp_over_qpoints(
@@ -137,10 +138,11 @@ void phpy_get_recip_dipole_dipole(
     const double (*born)[3][3], const double dielectric[3][3],
     const double (*pos)[3], /* [num_patom, 3] */
     const double factor,    /* 4pi/V*unit-conv */
-    const double lambda, const double tolerance, const long use_openmp) {
+    const double lambda, const double tolerance,
+    const double diel_ext, const double vacuum_size, const long dim, const long use_openmp) {
     dym_get_recip_dipole_dipole(dd, dd_q0, G_list, num_G, num_patom, q_cart,
                                 q_direction_cart, born, dielectric, pos, factor,
-                                lambda, tolerance, use_openmp);
+                                lambda, tolerance, diel_ext, vacuum_size, dim, use_openmp);
 }
 
 void phpy_get_recip_dipole_dipole_q0(
@@ -148,9 +150,10 @@ void phpy_get_recip_dipole_dipole_q0(
     const double (*G_list)[3], /* [num_G, 3] */
     const long num_G, const long num_patom, const double (*born)[3][3],
     const double dielectric[3][3], const double (*pos)[3], /* [num_patom, 3] */
-    const double lambda, const double tolerance, const long use_openmp) {
+    const double lambda, const double tolerance,
+    const double diel_ext, const double vacuum_size, const long dim, const long use_openmp) {
     dym_get_recip_dipole_dipole_q0(dd_q0, G_list, num_G, num_patom, born,
-                                   dielectric, pos, lambda, tolerance,
+                                   dielectric, pos, lambda, tolerance, diel_ext, vacuum_size, dim,
                                    use_openmp);
 }
 
