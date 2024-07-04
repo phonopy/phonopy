@@ -126,18 +126,20 @@ long dym_dynamical_matrices_with_dd_openmp_over_qpoints(
 #pragma omp parallel for private(charge_sum, q_cart, q_norm)
 #endif
         for (i = 0; i < n_qpoints; i++) {
-            charge_sum = (double(*)[3][3])malloc(sizeof(double[3][3]) *
-                                                 num_patom * num_patom);
             get_q_cart(q_cart, qpoints[i], reciprocal_lattice);
             q_norm = sqrt(q_cart[0] * q_cart[0] + q_cart[1] * q_cart[1] +
                           q_cart[2] * q_cart[2]);
             if (q_norm < q_zero_tolerance && q_direction) {
+                charge_sum = (double(*)[3][3])malloc(sizeof(double[3][3]) *
+                                                     num_patom * num_patom);
                 dym_get_charge_sum(
                     charge_sum, num_patom,
                     nac_factor / n /
                         get_dielectric_part(q_direction, dielectric),
                     q_dir_cart, born);
             } else if (!(q_norm < q_zero_tolerance)) {
+                charge_sum = (double(*)[3][3])malloc(sizeof(double[3][3]) *
+                                                     num_patom * num_patom);
                 dym_get_charge_sum(
                     charge_sum, num_patom,
                     nac_factor / n / get_dielectric_part(q_cart, dielectric),
@@ -239,7 +241,7 @@ long dym_get_dynamical_matrices_openmp_over_qpoints(
     return 0;
 }
 
-/// @brief charge_sum is NULL if no NAC.
+/// @brief charge_sum is NULL if G-L NAC or no-NAC.
 long dym_get_dynamical_matrix_at_q(double (*dynamical_matrix)[2],
                                    const long num_patom, const long num_satom,
                                    const double *fc, const double q[3],
@@ -487,7 +489,7 @@ void dym_transform_dynmat_to_fc(double *fc, const double (*dm)[2],
     }
 }
 
-/// @brief charge_sum is NULL if no NAC.
+/// @brief charge_sum is NULL if G-L NAC or no-NAC.
 static void get_dynmat_ij(double (*dynamical_matrix)[2], const long num_patom,
                           const long num_satom, const double *fc,
                           const double q[3], const double (*svecs)[3],
