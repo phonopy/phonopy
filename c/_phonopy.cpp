@@ -106,7 +106,7 @@ void py_get_dynamical_matrices_with_dd_openmp_over_qpoints(
     nb::ndarray<> py_q_direction, nb::ndarray<> py_born,
     nb::ndarray<> py_dielectric, nb::ndarray<> py_reciprocal_lattice,
     double nac_factor, nb::ndarray<> py_dd_q0, nb::ndarray<> py_G_list,
-    double lambda, long use_Wang_NAC) {
+    double lambda, long is_nac, long is_nac_q_zero, long use_Wang_NAC) {
     double(*dm)[2];
     double *fc;
     double *q_direction;
@@ -137,7 +137,6 @@ void py_get_dynamical_matrices_with_dd_openmp_over_qpoints(
     masses = (double *)py_masses.data();
     s2p_map = (long *)py_s2p_map.data();
     p2s_map = (long *)py_p2s_map.data();
-    q_direction = (double *)py_q_direction.data();
     born = (double(*)[3][3])py_born.data();
     dielectric = (double(*)[3])py_dielectric.data();
     reciprocal_lattice = (double(*)[3])py_reciprocal_lattice.data();
@@ -151,6 +150,18 @@ void py_get_dynamical_matrices_with_dd_openmp_over_qpoints(
         dd_q0 = (double(*)[2])py_dd_q0.data();
         G_list = (double(*)[3])py_G_list.data();
         n_Gpoints = py_G_list.shape(0);
+    }
+    if (is_nac_q_zero) {
+        q_direction = NULL;
+    } else {
+        q_direction = (double *)py_q_direction.data();
+    }
+    if (!is_nac) {
+        positions = NULL;
+        dd_q0 = NULL;
+        G_list = NULL;
+        n_Gpoints = 0;
+        q_direction = NULL;
     }
     num_patom = py_p2s_map.shape(0);
     num_satom = py_s2p_map.shape(0);
@@ -260,8 +271,8 @@ void py_get_recip_dipole_dipole(
     nb::ndarray<> py_dd, nb::ndarray<> py_dd_q0, nb::ndarray<> py_G_list,
     nb::ndarray<> py_q_cart, nb::ndarray<> py_q_direction,
     nb::ndarray<> py_born, nb::ndarray<> py_dielectric,
-    nb::ndarray<> py_positions, long is_q_zero, double factor, double lambda,
-    double tolerance, long use_openmp) {
+    nb::ndarray<> py_positions, long is_nac_q_zero, double factor,
+    double lambda, double tolerance, long use_openmp) {
     double(*dd)[2];
     double(*dd_q0)[2];
     double(*G_list)[3];
@@ -276,7 +287,7 @@ void py_get_recip_dipole_dipole(
     dd = (double(*)[2])py_dd.data();
     dd_q0 = (double(*)[2])py_dd_q0.data();
     G_list = (double(*)[3])py_G_list.data();
-    if (is_q_zero) {
+    if (is_nac_q_zero) {
         q_direction = NULL;
     } else {
         q_direction = (double *)py_q_direction.data();
@@ -334,7 +345,7 @@ void py_get_derivative_dynmat(
     nb::ndarray<> py_multi, nb::ndarray<> py_masses, nb::ndarray<> py_s2p_map,
     nb::ndarray<> py_p2s_map, double nac_factor, nb::ndarray<> py_born,
     nb::ndarray<> py_dielectric, nb::ndarray<> py_q_direction, long is_nac,
-    long is_q_zero, long use_openmp) {
+    long is_nac_q_zero, long use_openmp) {
     double(*ddm)[2];
     double *fc;
     double *q_vector;
@@ -365,7 +376,7 @@ void py_get_derivative_dynmat(
 
     epsilon = (double *)py_dielectric.data();
     born = (double *)py_born.data();
-    if (is_q_zero) {
+    if (is_nac_q_zero) {
         q_dir = NULL;
     } else {
         q_dir = (double *)py_q_direction.data();

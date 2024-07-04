@@ -146,18 +146,18 @@ class DerivativeOfDynamicalMatrix:
             dielectric = self._dynmat.dielectric_constant
             nac_factor = self._dynmat.nac_factor
             if q_direction is None:
-                q_dir = np.zerod(3)
-                is_q_zero = True
+                q_dir = np.zeros(3)
+                is_nac_q_zero = True
             else:
                 q_dir = np.array(q_direction, dtype="double", order="C")
-                is_q_zero = False
+                is_nac_q_zero = False
         else:
             born = np.zeros(0)  # dummy value
             dielectric = np.zeros(0)  # dummy value
             nac_factor = 0  # dummy value
-            q_dir = np.zerod(3)  # dummy value
+            q_dir = np.zeros(3)  # dummy value
             is_nac = False
-            is_q_zero = True
+            is_nac_q_zero = True
 
         if fc.shape[0] == fc.shape[1]:  # full fc
             phonoc.derivative_dynmat(
@@ -175,7 +175,7 @@ class DerivativeOfDynamicalMatrix:
                 dielectric,
                 q_dir,
                 is_nac * 1,
-                is_q_zero * 1,
+                is_nac_q_zero * 1,
                 self._dynmat.use_openmp * 1,
             )
         else:
@@ -194,7 +194,7 @@ class DerivativeOfDynamicalMatrix:
                 dielectric,
                 q_dir,
                 is_nac * 1,
-                is_q_zero * 1,
+                is_nac_q_zero * 1,
                 self._dynmat.use_openmp * 1,
             )
 

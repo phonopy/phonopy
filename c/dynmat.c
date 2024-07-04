@@ -89,9 +89,9 @@ static void get_q_cart(double q_cart[3], const double q[3],
                        const double reciprocal_lattice[3][3]);
 
 /// @brief Calculate dynamical matrices with openmp over q-points
-/// use_Wang_NAC gives NAC by Wang et al.
-/// dd_0 and NULL gives NAC by Gonze and Lee
-/// Otherwise no-NAC.
+/// use_Wang_NAC: Wang et al.
+/// !use_Wang_NAC and dd_0 is NULL: no-NAC
+/// !use_Wang_NAC and dd_0 is not NULL: NAC by Gonze and Lee.
 /// @param reciprocal_lattice in column vectors
 /// @param q_direction in Crystallographic coordinates.
 long dym_dynamical_matrices_with_dd_openmp_over_qpoints(
@@ -131,23 +131,18 @@ long dym_dynamical_matrices_with_dd_openmp_over_qpoints(
             get_q_cart(q_cart, qpoints[i], reciprocal_lattice);
             q_norm = sqrt(q_cart[0] * q_cart[0] + q_cart[1] * q_cart[1] +
                           q_cart[2] * q_cart[2]);
-            if (q_norm < q_zero_tolerance) {
-                if (q_direction) {
-                    dym_get_charge_sum(
-                        charge_sum, num_patom,
-                        nac_factor / n /
-                            get_dielectric_part(q_direction, dielectric),
-                        q_dir_cart, born);
-                } else {
-                    free(charge_sum);
-                    charge_sum = NULL;
-                }
-            } else {
+            if (q_norm < q_zero_tolerance && q_direction) {
+                dym_get_charge_sum(
+                    charge_sum, num_patom,
+                    nac_factor / n /
+                        get_dielectric_part(q_direction, dielectric),
+                    q_dir_cart, born);
+            } else if (!(q_norm < q_zero_tolerance)) {
                 dym_get_charge_sum(
                     charge_sum, num_patom,
                     nac_factor / n / get_dielectric_part(q_cart, dielectric),
                     q_cart, born);
-            }
+            }  // (q_norm < q_zero_tolerance && !q_direction) -> no NAC
             dym_get_dynamical_matrix_at_q(dynamical_matrices + adrs_shift * i,
                                           num_patom, num_satom, fc, qpoints[i],
                                           svecs, multi, masses, s2p_map,
@@ -166,7 +161,7 @@ long dym_dynamical_matrices_with_dd_openmp_over_qpoints(
                                           num_patom, num_satom, fc, qpoints[i],
                                           svecs, multi, masses, s2p_map,
                                           p2s_map, charge_sum, 0);
-            if (dd_q0) {
+            if (dd_q0) {  // NAC by Gonze and Lee if dd_in is not NULL
                 add_dynmat_dd_at_q(dynamical_matrices + adrs_shift * i,
                                    qpoints[i], fc, positions, num_patom, masses,
                                    born, dielectric, reciprocal_lattice,
@@ -244,6 +239,7 @@ long dym_get_dynamical_matrices_openmp_over_qpoints(
     return 0;
 }
 
+/// @brief charge_sum is NULL if no NAC.
 long dym_get_dynamical_matrix_at_q(double (*dynamical_matrix)[2],
                                    const long num_patom, const long num_satom,
                                    const double *fc, const double q[3],
@@ -491,6 +487,7 @@ void dym_transform_dynmat_to_fc(double *fc, const double (*dm)[2],
     }
 }
 
+/// @brief charge_sum is NULL if no NAC.
 static void get_dynmat_ij(double (*dynamical_matrix)[2], const long num_patom,
                           const long num_satom, const double *fc,
                           const double q[3], const double (*svecs)[3],
@@ -601,7 +598,7 @@ static void get_dd(double (*dd_part)[2], /* [natom, 3, natom, 3, (real,imag)] */
     /* q_direction is NULL for summation over G */
 #ifdef _OPENMP
 #pragma omp parallel for private(i, j, q_K, norm, \
-                                 dielectric_part) if (use_openmp)
+                                     dielectric_part) if (use_openmp)
 #endif
     for (g = 0; g < num_G; g++) {
         norm = 0;
