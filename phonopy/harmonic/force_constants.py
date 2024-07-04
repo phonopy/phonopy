@@ -293,7 +293,7 @@ def distribute_force_constants(
     atom_list_done,
     lattice,  # column vectors
     rotations,  # scaled (fractional)
-    permutations,
+    permutations: np.ndarray,
     atom_list=None,
     fc_indices_of_atom_list=None,
 ):
@@ -322,6 +322,16 @@ def distribute_force_constants(
         _fc_indices_of_atom_list = np.arange(len(targets), dtype="intc")
     else:
         _fc_indices_of_atom_list = np.array(fc_indices_of_atom_list, dtype="intc")
+
+    if map_atoms.ndim != 1 or map_atoms.shape[0] != permutations.shape[1]:
+        raise ValueError("wrong shape for map_atoms")
+
+    if map_syms.ndim != 1 or map_syms.shape[0] != permutations.shape[1]:
+        raise ValueError("wrong shape for map_syms")
+
+    if rots_cartesian.shape[0] != permutations.shape[0]:
+        raise ValueError("permutations and rotations are different length")
+
     import phonopy._phonopy as phonoc
 
     phonoc.distribute_fc2(

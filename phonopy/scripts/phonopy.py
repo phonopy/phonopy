@@ -36,7 +36,9 @@
 
 from phonopy.cui.phonopy_script import main
 
-if __name__ == "__main__":
+
+def run():
+    """Run phonopy script."""
     argparse_control = {
         "fc_symmetry": False,
         "is_nac": False,
