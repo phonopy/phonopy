@@ -44,7 +44,8 @@ logging.level = "INFO"
 
 [tool.scikit-build]
 metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
-sdist.include = ["phonopy/_version.py"]
+sdist.exclude = ["*"]
+sdist.include = ["test", "LICENSE", "c", "example", "phonopy", "pyproject.toml", "CMakeLists.txt", "README.md"]
 
 [tool.setuptools_scm]
 write_to = "phonopy/_version.py"
