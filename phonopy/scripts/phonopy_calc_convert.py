@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-
-
 # Copyright (C) 2020
 # All rights reserved.
 #
@@ -44,7 +41,9 @@ def get_options():
     """Parse options."""
     import argparse
 
-    parser = argparse.ArgumentParser(description="Phonopy bandplot command-line-tool")
+    parser = argparse.ArgumentParser(
+        description="Phonopy crystal structure converter command-line-tool"
+    )
     parser.add_argument(
         "-i",
         dest="filename_in",
@@ -76,8 +75,9 @@ def get_options():
     return parser.parse_args()
 
 
-def main(opts):
+def run():
     """Run phonopy-calc-convert."""
+    opts = get_options()
     args = (
         opts.filename_in,
         opts.calculator_in,
@@ -131,7 +131,3 @@ def _outfile_exist(filename):
             "Use different filename." % filename
         )
         raise RuntimeError(msg)
-
-
-if __name__ == "__main__":
-    main(get_options())

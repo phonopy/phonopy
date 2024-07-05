@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -131,8 +129,10 @@ def get_options():
     return args
 
 
-def main(args):
+def run():
     """Run phonopy-propplot."""
+    args = get_options()
+
     if args.is_gnuplot:
         print(
             "# temperature[K] Free energy [kJ/mol] Entropy [J/K/mol] "
@@ -225,7 +225,3 @@ def main(args):
             plt.savefig(args.output_filename)
         else:
             plt.show()
-
-
-if __name__ == "__main__":
-    main(get_options())

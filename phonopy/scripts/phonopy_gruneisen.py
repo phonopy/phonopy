@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (C) 2012 Atsushi Togo
 # All rights reserved.
 #
@@ -225,8 +223,10 @@ def get_options():
     return args
 
 
-def main(args):
+def run():
     """Run phonopy-gruneisen."""
+    args = get_options()
+
     if len(args.dirnames) != 3:
         sys.stderr.write(
             "Three directory names (original, plus, minus) " "have to be spefied.\n"
@@ -406,7 +406,3 @@ def main(args):
                 plt.savefig("gruneisen.pdf")
         else:
             plt.show()
-
-
-if __name__ == "__main__":
-    main(get_options())

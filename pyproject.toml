@@ -26,17 +26,17 @@ plot = ["seekpath"]
 [project.scripts]
 phonopy = "phonopy.scripts.phonopy:run"
 phonopy-load = "phonopy.scripts.phonopy_load:run"
-# phonopy-qha = "phonopy.scripts.phonopy-qha"
-# phonopy-bandplot = "phonopy.scripts.phonopy-bandplot"
-# phonopy-vasp-born = "phonopy.scripts.phonopy-vasp-born"
-# phonopy-vasp-efe = "phonopy.scripts.phonopy-vasp-efe"
-# phonopy-crystal-born = "phonopy.scripts.phonopy-crystal-born"
-# phonopy-calc-convert = "phonopy.scripts.phonopy-calc-convert"
-# phonopy-propplot = "phonopy.scripts.phonopy-propplot"
-# phonopy-tdplot = "phonopy.scripts.phonopy-tdplot"
-# phonopy-gruneisen = "phonopy.scripts.phonopy-gruneisen"
-# phonopy-gruneisenplot = "phonopy.scripts.phonopy-gruneisenplot"
-# phonopy-pdosplot = "phonopy.scripts.phonopy-pdosplot"
+phonopy-bandplot = "phonopy.scripts.phonopy_bandplot:run"
+phonopy-calc-convert = "phonopy.scripts.phonopy_calc_convert:run"
+phonopy-crystal-born = "phonopy.scripts.phonopy_crystal_born:run"
+phonopy-gruneisen = "phonopy.scripts.phonopy_gruneisen:run"
+phonopy-gruneisenplot = "phonopy.scripts.phonopy_gruneisenplot:run"
+phonopy-pdosplot = "phonopy.scripts.phonopy_pdosplot:run"
+phonopy-propplot = "phonopy.scripts.phonopy_propplot:run"
+phonopy-qha = "phonopy.scripts.phonopy_qha:run"
+phonopy-tdplot = "phonopy.scripts.phonopy_tdplot:run"
+phonopy-vasp-born = "phonopy.scripts.phonopy_vasp_born:run"
+phonopy-vasp-efe = "phonopy.scripts.phonopy_vasp_efe:run"
 
 [tool.sciki-build]
 cmake.verbose = true
