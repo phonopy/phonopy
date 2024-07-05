@@ -79,7 +79,7 @@ export HDF5_USE_FILE_LOCKING=FALSE
 
 The procedure to setup phonopy is explained in this section. It is supposed that
 phonopy is installed on the recent linux distribution like Ubuntu or Fedora with
-Python version 3.7 or later. Mac OS X users may use conda (conda-forge channel)
+Python version 3.8 or later. Mac OS X users may use conda (conda-forge channel)
 packages. Windows users should use conda (conda-forge channel) packages as well.
 
 Prepare the following Python libraries:
@@ -129,16 +129,21 @@ If specific one is expected, it is installed by (e.g. `openblas`)
 If you need a compiler,
 
 ```
-% conda install -c conda-forge c-compliler
+% conda install -c conda-forge c-compliler cxx-compiler cmake
 ```
 
 (install_setup_py)=
 
-### Building using setup.py
+### Building using `pip install`
 
-If package installation is not possible or you want to compile with special
-compiler or special options, phonopy is built using `setup.py`. In this case,
-manual modification of `setup.py` may be needed.
+If package installation is not possible or you want to compile with a special
+compiler or special options, phonopy is built using `pip install`. In this case,
+manual modification of `CMakeLists.txt` may be needed.
+
+Note that at version 2.26.0, the build system of phonopy was modernized.
+Nanobind, cmake, and scikit-build-core are used for the building. The receipt is
+written in `CMakeLists.txt` and `pyproject.toml`. The old `setup.py` was
+removed.
 
 1. Get the source code from github
 
@@ -148,20 +153,11 @@ manual modification of `setup.py` may be needed.
    % git checkout master
    ```
 
-2. Run `setup.py` script via `pip`
+2. Run `pip install`
 
    ```
    % pip install -e . -vvv
    ```
-
-Under the system with OpenMP library, setting environment variable
-
-```
-export PHONOPY_USE_OPENMP=true
-```
-
-before `pip install -e . -vvv` will build phonopy with OpenMP support thought
-the performance improvement is limited for many cases.
 
 (install_trouble_shooting)=
 
