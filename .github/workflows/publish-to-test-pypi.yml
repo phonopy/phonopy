@@ -19,7 +19,14 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Make sdist
+    - name: Make sdist for TestPyPI
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/rc')
+      run: |
+        git tag v`grep __version__ phonopy/version.py|awk -F'"' '{print($2)}'`
+        pip install build
+        python -m build --sdist
+    - name: Make sdist for PyPI
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/master')
       run: |
         pip install build
         python -m build --sdist
