@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -130,8 +128,10 @@ def get_options():
     return args
 
 
-def main(args):
+def run():
     """Run phonopy-tdplot."""
+    args = get_options()
+
     if not args.is_distance:
         if len(args.filename) == 0:
             filename = "thermal_displacements.yaml"
@@ -220,7 +220,3 @@ def main(args):
         plt.savefig(args.output_filename)
     else:
         plt.show()
-
-
-if __name__ == "__main__":
-    main(get_options())

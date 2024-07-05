@@ -161,11 +161,11 @@ void phpy_get_derivative_dynmat_at_q(
     const double (*svecs)[3], const long (*multi)[2], const double *mass,
     const long *s2p_map, const long *p2s_map, const double nac_factor,
     const double *born, const double *dielectric, const double *q_direction,
-    const long use_openmp) {
+    const long is_nac, const long use_openmp) {
     ddm_get_derivative_dynmat_at_q(derivative_dynmat, num_patom, num_satom, fc,
                                    q, lattice, svecs, multi, mass, s2p_map,
                                    p2s_map, nac_factor, born, dielectric,
-                                   q_direction, use_openmp);
+                                   q_direction, is_nac, use_openmp);
 }
 
 void phpy_get_relative_grid_address(long relative_grid_address[24][4][3],
@@ -257,7 +257,7 @@ void phpy_tetrahedron_method_dos(
 
 #ifdef _OPENMP
 #pragma omp parallel for private(j, k, l, m, q, r, iw, ir_gps, g_addr, \
-                                 tetrahedra, address_double)
+                                     tetrahedra, address_double)
 #endif
     for (i = 0; i < num_ir_gp; i++) {
         /* set 24 tetrahedra */

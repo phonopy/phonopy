@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (C) 2018 Atsushi Togo
 # All rights reserved.
 #
@@ -52,7 +50,7 @@ def get_options():
     """Parse command-line options."""
     import argparse
 
-    parser = argparse.ArgumentParser(description="Phonopy vasp-born command-line-tool")
+    parser = argparse.ArgumentParser(description="Phonopy vasp-efe command-line-tool")
     parser.set_defaults(tmax=1000.0, tmin=0.0, tstep=10.0)
     parser.add_argument(
         "--tmax", dest="tmax", type=float, help="Maximum calculated temperature"
@@ -115,8 +113,10 @@ def get_fe_ev_lines(args):
     return lines_fe, lines_ev
 
 
-def main(args):
+def run():
     """Run phonopy-vasp-efe."""
+    args = get_options()
+
     lines_fe, lines_ev = get_fe_ev_lines(args)
 
     with open("fe-v.dat", "w") as w:
@@ -128,7 +128,3 @@ def main(args):
         w.write("\n".join(lines_ev))
         w.write("\n")
         print('* energy (sigma->0) and volumes are written in "e-v.dat".')
-
-
-if __name__ == "__main__":
-    main(get_options())

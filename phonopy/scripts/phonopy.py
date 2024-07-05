@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -36,7 +34,9 @@
 
 from phonopy.cui.phonopy_script import main
 
-if __name__ == "__main__":
+
+def run():
+    """Run phonopy script."""
     argparse_control = {
         "fc_symmetry": False,
         "is_nac": False,

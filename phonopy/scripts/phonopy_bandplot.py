@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -757,8 +755,9 @@ def _write_gnuplot_data(args):
             print("")
 
 
-def main(args):
+def run():
     """Run phonopy-bandplot."""
+    args = get_options()
     if args.is_gnuplot:
         _write_gnuplot_data(args)
         sys.exit(1)
@@ -772,7 +771,3 @@ def main(args):
         _old_plot(args)
     else:
         _plot(args)
-
-
-if __name__ == "__main__":
-    main(get_options())
