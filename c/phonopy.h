@@ -37,6 +37,10 @@
 #ifndef __phonopy_H__
 #define __phonopy_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void phpy_transform_dynmat_to_fc(double *fc, const double (*dm)[2],
                                  const double (*comm_points)[3],
                                  const double (*svecs)[3],
@@ -94,7 +98,7 @@ void phpy_get_derivative_dynmat_at_q(
     const double (*svecs)[3], const long (*multi)[2], const double *mass,
     const long *s2p_map, const long *p2s_map, const double nac_factor,
     const double *born, const double *dielectric, const double *q_direction,
-    const long use_openmp);
+    const long is_nac, const long use_openmp);
 void phpy_get_neighboring_grid_points(
     size_t neighboring_grid_points[], const size_t grid_point,
     const int relative_grid_address[][3], const int num_relative_grid_address,
@@ -162,4 +166,9 @@ void phpy_set_index_permutation_symmetry_compact_fc(
     const int is_transpose);
 long phpy_use_openmp(void);
 long phpy_get_max_threads(void);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

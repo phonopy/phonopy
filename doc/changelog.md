@@ -2,6 +2,12 @@
 
 # Change Log
 
+## Jul-5-2024: Version 2.26.0
+
+- Build system of phonopy was renewed. Now nanobind, cmake, and
+  scikit-build-core are used for the building, and the receipt is written in
+  `CMakeLists.txt` and `pyproject.toml`.
+
 ## Jun-29-2024: Version 2.25.0
 
 - Migration to ruff.

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -109,8 +107,10 @@ def get_options():
     return args
 
 
-def main(args):
+def run():
     """Run phonopy-pdosplot."""
+    args = get_options()
+
     frequencies = []
     dos = []
     filename = "partial_dos.dat"
@@ -214,7 +214,3 @@ def main(args):
         plt.savefig(args.output_filename)
     else:
         plt.show()
-
-
-if __name__ == "__main__":
-    main(get_options())

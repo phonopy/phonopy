@@ -802,7 +802,9 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
 
         return C_dd
 
-    def _get_c_recip_dipole_dipole(self, q_cart, q_dir_cart):
+    def _get_c_recip_dipole_dipole(
+        self, q_cart: np.ndarray, q_dir_cart: Optional[np.ndarray]
+    ) -> np.ndarray:
         """Reciprocal part of Eq.(71) on the right hand side.
 
         This is subtracted from supercell force constants to create
@@ -828,15 +830,23 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         else:
             dd_q0 = self._dd_q0
 
+        if q_dir_cart is None:
+            is_nac_q_zero = True
+            _q_dir_cart = np.zeros(3, dtype="double")
+        else:
+            is_nac_q_zero = False
+            _q_dir_cart = q_dir_cart
+
         phonoc.recip_dipole_dipole(
             dd.view(dtype="double"),
             dd_q0.view(dtype="double"),
             self._G_list,
             q_cart,
-            q_dir_cart,
+            _q_dir_cart,
             self._born,
             self._dielectric,
             np.array(pos, dtype="double", order="C"),
+            is_nac_q_zero * 1,
             self._unit_conversion * 4.0 * np.pi / volume,
             self._Lambda,
             self.Q_DIRECTION_TOLERANCE,
@@ -1183,7 +1193,7 @@ def get_dynamical_matrix(
 def run_dynamical_matrix_solver_c(
     dm: Union[DynamicalMatrix, DynamicalMatrixWang, DynamicalMatrixGL],
     qpoints,
-    nac_q_direction=None,  # in reduced coordinates
+    nac_q_direction: Optional[np.ndarray] = None,  # in reduced coordinates
 ):
     """Bulid and solve dynamical matrices on grid in C-API.
 
@@ -1224,13 +1234,29 @@ def run_dynamical_matrix_solver_c(
         ) = gonze_nac_dataset  # Convergence parameter
         fc = gonze_fc
     else:
-        positions = None
-        dd_q0 = None
-        G_list = None
-        Lambda = 0
+        dd_q0 = np.zeros(2)  # dummy value
+        G_list = np.zeros(3)  # dummy value
+        Lambda = 0.0  # dummy value
         fc = dm.force_constants
         if isinstance(dm, DynamicalMatrixWang):
             use_Wang_NAC = True
+
+    if nac_q_direction is None:
+        is_nac_q_zero = True
+        _nac_q_direction = np.zeros(3)  # dummy variable
+    else:
+        is_nac_q_zero = False
+        _nac_q_direction = np.array(nac_q_direction, dtype="double")
+
+    if born is None:
+        _born = np.zeros(9)  # dummy variable
+    else:
+        _born = born
+
+    if dielectric is None:
+        _dielectric = np.zeros(9)  # dummy variable
+    else:
+        _dielectric = dielectric
 
     p2s, s2p = _get_fc_elements_mapping(dm, fc)
 
@@ -1246,14 +1272,16 @@ def run_dynamical_matrix_solver_c(
         masses,
         s2p,
         p2s,
-        nac_q_direction,
-        born,
-        dielectric,
+        _nac_q_direction,
+        _born,
+        _dielectric,
         rec_lattice,
-        nac_factor,
+        float(nac_factor),
         dd_q0,
         G_list,
         Lambda,
+        dm.is_nac() * 1,
+        is_nac_q_zero * 1,
         use_Wang_NAC * 1,  # use_Wang_NAC
     )
 

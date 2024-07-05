@@ -45,7 +45,7 @@ static void get_derivative_dynmat_at_q(
     const double *q, const double *lattice, /* column vector */
     const double (*svecs)[3], const long (*multi)[2], const double *mass,
     const long *s2p_map, const long *p2s_map, const double nac_factor,
-    const double *born, const double *dielectric, const double *q_direction);
+    const double *born, const double *dielectric);
 static void get_derivative_nac(double *ddnac, double *dnac,
                                const long num_patom, const double *lattice,
                                const double *mass, const double *q,
@@ -66,26 +66,10 @@ void ddm_get_derivative_dynmat_at_q(
     const double (*svecs)[3], const long (*multi)[2], const double *mass,
     const long *s2p_map, const long *p2s_map, const double nac_factor,
     const double *born, const double *dielectric, const double *q_direction,
-    const long use_openmp) {
-    long i, j, k, ij, adrs, adrsT, is_nac;
+    const long is_nac, const long use_openmp) {
+    long i, j, k, ij, adrs, adrsT;
     double factor;
     double *ddnac, *dnac;
-
-    if (born) {
-        is_nac = 1;
-        if (q_direction) {
-            if (fabs(q_direction[0]) < 1e-5 && fabs(q_direction[1]) < 1e-5 &&
-                fabs(q_direction[2]) < 1e-5) {
-                is_nac = 0;
-            }
-        } else {
-            if (fabs(q[0]) < 1e-5 && fabs(q[1]) < 1e-5 && fabs(q[2]) < 1e-5) {
-                is_nac = 0;
-            }
-        }
-    } else {
-        is_nac = 0;
-    }
 
     if (is_nac) {
         ddnac = (double *)malloc(sizeof(double) * num_patom * num_patom * 27);
@@ -102,10 +86,10 @@ void ddm_get_derivative_dynmat_at_q(
         for (ij = 0; ij < num_patom * num_patom; ij++) {
             i = ij / num_patom;
             j = ij % num_patom;
-            get_derivative_dynmat_at_q(
-                derivative_dynmat, i, j, ddnac, dnac, is_nac, num_patom,
-                num_satom, fc, q, lattice, svecs, multi, mass, s2p_map, p2s_map,
-                nac_factor, born, dielectric, q_direction);
+            get_derivative_dynmat_at_q(derivative_dynmat, i, j, ddnac, dnac,
+                                       is_nac, num_patom, num_satom, fc, q,
+                                       lattice, svecs, multi, mass, s2p_map,
+                                       p2s_map, nac_factor, born, dielectric);
         }
     } else {
         for (i = 0; i < num_patom; i++) {
@@ -113,7 +97,7 @@ void ddm_get_derivative_dynmat_at_q(
                 get_derivative_dynmat_at_q(
                     derivative_dynmat, i, j, ddnac, dnac, is_nac, num_patom,
                     num_satom, fc, q, lattice, svecs, multi, mass, s2p_map,
-                    p2s_map, nac_factor, born, dielectric, q_direction);
+                    p2s_map, nac_factor, born, dielectric);
             }
         }
     }
@@ -149,7 +133,7 @@ void get_derivative_dynmat_at_q(
     const double *q, const double *lattice, /* column vector */
     const double (*svecs)[3], const long (*multi)[2], const double *mass,
     const long *s2p_map, const long *p2s_map, const double nac_factor,
-    const double *born, const double *dielectric, const double *q_direction) {
+    const double *born, const double *dielectric) {
     long k, l, m, n, adrs, m_pair, i_pair, svecs_adrs;
     double coef[3], real_coef[3], imag_coef[3];
     double c, s, phase, mass_sqrt, fc_elem, real_phase, imag_phase;

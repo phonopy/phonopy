@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (C) 2018 Antti Karttunen (antti.j.karttunen@iki.fi)
 # All rights reserved.
 #
@@ -71,8 +69,10 @@ def read_crystal_epsilon(epscol, epslines):
     return eps
 
 
-def main(args):
+def run():
     """Run phonopy-crystal-born."""
+    args = get_options()
+
     if args.filename:
         crystal_filename = args.filename[0]
     else:
@@ -148,7 +148,3 @@ def main(args):
         for atom in range(0, N_asym_atoms):
             bornlines += ("%6.4f " * 9 + "\n") % tuple(zeff[atom])
         print(bornlines, end="")
-
-
-if __name__ == "__main__":
-    main(get_options())
