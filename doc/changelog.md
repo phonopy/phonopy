@@ -2,6 +2,11 @@
 
 # Change Log
 
+## Jul-7-2024: Version 2.26.2
+
+- Enable to use `PHONOPY_USE_OMP=OFF` environment variable to deactivate
+  building with OpenMP.
+
 ## Jul-7-2024: Version 2.26.1
 
 - Update for conda-forge build.
