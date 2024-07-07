@@ -12,24 +12,22 @@ if(PHONOPY_LIBS)
     include(GNUInstallDirs)
 
     # Version numbers
-    file(READ ${PROJECT_SOURCE_DIR}/phonopy/version.py version_file)
+    file(READ ${PROJECT_SOURCE_DIR}/phonopy/version.py VERSION_FILE)
     string(REGEX MATCH "__version__.*([0-9]+)[.]([0-9]+)[.]([0-9]+)"
-        phono3py_version ${version_file})
-    set(phonopy_major_version ${CMAKE_MATCH_1})
-    set(phonopy_minor_version ${CMAKE_MATCH_2})
-    set(phonopy_micro_version ${CMAKE_MATCH_3})
-    set(serial
-        "${phonopy_major_version}.${phonopy_minor_version}.${phonopy_micro_version}"
-    )
-    set(soserial "1")
+                 phono3py_version ${VERSION_FILE})
+    set(PHONOPY_MAJOR_VERSION ${CMAKE_MATCH_1})
+    set(PHONOPY_MINOR_VERSION ${CMAKE_MATCH_2})
+    set(PHONOPY_MICRO_VERSION ${CMAKE_MATCH_3})
+    set(SERIAL
+        "${PHONOPY_MAJOR_VERSION}.${PHONOPY_MINOR_VERSION}.${PHONOPY_MICRO_VERSION}")
+    set(SOSERIAL "1")
 else()
     project(${SKBUILD_PROJECT_NAME})
     set(DEV_MODULE Development.Module)
     find_package(
-        Python 3.8
-        REQUIRED COMPONENTS Interpreter ${DEV_MODULE}
-        OPTIONAL_COMPONENTS Development.SABIModule
-    )
+        Python 3.8 REQUIRED
+        COMPONENTS Interpreter ${DEV_MODULE}
+        OPTIONAL_COMPONENTS Development.SABIModule)
 endif()
 
 cmake_policy(SET CMP0007 NEW)
@@ -39,7 +37,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
         Release
         CACHE STRING "Choose the type of build." FORCE)
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
-        "MinSizeRel" "RelWithDebInfo")
+                                                 "MinSizeRel" "RelWithDebInfo")
 endif()
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
@@ -62,9 +60,7 @@ if(BUILD_SHARED_LIBS)
     add_library(phonopy_libs SHARED ${SOURCES_PHONOPY})
 
     if(OpenMP_FOUND)
-        target_link_libraries(
-            phonopy_libs
-            PRIVATE OpenMP::OpenMP_C)
+        target_link_libraries(phonopy_libs PRIVATE OpenMP::OpenMP_C)
     endif()
 
     target_compile_definitions(phonopy_libs PRIVATE THM_EPSILON=1e-10)
@@ -73,9 +69,7 @@ else()
     add_library(phonopy_libs STATIC ${SOURCES_PHONOPY})
 
     if(OpenMP_FOUND)
-        target_link_libraries(
-            phonopy_libs
-            PRIVATE OpenMP::OpenMP_C)
+        target_link_libraries(phonopy_libs PRIVATE OpenMP::OpenMP_C)
     endif()
 
     target_compile_definitions(phonopy_libs PRIVATE THM_EPSILON=1e-10)
@@ -83,16 +77,16 @@ endif()
 
 if(PHONOPY_LIBS)
     install(FILES ${PROJECT_SOURCE_DIR}/c/phonopy.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
     if(BUILD_SHARED_LIBS)
         install(TARGETS phonopy_libs LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-        set_property(TARGET phonopy_libs PROPERTY VERSION ${serial})
-        set_property(TARGET phonopy_libs PROPERTY SOVERSION ${soserial})
+        set_property(TARGET phonopy_libs PROPERTY VERSION ${SERIAL})
+        set_property(TARGET phonopy_libs PROPERTY SOVERSION ${SOSERIAL})
     else()
         install(TARGETS phonopy_libs ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-        set_property(TARGET phonopy_libs PROPERTY VERSION ${serial})
-        set_property(TARGET phonopy_libs PROPERTY SOVERSION ${soserial})
+        set_property(TARGET phonopy_libs PROPERTY VERSION ${SERIAL})
+        set_property(TARGET phonopy_libs PROPERTY SOVERSION ${SOSERIAL})
         set_property(TARGET phonopy_libs PROPERTY OUTPUT_NAME phonopy_libs)
     endif()
 else()
@@ -104,12 +98,8 @@ else()
         OUTPUT_VARIABLE NB_DIR)
     list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
     find_package(nanobind CONFIG REQUIRED)
-    nanobind_add_module(
-        _phonopy
-        STABLE_ABI
-        ${PROJECT_SOURCE_DIR}/c/phonopy.h
-        ${PROJECT_SOURCE_DIR}/c/_phonopy.cpp
-    )
+    nanobind_add_module(_phonopy STABLE_ABI ${PROJECT_SOURCE_DIR}/c/phonopy.h
+                        ${PROJECT_SOURCE_DIR}/c/_phonopy.cpp)
 
     if(OpenMP_FOUND)
         target_link_libraries(_phonopy PRIVATE phonopy_libs OpenMP::OpenMP_C)

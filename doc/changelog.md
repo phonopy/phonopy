@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Jul-7-2024: Version 2.26.1
+
+- Update for conda-forge build.
+
 ## Jul-5-2024: Version 2.26.0
 
 - Build system of phonopy was renewed. Now nanobind, cmake, and
