@@ -40,14 +40,21 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
                                                  "MinSizeRel" "RelWithDebInfo")
 endif()
 
+option(PHONOPY_USE_OMP "Build with OpenMP support" ON)
+
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "CMAKE_SYSTEM_PREFIX_PATH: ${CMAKE_SYSTEM_PREFIX_PATH}")
 
-find_package(OpenMP)
+if(PHONOPY_USE_OMP)
+    find_package(OpenMP)
 
-if(OpenMP_FOUND)
-    message(STATUS "OpenMP libs: ${OpenMP_C_LIBRARIES}")
-    message(STATUS "OpenMP flags: ${OpenMP_C_FLAGS}")
+    if(OpenMP_FOUND)
+        message(STATUS "OpenMP libs: ${OpenMP_C_LIBRARIES}")
+        message(STATUS "OpenMP flags: ${OpenMP_C_FLAGS}")
+    endif()
+else()
+    message(STATUS "OpenMP is not used.")
+    set(OpenMP_FOUND OFF) # cmake-lint: disable=C0103
 endif()
 
 set(SOURCES_PHONOPY
