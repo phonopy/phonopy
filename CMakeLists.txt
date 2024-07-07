@@ -64,10 +64,7 @@ if(BUILD_SHARED_LIBS)
     if(OpenMP_FOUND)
         target_link_libraries(
             phonopy_libs
-            PRIVATE m
             PRIVATE OpenMP::OpenMP_C)
-    else()
-        target_link_libraries(phonopy_libs PRIVATE m)
     endif()
 
     target_compile_definitions(phonopy_libs PRIVATE THM_EPSILON=1e-10)
@@ -78,10 +75,7 @@ else()
     if(OpenMP_FOUND)
         target_link_libraries(
             phonopy_libs
-            PRIVATE m
             PRIVATE OpenMP::OpenMP_C)
-    else()
-        target_link_libraries(phonopy_libs PRIVATE m)
     endif()
 
     target_compile_definitions(phonopy_libs PRIVATE THM_EPSILON=1e-10)
@@ -118,7 +112,7 @@ else()
     )
 
     if(OpenMP_FOUND)
-        target_link_libraries(_phonopy PRIVATE phonopy_libs PRIVATE OpenMP::OpenMP_C)
+        target_link_libraries(_phonopy PRIVATE phonopy_libs OpenMP::OpenMP_C)
     else()
         target_link_libraries(_phonopy PRIVATE phonopy_libs)
     endif()

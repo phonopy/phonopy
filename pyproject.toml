@@ -3,7 +3,6 @@ requires = ["scikit-build-core", "nanobind", "numpy"]
 build-backend = "scikit_build_core.build"
 
 [project]
-
 name = "phonopy"
 dynamic = ["version"]
 readme = { file = "README.md", content-type = "text/markdown" }
@@ -19,9 +18,16 @@ dependencies = [
 ]
 license = { file = "LICENSE" }
 
+[project.urls]
+Homepage = "https://phonopy.github.io/phonopy/"
+Repository = "https://github.com/phonopy/phonopy"
+
 [project.optional-dependencies]
 cp2k = ["cp2k-input-tools"]
-plot = ["seekpath"]
+seekpath = ["seekpath"]
+symfc = ["symfc"]
+pypolymlp = ["pypolymlp"]
+tools = ["seekpath", "symfc", "pypolymlp"]
 
 [project.scripts]
 phonopy = "phonopy.scripts.phonopy:run"
