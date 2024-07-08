@@ -943,9 +943,28 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         return g_rad
 
     def _get_G_vec_list(self, g_rad: int):
-        pts = np.arange(-g_rad, g_rad + 1, dtype="int_")
-        grid = np.r_["-1,2,0", np.meshgrid(pts, pts, pts)].reshape(3, -1)
-        return (self._rec_lat @ grid).T
+        """Return reciprocal lattice point vectors withing g_rad cutoff.
+
+        With g_rad = 2,
+        grid.T = [[-2, -2, -2],
+                  [-2, -2, -1],
+                  [-2, -2,  0],
+                  [-2, -2,  1],
+                  [-2, -2,  2],
+                  [-1, -2, -2],
+                  [-1, -2, -1],
+                  ...]
+
+        The implmentation using meshgrid may be unstable at numpy 2.0.
+        Therefore, another way is used although it can be slower.
+
+        """
+        # pts = np.arange(-g_rad, g_rad + 1, dtype="int_")
+        # grid = np.r_["-1,2,0", np.meshgrid(pts, pts, pts)].reshape(3, -1)
+        # return (self._rec_lat @ grid).T
+        npts = g_rad * 2 + 1
+        grid = np.array(list(np.ndindex((npts, npts, npts)))) - g_rad
+        return grid @ self._rec_lat.T
 
     def _get_H(self):
         lat = self._scell.cell
