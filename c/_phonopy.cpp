@@ -688,5 +688,5 @@ NB_MODULE(_phonopy, m) {
     m.def("tetrahedra_frequencies", &py_get_tetrahedra_frequenies);
     m.def("tetrahedron_method_dos", &py_tetrahedron_method_dos);
     m.def("use_openmp", &phpy_use_openmp);
-    m.def("get_max_threads", &phpy_get_max_threads);
+    m.def("omp_max_threads", &phpy_get_max_threads);
 }
