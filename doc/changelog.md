@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Jul-9-2024: Version 2.26.3
+
+- Release for attempting windows conda-forge build with numpy 2.0.
+
 ## Jul-7-2024: Version 2.26.2
 
 - Enable to use `PHONOPY_USE_OMP=OFF` environment variable to deactivate
