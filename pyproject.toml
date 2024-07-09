@@ -44,11 +44,9 @@ phonopy-tdplot = "phonopy.scripts.phonopy_tdplot:run"
 phonopy-vasp-born = "phonopy.scripts.phonopy_vasp_born:run"
 phonopy-vasp-efe = "phonopy.scripts.phonopy_vasp_efe:run"
 
-[tool.sciki-build]
+[tool.scikit-build]
 cmake.verbose = true
 logging.level = "INFO"
-
-[tool.scikit-build]
 metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
 sdist.exclude = ["*"]
 sdist.include = ["test", "LICENSE", "c", "example", "phonopy", "pyproject.toml", "CMakeLists.txt", "README.md"]
