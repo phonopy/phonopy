@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Jul-9-2024: Version 2.26.3
+
+- Fix #388 for `phonoc.omp_max_threads()`
+
 ## Jul-7-2024: Version 2.26.2
 
 - Enable to use `PHONOPY_USE_OMP=OFF` environment variable to deactivate
