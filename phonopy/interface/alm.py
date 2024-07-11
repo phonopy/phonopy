@@ -123,6 +123,9 @@ def run_alm(
     if alm_options["cutoff"] is not None:
         if len(alm_options["cutoff"]) == 1:
             cutoff_radii[:] = alm_options["cutoff"][0]
+        elif len(alm_options["cutoff"]) == _maxorder:
+            for i, cutoff in enumerate(alm_options["cutoff"]):
+                cutoff_radii[i] = cutoff
         elif np.prod(shape) == len(alm_options["cutoff"]):
             cutoff_radii[:] = np.reshape(alm_options["cutoff"], shape)
         else:
