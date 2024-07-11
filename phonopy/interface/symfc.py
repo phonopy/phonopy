@@ -121,6 +121,9 @@ def run_symfc(
             for key, val in options_dict.items():
                 print(f"  {key}: {val}", flush=True)
 
+    if log_level == 1:
+        print("Increase log-level to watch detailed ALM log.")
+
     symfc_supercell = SymfcAtoms(
         cell=supercell.cell,
         scaled_positions=supercell.scaled_positions,
@@ -138,9 +141,9 @@ def run_symfc(
 
     if log_level:
         print(
-            "--------------------------------"
-            " Symfc end "
             "---------------------------------"
+            " Symfc end "
+            "--------------------------------"
         )
 
     if is_compact_fc:

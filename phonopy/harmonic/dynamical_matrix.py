@@ -276,11 +276,11 @@ class DynamicalMatrix:
     def _set_force_constants(self, fc):
         if (
             type(fc) is np.ndarray
-            and fc.dtype is np.double
+            and fc.dtype is np.dtype("double")
             and fc.flags.aligned
             and fc.flags.owndata
             and fc.flags.c_contiguous
-        ):  # noqa E129
+        ):
             self._force_constants = fc
         else:
             self._force_constants = np.array(fc, dtype="double", order="C")
@@ -291,7 +291,8 @@ class DynamicalMatrix:
         fc = self._force_constants
         mass = self._pcell.masses
         size_prim = len(mass)
-        dm = np.zeros((size_prim * 3, size_prim * 3), dtype=self._dtype_complex)
+        dm_shape = size_prim * 3, size_prim * 3
+        dm = np.zeros(dm_shape + (2,), dtype="double")
 
         if fc.shape[0] == fc.shape[1]:  # full-fc
             s2p_map = self._s2p_map
@@ -301,7 +302,7 @@ class DynamicalMatrix:
             p2s_map = np.arange(len(self._p2s_map), dtype="int_")
 
         phonoc.dynamical_matrix(
-            dm.view(dtype="double"),
+            dm,
             fc,
             np.array(q, dtype="double"),
             self._svecs,
@@ -320,7 +321,7 @@ class DynamicalMatrix:
         #   dm_double = dm.view(dtype='double').reshape(size_prim * 3,
         #                                               size_prim * 3, 2)
         #   dm = dm_double[:, :, 0] + 1j * dm_double[:, :, 1]
-        self._dynamical_matrix = dm
+        self._dynamical_matrix = dm.view(dtype=self._dtype_complex).reshape(dm_shape)
 
     def _run_py_dynamical_matrix(self, q):
         """Python implementation of building dynamical matrix.
