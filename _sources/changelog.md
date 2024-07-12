@@ -2,6 +2,25 @@
 
 # Change Log
 
+## Jul-9-2024: Version 2.26.3
+
+- Fix #388 for `phonoc.omp_max_threads()`
+
+## Jul-7-2024: Version 2.26.2
+
+- Enable to use `PHONOPY_USE_OMP=OFF` environment variable to deactivate
+  building with OpenMP.
+
+## Jul-7-2024: Version 2.26.1
+
+- Update for conda-forge build.
+
+## Jul-5-2024: Version 2.26.0
+
+- Build system of phonopy was renewed. Now nanobind, cmake, and
+  scikit-build-core are used for the building, and the receipt is written in
+  `CMakeLists.txt` and `pyproject.toml`.
+
 ## Jun-29-2024: Version 2.25.0
 
 - Migration to ruff.

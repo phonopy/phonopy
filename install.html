@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Installation &#8212; Phonopy v.2.25.0</title>
+    <title>Installation &#8212; Phonopy v.2.26.3</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=9b5885d4"></script>
+    <script src="_static/documentation_options.js?v=52335dc7"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.25.0</p>
+    <p class="title logo__title">Phonopy v.2.26.3</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -348,7 +348,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-from-source-code">Installation from source code</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#system-requirement">System requirement</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-required-packages-by-conda">Installing required packages by conda</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-using-setup-py">Building using setup.py</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-using-pip-install">Building using <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trouble-shooting">Trouble shooting</a><ul class="nav section-nav flex-column">
@@ -435,7 +435,7 @@ In this case, setting the following environment variable may solve the problem:<
 <h3>System requirement<a class="headerlink" href="#system-requirement" title="Link to this heading">#</a></h3>
 <p>The procedure to setup phonopy is explained in this section. It is supposed that
 phonopy is installed on the recent linux distribution like Ubuntu or Fedora with
-Python version 3.7 or later. Mac OS X users may use conda (conda-forge channel)
+Python version 3.8 or later. Mac OS X users may use conda (conda-forge channel)
 packages. Windows users should use conda (conda-forge channel) packages as well.</p>
 <p>Prepare the following Python libraries:</p>
 <ul class="simple">
@@ -479,15 +479,19 @@ If specific one is expected, it is installed by (e.g. <code class="docutils lite
 </pre></div>
 </div>
 <p>If you need a compiler,</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="n">c</span><span class="o">-</span><span class="n">compliler</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="n">c</span><span class="o">-</span><span class="n">compliler</span> <span class="n">cxx</span><span class="o">-</span><span class="n">compiler</span> <span class="n">cmake</span>
 </pre></div>
 </div>
 </section>
-<section id="building-using-setup-py">
-<span id="install-setup-py"></span><h3>Building using <a class="reference external" href="http://setup.py">setup.py</a><a class="headerlink" href="#building-using-setup-py" title="Link to this heading">#</a></h3>
-<p>If package installation is not possible or you want to compile with special
-compiler or special options, phonopy is built using <code class="docutils literal notranslate"><span class="pre">setup.py</span></code>. In this case,
-manual modification of <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> may be needed.</p>
+<section id="building-using-pip-install">
+<span id="install-setup-py"></span><h3>Building using <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code><a class="headerlink" href="#building-using-pip-install" title="Link to this heading">#</a></h3>
+<p>If package installation is not possible or you want to compile with a special
+compiler or special options, phonopy is built using <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>. In this case,
+manual modification of <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> may be needed.</p>
+<p>Note that at version 2.26.0, the build system of phonopy was modernized.
+Nanobind, cmake, and scikit-build-core are used for the building. The receipt is
+written in <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> and <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>. The old <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> was
+removed.</p>
 <ol class="arabic">
 <li><p>Get the source code from github</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/phonopy/phonopy.git
@@ -496,18 +500,12 @@ manual modification of <code class="docutils literal notranslate"><span class="p
 </pre></div>
 </div>
 </li>
-<li><p>Run <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> script via <code class="docutils literal notranslate"><span class="pre">pip</span></code></p>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code></p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="o">.</span> <span class="o">-</span><span class="n">vvv</span>
 </pre></div>
 </div>
 </li>
 </ol>
-<p>Under the system with OpenMP library, setting environment variable</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">PHONOPY_USE_OPENMP</span><span class="o">=</span><span class="n">true</span>
-</pre></div>
-</div>
-<p>before <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span> <span class="pre">-vvv</span></code> will build phonopy with OpenMP support thought
-the performance improvement is limited for many cases.</p>
 </section>
 </section>
 <section id="trouble-shooting">
@@ -612,7 +610,7 @@ really need. Then logout from the current shell (terminal) and open new shell
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-from-source-code">Installation from source code</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#system-requirement">System requirement</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-required-packages-by-conda">Installing required packages by conda</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-using-setup-py">Building using setup.py</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-using-pip-install">Building using <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trouble-shooting">Trouble shooting</a><ul class="nav section-nav flex-column">
