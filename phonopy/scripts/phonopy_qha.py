@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (C) 2011 Atsushi Togo
 # All rights reserved.
 #
@@ -116,8 +114,10 @@ def get_options():
     return args
 
 
-def main(args):
+def run():
     """Run phonopy-qha."""
+    args = get_options()
+
     if args.is_graph_save:
         import matplotlib
 
@@ -315,7 +315,3 @@ def main(args):
     phonopy_qha.write_heat_capacity_P_numerical()
     phonopy_qha.write_heat_capacity_P_polyfit()
     phonopy_qha.write_gruneisen_temperature()
-
-
-if __name__ == "__main__":
-    main(get_options())

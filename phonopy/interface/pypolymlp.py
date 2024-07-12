@@ -141,7 +141,7 @@ def develop_polymlp(
     """
     try:
         from pypolymlp.mlp_dev.pypolymlp import Pypolymlp
-        from pypolymlp.utils.phonopy_utils import phonopy_cell_to_st_dict
+        from pypolymlp.utils.phonopy_utils import phonopy_cell_to_structure
     except ImportError as exc:
         raise ModuleNotFoundError("Pypolymlp python module was not found.") from exc
 
@@ -172,7 +172,7 @@ def develop_polymlp(
         test_data.displacements.transpose(0, 2, 1),
         test_data.forces.transpose(0, 2, 1),
         test_data.supercell_energies,
-        phonopy_cell_to_st_dict(supercell),
+        phonopy_cell_to_structure(supercell),
     )
     polymlp.run(verbose=verbose)
     return polymlp
@@ -203,13 +203,13 @@ def evalulate_polymlp(
     """
     try:
         from pypolymlp.calculator.properties import Properties
-        from pypolymlp.utils.phonopy_utils import phonopy_cell_to_st_dict
+        from pypolymlp.utils.phonopy_utils import phonopy_cell_to_structure
     except ImportError as exc:
         raise ModuleNotFoundError("Pypolymlp python module was not found.") from exc
 
-    prop = Properties(params_dict=polymlp.parameters, coeffs=polymlp.coeffs)
+    prop = Properties(params=polymlp.parameters, coeffs=polymlp.coeffs)
     energies, forces, stresses = prop.eval_multiple(
-        [phonopy_cell_to_st_dict(scell) for scell in supercells_with_displacements]
+        [phonopy_cell_to_structure(scell) for scell in supercells_with_displacements]
     )
     energies = np.array(energies, dtype="double")
     forces = np.array(np.transpose(forces, (0, 2, 1)), dtype="double", order="C")

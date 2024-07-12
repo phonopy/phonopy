@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (C) 2012 Atsushi Togo
 # All rights reserved.
 #
@@ -99,8 +97,10 @@ def get_options():
     return args
 
 
-def main(args):
+def run():
     """Rurn phonopy-vasp-born."""
+    args = get_options()
+
     if args.filenames:
         outcar_filename = args.filenames[0]
     else:
@@ -178,7 +178,3 @@ def main(args):
             sys.exit(0)
 
     sys.exit(1)
-
-
-if __name__ == "__main__":
-    main(get_options())

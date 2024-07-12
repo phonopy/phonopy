@@ -275,12 +275,12 @@ class DynamicalMatrix:
 
     def _set_force_constants(self, fc):
         if (
-            type(fc) is np.ndarray
-            and fc.dtype is np.double
+            isinstance(fc, np.ndarray)
+            and fc.dtype == np.dtype("double")
             and fc.flags.aligned
             and fc.flags.owndata
             and fc.flags.c_contiguous
-        ):  # noqa E129
+        ):
             self._force_constants = fc
         else:
             self._force_constants = np.array(fc, dtype="double", order="C")
@@ -291,7 +291,8 @@ class DynamicalMatrix:
         fc = self._force_constants
         mass = self._pcell.masses
         size_prim = len(mass)
-        dm = np.zeros((size_prim * 3, size_prim * 3), dtype=self._dtype_complex)
+        dm_shape = size_prim * 3, size_prim * 3
+        dm = np.zeros(dm_shape + (2,), dtype="double")
 
         if fc.shape[0] == fc.shape[1]:  # full-fc
             s2p_map = self._s2p_map
@@ -301,7 +302,7 @@ class DynamicalMatrix:
             p2s_map = np.arange(len(self._p2s_map), dtype="int_")
 
         phonoc.dynamical_matrix(
-            dm.view(dtype="double"),
+            dm,
             fc,
             np.array(q, dtype="double"),
             self._svecs,
@@ -320,7 +321,7 @@ class DynamicalMatrix:
         #   dm_double = dm.view(dtype='double').reshape(size_prim * 3,
         #                                               size_prim * 3, 2)
         #   dm = dm_double[:, :, 0] + 1j * dm_double[:, :, 1]
-        self._dynamical_matrix = dm
+        self._dynamical_matrix = dm.view(dtype=self._dtype_complex).reshape(dm_shape)
 
     def _run_py_dynamical_matrix(self, q):
         """Python implementation of building dynamical matrix.
@@ -802,7 +803,9 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
 
         return C_dd
 
-    def _get_c_recip_dipole_dipole(self, q_cart, q_dir_cart):
+    def _get_c_recip_dipole_dipole(
+        self, q_cart: np.ndarray, q_dir_cart: Optional[np.ndarray]
+    ) -> np.ndarray:
         """Reciprocal part of Eq.(71) on the right hand side.
 
         This is subtracted from supercell force constants to create
@@ -828,15 +831,23 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         else:
             dd_q0 = self._dd_q0
 
+        if q_dir_cart is None:
+            is_nac_q_zero = True
+            _q_dir_cart = np.zeros(3, dtype="double")
+        else:
+            is_nac_q_zero = False
+            _q_dir_cart = q_dir_cart
+
         phonoc.recip_dipole_dipole(
             dd.view(dtype="double"),
             dd_q0.view(dtype="double"),
             self._G_list,
             q_cart,
-            q_dir_cart,
+            _q_dir_cart,
             self._born,
             self._dielectric,
             np.array(pos, dtype="double", order="C"),
+            is_nac_q_zero * 1,
             self._unit_conversion * 4.0 * np.pi / volume,
             self._Lambda,
             self.Q_DIRECTION_TOLERANCE,
@@ -933,9 +944,28 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         return g_rad
 
     def _get_G_vec_list(self, g_rad: int):
-        pts = np.arange(-g_rad, g_rad + 1, dtype="int_")
-        grid = np.r_["-1,2,0", np.meshgrid(pts, pts, pts)].reshape(3, -1)
-        return (self._rec_lat @ grid).T
+        """Return reciprocal lattice point vectors withing g_rad cutoff.
+
+        With g_rad = 2,
+        grid.T = [[-2, -2, -2],
+                  [-2, -2, -1],
+                  [-2, -2,  0],
+                  [-2, -2,  1],
+                  [-2, -2,  2],
+                  [-1, -2, -2],
+                  [-1, -2, -1],
+                  ...]
+
+        The implmentation using meshgrid may be unstable at numpy 2.0.
+        Therefore, another way is used although it can be slower.
+
+        """
+        # pts = np.arange(-g_rad, g_rad + 1, dtype="int_")
+        # grid = np.r_["-1,2,0", np.meshgrid(pts, pts, pts)].reshape(3, -1)
+        # return (self._rec_lat @ grid).T
+        npts = g_rad * 2 + 1
+        grid = np.array(list(np.ndindex((npts, npts, npts)))) - g_rad
+        return grid @ self._rec_lat.T
 
     def _get_H(self):
         lat = self._scell.cell
@@ -1183,7 +1213,7 @@ def get_dynamical_matrix(
 def run_dynamical_matrix_solver_c(
     dm: Union[DynamicalMatrix, DynamicalMatrixWang, DynamicalMatrixGL],
     qpoints,
-    nac_q_direction=None,  # in reduced coordinates
+    nac_q_direction: Optional[np.ndarray] = None,  # in reduced coordinates
 ):
     """Bulid and solve dynamical matrices on grid in C-API.
 
@@ -1224,13 +1254,29 @@ def run_dynamical_matrix_solver_c(
         ) = gonze_nac_dataset  # Convergence parameter
         fc = gonze_fc
     else:
-        positions = None
-        dd_q0 = None
-        G_list = None
-        Lambda = 0
+        dd_q0 = np.zeros(2)  # dummy value
+        G_list = np.zeros(3)  # dummy value
+        Lambda = 0.0  # dummy value
         fc = dm.force_constants
         if isinstance(dm, DynamicalMatrixWang):
             use_Wang_NAC = True
+
+    if nac_q_direction is None:
+        is_nac_q_zero = True
+        _nac_q_direction = np.zeros(3)  # dummy variable
+    else:
+        is_nac_q_zero = False
+        _nac_q_direction = np.array(nac_q_direction, dtype="double")
+
+    if born is None:
+        _born = np.zeros(9)  # dummy variable
+    else:
+        _born = born
+
+    if dielectric is None:
+        _dielectric = np.zeros(9)  # dummy variable
+    else:
+        _dielectric = dielectric
 
     p2s, s2p = _get_fc_elements_mapping(dm, fc)
 
@@ -1246,14 +1292,16 @@ def run_dynamical_matrix_solver_c(
         masses,
         s2p,
         p2s,
-        nac_q_direction,
-        born,
-        dielectric,
+        _nac_q_direction,
+        _born,
+        _dielectric,
         rec_lattice,
-        nac_factor,
+        float(nac_factor),
         dd_q0,
         G_list,
         Lambda,
+        dm.is_nac() * 1,
+        is_nac_q_zero * 1,
         use_Wang_NAC * 1,  # use_Wang_NAC
     )
 

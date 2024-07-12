@@ -1,5 +1,61 @@
 [build-system]
-requires = ["setuptools", "wheel", "numpy"]
+requires = ["scikit-build-core", "nanobind", "numpy"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "phonopy"
+dynamic = ["version"]
+readme = { file = "README.md", content-type = "text/markdown" }
+description = "This is the phonopy module."
+authors = [{ name = "Atsushi Togo", email = "atztogo@gmail.com" }]
+requires-python = ">=3.8"
+dependencies = [
+    "numpy>=1.17.0",
+    "PyYAML>=5.3",
+    "matplotlib>=2.2.2",
+    "h5py>=3.0",
+    "spglib>=2.3",
+]
+license = { file = "LICENSE" }
+
+[project.urls]
+Homepage = "https://phonopy.github.io/phonopy/"
+Repository = "https://github.com/phonopy/phonopy"
+
+[project.optional-dependencies]
+cp2k = ["cp2k-input-tools"]
+seekpath = ["seekpath"]
+symfc = ["symfc"]
+pypolymlp = ["pypolymlp"]
+tools = ["seekpath", "symfc", "pypolymlp"]
+
+[project.scripts]
+phonopy = "phonopy.scripts.phonopy:run"
+phonopy-load = "phonopy.scripts.phonopy_load:run"
+phonopy-bandplot = "phonopy.scripts.phonopy_bandplot:run"
+phonopy-calc-convert = "phonopy.scripts.phonopy_calc_convert:run"
+phonopy-crystal-born = "phonopy.scripts.phonopy_crystal_born:run"
+phonopy-gruneisen = "phonopy.scripts.phonopy_gruneisen:run"
+phonopy-gruneisenplot = "phonopy.scripts.phonopy_gruneisenplot:run"
+phonopy-pdosplot = "phonopy.scripts.phonopy_pdosplot:run"
+phonopy-propplot = "phonopy.scripts.phonopy_propplot:run"
+phonopy-qha = "phonopy.scripts.phonopy_qha:run"
+phonopy-tdplot = "phonopy.scripts.phonopy_tdplot:run"
+phonopy-vasp-born = "phonopy.scripts.phonopy_vasp_born:run"
+phonopy-vasp-efe = "phonopy.scripts.phonopy_vasp_efe:run"
+
+[tool.scikit-build]
+cmake.verbose = true
+logging.level = "INFO"
+metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
+sdist.exclude = ["*"]
+sdist.include = ["test", "LICENSE", "c", "example", "phonopy", "pyproject.toml", "CMakeLists.txt", "README.md"]
+
+[tool.scikit-build.cmake.define]
+PHONOPY_USE_OMP = {env="PHONOPY_USE_OMP", default="ON"}
+
+[tool.setuptools_scm]
+write_to = "phonopy/_version.py"
 
 [tool.ruff]
 line-length = 88
@@ -10,14 +66,12 @@ lint.select = [
     "E", # pycodestyle-errors
     "D", # pydocstyle
 ]
-lint.extend-ignore = [
-    "D417",
-    "D100",
-]
+lint.extend-ignore = ["D417", "D100"]
 exclude = [
-  "test/phonon/test_irreps.py",
-  "test/qha/test_electron.py",
-  "phonopy/interface/cp2k.py",
+    "test/phonon/test_irreps.py",
+    "test/qha/test_electron.py",
+    "phonopy/interface/cp2k.py",
+    "cmake-format.py"
 ]
 
 [tool.ruff.lint.pydocstyle]

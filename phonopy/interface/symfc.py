@@ -53,6 +53,7 @@ def get_fc2(
     forces: np.ndarray,
     atom_list: Optional[Union[Sequence[int], np.ndarray]] = None,
     symmetry: Optional[Symmetry] = None,
+    options: Optional[Union[str, dict]] = None,
     log_level: int = 0,
 ):
     """Calculate fc2 using symfc."""
@@ -65,6 +66,7 @@ def get_fc2(
         forces,
         is_compact_fc=is_compact_fc,
         symmetry=symmetry,
+        options=options,
         log_level=log_level,
     )[0]
 
@@ -119,6 +121,9 @@ def run_symfc(
             for key, val in options_dict.items():
                 print(f"  {key}: {val}", flush=True)
 
+    if log_level == 1:
+        print("Increase log-level to watch detailed ALM log.")
+
     symfc_supercell = SymfcAtoms(
         cell=supercell.cell,
         scaled_positions=supercell.scaled_positions,
@@ -130,6 +135,7 @@ def run_symfc(
         displacements=displacements,
         forces=forces,
         cutoff={int(max(_orders)): options_dict.get("cutoff", None)},
+        use_mkl=options_dict.get("use_mkl", False),
         log_level=log_level - 1 and log_level,
     ).run(max_order=int(max(_orders)), is_compact_fc=is_compact_fc)
 
@@ -172,6 +178,9 @@ def parse_symfc_options(options: Union[str, dict]):
             key, val = key_val
             if key == "cutoff":
                 options_dict[key] = float(val)
+            if key == "use_mkl":
+                if val.strip().lower() == "true":
+                    options_dict[key] = True
         return options_dict
     else:
         raise TypeError(f"options must be str or dict, not {type(options)}.")

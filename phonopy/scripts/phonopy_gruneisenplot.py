@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (C) 2012 Atsushi Togo
 # All rights reserved.
 #
@@ -230,8 +228,10 @@ def get_options():
     return args
 
 
-def main(args):
+def run():
     """Run phonopy-gruneisenplot."""
+    args = get_options()
+
     if args.is_hdf5:
         try:
             import h5py
@@ -304,7 +304,3 @@ def main(args):
             plt.savefig(pdffile)
         else:
             plt.show()
-
-
-if __name__ == "__main__":
-    main(get_options())

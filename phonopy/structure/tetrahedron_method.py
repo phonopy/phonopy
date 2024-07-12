@@ -38,14 +38,6 @@ import warnings
 
 import numpy as np
 
-try:
-    import phonopy._phonopy as phonoc
-except ImportError:
-    import sys
-
-    print("Phonopy C-extension has to be built properly.")
-    sys.exit(1)
-
 
 def get_tetrahedra_relative_grid_address(microzone_lattice, lang="C"):
     """Return relative (differences of) grid addresses from the central.
@@ -57,6 +49,14 @@ def get_tetrahedra_relative_grid_address(microzone_lattice, lang="C"):
         microzone_lattice = np.linalg.inv(cell.get_cell()) / mesh
 
     """
+    try:
+        import phonopy._phonopy as phonoc
+    except ImportError:
+        import sys
+
+        print("Phonopy C-extension has to be built properly.")
+        sys.exit(1)
+
     relative_grid_address = np.zeros((24, 4, 3), dtype="int_", order="C")
     if lang == "C":
         phonoc.tetrahedra_relative_grid_address(
@@ -76,6 +76,14 @@ def get_all_tetrahedra_relative_grid_address(lang="C"):
     This exists only for the test.
 
     """
+    try:
+        import phonopy._phonopy as phonoc
+    except ImportError:
+        import sys
+
+        print("Phonopy C-extension has to be built properly.")
+        sys.exit(1)
+
     relative_grid_address = np.zeros((4, 24, 4, 3), dtype="int_", order="C")
     if lang == "C":
         phonoc.all_tetrahedra_relative_grid_address(relative_grid_address)
@@ -103,6 +111,14 @@ def get_tetrahedra_integration_weight(omegas, tetrahedra_omegas, function="I"):
         'J' is for intetration and 'I' is for its derivative.
 
     """
+    try:
+        import phonopy._phonopy as phonoc
+    except ImportError:
+        import sys
+
+        print("Phonopy C-extension has to be built properly.")
+        sys.exit(1)
+
     if isinstance(omegas, float):
         return phonoc.tetrahedra_integration_weight(
             omegas, np.array(tetrahedra_omegas, dtype="double", order="C"), function
