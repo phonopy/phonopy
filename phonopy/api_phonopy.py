@@ -2746,6 +2746,7 @@ class Phonopy:
         pretend_real=False,
         band_indices=None,
         is_projection=False,
+        classical=False,
     ) -> None:
         """Run calculation of thermal properties at constant volume.
 
@@ -2777,6 +2778,9 @@ class Phonopy:
             multiplied to mode thermal property quantities at respective phonon
             modes. Note that use of this results in unphysical values, and it
             is not recommended to use this feature. Default is False.
+        classical : bool optional
+            If True use classical statistics.
+            If False use quantum statistics.
 
         """
         if self._mesh is None:
@@ -2789,12 +2793,13 @@ class Phonopy:
             pretend_real=pretend_real,
             band_indices=band_indices,
             is_projection=is_projection,
+            classical=classical,
         )
         if temperatures is None:
             tp.set_temperature_range(t_step=t_step, t_max=t_max, t_min=t_min)
         else:
             tp.temperatures = temperatures
-        tp.run()
+        tp.run()  # lang='C' if not classical else 'py')
         self._thermal_properties = tp
 
     def set_thermal_properties(
@@ -2807,6 +2812,7 @@ class Phonopy:
         band_indices=None,
         cutoff_frequency=None,
         pretend_real=False,
+        classical=False,
     ):
         """Run calculation of thermal properties at constant volume."""
         warnings.warn(
@@ -2824,6 +2830,7 @@ class Phonopy:
             band_indices=band_indices,
             cutoff_frequency=cutoff_frequency,
             pretend_real=pretend_real,
+            classical=classical,
         )
 
     def get_thermal_properties_dict(self) -> dict:

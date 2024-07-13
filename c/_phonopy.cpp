@@ -391,7 +391,8 @@ void py_get_thermal_properties(nb::ndarray<> py_thermal_props,
                                nb::ndarray<> py_temperatures,
                                nb::ndarray<> py_frequencies,
                                nb::ndarray<> py_weights,
-                               double cutoff_frequency) {
+                               double cutoff_frequency,
+                               int classical) {
     double *temperatures;
     double *freqs;
     double *thermal_props;
@@ -410,7 +411,7 @@ void py_get_thermal_properties(nb::ndarray<> py_thermal_props,
 
     phpy_get_thermal_properties(thermal_props, temperatures, freqs, weights,
                                 num_temp, num_qpoints, num_bands,
-                                cutoff_frequency);
+                                cutoff_frequency, classical);
 }
 
 void py_distribute_fc2(nb::ndarray<> py_force_constants,

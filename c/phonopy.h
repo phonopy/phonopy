@@ -128,7 +128,8 @@ void phpy_get_thermal_properties(double *thermal_props,
                                  const double *freqs, const long *weights,
                                  const long num_temp, const long num_qpoints,
                                  const long num_bands,
-                                 const double cutoff_frequency);
+                                 const double cutoff_frequency,
+                                 const int classical);
 void phpy_distribute_fc2(double (*fc2)[3][3], const int *atom_list,
                          const int len_atom_list,
                          const int *fc_indices_of_atom_list,
