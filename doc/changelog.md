@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Jul-13-2024: Version 2.26.3
+
+- Collection of minor updates to follow updates of external libraries.
+
 ## Jul-9-2024: Version 2.26.3
 
 - Fix #388 for `phonoc.omp_max_threads()`
