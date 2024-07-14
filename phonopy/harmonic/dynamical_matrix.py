@@ -1146,17 +1146,29 @@ def run_dynamical_matrix_solver_c(
     dm: Union[DynamicalMatrix, DynamicalMatrixWang, DynamicalMatrixGL],
     qpoints,
     nac_q_direction: Optional[np.ndarray] = None,
-    is_nac: Optional[bool] = None,  # in reduced coordinates
+    is_nac: Optional[bool] = None,
 ):
     """Bulid and solve dynamical matrices on grid in C-API.
 
+    If dynamical matrices at many qpoints are calculated, it is recommended not
+    to use this function one qpoint by one qpoint to avoid overhead in the
+    preparation steps.
+
+    Parameters
+    ----------
     dm : DynamicalMatrix
         DynamicalMatrix instance.
     qpoints : array_like,
-        q-points in crystallographic coordinates.
-        shape=(n_qpoints, 3), dtype='double', order='C'
+        q-points in crystallographic coordinates. shape=(n_qpoints, 3),
+        dtype='double', order='C'
     nac_q_direction : array_like, optional
-        See Interaction.nac_q_direction. Default is None.
+        Direction of q from Gamma point given in reduced coordinates. This is
+        only activated when q-point->[0,0,0] case. For example, this is used for
+        q->[0,0,0] where approaching direction is known, e.g., band structure
+        calculation. Default is None.
+    is_nac : bool, optional
+        True if NAC is considered. Default is None. If None, it is determined
+        from dm.is_nac().
 
     """
     import phonopy._phonopy as phonoc
@@ -1218,16 +1230,6 @@ def run_dynamical_matrix_solver_c(
         is_nac_q_zero = False
         _nac_q_direction = np.array(nac_q_direction, dtype="double")
 
-    if born is None:
-        _born = np.zeros(9)  # dummy variable
-    else:
-        _born = born
-
-    if dielectric is None:
-        _dielectric = np.zeros(9)  # dummy variable
-    else:
-        _dielectric = dielectric
-
     p2s, s2p = _get_fc_elements_mapping(dm, fc)
 
     dtype_complex = "c%d" % (np.dtype("double").itemsize * 2)
@@ -1243,10 +1245,10 @@ def run_dynamical_matrix_solver_c(
         s2p,
         p2s,
         _nac_q_direction,
-        _born,
-        _dielectric,
+        born,
+        dielectric,
         rec_lattice,
-        float(nac_factor),
+        nac_factor,
         dd_q0,
         G_list,
         Lambda,
@@ -1269,17 +1271,17 @@ def _extract_params(dm: Union[DynamicalMatrix, DynamicalMatrixNAC]):
     else:
         _svecs, _multi = sparse_to_dense_svecs(svecs, multi)
 
-    masses = np.array(dm.primitive.masses, dtype="double")
+    masses = dm.primitive.masses
     rec_lattice = np.array(np.linalg.inv(dm.primitive.cell), dtype="double", order="C")
-    positions = np.array(dm.primitive.positions, dtype="double", order="C")
+    positions = dm.primitive.positions
     if dm.is_nac():
         born = dm.born
-        nac_factor = dm.nac_factor
+        nac_factor = float(dm.nac_factor)
         dielectric = dm.dielectric_constant
     else:
-        born = None
-        nac_factor = 0
-        dielectric = None
+        born = np.zeros(9)  # dummy variable
+        nac_factor = 0.0  # dummy variable
+        dielectric = np.zeros(9)  # dummy variable
 
     return (
         _svecs,
@@ -1293,19 +1295,15 @@ def _extract_params(dm: Union[DynamicalMatrix, DynamicalMatrixNAC]):
     )
 
 
-def _get_fc_elements_mapping(dm, fc):
+def _get_fc_elements_mapping(dm: DynamicalMatrix, fc: np.ndarray):
     p2s_map = dm.primitive.p2s_map
     s2p_map = dm.primitive.s2p_map
     if fc.shape[0] == fc.shape[1]:  # full fc
-        fc_p2s = p2s_map
-        fc_s2p = s2p_map
+        return np.array(p2s_map, dtype="int_"), np.array(s2p_map, dtype="int_")
     else:  # compact fc
         primitive = dm.primitive
         p2p_map = primitive.p2p_map
         s2pp_map = np.array(
-            [p2p_map[s2p_map[i]] for i in range(len(s2p_map))], dtype="intc"
+            [p2p_map[s2p_map[i]] for i in range(len(s2p_map))], dtype="int_"
         )
-        fc_p2s = np.arange(len(p2s_map), dtype="intc")
-        fc_s2p = s2pp_map
-
-    return np.array(fc_p2s, dtype="int_"), np.array(fc_s2p, dtype="int_")
+        return np.arange(len(p2s_map), dtype="int_"), s2pp_map
