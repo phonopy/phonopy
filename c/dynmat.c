@@ -193,8 +193,6 @@ static void add_dynmat_dd_at_q(
     double q_cart[3];
     double mm;
 
-    q_dir_cart = NULL;
-
     dd = (double(*)[2])malloc(sizeof(double[2]) * num_patom * num_patom * 9);
     get_q_cart(q_cart, q, reciprocal_lattice);
     dym_get_recip_dipole_dipole(dd, dd_q0, G_list, num_G_points, num_patom,
@@ -216,29 +214,6 @@ static void add_dynmat_dd_at_q(
 
     free(dd);
     dd = NULL;
-}
-
-long dym_get_dynamical_matrices_openmp_over_qpoints(
-    double (*dynamical_matrices)[2],  // [q-points, num_band, num_band,
-                                      // (real, imag)]
-    const long num_patom, const long num_satom, const double *fc,
-    const double (*qpoints)[3], const long n_qpoints, const double (*svecs)[3],
-    const long (*multi)[2], const double *mass, const long *s2p_map,
-    const long *p2s_map, const double (*charge_sum)[3][3]) {
-    long i, adrs_shift;
-
-    adrs_shift = num_patom * num_patom * 9;
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-    for (i = 0; i < n_qpoints; i++) {
-        dym_get_dynamical_matrix_at_q(
-            dynamical_matrices + adrs_shift * i, num_patom, num_satom, fc,
-            qpoints[i], svecs, multi, mass, s2p_map, p2s_map, charge_sum, 0);
-    }
-
-    return 0;
 }
 
 /// @brief charge_sum is NULL if G-L NAC or no-NAC.
