@@ -2,7 +2,11 @@
 
 # Change Log
 
-## Jul-13-2024: Version 2.26.3
+## Jul-14-2024: Version 2.26.5
+
+- Refactoring of dynamical matrix code.
+
+## Jul-13-2024: Version 2.26.4
 
 - Collection of minor updates to follow updates of external libraries.
 

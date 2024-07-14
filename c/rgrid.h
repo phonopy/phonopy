@@ -70,7 +70,6 @@
 /* without GRID_BOUNDARY_AS_NEGATIVE, e.g., [-2, -1, 0, 1, 2, 3]. */
 /* with GRID_BOUNDARY_AS_NEGATIVE, e.g., [-3, -2, -1, 0, 1, 2]. */
 
-void rgd_get_all_grid_addresses(long grid_address[][3], const long mesh[3]);
 long rgd_get_double_grid_index(const long address_double[3],
                                const long mesh[3]);
 void rgd_get_double_grid_address(long address_double[3], const long address[3],
