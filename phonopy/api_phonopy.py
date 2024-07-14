@@ -175,6 +175,16 @@ class Phonopy:
         self._is_symmetry = is_symmetry
         self._calculator = calculator
         self._store_dense_svecs = store_dense_svecs
+        if int(self.version.split(".")[0]) > 2 and not store_dense_svecs:
+            warnings.warn(
+                (
+                    "store_dense_svecs=False is not supported in Phonopy v3"
+                    "and later versions."
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            self._store_dense_svecs = True
         self._use_SNF_supercell = use_SNF_supercell
         self._log_level = log_level
 

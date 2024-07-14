@@ -211,7 +211,9 @@ class PhonopyAtoms:
     @property
     def positions(self):
         """Setter and getter of positions in Cartesian coordinates."""
-        return np.dot(self._scaled_positions, self._cell)
+        return np.array(
+            np.dot(self._scaled_positions, self._cell), dtype="double", order="C"
+        )
 
     @positions.setter
     def positions(self, positions):

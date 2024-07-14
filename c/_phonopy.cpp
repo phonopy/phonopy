@@ -173,100 +173,6 @@ void py_get_dynamical_matrices_with_dd_openmp_over_qpoints(
         lambda, use_Wang_NAC);
 }
 
-void py_get_dynamical_matrix(nb::ndarray<> py_dynamical_matrix,
-                             nb::ndarray<> py_force_constants,
-                             nb::ndarray<> py_q, nb::ndarray<> py_svecs,
-                             nb::ndarray<> py_multi, nb::ndarray<> py_masses,
-                             nb::ndarray<> py_s2p_map, nb::ndarray<> py_p2s_map,
-                             long use_openmp) {
-    double(*dm)[2];
-    double *fc;
-    double *q;
-    double(*svecs)[3];
-    double *m;
-    long(*multi)[2];
-    long *s2p_map;
-    long *p2s_map;
-    long num_patom;
-    long num_satom;
-
-    dm = (double(*)[2])py_dynamical_matrix.data();
-    fc = (double *)py_force_constants.data();
-    q = (double *)py_q.data();
-    svecs = (double(*)[3])py_svecs.data();
-    m = (double *)py_masses.data();
-    multi = (long(*)[2])py_multi.data();
-    s2p_map = (long *)py_s2p_map.data();
-    p2s_map = (long *)py_p2s_map.data();
-    num_patom = py_p2s_map.shape(0);
-    num_satom = py_s2p_map.shape(0);
-
-    if (py_q.ndim() == 1) {
-        phpy_get_dynamical_matrix_at_q(dm, num_patom, num_satom, fc, q, svecs,
-                                       multi, m, s2p_map, p2s_map, NULL,
-                                       use_openmp);
-    } else {
-        phpy_get_dynamical_matrices_openmp_over_qpoints(
-            dm, num_patom, num_satom, fc, (double(*)[3])q, py_q.shape(0), svecs,
-            multi, m, s2p_map, p2s_map, NULL);
-    }
-}
-
-void py_get_nac_dynamical_matrix(
-    nb::ndarray<> py_dynamical_matrix, nb::ndarray<> py_force_constants,
-    nb::ndarray<> py_q, nb::ndarray<> py_svecs, nb::ndarray<> py_multi,
-    nb::ndarray<> py_masses, nb::ndarray<> py_s2p_map, nb::ndarray<> py_p2s_map,
-    nb::ndarray<> py_q_cart, nb::ndarray<> py_born, double factor,
-    long use_openmp) {
-    double(*dm)[2];
-    double *fc;
-    double *q_cart;
-    double *q;
-    double(*svecs)[3];
-    double *m;
-    double(*born)[3][3];
-    long(*multi)[2];
-    long *s2p_map;
-    long *p2s_map;
-    long num_patom;
-    long num_satom;
-
-    long n;
-    double(*charge_sum)[3][3];
-
-    dm = (double(*)[2])py_dynamical_matrix.data();
-    fc = (double *)py_force_constants.data();
-    q_cart = (double *)py_q_cart.data();
-    q = (double *)py_q.data();
-    svecs = (double(*)[3])py_svecs.data();
-    m = (double *)py_masses.data();
-    born = (double(*)[3][3])py_born.data();
-    multi = (long(*)[2])py_multi.data();
-    s2p_map = (long *)py_s2p_map.data();
-    p2s_map = (long *)py_p2s_map.data();
-    num_patom = py_p2s_map.shape(0);
-    num_satom = py_s2p_map.shape(0);
-
-    charge_sum =
-        (double(*)[3][3])malloc(sizeof(double[3][3]) * num_patom * num_patom);
-    n = num_satom / num_patom;
-
-    phpy_get_charge_sum(charge_sum, num_patom, factor / n, q_cart, born);
-
-    if (py_q.ndim() == 1) {
-        phpy_get_dynamical_matrix_at_q(dm, num_patom, num_satom, fc, q, svecs,
-                                       multi, m, s2p_map, p2s_map, charge_sum,
-                                       use_openmp);
-    } else {
-        phpy_get_dynamical_matrices_openmp_over_qpoints(
-            dm, num_patom, num_satom, fc, (double(*)[3])q, py_q.shape(0), svecs,
-            multi, m, s2p_map, p2s_map, charge_sum);
-    }
-
-    free(charge_sum);
-    charge_sum = NULL;
-}
-
 void py_get_recip_dipole_dipole(
     nb::ndarray<> py_dd, nb::ndarray<> py_dd_q0, nb::ndarray<> py_G_list,
     nb::ndarray<> py_q_cart, nb::ndarray<> py_q_direction,
@@ -668,8 +574,6 @@ NB_MODULE(_phonopy, m) {
     m.def("transpose_compact_fc", &py_transpose_compact_fc);
     m.def("dynamical_matrices_with_dd_openmp_over_qpoints",
           &py_get_dynamical_matrices_with_dd_openmp_over_qpoints);
-    m.def("dynamical_matrix", &py_get_dynamical_matrix);
-    m.def("nac_dynamical_matrix", &py_get_nac_dynamical_matrix);
     m.def("recip_dipole_dipole", &py_get_recip_dipole_dipole);
     m.def("recip_dipole_dipole_q0", &py_get_recip_dipole_dipole_q0);
     m.def("derivative_dynmat", &py_get_derivative_dynmat);
