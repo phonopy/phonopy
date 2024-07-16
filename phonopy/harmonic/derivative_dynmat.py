@@ -55,6 +55,8 @@ class DerivativeOfDynamicalMatrix:
 
     """
 
+    Q_DIRECTION_TOLERANCE = 1e-5
+
     def __init__(self, dynamical_matrix: Union[DynamicalMatrix, DynamicalMatrixNAC]):
         """Init method.
 
@@ -83,7 +85,6 @@ class DerivativeOfDynamicalMatrix:
             self._multi = multi
         else:
             self._svecs, self._multi = sparse_to_dense_svecs(svecs, multi)
-        # self._svecs, self._multi = self._pcell.get_smallest_vectors()
 
         self._ddm = None
 
@@ -134,30 +135,34 @@ class DerivativeOfDynamicalMatrix:
         import phonopy._phonopy as phonoc
 
         num_patom = len(self._p2s_map)
-
         fc = self._force_constants
         ddm = np.zeros(
             (3, num_patom * 3, num_patom * 3),
             dtype=("c%d" % (np.dtype("double").itemsize * 2)),
         )
+        reclat = np.array(np.linalg.inv(self._pcell.cell), dtype="double", order="C")
+
+        is_nac = False
+        is_nac_q_zero = True
+        born = np.zeros(9)  # dummy value
+        dielectric = np.zeros(9)  # dummy value
+        nac_factor = 0  # dummy value
+        q_dir = np.zeros(3)  # dummy value
+
         if isinstance(self._dynmat, DynamicalMatrixNAC):
             is_nac = True
             born = self._dynmat.born
             dielectric = self._dynmat.dielectric_constant
             nac_factor = self._dynmat.nac_factor
             if q_direction is None:
-                q_dir = np.zeros(3)
-                is_nac_q_zero = True
+                q_norm = np.linalg.norm(reclat @ q)
+                if q_norm < self.Q_DIRECTION_TOLERANCE:
+                    is_nac = False
+                else:
+                    is_nac_q_zero = True
             else:
-                q_dir = np.array(q_direction, dtype="double", order="C")
+                q_dir = np.array(q_direction, dtype="double")
                 is_nac_q_zero = False
-        else:
-            born = np.zeros(0)  # dummy value
-            dielectric = np.zeros(0)  # dummy value
-            nac_factor = 0  # dummy value
-            q_dir = np.zeros(3)  # dummy value
-            is_nac = False
-            is_nac_q_zero = True
 
         if fc.shape[0] == fc.shape[1]:  # full fc
             phonoc.derivative_dynmat(
@@ -165,6 +170,7 @@ class DerivativeOfDynamicalMatrix:
                 fc,
                 np.array(q, dtype="double"),
                 np.array(self._pcell.cell.T, dtype="double", order="C"),
+                reclat,
                 self._svecs,
                 self._multi,
                 self._pcell.masses,
@@ -184,6 +190,7 @@ class DerivativeOfDynamicalMatrix:
                 fc,
                 np.array(q, dtype="double"),
                 np.array(self._pcell.cell.T, dtype="double", order="C"),
+                np.array(np.linalg.inv(self._pcell.cell), dtype="double", order="C"),
                 self._svecs,
                 self._multi,
                 self._pcell.masses,
@@ -236,7 +243,7 @@ class DerivativeOfDynamicalMatrix:
                     continue
 
                 multi = multiplicity[k, i]
-                vecs_multi = vecs[k, i, :multi]
+                vecs_multi = vecs[multi[1] : multi[1] + multi[0]]
                 phase_multi = np.exp(
                     [np.vdot(vec, q) * 2j * np.pi for vec in vecs_multi]
                 )
@@ -263,7 +270,7 @@ class DerivativeOfDynamicalMatrix:
                     ):
                         ddm_elem += d_nac[ll, i, j] * phase_multi.sum()
 
-                    ddm_local[ll] += ddm_elem / mass / multi
+                    ddm_local[ll] += ddm_elem / mass / multi[0]
 
             ddm[:, (i * 3) : (i * 3 + 3), (j * 3) : (j * 3 + 3)] = ddm_local
 
