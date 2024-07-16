@@ -58,19 +58,6 @@ long phpy_dynamical_matrices_with_dd_openmp_over_qpoints(
     const double *q_direction, const double nac_factor,
     const double (*dd_q0)[2], const double (*G_list)[3],
     const long num_G_points, const double lambda, const long use_Wang_NAC);
-long phpy_get_dynamical_matrices_openmp_over_qpoints(
-    double (*dynamical_matrices)[2], const long num_patom, const long num_satom,
-    const double *fc, const double (*qpoints)[3], const long n_qpoints,
-    const double (*svecs)[3], const long (*multi)[2], const double *mass,
-    const long *s2p_map, const long *p2s_map, const double (*charge_sum)[3][3]);
-long phpy_get_dynamical_matrix_at_q(double (*dynamical_matrix)[2],
-                                    const long num_patom, const long num_satom,
-                                    const double *fc, const double q[3],
-                                    const double (*svecs)[3],
-                                    const long (*multi)[2], const double *mass,
-                                    const long *s2p_map, const long *p2s_map,
-                                    const double (*charge_sum)[3][3],
-                                    const long use_openmp);
 void phpy_get_charge_sum(
     double (*charge_sum)[3][3], const long num_patom,
     const double factor, /* 4pi/V*unit-conv and denominator */
@@ -95,6 +82,7 @@ void phpy_get_derivative_dynmat_at_q(
     double (*derivative_dynmat)[2], const long num_patom, const long num_satom,
     const double *fc, const double *q,
     const double *lattice, /* column vector */
+    const double *reclat,  /* column vector */
     const double (*svecs)[3], const long (*multi)[2], const double *mass,
     const long *s2p_map, const long *p2s_map, const double nac_factor,
     const double *born, const double *dielectric, const double *q_direction,

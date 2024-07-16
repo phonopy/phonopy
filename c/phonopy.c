@@ -97,30 +97,6 @@ long phpy_dynamical_matrices_with_dd_openmp_over_qpoints(
         num_G_points, lambda, use_Wang_NAC);
 }
 
-long phpy_get_dynamical_matrices_openmp_over_qpoints(
-    double (*dynamical_matrices)[2], const long num_patom, const long num_satom,
-    const double *fc, const double (*qpoints)[3], const long n_qpoints,
-    const double (*svecs)[3], const long (*multi)[2], const double *mass,
-    const long *s2p_map, const long *p2s_map,
-    const double (*charge_sum)[3][3]) {
-    return dym_get_dynamical_matrices_openmp_over_qpoints(
-        dynamical_matrices, num_patom, num_satom, fc, qpoints, n_qpoints, svecs,
-        multi, mass, s2p_map, p2s_map, charge_sum);
-}
-
-long phpy_get_dynamical_matrix_at_q(double (*dynamical_matrix)[2],
-                                    const long num_patom, const long num_satom,
-                                    const double *fc, const double q[3],
-                                    const double (*svecs)[3],
-                                    const long (*multi)[2], const double *mass,
-                                    const long *s2p_map, const long *p2s_map,
-                                    const double (*charge_sum)[3][3],
-                                    const long use_openmp) {
-    return dym_get_dynamical_matrix_at_q(dynamical_matrix, num_patom, num_satom,
-                                         fc, q, svecs, multi, mass, s2p_map,
-                                         p2s_map, charge_sum, use_openmp);
-}
-
 void phpy_get_charge_sum(
     double (*charge_sum)[3][3], const long num_patom,
     const double factor, /* 4pi/V*unit-conv and denominator */
@@ -158,14 +134,15 @@ void phpy_get_derivative_dynmat_at_q(
     double (*derivative_dynmat)[2], const long num_patom, const long num_satom,
     const double *fc, const double *q,
     const double *lattice, /* column vector */
+    const double *reclat,  /* column vector */
     const double (*svecs)[3], const long (*multi)[2], const double *mass,
     const long *s2p_map, const long *p2s_map, const double nac_factor,
     const double *born, const double *dielectric, const double *q_direction,
     const long is_nac, const long use_openmp) {
     ddm_get_derivative_dynmat_at_q(derivative_dynmat, num_patom, num_satom, fc,
-                                   q, lattice, svecs, multi, mass, s2p_map,
-                                   p2s_map, nac_factor, born, dielectric,
-                                   q_direction, is_nac, use_openmp);
+                                   q, lattice, reclat, svecs, multi, mass,
+                                   s2p_map, p2s_map, nac_factor, born,
+                                   dielectric, q_direction, is_nac, use_openmp);
 }
 
 void phpy_get_relative_grid_address(long relative_grid_address[24][4][3],

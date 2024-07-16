@@ -2,6 +2,18 @@
 
 # Change Log
 
+## Jul-16-2024: Version 2.26.6
+
+- Fix derivative of dynamical matrix for Wang's NAC method.
+
+## Jul-14-2024: Version 2.26.5
+
+- Refactoring of dynamical matrix code.
+
+## Jul-13-2024: Version 2.26.4
+
+- Collection of minor updates to follow updates of external libraries.
+
 ## Jul-9-2024: Version 2.26.3
 
 - Fix #388 for `phonoc.omp_max_threads()`
