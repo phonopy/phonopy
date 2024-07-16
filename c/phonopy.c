@@ -134,14 +134,15 @@ void phpy_get_derivative_dynmat_at_q(
     double (*derivative_dynmat)[2], const long num_patom, const long num_satom,
     const double *fc, const double *q,
     const double *lattice, /* column vector */
+    const double *reclat,  /* column vector */
     const double (*svecs)[3], const long (*multi)[2], const double *mass,
     const long *s2p_map, const long *p2s_map, const double nac_factor,
     const double *born, const double *dielectric, const double *q_direction,
     const long is_nac, const long use_openmp) {
     ddm_get_derivative_dynmat_at_q(derivative_dynmat, num_patom, num_satom, fc,
-                                   q, lattice, svecs, multi, mass, s2p_map,
-                                   p2s_map, nac_factor, born, dielectric,
-                                   q_direction, is_nac, use_openmp);
+                                   q, lattice, reclat, svecs, multi, mass,
+                                   s2p_map, p2s_map, nac_factor, born,
+                                   dielectric, q_direction, is_nac, use_openmp);
 }
 
 void phpy_get_relative_grid_address(long relative_grid_address[24][4][3],

@@ -35,6 +35,7 @@
 #include "derivative_dynmat.h"
 
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #define PI 3.14159265358979323846
 
@@ -44,8 +45,7 @@ static void get_derivative_dynmat_at_q(
     const long num_patom, const long num_satom, const double *fc,
     const double *q, const double *lattice, /* column vector */
     const double (*svecs)[3], const long (*multi)[2], const double *mass,
-    const long *s2p_map, const long *p2s_map, const double nac_factor,
-    const double *born, const double *dielectric);
+    const long *s2p_map, const long *p2s_map);
 static void get_derivative_nac(double *ddnac, double *dnac,
                                const long num_patom, const double *lattice,
                                const double *mass, const double *q,
@@ -63,6 +63,7 @@ void ddm_get_derivative_dynmat_at_q(
     double (*derivative_dynmat)[2], const long num_patom, const long num_satom,
     const double *fc, const double *q,
     const double *lattice, /* column vector */
+    const double *reclat,  /* column vector */
     const double (*svecs)[3], const long (*multi)[2], const double *mass,
     const long *s2p_map, const long *p2s_map, const double nac_factor,
     const double *born, const double *dielectric, const double *q_direction,
@@ -74,8 +75,8 @@ void ddm_get_derivative_dynmat_at_q(
     if (is_nac) {
         ddnac = (double *)malloc(sizeof(double) * num_patom * num_patom * 27);
         dnac = (double *)malloc(sizeof(double) * num_patom * num_patom * 9);
-        factor = nac_factor * num_patom / num_satom;
-        get_derivative_nac(ddnac, dnac, num_patom, lattice, mass, q, born,
+        factor = (nac_factor * num_patom) / num_satom;
+        get_derivative_nac(ddnac, dnac, num_patom, reclat, mass, q, born,
                            dielectric, q_direction, factor);
     }
 
@@ -89,15 +90,15 @@ void ddm_get_derivative_dynmat_at_q(
             get_derivative_dynmat_at_q(derivative_dynmat, i, j, ddnac, dnac,
                                        is_nac, num_patom, num_satom, fc, q,
                                        lattice, svecs, multi, mass, s2p_map,
-                                       p2s_map, nac_factor, born, dielectric);
+                                       p2s_map);
         }
     } else {
         for (i = 0; i < num_patom; i++) {
             for (j = 0; j < num_patom; j++) {
-                get_derivative_dynmat_at_q(
-                    derivative_dynmat, i, j, ddnac, dnac, is_nac, num_patom,
-                    num_satom, fc, q, lattice, svecs, multi, mass, s2p_map,
-                    p2s_map, nac_factor, born, dielectric);
+                get_derivative_dynmat_at_q(derivative_dynmat, i, j, ddnac, dnac,
+                                           is_nac, num_patom, num_satom, fc, q,
+                                           lattice, svecs, multi, mass, s2p_map,
+                                           p2s_map);
             }
         }
     }
@@ -126,14 +127,15 @@ void ddm_get_derivative_dynmat_at_q(
     }
 }
 
-void get_derivative_dynmat_at_q(
-    double (*derivative_dynmat)[2], const long i, const long j,
-    const double *ddnac, const double *dnac, const long is_nac,
-    const long num_patom, const long num_satom, const double *fc,
-    const double *q, const double *lattice, /* column vector */
-    const double (*svecs)[3], const long (*multi)[2], const double *mass,
-    const long *s2p_map, const long *p2s_map, const double nac_factor,
-    const double *born, const double *dielectric) {
+void get_derivative_dynmat_at_q(double (*derivative_dynmat)[2], const long i,
+                                const long j, const double *ddnac,
+                                const double *dnac, const long is_nac,
+                                const long num_patom, const long num_satom,
+                                const double *fc, const double *q,
+                                const double *lattice, /* column vector */
+                                const double (*svecs)[3],
+                                const long (*multi)[2], const double *mass,
+                                const long *s2p_map, const long *p2s_map) {
     long k, l, m, n, adrs, m_pair, i_pair, svecs_adrs;
     double coef[3], real_coef[3], imag_coef[3];
     double c, s, phase, mass_sqrt, fc_elem, real_phase, imag_phase;
@@ -237,35 +239,21 @@ void get_derivative_dynmat_at_q(
 /* D_nac = a * AB/C */
 /* dD_nac = a * D_nac * (A'/A + B'/B - C'/C) */
 static void get_derivative_nac(double *ddnac, double *dnac,
-                               const long num_patom, const double *lattice,
+                               const long num_patom, const double *reclat,
                                const double *mass, const double *q,
                                const double *born, const double *dielectric,
                                const double *q_direction, const double factor) {
     long i, j, k, l, m;
-    double a, b, c, da, db, dc, volume, mass_sqrt;
-    double q_cart[3], rec_lat[9];
-
-    volume = lattice[0] * (lattice[4] * lattice[8] - lattice[5] * lattice[7]) +
-             lattice[1] * (lattice[5] * lattice[6] - lattice[3] * lattice[8]) +
-             lattice[2] * (lattice[3] * lattice[7] - lattice[4] * lattice[6]);
-
-    rec_lat[0] = (lattice[4] * lattice[8] - lattice[5] * lattice[7]) / volume;
-    rec_lat[1] = (lattice[5] * lattice[6] - lattice[3] * lattice[8]) / volume;
-    rec_lat[2] = (lattice[3] * lattice[7] - lattice[4] * lattice[6]) / volume;
-    rec_lat[3] = (lattice[7] * lattice[2] - lattice[8] * lattice[1]) / volume;
-    rec_lat[4] = (lattice[8] * lattice[0] - lattice[6] * lattice[2]) / volume;
-    rec_lat[5] = (lattice[6] * lattice[1] - lattice[7] * lattice[0]) / volume;
-    rec_lat[6] = (lattice[1] * lattice[5] - lattice[2] * lattice[4]) / volume;
-    rec_lat[7] = (lattice[2] * lattice[3] - lattice[0] * lattice[5]) / volume;
-    rec_lat[8] = (lattice[0] * lattice[4] - lattice[1] * lattice[3]) / volume;
+    double a, b, c, da, db, dc, mass_sqrt;
+    double q_cart[3];
 
     for (i = 0; i < 3; i++) {
         q_cart[i] = 0;
         for (j = 0; j < 3; j++) {
             if (q_direction) {
-                q_cart[i] += rec_lat[i * 3 + j] * q_direction[j];
+                q_cart[i] += reclat[i * 3 + j] * q_direction[j];
             } else {
-                q_cart[i] += rec_lat[i * 3 + j] * q[j];
+                q_cart[i] += reclat[i * 3 + j] * q[j];
             }
         }
     }
