@@ -208,6 +208,11 @@ class DerivativeOfDynamicalMatrix:
         self._ddm = ddm
 
     def _run_py(self, q, q_direction=None):
+        """Run in python.
+
+        This works only for full-FC.
+
+        """
         if isinstance(self._dynmat, DynamicalMatrixNAC):
             if q_direction is None:
                 fc_nac = self._nac(q)
@@ -217,6 +222,7 @@ class DerivativeOfDynamicalMatrix:
                 d_nac = self._d_nac(q_direction)
 
         fc = self._force_constants
+        assert fc.shape[0] == fc.shape[1]
         vecs = self._svecs
         multiplicity = self._multi
         num_patom = len(self._p2s_map)
