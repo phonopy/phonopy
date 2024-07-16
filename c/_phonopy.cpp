@@ -247,15 +247,17 @@ void py_get_recip_dipole_dipole_q0(nb::ndarray<> py_dd_q0,
 
 void py_get_derivative_dynmat(
     nb::ndarray<> py_derivative_dynmat, nb::ndarray<> py_force_constants,
-    nb::ndarray<> py_q_vector, nb::ndarray<> py_lattice, nb::ndarray<> py_svecs,
-    nb::ndarray<> py_multi, nb::ndarray<> py_masses, nb::ndarray<> py_s2p_map,
-    nb::ndarray<> py_p2s_map, double nac_factor, nb::ndarray<> py_born,
-    nb::ndarray<> py_dielectric, nb::ndarray<> py_q_direction, long is_nac,
-    long is_nac_q_zero, long use_openmp) {
+    nb::ndarray<> py_q_vector, nb::ndarray<> py_lattice,
+    nb::ndarray<> py_reclat, nb::ndarray<> py_svecs, nb::ndarray<> py_multi,
+    nb::ndarray<> py_masses, nb::ndarray<> py_s2p_map, nb::ndarray<> py_p2s_map,
+    double nac_factor, nb::ndarray<> py_born, nb::ndarray<> py_dielectric,
+    nb::ndarray<> py_q_direction, long is_nac, long is_nac_q_zero,
+    long use_openmp) {
     double(*ddm)[2];
     double *fc;
     double *q_vector;
-    double *lat;
+    double *lattice;
+    double *reclat;
     double(*svecs)[3];
     double *masses;
     long(*multi)[2];
@@ -271,7 +273,8 @@ void py_get_derivative_dynmat(
     ddm = (double(*)[2])py_derivative_dynmat.data();
     fc = (double *)py_force_constants.data();
     q_vector = (double *)py_q_vector.data();
-    lat = (double *)py_lattice.data();
+    lattice = (double *)py_lattice.data();
+    reclat = (double *)py_reclat.data();
     svecs = (double(*)[3])py_svecs.data();
     masses = (double *)py_masses.data();
     multi = (long(*)[2])py_multi.data();
@@ -288,9 +291,10 @@ void py_get_derivative_dynmat(
         q_dir = (double *)py_q_direction.data();
     }
 
-    phpy_get_derivative_dynmat_at_q(
-        ddm, num_patom, num_satom, fc, q_vector, lat, svecs, multi, masses,
-        s2p_map, p2s_map, nac_factor, born, epsilon, q_dir, is_nac, use_openmp);
+    phpy_get_derivative_dynmat_at_q(ddm, num_patom, num_satom, fc, q_vector,
+                                    lattice, reclat, svecs, multi, masses,
+                                    s2p_map, p2s_map, nac_factor, born, epsilon,
+                                    q_dir, is_nac, use_openmp);
 }
 
 void py_get_thermal_properties(nb::ndarray<> py_thermal_props,

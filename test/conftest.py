@@ -44,6 +44,26 @@ def ph_nacl() -> Phonopy:
 
 
 @pytest.fixture(scope="session")
+def ph_nacl_wang() -> Phonopy:
+    """Return Phonopy class instance of NaCl 2x2x2."""
+    yaml_filename = cwd / "phonopy_disp_NaCl.yaml"
+    force_sets_filename = cwd / "FORCE_SETS_NaCl"
+    born_filename = cwd / "BORN_NaCl"
+    ph = phonopy.load(
+        yaml_filename,
+        force_sets_filename=force_sets_filename,
+        born_filename=born_filename,
+        is_compact_fc=False,
+        log_level=1,
+        produce_fc=True,
+    )
+    nac_params = ph.nac_params
+    nac_params["method"] = "wang"
+    ph.nac_params = nac_params
+    return ph
+
+
+@pytest.fixture(scope="session")
 def ph_nacl_nofcsym() -> Phonopy:
     """Return Phonopy class instance of NaCl 2x2x2 without symmetrizing fc2."""
     yaml_filename = cwd / "phonopy_disp_NaCl.yaml"
