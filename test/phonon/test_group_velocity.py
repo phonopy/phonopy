@@ -39,6 +39,41 @@ def test_gv_nacl(ph_nacl: Phonopy):
     #     print("".join(["%.8f, " % v for v in line]))
 
 
+def test_gv_nacl_wang(ph_nacl_wang: Phonopy):
+    """Test of GroupVelocity by NaCl with Wang's NAC method.
+
+    This test should pass _get_dD_analytical.
+
+    """
+    gv_ref = [
+        14.56800976,
+        14.56800976,
+        14.56800976,
+        14.56800976,
+        14.56800976,
+        14.56800976,
+        25.16351730,
+        25.16351730,
+        25.16351730,
+        1.51378156,
+        1.51378156,
+        1.51378156,
+        1.51378156,
+        1.51378156,
+        1.51378156,
+        -7.84946438,
+        -7.84946438,
+        -7.84946438,
+    ]
+    gv = GroupVelocity(
+        ph_nacl_wang.dynamical_matrix, symmetry=ph_nacl_wang.primitive_symmetry
+    )
+    gv.run([[0.1, 0.1, 0.1]])
+    # for line in gv.group_velocities[0]:
+    #     print("".join(["%.8f, " % v for v in line]))
+    np.testing.assert_allclose(gv.group_velocities[0].ravel(), gv_ref, atol=1e-5)
+
+
 def test_gv_si(ph_si: Phonopy):
     """Test of GroupVelocity by Si.
 
