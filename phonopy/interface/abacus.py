@@ -286,11 +286,21 @@ def get_abacus_structure(atoms, pps, orbitals=None, abfs=None):
         line.append(f"{elem}\n{0}\n{numbers[i]}")
         for j in range(index, index + numbers[i]):
             if atoms.magnetic_moments is not None:
-                line_part = " ".join(_list_elem2str(atoms.scaled_positions[j])) + " 1 1 1"
+                line_part = (
+                    " ".join(_list_elem2str(atoms.scaled_positions[j])) + " 1 1 1"
+                )
                 # Add the magnetic moments part
                 mag_mom = atoms.magnetic_moments[j]
                 if len(mag_mom) == 3:  # If three components
-                    line_part += " mag " + " " + str(mag_mom[0]) + " " + str(mag_mom[1]) + " " + str(mag_mom[2])
+                    line_part += (
+                        " mag "
+                        + " "
+                        + str(mag_mom[0])
+                        + " "
+                        + str(mag_mom[1])
+                        + " "
+                        + str(mag_mom[2])
+                    )
                 else:  # If single value
                     line_part += " mag " + str(mag_mom)
                 # Append the completed line
