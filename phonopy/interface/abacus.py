@@ -291,18 +291,11 @@ def get_abacus_structure(atoms, pps, orbitals=None, abfs=None):
                 )
                 # Add the magnetic moments part
                 mag_mom = atoms.magnetic_moments[j]
-                if len(mag_mom) == 3:  # If three components
-                    line_part += (
-                        " mag "
-                        + " "
-                        + str(mag_mom[0])
-                        + " "
-                        + str(mag_mom[1])
-                        + " "
-                        + str(mag_mom[2])
-                    )
-                else:  # If single value
-                    line_part += " mag " + str(mag_mom)
+                if isinstance(mag_mom, (list, np.ndarray)):
+                    if len(mag_mom) == 3:  # Check the three components only if it is a list or numpy array
+                        line_part += " mag " + " ".join(map(str, mag_mom))
+                else:  # If single value (float), add directly
+                    line_part += f" mag {mag_mom}"
                 # Append the completed line
                 line.append(line_part)
             else:
