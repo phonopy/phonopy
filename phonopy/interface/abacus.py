@@ -330,7 +330,7 @@ def read_abacus_output(filename):
                     _match = re.match(_match_pattern, line)
                 iatom = 0
                 while _match:
-                    #print(_match.group(3).split())
+                    # print(_match.group(3).split())
                     fx, fy, fz = (_match.group(3).split()[i].strip() for i in range(3))
                     force[iatom] = (float(fx), float(fy), float(fz))
                     iatom += 1

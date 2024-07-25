@@ -51,6 +51,7 @@ def test_read_abacus_mag():
     diff_mag = cell_ref.magnetic_moments - np.array([1] * 4 + [2] * 4)
     assert (np.abs(diff_mag) < 1e-5).all()
 
+
 def test_read_abacus_mag_noncolin():
     """Test of read_ABACUS with magnetic moments."""
     cell, pps, orbitals, abfs = read_abacus(
