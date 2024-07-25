@@ -79,9 +79,3 @@ def test_read_abacus_output():
     force = read_abacus_output(os.path.join(data_dir, "NaCl-abacus.out"))
     assert force.mean() < 1e-10
     assert force[0][0] + 1.85537138e-02 < 1e-5
-
-
-if __name__ == "__main__":
-    test_read_abacus_mag()
-    test_read_abacus_mag_noncolin()
-    test_read_abacus_output()
