@@ -156,8 +156,11 @@ removed.
 2. Run `pip install`
 
    ```
-   % pip install -e . -vvv
+   % pip install . -vvv
    ```
+
+   The editable install (`pip install -e`) may not work depending on the
+   computer environment.
 
 (install_trouble_shooting)=
 
