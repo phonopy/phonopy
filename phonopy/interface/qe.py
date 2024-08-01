@@ -53,6 +53,7 @@ from phonopy.interface.vasp import (
 from phonopy.structure.atoms import PhonopyAtoms, symbol_map
 from phonopy.structure.cells import get_primitive, get_supercell
 from phonopy.units import Bohr
+from phonopy.structure.symmetry import elaborate_borns_and_epsilon
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
@@ -87,7 +88,12 @@ def read_pwscf(filename):
         pwscf_in = PwscfIn(f.readlines())
     tags = pwscf_in.get_tags()
     lattice = tags["cell_parameters"]
-    positions = [pos[1] for pos in tags["atomic_positions"]]
+    if pwscf_in.scaled_positions:
+        positions = None
+        scaled_positions = [pos[1] for pos in tags["atomic_positions"]]
+    else:
+        positions = [pos[1] for pos in tags["atomic_positions"]]
+        scaled_positions = None
     species = [pos[0] for pos in tags["atomic_positions"]]
     mass_map = {}
     pp_map = {}
@@ -127,10 +133,19 @@ def read_pwscf(filename):
                 numbers[i] = available_numbers[-n]
 
         cell = PhonopyAtoms(
-            numbers=numbers, masses=masses, cell=lattice, scaled_positions=positions
+            numbers=numbers,
+            masses=masses,
+            cell=lattice,
+            positions=positions,
+            scaled_positions=scaled_positions,
         )
     else:
-        cell = PhonopyAtoms(numbers=numbers, cell=lattice, scaled_positions=positions)
+        cell = PhonopyAtoms(
+            numbers=numbers,
+            cell=lattice,
+            positions=positions,
+            scaled_positions=scaled_positions,
+        )
 
     unique_symbols = []
     pp_filenames = {}
@@ -223,6 +238,7 @@ class PwscfIn:
         self._current_tag_name = None
         self._values = None
         self._collect(lines)
+        self.scaled_positions = True
 
     def get_tags(self):
         """Return tags."""
@@ -315,7 +331,9 @@ class PwscfIn:
 
     def _set_positions(self):
         unit = self._values[0].lower()
-        if "crystal" not in unit:
+        if "angstrom" in unit:
+            self.scaled_positions = False
+        elif "crystal" not in unit:
             raise RuntimeError(
                 "Only ATOMIC_POSITIONS format with " "crystal coordinates is supported."
             )
