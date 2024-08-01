@@ -33,7 +33,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
-import warnings
 
 import numpy as np
 
@@ -42,7 +41,7 @@ from phonopy.structure.symmetry import elaborate_borns_and_epsilon
 
 
 def parse_ph_out(file: str, natoms: int) -> dict:
-    """Parse BEC and dielectric tensor from QE ph.x output w/ a minor sanity check"""
+    """Parse BEC and dielectric tensor from QE ph.x output w/ a minor sanity check."""
     hook_eps = "Dielectric constant in cartesian axis"
     hook_bec = "Effective charges (d Force / dE) in cartesian axis without acoustic"
 
@@ -50,13 +49,13 @@ def parse_ph_out(file: str, natoms: int) -> dict:
         return xx.strip().strip("(").strip(")")
 
     def parse_epsilon(fp) -> np.ndarray:
-        """parse the dielectric tensor from ph.x output"""
+        """Parse the dielectric tensor from ph.x output."""
         next(fp)  # skip 1 line
         lines = [_strip(next(fp)) for _ in range(3)]
         return np.array([np.fromstring(x, sep=" ") for x in lines])
 
     def parse_bec(fp, natoms) -> np.ndarray:
-        """parse the BEC from ph.x output"""
+        """Parse the BEC from ph.x output."""
         next(fp)  # skip 1 line
         bec = []
         for _ in range(natoms):
@@ -83,7 +82,9 @@ def get_options():
     """Parse command-line options."""
     import argparse
 
-    parser = argparse.ArgumentParser(description="Phonopy QE-BORN command-line-tool")
+    parser = argparse.ArgumentParser(
+        description="Parse phonopy BORN file from QE output"
+    )
     parser.set_defaults(
         num_atoms=None,
         # primitive_axes=None,
