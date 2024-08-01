@@ -53,7 +53,6 @@ from phonopy.interface.vasp import (
 from phonopy.structure.atoms import PhonopyAtoms, symbol_map
 from phonopy.structure.cells import get_primitive, get_supercell
 from phonopy.units import Bohr
-from phonopy.structure.symmetry import elaborate_borns_and_epsilon
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
