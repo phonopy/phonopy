@@ -87,12 +87,13 @@ def read_pwscf(filename):
         pwscf_in = PwscfIn(f.readlines())
     tags = pwscf_in.get_tags()
     lattice = tags["cell_parameters"]
-    if pwscf_in.scaled_positions:
-        positions = None
-        scaled_positions = [pos[1] for pos in tags["atomic_positions"]]
-    else:
+    if pwscf_in.cartesian_positions:
         positions = [pos[1] for pos in tags["atomic_positions"]]
         scaled_positions = None
+
+    else:
+        positions = None
+        scaled_positions = [pos[1] for pos in tags["atomic_positions"]]
     species = [pos[0] for pos in tags["atomic_positions"]]
     mass_map = {}
     pp_map = {}
@@ -236,8 +237,8 @@ class PwscfIn:
         self._tags = {}
         self._current_tag_name = None
         self._values = None
+        self.cartesian_positions = False
         self._collect(lines)
-        self.scaled_positions = True
 
     def get_tags(self):
         """Return tags."""
@@ -330,11 +331,15 @@ class PwscfIn:
 
     def _set_positions(self):
         unit = self._values[0].lower()
+        factor = 1.0
         if "angstrom" in unit:
-            self.scaled_positions = False
+            factor = 1.0 / Bohr
+            self.cartesian_positions = True
+        elif "bohr" in unit:
+            self.cartesian_positions = True
         elif "crystal" not in unit:
             raise RuntimeError(
-                "Only ATOMIC_POSITIONS format with " "crystal coordinates is supported."
+                "Only supported ATOMIC_POSITIONS formats: crystal/bohr/angstrom."
             )
 
         natom = self._tags["nat"]
@@ -344,9 +349,11 @@ class PwscfIn:
 
         positions = []
         for i in range(natom):
-            positions.append(
-                [pos_vals[i * 4], [float(x) for x in pos_vals[i * 4 + 1 : i * 4 + 4]]]
-            )
+            row = [
+                pos_vals[i * 4],
+                [factor * float(x) for x in pos_vals[i * 4 + 1 : i * 4 + 4]],
+            ]
+            positions.append(row)
 
         self._tags["atomic_positions"] = positions
 
