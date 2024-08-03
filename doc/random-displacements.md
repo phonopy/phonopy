@@ -14,8 +14,8 @@ number of the supercells with displacements are specified by
 
 Forces on atoms in supercells with displacements are calculated by a force
 calculator and force constants are computed by a force constants calculator. As
-the force constants calculator, currently only {ref}`fc_calculator_alm_tag` is
-supported.
+the force constants calculators, currently {ref}`fc_calculator_symfc_tag` and
+{ref}`fc_calculator_alm_tag` are supported.
 
 ## Related setting tags
 
@@ -24,6 +24,8 @@ supported.
 - {ref}`random_seed_tag` (`--random-seed`)
 - {ref}`fc_calculator_tag` (`--fc-calc`)
 - {ref}`fc_calculator_options_tag` (`--fc-calc-opt`)
+- {ref}`fc_calculator_symfc_tag` (`--symfc`)
+- {ref}`fc_calculator_alm_tag` (`--alm`)
 
 ## Random directions with constant displacement distance
 
@@ -135,11 +137,12 @@ where `phonopy_disp.yaml` has to be located in the current directory where the
 above command is executed. The `FORCE_SETS` file is written in the
 {ref}`file_forces_type_2` format. To compute force constants for the type-2
 displacements-forces dataset, an external force constants calculator is
-necessary, e.g., ALM (https://github.com/ttadano/ALM). With installed ALM, force
-constants can be calculated by
+necessary, e.g., symfc(https://github.com/symfc/symfc) or ALM
+(https://github.com/ttadano/ALM). With installed symfc, force constants can be
+calculated by
 
 ```
-% phonopy --alm --writefc
+% phonopy --symfc --writefc
 ```
 With this command, the force constants are written in `FORCE_CONSTANTS`.
 
@@ -206,18 +209,18 @@ In the below, a step-by-step example is presented.
    with some force calculator with VASP, QE, etc.
 5. Generate `FORCE_SETS` in this directory, which overwrites previous
    `FORCE_SETS`.
-6. Run the force constants calculation, e.g., with ALM. ALM does the fitting
-   force constants using the dataset of displacements and forces stored in
-   `FORCE_SETS`. Run also phonon calculation. This is done for example,
+6. Run the force constants calculation, e.g., with symfc. Symfc fits the
+   displacement-force dataset stored in `FORCE_SETS` to symmetry adapted force
+   constants. Run also phonon calculation. This is done for example,
 
    ```
-   phonopy -v --alm --mesh 10 10 10 -p
+   phonopy -v --symfc --mesh 10 10 10 -p
    ```
 
    or
 
    ```bash
-   phonopy -v --alm --writefc
+   phonopy -v --symfc --writefc
    phonopy --readfc --mesh 10 10 10 -p
    ```
 

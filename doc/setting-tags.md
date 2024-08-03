@@ -1111,7 +1111,7 @@ calculator currently possible to be invoked from phonopy.
 
 To be written.
 
-(fc_calculator_alm_tag)=
+(fc_calculator_symfc_tag)=
 
 #### `SYMFC`
 
@@ -1127,6 +1127,8 @@ A. Seko and A. Togo, arXiv:2403.03588.
 ```text
 FC_CALCULATOR = SYMFC
 ```
+
+(fc_calculator_alm_tag)=
 
 #### `ALM`
 
