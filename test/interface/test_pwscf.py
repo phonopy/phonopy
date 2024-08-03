@@ -10,9 +10,9 @@ from phonopy.interface.qe import read_pwscf
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-def test_read_pwscf():
+def _test_read_pwscf(filename):
     """Test of read_pwscf."""
-    cell, pp_filenames = read_pwscf(os.path.join(data_dir, "NaCl-pwscf.in"))
+    cell, pp_filenames = read_pwscf(os.path.join(data_dir, filename))
     filename = os.path.join(data_dir, "NaCl-abinit-pwscf.yaml")
     cell_ref = read_cell_yaml(filename)
     assert (np.abs(cell.cell - cell_ref.cell) < 1e-5).all()
@@ -21,3 +21,18 @@ def test_read_pwscf():
     assert (np.abs(diff_pos) < 1e-5).all()
     for s, s_r in zip(cell.symbols, cell_ref.symbols):
         assert s == s_r
+
+
+def test_read_pwscf():
+    """Test of read_pwscf with default scaled positions."""
+    _test_read_pwscf("NaCl-pwscf.in")
+
+
+def test_read_pwscf_angstrom():
+    """Test of read_pwscf with angstrom coordinates."""
+    _test_read_pwscf("NaCl-pwscf-angstrom.in")
+
+
+def test_read_pwscf_bohr():
+    """Test of read_pwscf with bohr coordinates."""
+    _test_read_pwscf("NaCl-pwscf-bohr.in")
