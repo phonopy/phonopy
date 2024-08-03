@@ -43,6 +43,7 @@ phonopy-qha = "phonopy.scripts.phonopy_qha:run"
 phonopy-tdplot = "phonopy.scripts.phonopy_tdplot:run"
 phonopy-vasp-born = "phonopy.scripts.phonopy_vasp_born:run"
 phonopy-vasp-efe = "phonopy.scripts.phonopy_vasp_efe:run"
+phonopy-qe-born = "phonopy.scripts.phonopy_qe_born:run"
 
 [tool.scikit-build]
 cmake.verbose = true
