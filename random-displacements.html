@@ -375,8 +375,8 @@ number of the supercells with displacements are specified by
 <a class="reference internal" href="setting-tags.html#random-displacements-tag"><span class="std std-ref">RANDOM_DISPLACEMENTS</span></a> tag (or <code class="docutils literal notranslate"><span class="pre">--rd</span></code> option) in either case.</p>
 <p>Forces on atoms in supercells with displacements are calculated by a force
 calculator and force constants are computed by a force constants calculator. As
-the force constants calculator, currently only <a class="reference internal" href="setting-tags.html#fc-calculator-alm-tag"><span class="std std-ref">SYMFC</span></a> is
-supported.</p>
+the force constants calculators, currently <a class="reference internal" href="setting-tags.html#fc-calculator-symfc-tag"><span class="std std-ref">SYMFC</span></a> and
+<a class="reference internal" href="setting-tags.html#fc-calculator-alm-tag"><span class="std std-ref">ALM</span></a> are supported.</p>
 <section id="related-setting-tags">
 <h2>Related setting tags<a class="headerlink" href="#related-setting-tags" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -385,6 +385,8 @@ supported.</p>
 <li><p><a class="reference internal" href="setting-tags.html#random-seed-tag"><span class="std std-ref">RANDOM_SEED</span></a> (<code class="docutils literal notranslate"><span class="pre">--random-seed</span></code>)</p></li>
 <li><p><a class="reference internal" href="setting-tags.html#fc-calculator-tag"><span class="std std-ref">FC_CALCULATOR</span></a> (<code class="docutils literal notranslate"><span class="pre">--fc-calc</span></code>)</p></li>
 <li><p><a class="reference internal" href="setting-tags.html#fc-calculator-options-tag"><span class="std std-ref">FC_CALCULATOR_OPTIONS</span></a> (<code class="docutils literal notranslate"><span class="pre">--fc-calc-opt</span></code>)</p></li>
+<li><p><a class="reference internal" href="setting-tags.html#fc-calculator-symfc-tag"><span class="std std-ref">SYMFC</span></a> (<code class="docutils literal notranslate"><span class="pre">--symfc</span></code>)</p></li>
+<li><p><a class="reference internal" href="setting-tags.html#fc-calculator-alm-tag"><span class="std std-ref">ALM</span></a> (<code class="docutils literal notranslate"><span class="pre">--alm</span></code>)</p></li>
 </ul>
 </section>
 <section id="random-directions-with-constant-displacement-distance">
@@ -485,9 +487,10 @@ with displacements in the VASP interface is found as</p>
 above command is executed. The <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is written in the
 <a class="reference internal" href="input-files.html#file-forces-type-2"><span class="std std-ref">Type 2</span></a> format. To compute force constants for the type-2
 displacements-forces dataset, an external force constants calculator is
-necessary, e.g., ALM (<a class="github reference external" href="https://github.com/ttadano/ALM">ttadano/ALM</a>). With installed ALM, force
-constants can be calculated by</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">alm</span> <span class="o">--</span><span class="n">writefc</span>
+necessary, e.g., symfc(<a class="github reference external" href="https://github.com/symfc/symfc">symfc/symfc</a>) or ALM
+(<a class="github reference external" href="https://github.com/ttadano/ALM">ttadano/ALM</a>). With installed symfc, force constants can be
+calculated by</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">symfc</span> <span class="o">--</span><span class="n">writefc</span>
 </pre></div>
 </div>
 <p>With this command, the force constants are written in <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code>.</p>
@@ -548,14 +551,14 @@ also the purpose. It can be 10, or can be 1000.</p></li>
 with some force calculator with VASP, QE, etc.</p></li>
 <li><p>Generate <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> in this directory, which overwrites previous
 <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>.</p></li>
-<li><p>Run the force constants calculation, e.g., with ALM. ALM does the fitting
-force constants using the dataset of displacements and forces stored in
-<code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>. Run also phonon calculation. This is done for example,</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonopy</span> <span class="o">-</span><span class="n">v</span> <span class="o">--</span><span class="n">alm</span> <span class="o">--</span><span class="n">mesh</span> <span class="mi">10</span> <span class="mi">10</span> <span class="mi">10</span> <span class="o">-</span><span class="n">p</span>
+<li><p>Run the force constants calculation, e.g., with symfc. Symfc fits the
+displacement-force dataset stored in <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> to symmetry adapted force
+constants. Run also phonon calculation. This is done for example,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">phonopy</span> <span class="o">-</span><span class="n">v</span> <span class="o">--</span><span class="n">symfc</span> <span class="o">--</span><span class="n">mesh</span> <span class="mi">10</span> <span class="mi">10</span> <span class="mi">10</span> <span class="o">-</span><span class="n">p</span>
 </pre></div>
 </div>
 <p>or</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy<span class="w"> </span>-v<span class="w"> </span>--alm<span class="w"> </span>--writefc
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy<span class="w"> </span>-v<span class="w"> </span>--symfc<span class="w"> </span>--writefc
 phonopy<span class="w"> </span>--readfc<span class="w"> </span>--mesh<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="m">10</span><span class="w"> </span>-p
 </pre></div>
 </div>
