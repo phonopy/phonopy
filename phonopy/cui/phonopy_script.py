@@ -36,7 +36,7 @@
 
 from __future__ import annotations
 
-import os
+import pathlib
 import sys
 from typing import Optional, Union
 
@@ -177,7 +177,7 @@ def print_error_message(message):
 
 def file_exists(filename, log_level, is_any=False):
     """Check existence of file."""
-    if os.path.exists(filename):
+    if pathlib.Path(filename).exists():
         return True
     else:
         if is_any:
@@ -461,7 +461,7 @@ def write_displacements_files_then_exit(
         print('"phonopy_disp.yaml" and supercells have been created.')
 
     settings.set_include_displacements(True)
-
+    settings.set_include_nac_params(True)
     finalize_phonopy(log_level, settings, confs, phonon, filename="phonopy_disp.yaml")
 
 
@@ -832,74 +832,68 @@ def store_nac_params(
     else:
         _nac_factor = nac_factor
 
-    if settings.is_nac:
+    def read_BORN(phonon):
+        with open("BORN") as f:
+            return get_born_parameters(f, phonon.primitive, phonon.primitive_symmetry)
 
-        def read_BORN(phonon):
-            with open("BORN") as f:
-                return get_born_parameters(
-                    f, phonon.primitive, phonon.primitive_symmetry
-                )
+    nac_params = None
 
-        nac_params = None
-
-        if load_phonopy_yaml:
-            nac_params = get_nac_params(
-                primitive=phonon.primitive,
-                nac_params=phpy_yaml.nac_params,
-                log_level=log_level,
-            )
-            if phpy_yaml.nac_params is not None and log_level:
-                print('NAC parameters were read from "%s".' % unitcell_filename)
-        else:
-            if phpy_yaml:
-                nac_params = phpy_yaml.nac_params
-                if log_level:
-                    if nac_params is None:
-                        print(
-                            'NAC parameters were not found in "%s".' % unitcell_filename
-                        )
-                    else:
-                        print('NAC parameters were read from "%s".' % unitcell_filename)
-
-            if nac_params is None and file_exists("BORN", log_level):
-                nac_params = read_BORN(phonon)
-                if nac_params is not None and log_level:
-                    print('NAC parameters were read from "%s".' % "BORN")
-
-                if not nac_params:
-                    error_text = "BORN file could not be read correctly."
-                    print_error_message(error_text)
-                    if log_level:
-                        print_error()
-                    sys.exit(1)
-
-        if nac_params is not None:
-            if nac_params["factor"] is None:
-                nac_params["factor"] = _nac_factor
-            if settings.nac_method is not None:
-                nac_params["method"] = settings.nac_method
-            phonon.nac_params = nac_params
+    if load_phonopy_yaml:
+        nac_params = get_nac_params(
+            primitive=phonon.primitive,
+            nac_params=phpy_yaml.nac_params,
+            log_level=log_level,
+        )
+        if phpy_yaml.nac_params is not None and log_level:
+            print('NAC parameters were read from "%s".' % unitcell_filename)
+    else:
+        if phpy_yaml:
+            nac_params = phpy_yaml.nac_params
             if log_level:
-                dm = phonon.dynamical_matrix
-                if dm is not None:
-                    if isinstance(dm, DynamicalMatrixNAC):
-                        dm.show_nac_message()
-                    print("")
+                if nac_params is None:
+                    print('NAC parameters were not found in "%s".' % unitcell_filename)
+                else:
+                    print('NAC parameters were read from "%s".' % unitcell_filename)
 
-            if log_level > 1:
-                print("-" * 27 + " Dielectric constant " + "-" * 28)
-                for v in nac_params["dielectric"]:
-                    print("         %12.7f %12.7f %12.7f" % tuple(v))
-                print("-" * 26 + " Born effective charges " + "-" * 26)
-                symbols = phonon.primitive.symbols
-                for i, (z, s) in enumerate(zip(nac_params["born"], symbols)):
-                    for j, v in enumerate(z):
-                        if j == 0:
-                            text = "%5d %-2s" % (i + 1, s)
-                        else:
-                            text = "        "
-                        print("%s %12.7f %12.7f %12.7f" % ((text,) + tuple(v)))
-                print("-" * 76)
+        if nac_params is None and file_exists("BORN", log_level):
+            nac_params = read_BORN(phonon)
+            if nac_params is not None and log_level:
+                print('NAC parameters were read from "%s".' % "BORN")
+
+            if not nac_params:
+                error_text = "BORN file could not be read correctly."
+                print_error_message(error_text)
+                if log_level:
+                    print_error()
+                sys.exit(1)
+
+    if nac_params is not None:
+        if nac_params["factor"] is None:
+            nac_params["factor"] = _nac_factor
+        if settings.nac_method is not None:
+            nac_params["method"] = settings.nac_method
+        phonon.nac_params = nac_params
+        if log_level:
+            dm = phonon.dynamical_matrix
+            if dm is not None:
+                if isinstance(dm, DynamicalMatrixNAC):
+                    dm.show_nac_message()
+                print("")
+
+        if log_level > 1:
+            print("-" * 27 + " Dielectric constant " + "-" * 28)
+            for v in nac_params["dielectric"]:
+                print("         %12.7f %12.7f %12.7f" % tuple(v))
+            print("-" * 26 + " Born effective charges " + "-" * 26)
+            symbols = phonon.primitive.symbols
+            for i, (z, s) in enumerate(zip(nac_params["born"], symbols)):
+                for j, v in enumerate(z):
+                    if j == 0:
+                        text = "%5d %-2s" % (i + 1, s)
+                    else:
+                        text = "        "
+                    print("%s %12.7f %12.7f %12.7f" % ((text,) + tuple(v)))
+            print("-" * 76)
 
 
 def run_calculation(phonon: Phonopy, settings, plot_conf, log_level):
@@ -1915,6 +1909,23 @@ def main(**argparse_control):
         if log_level == 1:
             print("")
 
+    ##################################
+    # Non-analytical term correction #
+    ##################################
+
+    if settings.is_nac or (
+        (settings.create_displacements or settings.random_displacements)
+        and pathlib.Path("BORN").exists()
+    ):
+        store_nac_params(
+            phonon,
+            settings,
+            cell_info["phonopy_yaml"],
+            unitcell_filename,
+            log_level,
+            load_phonopy_yaml=load_phonopy_yaml,
+        )
+
     #########################################################
     # Create constant amplitude displacements and then exit #
     #########################################################
@@ -1948,18 +1959,6 @@ def main(**argparse_control):
         unitcell_filename,
         load_phonopy_yaml,
         log_level,
-    )
-
-    ##################################
-    # Non-analytical term correction #
-    ##################################
-    store_nac_params(
-        phonon,
-        settings,
-        cell_info["phonopy_yaml"],
-        unitcell_filename,
-        log_level,
-        load_phonopy_yaml=load_phonopy_yaml,
     )
 
     ###################################################################
