@@ -9,7 +9,7 @@ setting tag. The configuration file is recommended to place at the first
 position for the mixed use of setting tags and command-line options, i.e.,
 
 ```bash
-% phonopy setting.conf [command-line-options]
+% phonopy-load --config setting.conf [OPTIONS]
 ```
 
 For specifying real and reciprocal points, fractional values (e.g. `1/3`) are
@@ -284,23 +284,15 @@ FC_SYMMETRY = .TRUE.
 
 The random displacements at a specified temperature are generated after phonon
 calculation, therefore a set of data for the phonon calculation is necessary. In
-the following example, `POSCAR-unitcell` and `FORCE_SETS` of NaCl example is
+the following example, `FORCE_SETS` of NaCl example is
 copied to an empty directory. Running following command, `phonopy_disp.yaml` is
-generated.
+generated in the current directory.
 
+For example in `example/NaCl` directory,
 ```bash
-mkdir rd && cd rd
-cp <somewhere>/example/NaCl/POSCAR-unitcell .
-cp <somewhere>/example/NaCl/FORCE_SETS .
-cat <<EOL > rd.conf
-CREATE_DISPLACEMENTS = .TRUE.
-DIM = 2 2 2
-PRIMITIVE_AXES = AUTO
-RANDOM_DISPLACEMENTS = 1000
-RANDOM_DISPLACEMENT_TEMPERATURE = 300
-FC_SYMMETRY = .TRUE.
-EOL
-phonopy -c POSCAR-unitcell -- rd.conf
+% mkdir rd && cd rd
+% cp ../FORCE_SETS
+% phonopy-load ../phonopy_disp.yaml --rd 1000 --rd-temperature 300
 ```
 
 See also {ref}`f_force_sets_option` for creating `FORCE_SETS` from a series of
@@ -314,10 +306,10 @@ respective forces, an external force constants calculator is necessary. See
 Displacements thus generated are sensitive to acoustic sum rule. Tiny phonon
 frequency at Gamma point due to violation of acoustic sum rule can induce very
 large displacements. Therefore, it is safer to use this feature with
-`FC_SYMMETRY = .TRUE.` or a force constants calculator (see
-{ref}`fc_calculator_tag`) that enforces acoustic sum rule. It is also possible
-to ignore phonons with frequencies below cutoff frequency specified
-by {ref}`cutoff_frequency_tags` tag. Phonon frequencies of
+`FC_SYMMETRY = .TRUE.` (this is a default setting for `phonopy-load` command) or a force
+constants calculator (see {ref}`fc_calculator_tag`) that enforces acoustic sum
+rule. It is also possible to ignore phonons with frequencies below cutoff
+frequency specified by {ref}`cutoff_frequency_tags` tag. Phonon frequencies of
 imaginary modes are treated as their absolute values.
 
 (random_seed_tag)=
