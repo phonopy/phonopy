@@ -36,6 +36,7 @@
 
 from __future__ import annotations
 
+import os
 import pathlib
 import sys
 from typing import Optional, Union
@@ -98,10 +99,10 @@ def print_phonopy():
     )
 
 
-def print_version(version, package_name="phonopy"):
+def print_version(version, package_name="phonopy", rjust_length=44):
     """Show phonopy version number."""
     try:
-        version_text = ("%s" % version).rjust(44)
+        version_text = version.rjust(rjust_length)
         import pkg_resources
 
         dist = pkg_resources.get_distribution(package_name)
@@ -109,14 +110,14 @@ def print_version(version, package_name="phonopy"):
             ver = dist.version.split(".")
             if len(ver) > 3:
                 rev = ver[3]
-                version_text = ("%s-r%s" % (version, rev)).rjust(44)
+                version_text = ("%s-%s" % (version, rev)).rjust(44)
     except ImportError:
         pass
     except Exception as err:
         if (
             err.__module__ == "pkg_resources"
             and err.__class__.__name__ == "DistributionNotFound"
-        ):  # noqa E129
+        ):
             pass
         else:
             raise
@@ -175,30 +176,80 @@ def print_error_message(message):
     print(message)
 
 
-def file_exists(filename, log_level, is_any=False):
-    """Check existence of file."""
-    if pathlib.Path(filename).exists():
-        return True
+def file_exists(
+    filename: Union[str, os.PathLike],
+    log_level: int = 0,
+    is_any: bool = False,
+    check_file_extensions: bool = False,
+) -> Optional[str]:
+    """Check existence of file.
+
+    Parameters
+    ----------
+    is_any : bool
+        When False, the error message is shown and the program is terminated.
+    check_file_extensions : bool
+        By True, the existence of files having file
+        extensions of compression extensions is checked.
+
+    Returns
+    -------
+    str or None
+        If the file exists, the filename is returned. Otherwise, None is
+        returned.
+
+    """
+    if check_file_extensions:
+        file_extensions = get_supported_file_extensions_for_compression()
     else:
-        if is_any:
-            return False
-        else:
-            error_text = '"%s" was not found.' % filename
-            print_error_message(error_text)
-            if log_level > 0:
-                print_error()
-            sys.exit(1)
+        file_extensions = [""]
+    for ext in file_extensions:
+        _filename = pathlib.Path(filename) / ext
+        if _filename.exists():
+            return str(_filename)
+
+    if is_any:
+        return None
+    else:
+        error_text = '"%s" was not found.' % filename
+        print_error_message(error_text)
+        if log_level > 0:
+            print_error()
+        sys.exit(1)
 
 
-def files_exist(filename_list, log_level, is_any=False):
-    """Check existence of files."""
+def files_exist(
+    filename_list: list[Union[str, os.PathLike]],
+    log_level: int = 0,
+    is_any: bool = False,
+    check_file_extensions: bool = True,
+) -> list[str]:
+    """Check existence of files.
+
+    Parameters
+    ----------
+    check_file_extensions : bool
+        By True, the existence of files having file extensions of compression
+        extensions is checked.
+
+    Returns
+    -------
+    list[str]
+        If the files exist, a list of the filenames that are found in
+        considiering file extensions is returned.
+
+    """
     filenames = []
     for filename in filename_list:
-        for ext in get_supported_file_extensions_for_compression():
-            _filename = filename + ext
-            if file_exists(_filename, log_level, is_any=is_any):
-                filenames.append(_filename)
-                break
+        _filename = file_exists(
+            filename,
+            log_level=log_level,
+            is_any=is_any,
+            check_file_extensions=check_file_extensions,
+        )
+        if _filename is not None:
+            filenames.append(_filename)
+            break
 
     if filenames:
         return filenames
@@ -485,7 +536,9 @@ def create_FORCE_SETS_from_settings(
         disp_filename_candidates = [cell_filename]
     disp_filename_candidates += ["phonopy_disp.yaml", "disp.yaml"]
 
-    disp_filenames = files_exist(disp_filename_candidates, log_level, is_any=True)
+    disp_filenames = files_exist(
+        disp_filename_candidates, log_level=log_level, is_any=True
+    )
     disp_filename = disp_filenames[0]
 
     interface_mode = settings.calculator
@@ -504,7 +557,7 @@ def create_FORCE_SETS_from_settings(
         ):
             phpy_yaml.physical_units = physical_units
 
-    files_exist(filenames, log_level)
+    files_exist(filenames, log_level=log_level)
     create_FORCE_SETS(
         interface_mode,
         filenames,
@@ -560,7 +613,7 @@ def produce_force_constants(
                     )
 
         if force_sets is None:
-            file_exists("FORCE_SETS", log_level)
+            file_exists("FORCE_SETS", log_level=log_level)
             force_sets = parse_FORCE_SETS(natom=num_satom)
             if log_level:
                 print('Forces and displacements were read from "%s".' % "FORCE_SETS")
@@ -635,7 +688,7 @@ def _read_force_constants_from_file(
                 print_error()
             sys.exit(1)
 
-        file_exists("force_constants.hdf5", log_level)
+        file_exists("force_constants.hdf5", log_level=log_level)
         fc = read_force_constants_from_hdf5(
             filename="force_constants.hdf5",
             p2s_map=p2s_map,
@@ -643,7 +696,7 @@ def _read_force_constants_from_file(
         )
         fc_filename = "force_constants.hdf5"
     else:
-        file_exists("FORCE_CONSTANTS", log_level)
+        file_exists("FORCE_CONSTANTS", log_level=log_level)
         fc = parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS", p2s_map=p2s_map)
         fc_filename = "FORCE_CONSTANTS"
 
@@ -855,7 +908,7 @@ def store_nac_params(
                 else:
                     print('NAC parameters were read from "%s".' % unitcell_filename)
 
-        if nac_params is None and file_exists("BORN", log_level):
+        if nac_params is None and file_exists("BORN", log_level=log_level):
             nac_params = read_BORN(phonon)
             if nac_params is not None and log_level:
                 print('NAC parameters were read from "%s".' % "BORN")
@@ -1547,13 +1600,13 @@ def read_phonopy_settings(args, argparse_control, log_level):
                 args=args, default_settings=argparse_control
             )
         if len(args.filename) > 0:
-            file_exists(args.filename[0], log_level)
+            file_exists(args.filename[0], log_level=log_level)
             cell_filename = args.filename[0]
         else:
             cell_filename = phonopy_conf_parser.settings.cell_filename
     else:
         if len(args.filename) > 0:
-            file_exists(args.filename[0], log_level)
+            file_exists(args.filename[0], log_level=log_level)
             if is_file_phonopy_yaml(args.filename[0]):
                 phonopy_conf_parser = PhonopyConfParser(args=args)
                 cell_filename = args.filename[0]
@@ -1833,7 +1886,7 @@ def main(**argparse_control):
     ####################################################################
     if settings.create_force_constants:
         filename = settings.create_force_constants
-        file_exists(filename, log_level)
+        file_exists(filename, log_level=log_level)
         write_hdf5 = settings.is_hdf5 or settings.writefc_format == "hdf5"
         is_error = create_FORCE_CONSTANTS(filename, write_hdf5, log_level)
         if log_level:
@@ -1915,7 +1968,7 @@ def main(**argparse_control):
 
     if settings.is_nac or (
         (settings.create_displacements or settings.random_displacements)
-        and pathlib.Path("BORN").exists()
+        and file_exists("BORN", is_any=True)
     ):
         store_nac_params(
             phonon,
@@ -1968,6 +2021,15 @@ def main(**argparse_control):
         settings.random_displacements
         and settings.random_displacement_temperature is not None
     ):
+        if file_exists("phonopy_disp.yaml", log_level=log_level, is_any=True):
+            if log_level:
+                print(
+                    '"phonopy_disp.yaml" is already existing in the current directory.'
+                )
+                print('Please rename it not to lose "phonopy_disp.yaml".')
+                print_error()
+            sys.exit(1)
+
         phonon.generate_displacements(
             number_of_snapshots=settings.random_displacements,
             random_seed=settings.random_seed,
