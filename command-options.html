@@ -371,11 +371,14 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fz"><code class="docutils literal notranslate"><span class="pre">--fz</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sp-or-save-params"><code class="docutils literal notranslate"><span class="pre">--sp</span></code> or <code class="docutils literal notranslate"><span class="pre">--save-params</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-force-constants">Create <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-or-force-constants"><code class="docutils literal notranslate"><span class="pre">--fc</span></code> or <code class="docutils literal notranslate"><span class="pre">--force_constants</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-phonopy-params-yaml">Create <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sp-or-save-params"><code class="docutils literal notranslate"><span class="pre">--sp</span></code> or <code class="docutils literal notranslate"><span class="pre">--save-params</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#graph-plotting">Graph plotting</a><ul class="nav section-nav flex-column">
@@ -486,7 +489,7 @@ by those with dashes <code class="docutils literal notranslate"><span class="pre
 simultaneously, the command-line option supersedes the setting tag. The
 configuration file is recommended to place at the first position for the mixed
 use of setting tags and command-line options, i.e.,</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>setting.conf<span class="w"> </span><span class="o">[</span>command-line-options<span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>--config<span class="w"> </span>setting.conf<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 <section id="choice-of-force-calculator">
@@ -545,8 +548,9 @@ files.</p>
 <span id="cell-filename-option"></span><h2>Input cell<a class="headerlink" href="#input-cell" title="Link to this heading">#</a></h2>
 <section id="c-or-cell">
 <h3><code class="docutils literal notranslate"><span class="pre">-c</span></code> or <code class="docutils literal notranslate"><span class="pre">--cell</span></code><a class="headerlink" href="#c-or-cell" title="Link to this heading">#</a></h3>
+<p><strong><code class="docutils literal notranslate"><span class="pre">phonopy-load</span></code> doesn’t have this option.</strong></p>
 <p>Unit cell crystal structure file is specified with this tag.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--cell<span class="o">=</span>POSCAR-unitcell<span class="w"> </span>band.conf
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-c<span class="w"> </span>POSCAR-unitcell<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 <p>Without specifying this tag, default file name is searched in current directory.
@@ -598,6 +602,7 @@ The default file names for the calculators are as follows:</p>
 <h2>Create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code><a class="headerlink" href="#create-force-sets" title="Link to this heading">#</a></h2>
 <section id="f-or-forces">
 <span id="f-force-sets-option"></span><h3><code class="docutils literal notranslate"><span class="pre">-f</span></code> or <code class="docutils literal notranslate"><span class="pre">--forces</span></code><a class="headerlink" href="#f-or-forces" title="Link to this heading">#</a></h3>
+<p><strong><code class="docutils literal notranslate"><span class="pre">phonopy-load</span></code> doesn’t have this option.</strong></p>
 <section id="vasp-interface">
 <span id="vasp-force-sets-option"></span><h4>VASP interface<a class="headerlink" href="#vasp-interface" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>, which is an output file
@@ -696,6 +701,7 @@ with:</p>
 </section>
 <section id="fz">
 <span id="fz-force-sets-option"></span><h3><code class="docutils literal notranslate"><span class="pre">--fz</span></code><a class="headerlink" href="#fz" title="Link to this heading">#</a></h3>
+<p><strong><code class="docutils literal notranslate"><span class="pre">phonopy-load</span></code> doesn’t have this option.</strong></p>
 <p><code class="docutils literal notranslate"><span class="pre">--fz</span></code> option is used to subtract residual forces frown the forces calculated
 for the supercells with displacements. Here the residual forces mean that the
 forces calculated for the perfect supercell for which the number of atoms has to
@@ -717,12 +723,6 @@ interface, but it is not tested yet. It would be appreciated if you report it to
 the phonopy mailing list when you find it does/doesn’t work for any other
 calculator interfaces.</p>
 </section>
-<section id="sp-or-save-params">
-<span id="save-params-option"></span><h3><code class="docutils literal notranslate"><span class="pre">--sp</span></code> or <code class="docutils literal notranslate"><span class="pre">--save-params</span></code><a class="headerlink" href="#sp-or-save-params" title="Link to this heading">#</a></h3>
-<p>Using together with <code class="docutils literal notranslate"><span class="pre">-f</span></code>, force sets are stored in <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code> instead
-of <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>. When <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file is found in the current directory, the
-parameters are also stored in <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code>.</p>
-</section>
 </section>
 <section id="create-force-constants">
 <h2>Create <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code><a class="headerlink" href="#create-force-constants" title="Link to this heading">#</a></h2>
@@ -738,19 +738,34 @@ parameters are also stored in <code class="docutils literal notranslate"><span c
 please refer <a class="reference internal" href="vasp-dfpt.html#vasp-dfpt-interface"><span class="std std-ref">VASP-DFPT &amp; phonopy calculation</span></a>.</p>
 </section>
 </section>
+<section id="create-phonopy-params-yaml">
+<span id="save-params-option"></span><span id="graph-option"></span><h2>Create <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code><a class="headerlink" href="#create-phonopy-params-yaml" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code> thus created by <code class="docutils literal notranslate"><span class="pre">--sp</span></code> option contains the necessary
+information to run phonopy. Therefore only this file can be given to other user
+as the phonopy input file.</p>
+<section id="sp-or-save-params">
+<h3><code class="docutils literal notranslate"><span class="pre">--sp</span></code> or <code class="docutils literal notranslate"><span class="pre">--save-params</span></code><a class="headerlink" href="#sp-or-save-params" title="Link to this heading">#</a></h3>
+<p>After running phonopy, displacement-force dataset or force constants and
+parameters for non-analytical term correction are written in
+<code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code> if these data are used.</p>
+<p>When using with <code class="docutils literal notranslate"><span class="pre">-f</span></code>, displacement-force dataset are stored in
+<code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code> instead of <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>. When <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file is found in the
+current directory, the parameters are also stored in <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code>.</p>
+</section>
+</section>
 <section id="graph-plotting">
-<span id="graph-option"></span><h2>Graph plotting<a class="headerlink" href="#graph-plotting" title="Link to this heading">#</a></h2>
+<h2>Graph plotting<a class="headerlink" href="#graph-plotting" title="Link to this heading">#</a></h2>
 <section id="p">
 <h3><code class="docutils literal notranslate"><span class="pre">-p</span></code><a class="headerlink" href="#p" title="Link to this heading">#</a></h3>
 <p>Result is plotted.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-p
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>-p
 </pre></div>
 </div>
 </section>
 <section id="p-s">
 <span id="graph-save-option"></span><h3><code class="docutils literal notranslate"><span class="pre">-p</span> <span class="pre">-s</span></code><a class="headerlink" href="#p-s" title="Link to this heading">#</a></h3>
 <p>Result is plotted (saved) to PDF file.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-p<span class="w"> </span>-s
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>-p<span class="w"> </span>-s
 </pre></div>
 </div>
 </section>
@@ -860,11 +875,14 @@ style format.</p>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fz"><code class="docutils literal notranslate"><span class="pre">--fz</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sp-or-save-params"><code class="docutils literal notranslate"><span class="pre">--sp</span></code> or <code class="docutils literal notranslate"><span class="pre">--save-params</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-force-constants">Create <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fc-or-force-constants"><code class="docutils literal notranslate"><span class="pre">--fc</span></code> or <code class="docutils literal notranslate"><span class="pre">--force_constants</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-phonopy-params-yaml">Create <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sp-or-save-params"><code class="docutils literal notranslate"><span class="pre">--sp</span></code> or <code class="docutils literal notranslate"><span class="pre">--save-params</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#graph-plotting">Graph plotting</a><ul class="nav section-nav flex-column">

@@ -3,15 +3,14 @@
 **Phonopy** is an open source package for phonon calculations at harmonic and
 quasi-harmonic levels.
 
-**Phono3py** is another open source package for phonon-phonon interaction and
-lattice thermal conductivity calculations. See the documentation at
-<http://phonopy.github.io/phono3py/>
+[Phono3py](http://phonopy.github.io/phono3py/) is another open source package
+for phonon-phonon interaction and lattice thermal conductivity calculations.
 
-**Phonon database**: A collection of first principles phonon calculations is
-available as open data at <https://doi.org/10.48505/nims.4197> (its list of
-crystals
-<https://github.com/atztogo/phonondb/blob/main/mdr/phonondb/README.md>), where
-the phonopy input (see {ref}`phonopy_yaml_phonondb`) and the force calculation information are downloaded.
+**PhononDB**: URL links of first principles phonon calculation data at
+[nims.4197](https://doi.org/10.48505/nims.4197) are found at
+<https://github.com/atztogo/phonondb/blob/main/mdr/phonondb/README.md>.
+See {ref}`phonopy_yaml_phonondb`.
+
 
 The following features of phonopy are highlighted:
 
@@ -40,25 +39,6 @@ The following features of phonopy are highlighted:
 <abacus_interface>`, {ref}`LAMMPS <lammps_interface>`, {ref}`LAMMPS (external)
 <external_tools_phonolammps>`
 - {ref}`Phonopy API for Python <phonopy_module>`
-
-A presentation in pdf for introduction to phonopy is downloaded
-[here](https://sf.net/projects/phonopy/files/phonopy.pdf/download).
-
-```{image} band.png
-:width: 15%
-```
-
-```{image} pdos.png
-:width: 15%
-```
-
-```{image} thermalprop.png
-:width: 15%
-```
-
-```{image} QHA.png
-:width: 15%
-```
 
 ```{toctree}
 :hidden:

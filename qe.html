@@ -542,15 +542,18 @@ created as follows:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>mpirun<span class="w"> </span>~/espresso/bin/ph.x<span class="w"> </span>-i<span class="w"> </span>NaCl.ph.in<span class="w"> </span><span class="p">|&amp;</span><span class="w"> </span>tee<span class="w"> </span>NaCl.ph.out
 </pre></div>
 </div>
-<p>Finally the Born effective charges and dielectric constant are
-obtained in the output file <code class="docutils literal notranslate"><span class="pre">NaCl.ph.out</span></code>. The <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file has to
-be created manually following the <code class="docutils literal notranslate"><span class="pre">BORN</span></code> format
-(<a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a>). The <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file for this NaCl calculation would
-be something like below:</p>
+<p>Finally the Born effective charges and dielectric constant are obtained in the
+output file <code class="docutils literal notranslate"><span class="pre">NaCl.ph.out</span></code>. The <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file has to be created following the
+<code class="docutils literal notranslate"><span class="pre">BORN</span></code> format (<a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a>). The <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file for this NaCl calculation
+would be something like below:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">default</span> <span class="n">value</span>
 <span class="mf">2.472958201</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mf">2.472958201</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mf">2.472958201</span>
 <span class="mf">1.105385</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mf">1.105385</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mf">1.105385</span>
 <span class="o">-</span><span class="mf">1.105385</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="o">-</span><span class="mf">1.105385</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="o">-</span><span class="mf">1.105385</span>
+</pre></div>
+</div>
+<p>This <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file can be made using <code class="docutils literal notranslate"><span class="pre">phonopy-qe-born</span></code> command.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-qe-born<span class="w"> </span>NaCl.in<span class="w">  </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>BORN
 </pre></div>
 </div>
 <p>Once this is made, the non-analytical term correction is included

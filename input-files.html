@@ -343,7 +343,7 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setting-file">Setting file</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-yaml-and-phonopy-disp-yaml"><code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-disp-yaml"><code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#structure-file">Structure file</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vasp-poscar-like-format">VASP POSCAR like format</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#example-of-rutile-type-silicon-oxide-crystal-structure-vasp-4-style">Example of rutile-type silicon oxide crystal structure (VASP 4 style)</a></li>
@@ -393,28 +393,40 @@ document.write(`
 <h1>Input files<a class="headerlink" href="#input-files" title="Link to this heading">#</a></h1>
 <section id="setting-file">
 <h2>Setting file<a class="headerlink" href="#setting-file" title="Link to this heading">#</a></h2>
-<p>A setting file contains phonopy settings which are summarized at
-<a class="reference internal" href="setting-tags.html#setting-tags"><span class="std std-ref">Setting tags</span></a>. This file is passed to phonopy as an argument, e.g.,</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>phonopy.conf
+<p>Configuration of phonopy calculation can be written in a setting file though
+it is recommended to use phonopy with <a class="reference internal" href="command-options.html#command-options"><span class="std std-ref">Command options</span></a>.</p>
+<p>The setting file contains phonopy configurations whose details are found
+at <a class="reference internal" href="setting-tags.html#setting-tags"><span class="std std-ref">Setting tags</span></a>. This file is passed to phonopy as the argument of
+<code class="docutils literal notranslate"><span class="pre">--conf</span></code> option, e.g.,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>--config<span class="w"> </span>phonopy.conf<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
-<p>where the filename is arbitrary.</p>
+<p>where the configuration filename is arbitrary.</p>
 </section>
-<section id="phonopy-yaml-and-phonopy-disp-yaml">
-<h2><code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code><a class="headerlink" href="#phonopy-yaml-and-phonopy-disp-yaml" title="Link to this heading">#</a></h2>
-<p>These are output files after the calculation or creating the displacements.
-These files contain the crystal structure information, primitive cell and
-supercell sizes, and also the calculator interface. Therefore with this file,
-users will not need to specify those crystal sturcutre related tags. This file
-format can be used with <a class="reference internal" href="setting-tags.html#cell-filename-tag"><span class="std std-ref">CELL_FILENAME</span></a> tag or <code class="docutils literal notranslate"><span class="pre">-c</span></code> option:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ phonopy -c phonopy_disp.yaml
+<section id="phonopy-disp-yaml">
+<h2><code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code><a class="headerlink" href="#phonopy-disp-yaml" title="Link to this heading">#</a></h2>
+<p>This is an output file after creating the displacements by <code class="docutils literal notranslate"><span class="pre">-d</span></code> option. This
+contains the crystal structure information, primitive cell and supercell sizes,
+and also the calculator interface. Therefore with this file, users will not need
+to specify those crystal structure related tags when running phonopy.
+<code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> is a default file name that phonopy tries to find in the
+current directory. Therefore, phonopy can be used as</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">load</span> <span class="p">[</span><span class="n">OPTIONS</span><span class="p">]</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>, <code class="docutils literal notranslate"><span class="pre">BORN</span></code>, and <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> information can be also stored in
-<code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> as the output after running phonopy, e.g.,</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ phonopy -c phonopy_disp.yaml --include-all --nac
+<p>and <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> and <code class="docutils literal notranslate"><span class="pre">BORN</span></code> are also searched automatically in the current
+directory. <code class="docutils literal notranslate"><span class="pre">FORCE_CONSTANTS</span></code> can be read <code class="docutils literal notranslate"><span class="pre">--readfc</span></code> option.</p>
+<p>Other information such as forces (in <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>), parameters for
+non-analytical term correction (in <code class="docutils literal notranslate"><span class="pre">BORN</span></code>) can be also stored in
+<code class="docutils literal notranslate"><span class="pre">phonopy_*.yaml</span></code> like file. If <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code> contains necessary
+information to run expected phonon calculation, it is unnecessary to have
+<code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> and <code class="docutils literal notranslate"><span class="pre">BORN</span></code> in the current directory when <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code> is
+passed as the first argument of <code class="docutils literal notranslate"><span class="pre">phonopy-load</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">load</span> <span class="n">phonopy_params</span><span class="o">.</span><span class="n">yaml</span> <span class="p">[</span><span class="n">OPTIONS</span><span class="p">]</span>
 </pre></div>
 </div>
+<p>can perform the phonon calculation. See more details in
+<a class="reference internal" href="phonopy-load.html#phonopy-load-command"><span class="std std-ref">phonopy-load command</span></a>.</p>
 </section>
 <section id="structure-file">
 <h2>Structure file<a class="headerlink" href="#structure-file" title="Link to this heading">#</a></h2>
@@ -525,7 +537,7 @@ repeated until the forces of all the displacements have been written.</p>
 </section>
 <section id="type-2">
 <span id="file-forces-type-2"></span><h3>Type 2<a class="headerlink" href="#type-2" title="Link to this heading">#</a></h3>
-<p>Equivalent to <code class="docutils literal notranslate"><span class="pre">DFSET</span></code> of
+<p>The format is compatible to <code class="docutils literal notranslate"><span class="pre">DFSET</span></code> of
 <a class="reference external" href="https://alm.readthedocs.io/en/develop/format-dfset.html#format-of-dfset">ALM code</a>.</p>
 <p>Each line has exactly 6 elements. The first three and second three elements give
 displacement and force of an atom in a supercell, respectively. One set with the
@@ -535,8 +547,9 @@ This file is parsed to finally get displacements and forces to have the array
 shapes of <code class="docutils literal notranslate"><span class="pre">displacements.shape</span> <span class="pre">=</span> <span class="pre">(num_supercells,</span> <span class="pre">num_atoms,</span> <span class="pre">3)</span></code> and
 <code class="docutils literal notranslate"><span class="pre">forces.shape</span> <span class="pre">=</span> <span class="pre">(num_supercells,</span> <span class="pre">num_atoms,</span> <span class="pre">3)</span></code>.</p>
 <p>Force constants can be calculated by the fitting approach and this force
-constants calculation requires external force constants calculator such as
-<a class="reference external" href="https://alm.readthedocs.io/en/develop/index.html">ALM</a> (invoked by <code class="docutils literal notranslate"><span class="pre">--alm</span></code>
+constants calculation requires an external force constants calculator such as
+<a class="reference external" href="https://github.com/symfc/symfc">symfc</a> (<code class="docutils literal notranslate"><span class="pre">--symfc</span></code>) or
+<a class="reference external" href="https://alm.readthedocs.io/en/develop/index.html">ALM</a> (<code class="docutils literal notranslate"><span class="pre">--alm</span></code>
 option). All the data are used for calculating force constants in the fitting
 (usually least square fitting) by the force constants calculator.</p>
 <section id="id1">
@@ -820,7 +833,7 @@ atoms No. 1 and 13 have to be written in <code class="docutils literal notransla
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setting-file">Setting file</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-yaml-and-phonopy-disp-yaml"><code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#phonopy-disp-yaml"><code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#structure-file">Structure file</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vasp-poscar-like-format">VASP POSCAR like format</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#example-of-rutile-type-silicon-oxide-crystal-structure-vasp-4-style">Example of rutile-type silicon oxide crystal structure (VASP 4 style)</a></li>

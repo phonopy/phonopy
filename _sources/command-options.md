@@ -1,5 +1,4 @@
 (command_options)=
-
 # Command options
 
 From phonopy v1.12.2, the command option names with underscores `_` are replaced
@@ -86,11 +85,10 @@ configuration file is recommended to place at the first position for the mixed
 use of setting tags and command-line options, i.e.,
 
 ```bash
-% phonopy setting.conf [command-line-options]
+% phonopy-load --config setting.conf [OPTIONS]
 ```
 
 (force_calculators)=
-
 ## Choice of force calculator
 
 Currently interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT, Elk,
@@ -102,62 +100,52 @@ no interface is specified, `--vasp` is selected as the default interface.
 The details about these interfaces are found at {ref}`calculator_interfaces`.
 
 (abinit_mode)=
-
 ### `--abinit`
 
 Abinit mode is invoked with this option.
 
 (cp2k_mode)=
-
 ### `--cp2k`
 
 CP2K mode is invoked with this option.
 
 (crystal_mode)=
-
 ### `--crystal`
 
 CRYSTAL mode is invoked with this option.
 
 (elk_mode)=
-
 ### `--elk`
 
 Elk mode is invoked with this option.
 
 (fleur_mode)=
-
 ### `--fleur`
 
 Fleur mode is invoked with this option.
 
 (qe_mode)=
-
 ### `--qe`
 
 Quantum ESPRESSO mode is invoked with this option.
 
 (siesta_mode)=
-
 ### `--siesta`
 
 Siesta mode is invoked with this option.
 
 (turbomole_mode)=
-
 ### `--turbomole`
 
 TURBOMOLE mode is invoked with this option.
 
 (vasp_mode)=
-
 ### `--vasp`
 
 With this option, the calculator name `vasp` will appear in `phonopy.yaml` type
 files.
 
 (wien2k_mode)=
-
 ### `--wien2k`
 
 This option invokes the WIEN2k mode.
@@ -166,15 +154,16 @@ This option invokes the WIEN2k mode.
 {ref}`wien2k_interface`.
 
 (cell_filename_option)=
-
 ## Input cell
 
 ### `-c` or `--cell`
 
+**`phonopy-load` doesn't have this option.**
+
 Unit cell crystal structure file is specified with this tag.
 
 ```bash
-% phonopy --cell=POSCAR-unitcell band.conf
+% phonopy -c POSCAR-unitcell [OPTIONS]
 ```
 
 Without specifying this tag, default file name is searched in current directory.
@@ -209,11 +198,11 @@ The default file names for the calculators are as follows:
 ## Create `FORCE_SETS`
 
 (f_force_sets_option)=
-
 ### `-f` or `--forces`
 
-(vasp_force_sets_option)=
+**`phonopy-load` doesn't have this option.**
 
+(vasp_force_sets_option)=
 #### VASP interface
 
 `FORCE_SETS` file is created from `phonopy_disp.yaml`, which is an output file
@@ -236,7 +225,6 @@ correpond to that of `vasprun.xml` files .
 ```
 
 (abinit_force_sets_option)=
-
 #### ABINIT interface
 
 `FORCE_SETS` file is created from `phonopy_disp.yaml` and ABINIT output files
@@ -248,7 +236,6 @@ eV/Angstrom are read. The unit conversion factor is determined with this unit.
 ```
 
 (qe_force_sets_option)=
-
 #### Quantum ESPRESSO interface
 
 `FORCE_SETS` file is created from `phonopy_disp.yaml` and QE-PW output files.
@@ -263,7 +250,6 @@ calculations.
 (wien2k_force_sets_option)=
 
 #### WIEN2k interface
-
 This is experimental support to generage `FORCE_SETS`. Insted of this, you can
 use the external tool called `scf2forces` to generate `FORCE_SETS`. `scf2forces`
 is found at <http://www.wien2k.at/reg_user/unsupported/>.
@@ -281,7 +267,6 @@ negative atom index with the P lattice format is supported.**
 For more information, {ref}`wien2k_interface`.
 
 (elk_force_sets_option)=
-
 #### Elk interface
 
 `FORCE_SETS` file is created from `phonopy_disp.yaml` and Elk output files.
@@ -293,7 +278,6 @@ For more information, {ref}`wien2k_interface`.
 (crystal_force_sets_option)=
 
 #### CRYSTAL interface
-
 `FORCE_SETS` file is created from `phonopy_disp.yaml` and CRYSTAL output files.
 
 ```bash
@@ -301,7 +285,6 @@ For more information, {ref}`wien2k_interface`.
 ```
 
 (turbomole_force_sets_option)=
-
 #### TURBOMOLE interface
 
 `FORCE_SETS` file is created from `phonopy_disp.yaml` and TURBOMOLE output
@@ -312,7 +295,6 @@ files.
 ```
 
 (fleur_force_sets_option)=
-
 #### Fleur interface
 
 `FORCE_SETS` file is created from `phonopy_disp.yaml` and special Fleur FORCES
@@ -323,7 +305,6 @@ output files.
 ```
 
 (cp2k_force_sets_option)=
-
 #### CP2K interface
 
 `FORCE_SETS` file is created from `phonopy_disp.yaml` and CP2K output files,
@@ -337,8 +318,9 @@ Please note: the files containing the forces can be prefixed with the
 `PROJECT_NAME` as specified in the original CP2K input file.
 
 (fz_force_sets_option)=
-
 ### `--fz`
+
+**`phonopy-load` doesn't have this option.**
 
 `--fz` option is used to subtract residual forces frown the forces calculated
 for the supercells with displacements. Here the residual forces mean that the
@@ -365,14 +347,6 @@ interface, but it is not tested yet. It would be appreciated if you report it to
 the phonopy mailing list when you find it does/doesn't work for any other
 calculator interfaces.
 
-(save_params_option)=
-
-### `--sp` or `--save-params`
-
-Using together with `-f`, force sets are stored in `phonopy_params.yaml` instead
-of `FORCE_SETS`. When `BORN` file is found in the current directory, the
-parameters are also stored in `phonopy_params.yaml`.
-
 ## Create `FORCE_CONSTANTS`
 
 (vasp_force_constants)=
@@ -393,6 +367,23 @@ please refer {ref}`vasp_dfpt_interface`.
 
 (graph_option)=
 
+(save_params_option)=
+## Create `phonopy_params.yaml`
+
+`phonopy_params.yaml` thus created by `--sp` option contains the necessary
+information to run phonopy. Therefore only this file can be given to other user
+as the phonopy input file.
+
+### `--sp` or `--save-params`
+
+After running phonopy, displacement-force dataset or force constants and
+parameters for non-analytical term correction are written in
+`phonopy_params.yaml` if these data are used.
+
+When using with `-f`, displacement-force dataset are stored in
+`phonopy_params.yaml` instead of `FORCE_SETS`. When `BORN` file is found in the
+current directory, the parameters are also stored in `phonopy_params.yaml`.
+
 ## Graph plotting
 
 ### `-p`
@@ -400,7 +391,7 @@ please refer {ref}`vasp_dfpt_interface`.
 Result is plotted.
 
 ```bash
-% phonopy -p
+% phonopy-load -p
 ```
 
 (graph_save_option)=
@@ -410,7 +401,7 @@ Result is plotted.
 Result is plotted (saved) to PDF file.
 
 ```bash
-% phonopy -p -s
+% phonopy-load -p -s
 ```
 
 ## Log level
