@@ -15,7 +15,7 @@ To obtain supercells (:math:`2\times 2\times 3`) with displacements,
 run phonopy,
 
 ```bash
-phonopy -d --dim 2 2 3
+% phonopy -d --dim 2 2 3 --pa auto
 ```
 
 You should find the files, `SPOSCAR`, `phonopy_disp.yaml`, and
@@ -78,60 +78,34 @@ In the post-process,
 3. Phonon frequencies and eigenvectors are calculated from the
    dynamical matrices with the specified *q*-points.
 
-For mesh sampling calculation, prepare the following setting file
-named, e.g., `mesh.conf`:
-
-```
-ATOM_NAME = Si O
-DIM = 2 2 3
-MP = 8 8 8
-```
-
 The density of states (DOS) is plotted by
 
 ```bash
-% phonopy-load --config mesh.conf -p
+% phonopy-load --mesh 20 20 20 -p
 ```
 
 Thermal properties are calculated with the sampling mesh by
 ```bash
-% phonopy-load --config mesh.conf -t
+% phonopy-load --mesh 20 20 20 -t
 ```
 
 You should check the convergence with respect to the mesh numbers.
 Thermal properties can be plotted by
 
 ```bash
-% phonopy-load --config mesh.conf -t -p
+% phonopy-load --mesh 20 20 20 -t -p
 ```
 
-Projected DOS is calculated by the following setting file named, e.g.,
-`pdos.conf`:
-```
-ATOM_NAME = Si O
-DIM = 2 2 3
-MP = 8 8 8
-PDOS = 1 2, 3 4 5 6
-```
-
-and plotted by
-```bash
-% phonopy-load --config pdos.conf -p
-```
-
-Band structure is calculated with the following setting file named,
-e.g., `band.conf` by
-
-```
-ATOM_NAME = Si O
-DIM =  2 2 3
-BAND = 0.5 0.5 0.5  0.0 0.0 0.0  0.5 0.5 0.0  0.0 0.5 0.0
-```
-
-The band structure is plotted by
+Projected DOS is calculated and plotted by
 
 ```bash
-% phonopy-load --config band.conf -p
+% phonopy-load --mesh 20 20 20 --pdos "1 2, 3 4 5 6" -p
+```
+
+Band structure is plotted by
+
+```bash
+% phonopy-load --band "0.5 0.5 0.5  0.0 0.0 0.0  0.5 0.5 0.0  0.0 0.5 0.0" -p
 ```
 
 In either case, by setting the `-s` option, the plot is going to be
@@ -193,12 +167,5 @@ To employ symmetry constraints, `--st` option may used as follows:
 The values are slightly modified by symmetry, but we can see the
 original values obtained directly from VASP was already very good.
 
-To put `BORN` file in the current directly, and running phonopy with
-`--nac` option, non-analytical term correction is activated, such as
-
-```bash
-% phonopy--config --config band.conf -p --nac
-```
-
-Please watch the example of NaCl with and without `--nac` option shown in
-{ref}`examples_link`.
+To put `BORN` file in the current directly, non-analytical term correction is
+activated.

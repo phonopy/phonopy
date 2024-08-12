@@ -247,10 +247,11 @@ def set_dataset_and_force_constants(
                 )
             phonon.dataset = _dataset
             if log_level:
-                print('Force sets were read from "%s".' % _force_sets_filename)
+                print(f'Force sets were read from "{_force_sets_filename}".')
                 if is_overwritten:
                     print(
-                        f'Displacements were overwritten by "{_force_sets_filename}".'
+                        f"Displacements in dataset were overwritten by those in "
+                        f'"{_force_sets_filename}".'
                     )
 
         if produce_fc:
@@ -262,6 +263,14 @@ def set_dataset_and_force_constants(
                 is_compact_fc,
                 log_level,
             )
+
+
+def check_nac_params(nac_params: dict, unitcell: PhonopyAtoms, pmat: np.ndarray):
+    """Check number of Born effective charges."""
+    borns = nac_params["born"]
+    if len(borns) != np.rint(len(unitcell) * np.linalg.det(pmat)).astype(int):
+        msg = "Number of Born effective charges is not consistent with the cell."
+        raise ValueError(msg)
 
 
 def _read_force_constants_file(
@@ -306,7 +315,7 @@ def _produce_force_constants(
                 print("Force constants were symmetrized.")
     except ForcesetsNotFoundError:
         if log_level:
-            print("Force constants not produced due to force set not found.")
+            print("Displacement-force datast was not found. ")
 
 
 def _read_crystal_structure(filename=None, interface_mode=None):
@@ -316,9 +325,9 @@ def _read_crystal_structure(filename=None, interface_mode=None):
         raise
     except Exception as exc:
         msg = [
-            "============================ phonopy.load " "============================",
+            "============================ phonopy.load ============================",
             "  Reading crystal structure file failed in phonopy.load.",
-            "  Maybe phonopy.load(..., calculator='<calculator name>') " "expected?",
-            "============================ phonopy.load " "============================",
+            "  Maybe phonopy.load(..., calculator='<calculator name>') expected?",
+            "============================ phonopy.load ============================",
         ]
         raise RuntimeError("\n".join(msg)) from exc
