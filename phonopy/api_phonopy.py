@@ -3889,6 +3889,11 @@ class Phonopy:
         self._dynamical_matrix = None
 
         if self._is_symmetry and self._nac_params is not None:
+            if len(self._nac_params["born"]) != len(self._primitive):
+                raise ValueError(
+                    "Numbers of atoms in primitive cell and Born effective charges "
+                    "are different."
+                )
             borns, epsilon = symmetrize_borns_and_epsilon(
                 self._nac_params["born"],
                 self._nac_params["dielectric"],

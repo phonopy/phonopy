@@ -202,17 +202,22 @@ Similary `ph.x` is executed:
 % mpirun ~/espresso/bin/ph.x -i NaCl.ph.in |& tee NaCl.ph.out
 ```
 
-Finally the Born effective charges and dielectric constant are
-obtained in the output file `NaCl.ph.out`. The `BORN` file has to
-be created manually following the `BORN` format
-({ref}`born_file`). The `BORN` file for this NaCl calculation would
-be something like below:
+Finally the Born effective charges and dielectric constant are obtained in the
+output file `NaCl.ph.out`. The `BORN` file has to be created following the
+`BORN` format ({ref}`born_file`). The `BORN` file for this NaCl calculation
+would be something like below:
 
 ```
 default value
 2.472958201 0 0 0 2.472958201 0 0 0 2.472958201
 1.105385 0 0 0 1.105385 0 0 0 1.105385
 -1.105385 0 0 0 -1.105385 0 0 0 -1.105385
+```
+
+This `BORN` file can be made using `phonopy-qe-born` command.
+
+```bash
+% phonopy-qe-born NaCl.in  | tee BORN
 ```
 
 Once this is made, the non-analytical term correction is included

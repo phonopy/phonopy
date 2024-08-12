@@ -1,7 +1,5 @@
 """Example of NaCl calculation."""
 
-from typing import List
-
 import numpy as np
 
 from phonopy import Phonopy
@@ -38,7 +36,7 @@ phonon = Phonopy(
     primitive_matrix=[[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]],
 )
 
-symmetry = phonon.get_symmetry()
+symmetry = phonon.symmetry
 print("Space group: %s" % symmetry.get_international_table())
 
 force_sets = parse_FORCE_SETS()
@@ -65,12 +63,12 @@ nac_params = parse_BORN(primitive, filename="BORN")
 phonon.nac_params = nac_params
 
 # BAND = 0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5
-bands = List[List]
+bands = []
 _append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.0, 0.0])
 _append_band(bands, [0.5, 0.0, 0.0], [0.5, 0.5, 0.0])
 _append_band(bands, [0.5, 0.5, 0.0], [0.0, 0.0, 0.0])
 _append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.5, 0.5])
-phonon.set_band_structure(bands)
+phonon.run_band_structure(bands)
 band_dict = phonon.get_band_structure_dict()
 q_points = band_dict["qpoints"]
 distances = band_dict["distances"]

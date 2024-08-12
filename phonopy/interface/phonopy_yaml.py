@@ -200,6 +200,7 @@ class PhonopyYamlLoaderBase(ABC):
                 natom = len(supercell)
             else:
                 natom = None
+
             disp = self._yaml[f"{key_prefix}displacements"][0]
             if isinstance(disp, dict):  # type1
                 dataset = self._parse_force_sets_type1(

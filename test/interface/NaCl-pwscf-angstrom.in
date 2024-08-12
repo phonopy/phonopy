@@ -1,0 +1,37 @@
+ &control
+    calculation = 'scf'
+    tprnfor = .true.
+    tstress = .true.
+    pseudo_dir = '/home/togo/espresso/pseudo/'
+ /
+ &system
+    ibrav = 0
+    nat = 8
+    ntyp = 2
+    occupations = 'smearing'
+    smearing = 'gaussian'
+    degauss = 0.01
+    ecutwfc = 50.0
+ /
+ &electrons
+    diagonalization = 'david'
+    conv_thr = 1.0d-9
+ /
+ATOMIC_SPECIES
+ Na  22.98976928 Na.pbe-spn-kjpaw_psl.0.2.UPF
+ Cl  35.453      Cl.pbe-n-kjpaw_psl.0.1.UPF
+ATOMIC_POSITIONS angstrom
+Na 0.0000000000 0.0000000000 0.0000000000
+Na 0.0000000000 2.8451507381 2.8451507381
+Na 2.8451507381 0.0000000000 2.8451507381
+Na 2.8451507381 2.8451507381 0.0000000000
+Cl 2.8451507381 2.8451507381 2.8451507381
+Cl 2.8451507381 0.0000000000 0.0000000000
+Cl 0.0000000000 2.8451507381 0.0000000000
+Cl 0.0000000000 0.0000000000 2.8451507381
+CELL_PARAMETERS angstrom
+ 5.6903014761756712 0 0
+ 0 5.6903014761756712 0
+ 0 0 5.6903014761756712
+K_POINTS automatic
+ 4 4 4  1 1 1

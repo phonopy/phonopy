@@ -21,7 +21,7 @@ be different.
 
 ### `FORCE_SETS` file creation for VASP
 
-```
+~~~bash
 % phonopy -f vasprun.xml
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
@@ -29,37 +29,39 @@ be different.
  | |_) | | | | (_) | | | | (_) || |_) | |_| |
  | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
  |_|                            |_|    |___/
-                                       2.7.0
+                                      2.26.6
 
-Python version 3.7.6
-Spglib version 1.14.1
+Compiled with OpenMP support (max 10 threads).
+Python version 3.12.4
+Spglib version 2.4.0
 
 Displacements were read from "phonopy_disp.yaml".
 counter (file index): 1
-FORCE_SETS has been created.
+"FORCE_SETS" has been created.
                  _
    ___ _ __   __| |
   / _ \ '_ \ / _` |
  |  __/ | | | (_| |
   \___|_| |_|\__,_|
-```
-
+~~~
 where `vasprun.xml` is the VASP output.
 
 ### DOS
 
-```
-% phonopy -p mesh.conf
+~~~bash
+% phonopy-load --mesh 31 31 31 -p
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
  | |_) | | | | (_) | | | | (_) || |_) | |_| |
  | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
  |_|                            |_|    |___/
-                                       2.7.0
+                                      2.26.6
 
-Python version 3.7.6
-Spglib version 1.14.1
+Compiled with OpenMP support (max 10 threads).
+Running in phonopy.load mode.
+Python version 3.12.4
+Spglib version 2.4.0
 
 Crystal structure was read from "phonopy_disp.yaml".
 Unit of length: angstrom
@@ -72,12 +74,13 @@ Settings:
     [0. 1. 0.]
     [0. 0. 1.]
 Spacegroup: Fd-3m (227)
+Number of symmetry operations in supercell: 384
 Use -v option to watch primitive cell, unit cell, and supercell structures.
 
-Force sets were not found in "phonopy_disp.yaml".
-Forces and displacements were read from "FORCE_SETS".
-Computing force constants...
-Max drift of force constants: -0.000001 (yy) -0.000001 (yy)
+Force sets were read from "FORCE_SETS".
+Displacements were overwritten by "FORCE_SETS".
+Max drift of force constants: -0.000001 (zz) -0.000001 (zz)
+Max drift after symmetrization by translation: -0.000000 (xx) -0.000000 (xx)
 
 Mesh numbers: [31 31 31]
 Number of irreducible q-points on sampling mesh: 816/29791
@@ -90,7 +93,7 @@ Summary of calculation was written in "phonopy.yaml".
   / _ \ '_ \ / _` |
  |  __/ | | | (_| |
   \___|_| |_|\__,_|
-```
+~~~
 
 ```{image} Si-DOS.png
 :width: 50%
@@ -98,21 +101,22 @@ Summary of calculation was written in "phonopy.yaml".
 
 ### Thermal properties
 
-```
-% phonopy -t -p mesh.conf
+~~~bash
+% phonopy-load --mesh 31 31 31 -t -p
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
  | |_) | | | | (_) | | | | (_) || |_) | |_| |
  | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
  |_|                            |_|    |___/
-                                      2.12.0
+                     2.26.6-rdev26+g1f6a3f81
 
-Python version 3.9.6
-Spglib version 1.16.2
+Compiled with OpenMP support (max 10 threads).
+Running in phonopy.load mode.
+Python version 3.12.4
+Spglib version 2.4.0
 
-Phonopy configuration was read from "mesh.conf".
-Crystal structure was read from "phonopy_params.yaml".
+Crystal structure was read from "phonopy_disp.yaml".
 Unit of length: angstrom
 Mesh sampling mode
 Settings:
@@ -123,33 +127,34 @@ Settings:
     [0. 1. 0.]
     [0. 0. 1.]
 Spacegroup: Fd-3m (227)
+Number of symmetry operations in supercell: 384
 Use -v option to watch primitive cell, unit cell, and supercell structures.
 
-Forces and displacements were read from "phonopy_params.yaml".
-Computing force constants...
+Force sets were read from "FORCE_SETS".
+Displacements were overwritten by "FORCE_SETS".
 Max drift of force constants: -0.000001 (zz) -0.000001 (zz)
+Max drift after symmetrization by translation: -0.000000 (xx) -0.000000 (xx)
 
 Mesh numbers: [31 31 31]
 Number of irreducible q-points on sampling mesh: 816/29791
 Calculating phonons on sampling mesh...
 Calculating thermal properties...
 Cutoff frequency: 0.00000
-Number of phonon frequencies less than cutoff frequency: 3/178746
-# T [K] F [kJ/mol] S [J/K/mol] C_v [J/K/mol] E [kJ/mol]
-
-       0.000      11.7110491      0.0000000      0.0000000     11.7110491
-      10.000      11.7110004      0.0207133      0.0652014     11.7112076
-      20.000      11.7101706      0.1826665      0.5801980     11.7138239
-      30.000      11.7063148      0.6494417      1.9566658     11.7257980
-      40.000      11.6959680      1.4755146      3.9391312     11.7549886
-      50.000      11.6758626      2.5838026      6.0729959     11.8050528
-      60.000      11.6436849      3.8753235      8.1398561     11.8762043
-      70.000      11.5979858      5.2789840     10.1081937     11.9675147
-      80.000      11.5378706      6.7536681     12.0151391     12.0781640
-      90.000      11.4627490      8.2777067     13.8988296     12.2077426
-     100.000      11.3721917      9.8393078     15.7763730     12.3561224
+Number of phonon frequencies less than cutoff frequency: 1/178746
+#      T [K]      F [kJ/mol]    S [J/K/mol]  C_v [J/K/mol]     E [kJ/mol]
+       0.000      11.7110492      0.0000000      0.0000000     11.7110492
+      10.000      11.7109211      0.0292204      0.0657586     11.7112133
+      20.000      11.7100041      0.1915595      0.5807546     11.7138352
+      30.000      11.7060581      0.6585603      1.9572223     11.7258149
+      40.000      11.6956193      1.4847934      3.9396878     11.7550111
+      50.000      11.6754205      2.5932055      6.0735527     11.8050808
+      60.000      11.6431482      3.8848280      8.1404132     11.8762379
+      70.000      11.5973537      5.2885744     10.1087510     11.9675539
+      80.000      11.5371421      6.7633329     12.0156965     12.0782088
+      90.000      11.4619236      8.2874371     13.8993871     12.2077929
+     100.000      11.3712686      9.8490970     15.7769306     12.3561783
 ...
-```
+~~~
 
 ```{image} Si-props.png
 :width: 50%
@@ -159,20 +164,23 @@ Number of phonon frequencies less than cutoff frequency: 3/178746
 
 ### Band structure
 
-```
-% phonopy -p band.conf
+This requires to prepare `BORN` file.
+
+~~~bash
+% phonopy-load --band "0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5" -p
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
  | |_) | | | | (_) | | | | (_) || |_) | |_| |
  | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
  |_|                            |_|    |___/
-                                      2.12.0
+                                      2.26.6
 
-Python version 3.9.6
-Spglib version 1.16.2
+Compiled with OpenMP support (max 10 threads).
+Running in phonopy.load mode.
+Python version 3.12.4
+Spglib version 2.4.0
 
-Phonopy configuration was read from "band.conf".
 Crystal structure was read from "phonopy_disp.yaml".
 Unit of length: angstrom
 Band structure mode
@@ -183,12 +191,14 @@ Settings:
     [0.5 0.  0.5]
     [0.5 0.5 0. ]
 Spacegroup: Fm-3m (225)
+Number of symmetry operations in supercell: 1536
 Use -v option to watch primitive cell, unit cell, and supercell structures.
 
-Force sets were not found in "phonopy_disp.yaml".
-Forces and displacements were read from "FORCE_SETS".
-Computing force constants...
-Max drift of force constants: 0.040159 (yy) 0.000009 (xx)
+NAC params were read from "BORN".
+Force sets were read from "FORCE_SETS".
+Displacements were overwritten by "FORCE_SETS".
+Max drift of force constants: 0.040159 (xx) 0.000009 (xx)
+Max drift after symmetrization by translation: 0.000000 (zz) 0.000000 (zz)
 
 Reciprocal space paths in reduced coordinates:
 [ 0.000  0.000  0.000] --> [ 0.500  0.000  0.000]
@@ -202,67 +212,7 @@ Summary of calculation was written in "phonopy.yaml".
   / _ \ '_ \ / _` |
  |  __/ | | | (_| |
   \___|_| |_|\__,_|
-```
-
-```{image} NaCl-band.png
-:width: 50%
-```
-
-### Band structure with non-analytical term correction
-
-This requires to prepare BORN file.
-
-```
-% phonopy -p --nac band.conf
-        _
-  _ __ | |__   ___  _ __   ___   _ __  _   _
- | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
- | |_) | | | | (_) | | | | (_) || |_) | |_| |
- | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
- |_|                            |_|    |___/
-                                      2.12.0
-
-Python version 3.9.6
-Spglib version 1.16.2
-
-Phonopy configuration was read from "band.conf".
-Crystal structure was read from "phonopy_disp.yaml".
-Unit of length: angstrom
-Band structure mode
-Settings:
-  Non-analytical term correction (NAC): on
-  Supercell: [2 2 2]
-  Primitive matrix (Auto):
-    [0.  0.5 0.5]
-    [0.5 0.  0.5]
-    [0.5 0.5 0. ]
-Spacegroup: Fm-3m (225)
-Use -v option to watch primitive cell, unit cell, and supercell structures.
-
-Force sets were not found in "phonopy_disp.yaml".
-Forces and displacements were read from "FORCE_SETS".
-Computing force constants...
-Max drift of force constants: 0.040159 (yy) 0.000009 (xx)
-
-NAC parameters were not found in "phonopy_disp.yaml".
-NAC parameters were read from "BORN".
-Use NAC by Gonze et al. (no real space sum in current implementation)
-  PRB 50, 13035(R) (1994), PRB 55, 10355 (1997)
-  G-cutoff distance: 1.16, Number of G-points: 307, Lambda: 0.19
-
-Reciprocal space paths in reduced coordinates:
-[ 0.000  0.000  0.000] --> [ 0.500  0.000  0.000]
-[ 0.500  0.000  0.000] --> [ 0.500  0.500  0.000]
-[ 0.500  0.500  0.000] --> [ 0.000  0.000  0.000]
-[ 0.000  0.000  0.000] --> [ 0.500  0.500  0.500]
-
-Summary of calculation was written in "phonopy.yaml".
-                 _
-   ___ _ __   __| |
-  / _ \ '_ \ / _` |
- |  __/ | | | (_| |
-  \___|_| |_|\__,_|
-```
+~~~
 
 ```{image} NaCl-band-NAC.png
 :width: 50%
@@ -272,20 +222,21 @@ Summary of calculation was written in "phonopy.yaml".
 
 ### PDOS
 
-```
-% phonopy -p pdos.conf
+~~~bash
+% phonopy-load --mesh 41 41 41 --pdos "1, 2" -p
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
  | |_) | | | | (_) | | | | (_) || |_) | |_| |
  | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
  |_|                            |_|    |___/
-                                      2.12.0
+                                      2.26.6
 
-Python version 3.9.6
-Spglib version 1.16.2
+Compiled with OpenMP support (max 10 threads).
+Running in phonopy.load mode.
+Python version 3.12.4
+Spglib version 2.4.0
 
-Phonopy configuration was read from "pdos.conf".
 Crystal structure was read from "phonopy_disp.yaml".
 Unit of length: angstrom
 Mesh sampling mode
@@ -297,12 +248,14 @@ Settings:
     [0.5 0.  0.5]
     [0.5 0.5 0. ]
 Spacegroup: Fm-3m (225)
+Number of symmetry operations in supercell: 1536
 Use -v option to watch primitive cell, unit cell, and supercell structures.
 
-Force sets were not found in "phonopy_disp.yaml".
-Forces and displacements were read from "FORCE_SETS".
-Computing force constants...
-Max drift of force constants: 0.040159 (yy) 0.000009 (xx)
+NAC params were read from "BORN".
+Force sets were read from "FORCE_SETS".
+Displacements were overwritten by "FORCE_SETS".
+Max drift of force constants: 0.040159 (xx) 0.000009 (xx)
+Max drift after symmetrization by translation: 0.000000 (zz) 0.000000 (zz)
 
 Mesh numbers: [41 41 41]
 Number of q-points on sampling mesh: 68921
@@ -315,67 +268,7 @@ Summary of calculation was written in "phonopy.yaml".
   / _ \ '_ \ / _` |
  |  __/ | | | (_| |
   \___|_| |_|\__,_|
-```
-
-```{image} NaCl-PDOS.png
-:width: 50%
-```
-
-With non-analytical term correction, the PDOS may not change very much because
-it mainly affects phonon modes in the reciprocal region close to {math}`\Gamma`
-point.
-
-```
-% phonopy --nac -p pdos.conf
-        _
-  _ __ | |__   ___  _ __   ___   _ __  _   _
- | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
- | |_) | | | | (_) | | | | (_) || |_) | |_| |
- | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
- |_|                            |_|    |___/
-                                      2.12.0
-
-Python version 3.9.6
-Spglib version 1.16.2
-
-Phonopy configuration was read from "pdos.conf".
-Crystal structure was read from "phonopy_disp.yaml".
-Unit of length: angstrom
-Mesh sampling mode
-Settings:
-  Non-analytical term correction (NAC): on
-  Sampling mesh: [41 41 41]
-  Supercell: [2 2 2]
-  Primitive matrix (Auto):
-    [0.  0.5 0.5]
-    [0.5 0.  0.5]
-    [0.5 0.5 0. ]
-Spacegroup: Fm-3m (225)
-Use -v option to watch primitive cell, unit cell, and supercell structures.
-
-Force sets were not found in "phonopy_disp.yaml".
-Forces and displacements were read from "FORCE_SETS".
-Computing force constants...
-Max drift of force constants: 0.040159 (yy) 0.000009 (xx)
-
-NAC parameters were not found in "phonopy_disp.yaml".
-NAC parameters were read from "BORN".
-Use NAC by Gonze et al. (no real space sum in current implementation)
-  PRB 50, 13035(R) (1994), PRB 55, 10355 (1997)
-  G-cutoff distance: 1.16, Number of G-points: 307, Lambda: 0.19
-
-Mesh numbers: [41 41 41]
-Number of q-points on sampling mesh: 68921
-Calculating phonons on sampling mesh...
-Calculating projected DOS...
-
-Summary of calculation was written in "phonopy.yaml".
-                 _
-   ___ _ __   __| |
-  / _ \ '_ \ / _` |
- |  __/ | | | (_| |
-  \___|_| |_|\__,_|
-```
+~~~
 
 ```{image} NaCl-PDOS-nac.png
 :width: 50%
@@ -385,25 +278,25 @@ Summary of calculation was written in "phonopy.yaml".
 
 Band structure and DOS or PDOS can be plotted on one figure together by
 
-```
-% phonopy band-pdos.conf --nac -p
+~~~bash
+% phonopy-load --band "0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5" --mesh 41 41 41 --pdos "1, 2" -p
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
  | |_) | | | | (_) | | | | (_) || |_) | |_| |
  | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
  |_|                            |_|    |___/
-                                      2.12.0
+                                      2.26.6
 
-Python version 3.9.6
-Spglib version 1.16.2
+Compiled with OpenMP support (max 10 threads).
+Running in phonopy.load mode.
+Python version 3.12.4
+Spglib version 2.4.0
 
-Phonopy configuration was read from "band-pdos.conf".
 Crystal structure was read from "phonopy_disp.yaml".
 Unit of length: angstrom
 Band structure and mesh sampling mode
 Settings:
-  Non-analytical term correction (NAC): on
   Sampling mesh: [41 41 41]
   Supercell: [2 2 2]
   Primitive matrix (Auto):
@@ -411,18 +304,14 @@ Settings:
     [0.5 0.  0.5]
     [0.5 0.5 0. ]
 Spacegroup: Fm-3m (225)
+Number of symmetry operations in supercell: 1536
 Use -v option to watch primitive cell, unit cell, and supercell structures.
 
-Force sets were not found in "phonopy_disp.yaml".
-Forces and displacements were read from "FORCE_SETS".
-Computing force constants...
-Max drift of force constants: 0.040159 (yy) 0.000009 (xx)
-
-NAC parameters were not found in "phonopy_disp.yaml".
-NAC parameters were read from "BORN".
-Use NAC by Gonze et al. (no real space sum in current implementation)
-  PRB 50, 13035(R) (1994), PRB 55, 10355 (1997)
-  G-cutoff distance: 1.16, Number of G-points: 307, Lambda: 0.19
+NAC params were read from "BORN".
+Force sets were read from "FORCE_SETS".
+Displacements were overwritten by "FORCE_SETS".
+Max drift of force constants: 0.040159 (xx) 0.000009 (xx)
+Max drift after symmetrization by translation: 0.000000 (zz) 0.000000 (zz)
 
 Reciprocal space paths in reduced coordinates:
 [ 0.000  0.000  0.000] --> [ 0.500  0.000  0.000]
@@ -440,7 +329,7 @@ Summary of calculation was written in "phonopy.yaml".
   / _ \ '_ \ / _` |
  |  __/ | | | (_| |
   \___|_| |_|\__,_|
-```
+~~~
 
 ```{image} NaCl-band-PDOS-NAC.png
 :width: 50%
@@ -448,36 +337,34 @@ Summary of calculation was written in "phonopy.yaml".
 
 ## MgB2 characters of ireducible representations
 
-```
-% phonopy -f vasprun.xml-{001,002}
-% phonopy --dim="3 3 2" --irreps="0 0 0"
+~~~bash
+% phonopy-load --irreps 0 0 0
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
  | |_) | | | | (_) | | | | (_) || |_) | |_| |
  | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
  |_|                            |_|    |___/
-                                      2.12.0
+                     2.26.6-rdev26+g1f6a3f81
 
-Python version 3.9.6
-Spglib version 1.16.2
+Compiled with OpenMP support (max 10 threads).
+Running in phonopy.load mode.
+Python version 3.12.4
+Spglib version 2.4.0
 
 Crystal structure was read from "phonopy_disp.yaml".
 Unit of length: angstrom
 Ir-representation mode
 Settings:
   Supercell: [3 3 2]
-  Primitive matrix (Auto):
-    [1. 0. 0.]
-    [0. 1. 0.]
-    [0. 0. 1.]
 Spacegroup: P6/mmm (191)
+Number of symmetry operations in supercell: 432
 Use -v option to watch primitive cell, unit cell, and supercell structures.
 
-Force sets were not found in "phonopy_disp.yaml".
-Forces and displacements were read from "FORCE_SETS".
-Computing force constants...
+Force sets were read from "FORCE_SETS".
+Displacements were overwritten by "FORCE_SETS".
 Max drift of force constants: -0.039930 (zz) -0.000007 (zz)
+Max drift after symmetrization by translation: 0.000000 (yy) 0.000000 (yy)
 
 
 -------------------------------
@@ -514,7 +401,7 @@ Original rotation matrices:
 
 Transformation matrix:
 
- 1.000  0.000  0.000
+ 1.000 -0.000  0.000
  0.000  1.000  0.000
  0.000  0.000  1.000
 
@@ -546,17 +433,11 @@ Rotation matrices by transformation matrix:
 
 Character table:
 
-  1 (  -0.019): A2u
-    ( 1,   0.0) ( 1, 180.0) ( 1,   0.0) ( 1, 180.0) ( 1,   0.0) ( 1, 180.0)
-    ( 1,   0.0) ( 1, 180.0) ( 1,   0.0) ( 1, 180.0) ( 1,   0.0) ( 1, 180.0)
+  1 (  -0.000): Not found. Try adjusting tolerance value in IRREPS.
+    ( 3,   0.0) ( 3, 180.0) ( 2,   0.0) ( 2, 180.0) ( 0,   0.0) ( 0,   0.0)
+    ( 1, 180.0) ( 1,   0.0) ( 0,   0.0) ( 0,   0.0) ( 2,   0.0) ( 2, 180.0)
     ( 1, 180.0) ( 1,   0.0) ( 1, 180.0) ( 1,   0.0) ( 1, 180.0) ( 1,   0.0)
     ( 1, 180.0) ( 1,   0.0) ( 1, 180.0) ( 1,   0.0) ( 1, 180.0) ( 1,   0.0)
-
-  2 (   0.004): E1u
-    ( 2,   0.0) ( 2, 180.0) ( 1,   0.0) ( 1, 180.0) ( 1, 180.0) ( 1,   0.0)
-    ( 2, 180.0) ( 2,   0.0) ( 1, 180.0) ( 1,   0.0) ( 1,   0.0) ( 1, 180.0)
-    ( 0,   0.0) ( 0,   0.0) ( 0,   0.0) ( 0,   0.0) ( 0,   0.0) ( 0,   0.0)
-    ( 0,   0.0) ( 0,   0.0) ( 0,   0.0) ( 0,   0.0) ( 0,   0.0) ( 0,   0.0)
 
   4 (   9.953): E1u
     ( 2,   0.0) ( 2, 180.0) ( 1,   0.0) ( 1, 180.0) ( 1, 180.0) ( 1,   0.0)
@@ -564,7 +445,7 @@ Character table:
     ( 0,   0.0) ( 0,   0.0) ( 0,   0.0) ( 0,   0.0) ( 0,   0.0) ( 0,   0.0)
     ( 0,   0.0) ( 0,   0.0) ( 0,   0.0) ( 0,   0.0) ( 0,   0.0) ( 0,   0.0)
 
-  6 (  11.982): A2u
+  6 (  11.975): A2u
     ( 1,   0.0) ( 1, 180.0) ( 1,   0.0) ( 1, 180.0) ( 1,   0.0) ( 1, 180.0)
     ( 1,   0.0) ( 1, 180.0) ( 1,   0.0) ( 1, 180.0) ( 1,   0.0) ( 1, 180.0)
     ( 1, 180.0) ( 1,   0.0) ( 1, 180.0) ( 1,   0.0) ( 1, 180.0) ( 1,   0.0)
@@ -589,7 +470,7 @@ Summary of calculation was written in "phonopy.yaml".
   / _ \ '_ \ / _` |
  |  __/ | | | (_| |
   \___|_| |_|\__,_|
-```
+~~~
 
 ## Al-QHA
 

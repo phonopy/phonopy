@@ -654,7 +654,13 @@ def symmetrize_borns_and_epsilon(
             return borns_in_prim[idx2].copy(), epsilon_
 
 
-def _take_average_of_borns(borns, rotations, translations, cell, symprec):
+def _take_average_of_borns(
+    borns: np.ndarray,
+    rotations: np.ndarray,
+    translations: np.ndarray,
+    cell: PhonopyAtoms,
+    symprec: float,
+) -> np.ndarray:
     lattice = cell.cell
     positions = cell.scaled_positions
     borns_ = np.zeros_like(borns)
