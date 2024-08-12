@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>VASP-DFPT &amp; phonopy calculation &#8212; Phonopy v.2.26.6</title>
+    <title>VASP-DFPT &amp; phonopy calculation &#8212; Phonopy v.2.26.7</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=6baedd6d"></script>
+    <script src="_static/documentation_options.js?v=d0525f70"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.26.6</p>
+    <p class="title logo__title">Phonopy v.2.26.7</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -420,7 +420,8 @@ contains <code class="docutils literal notranslate"><span class="pre">hessian</s
 </div>
 </li>
 <li><p>Run phonopy</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>--config<span class="w"> </span>band.conf
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>--readfc<span class="w"> </span>--band<span class="w"> </span><span class="s2">&quot;0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5&quot;</span><span class="w"> </span>-p
+
 <span class="w">        </span>_
 <span class="w">  </span>_<span class="w"> </span>__<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="p">|</span>__<span class="w">   </span>___<span class="w">  </span>_<span class="w"> </span>__<span class="w">   </span>___<span class="w">   </span>_<span class="w"> </span>__<span class="w">  </span>_<span class="w">   </span>_
 <span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="s1">&#39;_ \| &#39;</span>_<span class="w"> </span><span class="se">\ </span>/<span class="w"> </span>_<span class="w"> </span><span class="se">\|</span><span class="w"> </span><span class="s1">&#39;_ \ / _ \ | &#39;</span>_<span class="w"> </span><span class="se">\|</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="p">|</span>
@@ -434,24 +435,23 @@ Running<span class="w"> </span><span class="k">in</span><span class="w"> </span>
 Python<span class="w"> </span>version<span class="w"> </span><span class="m">3</span>.12.4
 Spglib<span class="w"> </span>version<span class="w"> </span><span class="m">2</span>.4.0
 
-<span class="s2">&quot;band.conf&quot;</span><span class="w"> </span>was<span class="w"> </span><span class="nb">read</span><span class="w"> </span>as<span class="w"> </span>phonopy<span class="w"> </span>configuration<span class="w"> </span>file.
 Crystal<span class="w"> </span>structure<span class="w"> </span>was<span class="w"> </span><span class="nb">read</span><span class="w"> </span>from<span class="w"> </span><span class="s2">&quot;phonopy_disp.yaml&quot;</span>.
 Unit<span class="w"> </span>of<span class="w"> </span>length:<span class="w"> </span>angstrom
 Band<span class="w"> </span>structure<span class="w"> </span>mode
 Settings:
 <span class="w">  </span>Supercell:<span class="w"> </span><span class="o">[</span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="o">]</span>
 <span class="w">  </span>Primitive<span class="w"> </span>matrix:
-<span class="w">    </span><span class="o">[</span><span class="m">0</span>.<span class="w">  </span><span class="m">0</span>.5<span class="w"> </span><span class="m">0</span>.5<span class="o">]</span>
-<span class="w">    </span><span class="o">[</span><span class="m">0</span>.5<span class="w"> </span><span class="m">0</span>.<span class="w">  </span><span class="m">0</span>.5<span class="o">]</span>
-<span class="w">    </span><span class="o">[</span><span class="m">0</span>.5<span class="w"> </span><span class="m">0</span>.5<span class="w"> </span><span class="m">0</span>.<span class="w"> </span><span class="o">]</span>
+<span class="w">    </span><span class="o">[</span><span class="m">0</span>.<span class="w">   </span><span class="m">0</span>.25<span class="w"> </span><span class="m">0</span>.25<span class="o">]</span>
+<span class="w">    </span><span class="o">[</span><span class="m">0</span>.25<span class="w"> </span><span class="m">0</span>.<span class="w">   </span><span class="m">0</span>.25<span class="o">]</span>
+<span class="w">    </span><span class="o">[</span><span class="m">0</span>.25<span class="w"> </span><span class="m">0</span>.25<span class="w"> </span><span class="m">0</span>.<span class="w">  </span><span class="o">]</span>
 Spacegroup:<span class="w"> </span>Fm-3m<span class="w"> </span><span class="o">(</span><span class="m">225</span><span class="o">)</span>
 Number<span class="w"> </span>of<span class="w"> </span>symmetry<span class="w"> </span>operations<span class="w"> </span><span class="k">in</span><span class="w"> </span>supercell:<span class="w"> </span><span class="m">1536</span>
 Use<span class="w"> </span>-v<span class="w"> </span>option<span class="w"> </span>to<span class="w"> </span>watch<span class="w"> </span>primitive<span class="w"> </span>cell,<span class="w"> </span>unit<span class="w"> </span>cell,<span class="w"> </span>and<span class="w"> </span>supercell<span class="w"> </span>structures.
 
 Force<span class="w"> </span>constants<span class="w"> </span>are<span class="w"> </span><span class="nb">read</span><span class="w"> </span>from<span class="w"> </span><span class="s2">&quot;FORCE_CONSTANTS&quot;</span>.
 Force<span class="w"> </span>constants<span class="w"> </span>format<span class="w"> </span>was<span class="w"> </span>transformed<span class="w"> </span>to<span class="w"> </span>compact<span class="w"> </span>format.
-Array<span class="w"> </span>shape<span class="w"> </span>of<span class="w"> </span>force<span class="w"> </span>constants:<span class="w"> </span><span class="o">(</span><span class="m">16</span>,<span class="w"> </span><span class="m">64</span>,<span class="w"> </span><span class="m">3</span>,<span class="w"> </span><span class="m">3</span><span class="o">)</span>
-Max<span class="w"> </span>drift<span class="w"> </span>after<span class="w"> </span>symmetrization<span class="w"> </span>by<span class="w"> </span>translation:<span class="w"> </span>-0.000000<span class="w"> </span><span class="o">(</span>xx<span class="o">)</span><span class="w"> </span>-0.000000<span class="w"> </span><span class="o">(</span>xx<span class="o">)</span>
+Array<span class="w"> </span>shape<span class="w"> </span>of<span class="w"> </span>force<span class="w"> </span>constants:<span class="w"> </span><span class="o">(</span><span class="m">2</span>,<span class="w"> </span><span class="m">64</span>,<span class="w"> </span><span class="m">3</span>,<span class="w"> </span><span class="m">3</span><span class="o">)</span>
+Max<span class="w"> </span>drift<span class="w"> </span>after<span class="w"> </span>symmetrization<span class="w"> </span>by<span class="w"> </span>translation:<span class="w"> </span>-0.000000<span class="w"> </span><span class="o">(</span>zz<span class="o">)</span><span class="w"> </span>-0.000000<span class="w"> </span><span class="o">(</span>zz<span class="o">)</span>
 
 Reciprocal<span class="w"> </span>space<span class="w"> </span>paths<span class="w"> </span><span class="k">in</span><span class="w"> </span>reduced<span class="w"> </span>coordinates:
 <span class="o">[</span><span class="w"> </span><span class="m">0</span>.000<span class="w">  </span><span class="m">0</span>.000<span class="w">  </span><span class="m">0</span>.000<span class="o">]</span><span class="w"> </span>--&gt;<span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="m">0</span>.500<span class="w">  </span><span class="m">0</span>.000<span class="w">  </span><span class="m">0</span>.000<span class="o">]</span>

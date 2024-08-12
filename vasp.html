@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>VASP &amp; phonopy calculation &#8212; Phonopy v.2.26.6</title>
+    <title>VASP &amp; phonopy calculation &#8212; Phonopy v.2.26.7</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=6baedd6d"></script>
+    <script src="_static/documentation_options.js?v=d0525f70"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.26.6</p>
+    <p class="title logo__title">Phonopy v.2.26.7</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -367,7 +367,7 @@ displacements are created from a unit cell fully considering crystal
 symmetry.</p>
 <p>To obtain supercells (:math:<code class="docutils literal notranslate"><span class="pre">2\times</span> <span class="pre">2\times</span> <span class="pre">3</span></code>) with displacements,
 run phonopy,</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>phonopy<span class="w"> </span>-d<span class="w"> </span>--dim<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">3</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>-d<span class="w"> </span>--dim<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">3</span><span class="w"> </span>--pa<span class="w"> </span>auto
 </pre></div>
 </div>
 <p>You should find the files, <code class="docutils literal notranslate"><span class="pre">SPOSCAR</span></code>, <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>, and
@@ -422,47 +422,25 @@ file using <a class="reference internal" href="command-options.html#vasp-force-s
 <li><p>Phonon frequencies and eigenvectors are calculated from the
 dynamical matrices with the specified <em>q</em>-points.</p></li>
 </ol>
-<p>For mesh sampling calculation, prepare the following setting file
-named, e.g., <code class="docutils literal notranslate"><span class="pre">mesh.conf</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ATOM_NAME</span> <span class="o">=</span> <span class="n">Si</span> <span class="n">O</span>
-<span class="n">DIM</span> <span class="o">=</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">3</span>
-<span class="n">MP</span> <span class="o">=</span> <span class="mi">8</span> <span class="mi">8</span> <span class="mi">8</span>
-</pre></div>
-</div>
 <p>The density of states (DOS) is plotted by</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>--config<span class="w"> </span>mesh.conf<span class="w"> </span>-p
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>--mesh<span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">20</span><span class="w"> </span>-p
 </pre></div>
 </div>
 <p>Thermal properties are calculated with the sampling mesh by</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>--config<span class="w"> </span>mesh.conf<span class="w"> </span>-t
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>--mesh<span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">20</span><span class="w"> </span>-t
 </pre></div>
 </div>
 <p>You should check the convergence with respect to the mesh numbers.
 Thermal properties can be plotted by</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>--config<span class="w"> </span>mesh.conf<span class="w"> </span>-t<span class="w"> </span>-p
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>--mesh<span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">20</span><span class="w"> </span>-t<span class="w"> </span>-p
 </pre></div>
 </div>
-<p>Projected DOS is calculated by the following setting file named, e.g.,
-<code class="docutils literal notranslate"><span class="pre">pdos.conf</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ATOM_NAME</span> <span class="o">=</span> <span class="n">Si</span> <span class="n">O</span>
-<span class="n">DIM</span> <span class="o">=</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">3</span>
-<span class="n">MP</span> <span class="o">=</span> <span class="mi">8</span> <span class="mi">8</span> <span class="mi">8</span>
-<span class="n">PDOS</span> <span class="o">=</span> <span class="mi">1</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span> <span class="mi">4</span> <span class="mi">5</span> <span class="mi">6</span>
+<p>Projected DOS is calculated and plotted by</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>--mesh<span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">20</span><span class="w"> </span>--pdos<span class="w"> </span><span class="s2">&quot;1 2, 3 4 5 6&quot;</span><span class="w"> </span>-p
 </pre></div>
 </div>
-<p>and plotted by</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>--config<span class="w"> </span>pdos.conf<span class="w"> </span>-p
-</pre></div>
-</div>
-<p>Band structure is calculated with the following setting file named,
-e.g., <code class="docutils literal notranslate"><span class="pre">band.conf</span></code> by</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ATOM_NAME</span> <span class="o">=</span> <span class="n">Si</span> <span class="n">O</span>
-<span class="n">DIM</span> <span class="o">=</span>  <span class="mi">2</span> <span class="mi">2</span> <span class="mi">3</span>
-<span class="n">BAND</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="mf">0.5</span> <span class="mf">0.5</span>  <span class="mf">0.0</span> <span class="mf">0.0</span> <span class="mf">0.0</span>  <span class="mf">0.5</span> <span class="mf">0.5</span> <span class="mf">0.0</span>  <span class="mf">0.0</span> <span class="mf">0.5</span> <span class="mf">0.0</span>
-</pre></div>
-</div>
-<p>The band structure is plotted by</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>--config<span class="w"> </span>band.conf<span class="w"> </span>-p
+<p>Band structure is plotted by</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy-load<span class="w"> </span>--band<span class="w"> </span><span class="s2">&quot;0.5 0.5 0.5  0.0 0.0 0.0  0.5 0.5 0.0  0.0 0.5 0.0&quot;</span><span class="w"> </span>-p
 </pre></div>
 </div>
 <p>In either case, by setting the <code class="docutils literal notranslate"><span class="pre">-s</span></code> option, the plot is going to be
@@ -517,13 +495,8 @@ containing <code class="docutils literal notranslate"><span class="pre">vasprun.
 </div>
 <p>The values are slightly modified by symmetry, but we can see the
 original values obtained directly from VASP was already very good.</p>
-<p>To put <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file in the current directly, and running phonopy with
-<code class="docutils literal notranslate"><span class="pre">--nac</span></code> option, non-analytical term correction is activated, such as</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy--config<span class="w"> </span>--config<span class="w"> </span>band.conf<span class="w"> </span>-p<span class="w"> </span>--nac
-</pre></div>
-</div>
-<p>Please watch the example of NaCl with and without <code class="docutils literal notranslate"><span class="pre">--nac</span></code> option shown in
-<a class="reference internal" href="examples.html#examples-link"><span class="std std-ref">Examples</span></a>.</p>
+<p>To put <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file in the current directly, non-analytical term correction is
+activated.</p>
 </section>
 </section>
 
