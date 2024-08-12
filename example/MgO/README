@@ -1,9 +1,0 @@
-This is an exmaple of rocksalt MgO phonon calculation. Forces were calculated using VASP with 500 eV cutoff energy and 4x4x4 k-point mesh for the conventional unit cell (POSCAR-unitcell).
-
-Phonon band structure is drawn using Seek-path installed (pip instasll seekpath), without non-analytical-term correction,
-
-% phonopy -p band.conf
-
-and with non-analytical-term correction
-
-% phonopy -p --nac band.conf

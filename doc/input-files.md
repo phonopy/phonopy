@@ -2,33 +2,48 @@
 
 ## Setting file
 
-A setting file contains phonopy settings which are summarized at
-{ref}`setting_tags`. This file is passed to phonopy as an argument, e.g.,
+Configuration of phonopy calculation can be written in a setting file though
+it is recommended to use phonopy with {ref}`command_options`.
+
+The setting file contains phonopy configurations whose details are found
+at {ref}`setting_tags`. This file is passed to phonopy as the argument of
+`--conf` option, e.g.,
 
 ```bash
-% phonopy phonopy.conf
+% phonopy-load --config phonopy.conf [OPTIONS]
 ```
 
-where the filename is arbitrary.
+where the configuration filename is arbitrary.
 
-## `phonopy.yaml` and `phonopy_disp.yaml`
+## `phonopy_disp.yaml`
 
-These are output files after the calculation or creating the displacements.
-These files contain the crystal structure information, primitive cell and
-supercell sizes, and also the calculator interface. Therefore with this file,
-users will not need to specify those crystal sturcutre related tags. This file
-format can be used with {ref}`cell_filename_tag` tag or `-c` option:
-
-```
-$ phonopy -c phonopy_disp.yaml
-```
-
-`FORCE_SETS`, `BORN`, and `FORCE_CONSTANTS` information can be also stored in
-`phonopy.yaml` as the output after running phonopy, e.g.,
+This is an output file after creating the displacements by `-d` option. This
+contains the crystal structure information, primitive cell and supercell sizes,
+and also the calculator interface. Therefore with this file, users will not need
+to specify those crystal structure related tags when running phonopy.
+`phonopy_disp.yaml` is a default file name that phonopy tries to find in the
+current directory. Therefore, phonopy can be used as
 
 ```
-$ phonopy -c phonopy_disp.yaml --include-all --nac
+% phonopy-load [OPTIONS]
 ```
+
+and `FORCE_SETS` and `BORN` are also searched automatically in the current
+directory. `FORCE_CONSTANTS` can be read `--readfc` option.
+
+Other information such as forces (in `FORCE_SETS`), parameters for
+non-analytical term correction (in `BORN`) can be also stored in
+`phonopy_*.yaml` like file. If `phonopy_params.yaml` contains necessary
+information to run expected phonon calculation, it is unnecessary to have
+`FORCE_SETS` and `BORN` in the current directory when `phonopy_params.yaml` is
+passed as the first argument of `phonopy-load`
+
+```
+% phonopy-load phonopy_params.yaml [OPTIONS]
+```
+
+can perform the phonon calculation. See more details in
+{ref}`phonopy_load_command`.
 
 ## Structure file
 
@@ -151,7 +166,7 @@ repeated until the forces of all the displacements have been written.
 
 ### Type 2
 
-Equivalent to `DFSET` of
+The format is compatible to `DFSET` of
 [ALM code](https://alm.readthedocs.io/en/develop/format-dfset.html#format-of-dfset).
 
 Each line has exactly 6 elements. The first three and second three elements give
@@ -163,8 +178,9 @@ shapes of `displacements.shape = (num_supercells, num_atoms, 3)` and
 `forces.shape = (num_supercells, num_atoms, 3)`.
 
 Force constants can be calculated by the fitting approach and this force
-constants calculation requires external force constants calculator such as
-[ALM](https://alm.readthedocs.io/en/develop/index.html) (invoked by `--alm`
+constants calculation requires an external force constants calculator such as
+[symfc](https://github.com/symfc/symfc) (`--symfc`) or
+[ALM](https://alm.readthedocs.io/en/develop/index.html) (`--alm`
 option). All the data are used for calculating force constants in the fitting
 (usually least square fitting) by the force constants calculator.
 

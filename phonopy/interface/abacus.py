@@ -188,7 +188,7 @@ def read_abacus(filename):
         if m_index:
             atom_magnetism = mags
 
-    magnetic_moments = atom_magnetism if atom_magnetism.all() else None
+    magnetic_moments = atom_magnetism if atom_magnetism.flatten().any() else None
 
     # to ase
     if atom_pos_type == "Direct":
@@ -286,13 +286,20 @@ def get_abacus_structure(atoms, pps, orbitals=None, abfs=None):
         line.append(f"{elem}\n{0}\n{numbers[i]}")
         for j in range(index, index + numbers[i]):
             if atoms.magnetic_moments is not None:
-                line.append(
-                    " ".join(_list_elem2str(atoms.scaled_positions[j]))
-                    + " "
-                    + "1 1 1"
-                    + " mag "
-                    + f"{atoms.magnetic_moments[j]}"
+                line_part = (
+                    " ".join(_list_elem2str(atoms.scaled_positions[j])) + " 1 1 1"
                 )
+                # Add the magnetic moments part
+                mag_mom = atoms.magnetic_moments[j]
+                if isinstance(mag_mom, (list, np.ndarray)):
+                    if (
+                        len(mag_mom) == 3
+                    ):  # Check the three components only if it is a list or numpy array
+                        line_part += " mag " + " ".join(map(str, mag_mom))
+                else:  # If single value (float), add directly
+                    line_part += f" mag {mag_mom}"
+                # Append the completed line
+                line.append(line_part)
             else:
                 line.append(
                     " ".join(_list_elem2str(atoms.scaled_positions[j])) + " " + "1 1 1"
@@ -323,7 +330,7 @@ def read_abacus_output(filename):
                     _match = re.match(_match_pattern, line)
                 iatom = 0
                 while _match:
-                    print(_match.group(3).split())
+                    # print(_match.group(3).split())
                     fx, fy, fz = (_match.group(3).split()[i].strip() for i in range(3))
                     force[iatom] = (float(fx), float(fy), float(fz))
                     iatom += 1

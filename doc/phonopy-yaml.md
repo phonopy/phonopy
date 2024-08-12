@@ -11,7 +11,7 @@ for phonopy. This file can contain the following information:
 - Energies of supercells
 - Parameters used for non-analytical term correction
 
-`phonopy-load` command ({ref}`phonopy-load`) can read this type of file, e.g.,
+`phonopy-load` command ({ref}`phonopy_load_command`) can read this type of file, e.g.,
 
 ```bash
 % phonopy-load phonopy_params.yaml [OPTIONS]

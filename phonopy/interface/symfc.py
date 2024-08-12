@@ -122,7 +122,7 @@ def run_symfc(
                 print(f"  {key}: {val}", flush=True)
 
     if log_level == 1:
-        print("Increase log-level to watch detailed ALM log.")
+        print("Increase log-level to watch detailed symfc log.")
 
     symfc_supercell = SymfcAtoms(
         cell=supercell.cell,
