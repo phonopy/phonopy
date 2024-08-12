@@ -383,7 +383,9 @@ def solve_force_constants(
     else:
         fc_index = np.where(disp_atom_number == atom_list)[0]
         if len(fc_index) == 0:
-            raise RuntimeError
+            raise RuntimeError(
+                "Force constants could not be sovlved by finite difference method."
+            )
         else:
             fc_index = fc_index[0]
     force_constants[fc_index] = _solve_force_constants_svd(

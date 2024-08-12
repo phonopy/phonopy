@@ -2,6 +2,12 @@
 
 # Change Log
 
+## Aug-12-2024: Version 2.26.7
+
+- Minor updates of user interface to behave nicely.
+- Updated documentation and examples to recommend using `phonopy-load` instead
+  of `phonopy` for the post-process calculations.
+
 ## Jul-16-2024: Version 2.26.6
 
 - Fix derivative of dynamical matrix for Wang's NAC method.

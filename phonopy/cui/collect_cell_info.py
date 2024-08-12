@@ -54,6 +54,7 @@ def collect_cell_info(
     chemical_symbols=None,
     enforce_primitive_matrix_auto=False,
     phonopy_yaml_cls: type[PhonopyYaml] = PhonopyYaml,
+    load_phonopy_yaml: bool = False,
 ):
     """Collect crystal structure information from input file and parameters.
 
@@ -102,6 +103,8 @@ def collect_cell_info(
         PhonopyYaml like class name. This is used to return its instance when
         needed. Default is None, which means PhonopyYaml class type. This can be
         Phono3pyYaml class type.
+    load_phonopy_yaml : bool
+        True means phonopy-load mode.
 
     Returns
     -------
@@ -123,12 +126,15 @@ def collect_cell_info(
 
     """
     # In some cases, interface mode falls back to phonopy_yaml mode.
-    fallback_reason = _fallback_to_phonopy_yaml(
-        supercell_matrix, interface_mode, cell_filename
-    )
+    if not load_phonopy_yaml:
+        fallback_reason = _fallback_to_phonopy_yaml(
+            supercell_matrix,
+            interface_mode,
+            cell_filename,
+        )
 
     _cell_filename = cell_filename
-    if fallback_reason:
+    if load_phonopy_yaml or fallback_reason:
         _interface_mode = "phonopy_yaml"
         if cell_filename is None or not is_file_phonopy_yaml(
             cell_filename, keyword=phonopy_yaml_cls.command_name

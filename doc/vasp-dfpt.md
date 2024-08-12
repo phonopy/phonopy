@@ -77,7 +77,8 @@ procedure to calculate phonon properties may be as follows:
 6) Run phonopy
 
    ~~~bash
-   % phonopy-load --config band.conf
+   % phonopy-load --readfc --band "0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5" -p
+
            _
      _ __ | |__   ___  _ __   ___   _ __  _   _
     | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
@@ -91,24 +92,23 @@ procedure to calculate phonon properties may be as follows:
    Python version 3.12.4
    Spglib version 2.4.0
 
-   "band.conf" was read as phonopy configuration file.
    Crystal structure was read from "phonopy_disp.yaml".
    Unit of length: angstrom
    Band structure mode
    Settings:
      Supercell: [1 1 1]
      Primitive matrix:
-       [0.  0.5 0.5]
-       [0.5 0.  0.5]
-       [0.5 0.5 0. ]
+       [0.   0.25 0.25]
+       [0.25 0.   0.25]
+       [0.25 0.25 0.  ]
    Spacegroup: Fm-3m (225)
    Number of symmetry operations in supercell: 1536
    Use -v option to watch primitive cell, unit cell, and supercell structures.
 
    Force constants are read from "FORCE_CONSTANTS".
    Force constants format was transformed to compact format.
-   Array shape of force constants: (16, 64, 3, 3)
-   Max drift after symmetrization by translation: -0.000000 (xx) -0.000000 (xx)
+   Array shape of force constants: (2, 64, 3, 3)
+   Max drift after symmetrization by translation: -0.000000 (zz) -0.000000 (zz)
 
    Reciprocal space paths in reduced coordinates:
    [ 0.000  0.000  0.000] --> [ 0.500  0.000  0.000]
