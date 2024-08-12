@@ -49,7 +49,7 @@ where `vasprun.xml` is the VASP output.
 ### DOS
 
 ~~~bash
-% phonopy-load --config mesh.conf -p
+% phonopy-load --mesh 31 31 31 -p
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
@@ -63,7 +63,6 @@ Running in phonopy.load mode.
 Python version 3.12.4
 Spglib version 2.4.0
 
-"mesh.conf" was read as phonopy configuration file.
 Crystal structure was read from "phonopy_disp.yaml".
 Unit of length: angstrom
 Mesh sampling mode
@@ -103,7 +102,7 @@ Summary of calculation was written in "phonopy.yaml".
 ### Thermal properties
 
 ~~~bash
-% phonopy-load --config mesh.conf -t -p
+% phonopy-load --mesh 31 31 31 -t -p
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
@@ -117,7 +116,6 @@ Running in phonopy.load mode.
 Python version 3.12.4
 Spglib version 2.4.0
 
-"mesh.conf" was read as phonopy configuration file.
 Crystal structure was read from "phonopy_disp.yaml".
 Unit of length: angstrom
 Mesh sampling mode
@@ -169,7 +167,7 @@ Number of phonon frequencies less than cutoff frequency: 1/178746
 This requires to prepare `BORN` file.
 
 ~~~bash
-% phonopy-load --config band.conf -p
+% phonopy-load --band "0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5" -p
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
@@ -183,7 +181,6 @@ Running in phonopy.load mode.
 Python version 3.12.4
 Spglib version 2.4.0
 
-"band.conf" was read as phonopy configuration file.
 Crystal structure was read from "phonopy_disp.yaml".
 Unit of length: angstrom
 Band structure mode
@@ -226,7 +223,7 @@ Summary of calculation was written in "phonopy.yaml".
 ### PDOS
 
 ~~~bash
-% phonopy-load --config pdos.conf -p
+% phonopy-load --mesh 41 41 41 --pdos "1, 2" -p
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
@@ -240,7 +237,6 @@ Running in phonopy.load mode.
 Python version 3.12.4
 Spglib version 2.4.0
 
-"pdos.conf" was read as phonopy configuration file.
 Crystal structure was read from "phonopy_disp.yaml".
 Unit of length: angstrom
 Mesh sampling mode
@@ -283,7 +279,7 @@ Summary of calculation was written in "phonopy.yaml".
 Band structure and DOS or PDOS can be plotted on one figure together by
 
 ~~~bash
-% phonopy-load --config band-pdos.conf -p
+% phonopy-load --band "0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5" --mesh 41 41 41 --pdos "1, 2" -p
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
@@ -297,7 +293,6 @@ Running in phonopy.load mode.
 Python version 3.12.4
 Spglib version 2.4.0
 
-"band-pdos.conf" was read as phonopy configuration file.
 Crystal structure was read from "phonopy_disp.yaml".
 Unit of length: angstrom
 Band structure and mesh sampling mode
