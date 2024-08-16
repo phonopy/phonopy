@@ -365,7 +365,7 @@
 - Minor update of the look of band structure plot. The format in `band.yaml` for
   treating labels was changed.
 - `MESH` accepts a length value, which works in the same way as VASP automatic
-  k-mesh generation (see {ref}`mp_tag`).
+  k-mesh generation (see {ref}`mesh_tag`).
 - For plotting DOS, it is changed to choose linear tetrahedron method as
   default, but not smearing method.
 - Output file name of projected DOS was renamed from `partial_dos.dat` to
@@ -863,7 +863,7 @@ This version is dangerous. A lot of code is modified internally.
   ({ref}`band_labels_tag`).
 - `--band` option is implemented.
 - `GAMMA_CENTER` tag and `--gc`, `--gamma_center` option are implemented
-  ({ref}`mp_tag`).
+  ({ref}`mesh_tag`).
 - `phonopy-qha` was polished. Most of the code was moved to
   `phonopy/qha/__init__.py`.
 - `Phonopy::get_mesh` and `Phonopy::get_band_structure` were modified. Instead

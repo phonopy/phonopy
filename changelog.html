@@ -861,7 +861,7 @@ handled by the package manager.</p></li>
 <h2>Mar-29-2020: Version 2.5.0<a class="headerlink" href="#mar-29-2020-version-2-5-0" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p>New options, <code class="docutils literal notranslate"><span class="pre">--include-*</span></code>, to write summary in <code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code>. See
-<a class="reference internal" href="setting-tags.html#summary-tag"><span class="std std-ref">summary</span></a>.</p></li>
+<a class="reference internal" href="setting-tags.html#summary-tag"><span class="std std-ref"></span></a>.</p></li>
 <li><p>FHI-aims interface (<code class="docutils literal notranslate"><span class="pre">--aims</span></code>) was created by Florian Knoop.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">phonopy-gruneisen</span></code> and <code class="docutils literal notranslate"><span class="pre">--symmetry</span></code> option were updated to be able to handle
 most of build-in calculator interfaces.</p></li>
@@ -993,7 +993,7 @@ compatibility, when <code class="docutils literal notranslate"><span class="pre"
 <li><p>Minor update of the look of band structure plot. The format in <code class="docutils literal notranslate"><span class="pre">band.yaml</span></code> for
 treating labels was changed.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">MESH</span></code> accepts a length value, which works in the same way as VASP automatic
-k-mesh generation (see <a class="reference internal" href="setting-tags.html#mp-tag"><span class="std std-ref">MESH, MP, or MESH_NUMBERS</span></a>).</p></li>
+k-mesh generation (see <a class="reference internal" href="setting-tags.html#mesh-tag"><span class="std std-ref">MESH, MP, or MESH_NUMBERS</span></a>).</p></li>
 <li><p>For plotting DOS, it is changed to choose linear tetrahedron method as
 default, but not smearing method.</p></li>
 <li><p>Output file name of projected DOS was renamed from <code class="docutils literal notranslate"><span class="pre">partial_dos.dat</span></code> to
@@ -1437,7 +1437,7 @@ and thermal displacements.</p></li>
 <h2>Oct-3-2013: Version 1.7.4<a class="headerlink" href="#oct-3-2013-version-1-7-4" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p>Thermal displacement matrix is implemented. See
-<a class="reference internal" href="setting-tags.html#thermal-displacement-matrices-tag"><span class="std std-ref">TDISPMAT, TMAX, TMIN, and TSTEP</span></a> and <a class="reference internal" href="formulation.html#thermal-displacement"><span class="std std-ref">Thermal displacement</span></a>.</p></li>
+<a class="reference internal" href="setting-tags.html#thermal-displacement-matrices-tag"><span class="std std-ref">TDISPMAT</span></a> and <a class="reference internal" href="formulation.html#thermal-displacement"><span class="std std-ref">Thermal displacement</span></a>.</p></li>
 <li><p>PDOS with projection along arbitrary direction was implemented. See
 <a class="reference internal" href="setting-tags.html#projection-direction-tag"><span class="std std-ref">PROJECTION_DIRECTION</span></a>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">partial_dos.dat</span></code> format was changed. XYZ projected PDOS is not output.
@@ -1510,7 +1510,7 @@ thermal displacement matrix.</p></li>
 <h2>Apr-13-2013: Version 1.6.4<a class="headerlink" href="#apr-13-2013-version-1-6-4" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p>Group velocity can be calculated using <code class="docutils literal notranslate"><span class="pre">GROUP_VELOCITY</span></code> tag or <code class="docutils literal notranslate"><span class="pre">--gv</span></code> option
-(<a class="reference internal" href="setting-tags.html#group-velocity-tag"><span class="std std-ref">Group velocity</span></a>).</p></li>
+(<a class="reference internal" href="setting-tags.html#group-velocity-tag"><span class="std std-ref">GROUP_VELOCITY</span></a>).</p></li>
 <li><p>Non-analytical term correction is implemented in C, which accelerates the
 calculation speed.</p></li>
 </ul>
@@ -1519,7 +1519,7 @@ calculation speed.</p></li>
 <h2>Feb-7-2013: Version 1.6.3<a class="headerlink" href="#feb-7-2013-version-1-6-3" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p>Arbitral projection direction is allowed for thermal displacements
-calculation. (<a class="reference internal" href="setting-tags.html#thermal-displacements-tag"><span class="std std-ref">TDISP, TMAX, TMIN, and TSTEP</span></a>)</p></li>
+calculation. (<a class="reference internal" href="setting-tags.html#thermal-displacements-tag"><span class="std std-ref">TDISP</span></a>)</p></li>
 <li><p>A new tag <code class="docutils literal notranslate"><span class="pre">WRITEDM</span></code> and an option <code class="docutils literal notranslate"><span class="pre">--writedm</span></code> are implemented. Dynamical
 matrices are written into <code class="docutils literal notranslate"><span class="pre">qpoints.yaml</span></code> when this is used together with the
 <code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code> mode. (<a class="reference internal" href="setting-tags.html#writedm-tag"><span class="std std-ref">WRITEDM</span></a>)</p></li>
@@ -1547,7 +1547,7 @@ matrices are written into <code class="docutils literal notranslate"><span class
 <li><p>Experimental support of band connection. (<a class="reference internal" href="setting-tags.html#band-connection-tag"><span class="std std-ref">BAND_CONNECTION</span></a>)</p></li>
 <li><p>Experimental support of mode Grüneisen parameter calculation.
 (<a class="reference internal" href="gruneisen.html#phonopy-gruneisen"><span class="std std-ref">Calculation of mode Grüneisen parameters</span></a>)</p></li>
-<li><p>Format of <code class="docutils literal notranslate"><span class="pre">MODULATION</span></code> tag was modified. (<a class="reference internal" href="setting-tags.html#modulation-tag"><span class="std std-ref">Create modulated structure</span></a>)</p></li>
+<li><p>Format of <code class="docutils literal notranslate"><span class="pre">MODULATION</span></code> tag was modified. (<a class="reference internal" href="setting-tags.html#modulation-tag"><span class="std std-ref">MODULATION</span></a>)</p></li>
 <li><p>Phonopy is controlled by command line options more than before. <code class="docutils literal notranslate"><span class="pre">--qpoints</span></code>,
 <code class="docutils literal notranslate"><span class="pre">--modulation</span></code> and <code class="docutils literal notranslate"><span class="pre">--anime</span></code> options are prepared.</p></li>
 <li><p>Symmetry finder update.</p></li>
@@ -1598,7 +1598,7 @@ variable names without the underscore, which was implemented by the function
 (<a class="reference internal" href="setting-tags.html#band-labels-tag"><span class="std std-ref">BAND_LABELS</span></a>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--band</span></code> option is implemented.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">GAMMA_CENTER</span></code> tag and <code class="docutils literal notranslate"><span class="pre">--gc</span></code>, <code class="docutils literal notranslate"><span class="pre">--gamma_center</span></code> option are implemented
-(<a class="reference internal" href="setting-tags.html#mp-tag"><span class="std std-ref">MESH, MP, or MESH_NUMBERS</span></a>).</p></li>
+(<a class="reference internal" href="setting-tags.html#mesh-tag"><span class="std std-ref">MESH, MP, or MESH_NUMBERS</span></a>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">phonopy-qha</span></code> was polished. Most of the code was moved to
 <code class="docutils literal notranslate"><span class="pre">phonopy/qha/__init__.py</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Phonopy::get_mesh</span></code> and <code class="docutils literal notranslate"><span class="pre">Phonopy::get_band_structure</span></code> were modified. Instead
@@ -1743,7 +1743,7 @@ by Jörg Meyer and Christian Carbogno.</p></li>
 <li><p>Symmetry finder update to spglib-1.0.2</p></li>
 <li><p>[<strong>Experimental</strong>] Finding Bravais lattice using <code class="docutils literal notranslate"><span class="pre">--symmetry</span></code> option.</p></li>
 <li><p>[<strong>Experimental</strong>] Modulated structure along specified phonon modes by
-<code class="docutils literal notranslate"><span class="pre">MODULATION</span></code> tag (<a class="reference internal" href="setting-tags.html#modulation-tag"><span class="std std-ref">Create modulated structure</span></a>).</p></li>
+<code class="docutils literal notranslate"><span class="pre">MODULATION</span></code> tag (<a class="reference internal" href="setting-tags.html#modulation-tag"><span class="std std-ref">MODULATION</span></a>).</p></li>
 </ul>
 </section>
 <section id="jan-21-2011-version-0-9-3-3">
