@@ -6,78 +6,83 @@ by those with dashes `-`. Those tag names are unchanged.
 
 Some of command-line options are equivalent to respective setting tags:
 
-- `--alm` (`FC_CALCULATOR = ALM`)
-- `--amplitude` (`DISPLACEMENT_DISTANCE`)
-- `--anime` (`ANIME`)
-- `--band` (`BAND`)
-- `--band-connection` (`BAND_CONNECTION = .TRUE.`)
-- `--band-format` (`BAND_FORMAT`)
-- `--band-labels` (`BAND_LABELS`)
-- `--band-points` (`BAND_POINTS`)
-- `--cutoff-freq` (`CUTOFF_FREQUENCY`)
-- `-c`, `--cell` (`CELL_FILENAME`)
-- `-d` (`CREATE_DISPLACEMENTS = .TRUE.`
-- `--dim` (`DIM`)
-- `--dos` (`DOS = .TRUE.`)
+- `--alm` (`FC_CALCULATOR = ALM`) [{ref}`fc_calculator_alm_tag`]
+- `--amplitude` (`DISPLACEMENT_DISTANCE`) [{ref}`displacement_distance_tag`]
+- `--anime` (`ANIME`) [{ref}`anime_tag`]
+- `--band` (`BAND`) [{ref}`band_tag`]
+- `--band-connection` (`BAND_CONNECTION = .TRUE.`) [{ref}`band_connection_tag`]
+- `--band-format` (`BAND_FORMAT`) [{ref}`band_format_tag`]
+- `--band-labels` (`BAND_LABELS`) [{ref}`band_labels_tag`]
+- `--band-points` (`BAND_POINTS`) [{ref}`band_points_tag`]
+- `--cutoff-freq` (`CUTOFF_FREQUENCY`) [{ref}`cutoff_frequency_tags`]
+- `-c`, `--cell` (`CELL_FILENAME`) [{ref}`cell_filename_tag`]
+- `-d` (`CREATE_DISPLACEMENTS = .TRUE.`) [{ref}`create_displacements_tag`]
+- `--dim` (`DIM`) [{ref}`dimension_tag`]
+- `--dos` (`DOS = .TRUE.`) [{ref}`dos_tag`]
 - `--eigvecs`, `--eigenvectors` (`EIGENVECTORS = .TRUE.`)
+  [{ref}`eigenvectors_tag`]
 - `--factor` (`FREQUENCY_CONVERSION_FACTOR`)
-- `--fc-calc` (`FC_CALCULATOR`)
-- `--fc-calc-opt` (`FC_CALCULATOR_OPTIONS`)
-- `--fc-symmetry` (`FC_SYMMETRY = .TRUE.`)
-- `--fits-debye-model` (`DEBYE_MODEL = .TRUE.`)
-- `--fmax` (`FMAX`)
-- `--fmin` (`FMIN`)
-- `--fpitch` (`FPITCH`)
-- `--full-fc` (`FULL_FORCE_CONSTANTS`)
-- `--gc`, `--gamma_center` (`GAMMA_CENTER`)
+  [{ref}`frequency_conversion_factor_tag`]
+- `--fc-calc` (`FC_CALCULATOR`) [{ref}`fc_calculator_tag`]
+- `--fc-calc-opt` (`FC_CALCULATOR_OPTIONS`) [{ref}`fc_calculator_options_tag`]
+- `--fc-symmetry` (`FC_SYMMETRY = .TRUE.`) [{ref}`fc_symmetry_tag`]
+- `--fits-debye-model` (`DEBYE_MODEL = .TRUE.`) [{ref}`debye_model_tag`]
+- `--fmax` (`FMAX`) [{ref}`FMAX <dos_fmin_fmax_tags>`]
+- `--fmin` (`FMIN`) [{ref}`FMIN <dos_fmin_fmax_tags>`]
+- `--fpitch` (`FPITCH`) [{ref}`FPITCH <dos_fmin_fmax_tags>`]
+- `--full-fc` (`FULL_FORCE_CONSTANTS`) [{ref}`full_force_constants_tag`]
+- `--gc`, `--gamma_center` (`GAMMA_CENTER`) [{ref}`gamma_center_tag`]
 - `--gv`, `--group_velocity` (`GROUP_VELOCITY = .TRUE.`)
-- `--gv-delta-q` (`GV_DELTA_Q`)
-- `--hdf5` (`HDF5 = .TRUE.`)
-- `--irreps` (`IRREPS`)
-- `--include-fc` (`INCLUDE_FC = .TRUE.`)
-- `--include-fs` (`INCLUDE_FS = .TRUE.`)
-- `--include-born` (`INCLUDE_BORN = .TRUE.`)
-- `--include-disp` (`INCLUDE_DISP = .TRUE.`)
-- `--include-all` (`INCLUDE_ALL = .TRUE.`)
-- `--lcg`, `--little_cogroup` (`LITTLE_COGROUP`)
-- `--magmom` (`MAGMOM`)
-- `--modulation` (`MODULATION`)
-- `--moment` (`MOMENT = .TRUE.`)
-- `--moment_order` (`MOMENT_ORDER`)
-- `--mesh-format` (`MESH_FORMAT`)
-- `--mp`, `--mesh` (`MP` or `MESH`)
-- `--nac` (`NAC = .TRUE.`)
-- `--nac-method` (`NAC_METHOD`)
-- `--nosym` (`SYMMETRY = .FALSE.`)
-- `--nomeshsym` (`MESH_SYMMETRY = .FALSE.`)
-- `--nowritemesh` (`WRITE_MESH = .FALSE.`)
-- `--pa`, `--primitive-axes` (`PRIMITIVE_AXES`)
+  [{ref}`group_velocity_tag`]
+- `--gv-delta-q` (`GV_DELTA_Q`) [{ref}`gv_delta_q_tag`]
+- `--hdf5` (`HDF5 = .TRUE.`) [{ref}`hdf5_tag`]
+- `--irreps` (`IRREPS`) [{ref}`irreps_tag`]
+- `--include-fc` (`INCLUDE_FC = .TRUE.`) [{ref}`include_fc_tag`]
+- `--include-fs` (`INCLUDE_FS = .TRUE.`) [{ref}`include_fs_tag`]
+- `--include-born` (`INCLUDE_BORN = .TRUE.`) [{ref}`include_born_tag`]
+- `--include-disp` (`INCLUDE_DISP = .TRUE.`) [{ref}`include_disp_tag`]
+- `--include-all` (`INCLUDE_ALL = .TRUE.`) [{ref}`include_all_tag`]
+- `--lcg`, `--little_cogroup` (`LITTLE_COGROUP`) [{ref}`little_cogroup_tag`]
+- `--magmom` (`MAGMOM`) [{ref}`magmom_tag`]
+- `--modulation` (`MODULATION`) [{ref}`modulation_tag`]
+- `--moment` (`MOMENT = .TRUE.`) [{ref}`MOMENT <dos_moment_tag>`]
+- `--moment_order` (`MOMENT_ORDER`) [{ref}`MOMENT_ORDER <dos_moment_tag>`]
+- `--mesh-format` (`MESH_FORMAT`) [{ref}`mesh_format_tag`]
+- `--mp`, `--mesh` (`MP` or `MESH`) [{ref}`MESH <mesh_tag>`]
+- `--nac` (`NAC = .TRUE.`) [{ref}`nac_tag`]
+- `--nac-method` (`NAC_METHOD`) [{ref}`nac_method_tag`]
+- `--nosym` (`SYMMETRY = .FALSE.`) [{ref}`symmetry_tag`]
+- `--nomeshsym` (`MESH_SYMMETRY = .FALSE.`) [{ref}`nomeshsym_tag`]
+- `--nowritemesh` (`WRITE_MESH = .FALSE.`) [{ref}`write_mesh_tag`]
+- `--pa`, `--primitive-axes` (`PRIMITIVE_AXES`) [{ref}`primitive_axes_tag`]
 - `--pd`, `--projection-direction` (`PROJECTION_DIRECTION`)
-- `--pdos` (`PDOS`)
-- `--pr`, `--pretend-real` (`PRETEND_REAL = .TRUE.`)
-- `--q-direction` (`Q_DIRECTION`)
-- `--qpoints` (`QPOINTS`)
-- `--qpoints-format` (`QPOINTS_FORMAT`)
-- `--rd` (`RANDOM_DISPLACEMENTS`)
+  [{ref}`projection_direction_tag`]
+- `--pdos` (`PDOS`) [{ref}`pdos_tag`]
+- `--pr`, `--pretend-real` (`PRETEND_REAL = .TRUE.`) [{ref}`pretend_real_tags`]
+- `--q-direction` (`Q_DIRECTION`) [{ref}`q_direction_tag`]
+- `--qpoints` (`QPOINTS`) [{ref}`qpoints_tag`]
+- `--qpoints-format` (`QPOINTS_FORMAT`) [{ref}`qpoints_format_tag`]
+- `--rd` (`RANDOM_DISPLACEMENTS`) [{ref}`random_displacements_tag`]
 - `--rd-temperature` (`RANDOM_DISPLACEMENT_TEMPERATURE`)
-- `--readfc` (`READ_FORCE_CONSTANTS = .TRUE.`)
-- `--readfc-format` (`READFC_FORMAT`)
-- `--read-qpoints` (`QPOINTS = .TRUE.`)
-- `--show-irreps` (`SHOW_IRREPS`)
-- `--sigma` (`SIGMA`)
-- `--symfc` (`FC_CALCULATOR = SYMFC`)
-- `-t` (`TPROP`)
-- `--td` (`TDISP`)
-- `--tdm` (`TDISPMAT`)
-- `--tdm-cif` (`TDISPMAT_CIF`)
-- `--tmin` (`TMIN`)
-- `--tmax` (`TMAX`)
-- `--tolerance` (`SYMMETRY_TOLERANCE`)
-- `--tstep` (`TSTEP`)
-- `--writedm` (`WRITEDM = .TRUE.`)
-- `--writefc` (`WRITE_FORCE_CONSTANTS = .TRUE.`)
-- `--writefc-format` (`WRITEFC_FORMAT`)
-- `--xyz-projection` (`XYZ_PROJECTION = .TRUE.`)
+  [{ref}`random_displacement_temperature_tag`]
+- `--readfc` (`READ_FORCE_CONSTANTS = .TRUE.`) [{ref}`read_force_constants_tag`]
+- `--readfc-format` (`READFC_FORMAT`) [{ref}`READFC_FORMAT <fc_format_tag>`]
+- `--read-qpoints` (`QPOINTS = .TRUE.`) [{ref}`qpoints_tag`]
+- `--show-irreps` (`SHOW_IRREPS`) [{ref}`show_irreps_tag`]
+- `--sigma` (`SIGMA`) [{ref}`sigma_tag`]
+- `--symfc` (`FC_CALCULATOR = SYMFC`) [{ref}`fc_calculator_symfc_tag`]
+- `-t` (`TPROP = .TRUE.`) [{ref}`thermal_properties_tag`]
+- `--td` (`TDISP = .TRUE.`) [{ref}`thermal_displacements_tag`]
+- `--tdm` (`TDISPMAT = .TRUE.`) [{ref}`thermal_displacement_matrices_tag`]
+- `--tdm-cif` (`TDISPMAT_CIF = .TRUE.`)
+- `--tmin` (`TMIN`) [{ref}`TMIN <thermal_property_temperatures>`]
+- `--tmax` (`TMAX`) [{ref}`TMAX <thermal_property_temperatures>`]
+- `--tolerance` (`SYMMETRY_TOLERANCE`) [{ref}`tolerance_tag`]
+- `--tstep` (`TSTEP`) [{ref}`TSTEP <thermal_property_temperatures>`]
+- `--writedm` (`WRITEDM = .TRUE.`) [{ref}`writedm_tag`]
+- `--writefc` (`WRITE_FORCE_CONSTANTS = .TRUE.`) [{ref}`write_force_constants_tag`]
+- `--writefc-format` (`WRITEFC_FORMAT`) [{ref}`WRITEFC_FORMAT <fc_format_tag>`]
+- `--xyz-projection` (`XYZ_PROJECTION = .TRUE.`) [{ref}`xyz_projection_tag`]
 
 When both of equivalent command-line option and setting tag are set
 simultaneously, the command-line option supersedes the setting tag. The
@@ -199,8 +204,6 @@ The default file names for the calculators are as follows:
 
 (f_force_sets_option)=
 ### `-f` or `--forces`
-
-**`phonopy-load` doesn't have this option.**
 
 (vasp_force_sets_option)=
 #### VASP interface
