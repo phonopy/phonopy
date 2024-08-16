@@ -819,7 +819,7 @@ class PhonopyYaml:
 
     """
 
-    default_filenames = ("phonopy_params.yaml", "phonopy_disp.yaml", "phonopy.yaml")
+    default_filenames = ("phonopy_disp.yaml", "phonopy.yaml")
     command_name = "phonopy"
 
     configuration = phonopy_yaml_property_factory("configuration")

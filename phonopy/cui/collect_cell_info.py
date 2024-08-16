@@ -126,7 +126,9 @@ def collect_cell_info(
 
     """
     # In some cases, interface mode falls back to phonopy_yaml mode.
-    if not load_phonopy_yaml:
+    if load_phonopy_yaml:
+        fallback_reason = "load_phonopy_yaml mode"
+    else:
         fallback_reason = _fallback_to_phonopy_yaml(
             supercell_matrix,
             interface_mode,
@@ -390,9 +392,7 @@ def _get_error_message(
     elif fallback_reason == "no supercell matrix given":
         msg_list.append("Supercell matrix (DIM or --dim) was not explicitly specified.")
 
-    msg_list.append(
-        f"By this reason, {phonopy_yaml_cls.command_name}_yaml mode was invoked."
-    )
+    msg_list.append(f"Switched on {phonopy_yaml_cls.command_name}-yaml mode.")
 
     if final_cell_filename is None:  # No phonopy*.yaml file was found.
         filenames = [f'"{name}"' for name in phonopy_yaml_cls.default_filenames]
@@ -404,7 +404,7 @@ def _get_error_message(
             tail = " or ".join(filenames[-2:])
             head = ", ".join(filenames[:-2])
             text = head + ", " + tail
-        msg_list.append(f"But {text} could not be found.")
+        msg_list.append(f"{text} could not be found.")
         return "\n".join(msg_list)
 
     phpy = optional_structure_info[1]
