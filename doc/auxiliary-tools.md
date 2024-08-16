@@ -71,7 +71,7 @@ dielectric tensor are symmetrized as default. To prevent symmetrization,
 
 ### `--pa`, `--primitive-axes`
 
-This is same as {ref}`primitive_axis_tag`.
+This is same as {ref}`primitive_axes_tag`.
 
 ### `--dim`
 
