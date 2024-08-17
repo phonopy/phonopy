@@ -58,6 +58,9 @@ PHONOPY_USE_OMP = {env="PHONOPY_USE_OMP", default="ON"}
 [tool.setuptools_scm]
 write_to = "phonopy/_version.py"
 
+[tool.setuptools.package-data]
+phonopy = ["py.typed"]
+
 [tool.ruff]
 line-length = 88
 lint.select = [
