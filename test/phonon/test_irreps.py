@@ -1187,7 +1187,7 @@ def _load_data(data_str):
 
 
 def _check_char_sum(phonon: Phonopy, qpoints: list):
-    print("space-group number:", phonon.symmetry.dataset["number"])
+    print("space-group number:", phonon.symmetry.dataset.number)
 
     for q in qpoints:
         phonon.set_irreps(q)
