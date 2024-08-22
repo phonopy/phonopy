@@ -48,7 +48,7 @@ from phonopy.structure.cells import (
     get_primitive,
     get_supercell,
 )
-from phonopy.utils import similarity_transformation
+from phonopy.utils import get_dot_access_dataset, similarity_transformation
 
 
 class Symmetry:
@@ -328,7 +328,10 @@ class Symmetry:
         return np.array(site_symmetries, dtype="intc")
 
     def _set_symmetry_dataset(self):
-        self._dataset = spglib.get_symmetry_dataset(self._cell.totuple(), self._symprec)
+        self._dataset = get_dot_access_dataset(
+            spglib.get_symmetry_dataset(self._cell.totuple(), self._symprec)
+        )
+
         self._symmetry_operations = {
             "rotations": self._dataset.rotations,
             "translations": self._dataset.translations,
@@ -342,8 +345,10 @@ class Symmetry:
         self._map_atoms = self._dataset.equivalent_atoms
 
     def _set_symmetry_operations_with_magmoms(self):
-        self._dataset = spglib.get_magnetic_symmetry_dataset(
-            self._cell.totuple(), symprec=self._symprec
+        self._dataset = get_dot_access_dataset(
+            spglib.get_magnetic_symmetry_dataset(
+                self._cell.totuple(), symprec=self._symprec
+            )
         )
         self._symmetry_operations = {
             "rotations": self._dataset.rotations,

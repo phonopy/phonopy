@@ -458,12 +458,13 @@ class PhonopyYamlDumperBase(ABC):
 
         dataset = self._data.symmetry.dataset
         if dataset is not None:
-            if "uni_number" in dataset:
+            try:
+                uni_number = dataset.uni_number
                 lines.append("magnetic_space_group:")
-                lines.append(f'  uni_number: {dataset["uni_number"]}')
-                lines.append(f'  msg_type: {dataset["msg_type"]}')
+                lines.append(f"  uni_number: {uni_number}")
+                lines.append(f"  msg_type: {dataset.msg_type}")
                 lines.append("")
-            else:
+            except AttributeError:
                 lines.append("space_group:")
                 spg_type = dataset.international
                 lines.append(f'  type: "{spg_type}"')
