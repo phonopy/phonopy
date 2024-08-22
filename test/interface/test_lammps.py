@@ -52,7 +52,7 @@ def _assert_LammpsStructure(cell: PhonopyAtoms, symbol: str, helper_methods):
     phyml = read_phonopy_yaml(io.StringIO(phonopy_atoms[symbol]))
     helper_methods.compare_cells_with_order(cell, phyml.unitcell)
     symmetry = Symmetry(phyml.unitcell)
-    assert symmetry.dataset["number"] == 194
+    assert symmetry.dataset.number == 194
 
 
 def test_LammpsStructureDumper(primcell_nacl: PhonopyAtoms, helper_methods):

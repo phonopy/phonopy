@@ -207,7 +207,7 @@ class Symmetry:
 
         Returns
         -------
-        spglib_dataset["equivalent_atoms"]
+        spglib_dataset.equivalent_atoms
         e.g.,
             [0, 0, 0, 0, 4, 4, 4, 4]
 
@@ -330,26 +330,26 @@ class Symmetry:
     def _set_symmetry_dataset(self):
         self._dataset = spglib.get_symmetry_dataset(self._cell.totuple(), self._symprec)
         self._symmetry_operations = {
-            "rotations": self._dataset["rotations"],
-            "translations": self._dataset["translations"],
+            "rotations": self._dataset.rotations,
+            "translations": self._dataset.translations,
         }
         self._international_table = "%s (%d)" % (
-            self._dataset["international"],
-            self._dataset["number"],
+            self._dataset.international,
+            self._dataset.number,
         )
-        self._wyckoff_letters = self._dataset["wyckoffs"]
+        self._wyckoff_letters = self._dataset.wyckoffs
 
-        self._map_atoms = self._dataset["equivalent_atoms"]
+        self._map_atoms = self._dataset.equivalent_atoms
 
     def _set_symmetry_operations_with_magmoms(self):
         self._dataset = spglib.get_magnetic_symmetry_dataset(
             self._cell.totuple(), symprec=self._symprec
         )
         self._symmetry_operations = {
-            "rotations": self._dataset["rotations"],
-            "translations": self._dataset["translations"],
+            "rotations": self._dataset.rotations,
+            "translations": self._dataset.translations,
         }
-        self._map_atoms = self._dataset["equivalent_atoms"]
+        self._map_atoms = self._dataset.equivalent_atoms
 
     def _set_independent_atoms(self):
         indep_atoms = []

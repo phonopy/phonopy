@@ -1751,8 +1751,8 @@ def guess_primitive_matrix(unitcell: PhonopyAtoms, symprec: float = 1e-5):
         raise RuntimeError(msg)
 
     dataset = spglib.get_symmetry_dataset(unitcell.totuple(), symprec=symprec)
-    tmat = dataset["transformation_matrix"]
-    centring = dataset["international"][0]
+    tmat = dataset.transformation_matrix
+    centring = dataset.international[0]
     pmat = get_primitive_matrix_by_centring(centring)
     return np.array(np.dot(np.linalg.inv(tmat), pmat), dtype="double", order="C")
 
@@ -1796,9 +1796,9 @@ def estimate_supercell_matrix(spglib_dataset, max_num_atoms=120, max_iter=100):
         Multiplicities for a, b, c basis vectors, respectively.
 
     """
-    spg_num = spglib_dataset["number"]
-    num_atoms = len(spglib_dataset["std_types"])
-    lengths = get_cell_parameters(spglib_dataset["std_lattice"])
+    spg_num = spglib_dataset.number
+    num_atoms = len(spglib_dataset.std_types)
+    lengths = get_cell_parameters(spglib_dataset.std_lattice)
     if spg_num <= 74:  # Triclinic, monoclinic, and orthorhombic
         multi = _get_multiplicity_abc(
             num_atoms, lengths, max_num_atoms, max_iter=max_iter

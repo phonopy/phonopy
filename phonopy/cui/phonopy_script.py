@@ -1995,8 +1995,8 @@ def main(**argparse_control):
         if phonon.unitcell.magnetic_moments is None:
             print("Spacegroup: %s" % phonon.symmetry.get_international_table())
         elif phonon.symmetry.dataset is not None:
-            uni_number = phonon.symmetry.dataset["uni_number"]
-            msg_type = phonon.symmetry.dataset["msg_type"]
+            uni_number = phonon.symmetry.dataset.uni_number
+            msg_type = phonon.symmetry.dataset.msg_type
             print(f"Magnetic space group UNI number: {uni_number}")
             print(f"Type-{msg_type} magnetic space group")
         print(

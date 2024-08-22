@@ -465,10 +465,10 @@ class PhonopyYamlDumperBase(ABC):
                 lines.append("")
             else:
                 lines.append("space_group:")
-                spg_type = dataset["international"]
+                spg_type = dataset.international
                 lines.append(f'  type: "{spg_type}"')
-                lines.append(f'  number: {dataset["number"]}')
-                hall_symbol = dataset["hall"]
+                lines.append(f"  number: {dataset.number}")
+                hall_symbol = dataset.hall
                 if '"' in hall_symbol:
                     hall_symbol = hall_symbol.replace('"', '\\"')
                 lines.append(f'  Hall_symbol: "{hall_symbol}"')
