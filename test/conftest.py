@@ -161,6 +161,7 @@ def ph_nacl_rd_symfc() -> Phonopy:
 
     """
     pytest.importorskip("symfc")
+    pytest.importorskip("spglib", minversion="2.5")
 
     yaml_filename = cwd / "phonopy_params_NaCl-rd.yaml.xz"
     return phonopy.load(

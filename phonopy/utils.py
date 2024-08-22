@@ -57,8 +57,4 @@ def get_dot_access_dataset(dataset):
     else:
         from types import SimpleNamespace
 
-        class MySimpleNamespace(SimpleNamespace):
-            def __contains__(self, key):
-                return key in self.__dict__
-
-        return MySimpleNamespace(**dataset)
+        return SimpleNamespace(**dataset)
