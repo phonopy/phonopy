@@ -1704,7 +1704,7 @@ def _get_cell_info(
     )
 
     # Show primitive matrix overwrite message
-    phpy_yaml: PhonopyYaml = cell_info["phonopy_yaml"]
+    phpy_yaml: PhonopyYaml = cell_info.get("phonopy_yaml")
     if phpy_yaml is not None:
         yaml_filename = cell_info["optional_structure_info"][0]
         pmat_in_settings = _get_primitive_matrix(
