@@ -58,7 +58,7 @@ from phonopy.structure.symmetry import (
     get_lattice_vector_equivalence,
     get_pointgroup_operations,
 )
-from phonopy.utils import similarity_transformation
+from phonopy.utils import get_dot_access_dataset, similarity_transformation
 from phonopy.version import __version__
 
 
@@ -577,7 +577,9 @@ class GeneralizedRegularGridPoints:
 
     def _prepare(self, cell, length, symprec):
         """Define grid generating matrix and run the SNF."""
-        self._sym_dataset = get_symmetry_dataset(cell.totuple(), symprec=symprec)
+        self._sym_dataset = get_dot_access_dataset(
+            get_symmetry_dataset(cell.totuple(), symprec=symprec)
+        )
         if self._suggest:
             self._set_grid_matrix_by_std_primitive_cell(cell, length)
         else:

@@ -460,8 +460,8 @@ class PhonopyYamlDumperBase(ABC):
         if dataset is not None:
             if "uni_number" in dataset:
                 lines.append("magnetic_space_group:")
-                lines.append(f'  uni_number: {dataset["uni_number"]}')
-                lines.append(f'  msg_type: {dataset["msg_type"]}')
+                lines.append(f"  uni_number: {dataset.uni_number}")
+                lines.append(f"  msg_type: {dataset.msg_type}")
                 lines.append("")
             else:
                 lines.append("space_group:")

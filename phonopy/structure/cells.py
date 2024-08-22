@@ -44,6 +44,7 @@ import spglib
 
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.snf import SNF3x3
+from phonopy.utils import get_dot_access_dataset
 
 
 class Supercell(PhonopyAtoms):
@@ -1750,7 +1751,9 @@ def guess_primitive_matrix(unitcell: PhonopyAtoms, symprec: float = 1e-5):
         msg = "Can not be used with the unit cell having magnetic moments."
         raise RuntimeError(msg)
 
-    dataset = spglib.get_symmetry_dataset(unitcell.totuple(), symprec=symprec)
+    dataset = get_dot_access_dataset(
+        spglib.get_symmetry_dataset(unitcell.totuple(), symprec=symprec)
+    )
     tmat = dataset.transformation_matrix
     centring = dataset.international[0]
     pmat = get_primitive_matrix_by_centring(centring)
