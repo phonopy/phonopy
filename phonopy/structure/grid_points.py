@@ -58,7 +58,7 @@ from phonopy.structure.symmetry import (
     get_lattice_vector_equivalence,
     get_pointgroup_operations,
 )
-from phonopy.utils import similarity_transformation
+from phonopy.utils import get_dot_access_dataset, similarity_transformation
 from phonopy.version import __version__
 
 
@@ -533,7 +533,7 @@ class GeneralizedRegularGridPoints:
         self._generate_grid_points()
         self._generate_q_points()
         self._reciprocal_operations = get_reciprocal_operations(
-            self._sym_dataset["rotations"],
+            self._sym_dataset.rotations,
             self._transformation_matrix,
             self._snf.D,
             self._snf.Q,
@@ -577,7 +577,9 @@ class GeneralizedRegularGridPoints:
 
     def _prepare(self, cell, length, symprec):
         """Define grid generating matrix and run the SNF."""
-        self._sym_dataset = get_symmetry_dataset(cell.totuple(), symprec=symprec)
+        self._sym_dataset = get_dot_access_dataset(
+            get_symmetry_dataset(cell.totuple(), symprec=symprec)
+        )
         if self._suggest:
             self._set_grid_matrix_by_std_primitive_cell(cell, length)
         else:
@@ -586,15 +588,15 @@ class GeneralizedRegularGridPoints:
         self._snf.run()
 
     def _set_grid_matrix_by_std_primitive_cell(self, cell, length):
-        """Grid generating matrix based on standeardized primitive cell."""
-        tmat = self._sym_dataset["transformation_matrix"]
-        centring = self._sym_dataset["international"][0]
+        """Grid generating matrix based on standardized primitive cell."""
+        tmat = self._sym_dataset.transformation_matrix
+        centring = self._sym_dataset.international[0]
         pmat = get_primitive_matrix_by_centring(centring)
         conv_lat = np.dot(np.linalg.inv(tmat).T, cell.cell)
         num_cells = np.prod(length2mesh(length, conv_lat))
         self._mesh_numbers = estimate_supercell_matrix(
             self._sym_dataset,
-            max_num_atoms=num_cells * len(self._sym_dataset["std_types"]),
+            max_num_atoms=num_cells * len(self._sym_dataset.std_types),
         )
         inv_pmat = np.linalg.inv(pmat)
         inv_pmat_int = np.rint(inv_pmat).astype(int)
@@ -610,7 +612,7 @@ class GeneralizedRegularGridPoints:
 
     def _set_grid_matrix_by_input_cell(self, input_cell, length):
         """Grid generating matrix based on input cell."""
-        pointgroup = get_pointgroup(self._sym_dataset["rotations"])
+        pointgroup = get_pointgroup(self._sym_dataset.rotations)
         # tmat: From input lattice to point group preserving lattice
         tmat = pointgroup[2]
         lattice = np.dot(input_cell.cell.T, tmat).T

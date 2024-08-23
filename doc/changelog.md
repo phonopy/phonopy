@@ -2,6 +2,12 @@
 
 # Change Log
 
+## Aug-23-2024: Version 2.27.0
+
+- Update for new `SpglibDataset` in spglib v.2.5 (PR #413 by @janosh, #414).
+  Note that now `Symmetry.dataset` returns `SpglibDataset` (spglib >= v2.5) or
+  `SimpleNamespace` (spglib < v2.5).
+
 ## Aug-12-2024: Version 2.26.7
 
 - Minor updates of user interface to behave nicely.

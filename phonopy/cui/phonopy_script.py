@@ -1562,8 +1562,11 @@ def _start_phonopy(**argparse_control):
         if argparse_control.get("load_phonopy_yaml", False):
             print("Running in phonopy.load mode.")
         print("Python version %d.%d.%d" % sys.version_info[:3])
+        try:  # spglib.get_version() is deprecated.
+            print(f"Spglib version {spglib.spg_get_version()}")
+        except AttributeError:
+            print("Spglib version %d.%d.%d" % spglib.get_version())
 
-        print("Spglib version %d.%d.%d" % spglib.get_version())
         print("")
 
         if deprecated:
@@ -1704,7 +1707,7 @@ def _get_cell_info(
     )
 
     # Show primitive matrix overwrite message
-    phpy_yaml: PhonopyYaml = cell_info["phonopy_yaml"]
+    phpy_yaml: PhonopyYaml = cell_info.get("phonopy_yaml")
     if phpy_yaml is not None:
         yaml_filename = cell_info["optional_structure_info"][0]
         pmat_in_settings = _get_primitive_matrix(
@@ -1995,8 +1998,8 @@ def main(**argparse_control):
         if phonon.unitcell.magnetic_moments is None:
             print("Spacegroup: %s" % phonon.symmetry.get_international_table())
         elif phonon.symmetry.dataset is not None:
-            uni_number = phonon.symmetry.dataset["uni_number"]
-            msg_type = phonon.symmetry.dataset["msg_type"]
+            uni_number = phonon.symmetry.dataset.uni_number
+            msg_type = phonon.symmetry.dataset.msg_type
             print(f"Magnetic space group UNI number: {uni_number}")
             print(f"Type-{msg_type} magnetic space group")
         print(

@@ -39,6 +39,11 @@ import warnings
 from collections.abc import Sequence
 from typing import Optional
 
+try:
+    from spglib import SpglibDataset
+except ImportError:
+    from types import SimpleNamespace as SpglibDataset
+
 import numpy as np
 import spglib
 
@@ -48,7 +53,7 @@ from phonopy.structure.cells import (
     get_primitive,
     get_supercell,
 )
-from phonopy.utils import similarity_transformation
+from phonopy.utils import get_dot_access_dataset, similarity_transformation
 
 
 class Symmetry:
@@ -181,7 +186,7 @@ class Symmetry:
         return self._wyckoff_letters
 
     @property
-    def dataset(self):
+    def dataset(self) -> SpglibDataset:
         """Return spglib dataset.
 
         This is raw data of symmetry.
@@ -207,7 +212,7 @@ class Symmetry:
 
         Returns
         -------
-        spglib_dataset["equivalent_atoms"]
+        spglib_dataset.equivalent_atoms
         e.g.,
             [0, 0, 0, 0, 4, 4, 4, 4]
 
@@ -328,28 +333,33 @@ class Symmetry:
         return np.array(site_symmetries, dtype="intc")
 
     def _set_symmetry_dataset(self):
-        self._dataset = spglib.get_symmetry_dataset(self._cell.totuple(), self._symprec)
+        self._dataset = get_dot_access_dataset(
+            spglib.get_symmetry_dataset(self._cell.totuple(), self._symprec)
+        )
+
         self._symmetry_operations = {
-            "rotations": self._dataset["rotations"],
-            "translations": self._dataset["translations"],
+            "rotations": self._dataset.rotations,
+            "translations": self._dataset.translations,
         }
         self._international_table = "%s (%d)" % (
-            self._dataset["international"],
-            self._dataset["number"],
+            self._dataset.international,
+            self._dataset.number,
         )
-        self._wyckoff_letters = self._dataset["wyckoffs"]
+        self._wyckoff_letters = self._dataset.wyckoffs
 
-        self._map_atoms = self._dataset["equivalent_atoms"]
+        self._map_atoms = self._dataset.equivalent_atoms
 
     def _set_symmetry_operations_with_magmoms(self):
-        self._dataset = spglib.get_magnetic_symmetry_dataset(
-            self._cell.totuple(), symprec=self._symprec
+        self._dataset = get_dot_access_dataset(
+            spglib.get_magnetic_symmetry_dataset(
+                self._cell.totuple(), symprec=self._symprec
+            )
         )
         self._symmetry_operations = {
-            "rotations": self._dataset["rotations"],
-            "translations": self._dataset["translations"],
+            "rotations": self._dataset.rotations,
+            "translations": self._dataset.translations,
         }
-        self._map_atoms = self._dataset["equivalent_atoms"]
+        self._map_atoms = self._dataset.equivalent_atoms
 
     def _set_independent_atoms(self):
         indep_atoms = []
