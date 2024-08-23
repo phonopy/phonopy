@@ -458,17 +458,18 @@ class PhonopyYamlDumperBase(ABC):
 
         dataset = self._data.symmetry.dataset
         if dataset is not None:
-            if "uni_number" in dataset:
+            try:
+                uni_number = dataset.uni_number
                 lines.append("magnetic_space_group:")
-                lines.append(f'  uni_number: {dataset["uni_number"]}')
-                lines.append(f'  msg_type: {dataset["msg_type"]}')
+                lines.append(f"  uni_number: {uni_number}")
+                lines.append(f"  msg_type: {dataset.msg_type}")
                 lines.append("")
-            else:
+            except AttributeError:
                 lines.append("space_group:")
-                spg_type = dataset["international"]
+                spg_type = dataset.international
                 lines.append(f'  type: "{spg_type}"')
-                lines.append(f'  number: {dataset["number"]}')
-                hall_symbol = dataset["hall"]
+                lines.append(f"  number: {dataset.number}")
+                hall_symbol = dataset.hall
                 if '"' in hall_symbol:
                     hall_symbol = hall_symbol.replace('"', '\\"')
                 lines.append(f'  Hall_symbol: "{hall_symbol}"')
@@ -819,7 +820,7 @@ class PhonopyYaml:
 
     """
 
-    default_filenames = ("phonopy_params.yaml", "phonopy_disp.yaml", "phonopy.yaml")
+    default_filenames = ("phonopy_disp.yaml", "phonopy.yaml")
     command_name = "phonopy"
 
     configuration = phonopy_yaml_property_factory("configuration")

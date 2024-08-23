@@ -34,9 +34,27 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from importlib.metadata import version
+
 import numpy as np
+from packaging.version import Version
 
 
 def similarity_transformation(rot, mat):
     """Similarity transformation by R x M x R^-1."""
     return np.dot(rot, np.dot(mat, np.linalg.inv(rot)))
+
+
+def get_dot_access_dataset(dataset):
+    """Return dataset with dot access.
+
+    From spglib 2.5, dataset is returned as dataclass.
+    To emulate it for older versions, this function is used.
+
+    """
+    if Version(version("spglib")) >= Version("2.5"):
+        return dataset
+    else:
+        from types import SimpleNamespace
+
+        return SimpleNamespace(**dataset)
