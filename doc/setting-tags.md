@@ -19,7 +19,6 @@ accepted. However fractional values must not have space among characters (e.g.
 ## Basic tags
 
 (dimension_tag)=
-
 ### `DIM`
 
 The supercell is created from the input unit cell. When three integers are
@@ -62,9 +61,8 @@ M_\mathrm{s}
 Be careful that the axes in `POSCAR` is defined by three row vectors, i.e.,
 {math}`( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \; \mathbf{c}_\mathrm{u} )^T`.
 
-(primitive_axis_tag)=
-
-### `PRIMITIVE_AXES` or `PRIMITIVE_AXIS`
+(primitive_axes_tag)=
+### `PRIMITIVE_AXES`
 
 When specified, transformation from the input unit cell to the primitive cell is
 performed. With this, the primitive cell basis vectors are used as the
@@ -125,6 +123,7 @@ tag is used to specify chemical symbols.
 ATOM_NAME = Si O
 ```
 
+(eigenvectors_tag)=
 ### `EIGENVECTORS`
 
 When this tag is `.TRUE.`, eigenvectors are calculated.
@@ -149,7 +148,6 @@ MASS = 28.085 28.085 16.000 16.000 16.000 16.000
 ```
 
 (magmom_tag)=
-
 ### `MAGMOM`
 
 Symmetry of spin such as magnetic moments is specified using this tag. The
@@ -174,7 +172,6 @@ MAGMOM = 0 0 1 0 0 1 0 0 -1 0 0 -1
 where the first three values as a vector is for the first atom, and so on.
 
 (cell_filename_tag)=
-
 ### `CELL_FILENAME`
 
 ```
@@ -184,7 +181,6 @@ CELL_FILENAME = POSCAR-unitcell
 See {ref}`cell_filename_option`.
 
 (frequency_conversion_factor_tag)=
-
 ### `FREQUENCY_CONVERSION_FACTOR`
 
 This tag should be used to convert the phonon frequency unit to THz because if
@@ -199,6 +195,7 @@ factors is explained at {ref}`physical_unit_conversion`.
 
 ## Displacement creation tags
 
+(create_displacements_tag)=
 ### `CREATE_DISPLACEMENTS`
 
 Supercells with displacements are created. This tag is used as the post process
@@ -210,7 +207,6 @@ DIM = 2 2 2
 ```
 
 (displacement_distance_tag)=
-
 ### `DISPLACEMENT_DISTANCE`
 
 Finite atomic displacement distance is set as specified value when creating
@@ -240,7 +236,6 @@ between `.FALSE.` and `.TRUE.`. You can check how it works to see the file
 `DISP` where displacement directions on atoms are written.
 
 (random_displacements_tag)=
-
 ### `RANDOM_DISPLACEMENTS`
 
 The number of random displacement supercells are created by the specified
@@ -262,7 +257,6 @@ DISPLACEMENT_DISTANCE = 0.03
 ```
 
 (random_displacement_temperature_tag)=
-
 ### `RANDOM_DISPLACEMENT_TEMPERATURE`
 
 **New in v2.17** This invokes generation of random displacements at a
@@ -306,11 +300,11 @@ respective forces, an external force constants calculator is necessary. See
 Displacements thus generated are sensitive to acoustic sum rule. Tiny phonon
 frequency at Gamma point due to violation of acoustic sum rule can induce very
 large displacements. Therefore, it is safer to use this feature with
-`FC_SYMMETRY = .TRUE.` (this is a default setting for `phonopy-load` command) or a force
-constants calculator (see {ref}`fc_calculator_tag`) that enforces acoustic sum
-rule. It is also possible to ignore phonons with frequencies below cutoff
-frequency specified by {ref}`cutoff_frequency_tags` tag. Phonon frequencies of
-imaginary modes are treated as their absolute values.
+`FC_SYMMETRY = .TRUE.` (this is a default setting for `phonopy-load` command) or
+a force constants calculator (see {ref}`fc_calculator_tag`) that enforces
+acoustic sum rule. It is also possible to ignore phonons with frequencies below
+cutoff frequency specified by {ref}`cutoff_frequency_tags` tag. Phonon
+frequencies of imaginary modes are treated as their absolute values.
 
 (random_seed_tag)=
 
@@ -325,14 +319,12 @@ same number.
 
 ## Band structure tags
 
-### `BAND` and `BAND_POINTS`
+(band_tag)=
+### `BAND`
 
 `BAND` gives sampling band paths. The reciprocal points are specified in reduced
 coordinates. The given points are connected for defining band paths. When comma
 `,` is inserted between the points, the paths are disconnected.
-
-`BAND_POINTS` gives the number of sampling points including the path ends. The
-default value is `BAND_POINTS = 51`.
 
 An example of three paths, (0,0,0) to (1/2,0,1/2), (1/2,1/2,1) to (0,0,0), and
 (0,0,0) to (1/2,1/2,1/2), with 101 sampling points of each path are as follows:
@@ -342,8 +334,14 @@ BAND = 0 0 0 1/2 0 1/2, 1/2 1/2 1 0 0 0 1/2 1/2 1/2
 BAND_POINTS = 101
 ```
 
-(band_labels_tag)=
+(band_points_tag)=
+### `BAND_POINTS`
 
+`BAND_POINTS` gives the number of sampling points including the path ends. The
+default value is `BAND_POINTS = 51`.
+
+
+(band_labels_tag)=
 ### `BAND_LABELS`
 
 Labels specified are depicted in band structure plot at the points of band
@@ -366,7 +364,6 @@ in a band segment shows the same kind of band. Between different band segments,
 the correspondence of colors doesn't mean anything.
 
 (band_connection_tag)=
-
 ### `BAND_CONNECTION`
 
 With this option, band connections are estimated from eigenvectors and band
@@ -391,8 +388,7 @@ BAND_CONNECTION = .TRUE.
 Mesh sampling tags are used commonly for calculations of thermal properties and
 density of states.
 
-(mp_tag)=
-
+(mesh_tag)=
 ### `MESH`, `MP`, or `MESH_NUMBERS`
 
 `MESH` numbers give uniform meshes in each axis. As the default behavior, the
@@ -438,6 +434,7 @@ MESh = 100
 values. 1/2 means the half mesh shift with respect to neighboring grid points in
 each direction.
 
+(gamma_center_tag)=
 ### `GAMMA_CENTER`
 
 Instead of employing the Monkhorst-Pack scheme for the mesh sampling,
@@ -448,7 +445,6 @@ GAMMA_CENTER = .TRUE.
 ```
 
 (write_mesh_tag)=
-
 ### `WRITE_MESH`
 
 With a dense mesh, with eigenvectors, without mesh symmetry, sometimes its
@@ -491,6 +487,7 @@ function) with the standard deviation specified by {ref}`sigma_tag`. In the
 tetrahedron method, the Brillouin integration is made analytically within
 tetrahedra in reciprocal space.
 
+(dos_tag)=
 ### `DOS`
 
 This tag enables to calculate DOS. This tag is automatically set when `PDOS` tag
@@ -515,7 +512,6 @@ makes DOS be calculated from frequency=0 to 40 with 0.1 pitch.
 maximum frequencies (the first and second values).
 
 (dos_fmin_fmax_tags)=
-
 ### `FMIN`, `FMAX`, and `FPITCH`
 
 The uniform frequency sampling points for phonon-DOS calculation are specified.
@@ -523,6 +519,7 @@ The uniform frequency sampling points for phonon-DOS calculation are specified.
 respectively, and `FPITCH` gives the frequency pitch to be sampled. These three
 values are the same as those that can be specified by `DOS_RANGE`.
 
+(pdos_tag)=
 ### `PDOS`
 
 Projected DOS is calculated using this tag. The formal definition is written as
@@ -568,7 +565,6 @@ unnecessary, then it is good to consider using `WRITE_MESH = .FALSE.`
 ({ref}`write_mesh_tag`).
 
 (projection_direction_tag)=
-
 ### `PROJECTION_DIRECTION`
 
 Eigenvectors are projected along the direction specified by this tag. Projection
@@ -581,7 +577,6 @@ PROJECTION_DIRECTION = -1 1 1
 ```
 
 (xyz_projection_tag)=
-
 ### `XYZ_PROJECTION`
 
 PDOS is calculated using eigenvectors projected along x, y, and z Cartesian
@@ -602,7 +597,6 @@ XYZ_PROJECTION = .TRUE.
 ```
 
 (sigma_tag)=
-
 ### `SIGMA`
 
 A smearing method is used instead of a linear tetrahedron method. This tag also
@@ -615,7 +609,6 @@ SIGMA = 0.1
 ```
 
 (debye_model_tag)=
-
 ### `DEBYE_MODEL`
 
 By setting `.TRUE.`, DOS at lower phonon frequencies are fit to a Debye model.
@@ -631,7 +624,6 @@ DEBYE_MODEL = .TRUE.
 ```
 
 (dos_moment_tag)=
-
 ### `MOMEMT` and `MOMENT_ORDER`
 
 Phonon moments for DOS and PDOS defined below are calculated using these tags up
@@ -667,13 +659,12 @@ MOMENT = .TRUE.
 MOMENT_ORDER = 3
 ```
 
-(thermal_properties_tag)=
-
 ## Thermal properties related tags
 
 See {ref}`cutoff_frequency_tags` on the treatment of the imaginary modes.
 
-### `TPROP`, `TMIN`, `TMAX`, and `TSTEP`
+(thermal_properties_tag)=
+### `TPROP`
 
 Thermal properties, free energy, heat capacity, and entropy, are calculated from
 their statistical thermodynamic expressions (see
@@ -697,6 +688,13 @@ formula unit in your unit cell by yourself. For example, in MgO (conventional)
 unit cell, if you want to compare with experimental results in kJ/mol, you have
 to divide the phonopy output by four.
 
+```
+TPROP = .TRUE.
+```
+
+(thermal_property_temperatures)=
+### `TMIN`, `TMAX`, and `TSTEP`
+
 `TMIN`, `TMAX`, and `TSTEP` tags are used to specify the temperature range to be
 calculated. The default values of them are 0, 1000, and 10, respectively.
 
@@ -706,7 +704,6 @@ TMAX = 2000
 ```
 
 (pretend_real_tags)=
-
 ### `PRETEND_REAL`
 
 This enables to take imaginary frequencies as real for thermal property
@@ -719,7 +716,6 @@ PRETEND_REAL = .TRUE.
 ```
 
 (cutoff_frequency_tags)=
-
 ### `CUTOFF_FREQUENCY`
 
 This is given by a real value and the default value is 0. This tag works as
@@ -745,18 +741,15 @@ CUTOFF_FREQUENCY = 0.1
 ## Thermal displacements
 
 (thermal_displacements_tag)=
-
-### `TDISP`, `TMAX`, `TMIN`, and `TSTEP`
+### `TDISP`
 
 Mean square displacements projected to Cartesian axes as a function of
-temperature are calculated from the number of phonon excitations. The usages of
-`TMAX`, `TMIN`, `TSTEP` tags are same as those in
-{ref}`thermal properties tags <thermal_properties_tag>`. Phonon frequencies in
-THz, which is the default setting of phonopy, are used to obtain the mean square
-displacements, therefore physical units have to be set properly for it (see
-{ref}`calculator_interfaces`.) The result is given in {math}`\text{Angstrom}^2`
-and writen into `thermal_displacements.yaml`. See the detail of the method,
-{ref}`thermal_displacement`. These tags must be used with
+temperature are calculated from the number of phonon excitations. Phonon
+frequencies in THz, which is the default setting of phonopy, are used to obtain
+the mean square displacements, therefore physical units have to be set properly
+for it (see {ref}`calculator_interfaces`.) The result is given in
+{math}`\text{Angstrom}^2` and writen into `thermal_displacements.yaml`. See the
+detail of the method, {ref}`thermal_displacement`. These tags must be used with
 {ref}`mesh_sampling_tags`
 
 Optionally, `FMIN` tag (`--fmin` option) with a small value is recommened to be
@@ -767,6 +760,9 @@ where the phonons are considered in the summation. The projection is applied
 along arbitrary direction using `PROJECTION_DIRECTION` tag
 ({ref}`projection_direction_tag`).
 
+`TMAX`, `TMIN`, `TSTEP` tags are used to control temperature points at which the
+thermal displacements are calculated.
+
 `mesh.yaml` or `mesh.hdf5` is not written out from phonopy-1.11.14.
 
 ```
@@ -775,8 +771,7 @@ PROJECTION_DIRECTION = 1 1 0
 ```
 
 (thermal_displacement_matrices_tag)=
-
-### `TDISPMAT`, `TMAX`, `TMIN`, and `TSTEP`
+### `TDISPMAT`
 
 Mean square displacement matrices are calculated. The definition is shown at
 {ref}`thermal_displacement`. Phonon frequencies in THz, which is the default
@@ -797,6 +792,9 @@ where the phonons are considered in the summation.
 
 The 3x3 matrix restricts distribution of each atom around the equilibrium
 position to be ellipsoid. But the distribution is not necessarily to be so.
+
+`TMAX`, `TMIN`, `TSTEP` tags are used to control temperature points at which the
+thermal displacement matrices are calculated.
 
 `mesh.yaml` or `mesh.hdf5` is not written out from phonopy-1.11.14.
 
@@ -825,7 +823,6 @@ TDISPMAT_CIF = 1273.0
 ## Specific q-points
 
 (qpoints_tag)=
-
 ### `QPOINTS`
 
 When q-points are supplied, those phonons are calculated. Q-points are specified
@@ -845,7 +842,6 @@ QPOINTS = .TRUE.
 ```
 
 (writedm_tag)=
-
 ### `WRITEDM`
 
 ```
@@ -906,10 +902,9 @@ conversion_factor_to_THz = 15.633302
 print frequencies * conversion_factor_to_THz
 ```
 
-(nac_tag)=
-
 ## Non-analytical term correction
 
+(nac_tag)=
 ### `NAC`
 
 Non-analytical term correction is applied to dynamical matrix. `BORN` file has
@@ -922,13 +917,13 @@ NAC = .TRUE.
 ```
 
 (nac_method_tag)=
-
 ### `NAC_METHOD`
 
 The method of non-analytical term correction is chosen by this tag between two,
 `NAC_METHOD = GONZE` ({ref}`reference_dp_dp_NAC`) and `NAC_METHOD = WANG`
 ({ref}`reference_wang_NAC`), and the default is the former after v1.13.0.
 
+(q_direction_tag)=
 ### `Q_DIRECTION`
 
 This tag is used to activate non-analytical term correction (NAC) at
@@ -947,10 +942,9 @@ QPOINTS = 0 0 0 NAC = .TRUE.
 Q_DIRECTION = 1 0 0
 ```
 
-(group_velocity_tag)=
-
 ## Group velocity
 
+(group_velocity_tag)=
 ### `GROUP_VELOCITY`
 
 Group velocities at q-points are calculated by using this tag. The group
@@ -968,6 +962,7 @@ GROUP_VELOCITY = .TRUE.
 
 Technical details are shown at {ref}`group_velocity`.
 
+(gv_delta_q_tag)=
 ### `GV_DELTA_Q`
 
 The reciprocal distance used for finite difference method is specified. The
@@ -982,7 +977,6 @@ GV_DELTA_Q = 0.01
 ## Symmetry
 
 (tolerance_tag)=
-
 ### `SYMMETRY_TOLERANCE`
 
 This is used to set geometric tolerance to find symmetry of crystal structure.
@@ -995,13 +989,11 @@ SYMMETRY_TOLERANCE = 1e-3
 ```
 
 (symmetry_tag)=
-
 ### `SYMMETRY`
 
 P1 symmetry is enforced to the input unit cell by setting `SYMMETRY = .FALSE`.
 
 (nomeshsym_tag)=
-
 ### `MESH_SYMMETRY`
 
 Symmetry search on the reciprocal sampling mesh is disabled by setting
@@ -1016,14 +1008,12 @@ site-symmetry group and time reversal symmetry. Generally the difference becomes
 smaller when increasing the sampling mesh numbers.
 
 (fc_symmetry_tag)=
-
 ### `FC_SYMMETRY`
 
-**Changed at v1.12.3**
-
-Previously this tag required a number for the iteration. From version 1.12.3,
-the way of symmetrization for translation invariance is modified and this number
-became unnecessary.
+```{note}
+Starting with version 1.12.3, this tag was changed to a boolean (`.TRUE.` or
+`.FALSE.`), whereas it previously accepted an argument.
+```
 
 This tag is used to symmetrize force constants by translational symmetry and
 permutation symmetry with `.TRUE.` or `.FALSE.`.
@@ -1071,24 +1061,27 @@ The file format of `FORCE_CONSTANTS` is shown
 {ref}`here <file_force_constants>`.
 
 (full_force_constants_tag)=
-
 ### `FULL_FORCE_CONSTANTS`
 
 `FULL_FORCE_CONSTANTS = .TRUE.` is used to compute full supercell constants
-matrix. The default setting is `.FALSE.`. By `.TRUE.` or `.FALSE.`, the array
+matrix. This may be used to enforce space group symmetry to existing force
+constants.
+
+The default setting is `.FALSE.`. By `.TRUE.` or `.FALSE.`, the array
 shape becomes `(n_patom, n_satom, 3, 3)` or `(n_satom, n_satom, 3, 3)`,
 respectively. The detail is found at {ref}`file_force_constants`.
 
+(read_force_constants_tag)=
 ### `READ_FORCE_CONSTANTS`
 
 `READ_FORCE_CONSTANTS = .TRUE.` is equivalent to `FORCE_CONSTANTS = READ`.
 
+(write_force_constants_tag)=
 ### `WRITE_FORCE_CONSTANTS`
 
 `WRITE_FORCE_CONSTANTS = .TRUE.` is equivalent to `FORCE_CONSTANTS = WRITE`.
 
 (fc_calculator_tag)=
-
 ### `FC_CALCULATOR`
 
 External force constants calculator can be used using this tag. Currently
@@ -1098,13 +1091,11 @@ are made systematically. The following is the list of the force constants
 calculator currently possible to be invoked from phonopy.
 
 (fc_calculator_options_tag)=
-
 ### `FC_CALCULATOR_OPTIONS`
 
 To be written.
 
 (fc_calculator_symfc_tag)=
-
 #### `SYMFC`
 
 **New in v2.25** Symfc (<https://github.com/symfc/symfc>) is based on fitting
@@ -1121,7 +1112,6 @@ FC_CALCULATOR = SYMFC
 ```
 
 (fc_calculator_alm_tag)=
-
 #### `ALM`
 
 **New in v2.3** ALM (<https://github.com/ttadano/ALM>) is based on fitting
@@ -1156,6 +1146,7 @@ respective animation images are created such as `APOSCAR-000`,
 
 There are several parameters to be set in the `ANIME` tag.
 
+(anime_tag)=
 ### `ANIME`
 
 **The format of `ANIME` tag was modified after ver. 0.9.3.3.**
@@ -1204,10 +1195,9 @@ The values are as follows from left:
 For `anime.xyz_jmol`, the first and third values are not used, however dummy
 values, e.g. 0, are required.
 
-(modulation_tag)=
-
 ## Create modulated structure
 
+(modulation_tag)=
 ### `MODULATION`
 
 The `MODULATION` tag is used to create a crystal structure with displacements
@@ -1276,7 +1266,6 @@ MODULATION = -1 1 1 1 -1 1 1 1 -1, 1/2 1/2 0 1 2
 ## Characters of irreducible representations
 
 (irreps_tag)=
-
 ### `IRREPS`
 
 Characters of irreducible representations (Irreps) of phonon modes are shown.
@@ -1296,6 +1285,7 @@ IRREPS = 0 0 0 1e-3
 Symbols of Irreps for the 32 point group types at the {math}`\Gamma` point are
 shown but not at non-{math}`\Gamma` point.
 
+(show_irreps_tag)=
 ### `SHOW_IRREPS`
 
 Irreducible representations are shown along with character table.
@@ -1305,6 +1295,7 @@ IRREPS = 1/3 1/3 0
 SHOW_IRREPS = .TRUE.
 ```
 
+(little_cogroup_tag)=
 ### `LITTLE_COGROUP`
 
 Show irreps of little co-group (point-group of wavevector) instead of little
@@ -1318,7 +1309,6 @@ LITTLE_COGROUP = .TRUE.
 ## Input/Output file control
 
 (fc_format_tag)=
-
 ### `FC_FORMAT`, `READFC_FORMAT`, `WRITEFC_FORMAT`
 
 There are two file-formats to store force constants. Currently
@@ -1345,8 +1335,7 @@ WRITE_FORCE_CONSTANTS = .TRUE.
 WRITEFC_FORMAT = HDF5
 ```
 
-(band_format_tag)=
-
+(band_mesh_qpoints_format_tags)=
 ### `BAND_FORMAT`, `MESH_FORMAT`, `QPOINTS_FORMAT`
 
 There are two file-formats to write the results of band structure, mesh, and
@@ -1354,20 +1343,37 @@ q-points calculations. Currently YAML (`YAML`) and hdf5 (`HDF5`) formats are
 supported. The default file format is the YAML format. The file format is
 changed as follows:
 
+(band_format_tag)=
+#### `BAND_FORMAT`
+
+When `HDF5` is set, calculated result is stored in `band.hdf5` instead of
+`band.yaml`.
+
 ```
 BAND_FORMAT = HDF5
 ```
 
+(mesh_format_tag)=
+#### `MESH_FORMAT`
+
+When `HDF5` is set, calculated result is stored in `mesh.hdf5` instead of
+`mesh.yaml`.
+
 ```
 MESH_FORMAT = HDF5
 ```
+
+(qpoints_format_tag)=
+#### `QPOINTS_FORMAT`
+
+When `HDF5` is set, calculated result is stored in `qpoints.hdf5` instead of
+`qpoints.yaml`.
 
 ```
 QPOINTS_FORMAT = HDF5
 ```
 
 (hdf5_tag)=
-
 ### `HDF5`
 
 The following output files are written in hdf5 format instead of their original
@@ -1410,57 +1416,44 @@ In the band structure calculations ({ref}`band_structure_related_tags`),
 calculation results are written into `band.hdf5` but not into `band.yaml`.
 
 (summary_tag)=
+###
 
-### `summary`
+The following data may be optionally included in the `phonopy.yaml` file that is
+written at the end of the pre/post-process (after running the `phonopy` script).
 
-The following data may be optionally included in the summary yaml file called
-`phonopy_disp.yaml`/`phonopy.yaml` in addition to other file output settings.
-This happens at the end of the pre/post-process (after running the `phonopy`
-script):
-
-- `force constants`
-- `force sets`
-- `dielectric constant`
-- `born effective charge`
-- `displacements`
-- `[all]`
-
-Including all relevant data in a single output file allows for a human readable
-convenient file format.
-
-#### `force constants`
+(include_fc_tag)=
+#### `INCLUDE_FC`
 
 The `--include-fc` flag or setting `INCLUDE_FC = .TRUE.` will cause the force
-constants (if available) to be written as an entry in the yaml summary file. The
-written force constants will reflect the required/available format used during
-processing. So if `--full-fc` is set the entire matrix will be written.
+constants (if available) to be written as an entry in `phonopy.yaml` file.
+The written force constants will reflect the required/available format used
+during processing. So if `--full-fc` is set the entire matrix will be written.
 
-#### `force sets`
+(include_fs_tag)=
+#### `INCLUDE_FS`
 
 The `--include-fs` flag or setting `INCLUDE_FS = .TRUE.` will cause the force
-sets (if available) to be written as an entry in the yaml summary file.
+sets (if available) to be written as an entry in `phonopy.yaml`.
 
-#### `dielectric constant` and `born effective charge`
+(include_born_tag)=
+#### `INCLUDE_BORN`
 
 The `--include-born` flag or setting `INCLUDE_BORN = .TRUE.` will cause the born
 effective charges and dielectric tensor (if available) to be written as an entry
-in the yaml summary file. The values will only be written if non-analytical term
-correction is set with the `--nac` flag or by setting `NAC = .TRUE.`.
+in `phonopy.yaml` file. This is more convenient than keeping track of the `BORN`
+file created by the user. The values will only be written if non-analytical term
+correction is activated.
 
-This is more convenient than keeping track of the `BORN` file created by the
-user.
-
-#### `displacements`
+(include_disp_tag)=
+#### `INCLUDE_DISP`
 
 The `--include-disp` flag or setting `INCLUDE_DISP = .TRUE.` will cause
-displacements data (if available) to be written as an entry in the yaml summary
+displacements data (if available) to be written as an entry in `phonopy.yaml`
 file.
 
-This is set by default when the `phonopy` script is run in `displacements` mode.
+(include_all_tag)=
+#### `INCLUDE_ALL`
 
-#### `all`
-
-All available data covered by the other `include` flags can be written to the
-yaml summary file using the `--include-all` flag or by setting
-`INCLUDE_ALL = .TRUE.`. Force constants are not stored when force sets are
-stored.
+All available data covered by the other `include` flags can be written to
+`phonopy.yaml` file using the `--include-all` flag or by setting `INCLUDE_ALL =
+.TRUE.`. Force constants are not stored when force sets are stored.

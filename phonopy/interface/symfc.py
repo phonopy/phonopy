@@ -129,9 +129,10 @@ def run_symfc(
         scaled_positions=supercell.scaled_positions,
         numbers=supercell.numbers,
     )
+    spacegroup_operations = symmetry.symmetry_operations if symmetry else None
     symfc = Symfc(
         symfc_supercell,
-        spacegroup_operations=symmetry.dataset,
+        spacegroup_operations=spacegroup_operations,
         displacements=displacements,
         forces=forces,
         cutoff={int(max(_orders)): options_dict.get("cutoff", None)},

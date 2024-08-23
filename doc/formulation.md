@@ -490,14 +490,14 @@ Following these definition, phase factor should be represented as
 output of the reciprocal basis vectors, {math}`2\pi` is not included, e.g., in
 `band.yaml`.
 
-In phonopy, unless {ref}`primitive_axis_tag` (or `--pa` option) is specified,
+In phonopy, unless {ref}`primitive_axes_tag` (or `--pa` option) is specified,
 basis vectors in direct space {math}`( \mathbf{a} \; \mathbf{b} \; \mathbf{c})`
 are set from the input unit cell structure even if it is a supercell or a
 conventional unit cell having centring, therefore the basis vectors in the
 reciprocal space are given by Eq. {eq}`eq_rec_basis_vectors`. When using
-{ref}`primitive_axis_tag`, {math}`( \mathbf{a} \; \mathbf{b} \; \mathbf{c})` are
+{ref}`primitive_axes_tag`, {math}`( \mathbf{a} \; \mathbf{b} \; \mathbf{c})` are
 set from those transformed by the transformation matrix {math}`M_\text{p}` as
-written at {ref}`primitive_axis_tag`, therefore
+written at {ref}`primitive_axes_tag`, therefore
 {math}`( \mathbf{a}^{*} \; \mathbf{b}^{*} \; \mathbf{c}^{*} )` are given by
 those calculated following Eq. {eq}`eq_rec_basis_vectors` with this
 {math}`( \mathbf{a} \; \mathbf{b} \; \mathbf{c})`.

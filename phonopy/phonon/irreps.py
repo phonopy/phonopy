@@ -91,7 +91,7 @@ class IrReps:
             self._primitive, symprec=self._symprec
         ).dataset
 
-        if not is_primitive_cell(self._symmetry_dataset["rotations"]):
+        if not is_primitive_cell(self._symmetry_dataset.rotations):
             raise RuntimeError(
                 "Non-primitve cell is used. Your unit cell may be transformed to "
                 "a primitive cell by PRIMITIVE_AXIS tag."
@@ -180,7 +180,7 @@ class IrReps:
     @property
     def eigenvectors(self):
         """Return eigenvectors."""
-        return self._eigvecs
+        return self._eig_vecs
 
     def get_eigenvectors(self):
         """Return eigenvectors."""
@@ -276,14 +276,14 @@ class IrReps:
             dm.run(self._q, q_direction=self._nac_q_direction)
         else:
             dm.run(self._q)
-        eigvals, self._eigvecs = np.linalg.eigh(dm.dynamical_matrix)
-        self._freqs = np.sqrt(abs(eigvals)) * np.sign(eigvals) * self._factor
+        eig_vals, self._eig_vecs = np.linalg.eigh(dm.dynamical_matrix)
+        self._freqs = np.sqrt(abs(eig_vals)) * np.sign(eig_vals) * self._factor
 
     def _get_rotations_at_q(self):
         rotations_at_q = []
         trans_at_q = []
         for r, t in zip(
-            self._symmetry_dataset["rotations"], self._symmetry_dataset["translations"]
+            self._symmetry_dataset.rotations, self._symmetry_dataset.translations
         ):
             diff = np.dot(self._q, r) - self._q
             if (abs(diff - np.rint(diff)) < self._symprec).all():
@@ -297,8 +297,8 @@ class IrReps:
 
     def _get_conventional_rotations(self):
         rotations = self._rotations_at_q.copy()
-        pointgroup_symbol = self._symmetry_dataset["pointgroup"]
-        transformation_matrix = self._symmetry_dataset["transformation_matrix"]
+        pointgroup_symbol = self._symmetry_dataset.pointgroup
+        transformation_matrix = self._symmetry_dataset.transformation_matrix
         conventional_rotations = self._transform_rotations(
             transformation_matrix, rotations
         )
@@ -351,7 +351,7 @@ class IrReps:
         return matrix
 
     def _get_irreps(self):
-        eigvecs = self._eigvecs.T
+        eigvecs = self._eig_vecs.T
         irrep = []
         for band_indices in self._degenerate_sets:
             irrep_Rs = []
