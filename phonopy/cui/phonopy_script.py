@@ -1562,8 +1562,11 @@ def _start_phonopy(**argparse_control):
         if argparse_control.get("load_phonopy_yaml", False):
             print("Running in phonopy.load mode.")
         print("Python version %d.%d.%d" % sys.version_info[:3])
+        try:  # spglib.get_version() is deprecated.
+            print(f"Spglib version {spglib.spg_get_version()}")
+        except AttributeError:
+            print("Spglib version %d.%d.%d" % spglib.get_version())
 
-        print("Spglib version %d.%d.%d" % spglib.get_version())
         print("")
 
         if deprecated:
