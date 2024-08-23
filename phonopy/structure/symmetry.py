@@ -39,6 +39,11 @@ import warnings
 from collections.abc import Sequence
 from typing import Optional
 
+try:
+    from spglib import SpglibDataset
+except ImportError:
+    from types import SimpleNamespace as SpglibDataset
+
 import numpy as np
 import spglib
 
@@ -181,7 +186,7 @@ class Symmetry:
         return self._wyckoff_letters
 
     @property
-    def dataset(self):
+    def dataset(self) -> SpglibDataset:
         """Return spglib dataset.
 
         This is raw data of symmetry.
