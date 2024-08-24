@@ -98,10 +98,10 @@ def get_cell_settings(
                 'Supercell structure was read from "%s".' % optional_structure_info[0]
             )
     elif unitcell is not None:
-        cell = PhonopyAtoms(atoms=unitcell)
+        cell = unitcell.copy()
         smat = supercell_matrix
     elif supercell is not None:
-        cell = PhonopyAtoms(atoms=supercell)
+        cell = supercell.copy()
         smat = np.eye(3, dtype="intc", order="C")
     else:
         raise RuntimeError("Cell has to be specified.")

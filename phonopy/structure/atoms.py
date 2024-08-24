@@ -35,6 +35,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 from __future__ import annotations
 
+import re
 import warnings
 from collections.abc import Sequence
 from math import gcd
@@ -56,6 +57,18 @@ def Atoms(*args, **kwargs):
         stacklevel=2,
     )
     return PhonopyAtoms(*args, **kwargs)
+
+
+def split_symbol_and_index(symbol: str):
+    """Split symbol and index.
+
+    H --> H, 0
+    H2 --> H, 2
+
+    """
+    m = re.match(r"([a-zA-Z]+)([0-9]*)", symbol)
+    symbol, index = m.groups()
+    return symbol, int(index) if index else 0
 
 
 class PhonopyAtoms:
@@ -90,6 +103,8 @@ class PhonopyAtoms:
 
     """
 
+    MOD_DIVISOR = 1000
+
     def __init__(
         self,
         symbols: Optional[Sequence] = None,
@@ -119,6 +134,12 @@ class PhonopyAtoms:
                 stacklevel=2,
             )
         if atoms:
+            warnings.warn(
+                "PhonopyAtoms.__init__ parameter of atoms is deprecated. "
+                "Use PhonopyAtoms.copy() instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
             self._set_parameters(
                 numbers=atoms.numbers,
                 masses=atoms.masses,
@@ -303,6 +324,11 @@ class PhonopyAtoms:
         self.symbols = symbols
 
     @property
+    def numbers_of_chemical_symbols(self):
+        """Getter of atomic numbers + MOD_DIVISOR * index."""
+        return np.array([n % self.MOD_DIVISOR for n in self._numbers], dtype="intc")
+
+    @property
     def numbers(self):
         """Setter and getter of atomic numbers. For getter, copy is returned."""
         return self._numbers.copy()
@@ -475,10 +501,23 @@ class PhonopyAtoms:
             self._set_scaled_positions(scaled_positions)
 
     def _numbers_to_symbols(self):
-        self._symbols = [atom_data[n][1] for n in self._numbers]
+        symbols = []
+        for number in self._numbers:
+            n = number % self.MOD_DIVISOR
+            m = number // self.MOD_DIVISOR
+            if m > 0:
+                symbols.append(f"{atom_data[n][1]}{m}")
+            else:
+                symbols.append(f"{atom_data[n][1]}")
+        self._symbols = symbols
 
     def _symbols_to_numbers(self):
-        self._numbers = np.array([symbol_map[s] for s in self._symbols], dtype="intc")
+        numbers = []
+        for symnum in self._symbols:
+            symbol, index = split_symbol_and_index(symnum)
+            numbers.append(symbol_map[symbol] + self.MOD_DIVISOR * index)
+
+        self._numbers = np.array(numbers, dtype="intc")
 
     def _symbols_to_masses(self):
         masses = [atom_data[symbol_map[s]][3] for s in self._symbols]
@@ -530,19 +569,34 @@ class PhonopyAtoms:
             symbols=self._symbols,
         )
 
-    def totuple(self):
+    def totuple(self, distinguish_symbol_index: bool = False):
         """Return (cell, scaled_position, numbers).
 
-        If magmams is set, (cell, scaled_position, numbers, magmoms) is returned.
+        If magmams is set, (cell, scaled_position, numbers, magmoms) is
+        returned.
+
+        Parameters
+        ----------
+        with_symbol_index : bool
+            If True, number is replaced with atomic number + index *
+            self.MOD_DIVISOR.
+
+            'H' --> 1
+            'H2' --> 1 + self.MOD_DIVISOR * 2
 
         """
+        if distinguish_symbol_index:
+            numbers = self._numbers
+        else:
+            numbers = self.numbers_of_chemical_symbols
+
         if self._magnetic_moments is None:
-            return (self._cell, self._scaled_positions, self._numbers)
+            return (self._cell, self._scaled_positions, numbers)
         else:
             return (
                 self._cell,
                 self._scaled_positions,
-                self._numbers,
+                numbers,
                 self._magnetic_moments,
             )
 

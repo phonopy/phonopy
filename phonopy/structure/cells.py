@@ -1043,7 +1043,7 @@ def _trim_cell(
         symprec=symprec,
         positions_to_reorder=positions_to_reorder,
     )
-    return (PhonopyAtoms(atoms=tcell), tcell.extracted_atoms, tcell.mapping_table)
+    return (tcell.copy(), tcell.extracted_atoms, tcell.mapping_table)
 
 
 #

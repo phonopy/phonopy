@@ -116,7 +116,7 @@ def test_parse_cell_dict(helper_methods: Callable):
 
 
 def _test_phonopy_atoms(cell: PhonopyAtoms):
-    with StringIO(str(PhonopyAtoms(atoms=cell))) as f:
+    with StringIO(str(cell.copy())) as f:
         data = yaml.safe_load(f)
         np.testing.assert_allclose(cell.cell, data["lattice"], atol=1e-8)
         positions = []
