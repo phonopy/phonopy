@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 import yaml
 
+from phonopy import Phonopy
 from phonopy.structure.atoms import PhonopyAtoms, parse_cell_dict
 
 symbols_SiO2 = ["Si"] * 2 + ["O"] * 4
@@ -113,6 +114,38 @@ def test_parse_cell_dict(helper_methods: Callable):
     cell_dict = {"lattice": cell_SiO2.cell, "points": points}
     _cell = parse_cell_dict(cell_dict)
     helper_methods.compare_cells_with_order(cell, _cell)
+
+
+def test_PhonopyAtoms_with_Xn_symbol(ph_nacl: Phonopy):
+    """Test of PhonopyAtoms with Xn symbol."""
+    symbols = ph_nacl.unitcell.symbols
+    symbols[-1] = "Cl1"
+    masses = ph_nacl.unitcell.masses
+    masses[-1] = 70.0
+    numbers = ph_nacl.unitcell.numbers
+    numbers[-1] = numbers[-1] + PhonopyAtoms._MOD_DIVISOR
+
+    with pytest.raises(RuntimeError):
+        _ = PhonopyAtoms(
+            cell=ph_nacl.unitcell.cell,
+            scaled_positions=ph_nacl.unitcell.scaled_positions,
+            symbols=symbols,
+        )
+
+    with pytest.raises(RuntimeError):
+        _ = PhonopyAtoms(
+            cell=ph_nacl.unitcell.cell,
+            scaled_positions=ph_nacl.unitcell.scaled_positions,
+            numbers=numbers,
+        )
+
+    symbols[-1] = "Cl_1"
+    with pytest.raises(RuntimeError):
+        _ = PhonopyAtoms(
+            cell=ph_nacl.unitcell.cell,
+            scaled_positions=ph_nacl.unitcell.scaled_positions,
+            symbols=symbols,
+        )
 
 
 def _test_phonopy_atoms(cell: PhonopyAtoms):

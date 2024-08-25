@@ -59,15 +59,17 @@ def Atoms(*args, **kwargs):
     return PhonopyAtoms(*args, **kwargs)
 
 
-def split_symbol_and_index(symbol: str):
+def split_symbol_and_index(symnum: str):
     """Split symbol and index.
 
     H --> H, 0
     H2 --> H, 2
 
     """
-    m = re.match(r"([a-zA-Z]+)([0-9]*)", symbol)
+    m = re.match(r"([a-zA-Z]+)([0-9]*)", symnum)
     symbol, index = m.groups()
+    if symnum != f"{symbol}{index}":
+        raise RuntimeError(f"Invalid symbol: {symnum}.")
     return symbol, int(index) if index else 0
 
 
@@ -119,13 +121,6 @@ class PhonopyAtoms:
         pbc: Optional[bool] = None,
     ):  # pbc is dummy argument, and never used.
         """Init method."""
-        if numbers is not None:
-            warnings.warn(
-                "PhonopyAtoms.__init__ parameter of numbers is deprecated. "
-                "Use symbols instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
         if magmoms is not None:
             warnings.warn(
                 "PhonopyAtoms.__init__ parameter of magmoms is deprecated. "
@@ -180,10 +175,15 @@ class PhonopyAtoms:
         self._set_cell_and_positions(
             cell, positions=positions, scaled_positions=scaled_positions
         )
+
         self._symbols = symbols
+
         self._numbers_with_shifts = None
         if numbers is not None:
+            if (np.array(numbers) > 118).any():  # 118 is the max atomic number.
+                raise RuntimeError("Atomic numbers cannot be larger than 118.")
             self._numbers_with_shifts = np.array(numbers, dtype="intc")
+
         self._masses = None
         self._set_masses(masses)
 
@@ -191,7 +191,7 @@ class PhonopyAtoms:
         self._magnetic_moments = None
         self._set_magnetic_moments(magnetic_moments)
 
-        # numbers and symbols
+        # numbers <--> symbols
         if self._numbers_with_shifts is not None:  # number --> symbol
             self._numbers_to_symbols()
         elif self._symbols is not None:  # symbol --> number
@@ -199,6 +199,10 @@ class PhonopyAtoms:
 
         # symbol --> mass
         if self._symbols and (self._masses is None):
+            if (self._numbers_with_shifts > 118).any():  # 118 is the max atomic number.
+                raise RuntimeError(
+                    "Masses have to be provided when special symbols are given."
+                )
             self._symbols_to_masses()
 
         self._check()
