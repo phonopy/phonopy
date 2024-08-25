@@ -252,7 +252,7 @@ class Unfolding:
 
         """
         pcell = PhonopyAtoms(
-            numbers=[1], scaled_positions=[[0, 0, 0]], cell=np.diag([1, 1, 1])
+            symbols=["H"], scaled_positions=[[0, 0, 0]], cell=np.diag([1, 1, 1])
         )
         smat = self._supercell_matrix
         self._trans_s = get_supercell(pcell, smat).scaled_positions

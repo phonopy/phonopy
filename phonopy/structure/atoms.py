@@ -103,7 +103,7 @@ class PhonopyAtoms:
 
     """
 
-    MOD_DIVISOR = 1000
+    _MOD_DIVISOR = 1000
 
     def __init__(
         self,
@@ -119,6 +119,13 @@ class PhonopyAtoms:
         pbc: Optional[bool] = None,
     ):  # pbc is dummy argument, and never used.
         """Init method."""
+        if numbers is not None:
+            warnings.warn(
+                "PhonopyAtoms.__init__ parameter of numbers is deprecated. "
+                "Use symbols instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         if magmoms is not None:
             warnings.warn(
                 "PhonopyAtoms.__init__ parameter of magmoms is deprecated. "
@@ -174,9 +181,9 @@ class PhonopyAtoms:
             cell, positions=positions, scaled_positions=scaled_positions
         )
         self._symbols = symbols
-        self._numbers = None
+        self._numbers_with_shifts = None
         if numbers is not None:
-            self._numbers = np.array(numbers, dtype="intc")
+            self._numbers_with_shifts = np.array(numbers, dtype="intc")
         self._masses = None
         self._set_masses(masses)
 
@@ -185,7 +192,7 @@ class PhonopyAtoms:
         self._set_magnetic_moments(magnetic_moments)
 
         # numbers and symbols
-        if self._numbers is not None:  # number --> symbol
+        if self._numbers_with_shifts is not None:  # number --> symbol
             self._numbers_to_symbols()
         elif self._symbols is not None:  # symbol --> number
             self._symbols_to_numbers()
@@ -298,6 +305,11 @@ class PhonopyAtoms:
 
     @symbols.setter
     def symbols(self, symbols):
+        warnings.warn(
+            "Setter of PhonopyAtoms.symbols is deprecated.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self._symbols = symbols
         self._check()
         self._symbols_to_numbers()
@@ -324,18 +336,27 @@ class PhonopyAtoms:
         self.symbols = symbols
 
     @property
-    def numbers_of_chemical_symbols(self):
+    def numbers_with_shifts(self):
         """Getter of atomic numbers + MOD_DIVISOR * index."""
-        return np.array([n % self.MOD_DIVISOR for n in self._numbers], dtype="intc")
+        return self._numbers_with_shifts.copy()
 
     @property
     def numbers(self):
-        """Setter and getter of atomic numbers. For getter, copy is returned."""
-        return self._numbers.copy()
+        """Setter and getter of atomic numbers. For getter, new array is returned."""
+        return np.array(
+            [n % self._MOD_DIVISOR for n in self._numbers_with_shifts], dtype="intc"
+        )
 
     @numbers.setter
     def numbers(self, numbers):
-        self._numbers = numbers
+        if (np.array(numbers) > 118).any():  # 118 is the max atomic number.
+            raise RuntimeError("Atomic number is too large.")
+        warnings.warn(
+            "Setter of PhonopyAtoms.number is deprecated.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self._numbers_with_shifts = numbers
         self._check()
         self._numbers_to_symbols()
         self._symbols_to_masses()
@@ -451,7 +472,7 @@ class PhonopyAtoms:
     def Z(self):
         """Return number of formula units in this cell."""
         count = {}
-        for n in self._numbers:
+        for n in self._numbers_with_shifts:
             if n in count:
                 count[n] += 1
             else:
@@ -502,9 +523,9 @@ class PhonopyAtoms:
 
     def _numbers_to_symbols(self):
         symbols = []
-        for number in self._numbers:
-            n = number % self.MOD_DIVISOR
-            m = number // self.MOD_DIVISOR
+        for number in self._numbers_with_shifts:
+            n = number % self._MOD_DIVISOR
+            m = number // self._MOD_DIVISOR
             if m > 0:
                 symbols.append(f"{atom_data[n][1]}{m}")
             else:
@@ -515,9 +536,9 @@ class PhonopyAtoms:
         numbers = []
         for symnum in self._symbols:
             symbol, index = split_symbol_and_index(symnum)
-            numbers.append(symbol_map[symbol] + self.MOD_DIVISOR * index)
+            numbers.append(symbol_map[symbol] + self._MOD_DIVISOR * index)
 
-        self._numbers = np.array(numbers, dtype="intc")
+        self._numbers_with_shifts = np.array(numbers, dtype="intc")
 
     def _symbols_to_masses(self):
         masses = [atom_data[symbol_map[s]][3] for s in self._symbols]
@@ -537,14 +558,14 @@ class PhonopyAtoms:
             raise RuntimeError("cell is not set.")
         if self._scaled_positions is None:
             raise RuntimeError("scaled_positions (positions) is not set.")
-        if self._numbers is None:
+        if self._numbers_with_shifts is None:
             raise RuntimeError("numbers is not set.")
-        if len(self._numbers) != len(self._scaled_positions):
+        if len(self._numbers_with_shifts) != len(self._scaled_positions):
             raise RuntimeError("len(numbers) != len(scaled_positions).")
-        if len(self._numbers) != len(self._symbols):
+        if len(self._numbers_with_shifts) != len(self._symbols):
             raise RuntimeError("len(numbers) != len(symbols).")
         if self._masses is not None:
-            if len(self._numbers) != len(self._masses):
+            if len(self._numbers_with_shifts) != len(self._masses):
                 raise RuntimeError("len(numbers) != len(masses).")
         if self._magnetic_moments is not None:
             if len(self._magnetic_moments.ravel()) not in (len(self), len(self) * 3):
@@ -586,9 +607,9 @@ class PhonopyAtoms:
 
         """
         if distinguish_symbol_index:
-            numbers = self._numbers
+            numbers = self._numbers_with_shifts
         else:
-            numbers = self.numbers_of_chemical_symbols
+            numbers = self.numbers
 
         if self._magnetic_moments is None:
             return (self._cell, self._scaled_positions, numbers)

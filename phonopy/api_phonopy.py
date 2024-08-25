@@ -4002,7 +4002,7 @@ class Phonopy:
         for positions in all_positions:
             supercells.append(
                 PhonopyAtoms(
-                    numbers=self._supercell.numbers,
+                    symbols=self._supercell.symbols,
                     masses=self._supercell.masses,
                     magnetic_moments=self._supercell.magnetic_moments,
                     positions=positions,

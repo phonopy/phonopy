@@ -94,6 +94,7 @@ def read_pwscf(filename):
         positions = None
         scaled_positions = [pos[1] for pos in tags["atomic_positions"]]
     species = [pos[0] for pos in tags["atomic_positions"]]
+
     mass_map = {}
     pp_map = {}
     for vals in tags["atomic_species"]:
@@ -347,8 +348,10 @@ class PwscfIn:
 
         natom = self._tags["nat"]
         pos_vals = self._values[1:]
-        if len(pos_vals) < natom * 4:
-            raise RuntimeError("ATOMIC_POSITIONS is wrongly set.")
+        if len(pos_vals) != natom * 4:
+            raise RuntimeError(
+                "ATOMIC_POSITIONS is wrongly set or incompatible with nat."
+            )
 
         positions = []
         for i in range(natom):
@@ -371,8 +374,10 @@ class PwscfIn:
 
         """
         num_types = self._tags["ntyp"]
-        if len(self._values) < num_types * 3:
-            raise RuntimeError("%s is wrongly set." % self._current_tag_name)
+        if len(self._values) != num_types * 3:
+            raise RuntimeError(
+                f"{self._current_tag_name} is wrongly set or inconpatible with ntyp."
+            )
 
         species = []
 
