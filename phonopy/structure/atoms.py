@@ -70,7 +70,15 @@ def split_symbol_and_index(symnum: str):
     symbol, index = m.groups()
     if symnum != f"{symbol}{index}":
         raise RuntimeError(f"Invalid symbol: {symnum}.")
-    return symbol, int(index) if index else 0
+    if index:
+        index = int(index)
+        if index < 1:
+            raise RuntimeError(
+                f"Invalid symbol. Index has to be greater than 0: {symnum}."
+            )
+    else:
+        index = 0
+    return symbol, index
 
 
 class PhonopyAtoms:
@@ -83,19 +91,18 @@ class PhonopyAtoms:
     cell : np.ndarray
         Basis vectors (a, b, c) given in row vectors.
     positions : np.ndarray
-        Positions of atoms in Cartesian coordinates.
-        shape=(natom, 3), dtype='double', order='C'
+        Positions of atoms in Cartesian coordinates. shape=(natom, 3),
+        dtype='double', order='C'
     scaled_positions : np.ndarray
         Positions of atoms in fractional (crystallographic) coordinates.
         shape=(natom, 3), dtype='double', order='C'
     symbols : list[str]
-        List of chemical symbols of atoms.
+        List of chemical symbols of atoms. Chemical symbol + natural number is
+        allowed, e.g., "Cl1".
     numbers : np.ndarray
-        Atomic numbers.
-        shape=(natom,), dtype='intc'
+        Atomic numbers. Numbers cannot exceed 118. shape=(natom,), dtype='intc'
     masses : np.ndarray, optional
-        Atomic masses.
-        shape=(natom,), dtype='double'
+        Atomic masses. shape=(natom,), dtype='double'
     magnetic_moments : np.ndarray, optional
         shape=(natom,) or (natom, 3), dtype='double', order='C'
     volume : float
@@ -201,7 +208,7 @@ class PhonopyAtoms:
         if self._symbols and (self._masses is None):
             if (self._numbers_with_shifts > 118).any():  # 118 is the max atomic number.
                 raise RuntimeError(
-                    "Masses have to be provided when special symbols are given."
+                    "Masses have to be specified when special symbols are used."
                 )
             self._symbols_to_masses()
 

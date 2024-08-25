@@ -125,27 +125,39 @@ def test_PhonopyAtoms_with_Xn_symbol(ph_nacl: Phonopy):
     numbers = ph_nacl.unitcell.numbers
     numbers[-1] = numbers[-1] + PhonopyAtoms._MOD_DIVISOR
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError) as e:
         _ = PhonopyAtoms(
             cell=ph_nacl.unitcell.cell,
             scaled_positions=ph_nacl.unitcell.scaled_positions,
             symbols=symbols,
         )
+    assert str(e.value) == "Masses have to be specified when special symbols are used."
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError) as e:
         _ = PhonopyAtoms(
             cell=ph_nacl.unitcell.cell,
             scaled_positions=ph_nacl.unitcell.scaled_positions,
             numbers=numbers,
         )
+    assert str(e.value) == "Atomic numbers cannot be larger than 118."
 
     symbols[-1] = "Cl_1"
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError) as e:
         _ = PhonopyAtoms(
             cell=ph_nacl.unitcell.cell,
             scaled_positions=ph_nacl.unitcell.scaled_positions,
             symbols=symbols,
         )
+    assert str(e.value) == "Invalid symbol: Cl_1."
+
+    symbols[-1] = "Cl_0"
+    with pytest.raises(RuntimeError) as e:
+        _ = PhonopyAtoms(
+            cell=ph_nacl.unitcell.cell,
+            scaled_positions=ph_nacl.unitcell.scaled_positions,
+            symbols=symbols,
+        )
+    assert str(e.value) == "Invalid symbol: Cl_0."
 
 
 def _test_phonopy_atoms(cell: PhonopyAtoms):

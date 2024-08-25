@@ -514,5 +514,6 @@ def test_get_primitive_with_Xn_symbol(ph_nacl: Phonopy):
         symbols=symbols,
         masses=masses,
     )
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError) as e:
         get_primitive(cell, primitive_matrix="F")
+    assert str(e.value).split("\n")[0] == "Atom symbol mapping failure."
