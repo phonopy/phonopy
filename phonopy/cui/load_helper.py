@@ -34,6 +34,8 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
 import pathlib
 from typing import Optional
 
@@ -57,6 +59,7 @@ from phonopy.interface.calculator import (
 )
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_primitive_matrix
+from phonopy.structure.dataset import forces_in_dataset
 
 
 def get_cell_settings(
@@ -254,7 +257,7 @@ def set_dataset_and_force_constants(
                         f'"{_force_sets_filename}".'
                     )
 
-        if produce_fc:
+        if produce_fc and forces_in_dataset(phonon.dataset):
             _produce_force_constants(
                 phonon,
                 fc_calculator,

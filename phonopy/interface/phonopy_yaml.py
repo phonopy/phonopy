@@ -491,7 +491,7 @@ class PhonopyYamlDumperBase(ABC):
     def _primitive_matrix_yaml_lines(self, matrix, name):
         lines = []
         if matrix is not None:
-            lines.append("%s:" % name)
+            lines.append(f"{name}:")
             for v in matrix:
                 lines.append("- [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
             lines.append("")
@@ -500,7 +500,7 @@ class PhonopyYamlDumperBase(ABC):
     def _supercell_matrix_yaml_lines(self, matrix, name):
         lines = []
         if matrix is not None:
-            lines.append("%s:" % name)
+            lines.append(f"{name}:")
             for v in matrix:
                 lines.append("- [ %3d, %3d, %3d ]" % tuple(v))
             lines.append("")
@@ -881,7 +881,7 @@ class PhonopyYaml:
         )
         return self
 
-    def set_phonon_info(self, phonopy: "Phonopy"):
+    def set_phonon_info(self, phonopy: "Phonopy") -> PhonopyYaml:
         """Collect data from Phonopy instance."""
         self._data.unitcell = phonopy.unitcell
         self._data.primitive = phonopy.primitive
@@ -895,6 +895,7 @@ class PhonopyYaml:
         self._data.calculator = phonopy.calculator
         self._data.force_constants = phonopy.force_constants
         self._data.dataset = phonopy.dataset
+        return self
 
 
 def read_phonopy_yaml(

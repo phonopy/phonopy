@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+import pathlib
 from collections.abc import Callable
-from pathlib import Path
 
 import numpy as np
 import pytest
@@ -12,7 +12,7 @@ import phonopy
 from phonopy import Phonopy
 from phonopy.structure.atoms import PhonopyAtoms
 
-cwd = Path(__file__).parent
+cwd = pathlib.Path(__file__).parent
 
 
 @pytest.fixture(scope="session")

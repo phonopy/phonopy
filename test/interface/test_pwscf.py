@@ -29,6 +29,7 @@ def test_read_pwscf_bohr():
 def test_read_pwscf_NaCl_Xn():
     """Test of read_pwscf."""
     cell, pp_filenames = read_pwscf(cwd / "NaCl-pwscf-Xn.in")
+    print(cell)
     symnums = pp_filenames.keys()
     assert set(symnums) == {"Na", "Cl", "Cl1"}
     np.testing.assert_allclose(

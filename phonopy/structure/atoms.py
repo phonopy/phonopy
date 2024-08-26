@@ -496,6 +496,12 @@ class PhonopyAtoms:
 
     def get_number_of_atoms(self):
         """Return number of atoms."""
+        warnings.warn(
+            "PhonopyAtoms.get_number_of_atoms() is deprecated. "
+            "Use len(PhonopyAtoms).",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return len(self)
 
     def _set_cell(self, cell):
@@ -659,10 +665,15 @@ class PhonopyAtoms:
             magmoms = [None] * len(self._symbols)
         else:
             magmoms = self._magnetic_moments
-        for i, (s, v, m, mag) in enumerate(
-            zip(self._symbols, self._scaled_positions, masses, magmoms)
+        for i, (s, num, v, m, mag) in enumerate(
+            zip(self._symbols, self.numbers, self._scaled_positions, masses, magmoms)
         ):
-            lines.append("- symbol: %-2s # %d" % (s, i + 1))
+            formal_s = atom_data[num][1]
+            if s == formal_s:
+                lines.append(f"- symbol: {s} # {i + 1}")
+            else:
+                lines.append(f"- symbol: {formal_s} # {i + 1}")
+                lines.append(f"  extended_symbol: {s}")
             lines.append("  coordinates: [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
             if m is not None:
                 lines.append("  mass: %f" % m)
@@ -694,7 +705,9 @@ def parse_cell_dict(cell_dict: dict) -> Optional[PhonopyAtoms]:
         for x in cell_dict["points"]:
             if "coordinates" in x:
                 points.append(x["coordinates"])
-            if "symbol" in x:
+            if "extended_symbol" in x:  # like Fe1
+                symbols.append(x["extended_symbol"])
+            elif "symbol" in x:  # like Fe
                 symbols.append(x["symbol"])
             if "mass" in x:
                 masses.append(x["mass"])
