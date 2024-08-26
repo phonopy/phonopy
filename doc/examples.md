@@ -21,7 +21,7 @@ be different.
 
 ### `FORCE_SETS` file creation for VASP
 
-~~~bash
+~~~
 % phonopy -f vasprun.xml
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
@@ -48,7 +48,7 @@ where `vasprun.xml` is the VASP output.
 
 ### DOS
 
-~~~bash
+~~~
 % phonopy-load --mesh 31 31 31 -p
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
@@ -101,7 +101,7 @@ Summary of calculation was written in "phonopy.yaml".
 
 ### Thermal properties
 
-~~~bash
+~~~
 % phonopy-load --mesh 31 31 31 -t -p
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
@@ -166,7 +166,7 @@ Number of phonon frequencies less than cutoff frequency: 1/178746
 
 This requires to prepare `BORN` file.
 
-~~~bash
+~~~
 % phonopy-load --band "0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5" -p
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
@@ -222,7 +222,7 @@ Summary of calculation was written in "phonopy.yaml".
 
 ### PDOS
 
-~~~bash
+~~~
 % phonopy-load --mesh 41 41 41 --pdos "1, 2" -p
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
@@ -278,7 +278,7 @@ Summary of calculation was written in "phonopy.yaml".
 
 Band structure and DOS or PDOS can be plotted on one figure together by
 
-~~~bash
+~~~
 % phonopy-load --band "0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5" --mesh 41 41 41 --pdos "1, 2" -p
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
