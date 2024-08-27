@@ -34,7 +34,10 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import io
+import os
 import sys
+from typing import Union
 
 import numpy as np
 
@@ -45,7 +48,7 @@ from phonopy.interface.vasp import (
     get_drift_forces,
     get_scaled_positions_lines,
 )
-from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.atoms import PhonopyAtoms, atom_data
 from phonopy.units import Bohr
 
 
@@ -74,10 +77,13 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
         return []
 
 
-def read_abinit(filename):
+def read_abinit(filename: Union[str, bytes, os.PathLike, io.IOBase]):
     """Read crystal structure."""
-    with open(filename) as f:
-        abinit_in = AbinitIn(f.readlines())
+    if isinstance(filename, io.IOBase):
+        abinit_in = AbinitIn(filename.readlines())
+    else:
+        with open(filename) as f:
+            abinit_in = AbinitIn(f.readlines())
     tags = abinit_in.get_variables()
     acell = tags["acell"]
     rprim = tags["rprim"].T
@@ -97,8 +103,9 @@ def read_abinit(filename):
         positions = tags["xred"]
 
     numbers = [tags["znucl"][x - 1] for x in tags["typat"]]
+    symbols = [atom_data[n][1] for n in numbers]
 
-    return PhonopyAtoms(numbers=numbers, cell=lattice.T, scaled_positions=positions)
+    return PhonopyAtoms(symbols=symbols, cell=lattice.T, scaled_positions=positions)
 
 
 def write_abinit(filename, cell):
@@ -119,10 +126,10 @@ def write_supercells_with_displacements(
         write_abinit(filename, cell)
 
 
-def get_abinit_structure(cell):
+def get_abinit_structure(cell: PhonopyAtoms):
     """Return abinit structure in text."""
     znucl = []
-    numbers = cell.get_atomic_numbers()
+    numbers = cell.numbers
     for n in numbers:
         if n not in znucl:
             znucl.append(n)
@@ -138,9 +145,9 @@ def get_abinit_structure(cell):
     lines += ("znucl" + " %d" * len(znucl) + "\n") % tuple(znucl)
     lines += "acell 1 1 1\n"
     lines += "rprim\n"
-    lines += ((" % 20.16f" * 3 + "\n") * 3) % tuple(cell.get_cell().ravel())
+    lines += ((" % 20.16f" * 3 + "\n") * 3) % tuple(cell.cell.ravel())
     lines += "xred\n"
-    lines += get_scaled_positions_lines(cell.get_scaled_positions())
+    lines += get_scaled_positions_lines(cell.scaled_positions)
 
     return lines
 

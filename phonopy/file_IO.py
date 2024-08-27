@@ -34,9 +34,12 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
+import io
 import pathlib
 import sys
-from io import StringIO
+from typing import Optional
 
 import numpy as np
 import yaml
@@ -137,7 +140,7 @@ def parse_FORCE_SETS(natom=None, filename="FORCE_SETS", to_type2=False):
 
 def parse_FORCE_SETS_from_strings(strings, natom=None, to_type2=False):
     """Parse FORCE_SETS from strings."""
-    return _get_dataset(StringIO(strings), natom=natom, to_type2=to_type2)
+    return _get_dataset(io.StringIO(strings), natom=natom, to_type2=to_type2)
 
 
 def _get_dataset(f, natom=None, to_type2=False):
@@ -541,14 +544,14 @@ def write_disp_yaml_from_dataset(dataset, supercell, filename="disp.yaml"):
     write_disp_yaml(displacements, supercell, filename=filename)
 
 
-def write_disp_yaml(displacements, supercell, filename="disp.yaml"):
+def write_disp_yaml(displacements: dict, supercell: PhonopyAtoms, filename="disp.yaml"):
     """Write disp.yaml from displacements.
 
     This function is obsolete, because disp.yaml is obsolete.
 
     """
     lines = []
-    lines.append("natom: %4d" % supercell.get_number_of_atoms())
+    lines.append("natom: %4d" % len(supercell))
     lines += _get_disp_yaml_lines(displacements, supercell)
     lines.append(str(supercell))
 
@@ -692,22 +695,26 @@ def parse_BORN(primitive, symprec=1e-5, is_symmetry=True, filename="BORN"):
         return _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry)
 
 
-def parse_BORN_from_strings(strings, primitive, symprec=1e-5, is_symmetry=True):
+def parse_BORN_from_strings(
+    strings, primitive, symprec=1e-5, is_symmetry=True
+) -> Optional[dict]:
     """Parse BORN file text.
 
     See `parse_BORN` for parameters.
 
     """
-    f = StringIO(strings)
+    f = io.StringIO(strings)
     return _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry)
 
 
-def _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry):
+def _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry) -> Optional[dict]:
     symmetry = Symmetry(primitive, symprec=symprec, is_symmetry=is_symmetry)
     return get_born_parameters(f, primitive, symmetry)
 
 
-def get_born_parameters(f, primitive, prim_symmetry):
+def get_born_parameters(
+    f: io.IOBase, primitive: PhonopyAtoms, prim_symmetry: Symmetry
+) -> Optional[dict]:
     """Parse BORN file text.
 
     Parameters
@@ -754,7 +761,7 @@ def get_born_parameters(f, primitive, prim_symmetry):
 
     # Read Born effective charge
     independent_atoms = prim_symmetry.get_independent_atoms()
-    borns = np.zeros((primitive.get_number_of_atoms(), 3, 3), dtype="double", order="C")
+    borns = np.zeros((len(primitive), 3, 3), dtype="double", order="C")
 
     for i in independent_atoms:
         line = f.readline().split()

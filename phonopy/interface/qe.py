@@ -50,7 +50,7 @@ from phonopy.interface.vasp import (
     get_drift_forces,
     get_scaled_positions_lines,
 )
-from phonopy.structure.atoms import PhonopyAtoms, symbol_map
+from phonopy.structure.atoms import PhonopyAtoms, split_symbol_and_index, symbol_map
 from phonopy.structure.cells import get_primitive, get_supercell
 from phonopy.units import Bohr
 
@@ -90,11 +90,11 @@ def read_pwscf(filename):
     if pwscf_in.cartesian_positions:
         positions = [pos[1] for pos in tags["atomic_positions"]]
         scaled_positions = None
-
     else:
         positions = None
         scaled_positions = [pos[1] for pos in tags["atomic_positions"]]
     species = [pos[0] for pos in tags["atomic_positions"]]
+
     mass_map = {}
     pp_map = {}
     for vals in tags["atomic_species"]:
@@ -103,45 +103,25 @@ def read_pwscf(filename):
     masses = [mass_map[x] for x in species]
     pp_all_filenames = [pp_map[x] for x in species]
 
-    unique_species = []
-    for x in species:
-        if x not in unique_species:
-            unique_species.append(x)
+    use_given_masses = False
+    for symnum in species:  # symnum is like 'H', 'H1', 'H2', ...
+        symbol, num = split_symbol_and_index(symnum)
+        if symbol not in symbol_map:
+            RuntimeError(f"Element {symbol} is not supported.")
+        if num > 0:
+            use_given_masses = True
 
-    numbers = []
-    is_unusual = False
-    for x in species:
-        if x in symbol_map:
-            numbers.append(symbol_map[x])
-        else:
-            numbers.append(-unique_species.index(x))
-            is_unusual = True
-
-    if is_unusual:
-        positive_numbers = []
-        for n in numbers:
-            if n > 0:
-                if n not in positive_numbers:
-                    positive_numbers.append(n)
-
-        available_numbers = list(range(1, 119))
-        for pn in positive_numbers:
-            available_numbers.remove(pn)
-
-        for i, n in enumerate(numbers):
-            if n < 1:
-                numbers[i] = available_numbers[-n]
-
+    if use_given_masses:
         cell = PhonopyAtoms(
-            numbers=numbers,
-            masses=masses,
+            symbols=species,
             cell=lattice,
             positions=positions,
             scaled_positions=scaled_positions,
+            masses=masses,
         )
     else:
         cell = PhonopyAtoms(
-            numbers=numbers,
+            symbols=species,
             cell=lattice,
             positions=positions,
             scaled_positions=scaled_positions,
@@ -149,10 +129,10 @@ def read_pwscf(filename):
 
     unique_symbols = []
     pp_filenames = {}
-    for i, symbol in enumerate(cell.symbols):
-        if symbol not in unique_symbols:
-            unique_symbols.append(symbol)
-            pp_filenames[symbol] = pp_all_filenames[i]
+    for i, symnum in enumerate(cell.symbols):
+        if symnum not in unique_symbols:
+            unique_symbols.append(symnum)
+            pp_filenames[symnum] = pp_all_filenames[i]
 
     return cell, pp_filenames
 
@@ -237,8 +217,13 @@ class PwscfIn:
         self._tags = {}
         self._current_tag_name = None
         self._values = None
-        self.cartesian_positions = False
+        self._cartesian_positions = False
         self._collect(lines)
+
+    @property
+    def cartesian_positions(self):
+        """Return True if positions are in Cartesian coordinates."""
+        return self._cartesian_positions
 
     def get_tags(self):
         """Return tags."""
@@ -309,6 +294,14 @@ class PwscfIn:
 
         Invoked by CELL_PARAMETERS tag_name.
 
+        self._values[0] = unit
+        self._values[1:] = [a1, a2, a3, b1, b2, b3, c1, c2, c3]
+
+        is transformed to
+
+        self._tags["cell_parameters"] =
+            unit_factor * [[a1, a2, a3], [b1, b2, b3], [c1, c2, c3]]
+
         """
         unit = self._values[0].lower()
         if unit == "alat":
@@ -330,13 +323,24 @@ class PwscfIn:
         self._tags["cell_parameters"] = lattice * factor
 
     def _set_positions(self):
+        """Set atomic positions.
+
+        self._values[0] = unit
+        self._values[1:] = [species, x, y, z, ...]
+
+        is transformed to
+
+        self._cartesian_positions is set to True if unit is "angstrom" or "bohr".
+        self._tags["atomic_positions"] = [[species, unit_factor * [x, y, z]], ...]
+
+        """
         unit = self._values[0].lower()
         factor = 1.0
         if "angstrom" in unit:
             factor = 1.0 / Bohr
-            self.cartesian_positions = True
+            self._cartesian_positions = True
         elif "bohr" in unit:
-            self.cartesian_positions = True
+            self._cartesian_positions = True
         elif "crystal" not in unit:
             raise RuntimeError(
                 "Only supported ATOMIC_POSITIONS formats: crystal/bohr/angstrom."
@@ -344,8 +348,10 @@ class PwscfIn:
 
         natom = self._tags["nat"]
         pos_vals = self._values[1:]
-        if len(pos_vals) < natom * 4:
-            raise RuntimeError("ATOMIC_POSITIONS is wrongly set.")
+        if len(pos_vals) != natom * 4:
+            raise RuntimeError(
+                "ATOMIC_POSITIONS is wrongly set or incompatible with nat."
+            )
 
         positions = []
         for i in range(natom):
@@ -358,9 +364,20 @@ class PwscfIn:
         self._tags["atomic_positions"] = positions
 
     def _set_atom_types(self):
+        """Set atomic species.
+
+        self._values = [species, mass, pp_filename, ...]
+
+        is transformed to
+
+        self._tags["atomic_species"] = [[species, mass, pp_filename], ...]
+
+        """
         num_types = self._tags["ntyp"]
-        if len(self._values) < num_types * 3:
-            raise RuntimeError("%s is wrongly set." % self._current_tag_name)
+        if len(self._values) != num_types * 3:
+            raise RuntimeError(
+                f"{self._current_tag_name} is wrongly set or inconpatible with ntyp."
+            )
 
         species = []
 

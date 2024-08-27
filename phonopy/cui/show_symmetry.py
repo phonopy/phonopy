@@ -42,7 +42,7 @@ from phonopy.interface.calculator import (
     get_default_cell_filename,
     write_crystal_structure,
 )
-from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.atoms import PhonopyAtoms, atom_data
 from phonopy.structure.cells import get_primitive, guess_primitive_matrix
 from phonopy.structure.symmetry import Symmetry
 
@@ -60,8 +60,9 @@ def check_symmetry(phonon: Phonopy, optional_structure_info):
         (bravais_lattice, bravais_pos, bravais_numbers) = spglib.refine_cell(
             phonon.primitive.totuple(), symprec
         )
+        bravais_symbols = [atom_data[n][1] for n in bravais_numbers]
         bravais = PhonopyAtoms(
-            numbers=bravais_numbers, scaled_positions=bravais_pos, cell=bravais_lattice
+            symbols=bravais_symbols, scaled_positions=bravais_pos, cell=bravais_lattice
         )
         filename = "B" + base_fname
         print(f'# Symmetrized conventional unit cell is written into "{filename}" and')

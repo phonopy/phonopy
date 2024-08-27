@@ -721,10 +721,10 @@ def test_watch_GeneralizedRegularGridPoints(ph_tio2: Phonopy, helper_methods):
     plat = np.dot(tmat.T, ph_tio2.unitcell.cell)
     # reciprocal basis vectors in row vectors (10 times magnified)
     rec_plat = np.linalg.inv(plat).T * 10
-    nums = [
-        1,
+    symbols = [
+        "H",
     ] * len(grgp.qpoints)
-    cell = PhonopyAtoms(cell=rec_plat, scaled_positions=grgp.qpoints, numbers=nums)
+    cell = PhonopyAtoms(cell=rec_plat, scaled_positions=grgp.qpoints, symbols=symbols)
     yaml_filename = os.path.join(current_dir, "tio2_qpoints.yaml")
     cell_ref = read_cell_yaml(yaml_filename)
     helper_methods.compare_cells(cell, cell_ref)
