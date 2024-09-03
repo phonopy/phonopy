@@ -16,6 +16,16 @@ More tags may be supported on request.
 nat, ntyp, celldm(1), ATOMIC_SPECIES, ATOMIC_POSITIONS, CELL_PARAMETERS
 ```
 
+Chemical symbols with natural number for `ATOMIC_SPECIES` like `Xn` (`n>0`),
+e.g.. `Fe1`, can be used. The formats of `X_*` and `X-*` are not supported. When
+this extended symbol is used, masses of all atoms including usual chemical
+symbols are read from QE structure file. Otherwise, masses of respective
+chemical symbols implemented in phonopy are used. Note that when using the
+extended symbol, if the unit cell of QE structure file is not a primitive cell,
+and the primitive cell is defined by the transformation matrix (`PRIMITIVE_AXES`
+tag or `--pa` option), atoms with the extended symbols in the unit cell have to
+be mapped properly to those in the primitive cell.
+
 ## How to run
 
 The procedure of QE-phonopy calculation is shown below using the
@@ -331,7 +341,7 @@ Saving this script as `make_born_q2r.py`,
 #### NaCl example
 
 NaCl example is found at
-https://github.com/phonopy/phonopy/tree/master/example/NaCl-QE-q2r.
+<https://github.com/phonopy/phonopy/tree/master/example/NaCl-QE-q2r>.
 
 ```bash
 % phonopy --qe -c NaCl.in --dim="8 8 8" --band="0 0 0  1/2 0 0  1/2 1/2 0  0 0 0  1/2 1/2 1/2" --readfc --readfc-format=hdf5 --fc-symmetry --nac -p

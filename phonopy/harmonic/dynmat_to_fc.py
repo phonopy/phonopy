@@ -67,7 +67,7 @@ def get_commensurate_points(supercell_matrix):  # wrt primitive cell
     """
     smat = np.array(supercell_matrix, dtype=int)
     rec_primitive = PhonopyAtoms(
-        numbers=[1], scaled_positions=[[0, 0, 0]], cell=np.diag([1, 1, 1])
+        symbols=["H"], scaled_positions=[[0, 0, 0]], cell=np.diag([1, 1, 1])
     )
     rec_supercell = get_supercell(rec_primitive, smat.T)
     q_pos = rec_supercell.scaled_positions
