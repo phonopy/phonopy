@@ -377,6 +377,15 @@ More tags may be supported on request.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">nat</span><span class="p">,</span> <span class="n">ntyp</span><span class="p">,</span> <span class="n">celldm</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">ATOMIC_SPECIES</span><span class="p">,</span> <span class="n">ATOMIC_POSITIONS</span><span class="p">,</span> <span class="n">CELL_PARAMETERS</span>
 </pre></div>
 </div>
+<p>Chemical symbols with natural number for <code class="docutils literal notranslate"><span class="pre">ATOMIC_SPECIES</span></code> like <code class="docutils literal notranslate"><span class="pre">Xn</span></code> (<code class="docutils literal notranslate"><span class="pre">n&gt;0</span></code>),
+e.g.. <code class="docutils literal notranslate"><span class="pre">Fe1</span></code>, can be used. The formats of <code class="docutils literal notranslate"><span class="pre">X_*</span></code> and <code class="docutils literal notranslate"><span class="pre">X-*</span></code> are not supported. When
+this extended symbol is used, masses of all atoms including usual chemical
+symbols are read from QE structure file. Otherwise, masses of respective
+chemical symbols implemented in phonopy are used. Note that when using the
+extended symbol, if the unit cell of QE structure file is not a primitive cell,
+and the primitive cell is defined by the transformation matrix (<code class="docutils literal notranslate"><span class="pre">PRIMITIVE_AXES</span></code>
+tag or <code class="docutils literal notranslate"><span class="pre">--pa</span></code> option), atoms with the extended symbols in the unit cell have to
+be mapped properly to those in the primitive cell.</p>
 </section>
 <section id="how-to-run">
 <h2>How to run<a class="headerlink" href="#how-to-run" title="Link to this heading">#</a></h2>
