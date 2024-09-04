@@ -91,6 +91,8 @@ class PypolymlpParams:
     gaussian_params1: Sequence[float, float, int] = (1.0, 1.0, 1)
     gaussian_params2: Sequence[float, float, int] = (0.0, 7.0, 10)
     atom_energies: Optional[dict[str, float]] = None
+    ntrain: Optional[int] = None
+    ntest: Optional[int] = None
 
 
 @dataclass
@@ -273,7 +275,7 @@ def parse_mlp_params(params: Union[str, dict, PypolymlpParams]) -> PypolymlpPara
             elif key == "cutoff":
                 params_dict[key] = float(val)
             else:
-                if key in ("model_type", "max_p", "gtinv_order"):
+                if key in ("model_type", "max_p", "gtinv_order", "ntrain", "ntest"):
                     params_dict[key] = int(val)
         return PypolymlpParams(**params_dict)
     else:
