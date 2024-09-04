@@ -381,7 +381,7 @@ phonon.run_mesh([20, 20, 20], with_group_velocities=True)
 ```
 
 The first argument of `run_mesh()` can be a float value, which is a length
-measure as explained at {ref}`mehs_tag`, for example:
+measure as explained at {ref}`mesh_tag`, for example:
 
 ```python
 phonon.run_mesh(100.0)

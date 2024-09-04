@@ -1694,7 +1694,7 @@ def _get_cell_info(
     cell_filename: str,
     log_level: int = 0,
     load_phonopy_yaml: bool = False,
-):
+) -> dict:
     """Return calculator interface and crystal structure information."""
     cell_info = collect_cell_info(
         supercell_matrix=settings.supercell_matrix,
@@ -1778,7 +1778,7 @@ def _show_symmetry_info_then_exit(cell_info, symprec):
         calculator=cell_info["interface_mode"],
         log_level=0,
     )
-    check_symmetry(phonon, cell_info["optional_structure_info"])
+    check_symmetry(phonon, cell_info)
     sys.exit(0)
 
 
@@ -1950,12 +1950,13 @@ def main(**argparse_control):
         log_level=log_level,
         load_phonopy_yaml=load_phonopy_yaml,
     )
+
     unitcell_filename = cell_info["optional_structure_info"][0]
 
     if cell_info["unitcell"].magnetic_moments is not None and _auto_primitive_axes(
         cell_info["primitive_matrix"]
     ):
-        print_error_message('Unit cell was read from "%s".' % unitcell_filename)
+        print_error_message(f'Unit cell was read from "{unitcell_filename}".')
 
         if cell_info["phonopy_yaml"] is None:
             print_error_message(

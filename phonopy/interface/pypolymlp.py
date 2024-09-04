@@ -177,6 +177,7 @@ def develop_polymlp(
         phonopy_cell_to_structure(supercell),
     )
     polymlp.run(verbose=verbose)
+    polymlp.save_mlp(filename="pypolymlp.mlp")
     return polymlp
 
 
@@ -280,3 +281,10 @@ def parse_mlp_params(params: Union[str, dict, PypolymlpParams]) -> PypolymlpPara
         return PypolymlpParams(**params_dict)
     else:
         raise RuntimeError("params has to be dict, str, or PypolymlpParams.")
+
+
+def load_polymlp(filename: str) -> Pypolymlp:  # type: ignore
+    """Load MLP data from file."""
+    mlp = Pypolymlp()
+    mlp.load_mlp(filename=filename)
+    return mlp

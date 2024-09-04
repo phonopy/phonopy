@@ -347,7 +347,7 @@ def test_TrimmedCell(nacl_unitcell_order1: PhonopyAtoms, helper_methods: Callabl
     scell3_swap = PhonopyAtoms(
         cell=scell3.cell,
         scaled_positions=scell3.scaled_positions[indices],
-        numbers=scell3.numbers[indices],
+        symbols=[scell3.symbols[i] for i in indices],
     )
     tcell2 = TrimmedCell(pmat2, scell2)
     tcell3 = TrimmedCell(
@@ -443,9 +443,9 @@ def test_convert_to_phonopy_primitive(ph_nacl: Phonopy):
 
     # Changing order of atoms is not allowed.
     points = pcell.scaled_positions[[1, 0]]
-    numbers = pcell.numbers[[1, 0]]
+    symbols = [pcell.symbols[i] for i in (1, 0)]
     cell = pcell.cell
-    pcell_mode = PhonopyAtoms(cell=cell, scaled_positions=points, numbers=numbers)
+    pcell_mode = PhonopyAtoms(cell=cell, scaled_positions=points, symbols=symbols)
     with pytest.raises(RuntimeError):
         _pcell = convert_to_phonopy_primitive(scell, pcell_mode)
 
@@ -476,3 +476,44 @@ def test_get_cell_matrix_from_lattice(primcell_nacl: PhonopyAtoms):
         lattice,
         atol=1e-7,
     )
+
+
+def test_get_supercell_with_Xn_symbol(ph_nacl: Phonopy):
+    """Test of get_supercell with Xn symbol."""
+    symbols = ph_nacl.unitcell.symbols
+    symbols[-1] = "Cl1"
+    masses = ph_nacl.unitcell.masses
+    masses[-1] = 70.0
+    cell = PhonopyAtoms(
+        cell=ph_nacl.unitcell.cell,
+        scaled_positions=ph_nacl.unitcell.scaled_positions,
+        symbols=symbols,
+        masses=masses,
+    )
+    scell = get_supercell(cell, np.diag([2, 2, 2]))
+    assert scell.symbols[-8:] == ["Cl1"] * 8
+    np.testing.assert_allclose(scell.masses[-8:], [70.0] * 8)
+
+
+def test_get_primitive_with_Xn_symbol(ph_nacl: Phonopy):
+    """Test of get_primitive with Xn symbol.
+
+    Symbols with index breaks symmetry to make primitive cell.
+
+    Can not make primitive cell like:
+    ["Na", "Na", "Na", "Na", "Cl", "Cl", "Cl", "Cl1"] -> ["Na", "Cl"]
+
+    """
+    symbols = ph_nacl.unitcell.symbols
+    symbols[-1] = "Cl1"
+    masses = ph_nacl.unitcell.masses
+    masses[-1] = 70.0
+    cell = PhonopyAtoms(
+        cell=ph_nacl.unitcell.cell,
+        scaled_positions=ph_nacl.unitcell.scaled_positions,
+        symbols=symbols,
+        masses=masses,
+    )
+    with pytest.raises(RuntimeError) as e:
+        get_primitive(cell, primitive_matrix="F")
+    assert str(e.value).split("\n")[0] == "Atom symbol mapping failure."

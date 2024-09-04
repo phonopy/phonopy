@@ -189,7 +189,7 @@ class Phonopy:
         self._log_level = log_level
 
         # Create supercell and primitive cell
-        self._unitcell = PhonopyAtoms(atoms=unitcell)
+        self._unitcell = unitcell.copy()
         self._supercell_matrix = self._shape_supercell_matrix(supercell_matrix)
         if isinstance(primitive_matrix, str):
             self._primitive_matrix = self._set_primitive_matrix(primitive_matrix)
@@ -4002,7 +4002,7 @@ class Phonopy:
         for positions in all_positions:
             supercells.append(
                 PhonopyAtoms(
-                    numbers=self._supercell.numbers,
+                    symbols=self._supercell.symbols,
                     masses=self._supercell.masses,
                     magnetic_moments=self._supercell.magnetic_moments,
                     positions=positions,

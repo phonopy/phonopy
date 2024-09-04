@@ -55,7 +55,7 @@ def collect_cell_info(
     enforce_primitive_matrix_auto=False,
     phonopy_yaml_cls: type[PhonopyYaml] = PhonopyYaml,
     load_phonopy_yaml: bool = False,
-):
+) -> dict:
     """Collect crystal structure information from input file and parameters.
 
     This function returns crystal structure information obtained from an input
