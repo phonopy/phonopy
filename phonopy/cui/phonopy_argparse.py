@@ -519,6 +519,15 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         help="Same behavior as MP tag",
     )
     parser.add_argument(
+        "--mlp-params",
+        dest="mlp_params",
+        default=None,
+        help=(
+            "Parameters for machine learning potentials as comma separated "
+            "string with the style of key = values"
+        ),
+    )
+    parser.add_argument(
         "--moment",
         dest="is_moment",
         action="store_true",
