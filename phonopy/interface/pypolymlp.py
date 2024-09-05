@@ -91,6 +91,8 @@ class PypolymlpParams:
     gaussian_params1: Sequence[float, float, int] = (1.0, 1.0, 1)
     gaussian_params2: Sequence[float, float, int] = (0.0, 7.0, 10)
     atom_energies: Optional[dict[str, float]] = None
+    ntrain: Optional[int] = None
+    ntest: Optional[int] = None
 
 
 @dataclass
@@ -117,7 +119,7 @@ def develop_polymlp(
     test_data: PypolymlpData,
     params: Optional[PypolymlpParams] = None,
     verbose: bool = False,
-):
+) -> Pypolymlp:  # type: ignore
     """Develop polynomial MLPs of pypolymlp.
 
     Parameters
@@ -175,7 +177,6 @@ def develop_polymlp(
         phonopy_cell_to_structure(supercell),
     )
     polymlp.run(verbose=verbose)
-    polymlp.save_mlp(filename="pypolymlp.mlp")
     return polymlp
 
 
@@ -274,7 +275,7 @@ def parse_mlp_params(params: Union[str, dict, PypolymlpParams]) -> PypolymlpPara
             elif key == "cutoff":
                 params_dict[key] = float(val)
             else:
-                if key in ("model_type", "max_p", "gtinv_order"):
+                if key in ("model_type", "max_p", "gtinv_order", "ntrain", "ntest"):
                     params_dict[key] = int(val)
         return PypolymlpParams(**params_dict)
     else:
@@ -285,4 +286,58 @@ def load_polymlp(filename: str) -> Pypolymlp:  # type: ignore
     """Load MLP data from file."""
     mlp = Pypolymlp()
     mlp.load_mlp(filename=filename)
+    return mlp
+
+
+def develop_mlp_by_pypolymlp(
+    mlp_dataset: dict,
+    supercell: PhonopyAtoms,
+    params: Optional[Union[PypolymlpParams, dict, str]] = None,
+    test_size: float = 0.1,
+    log_level: int = 0,
+) -> Pypolymlp:  # type: ignore
+    """Develop MLPs by pypolymlp."""
+    if params is not None:
+        _params = parse_mlp_params(params)
+    else:
+        _params = params
+
+    if _params is not None and _params.ntrain is not None and _params.ntest is not None:
+        ntrain = _params.ntrain
+        ntest = _params.ntest
+        disps = mlp_dataset["displacements"]
+        forces = mlp_dataset["forces"]
+        energies = mlp_dataset["supercell_energies"]
+        train_data = PypolymlpData(
+            displacements=disps[:ntrain],
+            forces=forces[:ntrain],
+            supercell_energies=energies[:ntrain],
+        )
+        test_data = PypolymlpData(
+            displacements=disps[-ntest:],
+            forces=forces[-ntest:],
+            supercell_energies=energies[-ntest:],
+        )
+    else:
+        disps = mlp_dataset["displacements"]
+        forces = mlp_dataset["forces"]
+        energies = mlp_dataset["supercell_energies"]
+        n = int(len(disps) * (1 - test_size))
+        train_data = PypolymlpData(
+            displacements=disps[:n],
+            forces=forces[:n],
+            supercell_energies=energies[:n],
+        )
+        test_data = PypolymlpData(
+            displacements=disps[n:],
+            forces=forces[n:],
+            supercell_energies=energies[n:],
+        )
+    mlp = develop_polymlp(
+        supercell,
+        train_data,
+        test_data,
+        params=_params,
+        verbose=log_level - 1 > 0,
+    )
     return mlp

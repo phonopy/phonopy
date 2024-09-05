@@ -75,6 +75,8 @@ def load(
     is_symmetry: bool = True,
     symmetrize_fc: bool = True,
     is_compact_fc: bool = True,
+    use_pypolymlp: bool = False,
+    mlp_params: Optional[dict] = None,
     store_dense_svecs: bool = False,
     use_SNF_supercell: bool = False,
     symprec: float = 1e-5,
@@ -201,6 +203,10 @@ def load(
             True: (primitive, supecell, 3, 3) False: (supercell, supecell, 3, 3)
         where 'supercell' and 'primitive' indicate number of atoms in these
         cells. Default is True.
+    use_pypolymlp : bool, optional
+        Use pypolymlp for generating force constants. Default is False.
+    mlp_params : dict, optional
+        A set of parameters used by machine learning potentials.
     store_dense_svecs : bool, optional
         Dataset of shortest vectors between atoms in primitive cell and
         supercell is stored in the dense format when this is True. Default is
@@ -317,6 +323,8 @@ def load(
         produce_fc=produce_fc,
         symmetrize_fc=symmetrize_fc,
         is_compact_fc=is_compact_fc,
+        use_pypolymlp=use_pypolymlp,
+        mlp_params=mlp_params,
         log_level=log_level,
     )
 
