@@ -260,10 +260,18 @@ def files_exist(
 
 
 def _finalize_phonopy(
-    log_level, settings: Settings, confs, phonon, filename="phonopy.yaml"
+    log_level, settings: Settings, confs, phonon: Phonopy, filename="phonopy.yaml"
 ):
     """Finalize phonopy."""
     units = get_default_physical_units(phonon.calculator)
+
+    if phonon.mlp_dataset is not None:
+        mlp_eval_filename = "phonopy_mlp_eval_dataset.yaml"
+        if log_level:
+            print(
+                f'Dataset generated using MMLPs was written in "{mlp_eval_filename}".'
+            )
+        phonon.save(mlp_eval_filename)
 
     if settings.save_params:
         exists_fc_only = (
@@ -566,6 +574,41 @@ def _create_FORCE_SETS_from_settings(
     )
 
 
+def _produce_force_constants_load_phonopy_yaml(
+    phonon: Phonopy,
+    settings: Settings,
+    phpy_yaml: PhonopyYaml,
+    unitcell_filename: str,
+    log_level: int,
+):
+    is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
+    (fc_calculator, fc_calculator_options) = _get_fc_calculator_params(settings)
+
+    try:
+        set_dataset_and_force_constants(
+            phonon,
+            phpy_yaml.dataset,
+            phonopy_yaml_filename=unitcell_filename,
+            fc=phpy_yaml.force_constants,
+            fc_calculator=fc_calculator,
+            fc_calculator_options=fc_calculator_options,
+            produce_fc=True,
+            symmetrize_fc=False,
+            is_compact_fc=(not is_full_fc),
+            use_pypolymlp=settings.use_pypolymlp,
+            mlp_params=settings.mlp_params,
+            displacement_distance=settings.displacement_distance,
+            number_of_snapshots=settings.random_displacements,
+            random_seed=settings.random_seed,
+            log_level=log_level,
+        )
+    except (RuntimeError, ValueError) as e:
+        print_error_message(str(e))
+        if log_level:
+            print_error()
+        sys.exit(1)
+
+
 def _produce_force_constants(
     phonon: Phonopy,
     settings: Settings,
@@ -601,7 +644,7 @@ def _produce_force_constants(
             force_sets = read_force_sets_from_phonopy_yaml(phpy_yaml)
             if log_level:
                 if force_sets is None:
-                    print('Force sets were not found in "%s".' % unitcell_filename)
+                    print(f'Force sets were not found in "{unitcell_filename}".')
                 else:
                     print(
                         'Forces and displacements were read from "%s".'
@@ -748,69 +791,9 @@ def _store_force_constants(
     p2s_map = phonon.primitive.p2s_map
 
     if load_phonopy_yaml:
-        is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
-        if phpy_yaml.force_constants is not None:
-            if log_level:
-                print('Force constants were read from "%s".' % unitcell_filename)
-
-            fc = phpy_yaml.force_constants
-
-            if fc.shape[1] != len(phonon.supercell):
-                error_text = (
-                    "Number of atoms in supercell is not consistent "
-                    "with the matrix shape of\nforce constants read "
-                    "from %s." % unitcell_filename
-                )
-                print_error_message(error_text)
-                if log_level:
-                    print_error()
-                sys.exit(1)
-
-            # Compact fc is expanded to full fc when full fc is required.
-            if is_full_fc and fc.shape[0] != fc.shape[1]:
-                fc = compact_fc_to_full_fc(phonon, fc, log_level=log_level)
-            elif not is_full_fc and fc.shape[0] == fc.shape[1]:
-                fc = full_fc_to_compact_fc(phonon, fc, log_level=log_level)
-
-            phonon.set_force_constants(fc, show_drift=(log_level > 0))
-
-        if settings.read_force_constants:
-            _read_force_constants_from_file(
-                settings, phonon, unitcell_filename, is_full_fc, log_level
-            )
-        else:
-            if forces_in_dataset(phpy_yaml.dataset):
-                if log_level:
-                    text = 'Force sets were read from "%s"' % unitcell_filename
-                    if phpy_yaml.force_constants is not None:
-                        text += " but not to be used."
-                    else:
-                        text += "."
-                    print(text)
-
-            if phpy_yaml.force_constants is None:
-                (fc_calculator, fc_calculator_options) = _get_fc_calculator_params(
-                    settings
-                )
-
-                try:
-                    set_dataset_and_force_constants(
-                        phonon,
-                        phpy_yaml.dataset,
-                        None,
-                        fc_calculator=fc_calculator,
-                        fc_calculator_options=fc_calculator_options,
-                        produce_fc=True,
-                        symmetrize_fc=False,
-                        is_compact_fc=(not is_full_fc),
-                        use_pypolymlp=settings.use_pypolymlp,
-                        log_level=log_level,
-                    )
-                except (RuntimeError, ValueError) as e:
-                    print_error_message(str(e))
-                    if log_level:
-                        print_error()
-                    sys.exit(1)
+        _produce_force_constants_load_phonopy_yaml(
+            phonon, settings, phpy_yaml, unitcell_filename, log_level
+        )
     else:
         _produce_force_constants(
             phonon, settings, phpy_yaml, unitcell_filename, log_level
@@ -872,6 +855,64 @@ def _store_force_constants(
         print("")
 
     return True
+
+
+def _create_random_displacements_at_finite_temperature(
+    phonon: Phonopy,
+    settings: Settings,
+    confs: dict,
+    optional_structure_info: Optional[tuple],
+    log_level: int,
+):
+    if (
+        settings.random_displacements
+        and settings.random_displacement_temperature is not None
+    ):
+        if file_exists("phonopy_disp.yaml", log_level=log_level, is_any=True):
+            if log_level:
+                print(
+                    '"phonopy_disp.yaml" is already existing in the current directory.'
+                )
+                print('Please rename it not to lose "phonopy_disp.yaml".')
+                print_error()
+            sys.exit(1)
+
+        phonon.generate_displacements(
+            number_of_snapshots=settings.random_displacements,
+            random_seed=settings.random_seed,
+            temperature=settings.random_displacement_temperature,
+            cutoff_frequency=settings.cutoff_frequency,
+        )
+
+        if log_level:
+            rd_comm_points = phonon.random_displacements.qpoints
+            rd_integrated_modes = phonon.random_displacements.integrated_modes
+            rd_frequencies = phonon.random_displacements.frequencies
+            print(
+                "Sampled q-points for generating displacements "
+                "(number of integrated modes):"
+            )
+            for q, integrated_modes, freqs in zip(
+                rd_comm_points, rd_integrated_modes, rd_frequencies
+            ):
+                print(f"{q} ({integrated_modes.sum()})")
+                if log_level > 1:
+                    print("  ", " ".join([f"{f:.3f}" for f in freqs]))
+            if np.prod(rd_integrated_modes.shape) - rd_integrated_modes.sum() != 3:
+                msg_lines = [
+                    "*****************************************************************",
+                    "* Tiny frequencies can induce unexpectedly large displacements. *",
+                    "* Please check force constants symmetry, e.g., --sym-fc option. *",
+                    "*****************************************************************",
+                ]
+                print("\n".join(msg_lines))
+            if log_level < 2:
+                print('Phonon frequencies can be shown by "-v" option.')
+            print()
+
+        _write_displacements_files_then_exit(
+            phonon, settings, confs, optional_structure_info, log_level
+        )
 
 
 def store_nac_params(
@@ -2037,25 +2078,28 @@ def main(**argparse_control):
     #########################################################
     # Create constant amplitude displacements and then exit #
     #########################################################
-    if (
-        settings.create_displacements or settings.random_displacements
-    ) and settings.random_displacement_temperature is None:
-        if settings.displacement_distance is None:
-            displacement_distance = get_default_displacement_distance(phonon.calculator)
-        else:
-            displacement_distance = settings.displacement_distance
+    if not settings.use_pypolymlp:
+        if (
+            settings.create_displacements or settings.random_displacements
+        ) and settings.random_displacement_temperature is None:
+            if settings.displacement_distance is None:
+                displacement_distance = get_default_displacement_distance(
+                    phonon.calculator
+                )
+            else:
+                displacement_distance = settings.displacement_distance
 
-        phonon.generate_displacements(
-            distance=displacement_distance,
-            is_plusminus=settings.is_plusminus_displacement,
-            is_diagonal=settings.is_diagonal_displacement,
-            is_trigonal=settings.is_trigonal_displacement,
-            number_of_snapshots=settings.random_displacements,
-            random_seed=settings.random_seed,
-        )
-        _write_displacements_files_then_exit(
-            phonon, settings, confs, cell_info["optional_structure_info"], log_level
-        )
+            phonon.generate_displacements(
+                distance=displacement_distance,
+                is_plusminus=settings.is_plusminus_displacement,
+                is_diagonal=settings.is_diagonal_displacement,
+                is_trigonal=settings.is_trigonal_displacement,
+                number_of_snapshots=settings.random_displacements,
+                random_seed=settings.random_seed,
+            )
+            _write_displacements_files_then_exit(
+                phonon, settings, confs, cell_info["optional_structure_info"], log_level
+            )
 
     ###################
     # Force constants #
@@ -2075,53 +2119,8 @@ def main(**argparse_control):
     ###################################################################
     # Create random displacements at finite temperature and then exit #
     ###################################################################
-    if (
-        settings.random_displacements
-        and settings.random_displacement_temperature is not None
-    ):
-        if file_exists("phonopy_disp.yaml", log_level=log_level, is_any=True):
-            if log_level:
-                print(
-                    '"phonopy_disp.yaml" is already existing in the current directory.'
-                )
-                print('Please rename it not to lose "phonopy_disp.yaml".')
-                print_error()
-            sys.exit(1)
-
-        phonon.generate_displacements(
-            number_of_snapshots=settings.random_displacements,
-            random_seed=settings.random_seed,
-            temperature=settings.random_displacement_temperature,
-            cutoff_frequency=settings.cutoff_frequency,
-        )
-
-        if log_level:
-            rd_comm_points = phonon.random_displacements.qpoints
-            rd_integrated_modes = phonon.random_displacements.integrated_modes
-            rd_frequencies = phonon.random_displacements.frequencies
-            print(
-                "Sampled q-points for generating displacements "
-                "(number of integrated modes):"
-            )
-            for q, integrated_modes, freqs in zip(
-                rd_comm_points, rd_integrated_modes, rd_frequencies
-            ):
-                print(f"{q} ({integrated_modes.sum()})")
-                if log_level > 1:
-                    print("  ", " ".join([f"{f:.3f}" for f in freqs]))
-            if np.prod(rd_integrated_modes.shape) - rd_integrated_modes.sum() != 3:
-                msg_lines = [
-                    "*****************************************************************",
-                    "* Tiny frequencies can induce unexpectedly large displacements. *",
-                    "* Please check force constants symmetry, e.g., --sym-fc option. *",
-                    "*****************************************************************",
-                ]
-                print("\n".join(msg_lines))
-            if log_level < 2:
-                print('Phonon frequencies can be shown by "-v" option.')
-            print()
-
-        _write_displacements_files_then_exit(
+    if not settings.use_pypolymlp:
+        _create_random_displacements_at_finite_temperature(
             phonon, settings, confs, cell_info["optional_structure_info"], log_level
         )
 

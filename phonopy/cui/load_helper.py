@@ -37,7 +37,8 @@
 from __future__ import annotations
 
 import pathlib
-from typing import Optional
+from dataclasses import asdict
+from typing import Optional, Union
 
 import numpy as np
 
@@ -56,6 +57,10 @@ from phonopy.harmonic.force_constants import (
 from phonopy.interface.calculator import (
     get_force_constant_conversion_factor,
     read_crystal_structure,
+)
+from phonopy.interface.pypolymlp import (
+    PypolymlpParams,
+    parse_mlp_params,
 )
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_primitive_matrix
@@ -175,8 +180,9 @@ def read_force_constants_from_hdf5(
 
 def set_dataset_and_force_constants(
     phonon: Phonopy,
-    dataset: dict,
-    fc: Optional[np.ndarray],  # From phonopy_yaml
+    dataset: Optional[dict],
+    phonopy_yaml_filename: Optional[str] = None,
+    fc: Optional[np.ndarray] = None,  # From phonopy_yaml
     force_constants_filename: Optional[str] = None,
     force_sets_filename: Optional[str] = None,
     fc_calculator: Optional[str] = None,
@@ -185,23 +191,191 @@ def set_dataset_and_force_constants(
     symmetrize_fc: bool = True,
     is_compact_fc: bool = True,
     use_pypolymlp: bool = False,
+    mlp_params: Optional[dict] = None,
+    displacement_distance: Optional[float] = None,
+    number_of_snapshots: Optional[int] = None,
+    random_seed: Optional[int] = None,
     log_level: int = 0,
 ):
     """Set displacement-force dataset and force constants."""
+    _set_dataset(
+        phonon,
+        dataset,
+        phonopy_yaml_filename,
+        force_sets_filename,
+        use_pypolymlp,
+        log_level,
+    )
+
+    _set_force_constants(
+        phonon,
+        phonopy_yaml_filename,
+        fc,
+        force_constants_filename,
+        is_compact_fc,
+        log_level,
+    )
+
+    if use_pypolymlp:
+        _run_pypolymlp_to_compute_forces(
+            phonon,
+            mlp_params,
+            displacement_distance=displacement_distance,
+            number_of_snapshots=number_of_snapshots,
+            random_seed=random_seed,
+            log_level=log_level,
+        )
+
+    if (
+        phonon.force_constants is None
+        and produce_fc
+        and forces_in_dataset(phonon.dataset)
+    ):
+        _produce_force_constants(
+            phonon,
+            fc_calculator,
+            fc_calculator_options,
+            symmetrize_fc,
+            is_compact_fc,
+            log_level,
+        )
+
+
+def check_nac_params(nac_params: dict, unitcell: PhonopyAtoms, pmat: np.ndarray):
+    """Check number of Born effective charges."""
+    borns = nac_params["born"]
+    if len(borns) != np.rint(len(unitcell) * np.linalg.det(pmat)).astype(int):
+        msg = "Number of Born effective charges is not consistent with the cell."
+        raise ValueError(msg)
+
+
+def _set_dataset(
+    phonon: Phonopy,
+    dataset: Optional[dict],
+    phonopy_yaml_filename: Optional[str] = None,
+    force_sets_filename: Optional[str] = None,
+    use_pypolymlp: bool = False,
+    log_level: int = 0,
+):
     natom = len(phonon.supercell)
-
-    # dataset and fc are those obtained from phonopy_yaml unless None.
-    if dataset is not None:
-        if use_pypolymlp:
-            phonon.mlp_dataset = dataset
-        else:
-            phonon.dataset = dataset
-    if fc is not None:
-        phonon.force_constants = fc
-
-    _fc = None
     _dataset = None
-    if force_constants_filename is not None:
+    _force_sets_filename = None
+    if forces_in_dataset(dataset):
+        _dataset = dataset
+        _force_sets_filename = phonopy_yaml_filename
+    elif force_sets_filename is not None:
+        _dataset = parse_FORCE_SETS(natom=natom, filename=force_sets_filename)
+        _force_sets_filename = force_sets_filename
+    elif pathlib.Path("FORCE_SETS").exists():
+        _dataset = parse_FORCE_SETS(natom=natom)
+        _force_sets_filename = "FORCE_SETS"
+    else:
+        _dataset = dataset
+
+    if log_level:
+        if forces_in_dataset(_dataset):
+            print(f'Displacement-force dataset was read from "{_force_sets_filename}".')
+        elif _dataset is not None:
+            print(f'Displacement dataset was read from "{_force_sets_filename}".')
+
+    if use_pypolymlp:
+        phonon.mlp_dataset = _dataset
+    else:
+        phonon.dataset = _dataset
+
+
+def _run_pypolymlp_to_compute_forces(
+    phonon: Phonopy,
+    mlp_params: Union[str, dict, PypolymlpParams],
+    displacement_distance: Optional[float] = None,
+    number_of_snapshots: Optional[int] = None,
+    random_seed: Optional[int] = None,
+    mlp_filename: str = "phonopy.pmlp",
+    log_level: int = 0,
+):
+    """Run pypolymlp to compute forces."""
+    if log_level:
+        print("-" * 29 + " pypolymlp start " + "-" * 30)
+        print("Pypolymlp is a generator of polynomial machine learning potentials.")
+        print("Please cite the paper: A. Seko, J. Appl. Phys. 133, 011101 (2023).")
+        print("Pypolymlp is developed at https://github.com/sekocha/pypolymlp.")
+        if mlp_params:
+            print("Parameters:")
+            for k, v in asdict(parse_mlp_params(mlp_params)).items():
+                if v is not None:
+                    print(f"  {k}: {v}")
+
+    if forces_in_dataset(phonon.mlp_dataset):
+        if log_level:
+            print("Developing MLPs by pypolymlp...", flush=True)
+        phonon.develop_mlp(params=mlp_params)
+        phonon.mlp.save_mlp(filename=mlp_filename)
+        if log_level:
+            print(f'MLPs were written into "{mlp_filename}"', flush=True)
+    else:
+        if pathlib.Path(mlp_filename).exists():
+            if log_level:
+                print(f'Load MLPs from "{mlp_filename}".')
+            phonon.load_mlp(mlp_filename)
+        else:
+            raise RuntimeError(f'"{mlp_filename}" is not found.')
+
+    if log_level:
+        print("-" * 30 + " pypolymlp end " + "-" * 31, flush=True)
+
+    if displacement_distance is None:
+        _displacement_distance = 0.001
+    else:
+        _displacement_distance = displacement_distance
+
+    if log_level:
+        if number_of_snapshots:
+            print("Generate random displacements")
+            print(
+                "  Twice of number of snapshots will be generated "
+                "for plus-minus displacements."
+            )
+        else:
+            print("Generate displacements")
+        print(
+            f"  Displacement distance: {_displacement_distance:.5f}".rstrip("0").rstrip(
+                "."
+            )
+        )
+    phonon.generate_displacements(
+        distance=_displacement_distance,
+        is_plusminus=True,
+        number_of_snapshots=number_of_snapshots,
+        random_seed=random_seed,
+    )
+
+    if log_level:
+        print(
+            f"Evaluate forces in {len(phonon.displacements)} supercells "
+            "by pypolymlp",
+            flush=True,
+        )
+
+    if phonon.supercells_with_displacements is None:
+        raise RuntimeError("Displacements are not set. Run generate_displacements.")
+
+    phonon.evaluate_mlp()
+
+
+def _set_force_constants(
+    phonon: Phonopy,
+    phonopy_yaml_filename: Optional[str] = None,
+    fc: Optional[np.ndarray] = None,  # From phonopy_yaml
+    force_constants_filename: Optional[str] = None,
+    is_compact_fc: bool = True,
+    log_level: int = 0,
+):
+    _fc = None
+    _force_constants_filename = None
+    if fc is not None:
+        _fc = fc
+        _force_constants_filename = phonopy_yaml_filename
+    elif force_constants_filename is not None:
         _fc = _read_force_constants_file(
             phonon,
             force_constants_filename,
@@ -209,10 +383,7 @@ def set_dataset_and_force_constants(
             log_level=log_level,
         )
         _force_constants_filename = force_constants_filename
-    elif force_sets_filename is not None:
-        _dataset = parse_FORCE_SETS(natom=natom, filename=force_sets_filename)
-        _force_sets_filename = force_sets_filename
-    elif phonon.forces is None and phonon.force_constants is None:
+    elif phonon.force_constants is None:
         # unless provided these from phonopy_yaml.
         if pathlib.Path("FORCE_CONSTANTS").exists():
             _fc = _read_force_constants_file(
@@ -230,50 +401,15 @@ def set_dataset_and_force_constants(
                 log_level=log_level,
             )
             _force_constants_filename = "force_constants.hdf5"
-        elif pathlib.Path("FORCE_SETS").exists():
-            _dataset = parse_FORCE_SETS(natom=natom)
-            _force_sets_filename = "FORCE_SETS"
 
     if _fc is not None:
+        if not is_compact_fc and _fc.shape[0] != _fc.shape[1]:
+            _fc = compact_fc_to_full_fc(phonon, _fc, log_level=log_level)
+        elif is_compact_fc and _fc.shape[0] == _fc.shape[1]:
+            _fc = full_fc_to_compact_fc(phonon, _fc, log_level=log_level)
         phonon.force_constants = _fc
         if log_level:
-            print('Force constants were read from "%s".' % _force_constants_filename)
-
-    if phonon.force_constants is None:
-        # Overwrite dataset
-        if _dataset is not None:
-            if phonon.dataset is None:
-                is_overwritten = False
-            else:
-                is_overwritten = (
-                    "first_atoms" in phonon.dataset or "displacements" in phonon.dataset
-                )
-            phonon.dataset = _dataset
-            if log_level:
-                print(f'Force sets were read from "{_force_sets_filename}".')
-                if is_overwritten:
-                    print(
-                        f"Displacements in dataset were overwritten by those in "
-                        f'"{_force_sets_filename}".'
-                    )
-
-        if produce_fc and forces_in_dataset(phonon.dataset):
-            _produce_force_constants(
-                phonon,
-                fc_calculator,
-                fc_calculator_options,
-                symmetrize_fc,
-                is_compact_fc,
-                log_level,
-            )
-
-
-def check_nac_params(nac_params: dict, unitcell: PhonopyAtoms, pmat: np.ndarray):
-    """Check number of Born effective charges."""
-    borns = nac_params["born"]
-    if len(borns) != np.rint(len(unitcell) * np.linalg.det(pmat)).astype(int):
-        msg = "Number of Born effective charges is not consistent with the cell."
-        raise ValueError(msg)
+            print(f'Force constants were read from "{_force_constants_filename}".')
 
 
 def _read_force_constants_file(

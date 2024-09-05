@@ -69,10 +69,10 @@ from phonopy.interface.calculator import get_default_physical_units
 from phonopy.interface.fc_calculator import get_fc2
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.pypolymlp import (
-    PypolymlpData,
     PypolymlpParams,
-    develop_polymlp,
+    develop_mlp_by_pypolymlp,
     evalulate_polymlp,
+    load_polymlp,
 )
 from phonopy.phonon.animation import write_animation
 from phonopy.phonon.band_structure import BandStructure, get_band_qpoints_by_seekpath
@@ -1242,7 +1242,11 @@ class Phonopy:
         if self._primitive.masses is not None:
             self._set_dynamical_matrix()
 
-    def develop_mlp(self, params: Optional[Union[PypolymlpParams, dict]] = None):
+    def develop_mlp(
+        self,
+        params: Optional[Union[PypolymlpParams, dict, str]] = None,
+        test_size: float = 0.1,
+    ):
         """Develop MLP of pypolymlp.
 
         Parameters
@@ -1250,36 +1254,29 @@ class Phonopy:
         params : PypolymlpParams or dict, optional
             Parameters for developing MLP. Default is None. When dict is given,
             PypolymlpParams instance is created from the dict.
+        test_size : float, optional
+            Training and test data are splitted by this ratio. test_size=0.1
+            means the first 90% of the data is used for training and the rest
+            is used for test. Default is 0.1.
 
         """
         if self._mlp_dataset is None:
             raise RuntimeError("MLP dataset is not set.")
 
-        if isinstance(params, dict):
-            _params = PypolymlpParams(**params)
-        else:
-            _params = params
-
-        disps = self._mlp_dataset["displacements"]
-        forces = self._mlp_dataset["forces"]
-        energies = self._mlp_dataset["supercell_energies"]
-        n = int(len(disps) * 0.9)
-        train_data = PypolymlpData(
-            displacements=disps[:n], forces=forces[:n], supercell_energies=energies[:n]
-        )
-        test_data = PypolymlpData(
-            displacements=disps[n:], forces=forces[n:], supercell_energies=energies[n:]
-        )
-        self._mlp = develop_polymlp(
+        self._mlp = develop_mlp_by_pypolymlp(
+            self._mlp_dataset,
             self._supercell,
-            train_data,
-            test_data,
-            params=_params,
-            verbose=self._log_level - 1 > 0,
+            params=params,
+            test_size=test_size,
+            log_level=self._log_level,
         )
+
+    def load_mlp(self, filename: str = "phonopy.pmlp"):
+        """Load machine learning potential of pypolymlp."""
+        self._mlp = load_polymlp(filename=filename)
 
     def evaluate_mlp(self):
-        """Evaluate the machine learning potential of pypolymlp.
+        """Evaluate machine learning potential of pypolymlp.
 
         This method calculates the supercell energies and forces from the MLP
         for the displacements in self._dataset of type 2. The results are stored
