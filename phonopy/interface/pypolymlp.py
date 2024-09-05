@@ -177,7 +177,6 @@ def develop_polymlp(
         phonopy_cell_to_structure(supercell),
     )
     polymlp.run(verbose=verbose)
-    polymlp.save_mlp(filename="pypolymlp.mlp")
     return polymlp
 
 
