@@ -162,7 +162,7 @@ with open("band.yaml") as f:
   - Phonon frequency in a specified unit at each phonon mode
 * - eigenvector
   - Eigenvector at each phonon mode.
-    Each eigenvector :math:`\mathbf{e}` of
+    Each eigenvector {math}`\mathbf{e}` of
     {ref}`dynamical matrix <dynacmial_matrix_theory>`
     is shown as sets of three
     complex values of each atom along the Cartesian axes in
