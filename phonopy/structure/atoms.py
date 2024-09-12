@@ -35,6 +35,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 from __future__ import annotations
 
+import re
 import warnings
 from collections.abc import Sequence
 from math import gcd
@@ -58,6 +59,28 @@ def Atoms(*args, **kwargs):
     return PhonopyAtoms(*args, **kwargs)
 
 
+def split_symbol_and_index(symnum: str):
+    """Split symbol and index.
+
+    H --> H, 0
+    H2 --> H, 2
+
+    """
+    m = re.match(r"([a-zA-Z]+)([0-9]*)", symnum)
+    symbol, index = m.groups()
+    if symnum != f"{symbol}{index}":
+        raise RuntimeError(f"Invalid symbol: {symnum}.")
+    if index:
+        index = int(index)
+        if index < 1:
+            raise RuntimeError(
+                f"Invalid symbol. Index has to be greater than 0: {symnum}."
+            )
+    else:
+        index = 0
+    return symbol, index
+
+
 class PhonopyAtoms:
     """Class to represent crystal structure.
 
@@ -68,19 +91,18 @@ class PhonopyAtoms:
     cell : np.ndarray
         Basis vectors (a, b, c) given in row vectors.
     positions : np.ndarray
-        Positions of atoms in Cartesian coordinates.
-        shape=(natom, 3), dtype='double', order='C'
+        Positions of atoms in Cartesian coordinates. shape=(natom, 3),
+        dtype='double', order='C'
     scaled_positions : np.ndarray
         Positions of atoms in fractional (crystallographic) coordinates.
         shape=(natom, 3), dtype='double', order='C'
     symbols : list[str]
-        List of chemical symbols of atoms.
+        List of chemical symbols of atoms. Chemical symbol + natural number is
+        allowed, e.g., "Cl1".
     numbers : np.ndarray
-        Atomic numbers.
-        shape=(natom,), dtype='intc'
+        Atomic numbers. Numbers cannot exceed 118. shape=(natom,), dtype='intc'
     masses : np.ndarray, optional
-        Atomic masses.
-        shape=(natom,), dtype='double'
+        Atomic masses. shape=(natom,), dtype='double'
     magnetic_moments : np.ndarray, optional
         shape=(natom,) or (natom, 3), dtype='double', order='C'
     volume : float
@@ -89,6 +111,8 @@ class PhonopyAtoms:
         Number of formula units in this cell.
 
     """
+
+    _MOD_DIVISOR = 1000
 
     def __init__(
         self,
@@ -119,6 +143,12 @@ class PhonopyAtoms:
                 stacklevel=2,
             )
         if atoms:
+            warnings.warn(
+                "PhonopyAtoms.__init__ parameter of atoms is deprecated. "
+                "Use PhonopyAtoms.copy() instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
             self._set_parameters(
                 numbers=atoms.numbers,
                 masses=atoms.masses,
@@ -152,10 +182,15 @@ class PhonopyAtoms:
         self._set_cell_and_positions(
             cell, positions=positions, scaled_positions=scaled_positions
         )
+
         self._symbols = symbols
-        self._numbers = None
+
+        self._numbers_with_shifts = None
         if numbers is not None:
-            self._numbers = np.array(numbers, dtype="intc")
+            if (np.array(numbers) > 118).any():  # 118 is the max atomic number.
+                raise RuntimeError("Atomic numbers cannot be larger than 118.")
+            self._numbers_with_shifts = np.array(numbers, dtype="intc")
+
         self._masses = None
         self._set_masses(masses)
 
@@ -163,14 +198,18 @@ class PhonopyAtoms:
         self._magnetic_moments = None
         self._set_magnetic_moments(magnetic_moments)
 
-        # numbers and symbols
-        if self._numbers is not None:  # number --> symbol
+        # numbers <--> symbols
+        if self._numbers_with_shifts is not None:  # number --> symbol
             self._numbers_to_symbols()
         elif self._symbols is not None:  # symbol --> number
             self._symbols_to_numbers()
 
         # symbol --> mass
         if self._symbols and (self._masses is None):
+            if (self._numbers_with_shifts > 118).any():  # 118 is the max atomic number.
+                raise RuntimeError(
+                    "Masses have to be specified when special symbols are used."
+                )
             self._symbols_to_masses()
 
         self._check()
@@ -277,6 +316,11 @@ class PhonopyAtoms:
 
     @symbols.setter
     def symbols(self, symbols):
+        warnings.warn(
+            "Setter of PhonopyAtoms.symbols is deprecated.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self._symbols = symbols
         self._check()
         self._symbols_to_numbers()
@@ -303,13 +347,27 @@ class PhonopyAtoms:
         self.symbols = symbols
 
     @property
+    def numbers_with_shifts(self):
+        """Getter of atomic numbers + MOD_DIVISOR * index."""
+        return self._numbers_with_shifts.copy()
+
+    @property
     def numbers(self):
-        """Setter and getter of atomic numbers. For getter, copy is returned."""
-        return self._numbers.copy()
+        """Setter and getter of atomic numbers. For getter, new array is returned."""
+        return np.array(
+            [n % self._MOD_DIVISOR for n in self._numbers_with_shifts], dtype="intc"
+        )
 
     @numbers.setter
     def numbers(self, numbers):
-        self._numbers = numbers
+        if (np.array(numbers) > 118).any():  # 118 is the max atomic number.
+            raise RuntimeError("Atomic number is too large.")
+        warnings.warn(
+            "Setter of PhonopyAtoms.number is deprecated.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self._numbers_with_shifts = numbers
         self._check()
         self._numbers_to_symbols()
         self._symbols_to_masses()
@@ -425,7 +483,7 @@ class PhonopyAtoms:
     def Z(self):
         """Return number of formula units in this cell."""
         count = {}
-        for n in self._numbers:
+        for n in self._numbers_with_shifts:
             if n in count:
                 count[n] += 1
             else:
@@ -438,6 +496,12 @@ class PhonopyAtoms:
 
     def get_number_of_atoms(self):
         """Return number of atoms."""
+        warnings.warn(
+            "PhonopyAtoms.get_number_of_atoms() is deprecated. "
+            "Use len(PhonopyAtoms).",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return len(self)
 
     def _set_cell(self, cell):
@@ -475,10 +539,23 @@ class PhonopyAtoms:
             self._set_scaled_positions(scaled_positions)
 
     def _numbers_to_symbols(self):
-        self._symbols = [atom_data[n][1] for n in self._numbers]
+        symbols = []
+        for number in self._numbers_with_shifts:
+            n = number % self._MOD_DIVISOR
+            m = number // self._MOD_DIVISOR
+            if m > 0:
+                symbols.append(f"{atom_data[n][1]}{m}")
+            else:
+                symbols.append(f"{atom_data[n][1]}")
+        self._symbols = symbols
 
     def _symbols_to_numbers(self):
-        self._numbers = np.array([symbol_map[s] for s in self._symbols], dtype="intc")
+        numbers = []
+        for symnum in self._symbols:
+            symbol, index = split_symbol_and_index(symnum)
+            numbers.append(symbol_map[symbol] + self._MOD_DIVISOR * index)
+
+        self._numbers_with_shifts = np.array(numbers, dtype="intc")
 
     def _symbols_to_masses(self):
         masses = [atom_data[symbol_map[s]][3] for s in self._symbols]
@@ -498,14 +575,14 @@ class PhonopyAtoms:
             raise RuntimeError("cell is not set.")
         if self._scaled_positions is None:
             raise RuntimeError("scaled_positions (positions) is not set.")
-        if self._numbers is None:
+        if self._numbers_with_shifts is None:
             raise RuntimeError("numbers is not set.")
-        if len(self._numbers) != len(self._scaled_positions):
+        if len(self._numbers_with_shifts) != len(self._scaled_positions):
             raise RuntimeError("len(numbers) != len(scaled_positions).")
-        if len(self._numbers) != len(self._symbols):
+        if len(self._numbers_with_shifts) != len(self._symbols):
             raise RuntimeError("len(numbers) != len(symbols).")
         if self._masses is not None:
-            if len(self._numbers) != len(self._masses):
+            if len(self._numbers_with_shifts) != len(self._masses):
                 raise RuntimeError("len(numbers) != len(masses).")
         if self._magnetic_moments is not None:
             if len(self._magnetic_moments.ravel()) not in (len(self), len(self) * 3):
@@ -530,19 +607,34 @@ class PhonopyAtoms:
             symbols=self._symbols,
         )
 
-    def totuple(self):
+    def totuple(self, distinguish_symbol_index: bool = False):
         """Return (cell, scaled_position, numbers).
 
-        If magmams is set, (cell, scaled_position, numbers, magmoms) is returned.
+        If magmams is set, (cell, scaled_position, numbers, magmoms) is
+        returned.
+
+        Parameters
+        ----------
+        with_symbol_index : bool
+            If True, number is replaced with atomic number + index *
+            self.MOD_DIVISOR.
+
+            'H' --> 1
+            'H2' --> 1 + self.MOD_DIVISOR * 2
 
         """
+        if distinguish_symbol_index:
+            numbers = self._numbers_with_shifts
+        else:
+            numbers = self.numbers
+
         if self._magnetic_moments is None:
-            return (self._cell, self._scaled_positions, self._numbers)
+            return (self._cell, self._scaled_positions, numbers)
         else:
             return (
                 self._cell,
                 self._scaled_positions,
-                self._numbers,
+                numbers,
                 self._magnetic_moments,
             )
 
@@ -573,10 +665,15 @@ class PhonopyAtoms:
             magmoms = [None] * len(self._symbols)
         else:
             magmoms = self._magnetic_moments
-        for i, (s, v, m, mag) in enumerate(
-            zip(self._symbols, self._scaled_positions, masses, magmoms)
+        for i, (s, num, v, m, mag) in enumerate(
+            zip(self._symbols, self.numbers, self._scaled_positions, masses, magmoms)
         ):
-            lines.append("- symbol: %-2s # %d" % (s, i + 1))
+            formal_s = atom_data[num][1]
+            if s == formal_s:
+                lines.append(f"- symbol: {s} # {i + 1}")
+            else:
+                lines.append(f"- symbol: {formal_s} # {i + 1}")
+                lines.append(f"  extended_symbol: {s}")
             lines.append("  coordinates: [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
             if m is not None:
                 lines.append("  mass: %f" % m)
@@ -608,7 +705,9 @@ def parse_cell_dict(cell_dict: dict) -> Optional[PhonopyAtoms]:
         for x in cell_dict["points"]:
             if "coordinates" in x:
                 points.append(x["coordinates"])
-            if "symbol" in x:
+            if "extended_symbol" in x:  # like Fe1
+                symbols.append(x["extended_symbol"])
+            elif "symbol" in x:  # like Fe
                 symbols.append(x["symbol"])
             if "mass" in x:
                 masses.append(x["mass"])

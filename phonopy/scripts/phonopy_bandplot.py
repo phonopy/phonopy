@@ -31,6 +31,7 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+
 from __future__ import annotations
 
 import lzma
@@ -122,7 +123,7 @@ def _savefig(plt, file, fonttype=42, family="serif"):
     plt.savefig(file)
 
 
-def _plot_dos(d, f, dmax):
+def _get_dos(d, f, dmax):
     pdos = []
     for f1, f2, d1, d2 in zip(f[:-1], f[1:], d[:-1], d[1:]):
         pdos += _cut_dos([f1, d1], [f2, d2], dmax)
@@ -590,7 +591,7 @@ def _old_plot(args):
 
         for pdos in dos.T:
             if args.dos_max:
-                _pdos = _plot_dos(
+                _pdos = _get_dos(
                     pdos[arg_fmin:arg_fmax],
                     dos_frequencies[arg_fmin:arg_fmax],
                     args.dos_max,
@@ -639,6 +640,11 @@ def _plot(args):
             filenames = args.filenames
         bands_data = [_read_band_yaml(fname) for fname in filenames]
 
+    if args.dos:
+        dos_frequencies, dos = _read_dos_dat(
+            args.dos, pdos_indices=args.pdos_indices, dos_factor=args.dos_factor
+        )
+
     plots_data = [_arrange_band_data(*band_data) for band_data in bands_data]
     # Check consistency of input band structures
     all_path_connections = [data[1] for data in plots_data]
@@ -654,7 +660,12 @@ def _plot(args):
     plot_data = plots_data[np.argmax(max_frequencies)]
     _, path_connections, _, _ = plot_data
     n = len([x for x in path_connections if not x])
+
+    if args.dos:
+        n += 1
+
     fig = plt.figure()
+
     axs = ImageGrid(
         fig,
         111,  # similar to subplot(111)
@@ -662,7 +673,7 @@ def _plot(args):
         axes_pad=0.11,
         label_mode="L",
     )
-    for ax in axs:
+    for ax in axs[:-1]:
         if args.f_min:
             ax.set_ylim(ymin=args.f_min)
         if args.f_max:
@@ -699,9 +710,52 @@ def _plot(args):
         else:
             band_plot.plot(d, _f, p, fmt=fmt)
 
+    # dos
+    if args.dos:
+        arg_fmax = len(dos_frequencies)
+        if args.f_max is not None:
+            for i, f in enumerate(dos_frequencies):
+                if f > args.f_max:
+                    arg_fmax = i
+                    break
+        arg_fmin = 0
+        if args.f_min is not None:
+            for i, f in enumerate(dos_frequencies):
+                if f > args.f_min:
+                    if i > 0:
+                        arg_fmin = i - 1
+                    break
+
+        axs[-1].xaxis.set_ticks_position("both")
+        axs[-1].yaxis.set_ticks_position("both")
+        axs[-1].xaxis.set_tick_params(which="both", direction="in")
+        axs[-1].yaxis.set_tick_params(which="both", direction="in")
+
+        for pdos in dos.T:
+            if args.dos_max:
+                _pdos = _get_dos(
+                    pdos[arg_fmin:arg_fmax],
+                    dos_frequencies[arg_fmin:arg_fmax],
+                    args.dos_max,
+                )
+                axs[-1].plot(_pdos[1], _pdos[0])
+            else:
+                axs[-1].plot(
+                    pdos[arg_fmin:arg_fmax], dos_frequencies[arg_fmin:arg_fmax]
+                )
+        axs[-1].set_xlabel("DOS")
+
+        xlim = axs[-1].get_xlim()
+        ylim = axs[-1].get_ylim()
+        aspect = (xlim[1] - xlim[0]) / (ylim[1] - ylim[0]) * 3
+        axs[-1].set_aspect(aspect)
+
     # Bring legend in front.
     if args.show_legend:
         axs[0].set_zorder(1)
+
+    if args.title is not None:
+        plt.suptitle(args.title)
 
     if args.output_filename is not None:
         _savefig(plt, args.output_filename)

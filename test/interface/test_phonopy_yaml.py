@@ -1,11 +1,12 @@
 """Tests of PhonopyYaml."""
 
-from io import StringIO
+import io
 from pathlib import Path
 
 import numpy as np
 import yaml
 
+import phonopy
 from phonopy import Phonopy
 from phonopy.interface.phonopy_yaml import (
     PhonopyYaml,
@@ -15,6 +16,7 @@ from phonopy.interface.phonopy_yaml import (
     read_phonopy_yaml,
 )
 from phonopy.interface.vasp import read_vasp
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_primitive
 from phonopy.structure.dataset import get_displacements_and_forces
 
@@ -87,7 +89,7 @@ def test_write_phonopy_yaml(ph_nacl_nofcsym: Phonopy, helper_methods):
     phpy_yaml.set_phonon_info(phonon)
     phpy_yaml_test = PhonopyYaml()
     phpy_yaml_test._data = load_phonopy_yaml(
-        yaml.safe_load(StringIO(str(phpy_yaml))), calculator=phpy_yaml.calculator
+        yaml.safe_load(io.StringIO(str(phpy_yaml))), calculator=phpy_yaml.calculator
     )
     helper_methods.compare_cells_with_order(
         phpy_yaml.primitive, phpy_yaml_test.primitive
@@ -124,7 +126,7 @@ def test_write_phonopy_yaml_extra(ph_nacl_nofcsym: Phonopy):
     phpy_yaml.set_phonon_info(phonon)
     phpy_yaml_test = PhonopyYaml()
     phpy_yaml_test._data = load_phonopy_yaml(
-        yaml.safe_load(StringIO(str(phpy_yaml))), calculator=phpy_yaml.calculator
+        yaml.safe_load(io.StringIO(str(phpy_yaml))), calculator=phpy_yaml.calculator
     )
     np.testing.assert_allclose(
         phpy_yaml.force_constants, phpy_yaml_test.force_constants, atol=1e-8
@@ -163,6 +165,40 @@ def test_load_nac_yaml():
     assert pyl.data.nac_params["born"].shape == (2, 3, 3)
     assert isinstance(pyl.data.nac_params["factor"], float)
     assert isinstance(pyl.data.nac_params["method"], str)
+
+
+def test_phonopy_yaml_extended_symbol(nacl_unitcell_order1: PhonopyAtoms):
+    """Test of PhonopyYaml with extended symbol."""
+    unitcell = nacl_unitcell_order1
+    symbols = unitcell.symbols
+    symbols[-1] = "Cl1"
+    cell = PhonopyAtoms(
+        cell=unitcell.cell,
+        symbols=symbols,
+        scaled_positions=unitcell.scaled_positions,
+        masses=unitcell.masses,
+    )
+    ph = Phonopy(cell, supercell_matrix=[2, 2, 2])
+    assert ph.primitive.symbols[:4] == ["Na"] * 4
+    assert ph.primitive.symbols[4:7] == ["Cl"] * 3
+    assert ph.primitive.symbols[-1] == "Cl1"
+    assert ph.unitcell.symbols[:4] == ["Na"] * 4
+    assert ph.unitcell.symbols[4:7] == ["Cl"] * 3
+    assert ph.unitcell.symbols[-1] == "Cl1"
+    assert ph.supercell.symbols[:32] == ["Na"] * 32
+    assert ph.supercell.symbols[-32:-8] == ["Cl"] * 24
+    assert ph.supercell.symbols[-8:] == ["Cl1"] * 8
+
+    ph_load = phonopy.load(io.StringIO(str(PhonopyYaml().set_phonon_info(ph))))
+    assert ph_load.primitive.symbols[:4] == ["Na"] * 4
+    assert ph_load.primitive.symbols[4:7] == ["Cl"] * 3
+    assert ph_load.primitive.symbols[-1] == "Cl1"
+    assert ph_load.unitcell.symbols[:4] == ["Na"] * 4
+    assert ph_load.unitcell.symbols[4:7] == ["Cl"] * 3
+    assert ph_load.unitcell.symbols[-1] == "Cl1"
+    assert ph_load.supercell.symbols[:32] == ["Na"] * 32
+    assert ph_load.supercell.symbols[-32:-8] == ["Cl"] * 24
+    assert ph_load.supercell.symbols[-8:] == ["Cl1"] * 8
 
 
 def _compare_NaCl_convcell(cell, compare_cells):
