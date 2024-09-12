@@ -34,10 +34,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from importlib.metadata import version
-
 import numpy as np
-from packaging.version import Version
 
 
 def similarity_transformation(rot, mat):
@@ -52,9 +49,13 @@ def get_dot_access_dataset(dataset):
     To emulate it for older versions, this function is used.
 
     """
-    if Version(version("spglib")) >= Version("2.5"):
-        return dataset
-    else:
+    import spglib
+
+    spg_version = tuple(int(v) for v in spglib.__version__.split(".")[:3])
+
+    if spg_version < (2, 5, 0):
         from types import SimpleNamespace
 
         return SimpleNamespace(**dataset)
+    else:
+        return dataset
