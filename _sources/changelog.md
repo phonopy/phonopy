@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Sep-12-2024: Version 2.28.0
+
+- Maintenance release including minor fixes and updates.
+
 ## Aug-23-2024: Version 2.27.0
 
 - Update for new `SpglibDataset` in spglib v.2.5 (PR #413 by @janosh, #414).
