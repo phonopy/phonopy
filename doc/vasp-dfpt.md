@@ -76,7 +76,7 @@ procedure to calculate phonon properties may be as follows:
 
 6) Run phonopy
 
-   ~~~bash
+   ~~~
    % phonopy-load --readfc --band "0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5" -p
 
            _

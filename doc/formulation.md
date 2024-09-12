@@ -1,5 +1,4 @@
 (formulations)=
-
 # Formulations
 
 ## Second-order force constants
@@ -43,7 +42,6 @@ a finite displacement {math}`\Delta r_\alpha{(jl)}` and usually
 {math}`F_\beta(j'l') \equiv 0`.
 
 (force_constants_solver_theory)=
-
 ## Modified Parlinski-Li-Kawazoe method
 
 The following is a modified and simplified version of the Parlinski-Li-Kawazoe
@@ -118,7 +116,6 @@ where the superscript with parenthesis gives the index of site-symmetry
 operations. This is solved by pseudo inverse.
 
 (dynacmial_matrix_theory)=
-
 ## Dynamical matrix
 
 In phonopy, a phase convention of dynamical matrix is used as follows:
@@ -162,7 +159,6 @@ annihilation operators of phonon, {math}`\hbar` is the reduced Planck constant,
 and {math}`t` is the time.
 
 (non_analytical_term_correction_theory)=
-
 ## Non-analytical term correction
 
 To treat long range interaction of macroscopic electric field induced by
@@ -180,12 +176,12 @@ D_{\alpha\beta}(jj',\mathbf{q}=\mathbf{0}) + \frac{1}{\sqrt{m_j m_{j'}}}
 {\sum_{\alpha\beta}q_{\alpha}\epsilon_{\alpha\beta}^{\infty} q_{\beta}}.
 ```
 
-Phonon frequencies at general **q**-points with long-range dipole-dipole
-interaction are calculated by the method of Gonze _et al._
-({ref}`reference_dp_dp_NAC`).
+where {math}`\Omega_0` is the unit cell volume. See more details about the
+physical units at {ref}`physical_unit_conversion`. Phonon frequencies at general
+**q**-points with long-range dipole-dipole interaction are calculated by the
+method of Gonze _et al._ ({ref}`reference_dp_dp_NAC`).
 
 (thermal_properties_expressions)=
-
 ## Thermodynamic properties
 
 ### Phonon number
@@ -399,7 +395,6 @@ difference is employed, and {math}`+\Delta q_\alpha` and
 `GV_DELTA_Q` tag.
 
 (physical_unit_conversion)=
-
 ## Physical unit conversion
 
 Phonopy calculates phonon frequencies based on input values from users. In the
@@ -448,8 +443,6 @@ In the default case of the Wien2k interface, the conversion factor is
 {math}`(\text{hartree} \rightarrow \text{mRy})=2000`. For the other interfaces,
 the conversion factors are similarly calculated following the unit systems
 employed in phonopy ({ref}`calculator_interfaces`).
-
-(definition_of_commensurate_points)=
 
 ## Crystal structure
 
@@ -502,6 +495,7 @@ written at {ref}`primitive_axes_tag`, therefore
 those calculated following Eq. {eq}`eq_rec_basis_vectors` with this
 {math}`( \mathbf{a} \; \mathbf{b} \; \mathbf{c})`.
 
+(definition_of_commensurate_points)=
 ### Commensurate points
 
 In phonopy, so-called commensurate points mean the q-points whose waves are

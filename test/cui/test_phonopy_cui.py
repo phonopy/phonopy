@@ -96,7 +96,7 @@ def test_phonopy_load():
 
 
 def test_phonopy_is_check_symmetry():
-    """Test phonopy --symmetry command."""
+    """Test phonopy --symmetry command with phonopy.yaml input structure."""
     # Check sys.exit(0)
     argparse_control = _get_phonopy_load_args(
         cwd / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
@@ -108,10 +108,9 @@ def test_phonopy_is_check_symmetry():
     assert excinfo.value.code == 0
 
     # Clean files created by phonopy --symmetry command.
-    for created_filename in ("BPOSCAR", "PPOSCAR", "phonopy_symcells.yaml"):
-        file_path = pathlib.Path(cwd_called / created_filename)
-        assert file_path.exists()
-        file_path.unlink()
+    file_path = pathlib.Path(cwd_called / "phonopy_symcells.yaml")
+    assert file_path.exists()
+    file_path.unlink()
 
 
 def _get_phonopy_args(

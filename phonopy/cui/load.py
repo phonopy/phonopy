@@ -34,41 +34,53 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
+import io
+import os
+from collections.abc import Sequence
+from typing import Optional, Union
+
 import numpy as np
 
 import phonopy.cui.load_helper as load_helper
 from phonopy.api_phonopy import Phonopy
 from phonopy.interface.calculator import get_default_physical_units
 from phonopy.interface.phonopy_yaml import PhonopyYaml
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_primitive_matrix
 
 
 def load(
-    phonopy_yaml=None,  # phonopy.yaml-like must be the first argument.
-    supercell_matrix=None,
-    primitive_matrix=None,
-    is_nac=True,
-    calculator=None,
-    unitcell=None,
-    supercell=None,
-    nac_params=None,
-    unitcell_filename=None,
-    supercell_filename=None,
-    born_filename=None,
-    force_sets_filename=None,
-    force_constants_filename=None,
-    fc_calculator=None,
-    fc_calculator_options=None,
-    factor=None,
-    frequency_scale_factor=None,
-    produce_fc=True,
-    is_symmetry=True,
-    symmetrize_fc=True,
-    is_compact_fc=True,
-    store_dense_svecs=False,
-    use_SNF_supercell=False,
-    symprec=1e-5,
-    log_level=0,
+    phonopy_yaml: Optional[
+        Union[str, bytes, os.PathLike, io.IOBase]
+    ] = None,  # phonopy.yaml-like must be the first argument.
+    supercell_matrix: Optional[Union[np.ndarray, Sequence]] = None,
+    primitive_matrix: Optional[Union[np.ndarray, Sequence]] = None,
+    is_nac: bool = True,
+    calculator: Optional[str] = None,
+    unitcell: Optional[PhonopyAtoms] = None,
+    supercell: Optional[PhonopyAtoms] = None,
+    nac_params: Optional[dict] = None,
+    unitcell_filename: Optional[str] = None,
+    supercell_filename: Optional[str] = None,
+    born_filename: Optional[str] = None,
+    force_sets_filename: Optional[str] = None,
+    force_constants_filename: Optional[str] = None,
+    fc_calculator: Optional[str] = None,
+    fc_calculator_options: Optional[str] = None,
+    factor: Optional[float] = None,
+    frequency_scale_factor: Optional[float] = None,
+    produce_fc: bool = True,
+    is_symmetry: bool = True,
+    symmetrize_fc: bool = True,
+    is_compact_fc: bool = True,
+    use_pypolymlp: bool = False,
+    mlp_params: Optional[dict] = None,
+    store_dense_svecs: bool = False,
+    use_SNF_supercell: bool = False,
+    symprec: float = 1e-5,
+    log_level: int = 0,
 ) -> Phonopy:
     """Create Phonopy instance from parameters and/or input files.
 
@@ -116,9 +128,10 @@ def load(
 
     Parameters
     ----------
-    phonopy_yaml : str, optional
-        Filename of "phonopy.yaml"-like file. If this is given, the data in the
-        file are parsed. Default is None.
+    phonopy_yaml : str, bytes, os.PathLike, io.IOBase, optional
+        Filename of "phonopy.yaml"-like file for str or bytes, otherwise file
+        pointer-like. If this is given, the data in the file are parsed. Default
+        is None.
     supercell_matrix : array_like, optional
         Supercell matrix multiplied to input cell basis vectors. shape=(3, ) or
         (3, 3), where the former is considered a diagonal matrix. Default is the
@@ -190,6 +203,10 @@ def load(
             True: (primitive, supecell, 3, 3) False: (supercell, supecell, 3, 3)
         where 'supercell' and 'primitive' indicate number of atoms in these
         cells. Default is True.
+    use_pypolymlp : bool, optional
+        Use pypolymlp for generating force constants. Default is False.
+    mlp_params : dict, optional
+        A set of parameters used by machine learning potentials.
     store_dense_svecs : bool, optional
         Dataset of shortest vectors between atoms in primitive cell and
         supercell is stored in the dense format when this is True. Default is
@@ -306,6 +323,8 @@ def load(
         produce_fc=produce_fc,
         symmetrize_fc=symmetrize_fc,
         is_compact_fc=is_compact_fc,
+        use_pypolymlp=use_pypolymlp,
+        mlp_params=mlp_params,
         log_level=log_level,
     )
 

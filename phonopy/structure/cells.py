@@ -245,7 +245,7 @@ class Supercell(PhonopyAtoms):
             super().__init__()
         else:
             super().__init__(
-                numbers=supercell.numbers,
+                symbols=supercell.symbols,
                 masses=supercell.masses,
                 magnetic_moments=supercell.magnetic_moments,
                 scaled_positions=supercell.scaled_positions,
@@ -264,7 +264,7 @@ class Supercell(PhonopyAtoms):
         # Scaled positions within the frame, i.e., create a supercell that
         # is made simply to multiply the input cell.
         positions = unitcell.scaled_positions
-        numbers = unitcell.numbers
+        symbols = unitcell.symbols
         masses = unitcell.masses
         magmoms = unitcell.magnetic_moments
         lattice = unitcell.cell
@@ -292,7 +292,7 @@ class Supercell(PhonopyAtoms):
             np.tile(lattice_points, (n, 1)) + np.repeat(positions, n_l, axis=0),
             np.linalg.inv(mat).T,
         )
-        numbers_multi = np.repeat(numbers, n_l)
+        symbols_multi = [s for s in symbols for _ in range(n_l)]
         atom_map = np.repeat(np.arange(n), n_l)
         if masses is None:
             masses_multi = None
@@ -306,7 +306,7 @@ class Supercell(PhonopyAtoms):
             magmoms_multi = [v for v in magmoms for _ in range(n_l)]
 
         simple_supercell = PhonopyAtoms(
-            numbers=numbers_multi,
+            symbols=symbols_multi,
             masses=masses_multi,
             magnetic_moments=magmoms_multi,
             scaled_positions=positions_multi,
@@ -355,7 +355,7 @@ class Primitive(PhonopyAtoms):
 
     def __init__(
         self,
-        supercell,
+        supercell: PhonopyAtoms,
         primitive_matrix,
         symprec=1e-5,
         store_dense_svecs=False,
@@ -553,7 +553,7 @@ class Primitive(PhonopyAtoms):
         """Return whether shortest vectors are stored in dense array or not."""
         return self._store_dense_svecs
 
-    def _run(self, supercell, positions_to_reorder=None):
+    def _run(self, supercell: PhonopyAtoms, positions_to_reorder=None):
         self._p2s_map = self._create_primitive_cell(
             supercell, positions_to_reorder=positions_to_reorder
         )
@@ -565,15 +565,30 @@ class Primitive(PhonopyAtoms):
         )
         self._atomic_permutations = self._get_atomic_permutations(supercell)
 
-    def _create_primitive_cell(self, supercell, positions_to_reorder=None):
-        trimmed_cell, p2s_map, _ = _trim_cell(
+    def _create_primitive_cell(
+        self, supercell: PhonopyAtoms, positions_to_reorder=None
+    ):
+        trimmed_cell, p2s_map, mapping_table = _trim_cell(
             self._primitive_matrix,
             supercell,
             symprec=self._symprec,
             positions_to_reorder=positions_to_reorder,
         )
+        mapped_symbols = [supercell.symbols[i] for i in mapping_table]
+        if supercell.symbols != mapped_symbols:
+            msg = [
+                "Atom symbol mapping failure.",
+                "Primitive cell could not be created.",
+            ]
+            msg.append("Primitive cell:")
+            for i, s in enumerate(trimmed_cell.symbols):
+                msg.append(f"  {i + 1}: {s}")
+            msg.append("Original cell:")
+            for i, (s1, s2) in enumerate(zip(supercell.symbols, mapped_symbols)):
+                msg.append(f"  {i + 1}: {s1} -> {s2}")
+            raise RuntimeError("\n".join(msg))
         super().__init__(
-            numbers=trimmed_cell.numbers,
+            symbols=trimmed_cell.symbols,
             masses=trimmed_cell.masses,
             magnetic_moments=trimmed_cell.magnetic_moments,
             scaled_positions=trimmed_cell.scaled_positions,
@@ -601,7 +616,7 @@ class Primitive(PhonopyAtoms):
 
         return s2p_map, p2p_map
 
-    def _get_atomic_permutations(self, supercell):
+    def _get_atomic_permutations(self, supercell: PhonopyAtoms):
         positions = supercell.scaled_positions
         diff = positions - positions[self._p2s_map[0]]
         trans = np.array(
@@ -742,7 +757,7 @@ class TrimmedCell(PhonopyAtoms):
 
         (
             trimmed_positions,
-            trimmed_numbers,
+            trimmed_symbols,
             trimmed_masses,
             trimmed_magmoms,
             extracted_atoms,
@@ -750,7 +765,7 @@ class TrimmedCell(PhonopyAtoms):
         ) = self._extract(
             positions_in_new_lattice,
             trimmed_lattice,
-            cell.numbers,
+            cell.symbols,
             cell.masses,
             cell.magnetic_moments,
             check_overlap,
@@ -762,7 +777,7 @@ class TrimmedCell(PhonopyAtoms):
                 positions_to_reorder, trimmed_positions, trimmed_lattice, symprec
             )
             trimmed_positions = trimmed_positions[ids]
-            trimmed_numbers = trimmed_numbers[ids]
+            trimmed_symbols = [trimmed_symbols[i] for i in ids]
             if trimmed_masses is not None:
                 trimmed_masses = trimmed_masses[ids]
             if trimmed_magmoms is not None:
@@ -771,9 +786,9 @@ class TrimmedCell(PhonopyAtoms):
 
         # scale is not always to become integer.
         scale = 1.0 / np.linalg.det(relative_axes)
-        if len(cell) == int(np.rint(scale * len(trimmed_numbers))):
+        if len(cell) == int(np.rint(scale * len(trimmed_symbols))):
             super().__init__(
-                numbers=trimmed_numbers,
+                symbols=trimmed_symbols,
                 masses=trimmed_masses,
                 magnetic_moments=trimmed_magmoms,
                 scaled_positions=trimmed_positions,
@@ -788,7 +803,7 @@ class TrimmedCell(PhonopyAtoms):
         self,
         positions_in_new_lattice,
         trimmed_lattice,
-        numbers,
+        symbols,
         masses,
         magmoms,
         check_overlap,
@@ -798,7 +813,7 @@ class TrimmedCell(PhonopyAtoms):
         extracted_atoms = []
         mapping_table = np.arange(len(positions_in_new_lattice), dtype="intc")
         trimmed_positions = np.zeros_like(positions_in_new_lattice)
-        trimmed_numbers = []
+        trimmed_symbols = []
         if masses is None:
             trimmed_masses = None
         else:
@@ -824,7 +839,7 @@ class TrimmedCell(PhonopyAtoms):
             if not found_overlap:
                 trimmed_positions[num_atoms] = pos
                 num_atoms += 1
-                trimmed_numbers.append(numbers[i])
+                trimmed_symbols.append(symbols[i])
                 if masses is not None:
                     trimmed_masses.append(masses[i])
                 if magmoms is not None:
@@ -838,7 +853,7 @@ class TrimmedCell(PhonopyAtoms):
 
         return (
             np.array(trimmed_positions[:num_atoms], dtype="double", order="C"),
-            np.array(trimmed_numbers, dtype="intc"),
+            trimmed_symbols,
             trimmed_masses,
             trimmed_magmoms,
             np.array(extracted_atoms, dtype="intc"),
@@ -1033,7 +1048,11 @@ def convert_to_phonopy_primitive(
 
 
 def _trim_cell(
-    relative_axes, cell, check_overlap=True, symprec=1e-5, positions_to_reorder=None
+    relative_axes,
+    cell: PhonopyAtoms,
+    check_overlap=True,
+    symprec=1e-5,
+    positions_to_reorder=None,
 ):
     """Trim overlapping atoms."""
     tcell = TrimmedCell(
@@ -1043,7 +1062,7 @@ def _trim_cell(
         symprec=symprec,
         positions_to_reorder=positions_to_reorder,
     )
-    return (PhonopyAtoms(atoms=tcell), tcell.extracted_atoms, tcell.mapping_table)
+    return (tcell.copy(), tcell.extracted_atoms, tcell.mapping_table)
 
 
 #
