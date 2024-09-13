@@ -240,7 +240,7 @@ class QpointsPhonon:
         self._eigenvalues = np.zeros((num_qpoints, num_band), dtype="double")
         if phonoc.use_openmp():
             dynmat = run_dynamical_matrix_solver_c(
-                self._dynamical_matrix, self._qpoints
+                self._dynamical_matrix, self._qpoints, self._nac_q_direction
             )
             eigenvectors = dynmat
         elif self._with_eigenvectors:
