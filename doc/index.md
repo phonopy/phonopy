@@ -99,9 +99,3 @@ New BSD from version 1.3.
 Phonopy development is supported by:
 
 - National Institute for Materials Science
-
-## Indices and tables
-
-- {ref}`genindex`
-- {ref}`modindex`
-- {ref}`search`
