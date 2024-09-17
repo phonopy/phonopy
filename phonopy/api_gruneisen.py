@@ -113,9 +113,9 @@ class PhonopyGruneisen:
         """Write mesh sampling calculation results to file in yaml."""
         self._mesh.write_yaml(filename=filename)
 
-    def write_hdf5_mesh(self):
+    def write_hdf5_mesh(self, filename="gruneisen_mesh.hdf5"):
         """Write mesh sampling calculation results to file in hdf5."""
-        self._mesh.write_hdf5()
+        self._mesh.write_hdf5(filename=filename)
 
     def plot_mesh(
         self, cutoff_frequency=None, color_scheme=None, marker="o", markersize=None
