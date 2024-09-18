@@ -14,8 +14,8 @@ See https://phonopy.github.io/phonopy/install.html.
 
 ## Dependency
 
-See `requirements.txt`. Optionally `symfc`, `scipy` and `seekpath` are required
-for using additional features.
+It is necessary to install `symfc` and `seekpath` either via pip, conda, etc, to
+utilize the respective additional features.
 
 ## Mailing list for questions
 
