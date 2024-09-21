@@ -39,7 +39,7 @@ from __future__ import annotations
 import io
 import pathlib
 import sys
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
 import yaml
@@ -350,11 +350,11 @@ def get_FORCE_CONSTANTS_lines(force_constants, p2s_map=None):
 
 
 def write_force_constants_to_hdf5(
-    force_constants,
-    filename="force_constants.hdf5",
-    p2s_map=None,
-    physical_unit=None,
-    compression=None,
+    force_constants: np.ndarray,
+    filename: str = "force_constants.hdf5",
+    p2s_map: Optional[np.ndarray] = None,
+    physical_unit: Optional[str] = None,
+    compression: Optional[Union[str, int]] = None,
 ):
     """Write force constants in hdf5 format.
 
@@ -390,10 +390,7 @@ def write_force_constants_to_hdf5(
         if p2s_map is not None:
             w.create_dataset("p2s_map", data=p2s_map)
         if physical_unit is not None:
-            dset = w.create_dataset(
-                "physical_unit", (1,), dtype="S%d" % len(physical_unit)
-            )
-            dset[0] = np.string_(physical_unit)
+            w.create_dataset("physical_unit", data=[physical_unit])
 
 
 def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS", p2s_map=None):

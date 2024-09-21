@@ -234,6 +234,17 @@ class BandStructure:
         This is only used in graphical plot of band structure and gives
         labels of end points of each path. The number of labels is equal
         to (2 - np.array(path_connections)).sum().
+        For non-legacy plot, for example:
+
+            band_paths = [
+                [[0, 0, 0], [0.5, 0.5, 0.5]],
+                [[0.5, 0.5, 0], [0, 0, 0], [0.5, 0.25, 0.75]],
+            ]
+            labels = ["G", "L", "X", "G", "W"]
+            path_connections = [False, True, False]
+                G -> L  False
+                X -> G  True
+                G -> W  False (last one has to be False)
 
     """
 
@@ -308,7 +319,7 @@ class BandStructure:
             if (
                 labels is not None
                 and len(labels) == (2 - np.array(self._path_connections)).sum()
-            ):  # noqa #129 #E501
+            ):
                 self._labels = labels
         self._distances = []
         self._distance = 0.0
@@ -485,7 +496,7 @@ class BandStructure:
                         "eigenvector",
                         "group_velocity",
                     ):
-                        w.create_dataset(key, data=np.string_(comment[key]))
+                        w.create_dataset(key, data=comment[key])
 
             path_labels = []
             if self._labels:
@@ -493,8 +504,8 @@ class BandStructure:
                     for i in range(len(self._paths)):
                         path_labels.append(
                             [
-                                np.string_(self._labels[i]),
-                                np.string_(self._labels[i + 1]),
+                                self._labels[i],
+                                self._labels[i + 1],
                             ]
                         )
                 else:
@@ -502,8 +513,8 @@ class BandStructure:
                     for c in self._path_connections:
                         path_labels.append(
                             [
-                                np.string_(self._labels[i]),
-                                np.string_(self._labels[i + 1]),
+                                self._labels[i],
+                                self._labels[i + 1],
                             ]
                         )
                         if c:
@@ -571,15 +582,11 @@ class BandStructure:
             text.append("labels:")
             if self._is_legacy_plot:
                 for i in range(len(self._paths)):
-                    text.append(
-                        "- [ '%s', '%s' ]" % (self._labels[i], self._labels[i + 1])
-                    )
+                    text.append(f"- [ '{self._labels[i]}', '{self._labels[i + 1]}' ]")
             else:
                 i = 0
                 for c in self._path_connections:
-                    text.append(
-                        "- [ '%s', '%s' ]" % (self._labels[i], self._labels[i + 1])
-                    )
+                    text.append(f"- [ '{self._labels[i]}', '{self._labels[i + 1]}' ]")
                     if c:
                         i += 1
                     else:
