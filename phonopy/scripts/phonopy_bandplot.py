@@ -219,25 +219,25 @@ def _read_band_yaml(filename):
 
 
 def _read_band_hdf5(filename):
-    data = h5py.File(filename, "r")
-    f2 = data["frequency"][:]
-    d1 = data["distance"][:]
-    # lbl = data['label'][:]
+    with h5py.File(filename, "r") as data:
+        f2 = data["frequency"][:]
+        d1 = data["distance"][:]
+        # lbl = data['label'][:]
 
-    labels_path = []
-    for x in data["label"][:]:
-        labels_path.append([y.decode("utf-8") for y in x])
+        labels_path = []
+        for x in data["label"][:]:
+            labels_path.append([y.decode("utf-8") for y in x])
 
-    frequencies = f2.reshape((f2.shape[0] * f2.shape[1], f2.shape[2]))
-    distances = []
-    for x in d1:
-        for y in x:
-            distances.append(y)
-    qpoints = [i for j in data["path"][:] for i in j]
+        frequencies = f2.reshape((f2.shape[0] * f2.shape[1], f2.shape[2]))
+        distances = []
+        for x in d1:
+            for y in x:
+                distances.append(y)
+        qpoints = [i for j in data["path"][:] for i in j]
 
-    seg_pt = data["segment_nqpoint"][:]
+        seg_pt = data["segment_nqpoint"][:]
 
-    # nqpt = data['nqpoint'][0]
+        # nqpt = data['nqpoint'][0]
 
     return (
         np.array(distances),
