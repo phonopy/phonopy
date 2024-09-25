@@ -172,6 +172,13 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
             help="Phonopy configuration file",
         )
     parser.add_argument(
+        "--classical",
+        dest="classical",
+        action="store_true",
+        default=False,
+        help=("Compute thermodynamic properties using classical statistics."),
+    )
+    parser.add_argument(
         "--cutoff-freq",
         "--cutoff-frequency",
         dest="cutoff_frequency",

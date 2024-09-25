@@ -25,6 +25,7 @@ lib64
 
 # Installer logs
 pip-log.txt
+phonopy/_version.py
 
 # Unit test / coverage reports
 .coverage
@@ -49,3 +50,6 @@ _build
 
 # sphinx
 _sources
+
+# jupyter notebooks
+.ipynb_checkpoints
