@@ -908,6 +908,13 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
     if load_phonopy_yaml:
         parser.add_argument("filename", nargs="*", help="phonopy.yaml like file")
     else:
-        parser.add_argument("filename", nargs="*", help="Phonopy configure file")
+        parser.add_argument(
+            "filename",
+            nargs="*",
+            help=(
+                "Phonopy configure file. However if the file is recognized as "
+                "phonopy.yaml like file, this file is read as phonopy.yaml like file."
+            ),
+        )
 
     return parser, deprecated

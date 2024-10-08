@@ -153,6 +153,12 @@ def test_parse_set_of_forces():
     dataset = parse_FORCE_SETS(filename=filename)
     force_sets = [dataset["first_atoms"][i]["forces"] for i in (0, 1)]
     energy_ref = [-216.82820693, -216.82817843]
+    np.testing.assert_allclose(
+        calc_dataset["points"][0][0], [0.00087869, 0.0, 0.0], atol=1e-5
+    )
+    np.testing.assert_allclose(
+        calc_dataset["points"][1][32], [0.25087869, 0.25, 0.25], atol=1e-5
+    )
     np.testing.assert_allclose(force_sets, calc_dataset["forces"], atol=1e-8)
     np.testing.assert_allclose(
         energy_ref, calc_dataset["supercell_energies"], atol=1e-8
