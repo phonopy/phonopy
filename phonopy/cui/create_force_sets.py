@@ -45,6 +45,8 @@ from phonopy.file_IO import parse_disp_yaml, write_FORCE_SETS
 from phonopy.interface.calculator import get_calc_dataset, get_calc_dataset_wien2k
 from phonopy.interface.lammps import rotate_lammps_forces
 from phonopy.interface.phonopy_yaml import PhonopyYaml
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.dataset import get_displacements_and_forces
 
 
 def create_FORCE_SETS(
@@ -66,8 +68,8 @@ def create_FORCE_SETS(
     """
     if log_level > 0:
         if interface_mode:
-            print("Calculator interface: %s" % interface_mode)
-        print('Displacements were read from "%s".' % disp_filename)
+            print(f"Calculator interface: {interface_mode}")
+        print(f'Displacements were read from "{disp_filename}".')
         if disp_filename == "disp.yaml":
             print("")
             print("NOTE:")
@@ -83,8 +85,8 @@ def create_FORCE_SETS(
             print("")
         if force_sets_zero_mode:
             print(
-                "Forces in %s are subtracted from forces in all "
-                "other files." % force_filenames[0]
+                f'Forces in "{force_filenames[0]}" are subtracted from forces in all '
+                "other files."
             )
 
     if disp_filename == "disp.yaml":
@@ -137,6 +139,13 @@ def create_FORCE_SETS(
             verbose=(log_level > 0),
         )
         force_sets = calc_dataset["forces"]
+        if "points" in calc_dataset:
+            if filename := _check_agreements_of_displacements(
+                supercell, disp_dataset, calc_dataset["points"], force_filenames
+            ):
+                raise RuntimeError(
+                    f'Displacements don\'t match with atomic positions in "{filename}".'
+                )
 
     if interface_mode == "lammps":
         rotate_lammps_forces(force_sets, supercell.cell, verbose=(log_level > 0))
@@ -196,6 +205,23 @@ def check_number_of_force_files(num_displacements, force_filenames, disp_filenam
         return False
     else:
         return True
+
+
+def _check_agreements_of_displacements(
+    supercell: PhonopyAtoms,
+    dataset: dict,
+    all_points: list[np.ndarray],
+    force_filenames: list[str],
+) -> Optional[str]:
+    """Check agreements of displacements."""
+    displacements = get_displacements_and_forces(dataset)[0] @ np.linalg.inv(
+        supercell.cell
+    )
+    for disp, points, filename in zip(displacements, all_points, force_filenames):
+        diff = supercell.scaled_positions + disp - points
+        diff -= np.rint(diff)
+        if (np.linalg.norm(diff @ supercell.cell, axis=1) > 1e-5).any():
+            return filename
 
 
 def _subtract_residual_forces(force_sets):
