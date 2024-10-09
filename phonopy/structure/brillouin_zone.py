@@ -34,6 +34,11 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import annotations
+
+from collections.abc import Sequence
+from typing import Union
+
 import numpy as np
 
 from phonopy.structure.cells import get_reduced_bases
@@ -73,10 +78,28 @@ search_space = np.array(
 
 
 def get_qpoints_in_Brillouin_zone(
-    reciprocal_lattice, qpoints, only_unique=False, tolerance=0.01
-):
-    """Move qpoints to first Brillouin zone by lattice translation."""
-    bz = BrillouinZone(reciprocal_lattice)
+    reciprocal_lattice: Union[Sequence, np.ndarray],
+    qpoints: Union[Sequence, np.ndarray],
+    only_unique: bool = False,
+    tolerance: float = 0.01,
+) -> Union[np.ndarray, list]:
+    """Move qpoints to first Brillouin zone by lattice translation.
+
+    Parameters
+    ----------
+    reciprocal_lattice : array_like
+        Reciprocal primitive cell basis vectors given in column vectors.
+        shape=(3,3), dtype=float
+    qpoints : array_like
+        q-points in reduced coordinates.
+        shape=(n_qpoints,3), dtype=float
+    only_unique : bool, optional
+        With True, only unique q-points are returned. Default is False.
+    tolerance : float, optional
+        Tolerance parameter to distinguish equivalent points. Default is 0.01.
+
+    """
+    bz = BrillouinZone(reciprocal_lattice, tolerance=tolerance)
     bz.run(qpoints)
     if only_unique:
         return np.array(
@@ -106,10 +129,10 @@ class BrillouinZone:
         ----------
         reciprocal_lattice : array_like
             Reciprocal primitive cell basis vectors given in column vectors.
-            shape=(3,3)
-            dtype=float
+            shape=(3,3), dtype=float
         tolerance : float, optional
-            Default = 0.01
+            Tolerance parameter to distinguish equivalent points. Default is
+            0.01.
 
         """
         self._reciprocal_lattice = np.array(reciprocal_lattice)
@@ -121,8 +144,16 @@ class BrillouinZone:
         self._tmat_inv = np.linalg.inv(self._tmat)
         self._shortest_qpoints = None
 
-    def run(self, qpoints):
-        """Find q-points inside Wigner–Seitz cell."""
+    def run(
+        self,
+        qpoints: Union[Sequence, np.ndarray],
+    ):
+        """Find q-points inside Wigner–Seitz cell.
+
+        qpoints : array_like
+            q-points in reduced coordinates.
+
+        """
         reduced_qpoints = np.dot(qpoints, self._tmat_inv.T)
         reduced_qpoints -= np.rint(reduced_qpoints)
         self._shortest_qpoints = []
