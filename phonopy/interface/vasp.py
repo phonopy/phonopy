@@ -62,11 +62,15 @@ def check_forces(forces, num_atom, filename, verbose=True):
     """Check a set of forces and show message if it is wrong."""
     if len(forces) != num_atom:
         if verbose:
-            stars = "*" * len(filename)
             print("")
-            print("***************%s***************" % stars)
-            print('***** Parsing "%s" failed. *****' % filename)
-            print("***************%s***************" % stars)
+            if isinstance(filename, io.IOBase):
+                file_ptr_name = "forces"
+            else:
+                file_ptr_name = f'"{filename}"'
+            stars = "*" * len(file_ptr_name)
+            print(f"**************{stars}**************")
+            print(f"***** Parsing {file_ptr_name} failed. *****")
+            print(f"**************{stars}**************")
         return False
     else:
         return True

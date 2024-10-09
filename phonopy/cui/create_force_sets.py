@@ -140,12 +140,27 @@ def create_FORCE_SETS(
         )
         force_sets = calc_dataset["forces"]
         if "points" in calc_dataset:
-            if filename := _check_agreements_of_displacements(
-                supercell, disp_dataset, calc_dataset["points"], force_filenames
+            if force_sets_zero_mode:
+                range_start = 1
+            else:
+                range_start = 0
+            if filename := check_agreements_of_displacements(
+                supercell,
+                disp_dataset,
+                calc_dataset["points"][range_start:],
+                force_filenames[range_start:],
             ):
                 raise RuntimeError(
                     f'Displacements don\'t match with atomic positions in "{filename}".'
                 )
+            if force_sets_zero_mode:
+                if check_agreement_of_supercell_positions(
+                    supercell, calc_dataset["points"][0]
+                ):
+                    raise RuntimeError(
+                        "Supercell doesn't match with atomic positions in "
+                        f'"{force_filenames[0]}".'
+                    )
 
     if interface_mode == "lammps":
         rotate_lammps_forces(force_sets, supercell.cell, verbose=(log_level > 0))
@@ -196,18 +211,16 @@ def check_number_of_force_files(num_displacements, force_filenames, disp_filenam
 
     """
     if num_displacements != len(force_filenames):
-        print("")
-        print("Number of files to be read (%d) don't match to" % len(force_filenames))
+        print(f"Number of files to be read ({len(force_filenames)}) don't match to")
         print(
-            "the number of displacements (%d) in %s."
-            % (num_displacements, disp_filename)
+            f'the number of displacements ({num_displacements}) in "{disp_filename}".'
         )
         return False
     else:
         return True
 
 
-def _check_agreements_of_displacements(
+def check_agreements_of_displacements(
     supercell: PhonopyAtoms,
     dataset: dict,
     all_points: list[np.ndarray],
@@ -222,6 +235,15 @@ def _check_agreements_of_displacements(
         diff -= np.rint(diff)
         if (np.linalg.norm(diff @ supercell.cell, axis=1) > 1e-5).any():
             return filename
+
+
+def check_agreement_of_supercell_positions(
+    supercell: PhonopyAtoms, points: np.ndarray
+) -> bool:
+    """Check agreement of supercell positions."""
+    diff = supercell.scaled_positions - points
+    diff -= np.rint(diff)
+    return (np.linalg.norm(diff @ supercell.cell, axis=1) > 1e-5).any()
 
 
 def _subtract_residual_forces(force_sets):
