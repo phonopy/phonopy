@@ -63,6 +63,7 @@ class Settings:
         "band_points": None,
         "cell_filename": None,
         "chemical_symbols": None,
+        "classical": False,
         "cutoff_frequency": None,
         "displacement_distance": None,
         "dm_decimals": None,
@@ -145,6 +146,10 @@ class Settings:
     def set_chemical_symbols(self, val):
         """Set chemical_symbols."""
         self._v["chemical_symbols"] = val
+
+    def set_classical(self, val):
+        """Set classical."""
+        self._v["classical"] = val
 
     def set_create_displacements(self, val):
         """Set create_displacements."""
@@ -438,6 +443,10 @@ class ConfParser:
         if "cell_filename" in arg_list:
             if self._args.cell_filename is not None:
                 self._confs["cell_filename"] = self._args.cell_filename
+
+        if "classical" in arg_list:
+            if self._args.classical:
+                self._confs["classical"] = self._args.classical
 
         if "cutoff_frequency" in arg_list:
             if self._args.cutoff_frequency:
@@ -913,6 +922,12 @@ class ConfParser:
                 val = float(confs["cutoff_frequency"])
                 self.set_parameter("cutoff_frequency", val)
 
+            if conf_key == "classical":
+                if confs["classical"].lower() == ".false.":
+                    self.set_parameter("classical", False)
+                elif confs["classical"].lower() == ".true.":
+                    self.set_parameter("classical", True)
+
             if conf_key == "sigma":
                 vals = [float(x) for x in str(confs["sigma"]).split()]
                 if len(vals) == 1:
@@ -1007,6 +1022,10 @@ class ConfParser:
         # Is getting least displacements?
         if "create_displacements" in params:
             self._settings.set_create_displacements(params["create_displacements"])
+
+        # Treat statistics classically?
+        if "classical" in params:
+            self._settings.set_create_displacements(params["classical"])
 
         # Cutoff frequency
         if "cutoff_frequency" in params:

@@ -26,6 +26,7 @@ class MockArgs:
     log_level: Optional[int] = None
     fc_symmetry: bool = True
     cell_filename: Optional[str] = None
+    create_force_sets: Optional[list[str]] = None
     is_check_symmetry: Optional[bool] = None
     is_graph_plot: Optional[bool] = None
     is_graph_save: Optional[bool] = None
@@ -78,6 +79,35 @@ def test_phonopy_disp_Cr(is_ncl: bool):
         file_path.unlink()
 
 
+def test_create_force_sets():
+    """Test phonopy --create-force-sets command."""
+    argparse_control = _get_phonopy_args(
+        cell_filename=cwd / "NaCl" / "phonopy_disp.yaml.xz",
+        create_force_sets=[
+            cwd / "NaCl" / "vasprun.xml-001.xz",
+            cwd / "NaCl" / "vasprun.xml-002.xz",
+        ],
+    )
+    with pytest.raises(SystemExit) as excinfo:
+        main(**argparse_control)
+    assert excinfo.value.code == 0
+
+    for created_filename in ("FORCE_SETS",):
+        file_path = pathlib.Path(cwd_called / created_filename)
+        assert file_path.exists()
+        file_path.unlink()
+
+    argparse_control = _get_phonopy_args(
+        cell_filename=cwd / "NaCl" / "phonopy_disp.yaml.xz",
+        create_force_sets=[
+            cwd / "NaCl" / "vasprun.xml-002.xz",
+            cwd / "NaCl" / "vasprun.xml-001.xz",
+        ],
+    )
+    with pytest.raises(RuntimeError) as excinfo:
+        main(**argparse_control)
+
+
 def test_phonopy_load():
     """Test phonopy-load command."""
     # Check sys.exit(0)
@@ -114,15 +144,17 @@ def test_phonopy_is_check_symmetry():
 
 
 def _get_phonopy_args(
-    cell_filename: str,
-    supercell_dimension: Optional[str],
-    is_displacement: Optional[bool],
-    magmoms: Optional[str],
+    cell_filename: Optional[str] = None,
+    create_force_sets: Optional[list[str]] = None,
+    supercell_dimension: Optional[str] = None,
+    is_displacement: Optional[bool] = None,
+    magmoms: Optional[str] = None,
 ):
     mockargs = MockArgs(
         filename=[],
         log_level=1,
         cell_filename=cell_filename,
+        create_force_sets=create_force_sets,
         supercell_dimension=supercell_dimension,
         is_displacement=is_displacement,
         magmoms=magmoms,

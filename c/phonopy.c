@@ -55,9 +55,15 @@ static void set_translational_symmetry_fc(double *fc, const int natom);
 static void set_translational_symmetry_compact_fc(double *fc, const int p2s[],
                                                   const int n_satom,
                                                   const int n_patom);
-static double get_free_energy(const double temperature, const double f);
-static double get_entropy(const double temperature, const double f);
-static double get_heat_capacity(const double temperature, const double f);
+static double get_free_energy(const double temperature,
+                              const double f,
+                              const int classical);
+static double get_entropy(const double temperature,
+                          const double f,
+                          const int classical);
+static double get_heat_capacity(const double temperature,
+                                const double f,
+                                const int classical);
 /* static double get_energy(double temperature, double f); */
 static void distribute_fc2(double (*fc2)[3][3], const int *atom_list,
                            const int len_atom_list,
@@ -283,7 +289,9 @@ void phpy_get_thermal_properties(double *thermal_props,
                                  const double *freqs, const long *weights,
                                  const long num_temp, const long num_qpoints,
                                  const long num_bands,
-                                 const double cutoff_frequency) {
+                                 const double cutoff_frequency,
+                                 const int classical
+) {
     long i, j, k;
     double f;
     double *tp;
@@ -302,11 +310,11 @@ void phpy_get_thermal_properties(double *thermal_props,
                 f = freqs[i * num_bands + k];
                 if (temperatures[j] > 0 && f > cutoff_frequency) {
                     tp[i * num_temp * 3 + j * 3] +=
-                        get_free_energy(temperatures[j], f) * weights[i];
+                        get_free_energy(temperatures[j], f, classical) * weights[i];
                     tp[i * num_temp * 3 + j * 3 + 1] +=
-                        get_entropy(temperatures[j], f) * weights[i];
+                        get_entropy(temperatures[j], f, classical) * weights[i];
                     tp[i * num_temp * 3 + j * 3 + 2] +=
-                        get_heat_capacity(temperatures[j], f) * weights[i];
+                        get_heat_capacity(temperatures[j], f, classical) * weights[i];
                 }
             }
         }
@@ -773,32 +781,42 @@ static void set_translational_symmetry_compact_fc(double *fc, const int p2s[],
     }
 }
 
-static double get_free_energy(const double temperature, const double f) {
+static double get_free_energy(const double temperature, const double f, const int classical) {
     /* temperature is defined by T (K) */
     /* 'f' must be given in eV. */
-    return KB * temperature * log(1 - exp(-f / (KB * temperature)));
+    if (classical) {
+        return KB * temperature * log(f / (KB * temperature));
+    } else {
+        return KB * temperature * log(1 - exp(-f / (KB * temperature)));
+    }
 }
 
-static double get_entropy(const double temperature, const double f) {
+static double get_entropy(const double temperature, const double f, const int classical) {
     /* temperature is defined by T (K) */
     /* 'f' must be given in eV. */
     double val;
-
-    val = f / (2 * KB * temperature);
-    return 1 / (2 * temperature) * f * cosh(val) / sinh(val) -
-           KB * log(2 * sinh(val));
+    if (classical) {
+        return KB - KB * log(f / (KB * temperature));
+    } else {
+        val = f / (2 * KB * temperature);
+        return 1 / (2 * temperature) * f * cosh(val) / sinh(val) -
+               KB * log(2 * sinh(val));
+    }
 }
 
-static double get_heat_capacity(const double temperature, const double f) {
+static double get_heat_capacity(const double temperature, const double f, const int classical) {
     /* temperature is defined by T (K) */
     /* 'f' must be given in eV. */
     /* If val is close to 1. Then expansion is used. */
     double val, val1, val2;
-
-    val = f / (KB * temperature);
-    val1 = exp(val);
-    val2 = (val) / (val1 - 1);
-    return KB * val1 * val2 * val2;
+    if (classical) {
+        return KB;
+    } else {
+        val = f / (KB * temperature);
+        val1 = exp(val);
+        val2 = (val) / (val1 - 1);
+        return KB * val1 * val2 * val2;
+    }
 }
 
 static void distribute_fc2(double (*fc2)[3][3], /* shape[n_pos][n_pos] */

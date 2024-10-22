@@ -109,13 +109,13 @@ class PhonopyGruneisen:
                 self._mesh.get_gruneisen(),
             )
 
-    def write_yaml_mesh(self):
+    def write_yaml_mesh(self, filename="gruneisen_mesh.yaml"):
         """Write mesh sampling calculation results to file in yaml."""
-        self._mesh.write_yaml()
+        self._mesh.write_yaml(filename=filename)
 
-    def write_hdf5_mesh(self):
+    def write_hdf5_mesh(self, filename="gruneisen_mesh.hdf5"):
         """Write mesh sampling calculation results to file in hdf5."""
-        self._mesh.write_hdf5()
+        self._mesh.write_hdf5(filename=filename)
 
     def plot_mesh(
         self, cutoff_frequency=None, color_scheme=None, marker="o", markersize=None
@@ -159,9 +159,9 @@ class PhonopyGruneisen:
             band.get_gruneisen(),
         )
 
-    def write_yaml_band_structure(self):
+    def write_yaml_band_structure(self, filename="gruneisen_band.yaml"):
         """Write band structure calculation results to file in yaml."""
-        self._band_structure.write_yaml()
+        self._band_structure.write_yaml(filename=filename)
 
     def plot_band_structure(self, epsilon=1e-4, color_scheme=None):
         """Return pyplot of band structure calculation results."""

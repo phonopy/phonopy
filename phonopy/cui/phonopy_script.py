@@ -452,6 +452,11 @@ def _print_settings(
                     "  - Phonon frequencies > %5.3f are used to calculate "
                     "thermal properties." % cutoff_freq
                 )
+            if settings.classical:
+                print(
+                    "  - Classical statistics are used to calculate"
+                    " thermodynamic properties."
+                )
         elif (
             settings.is_thermal_displacements
             or settings.is_thermal_displacement_matrices

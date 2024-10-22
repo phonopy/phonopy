@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Oct-22-2024: Version 2.29.0
+
+- Maintenance release including minor fixes and updates.
+
 ## Sep-12-2024: Version 2.28.0
 
 - Maintenance release including minor fixes and updates.
