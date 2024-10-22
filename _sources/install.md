@@ -90,17 +90,16 @@ Prepare the following Python libraries:
 - python-yaml (pyyaml >= 5.3)
 - python-h5py (h5py >= 3.0)
 - spglib (>=2.3)
+- scipy
 
 It is recommended to install seekpath to plot phonon band structure:
 
 - seekpath
+
+
+As an external force constants calculator, installation of symfc is recommended:
+
 - symfc
-
-Scipy is optional because most of features of phonopy can work without scipy,
-but scipy is needed for symfc and fitting to equations of states for
-quasi-harmonic phonon calculation.
-
-- scipy
 
 For the CP2K interface, the following package will be needed to install:
 

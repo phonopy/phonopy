@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Installation &#8212; Phonopy v.2.28.0</title>
+    <title>Installation &#8212; Phonopy v.2.29.0</title>
   
   
   
@@ -36,8 +36,8 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=a91ddd6e"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/documentation_options.js?v=55c7e882"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'install';</script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.28.0</p>
+    <p class="title logo__title">Phonopy v.2.29.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -445,17 +445,15 @@ packages. Windows users should use conda (conda-forge channel) packages as well.
 <li><p>python-yaml (pyyaml &gt;= 5.3)</p></li>
 <li><p>python-h5py (h5py &gt;= 3.0)</p></li>
 <li><p>spglib (&gt;=2.3)</p></li>
+<li><p>scipy</p></li>
 </ul>
 <p>It is recommended to install seekpath to plot phonon band structure:</p>
 <ul class="simple">
 <li><p>seekpath</p></li>
-<li><p>symfc</p></li>
 </ul>
-<p>Scipy is optional because most of features of phonopy can work without scipy,
-but scipy is needed for symfc and fitting to equations of states for
-quasi-harmonic phonon calculation.</p>
+<p>As an external force constants calculator, installation of symfc is recommended:</p>
 <ul class="simple">
-<li><p>scipy</p></li>
+<li><p>symfc</p></li>
 </ul>
 <p>For the CP2K interface, the following package will be needed to install:</p>
 <ul class="simple">
