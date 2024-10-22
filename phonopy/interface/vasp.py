@@ -62,11 +62,15 @@ def check_forces(forces, num_atom, filename, verbose=True):
     """Check a set of forces and show message if it is wrong."""
     if len(forces) != num_atom:
         if verbose:
-            stars = "*" * len(filename)
             print("")
-            print("***************%s***************" % stars)
-            print('***** Parsing "%s" failed. *****' % filename)
-            print("***************%s***************" % stars)
+            if isinstance(filename, io.IOBase):
+                file_ptr_name = "forces"
+            else:
+                file_ptr_name = f'"{filename}"'
+            stars = "*" * len(file_ptr_name)
+            print(f"**************{stars}**************")
+            print(f"***** Parsing {file_ptr_name} failed. *****")
+            print(f"**************{stars}**************")
         return False
     else:
         return True
@@ -145,14 +149,15 @@ def sort_positions_by_symbols(symbols: Sequence, positions: np.ndarray):
     return counts_list, reduced_symbols, sorted_positions, perm
 
 
-def _get_forces_and_energy(
+def _get_forces_points_and_energy(
     fp: io.IOBase,
     use_expat: bool = True,
     filename: Optional[Union[str, os.PathLike]] = None,
-):
+) -> tuple[np.ndarray, Optional[np.ndarray], Optional[float]]:
     vasprun = Vasprun(fp, use_expat=use_expat)
     try:
         forces = vasprun.read_forces()
+        points = vasprun.read_points()
         energy = vasprun.read_energy()
     except (RuntimeError, ValueError, xml.parsers.expat.ExpatError) as err:
         msg = (
@@ -164,7 +169,7 @@ def _get_forces_and_energy(
         if filename is not None:
             msg = f'Could not parse "{filename}". ' + msg
         raise RuntimeError(msg) from err
-    return forces, energy
+    return forces, points, energy
 
 
 def parse_set_of_forces(
@@ -179,21 +184,25 @@ def parse_set_of_forces(
 
     is_parsed = True
     force_sets = []
+    point_sets = []
     energy_sets = []
 
     for i, fp in enumerate(forces_filenames):
         if verbose:
             print(f"{i + 1}", end=" ")
         if isinstance(fp, io.IOBase):
-            forces, energy = _get_forces_and_energy(fp, use_expat=use_expat)
+            forces, points, energy = _get_forces_points_and_energy(
+                fp, use_expat=use_expat
+            )
         else:
             myio = get_io_module_to_decompress(fp)
             with myio.open(fp, "rb") as fp:
-                forces, energy = _get_forces_and_energy(
+                forces, points, energy = _get_forces_points_and_energy(
                     fp, use_expat=use_expat, filename=fp
                 )
         force_sets.append(forces)
         energy_sets.append(energy)
+        point_sets.append(points)
 
         if not check_forces(force_sets[-1], num_atoms, fp):
             is_parsed = False
@@ -202,7 +211,11 @@ def parse_set_of_forces(
         print("")
 
     if is_parsed:
-        return {"forces": force_sets, "supercell_energies": energy_sets}
+        return {
+            "forces": force_sets,
+            "points": point_sets,
+            "supercell_energies": energy_sets,
+        }
     else:
         return {}
 
@@ -613,18 +626,20 @@ class Vasprun:
         self._use_expat = use_expat
         self._vasprun_expat = None
 
-    def read_forces(self) -> Union[np.ndarray, float]:
+    def read_forces(self) -> np.ndarray:
         """Read forces either using expat or etree."""
         if self._use_expat:
-            return self._parse_expat_vasprun_xml()
+            return self._parse_expat_vasprun_xml(target="forces")
         else:
             vasprun_etree = self._parse_etree_vasprun_xml(tag="varray")
             return self._get_forces(vasprun_etree)
 
-    def read_force_constants(self):
-        """Read force constants using etree."""
-        vasprun = self._parse_etree_vasprun_xml()
-        return self._get_force_constants(vasprun)
+    def read_points(self) -> Optional[np.ndarray]:
+        """Read forces either using expat or etree."""
+        if self._use_expat:
+            return self._parse_expat_vasprun_xml(target="points")
+        else:
+            return None
 
     def read_energy(self) -> Optional[float]:
         """Read energy using expat and etree is not supported."""
@@ -632,6 +647,11 @@ class Vasprun:
             return self._parse_expat_vasprun_xml(target="energy")
         else:
             return None
+
+    def read_force_constants(self):
+        """Read force constants using etree."""
+        vasprun = self._parse_etree_vasprun_xml()
+        return self._get_force_constants(vasprun)
 
     def _get_forces(self, vasprun_etree):
         """Return forces using etree.
@@ -745,7 +765,7 @@ class Vasprun:
                 yield event, elem
 
     def _parse_expat_vasprun_xml(
-        self, target: Literal["forces", "energy"] = "forces"
+        self, target: Literal["forces", "points", "energy"] = "forces"
     ) -> Union[np.ndarray, float]:
         if self._is_version528():
             return self._parse_by_expat(VasprunWrapper(self._fileptr), target=target)
@@ -753,7 +773,9 @@ class Vasprun:
             return self._parse_by_expat(self._fileptr, target=target)
 
     def _parse_by_expat(
-        self, fileptr: io.IOBase, target: Literal["forces", "energy"] = "forces"
+        self,
+        fileptr: io.IOBase,
+        target: Literal["forces", "points", "energy"] = "forces",
     ) -> Union[np.ndarray, float]:
         if self._vasprun_expat is None:
             self._vasprun_expat = VasprunxmlExpat(fileptr)
@@ -768,6 +790,8 @@ class Vasprun:
 
         if target == "forces":
             return self._vasprun_expat.forces[-1]
+        if target == "points":
+            return self._vasprun_expat.points[-1]
         if target == "energy":
             return float(self._vasprun_expat.energies[-1][1])
 
