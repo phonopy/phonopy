@@ -35,7 +35,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
 
@@ -43,7 +43,9 @@ from phonopy.phonon.mesh import Mesh
 from phonopy.units import EvTokJmol, Kb, THzToEv
 
 
-def mode_cv(temp, freqs):  # freqs (eV)
+def mode_cv(
+    temp: float, freqs: Union[float, np.ndarray], classical: bool = False
+) -> Union[float, np.ndarray]:  # freqs (eV)
     """Return mode heat capacity.
 
     Parameters
@@ -52,6 +54,9 @@ def mode_cv(temp, freqs):  # freqs (eV)
         Temperature in K.
     freqs : float or ndarray
         Phonon frequency in eV.
+    classical : bool
+        If True use classical statistics.
+        If False use quantum statistics.
 
     Returns
     -------
@@ -59,12 +64,17 @@ def mode_cv(temp, freqs):  # freqs (eV)
         Mode heat capacity in eV/K.
 
     """
-    x = freqs / Kb / temp
-    expVal = np.exp(x)
-    return Kb * x**2 * expVal / (expVal - 1.0) ** 2
+    if classical:
+        return np.array(len(freqs) * [Kb])
+    else:
+        x = freqs / Kb / temp
+        expVal = np.exp(x)
+        return Kb * x**2 * expVal / (expVal - 1.0) ** 2
 
 
-def mode_F(temp, freqs):
+def mode_F(
+    temp: float, freqs: Union[float, np.ndarray], classical: bool = False
+) -> Union[float, np.ndarray]:
     """Return mode Helmholtz free energy.
 
     Parameters
@@ -73,6 +83,9 @@ def mode_F(temp, freqs):
         Temperature in K.
     freqs : float or ndarray
         Phonon frequency in eV.
+    classical : bool
+        If True use classical statistics.
+        If False use quantum statistics.
 
     Returns
     -------
@@ -80,10 +93,15 @@ def mode_F(temp, freqs):
         Mode Helmholtz free energy in eV.
 
     """
-    return Kb * temp * np.log(1.0 - np.exp((-freqs) / (Kb * temp))) + freqs / 2
+    if classical:
+        return Kb * temp * np.log(freqs / (Kb * temp))
+    else:
+        return Kb * temp * np.log(1.0 - np.exp((-freqs) / (Kb * temp))) + freqs / 2
 
 
-def mode_S(temp, freqs):
+def mode_S(
+    temp: float, freqs: Union[float, np.ndarray], classical: bool = False
+) -> Union[float, np.ndarray]:
     """Return mode entropy.
 
     Parameters
@@ -92,6 +110,9 @@ def mode_S(temp, freqs):
         Temperature in K.
     freqs : float or ndarray
         Phonon frequency in eV.
+    classical : bool
+        If True use classical statistics.
+        If False use quantum statistics.
 
     Returns
     -------
@@ -99,21 +120,29 @@ def mode_S(temp, freqs):
         Mode entropy in eV/K.
 
     """
-    val = freqs / (2 * Kb * temp)
-    return 1 / (2 * temp) * freqs * np.cosh(val) / np.sinh(val) - Kb * np.log(
-        2 * np.sinh(val)
-    )
+    if classical:
+        return Kb - Kb * np.log(freqs / (Kb * temp))
+    else:
+        val = freqs / (2 * Kb * temp)
+        return 1 / (2 * temp) * freqs * np.cosh(val) / np.sinh(val) - Kb * np.log(
+            2 * np.sinh(val)
+        )
 
 
-def mode_ZPE(temp, freqs):
+def mode_ZPE(
+    temp: float, freqs: Union[float, np.ndarray], classical: bool = False
+) -> Union[float, np.ndarray]:
     """Return half of phonon frequency as mode zero point energy.
 
     Parameters
     ----------
-    temp :
-        Dummy parameter. This is not used.
+    temp : float
+        Dummy parameter. This is not used but needed to exist.
     freqs : float or ndarray
         Phonon frequency in eV.
+    classical : bool
+        If True use classical statistics.
+        If False use quantum statistics.
 
     Returns
     -------
@@ -121,18 +150,25 @@ def mode_ZPE(temp, freqs):
         Half of phonon frequency as mode zero point energy in eV.
 
     """
-    return freqs / 2
+    if classical:
+        return np.array(len(freqs) * [0.0])
+    else:
+        return freqs / 2
 
 
-def mode_zero(temp, freqs):
+def mode_zero(
+    temp: float, freqs: Union[float, np.ndarray], classical: bool = False
+) -> Union[float, np.ndarray]:
     """Return zero.
 
     Parameters
     ----------
-    temp :
-        Dummy parameter. This is not used.
+    temp : float
+        Dummy parameter. This is not used but needed to exist.
     freqs : float or ndarray
-        Dummy parameter. This is not used.
+        Dummy parameter. This is not used except for determining the array shape.
+    classical : bool
+        Dummy parameter. This is not used but needed to exist.
 
     Returns
     -------
@@ -140,7 +176,10 @@ def mode_zero(temp, freqs):
         0 or an array of zero.
 
     """
-    return np.zeros_like(freqs)
+    if isinstance(freqs, np.ndarray):
+        return np.zeros_like(freqs)
+    else:
+        return 0.0
 
 
 class ThermalPropertiesBase:
@@ -153,6 +192,7 @@ class ThermalPropertiesBase:
         pretend_real=False,
         band_indices=None,
         is_projection=False,
+        classical=False,
     ):
         """Init method.
 
@@ -169,6 +209,7 @@ class ThermalPropertiesBase:
         """
         self._is_projection = is_projection
         self._band_indices = None
+        self._classical = classical
 
         if cutoff_frequency is None or cutoff_frequency < 0:
             self._cutoff_frequency = 0.0
@@ -244,7 +285,9 @@ class ThermalPropertiesBase:
             t_property = 0.0
             for freqs, w in zip(self._frequencies, self._weights):
                 cond = freqs > self._cutoff_frequency
-                t_property += np.sum(func(t, freqs[cond])) * w
+                t_property += (
+                    np.sum(func(t, freqs[cond], classical=self._classical)) * w
+                )
             return t_property
         else:
             t_property = np.zeros(len(self._frequencies[0]), dtype="double")
@@ -252,7 +295,13 @@ class ThermalPropertiesBase:
                 self._frequencies, np.abs(self._eigenvectors) ** 2, self._weights
             ):
                 cond = freqs > self._cutoff_frequency
-                t_property += np.dot(eigvecs2[:, cond], func(t, freqs[cond])) * w
+                t_property += (
+                    np.dot(
+                        eigvecs2[:, cond],
+                        func(t, freqs[cond], classical=self._classical),
+                    )
+                    * w
+                )
             return t_property
 
 
@@ -266,6 +315,7 @@ class ThermalProperties(ThermalPropertiesBase):
         pretend_real=False,
         band_indices=None,
         is_projection=False,
+        classical=False,
     ):
         """Init method.
 
@@ -286,6 +336,7 @@ class ThermalProperties(ThermalPropertiesBase):
             pretend_real=pretend_real,
             band_indices=band_indices,
             is_projection=is_projection,
+            classical=classical,
         )
         self._thermal_properties = None
         self._temperatures = None
@@ -293,10 +344,13 @@ class ThermalProperties(ThermalPropertiesBase):
         self._projected_thermal_properties = None
 
         zp_energy = 0.0
-        for freqs, w in zip(self._frequencies, self._weights):
-            positive_fs = np.extract(freqs > 0.0, freqs)
-            zp_energy += np.sum(positive_fs) * w / 2
-        self._zero_point_energy = zp_energy / np.sum(self._weights) * EvTokJmol
+        if classical:
+            self._zero_point_energy = 0.0
+        else:
+            for freqs, w in zip(self._frequencies, self._weights):
+                positive_fs = np.extract(freqs > 0.0, freqs)
+                zp_energy += np.sum(positive_fs) * w / 2
+            self._zero_point_energy = zp_energy / np.sum(self._weights) * EvTokJmol
 
     @property
     def temperatures(self):
@@ -553,6 +607,7 @@ class ThermalProperties(ThermalPropertiesBase):
             self._frequencies,
             self._weights,
             self._cutoff_frequency,
+            self._classical,
         )
         # for f, w in zip(self._frequencies, self._weights):
         #     phonoc.thermal_properties(

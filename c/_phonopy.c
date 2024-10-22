@@ -865,6 +865,7 @@ static PyObject* py_get_thermal_properties(PyObject* self, PyObject* args) {
     PyArrayObject* py_weights;
 
     double cutoff_frequency;
+    int classical;
 
     double* temperatures;
     double* freqs;
@@ -874,8 +875,8 @@ static PyObject* py_get_thermal_properties(PyObject* self, PyObject* args) {
     long num_bands;
     long num_temp;
 
-    if (!PyArg_ParseTuple(args, "OOOOd", &py_thermal_props, &py_temperatures,
-                          &py_frequencies, &py_weights, &cutoff_frequency)) {
+    if (!PyArg_ParseTuple(args, "OOOOdi", &py_thermal_props, &py_temperatures,
+                          &py_frequencies, &py_weights, &cutoff_frequency, &classical)) {
         return NULL;
     }
 
@@ -889,7 +890,7 @@ static PyObject* py_get_thermal_properties(PyObject* self, PyObject* args) {
 
     phpy_get_thermal_properties(thermal_props, temperatures, freqs, weights,
                                 num_temp, num_qpoints, num_bands,
-                                cutoff_frequency);
+                                cutoff_frequency, classical);
 
     Py_RETURN_NONE;
 }

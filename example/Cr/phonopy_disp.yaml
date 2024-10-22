@@ -1,17 +1,26 @@
 phonopy:
-  version: 2.7.0
+  version: "2.28.0"
   frequency_unit_conversion_factor: 15.633302
   symmetry_tolerance: 1.00000e-05
   configuration:
     cell_filename: "POSCAR-unitcell"
     create_displacements: ".true."
     magmom: "1 -1"
+    primitive_axes: "-1/2 1/2 1/2 1/2 -1/2 1/2 1/2 1/2 -1/2"
     dim: "2 2 2"
 
 physical_unit:
   atomic_mass: "AMU"
   length: "angstrom"
-  force_constants: "eV/angstrom^2"
+
+magnetic_space_group:
+  uni_number: 1599
+  msg_type: 4
+
+primitive_matrix:
+- [ -0.500000000000000,  0.500000000000000,  0.500000000000000 ]
+- [  0.500000000000000, -0.500000000000000,  0.500000000000000 ]
+- [  0.500000000000000,  0.500000000000000, -0.500000000000000 ]
 
 supercell_matrix:
 - [   2,   0,   0 ]
@@ -20,20 +29,18 @@ supercell_matrix:
 
 primitive_cell:
   lattice:
-  - [     2.812696943681890,     0.000000000000000,     0.000000000000000 ] # a
-  - [     0.000000000000000,     2.812696943681890,     0.000000000000000 ] # b
-  - [     0.000000000000000,     0.000000000000000,     2.812696943681890 ] # c
+  - [    -1.406348471840945,     1.406348471840945,     1.406348471840945 ] # a
+  - [     1.406348471840945,    -1.406348471840945,     1.406348471840945 ] # b
+  - [     1.406348471840945,     1.406348471840945,    -1.406348471840945 ] # c
   points:
   - symbol: Cr # 1
     coordinates: [  0.000000000000000,  0.000000000000000,  0.000000000000000 ]
     mass: 51.996100
-  - symbol: Cr # 2
-    coordinates: [  0.500000000000000,  0.500000000000000,  0.500000000000000 ]
-    mass: 51.996100
+    magnetic_moment: 1.00000000
   reciprocal_lattice: # without 2pi
-  - [     0.355530659727235,     0.000000000000000,     0.000000000000000 ] # a*
-  - [     0.000000000000000,     0.355530659727235,     0.000000000000000 ] # b*
-  - [     0.000000000000000,     0.000000000000000,     0.355530659727235 ] # c*
+  - [    -0.000000000000000,     0.355530659727235,     0.355530659727235 ] # a*
+  - [     0.355530659727235,     0.000000000000000,     0.355530659727235 ] # b*
+  - [     0.355530659727235,     0.355530659727235,     0.000000000000000 ] # c*
 
 unit_cell:
   lattice:
@@ -45,10 +52,12 @@ unit_cell:
     coordinates: [  0.000000000000000,  0.000000000000000,  0.000000000000000 ]
     mass: 51.996100
     reduced_to: 1
+    magnetic_moment: 1.00000000
   - symbol: Cr # 2
     coordinates: [  0.500000000000000,  0.500000000000000,  0.500000000000000 ]
     mass: 51.996100
-    reduced_to: 2
+    reduced_to: 1
+    magnetic_moment: -1.00000000
 
 supercell:
   lattice:
@@ -60,66 +69,82 @@ supercell:
     coordinates: [  0.000000000000000,  0.000000000000000,  0.000000000000000 ]
     mass: 51.996100
     reduced_to: 1
+    magnetic_moment: 1.00000000
   - symbol: Cr # 2
     coordinates: [  0.500000000000000,  0.000000000000000,  0.000000000000000 ]
     mass: 51.996100
     reduced_to: 1
+    magnetic_moment: 1.00000000
   - symbol: Cr # 3
     coordinates: [  0.000000000000000,  0.500000000000000,  0.000000000000000 ]
     mass: 51.996100
     reduced_to: 1
+    magnetic_moment: 1.00000000
   - symbol: Cr # 4
     coordinates: [  0.500000000000000,  0.500000000000000,  0.000000000000000 ]
     mass: 51.996100
     reduced_to: 1
+    magnetic_moment: 1.00000000
   - symbol: Cr # 5
     coordinates: [  0.000000000000000,  0.000000000000000,  0.500000000000000 ]
     mass: 51.996100
     reduced_to: 1
+    magnetic_moment: 1.00000000
   - symbol: Cr # 6
     coordinates: [  0.500000000000000,  0.000000000000000,  0.500000000000000 ]
     mass: 51.996100
     reduced_to: 1
+    magnetic_moment: 1.00000000
   - symbol: Cr # 7
     coordinates: [  0.000000000000000,  0.500000000000000,  0.500000000000000 ]
     mass: 51.996100
     reduced_to: 1
+    magnetic_moment: 1.00000000
   - symbol: Cr # 8
     coordinates: [  0.500000000000000,  0.500000000000000,  0.500000000000000 ]
     mass: 51.996100
     reduced_to: 1
+    magnetic_moment: 1.00000000
   - symbol: Cr # 9
     coordinates: [  0.250000000000000,  0.250000000000000,  0.250000000000000 ]
     mass: 51.996100
-    reduced_to: 9
+    reduced_to: 1
+    magnetic_moment: -1.00000000
   - symbol: Cr # 10
     coordinates: [  0.750000000000000,  0.250000000000000,  0.250000000000000 ]
     mass: 51.996100
-    reduced_to: 9
+    reduced_to: 1
+    magnetic_moment: -1.00000000
   - symbol: Cr # 11
     coordinates: [  0.250000000000000,  0.750000000000000,  0.250000000000000 ]
     mass: 51.996100
-    reduced_to: 9
+    reduced_to: 1
+    magnetic_moment: -1.00000000
   - symbol: Cr # 12
     coordinates: [  0.750000000000000,  0.750000000000000,  0.250000000000000 ]
     mass: 51.996100
-    reduced_to: 9
+    reduced_to: 1
+    magnetic_moment: -1.00000000
   - symbol: Cr # 13
     coordinates: [  0.250000000000000,  0.250000000000000,  0.750000000000000 ]
     mass: 51.996100
-    reduced_to: 9
+    reduced_to: 1
+    magnetic_moment: -1.00000000
   - symbol: Cr # 14
     coordinates: [  0.750000000000000,  0.250000000000000,  0.750000000000000 ]
     mass: 51.996100
-    reduced_to: 9
+    reduced_to: 1
+    magnetic_moment: -1.00000000
   - symbol: Cr # 15
     coordinates: [  0.250000000000000,  0.750000000000000,  0.750000000000000 ]
     mass: 51.996100
-    reduced_to: 9
+    reduced_to: 1
+    magnetic_moment: -1.00000000
   - symbol: Cr # 16
     coordinates: [  0.750000000000000,  0.750000000000000,  0.750000000000000 ]
     mass: 51.996100
-    reduced_to: 9
+    reduced_to: 1
+    magnetic_moment: -1.00000000
 
 displacements:
 - atom:    1
