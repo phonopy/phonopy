@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Oct-25-2024: Version 2.29.1
+
+- Release for conda-forge packaging.
+
 ## Oct-22-2024: Version 2.29.0
 
 - Maintenance release including minor fixes and updates.
