@@ -43,9 +43,16 @@ import numpy as np
 
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
+from phonopy.structure.dataset import get_displacements_and_forces
 from phonopy.structure.symmetry import Symmetry
 
-fc_calculator_names = {"alm": "ALM", "hiphive": "hiPhive", "symfc": "symfc"}
+fc_calculator_names = {
+    "alm": "ALM",
+    "hiphive": "hiPhive",
+    "symfc": "symfc",
+    "traditional": "traditional",
+    "none": "none",
+}
 
 
 # get_fc2 is called from
@@ -53,8 +60,7 @@ fc_calculator_names = {"alm": "ALM", "hiphive": "hiPhive", "symfc": "symfc"}
 def get_fc2(
     supercell: PhonopyAtoms,
     primitive: Primitive,
-    displacements: np.ndarray,
-    forces: np.ndarray,
+    dataset: dict,
     fc_calculator: Optional[str] = None,
     fc_calculator_options: Optional[str] = None,
     atom_list: Optional[Union[Sequence[int], np.ndarray]] = None,
@@ -73,12 +79,8 @@ def get_fc2(
         Supercell
     primitive : Primitive
         Primitive cell
-    displacements : array_like
-        Displacements of atoms in supercell.
-        shape=(num_snapshots, num_atoms, 3), dtype='double', order='C'
-    forces : array_like
-        Forces of atoms in supercell.
-        shape=(num_snapshots, num_atoms, 3), dtype='double', order='C'
+    dataset : dict
+        Dataset that contains displacements, forces, and optionally energies.
     fc_calculator : str, optional
         Currently only 'alm' is supported. Default is None, meaning invoking
         'alm'.
@@ -108,6 +110,26 @@ def get_fc2(
         shape=(len(atom_list), num_atoms, 3, 3), dtype='double', order='C'.
 
     """
+    displacements, forces = get_displacements_and_forces(dataset)
+    if fc_calculator is None or fc_calculator == "traditional":
+        from phonopy.harmonic.force_constants import get_fc2
+
+        if "displacements" in dataset:
+            lines = [
+                "Type-II dataset for displacements and forces was "
+                "given. Setting fc_calculator",
+                "(external force constants calculator) is required "
+                "to produce force constants.",
+            ]
+            raise RuntimeError("\n".join(lines))
+        return get_fc2(
+            supercell,
+            symmetry,
+            dataset,
+            atom_list=atom_list,
+            primitive=primitive,
+        )
+
     if fc_calculator == "alm" or fc_calculator is None:
         from phonopy.interface.alm import get_fc2
 

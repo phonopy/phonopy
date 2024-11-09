@@ -15,7 +15,8 @@ dependencies = [
     "matplotlib>=2.2.2",
     "h5py>=3.0",
     "spglib>=2.3",
-    "scipy"
+    "scipy",
+    "symfc",
 ]
 license = { file = "LICENSE" }
 
@@ -26,9 +27,8 @@ Repository = "https://github.com/phonopy/phonopy"
 [project.optional-dependencies]
 cp2k = ["cp2k-input-tools"]
 seekpath = ["seekpath"]
-symfc = ["symfc"]
 pypolymlp = ["pypolymlp"]
-tools = ["seekpath", "symfc", "pypolymlp"]
+tools = ["seekpath", "pypolymlp"]
 
 [project.scripts]
 phonopy = "phonopy.scripts.phonopy:run"

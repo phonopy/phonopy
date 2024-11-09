@@ -680,7 +680,9 @@ def _produce_force_constants(
                 print_error()
             sys.exit(1)
 
-        (fc_calculator, fc_calculator_options) = _get_fc_calculator_params(settings)
+        (fc_calculator, fc_calculator_options) = _get_fc_calculator_params(
+            settings, load_phonopy_yaml=False
+        )
 
         phonon.dataset = force_sets
         if log_level:
@@ -812,7 +814,9 @@ def _store_force_constants(
     if cutoff_radius:
         phonon.set_force_constants_zero_with_radius(cutoff_radius)
 
-    # Enforce space group symmetry to force constants
+    # This enforces space group symmetry to force constants.
+    # The force constants are supposed to be read from a file since otherwise
+    # the force constants are considered to follow space group symmetry.
     if settings.fc_spg_symmetry:
         if log_level:
             print("Force constants are symmetrized by space group operations.")
@@ -830,7 +834,10 @@ def _store_force_constants(
 
     # Imporse translational invariance and index permulation symmetry to
     # force constants
-    if settings.fc_symmetry:
+    fc_calculator, _ = _get_fc_calculator_params(
+        settings, load_phonopy_yaml=load_phonopy_yaml
+    )
+    if settings.fc_symmetry and fc_calculator == "traditional":
         phonon.symmetrize_force_constants()
 
     # Write FORCE_CONSTANTS
@@ -1721,12 +1728,20 @@ def _auto_primitive_axes(primitive_matrix):
     return isinstance(primitive_matrix, str) and primitive_matrix == "auto"
 
 
-def _get_fc_calculator_params(settings):
+def _get_fc_calculator_params(settings, load_phonopy_yaml=True):
     """Return fc_calculator and fc_calculator_params from settings."""
     fc_calculator = None
     if settings.fc_calculator is not None:
         if settings.fc_calculator.lower() in fc_calculator_names:
             fc_calculator = settings.fc_calculator.lower()
+    else:
+        if settings.fc_symmetry:
+            if load_phonopy_yaml:
+                fc_calculator = "symfc"
+            else:
+                fc_calculator = "traditional"
+        else:
+            fc_calculator = "traditional"
 
     fc_calculator_options = None
     if settings.fc_calculator_options is not None:

@@ -110,9 +110,7 @@ def run_symfc(
             " Symfc start "
             "-------------------------------"
         )
-        print(
-            "Symfc is a non-trivial force constants calculator. Please cite the paper:"
-        )
+        print("Symfc is a force constants calculator. See the following paper:")
         print("A. Seko and A. Togo, arXiv:2403.03588.")
         print("Symfc is developed at https://github.com/symfc/symfc.")
         print(f"Computing {_orders} order force constants.", flush=True)

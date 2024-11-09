@@ -64,7 +64,6 @@ from phonopy.harmonic.force_constants import (
     symmetrize_compact_force_constants,
     symmetrize_force_constants,
 )
-from phonopy.harmonic.force_constants import get_fc2 as get_phonopy_fc2
 from phonopy.interface.calculator import get_default_physical_units
 from phonopy.interface.fc_calculator import get_fc2
 from phonopy.interface.phonopy_yaml import PhonopyYaml
@@ -101,7 +100,7 @@ from phonopy.structure.cells import (
     isclose,
     shape_supercell_matrix,
 )
-from phonopy.structure.dataset import forces_in_dataset, get_displacements_and_forces
+from phonopy.structure.dataset import forces_in_dataset
 from phonopy.structure.grid_points import length2mesh
 from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
 from phonopy.units import VaspToTHz
@@ -3855,37 +3854,19 @@ class Phonopy:
         decimals=None,
     ) -> None:
         if self._dataset is not None:
-            if fc_calculator is not None:
-                disps, forces = get_displacements_and_forces(self._dataset)
-                self._force_constants = get_fc2(
-                    self._supercell,
-                    self._primitive,
-                    disps,
-                    forces,
-                    fc_calculator=fc_calculator,
-                    fc_calculator_options=fc_calculator_options,
-                    atom_list=distributed_atom_list,
-                    symmetry=self._symmetry,
-                    symprec=self._symprec,
-                    log_level=self._log_level,
-                )
-            else:
-                if "displacements" in self._dataset:
-                    lines = [
-                        "Type-II dataset for displacements and forces was "
-                        "given. Setting fc_calculator",
-                        "(external force constants calculator) is required "
-                        "to produce force constants.",
-                    ]
-                    raise RuntimeError("\n".join(lines))
-                self._force_constants = get_phonopy_fc2(
-                    self._supercell,
-                    self._symmetry,
-                    self._dataset,
-                    atom_list=distributed_atom_list,
-                    primitive=self._primitive,
-                    decimals=decimals,
-                )
+            self._force_constants = get_fc2(
+                self._supercell,
+                self._primitive,
+                self._dataset,
+                fc_calculator=fc_calculator,
+                fc_calculator_options=fc_calculator_options,
+                atom_list=distributed_atom_list,
+                symmetry=self._symmetry,
+                symprec=self._symprec,
+                log_level=self._log_level,
+            )
+            if decimals:
+                self._force_constants = self._force_constants.round(decimals=decimals)
 
     def _set_dynamical_matrix(self) -> None:
         import phonopy._phonopy as phonoc
