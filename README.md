@@ -12,11 +12,6 @@ http://phonopy.github.io/phonopy/
 
 See https://phonopy.github.io/phonopy/install.html.
 
-## Dependency
-
-It is necessary to install `symfc` and `seekpath` either via pip, conda, etc, to
-utilize the respective additional features.
-
 ## Mailing list for questions
 
 Usual phonopy questions should be sent to phonopy mailing list

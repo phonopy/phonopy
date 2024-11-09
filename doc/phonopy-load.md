@@ -29,8 +29,11 @@ command:
    automatically enabled. This can be disabled by `--nonac` option.
 
 5. When force constants are calculated from displacements and forces dataset,
-   force constants are automatically symmetrized. To disable this, `--no-sym-fc`
-   option is used.
+   force constants are automatically symmetrized. From phonopy v2.30.0, `symfc`
+   is used for the symmetrization. The behavior of the symmetrization before
+   v2.30.0, `--fc-calculator traditional` has to be specified. `--no-sym-fc`
+   option can be used to calculate force constants in the traditional force
+   constants calculator without symmetrization.
 
 6. `--save-params` option is added. With this option, `phonopy_params.yaml` that
    contains most of the information to run phonopy, i.e., crystal structure,
