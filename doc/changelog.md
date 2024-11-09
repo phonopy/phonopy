@@ -2,6 +2,14 @@
 
 # Change Log
 
+## Nov-9-2024: Version 2.30.0
+
+- The symfc package (https://github.com/symfc/symfc) was made a necessary
+  package from this version.
+- Default force constants calculator for `phonopy-load` command was changed to
+  `symfc`. The previous behaviour is recovered by `phonopy-load --fc-calculator
+  traditional`.
+
 ## Oct-25-2024: Version 2.29.1
 
 - Release for conda-forge packaging.

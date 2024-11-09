@@ -60,7 +60,6 @@ def get_fc2(
     dataset,
     atom_list=None,
     primitive: Optional[Primitive] = None,
-    decimals=None,
 ):
     """Force constants are computed.
 
@@ -121,9 +120,6 @@ def get_fc2(
             permutations,
             atom_list=atom_list,
         )
-
-    if decimals:
-        force_constants = force_constants.round(decimals=decimals)
 
     return force_constants
 
