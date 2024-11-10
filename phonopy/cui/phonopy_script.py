@@ -688,8 +688,8 @@ def _produce_force_constants(
         if log_level:
             if fc_calculator is not None:
                 print(
-                    "Force constants calculation by %s starts."
-                    % fc_calculator_names[fc_calculator]
+                    "Force constants calculation using "
+                    f"{fc_calculator_names[fc_calculator]} starts."
                 )
             else:
                 print("Computing force constants...")
