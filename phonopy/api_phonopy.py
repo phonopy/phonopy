@@ -814,13 +814,15 @@ class Phonopy:
         dict
             Parameters used for non-analytical term correction
             'born': ndarray
-                Born effective charges
+                Born effective charges.
                 shape=(primitive cell atoms, 3, 3), dtype='double', order='C'
-            'factor': float
-                Unit conversion factor
             'dielectric': ndarray
-                Dielectric constant tensor
+                Dielectric constant tensor.
                 shape=(3, 3), dtype='double', order='C'
+            'factor': float, optional
+                Unit conversion factor.
+            'method': str, optional
+                Method to calculate NAC.
 
         """
         return self._nac_params

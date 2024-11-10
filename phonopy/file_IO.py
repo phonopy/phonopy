@@ -780,7 +780,9 @@ def get_born_parameters(
         return None
 
     _expand_borns(borns, primitive, prim_symmetry)
-    non_anal = {"born": borns, "factor": factor, "dielectric": dielectric}
+    non_anal = {"born": borns, "dielectric": dielectric}
+    if factor is not None:
+        non_anal["factor"] = factor
     if G_cutoff is not None:
         non_anal["G_cutoff"] = G_cutoff
     if Lambda is not None:
