@@ -2,6 +2,9 @@
 
 # Setting tags
 
+(configuration_file)=
+## Configuration file
+
 Most of the setting tags have respective command-line options
 ({ref}`command_options`). When both of equivalent command-line option and
 setting tag are set simultaneously, the command-line option supersedes the

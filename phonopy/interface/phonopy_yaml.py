@@ -584,9 +584,9 @@ class PhonopyYamlDumperBase(ABC):
                     if self._data.nac_params["method"].lower() == "wang":
                         lines.append('  method: "Wang"')
                 if "factor" in self._data.nac_params:
-                    lines.append(
-                        "  unit_conversion_factor: %f" % self._data.nac_params["factor"]
-                    )
+                    factor = self._data.nac_params["factor"]
+                    # if factor is not None:
+                    lines.append("  unit_conversion_factor: %f" % factor)
                 lines.insert(0, "nac:")
                 lines.append("")
         return lines
