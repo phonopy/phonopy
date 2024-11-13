@@ -63,7 +63,7 @@ from phonopy.interface.pypolymlp import (
     parse_mlp_params,
 )
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.structure.cells import get_primitive_matrix
+from phonopy.structure.cells import Primitive, get_primitive_matrix
 from phonopy.structure.dataset import forces_in_dataset
 
 
@@ -125,14 +125,43 @@ def get_cell_settings(
 
 
 def get_nac_params(
-    primitive=None,
-    nac_params=None,
-    born_filename=None,
-    is_nac=True,
-    nac_factor=None,
-    log_level=0,
-):
-    """Look for and return NAC parameters."""
+    primitive: Optional[Primitive] = None,
+    nac_params: Optional[dict] = None,
+    born_filename: Optional[str] = None,
+    is_nac: bool = True,
+    nac_factor: Optional[float] = None,
+    log_level: int = 0,
+) -> dict:
+    """Look for and return NAC parameters.
+
+    Parameters
+    ----------
+    primitive : Primitive
+        Primitive cell.
+    nac_params : dict
+        NAC parameters.
+    born_filename : str
+        Filename of BORN file.
+    is_nac : bool
+        Whether to read NAC parameters from BORN file.
+    nac_factor : float
+        Unit conversion factor for non-analytical term correction. This value is
+        set only when the NAC factor is unset by other means.
+    log_level : int
+        Log level.
+
+    Returns
+    -------
+    dict
+        Parameters used for non-analytical term correction 'born': ndarray
+            Born effective charges. shape=(primitive cell atoms, 3, 3),
+            dtype='double', order='C'
+        'dielectric': ndarray
+            Dielectric constant tensor. shape=(3, 3), dtype='double', order='C'
+        'factor': float, optional
+            Unit conversion factor.
+
+    """
     if born_filename is not None:
         _nac_params = parse_BORN(primitive, filename=born_filename)
         if log_level:
@@ -146,9 +175,8 @@ def get_nac_params(
     else:
         _nac_params = None
 
-    if _nac_params is not None:
-        if "factor" not in _nac_params or _nac_params["factor"] is None:
-            _nac_params["factor"] = nac_factor
+    if _nac_params and "factor" not in _nac_params and nac_factor is not None:
+        _nac_params["factor"] = nac_factor
 
     return _nac_params
 
