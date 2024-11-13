@@ -2,6 +2,11 @@
 
 # Change Log
 
+## Nov-13-2024: Version 2.30.1
+
+- Release for attempting conda-forge packaging except for a few very minor
+  change.
+
 ## Nov-9-2024: Version 2.30.0
 
 - The symfc package (https://github.com/symfc/symfc) was made a necessary
