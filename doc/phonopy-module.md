@@ -192,94 +192,6 @@ If force constants are needed to be written in the yaml file, the argument
 phonon.save(settings={'force_constants': True})
 ```
 
-(phonopy_load)=
-
-### Shortcut to load input files (`phonopy.load`)
-
-`phonopy.load` is a convenient python method to create `Phonopy` instance
-loading forces, displacements, and parameters for non-analytical term
-correction. The details are found in the docstring that can be seen by (e.g., in
-ipython)
-
-```python
-In [1]: import phonopy
-In [2]: help(phonopy.load)
-```
-
-Examples of how to use `phonopy.load` are listed below.
-
-`phonopy_params.yaml` may contain all information needed to prepare phonon
-calculation:
-
-```python
-phonon = phonopy.load("phonopy_params.yaml")
-```
-
-More detailed configuration can be given as follows:
-
-```python
-phonon = phonopy.load(supercell_matrix=[2, 2, 2],
-                      primitive_matrix='auto',
-                      unitcell_filename="POSCAR",
-                      force_constants_filename="force_constants.hdf5")
-```
-
-With `is_nac=True` (default), `BORN` file in the current directory is read if it
-exists. If supercell is passed and `primitive matrix` and `supercell_matrix` are
-not set, the primitive cell is automatically searched:
-
-```python
-phonon = phonopy.load(supercell_filename="SPOSCAR",
-                      force_constants_filename="force_constants.hdf5")
-```
-
-If `FORCE_SETS` exists in the current directory, this below works to be ready
-for post-process calculation with automatic choice of primitive matrix:
-
-```python
-phonon = phonopy.load(supercell_filename="SPOSCAR")
-```
-
-For example, in the `example/NaCl` directory, phonon band structure of NaCl is
-easily plotted by
-
-```python
-In [1]: import phonopy
-
-In [2]: ph = phonopy.load(supercell_filename="SPOSCAR", log_level=1)
-Supercell structure was read from "SPOSCAR".
-NAC params were read from "BORN".
-Force constants were read from "FORCE_CONSTANTS".
-
-In [3]: print(ph.primitive)
-lattice:
-- [     0.000000000000000,     2.845150738087836,     2.845150738087836 ] # a
-- [     2.845150738087836,     0.000000000000000,     2.845150738087836 ] # b
-- [     2.845150738087836,     2.845150738087836,     0.000000000000000 ] # c
-points:
-- symbol: Na # 1
-  coordinates: [  0.000000000000000,  0.000000000000000,  0.000000000000000 ]
-  mass: 22.989769
-- symbol: Cl # 2
-  coordinates: [  0.500000000000000,  0.500000000000000,  0.500000000000000 ]
-  mass: 35.453000
-
-In [4]: ph.nac_params
-Out[4]:
-{'born': array([[[ 1.08703000e+00, -5.17677526e-34, -1.06309751e-33],
-         [-5.45419984e-34,  1.08703000e+00,  1.06309751e-33],
-         [ 0.00000000e+00,  3.08148791e-33,  1.08703000e+00]],
-
-        [[-1.08672000e+00, -2.93244455e-35,  5.15939995e-34],
-         [ 5.45264441e-34, -1.08672000e+00, -5.15939995e-34],
-         [ 0.00000000e+00,  0.00000000e+00, -1.08672000e+00]]]),
- 'factor': 14.4,
- 'dielectric': array([[2.43533967, 0.        , 0.        ],
-        [0.        , 2.43533967, 0.        ],
-        [0.        , 0.        , 2.43533967]])}
-
-In [5]: ph.auto_band_structure(plot=True).show()
-```
 
 ### Band structure
 
@@ -503,8 +415,8 @@ if eigvecs is not None:
             print(vec)
 ```
 
-(phonopy_Atoms)=
 
+(phonopy_Atoms)=
 ## `PhonopyAtoms` class
 
 ### Initialization
@@ -687,6 +599,97 @@ supercell_lattice = np.dot(supercell_matrix.T, original_lattice)
 Symmetry search tolerance (often the name `symprec` is used in phonopy) is used
 to determine symmetry operations of the crystal structures. The physical unit
 follows that of input crystal structure.
+
+(phonopy_load)=
+## Load phonopy settings `phonopy.load`
+
+`phonopy.load` is a convenient function for creating a Phonopy instance by
+loading data from a `phonopy_xxx.yaml` file, which may contain the necessary
+information to run phonopy. A typical usage example is:
+
+```python
+phonon = phonopy.load("phonopy_params.yaml")
+```
+
+To avoid producing force constants,
+
+```python
+phonon = phonopy.load("phonopy_params.yaml", produce_fc=False)
+```
+
+
+The details are found in the docstring:
+
+```python
+In [1]: import phonopy
+In [2]: help(phonopy.load)
+```
+
+More detailed control can be performed using `phonopy.load`.
+
+```python
+phonon = phonopy.load(supercell_matrix=[2, 2, 2],
+                      primitive_matrix='auto',
+                      unitcell_filename="POSCAR",
+                      force_constants_filename="force_constants.hdf5")
+```
+
+With `is_nac=True` (default), `BORN` file in the current directory is read if it
+exists. If supercell is passed and `primitive matrix` and `supercell_matrix` are
+not set, the primitive cell is automatically searched:
+
+```python
+phonon = phonopy.load(supercell_filename="SPOSCAR",
+                      force_constants_filename="force_constants.hdf5")
+```
+
+If `FORCE_SETS` exists in the current directory, this below works to be ready
+for post-process calculation with automatic choice of primitive matrix:
+
+```python
+phonon = phonopy.load(supercell_filename="SPOSCAR")
+```
+
+For example, in the `example/NaCl` directory, phonon band structure of NaCl is
+easily plotted by
+
+```python
+In [1]: import phonopy
+
+In [2]: ph = phonopy.load(supercell_filename="SPOSCAR", log_level=1)
+Supercell structure was read from "SPOSCAR".
+NAC params were read from "BORN".
+Force constants were read from "FORCE_CONSTANTS".
+
+In [3]: print(ph.primitive)
+lattice:
+- [     0.000000000000000,     2.845150738087836,     2.845150738087836 ] # a
+- [     2.845150738087836,     0.000000000000000,     2.845150738087836 ] # b
+- [     2.845150738087836,     2.845150738087836,     0.000000000000000 ] # c
+points:
+- symbol: Na # 1
+  coordinates: [  0.000000000000000,  0.000000000000000,  0.000000000000000 ]
+  mass: 22.989769
+- symbol: Cl # 2
+  coordinates: [  0.500000000000000,  0.500000000000000,  0.500000000000000 ]
+  mass: 35.453000
+
+In [4]: ph.nac_params
+Out[4]:
+{'born': array([[[ 1.08703000e+00, -5.17677526e-34, -1.06309751e-33],
+         [-5.45419984e-34,  1.08703000e+00,  1.06309751e-33],
+         [ 0.00000000e+00,  3.08148791e-33,  1.08703000e+00]],
+
+        [[-1.08672000e+00, -2.93244455e-35,  5.15939995e-34],
+         [ 5.45264441e-34, -1.08672000e+00, -5.15939995e-34],
+         [ 0.00000000e+00,  0.00000000e+00, -1.08672000e+00]]]),
+ 'factor': 14.4,
+ 'dielectric': array([[2.43533967, 0.        , 0.        ],
+        [0.        , 2.43533967, 0.        ],
+        [0.        , 0.        , 2.43533967]])}
+
+In [5]: ph.auto_band_structure(plot=True).show()
+```
 
 (phonopy_read_write_structure)=
 ## Read and write crystal structures

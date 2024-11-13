@@ -50,13 +50,10 @@ fc_calculator_names = {
     "alm": "ALM",
     "hiphive": "hiPhive",
     "symfc": "symfc",
-    "traditional": "traditional",
-    "none": "none",
+    "traditional": "phonopy-traditional",
 }
 
 
-# get_fc2 is called from
-# phonopy.api_phonopy.Phonopy._run_force_constants_from_forces.
 def get_fc2(
     supercell: PhonopyAtoms,
     primitive: Primitive,
@@ -116,10 +113,10 @@ def get_fc2(
 
         if "displacements" in dataset:
             lines = [
-                "Type-II dataset for displacements and forces was "
-                "given. Setting fc_calculator",
-                "(external force constants calculator) is required "
-                "to produce force constants.",
+                "Type-II dataset for displacements and forces was provided, ",
+                "but the selected force constants calculator cannot process it.",
+                "Use another force constants calculator, e.g., symfc, ",
+                "to generate force constants.",
             ]
             raise RuntimeError("\n".join(lines))
         return get_fc2(

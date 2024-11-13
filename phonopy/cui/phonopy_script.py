@@ -688,8 +688,8 @@ def _produce_force_constants(
         if log_level:
             if fc_calculator is not None:
                 print(
-                    "Force constants calculation by %s starts."
-                    % fc_calculator_names[fc_calculator]
+                    "Force constants calculation using "
+                    f"{fc_calculator_names[fc_calculator]} starts."
                 )
             else:
                 print("Computing force constants...")
@@ -979,7 +979,7 @@ def store_nac_params(
                 sys.exit(1)
 
     if nac_params is not None:
-        if nac_params["factor"] is None:
+        if "factor" not in nac_params or nac_params["factor"] is None:
             nac_params["factor"] = _nac_factor
         if settings.nac_method is not None:
             nac_params["method"] = settings.nac_method
@@ -2143,6 +2143,20 @@ def main(**argparse_control):
         _create_random_displacements_at_finite_temperature(
             phonon, settings, confs, cell_info["optional_structure_info"], log_level
         )
+
+    if log_level and not load_phonopy_yaml:
+        print("*" * 76)
+
+        print(
+            ' The "phonopy" command for running phonon calculations'
+            "will be phased out in "
+        )
+        print(
+            ' the future. It is recommended to use the "phonopy-load" command instead.'
+        )
+        print(" For more details, please refer to this link.")
+        print(" https://phonopy.github.io/phonopy/phonopy-load.html")
+        print("*" * 76)
 
     #######################
     # Phonon calculations #
