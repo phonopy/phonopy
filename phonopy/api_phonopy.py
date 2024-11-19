@@ -1051,7 +1051,7 @@ class Phonopy:
         max_distance : float or None, optional
             In random displacements generation from canonical ensemble of
             harmonic phonons, displacements larger than max distance are
-            renormalized to the max distance, i.e., a disptalcement d is shorten
+            renormalized to the max distance, i.e., a displacement d is shorten
             by d -> d / |d| * max_distance if |d| > max_distance. In random
             direction and distance displacements generation, this value is is
             specified.
