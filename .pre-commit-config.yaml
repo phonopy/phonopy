@@ -16,9 +16,3 @@ repos:
   - id: ruff
     args: [ "--fix", "--show-fixes" ]
   - id: ruff-format
-
-- repo: https://github.com/cheshirekow/cmake-format-precommit
-  rev: v0.6.13
-  hooks:
-  - id: cmake-format
-  - id: cmake-lint
