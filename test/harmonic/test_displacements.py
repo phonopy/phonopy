@@ -202,6 +202,24 @@ def test_tio2_random_disp_plusminus(ph_tio2: Phonopy):
     ph_tio2.dataset = dataset
 
 
+def test_tio2_random_distances(ph_tio2: Phonopy):
+    """Test random distance displacements with random directions of TiO2."""
+    dataset = deepcopy(ph_tio2.dataset)
+
+    n_snapshots = 100
+    ph_tio2.generate_displacements(
+        number_of_snapshots=n_snapshots,
+        min_distance=0.01,
+        distance=0.1,
+    )
+    d = ph_tio2.displacements
+    assert len(d) == n_snapshots
+    dists = np.linalg.norm(d, axis=2)
+    for dist_supercell in dists:
+        np.testing.assert_allclose(dist_supercell[0], dist_supercell, atol=1e-10)
+    ph_tio2.dataset = dataset
+
+
 def test_zr3n4(ph_zr3n4: Phonopy):
     """Test displacements of Zr3N4."""
     dataset = deepcopy(ph_zr3n4.dataset)

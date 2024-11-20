@@ -1053,7 +1053,7 @@ class Phonopy:
             harmonic phonons, displacements larger than max distance are
             renormalized to the max distance, i.e., a displacement d is shorten
             by d -> d / |d| * max_distance if |d| > max_distance. In random
-            direction and distance displacements generation, this value is is
+            direction and distance displacements generation, this value is
             specified.
         is_random_distance : bool, optional
             Random direction displacements are generated also with random
