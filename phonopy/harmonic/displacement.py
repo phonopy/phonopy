@@ -317,8 +317,8 @@ def get_random_displacements_dataset(
             directions = _get_random_directions(
                 num_atoms * num_supercells, rng
             ).reshape(num_supercells, num_atoms, 3)
-            dists = np.sort(
-                min_distance + rng.random(num_supercells) * (distance - min_distance)
+            dists = min_distance + rng.random(num_supercells) * (
+                distance - min_distance
             )
             for i, (dirs, dist) in enumerate(zip(directions, dists)):
                 supercell_disps[i] = dirs * dist
