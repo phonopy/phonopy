@@ -41,7 +41,7 @@ import sys
 import textwrap
 import warnings
 from collections.abc import Sequence
-from typing import Any, Literal, Optional, Union
+from typing import Literal, Optional, Union
 
 import numpy as np
 
@@ -66,13 +66,9 @@ from phonopy.harmonic.force_constants import (
 )
 from phonopy.interface.calculator import get_default_physical_units
 from phonopy.interface.fc_calculator import get_fc2
+from phonopy.interface.mlp import PhonopyMLP
 from phonopy.interface.phonopy_yaml import PhonopyYaml
-from phonopy.interface.pypolymlp import (
-    PypolymlpParams,
-    develop_mlp_by_pypolymlp,
-    evalulate_polymlp,
-    load_polymlp,
-)
+from phonopy.interface.pypolymlp import PypolymlpParams
 from phonopy.phonon.animation import write_animation
 from phonopy.phonon.band_structure import BandStructure, get_band_qpoints_by_seekpath
 from phonopy.phonon.dos import ProjectedDos, TotalDos, get_dos_frequency_range
@@ -564,9 +560,13 @@ class Phonopy:
         self._mlp_dataset = mlp_dataset
 
     @property
-    def mlp(self) -> Optional[Any]:
-        """Return MLP instance."""
+    def mlp(self) -> Optional[PhonopyMLP]:
+        """Setter and getter of PhonopyMLP dataclass."""
         return self._mlp
+
+    @mlp.setter
+    def mlp(self, mlp) -> Optional[PhonopyMLP]:
+        self._mlp = mlp
 
     @property
     def displacement_dataset(self):
@@ -1248,7 +1248,7 @@ class Phonopy:
         params: Optional[Union[PypolymlpParams, dict, str]] = None,
         test_size: float = 0.1,
     ):
-        """Develop MLP of pypolymlp.
+        """Develop machine learning potential.
 
         Parameters
         ----------
@@ -1264,20 +1264,28 @@ class Phonopy:
         if self._mlp_dataset is None:
             raise RuntimeError("MLP dataset is not set.")
 
-        self._mlp = develop_mlp_by_pypolymlp(
+        self._mlp = PhonopyMLP(log_level=self._log_level)
+        self._mlp.develop(
             self._mlp_dataset,
             self._supercell,
             params=params,
             test_size=test_size,
-            log_level=self._log_level,
         )
 
-    def load_mlp(self, filename: str = "phonopy.pmlp"):
-        """Load machine learning potential of pypolymlp."""
-        self._mlp = load_polymlp(filename=filename)
+    def save_mlp(self, filename: Optional[str] = None):
+        """Save machine learning potential."""
+        if self._mlp is None:
+            raise RuntimeError("MLP is not developed yet.")
+
+        self._mlp.save(filename=filename)
+
+    def load_mlp(self, filename: Optional[str] = None):
+        """Load machine learning potential."""
+        self._mlp = PhonopyMLP(log_level=self._log_level)
+        self._mlp.load(filename=filename)
 
     def evaluate_mlp(self):
-        """Evaluate machine learning potential of pypolymlp.
+        """Evaluate machine learning potential.
 
         This method calculates the supercell energies and forces from the MLP
         for the displacements in self._dataset of type 2. The results are stored
@@ -1295,9 +1303,7 @@ class Phonopy:
         if self.supercells_with_displacements is None:
             raise RuntimeError("Displacements are not set. Run generate_displacements.")
 
-        energies, forces, _ = evalulate_polymlp(
-            self._mlp, self.supercells_with_displacements
-        )
+        energies, forces, _ = self._mlp.evaluate(self.supercells_with_displacements)
         self.supercell_energies = energies
         self.forces = forces
 
@@ -3810,6 +3816,23 @@ class Phonopy:
 
         return ph
 
+    def copy(self) -> Phonopy:
+        """Copy this Phonopy class instance with init parameters.
+
+        Note
+        ----
+        Phonopy class instance with the initial parameters is returned, but
+        internal variables such as force constants, NAC params, MLP parameters, etc,
+        are not stored.
+
+        Returns
+        -------
+        ph : Phonopy
+            Copied phonopy class instace.
+
+        """
+        return self._copy()
+
     ###################
     # private methods #
     ###################
@@ -3844,6 +3867,7 @@ class Phonopy:
             symprec=self._symprec,
             is_symmetry=self._is_symmetry,
             store_dense_svecs=self._store_dense_svecs,
+            use_SNF_supercell=self._use_SNF_supercell,
             calculator=self._calculator,
             log_level=self._log_level,
         )
