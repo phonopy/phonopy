@@ -113,7 +113,7 @@ class PypolymlpData:
     supercell_energies: np.ndarray
 
 
-def develop_polymlp(
+def develop_pypolymlp(
     supercell: PhonopyAtoms,
     train_data: PypolymlpData,
     test_data: PypolymlpData,
@@ -180,10 +180,10 @@ def develop_polymlp(
     return polymlp
 
 
-def evalulate_polymlp(
+def evalulate_pypolymlp(
     polymlp: Pypolymlp,  # type: ignore
     supercells_with_displacements: list[PhonopyAtoms],
-):
+) -> list[np.ndarray, np.ndarray, np.ndarray]:
     """Run force calculation using pypolymlp.
 
     Parameters
@@ -232,6 +232,8 @@ def parse_mlp_params(params: Union[str, dict, PypolymlpParams]) -> PypolymlpPara
     gaussian_params1: Sequence[float, float, int] = (1.0, 1.0, 1)
     gaussian_params2: Sequence[float, float, int] = (0.0, 7.0, 10)
     atom_energies: Optional[dict[str, float]] = None
+    ntrain: Optional[int] = None
+    ntest: Optional[int] = None
 
     Parameters
     ----------
@@ -282,7 +284,12 @@ def parse_mlp_params(params: Union[str, dict, PypolymlpParams]) -> PypolymlpPara
         raise RuntimeError("params has to be dict, str, or PypolymlpParams.")
 
 
-def load_polymlp(filename: str) -> Pypolymlp:  # type: ignore
+def save_pypolymlp(mlp: Pypolymlp, filename: str):  # type: ignore
+    """Save MLP data to file."""
+    mlp.save_mlp(filename=filename)
+
+
+def load_pypolymlp(filename: str) -> Pypolymlp:  # type: ignore
     """Load MLP data from file."""
     mlp = Pypolymlp()
     mlp.load_mlp(filename=filename)
@@ -333,7 +340,7 @@ def develop_mlp_by_pypolymlp(
             forces=forces[n:],
             supercell_energies=energies[n:],
         )
-    mlp = develop_polymlp(
+    mlp = develop_pypolymlp(
         supercell,
         train_data,
         test_data,

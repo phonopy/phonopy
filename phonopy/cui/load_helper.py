@@ -337,7 +337,7 @@ def _run_pypolymlp_to_compute_forces(
         if log_level:
             print("Developing MLPs by pypolymlp...", flush=True)
         phonon.develop_mlp(params=mlp_params)
-        phonon.mlp.save_mlp(filename=mlp_filename)
+        phonon.save_mlp(filename=mlp_filename)
         if log_level:
             print(f'MLPs were written into "{mlp_filename}"', flush=True)
     else:
