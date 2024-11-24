@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Nov-13-2024: Version 2.31.0
+
+- Maintenance release along with refactoring of MLP interface.
+
 ## Nov-13-2024: Version 2.30.1
 
 - Release for attempting conda-forge packaging except for a few very minor
