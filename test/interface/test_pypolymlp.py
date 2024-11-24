@@ -9,8 +9,8 @@ from phonopy import Phonopy
 from phonopy.interface.pypolymlp import (
     PypolymlpData,
     PypolymlpParams,
-    develop_polymlp,
-    evalulate_polymlp,
+    develop_pypolymlp,
+    evalulate_pypolymlp,
 )
 
 cwd_called = pathlib.Path.cwd()
@@ -236,7 +236,7 @@ def test_pypolymlp_develop(ph_nacl_rd: Phonopy):
     # ph_nacl_rd.auto_band_structure(write_yaml=True, filename="band-orig.yaml")
 
     ndata = 4
-    polymlp = develop_polymlp(
+    polymlp = develop_pypolymlp(
         ph_nacl_rd.supercell,
         PypolymlpData(
             displacements=disps[:ndata],
@@ -393,7 +393,7 @@ def test_pypolymlp_develop(ph_nacl_rd: Phonopy):
         [0.000507583278, 0.000853411695, 0.000118522969],
     ]
     ph.displacements = np.reshape(displacements, (2, -1, 3))
-    energies, forces, _ = evalulate_polymlp(polymlp, ph.supercells_with_displacements)
+    energies, forces, _ = evalulate_pypolymlp(polymlp, ph.supercells_with_displacements)
     ph.supercell_energies = energies
     ph.forces = forces
     ph.produce_force_constants(fc_calculator="symfc")

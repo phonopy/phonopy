@@ -284,35 +284,45 @@ def get_random_displacements_dataset(
         value.
 
     """
-    if is_random_distance:
-        if min_distance is None:
-            _min_distance = 0.0
-        else:
-            _min_distance = min_distance
-
     if np.issubdtype(type(random_seed), np.integer):
         rng = np.random.default_rng(seed=random_seed)
     else:
         rng = np.random.default_rng()
 
-    if is_random_distance:
-        if distance < _min_distance:
+    if min_distance is None:
+        directions = _get_random_directions(num_atoms * num_supercells, rng)
+        disps = directions * distance
+        supercell_disps = np.array(
+            disps.reshape(num_supercells, num_atoms, 3), dtype="double", order="C"
+        )
+    else:
+        if distance < min_distance:
             raise RuntimeError(
                 "Random displacements generation failed. min_distance is too large."
             )
-        directions = _get_random_directions(num_atoms * num_supercells, rng)
-        rand_dists = np.array([])
-        while len(rand_dists) < num_atoms * num_supercells:
-            rd = np.sqrt(rng.random(num_atoms * num_supercells)) * distance
-            rand_dists = np.r_[rand_dists, rd[rd > _min_distance]]
-        disps = rand_dists[: num_atoms * num_supercells, None] * directions
-    else:
-        directions = _get_random_directions(num_atoms * num_supercells, rng)
-        disps = directions * distance
+        if is_random_distance:
+            directions = _get_random_directions(num_atoms * num_supercells, rng)
+            rand_dists = np.array([])
+            while len(rand_dists) < num_atoms * num_supercells:
+                rd = np.sqrt(rng.random(num_atoms * num_supercells)) * distance
+                rand_dists = np.r_[rand_dists, rd[rd > min_distance]]
+            disps = rand_dists[: num_atoms * num_supercells, None] * directions
+            supercell_disps = np.array(
+                disps.reshape(num_supercells, num_atoms, 3), dtype="double", order="C"
+            )
+        else:
+            supercell_disps = np.zeros(
+                (num_supercells, num_atoms, 3), dtype="double", order="C"
+            )
+            directions = _get_random_directions(
+                num_atoms * num_supercells, rng
+            ).reshape(num_supercells, num_atoms, 3)
+            dists = min_distance + rng.random(num_supercells) * (
+                distance - min_distance
+            )
+            for i, (dirs, dist) in enumerate(zip(directions, dists)):
+                supercell_disps[i] = dirs * dist
 
-    supercell_disps = np.array(
-        disps.reshape(num_supercells, num_atoms, 3), dtype="double", order="C"
-    )
     if is_plusminus is True:
         supercell_disps = np.array(
             np.concatenate((supercell_disps, -supercell_disps), axis=0),

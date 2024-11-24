@@ -240,6 +240,13 @@ def ph_srtio3() -> Phonopy:
 
 
 @pytest.fixture(scope="session")
+def ph_kcl_mlp() -> Phonopy:
+    """Return Phonopy class instance of KCl containins MLP dataset for SSCHA."""
+    yaml_filename = cwd / "phonopy_mlpsscha_params_KCl-120.yaml.xz"
+    return phonopy.load(yaml_filename, produce_fc=False, log_level=1)
+
+
+@pytest.fixture(scope="session")
 def ph_nacl_gruneisen() -> tuple[Phonopy, Phonopy, Phonopy]:
     """Return Phonopy class instances of NaCl 2x2x2 at three volumes."""
     ph0 = phonopy.load(

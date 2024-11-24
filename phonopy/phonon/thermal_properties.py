@@ -200,7 +200,7 @@ class ThermalPropertiesBase:
         ----
         Physical unit of Phonon frequency is eV throughout this class, for
         which phonon frequencies and cutoff frequency are stored as class
-        instance variables by being transfomred to have eV unit.
+        instance variables by being transformed to have eV unit.
 
         Parameters
         ----------
@@ -323,7 +323,7 @@ class ThermalProperties(ThermalPropertiesBase):
         ----
         Physical unit of Phonon frequency is eV throughout this class, for
         which phonon frequencies and cutoff frequency are stored as class
-        instance variables by being transfomred to have eV unit.
+        instance variables by being transformed to have eV unit.
 
         Parameters
         ----------
