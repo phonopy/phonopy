@@ -778,6 +778,13 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
     parser.add_argument(
         "--sigma", dest="sigma", default=None, help="Smearing width for DOS"
     )
+    parser.add_argument(
+        "--sscha",
+        dest="sscha_iterations",
+        type=int,
+        default=None,
+        help="Number of iterations in SSCHA calculation",
+    )
     if not fc_symmetry:
         parser.add_argument(
             "--symfc",
