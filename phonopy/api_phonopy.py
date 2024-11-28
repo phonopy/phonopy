@@ -37,6 +37,7 @@
 from __future__ import annotations
 
 import copy
+import os
 import sys
 import textwrap
 import warnings
@@ -543,21 +544,26 @@ class Phonopy:
 
     @mlp_dataset.setter
     def mlp_dataset(self, mlp_dataset: dict):
-        if not isinstance(mlp_dataset, dict):
-            raise TypeError("mlp_dataset has to be a dictionary.")
-        if "displacements" not in mlp_dataset:
-            raise RuntimeError("Displacements have to be given.")
-        if "forces" not in mlp_dataset:
-            raise RuntimeError("Forces have to be given.")
-        if "supercell_energy" in mlp_dataset:
-            raise RuntimeError("Supercell energies have to be given.")
-        if len(mlp_dataset["displacements"]) != len(mlp_dataset["forces"]):
-            raise RuntimeError("Length of displacements and forces are different.")
-        if len(mlp_dataset["displacements"]) != len(mlp_dataset["supercell_energies"]):
-            raise RuntimeError(
-                "Length of displacements and supercell_energies are different."
-            )
-        self._mlp_dataset = mlp_dataset
+        if isinstance(mlp_dataset, dict):
+            if "displacements" not in mlp_dataset:
+                raise RuntimeError("Displacements have to be given.")
+            if "forces" not in mlp_dataset:
+                raise RuntimeError("Forces have to be given.")
+            if "supercell_energy" in mlp_dataset:
+                raise RuntimeError("Supercell energies have to be given.")
+            if len(mlp_dataset["displacements"]) != len(mlp_dataset["forces"]):
+                raise RuntimeError("Length of displacements and forces are different.")
+            if len(mlp_dataset["displacements"]) != len(
+                mlp_dataset["supercell_energies"]
+            ):
+                raise RuntimeError(
+                    "Length of displacements and supercell_energies are different."
+                )
+            self._mlp_dataset = mlp_dataset
+        elif mlp_dataset is None:
+            self._mlp_dataset = None
+        else:
+            raise TypeError("mlp_dataset has to be a dictionary or None.")
 
     @property
     def mlp(self) -> Optional[PhonopyMLP]:
@@ -995,8 +1001,6 @@ class Phonopy:
         temperature: Optional[float] = None,
         cutoff_frequency: Optional[float] = None,
         max_distance: Optional[float] = None,
-        is_random_distance: bool = False,
-        min_distance: Optional[float] = None,
     ) -> None:
         """Generate displacement dataset.
 
@@ -1015,9 +1019,10 @@ class Phonopy:
         ----------
         distance : float, optional
             Displacement distance. Unit is the same as that used for crystal
-            structure. Default is 0.01. For random direction and distance
-            displacements generation, this value is used when `max_distance` is
-            unspecified.
+            structure. Default is 0.01. For random direction and random distance
+            displacements generation, this value is also used as `min_distance`,
+            is used to replace generated random distances smaller than this
+            value by this value.
         is_plusminus : 'auto', True, or False, optional
             For each atom, displacement of one direction (False), both
             direction, i.e., one directiona and its opposite direction (True),
@@ -1054,15 +1059,8 @@ class Phonopy:
             renormalized to the max distance, i.e., a displacement d is shorten
             by d -> d / |d| * max_distance if |d| > max_distance. In random
             direction and distance displacements generation, this value is
-            specified.
-        is_random_distance : bool, optional
-            Random direction displacements are generated also with random
-            amplitudes. The maximum value is defined by `distance` and minimum
-            value is given by `min_distance`. Default is False.
-        min_distance : float or None, optional
-            In random direction displacements generation with random distance
-            (`is_random_distance=True`), the minimum distance is given by this
-            value.
+            specified. In random direction and random distance displacements
+            generation, this value is used as `max_distance`.
 
         """
         if number_of_snapshots is not None and number_of_snapshots > 0:
@@ -1073,21 +1071,17 @@ class Phonopy:
                 _random_seed = None
                 displacement_dataset = {}
             if temperature is None:
-                if max_distance is None:
-                    if distance is None:
-                        _distance = 0.01
-                    else:
-                        _distance = distance
+                if distance is None:
+                    _distance = 0.01
                 else:
-                    _distance = max_distance
+                    _distance = distance
                 d = get_random_displacements_dataset(
                     number_of_snapshots,
                     len(self._supercell),
                     _distance,
                     random_seed=_random_seed,
                     is_plusminus=(is_plusminus is True),
-                    is_random_distance=is_random_distance,
-                    min_distance=min_distance,
+                    max_distance=max_distance,
                 )
                 displacement_dataset["displacements"] = d
             else:
@@ -1120,11 +1114,12 @@ class Phonopy:
 
     def produce_force_constants(
         self,
-        forces=None,
-        calculate_full_force_constants=True,
-        fc_calculator=None,
-        fc_calculator_options=None,
-        show_drift=True,
+        forces: Optional[Sequence] = None,
+        calculate_full_force_constants: bool = True,
+        fc_calculator: Optional[str] = None,
+        fc_calculator_options: Optional[str] = None,
+        show_drift: bool = True,
+        fc_calculator_log_level: Optional[int] = None,
     ) -> None:
         """Compute supercell force constants from forces-displacements dataset.
 
@@ -1149,10 +1144,17 @@ class Phonopy:
             phonopy.interface.fc_calculator.get_fc2. Default is None.
         show_drift : Bool, optional
             With setting
+        fc_calculator_log_level : int, optional
+            Log level for force constants calculator.
 
         """
         if forces is not None:
             self.forces = forces
+
+        if fc_calculator_log_level is None:
+            fc_log_level = self._log_level
+        else:
+            fc_log_level = fc_calculator_log_level
 
         # A primitive check if 'forces' key is in displacement_dataset.
         if "first_atoms" in self._dataset:
@@ -1167,6 +1169,7 @@ class Phonopy:
                 fc_calculator=fc_calculator,
                 fc_calculator_options=fc_calculator_options,
                 decimals=self._force_constants_decimals,
+                log_level=fc_log_level,
             )
         else:
             self._run_force_constants_from_forces(
@@ -1174,6 +1177,7 @@ class Phonopy:
                 fc_calculator=fc_calculator,
                 fc_calculator_options=fc_calculator_options,
                 decimals=self._force_constants_decimals,
+                log_level=fc_log_level,
             )
 
         if show_drift and self._log_level:
@@ -1247,6 +1251,7 @@ class Phonopy:
         self,
         params: Optional[Union[PypolymlpParams, dict, str]] = None,
         test_size: float = 0.1,
+        log_level: Optional[int] = None,
     ):
         """Develop machine learning potential.
 
@@ -1264,7 +1269,10 @@ class Phonopy:
         if self._mlp_dataset is None:
             raise RuntimeError("MLP dataset is not set.")
 
-        self._mlp = PhonopyMLP(log_level=self._log_level)
+        if log_level is None:
+            self._mlp = PhonopyMLP(log_level=self._log_level)
+        else:
+            self._mlp = PhonopyMLP(log_level=log_level)
         self._mlp.develop(
             self._mlp_dataset,
             self._supercell,
@@ -1279,7 +1287,7 @@ class Phonopy:
 
         self._mlp.save(filename=filename)
 
-    def load_mlp(self, filename: Optional[str] = None):
+    def load_mlp(self, filename: Optional[Union[str, bytes, os.PathLike]] = None):
         """Load machine learning potential."""
         self._mlp = PhonopyMLP(log_level=self._log_level)
         self._mlp.load(filename=filename)
@@ -3816,7 +3824,7 @@ class Phonopy:
 
         return ph
 
-    def copy(self) -> Phonopy:
+    def copy(self, log_level=None) -> Phonopy:
         """Copy this Phonopy class instance with init parameters.
 
         Note
@@ -3831,12 +3839,12 @@ class Phonopy:
             Copied phonopy class instace.
 
         """
-        return self._copy()
+        return self._copy(log_level=log_level)
 
     ###################
     # private methods #
     ###################
-    def _copy(self, supercell_matrix=None) -> Phonopy:
+    def _copy(self, supercell_matrix=None, log_level=None) -> Phonopy:
         """Copy this Phonopy class instance with init parameters.
 
         Parameters
@@ -3855,6 +3863,10 @@ class Phonopy:
             smat = self._supercell_matrix
         else:
             smat = supercell_matrix
+        if log_level is not None:
+            _log_level = log_level
+        else:
+            _log_level = self._log_level
         return Phonopy(
             self._unitcell,
             supercell_matrix=smat,
@@ -3869,15 +3881,16 @@ class Phonopy:
             store_dense_svecs=self._store_dense_svecs,
             use_SNF_supercell=self._use_SNF_supercell,
             calculator=self._calculator,
-            log_level=self._log_level,
+            log_level=_log_level,
         )
 
     def _run_force_constants_from_forces(
         self,
-        distributed_atom_list=None,
-        fc_calculator=None,
-        fc_calculator_options=None,
-        decimals=None,
+        distributed_atom_list: Optional[Sequence] = None,
+        fc_calculator: Optional[str] = None,
+        fc_calculator_options: Optional[str] = None,
+        decimals: Optional[int] = None,
+        log_level: int = 0,
     ) -> None:
         if self._dataset is not None:
             self._force_constants = get_fc2(
@@ -3889,7 +3902,7 @@ class Phonopy:
                 atom_list=distributed_atom_list,
                 symmetry=self._symmetry,
                 symprec=self._symprec,
-                log_level=self._log_level,
+                log_level=log_level,
             )
             if decimals:
                 self._force_constants = self._force_constants.round(decimals=decimals)

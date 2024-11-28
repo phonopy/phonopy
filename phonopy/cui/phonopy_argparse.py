@@ -94,10 +94,21 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
     )
     parser.add_argument(
         "--amplitude",
+        "--amin",
         dest="displacement_distance",
         type=float,
         default=None,
-        help="Distance of displacements",
+        help=(
+            "Distance of displacements and also minimum distance of displacements "
+            "in random displacements"
+        ),
+    )
+    parser.add_argument(
+        "--amax",
+        dest="displacement_distance_max",
+        type=float,
+        default=None,
+        help="Minimum distance of displacements in random displacements",
     )
     parser.add_argument(
         "--anime", nargs="+", dest="anime", default=None, help="Same as ANIME tag"
@@ -777,6 +788,13 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
     )
     parser.add_argument(
         "--sigma", dest="sigma", default=None, help="Smearing width for DOS"
+    )
+    parser.add_argument(
+        "--sscha",
+        dest="sscha_iterations",
+        type=int,
+        default=None,
+        help="Number of iterations in SSCHA calculation",
     )
     if not fc_symmetry:
         parser.add_argument(
