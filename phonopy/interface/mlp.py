@@ -36,6 +36,7 @@
 
 from __future__ import annotations
 
+import os
 from typing import Any, Optional, Union
 
 import numpy as np
@@ -70,7 +71,9 @@ class PhonopyMLP:
             _filename = filename
         save_pypolymlp(self._mlp, _filename)
 
-    def load(self, filename: Optional[str] = None) -> PhonopyMLP:
+    def load(
+        self, filename: Optional[Union[str, bytes, os.PathLike]] = None
+    ) -> PhonopyMLP:
         """Load MLP."""
         if filename is None:
             _filename = "phonopy.pmlp"

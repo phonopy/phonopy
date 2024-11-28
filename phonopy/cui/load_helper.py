@@ -223,6 +223,7 @@ def set_dataset_and_force_constants(
     displacement_distance: Optional[float] = None,
     number_of_snapshots: Optional[int] = None,
     random_seed: Optional[int] = None,
+    evaluating_forces: bool = False,
     log_level: int = 0,
 ):
     """Set displacement-force dataset and force constants."""
@@ -231,7 +232,6 @@ def set_dataset_and_force_constants(
         dataset,
         phonopy_yaml_filename,
         force_sets_filename,
-        use_pypolymlp,
         log_level,
     )
 
@@ -245,14 +245,17 @@ def set_dataset_and_force_constants(
     )
 
     if use_pypolymlp:
-        _run_pypolymlp_to_compute_forces(
-            phonon,
-            mlp_params,
-            displacement_distance=displacement_distance,
-            number_of_snapshots=number_of_snapshots,
-            random_seed=random_seed,
-            log_level=log_level,
-        )
+        phonon.mlp_dataset = phonon.dataset
+        phonon.dataset = None
+        _run_pypolymlp(phonon, mlp_params, log_level=log_level)
+        if evaluating_forces:
+            _generate_displacements_and_forces_by_pypolymlp(
+                phonon,
+                displacement_distance=displacement_distance,
+                number_of_snapshots=number_of_snapshots,
+                random_seed=random_seed,
+                log_level=log_level,
+            )
 
     if (
         phonon.force_constants is None
@@ -282,7 +285,6 @@ def _set_dataset(
     dataset: Optional[dict],
     phonopy_yaml_filename: Optional[str] = None,
     force_sets_filename: Optional[str] = None,
-    use_pypolymlp: bool = False,
     log_level: int = 0,
 ):
     natom = len(phonon.supercell)
@@ -306,18 +308,12 @@ def _set_dataset(
         elif _dataset is not None:
             print(f'Displacement dataset was read from "{_force_sets_filename}".')
 
-    if use_pypolymlp:
-        phonon.mlp_dataset = _dataset
-    else:
-        phonon.dataset = _dataset
+    phonon.dataset = _dataset
 
 
-def _run_pypolymlp_to_compute_forces(
+def _run_pypolymlp(
     phonon: Phonopy,
     mlp_params: Union[str, dict, PypolymlpParams],
-    displacement_distance: Optional[float] = None,
-    number_of_snapshots: Optional[int] = None,
-    random_seed: Optional[int] = None,
     mlp_filename: str = "phonopy.pmlp",
     log_level: int = 0,
 ):
@@ -333,7 +329,14 @@ def _run_pypolymlp_to_compute_forces(
                 if v is not None:
                     print(f"  {k}: {v}")
 
-    if forces_in_dataset(phonon.mlp_dataset):
+    _mlp_filename_list = list(pathlib.Path().glob(f"{mlp_filename}*"))
+    if _mlp_filename_list:
+        _mlp_filename = _mlp_filename_list[0]
+        if log_level:
+            print(f'Load MLPs from "{_mlp_filename}".')
+        phonon.load_mlp(_mlp_filename)
+        phonon.mlp_dataset = None
+    elif forces_in_dataset(phonon.mlp_dataset):
         if log_level:
             print("Developing MLPs by pypolymlp...", flush=True)
         phonon.develop_mlp(params=mlp_params)
@@ -341,16 +344,19 @@ def _run_pypolymlp_to_compute_forces(
         if log_level:
             print(f'MLPs were written into "{mlp_filename}"', flush=True)
     else:
-        if pathlib.Path(mlp_filename).exists():
-            if log_level:
-                print(f'Load MLPs from "{mlp_filename}".')
-            phonon.load_mlp(mlp_filename)
-        else:
-            raise RuntimeError(f'"{mlp_filename}" is not found.')
+        raise RuntimeError(f'"{mlp_filename}" is not found.')
 
     if log_level:
         print("-" * 30 + " pypolymlp end " + "-" * 31, flush=True)
 
+
+def _generate_displacements_and_forces_by_pypolymlp(
+    phonon: Phonopy,
+    displacement_distance: Optional[float] = None,
+    number_of_snapshots: Optional[int] = None,
+    random_seed: Optional[int] = None,
+    log_level: int = 0,
+):
     if displacement_distance is None:
         _displacement_distance = 0.001
     else:

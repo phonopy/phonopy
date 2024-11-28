@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Nov-28-2024: Version 2.31.1
+
+- Experimental implementation of SSCHA using pypolymlp and symfc.
+
 ## Nov-13-2024: Version 2.31.0
 
 - Maintenance release along with refactoring of MLP interface.
