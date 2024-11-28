@@ -101,18 +101,12 @@ def test_tio2_random_disp_with_random_dist(
     if min_distance is not None and min_distance > 0.1:
         with pytest.raises(RuntimeError):
             ph_tio2.generate_displacements(
-                number_of_snapshots=1,
-                distance=0.1,
-                is_random_distance=True,
-                min_distance=min_distance,
+                number_of_snapshots=1, max_distance=0.1, distance=min_distance
             )
     else:
         n_snapshots = 100
         ph_tio2.generate_displacements(
-            number_of_snapshots=n_snapshots,
-            distance=0.1,
-            is_random_distance=True,
-            min_distance=min_distance,
+            number_of_snapshots=n_snapshots, distance=min_distance, max_distance=0.1
         )
         d = ph_tio2.displacements
         assert len(d) == n_snapshots
@@ -137,9 +131,7 @@ def test_tio2_random_disp_with_random_dist_defualt(
 
     n_snapshots = 100
     ph_tio2.generate_displacements(
-        number_of_snapshots=n_snapshots,
-        is_random_distance=True,
-        max_distance=max_distance,
+        number_of_snapshots=n_snapshots, max_distance=max_distance, distance=0.01
     )
     d = ph_tio2.displacements
     assert len(d) == n_snapshots
@@ -147,7 +139,7 @@ def test_tio2_random_disp_with_random_dist_defualt(
     if max_distance is None:
         assert (dists < 0.01 + 1e-8).all()
     else:
-        assert (dists < max_distance + 1e-8).all()
+        assert (dists < max_distance + 1e-8).all() and (dists > 0.01 - 1e-8).all()
 
     ph_tio2.dataset = dataset
 
@@ -162,10 +154,7 @@ def test_tio2_random_disp_with_random_max_distance(ph_tio2: Phonopy):
 
     n_snapshots = 100
     ph_tio2.generate_displacements(
-        number_of_snapshots=n_snapshots,
-        distance=0.01,
-        max_distance=0.1,
-        is_random_distance=True,
+        number_of_snapshots=n_snapshots, distance=0.01, max_distance=0.1
     )
     d = ph_tio2.displacements
     assert len(d) == n_snapshots
@@ -209,8 +198,8 @@ def test_tio2_random_distances(ph_tio2: Phonopy):
     n_snapshots = 100
     ph_tio2.generate_displacements(
         number_of_snapshots=n_snapshots,
-        min_distance=0.01,
-        distance=0.1,
+        max_distance=0.1,
+        distance=0.01,
     )
     d = ph_tio2.displacements
     assert len(d) == n_snapshots

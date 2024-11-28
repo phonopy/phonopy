@@ -36,12 +36,14 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any, Optional, Union
 
 import numpy as np
 
+from phonopy.file_IO import get_io_module_to_decompress
 from phonopy.structure.atoms import PhonopyAtoms
 
 try:
@@ -289,10 +291,12 @@ def save_pypolymlp(mlp: Pypolymlp, filename: str):  # type: ignore
     mlp.save_mlp(filename=filename)
 
 
-def load_pypolymlp(filename: str) -> Pypolymlp:  # type: ignore
+def load_pypolymlp(filename: Optional[Union[str, bytes, os.PathLike]]) -> Pypolymlp:  # type: ignore
     """Load MLP data from file."""
     mlp = Pypolymlp()
-    mlp.load_mlp(filename=filename)
+    myio = get_io_module_to_decompress(filename)
+    with myio.open(filename, "rt") as fp:
+        mlp.load_mlp(fp)
     return mlp
 
 

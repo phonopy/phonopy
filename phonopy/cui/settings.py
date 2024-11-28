@@ -66,6 +66,7 @@ class Settings:
         "classical": False,
         "cutoff_frequency": None,
         "displacement_distance": None,
+        "displacement_distance_max": None,
         "dm_decimals": None,
         "calculator": None,
         "create_displacements": False,
@@ -166,6 +167,10 @@ class Settings:
     def set_displacement_distance(self, val):
         """Set displacement_distance."""
         self._v["displacement_distance"] = val
+
+    def set_displacement_distance_max(self, val):
+        """Set displacement_distance_max."""
+        self._v["displacement_distance_max"] = val
 
     def set_calculator(self, val):
         """Set calculator."""
@@ -455,6 +460,12 @@ class ConfParser:
         if "displacement_distance" in arg_list:
             if self._args.displacement_distance:
                 self._confs["displacement_distance"] = self._args.displacement_distance
+
+        if "displacement_distance_max" in arg_list:
+            if self._args.displacement_distance_max:
+                self._confs["displacement_distance_max"] = (
+                    self._args.displacement_distance_max
+                )
 
         if "dynamical_matrix_decimals" in arg_list:
             if self._args.dynamical_matrix_decimals:
@@ -767,6 +778,12 @@ class ConfParser:
                     "displacement_distance", float(confs["displacement_distance"])
                 )
 
+            if conf_key == "displacement_distance_max":
+                self.set_parameter(
+                    "displacement_distance_max",
+                    float(confs["displacement_distance_max"]),
+                )
+
             if conf_key == "diag":
                 if confs["diag"].lower() == ".false.":
                     self.set_parameter("diag", False)
@@ -1039,6 +1056,11 @@ class ConfParser:
         if "displacement_distance" in params:
             self._settings.set_displacement_distance(params["displacement_distance"])
 
+        if "displacement_distance_max" in params:
+            self._settings.set_displacement_distance_max(
+                params["displacement_distance_max"]
+            )
+
         # Decimals of values of dynamical matrxi
         if "dm_decimals" in params:
             self._settings.set_dm_decimals(int(params["dm_decimals"]))
@@ -1270,6 +1292,7 @@ class PhonopySettings(Settings):
         "readfc_format": "text",
         "run_mode": None,
         "show_irreps": False,
+        "sscha_iterations": None,
         "store_dense_svecs": False,
         "thermal_atom_pairs": None,
         "thermal_displacement_matrix_temperatue": None,
@@ -1495,6 +1518,10 @@ class PhonopySettings(Settings):
     def set_show_irreps(self, val):
         """Set show_irreps."""
         self._v["show_irreps"] = val
+
+    def set_sscha_iterations(self, val):
+        """Set sscha_iterations."""
+        self._v["sscha_iterations"] = val
 
     def set_store_dense_svecs(self, val):
         """Set store_dense_svecs."""
@@ -1784,6 +1811,10 @@ class PhonopyConfParser(ConfParser):
             if self._args.is_check_symmetry:
                 # Dummy 'dim' setting for sym-check
                 self._confs["dim"] = "1 1 1"
+
+        if "sscha_iterations" in arg_list:
+            if self._args.sscha_iterations:
+                self._confs["sscha_iterations"] = self._args.sscha_iterations
 
     def _parse_conf(self):
         ConfParser.parse_conf(self)
@@ -2116,6 +2147,11 @@ class PhonopyConfParser(ConfParser):
             if conf_key == "store_dense_svecs":
                 if confs["store_dense_svecs"].lower() == ".true.":
                     self.set_parameter("store_dense_svecs", True)
+
+            # SSCHA
+            if conf_key == "sscha_iterations":
+                val = int(confs["sscha_iterations"])
+                self.set_parameter("sscha_iterations", val)
 
     def _parse_conf_modulation(self, conf_modulation):
         modulation = {}
@@ -2453,3 +2489,7 @@ class PhonopyConfParser(ConfParser):
 
         if "mesh_numbers" in params and "band_paths" in params:
             self._settings.set_run_mode("band_mesh")
+
+        # SSCHA
+        if "sscha_iterations" in params:
+            self._settings.set_sscha_iterations(params["sscha_iterations"])

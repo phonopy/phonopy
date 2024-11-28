@@ -196,9 +196,9 @@ def parse_set_of_forces(
             )
         else:
             myio = get_io_module_to_decompress(fp)
-            with myio.open(fp, "rb") as fp:
+            with myio.open(fp, "rb") as _fp:
                 forces, points, energy = _get_forces_points_and_energy(
-                    fp, use_expat=use_expat, filename=fp
+                    _fp, use_expat=use_expat, filename=fp
                 )
         force_sets.append(forces)
         energy_sets.append(energy)

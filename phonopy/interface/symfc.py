@@ -135,7 +135,7 @@ def run_symfc(
         forces=forces,
         cutoff={int(max(_orders)): options_dict.get("cutoff", None)},
         use_mkl=options_dict.get("use_mkl", False),
-        log_level=log_level - 1 and log_level,
+        log_level=log_level - 1 if log_level else 0,
     ).run(max_order=int(max(_orders)), is_compact_fc=is_compact_fc)
 
     if log_level:
