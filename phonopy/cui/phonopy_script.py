@@ -416,8 +416,22 @@ def _print_settings(
                     "  Temperatuere to generate random displacements: "
                     f"{settings.random_displacement_temperature}"
                 )
-            elif settings.displacement_distance is not None:
-                print(f"  Displacement distance: {settings.displacement_distance}")
+            else:
+                if settings.displacement_distance_max is None:
+                    if settings.displacement_distance is not None:
+                        print(
+                            f"  Displacement distance: {settings.displacement_distance}"
+                        )
+                else:
+                    if settings.displacement_distance is not None:
+                        print(
+                            "  Min displacement distance: "
+                            f"{settings.displacement_distance}"
+                        )
+                    print(
+                        "  Max displacement distance: "
+                        f"{settings.displacement_distance_max}"
+                    )
             if settings.random_seed is not None:
                 print("  Random seed: %d" % settings.random_seed)
         elif settings.displacement_distance is not None:
@@ -2168,9 +2182,9 @@ def main(**argparse_control):
             load_phonopy_yaml=load_phonopy_yaml,
         )
 
-    #########################################################
-    # Create constant amplitude displacements and then exit #
-    #########################################################
+    ################################################################
+    # Create non-temperature dependent displacements and then exit #
+    ################################################################
     # settings.use_pypolymlp=True case is handled in _store_force_constants.
     if (
         (settings.create_displacements or settings.random_displacements)
@@ -2189,6 +2203,7 @@ def main(**argparse_control):
             is_trigonal=settings.is_trigonal_displacement,
             number_of_snapshots=settings.random_displacements,
             random_seed=settings.random_seed,
+            max_distance=settings.displacement_distance_max,
         )
         _write_displacements_files_then_exit(
             phonon, settings, confs, cell_info["optional_structure_info"], log_level

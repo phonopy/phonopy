@@ -250,8 +250,7 @@ def get_random_displacements_dataset(
     distance: float,
     random_seed: Optional[int] = None,
     is_plusminus: bool = False,
-    is_random_distance: bool = False,
-    min_distance: Optional[float] = None,
+    max_distance: Optional[float] = None,
 ) -> np.ndarray:
     """Return random displacements at constant displacement distance.
 
@@ -265,23 +264,20 @@ def get_random_displacements_dataset(
         Number of atoms in supercell.
     distance : float
         Displacement distance. Unit is the same as that used for crystal
-        structure.
+        structure. In random direction displacements generation with random
+        distance, the displacement distance smaller than this value is set to
+        this value.
     random_seed : int or None, optional
         Random seed for random displacements generation. Default is None.
     is_plusminus : True, or False, optional
-        In addition to sets of usual random displacements for supercell, sets
-        of the opposite displacements for supercell are concatenated.
-        Therefore, total number of sets of displacements is `2 *
-        num_supercells`. Default is False.
-    is_random_distance : bool, optional
-        Random direction displacements are generated also with random
-        amplitudes. The maximum value is defined by `distance` and minimum value
-        is given by `min_distance`. Default is False. Random distance is given
-        by `sqrt(random(distance - min_distance) + min_distance)`.
-    min_distance : float or None, optional
-        In random direction displacements generation with random distance
-        (`is_random_distance=True`), the minimum distance is given by this
-        value.
+        In addition to sets of usual random displacements for supercell, sets of
+        the opposite displacements for supercell are concatenated. Therefore,
+        total number of sets of displacements is `2 * num_supercells`. Default
+        is False.
+    max_distance : float or None, optional
+        In random direction and distance displacements generation, this value is
+        specified. In random direction and random distance displacements
+        generation, this value is used as `max_distance`.
 
     """
     if np.issubdtype(type(random_seed), np.integer):
@@ -289,39 +285,27 @@ def get_random_displacements_dataset(
     else:
         rng = np.random.default_rng()
 
-    if min_distance is None:
+    if max_distance is None:
         directions = _get_random_directions(num_atoms * num_supercells, rng)
         disps = directions * distance
         supercell_disps = np.array(
             disps.reshape(num_supercells, num_atoms, 3), dtype="double", order="C"
         )
     else:
-        if distance < min_distance:
+        if distance > max_distance:
             raise RuntimeError(
-                "Random displacements generation failed. min_distance is too large."
+                "Random displacements generation failed. max_distance is too small."
             )
-        if is_random_distance:
-            directions = _get_random_directions(num_atoms * num_supercells, rng)
-            rand_dists = np.array([])
-            while len(rand_dists) < num_atoms * num_supercells:
-                rd = np.sqrt(rng.random(num_atoms * num_supercells)) * distance
-                rand_dists = np.r_[rand_dists, rd[rd > min_distance]]
-            disps = rand_dists[: num_atoms * num_supercells, None] * directions
-            supercell_disps = np.array(
-                disps.reshape(num_supercells, num_atoms, 3), dtype="double", order="C"
-            )
-        else:
-            supercell_disps = np.zeros(
-                (num_supercells, num_atoms, 3), dtype="double", order="C"
-            )
-            directions = _get_random_directions(
-                num_atoms * num_supercells, rng
-            ).reshape(num_supercells, num_atoms, 3)
-            dists = min_distance + rng.random(num_supercells) * (
-                distance - min_distance
-            )
-            for i, (dirs, dist) in enumerate(zip(directions, dists)):
-                supercell_disps[i] = dirs * dist
+        supercell_disps = np.zeros(
+            (num_supercells, num_atoms, 3), dtype="double", order="C"
+        )
+        directions = _get_random_directions(num_atoms * num_supercells, rng).reshape(
+            num_supercells, num_atoms, 3
+        )
+        dists = rng.random(num_supercells) * max_distance
+        dists[dists < distance] = distance
+        for i, (dirs, dist) in enumerate(zip(directions, dists)):
+            supercell_disps[i] = dirs * dist
 
     if is_plusminus is True:
         supercell_disps = np.array(
