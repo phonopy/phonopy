@@ -60,6 +60,7 @@ external-tools
 phonopy-module
 phonopy-yaml
 phonopy-load
+pypolymlp
 formulation
 citation
 reference
