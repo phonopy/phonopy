@@ -329,10 +329,12 @@ def _run_pypolymlp(
                 if v is not None:
                     print(f"  {k}: {v}")
 
-    if pathlib.Path(mlp_filename).exists():
+    _mlp_filename_list = list(pathlib.Path().glob(f"{mlp_filename}*"))
+    if _mlp_filename_list:
+        _mlp_filename = _mlp_filename_list[0]
         if log_level:
-            print(f'Load MLPs from "{mlp_filename}".')
-        phonon.load_mlp(mlp_filename)
+            print(f'Load MLPs from "{_mlp_filename}".')
+        phonon.load_mlp(_mlp_filename)
         phonon.mlp_dataset = None
     elif forces_in_dataset(phonon.mlp_dataset):
         if log_level:
