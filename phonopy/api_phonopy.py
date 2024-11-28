@@ -37,6 +37,7 @@
 from __future__ import annotations
 
 import copy
+import os
 import sys
 import textwrap
 import warnings
@@ -1125,11 +1126,12 @@ class Phonopy:
 
     def produce_force_constants(
         self,
-        forces=None,
-        calculate_full_force_constants=True,
-        fc_calculator=None,
-        fc_calculator_options=None,
-        show_drift=True,
+        forces: Optional[Sequence] = None,
+        calculate_full_force_constants: bool = True,
+        fc_calculator: Optional[str] = None,
+        fc_calculator_options: Optional[str] = None,
+        show_drift: bool = True,
+        fc_calculator_log_level: Optional[int] = None,
     ) -> None:
         """Compute supercell force constants from forces-displacements dataset.
 
@@ -1154,10 +1156,17 @@ class Phonopy:
             phonopy.interface.fc_calculator.get_fc2. Default is None.
         show_drift : Bool, optional
             With setting
+        fc_calculator_log_level : int, optional
+            Log level for force constants calculator.
 
         """
         if forces is not None:
             self.forces = forces
+
+        if fc_calculator_log_level is None:
+            fc_log_level = self._log_level
+        else:
+            fc_log_level = fc_calculator_log_level
 
         # A primitive check if 'forces' key is in displacement_dataset.
         if "first_atoms" in self._dataset:
@@ -1172,6 +1181,7 @@ class Phonopy:
                 fc_calculator=fc_calculator,
                 fc_calculator_options=fc_calculator_options,
                 decimals=self._force_constants_decimals,
+                log_level=fc_log_level,
             )
         else:
             self._run_force_constants_from_forces(
@@ -1179,6 +1189,7 @@ class Phonopy:
                 fc_calculator=fc_calculator,
                 fc_calculator_options=fc_calculator_options,
                 decimals=self._force_constants_decimals,
+                log_level=fc_log_level,
             )
 
         if show_drift and self._log_level:
@@ -1252,6 +1263,7 @@ class Phonopy:
         self,
         params: Optional[Union[PypolymlpParams, dict, str]] = None,
         test_size: float = 0.1,
+        log_level: Optional[int] = None,
     ):
         """Develop machine learning potential.
 
@@ -1269,7 +1281,10 @@ class Phonopy:
         if self._mlp_dataset is None:
             raise RuntimeError("MLP dataset is not set.")
 
-        self._mlp = PhonopyMLP(log_level=self._log_level)
+        if log_level is None:
+            self._mlp = PhonopyMLP(log_level=self._log_level)
+        else:
+            self._mlp = PhonopyMLP(log_level=log_level)
         self._mlp.develop(
             self._mlp_dataset,
             self._supercell,
@@ -1284,7 +1299,7 @@ class Phonopy:
 
         self._mlp.save(filename=filename)
 
-    def load_mlp(self, filename: Optional[str] = None):
+    def load_mlp(self, filename: Optional[Union[str, bytes, os.PathLike]] = None):
         """Load machine learning potential."""
         self._mlp = PhonopyMLP(log_level=self._log_level)
         self._mlp.load(filename=filename)
@@ -3860,7 +3875,7 @@ class Phonopy:
             smat = self._supercell_matrix
         else:
             smat = supercell_matrix
-        if log_level:
+        if log_level is not None:
             _log_level = log_level
         else:
             _log_level = self._log_level
@@ -3883,10 +3898,11 @@ class Phonopy:
 
     def _run_force_constants_from_forces(
         self,
-        distributed_atom_list=None,
-        fc_calculator=None,
-        fc_calculator_options=None,
-        decimals=None,
+        distributed_atom_list: Optional[Sequence] = None,
+        fc_calculator: Optional[str] = None,
+        fc_calculator_options: Optional[str] = None,
+        decimals: Optional[int] = None,
+        log_level: int = 0,
     ) -> None:
         if self._dataset is not None:
             self._force_constants = get_fc2(
@@ -3898,7 +3914,7 @@ class Phonopy:
                 atom_list=distributed_atom_list,
                 symmetry=self._symmetry,
                 symprec=self._symprec,
-                log_level=self._log_level,
+                log_level=log_level,
             )
             if decimals:
                 self._force_constants = self._force_constants.round(decimals=decimals)

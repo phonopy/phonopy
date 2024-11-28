@@ -108,24 +108,9 @@ class MLPSSCHA:
         """Return force constants."""
         return self._last_fc
 
-    def initialize_force_constants(self):
-        """Initialize force constants."""
-        if self._log_level:
-            print("[ SSCHA initialization (rd=0.03, n_supercells=20) ]")
-
-        ph = self._ph.copy(log_level=self._log_level)
-        ph.mlp = self._mlp
-        ph.generate_displacements(distance=0.03, number_of_snapshots=20)
-        ph.evaluate_mlp()
-        ph.produce_force_constants(fc_calculator=self._fc_calculator)
-        self._last_fc = ph.force_constants
-
-        if self._log_level:
-            print("")
-
     def run(self):
         """Run through all iterations."""
-        self.initialize_force_constants()
+        self._run()
         for _ in self:
             pass
 
@@ -142,29 +127,53 @@ class MLPSSCHA:
         return self._run()
 
     def _run(self) -> Phonopy:
-        if self._log_level:
+        if self._log_level and self._iter_counter == 0:
+            print("[ SSCHA initialization (rd=0.03, n_supercells=20) ]")
+        if self._log_level and self._iter_counter > 0:
             print(f"[ SSCHA iteration {self._iter_counter} / {self._max_iterations} ]")
-            print(f"Generate {self._number_of_snapshots} supercells with displacements")
+            print(
+                f"Generate {self._number_of_snapshots} supercells with displacements "
+                f"at {self._temperature} K",
+                flush=True,
+            )
 
         ph = self._ph.copy()
-        ph.mlp = self._mlp
-        ph.force_constants = self._last_fc
+        ph.mlp = PhonopyMLP(mlp=self._mlp.mlp)
         ph.nac_params = copy.deepcopy(self._ph.nac_params)
-        ph.generate_displacements(
-            number_of_snapshots=self._number_of_snapshots, temperature=self._temperature
-        )
-        hist, bin_edges = np.histogram(
-            np.linalg.norm(ph.displacements, axis=2), bins=10
-        )
 
-        if self._log_level > 1:
-            size = np.prod(ph.displacements.shape[0:2])
-            for i, h in enumerate(hist):
-                length = round(h / size * 100)
-                print(f"  [{bin_edges[i]:4.3f}, {bin_edges[i+1]:4.3f}] " + "*" * length)
+        if self._iter_counter == 0:
+            ph.generate_displacements(distance=0.03, number_of_snapshots=20)
+        else:
+            ph.force_constants = self._last_fc
+            ph.generate_displacements(
+                number_of_snapshots=self._number_of_snapshots,
+                temperature=self._temperature,
+            )
+            hist, bin_edges = np.histogram(
+                np.linalg.norm(ph.displacements, axis=2), bins=10
+            )
+
+            if self._log_level:
+                size = np.prod(ph.displacements.shape[0:2])
+                for i, h in enumerate(hist):
+                    length = round(h / size * 100)
+                    print(
+                        f"  [{bin_edges[i]:4.3f}, {bin_edges[i+1]:4.3f}] "
+                        + "*" * length
+                    )
+
+        if self._log_level:
+            print("Evaluate MLP to obtain forces using pypolymlp", flush=True)
 
         ph.evaluate_mlp()
-        ph.produce_force_constants(fc_calculator="symfc")
+
+        if self._log_level:
+            print("Calculate force constants using symfc", flush=True)
+        ph.produce_force_constants(
+            fc_calculator="symfc",
+            fc_calculator_log_level=self._log_level if self._log_level > 1 else 0,
+            show_drift=False,
+        )
         self._last_fc = ph.force_constants
 
         if self._log_level:
