@@ -102,6 +102,7 @@ class Settings:
         "read_qpoints": False,
         "save_params": False,
         "sigma": None,
+        "sscha_iterations": None,
         "supercell_matrix": None,
         "symmetry_tolerance": None,
         "max_temperature": 1000,
@@ -306,6 +307,10 @@ class Settings:
     def set_sigma(self, val):
         """Set sigma."""
         self._v["sigma"] = val
+
+    def set_sscha_iterations(self, val):
+        """Set sscha_iterations."""
+        self._v["sscha_iterations"] = val
 
     def set_supercell_matrix(self, val):
         """Set supercell_matrix."""
@@ -633,6 +638,10 @@ class ConfParser:
         if "save_params" in arg_list:
             if self._args.save_params:
                 self._confs["save_params"] = ".true."
+
+        if "sscha_iterations" in arg_list:
+            if self._args.sscha_iterations:
+                self._confs["sscha_iterations"] = self._args.sscha_iterations
 
         if "supercell_dimension" in arg_list:
             dim = self._args.supercell_dimension
@@ -999,6 +1008,11 @@ class ConfParser:
             if conf_key == "random_seed":
                 self.set_parameter("random_seed", int(confs["random_seed"]))
 
+            # SSCHA
+            if conf_key == "sscha_iterations":
+                val = int(confs["sscha_iterations"])
+                self.set_parameter("sscha_iterations", val)
+
     def set_parameter(self, key, val):
         """Pass to another data structure."""
         self._parameters[key] = val
@@ -1202,6 +1216,10 @@ class ConfParser:
 
         if "random_seed" in params:
             self._settings.set_random_seed(params["random_seed"])
+
+        # SSCHA
+        if "sscha_iterations" in params:
+            self._settings.set_sscha_iterations(params["sscha_iterations"])
 
 
 #

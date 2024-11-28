@@ -543,21 +543,26 @@ class Phonopy:
 
     @mlp_dataset.setter
     def mlp_dataset(self, mlp_dataset: dict):
-        if not isinstance(mlp_dataset, dict):
-            raise TypeError("mlp_dataset has to be a dictionary.")
-        if "displacements" not in mlp_dataset:
-            raise RuntimeError("Displacements have to be given.")
-        if "forces" not in mlp_dataset:
-            raise RuntimeError("Forces have to be given.")
-        if "supercell_energy" in mlp_dataset:
-            raise RuntimeError("Supercell energies have to be given.")
-        if len(mlp_dataset["displacements"]) != len(mlp_dataset["forces"]):
-            raise RuntimeError("Length of displacements and forces are different.")
-        if len(mlp_dataset["displacements"]) != len(mlp_dataset["supercell_energies"]):
-            raise RuntimeError(
-                "Length of displacements and supercell_energies are different."
-            )
-        self._mlp_dataset = mlp_dataset
+        if isinstance(mlp_dataset, dict):
+            if "displacements" not in mlp_dataset:
+                raise RuntimeError("Displacements have to be given.")
+            if "forces" not in mlp_dataset:
+                raise RuntimeError("Forces have to be given.")
+            if "supercell_energy" in mlp_dataset:
+                raise RuntimeError("Supercell energies have to be given.")
+            if len(mlp_dataset["displacements"]) != len(mlp_dataset["forces"]):
+                raise RuntimeError("Length of displacements and forces are different.")
+            if len(mlp_dataset["displacements"]) != len(
+                mlp_dataset["supercell_energies"]
+            ):
+                raise RuntimeError(
+                    "Length of displacements and supercell_energies are different."
+                )
+            self._mlp_dataset = mlp_dataset
+        elif mlp_dataset is None:
+            self._mlp_dataset = None
+        else:
+            raise TypeError("mlp_dataset has to be a dictionary or None.")
 
     @property
     def mlp(self) -> Optional[PhonopyMLP]:
@@ -3816,7 +3821,7 @@ class Phonopy:
 
         return ph
 
-    def copy(self) -> Phonopy:
+    def copy(self, log_level=None) -> Phonopy:
         """Copy this Phonopy class instance with init parameters.
 
         Note
@@ -3831,12 +3836,12 @@ class Phonopy:
             Copied phonopy class instace.
 
         """
-        return self._copy()
+        return self._copy(log_level=log_level)
 
     ###################
     # private methods #
     ###################
-    def _copy(self, supercell_matrix=None) -> Phonopy:
+    def _copy(self, supercell_matrix=None, log_level=None) -> Phonopy:
         """Copy this Phonopy class instance with init parameters.
 
         Parameters
@@ -3855,6 +3860,10 @@ class Phonopy:
             smat = self._supercell_matrix
         else:
             smat = supercell_matrix
+        if log_level:
+            _log_level = log_level
+        else:
+            _log_level = self._log_level
         return Phonopy(
             self._unitcell,
             supercell_matrix=smat,
@@ -3869,7 +3878,7 @@ class Phonopy:
             store_dense_svecs=self._store_dense_svecs,
             use_SNF_supercell=self._use_SNF_supercell,
             calculator=self._calculator,
-            log_level=self._log_level,
+            log_level=_log_level,
         )
 
     def _run_force_constants_from_forces(
