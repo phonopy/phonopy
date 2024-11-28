@@ -1001,8 +1001,6 @@ class Phonopy:
         temperature: Optional[float] = None,
         cutoff_frequency: Optional[float] = None,
         max_distance: Optional[float] = None,
-        is_random_distance: bool = False,
-        min_distance: Optional[float] = None,
     ) -> None:
         """Generate displacement dataset.
 
@@ -1021,9 +1019,10 @@ class Phonopy:
         ----------
         distance : float, optional
             Displacement distance. Unit is the same as that used for crystal
-            structure. Default is 0.01. For random direction and distance
-            displacements generation, this value is used when `max_distance` is
-            unspecified.
+            structure. Default is 0.01. For random direction and random distance
+            displacements generation, this value is also used as `min_distance`,
+            is used to replace generated random distances smaller than this
+            value by this value.
         is_plusminus : 'auto', True, or False, optional
             For each atom, displacement of one direction (False), both
             direction, i.e., one directiona and its opposite direction (True),
@@ -1060,15 +1059,8 @@ class Phonopy:
             renormalized to the max distance, i.e., a displacement d is shorten
             by d -> d / |d| * max_distance if |d| > max_distance. In random
             direction and distance displacements generation, this value is
-            specified.
-        is_random_distance : bool, optional
-            Random direction displacements are generated also with random
-            amplitudes. The maximum value is defined by `distance` and minimum
-            value is given by `min_distance`. Default is False.
-        min_distance : float or None, optional
-            In random direction displacements generation with random distance
-            (`is_random_distance=True`), the minimum distance is given by this
-            value.
+            specified. In random direction and random distance displacements
+            generation, this value is used as `max_distance`.
 
         """
         if number_of_snapshots is not None and number_of_snapshots > 0:
@@ -1079,21 +1071,17 @@ class Phonopy:
                 _random_seed = None
                 displacement_dataset = {}
             if temperature is None:
-                if max_distance is None:
-                    if distance is None:
-                        _distance = 0.01
-                    else:
-                        _distance = distance
+                if distance is None:
+                    _distance = 0.01
                 else:
-                    _distance = max_distance
+                    _distance = distance
                 d = get_random_displacements_dataset(
                     number_of_snapshots,
                     len(self._supercell),
                     _distance,
                     random_seed=_random_seed,
                     is_plusminus=(is_plusminus is True),
-                    is_random_distance=is_random_distance,
-                    min_distance=min_distance,
+                    max_distance=max_distance,
                 )
                 displacement_dataset["displacements"] = d
             else:
