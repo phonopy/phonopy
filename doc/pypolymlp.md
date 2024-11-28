@@ -23,10 +23,10 @@ For further details on combining phonopy calculations with pypolymlp, refer to
 Using the polynomial MLPs, stochastic self-consistent harmonic approximation
 (SSCHA) calculation is performed in the following sections. By this, temperature
 dependent force constants are calculated within SSCHA. About SSCHA, please refer
-the paper by Lorenzo Monacelli *et al.* J. Phys.: Condens. Matter **33** 363001
-(2021) and A. van Roekeghem A, *et al.* Comput. Phys. Commun. **263** 107945
-(2021). Technically, the procedure introduced here is equivalent to the latter
-approach.
+the paper by <u>L. Monacelli *et al.*, J. Phys.: Condens. Matter **33** 363001
+(2021)</u> and <u>A. van Roekeghem A, *et al.*, Comput. Phys. Commun. **263**
+107945 (2021)</u>. Technically, the computational procedure introduced here is
+equivalent to the approach of the latter paper.
 
 ## Citation of pypolymlp
 
