@@ -456,17 +456,6 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         default=None,
         help="Include force sets in phonopy.yaml",
     )
-    if not load_phonopy_yaml:
-        parser.add_argument(
-            "--include-born",
-            "--include-nac-params",
-            dest="include_nac_params",
-            action="store_true",
-            default=None,
-            help=(
-                "Include born effective charge and dielectric tensor in " "phonopy.yaml"
-            ),
-        )
     parser.add_argument(
         "--include-disp",
         dest="include_disp",

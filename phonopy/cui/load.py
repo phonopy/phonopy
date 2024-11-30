@@ -315,8 +315,8 @@ def load(
     load_helper.set_dataset_and_force_constants(
         phonon,
         _dataset,
-        _fc,
         force_constants_filename=force_constants_filename,
+        fc=_fc,
         force_sets_filename=force_sets_filename,
         fc_calculator=fc_calculator,
         fc_calculator_options=fc_calculator_options,

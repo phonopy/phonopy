@@ -442,7 +442,7 @@ def _set_force_constants(
         elif is_compact_fc and _fc.shape[0] == _fc.shape[1]:
             _fc = full_fc_to_compact_fc(phonon, _fc, log_level=log_level)
         phonon.force_constants = _fc
-        if log_level:
+        if log_level and _force_constants_filename is not None:
             print(f'Force constants were read from "{_force_constants_filename}".')
 
 
