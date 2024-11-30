@@ -240,9 +240,9 @@ def ph_srtio3() -> Phonopy:
 
 
 @pytest.fixture(scope="session")
-def ph_kcl_mlp() -> Phonopy:
-    """Return Phonopy class instance of KCl containins MLP dataset for SSCHA."""
-    yaml_filename = cwd / "phonopy_mlpsscha_params_KCl-120.yaml.xz"
+def ph_kcl() -> Phonopy:
+    """Return Phonopy class instance of KCl for mlpsscha_KCl-120.pmlp."""
+    yaml_filename = cwd / "phonopy_KCl.yaml"
     return phonopy.load(yaml_filename, produce_fc=False, log_level=1)
 
 

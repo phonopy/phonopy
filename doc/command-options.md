@@ -39,7 +39,6 @@ Some of command-line options are equivalent to respective setting tags:
 - `--irreps` (`IRREPS`) [{ref}`irreps_tag`]
 - `--include-fc` (`INCLUDE_FC = .TRUE.`) [{ref}`include_fc_tag`]
 - `--include-fs` (`INCLUDE_FS = .TRUE.`) [{ref}`include_fs_tag`]
-- `--include-born` (`INCLUDE_BORN = .TRUE.`) [{ref}`include_born_tag`]
 - `--include-disp` (`INCLUDE_DISP = .TRUE.`) [{ref}`include_disp_tag`]
 - `--include-all` (`INCLUDE_ALL = .TRUE.`) [{ref}`include_all_tag`]
 - `--lcg`, `--little_cogroup` (`LITTLE_COGROUP`) [{ref}`little_cogroup_tag`]

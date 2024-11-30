@@ -2,6 +2,11 @@
 
 # Change Log
 
+## Nov-xx-2024: Version 2.31.2
+
+- `INCLUDE_BORN` tag and `--include-born` option were removed. NAC params are
+  always included in `phonopy.yaml` when they are available.
+
 ## Nov-28-2024: Version 2.31.1
 
 - Experimental implementation of SSCHA using pypolymlp and symfc.
