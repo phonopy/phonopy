@@ -37,6 +37,7 @@
 from __future__ import annotations
 
 import copy
+import lzma
 import os
 import sys
 import textwrap
@@ -3716,8 +3717,12 @@ class Phonopy:
         return d
 
     def save(
-        self, filename="phonopy_params.yaml", settings=None, hdf5_settings=None
-    ) -> None:
+        self,
+        filename="phonopy_params.yaml",
+        settings=None,
+        hdf5_settings=None,
+        compression: Union[str, bool] = False,
+    ) -> str:
         """Save phonopy parameters into file.
 
         Parameters
@@ -3725,26 +3730,32 @@ class Phonopy:
         filename: str, optional
             File name. Default is "phonopy_params.yaml"
         settings: dict, optional
-            It is described which parameters are written out. Only the
-            settings expected to be updated from the following default
-            settings are needed to be set in the dictionary.  The
-            possible parameters and their default settings are:
+            It is described which parameters are written out. Only the settings
+            expected to be updated from the following default settings are
+            needed to be set in the dictionary.  The possible parameters and
+            their default settings are:
                 {'force_sets': True,
-                 'displacements': True,
-                 'force_constants': False,
-                 'born_effective_charge': True,
-                 'dielectric_constant': True}
-            This default settings are updated by {'force_constants': True}
-            when dataset is None and force_constants is not None unless
+                 'displacements': True, 'force_constants': False,
+                 'born_effective_charge': True, 'dielectric_constant': True}
+            This default settings are updated by {'force_constants': True} when
+            dataset is None and force_constants is not None unless
             {'force_constants': False} is specified.
         hdf5_settings: dict, optional (To be implemented)
-            Force constants and force_sets are stored in hdf5 file when
-            they are activated in the dict. The dict has the following keys.
-            The default filename is the filename of yaml file where '.yaml' is
-            replaced by '.hdf5'.
-                'filename' : str
-                'force_constants': bool (default=False)
+            Force constants and force_sets are stored in hdf5 file when they are
+            activated in the dict. The dict has the following keys. The default
+            filename is the filename of yaml file where '.yaml' is replaced by
+            '.hdf5'.
+                'filename' : str 'force_constants': bool (default=False)
                 'force_sets': bool (default=False)
+        compression : bool or str
+            If True, phonopy_params.yaml like file is compressed by xz. When
+            compression=='xz', the file is compressed by xz. Default is False.
+
+        Returns
+        -------
+        str :
+            File name of the saved phonopy_params.yaml like file. If it is
+            compressed,
 
         """
         if hdf5_settings is not None:
@@ -3761,8 +3772,17 @@ class Phonopy:
             _settings.update({"force_constants": True})
         phpy_yaml = PhonopyYaml(settings=_settings)
         phpy_yaml.set_phonon_info(self)
-        with open(filename, "w") as w:
-            w.write(str(phpy_yaml))
+
+        if compression == "xz" or compression is True:
+            out_filename = f"{filename}.xz"
+            with lzma.open(f"{out_filename}", "wt") as w:
+                w.write(str(phpy_yaml))
+        else:
+            with open(filename, "w") as w:
+                out_filename = filename
+                w.write(str(phpy_yaml))
+
+        return out_filename
 
     def ph2ph(self, supercell_matrix, with_nac=False) -> Phonopy:
         """Transform force constants in Phonopy class instance to other shape.

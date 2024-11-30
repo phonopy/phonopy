@@ -1438,15 +1438,6 @@ during processing. So if `--full-fc` is set the entire matrix will be written.
 The `--include-fs` flag or setting `INCLUDE_FS = .TRUE.` will cause the force
 sets (if available) to be written as an entry in `phonopy.yaml`.
 
-(include_born_tag)=
-#### `INCLUDE_BORN`
-
-The `--include-born` flag or setting `INCLUDE_BORN = .TRUE.` will cause the born
-effective charges and dielectric tensor (if available) to be written as an entry
-in `phonopy.yaml` file. This is more convenient than keeping track of the `BORN`
-file created by the user. The values will only be written if non-analytical term
-correction is activated.
-
 (include_disp_tag)=
 #### `INCLUDE_DISP`
 

@@ -1276,7 +1276,7 @@ class PhonopySettings(Settings):
         "is_projected_thermal_properties": False,
         "include_force_constants": False,
         "include_force_sets": False,
-        "include_nac_params": False,
+        "include_nac_params": True,
         "include_displacements": False,
         "lapack_solver": False,
         "mesh_shift": None,
