@@ -4,12 +4,18 @@
 
 **This is an experimental feature, and its usage may change occasionally.**
 
-With the `--pypolymlp` option, phonopy can interface with the polynomial
-machine learning potential (MLP) code,
+```{note}
+This feature is supported through the `phonopy-load` command but not the `phonopy`
+command.
+```
+
+With the `--pypolymlp` option, phonopy can interface with the polynomial machine
+learning potential (MLP) code,
 [pypolymlp](https://github.com/sekocha/pypolymlp), to perform training and
 evaluation tasks of MLPs. This feature aims to reduce the computational cost of
 anharmonic force constant calculations by using MLPs as an intermediary layer,
-efficiently representing atomic interactions.
+efficiently representing atomic interactions. The example is found at
+`example/KCl-SSCHA`.
 
 The training process involves using a dataset consisting of supercell
 displacements, forces, and energies. The trained MLPs are then employed to

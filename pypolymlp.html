@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Temperature dependent force constants calculation using pypolymlp and symfc &#8212; Phonopy v.2.31.1</title>
+    <title>Temperature dependent force constants calculation using pypolymlp and symfc &#8212; Phonopy v.2.31.2</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="_static/documentation_options.js?v=cc6ea89d"></script>
+    <script src="_static/documentation_options.js?v=db1a28fb"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -125,7 +125,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.31.1</p>
+    <p class="title logo__title">Phonopy v.2.31.2</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -353,12 +353,18 @@
   <section class="tex2jax_ignore mathjax_ignore" id="temperature-dependent-force-constants-calculation-using-pypolymlp-and-symfc">
 <span id="pypolymlp-interface"></span><h1>Temperature dependent force constants calculation using pypolymlp and symfc<a class="headerlink" href="#temperature-dependent-force-constants-calculation-using-pypolymlp-and-symfc" title="Link to this heading">#</a></h1>
 <p><strong>This is an experimental feature, and its usage may change occasionally.</strong></p>
-<p>With the <code class="docutils literal notranslate"><span class="pre">--pypolymlp</span></code> option, phonopy can interface with the polynomial
-machine learning potential (MLP) code,
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This feature is supported through the <code class="docutils literal notranslate"><span class="pre">phonopy-load</span></code> command but not the <code class="docutils literal notranslate"><span class="pre">phonopy</span></code>
+command.</p>
+</div>
+<p>With the <code class="docutils literal notranslate"><span class="pre">--pypolymlp</span></code> option, phonopy can interface with the polynomial machine
+learning potential (MLP) code,
 <a class="reference external" href="https://github.com/sekocha/pypolymlp">pypolymlp</a>, to perform training and
 evaluation tasks of MLPs. This feature aims to reduce the computational cost of
 anharmonic force constant calculations by using MLPs as an intermediary layer,
-efficiently representing atomic interactions.</p>
+efficiently representing atomic interactions. The example is found at
+<code class="docutils literal notranslate"><span class="pre">example/KCl-SSCHA</span></code>.</p>
 <p>The training process involves using a dataset consisting of supercell
 displacements, forces, and energies. The trained MLPs are then employed to
 compute forces for supercells with specific displacements.</p>
