@@ -2,7 +2,7 @@
 
 # Change Log
 
-## Nov-xx-2024: Version 2.31.2
+## Nov-30-2024: Version 2.31.2
 
 - `INCLUDE_BORN` tag and `--include-born` option were removed. NAC params are
   always included in `phonopy.yaml` when they are available.
