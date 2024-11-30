@@ -840,25 +840,29 @@ def _store_force_constants(
                 max_iterations=settings.sscha_iterations,
                 log_level=log_level,
             )
-            sscha.run()
+            fc_unit = physical_units["force_constants_unit"]
+            for i, ph in enumerate(sscha):
+                out_filename = ph.save(
+                    filename=f"phonopy_sscha_fc_{i}.yaml",
+                    settings={
+                        "force_sets": False,
+                        "displacements": False,
+                        "force_constants": True,
+                    },
+                    compression=True,
+                )
+                if log_level:
+                    if i == 0:
+                        print("Initial ", end="")
+                    else:
+                        print("SSCHA ", end="")
+                    print(f'force constants are written into "{out_filename}".')
+                    print("")
+
             if log_level:
                 print(
                     "-------------------------------- SSCHA end "
                     "---------------------------------"
-                )
-            phonon.force_constants = sscha.force_constants
-            fc_unit = physical_units["force_constants_unit"]
-            write_force_constants_to_hdf5(
-                phonon.force_constants,
-                filename="force_constants_SSCHA.hdf5",
-                p2s_map=p2s_map,
-                physical_unit=fc_unit,
-                compression=settings.hdf5_compression,
-            )
-            if log_level:
-                print(
-                    "SSCHA force constants are written into "
-                    '"force_constants_SSCHA.hdf5".'
                 )
     else:
         _produce_force_constants(
@@ -1221,7 +1225,7 @@ def _run_calculation(phonon: Phonopy, settings: PhonopySettings, plot_conf, log_
         if (
             settings.is_thermal_displacements
             or settings.is_thermal_displacement_matrices
-        ):  # noqa E129
+        ):
             if settings.cutoff_frequency is not None:
                 if log_level:
                     print_error_message(
