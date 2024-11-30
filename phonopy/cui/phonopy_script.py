@@ -859,6 +859,8 @@ def _store_force_constants(
                     print(f'force constants are written into "{out_filename}".')
                     print("")
 
+            phonon.force_constants = ph.force_constants
+
             if log_level:
                 print(
                     "-------------------------------- SSCHA end "

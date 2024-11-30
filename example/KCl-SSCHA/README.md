@@ -1,18 +1,53 @@
 # Example of KCl SSCHA calculation
 
-Developing polynomial machine learning potentials (MLPs) by
+## How to run
+
+The displacements for the training data used in polynomial machine learning
+potentials (MLPs) are generated with a command like the following:
+
+```
+% phonopy --pa auto --rd 1000 -c POSCAR-unitcell --dim 2 2 2 --amin 0.03 --amax 1.5
+```
+
+After calculating forces using the VASP code, the `phonopy_params.yaml` file,
+which contains displacements, forces, and supercell energies, is created with
+the following command:
+
+```
+% phonopy --sp -f vasprun-{001..120}.xml
+```
+
+In this example, the file `phonopy_mlpsscha_params_KCl-120.yaml.xz` in the
+example directory serves as precomputed data for KCl. To develop the MLPs using
+this file, run:
 
 ```
 % phonopy-load phonopy_mlpsscha_params_KCl-120.yaml.xz --pypolymlp --mlp-params="ntrain=100, ntest=20"
 ```
 
-The `phonopy.pmlp` file is generated. This file contains the developed MLPs and
-read when running phonopy with `--pypolymlp`. The SSCHA calculation is peformed
-by
+This command generates the `phonopy.pmlp` file, which contains the developed
+MLPs. This file under current directory is read when running phonopy with the
+`--pypolymlp` option. To perform the SSCHA calculation, execute:
 
 ```
 % phonopy-load phonopy_mlpsscha_params_KCl-120.yaml.xz --pypolymlp --sscha 10 --rd-temperature 300
 ```
+
+The calculated SSCHA force constants are stored in
+`phonopy_sscha_fc_10.yaml.xz`, where `10` indicates the final iteration number.
+These SSCHA force constants can be compared with `phonopy_fc_JPCM2022.yaml.xz`,
+which is explained in the next section. The phonon band structures corresponding
+to these force constants can be plotted and compared using the following
+command:
+
+```
+% phonopy-load phonopy_sscha_fc_JPCM2022.yaml.xz --band auto
+% mv band.yaml band-JPCM2022.yaml
+% phonopy-load phonopy_sscha_fc_10.yaml.xz --band auto
+% phonopy-bandplot band.yaml band-JPCM2022.yaml
+```
+
+## Comparison with the reported result
 
 The file `phonopy_fc_JPCM2022.yaml.xz` contains the full *ab initio* SSCHA
 force constants for a 2×2×2 supercell of the conventional unit cell, as

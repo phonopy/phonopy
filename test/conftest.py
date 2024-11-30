@@ -242,7 +242,7 @@ def ph_srtio3() -> Phonopy:
 @pytest.fixture(scope="session")
 def ph_kcl() -> Phonopy:
     """Return Phonopy class instance of KCl for mlpsscha_KCl-120.pmlp."""
-    yaml_filename = cwd / "phonopy_kcl.yaml"
+    yaml_filename = cwd / "phonopy_KCl.yaml"
     return phonopy.load(yaml_filename, produce_fc=False, log_level=1)
 
 
