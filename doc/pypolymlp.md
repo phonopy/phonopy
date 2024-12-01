@@ -148,7 +148,7 @@ assumed to use the VASP code. Once the calculations are complete, the data
 (forces and energies) can be extracted using the following command:
 
 ```bash
-% phonopy --sp -f vasprun_xmls/vasprun-{001..100}.xml
+% phonopy --sp -f vasprun_xmls/vasprun-{001..120}.xml
 ```
 
 This command extracts the necessary data and stores it in the
@@ -164,18 +164,18 @@ crystal symmetry.
 Having `phonopy_params.yaml`, phonopy is executed with `--pypolymlp` option,
 
 ```
-% phonopy-load --pypolymlp phonopy_mlpsscha_params_KCl-120.yaml.xz
+% phonopy-load phonopy_mlpsscha_params_KCl-120.yaml.xz --pypolymlp --mlp-params="ntrain=100, ntest=20"
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
  | |_) | | | | (_) | | | | (_) || |_) | |_| |
  | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
  |_|                            |_|    |___/
-                                      2.31.1
+                                      2.31.2
 
 Compiled with OpenMP support (max 10 threads).
 Running in phonopy.load mode.
-Python version 3.12.6
+Python version 3.12.3
 Spglib version 2.5.0
 
 Crystal structure was read from "phonopy_mlpsscha_params_KCl-120.yaml.xz".
@@ -196,6 +196,16 @@ Displacement-force dataset was read from "phonopy_mlpsscha_params_KCl-120.yaml.x
 Pypolymlp is a generator of polynomial machine learning potentials.
 Please cite the paper: A. Seko, J. Appl. Phys. 133, 011101 (2023).
 Pypolymlp is developed at https://github.com/sekocha/pypolymlp.
+Parameters:
+  cutoff: 8.0
+  model_type: 3
+  max_p: 2
+  gtinv_order: 3
+  gtinv_maxl: (8, 8)
+  gaussian_params1: (1.0, 1.0, 1)
+  gaussian_params2: (0.0, 7.0, 10)
+  ntrain: 100
+  ntest: 20
 Developing MLPs by pypolymlp...
 Regression: cholesky decomposition ...
 - alpha: 0.001
@@ -207,11 +217,11 @@ Clear training X.T @ X
 Calculate X.T @ X for test data
 Clear test X.T @ X
 Regression: model selection ...
-- alpha = 1.000e-03 : rmse (train, test) = 0.02540 0.26015
-- alpha = 1.000e-02 : rmse (train, test) = 0.03581 0.17769
-- alpha = 1.000e-01 : rmse (train, test) = 0.07074 0.22012
-- alpha = 1.000e+00 : rmse (train, test) = 0.11511 0.25460
-- alpha = 1.000e+01 : rmse (train, test) = 0.18768 0.29370
+- alpha = 1.000e-03 : rmse (train, test) = 0.02432 0.23669
+- alpha = 1.000e-02 : rmse (train, test) = 0.03613 0.16766
+- alpha = 1.000e-01 : rmse (train, test) = 0.07193 0.22140
+- alpha = 1.000e+00 : rmse (train, test) = 0.11563 0.26042
+- alpha = 1.000e+01 : rmse (train, test) = 0.19375 0.31767
 MLPs were written into "phonopy.pmlp"
 ------------------------------ pypolymlp end -------------------------------
 Generate displacements
@@ -267,25 +277,22 @@ displacements, temperature dependent force constants are calculated with the
 `--sscha NUMBER_OF_ITERATIONS` option.
 
 ```
-% phonopy-load phonopy_mlpsscha_params_KCl-120.yaml.xz --pypolymlp --sscha 10 --rd 1000 --rd-temperature 300|tee log
+% phonopy-load phonopy_mlpsscha_params_KCl-120.yaml.xz --pypolymlp --sscha 10 --rd 1000 --rd-temperature 300
         _
   _ __ | |__   ___  _ __   ___   _ __  _   _
  | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
  | |_) | | | | (_) | | | | (_) || |_) | |_| |
  | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
  |_|                            |_|    |___/
-                       2.31.1-dev4+g80edd513
+                                      2.31.2
 
 Compiled with OpenMP support (max 10 threads).
 Running in phonopy.load mode.
-Python version 3.12.6
+Python version 3.12.3
 Spglib version 2.5.0
 
 Crystal structure was read from "phonopy_mlpsscha_params_KCl-120.yaml.xz".
 Unit of length: angstrom
-Displacements creation mode
-  Number of supercells with random displacements: 1000
-  Temperatuere to generate random displacements: 300.0
 Settings:
   Supercell: [2 2 2]
   Primitive matrix:
@@ -308,56 +315,59 @@ Load MLPs from "phonopy.pmlp".
 [ SSCHA initialization (rd=0.03, n_supercells=20) ]
 Evaluate MLP to obtain forces using pypolymlp
 Calculate force constants using symfc
+Initial force constants are written into "phonopy_sscha_fc_0.yaml.xz".
 
 [ SSCHA iteration 1 / 10 ]
 Generate 1000 supercells with displacements at 300.0 K
-  [0.008, 0.080] ****
-  [0.080, 0.152] ****************
-  [0.152, 0.224] **************************
-  [0.224, 0.297] *************************
-  [0.297, 0.369] *****************
-  [0.369, 0.441] ********
-  [0.441, 0.513] ***
-  [0.513, 0.585] *
-  [0.585, 0.657]
-  [0.657, 0.730]
+  [0.005, 0.084] ****
+  [0.084, 0.162] *******************
+  [0.162, 0.241] *****************************
+  [0.241, 0.319] *************************
+  [0.319, 0.397] ***************
+  [0.397, 0.476] ******
+  [0.476, 0.554] **
+  [0.554, 0.633]
+  [0.633, 0.711]
+  [0.711, 0.790]
 Evaluate MLP to obtain forces using pypolymlp
 Calculate force constants using symfc
+SSCHA force constants are written into "phonopy_sscha_fc_1.yaml.xz".
 
 ...
 
 [ SSCHA iteration 9 / 10 ]
 Generate 1000 supercells with displacements at 300.0 K
-  [0.005, 0.078] ***
-  [0.078, 0.152] ****************
-  [0.152, 0.225] ***************************
-  [0.225, 0.298] **************************
-  [0.298, 0.371] *****************
-  [0.371, 0.444] ********
-  [0.444, 0.518] ***
-  [0.518, 0.591] *
-  [0.591, 0.664]
-  [0.664, 0.737]
+  [0.006, 0.083] ****
+  [0.083, 0.160] ******************
+  [0.160, 0.236] ****************************
+  [0.236, 0.313] *************************
+  [0.313, 0.389] ***************
+  [0.389, 0.466] ******
+  [0.466, 0.542] **
+  [0.542, 0.619]
+  [0.619, 0.695]
+  [0.695, 0.772]
 Evaluate MLP to obtain forces using pypolymlp
 Calculate force constants using symfc
+SSCHA force constants are written into "phonopy_sscha_fc_9.yaml.xz".
 
 [ SSCHA iteration 10 / 10 ]
 Generate 1000 supercells with displacements at 300.0 K
-  [0.008, 0.084] ****
-  [0.084, 0.161] ******************
-  [0.161, 0.238] *****************************
-  [0.238, 0.314] *************************
-  [0.314, 0.391] ***************
-  [0.391, 0.468] ******
-  [0.468, 0.544] **
-  [0.544, 0.621]
-  [0.621, 0.698]
-  [0.698, 0.774]
+  [0.003, 0.079] ***
+  [0.079, 0.155] *****************
+  [0.155, 0.230] ****************************
+  [0.230, 0.306] **************************
+  [0.306, 0.382] ****************
+  [0.382, 0.458] *******
+  [0.458, 0.534] **
+  [0.534, 0.610] *
+  [0.610, 0.686]
+  [0.686, 0.762]
 Evaluate MLP to obtain forces using pypolymlp
 Calculate force constants using symfc
+SSCHA force constants are written into "phonopy_sscha_fc_10.yaml.xz".
 
 -------------------------------- SSCHA end ---------------------------------
-SSCHA force constants are written into "force_constants_SSCHA.hdf5".
 
 ----------------------------------------------------------------------------
  One of the following run modes may be specified for phonon calculations.
@@ -378,10 +388,19 @@ Summary of calculation was written in "phonopy.yaml".
   \___|_| |_|\__,_|
 ```
 
-The final force constants are stored in `force_constants_SSCHA.hdf5`. With
-sufficient number of SSCHA iterations and number of supercells with random
-displacements at the temperature, the force constatns are expected to be
-the SSCHA force constants.
+The final force constants are stored in files named
+`phonopy_sscha_fc_NUM.yaml.xz`, where `NUM` represents the integer corresponding
+to the iteration step. With a sufficient number of SSCHA iterations and a
+sufficiently large number of supercells containing random displacements at a
+given temperature, the force constants are expected to converge to the SSCHA
+force constants. Convergence may be assessed by plotting the phonon band
+structures corresponding to the SSCHA force constants at different iteration
+steps. For example:
+
+```
+% for i in {0..10}; do phonopy-load phonopy_sscha_fc_$i.yaml.xz --band auto --band-points 101; mv band.yaml band-$i.yaml; done
+% phonopy-bandplot band-{0..10}.yaml --legend
+```
 
 ## Parameters for developing MLPs
 
@@ -437,6 +456,7 @@ the test dataset unchanged as follows:
 % phonopy-load --pypolymlp --mlp-params="ntrain=40, ntest=20" --br --mesh 40 phonopy_params.yaml | tee log-40
 % phonopy-load --pypolymlp --mlp-params="ntrain=60, ntest=20" --br --mesh 40 phonopy_params.yaml | tee log-60
 % phonopy-load --pypolymlp --mlp-params="ntrain=80, ntest=20" --br --mesh 40 phonopy_params.yaml | tee log-80
+% phonopy-load --pypolymlp --mlp-params="ntrain=100, ntest=20" --br --mesh 40 phonopy_params.yaml | tee log-100
 ```
 
 The computed phonon band structures are plotted against the size of the training
