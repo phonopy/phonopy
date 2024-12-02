@@ -104,7 +104,6 @@ class MLPSSCHA:
             self._fc_calculator = "symfc"
         else:
             self._fc_calculator = fc_calculator
-        self._iter_counter = 0
         self._log_level = log_level
 
         self._ph = ph.copy()
@@ -115,6 +114,16 @@ class MLPSSCHA:
         self._ph.generate_displacements(distance=0, number_of_snapshots=1)
         self._ph.evaluate_mlp()
         self._supercell_energy = float(self._ph.supercell_energies[0])
+        self._ph.dataset = None
+
+        if ph.force_constants is None:
+            self._iter_counter = 0
+        else:
+            if log_level:
+                print("Use provided force constants.")
+                print("")
+            self._ph.force_constants = ph.force_constants
+            self._iter_counter = 1
 
     @property
     def free_energy(self) -> float:
