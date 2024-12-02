@@ -43,7 +43,7 @@
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'pypolymlp';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'mlp-sscha';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Formulations" href="formulation.html" />
@@ -236,7 +236,7 @@
       
       
       
-      <li><a href="_sources/pypolymlp.md" target="_blank"
+      <li><a href="_sources/mlp-sscha.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -351,7 +351,7 @@
                 <article class="bd-article">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="temperature-dependent-force-constants-calculation-using-pypolymlp-and-symfc">
-<span id="pypolymlp-interface"></span><h1>Temperature dependent force constants calculation using pypolymlp and symfc<a class="headerlink" href="#temperature-dependent-force-constants-calculation-using-pypolymlp-and-symfc" title="Link to this heading">#</a></h1>
+<span id="mlp-sscha"></span><h1>Temperature dependent force constants calculation using pypolymlp and symfc<a class="headerlink" href="#temperature-dependent-force-constants-calculation-using-pypolymlp-and-symfc" title="Link to this heading">#</a></h1>
 <p><strong>This is an experimental feature, and its usage may change occasionally.</strong></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -382,16 +382,17 @@ equivalent to the approach of the latter paper.</p>
 <section id="citation-of-pypolymlp">
 <h2>Citation of pypolymlp<a class="headerlink" href="#citation-of-pypolymlp" title="Link to this heading">#</a></h2>
 <p>“Tutorial: Systematic development of polynomial machine learning potentials for
-elemental and alloy systems”, A. Seko, J. Appl. Phys. <strong>133</strong>, 011101 (2023).</p>
+elemental and alloy systems”, A. Seko, J. Appl. Phys. <strong>133</strong>, 011101 (2023)
+[<a class="reference external" href="https://doi.org/10.1063/5.0129045">doi</a>].</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@article</span><span class="p">{</span><span class="n">pypolymlp</span><span class="p">,</span>
-    <span class="n">author</span> <span class="o">=</span> <span class="p">{</span><span class="n">Seko</span><span class="p">,</span> <span class="n">Atsuto</span><span class="p">},</span>
-    <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;{&quot;</span><span class="n">Tutorial</span><span class="p">:</span> <span class="n">Systematic</span> <span class="n">development</span> <span class="n">of</span> <span class="n">polynomial</span> <span class="n">machine</span> <span class="n">learning</span> <span class="n">potentials</span> <span class="k">for</span> <span class="n">elemental</span> <span class="ow">and</span> <span class="n">alloy</span> <span class="n">systems</span><span class="s2">&quot;}&quot;</span><span class="p">,</span>
-    <span class="n">journal</span> <span class="o">=</span> <span class="p">{</span><span class="n">J</span><span class="o">.</span> <span class="n">Appl</span><span class="o">.</span> <span class="n">Phys</span><span class="o">.</span><span class="p">},</span>
-    <span class="n">volume</span> <span class="o">=</span> <span class="p">{</span><span class="mi">133</span><span class="p">},</span>
-    <span class="n">number</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">},</span>
-    <span class="n">pages</span> <span class="o">=</span> <span class="p">{</span><span class="mi">011101</span><span class="p">},</span>
-    <span class="n">year</span> <span class="o">=</span> <span class="p">{</span><span class="mi">2023</span><span class="p">},</span>
-    <span class="n">month</span> <span class="o">=</span> <span class="p">{</span><span class="mi">01</span><span class="p">},</span>
+  <span class="n">author</span> <span class="o">=</span> <span class="p">{</span><span class="n">Seko</span><span class="p">,</span> <span class="n">Atsuto</span><span class="p">},</span>
+  <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;{&quot;</span><span class="n">Tutorial</span><span class="p">:</span> <span class="n">Systematic</span> <span class="n">development</span> <span class="n">of</span> <span class="n">polynomial</span> <span class="n">machine</span> <span class="n">learning</span> <span class="n">potentials</span> <span class="k">for</span> <span class="n">elemental</span> <span class="ow">and</span> <span class="n">alloy</span> <span class="n">systems</span><span class="s2">&quot;}&quot;</span><span class="p">,</span>
+  <span class="n">journal</span> <span class="o">=</span> <span class="p">{</span><span class="n">J</span><span class="o">.</span> <span class="n">Appl</span><span class="o">.</span> <span class="n">Phys</span><span class="o">.</span><span class="p">},</span>
+  <span class="n">volume</span> <span class="o">=</span> <span class="p">{</span><span class="mi">133</span><span class="p">},</span>
+  <span class="n">number</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">},</span>
+  <span class="n">pages</span> <span class="o">=</span> <span class="p">{</span><span class="mi">011101</span><span class="p">},</span>
+  <span class="n">year</span> <span class="o">=</span> <span class="p">{</span><span class="mi">2023</span><span class="p">},</span>
+  <span class="n">month</span> <span class="o">=</span> <span class="p">{</span><span class="mi">01</span><span class="p">},</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -399,8 +400,21 @@ elemental and alloy systems”, A. Seko, J. Appl. Phys. <strong>133</strong>, 01
 <section id="citation-of-symfc">
 <h2>Citation of symfc<a class="headerlink" href="#citation-of-symfc" title="Link to this heading">#</a></h2>
 <p>“Projector-based efficient estimation of force constants”,
-A. Seko and A. Togo, Phys. Rev. B - Accepted 19 November 2024.</p>
-<p><a class="reference external" href="https://arxiv.org/abs/2403.03588">https://arxiv.org/abs/2403.03588</a></p>
+A. Seko and A. Togo, Phys. Rev. B, <strong>110</strong>, 214302 (2024) [<a class="reference external" href="https://doi.org/10.1103/PhysRevB.110.214302">doi</a>]
+[<a class="reference external" href="https://arxiv.org/abs/2403.03588">arxiv</a>].</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@article</span><span class="p">{</span><span class="n">PhysRevB</span><span class="mf">.110.214302</span><span class="p">,</span>
+  <span class="n">title</span> <span class="o">=</span> <span class="p">{</span><span class="n">Projector</span><span class="o">-</span><span class="n">based</span> <span class="n">efficient</span> <span class="n">estimation</span> <span class="n">of</span> <span class="n">force</span> <span class="n">constants</span><span class="p">},</span>
+  <span class="n">author</span> <span class="o">=</span> <span class="p">{</span><span class="n">Seko</span><span class="p">,</span> <span class="n">Atsuto</span> <span class="ow">and</span> <span class="n">Togo</span><span class="p">,</span> <span class="n">Atsushi</span><span class="p">},</span>
+  <span class="n">journal</span> <span class="o">=</span> <span class="p">{</span><span class="n">Phys</span><span class="o">.</span> <span class="n">Rev</span><span class="o">.</span> <span class="n">B</span><span class="p">},</span>
+  <span class="n">volume</span> <span class="o">=</span> <span class="p">{</span><span class="mi">110</span><span class="p">},</span>
+  <span class="n">issue</span> <span class="o">=</span> <span class="p">{</span><span class="mi">21</span><span class="p">},</span>
+  <span class="n">pages</span> <span class="o">=</span> <span class="p">{</span><span class="mi">214302</span><span class="p">},</span>
+  <span class="n">numpages</span> <span class="o">=</span> <span class="p">{</span><span class="mi">18</span><span class="p">},</span>
+  <span class="n">year</span> <span class="o">=</span> <span class="p">{</span><span class="mi">2024</span><span class="p">},</span>
+  <span class="n">month</span> <span class="o">=</span> <span class="p">{</span><span class="n">Dec</span><span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 </section>
 <section id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading">#</a></h2>
@@ -609,7 +623,7 @@ This file is read automatically in the next calculation with the <code class="do
 option. If the developed MLPs can predict well forces at relatively large
 displacements, temperature dependent force constants are calculated with the
 <code class="docutils literal notranslate"><span class="pre">--sscha</span> <span class="pre">NUMBER_OF_ITERATIONS</span></code> option.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">load</span> <span class="n">phonopy_mlpsscha_params_KCl</span><span class="o">-</span><span class="mf">120.</span><span class="n">yaml</span><span class="o">.</span><span class="n">xz</span> <span class="o">--</span><span class="n">pypolymlp</span> <span class="o">--</span><span class="n">sscha</span> <span class="mi">10</span> <span class="o">--</span><span class="n">rd</span> <span class="mi">1000</span> <span class="o">--</span><span class="n">rd</span><span class="o">-</span><span class="n">temperature</span> <span class="mi">300</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span><span class="o">-</span><span class="n">load</span> <span class="n">phonopy_mlpsscha_params_KCl</span><span class="o">-</span><span class="mf">120.</span><span class="n">yaml</span><span class="o">.</span><span class="n">xz</span> <span class="o">--</span><span class="n">pypolymlp</span> <span class="o">--</span><span class="n">sscha</span> <span class="mi">10</span> <span class="o">--</span><span class="n">rd</span><span class="o">-</span><span class="n">temperature</span> <span class="mi">300</span> <span class="o">--</span><span class="n">rd</span> <span class="mi">1000</span>
         <span class="n">_</span>
   <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
  <span class="o">|</span> <span class="s1">&#39;_ \| &#39;</span><span class="n">_</span> \ <span class="o">/</span> <span class="n">_</span> \<span class="o">|</span> <span class="s1">&#39;_ \ / _ \ | &#39;</span><span class="n">_</span> \<span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span>
@@ -625,6 +639,9 @@ displacements, temperature dependent force constants are calculated with the
 
 <span class="n">Crystal</span> <span class="n">structure</span> <span class="n">was</span> <span class="n">read</span> <span class="kn">from</span> <span class="s2">&quot;phonopy_mlpsscha_params_KCl-120.yaml.xz&quot;</span><span class="o">.</span>
 <span class="n">Unit</span> <span class="n">of</span> <span class="n">length</span><span class="p">:</span> <span class="n">angstrom</span>
+<span class="n">Displacements</span> <span class="n">creation</span> <span class="n">mode</span>
+  <span class="n">Number</span> <span class="n">of</span> <span class="n">supercells</span> <span class="k">with</span> <span class="n">random</span> <span class="n">displacements</span><span class="p">:</span> <span class="mi">1000</span>
+  <span class="n">Temperatuere</span> <span class="n">to</span> <span class="n">generate</span> <span class="n">random</span> <span class="n">displacements</span><span class="p">:</span> <span class="mf">300.0</span>
 <span class="n">Settings</span><span class="p">:</span>
   <span class="n">Supercell</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span><span class="p">]</span>
   <span class="n">Primitive</span> <span class="n">matrix</span><span class="p">:</span>
@@ -644,59 +661,63 @@ displacements, temperature dependent force constants are calculated with the
 <span class="n">Load</span> <span class="n">MLPs</span> <span class="kn">from</span> <span class="s2">&quot;phonopy.pmlp&quot;</span><span class="o">.</span>
 <span class="o">------------------------------</span> <span class="n">pypolymlp</span> <span class="n">end</span> <span class="o">-------------------------------</span>
 <span class="o">-------------------------------</span> <span class="n">SSCHA</span> <span class="n">start</span> <span class="o">--------------------------------</span>
-<span class="p">[</span> <span class="n">SSCHA</span> <span class="n">initialization</span> <span class="p">(</span><span class="n">rd</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span> <span class="n">n_supercells</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span> <span class="p">]</span>
+<span class="p">[</span> <span class="n">SSCHA</span> <span class="n">initialization</span> <span class="p">(</span><span class="n">rd</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">n_supercells</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span> <span class="p">]</span>
 <span class="n">Evaluate</span> <span class="n">MLP</span> <span class="n">to</span> <span class="n">obtain</span> <span class="n">forces</span> <span class="n">using</span> <span class="n">pypolymlp</span>
 <span class="n">Calculate</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">using</span> <span class="n">symfc</span>
+<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">102.786</span> <span class="n">meV</span>
 <span class="n">Initial</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">are</span> <span class="n">written</span> <span class="n">into</span> <span class="s2">&quot;phonopy_sscha_fc_0.yaml.xz&quot;</span><span class="o">.</span>
 
 <span class="p">[</span> <span class="n">SSCHA</span> <span class="n">iteration</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">10</span> <span class="p">]</span>
 <span class="n">Generate</span> <span class="mi">1000</span> <span class="n">supercells</span> <span class="k">with</span> <span class="n">displacements</span> <span class="n">at</span> <span class="mf">300.0</span> <span class="n">K</span>
-  <span class="p">[</span><span class="mf">0.005</span><span class="p">,</span> <span class="mf">0.084</span><span class="p">]</span> <span class="o">****</span>
-  <span class="p">[</span><span class="mf">0.084</span><span class="p">,</span> <span class="mf">0.162</span><span class="p">]</span> <span class="o">*******************</span>
-  <span class="p">[</span><span class="mf">0.162</span><span class="p">,</span> <span class="mf">0.241</span><span class="p">]</span> <span class="o">*****************************</span>
-  <span class="p">[</span><span class="mf">0.241</span><span class="p">,</span> <span class="mf">0.319</span><span class="p">]</span> <span class="o">*************************</span>
-  <span class="p">[</span><span class="mf">0.319</span><span class="p">,</span> <span class="mf">0.397</span><span class="p">]</span> <span class="o">***************</span>
-  <span class="p">[</span><span class="mf">0.397</span><span class="p">,</span> <span class="mf">0.476</span><span class="p">]</span> <span class="o">******</span>
-  <span class="p">[</span><span class="mf">0.476</span><span class="p">,</span> <span class="mf">0.554</span><span class="p">]</span> <span class="o">**</span>
-  <span class="p">[</span><span class="mf">0.554</span><span class="p">,</span> <span class="mf">0.633</span><span class="p">]</span>
-  <span class="p">[</span><span class="mf">0.633</span><span class="p">,</span> <span class="mf">0.711</span><span class="p">]</span>
-  <span class="p">[</span><span class="mf">0.711</span><span class="p">,</span> <span class="mf">0.790</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.010</span><span class="p">,</span> <span class="mf">0.084</span><span class="p">]</span> <span class="o">****</span>
+  <span class="p">[</span><span class="mf">0.084</span><span class="p">,</span> <span class="mf">0.159</span><span class="p">]</span> <span class="o">******************</span>
+  <span class="p">[</span><span class="mf">0.159</span><span class="p">,</span> <span class="mf">0.234</span><span class="p">]</span> <span class="o">***************************</span>
+  <span class="p">[</span><span class="mf">0.234</span><span class="p">,</span> <span class="mf">0.309</span><span class="p">]</span> <span class="o">*************************</span>
+  <span class="p">[</span><span class="mf">0.309</span><span class="p">,</span> <span class="mf">0.383</span><span class="p">]</span> <span class="o">****************</span>
+  <span class="p">[</span><span class="mf">0.383</span><span class="p">,</span> <span class="mf">0.458</span><span class="p">]</span> <span class="o">*******</span>
+  <span class="p">[</span><span class="mf">0.458</span><span class="p">,</span> <span class="mf">0.533</span><span class="p">]</span> <span class="o">**</span>
+  <span class="p">[</span><span class="mf">0.533</span><span class="p">,</span> <span class="mf">0.608</span><span class="p">]</span> <span class="o">*</span>
+  <span class="p">[</span><span class="mf">0.608</span><span class="p">,</span> <span class="mf">0.683</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.683</span><span class="p">,</span> <span class="mf">0.757</span><span class="p">]</span>
 <span class="n">Evaluate</span> <span class="n">MLP</span> <span class="n">to</span> <span class="n">obtain</span> <span class="n">forces</span> <span class="n">using</span> <span class="n">pypolymlp</span>
 <span class="n">Calculate</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">using</span> <span class="n">symfc</span>
+<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.205</span> <span class="n">meV</span>
 <span class="n">SSCHA</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">are</span> <span class="n">written</span> <span class="n">into</span> <span class="s2">&quot;phonopy_sscha_fc_1.yaml.xz&quot;</span><span class="o">.</span>
+
+<span class="p">[</span> <span class="n">SSCHA</span> <span class="n">iteration</span> <span class="mi">2</span> <span class="o">/</span> <span class="mi">10</span> <span class="p">]</span>
+<span class="n">Generate</span> <span class="mi">1000</span> <span class="n">supercells</span> <span class="k">with</span> <span class="n">displacements</span> <span class="n">at</span> <span class="mf">300.0</span> <span class="n">K</span>
+  <span class="p">[</span><span class="mf">0.007</span><span class="p">,</span> <span class="mf">0.094</span><span class="p">]</span> <span class="o">*****</span>
+  <span class="p">[</span><span class="mf">0.094</span><span class="p">,</span> <span class="mf">0.181</span><span class="p">]</span> <span class="o">***********************</span>
+  <span class="p">[</span><span class="mf">0.181</span><span class="p">,</span> <span class="mf">0.267</span><span class="p">]</span> <span class="o">********************************</span>
+  <span class="p">[</span><span class="mf">0.267</span><span class="p">,</span> <span class="mf">0.354</span><span class="p">]</span> <span class="o">************************</span>
+  <span class="p">[</span><span class="mf">0.354</span><span class="p">,</span> <span class="mf">0.440</span><span class="p">]</span> <span class="o">***********</span>
+  <span class="p">[</span><span class="mf">0.440</span><span class="p">,</span> <span class="mf">0.527</span><span class="p">]</span> <span class="o">***</span>
+  <span class="p">[</span><span class="mf">0.527</span><span class="p">,</span> <span class="mf">0.613</span><span class="p">]</span> <span class="o">*</span>
+  <span class="p">[</span><span class="mf">0.613</span><span class="p">,</span> <span class="mf">0.700</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.700</span><span class="p">,</span> <span class="mf">0.787</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.787</span><span class="p">,</span> <span class="mf">0.873</span><span class="p">]</span>
+<span class="n">Evaluate</span> <span class="n">MLP</span> <span class="n">to</span> <span class="n">obtain</span> <span class="n">forces</span> <span class="n">using</span> <span class="n">pypolymlp</span>
+<span class="n">Calculate</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">using</span> <span class="n">symfc</span>
+<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.221</span> <span class="n">meV</span>
+<span class="n">SSCHA</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">are</span> <span class="n">written</span> <span class="n">into</span> <span class="s2">&quot;phonopy_sscha_fc_2.yaml.xz&quot;</span><span class="o">.</span>
 
 <span class="o">...</span>
 
-<span class="p">[</span> <span class="n">SSCHA</span> <span class="n">iteration</span> <span class="mi">9</span> <span class="o">/</span> <span class="mi">10</span> <span class="p">]</span>
-<span class="n">Generate</span> <span class="mi">1000</span> <span class="n">supercells</span> <span class="k">with</span> <span class="n">displacements</span> <span class="n">at</span> <span class="mf">300.0</span> <span class="n">K</span>
-  <span class="p">[</span><span class="mf">0.006</span><span class="p">,</span> <span class="mf">0.083</span><span class="p">]</span> <span class="o">****</span>
-  <span class="p">[</span><span class="mf">0.083</span><span class="p">,</span> <span class="mf">0.160</span><span class="p">]</span> <span class="o">******************</span>
-  <span class="p">[</span><span class="mf">0.160</span><span class="p">,</span> <span class="mf">0.236</span><span class="p">]</span> <span class="o">****************************</span>
-  <span class="p">[</span><span class="mf">0.236</span><span class="p">,</span> <span class="mf">0.313</span><span class="p">]</span> <span class="o">*************************</span>
-  <span class="p">[</span><span class="mf">0.313</span><span class="p">,</span> <span class="mf">0.389</span><span class="p">]</span> <span class="o">***************</span>
-  <span class="p">[</span><span class="mf">0.389</span><span class="p">,</span> <span class="mf">0.466</span><span class="p">]</span> <span class="o">******</span>
-  <span class="p">[</span><span class="mf">0.466</span><span class="p">,</span> <span class="mf">0.542</span><span class="p">]</span> <span class="o">**</span>
-  <span class="p">[</span><span class="mf">0.542</span><span class="p">,</span> <span class="mf">0.619</span><span class="p">]</span>
-  <span class="p">[</span><span class="mf">0.619</span><span class="p">,</span> <span class="mf">0.695</span><span class="p">]</span>
-  <span class="p">[</span><span class="mf">0.695</span><span class="p">,</span> <span class="mf">0.772</span><span class="p">]</span>
-<span class="n">Evaluate</span> <span class="n">MLP</span> <span class="n">to</span> <span class="n">obtain</span> <span class="n">forces</span> <span class="n">using</span> <span class="n">pypolymlp</span>
-<span class="n">Calculate</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">using</span> <span class="n">symfc</span>
-<span class="n">SSCHA</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">are</span> <span class="n">written</span> <span class="n">into</span> <span class="s2">&quot;phonopy_sscha_fc_9.yaml.xz&quot;</span><span class="o">.</span>
-
 <span class="p">[</span> <span class="n">SSCHA</span> <span class="n">iteration</span> <span class="mi">10</span> <span class="o">/</span> <span class="mi">10</span> <span class="p">]</span>
 <span class="n">Generate</span> <span class="mi">1000</span> <span class="n">supercells</span> <span class="k">with</span> <span class="n">displacements</span> <span class="n">at</span> <span class="mf">300.0</span> <span class="n">K</span>
-  <span class="p">[</span><span class="mf">0.003</span><span class="p">,</span> <span class="mf">0.079</span><span class="p">]</span> <span class="o">***</span>
-  <span class="p">[</span><span class="mf">0.079</span><span class="p">,</span> <span class="mf">0.155</span><span class="p">]</span> <span class="o">*****************</span>
-  <span class="p">[</span><span class="mf">0.155</span><span class="p">,</span> <span class="mf">0.230</span><span class="p">]</span> <span class="o">****************************</span>
-  <span class="p">[</span><span class="mf">0.230</span><span class="p">,</span> <span class="mf">0.306</span><span class="p">]</span> <span class="o">**************************</span>
-  <span class="p">[</span><span class="mf">0.306</span><span class="p">,</span> <span class="mf">0.382</span><span class="p">]</span> <span class="o">****************</span>
-  <span class="p">[</span><span class="mf">0.382</span><span class="p">,</span> <span class="mf">0.458</span><span class="p">]</span> <span class="o">*******</span>
-  <span class="p">[</span><span class="mf">0.458</span><span class="p">,</span> <span class="mf">0.534</span><span class="p">]</span> <span class="o">**</span>
-  <span class="p">[</span><span class="mf">0.534</span><span class="p">,</span> <span class="mf">0.610</span><span class="p">]</span> <span class="o">*</span>
-  <span class="p">[</span><span class="mf">0.610</span><span class="p">,</span> <span class="mf">0.686</span><span class="p">]</span>
-  <span class="p">[</span><span class="mf">0.686</span><span class="p">,</span> <span class="mf">0.762</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.006</span><span class="p">,</span> <span class="mf">0.089</span><span class="p">]</span> <span class="o">*****</span>
+  <span class="p">[</span><span class="mf">0.089</span><span class="p">,</span> <span class="mf">0.171</span><span class="p">]</span> <span class="o">*********************</span>
+  <span class="p">[</span><span class="mf">0.171</span><span class="p">,</span> <span class="mf">0.253</span><span class="p">]</span> <span class="o">*******************************</span>
+  <span class="p">[</span><span class="mf">0.253</span><span class="p">,</span> <span class="mf">0.336</span><span class="p">]</span> <span class="o">*************************</span>
+  <span class="p">[</span><span class="mf">0.336</span><span class="p">,</span> <span class="mf">0.418</span><span class="p">]</span> <span class="o">*************</span>
+  <span class="p">[</span><span class="mf">0.418</span><span class="p">,</span> <span class="mf">0.500</span><span class="p">]</span> <span class="o">****</span>
+  <span class="p">[</span><span class="mf">0.500</span><span class="p">,</span> <span class="mf">0.583</span><span class="p">]</span> <span class="o">*</span>
+  <span class="p">[</span><span class="mf">0.583</span><span class="p">,</span> <span class="mf">0.665</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.665</span><span class="p">,</span> <span class="mf">0.747</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.747</span><span class="p">,</span> <span class="mf">0.830</span><span class="p">]</span>
 <span class="n">Evaluate</span> <span class="n">MLP</span> <span class="n">to</span> <span class="n">obtain</span> <span class="n">forces</span> <span class="n">using</span> <span class="n">pypolymlp</span>
 <span class="n">Calculate</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">using</span> <span class="n">symfc</span>
+<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.122</span> <span class="n">meV</span>
 <span class="n">SSCHA</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">are</span> <span class="n">written</span> <span class="n">into</span> <span class="s2">&quot;phonopy_sscha_fc_10.yaml.xz&quot;</span><span class="o">.</span>
 
 <span class="o">--------------------------------</span> <span class="n">SSCHA</span> <span class="n">end</span> <span class="o">---------------------------------</span>
@@ -722,11 +743,12 @@ displacements, temperature dependent force constants are calculated with the
 </div>
 <p>The final force constants are stored in files named
 <code class="docutils literal notranslate"><span class="pre">phonopy_sscha_fc_NUM.yaml.xz</span></code>, where <code class="docutils literal notranslate"><span class="pre">NUM</span></code> represents the integer corresponding
-to the iteration step. With a sufficient number of SSCHA iterations and a
-sufficiently large number of supercells containing random displacements at a
-given temperature, the force constants are expected to converge to the SSCHA
-force constants. Convergence may be assessed by plotting the phonon band
-structures corresponding to the SSCHA force constants at different iteration
+to the iteration step. By performing a sufficient number of SSCHA iterations and
+utilizing a sufficiently large set of supercells with random displacements at a
+given temperature, the SSCHA force constants can be reliably determined. The
+convergence of these force constants can be monitored through the SSCHA free
+energy. Additionally, convergence can be assessed by plotting the phonon band
+structures corresponding to the SSCHA force constants at the iteration
 steps. For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>% for i in {0..10}; do phonopy-load phonopy_sscha_fc_$i.yaml.xz --band auto --band-points 101; mv band.yaml band-$i.yaml; done
 % phonopy-bandplot band-{0..10}.yaml --legend
