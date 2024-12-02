@@ -37,27 +37,41 @@ equivalent to the approach of the latter paper.
 ## Citation of pypolymlp
 
 "Tutorial: Systematic development of polynomial machine learning potentials for
-elemental and alloy systems", A. Seko, J. Appl. Phys. **133**, 011101 (2023).
+elemental and alloy systems", A. Seko, J. Appl. Phys. **133**, 011101 (2023)
+[[doi](https://doi.org/10.1063/5.0129045)].
 
 ```
 @article{pypolymlp,
-    author = {Seko, Atsuto},
-    title = "{"Tutorial: Systematic development of polynomial machine learning potentials for elemental and alloy systems"}",
-    journal = {J. Appl. Phys.},
-    volume = {133},
-    number = {1},
-    pages = {011101},
-    year = {2023},
-    month = {01},
+  author = {Seko, Atsuto},
+  title = "{"Tutorial: Systematic development of polynomial machine learning potentials for elemental and alloy systems"}",
+  journal = {J. Appl. Phys.},
+  volume = {133},
+  number = {1},
+  pages = {011101},
+  year = {2023},
+  month = {01},
 }
 ```
 
 ## Citation of symfc
 
 "Projector-based efficient estimation of force constants",
-A. Seko and A. Togo, Phys. Rev. B - Accepted 19 November 2024.
+A. Seko and A. Togo, Phys. Rev. B, **110**, 214302 (2024) [[doi](https://doi.org/10.1103/PhysRevB.110.214302)]
+[[arxiv](https://arxiv.org/abs/2403.03588)].
 
-https://arxiv.org/abs/2403.03588
+```
+@article{PhysRevB.110.214302,
+  title = {Projector-based efficient estimation of force constants},
+  author = {Seko, Atsuto and Togo, Atsushi},
+  journal = {Phys. Rev. B},
+  volume = {110},
+  issue = {21},
+  pages = {214302},
+  numpages = {18},
+  year = {2024},
+  month = {Dec},
+}
+```
 
 ## Requirements
 

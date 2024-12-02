@@ -111,7 +111,7 @@ def run_symfc(
             "-------------------------------"
         )
         print("Symfc is a force constants calculator. See the following paper:")
-        print("A. Seko and A. Togo, arXiv:2403.03588.")
+        print("A. Seko and A. Togo, Phys. Rev. B, 110, 214302 (2024).")
         print("Symfc is developed at https://github.com/symfc/symfc.")
         print(f"Computing {_orders} order force constants.", flush=True)
         if options_dict:
