@@ -126,6 +126,11 @@ class MLPSSCHA:
             self._iter_counter = 1
 
     @property
+    def phonopy(self) -> Phonopy:
+        """Return Phonopy instance."""
+        return self._ph
+
+    @property
     def free_energy(self) -> float:
         """Return free energy in eV."""
         return self._free_energy
@@ -168,14 +173,14 @@ class MLPSSCHA:
         """Iterate over force constants calculations."""
         return self
 
-    def __next__(self) -> Phonopy:
+    def __next__(self) -> int:
         """Calculate next force constants."""
         if self._iter_counter == self._max_iterations + 1:
             self._iter_counter = 0
             raise StopIteration
         self._run()
         self._iter_counter += 1
-        return self._ph
+        return self._iter_counter - 1
 
     def _run(self) -> Phonopy:
         if self._log_level and self._iter_counter == 0:

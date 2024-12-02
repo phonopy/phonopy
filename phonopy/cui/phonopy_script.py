@@ -841,9 +841,10 @@ def _store_force_constants(
                 log_level=log_level,
             )
             fc_unit = physical_units["force_constants_unit"]
-            for i, ph in enumerate(sscha):
+            for iter_num in sscha:
+                ph = sscha.phonopy
                 out_filename = ph.save(
-                    filename=f"phonopy_sscha_fc_{i}.yaml",
+                    filename=f"phonopy_sscha_fc_{iter_num}.yaml",
                     settings={
                         "force_sets": False,
                         "displacements": False,
@@ -854,7 +855,7 @@ def _store_force_constants(
                 if log_level:
                     sscha.calculate_free_energy()
                     print(f"SSCHA free energy: {sscha.free_energy * 1000:.3f} meV")
-                    if i == 0:
+                    if iter_num == 0:
                         print("Initial ", end="")
                     else:
                         print("SSCHA ", end="")
