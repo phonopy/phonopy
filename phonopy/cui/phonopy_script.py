@@ -841,9 +841,10 @@ def _store_force_constants(
                 log_level=log_level,
             )
             fc_unit = physical_units["force_constants_unit"]
-            for i, ph in enumerate(sscha):
+            for iter_num in sscha:
+                ph = sscha.phonopy
                 out_filename = ph.save(
-                    filename=f"phonopy_sscha_fc_{i}.yaml",
+                    filename=f"phonopy_sscha_fc_{iter_num}.yaml",
                     settings={
                         "force_sets": False,
                         "displacements": False,
@@ -852,12 +853,14 @@ def _store_force_constants(
                     compression=True,
                 )
                 if log_level:
-                    if i == 0:
+                    sscha.calculate_free_energy()
+                    print(f"SSCHA free energy: {sscha.free_energy * 1000:.3f} meV")
+                    if iter_num == 0:
                         print("Initial ", end="")
                     else:
                         print("SSCHA ", end="")
                     print(f'force constants are written into "{out_filename}".')
-                    print("")
+                    print("", flush=True)
 
             phonon.force_constants = ph.force_constants
 
@@ -1298,6 +1301,7 @@ def _run_calculation(phonon: Phonopy, settings: PhonopySettings, plot_conf, log_
                 pretend_real=settings.pretend_real,
                 band_indices=settings.band_indices,
                 is_projection=settings.is_projected_thermal_properties,
+                classical=settings.classical,
             )
             phonon.write_yaml_thermal_properties()
 
