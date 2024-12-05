@@ -41,6 +41,8 @@ from typing import Optional, Union
 
 import numpy as np
 
+from phonopy.harmonic.force_constants import FDFCCalculator
+from phonopy.interface.symfc import SymfcCalculator, parse_symfc_options
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
 from phonopy.structure.dataset import get_displacements_and_forces
@@ -48,7 +50,6 @@ from phonopy.structure.symmetry import Symmetry
 
 fc_calculator_names = {
     "alm": "ALM",
-    "hiphive": "hiPhive",
     "symfc": "symfc",
     "traditional": "phonopy-traditional",
 }
@@ -107,7 +108,6 @@ def get_fc2(
         shape=(len(atom_list), num_atoms, 3, 3), dtype='double', order='C'.
 
     """
-    displacements, forces = get_displacements_and_forces(dataset)
     if fc_calculator is None or fc_calculator == "traditional":
         from phonopy.harmonic.force_constants import get_fc2
 
@@ -127,6 +127,7 @@ def get_fc2(
             primitive=primitive,
         )
 
+    displacements, forces = get_displacements_and_forces(dataset)
     if fc_calculator == "alm" or fc_calculator is None:
         from phonopy.interface.alm import get_fc2
 
@@ -151,16 +152,65 @@ def get_fc2(
             symmetry=symmetry,
             log_level=log_level,
         )
-    if fc_calculator == "hiphive":
-        from phonopy.interface.hiphive_interface import get_fc2
 
-        return get_fc2(
-            supercell,
-            primitive,
-            displacements,
-            forces,
-            atom_list=atom_list,
-            options=fc_calculator_options,
-            log_level=log_level,
-            symprec=symprec,
-        )
+
+class FCCalculator:
+    """Force constants calculator interface."""
+
+    def __init__(
+        self,
+        fc_calculator_name: str,
+        supercell: PhonopyAtoms,
+        symmetry: Symmetry,
+        dataset: dict,
+        atom_list: Optional[Sequence] = None,
+        primitive: Optional[Primitive] = None,
+        options: Optional[str] = None,
+        log_level: int = 0,
+    ):
+        self._supercell = supercell
+        self._symmetry = symmetry
+        self._dataset = dataset
+        self._atom_list = atom_list
+        self._primitive = primitive
+        self._options = options
+        self._log_level = log_level
+
+        self._fc_calculator = self._set_fc_calculator(fc_calculator_name)
+
+        if self._primitive is None:
+            self._is_compact_fc = False
+        else:
+            self._is_compact_fc = (
+                atom_list is not None and (atom_list == primitive.p2s_map).all()
+            )
+
+    @property
+    def fc_calculator(self):
+        """Return force constants calculator."""
+        return self._fc_calculator
+
+    def _set_fc_calculator(self, fc_calculator_name: str):
+        if fc_calculator_name not in fc_calculator_names:
+            raise ValueError(
+                f"fc_calculator_name must be one of {fc_calculator_names.keys()}"
+            )
+
+        if fc_calculator_name == "traditional":
+            return FDFCCalculator(
+                self._supercell,
+                self._symmetry,
+                self._dataset,
+                atom_list=self._atom_list,
+                primitive=self._primitive,
+            )
+        if fc_calculator_name == "symfc":
+            displacements, forces = get_displacements_and_forces(self._dataset)
+            return SymfcCalculator(
+                self._supercell,
+                displacements,
+                forces,
+                symmetry=self._symmetry,
+                options=parse_symfc_options(self._options),
+                log_level=self._log_level,
+            )

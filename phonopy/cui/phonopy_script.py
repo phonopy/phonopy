@@ -36,6 +36,7 @@
 
 from __future__ import annotations
 
+import datetime
 import os
 import pathlib
 import sys
@@ -103,6 +104,13 @@ def _print_phonopy():
  | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
  |_|                            |_|    |___/"""
     )
+    print_version(__version__)
+    print_time()
+
+
+def _print_phonopy_end():
+    print_time()
+    print_end()
 
 
 def print_version(version, package_name="phonopy", rjust_length=44):
@@ -171,6 +179,15 @@ def print_error_message(message):
     """Show error message."""
     print("")
     print(message)
+
+
+def print_time():
+    """Print current time."""
+    print(
+        "-------------------------"
+        f'[time {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}]'
+        "-------------------------"
+    )
 
 
 def file_exists(
@@ -316,7 +333,7 @@ def _finalize_phonopy(
             )
         else:
             print('Summary of calculation was written in "%s".' % _filename)
-        print_end()
+        _print_phonopy_end()
     sys.exit(0)
 
 
@@ -841,9 +858,10 @@ def _store_force_constants(
                 log_level=log_level,
             )
             fc_unit = physical_units["force_constants_unit"]
-            for i, ph in enumerate(sscha):
+            for iter_num in sscha:
+                ph = sscha.phonopy
                 out_filename = ph.save(
-                    filename=f"phonopy_sscha_fc_{i}.yaml",
+                    filename=f"phonopy_sscha_fc_{iter_num}.yaml",
                     settings={
                         "force_sets": False,
                         "displacements": False,
@@ -852,12 +870,14 @@ def _store_force_constants(
                     compression=True,
                 )
                 if log_level:
-                    if i == 0:
+                    sscha.calculate_free_energy()
+                    print(f"SSCHA free energy: {sscha.free_energy * 1000:.3f} meV")
+                    if iter_num == 0:
                         print("Initial ", end="")
                     else:
                         print("SSCHA ", end="")
                     print(f'force constants are written into "{out_filename}".')
-                    print("")
+                    print("", flush=True)
 
             phonon.force_constants = ph.force_constants
 
@@ -1298,6 +1318,7 @@ def _run_calculation(phonon: Phonopy, settings: PhonopySettings, plot_conf, log_
                 pretend_real=settings.pretend_real,
                 band_indices=settings.band_indices,
                 is_projection=settings.is_projected_thermal_properties,
+                classical=settings.classical,
             )
             phonon.write_yaml_thermal_properties()
 
@@ -1695,7 +1716,6 @@ def _start_phonopy(**argparse_control):
     # Show phonopy logo
     if log_level:
         _print_phonopy()
-        print_version(__version__)
 
         import phonopy._phonopy as phonoc
 
@@ -2011,7 +2031,7 @@ def _init_phonopy(settings, cell_info, symprec, log_level):
 
     if len(symbols_with_no_mass) > 0:
         if log_level:
-            print_end()
+            _print_phonopy_end()
         sys.exit(1)
 
     return phonon
@@ -2080,7 +2100,7 @@ def main(**argparse_control):
     if settings.create_force_sets or settings.create_force_sets_zero:
         _create_FORCE_SETS_from_settings(settings, cell_filename, symprec, log_level)
         if log_level > 0:
-            print_end()
+            _print_phonopy_end()
         sys.exit(0)
 
     ####################################################################
@@ -2092,7 +2112,7 @@ def main(**argparse_control):
         write_hdf5 = settings.is_hdf5 or settings.writefc_format == "hdf5"
         is_error = create_FORCE_CONSTANTS(filename, write_hdf5, log_level)
         if log_level:
-            print_end()
+            _print_phonopy_end()
         sys.exit(is_error)
 
     #################################################################

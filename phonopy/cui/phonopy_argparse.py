@@ -428,13 +428,6 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         help="hdf5 compression filter (default: gzip)",
     )
     parser.add_argument(
-        "--hiphive",
-        dest="use_hiphive",
-        action="store_true",
-        default=None,
-        help="Use hiPhive for generating force constants",
-    )
-    parser.add_argument(
         "--irreps",
         "--irreps-qpoint",
         nargs="+",
