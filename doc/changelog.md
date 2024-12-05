@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Dec-5-2024: Version 2.32.0
+
+- Maintenance release including refactoring of SSCHA interface
+
 ## Nov-30-2024: Version 2.31.2
 
 - `INCLUDE_BORN` tag and `--include-born` option were removed. NAC params are
