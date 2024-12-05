@@ -36,6 +36,7 @@
 
 from __future__ import annotations
 
+import datetime
 import os
 import pathlib
 import sys
@@ -103,6 +104,13 @@ def _print_phonopy():
  | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
  |_|                            |_|    |___/"""
     )
+    print_version(__version__)
+    print_time()
+
+
+def _print_phonopy_end():
+    print_time()
+    print_end()
 
 
 def print_version(version, package_name="phonopy", rjust_length=44):
@@ -171,6 +179,15 @@ def print_error_message(message):
     """Show error message."""
     print("")
     print(message)
+
+
+def print_time():
+    """Print current time."""
+    print(
+        "-------------------------"
+        f'[time {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}]'
+        "-------------------------"
+    )
 
 
 def file_exists(
@@ -316,7 +333,7 @@ def _finalize_phonopy(
             )
         else:
             print('Summary of calculation was written in "%s".' % _filename)
-        print_end()
+        _print_phonopy_end()
     sys.exit(0)
 
 
@@ -1699,7 +1716,6 @@ def _start_phonopy(**argparse_control):
     # Show phonopy logo
     if log_level:
         _print_phonopy()
-        print_version(__version__)
 
         import phonopy._phonopy as phonoc
 
@@ -2015,7 +2031,7 @@ def _init_phonopy(settings, cell_info, symprec, log_level):
 
     if len(symbols_with_no_mass) > 0:
         if log_level:
-            print_end()
+            _print_phonopy_end()
         sys.exit(1)
 
     return phonon
@@ -2084,7 +2100,7 @@ def main(**argparse_control):
     if settings.create_force_sets or settings.create_force_sets_zero:
         _create_FORCE_SETS_from_settings(settings, cell_filename, symprec, log_level)
         if log_level > 0:
-            print_end()
+            _print_phonopy_end()
         sys.exit(0)
 
     ####################################################################
@@ -2096,7 +2112,7 @@ def main(**argparse_control):
         write_hdf5 = settings.is_hdf5 or settings.writefc_format == "hdf5"
         is_error = create_FORCE_CONSTANTS(filename, write_hdf5, log_level)
         if log_level:
-            print_end()
+            _print_phonopy_end()
         sys.exit(is_error)
 
     #################################################################

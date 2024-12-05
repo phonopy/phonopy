@@ -7,7 +7,7 @@ name = "phonopy"
 dynamic = ["version"]
 readme = { file = "README.md", content-type = "text/markdown" }
 description = "This is the phonopy module."
-authors = [{ name = "Atsushi Togo", email = "atztogo@gmail.com" }]
+authors = [{ name = "Atsushi Togo", email = "atz.togo@gmail.com" }]
 requires-python = ">=3.9"
 dependencies = [
     "numpy>=1.17.0",
@@ -15,8 +15,7 @@ dependencies = [
     "matplotlib>=2.2.2",
     "h5py>=3.0",
     "spglib>=2.3",
-    "scipy",
-    "symfc",
+    "symfc>=1.1.6",
 ]
 license = { file = "LICENSE" }
 
@@ -28,7 +27,7 @@ Repository = "https://github.com/phonopy/phonopy"
 cp2k = ["cp2k-input-tools"]
 seekpath = ["seekpath"]
 pypolymlp = ["pypolymlp>=0.4.6"]
-tools = ["seekpath", "pypolymlp"]
+tools = ["seekpath", "pypolymlp>=0.4.6"]
 
 [project.scripts]
 phonopy = "phonopy.scripts.phonopy:run"
