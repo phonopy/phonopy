@@ -54,6 +54,101 @@ from phonopy.structure.symmetry import Symmetry
 from phonopy.utils import similarity_transformation
 
 
+class FDFCCalculator:
+    """Finite difference type force constants calculator.
+
+    This is phonopy's traditional force constants calculator.
+
+    """
+
+    def __init__(
+        self,
+        supercell: PhonopyAtoms,
+        symmetry: Symmetry,
+        dataset,
+        atom_list=None,
+        primitive: Optional[Primitive] = None,
+    ):
+        self._fc2 = self._run(
+            supercell, symmetry, dataset, atom_list=atom_list, primitive=primitive
+        )
+
+    @property
+    def fc2(self) -> np.ndarray:
+        """Return 2nd order force constants."""
+        return self._fc2
+
+    def _run(
+        self,
+        supercell: PhonopyAtoms,
+        symmetry: Symmetry,
+        dataset,
+        atom_list=None,
+        primitive: Optional[Primitive] = None,
+    ) -> np.ndarray:
+        """Force constants are computed.
+
+        Force constants, Phi, are calculated from sets for forces, F, and
+        atomic displacement, d:
+        Phi = -F / d
+        This is solved by matrix pseudo-inversion.
+        Crystal symmetry is included when creating F and d matrices.
+
+        Returns
+        -------
+        ndarray
+            Force constants[ i, j, a, b ]
+            i: Atom index of finitely displaced atom.
+            j: Atom index at which force on the atom is measured.
+            a, b: Cartesian direction indices = (0, 1, 2) for i and j, respectively
+            dtype=double
+            shape=(len(atom_list),n_satom,3,3),
+
+        """
+        if atom_list is None:
+            fc_dim0 = len(supercell)
+        else:
+            fc_dim0 = len(atom_list)
+
+        force_constants = np.zeros(
+            (fc_dim0, len(supercell), 3, 3), dtype="double", order="C"
+        )
+
+        # Fill force_constants[ displaced_atoms, all_atoms_in_supercell ]
+        atom_list_done = _get_force_constants_disps(
+            force_constants, supercell, dataset, symmetry, atom_list=atom_list
+        )
+        rotations = symmetry.symmetry_operations["rotations"]
+        lattice = np.array(supercell.cell.T, dtype="double", order="C")
+        permutations = symmetry.atomic_permutations
+
+        if atom_list is None and primitive is not None:
+            # Distribute to atoms in primitive cell, then distribute to all.
+            distribute_force_constants(
+                force_constants,
+                atom_list_done,
+                lattice,
+                rotations,
+                permutations,
+                atom_list=primitive.p2s_map,
+                fc_indices_of_atom_list=primitive.p2s_map,
+            )
+            distribute_force_constants_by_translations(
+                force_constants, primitive, supercell
+            )
+        else:
+            distribute_force_constants(
+                force_constants,
+                atom_list_done,
+                lattice,
+                rotations,
+                permutations,
+                atom_list=atom_list,
+            )
+
+        return force_constants
+
+
 def get_fc2(
     supercell: PhonopyAtoms,
     symmetry: Symmetry,
@@ -61,67 +156,11 @@ def get_fc2(
     atom_list=None,
     primitive: Optional[Primitive] = None,
 ):
-    """Force constants are computed.
-
-    Force constants, Phi, are calculated from sets for forces, F, and
-    atomic displacement, d:
-      Phi = -F / d
-    This is solved by matrix pseudo-inversion.
-    Crystal symmetry is included when creating F and d matrices.
-
-    Returns
-    -------
-    ndarray
-        Force constants[ i, j, a, b ]
-        i: Atom index of finitely displaced atom.
-        j: Atom index at which force on the atom is measured.
-        a, b: Cartesian direction indices = (0, 1, 2) for i and j, respectively
-        dtype=double
-        shape=(len(atom_list),n_satom,3,3),
-
-    """
-    if atom_list is None:
-        fc_dim0 = len(supercell)
-    else:
-        fc_dim0 = len(atom_list)
-
-    force_constants = np.zeros(
-        (fc_dim0, len(supercell), 3, 3), dtype="double", order="C"
+    """Get 2nd order force constants."""
+    fd_fc_calculator = FDFCCalculator(
+        supercell, symmetry, dataset, atom_list=atom_list, primitive=primitive
     )
-
-    # Fill force_constants[ displaced_atoms, all_atoms_in_supercell ]
-    atom_list_done = _get_force_constants_disps(
-        force_constants, supercell, dataset, symmetry, atom_list=atom_list
-    )
-    rotations = symmetry.symmetry_operations["rotations"]
-    lattice = np.array(supercell.cell.T, dtype="double", order="C")
-    permutations = symmetry.atomic_permutations
-
-    if atom_list is None and primitive is not None:
-        # Distribute to atoms in primitive cell, then distribute to all.
-        distribute_force_constants(
-            force_constants,
-            atom_list_done,
-            lattice,
-            rotations,
-            permutations,
-            atom_list=primitive.p2s_map,
-            fc_indices_of_atom_list=primitive.p2s_map,
-        )
-        distribute_force_constants_by_translations(
-            force_constants, primitive, supercell
-        )
-    else:
-        distribute_force_constants(
-            force_constants,
-            atom_list_done,
-            lattice,
-            rotations,
-            permutations,
-            atom_list=atom_list,
-        )
-
-    return force_constants
+    return fd_fc_calculator.fc2
 
 
 def compact_fc_to_full_fc(phonon: "Phonopy", compact_fc, log_level=0):
@@ -783,42 +822,6 @@ def _get_force_constants_disps(
     return disp_atom_list
 
 
-def _combine_force_constants_equivalent_atoms(
-    fc_combined, force_constants, i, cart_rot, map_atoms, mapa
-):
-    num_equiv_atoms = 0
-    for j, k in enumerate(map_atoms):
-        if k != i:
-            continue
-
-        num_equiv_atoms += 1
-        r_i = (mapa[:, j] == i).nonzero()[0][0]
-        for k, ll in enumerate(mapa[r_i]):
-            fc_combined[ll] += similarity_transformation(
-                cart_rot[r_i], force_constants[j, k]
-            )
-
-    fc_combined /= num_equiv_atoms
-
-    return num_equiv_atoms
-
-
-def _average_force_constants_by_sitesym(fc_new, fc_i, i, cart_rot, mapa):
-    num_sitesym = 0
-    for r_i, mapa_r in enumerate(mapa):
-        if mapa_r[i] != i:
-            continue
-        num_sitesym += 1
-        for j in range(fc_i.shape[0]):
-            fc_new[i, j] += similarity_transformation(
-                cart_rot[r_i].T, fc_i[mapa[r_i, j]]
-            )
-
-    fc_new[i] /= num_sitesym
-
-    return num_sitesym
-
-
 def _get_atom_indices_by_symmetry(lattice, positions, rotations, translations, symprec):
     # To understand this method, understanding numpy broadcasting is mandatory.
 
@@ -842,16 +845,6 @@ def _get_atom_indices_by_symmetry(lattice, positions, rotations, translations, s
     # mapa[N, K(1)]
     mapa = np.array([index_array[mr] for mr in m])
     return mapa
-
-
-def _get_shortest_distance_in_PBC(pos_i, pos_j, reduced_bases):
-    distances = []
-    for k in (-1, 0, 1):
-        for ll in (-1, 0, 1):
-            for m in (-1, 0, 1):
-                diff = pos_j + np.array([k, ll, m]) - pos_i
-                distances.append(np.linalg.norm(np.dot(diff, reduced_bases)))
-    return np.min(distances)
 
 
 def _get_sym_mappings_from_permutations(permutations, atom_list_done):
