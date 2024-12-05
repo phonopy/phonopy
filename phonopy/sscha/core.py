@@ -43,6 +43,7 @@ import numpy as np
 
 from phonopy import Phonopy
 from phonopy.interface.mlp import PhonopyMLP
+from phonopy.units import EvTokJmol
 
 
 class MLPSSCHA:
@@ -55,6 +56,7 @@ class MLPSSCHA:
         temperature: Optional[float] = None,
         number_of_snapshots: Optional[int] = None,
         max_iterations: Optional[int] = None,
+        distance: Optional[float] = None,
         fc_calculator: Optional[str] = None,
         log_level: int = 0,
     ):
@@ -70,6 +72,8 @@ class MLPSSCHA:
             Number of snapshots, by default 2000.
         max_iterations : int, optional
             Maximum number of iterations, by default 10.
+        distance : float, optional
+            Distance of displacements, by default is None, which gives 0.001.
         fc_calculator : str, optional
             Force constants calculator. The default is None, which means "symfc".
         log_level : int, optional
@@ -92,21 +96,71 @@ class MLPSSCHA:
         else:
             self._max_iterations = max_iterations
         self._max_iterations = max_iterations
+        if distance is None:
+            self._distance = 0.001
+        else:
+            self._distance = distance
         if fc_calculator is None:
             self._fc_calculator = "symfc"
         else:
             self._fc_calculator = fc_calculator
-        self._iter_counter = 0
         self._log_level = log_level
 
         self._ph = ph.copy()
         self._ph.mlp = PhonopyMLP(mlp=mlp.mlp)
         self._ph.nac_params = copy.deepcopy(ph.nac_params)
 
+        # Calculate supercell energy without displacements
+        self._ph.generate_displacements(distance=0, number_of_snapshots=1)
+        self._ph.evaluate_mlp()
+        self._supercell_energy = float(self._ph.supercell_energies[0])
+        self._ph.dataset = None
+
+        if ph.force_constants is None:
+            self._iter_counter = 0
+        else:
+            if log_level:
+                print("Use provided force constants.")
+                print("")
+            self._ph.force_constants = ph.force_constants
+            self._iter_counter = 1
+
+    @property
+    def phonopy(self) -> Phonopy:
+        """Return Phonopy instance."""
+        return self._ph
+
+    @property
+    def free_energy(self) -> float:
+        """Return free energy in eV."""
+        return self._free_energy
+
     @property
     def force_constants(self) -> np.ndarray:
         """Return force constants."""
         return self._ph.force_constants
+
+    @property
+    def harmonic_potential_energy(self) -> float:
+        """Return supercell energies."""
+        d = self._ph.displacements
+        pe = np.einsum("ijkl,mik,mjl", self.force_constants, d, d) / len(d) / 2
+        return pe
+
+    @property
+    def potential_energy(self) -> float:
+        """Return potential energy."""
+        return np.average(self._ph.supercell_energies - self._supercell_energy)
+
+    def calculate_free_energy(self, mesh: float = 100.0) -> float:
+        """Calculate SSCHA free energy."""
+        self._ph.run_mesh(mesh=mesh)
+        self._ph.run_thermal_properties(temperatures=[self._temperature])
+        hfe = self._ph.get_thermal_properties_dict()["free_energy"][0] / EvTokJmol
+        n_cell = len(self._ph.supercell) / len(self._ph.primitive)
+        pe = self.potential_energy / n_cell
+        hpe = self.harmonic_potential_energy / n_cell
+        self._free_energy = hfe + pe - hpe
 
     def run(self) -> "MLPSSCHA":
         """Run through all iterations."""
@@ -119,18 +173,22 @@ class MLPSSCHA:
         """Iterate over force constants calculations."""
         return self
 
-    def __next__(self) -> Phonopy:
+    def __next__(self) -> int:
         """Calculate next force constants."""
         if self._iter_counter == self._max_iterations + 1:
             self._iter_counter = 0
             raise StopIteration
         self._run()
         self._iter_counter += 1
-        return self._ph
+        return self._iter_counter - 1
 
     def _run(self) -> Phonopy:
         if self._log_level and self._iter_counter == 0:
-            print("[ SSCHA initialization (rd=0.03, n_supercells=20) ]")
+            print(
+                f"[ SSCHA initialization (rd={self._distance}, "
+                f"n_supercells={self._number_of_snapshots}) ]",
+                flush=True,
+            )
         if self._log_level and self._iter_counter > 0:
             print(f"[ SSCHA iteration {self._iter_counter} / {self._max_iterations} ]")
             print(
@@ -140,7 +198,9 @@ class MLPSSCHA:
             )
 
         if self._iter_counter == 0:
-            self._ph.generate_displacements(distance=0.03, number_of_snapshots=20)
+            self._ph.generate_displacements(
+                distance=self._distance, number_of_snapshots=self._number_of_snapshots
+            )
         else:
             self._ph.generate_displacements(
                 number_of_snapshots=self._number_of_snapshots,
@@ -169,6 +229,6 @@ class MLPSSCHA:
         self._ph.produce_force_constants(
             fc_calculator="symfc",
             fc_calculator_log_level=self._log_level if self._log_level > 1 else 0,
-            calculate_full_force_constants=False,
+            calculate_full_force_constants=True,
             show_drift=False,
         )

@@ -451,18 +451,18 @@ class ConfParser:
 
         if "classical" in arg_list:
             if self._args.classical:
-                self._confs["classical"] = self._args.classical
+                self._confs["classical"] = ".true."
 
         if "cutoff_frequency" in arg_list:
             if self._args.cutoff_frequency:
                 self._confs["cutoff_frequency"] = self._args.cutoff_frequency
 
         if "displacement_distance" in arg_list:
-            if self._args.displacement_distance:
+            if self._args.displacement_distance is not None:
                 self._confs["displacement_distance"] = self._args.displacement_distance
 
         if "displacement_distance_max" in arg_list:
-            if self._args.displacement_distance_max:
+            if self._args.displacement_distance_max is not None:
                 self._confs["displacement_distance_max"] = (
                     self._args.displacement_distance_max
                 )
@@ -1042,7 +1042,7 @@ class ConfParser:
 
         # Treat statistics classically?
         if "classical" in params:
-            self._settings.set_create_displacements(params["classical"])
+            self._settings.set_classical(params["classical"])
 
         # Cutoff frequency
         if "cutoff_frequency" in params:
