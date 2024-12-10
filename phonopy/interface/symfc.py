@@ -55,7 +55,7 @@ def get_fc2(
     symmetry: Optional[Symmetry] = None,
     options: Optional[Union[str, dict]] = None,
     log_level: int = 0,
-):
+) -> np.ndarray:
     """Calculate fc2 using symfc."""
     p2s_map = primitive.p2s_map
     is_compact_fc = atom_list is not None and (atom_list == p2s_map).all()
@@ -69,7 +69,7 @@ def get_fc2(
         symmetry=symmetry,
         options=options,
         log_level=log_level,
-    )[0]
+    )[2]
 
     if not is_compact_fc and atom_list is not None:
         fc2 = np.array(fc2[atom_list], dtype="double", order="C")
@@ -87,8 +87,12 @@ def run_symfc(
     symmetry: Optional[Symmetry] = None,
     options: Optional[Union[str, dict]] = None,
     log_level: int = 0,
-):
-    """Run symfc."""
+) -> dict[int, np.ndarray]:
+    """Calculate force constants using symfc.
+
+    The details of the parameters are found in the SymfcFCSolver class.
+
+    """
     if orders is None:
         _orders = [2]
     else:
@@ -111,7 +115,10 @@ def run_symfc(
             for key, val in options_dict.items():
                 print(f"  {key}: {val}", flush=True)
 
-    symfc_calculator = SymfcSolver(
+    if log_level == 1:
+        print("Increase log-level to watch detailed symfc log.")
+
+    symfc_calculator = SymfcFCSolver(
         supercell,
         displacements,
         forces,
@@ -133,7 +140,7 @@ def run_symfc(
     return symfc_calculator.force_constants
 
 
-class SymfcSolver:
+class SymfcFCSolver:
     """Interface to symfc."""
 
     def __init__(
@@ -145,6 +152,24 @@ class SymfcSolver:
         options: dict = lambda: {},
         log_level: int = 0,
     ):
+        """Init method.
+
+        Parameters
+        ----------
+        supercell : PhonopyAtoms
+            Supercell.
+        displacements : np.ndarray
+            Displacements.
+        forces : np.ndarray
+            Forces.
+        symmetry : Symmetry, optional
+            Symmetry of supercell. Default is None.
+        options : dict, optional
+            Options for symfc. Default is {}.
+        log_level : int, optional
+            Log level. Default is 0.
+
+        """
         self._options = options
         self._log_level = log_level
         self._symfc = None
@@ -158,11 +183,18 @@ class SymfcSolver:
         )
 
     @property
-    def force_constants(self) -> np.ndarray:
-        """Return force constants."""
+    def force_constants(self) -> dict[int, np.ndarray]:
+        """Return force constants.
+
+        Returns
+        -------
+        dict[int, np.ndarray]
+            Force constants with order as key.
+
+        """
         if self._orders is None:
             raise RuntimeError("Run SymfcCalculator.run() first.")
-        return [self._symfc.force_constants[n] for n in self._orders]
+        return self._symfc.force_constants
 
     def run(
         self,
@@ -189,9 +221,6 @@ class SymfcSolver:
             from symfc.utils.utils import SymfcAtoms
         except ImportError as exc:
             raise ModuleNotFoundError("Symfc python module was not found.") from exc
-
-        if self._log_level == 1:
-            print("Increase log-level to watch detailed symfc log.")
 
         symfc_supercell = SymfcAtoms(
             cell=supercell.cell,

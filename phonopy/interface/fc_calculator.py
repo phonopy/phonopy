@@ -42,7 +42,7 @@ from typing import Optional, Union
 import numpy as np
 
 from phonopy.harmonic.force_constants import FDFCSolver
-from phonopy.interface.symfc import SymfcSolver, parse_symfc_options
+from phonopy.interface.symfc import SymfcFCSolver, parse_symfc_options
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
 from phonopy.structure.dataset import get_displacements_and_forces
@@ -63,7 +63,6 @@ def get_fc2(
     fc_calculator_options: Optional[str] = None,
     atom_list: Optional[Union[Sequence[int], np.ndarray]] = None,
     symmetry: Optional[Symmetry] = None,
-    symprec: float = 1e-5,
     log_level: int = 0,
 ):
     """Supercell 2nd order force constants (fc2) are calculated.
@@ -95,8 +94,6 @@ def get_fc2(
         [all atoms in primitive cell in the atomic indices of supercell].
     symmetry : Symmetry, optional
         Symmetry of supercell. Default is None.
-    symprec : float, optional
-        Tolerance used in symmetry analysis. Default is 1e-5.
     log_level : integer or bool, optional
         Verbosity level. False or 0 means quiet. True or 1 means normal level
         of log to stdout. 2 gives verbose mode.
@@ -206,7 +203,7 @@ class FCCalculator:
             )
         if fc_calculator_name == "symfc":
             displacements, forces = get_displacements_and_forces(self._dataset)
-            return SymfcSolver(
+            return SymfcFCSolver(
                 self._supercell,
                 displacements,
                 forces,

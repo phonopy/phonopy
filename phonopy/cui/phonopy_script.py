@@ -812,9 +812,7 @@ def _read_force_constants_from_file(
 
     # Compact fc is expanded to full fc when full fc is required.
     if is_full_fc and fc.shape[0] != fc.shape[1]:
-        fc = compact_fc_to_full_fc(
-            phonon.primitive, phonon.supercell, fc, log_level=log_level
-        )
+        fc = compact_fc_to_full_fc(phonon.primitive, fc, log_level=log_level)
     elif not is_full_fc and fc.shape[0] == fc.shape[1]:
         fc = full_fc_to_compact_fc(phonon.primitive, fc, log_level=log_level)
 

@@ -438,9 +438,7 @@ def _set_force_constants(
 
     if _fc is not None:
         if not is_compact_fc and _fc.shape[0] != _fc.shape[1]:
-            _fc = compact_fc_to_full_fc(
-                phonon.primitive, phonon.supercell, _fc, log_level=log_level
-            )
+            _fc = compact_fc_to_full_fc(phonon.primitive, _fc, log_level=log_level)
         elif is_compact_fc and _fc.shape[0] == _fc.shape[1]:
             _fc = full_fc_to_compact_fc(phonon.primitive, _fc, log_level=log_level)
         phonon.force_constants = _fc
@@ -465,9 +463,7 @@ def _read_force_constants_file(
     if is_compact_fc and _fc.shape[0] == _fc.shape[1]:
         _fc = full_fc_to_compact_fc(phonon.primitive, _fc, log_level=log_level)
     elif not is_compact_fc and _fc.shape[0] != _fc.shape[1]:
-        _fc = compact_fc_to_full_fc(
-            phonon.primitive, phonon.supercell, _fc, log_level=log_level
-        )
+        _fc = compact_fc_to_full_fc(phonon.primitive, _fc, log_level=log_level)
 
     return _fc
 

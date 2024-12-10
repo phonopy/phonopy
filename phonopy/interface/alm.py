@@ -67,7 +67,7 @@ def get_fc2(
         is_compact_fc=is_compact_fc,
         options=options,
         log_level=log_level,
-    )[0]
+    )[2]
 
     if not is_compact_fc and atom_list is not None:
         fc2 = np.array(fc2[atom_list], dtype="double", order="C")
@@ -84,19 +84,12 @@ def run_alm(
     is_compact_fc: bool = False,
     options: Optional[str] = None,
     log_level: int = 0,
-):
-    """Calculate force constants of arbitrary-order using ALM."""
-    fcs = None  # This is returned.
+) -> list[np.ndarray]:
+    """Calculate force constants using ALM.
 
-    lattice = supercell.cell
-    positions = supercell.scaled_positions
-    numbers = supercell.numbers
-    natom = len(numbers)
-    p2s_map = primitive.p2s_map
-    p2p_map = primitive.p2p_map
+    The details of the parameters are found in the ALMFCSolver class.
 
-    alm_options = _update_options(options)
-    num_elems = len(np.unique(numbers))
+    """
     if log_level:
         print(
             "---------------------------------"
@@ -108,106 +101,20 @@ def run_alm(
         )
         print("T. Tadano and S. Tsuneyuki, " "J. Phys. Soc. Jpn. 87, 041015 (2018).")
         print("ALM is developed at https://github.com/ttadano/ALM by T. " "Tadano.")
+
     if log_level == 1:
         print("Increase log-level to watch detailed ALM log.")
 
-    if "norder" in alm_options:
-        _maxorder = alm_options["norder"]
-    elif "maxorder" in alm_options:
-        _maxorder = alm_options["maxorder"]
-    else:
-        _maxorder = maxorder
-
-    shape = (_maxorder, num_elems, num_elems)
-    cutoff_radii = -np.ones(shape, dtype="double")
-    if alm_options["cutoff"] is not None:
-        if len(alm_options["cutoff"]) == 1:
-            cutoff_radii[:] = alm_options["cutoff"][0]
-        elif len(alm_options["cutoff"]) == _maxorder:
-            for i, cutoff in enumerate(alm_options["cutoff"]):
-                cutoff_radii[i] = cutoff
-        elif np.prod(shape) == len(alm_options["cutoff"]):
-            cutoff_radii[:] = np.reshape(alm_options["cutoff"], shape)
-        else:
-            raise RuntimeError("Cutoff is not properly set.")
-
-    _disps, _forces, df_msg = _slice_displacements_and_forces(
+    alm = ALMFCSolver(
+        supercell,
+        primitive,
         displacements,
         forces,
-        alm_options["ndata"],
-        alm_options["nstart"],
-        alm_options["nend"],
+        maxorder,
+        is_compact_fc=is_compact_fc,
+        options=options,
+        log_level=log_level,
     )
-
-    if log_level > 1:
-        print("")
-        print("  ndata: %d" % len(displacements))
-        for key, val in alm_options.items():
-            if val is not None:
-                print("  %s: %s" % (key, val))
-        print("")
-        print(" " + "-" * 67)
-
-    if log_level > 0:
-        log_level_alm = log_level - 1
-    else:
-        log_level_alm = 0
-
-    try:
-        from alm import ALM, optimizer_control_data_types
-    except ImportError as exc:
-        raise ModuleNotFoundError("ALM python module was not found.") from exc
-
-    with ALM(lattice, positions, numbers) as alm:
-        if log_level > 0:
-            if alm_options["cutoff"] is not None:
-                for i in range(_maxorder):
-                    if _maxorder > 1:
-                        print("fc%d" % (i + 2))
-                    print(
-                        ("cutoff" + " %6s" * num_elems) % tuple(alm.kind_names.values())
-                    )
-                    for r, kn in zip(cutoff_radii[i], alm.kind_names.values()):
-                        print(("   %-3s" + " %6.2f" * num_elems) % ((kn,) + tuple(r)))
-            if df_msg is not None:
-                print(df_msg)
-        if log_level > 1:
-            print("")
-        sys.stdout.flush()
-
-        alm.output_filename_prefix = alm_options["output_filename_prefix"]
-        alm.verbosity = log_level_alm
-
-        alm.define(
-            _maxorder,
-            cutoff_radii=cutoff_radii,
-            nbody=alm_options["nbody"],
-            symmetrization_basis=alm_options["symmetrization_basis"],
-        )
-        alm.displacements = _disps
-        alm.forces = _forces
-
-        # Mainly for elastic net (or lasso) regression
-        optcontrol = {}
-        for key in optimizer_control_data_types:
-            if key in alm_options:
-                optcontrol[key] = alm_options[key]
-        if optcontrol:
-            alm.optimizer_control = optcontrol
-            if "cross_validation" in optcontrol and optcontrol["cross_validation"] > 0:
-                alm.optimize(solver=alm_options["solver"])
-                optcontrol["cross_validation"] = 0
-                optcontrol["l1_alpha"] = alm.cv_l1_alpha
-                alm.optimizer_control = optcontrol
-
-        if alm_options["iconst"] == 0:
-            alm.set_constraint(translation=False)
-
-        alm.optimize(solver=alm_options["solver"])
-
-        fcs = _extract_fc_from_alm(
-            alm, natom, maxorder, is_compact_fc, p2s_map=p2s_map, p2p_map=p2p_map
-        )
 
     if log_level:
         print(
@@ -216,7 +123,198 @@ def run_alm(
             "---------------------------------"
         )
 
-    return fcs
+    return alm.force_constants
+
+
+class ALMFCSolver:
+    """ALM force constants calculator interface."""
+
+    def __init__(
+        self,
+        supercell: PhonopyAtoms,
+        primitive: Primitive,
+        displacements: np.ndarray,
+        forces: np.ndarray,
+        maxorder: int,
+        is_compact_fc: bool = False,
+        options: Optional[str] = None,
+        log_level: int = 0,
+    ):
+        """Init method.
+
+        Parameters
+        ----------
+        supercell : PhonopyAtoms
+            Supercell structure.
+        primitive : Primitive
+            Primitive structure.
+        displacements : np.ndarray
+            Atomic displacements.
+        forces : np.ndarray
+            Forces.
+        maxorder : int
+            Maximum order of force constants. The integer values 1, 2, ...
+            correspond to 2nd, 3rd, ... order force constants.
+        is_compact_fc : bool, optional
+            Compact force constants. Default is False.
+        options : str, optional
+            ALM options. Default is None.
+        log_level : int, optional
+            Log level. Default is 0.
+
+        """
+        self._fc = self._run(
+            supercell,
+            primitive,
+            displacements,
+            forces,
+            maxorder,
+            is_compact_fc=is_compact_fc,
+            options=options,
+            log_level=log_level,
+        )
+
+    @property
+    def force_constants(self) -> dict[int, np.ndarray]:
+        """Return force constants.
+
+        Returns
+        -------
+        dict[int, np.ndarray]
+            Force constants with order as key.
+
+        """
+        return {i + 2: fc for i, fc in enumerate(self._fc)}
+
+    def _run(
+        self,
+        supercell: PhonopyAtoms,
+        primitive: Primitive,
+        displacements: np.ndarray,
+        forces: np.ndarray,
+        maxorder: int,
+        is_compact_fc: bool = False,
+        options: Optional[str] = None,
+        log_level: int = 0,
+    ) -> list[np.ndarray]:
+        """Calculate force constants of arbitrary-order using ALM."""
+        fcs = None  # This is returned.
+
+        lattice = supercell.cell
+        positions = supercell.scaled_positions
+        numbers = supercell.numbers
+        natom = len(numbers)
+        p2s_map = primitive.p2s_map
+        p2p_map = primitive.p2p_map
+
+        alm_options = _update_options(options)
+        num_elems = len(np.unique(numbers))
+
+        if "norder" in alm_options:
+            _maxorder = alm_options["norder"]
+        elif "maxorder" in alm_options:
+            _maxorder = alm_options["maxorder"]
+        else:
+            _maxorder = maxorder
+
+        shape = (_maxorder, num_elems, num_elems)
+        cutoff_radii = -np.ones(shape, dtype="double")
+        if alm_options["cutoff"] is not None:
+            if len(alm_options["cutoff"]) == 1:
+                cutoff_radii[:] = alm_options["cutoff"][0]
+            elif len(alm_options["cutoff"]) == _maxorder:
+                for i, cutoff in enumerate(alm_options["cutoff"]):
+                    cutoff_radii[i] = cutoff
+            elif np.prod(shape) == len(alm_options["cutoff"]):
+                cutoff_radii[:] = np.reshape(alm_options["cutoff"], shape)
+            else:
+                raise RuntimeError("Cutoff is not properly set.")
+
+        _disps, _forces, df_msg = _slice_displacements_and_forces(
+            displacements,
+            forces,
+            alm_options["ndata"],
+            alm_options["nstart"],
+            alm_options["nend"],
+        )
+
+        if log_level > 1:
+            print("")
+            print("  ndata: %d" % len(displacements))
+            for key, val in alm_options.items():
+                if val is not None:
+                    print("  %s: %s" % (key, val))
+            print("")
+            print(" " + "-" * 67)
+
+        if log_level > 0:
+            log_level_alm = log_level - 1
+        else:
+            log_level_alm = 0
+
+        try:
+            from alm import ALM, optimizer_control_data_types
+        except ImportError as exc:
+            raise ModuleNotFoundError("ALM python module was not found.") from exc
+
+        with ALM(lattice, positions, numbers) as alm:
+            if log_level > 0:
+                if alm_options["cutoff"] is not None:
+                    for i in range(_maxorder):
+                        if _maxorder > 1:
+                            print("fc%d" % (i + 2))
+                        print(
+                            ("cutoff" + " %6s" * num_elems)
+                            % tuple(alm.kind_names.values())
+                        )
+                        for r, kn in zip(cutoff_radii[i], alm.kind_names.values()):
+                            print(
+                                ("   %-3s" + " %6.2f" * num_elems) % ((kn,) + tuple(r))
+                            )
+                if df_msg is not None:
+                    print(df_msg)
+            if log_level > 1:
+                print("")
+            sys.stdout.flush()
+
+            alm.output_filename_prefix = alm_options["output_filename_prefix"]
+            alm.verbosity = log_level_alm
+
+            alm.define(
+                _maxorder,
+                cutoff_radii=cutoff_radii,
+                nbody=alm_options["nbody"],
+                symmetrization_basis=alm_options["symmetrization_basis"],
+            )
+            alm.displacements = _disps
+            alm.forces = _forces
+
+            # Mainly for elastic net (or lasso) regression
+            optcontrol = {}
+            for key in optimizer_control_data_types:
+                if key in alm_options:
+                    optcontrol[key] = alm_options[key]
+            if optcontrol:
+                alm.optimizer_control = optcontrol
+                if (
+                    "cross_validation" in optcontrol
+                    and optcontrol["cross_validation"] > 0
+                ):
+                    alm.optimize(solver=alm_options["solver"])
+                    optcontrol["cross_validation"] = 0
+                    optcontrol["l1_alpha"] = alm.cv_l1_alpha
+                    alm.optimizer_control = optcontrol
+
+            if alm_options["iconst"] == 0:
+                alm.set_constraint(translation=False)
+
+            alm.optimize(solver=alm_options["solver"])
+
+            fcs = _extract_fc_from_alm(
+                alm, natom, maxorder, is_compact_fc, p2s_map=p2s_map, p2p_map=p2p_map
+            )
+
+        return fcs
 
 
 def _update_options(fc_calculator_options):
@@ -302,7 +400,7 @@ def _slice_displacements_and_forces(d, f, ndata, nstart, nend):
 
 def _extract_fc_from_alm(
     alm, natom, maxorder, is_compact_fc, p2s_map=None, p2p_map=None
-):
+) -> list[np.ndarray]:
     # Harmonic: order=1, 3rd: order=2, ...
     fcs = []
     for order in range(1, maxorder + 1):
