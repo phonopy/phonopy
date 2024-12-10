@@ -3921,7 +3921,6 @@ class Phonopy:
                 fc_calculator_options=fc_calculator_options,
                 atom_list=distributed_atom_list,
                 symmetry=self._symmetry,
-                symprec=self._symprec,
                 log_level=log_level,
             )
             if decimals:

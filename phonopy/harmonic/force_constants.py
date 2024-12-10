@@ -36,7 +36,8 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from collections.abc import Sequence
+from typing import Optional, Union
 
 import numpy as np
 
@@ -51,6 +52,20 @@ from phonopy.structure.symmetry import Symmetry
 from phonopy.utils import similarity_transformation
 
 
+def get_fc2(
+    supercell: PhonopyAtoms,
+    symmetry: Symmetry,
+    dataset: dict,
+    atom_list: Optional[Union[Sequence[int], np.ndarray]] = None,
+    primitive: Optional[Primitive] = None,
+):
+    """Get 2nd order force constants."""
+    fd_fc_solver = FDFCSolver(
+        supercell, symmetry, dataset, atom_list=atom_list, primitive=primitive
+    )
+    return fd_fc_solver.force_constants[2]
+
+
 class FDFCSolver:
     """Finite difference type force constants calculator.
 
@@ -62,8 +77,8 @@ class FDFCSolver:
         self,
         supercell: PhonopyAtoms,
         symmetry: Symmetry,
-        dataset,
-        atom_list=None,
+        dataset: dict,
+        atom_list: Optional[Union[Sequence[int], np.ndarray]] = None,
         primitive: Optional[Primitive] = None,
     ):
         self._fc2 = self._run(
@@ -71,16 +86,23 @@ class FDFCSolver:
         )
 
     @property
-    def fc2(self) -> np.ndarray:
-        """Return 2nd order force constants."""
-        return self._fc2
+    def force_constants(self) -> dict[int, np.ndarray]:
+        """Return force constants.
+
+        Returns
+        -------
+        dict[int, np.ndarray]
+            Force constants with order as key.
+
+        """
+        return {2: self._fc2}
 
     def _run(
         self,
         supercell: PhonopyAtoms,
         symmetry: Symmetry,
         dataset,
-        atom_list=None,
+        atom_list: Optional[Union[Sequence[int], np.ndarray]] = None,
         primitive: Optional[Primitive] = None,
     ) -> np.ndarray:
         """Force constants are computed.
@@ -144,25 +166,8 @@ class FDFCSolver:
         return force_constants
 
 
-def get_fc2(
-    supercell: PhonopyAtoms,
-    symmetry: Symmetry,
-    dataset,
-    atom_list=None,
-    primitive: Optional[Primitive] = None,
-):
-    """Get 2nd order force constants."""
-    fd_fc_calculator = FDFCSolver(
-        supercell, symmetry, dataset, atom_list=atom_list, primitive=primitive
-    )
-    return fd_fc_calculator.fc2
-
-
 def compact_fc_to_full_fc(
-    primitive: Primitive,
-    supercell: PhonopyAtoms,
-    compact_fc: np.ndarray,
-    log_level: int = 0,
+    primitive: Primitive, compact_fc: np.ndarray, log_level: int = 0
 ):
     """Transform compact fc to full fc."""
     fc = np.zeros(
@@ -382,7 +387,7 @@ def distribute_force_constants(
     )
 
 
-def distribute_force_constants_by_translations(fc, primitive: Primitive):
+def distribute_force_constants_by_translations(fc: np.ndarray, primitive: Primitive):
     """Distribute compact fc data to full fc by pure translations.
 
     For example, the input fc has to be prepared in the following way
