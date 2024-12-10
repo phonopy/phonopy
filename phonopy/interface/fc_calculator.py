@@ -152,8 +152,8 @@ class FCSolver:
         is_compact_fc : bool, optional
             If True, force constants are returned in the compact form.
         primitive : Primitive, optional
-            Primitive cell. Only needed for the traditional FC calculator.
-            Default is None.
+            Primitive cell. This is needed for the traditional and alm FC
+            calculator. Default is None.
         orders : Sequence[int], optional
             Orders of force constants to be calculated. Default is None.
         options : str, optional
@@ -258,6 +258,11 @@ class FCSolver:
     def _set_alm_solver(self):
         from phonopy.interface.alm import ALMFCSolver
 
+        if self._primitive is None:
+            raise RuntimeError(
+                "Primitive cell is required for the traditional FC solver."
+            )
+
         if self._dataset is None:
             raise RuntimeError(
                 "Displacement-force dataset is required for ALM FC solver."
@@ -266,6 +271,7 @@ class FCSolver:
 
         return ALMFCSolver(
             self._supercell,
+            self._primitive,
             displacements,
             forces,
             max(self._orders) - 1,
