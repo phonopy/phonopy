@@ -204,7 +204,7 @@ class SymfcFCSolver:
     ):
         """Run symfc."""
         self._orders = orders
-        self._symfc.run(max_order=int(max(orders)), is_compact_fc=is_compact_fc)
+        self._symfc.run(orders=orders, is_compact_fc=is_compact_fc)
         if is_compact_fc and p2s_map is not None:
             assert (self._symfc.p2s_map == p2s_map).all()
 

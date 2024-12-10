@@ -163,7 +163,7 @@ class ALMFCSolver:
             Log level. Default is 0.
 
         """
-        self._fc = self._run(
+        fcs = self._run(
             supercell,
             primitive,
             displacements,
@@ -173,6 +173,7 @@ class ALMFCSolver:
             options=options,
             log_level=log_level,
         )
+        self._fc = {i + 2: fc for i, fc in enumerate(fcs)}
 
     @property
     def force_constants(self) -> dict[int, np.ndarray]:
@@ -184,7 +185,7 @@ class ALMFCSolver:
             Force constants with order as key.
 
         """
-        return {i + 2: fc for i, fc in enumerate(self._fc)}
+        return self._fc
 
     def _run(
         self,
