@@ -36,12 +36,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
 import numpy as np
-
-if TYPE_CHECKING:
-    from phonopy import Phonopy
 
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
@@ -54,7 +51,7 @@ from phonopy.structure.symmetry import Symmetry
 from phonopy.utils import similarity_transformation
 
 
-class FDFCCalculator:
+class FDFCSolver:
     """Finite difference type force constants calculator.
 
     This is phonopy's traditional force constants calculator.
@@ -133,9 +130,7 @@ class FDFCCalculator:
                 atom_list=primitive.p2s_map,
                 fc_indices_of_atom_list=primitive.p2s_map,
             )
-            distribute_force_constants_by_translations(
-                force_constants, primitive, supercell
-            )
+            distribute_force_constants_by_translations(force_constants, primitive)
         else:
             distribute_force_constants(
                 force_constants,
@@ -157,28 +152,35 @@ def get_fc2(
     primitive: Optional[Primitive] = None,
 ):
     """Get 2nd order force constants."""
-    fd_fc_calculator = FDFCCalculator(
+    fd_fc_calculator = FDFCSolver(
         supercell, symmetry, dataset, atom_list=atom_list, primitive=primitive
     )
     return fd_fc_calculator.fc2
 
 
-def compact_fc_to_full_fc(phonon: "Phonopy", compact_fc, log_level=0):
+def compact_fc_to_full_fc(
+    primitive: Primitive,
+    supercell: PhonopyAtoms,
+    compact_fc: np.ndarray,
+    log_level: int = 0,
+):
     """Transform compact fc to full fc."""
     fc = np.zeros(
         (compact_fc.shape[1], compact_fc.shape[1], 3, 3), dtype="double", order="C"
     )
-    fc[phonon.primitive.p2s_map] = compact_fc
-    distribute_force_constants_by_translations(fc, phonon.primitive, phonon.supercell)
+    fc[primitive.p2s_map] = compact_fc
+    distribute_force_constants_by_translations(fc, primitive)
     if log_level:
         print("Force constants were expanded to full format.")
 
     return fc
 
 
-def full_fc_to_compact_fc(phonon: "Phonopy", full_fc, log_level=0):
+def full_fc_to_compact_fc(
+    primitive: Primitive, full_fc: np.ndarray, log_level: int = 0
+):
     """Transform full fc to compact fc."""
-    p2s_map = phonon.primitive.p2s_map
+    p2s_map = primitive.p2s_map
     fc = np.zeros((len(p2s_map), full_fc.shape[1], 3, 3), dtype="double", order="C")
     fc[:] = full_fc[p2s_map]
     if log_level:
@@ -380,9 +382,7 @@ def distribute_force_constants(
     )
 
 
-def distribute_force_constants_by_translations(
-    fc, primitive: Primitive, supercell: PhonopyAtoms
-):
+def distribute_force_constants_by_translations(fc, primitive: Primitive):
     """Distribute compact fc data to full fc by pure translations.
 
     For example, the input fc has to be prepared in the following way
@@ -395,7 +395,7 @@ def distribute_force_constants_by_translations(
     """
     p2s = primitive.p2s_map
     permutations = primitive.atomic_permutations
-    lattice = supercell.cell.T
+    lattice = primitive.cell.T @ np.linalg.inv(primitive.primitive_matrix)
     rotations = np.array(
         [np.eye(3, dtype="intc")] * permutations.shape[0], dtype="intc", order="C"
     )

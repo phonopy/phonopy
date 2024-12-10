@@ -275,6 +275,8 @@ class DynamicStructureFactor:
 def atomic_form_factor_WK1995(s, f_x):
     """Return atomic form factor of WK1995.
 
+    D. Waasmaier and A. Kirfel, Acta Cryst. (1995). A51, 416-431
+
     s = sin(theta)/lambda = |k' - k|/2 = |Q|/2
 
     where k, k', Q are given without 2pi.

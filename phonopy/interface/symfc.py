@@ -111,7 +111,7 @@ def run_symfc(
             for key, val in options_dict.items():
                 print(f"  {key}: {val}", flush=True)
 
-    symfc_calculator = SymfcCalculator(
+    symfc_calculator = SymfcSolver(
         supercell,
         displacements,
         forces,
@@ -133,7 +133,7 @@ def run_symfc(
     return symfc_calculator.force_constants
 
 
-class SymfcCalculator:
+class SymfcSolver:
     """Interface to symfc."""
 
     def __init__(

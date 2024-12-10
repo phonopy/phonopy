@@ -41,8 +41,8 @@ from typing import Optional, Union
 
 import numpy as np
 
-from phonopy.harmonic.force_constants import FDFCCalculator
-from phonopy.interface.symfc import SymfcCalculator, parse_symfc_options
+from phonopy.harmonic.force_constants import FDFCSolver
+from phonopy.interface.symfc import SymfcSolver, parse_symfc_options
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
 from phonopy.structure.dataset import get_displacements_and_forces
@@ -197,7 +197,7 @@ class FCCalculator:
             )
 
         if fc_calculator_name == "traditional":
-            return FDFCCalculator(
+            return FDFCSolver(
                 self._supercell,
                 self._symmetry,
                 self._dataset,
@@ -206,7 +206,7 @@ class FCCalculator:
             )
         if fc_calculator_name == "symfc":
             displacements, forces = get_displacements_and_forces(self._dataset)
-            return SymfcCalculator(
+            return SymfcSolver(
                 self._supercell,
                 displacements,
                 forces,
