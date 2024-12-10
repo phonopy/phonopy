@@ -37,9 +37,13 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Literal, Optional
+from typing import Literal, Optional, Union
+
+import numpy as np
 
 from phonopy.harmonic.force_constants import FDFCSolver
+from phonopy.interface.alm import ALMFCSolver
+from phonopy.interface.symfc import SymfcFCSolver
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
 from phonopy.structure.dataset import get_displacements_and_forces
@@ -56,7 +60,7 @@ def get_fc2(
     supercell: PhonopyAtoms,
     dataset: dict,
     primitive: Optional[Primitive] = None,
-    fc_calculator: Optional[str] = None,
+    fc_calculator: Optional[Literal["traditional", "symfc", "alm"]] = None,
     fc_calculator_options: Optional[str] = None,
     is_compact_fc: bool = False,
     symmetry: Optional[Symmetry] = None,
@@ -76,87 +80,39 @@ def get_fc2(
     primitive : Primitive
         Primitive cell. Only needed for the traditional FC calculator.
     fc_calculator : str, optional
-        Currently only 'alm' is supported. Default is None, meaning invoking
-        'alm'.
+        Currently 'traditional' (FD method), 'alm', and 'symfc' are supported.
+        Default is None, meaning invoking 'traditional'.
     fc_calculator_options : str, optional
         This is arbitrary string.
     is_compact_fc : bool, optional
         If True, force constants are returned in the compact form.
     symmetry : Symmetry, optional
-        Symmetry of supercell. Default is None.
+        Symmetry of supercell. This is used for the traditional and symfc FC
+        solver. Default is None.
     log_level : integer or bool, optional
-        Verbosity level. False or 0 means quiet. True or 1 means normal level
-        of log to stdout. 2 gives verbose mode.
+        Verbosity level. False or 0 means quiet. True or 1 means normal level of
+        log to stdout. 2 gives verbose mode.
 
     Returns
     -------
     fc2 : ndarray
-        2nd order force constants.
-        shape=(len(atom_list), num_atoms, 3, 3), dtype='double', order='C'.
+        2nd order force constants. shape=(len(atom_list), num_atoms, 3, 3),
+        dtype='double', order='C'.
 
     """
-    if fc_calculator is None or fc_calculator == "traditional":
-        from phonopy.harmonic.force_constants import get_fc2
-
-        if primitive is None:
-            raise RuntimeError(
-                "Primitive cell is required for the traditional FC calculator."
-            )
-
-        if "displacements" in dataset:
-            lines = [
-                "Type-II dataset for displacements and forces was provided, ",
-                "but the selected force constants calculator cannot process it.",
-                "Use another force constants calculator, e.g., symfc, ",
-                "to generate force constants.",
-            ]
-            raise RuntimeError("\n".join(lines))
-
-        if is_compact_fc:
-            atom_list = primitive.p2s_map
-        else:
-            atom_list = list(range(len(supercell)))
-        return get_fc2(
-            supercell,
-            symmetry,
-            dataset,
-            atom_list=atom_list,
-            primitive=primitive,
-        )
-
-    displacements, forces = get_displacements_and_forces(dataset)
-    if fc_calculator == "alm" or fc_calculator is None:
-        from phonopy.interface.alm import run_alm
-
-        fc2 = run_alm(
-            supercell,
-            primitive,
-            displacements,
-            forces,
-            1,
-            is_compact_fc=is_compact_fc,
-            options=fc_calculator_options,
-            log_level=log_level,
-        )[2]
-
-        return fc2
-
-    if fc_calculator == "symfc":
-        from phonopy.interface.symfc import run_symfc
-
-        fc2 = run_symfc(
-            supercell,
-            primitive,
-            displacements,
-            forces,
-            orders=[2],
-            is_compact_fc=is_compact_fc,
-            symmetry=symmetry,
-            options=fc_calculator_options,
-            log_level=log_level,
-        )[2]
-
-        return fc2
+    fc_solver_name = fc_calculator if fc_calculator is not None else "traditional"
+    fc_solver = FCSolver(
+        fc_solver_name,
+        supercell,
+        symmetry=symmetry,
+        dataset=dataset,
+        is_compact_fc=is_compact_fc,
+        primitive=primitive,
+        orders=[2],
+        options=fc_calculator_options,
+        log_level=log_level,
+    )
+    return fc_solver.force_constants[2]
 
 
 class FCSolver:
@@ -164,7 +120,7 @@ class FCSolver:
 
     def __init__(
         self,
-        fc_calculator_name: Literal["traditional", "symfc", "alm"],
+        fc_solver_name: Literal["traditional", "symfc", "alm"],
         supercell: PhonopyAtoms,
         symmetry: Optional[Symmetry] = None,
         dataset: Optional[dict] = None,
@@ -184,7 +140,7 @@ class FCSolver:
 
         Parameters
         ----------
-        fc_calculator_name : Literal["traditional", "symfc", "alm"]
+        fc_solver_name : Literal["traditional", "symfc", "alm"]
             Force constants calculator name.
         supercell : PhonopyAtoms
             Supercell.
@@ -216,12 +172,17 @@ class FCSolver:
         self._options = options
         self._log_level = log_level
 
-        self._fc_solver = self._set_fc_solver(fc_calculator_name)
+        self._fc_solver = self._set_fc_solver(fc_solver_name)
 
     @property
-    def fc_solver(self):
+    def fc_solver(self) -> Union[FDFCSolver, SymfcFCSolver, ALMFCSolver]:
         """Return force constants solver class instance."""
         return self._fc_solver
+
+    @property
+    def force_constants(self) -> dict[int, np.ndarray]:
+        """Return force constants."""
+        return self._fc_solver.force_constants
 
     def _set_fc_solver(self, fc_calculator_name: str):
         if fc_calculator_name not in fc_calculator_names:
@@ -287,6 +248,7 @@ class FCSolver:
                 forces,
                 symmetry=self._symmetry,
                 options=parse_symfc_options(self._options),
+                is_compact_fc=self._is_compact_fc,
                 log_level=self._log_level,
             )
             if self._orders is not None:
