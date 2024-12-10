@@ -37,42 +37,12 @@
 from __future__ import annotations
 
 import sys
-from collections.abc import Sequence
-from typing import Optional, Union
+from typing import Optional
 
 import numpy as np
 
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
-
-
-def get_fc2(
-    supercell: PhonopyAtoms,
-    primitive: Primitive,
-    displacements: np.ndarray,
-    forces: np.ndarray,
-    atom_list: Optional[Union[Sequence[int], np.ndarray]] = None,
-    options: Optional[str] = None,
-    log_level: int = 0,
-):
-    """Calculate fc2 using ALM."""
-    p2s_map = primitive.p2s_map
-    is_compact_fc = atom_list is not None and (atom_list == p2s_map).all()
-    fc2 = run_alm(
-        supercell,
-        primitive,
-        displacements,
-        forces,
-        1,
-        is_compact_fc=is_compact_fc,
-        options=options,
-        log_level=log_level,
-    )[2]
-
-    if not is_compact_fc and atom_list is not None:
-        fc2 = np.array(fc2[atom_list], dtype="double", order="C")
-
-    return fc2
 
 
 def run_alm(
