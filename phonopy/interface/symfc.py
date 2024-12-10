@@ -46,37 +46,6 @@ from phonopy.structure.cells import Primitive
 from phonopy.structure.symmetry import Symmetry
 
 
-def get_fc2(
-    supercell: PhonopyAtoms,
-    primitive: Primitive,
-    displacements: np.ndarray,
-    forces: np.ndarray,
-    atom_list: Optional[Union[Sequence[int], np.ndarray]] = None,
-    symmetry: Optional[Symmetry] = None,
-    options: Optional[Union[str, dict]] = None,
-    log_level: int = 0,
-) -> np.ndarray:
-    """Calculate fc2 using symfc."""
-    p2s_map = primitive.p2s_map
-    is_compact_fc = atom_list is not None and (atom_list == p2s_map).all()
-    fc2 = run_symfc(
-        supercell,
-        primitive,
-        displacements,
-        forces,
-        orders=[2],
-        is_compact_fc=is_compact_fc,
-        symmetry=symmetry,
-        options=options,
-        log_level=log_level,
-    )[2]
-
-    if not is_compact_fc and atom_list is not None:
-        fc2 = np.array(fc2[atom_list], dtype="double", order="C")
-
-    return fc2
-
-
 def run_symfc(
     supercell: PhonopyAtoms,
     primitive: Primitive,
@@ -120,15 +89,15 @@ def run_symfc(
 
     symfc_calculator = SymfcFCSolver(
         supercell,
-        displacements,
-        forces,
+        displacements=displacements,
+        forces=forces,
         symmetry=symmetry,
+        orders=orders,
         options=options_dict,
+        is_compact_fc=is_compact_fc,
         log_level=log_level,
     )
-    symfc_calculator.run(
-        orders=orders, is_compact_fc=is_compact_fc, p2s_map=primitive.p2s_map
-    )
+    assert np.array_equal(symfc_calculator.p2s_map, primitive.p2s_map)
 
     if log_level:
         print(
@@ -149,7 +118,9 @@ class SymfcFCSolver:
         displacements: np.ndarray,
         forces: np.ndarray,
         symmetry: Optional[Symmetry] = None,
+        orders: Optional[Sequence[int]] = None,
         options: dict = lambda: {},
+        is_compact_fc: bool = False,
         log_level: int = 0,
     ):
         """Init method.
@@ -164,23 +135,32 @@ class SymfcFCSolver:
             Forces.
         symmetry : Symmetry, optional
             Symmetry of supercell. Default is None.
+        orders: Sequence[int], optional
+            Orders of force constants. Default is None.
         options : dict, optional
             Options for symfc. Default is {}.
+        is_compact_fc : bool, optional
+            Whether force constants are compact or full. When True, check if
+            SymfcFCSolver.p2s_map is equal to primitive.p2s_map. Default is
+            False.
         log_level : int, optional
             Log level. Default is 0.
 
         """
         self._options = options
         self._log_level = log_level
+        self._orders = orders
+        self._is_compact_fc = is_compact_fc
         self._symfc = None
-        self._orders = None
 
-        self._set_symfc(
+        self._initialize(
             supercell,
-            displacements,
-            forces,
             symmetry=symmetry,
+            displacements=displacements,
+            forces=forces,
         )
+        if self._orders is not None:
+            self.run(self._orders)
 
     @property
     def force_constants(self) -> dict[int, np.ndarray]:
@@ -196,24 +176,22 @@ class SymfcFCSolver:
             raise RuntimeError("Run SymfcCalculator.run() first.")
         return self._symfc.force_constants
 
-    def run(
-        self,
-        orders: Sequence[int],
-        is_compact_fc: bool = False,
-        p2s_map: Optional[np.ndarray] = None,
-    ):
+    def run(self, orders: Sequence[int]):
         """Run symfc."""
         self._orders = orders
-        self._symfc.run(orders=orders, is_compact_fc=is_compact_fc)
-        if is_compact_fc and p2s_map is not None:
-            assert (self._symfc.p2s_map == p2s_map).all()
+        self._symfc.run(orders=orders, is_compact_fc=self._is_compact_fc)
 
-    def _set_symfc(
+    @property
+    def p2s_map(self) -> np.ndarray:
+        """Return indices of translationally independent atoms."""
+        return self._symfc.p2s_map
+
+    def _initialize(
         self,
         supercell: PhonopyAtoms,
-        displacements: np.ndarray,
-        forces: np.ndarray,
         symmetry: Optional[Symmetry] = None,
+        displacements: Optional[np.ndarray] = None,
+        forces: Optional[np.ndarray] = None,
     ):
         """Calculate force constants."""
         try:
@@ -232,11 +210,12 @@ class SymfcFCSolver:
         self._symfc = Symfc(
             symfc_supercell,
             spacegroup_operations=spacegroup_operations,
-            displacements=displacements,
-            forces=forces,
             use_mkl=self._options.get("use_mkl", False),
             log_level=self._log_level - 1 if self._log_level else 0,
         )
+        if displacements is not None and forces is not None:
+            self._symfc.displacements = displacements
+            self._symfc.forces = forces
 
 
 def parse_symfc_options(options: Optional[Union[str, dict]]) -> dict:

@@ -1165,21 +1165,13 @@ class Phonopy:
         elif "forces" not in self._dataset:
             raise ForcesetsNotFoundError("Force sets are not yet set.")
 
-        if calculate_full_force_constants:
-            self._run_force_constants_from_forces(
-                fc_calculator=fc_calculator,
-                fc_calculator_options=fc_calculator_options,
-                decimals=self._force_constants_decimals,
-                log_level=fc_log_level,
-            )
-        else:
-            self._run_force_constants_from_forces(
-                distributed_atom_list=self._primitive.p2s_map,
-                fc_calculator=fc_calculator,
-                fc_calculator_options=fc_calculator_options,
-                decimals=self._force_constants_decimals,
-                log_level=fc_log_level,
-            )
+        self._run_force_constants_from_forces(
+            is_compact_fc=not calculate_full_force_constants,
+            fc_calculator=fc_calculator,
+            fc_calculator_options=fc_calculator_options,
+            decimals=self._force_constants_decimals,
+            log_level=fc_log_level,
+        )
 
         if show_drift and self._log_level:
             show_drift_force_constants(self._force_constants, primitive=self._primitive)
@@ -3906,7 +3898,7 @@ class Phonopy:
 
     def _run_force_constants_from_forces(
         self,
-        distributed_atom_list: Optional[Sequence] = None,
+        is_compact_fc: bool = False,
         fc_calculator: Optional[str] = None,
         fc_calculator_options: Optional[str] = None,
         decimals: Optional[int] = None,
@@ -3915,11 +3907,11 @@ class Phonopy:
         if self._dataset is not None:
             self._force_constants = get_fc2(
                 self._supercell,
-                self._primitive,
                 self._dataset,
+                primitive=self._primitive,
                 fc_calculator=fc_calculator,
                 fc_calculator_options=fc_calculator_options,
-                atom_list=distributed_atom_list,
+                is_compact_fc=is_compact_fc,
                 symmetry=self._symmetry,
                 log_level=log_level,
             )
