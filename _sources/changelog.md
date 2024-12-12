@@ -2,6 +2,12 @@
 
 # Change Log
 
+## Dec-12-2024: Version 2.33.0
+
+- The default choice for storing atomic pair vectors in the `Primitive` class
+  has been updated. Previously, the API had `store_dense_svecs=False` as the
+  default, but now it is `store_dense_svecs=True`.
+
 ## Dec-5-2024: Version 2.32.0
 
 - Maintenance release including refactoring of SSCHA interface
