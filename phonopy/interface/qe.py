@@ -597,7 +597,7 @@ class PH_Q2R:
             fc = np.zeros((natom_s, natom_s, 3, 3), dtype="double", order="C")
             p2s = pcell.get_primitive_to_supercell_map()
             fc[p2s, :] = q2r_fc[:, site_map]
-            distribute_force_constants_by_translations(fc, pcell, scell)
+            distribute_force_constants_by_translations(fc, pcell)
         else:
             fc = np.zeros((natom, natom_s, 3, 3), dtype="double", order="C")
             fc[:, :] = q2r_fc[:, site_map]

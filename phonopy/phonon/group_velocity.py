@@ -80,10 +80,10 @@ class GroupVelocity:
     def __init__(
         self,
         dynamical_matrix: Union[DynamicalMatrix, DynamicalMatrixNAC],
-        q_length=None,
+        q_length: Optional[float] = None,
         symmetry: Optional[Symmetry] = None,
-        frequency_factor_to_THz=VaspToTHz,
-        cutoff_frequency=1e-4,
+        frequency_factor_to_THz: float = VaspToTHz,
+        cutoff_frequency: float = 1e-4,
     ):
         """Init method.
 
