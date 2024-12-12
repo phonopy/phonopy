@@ -340,25 +340,14 @@ class Supercell(PhonopyAtoms):
 
 
 class Primitive(PhonopyAtoms):
-    """Build primitive cell.
-
-    Attributes
-    ----------
-    primitive_matrix : ndarray
-    p2s_map : ndarray
-    s2p_map : ndarray
-    p2p_map : dict
-    atomic_permutations : ndarray
-    store_dense_svecs : bool
-
-    """
+    """Build primitive cell."""
 
     def __init__(
         self,
         supercell: PhonopyAtoms,
         primitive_matrix,
         symprec=1e-5,
-        store_dense_svecs=False,
+        store_dense_svecs=True,
         positions_to_reorder=None,
     ):
         """Init method.
@@ -368,19 +357,21 @@ class Primitive(PhonopyAtoms):
         supercell : PhonopyAtoms
             Supercell
         primitive_matrix : list of list or ndarray
-            Transformation matrix to transform supercell to primitive cell
-            such as:
+            Transformation matrix to transform supercell to primitive cell such
+            as:
                np.dot(primitive_matrix.T, supercell.cell)
             shape=(3,3)
-        symprec : float, optional, default=1e-5
-            Tolerance to find overlapping atoms in primitive cell.
-        store_dense_svecs : bool, optional, default=False
-            Shortest vectors are stored in a dense array. See `ShortestPairs`.
-        positions_to_reorder : array_like, optional, default=None
-            If atomic positions in a created primitive cell is known and
-            the order of atoms is expected to be sure, these positions with
-            the specific order is used after position matching between
-            this data and generated positions.
+        symprec : float, optional
+            Tolerance to find overlapping atoms in primitive cell. Default is
+            1e-5.
+        store_dense_svecs : bool, optional
+            Shortest vectors are stored in a dense array. Default is True. See
+            `ShortestPairs`.
+        positions_to_reorder : array_like, optional
+            If atomic positions in a created primitive cell is known and the
+            order of atoms is expected to be sure, these positions with the
+            specific order is used after position matching between this data and
+            generated positions. Default is None.
 
         """
         self._primitive_matrix = np.array(primitive_matrix, dtype="double", order="C")
@@ -888,7 +879,7 @@ def get_primitive(
     supercell: PhonopyAtoms,
     primitive_matrix: Optional[Union[str, np.ndarray, Sequence]] = None,
     symprec=1e-5,
-    store_dense_svecs=False,
+    store_dense_svecs=True,
     positions_to_reorder=None,
 ):
     """Create primitive cell."""
@@ -1141,7 +1132,7 @@ class ShortestPairs:
         supercell_bases,
         supercell_pos,
         primitive_pos,
-        store_dense_svecs=False,
+        store_dense_svecs=True,
         symprec=1e-5,
     ):
         """Init method.
@@ -1160,7 +1151,7 @@ class ShortestPairs:
             shape=(size_prim, 3)
         store_dense_svecs_: bool, optional
             ``shortest_vectors`` are stored in the dense data structure.
-            Default is False.
+            Default is True.
         symprec : float, optional
             Tolerance to find equal distances of vectors. Default is 1e-5.
 
