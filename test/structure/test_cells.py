@@ -361,7 +361,7 @@ def test_ShortestPairs_sparse_nacl(ph_nacl: Phonopy, helper_methods: Callable):
     scell = ph_nacl.supercell
     pcell = ph_nacl.primitive
     pos = scell.scaled_positions
-    spairs = ShortestPairs(scell.cell, pos, pos[pcell.p2s_map])
+    spairs = ShortestPairs(scell.cell, pos, pos[pcell.p2s_map], store_dense_svecs=False)
     svecs = spairs.shortest_vectors
     multi = spairs.multiplicities
     np.testing.assert_array_equal(multi.ravel(), multi_nacl_ref)

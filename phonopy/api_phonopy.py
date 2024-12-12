@@ -152,36 +152,127 @@ class Phonopy:
         unitcell,
         supercell_matrix: Optional[Union[Sequence, np.ndarray]] = None,
         primitive_matrix: Optional[Union[str, Sequence, np.ndarray]] = None,
-        nac_params=None,
-        factor=VaspToTHz,
-        frequency_scale_factor=None,
-        dynamical_matrix_decimals=None,
-        force_constants_decimals=None,
-        group_velocity_delta_q=None,
-        symprec=1e-5,
-        is_symmetry=True,
-        store_dense_svecs=False,
-        use_SNF_supercell=False,
-        calculator=None,
-        log_level=0,
+        nac_params: Optional[dict] = None,
+        factor: float = VaspToTHz,
+        frequency_scale_factor: Optional[float] = None,
+        dynamical_matrix_decimals: Optional[int] = None,
+        force_constants_decimals: Optional[int] = None,
+        group_velocity_delta_q: Optional[float] = None,
+        symprec: float = 1e-5,
+        is_symmetry: bool = True,
+        store_dense_svecs: bool = True,
+        use_SNF_supercell: bool = False,
+        calculator: Optional[str] = None,
+        log_level: int = 0,
     ):
-        """Init Phonopy API."""
-        self._symprec = symprec
-        self._factor = factor
-        self._frequency_scale_factor = frequency_scale_factor
-        self._is_symmetry = is_symmetry
-        self._calculator = calculator
-        self._store_dense_svecs = store_dense_svecs
-        if int(self.version.split(".")[0]) > 2 and not store_dense_svecs:
+        """Init method.
+
+        Parameters
+        ----------
+        unitcell : PhonopyAtoms
+            Input unit cell.
+        supercell_matrix : array_like, optional
+            Transformation matrix to supercell cell from unit cell. shape=(3,
+            3), dtype=int.
+        primitive_matrix : str or array_like, optional
+            Transformation matrix to primitive cell from unit cell. shape=(3,
+            3), dtype=float.
+        nac_params : None
+            Deprecated.
+        factor : float, optional
+            Phonon frequency unit conversion factor.
+        group_velocity_delta_q : float, optional
+            Delta-q distance to calculate group velocity.
+        symprec : float, optional
+            Symmetry search precision. Default is 1e-5.
+        is_symmetry : bool, optional
+            Whether to search symmetry of supercell. Default is True.
+        use_SNF_supercell : bool, optional
+            Supercell is built by SNF algorithm when True. Default is False. SNF
+            algorithm is faster than the original one, but the order of atoms in
+            the supercell can be different from the original one. So the
+            backward compatibility to the old data (e.g., force constants) may
+            not be preserved.
+        calculator : str, optional
+            Calculator name such as 'vasp', 'qe', etc. Default is None.
+        log_level : int, optional
+            Log level. Default is 0.
+        store_dense_svecs : bool, optional
+            Deprected. Dataset of shortest vectors between atoms in primitive
+            cell and supercell is stored in the dense format when this is True.
+            Default is True. In phonopy v3 or later version, False will not be
+            supported.
+        frequency_scale_factor : None
+            Deprecated.
+        dynamical_matrix_decimals : None
+            Deprecated.
+        force_constants_decimals : None
+            Deprecated.
+
+        """
+        if not store_dense_svecs:
             warnings.warn(
                 (
-                    "store_dense_svecs=False is not supported in Phonopy v3"
-                    "and later versions."
+                    "store_dense_svecs=False is deprecated and will not be supported "
+                    "in Phonopy v3 and later versions."
                 ),
                 DeprecationWarning,
                 stacklevel=2,
             )
+        if int(self.version.split(".")[0]) > 2:
             self._store_dense_svecs = True
+        else:
+            self._store_dense_svecs = store_dense_svecs
+
+        if nac_params is not None:
+            warnings.warn(
+                (
+                    "Phonopy class instanciation with nac_params is deprecated. "
+                    "Use Phonopy.nac_params attribute instead."
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        self._nac_params = nac_params
+
+        if frequency_scale_factor is not None:
+            warnings.warn(
+                (
+                    "Phonopy class instanciation with frequency_scale_factor is "
+                    "deprecated."
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        self._frequency_scale_factor = frequency_scale_factor
+
+        if dynamical_matrix_decimals is not None:
+            warnings.warn(
+                (
+                    "Phonopy class instanciation with dynamical_matrix_decimals is "
+                    "deprecated."
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        self._dynamical_matrix_decimals = dynamical_matrix_decimals
+
+        if force_constants_decimals is not None:
+            warnings.warn(
+                (
+                    "Phonopy class instanciation with force_constants_decimals is "
+                    "deprecated."
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        self._force_constants_decimals = force_constants_decimals
+
+        self._symprec = symprec
+        self._factor = factor
+        self._is_symmetry = is_symmetry
+        self._calculator = calculator
+
         self._use_SNF_supercell = use_SNF_supercell
         self._log_level = log_level
 
@@ -213,21 +304,9 @@ class Phonopy:
 
         # set_force_constants or set_forces
         self._force_constants = None
-        self._force_constants_decimals = force_constants_decimals
 
         # set_dynamical_matrix
         self._dynamical_matrix = None
-        if nac_params is not None:
-            warnings.warn(
-                (
-                    "Phonopy class instanciation with nac_params is deprecated. "
-                    "Use Phonopy.nac_params attribute instead."
-                ),
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        self._nac_params = nac_params
-        self._dynamical_matrix_decimals = dynamical_matrix_decimals
 
         # MLP
         self._mlp = None
@@ -1165,21 +1244,13 @@ class Phonopy:
         elif "forces" not in self._dataset:
             raise ForcesetsNotFoundError("Force sets are not yet set.")
 
-        if calculate_full_force_constants:
-            self._run_force_constants_from_forces(
-                fc_calculator=fc_calculator,
-                fc_calculator_options=fc_calculator_options,
-                decimals=self._force_constants_decimals,
-                log_level=fc_log_level,
-            )
-        else:
-            self._run_force_constants_from_forces(
-                distributed_atom_list=self._primitive.p2s_map,
-                fc_calculator=fc_calculator,
-                fc_calculator_options=fc_calculator_options,
-                decimals=self._force_constants_decimals,
-                log_level=fc_log_level,
-            )
+        self._run_force_constants_from_forces(
+            is_compact_fc=not calculate_full_force_constants,
+            fc_calculator=fc_calculator,
+            fc_calculator_options=fc_calculator_options,
+            decimals=self._force_constants_decimals,
+            log_level=fc_log_level,
+        )
 
         if show_drift and self._log_level:
             show_drift_force_constants(self._force_constants, primitive=self._primitive)
@@ -3906,7 +3977,7 @@ class Phonopy:
 
     def _run_force_constants_from_forces(
         self,
-        distributed_atom_list: Optional[Sequence] = None,
+        is_compact_fc: bool = False,
         fc_calculator: Optional[str] = None,
         fc_calculator_options: Optional[str] = None,
         decimals: Optional[int] = None,
@@ -3915,13 +3986,12 @@ class Phonopy:
         if self._dataset is not None:
             self._force_constants = get_fc2(
                 self._supercell,
-                self._primitive,
                 self._dataset,
+                primitive=self._primitive,
                 fc_calculator=fc_calculator,
                 fc_calculator_options=fc_calculator_options,
-                atom_list=distributed_atom_list,
+                is_compact_fc=is_compact_fc,
                 symmetry=self._symmetry,
-                symprec=self._symprec,
                 log_level=log_level,
             )
             if decimals:

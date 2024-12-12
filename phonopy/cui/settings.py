@@ -1293,7 +1293,7 @@ class PhonopySettings(Settings):
         "run_mode": None,
         "show_irreps": False,
         "sscha_iterations": None,
-        "store_dense_svecs": False,
+        "store_dense_svecs": True,
         "thermal_atom_pairs": None,
         "thermal_displacement_matrix_temperatue": None,
         "write_dynamical_matrices": False,
@@ -1801,6 +1801,8 @@ class PhonopyConfParser(ConfParser):
         if "store_dense_svecs" in arg_list:
             if self._args.store_dense_svecs:
                 self._confs["store_dense_svecs"] = ".true."
+            else:
+                self._confs["store_dense_svecs"] = ".false."
 
         if "lapack_solver" in arg_list:
             if self._args.lapack_solver:

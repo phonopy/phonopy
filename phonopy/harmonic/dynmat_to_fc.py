@@ -429,9 +429,7 @@ class DynmatToForceConstants:
             self._py_inverse_transformation()
 
         if self._fc.shape[0] == self._fc.shape[1]:
-            distribute_force_constants_by_translations(
-                self._fc, self._pcell, self._scell
-            )
+            distribute_force_constants_by_translations(self._fc, self._pcell)
 
     def _c_inverse_transformation(self):
         import phonopy._phonopy as phonoc
