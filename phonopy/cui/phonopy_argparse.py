@@ -213,13 +213,6 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
             default=None,
             help="Create supercells with displacements",
         )
-    parser.add_argument(
-        "--dense-svecs",
-        dest="store_dense_svecs",
-        action="store_true",
-        default=None,
-        help="Pair shortest vectors in supercell are stored in dense format.",
-    )
     if not load_phonopy_yaml:
         parser.add_argument(
             "--dim",
@@ -340,17 +333,17 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         default=None,
         help="Fits total DOS to a Debye model",
     )
-    parser.add_argument(
-        "--freq-scale",
-        dest="frequency_scale_factor",
-        type=float,
-        default=None,
-        help=(
-            "Squared scale factor multiplied as fc2 * factor^2. Therefore "
-            "frequency is changed but the contribution from NAC is not "
-            "changed."
-        ),
-    )
+    # parser.add_argument(
+    #     "--freq-scale",
+    #     dest="frequency_scale_factor",
+    #     type=float,
+    #     default=None,
+    #     help=(
+    #         "Squared scale factor multiplied as fc2 * factor^2. Therefore "
+    #         "frequency is changed but the contribution from NAC is not "
+    #         "changed."
+    #     ),
+    # )
     parser.add_argument(
         "--full-fc",
         dest="is_full_fc",

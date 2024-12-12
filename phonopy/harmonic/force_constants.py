@@ -223,7 +223,11 @@ def rearrange_force_constants_array(
 
 
 def cutoff_force_constants(
-    force_constants, supercell, primitive, cutoff_radius, symprec=1e-5
+    force_constants: np.ndarray,
+    supercell: PhonopyAtoms,
+    primitive: Primitive,
+    cutoff_radius: float,
+    symprec=1e-5,
 ):
     """Set zero to force constants outside of cutoff distance.
 
@@ -260,7 +264,7 @@ def cutoff_force_constants(
                 force_constants[i, j] = 0.0
 
 
-def symmetrize_force_constants(force_constants, level=1):
+def symmetrize_force_constants(force_constants: np.ndarray, level: int = 1):
     """Symmetry force constants by translational and permutation symmetries.
 
     Note

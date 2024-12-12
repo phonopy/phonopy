@@ -70,14 +70,13 @@ def load(
     fc_calculator: Optional[str] = None,
     fc_calculator_options: Optional[str] = None,
     factor: Optional[float] = None,
-    frequency_scale_factor: Optional[float] = None,
     produce_fc: bool = True,
     is_symmetry: bool = True,
     symmetrize_fc: bool = True,
     is_compact_fc: bool = True,
     use_pypolymlp: bool = False,
     mlp_params: Optional[dict] = None,
-    store_dense_svecs: bool = False,
+    store_dense_svecs: bool = True,
     use_SNF_supercell: bool = False,
     symprec: float = 1e-5,
     log_level: int = 0,
@@ -186,9 +185,6 @@ def load(
     factor : float, optional
         Phonon frequency unit conversion factor. Unless specified, default unit
         conversion factor for each calculator is used.
-    frequency_scale_factor : float, optional
-        Factor multiplied to calculated phonon frequency. Default is None, i.e.,
-        effectively 1.
     produce_fc : bool, optional
         Setting False, force constants are not calculated from dataset of
         displacements and forces even if the dataset exists. Default is True.
@@ -208,9 +204,10 @@ def load(
     mlp_params : dict, optional
         A set of parameters used by machine learning potentials.
     store_dense_svecs : bool, optional
-        Dataset of shortest vectors between atoms in primitive cell and
-        supercell is stored in the dense format when this is True. Default is
-        False.
+        Deprected. Dataset of shortest vectors between atoms in primitive
+        cell and supercell is stored in the dense format when this is True.
+        Default is True. In phonopy v3 or later version, False will not be
+        supported.
     use_SNF_supercell : bool, optional
         Supercell is built by SNF algorithm when True. Default is False. SNF
         algorithm is faster than the original one, but the order of atoms in the
@@ -289,7 +286,6 @@ def load(
         smat,
         primitive_matrix=pmat,
         factor=_factor,
-        frequency_scale_factor=frequency_scale_factor,
         symprec=symprec,
         is_symmetry=is_symmetry,
         store_dense_svecs=store_dense_svecs,
