@@ -2,6 +2,11 @@
 
 # Change Log
 
+## Dec-13-2024: Version 2.33.1
+
+- Add another dataset for the crystallographic point group -6m2.
+- Bug fix for reading forces with `-f` CLI option.
+
 ## Dec-12-2024: Version 2.33.0
 
 - The default choice for storing atomic pair vectors in the `Primitive` class
