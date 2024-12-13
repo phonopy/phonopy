@@ -598,7 +598,7 @@ def _create_FORCE_SETS_from_settings(
         if phpy_yaml.calculator is not None:
             interface_mode = phpy_yaml.calculator  # overwrite interface_mode
         physical_units = get_default_physical_units(interface_mode)
-        if all(
+        if phpy_yaml.physical_units is None or all(
             [
                 physical_units.get(key, None) == val
                 for key, val in phpy_yaml.physical_units.items()
