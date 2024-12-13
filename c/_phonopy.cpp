@@ -301,8 +301,7 @@ void py_get_thermal_properties(nb::ndarray<> py_thermal_props,
                                nb::ndarray<> py_temperatures,
                                nb::ndarray<> py_frequencies,
                                nb::ndarray<> py_weights,
-                               double cutoff_frequency,
-                               int classical) {
+                               double cutoff_frequency, int classical) {
     double *temperatures;
     double *freqs;
     double *thermal_props;

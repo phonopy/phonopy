@@ -299,6 +299,7 @@ class IrReps:
         rotations = self._rotations_at_q.copy()
         pointgroup_symbol = self._symmetry_dataset.pointgroup
         transformation_matrix = self._symmetry_dataset.transformation_matrix
+        print("transformation_matrix", transformation_matrix)
         conventional_rotations = self._transform_rotations(
             transformation_matrix, rotations
         )
