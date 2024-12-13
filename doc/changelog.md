@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Dec-13-2024: Version 2.33.2
+
+- Update symfc version dependency
+
 ## Dec-13-2024: Version 2.33.1
 
 - Add another dataset for the crystallographic point group -6m2.
