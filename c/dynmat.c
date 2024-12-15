@@ -159,10 +159,9 @@ long dym_dynamical_matrices_with_dd_openmp_over_qpoints(
 #pragma omp parallel for
 #endif
         for (i = 0; i < n_qpoints; i++) {
-            dym_get_dynamical_matrix_at_q(dynamical_matrices + adrs_shift * i,
-                                          num_patom, num_satom, fc, qpoints[i],
-                                          svecs, multi, masses, s2p_map,
-                                          p2s_map, charge_sum, 0);
+            dym_get_dynamical_matrix_at_q(
+                dynamical_matrices + adrs_shift * i, num_patom, num_satom, fc,
+                qpoints[i], svecs, multi, masses, s2p_map, p2s_map, NULL, 0);
             if (dd_q0) {  // NAC by Gonze and Lee if dd_in is not NULL
                 add_dynmat_dd_at_q(dynamical_matrices + adrs_shift * i,
                                    qpoints[i], fc, positions, num_patom, masses,

@@ -187,14 +187,9 @@ def test_Mesh_full_fcsym_nonac(ph_nacl_nonac: Phonopy):
     _test_IterMesh(ph_nacl_nonac, freqs_nonac_ref)
 
 
-def test_Mesh_full_fcsym_wang(ph_nacl: Phonopy):
+def test_Mesh_full_fcsym_wang(ph_nacl_wang: Phonopy):
     """Test by NaCl with symmetrizing force constants."""
-    nac_params = ph_nacl.nac_params
-    nac_params["method"] = "wang"
-    ph_nacl.nac_params = nac_params
-    _test_IterMesh(ph_nacl, freqs_full_fcsym_ref_wang)
-    nac_params.pop("method")
-    ph_nacl.nac_params = nac_params
+    _test_IterMesh(ph_nacl_wang, freqs_full_fcsym_ref_wang)
 
 
 def test_Mesh_full_fcsym_si(ph_si: Phonopy):
