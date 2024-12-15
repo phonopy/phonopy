@@ -87,6 +87,14 @@ static void transform_dynmat_to_fc_ij(
     const long *fc_index_map, const long num_patom, const long num_satom);
 static void get_q_cart(double q_cart[3], const double q[3],
                        const double reciprocal_lattice[3][3]);
+static void get_dynmat_want(
+    double (*dynamical_matrices)[2], const double qpoint[3], const double *fc,
+    const double (*svecs)[3], const long (*multi)[2], const long num_patom,
+    const long num_satom, const double *masses, const long *p2s_map,
+    const long *s2p_map, const double (*born)[3][3],
+    const double dielectric[3][3], const double (*reciprocal_lattice)[3],
+    const double *q_direction, const double *q_dir_cart,
+    const double nac_factor, const double q_zero_tolerance);
 
 /// @brief Calculate dynamical matrices with openmp over q-points
 /// use_Wang_NAC: Wang et al.
@@ -105,15 +113,12 @@ long dym_dynamical_matrices_with_dd_openmp_over_qpoints(
     const double (*dd_q0)[2], const double (*G_list)[3],
     const long num_G_points, const double lambda, const long use_Wang_NAC) {
     long i, n, adrs_shift;
-    double(*charge_sum)[3][3];
-    double q_cart[3];
     double *q_dir_cart;
-    double q_norm, q_zero_tolerance;
+    double q_zero_tolerance;
 
-    charge_sum = NULL;
+    q_zero_tolerance = 1e-5;
     q_dir_cart = NULL;
     adrs_shift = num_patom * num_patom * 9;
-    q_zero_tolerance = 1e-5;
 
     if (q_direction) {
         q_dir_cart = (double *)malloc(sizeof(double) * 3);
@@ -121,48 +126,24 @@ long dym_dynamical_matrices_with_dd_openmp_over_qpoints(
     }
 
     if (use_Wang_NAC) {
-        n = num_satom / num_patom;
 #ifdef _OPENMP
-#pragma omp parallel for private(charge_sum, q_cart, q_norm)
+#pragma omp parallel for
 #endif
         for (i = 0; i < n_qpoints; i++) {
-            get_q_cart(q_cart, qpoints[i], reciprocal_lattice);
-            q_norm = sqrt(q_cart[0] * q_cart[0] + q_cart[1] * q_cart[1] +
-                          q_cart[2] * q_cart[2]);
-            if (q_norm < q_zero_tolerance && q_direction) {
-                charge_sum = (double(*)[3][3])malloc(sizeof(double[3][3]) *
-                                                     num_patom * num_patom);
-                dym_get_charge_sum(
-                    charge_sum, num_patom,
-                    nac_factor / n /
-                        get_dielectric_part(q_direction, dielectric),
-                    q_dir_cart, born);
-            } else if (!(q_norm < q_zero_tolerance)) {
-                charge_sum = (double(*)[3][3])malloc(sizeof(double[3][3]) *
-                                                     num_patom * num_patom);
-                dym_get_charge_sum(
-                    charge_sum, num_patom,
-                    nac_factor / n / get_dielectric_part(q_cart, dielectric),
-                    q_cart, born);
-            }  // (q_norm < q_zero_tolerance && !q_direction) -> no NAC
-            dym_get_dynamical_matrix_at_q(dynamical_matrices + adrs_shift * i,
-                                          num_patom, num_satom, fc, qpoints[i],
-                                          svecs, multi, masses, s2p_map,
-                                          p2s_map, charge_sum, 0);
-            if (charge_sum) {
-                free(charge_sum);
-                charge_sum = NULL;
-            }
+            get_dynmat_want(dynamical_matrices + adrs_shift * i, qpoints[i], fc,
+                            svecs, multi, num_patom, num_satom, masses, p2s_map,
+                            s2p_map, born, dielectric, reciprocal_lattice,
+                            q_direction, q_dir_cart, nac_factor,
+                            q_zero_tolerance);
         }
     } else {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
         for (i = 0; i < n_qpoints; i++) {
-            dym_get_dynamical_matrix_at_q(dynamical_matrices + adrs_shift * i,
-                                          num_patom, num_satom, fc, qpoints[i],
-                                          svecs, multi, masses, s2p_map,
-                                          p2s_map, charge_sum, 0);
+            dym_get_dynamical_matrix_at_q(
+                dynamical_matrices + adrs_shift * i, num_patom, num_satom, fc,
+                qpoints[i], svecs, multi, masses, s2p_map, p2s_map, NULL, 0);
             if (dd_q0) {  // NAC by Gonze and Lee if dd_in is not NULL
                 add_dynmat_dd_at_q(dynamical_matrices + adrs_shift * i,
                                    qpoints[i], fc, positions, num_patom, masses,
@@ -178,6 +159,57 @@ long dym_dynamical_matrices_with_dd_openmp_over_qpoints(
         q_dir_cart = NULL;
     }
     return 0;
+}
+
+static void get_dynmat_want(
+    double (*dynamical_matrices)[2], const double qpoint[3], const double *fc,
+    const double (*svecs)[3], const long (*multi)[2], const long num_patom,
+    const long num_satom, const double *masses, const long *p2s_map,
+    const long *s2p_map, const double (*born)[3][3],
+    const double dielectric[3][3], const double (*reciprocal_lattice)[3],
+    const double *q_direction, const double *q_dir_cart,
+    const double nac_factor, const double q_zero_tolerance) {
+    double(*charge_sum)[3][3];
+    double q_cart[3];
+    double q_norm;
+    long n;
+
+    charge_sum = NULL;
+    n = num_satom / num_patom;
+
+    get_q_cart(q_cart, qpoint, reciprocal_lattice);
+    q_norm = sqrt(q_cart[0] * q_cart[0] + q_cart[1] * q_cart[1] +
+                  q_cart[2] * q_cart[2]);
+    charge_sum =
+        (double(*)[3][3])malloc(sizeof(double[3][3]) * num_patom * num_patom);
+
+    if (q_norm < q_zero_tolerance) {
+        if (q_direction) {
+            dym_get_charge_sum(
+                charge_sum, num_patom,
+                nac_factor / n / get_dielectric_part(q_dir_cart, dielectric),
+                q_dir_cart, born);
+            dym_get_dynamical_matrix_at_q(
+                dynamical_matrices, num_patom, num_satom, fc, qpoint, svecs,
+                multi, masses, s2p_map, p2s_map, charge_sum, 0);
+
+        } else {
+            dym_get_dynamical_matrix_at_q(dynamical_matrices, num_patom,
+                                          num_satom, fc, qpoint, svecs, multi,
+                                          masses, s2p_map, p2s_map, NULL, 0);
+        }
+    } else {
+        dym_get_charge_sum(
+            charge_sum, num_patom,
+            nac_factor / n / get_dielectric_part(q_cart, dielectric), q_cart,
+            born);
+        dym_get_dynamical_matrix_at_q(dynamical_matrices, num_patom, num_satom,
+                                      fc, qpoint, svecs, multi, masses, s2p_map,
+                                      p2s_map, charge_sum, 0);
+    }
+
+    free(charge_sum);
+    charge_sum = NULL;
 }
 
 static void add_dynmat_dd_at_q(

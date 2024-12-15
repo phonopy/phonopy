@@ -110,6 +110,8 @@ def test_create_force_sets():
 
 def test_phonopy_load():
     """Test phonopy-load command."""
+    pytest.importorskip("symfc")
+
     # Check sys.exit(0)
     argparse_control = _get_phonopy_load_args(
         cwd / ".." / "phonopy_params_NaCl-1.00.yaml.xz"
