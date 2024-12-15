@@ -1217,15 +1217,17 @@ def run_dynamical_matrix_solver_c(
         ) = gonze_nac_dataset  # Convergence parameter
         fc = gonze_fc
     else:
-        dd_q0 = np.zeros(2)  # dummy value
-        G_list = np.zeros(3)  # dummy value
+        dd_q0 = np.zeros(
+            (len(positions), 3, 3), dtype="double", order="C"
+        )  # dummy value
+        G_list = np.zeros((1, 3), dtype="double", order="C")  # dummy value
         Lambda = 0.0  # dummy value
         fc = dm.force_constants
         use_Wang_NAC = _is_nac and dm.nac_method == "wang"
 
     if nac_q_direction is None:
         is_nac_q_zero = True
-        _nac_q_direction = np.zeros(3)  # dummy variable
+        _nac_q_direction = np.zeros(3, dtype="double")  # dummy variable
     else:
         is_nac_q_zero = False
         _nac_q_direction = np.array(nac_q_direction, dtype="double")
@@ -1233,7 +1235,10 @@ def run_dynamical_matrix_solver_c(
     p2s, s2p = _get_fc_elements_mapping(dm, fc)
 
     dtype_complex = "c%d" % (np.dtype("double").itemsize * 2)
-    dynmat = np.zeros((len(qpoints), len(p2s) * 3, len(p2s) * 3), dtype=dtype_complex)
+    dynmat = np.zeros(
+        (len(qpoints), len(p2s) * 3, len(p2s) * 3), dtype=dtype_complex, order="C"
+    )
+
     phonoc.dynamical_matrices_with_dd_openmp_over_qpoints(
         dynmat.view(dtype="double"),
         _qpoints,
