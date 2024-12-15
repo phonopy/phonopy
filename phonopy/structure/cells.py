@@ -139,7 +139,7 @@ class Supercell(PhonopyAtoms):
         Returns
         -------
         ndarray
-            shape=(num_atoms_in_supercell, ), dtype='int_'
+            shape=(num_atoms_in_supercell, ), dtype='long'
 
         """
         return self._s2u_map
@@ -164,7 +164,7 @@ class Supercell(PhonopyAtoms):
         Returns
         -------
         ndarray
-            shape=(num_atoms_in_unitcell, ), dtype='int_'
+            shape=(num_atoms_in_unitcell, ), dtype='long'
 
         """
         return self._u2s_map
@@ -251,9 +251,9 @@ class Supercell(PhonopyAtoms):
                 scaled_positions=supercell.scaled_positions,
                 cell=supercell.cell,
             )
-            self._u2s_map = np.array(np.arange(num_uatom) * N, dtype="int_")
+            self._u2s_map = np.array(np.arange(num_uatom) * N, dtype="long")
             self._u2u_map = {j: i for i, j in enumerate(self._u2s_map)}
-            self._s2u_map = np.array(u2sur_map[sur2s_map] * N, dtype="int_")
+            self._s2u_map = np.array(u2sur_map[sur2s_map] * N, dtype="long")
 
     def _get_simple_supercell(self, unitcell: PhonopyAtoms, multi, P):
         if self._is_old_style:
@@ -504,7 +504,7 @@ class Primitive(PhonopyAtoms):
                 and primitive cell, and [1] integral of multiplicities to this
                 pair, i.e., which indicates address used in `shortest_vectors`.
                 In the dense format, shape=(size_super, size_prim, 2),
-                dtype='int_' dtype='intc', order='C'.
+                dtype='long' dtype='intc', order='C'.
 
         """
         return self._smallest_vectors, self._multiplicity
@@ -1204,7 +1204,7 @@ class ShortestPairs:
             and primitive cell, and [1] integral of multiplicities to
             this pair, i.e., which indicates address used in
             `shortest_vectors`.
-            shape=(size_super, size_prim, 2), dtype='int_'
+            shape=(size_super, size_prim, 2), dtype='long'
 
         """
         (
@@ -1213,13 +1213,13 @@ class ShortestPairs:
             primitive_fracs,
             trans_mat_inv,
             reduced_bases,
-        ) = self._transform_cell_basis("int_")
+        ) = self._transform_cell_basis("long")
 
         # Phase1 : Set multiplicity.
         # shortest_vectors is a dummy array.
         shortest_vectors = np.zeros((1, 3), dtype="double", order="C")
         multiplicity = np.zeros(
-            (len(supercell_fracs), len(primitive_fracs), 2), dtype="int_", order="C"
+            (len(supercell_fracs), len(primitive_fracs), 2), dtype="long", order="C"
         )
         import phonopy._phonopy as phonoc
 
@@ -1230,7 +1230,7 @@ class ShortestPairs:
             primitive_fracs,
             lattice_points,
             np.array(reduced_bases.T, dtype="double", order="C"),
-            np.array(trans_mat_inv.T, dtype="int_", order="C"),
+            np.array(trans_mat_inv.T, dtype="long", order="C"),
             1,
             self._symprec,
         )
@@ -1246,7 +1246,7 @@ class ShortestPairs:
             primitive_fracs,
             lattice_points,
             np.array(reduced_bases.T, dtype="double", order="C"),
-            np.array(trans_mat_inv.T, dtype="int_", order="C"),
+            np.array(trans_mat_inv.T, dtype="long", order="C"),
             0,
             self._symprec,
         )
@@ -1300,7 +1300,7 @@ class ShortestPairs:
 
         return shortest_vectors, multiplicity
 
-    def _transform_cell_basis(self, int_dtype):
+    def _transform_cell_basis(self, longdtype):
         reduced_cell_method = "niggli"
         reduced_bases = get_reduced_bases(
             self._supercell_bases, method=reduced_cell_method, tolerance=self._symprec
@@ -1334,13 +1334,13 @@ class ShortestPairs:
                 for k in lattice_1D
                 for ll in lattice_1D
             ],
-            dtype=int_dtype,
+            dtype=longdtype,
             order="C",
         )
         bases = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [-1, -1, -1]]
         lattice_points = np.dot(lattice_4D, bases)
         lattice_points = np.array(
-            np.unique(lattice_points, axis=0), dtype=int_dtype, order="C"
+            np.unique(lattice_points, axis=0), dtype=longdtype, order="C"
         )
 
         return (
@@ -1354,7 +1354,7 @@ class ShortestPairs:
 
 def sparse_to_dense_svecs(svecs, multi):
     """Convert sparse svecs to dense svecs."""
-    dmulti = np.zeros(multi.shape + (2,), dtype="int_", order="C")
+    dmulti = np.zeros(multi.shape + (2,), dtype="long", order="C")
     dmulti[:, :, 0] = multi
     dsvecs = np.zeros((multi.sum(), 3), dtype="double", order="C")
     adrs = 0
