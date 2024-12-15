@@ -71,7 +71,7 @@ class DerivativeOfDynamicalMatrix:
         self._scell = self._dynmat.supercell
         self._pcell = self._dynmat.primitive
 
-        dtype = "int_"
+        dtype = "long"
         self._p2s_map = np.array(self._pcell.p2s_map, dtype=dtype)
         self._s2p_map = np.array(self._pcell.s2p_map, dtype=dtype)
         p2p_map = self._pcell.p2p_map
@@ -195,7 +195,7 @@ class DerivativeOfDynamicalMatrix:
                 self._multi,
                 self._pcell.masses,
                 self._s2pp_map,
-                np.arange(len(self._p2s_map), dtype="int_"),
+                np.arange(len(self._p2s_map), dtype="long"),
                 nac_factor,
                 born,
                 dielectric,

@@ -124,11 +124,11 @@ class DynamicalMatrix:
 
         self._dtype_complex = "c%d" % (np.dtype("double").itemsize * 2)
 
-        self._p2s_map = np.array(self._pcell.p2s_map, dtype="int_")
-        self._s2p_map = np.array(self._pcell.s2p_map, dtype="int_")
+        self._p2s_map = np.array(self._pcell.p2s_map, dtype="long")
+        self._s2p_map = np.array(self._pcell.s2p_map, dtype="long")
         p2p_map = self._pcell.p2p_map
         self._s2pp_map = np.array(
-            [p2p_map[self._s2p_map[i]] for i in range(len(self._s2p_map))], dtype="int_"
+            [p2p_map[self._s2p_map[i]] for i in range(len(self._s2p_map))], dtype="long"
         )
         svecs, multi = self._pcell.get_smallest_vectors()
         if self._pcell.store_dense_svecs:
@@ -930,7 +930,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
         Therefore, another way is used although it can be slower.
 
         """
-        # pts = np.arange(-g_rad, g_rad + 1, dtype="int_")
+        # pts = np.arange(-g_rad, g_rad + 1, dtype="long")
         # grid = np.r_["-1,2,0", np.meshgrid(pts, pts, pts)].reshape(3, -1)
         # return (self._rec_lat @ grid).T
         npts = g_rad * 2 + 1
@@ -1299,11 +1299,11 @@ def _get_fc_elements_mapping(dm: DynamicalMatrix, fc: np.ndarray):
     p2s_map = dm.primitive.p2s_map
     s2p_map = dm.primitive.s2p_map
     if fc.shape[0] == fc.shape[1]:  # full fc
-        return np.array(p2s_map, dtype="int_"), np.array(s2p_map, dtype="int_")
+        return np.array(p2s_map, dtype="long"), np.array(s2p_map, dtype="long")
     else:  # compact fc
         primitive = dm.primitive
         p2p_map = primitive.p2p_map
         s2pp_map = np.array(
-            [p2p_map[s2p_map[i]] for i in range(len(s2p_map))], dtype="int_"
+            [p2p_map[s2p_map[i]] for i in range(len(s2p_map))], dtype="long"
         )
-        return np.arange(len(p2s_map), dtype="int_"), s2pp_map
+        return np.arange(len(p2s_map), dtype="long"), s2pp_map

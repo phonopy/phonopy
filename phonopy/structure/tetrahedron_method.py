@@ -57,7 +57,7 @@ def get_tetrahedra_relative_grid_address(microzone_lattice, lang="C"):
         print("Phonopy C-extension has to be built properly.")
         sys.exit(1)
 
-    relative_grid_address = np.zeros((24, 4, 3), dtype="int_", order="C")
+    relative_grid_address = np.zeros((24, 4, 3), dtype="long", order="C")
     if lang == "C":
         phonoc.tetrahedra_relative_grid_address(
             relative_grid_address,
@@ -84,7 +84,7 @@ def get_all_tetrahedra_relative_grid_address(lang="C"):
         print("Phonopy C-extension has to be built properly.")
         sys.exit(1)
 
-    relative_grid_address = np.zeros((4, 24, 4, 3), dtype="int_", order="C")
+    relative_grid_address = np.zeros((4, 24, 4, 3), dtype="long", order="C")
     if lang == "C":
         phonoc.all_tetrahedra_relative_grid_address(relative_grid_address)
     else:
@@ -217,7 +217,7 @@ class TetrahedronMethod:
                     break
             if not found:
                 unique_vertices.append(adrs)
-        return np.array(unique_vertices, dtype="int_", order="C")
+        return np.array(unique_vertices, dtype="long", order="C")
 
     def set_tetrahedra_omegas(self, tetrahedra_omegas):
         """Set values on vertices of tetrahedra.
@@ -237,7 +237,7 @@ class TetrahedronMethod:
             if self._primitive_vectors is None:
                 rga = np.array(
                     get_all_tetrahedra_relative_grid_address()[0],
-                    dtype="int_",
+                    dtype="long",
                     order="C",
                 )
             else:
@@ -744,11 +744,11 @@ def _get_relative_grid_addresses_from_six_tetrahedra(six_tetras):
             [0, 1, 1],
             [1, 1, 1],
         ],
-        dtype="int_",
+        dtype="long",
         order="C",
     )
-    relative_grid_addresses = np.zeros((24, 4, 3), dtype="int_", order="C")
-    central_indices = np.zeros(24, dtype="int_")
+    relative_grid_addresses = np.zeros((24, 4, 3), dtype="long", order="C")
+    central_indices = np.zeros(24, dtype="long")
     pos = 0
     for i in range(8):
         ppd_shifted = parallelepiped_vertices - parallelepiped_vertices[i]

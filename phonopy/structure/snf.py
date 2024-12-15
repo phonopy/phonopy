@@ -64,7 +64,7 @@ class SNF3x3:
     ----------
     D, P, Q : ndarray
         These 3x3 interger matrices explained above.
-        shape=(3, 3), dtype='intc'
+        shape=(3, 3), dtype='long'
 
     """
 
@@ -78,8 +78,8 @@ class SNF3x3:
             shape=(3, 3)
 
         """
-        self._A_orig = np.array(A, dtype="int_", order="C")
-        self._A = np.array(A, dtype="int_", order="C")
+        self._A_orig = np.array(A, dtype="long", order="C")
+        self._A = np.array(A, dtype="long", order="C")
         self._Ps = []
         self._Qs = []
         self._L = []
@@ -182,7 +182,7 @@ class SNF3x3:
 
         """
         A = self._A
-        L = np.eye(3, dtype="int_")
+        L = np.eye(3, dtype="long")
         L[1, 0] = -A[1, 0] // A[0, 0]
         L[2, 0] = -A[2, 0] // A[0, 0]
         self._L.append(L.copy())
@@ -236,7 +236,7 @@ class SNF3x3:
 
         """
         A = self._A
-        L = np.eye(3, dtype="int_")
+        L = np.eye(3, dtype="long")
         L[2, 1] = -A[2, 1] // A[1, 1]
         self._L.append(L.copy())
         self._A[:] = np.dot(L, self._A)
@@ -272,7 +272,7 @@ class SNF3x3:
             self._A[:] = self._A.T
 
     def _disturb_rows(self, i, j):
-        L = np.eye(3, dtype="int_")
+        L = np.eye(3, dtype="long")
         L[i, i] = 1
         L[i, j] = 1
         L[j, i] = 0
@@ -296,7 +296,7 @@ class SNF3x3:
         As the side effect, determinant flips.
 
         """
-        L = np.eye(3, dtype="int_")
+        L = np.eye(3, dtype="long")
         L[i, i] = 0
         L[j, j] = 0
         L[i, j] = 1
@@ -306,7 +306,7 @@ class SNF3x3:
 
     def _flip_sign_row(self, i):
         """Multiply -1 for all elements in row."""
-        L = np.eye(3, dtype="int_")
+        L = np.eye(3, dtype="long")
         L[i, i] = -1
         self._L.append(L.copy())
         self._A[:] = np.dot(L, self._A)
@@ -318,7 +318,7 @@ class SNF3x3:
         [ji jj] is a (k,k) minor of original 3x3 matrix.
 
         """
-        L = np.eye(3, dtype="int_")
+        L = np.eye(3, dtype="long")
         L[i, i] = s
         L[i, j] = t
         L[j, i] = -b // r
@@ -327,10 +327,10 @@ class SNF3x3:
         self._A[:] = np.dot(L, self._A)
 
     def _set_PQ(self):
-        P = np.eye(3, dtype="int_")
+        P = np.eye(3, dtype="long")
         for _P in self._Ps:
             P = np.dot(_P, P)
-        Q = np.eye(3, dtype="int_")
+        Q = np.eye(3, dtype="long")
         for _Q in self._Qs:
             Q = np.dot(Q, _Q.T)
 
