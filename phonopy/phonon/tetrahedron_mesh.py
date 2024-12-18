@@ -67,20 +67,20 @@ class TetrahedronMesh:
         mesh : ndarray or list of int
             Mesh numbers for grids
             shape=(3,)
-            dtype='int_'
+            dtype='long'
         grid_address : ndarray
             Addresses of all grid points given by GridPoints class.
             shape=(prod(mesh), 3)
-            dtype='int_'
+            dtype='long'
         grid_mapping_table : ndarray
             Mapping of grid points to irreducible grid points given by
             GridPoints class.
             shape=(prod(mesh),)
-            dtype='int_'
+            dtype='long'
         ir_grid_points : ndarray
             Irreducible gird points given by GridPoints class.
             shape=(len(np.unique(grid_mapping_table)),)
-            dtype='int_'
+            dtype='long'
         grid_order : list of int, optional
             This controls how grid addresses are stored either C style or
             Fortran style.
@@ -91,7 +91,7 @@ class TetrahedronMesh:
         """
         self._cell = cell
         self._frequencies = frequencies
-        self._mesh = np.array(mesh, dtype="int_")
+        self._mesh = np.array(mesh, dtype="long")
         self._grid_address = grid_address
         self._grid_mapping_table = grid_mapping_table
         self._lang = lang
@@ -209,16 +209,16 @@ def get_tetrahedra_frequencies(
     gp : float
         Grid index
     mesh : ndarray
-        Mesh numbers. shape=(3, ), dtype='int_'
+        Mesh numbers. shape=(3, ), dtype='long'
     grid_address : ndarray
-        Grid address in integers. shape=(prod(mesh), 3), dtype='int_', order='C'
+        Grid address in integers. shape=(prod(mesh), 3), dtype='long', order='C'
     relative_grid_addresses : ndarray
         Relative grid addresses from the centre (i.e., gp) shape=(24, 4, 3),
-        dtype='int_', order='C'
+        dtype='long', order='C'
     gp_ir_index : ndarray
         Mapping table from grid index in GR-grid to index corresponding to first
         dimension of frequencies. The ir-grid index is
-        range(len(ir-grid-points)). shape=(prod(mesh), ), dtype='int_'
+        range(len(ir-grid-points)). shape=(prod(mesh), ), dtype='long'
     frequencies : ndarray
         Phonon frequences on ir-grid points. shape=(ir-grid-points, num_band)
         dtype='double'
@@ -273,7 +273,7 @@ def _get_tetrahedra_frequencies_C(
     t_frequencies = np.zeros((1, frequencies.shape[1], 24, 4), dtype="double")
     phonoc.tetrahedra_frequencies(
         t_frequencies,
-        np.array([gp], dtype="int_"),
+        np.array([gp], dtype="long"),
         mesh,
         grid_address,
         gp_ir_index,

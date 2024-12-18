@@ -434,14 +434,14 @@ class DynmatToForceConstants:
     def _c_inverse_transformation(self):
         import phonopy._phonopy as phonoc
 
-        s2p = np.array(self._pcell.s2p_map, dtype="int_")
+        s2p = np.array(self._pcell.s2p_map, dtype="long")
         p2p = self._pcell.p2p_map
-        s2pp = np.array([p2p[i] for i in s2p], dtype="int_")
+        s2pp = np.array([p2p[i] for i in s2p], dtype="long")
 
         if self._fc.shape[0] == self._fc.shape[1]:
-            fc_index_map = np.array(self._pcell.p2s_map, dtype="int_")
+            fc_index_map = np.array(self._pcell.p2s_map, dtype="long")
         else:
-            fc_index_map = np.arange(self._fc.shape[0], dtype="int_")
+            fc_index_map = np.arange(self._fc.shape[0], dtype="long")
 
         phonoc.transform_dynmat_to_fc(
             self._fc,

@@ -87,9 +87,9 @@ class VelocityQpoints:
     ):
         """Init method."""
         if symmetry is not None:
-            self._point_group_opts = symmetry.get_pointgroup_operations()
+            self._polonggroup_opts = symmetry.get_pointgroup_operations()
         else:
-            self._point_group_opts = None
+            self._polonggroup_opts = None
 
         self._supercell = supercell
         self._primitive = primitive
@@ -114,12 +114,12 @@ class VelocityQpoints:
         """Set mesh."""
         rec_lat = np.linalg.inv(self._primitive.get_cell())
         self._qpoints, self._weights = get_qpoints(
-            mesh, rec_lat, is_gamma_center=True, rotations=self._point_group_opts
+            mesh, rec_lat, is_gamma_center=True, rotations=self._polonggroup_opts
         )
 
     def set_qpoints(self, qpoints):
         """Set q-points."""
-        self._weights = np.ones(len(qpoints), dtype="int_")
+        self._weights = np.ones(len(qpoints), dtype="long")
         self._qpoints = qpoints
 
     def set_commensurate_points(self):
