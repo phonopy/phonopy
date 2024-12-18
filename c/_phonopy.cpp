@@ -140,7 +140,8 @@ void py_get_dynamical_matrices_with_dd_openmp_over_qpoints(
     born = (double(*)[3][3])py_born.data();
     dielectric = (double(*)[3])py_dielectric.data();
     reciprocal_lattice = (double(*)[3])py_reciprocal_lattice.data();
-    if (use_Wang_NAC) {
+
+    if (use_Wang_NAC || (!is_nac)) {
         positions = NULL;
         dd_q0 = NULL;
         G_list = NULL;
@@ -151,18 +152,13 @@ void py_get_dynamical_matrices_with_dd_openmp_over_qpoints(
         G_list = (double(*)[3])py_G_list.data();
         n_Gpoints = py_G_list.shape(0);
     }
-    if (is_nac_q_zero) {
+
+    if (is_nac_q_zero || (!is_nac)) {
         q_direction = NULL;
     } else {
         q_direction = (double *)py_q_direction.data();
     }
-    if (!is_nac) {
-        positions = NULL;
-        dd_q0 = NULL;
-        G_list = NULL;
-        n_Gpoints = 0;
-        q_direction = NULL;
-    }
+
     num_patom = py_p2s_map.shape(0);
     num_satom = py_s2p_map.shape(0);
 
@@ -301,8 +297,7 @@ void py_get_thermal_properties(nb::ndarray<> py_thermal_props,
                                nb::ndarray<> py_temperatures,
                                nb::ndarray<> py_frequencies,
                                nb::ndarray<> py_weights,
-                               double cutoff_frequency,
-                               int classical) {
+                               double cutoff_frequency, int classical) {
     double *temperatures;
     double *freqs;
     double *thermal_props;

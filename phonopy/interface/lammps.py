@@ -351,8 +351,8 @@ class LammpsStructureLoader:
         if self._atom_type_labels:
             lables = []
         else:
-            lables = np.zeros(self._header_tags["atoms"], dtype="int_")
-        ids = np.zeros(self._header_tags["atoms"], dtype="int_")
+            lables = np.zeros(self._header_tags["atoms"], dtype="long")
+        ids = np.zeros(self._header_tags["atoms"], dtype="long")
         num_atoms = 0
         for line in lines:
             _line = line.split("#")[0].strip()
