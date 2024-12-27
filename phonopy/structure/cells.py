@@ -1352,7 +1352,9 @@ class ShortestPairs:
         )
 
 
-def sparse_to_dense_svecs(svecs, multi):
+def sparse_to_dense_svecs(
+    svecs: np.ndarray, multi: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     """Convert sparse svecs to dense svecs."""
     dmulti = np.zeros(multi.shape + (2,), dtype="long", order="C")
     dmulti[:, :, 0] = multi
@@ -1367,14 +1369,16 @@ def sparse_to_dense_svecs(svecs, multi):
     return dsvecs, dmulti
 
 
-def dense_to_sparse_svecs(svecs, multi):
+def dense_to_sparse_svecs(
+    svecs: np.ndarray, multi: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     """Convert dense svecs to sparse svecs."""
     ssvecs = np.zeros(
         (multi.shape[0], multi.shape[1], 27, 3),
         dtype="double",
         order="C",
     )
-    smulti = np.zeros(multi.shape[:2], dtype="long", order="C")
+    smulti = np.zeros(multi.shape[:2], dtype="intc", order="C")
     smulti[:, :] = multi[:, :, 0]
     for s_i in range(multi.shape[0]):
         for p_i in range(multi.shape[1]):
