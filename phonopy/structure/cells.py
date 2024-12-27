@@ -1367,6 +1367,22 @@ def sparse_to_dense_svecs(svecs, multi):
     return dsvecs, dmulti
 
 
+def dense_to_sparse_svecs(svecs, multi):
+    """Convert dense svecs to sparse svecs."""
+    ssvecs = np.zeros(
+        (multi.shape[0], multi.shape[1], 27, 3),
+        dtype="double",
+        order="C",
+    )
+    smulti = np.zeros(multi.shape[:2], dtype="long", order="C")
+    smulti[:, :] = multi[:, :, 0]
+    for s_i in range(multi.shape[0]):
+        for p_i in range(multi.shape[1]):
+            m = multi[s_i, p_i]
+            ssvecs[s_i, p_i, : m[0]] = svecs[m[1] : m[0] + m[1]]
+    return ssvecs, smulti
+
+
 def compute_all_sg_permutations(
     positions,  # scaled positions
     rotations,  # scaled
