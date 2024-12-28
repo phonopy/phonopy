@@ -112,10 +112,10 @@ def read_cp2k(filename):
 
             alpha, beta, gamma = cp2k_cell.pop("alpha_beta_gamma")
 
-            cos_alpha = np.cos(alpha)
-            cos_beta = np.cos(beta)
-            cos_gamma = np.cos(gamma)
-            sin_gamma = np.sin(gamma)
+            cos_alpha = np.cos(alpha * np.pi / 180.0)
+            cos_beta = np.cos(beta * np.pi / 180.0)
+            cos_gamma = np.cos(gamma * np.pi / 180.0)
+            sin_gamma = np.sin(gamma * np.pi / 180.0)
 
             unit_cell = np.array(
                 [
