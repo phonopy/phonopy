@@ -1352,7 +1352,9 @@ class ShortestPairs:
         )
 
 
-def sparse_to_dense_svecs(svecs, multi):
+def sparse_to_dense_svecs(
+    svecs: np.ndarray, multi: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     """Convert sparse svecs to dense svecs."""
     dmulti = np.zeros(multi.shape + (2,), dtype="long", order="C")
     dmulti[:, :, 0] = multi
@@ -1365,6 +1367,24 @@ def sparse_to_dense_svecs(svecs, multi):
             dsvecs[adrs : (adrs + m)] = svecs[s_i, p_i, :m]
             adrs += multi[s_i, p_i]
     return dsvecs, dmulti
+
+
+def dense_to_sparse_svecs(
+    svecs: np.ndarray, multi: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
+    """Convert dense svecs to sparse svecs."""
+    ssvecs = np.zeros(
+        (multi.shape[0], multi.shape[1], 27, 3),
+        dtype="double",
+        order="C",
+    )
+    smulti = np.zeros(multi.shape[:2], dtype="intc", order="C")
+    smulti[:, :] = multi[:, :, 0]
+    for s_i in range(multi.shape[0]):
+        for p_i in range(multi.shape[1]):
+            m = multi[s_i, p_i]
+            ssvecs[s_i, p_i, : m[0]] = svecs[m[1] : m[0] + m[1]]
+    return ssvecs, smulti
 
 
 def compute_all_sg_permutations(

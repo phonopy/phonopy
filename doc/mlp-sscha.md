@@ -81,6 +81,8 @@ A. Seko and A. Togo, Phys. Rev. B, **110**, 214302 (2024) [[doi](https://doi.org
   conda-forge (recommended). Otherwise, pypolymlp can be installed from
   source-code.
 
+- [symfc](https://github.com/sekocha/pypolymlp) >= 1.1.7
+
 ## How to calculate
 
 ### Workflow
