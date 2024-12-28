@@ -69,42 +69,17 @@ def run_symfc(
 
     options_dict = parse_symfc_options(options)
 
-    if log_level:
-        print(
-            "--------------------------------"
-            " Symfc start "
-            "-------------------------------"
-        )
-        print("Symfc is a force constants calculator. See the following paper:")
-        print("A. Seko and A. Togo, Phys. Rev. B, 110, 214302 (2024).")
-        print("Symfc is developed at https://github.com/symfc/symfc.")
-        print(f"Computing {_orders} order force constants.", flush=True)
-        if options_dict:
-            print("Parameters:")
-            for key, val in options_dict.items():
-                print(f"  {key}: {val}", flush=True)
-
-    if log_level == 1:
-        print("Increase log-level to watch detailed symfc log.")
-
     symfc_calculator = SymfcFCSolver(
         supercell,
         displacements=displacements,
         forces=forces,
         symmetry=symmetry,
-        orders=orders,
+        orders=_orders,
         options=options_dict,
         is_compact_fc=is_compact_fc,
         log_level=log_level,
     )
     assert np.array_equal(symfc_calculator.p2s_map, primitive.p2s_map)
-
-    if log_level:
-        print(
-            "---------------------------------"
-            " Symfc end "
-            "--------------------------------"
-        )
 
     return symfc_calculator.force_constants
 
@@ -178,8 +153,33 @@ class SymfcFCSolver:
 
     def run(self, orders: Sequence[int]):
         """Run symfc."""
+        if self._log_level:
+            print(
+                "--------------------------------"
+                " Symfc start "
+                "-------------------------------"
+            )
+            print("Symfc is a force constants calculator. See the following paper:")
+            print("A. Seko and A. Togo, Phys. Rev. B, 110, 214302 (2024).")
+            print("Symfc is developed at https://github.com/symfc/symfc.")
+            print(f"Computing {orders} order force constants.", flush=True)
+            if self._options:
+                print("Parameters:")
+                for key, val in self._options.items():
+                    print(f"  {key}: {val}", flush=True)
+
         self._orders = orders
         self._symfc.run(orders=orders, is_compact_fc=self._is_compact_fc)
+
+        if self._log_level == 1:
+            print("Increase log-level to watch detailed symfc log.")
+
+        if self._log_level:
+            print(
+                "---------------------------------"
+                " Symfc end "
+                "--------------------------------"
+            )
 
     @property
     def p2s_map(self) -> np.ndarray:
