@@ -10,15 +10,18 @@ from phonopy import Phonopy
 from phonopy.interface.phonopy_yaml import read_cell_yaml
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
+    Primitive,
     ShortestPairs,
     TrimmedCell,
     compute_all_sg_permutations,
     compute_permutation_for_rotation,
     convert_to_phonopy_primitive,
+    dense_to_sparse_svecs,
     get_angles,
     get_cell_matrix_from_lattice,
     get_cell_parameters,
     get_primitive,
+    get_primitive_matrix,
     get_supercell,
     isclose,
     sparse_to_dense_svecs,
@@ -391,10 +394,31 @@ def test_ShortestPairs_dense_nacl(ph_nacl: Phonopy, helper_methods: Callable):
     helper_methods.compare_positions_with_order(pos_from_svecs, pos, scell.cell)
 
 
-def test_sparse_to_dense_nacl(ph_nacl: Phonopy):
-    """Test for sparse_to_dense_svecs."""
-    scell = ph_nacl.supercell
-    pcell = ph_nacl.primitive
+def test_sparse_to_dense_and_dense_to_sparse_nacl(ph_nacl: Phonopy):
+    """Test for sparse_to_dense_svecs and dense_to_sparse_svecs by NaCl."""
+    _test_sparse_to_dense_and_dense_to_sparse(ph_nacl.supercell, ph_nacl.primitive)
+
+
+def test_sparse_to_dense_and_dense_to_sparse_tipn3(ph_tipn3: Phonopy):
+    """Test for sparse_to_dense_svecs and dense_to_sparse_svecs by TiPN3."""
+    _test_sparse_to_dense_and_dense_to_sparse(ph_tipn3.supercell, ph_tipn3.primitive)
+
+
+def test_sparse_to_dense_and_dense_to_sparse_al2o3(convcell_al2o3: PhonopyAtoms):
+    """Test for sparse_to_dense_svecs and dense_to_sparse_svecs by Al2O3."""
+    smat = np.diag([3, 3, 2])
+    scell = get_supercell(convcell_al2o3, smat)
+
+    pmat = np.diag([1.0 / 3, 1.0 / 3, 1.0 / 2]) @ get_primitive_matrix("R")
+    pcell = get_primitive(scell, primitive_matrix=pmat)
+    _test_sparse_to_dense_and_dense_to_sparse(scell, pcell)
+
+    pmat = np.diag([1.0 / 3, 1.0 / 3, 1.0 / 2])
+    pcell = get_primitive(scell, primitive_matrix=pmat)
+    _test_sparse_to_dense_and_dense_to_sparse(scell, pcell)
+
+
+def _test_sparse_to_dense_and_dense_to_sparse(scell: PhonopyAtoms, pcell: Primitive):
     pos = scell.scaled_positions
 
     spairs = ShortestPairs(scell.cell, pos, pos[pcell.p2s_map], store_dense_svecs=False)
@@ -409,6 +433,11 @@ def test_sparse_to_dense_nacl(ph_nacl: Phonopy):
 
     np.testing.assert_array_equal(dmulti, _dmulti)
     np.testing.assert_allclose(dsvecs, _dsvecs, rtol=0, atol=1e-8)
+
+    _ssvecs, _smulti = dense_to_sparse_svecs(dsvecs, dmulti)
+
+    np.testing.assert_array_equal(multi, _smulti)
+    np.testing.assert_allclose(svecs, _ssvecs, rtol=0, atol=1e-8)
 
 
 def test_isclose(ph_nacl: Phonopy):

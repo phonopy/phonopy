@@ -665,6 +665,7 @@ def get_default_physical_units(interface_mode=None):
         units["factor"] = Wien2kToTHz
         units["nac_factor"] = 2000.0
         units["distance_to_A"] = Bohr
+        units["force_to_eVperA"] = 0.001 * Rydberg / Bohr
         units["force_constants_unit"] = "mRy/au^2"
         units["length_unit"] = "au"
         units["force_unit"] = "mRy/au"
