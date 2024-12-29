@@ -242,8 +242,8 @@ class RandomDisplacements:
         ----------
         T : float
             Temperature in Kelvin.
-        number_of_snapshots : int
-            Number of snapshots to be generated.
+        number_of_snapshots : int, optional
+            Number of snapshots to be generated. Default is 1.
         random_seed : int or None, optional
             Random seed passed to np.random.default_rng(seed). Default is None.
         randn : tuple

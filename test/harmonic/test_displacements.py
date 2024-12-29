@@ -2,7 +2,7 @@
 
 import itertools
 from copy import deepcopy
-from typing import Optional
+from typing import Literal, Optional, Union
 
 import numpy as np
 import pytest
@@ -66,10 +66,14 @@ def test_tio2(ph_tio2: Phonopy):
 
 
 @pytest.mark.parametrize(
-    "is_plusminus,distance", itertools.product([False, True], [None, 0.03])
+    "is_plusminus,distance,number_of_snapshots",
+    itertools.product([False, True], [None, 0.03], [4, "auto"]),
 )
 def test_tio2_random_disp(
-    ph_tio2: Phonopy, is_plusminus: bool, distance: Optional[float]
+    ph_tio2: Phonopy,
+    is_plusminus: bool,
+    distance: Optional[float],
+    number_of_snapshots: Union[int, Literal["auto"]],
 ):
     """Test random displacements of TiO2.
 
@@ -78,16 +82,23 @@ def test_tio2_random_disp(
     """
     dataset = deepcopy(ph_tio2.dataset)
     ph_tio2.generate_displacements(
-        number_of_snapshots=4, distance=distance, is_plusminus=is_plusminus
+        number_of_snapshots=number_of_snapshots,
+        distance=distance,
+        is_plusminus=is_plusminus,
     )
     d = ph_tio2.displacements
-    assert len(d) == 4 * (is_plusminus + 1)
+
+    if number_of_snapshots == "auto":
+        assert len(d) == 2 * (is_plusminus + 1)
+    else:
+        assert len(d) == 4 * (is_plusminus + 1)
+
     if distance is None:
         np.testing.assert_allclose(np.linalg.norm(d, axis=2).ravel(), 0.01, atol=1e-8)
     else:
         np.testing.assert_allclose(np.linalg.norm(d, axis=2).ravel(), 0.03, atol=1e-8)
     if is_plusminus:
-        np.testing.assert_allclose(d[:4], -d[4:], atol=1e-8)
+        np.testing.assert_allclose(d[: len(d) // 2], -d[len(d) // 2 :], atol=1e-8)
     ph_tio2.dataset = dataset
 
 

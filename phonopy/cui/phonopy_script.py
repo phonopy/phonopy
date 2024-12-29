@@ -424,10 +424,8 @@ def _print_settings(
             print("  Diagonal displacement: off")
 
         if settings.random_displacements is not None:
-            print(
-                "  Number of supercells with random displacements: %d"
-                % settings.random_displacements
-            )
+            rd = settings.random_displacements
+            print(f"  Number of supercells with random displacements: {rd}")
             if settings.random_displacement_temperature is not None:
                 print(
                     "  Temperatuere to generate random displacements: "
@@ -2231,6 +2229,11 @@ def main(**argparse_control):
             random_seed=settings.random_seed,
             max_distance=settings.displacement_distance_max,
         )
+        if log_level and settings.random_displacements == "auto":
+            print(
+                "Generated number of supercells with random displacements: "
+                f"{len(phonon.supercells_with_displacements)}",
+            )
         _write_displacements_files_then_exit(
             phonon, settings, confs, cell_info["optional_structure_info"], log_level
         )

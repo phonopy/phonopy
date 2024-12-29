@@ -1076,7 +1076,7 @@ class Phonopy:
         is_plusminus: Union[str, bool] = "auto",
         is_diagonal: bool = True,
         is_trigonal: bool = False,
-        number_of_snapshots: Optional[int] = None,
+        number_of_snapshots: Optional[Union[int, Literal["auto"]]] = None,
         random_seed: Optional[int] = None,
         temperature: Optional[float] = None,
         cutoff_frequency: Optional[float] = None,
@@ -1113,13 +1113,12 @@ class Phonopy:
             can be reduced by symmetry (True). Default is True.
         is_trigonal : bool, optional
             Existing only testing purpose. Default is False.
-        number_of_snapshots : int or None, optional
+        number_of_snapshots : int, "auto", or None, optional
             Number of snapshots of supercells with random displacements. Random
             displacements are generated displacing all atoms in random
             directions with a fixed displacement distance specified by
             'distance' parameter, i.e., all atoms in supercell are displaced
-            with the same displacement distance in direct space. Default is
-            None.
+            with the same displacement distance in direct space. Default is None.
         random_seed : int or None, optional
             Random seed for random displacements generation. Default is None.
         temperature : float or None, optional
@@ -1143,7 +1142,21 @@ class Phonopy:
             generation, this value is used as `max_distance`.
 
         """
-        if number_of_snapshots is not None and number_of_snapshots > 0:
+        if number_of_snapshots is not None and (
+            number_of_snapshots == "auto" or number_of_snapshots > 0
+        ):
+            if number_of_snapshots == "auto":
+                _number_of_snapshots = len(
+                    get_least_displacements(
+                        self._symmetry,
+                        is_plusminus=False,
+                        is_diagonal=True,
+                        log_level=0,
+                    )
+                )
+            else:
+                _number_of_snapshots = number_of_snapshots
+
             if random_seed is not None and random_seed >= 0 and random_seed < 2**32:
                 _random_seed = random_seed
                 displacement_dataset = {"random_seed": _random_seed}
@@ -1156,7 +1169,7 @@ class Phonopy:
                 else:
                     _distance = distance
                 d = get_random_displacements_dataset(
-                    number_of_snapshots,
+                    _number_of_snapshots,
                     len(self._supercell),
                     _distance,
                     random_seed=_random_seed,
@@ -1170,7 +1183,7 @@ class Phonopy:
                 )
                 d = self.get_random_displacements_at_temperature(
                     temperature,
-                    number_of_snapshots,
+                    _number_of_snapshots,
                     is_plusminus=(is_plusminus is True),
                     random_seed=_random_seed,
                 )

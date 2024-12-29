@@ -38,7 +38,7 @@ from __future__ import annotations
 
 import pathlib
 from dataclasses import asdict
-from typing import Optional, Union
+from typing import Literal, Optional, Union
 
 import numpy as np
 
@@ -221,7 +221,7 @@ def set_dataset_and_force_constants(
     use_pypolymlp: bool = False,
     mlp_params: Optional[dict] = None,
     displacement_distance: Optional[float] = None,
-    number_of_snapshots: Optional[int] = None,
+    number_of_snapshots: Optional[Union[int, Literal["auto"]]] = None,
     random_seed: Optional[int] = None,
     evaluating_forces: bool = False,
     log_level: int = 0,
@@ -353,7 +353,7 @@ def _run_pypolymlp(
 def _generate_displacements_and_forces_by_pypolymlp(
     phonon: Phonopy,
     displacement_distance: Optional[float] = None,
-    number_of_snapshots: Optional[int] = None,
+    number_of_snapshots: Optional[Union[int, Literal["auto"]]] = None,
     random_seed: Optional[int] = None,
     log_level: int = 0,
 ):
@@ -382,6 +382,11 @@ def _generate_displacements_and_forces_by_pypolymlp(
         number_of_snapshots=number_of_snapshots,
         random_seed=random_seed,
     )
+    if log_level and number_of_snapshots == "auto":
+        print(
+            "  Number of generated supercells with random displacements: "
+            f"{len(phonon.supercells_with_displacements)}",
+        )
 
     if log_level:
         print(
