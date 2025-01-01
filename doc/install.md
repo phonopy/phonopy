@@ -84,19 +84,18 @@ packages. Windows users should use conda (conda-forge channel) packages as well.
 
 Prepare the following Python libraries:
 
-- Python (>=3.8) and its header files
+- Python (>=3.9) and its header files
 - numpy (>=1.17)
 - matplotlib (>=2.2.2)
-- python-yaml (pyyaml >= 5.3)
-- python-h5py (h5py >= 3.0)
+- python-yaml (pyyaml>=5.3)
+- python-h5py (h5py>=3.0)
 - scipy
 - spglib (>=2.3)
-- symfc
+- symfc (>=1.2)
 
 It is recommended to install seekpath to plot phonon band structure:
 
 - seekpath
-
 
 For the CP2K interface, the following package will be needed to install:
 
