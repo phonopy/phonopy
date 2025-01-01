@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Jan-1-2025: Version 2.34.0
+
+- Maintenance release
+
 ## Dec-28-2024: Version 2.33.4
 
 - Restore symfc dependency
@@ -11,7 +15,7 @@
 - Fix for Windows build: `dtype="int_"` was replaced by `dtype="long"`.
 - Drop symfc dependency because symfc seems not working on Windows.
 
-## Dec-13-2024: Version 2.33.2
+## Dec-13-2024: Version 2.33.2v
 
 - Update symfc version dependency
 
