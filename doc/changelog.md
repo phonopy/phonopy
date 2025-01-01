@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Jan-1-2025: Version 2.34.0
+
+- Maintenance release
+
 ## Dec-28-2024: Version 2.33.4
 
 - Restore symfc dependency
