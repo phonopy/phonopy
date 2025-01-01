@@ -792,9 +792,9 @@ class ConfParser:
 
             if conf_key == "pm":
                 if confs["pm"].lower() == ".false.":
-                    self.set_parameter("pm_displacement", False)
+                    self.set_parameter("pm", False)
                 elif confs["pm"].lower() == ".true.":
-                    self.set_parameter("pm_displacement", True)
+                    self.set_parameter("pm", True)
 
             if conf_key == "trigonal":
                 if confs["trigonal"].lower() == ".false.":
@@ -913,7 +913,7 @@ class ConfParser:
                 q_direction = [fracval(x) for x in confs["q_direction"].split()]
                 if len(q_direction) < 3:
                     self.setting_error(
-                        "Number of elements of q_direction " "is less than 3"
+                        "Number of elements of q_direction is less than 3"
                     )
                 else:
                     self.set_parameter("nac_q_direction", q_direction)
@@ -1009,9 +1009,14 @@ class ConfParser:
 
             # Number of supercells with random displacements
             if conf_key == "random_displacements":
-                self.set_parameter(
-                    "random_displacements", int(confs["random_displacements"])
-                )
+                rd = confs["random_displacements"]
+                if rd.lower() == "auto":
+                    self.set_parameter("random_displacements", "auto")
+                else:
+                    try:
+                        self.set_parameter("random_displacements", int(rd))
+                    except ValueError:
+                        self.setting_error(f"{conf_key.upper()} is incorrectly set.")
 
             if conf_key == "random_seed":
                 self.set_parameter("random_seed", int(confs["random_seed"]))
@@ -1149,8 +1154,8 @@ class ConfParser:
             self._settings.set_masses(params["mass"])
 
         # Plus minus displacement
-        if "pm_displacement" in params:
-            self._settings.set_is_plusminus_displacement(params["pm_displacement"])
+        if "pm" in params:
+            self._settings.set_is_plusminus_displacement(params["pm"])
 
         # Primitive cell shape
         if "primitive_axes" in params:

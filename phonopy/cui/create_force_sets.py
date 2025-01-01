@@ -36,6 +36,7 @@
 
 from __future__ import annotations
 
+import copy
 from typing import Optional
 
 import numpy as np
@@ -114,53 +115,64 @@ def create_FORCE_SETS(
         raise RuntimeError(
             "Number of atoms could not be retrieved from %s" % disp_filename
         )
-    if force_sets_zero_mode:
-        num_displacements += 1
 
-    if not check_number_of_force_files(
-        num_displacements, force_filenames, disp_filename
+    if log_level > 0:
+        print(f"  Number of supercell files: {len(force_filenames)}")
+        print(f'  Number of displacements in "{disp_filename}": {num_displacements}')
+
+    if "first_atoms" in disp_dataset and not check_number_of_force_files(
+        num_displacements,
+        force_filenames,
+        disp_filename,
+        force_sets_zero_mode=force_sets_zero_mode,
     ):
         force_sets = []
-    elif interface_mode == "wien2k":
-        calc_dataset = get_calc_dataset_wien2k(
-            force_filenames,
-            supercell,
-            disp_dataset,
-            wien2k_P1_mode=wien2k_P1_mode,
-            symmetry_tolerance=symmetry_tolerance,
-            verbose=(log_level > 0),
-        )
-        force_sets = calc_dataset["forces"]
     else:
-        calc_dataset = get_calc_dataset(
-            interface_mode,
-            num_atoms,
-            force_filenames,
-            verbose=(log_level > 0),
-        )
-        force_sets = calc_dataset["forces"]
-        if "points" in calc_dataset:
-            if force_sets_zero_mode:
-                range_start = 1
-            else:
-                range_start = 0
-            if filename := check_agreements_of_displacements(
+        if interface_mode == "wien2k":
+            calc_dataset = get_calc_dataset_wien2k(
+                force_filenames,
                 supercell,
                 disp_dataset,
-                calc_dataset["points"][range_start:],
-                force_filenames[range_start:],
-            ):
-                raise RuntimeError(
-                    f'Displacements don\'t match with atomic positions in "{filename}".'
-                )
-            if force_sets_zero_mode:
-                if check_agreement_of_supercell_positions(
-                    supercell, calc_dataset["points"][0]
+                wien2k_P1_mode=wien2k_P1_mode,
+                symmetry_tolerance=symmetry_tolerance,
+                verbose=(log_level > 0),
+            )
+            force_sets = calc_dataset["forces"]
+        else:
+            calc_dataset = get_calc_dataset(
+                interface_mode,
+                num_atoms,
+                force_filenames,
+                verbose=(log_level > 0),
+            )
+            force_sets = calc_dataset["forces"]
+            if "points" in calc_dataset:
+                if force_sets_zero_mode:
+                    range_start = 1
+                else:
+                    range_start = 0
+                if filename := check_agreements_of_displacements(
+                    supercell,
+                    disp_dataset,
+                    calc_dataset["points"][range_start:],
+                    force_filenames[range_start:],
                 ):
                     raise RuntimeError(
-                        "Supercell doesn't match with atomic positions in "
-                        f'"{force_filenames[0]}".'
+                        "Displacements don't match with atomic positions in "
+                        f'"{filename}".'
                     )
+                if force_sets_zero_mode:
+                    if check_agreement_of_supercell_positions(
+                        supercell, calc_dataset["points"][0]
+                    ):
+                        raise RuntimeError(
+                            "Supercell doesn't match with atomic positions in "
+                            f'"{force_filenames[0]}".'
+                        )
+
+    if log_level > 0 and "first_atoms" not in disp_dataset:
+        if len(force_filenames) < num_displacements:
+            print("** Number of supercell files is less than displacements. **")
 
     if interface_mode == "lammps":
         rotate_lammps_forces(force_sets, supercell.cell, verbose=(log_level > 0))
@@ -168,24 +180,25 @@ def create_FORCE_SETS(
     if force_sets:
         if force_sets_zero_mode:
             force_sets = _subtract_residual_forces(force_sets)
-        if dataset_type == 1:
-            for forces, disp in zip(force_sets, disp_dataset["first_atoms"]):
-                disp["forces"] = forces
-        elif dataset_type == 2:
-            disp_dataset["forces"] = np.array(force_sets, dtype="double", order="C")
-        else:
-            raise RuntimeError("Force sets could not be found.")
+        energies = calc_dataset.get("supercell_energies")
 
-        if "supercell_energies" in calc_dataset:
-            energies = np.array(calc_dataset["supercell_energies"], dtype="double")
-            if dataset_type == 1:
-                for energy, disp in zip(energies, disp_dataset["first_atoms"]):
+        if dataset_type == 1:
+            dataset = copy.deepcopy(disp_dataset)
+            for forces, disp in zip(force_sets, dataset["first_atoms"]):
+                disp["forces"] = forces
+            if energies is not None:
+                for energy, disp in zip(energies, dataset["first_atoms"]):
                     disp["supercell_energy"] = energy
-            elif dataset_type == 2:
-                disp_dataset["supercell_energies"] = energies
+        elif dataset_type == 2:
+            dataset = {
+                "displacements": disp_dataset["displacements"][: len(force_sets)],
+                "forces": force_sets,
+            }
+            if energies is not None:
+                dataset["supercell_energies"] = energies
 
         if save_params:
-            phpy_yaml.dataset = disp_dataset
+            phpy_yaml.dataset = dataset
             nac_params = get_nac_params(primitive=phpy_yaml.primitive)
             if nac_params:
                 phpy_yaml.nac_params = nac_params
@@ -195,7 +208,7 @@ def create_FORCE_SETS(
             if log_level > 0:
                 print(f'"{yaml_filename}" has been created.')
         else:
-            write_FORCE_SETS(disp_dataset, filename=force_sets_filename)
+            write_FORCE_SETS(dataset, filename=force_sets_filename)
             if log_level > 0:
                 print(f'"{force_sets_filename}" has been created.')
 
@@ -204,14 +217,21 @@ def create_FORCE_SETS(
             print("%s could not be created." % force_sets_filename)
 
 
-def check_number_of_force_files(num_displacements, force_filenames, disp_filename):
+def check_number_of_force_files(
+    num_displacements, force_filenames, disp_filename, force_sets_zero_mode=False
+):
     """Verify number of supercell force files.
 
     This function is public because being used from phono3py.
 
     """
-    if num_displacements != len(force_filenames):
-        print(f"Number of files to be read ({len(force_filenames)}) don't match to")
+    if force_sets_zero_mode:
+        num_force_filenames = len(force_filenames) - 1
+    else:
+        num_force_filenames = len(force_filenames)
+
+    if num_displacements != num_force_filenames:
+        print(f"Number of files to be read ({num_force_filenames}) don't match to")
         print(
             f'the number of displacements ({num_displacements}) in "{disp_filename}".'
         )
