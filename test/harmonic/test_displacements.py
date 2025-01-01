@@ -80,6 +80,8 @@ def test_tio2_random_disp(
     Currently default displacement distance = 0.01.
 
     """
+    pytest.importorskip("symfc")
+
     dataset = deepcopy(ph_tio2.dataset)
     ph_tio2.generate_displacements(
         number_of_snapshots=number_of_snapshots,
