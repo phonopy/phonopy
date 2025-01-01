@@ -36,6 +36,7 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 from typing import Optional, Union
 
@@ -90,11 +91,11 @@ class SymfcFCSolver:
     def __init__(
         self,
         supercell: PhonopyAtoms,
-        displacements: np.ndarray,
-        forces: np.ndarray,
+        displacements: Optional[np.ndarray] = None,
+        forces: Optional[np.ndarray] = None,
         symmetry: Optional[Symmetry] = None,
         orders: Optional[Sequence[int]] = None,
-        options: dict = lambda: {},
+        options: Optional[dict] = None,
         is_compact_fc: bool = False,
         log_level: int = 0,
     ):
@@ -104,16 +105,16 @@ class SymfcFCSolver:
         ----------
         supercell : PhonopyAtoms
             Supercell.
-        displacements : np.ndarray
-            Displacements.
-        forces : np.ndarray
-            Forces.
+        displacements : np.ndarray, optional
+            Displacements. Default is None.
+        forces : np.ndarray, optional.
+            Forces. Default is None.
         symmetry : Symmetry, optional
             Symmetry of supercell. Default is None.
         orders: Sequence[int], optional
             Orders of force constants. Default is None.
         options : dict, optional
-            Options for symfc. Default is {}.
+            Options for symfc. Default is None, which gives {}.
         is_compact_fc : bool, optional
             Whether force constants are compact or full. When True, check if
             SymfcFCSolver.p2s_map is equal to primitive.p2s_map. Default is
@@ -122,7 +123,10 @@ class SymfcFCSolver:
             Log level. Default is 0.
 
         """
-        self._options = options
+        if options is None:
+            self._options = {}
+        else:
+            self._options = options
         self._log_level = log_level
         self._orders = orders
         self._is_compact_fc = is_compact_fc
@@ -186,6 +190,19 @@ class SymfcFCSolver:
         """Return indices of translationally independent atoms."""
         return self._symfc.p2s_map
 
+    def estimate_numbers_of_supercells(
+        self,
+        max_order: Optional[int] = None,
+        orders: Optional[list] = None,
+    ) -> dict[int]:
+        """Estimate numbers of supercells."""
+        basis_set = self._compute_basis_set(orders=orders, max_order=max_order)
+        n_scells = {}
+        for key, value in basis_set.items():
+            n3 = value.translation_permutations.shape[1] * 3
+            n_scells[key] = math.ceil(value.basis_set.shape[1] / n3)
+        return n_scells
+
     def _initialize(
         self,
         supercell: PhonopyAtoms,
@@ -216,6 +233,29 @@ class SymfcFCSolver:
         if displacements is not None and forces is not None:
             self._symfc.displacements = displacements
             self._symfc.forces = forces
+
+    def _compute_basis_set(
+        self,
+        max_order: Optional[int] = None,
+        orders: Optional[list] = None,
+    ) -> dict:
+        """Run basis set calculations and return basis sets.
+
+        Parameters
+        ----------
+        max_order : int
+            Maximum fc order.
+        orders: list
+            Orders of force constants.
+
+        Returns
+        -------
+        dict[FCBasisSetBase]
+            Basis sets. Keys are orders.
+
+        """
+        self._symfc.compute_basis_set(max_order=max_order, orders=orders)
+        return self._symfc.basis_set
 
 
 def parse_symfc_options(options: Optional[Union[str, dict]]) -> dict:

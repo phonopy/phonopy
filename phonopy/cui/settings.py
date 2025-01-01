@@ -792,9 +792,9 @@ class ConfParser:
 
             if conf_key == "pm":
                 if confs["pm"].lower() == ".false.":
-                    self.set_parameter("pm_displacement", False)
+                    self.set_parameter("pm", False)
                 elif confs["pm"].lower() == ".true.":
-                    self.set_parameter("pm_displacement", True)
+                    self.set_parameter("pm", True)
 
             if conf_key == "trigonal":
                 if confs["trigonal"].lower() == ".false.":
@@ -1154,8 +1154,8 @@ class ConfParser:
             self._settings.set_masses(params["mass"])
 
         # Plus minus displacement
-        if "pm_displacement" in params:
-            self._settings.set_is_plusminus_displacement(params["pm_displacement"])
+        if "pm" in params:
+            self._settings.set_is_plusminus_displacement(params["pm"])
 
         # Primitive cell shape
         if "primitive_axes" in params:

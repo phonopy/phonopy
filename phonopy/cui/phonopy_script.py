@@ -553,6 +553,20 @@ def _write_displacements_files_then_exit(
     )
 
     if log_level > 0:
+        identity = np.eye(3, dtype=int)
+        n_pure_trans = sum(
+            [
+                (r == identity).all()
+                for r in phonon.symmetry.symmetry_operations["rotations"]
+            ]
+        )
+        if len(phonon.supercell) // len(phonon.primitive) != n_pure_trans:
+            print("*" * 72)
+            print(
+                "Note: "
+                'A better primitive cell can be chosen by using "--pa auto" option.'
+            )
+            print("*" * 72)
         print('"phonopy_disp.yaml" and supercells have been created.')
 
     settings.set_include_displacements(True)
@@ -1016,10 +1030,10 @@ def _create_random_displacements_at_finite_temperature(
                 print("  ", " ".join([f"{f:.3f}" for f in freqs]))
         if np.prod(rd_integrated_modes.shape) - rd_integrated_modes.sum() != 3:
             msg_lines = [
-                "*****************************************************************",
-                "* Tiny frequencies can induce unexpectedly large displacements. *",
-                "* Please check force constants symmetry, e.g., --sym-fc option. *",
-                "*****************************************************************",
+                "*************************************************************",
+                "Tiny frequencies can induce unexpectedly large displacements.",
+                "Please check force constants symmetry, e.g., --symfc option. ",
+                "*************************************************************",
             ]
             print("\n".join(msg_lines))
         if log_level < 2:
@@ -2229,9 +2243,9 @@ def main(**argparse_control):
             random_seed=settings.random_seed,
             max_distance=settings.displacement_distance_max,
         )
-        if log_level and settings.random_displacements == "auto":
+        if log_level:
             print(
-                "Generated number of supercells with random displacements: "
+                "Generated number of supercells: "
                 f"{len(phonon.supercells_with_displacements)}",
             )
         _write_displacements_files_then_exit(
