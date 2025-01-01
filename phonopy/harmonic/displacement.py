@@ -245,7 +245,7 @@ def _determinant(a, b, c):
 
 
 def get_random_displacements_dataset(
-    num_supercells: int,
+    number_of_snapshots: int,
     num_atoms: int,
     distance: float,
     random_seed: Optional[int] = None,
@@ -254,7 +254,7 @@ def get_random_displacements_dataset(
 ) -> np.ndarray:
     """Return random displacements at constant displacement distance.
 
-    num_supercells : int
+    number_of_snapshots : int,
         Number of snapshots of supercells with random displacements. Random
         displacements are generated displacing all atoms in random directions
         with a fixed displacement distance specified by 'distance' parameter,
@@ -272,8 +272,8 @@ def get_random_displacements_dataset(
     is_plusminus : True, or False, optional
         In addition to sets of usual random displacements for supercell, sets of
         the opposite displacements for supercell are concatenated. Therefore,
-        total number of sets of displacements is `2 * num_supercells`. Default
-        is False.
+        total number of sets of displacements is `2 * number_of_snapshots`.
+        Default is False.
     max_distance : float or None, optional
         In random direction and distance displacements generation, this value is
         specified. In random direction and random distance displacements
@@ -284,6 +284,8 @@ def get_random_displacements_dataset(
         rng = np.random.default_rng(seed=random_seed)
     else:
         rng = np.random.default_rng()
+
+    num_supercells = number_of_snapshots
 
     if max_distance is None:
         directions = _get_random_directions(num_atoms * num_supercells, rng)
