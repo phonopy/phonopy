@@ -698,9 +698,8 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         "--rd",
         "--random-displacements",
         dest="random_displacements",
-        type=int,
         default=None,
-        help="Number of supercells with random displacements",
+        help='Number of supercells with random displacements or "auto".',
     )
     parser.add_argument(
         "--rd-temperature",
