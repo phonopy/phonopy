@@ -30,7 +30,7 @@
   <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- So that users can add custom icons -->
@@ -389,21 +389,21 @@ with setting <span class="math notranslate nohighlight">\(N k'/k = 1\)</span> an
 <h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">#</a></h2>
 <p>Currently this feature is usable only from API. The following example runs with
 the input files in <code class="docutils literal notranslate"><span class="pre">example/NaCl</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">phonopy</span>
-<span class="kn">from</span> <span class="nn">phonopy.phonon.degeneracy</span> <span class="kn">import</span> <span class="n">degenerate_sets</span>
-<span class="kn">from</span> <span class="nn">phonopy.spectrum.dynamic_structure_factor</span> <span class="kn">import</span> <span class="n">atomic_form_factor_WK1995</span>
-<span class="kn">from</span> <span class="nn">phonopy.units</span> <span class="kn">import</span> <span class="n">THzToEv</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.phonon.degeneracy</span><span class="w"> </span><span class="kn">import</span> <span class="n">degenerate_sets</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.spectrum.dynamic_structure_factor</span><span class="w"> </span><span class="kn">import</span> <span class="n">atomic_form_factor_WK1995</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.units</span><span class="w"> </span><span class="kn">import</span> <span class="n">THzToEv</span>
 
 
-<span class="k">def</span> <span class="nf">get_AFF_func</span><span class="p">(</span><span class="n">f_params</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_AFF_func</span><span class="p">(</span><span class="n">f_params</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">atomic_form_factor_WK1995</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">f_params</span><span class="p">[</span><span class="n">symbol</span><span class="p">])</span>
 
     <span class="k">return</span> <span class="n">func</span>
 
 
-<span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
     <span class="n">phonon</span><span class="p">,</span> <span class="n">Qpoints</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">atomic_form_factor_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scattering_lengths</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">):</span>
     <span class="c1"># Transformation to the Q-points in reciprocal primitive basis vectors</span>

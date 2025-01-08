@@ -30,7 +30,7 @@
   <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- So that users can add custom icons -->
@@ -469,7 +469,7 @@ University</a>.</p>
 <span class="n">Spglib</span> <span class="n">version</span> <span class="mf">2.0.2</span>
 
 <span class="n">Calculator</span> <span class="n">interface</span><span class="p">:</span> <span class="n">lammps</span>
-<span class="n">Crystal</span> <span class="n">structure</span> <span class="n">was</span> <span class="n">read</span> <span class="kn">from</span> <span class="s2">&quot;lammps_structure_Ti&quot;</span><span class="o">.</span>
+<span class="n">Crystal</span> <span class="n">structure</span> <span class="n">was</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">&quot;lammps_structure_Ti&quot;</span><span class="o">.</span>
 <span class="n">Unit</span> <span class="n">of</span> <span class="n">length</span><span class="p">:</span> <span class="n">angstrom</span>
 <span class="n">Displacements</span> <span class="n">creation</span> <span class="n">mode</span>
 <span class="n">Settings</span><span class="p">:</span>
@@ -510,10 +510,10 @@ after the LAMMPS calculation.</p>
 <span class="n">Spglib</span> <span class="n">version</span> <span class="mf">2.0.2</span>
 
 <span class="n">Calculator</span> <span class="n">interface</span><span class="p">:</span> <span class="n">lammps</span>
-<span class="n">Displacements</span> <span class="n">were</span> <span class="n">read</span> <span class="kn">from</span> <span class="s2">&quot;phonopy_disp.yaml&quot;</span><span class="o">.</span>
+<span class="n">Displacements</span> <span class="n">were</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">&quot;phonopy_disp.yaml&quot;</span><span class="o">.</span>
 <span class="mf">1.</span> <span class="n">Drift</span> <span class="n">force</span> <span class="n">of</span> <span class="s2">&quot;lammps_forces_Ti.0&quot;</span> <span class="n">to</span> <span class="n">be</span> <span class="n">subtracted</span>
  <span class="o">-</span><span class="mf">0.00000000</span>  <span class="o">-</span><span class="mf">0.00000000</span>   <span class="mf">0.00000000</span>
-<span class="n">Forces</span> <span class="n">parsed</span> <span class="kn">from</span> <span class="nn">LAMMPS</span> <span class="n">output</span> <span class="n">were</span> <span class="n">rotated</span> <span class="n">by</span> <span class="n">F</span><span class="o">=</span><span class="n">R</span><span class="o">.</span><span class="n">F</span><span class="p">(</span><span class="n">lammps</span><span class="p">)</span> <span class="k">with</span> <span class="n">R</span><span class="p">:</span>
+<span class="n">Forces</span> <span class="n">parsed</span> <span class="kn">from</span><span class="w"> </span><span class="nn">LAMMPS</span> <span class="n">output</span> <span class="n">were</span> <span class="n">rotated</span> <span class="n">by</span> <span class="n">F</span><span class="o">=</span><span class="n">R</span><span class="o">.</span><span class="n">F</span><span class="p">(</span><span class="n">lammps</span><span class="p">)</span> <span class="k">with</span> <span class="n">R</span><span class="p">:</span>
   <span class="mf">1.00000</span> <span class="mf">0.00000</span> <span class="mf">0.00000</span>
   <span class="mf">0.00000</span> <span class="mf">0.00000</span> <span class="mf">0.00000</span>
   <span class="mf">0.00000</span> <span class="mf">1.00000</span> <span class="mf">1.00000</span>
@@ -548,9 +548,9 @@ follows:</p>
 </div>
 <p>With this saved in <code class="docutils literal notranslate"><span class="pre">phonopy_unitcell.yaml</span></code> file, we can generate 2x2x2 supercell
 of this primitive cell orientation by using a python script:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">phonopy</span>
-<span class="kn">from</span> <span class="nn">phonopy.interface.phonopy_yaml</span> <span class="kn">import</span> <span class="n">read_cell_yaml</span>
-<span class="kn">from</span> <span class="nn">phonopy.interface.calculator</span> <span class="kn">import</span> <span class="n">write_supercells_with_displacements</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.phonopy_yaml</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_cell_yaml</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_supercells_with_displacements</span>
 
 <span class="n">cell</span> <span class="o">=</span> <span class="n">read_cell_yaml</span><span class="p">(</span><span class="s2">&quot;phonopy_unitcell.yaml&quot;</span><span class="p">)</span>
 <span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">unitcell</span><span class="o">=</span><span class="n">cell</span><span class="p">,</span> <span class="n">primitive_matrix</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">calculator</span><span class="o">=</span><span class="s1">&#39;lammps&#39;</span><span class="p">)</span>

@@ -30,7 +30,7 @@
   <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=a3416100" />
   
   <!-- So that users can add custom icons -->
@@ -329,8 +329,13 @@
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#method-used-in-phonopy">Method used in phonopy</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#generation-of-force-constants">Generation of force constants</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#methods-used-in-phonopy">Methods used in phonopy</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#generation-of-supercell-force-constants">Generation of supercell force constants</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#systematic-displacement-method">Systematic displacement method</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#projector-based-method">Projector-based method</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tadano-tsuneyuki-method">Tadano-Tsuneyuki method</a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parlinski-li-kawazoe-method">Parlinski-Li-Kawazoe method</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-expansion-using-quasi-harmonic-approximation">Thermal expansion using quasi-harmonic approximation</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a></li>
@@ -363,34 +368,68 @@
                   
   <section class="tex2jax_ignore mathjax_ignore" id="references">
 <h1>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h1>
-<section id="method-used-in-phonopy">
-<h2>Method used in phonopy<a class="headerlink" href="#method-used-in-phonopy" title="Link to this heading">#</a></h2>
-<section id="generation-of-force-constants">
-<span id="reference-force-constants"></span><h3>Generation of force constants<a class="headerlink" href="#generation-of-force-constants" title="Link to this heading">#</a></h3>
-<p>In phonopy, force constants are generated based on finite displacement method.
-Crystal symmetry is used to reduce the calculation cost and numerical noise of
-the force constants. Firstly a symmetry reduced set of atomic displacements is
-generated. After the atomic force calculations, the set of atomic displacements
-are expanded using the symmetry and then all the elements of force constans
-between atoms in a primitive cell and the supercell are fit to the symmetry
-expanded forces of atoms in supercells using Moore–Penrose pseudoinverse. This
-procedure may considered as a variant of <a class="reference internal" href="#reference-plk"><span class="std std-ref">Parlinski-Li-Kawazoe method</span></a>. Some of the
-details are found in the appendix of the following paper:</p>
+<section id="methods-used-in-phonopy">
+<h2>Methods used in phonopy<a class="headerlink" href="#methods-used-in-phonopy" title="Link to this heading">#</a></h2>
+<section id="generation-of-supercell-force-constants">
+<span id="reference-force-constants"></span><h3>Generation of supercell force constants<a class="headerlink" href="#generation-of-supercell-force-constants" title="Link to this heading">#</a></h3>
+<p>In phonopy, force constants are generated using the supercell method with finite
+displacements. Several approaches can be employed to calculate supercell force
+constants. Technical details regarding supercell method can be found in the
+following paper:</p>
 <ul class="simple">
-<li><p>L. Chaput, A. Togo, I. Tanaka, and G. Hug, Phys. Rev. B, 84, 094302 (2011)</p></li>
+<li><p>A. Togo, L. Chaput, T. Tadano, I. Tanaka,  J. Phys.: Condens. Matter 35 353001
+(2023)</p></li>
 </ul>
+<section id="systematic-displacement-method">
+<span id="reference-systematic-displacement"></span><h4>Systematic displacement method<a class="headerlink" href="#systematic-displacement-method" title="Link to this heading">#</a></h4>
+<p>This is the traditional method that phonopy has employed for many years. Crystal
+symmetry is utilized to reduce both the computational cost and numerical noise
+in supercell force constant calculations. First, a symmetry-reduced set of
+atomic displacements is systematically generated. After calculating the atomic
+forces, the displacements are expanded using symmetry operations. The force
+constants between atoms in the primitive cell and the supercell are then fitted
+to the symmetry-expanded forces of atoms in the supercells using the
+Moore–Penrose pseudoinverse.</p>
+<p>This procedure can be considered a variant of <a class="reference internal" href="#reference-plk"><span class="std std-ref">Parlinski-Li-Kawazoe method</span></a> (see below).
+Unlike the Parlinski–Li–Kawazoe method, supercell force constants are initially
+computed without imposing the translational invariance constraint. The
+constraint is applied a posteriori. Additional implementation details in phonopy
+can be found in the appendix of the following paper:</p>
+<ul class="simple">
+<li><p>L. Chaput, A. Togo, I. Tanaka, and G. Hug, Phys. Rev. B, <strong>84</strong>, 094302 (2011)</p></li>
+</ul>
+</section>
+<section id="projector-based-method">
+<span id="reference-random-displacement"></span><h4>Projector-based method<a class="headerlink" href="#projector-based-method" title="Link to this heading">#</a></h4>
+<p>This approach is implemented in the symfc code, allowing for the displacement of
+any number of atoms in the supercell. Typically, all atoms are displaced either
+in random directions with a fixed displacement magnitude or with both random
+directions and magnitudes. The former approach, using a small displacement
+(e.g., 0.01 to 0.03 Angstrom), is recommended. However, for estimating supercell
+force constants at finite temperatures, the latter approach may be used.</p>
+<ul class="simple">
+<li><p>A. Seko and A. Togo, Phys. Rev. B <strong>110</strong>, 214302 (2024)</p></li>
+</ul>
+</section>
+<section id="tadano-tsuneyuki-method">
+<h4>Tadano-Tsuneyuki method<a class="headerlink" href="#tadano-tsuneyuki-method" title="Link to this heading">#</a></h4>
+<p>This approach is implemented in the ALM code, allowing for the displacement of
+any number of atoms in the supercell.</p>
+<ul class="simple">
+<li><p>T. Tadano and S. Tsuneyuki, J. Phys. Soc. Jpn. <strong>87</strong>, 041015 (2018).</p></li>
+</ul>
+</section>
 </section>
 <section id="parlinski-li-kawazoe-method">
 <span id="reference-plk"></span><h3>Parlinski-Li-Kawazoe method<a class="headerlink" href="#parlinski-li-kawazoe-method" title="Link to this heading">#</a></h3>
-<p>Parlinski-Li-Kawazoe method is based on the supercell approach with the finite
-displacement method.</p>
-<p>Force constants are calculated using Moore–Penrose pseudoinverse by fitting
-symmetry reduced elements of force constans to the linear relations between
-atomic forces and atomic displacements. The pseudoinverse is easy to handle
-arbitrary number of displacements amplitudes and directions, and can rely on the
-existing library, e.g., LAPACK.</p>
+<p>Supercell force constants are calculated using the Moore–Penrose pseudoinverse
+by fitting the symmetry-reduced elements of supercell force constants to the
+linear relationships between atomic forces and atomic displacements. When
+constructing the dynamical matrix, supercell boundary conditions are treated to
+preserve crystal symmetry by averaging the phase factors of atomic pairs that
+are equivalent under supercell lattice translations.</p>
 <ul class="simple">
-<li><p>K. Parlinski, Z. Q. Li, and Y. Kawazoe, Phys. Rev. Lett. 78, 4063 (1997)</p></li>
+<li><p>K. Parlinski, Z. Q. Li, and Y. Kawazoe, Phys. Rev. Lett. <strong>78</strong>, 4063 (1997)</p></li>
 </ul>
 </section>
 <section id="thermal-expansion-using-quasi-harmonic-approximation">
@@ -565,8 +604,13 @@ University Press</p></li>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#method-used-in-phonopy">Method used in phonopy</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#generation-of-force-constants">Generation of force constants</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#methods-used-in-phonopy">Methods used in phonopy</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#generation-of-supercell-force-constants">Generation of supercell force constants</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#systematic-displacement-method">Systematic displacement method</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#projector-based-method">Projector-based method</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tadano-tsuneyuki-method">Tadano-Tsuneyuki method</a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parlinski-li-kawazoe-method">Parlinski-Li-Kawazoe method</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#thermal-expansion-using-quasi-harmonic-approximation">Thermal expansion using quasi-harmonic approximation</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#non-analytical-term-correction">Non-analytical term correction</a></li>
