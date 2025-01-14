@@ -170,8 +170,7 @@ class IrReps:
     def get_characters(self):
         """Return characters of irreps."""
         warnings.warn(
-            "IrReps.get_characters() is deprecated. "
-            "Use IrReps.characters attribute.",
+            "IrReps.get_characters() is deprecated. Use IrReps.characters attribute.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -200,7 +199,7 @@ class IrReps:
     def get_irreps(self):
         """Return irreps."""
         warnings.warn(
-            "IrReps.get_irreps() is deprecated. " "Use IrReps.irreps attribute.",
+            "IrReps.get_irreps() is deprecated. Use IrReps.irreps attribute.",
             DeprecationWarning,
             stacklevel=2,
         )

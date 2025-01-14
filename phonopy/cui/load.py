@@ -269,7 +269,7 @@ def load(
         else:
             _calculator = calculator
     else:
-        msg = "Cell information could not found. " "Phonopy instance loading failed."
+        msg = "Cell information could not found. Phonopy instance loading failed."
         raise RuntimeError(msg)
 
     if log_level and _calculator is not None:
