@@ -215,7 +215,7 @@ class MLPSSCHA:
                 for i, h in enumerate(hist):
                     length = round(h / size * 100)
                     print(
-                        f"  [{bin_edges[i]:4.3f}, {bin_edges[i+1]:4.3f}] "
+                        f"  [{bin_edges[i]:4.3f}, {bin_edges[i + 1]:4.3f}] "
                         + "*" * length
                     )
 

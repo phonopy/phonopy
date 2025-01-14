@@ -390,8 +390,7 @@ def _generate_displacements_and_forces_by_pypolymlp(
 
     if log_level:
         print(
-            f"Evaluate forces in {len(phonon.displacements)} supercells "
-            "by pypolymlp",
+            f"Evaluate forces in {len(phonon.displacements)} supercells by pypolymlp",
             flush=True,
         )
 

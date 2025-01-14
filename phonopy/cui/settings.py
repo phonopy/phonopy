@@ -365,7 +365,7 @@ class ConfParser:
     def get_configures(self):
         """Return configuration dict."""
         warnings.warn(
-            "ConfParser.get_configures() is deprecated." "Use confs attribute.",
+            "ConfParser.get_configures() is deprecated.Use confs attribute.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -379,7 +379,7 @@ class ConfParser:
     def get_settings(self):
         """Return Settings class instance."""
         warnings.warn(
-            "ConfParser.get_settings() is deprecated." "Use settings attribute.",
+            "ConfParser.get_settings() is deprecated.Use settings attribute.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -733,7 +733,7 @@ class ConfParser:
                 if matrix.shape == (3, 3):
                     if np.linalg.det(matrix) < 1:
                         self.setting_error(
-                            "Determinant of supercell matrix has to be " "positive."
+                            "Determinant of supercell matrix has to be positive."
                         )
                     else:
                         self.set_parameter("supercell_matrix", matrix)

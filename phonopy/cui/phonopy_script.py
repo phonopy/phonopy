@@ -185,7 +185,7 @@ def print_time():
     """Print current time."""
     print(
         "-------------------------"
-        f'[time {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}]'
+        f"[time {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]"
         "-------------------------"
     )
 
@@ -382,8 +382,7 @@ def _print_settings(
     print("Unit of length: %s" % physical_units["length_unit"])
     if _is_band_auto(settings) and not is_primitive_axes_auto:
         print(
-            "Automatic band structure mode forced automatic choice "
-            "of primitive axes."
+            "Automatic band structure mode forced automatic choice of primitive axes."
         )
     if run_mode == "band":
         if _is_band_auto(settings):
@@ -726,7 +725,7 @@ def _produce_force_constants(
             error_text = "Number of atoms in supercell is not consistent with "
             error_text += "the data in FORCE_SETS.\n"
             error_text += (
-                "Please carefully check DIM, FORCE_SETS," " and %s"
+                "Please carefully check DIM, FORCE_SETS, and %s"
             ) % unitcell_filename
             print_error_message(error_text)
             if log_level:
@@ -815,7 +814,7 @@ def _read_force_constants_from_file(
         else:
             error_text += "FORCE_CONSTANTS.\n"
         error_text += (
-            "Please carefully check DIM, FORCE_CONSTANTS, " "and %s."
+            "Please carefully check DIM, FORCE_CONSTANTS, and %s."
         ) % unitcell_filename
         print_error_message(error_text)
         if log_level:
@@ -956,9 +955,7 @@ def _store_force_constants(
                 print('Force constants are written into "FORCE_CONSTANTS".')
                 print("  Array shape of force constants is %s." % str(fc.shape))
                 if fc.shape[0] != fc.shape[1]:
-                    print(
-                        "  Use --full-fc option for full array of force " "constants."
-                    )
+                    print("  Use --full-fc option for full array of force constants.")
 
     if log_level:
         print("")
@@ -1181,8 +1178,7 @@ def _run_calculation(phonon: Phonopy, settings: PhonopySettings, plot_conf, log_
         if _is_band_auto(settings):
             print("SeeK-path is used to generate band paths.")
             print(
-                "  About SeeK-path https://seekpath.readthedocs.io/ "
-                "(citation there-in)"
+                "  About SeeK-path https://seekpath.readthedocs.io/ (citation there-in)"
             )
             is_legacy_plot = False
             bands, labels, path_connections = get_band_qpoints_by_seekpath(
@@ -1263,8 +1259,7 @@ def _run_calculation(phonon: Phonopy, settings: PhonopySettings, plot_conf, log_
             if settings.cutoff_frequency is not None:
                 if log_level:
                     print_error_message(
-                        "Use FMIN (--fmin) instead of CUTOFF_FREQUENCY "
-                        "(--cutoff-freq)."
+                        "Use FMIN (--fmin) instead of CUTOFF_FREQUENCY (--cutoff-freq)."
                     )
                     print_error()
                 sys.exit(1)
@@ -2310,8 +2305,7 @@ def main(**argparse_control):
     ):
         print("-" * 76)
         print(
-            " One of the following run modes may be specified for phonon "
-            "calculations."
+            " One of the following run modes may be specified for phonon calculations."
         )
         for mode in [
             "Mesh sampling (MESH, --mesh)",

@@ -66,11 +66,9 @@ def run_alm(
             " ALM start "
             "--------------------------------"
         )
-        print(
-            "ALM is a non-trivial force constants calculator. " "Please cite the paper:"
-        )
-        print("T. Tadano and S. Tsuneyuki, " "J. Phys. Soc. Jpn. 87, 041015 (2018).")
-        print("ALM is developed at https://github.com/ttadano/ALM by T. " "Tadano.")
+        print("ALM is a non-trivial force constants calculator. Please cite the paper:")
+        print("T. Tadano and S. Tsuneyuki, J. Phys. Soc. Jpn. 87, 041015 (2018).")
+        print("ALM is developed at https://github.com/ttadano/ALM by T. Tadano.")
 
     if log_level == 1:
         print("Increase log-level to watch detailed ALM log.")

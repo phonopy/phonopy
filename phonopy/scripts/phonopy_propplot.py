@@ -121,9 +121,7 @@ def get_options():
     parser.add_argument(
         "filename",
         nargs="*",
-        help=(
-            "Filename of phonon thermal properties result " "(thermal_properties.yaml)"
-        ),
+        help=("Filename of phonon thermal properties result (thermal_properties.yaml)"),
     )
     args = parser.parse_args()
     return args

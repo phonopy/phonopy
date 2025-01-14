@@ -407,8 +407,7 @@ class PhonopyQHA:
     def get_bulk_modulus(self):
         """Return bulk moduli with no phonon contribution."""
         warnings.warn(
-            "PhonopyQHA.get_bulk_modulus() is deprecated."
-            "Use bulk_modulus attribute.",
+            "PhonopyQHA.get_bulk_modulus() is deprecated.Use bulk_modulus attribute.",
             DeprecationWarning,
             stacklevel=2,
         )

@@ -636,7 +636,7 @@ class BandStructure:
                 if group_velocities is not None:
                     gv = group_velocities[j, k]
                     text.append(
-                        "    group_velocity: " "[ %13.7f, %13.7f, %13.7f ]" % tuple(gv)
+                        "    group_velocity: [ %13.7f, %13.7f, %13.7f ]" % tuple(gv)
                     )
 
                 if eigenvectors is not None:
