@@ -296,13 +296,13 @@ def prepare_pypolymlp_and_dataset(
     displacement_distance: Optional[float] = None,
     number_of_snapshots: Optional[Union[int, Literal["auto"]]] = None,
     random_seed: Optional[int] = None,
-    evaluating_forces: bool = False,
+    prepare_dataset: bool = False,
     log_level: int = 0,
 ):
     """Prepare pypolymlp and dataset."""
     _run_pypolymlp(phonon, mlp_params, log_level=log_level)
-    if evaluating_forces:
-        evaluate_dataset_by_pypolymlp(
+    if prepare_dataset:
+        _prepare_dataset_by_pypolymlp(
             phonon,
             displacement_distance=displacement_distance,
             number_of_snapshots=number_of_snapshots,
@@ -382,7 +382,7 @@ def _run_pypolymlp(
         print("-" * 30 + " pypolymlp end " + "-" * 31, flush=True)
 
 
-def evaluate_dataset_by_pypolymlp(
+def _prepare_dataset_by_pypolymlp(
     phonon: Phonopy,
     displacement_distance: Optional[float] = None,
     number_of_snapshots: Optional[Union[int, Literal["auto"]]] = None,

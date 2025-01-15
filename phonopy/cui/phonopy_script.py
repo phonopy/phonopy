@@ -2249,7 +2249,7 @@ def main(**argparse_control):
     # polynomial MLPs #
     ###################
     if load_phonopy_yaml and settings.use_pypolymlp:
-        prepare_displacements_and_forces = (
+        prepare_dataset = (
             settings.create_displacements or settings.random_displacements is not None
         )
         if phonon.dataset is not None:
@@ -2262,7 +2262,7 @@ def main(**argparse_control):
                 displacement_distance=settings.displacement_distance,
                 number_of_snapshots=settings.random_displacements,
                 random_seed=settings.random_seed,
-                evaluating_forces=prepare_displacements_and_forces,
+                prepare_dataset=prepare_dataset,
                 log_level=log_level,
             )
         except RuntimeError as e:
@@ -2272,7 +2272,7 @@ def main(**argparse_control):
             sys.exit(1)
 
         # pypolymlp dataset is stored in "phonopy.pmlp" and stop here.
-        if not prepare_displacements_and_forces:
+        if not prepare_dataset:
             if log_level:
                 print(
                     "Generate displacements (--rd or -d) for proceeding to phonon "
