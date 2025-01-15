@@ -416,7 +416,14 @@ def _print_settings(
         else:
             print("")
     if settings.create_displacements or settings.random_displacements:
-        print("Displacements creation mode")
+        if settings.use_pypolymlp:
+            print("Pypolymlp displacements creation mode")
+        else:
+            print("Displacements creation mode")
+        if settings.random_displacements is not None:
+            print("  Random displacements")
+        elif settings.create_displacements:
+            print("  Systematic displacements")
         if not settings.is_plusminus_displacement == "auto":
             if settings.is_plusminus_displacement:
                 print("  Plus Minus displacement: full plus minus directions")
