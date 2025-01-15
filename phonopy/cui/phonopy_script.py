@@ -50,8 +50,11 @@ from phonopy.cui.collect_cell_info import collect_cell_info
 from phonopy.cui.create_force_sets import create_FORCE_SETS
 from phonopy.cui.load_helper import (
     get_nac_params,
+    prepare_pypolymlp_and_dataset,
+    produce_force_constants,
     read_force_constants_from_hdf5,
-    set_dataset_and_force_constants,
+    select_and_extract_force_constants,
+    select_and_load_dataset,
 )
 from phonopy.cui.phonopy_argparse import get_parser, show_deprecated_option_warnings
 from phonopy.cui.settings import PhonopyConfParser, PhonopySettings
@@ -630,42 +633,6 @@ def _create_FORCE_SETS_from_settings(
     )
 
 
-def _produce_force_constants_load_phonopy_yaml(
-    phonon: Phonopy,
-    settings: PhonopySettings,
-    phpy_yaml: PhonopyYaml,
-    unitcell_filename: str,
-    log_level: int,
-):
-    is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
-    (fc_calculator, fc_calculator_options) = _get_fc_calculator_params(settings)
-
-    try:
-        set_dataset_and_force_constants(
-            phonon,
-            phpy_yaml.dataset,
-            phonopy_yaml_filename=unitcell_filename,
-            fc=phpy_yaml.force_constants,
-            fc_calculator=fc_calculator,
-            fc_calculator_options=fc_calculator_options,
-            produce_fc=True,
-            symmetrize_fc=False,
-            is_compact_fc=(not is_full_fc),
-            use_pypolymlp=settings.use_pypolymlp,
-            mlp_params=settings.mlp_params,
-            displacement_distance=settings.displacement_distance,
-            number_of_snapshots=settings.random_displacements,
-            random_seed=settings.random_seed,
-            evaluating_forces=not settings.sscha_iterations,
-            log_level=log_level,
-        )
-    except (RuntimeError, ValueError) as e:
-        print_error_message(str(e))
-        if log_level:
-            print_error()
-        sys.exit(1)
-
-
 def _produce_force_constants(
     phonon: Phonopy,
     settings: PhonopySettings,
@@ -761,7 +728,7 @@ def _produce_force_constants(
                     fc_calculator=fc_calculator,
                     fc_calculator_options=fc_calculator_options,
                 )
-        except RuntimeError as e:
+        except (RuntimeError, ValueError) as e:
             print_error_message(str(e))
             if log_level:
                 print_error()
@@ -838,7 +805,6 @@ def _store_force_constants(
     settings: PhonopySettings,
     phpy_yaml: PhonopyYaml,
     unitcell_filename: str,
-    load_phonopy_yaml: bool,
     log_level: int,
 ) -> bool:
     """Calculate or read force constants.
@@ -846,64 +812,87 @@ def _store_force_constants(
     Return True if force constants are created.
 
     """
-    physical_units = get_default_physical_units(phonon.calculator)
-    p2s_map = phonon.primitive.p2s_map
+    is_full_fc = settings.fc_spg_symmetry or settings.is_full_fc
+    (fc_calculator, fc_calculator_options) = _get_fc_calculator_params(settings)
 
-    if load_phonopy_yaml:
-        _produce_force_constants_load_phonopy_yaml(
-            phonon, settings, phpy_yaml, unitcell_filename, log_level
-        )
-        if settings.use_pypolymlp and settings.sscha_iterations:
-            if log_level:
-                print(
-                    "------------------------------- SSCHA start "
-                    "--------------------------------"
-                )
+    fc = select_and_extract_force_constants(
+        phonon,
+        phonopy_yaml_filename=unitcell_filename,
+        fc=phpy_yaml.force_constants,
+        is_compact_fc=(not is_full_fc),
+        log_level=log_level,
+    )
+    if fc is not None:
+        phonon.force_constants = fc
 
-            sscha = MLPSSCHA(
+    if phonon.force_constants is None and forces_in_dataset(phonon.dataset):
+        try:
+            produce_force_constants(
                 phonon,
-                phonon.mlp,
-                temperature=settings.random_displacement_temperature,
-                number_of_snapshots=settings.random_displacements,
-                max_iterations=settings.sscha_iterations,
+                fc_calculator=fc_calculator,
+                fc_calculator_options=fc_calculator_options,
+                symmetrize_fc=False,
+                is_compact_fc=(not is_full_fc),
                 log_level=log_level,
             )
-            fc_unit = physical_units["force_constants_unit"]
-            for iter_num in sscha:
-                ph = sscha.phonopy
-                out_filename = ph.save(
-                    filename=f"phonopy_sscha_fc_{iter_num}.yaml",
-                    settings={
-                        "force_sets": False,
-                        "displacements": False,
-                        "force_constants": True,
-                    },
-                    compression=True,
-                )
-                if log_level:
-                    sscha.calculate_free_energy()
-                    print(f"SSCHA free energy: {sscha.free_energy * 1000:.3f} meV")
-                    if iter_num == 0:
-                        print("Initial ", end="")
-                    else:
-                        print("SSCHA ", end="")
-                    print(f'force constants are written into "{out_filename}".')
-                    print("", flush=True)
-
-            phonon.force_constants = ph.force_constants
-
+        except (RuntimeError, ValueError) as e:
+            print_error_message(str(e))
             if log_level:
-                print(
-                    "-------------------------------- SSCHA end "
-                    "---------------------------------"
-                )
-    else:
-        _produce_force_constants(
-            phonon, settings, phpy_yaml, unitcell_filename, log_level
+                print_error()
+            sys.exit(1)
+
+
+def _run_MLPSSCHA(phonon: Phonopy, settings: PhonopySettings, log_level: int):
+    if log_level:
+        print(
+            "------------------------------- SSCHA start "
+            "--------------------------------"
         )
 
-    if phonon.force_constants is None:
-        return False
+    sscha = MLPSSCHA(
+        phonon,
+        phonon.mlp,
+        temperature=settings.random_displacement_temperature,
+        number_of_snapshots=settings.random_displacements,
+        max_iterations=settings.sscha_iterations,
+        log_level=log_level,
+    )
+    for iter_num in sscha:
+        ph = sscha.phonopy
+        out_filename = ph.save(
+            filename=f"phonopy_sscha_fc_{iter_num}.yaml",
+            settings={
+                "force_sets": False,
+                "displacements": False,
+                "force_constants": True,
+            },
+            compression=True,
+        )
+        if log_level:
+            sscha.calculate_free_energy()
+            print(f"SSCHA free energy: {sscha.free_energy * 1000:.3f} meV")
+            if iter_num == 0:
+                print("Initial ", end="")
+            else:
+                print("SSCHA ", end="")
+            print(f'force constants are written into "{out_filename}".')
+            print("", flush=True)
+
+    phonon.force_constants = ph.force_constants
+
+    if log_level:
+        print(
+            "-------------------------------- SSCHA end "
+            "---------------------------------"
+        )
+
+
+def _post_process_force_constants(
+    phonon: Phonopy, settings: PhonopySettings, log_level: int, load_phonopy_yaml: bool
+):
+    physical_units = get_default_physical_units(phonon.calculator)
+    p2s_map = phonon.primitive.p2s_map
+    fc_unit = physical_units["force_constants_unit"]
 
     # Impose cutoff radius on force constants
     cutoff_radius = settings.cutoff_radius
@@ -959,8 +948,6 @@ def _store_force_constants(
 
     if log_level:
         print("")
-
-    return True
 
 
 def _create_random_displacements_at_finite_temperature(
@@ -2247,20 +2234,91 @@ def main(**argparse_control):
             phonon, settings, confs, cell_info["optional_structure_info"], log_level
         )
 
+    ################
+    # Load dataset #
+    ################
+    if load_phonopy_yaml:
+        phonon.dataset = select_and_load_dataset(
+            phonon,
+            cell_info["phonopy_yaml"].dataset,
+            phonopy_yaml_filename=unitcell_filename,
+            log_level=log_level,
+        )
+
+    ###################
+    # polynomial MLPs #
+    ###################
+    if load_phonopy_yaml and settings.use_pypolymlp:
+        if phonon.dataset is None:
+            print_error_message("Dataset for developing MLPs is not found.")
+            if log_level:
+                print_error()
+            sys.exit(1)
+        else:
+            phonon.mlp_dataset = phonon.dataset
+            phonon.dataset = None
+            prepare_dataset = (
+                settings.create_displacements
+                or settings.random_displacements is not None
+            )
+
+            try:
+                prepare_pypolymlp_and_dataset(
+                    phonon,
+                    mlp_params=settings.mlp_params,
+                    displacement_distance=settings.displacement_distance,
+                    number_of_snapshots=settings.random_displacements,
+                    random_seed=settings.random_seed,
+                    evaluating_forces=prepare_dataset,
+                    log_level=log_level,
+                )
+            except RuntimeError as e:
+                print_error_message(str(e))
+                if log_level:
+                    print_error()
+                sys.exit(1)
+
+            # pypolymlp dataset is stored in "phonopy.pmlp" and stop here.
+            if not prepare_dataset:
+                if log_level:
+                    print(
+                        "Generate displacements (--rd or -d) for proceeding to phonon "
+                        "calculations."
+                    )
+                _finalize_phonopy(log_level, settings, confs, phonon)
+
     ###################
     # Force constants #
     ###################
-    if not _store_force_constants(
-        phonon,
-        settings,
-        cell_info["phonopy_yaml"],
-        unitcell_filename,
-        load_phonopy_yaml,
-        log_level,
-    ):
+    if load_phonopy_yaml:
+        _store_force_constants(
+            phonon,
+            settings,
+            cell_info["phonopy_yaml"],
+            unitcell_filename,
+            log_level,
+        )
+    else:
+        _produce_force_constants(
+            phonon,
+            settings,
+            cell_info["phonopy_yaml"],
+            unitcell_filename,
+            log_level,
+        )
+
+    if phonon.force_constants is None:
         if log_level:
             print_error()
         sys.exit(1)
+    else:
+        _post_process_force_constants(phonon, settings, log_level, load_phonopy_yaml)
+
+    ##############################
+    # MLPSSCHA (pypolymlp-sscha) #
+    ##############################
+    if settings.use_pypolymlp and settings.sscha_iterations:
+        _run_MLPSSCHA(phonon, settings, log_level)
 
     ###################################################################
     # Create random displacements at finite temperature and then exit #

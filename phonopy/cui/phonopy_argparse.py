@@ -203,15 +203,14 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         default=None,
         help="Out of cutoff radius, force constants are set zero.",
     )
-    if not load_phonopy_yaml:
-        parser.add_argument(
-            "-d",
-            "--displacement",
-            dest="is_displacement",
-            action="store_true",
-            default=None,
-            help="Create supercells with displacements",
-        )
+    parser.add_argument(
+        "-d",
+        "--displacement",
+        dest="is_displacement",
+        action="store_true",
+        default=None,
+        help="Create supercells with displacements",
+    )
     if not load_phonopy_yaml:
         parser.add_argument(
             "--dim",
