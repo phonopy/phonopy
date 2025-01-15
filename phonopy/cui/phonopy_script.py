@@ -2249,43 +2249,36 @@ def main(**argparse_control):
     # polynomial MLPs #
     ###################
     if load_phonopy_yaml and settings.use_pypolymlp:
-        if phonon.dataset is None:
-            print_error_message("Dataset for developing MLPs is not found.")
+        prepare_displacements_and_forces = (
+            settings.create_displacements or settings.random_displacements is not None
+        )
+        if phonon.dataset is not None:
+            phonon.mlp_dataset = phonon.dataset
+            phonon.dataset = None
+        try:
+            prepare_pypolymlp_and_dataset(
+                phonon,
+                mlp_params=settings.mlp_params,
+                displacement_distance=settings.displacement_distance,
+                number_of_snapshots=settings.random_displacements,
+                random_seed=settings.random_seed,
+                evaluating_forces=prepare_displacements_and_forces,
+                log_level=log_level,
+            )
+        except RuntimeError as e:
+            print_error_message(str(e))
             if log_level:
                 print_error()
             sys.exit(1)
-        else:
-            phonon.mlp_dataset = phonon.dataset
-            phonon.dataset = None
-            prepare_dataset = (
-                settings.create_displacements
-                or settings.random_displacements is not None
-            )
 
-            try:
-                prepare_pypolymlp_and_dataset(
-                    phonon,
-                    mlp_params=settings.mlp_params,
-                    displacement_distance=settings.displacement_distance,
-                    number_of_snapshots=settings.random_displacements,
-                    random_seed=settings.random_seed,
-                    evaluating_forces=prepare_dataset,
-                    log_level=log_level,
+        # pypolymlp dataset is stored in "phonopy.pmlp" and stop here.
+        if not prepare_displacements_and_forces:
+            if log_level:
+                print(
+                    "Generate displacements (--rd or -d) for proceeding to phonon "
+                    "calculations."
                 )
-            except RuntimeError as e:
-                print_error_message(str(e))
-                if log_level:
-                    print_error()
-                sys.exit(1)
-
-            # pypolymlp dataset is stored in "phonopy.pmlp" and stop here.
-            if not prepare_dataset:
-                if log_level:
-                    print(
-                        "Generate displacements (--rd or -d) for proceeding to phonon "
-                        "calculations."
-                    )
-                _finalize_phonopy(log_level, settings, confs, phonon)
+            _finalize_phonopy(log_level, settings, confs, phonon)
 
     ###################
     # Force constants #
