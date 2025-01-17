@@ -86,9 +86,7 @@ def get_options():
         "--outcar",
         dest="read_outcar",
         action="store_true",
-        help=(
-            "Read OUTCAR instead of vasprun.xml. " "POSCAR is necessary in this case."
-        ),
+        help=("Read OUTCAR instead of vasprun.xml. POSCAR is necessary in this case."),
     )
     parser.add_argument(
         "filenames", nargs="*", help="Filenames: vasprun.xml or OUTCAR and POSCAR"

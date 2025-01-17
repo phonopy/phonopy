@@ -153,8 +153,7 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         type=int,
         default=None,
         help=(
-            "Number of points calculated on a band segment in "
-            "the band structure mode"
+            "Number of points calculated on a band segment in the band structure mode"
         ),
     )
     parser.add_argument(
@@ -163,7 +162,7 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         nargs="+",
         dest="band_indices",
         default=None,
-        help=("Band indices to be included to calcualte thermal " "properties"),
+        help=("Band indices to be included to calcualte thermal properties"),
     )
     if not load_phonopy_yaml:
         parser.add_argument(
@@ -195,7 +194,7 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         dest="cutoff_frequency",
         type=float,
         default=None,
-        help=("Thermal properties are not calculated below this " "cutoff frequency."),
+        help=("Thermal properties are not calculated below this cutoff frequency."),
     )
     parser.add_argument(
         "--cutoff-radius",
@@ -204,15 +203,14 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         default=None,
         help="Out of cutoff radius, force constants are set zero.",
     )
-    if not load_phonopy_yaml:
-        parser.add_argument(
-            "-d",
-            "--displacement",
-            dest="is_displacement",
-            action="store_true",
-            default=None,
-            help="Create supercells with displacements",
-        )
+    parser.add_argument(
+        "-d",
+        "--displacement",
+        dest="is_displacement",
+        action="store_true",
+        default=None,
+        help="Create supercells with displacements",
+    )
     if not load_phonopy_yaml:
         parser.add_argument(
             "--dim",
@@ -251,7 +249,7 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
             action="store_false",
             default=None,
             help=(
-                "Exclude born effective charge and dielectric tensor in " "phonopy.yaml"
+                "Exclude born effective charge and dielectric tensor in phonopy.yaml"
             ),
         )
     parser.add_argument(

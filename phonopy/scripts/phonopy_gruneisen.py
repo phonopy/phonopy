@@ -217,7 +217,7 @@ def get_options():
     parser.add_argument(
         "dirnames",
         nargs="*",
-        help=("Directory names of phonons with three different volumes " "(0, +, -)"),
+        help=("Directory names of phonons with three different volumes (0, +, -)"),
     )
     args = parser.parse_args()
     return args
@@ -229,7 +229,7 @@ def run():
 
     if len(args.dirnames) != 3:
         sys.stderr.write(
-            "Three directory names (original, plus, minus) " "have to be spefied.\n"
+            "Three directory names (original, plus, minus) have to be spefied.\n"
         )
         sys.exit(1)
 

@@ -134,7 +134,9 @@ def get_qpoints(
     return gp.qpoints, gp.weights
 
 
-def extract_ir_grid_points(grid_mapping_table):
+def extract_ir_grid_points(
+    grid_mapping_table: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
     """Return ir-grid points and weights in grid index mapping table."""
     dtype = grid_mapping_table.dtype
     ir_grid_points = np.array(np.unique(grid_mapping_table), dtype=dtype)

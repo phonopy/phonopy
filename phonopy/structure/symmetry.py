@@ -170,8 +170,7 @@ class Symmetry:
     def get_pointgroup(self):
         """Return symbol of crystallographic point group."""
         warnings.warn(
-            "Symmetry.get_pointgroup() is deprecated."
-            "Use pointgroup_symbol attribute.",
+            "Symmetry.get_pointgroup() is deprecated.Use pointgroup_symbol attribute.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -197,7 +196,7 @@ class Symmetry:
     def get_dataset(self):
         """Return spglib dataset."""
         warnings.warn(
-            "Symmetry.get_dataset() is deprecated." "Use dataset attribute.",
+            "Symmetry.get_dataset() is deprecated.Use dataset attribute.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -631,8 +630,7 @@ def symmetrize_borns_and_epsilon(
 
     if (abs(borns - borns_) > 0.1).any():
         lines = [
-            "Symmetry of Born effective charge is largely broken. "
-            "The difference is:",
+            "Symmetry of Born effective charge is largely broken. The difference is:",
             "%s" % (borns - borns_),
         ]
         import warnings

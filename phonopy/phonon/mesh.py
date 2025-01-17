@@ -321,7 +321,7 @@ class Mesh(MeshBase):
     def get_frequencies(self):
         """Return phonon frequencies."""
         warnings.warn(
-            "Mesh.get_frequencies() is deprecated. " "Use frequencies attribute.",
+            "Mesh.get_frequencies() is deprecated. Use frequencies attribute.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -347,7 +347,7 @@ class Mesh(MeshBase):
     def get_eigenvectors(self):
         """Return eigenvectors."""
         warnings.warn(
-            "Mesh.get_eigenvectors() is deprecated. " "Use eigenvectors attribute.",
+            "Mesh.get_eigenvectors() is deprecated. Use eigenvectors attribute.",
             DeprecationWarning,
             stacklevel=2,
         )

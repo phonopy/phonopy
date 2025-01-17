@@ -163,8 +163,7 @@ class BulkModulus:
     def get_energy(self):
         """Return fitted parameter of energy."""
         warnings.warn(
-            "BulkModulus.get_energy() is deprecated."
-            "Use BulkModulus.energy attribute.",
+            "BulkModulus.get_energy() is deprecated.Use BulkModulus.energy attribute.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -452,8 +451,7 @@ class QHA:
     def get_helmholtz_volume(self):
         """Return Helmholtz free energy at volumes and temperatures."""
         warnings.warn(
-            "QHA.get_helmholtz_volume() is deprecated."
-            "Use helmholtz_volume attribute.",
+            "QHA.get_helmholtz_volume() is deprecated.Use helmholtz_volume attribute.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -1146,8 +1144,7 @@ class QHA:
                 )
             except np.lib.polynomial.RankWarning as exc:
                 msg = (
-                    "Failed to fit equilibrium volumes vs T to "
-                    "polynomial of degree 2."
+                    "Failed to fit equilibrium volumes vs T to polynomial of degree 2."
                 )
                 raise RuntimeError(msg) from exc
             dvdt = parameters[0] * 2 * t + parameters[1]
