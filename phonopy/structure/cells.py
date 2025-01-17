@@ -238,8 +238,7 @@ class Supercell(PhonopyAtoms):
         if N != determinant(self._supercell_matrix):
             print("Supercell creation failed.")
             print(
-                "Probably some atoms are overwrapped. "
-                "The mapping table is given below."
+                "Probably some atoms are overwrapped. The mapping table is given below."
             )
             print(mapping_table)
             super().__init__()
@@ -1722,7 +1721,7 @@ def get_primitive_matrix(
             if symprec < det and det < 1 + symprec:
                 _pmat = matrix
             else:
-                msg = "Determinant of primitive_matrix has to be larger " "than 0"
+                msg = "Determinant of primitive_matrix has to be larger than 0"
                 raise RuntimeError(msg)
     else:
         msg = (

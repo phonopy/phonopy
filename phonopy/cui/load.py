@@ -49,6 +49,7 @@ from phonopy.interface.calculator import get_default_physical_units
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_primitive_matrix
+from phonopy.structure.dataset import forces_in_dataset
 
 
 def load(
@@ -269,7 +270,7 @@ def load(
         else:
             _calculator = calculator
     else:
-        msg = "Cell information could not found. " "Phonopy instance loading failed."
+        msg = "Cell information could not found. Phonopy instance loading failed."
         raise RuntimeError(msg)
 
     if log_level and _calculator is not None:
@@ -307,21 +308,45 @@ def load(
         if ret_nac_params is not None:
             phonon.nac_params = ret_nac_params
 
-    # Displacements, forces, and force constants
-    load_helper.set_dataset_and_force_constants(
+    dataset = load_helper.select_and_load_dataset(
         phonon,
         _dataset,
-        force_constants_filename=force_constants_filename,
-        fc=_fc,
         force_sets_filename=force_sets_filename,
-        fc_calculator=fc_calculator,
-        fc_calculator_options=fc_calculator_options,
-        produce_fc=produce_fc,
-        symmetrize_fc=symmetrize_fc,
-        is_compact_fc=is_compact_fc,
-        use_pypolymlp=use_pypolymlp,
-        mlp_params=mlp_params,
         log_level=log_level,
     )
+    if dataset is not None:
+        phonon.dataset = dataset
+
+    fc = load_helper.select_and_extract_force_constants(
+        phonon,
+        fc=_fc,
+        force_constants_filename=force_constants_filename,
+        is_compact_fc=is_compact_fc,
+        log_level=log_level,
+    )
+    if fc is not None:
+        phonon.force_constants = fc
+
+    if use_pypolymlp and dataset is not None:
+        phonon.mlp_dataset = dataset
+        phonon.dataset = None
+        load_helper.prepare_pypolymlp_and_dataset(
+            phonon,
+            mlp_params=mlp_params,
+            log_level=log_level,
+        )
+    if (
+        phonon.force_constants is None
+        and produce_fc
+        and forces_in_dataset(phonon.dataset)
+    ):
+        load_helper.produce_force_constants(
+            phonon,
+            fc_calculator=fc_calculator,
+            fc_calculator_options=fc_calculator_options,
+            symmetrize_fc=symmetrize_fc,
+            is_compact_fc=is_compact_fc,
+            log_level=log_level,
+        )
 
     return phonon

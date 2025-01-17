@@ -1,37 +1,69 @@
 # References
 
-## Method used in phonopy
+## Methods used in phonopy
 
 (reference_force_constants)=
 
-### Generation of force constants
+### Generation of supercell force constants
 
-In phonopy, force constants are generated based on finite displacement method.
-Crystal symmetry is used to reduce the calculation cost and numerical noise of
-the force constants. Firstly a symmetry reduced set of atomic displacements is
-generated. After the atomic force calculations, the set of atomic displacements
-are expanded using the symmetry and then all the elements of force constans
-between atoms in a primitive cell and the supercell are fit to the symmetry
-expanded forces of atoms in supercells using Moore–Penrose pseudoinverse. This
-procedure may considered as a variant of {ref}`reference_plk`. Some of the
-details are found in the appendix of the following paper:
+In phonopy, force constants are generated using the supercell method with finite
+displacements. Several approaches can be employed to calculate supercell force
+constants. Technical details regarding supercell method can be found in the
+following paper:
 
-- L. Chaput, A. Togo, I. Tanaka, and G. Hug, Phys. Rev. B, 84, 094302 (2011)
+- A. Togo, L. Chaput, T. Tadano, I. Tanaka,  J. Phys.: Condens. Matter 35 353001
+  (2023)
+
+(reference_systematic_displacement)=
+#### Systematic displacement method
+
+This is the traditional method that phonopy has employed for many years. Crystal
+symmetry is utilized to reduce both the computational cost and numerical noise
+in supercell force constant calculations. First, a symmetry-reduced set of
+atomic displacements is systematically generated. After calculating the atomic
+forces, the displacements are expanded using symmetry operations. The force
+constants between atoms in the primitive cell and the supercell are then fitted
+to the symmetry-expanded forces of atoms in the supercells using the
+Moore–Penrose pseudoinverse.
+
+This procedure can be considered a variant of {ref}`reference_plk` (see below).
+Unlike the Parlinski–Li–Kawazoe method, supercell force constants are initially
+computed without imposing the translational invariance constraint. The
+constraint is applied a posteriori. Additional implementation details in phonopy
+can be found in the appendix of the following paper:
+
+- L. Chaput, A. Togo, I. Tanaka, and G. Hug, Phys. Rev. B, **84**, 094302 (2011)
+
+(reference_random_displacement)=
+#### Projector-based method
+
+This approach is implemented in the symfc code, allowing for the displacement of
+any number of atoms in the supercell. Typically, all atoms are displaced either
+in random directions with a fixed displacement magnitude or with both random
+directions and magnitudes. The former approach, using a small displacement
+(e.g., 0.01 to 0.03 Angstrom), is recommended. However, for estimating supercell
+force constants at finite temperatures, the latter approach may be used.
+
+- A. Seko and A. Togo, Phys. Rev. B **110**, 214302 (2024)
+
+#### Tadano-Tsuneyuki method
+
+This approach is implemented in the ALM code, allowing for the displacement of
+any number of atoms in the supercell.
+
+- T. Tadano and S. Tsuneyuki, J. Phys. Soc. Jpn. **87**, 041015 (2018).
 
 (reference_plk)=
-
 ### Parlinski-Li-Kawazoe method
 
-Parlinski-Li-Kawazoe method is based on the supercell approach with the finite
-displacement method.
+Supercell force constants are calculated using the Moore–Penrose pseudoinverse
+by fitting the symmetry-reduced elements of supercell force constants to the
+linear relationships between atomic forces and atomic displacements. When
+constructing the dynamical matrix, supercell boundary conditions are treated to
+preserve crystal symmetry by averaging the phase factors of atomic pairs that
+are equivalent under supercell lattice translations.
 
-Force constants are calculated using Moore–Penrose pseudoinverse by fitting
-symmetry reduced elements of force constans to the linear relations between
-atomic forces and atomic displacements. The pseudoinverse is easy to handle
-arbitrary number of displacements amplitudes and directions, and can rely on the
-existing library, e.g., LAPACK.
-
-- K. Parlinski, Z. Q. Li, and Y. Kawazoe, Phys. Rev. Lett. 78, 4063 (1997)
+- K. Parlinski, Z. Q. Li, and Y. Kawazoe, Phys. Rev. Lett. **78**, 4063 (1997)
 
 (reference_thermal_expansion)=
 

@@ -655,8 +655,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             self._run_c_recip_dipole_dipole_q0()
         except ImportError:
             print(
-                "Python version of dipole-dipole calculation is not well "
-                "implemented."
+                "Python version of dipole-dipole calculation is not well implemented."
             )
             sys.exit(1)
 
@@ -698,9 +697,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
 
     def show_nac_message(self):
         """Show message on Gonze-Lee NAC method."""
-        print(
-            "Use NAC by Gonze et al. (no real space sum in current " "implementation)"
-        )
+        print("Use NAC by Gonze et al. (no real space sum in current implementation)")
         print("  PRB 50, 13035(R) (1994), PRB 55, 10355 (1997)")
         print(
             "  G-cutoff distance: %4.2f, Number of G-points: %d, "
@@ -750,8 +747,7 @@ class DynamicalMatrixGL(DynamicalMatrixNAC):
             C_recip = self._get_c_recip_dipole_dipole(q_cart, q_dir_cart)
         except ImportError:
             print(
-                "Python version of dipole-dipole calculation is not well "
-                "implemented."
+                "Python version of dipole-dipole calculation is not well implemented."
             )
             sys.exit(1)
 
@@ -1027,7 +1023,7 @@ class DynamicalMatrixWang(DynamicalMatrixNAC):
     def show_nac_message(self):
         """Show Wang et al.'s paper reference."""
         if self._log_level:
-            print("NAC by Wang et al., J. Phys. Condens. Matter 22, " "202201 (2010)")
+            print("NAC by Wang et al., J. Phys. Condens. Matter 22, 202201 (2010)")
 
     def _set_nac_params(self, nac_params):
         """Set NAC parameters.

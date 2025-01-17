@@ -51,8 +51,7 @@ def Atoms(*args, **kwargs):
 
     """
     warnings.warn(
-        "phonopy.atoms.Atoms is deprecated. Please use "
-        "PhonopyAtoms instead of Atoms.",
+        "phonopy.atoms.Atoms is deprecated. Please use PhonopyAtoms instead of Atoms.",
         DeprecationWarning,
         stacklevel=2,
     )
@@ -473,7 +472,7 @@ class PhonopyAtoms:
     def get_volume(self):
         """Return cell volume."""
         warnings.warn(
-            "PhonopyAtoms.get_volume() is deprecated. " "Use volume attribute instead.",
+            "PhonopyAtoms.get_volume() is deprecated. Use volume attribute instead.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -497,8 +496,7 @@ class PhonopyAtoms:
     def get_number_of_atoms(self):
         """Return number of atoms."""
         warnings.warn(
-            "PhonopyAtoms.get_number_of_atoms() is deprecated. "
-            "Use len(PhonopyAtoms).",
+            "PhonopyAtoms.get_number_of_atoms() is deprecated. Use len(PhonopyAtoms).",
             DeprecationWarning,
             stacklevel=2,
         )
