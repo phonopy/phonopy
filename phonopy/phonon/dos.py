@@ -659,12 +659,11 @@ def plot_projected_dos(
         for i in set_for_sum:
             if i > num_pdos - 1:
                 print("Index number '%d' is specified," % (i + 1))
-                print("but it is not allowed to be larger than the number of " "atoms.")
+                print("but it is not allowed to be larger than the number of atoms.")
                 raise ValueError
             if i < 0:
                 print(
-                    "Index number '%d' is specified, but it must be "
-                    "positive." % (i + 1)
+                    "Index number '%d' is specified, but it must be positive." % (i + 1)
                 )
                 raise ValueError
             pdos_sum += projected_dos[i]

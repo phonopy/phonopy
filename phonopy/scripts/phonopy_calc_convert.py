@@ -126,8 +126,5 @@ def _infile_exist(filename):
 
 def _outfile_exist(filename):
     if os.path.isfile(filename):
-        msg = (
-            '"%s" exists in the current directory. '
-            "Use different filename." % filename
-        )
+        msg = '"%s" exists in the current directory. Use different filename.' % filename
         raise RuntimeError(msg)

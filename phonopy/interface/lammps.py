@@ -374,9 +374,9 @@ class LammpsStructureLoader:
             num_atoms += 1
             if num_atoms == self._header_tags["atoms"]:
                 break
-        assert (
-            num_atoms == self._header_tags["atoms"]
-        ), f'{num_atoms} != {self._header_tags["atoms"]}'
+        assert num_atoms == self._header_tags["atoms"], (
+            f"{num_atoms} != {self._header_tags['atoms']}"
+        )
         self._atom_ids = ids
         self._atom_labels = lables
         self._atom_positions = positions

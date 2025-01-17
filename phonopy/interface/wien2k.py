@@ -355,7 +355,7 @@ def _distribute_forces(supercell, disp, forces, filename, symprec):
         return False
 
     if len(atoms_in_dot_scf) == natom:
-        print("It is assumed that there is no symmetrically-equivalent " "atoms in ")
+        print("It is assumed that there is no symmetrically-equivalent atoms in ")
         print("'%s' at wien2k calculation." % filename)
         force_set = forces
     elif len(forces) != len(independent_atoms):
