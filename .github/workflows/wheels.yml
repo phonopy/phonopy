@@ -12,6 +12,8 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest,]
+        # os: [ubuntu-latest, windows-latest, macos-13, macos-latest]
+
 
     steps:
     - uses: actions/checkout@v4
@@ -25,7 +27,7 @@ jobs:
     - name: Build wheels
       run: python -m cibuildwheel --output-dir wheelhouse
       env:
-        CIBW_SKIP: "cp39-* pp* *_i686"
+        CIBW_SKIP: "cp39-* pp* *_i686 *musllinux*"
         CIBW_BUILD_VERBOSITY: 1
 
       # to supply options, put them in 'env', like:
@@ -39,6 +41,9 @@ jobs:
 
   upload_pypi_test:
     name: Upload to PyPI (test)
+    strategy:
+      matrix:
+        os: [ubuntu-latest,]
     needs: [build_wheels,]
     runs-on: ${{ matrix.os }}
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/make-wheel')
