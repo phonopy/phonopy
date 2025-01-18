@@ -62,6 +62,11 @@ jobs:
               repository_url: https://test.pypi.org/legacy/
               skip-existing: true
 
+    - uses: actions/upload-artifact@v4
+      with:
+        name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+        path: ./wheelhouse/*.whl
+
         upload_pypi:
           name: Upload to PyPI
           strategy:
@@ -73,12 +78,10 @@ jobs:
           steps:
           - uses: actions/download-artifact@v4
             with:
-                pattern: cibw-wheels-*
-                path: dist
-                merge-multiple: true
+              pattern: cibw-wheels-*
+              path: dist
+              merge-multiple: true
           - uses: pypa/gh-action-pypi-publish@release/v1
             with:
-                user: __token__
-                password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-                repository_url: https://test.pypi.org/legacy/
-                skip-existing: true
+              user: __token__
+              password: ${{ secrets.PYPI_API_TOKEN }}
