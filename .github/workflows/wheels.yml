@@ -41,47 +41,42 @@ jobs:
         name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
         path: ./wheelhouse/*.whl
 
-        upload_pypi_test:
-          name: Upload to PyPI (test)
-          strategy:
-            matrix:
-              os: [ubuntu-latest,]
-          needs: [build_wheels,]
-          runs-on: ${{ matrix.os }}
-          if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/make-wheel-test')
-          steps:
-          - uses: actions/download-artifact@v4
-            with:
-              pattern: cibw-wheels-*
-              path: dist
-              merge-multiple: true
-          - uses: pypa/gh-action-pypi-publish@release/v1
-            with:
-              user: __token__
-              password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-              repository_url: https://test.pypi.org/legacy/
-              skip-existing: true
-
-    - uses: actions/upload-artifact@v4
+  upload_pypi_test:
+    name: Upload to PyPI (test)
+    strategy:
+      matrix:
+        os: [ubuntu-latest,]
+    needs: [build_wheels,]
+    runs-on: ${{ matrix.os }}
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/make-wheel-test')
+    steps:
+    - uses: actions/download-artifact@v4
       with:
-        name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
-        path: ./wheelhouse/*.whl
+        pattern: cibw-wheels-*
+        path: dist
+        merge-multiple: true
+    - uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        repository_url: https://test.pypi.org/legacy/
+        skip-existing: true
 
-        upload_pypi:
-          name: Upload to PyPI
-          strategy:
-          matrix:
-              os: [ubuntu-latest,]
-          needs: [build_wheels,]
-          runs-on: ${{ matrix.os }}
-          if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/make-wheel')
-          steps:
-          - uses: actions/download-artifact@v4
-            with:
-              pattern: cibw-wheels-*
-              path: dist
-              merge-multiple: true
-          - uses: pypa/gh-action-pypi-publish@release/v1
-            with:
-              user: __token__
-              password: ${{ secrets.PYPI_API_TOKEN }}
+  upload_pypi:
+    name: Upload to PyPI
+    strategy:
+    matrix:
+        os: [ubuntu-latest,]
+    needs: [build_wheels,]
+    runs-on: ${{ matrix.os }}
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/make-wheel')
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        pattern: cibw-wheels-*
+        path: dist
+        merge-multiple: true
+    - uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}
