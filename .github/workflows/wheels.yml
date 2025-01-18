@@ -25,7 +25,9 @@ jobs:
       run: python -m pip install cibuildwheel==2.22.0
 
     - name: Build wheels
-      run: python -m cibuildwheel --output-dir wheelhouse
+      run: |
+        git tag v`grep __version__ phonopy/version.py|awk -F'"' '{print($2)}'`
+        python -m cibuildwheel --output-dir wheelhouse
       env:
         CIBW_SKIP: "cp39-* pp* *_i686 *musllinux*"
         CIBW_BUILD_VERBOSITY: 1
