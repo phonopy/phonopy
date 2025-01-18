@@ -1,0 +1,83 @@
+name: wheel-build-and-deploy
+
+on:
+    push:
+      branches:
+      - make-wheel
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest,]
+        # os: [ubuntu-latest, windows-latest, macos-13, macos-latest]
+
+
+    steps:
+    - uses: actions/checkout@v4
+
+    # Used to host cibuildwheel
+    - uses: actions/setup-python@v5
+
+    - name: Install cibuildwheel
+      run: python -m pip install cibuildwheel==2.22.0
+
+    - name: Build wheels
+      run: |
+        git tag v`grep __version__ phonopy/version.py|awk -F'"' '{print($2)}'`
+        python -m cibuildwheel --output-dir wheelhouse
+      env:
+        CIBW_SKIP: "cp39-* pp* *_i686 *musllinux*"
+        CIBW_BUILD_VERBOSITY: 1
+
+      # to supply options, put them in 'env', like:
+      # env:
+      #   CIBW_SOME_OPTION: value
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+        path: ./wheelhouse/*.whl
+
+  upload_pypi_test:
+    name: Upload to PyPI (test)
+    strategy:
+      matrix:
+        os: [ubuntu-latest,]
+    needs: [build_wheels,]
+    runs-on: ${{ matrix.os }}
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/make-wheel-test')
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        pattern: cibw-wheels-*
+        path: dist
+        merge-multiple: true
+    - uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        repository_url: https://test.pypi.org/legacy/
+        skip-existing: true
+
+  upload_pypi:
+    name: Upload to PyPI
+    strategy:
+      matrix:
+        os: [ubuntu-latest,]
+    needs: [build_wheels,]
+    runs-on: ${{ matrix.os }}
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/make-wheel')
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        pattern: cibw-wheels-*
+        path: dist
+        merge-multiple: true
+    - uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        skip-existing: true
