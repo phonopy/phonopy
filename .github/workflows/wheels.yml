@@ -23,7 +23,11 @@ jobs:
       run: python -m pip install cibuildwheel==2.22.0
 
     - name: Build wheels
-      run: CIBW_SKIP="cp39-* pp*" CIBW_BUILD_VERBOSITY=1 python -m cibuildwheel --output-dir wheelhouse
+      run: python -m cibuildwheel --output-dir wheelhouse
+      env:
+        CIBW_SKIP: "cp39-* pp*"
+        CIBW_BUILD_VERBOSITY: 1
+
       # to supply options, put them in 'env', like:
       # env:
       #   CIBW_SOME_OPTION: value
