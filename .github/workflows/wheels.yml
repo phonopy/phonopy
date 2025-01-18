@@ -4,6 +4,7 @@ on:
     push:
       branches:
       - make-wheel
+      - make-wheel-test
 
 jobs:
   build_wheels:
