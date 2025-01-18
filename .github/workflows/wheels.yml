@@ -65,7 +65,7 @@ jobs:
   upload_pypi:
     name: Upload to PyPI
     strategy:
-    matrix:
+      matrix:
         os: [ubuntu-latest,]
     needs: [build_wheels,]
     runs-on: ${{ matrix.os }}
