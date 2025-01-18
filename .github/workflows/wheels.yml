@@ -33,20 +33,20 @@ jobs:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
 
-    upload_pypi_test:
-      name: Upload to PyPI (test)
-      needs: [build_wheels,]
-      runs-on: ${{ matrix.os }}
-      if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/make-wheel')
-      steps:
-        - uses: actions/download-artifact@v4
-          with:
-            pattern: artifacts-*
-            path: dist
-            merge-multiple: true
-        - uses: pypa/gh-action-pypi-publish@release/v1
-          with:
-            user: __token__
-            password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-            repository_url: https://test.pypi.org/legacy/
-            skip-existing: true
+  upload_pypi_test:
+    name: Upload to PyPI (test)
+    needs: [build_wheels,]
+    runs-on: ${{ matrix.os }}
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/make-wheel')
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: artifacts-*
+          path: dist
+          merge-multiple: true
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
+          skip-existing: true
