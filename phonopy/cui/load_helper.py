@@ -391,7 +391,7 @@ def _prepare_dataset_by_pypolymlp(
 ):
     """Generate displacements and evaluate forces by pypolymlp."""
     if displacement_distance is None:
-        _displacement_distance = 0.001
+        _displacement_distance = 0.01
     else:
         _displacement_distance = displacement_distance
 
