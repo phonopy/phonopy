@@ -1813,11 +1813,11 @@ class PhonopyConfParser(ConfParser):
             if self._args.lapack_solver:
                 self._confs["lapack_solver"] = ".true."
 
-        # Overwrite
         if "is_check_symmetry" in arg_list:
             if self._args.is_check_symmetry:
-                # Dummy 'dim' setting for sym-check
-                self._confs["dim"] = "1 1 1"
+                if "dim" not in self._confs:
+                    # Dummy 'dim' setting not to exit by no-dim check.
+                    self._confs["dim"] = "1 1 1"
 
         if "sscha_iterations" in arg_list:
             if self._args.sscha_iterations:
