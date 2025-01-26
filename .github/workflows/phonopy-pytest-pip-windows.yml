@@ -1,13 +1,31 @@
-name: phonopy test on windows
+name: phonopy test on windows and macos
 
 on:
   push:
     branches:
-    - windows
+    - run-test-on-windows-macos
 
 jobs:
-  build-linux:
+  build-windows:
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install dependencies
+      run: |
+        yes | pip install matplotlib PyYAML scipy numpy spglib h5py pytest symfc
+    - name: Setup phonopy
+      run: |
+        pip install -e . -v
+    - name: Test with pytest
+      run: |
+        pytest -v test
+
+  build-macos:
+    runs-on: macos-latest
     defaults:
       run:
         shell: bash -l {0}
