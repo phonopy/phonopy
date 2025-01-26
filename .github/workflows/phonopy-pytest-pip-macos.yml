@@ -1,9 +1,8 @@
 name: phonopy test on macos
 
 on:
-  push:
-    branches:
-    - macos
+  pull_request:
+    branches: [ develop ]
 
 jobs:
   build-linux:
@@ -19,7 +18,7 @@ jobs:
         yes | pip install matplotlib PyYAML scipy numpy spglib h5py pytest symfc
     - name: Setup phonopy
       run: |
-        pip install -e . -vvv
+        pip install -e . -v
     - name: Test with pytest
       run: |
         pytest -v test
