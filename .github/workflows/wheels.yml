@@ -1,10 +1,10 @@
 name: wheel-build-and-deploy
 
 on:
-    push:
-      branches:
-      - make-wheel
-      - make-wheel-test
+  push:
+    branches:
+    - make-wheel
+    - make-wheel-test
 
 jobs:
   build_wheels:
