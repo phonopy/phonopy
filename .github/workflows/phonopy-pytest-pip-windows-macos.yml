@@ -1,0 +1,39 @@
+name: phonopy test on windows and macos
+
+on:
+  push:
+    branches:
+    - run-test-on-windows-macos
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup phonopy
+      run: |
+        pip install -e . -v
+    - name: Test with pytest
+      run: |
+        pip install pytest
+        pytest -v test
+
+  build-macos:
+    runs-on: macos-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup phonopy
+      run: |
+        pip install -e . -v
+    - name: Test with pytest
+      run: |
+        pip install pytest
+        pytest -v test
