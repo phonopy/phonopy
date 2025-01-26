@@ -1,0 +1,25 @@
+name: phonopy test on macos
+
+on:
+  push:
+    branches:
+    - macos
+
+jobs:
+  build-linux:
+    runs-on: macos-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install dependencies
+      run: |
+        yes | pip install matplotlib-base pyyaml scipy numpy spglib h5py pytest symfc
+    - name: Setup phonopy
+      run: |
+        pip install -e . -vvv
+    - name: Test with pytest
+      run: |
+        pytest -v test
