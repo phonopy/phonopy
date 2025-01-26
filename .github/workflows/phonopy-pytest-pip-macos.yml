@@ -16,7 +16,7 @@ jobs:
     - uses: actions/checkout@v4
     - name: Install dependencies
       run: |
-        yes | pip install matplotlib-base pyyaml scipy numpy spglib h5py pytest symfc
+        yes | pip install matplotlib PyYAML scipy numpy spglib h5py pytest symfc
     - name: Setup phonopy
       run: |
         pip install -e . -vvv
