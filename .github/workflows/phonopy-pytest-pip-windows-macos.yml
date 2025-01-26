@@ -19,6 +19,7 @@ jobs:
         pip install -e . -v
     - name: Test with pytest
       run: |
+        pip install pytest
         pytest -v test
 
   build-macos:
@@ -34,4 +35,5 @@ jobs:
         pip install -e . -v
     - name: Test with pytest
       run: |
+        pip install pytest
         pytest -v test
