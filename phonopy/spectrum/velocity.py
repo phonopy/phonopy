@@ -119,7 +119,7 @@ class VelocityQpoints:
 
     def set_qpoints(self, qpoints):
         """Set q-points."""
-        self._weights = np.ones(len(qpoints), dtype="long")
+        self._weights = np.ones(len(qpoints), dtype="int64")
         self._qpoints = qpoints
 
     def set_commensurate_points(self):

@@ -36,6 +36,7 @@
 
 #include <float.h>
 #include <math.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -55,14 +56,11 @@ static void set_translational_symmetry_fc(double *fc, const int natom);
 static void set_translational_symmetry_compact_fc(double *fc, const int p2s[],
                                                   const int n_satom,
                                                   const int n_patom);
-static double get_free_energy(const double temperature,
-                              const double f,
+static double get_free_energy(const double temperature, const double f,
                               const int classical);
-static double get_entropy(const double temperature,
-                          const double f,
+static double get_entropy(const double temperature, const double f,
                           const int classical);
-static double get_heat_capacity(const double temperature,
-                                const double f,
+static double get_heat_capacity(const double temperature, const double f,
                                 const int classical);
 /* static double get_energy(double temperature, double f); */
 static void distribute_fc2(double (*fc2)[3][3], const int *atom_list,
@@ -74,28 +72,28 @@ static void distribute_fc2(double (*fc2)[3][3], const int *atom_list,
                            const int num_pos);
 static int nint(const double a);
 
-void phpy_transform_dynmat_to_fc(double *fc, const double (*dm)[2],
-                                 const double (*comm_points)[3],
-                                 const double (*svecs)[3],
-                                 const long (*multi)[2], const double *masses,
-                                 const long *s2pp_map, const long *fc_index_map,
-                                 const long num_patom, const long num_satom,
-                                 const long use_openmp) {
+void phpy_transform_dynmat_to_fc(
+    double *fc, const double (*dm)[2], const double (*comm_points)[3],
+    const double (*svecs)[3], const int64_t (*multi)[2], const double *masses,
+    const int64_t *s2pp_map, const int64_t *fc_index_map,
+    const int64_t num_patom, const int64_t num_satom,
+    const int64_t use_openmp) {
     dym_transform_dynmat_to_fc(fc, dm, comm_points, svecs, multi, masses,
                                s2pp_map, fc_index_map, num_patom, num_satom,
                                use_openmp);
 }
 
-long phpy_dynamical_matrices_with_dd_openmp_over_qpoints(
+int64_t phpy_dynamical_matrices_with_dd_openmp_over_qpoints(
     double (*dynamical_matrices)[2], const double (*qpoints)[3],
-    const long n_qpoints, const double *fc, const double (*svecs)[3],
-    const long (*multi)[2], const double (*positions)[3], const long num_patom,
-    const long num_satom, const double *masses, const long *p2s_map,
-    const long *s2p_map, const double (*born)[3][3],
+    const int64_t n_qpoints, const double *fc, const double (*svecs)[3],
+    const int64_t (*multi)[2], const double (*positions)[3],
+    const int64_t num_patom, const int64_t num_satom, const double *masses,
+    const int64_t *p2s_map, const int64_t *s2p_map, const double (*born)[3][3],
     const double dielectric[3][3], const double (*reciprocal_lattice)[3],
     const double *q_direction, const double nac_factor,
     const double (*dd_q0)[2], const double (*G_list)[3],
-    const long num_G_points, const double lambda, const long use_Wang_NAC) {
+    const int64_t num_G_points, const double lambda,
+    const int64_t use_Wang_NAC) {
     return dym_dynamical_matrices_with_dd_openmp_over_qpoints(
         dynamical_matrices, qpoints, n_qpoints, fc, svecs, multi, positions,
         num_patom, num_satom, masses, p2s_map, s2p_map, born, dielectric,
@@ -104,7 +102,7 @@ long phpy_dynamical_matrices_with_dd_openmp_over_qpoints(
 }
 
 void phpy_get_charge_sum(
-    double (*charge_sum)[3][3], const long num_patom,
+    double (*charge_sum)[3][3], const int64_t num_patom,
     const double factor, /* 4pi/V*unit-conv and denominator */
     const double q_cart[3], const double (*born)[3][3]) {
     dym_get_charge_sum(charge_sum, num_patom, factor, q_cart, born);
@@ -114,12 +112,12 @@ void phpy_get_recip_dipole_dipole(
     double (*dd)[2],           /* [natom, 3, natom, 3, (real,imag)] */
     const double (*dd_q0)[2],  /* [natom, 3, 3, (real,imag)] */
     const double (*G_list)[3], /* [num_G, 3] */
-    const long num_G, const long num_patom, const double q_cart[3],
+    const int64_t num_G, const int64_t num_patom, const double q_cart[3],
     const double *q_direction_cart, /* must be pointer */
     const double (*born)[3][3], const double dielectric[3][3],
     const double (*pos)[3], /* [num_patom, 3] */
     const double factor,    /* 4pi/V*unit-conv */
-    const double lambda, const double tolerance, const long use_openmp) {
+    const double lambda, const double tolerance, const int64_t use_openmp) {
     dym_get_recip_dipole_dipole(dd, dd_q0, G_list, num_G, num_patom, q_cart,
                                 q_direction_cart, born, dielectric, pos, factor,
                                 lambda, tolerance, use_openmp);
@@ -128,36 +126,36 @@ void phpy_get_recip_dipole_dipole(
 void phpy_get_recip_dipole_dipole_q0(
     double (*dd_q0)[2],        /* [natom, 3, 3, (real,imag)] */
     const double (*G_list)[3], /* [num_G, 3] */
-    const long num_G, const long num_patom, const double (*born)[3][3],
+    const int64_t num_G, const int64_t num_patom, const double (*born)[3][3],
     const double dielectric[3][3], const double (*pos)[3], /* [num_patom, 3] */
-    const double lambda, const double tolerance, const long use_openmp) {
+    const double lambda, const double tolerance, const int64_t use_openmp) {
     dym_get_recip_dipole_dipole_q0(dd_q0, G_list, num_G, num_patom, born,
                                    dielectric, pos, lambda, tolerance,
                                    use_openmp);
 }
 
 void phpy_get_derivative_dynmat_at_q(
-    double (*derivative_dynmat)[2], const long num_patom, const long num_satom,
-    const double *fc, const double *q,
+    double (*derivative_dynmat)[2], const int64_t num_patom,
+    const int64_t num_satom, const double *fc, const double *q,
     const double *lattice, /* column vector */
     const double *reclat,  /* column vector */
-    const double (*svecs)[3], const long (*multi)[2], const double *mass,
-    const long *s2p_map, const long *p2s_map, const double nac_factor,
+    const double (*svecs)[3], const int64_t (*multi)[2], const double *mass,
+    const int64_t *s2p_map, const int64_t *p2s_map, const double nac_factor,
     const double *born, const double *dielectric, const double *q_direction,
-    const long is_nac, const long use_openmp) {
+    const int64_t is_nac, const int64_t use_openmp) {
     ddm_get_derivative_dynmat_at_q(derivative_dynmat, num_patom, num_satom, fc,
                                    q, lattice, reclat, svecs, multi, mass,
                                    s2p_map, p2s_map, nac_factor, born,
                                    dielectric, q_direction, is_nac, use_openmp);
 }
 
-void phpy_get_relative_grid_address(long relative_grid_address[24][4][3],
+void phpy_get_relative_grid_address(int64_t relative_grid_address[24][4][3],
                                     const double reciprocal_lattice[3][3]) {
     thm_get_relative_grid_address(relative_grid_address, reciprocal_lattice);
 }
 
 void phpy_get_all_relative_grid_address(
-    long relative_grid_address[4][24][4][3]) {
+    int64_t relative_grid_address[4][24][4][3]) {
     thm_get_all_relative_grid_address(relative_grid_address);
 }
 
@@ -167,17 +165,15 @@ double phpy_get_integration_weight(const double omega,
     return thm_get_integration_weight(omega, tetrahedra_omegas, function);
 }
 
-void phpy_get_tetrahedra_frequenies(double *freq_tetras, const long mesh[3],
-                                    const long *grid_points,
-                                    const long (*grid_address)[3],
-                                    const long (*relative_grid_address)[3],
-                                    const long *gp_ir_index,
-                                    const double *frequencies,
-                                    const long num_band, const long num_gp) {
-    long is_shift[3] = {0, 0, 0};
-    long i, j, k, gp;
-    long g_addr[3];
-    long address_double[3];
+void phpy_get_tetrahedra_frequenies(
+    double *freq_tetras, const int64_t mesh[3], const int64_t *grid_points,
+    const int64_t (*grid_address)[3], const int64_t (*relative_grid_address)[3],
+    const int64_t *gp_ir_index, const double *frequencies,
+    const int64_t num_band, const int64_t num_gp) {
+    int64_t is_shift[3] = {0, 0, 0};
+    int64_t i, j, k, gp;
+    int64_t g_addr[3];
+    int64_t address_double[3];
 
     /* relative_grid_address[4, 24, 3] is viewed as [96, 3]. */
     for (i = 0; i < num_gp; i++) {
@@ -198,28 +194,29 @@ void phpy_get_tetrahedra_frequenies(double *freq_tetras, const long mesh[3],
 }
 
 void phpy_tetrahedron_method_dos(
-    double *dos, const long mesh[3], const long (*grid_address)[3],
-    const long (*relative_grid_address)[4][3], const long *grid_mapping_table,
-    const double *freq_points, const double *frequencies, const double *coef,
-    const long num_freq_points, const long num_ir_gp, const long num_band,
-    const long num_coef, const long num_gp) {
-    long is_shift[3] = {0, 0, 0};
-    long i, j, k, l, m, q, r, count;
-    long ir_gps[24][4];
-    long g_addr[3];
+    double *dos, const int64_t mesh[3], const int64_t (*grid_address)[3],
+    const int64_t (*relative_grid_address)[4][3],
+    const int64_t *grid_mapping_table, const double *freq_points,
+    const double *frequencies, const double *coef,
+    const int64_t num_freq_points, const int64_t num_ir_gp,
+    const int64_t num_band, const int64_t num_coef, const int64_t num_gp) {
+    int64_t is_shift[3] = {0, 0, 0};
+    int64_t i, j, k, l, m, q, r, count;
+    int64_t ir_gps[24][4];
+    int64_t g_addr[3];
     double tetrahedra[24][4];
-    long address_double[3];
-    long *gp2ir, *ir_grid_points;
-    long *weights;
+    int64_t address_double[3];
+    int64_t *gp2ir, *ir_grid_points;
+    int64_t *weights;
     double iw;
 
     gp2ir = NULL;
     ir_grid_points = NULL;
     weights = NULL;
 
-    gp2ir = (long *)malloc(sizeof(long) * num_gp);
-    ir_grid_points = (long *)malloc(sizeof(long) * num_ir_gp);
-    weights = (long *)malloc(sizeof(long) * num_ir_gp);
+    gp2ir = (int64_t *)malloc(sizeof(int64_t) * num_gp);
+    ir_grid_points = (int64_t *)malloc(sizeof(int64_t) * num_ir_gp);
+    weights = (int64_t *)malloc(sizeof(int64_t) * num_ir_gp);
 
     count = 0;
     for (i = 0; i < num_gp; i++) {
@@ -284,15 +281,12 @@ void phpy_tetrahedron_method_dos(
     weights = NULL;
 }
 
-void phpy_get_thermal_properties(double *thermal_props,
-                                 const double *temperatures,
-                                 const double *freqs, const long *weights,
-                                 const long num_temp, const long num_qpoints,
-                                 const long num_bands,
-                                 const double cutoff_frequency,
-                                 const int classical
-) {
-    long i, j, k;
+void phpy_get_thermal_properties(
+    double *thermal_props, const double *temperatures, const double *freqs,
+    const int64_t *weights, const int64_t num_temp, const int64_t num_qpoints,
+    const int64_t num_bands, const double cutoff_frequency,
+    const int classical) {
+    int64_t i, j, k;
     double f;
     double *tp;
 
@@ -310,11 +304,13 @@ void phpy_get_thermal_properties(double *thermal_props,
                 f = freqs[i * num_bands + k];
                 if (temperatures[j] > 0 && f > cutoff_frequency) {
                     tp[i * num_temp * 3 + j * 3] +=
-                        get_free_energy(temperatures[j], f, classical) * weights[i];
+                        get_free_energy(temperatures[j], f, classical) *
+                        weights[i];
                     tp[i * num_temp * 3 + j * 3 + 1] +=
                         get_entropy(temperatures[j], f, classical) * weights[i];
                     tp[i * num_temp * 3 + j * 3 + 2] +=
-                        get_heat_capacity(temperatures[j], f, classical) * weights[i];
+                        get_heat_capacity(temperatures[j], f, classical) *
+                        weights[i];
                 }
             }
         }
@@ -354,7 +350,7 @@ int phpy_compute_permutation(int *rot_atom, const double lat[3][3],
     }
 
     /* optimization: Iterate primarily by pos instead of rot_pos. */
-    /*  (find where 0 belongs in rot_atom, then where 1 belongs, etc.) */
+    /*  (find where 0 beint64_ts in rot_atom, then where 1 beint64_ts, etc.) */
     /*  Then track the first unassigned index. */
     /* */
     /* This works best if the permutation is close to the identity. */
@@ -468,13 +464,13 @@ void phpy_set_smallest_vectors_sparse(
 }
 
 void phpy_set_smallest_vectors_dense(
-    double (*smallest_vectors)[3], long (*multiplicity)[2],
-    const double (*pos_to)[3], const long num_pos_to,
-    const double (*pos_from)[3], const long num_pos_from,
-    const long (*lattice_points)[3], const long num_lattice_points,
-    const double reduced_basis[3][3], const long trans_mat[3][3],
-    const long initialize, const double symprec) {
-    long i, j, k, l, count, adrs;
+    double (*smallest_vectors)[3], int64_t (*multiplicity)[2],
+    const double (*pos_to)[3], const int64_t num_pos_to,
+    const double (*pos_from)[3], const int64_t num_pos_from,
+    const int64_t (*lattice_points)[3], const int64_t num_lattice_points,
+    const double reduced_basis[3][3], const int64_t trans_mat[3][3],
+    const int64_t initialize, const double symprec) {
+    int64_t i, j, k, l, count, adrs;
     double length_tmp, minimum, vec_xyz;
     double *length;
     double(*vec)[3];
@@ -543,7 +539,7 @@ void phpy_perm_trans_symmetrize_fc(double *fc, const int n_satom,
     double sum;
 
     for (iter = 0; iter < level; iter++) {
-        /* Subtract drift along column */
+        /* Subtract drift aint64_t column */
         for (j = 0; j < n_satom; j++) {
             for (k = 0; k < 3; k++) {
                 for (l = 0; l < 3; l++) {
@@ -558,7 +554,7 @@ void phpy_perm_trans_symmetrize_fc(double *fc, const int n_satom,
                 }
             }
         }
-        /* Subtract drift along row */
+        /* Subtract drift aint64_t row */
         for (i = 0; i < n_satom; i++) {
             for (k = 0; k < 3; k++) {
                 for (l = 0; l < 3; l++) {
@@ -681,7 +677,7 @@ void phpy_set_index_permutation_symmetry_compact_fc(
     done = NULL;
 }
 
-long phpy_use_openmp(void) {
+int64_t phpy_use_openmp(void) {
 #ifdef _OPENMP
     return 1;
 #else
@@ -689,7 +685,7 @@ long phpy_use_openmp(void) {
 #endif
 }
 
-long phpy_get_max_threads(void) {
+int64_t phpy_get_max_threads(void) {
 #ifdef _OPENMP
     return omp_get_max_threads();
 #else
@@ -781,7 +777,8 @@ static void set_translational_symmetry_compact_fc(double *fc, const int p2s[],
     }
 }
 
-static double get_free_energy(const double temperature, const double f, const int classical) {
+static double get_free_energy(const double temperature, const double f,
+                              const int classical) {
     /* temperature is defined by T (K) */
     /* 'f' must be given in eV. */
     if (classical) {
@@ -791,7 +788,8 @@ static double get_free_energy(const double temperature, const double f, const in
     }
 }
 
-static double get_entropy(const double temperature, const double f, const int classical) {
+static double get_entropy(const double temperature, const double f,
+                          const int classical) {
     /* temperature is defined by T (K) */
     /* 'f' must be given in eV. */
     double val;
@@ -804,7 +802,8 @@ static double get_entropy(const double temperature, const double f, const int cl
     }
 }
 
-static double get_heat_capacity(const double temperature, const double f, const int classical) {
+static double get_heat_capacity(const double temperature, const double f,
+                                const int classical) {
     /* temperature is defined by T (K) */
     /* 'f' must be given in eV. */
     /* If val is close to 1. Then expansion is used. */
