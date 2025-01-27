@@ -1,36 +1,35 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
+#include <stdint.h>
 
 #include "phonopy.h"
 
 namespace nb = nanobind;
 
-void py_transform_dynmat_to_fc(nb::ndarray<> py_force_constants,
-                               nb::ndarray<> py_dynamical_matrices,
-                               nb::ndarray<> py_commensurate_points,
-                               nb::ndarray<> py_svecs, nb::ndarray<> py_multi,
-                               nb::ndarray<> py_masses,
-                               nb::ndarray<> py_s2pp_map,
-                               nb::ndarray<> py_fc_index_map, long use_openmp) {
+void py_transform_dynmat_to_fc(
+    nb::ndarray<> py_force_constants, nb::ndarray<> py_dynamical_matrices,
+    nb::ndarray<> py_commensurate_points, nb::ndarray<> py_svecs,
+    nb::ndarray<> py_multi, nb::ndarray<> py_masses, nb::ndarray<> py_s2pp_map,
+    nb::ndarray<> py_fc_index_map, int64_t use_openmp) {
     double *fc;
     double(*dm)[2];
     double(*comm_points)[3];
     double(*svecs)[3];
     double *masses;
-    long(*multi)[2];
-    long *s2pp_map;
-    long *fc_index_map;
-    long num_patom;
-    long num_satom;
+    int64_t(*multi)[2];
+    int64_t *s2pp_map;
+    int64_t *fc_index_map;
+    int64_t num_patom;
+    int64_t num_satom;
 
     fc = (double *)py_force_constants.data();
     dm = (double(*)[2])py_dynamical_matrices.data();
     comm_points = (double(*)[3])py_commensurate_points.data();
     svecs = (double(*)[3])py_svecs.data();
     masses = (double *)py_masses.data();
-    multi = (long(*)[2])py_multi.data();
-    s2pp_map = (long *)py_s2pp_map.data();
-    fc_index_map = (long *)py_fc_index_map.data();
+    multi = (int64_t(*)[2])py_multi.data();
+    s2pp_map = (int64_t *)py_s2pp_map.data();
+    fc_index_map = (int64_t *)py_fc_index_map.data();
     num_patom = py_multi.shape(1);
     num_satom = py_multi.shape(0);
 
@@ -39,7 +38,8 @@ void py_transform_dynmat_to_fc(nb::ndarray<> py_force_constants,
                                 use_openmp);
 };
 
-void py_perm_trans_symmetrize_fc(nb::ndarray<> py_force_constants, long level) {
+void py_perm_trans_symmetrize_fc(nb::ndarray<> py_force_constants,
+                                 int64_t level) {
     double *fc;
     int n_satom;
 
@@ -54,7 +54,7 @@ void py_perm_trans_symmetrize_compact_fc(nb::ndarray<> py_force_constants,
                                          nb::ndarray<> py_s2pp_map,
                                          nb::ndarray<> py_p2s_map,
                                          nb::ndarray<> py_nsym_list,
-                                         long level) {
+                                         int64_t level) {
     double *fc;
     int *perms;
     int *s2pp;
@@ -106,13 +106,14 @@ void py_get_dynamical_matrices_with_dd_openmp_over_qpoints(
     nb::ndarray<> py_q_direction, nb::ndarray<> py_born,
     nb::ndarray<> py_dielectric, nb::ndarray<> py_reciprocal_lattice,
     double nac_factor, nb::ndarray<> py_dd_q0, nb::ndarray<> py_G_list,
-    double lambda, long is_nac, long is_nac_q_zero, long use_Wang_NAC) {
+    double lambda, int64_t is_nac, int64_t is_nac_q_zero,
+    int64_t use_Wang_NAC) {
     double(*dm)[2];
     double *fc;
     double *q_direction;
     double(*qpoints)[3];
     double(*svecs)[3];
-    long(*multi)[2];
+    int64_t(*multi)[2];
     double(*positions)[3];
     double *masses;
     double(*born)[3][3];
@@ -121,22 +122,22 @@ void py_get_dynamical_matrices_with_dd_openmp_over_qpoints(
     double(*dd_q0)[2];
     double(*G_list)[3];
 
-    long *s2p_map;
-    long *p2s_map;
-    long num_patom;
-    long num_satom;
-    long n_qpoints;
-    long n_Gpoints;
+    int64_t *s2p_map;
+    int64_t *p2s_map;
+    int64_t num_patom;
+    int64_t num_satom;
+    int64_t n_qpoints;
+    int64_t n_Gpoints;
 
     dm = (double(*)[2])py_dynamical_matrix.data();
     qpoints = (double(*)[3])py_qpoints.data();
     n_qpoints = py_qpoints.shape(0);
     fc = (double *)py_force_constants.data();
     svecs = (double(*)[3])py_svecs.data();
-    multi = (long(*)[2])py_multi.data();
+    multi = (int64_t(*)[2])py_multi.data();
     masses = (double *)py_masses.data();
-    s2p_map = (long *)py_s2p_map.data();
-    p2s_map = (long *)py_p2s_map.data();
+    s2p_map = (int64_t *)py_s2p_map.data();
+    p2s_map = (int64_t *)py_p2s_map.data();
     born = (double(*)[3][3])py_born.data();
     dielectric = (double(*)[3])py_dielectric.data();
     reciprocal_lattice = (double(*)[3])py_reciprocal_lattice.data();
@@ -173,8 +174,8 @@ void py_get_recip_dipole_dipole(
     nb::ndarray<> py_dd, nb::ndarray<> py_dd_q0, nb::ndarray<> py_G_list,
     nb::ndarray<> py_q_cart, nb::ndarray<> py_q_direction,
     nb::ndarray<> py_born, nb::ndarray<> py_dielectric,
-    nb::ndarray<> py_positions, long is_nac_q_zero, double factor,
-    double lambda, double tolerance, long use_openmp) {
+    nb::ndarray<> py_positions, int64_t is_nac_q_zero, double factor,
+    double lambda, double tolerance, int64_t use_openmp) {
     double(*dd)[2];
     double(*dd_q0)[2];
     double(*G_list)[3];
@@ -184,7 +185,7 @@ void py_get_recip_dipole_dipole(
     double(*dielectric)[3];
     double(*pos)[3];
 
-    long num_patom, num_G;
+    int64_t num_patom, num_G;
 
     dd = (double(*)[2])py_dd.data();
     dd_q0 = (double(*)[2])py_dd_q0.data();
@@ -216,14 +217,14 @@ void py_get_recip_dipole_dipole_q0(nb::ndarray<> py_dd_q0,
                                    nb::ndarray<> py_born,
                                    nb::ndarray<> py_dielectric,
                                    nb::ndarray<> py_positions, double lambda,
-                                   double tolerance, long use_openmp) {
+                                   double tolerance, int64_t use_openmp) {
     double(*dd_q0)[2];
     double(*G_list)[3];
     double(*born)[3][3];
     double(*dielectric)[3];
     double(*pos)[3];
 
-    long num_patom, num_G;
+    int64_t num_patom, num_G;
 
     dd_q0 = (double(*)[2])py_dd_q0.data();
     G_list = (double(*)[3])py_G_list.data();
@@ -247,8 +248,8 @@ void py_get_derivative_dynmat(
     nb::ndarray<> py_reclat, nb::ndarray<> py_svecs, nb::ndarray<> py_multi,
     nb::ndarray<> py_masses, nb::ndarray<> py_s2p_map, nb::ndarray<> py_p2s_map,
     double nac_factor, nb::ndarray<> py_born, nb::ndarray<> py_dielectric,
-    nb::ndarray<> py_q_direction, long is_nac, long is_nac_q_zero,
-    long use_openmp) {
+    nb::ndarray<> py_q_direction, int64_t is_nac, int64_t is_nac_q_zero,
+    int64_t use_openmp) {
     double(*ddm)[2];
     double *fc;
     double *q_vector;
@@ -256,11 +257,11 @@ void py_get_derivative_dynmat(
     double *reclat;
     double(*svecs)[3];
     double *masses;
-    long(*multi)[2];
-    long *s2p_map;
-    long *p2s_map;
-    long num_patom;
-    long num_satom;
+    int64_t(*multi)[2];
+    int64_t *s2p_map;
+    int64_t *p2s_map;
+    int64_t num_patom;
+    int64_t num_satom;
 
     double *born;
     double *epsilon;
@@ -273,9 +274,9 @@ void py_get_derivative_dynmat(
     reclat = (double *)py_reclat.data();
     svecs = (double(*)[3])py_svecs.data();
     masses = (double *)py_masses.data();
-    multi = (long(*)[2])py_multi.data();
-    s2p_map = (long *)py_s2p_map.data();
-    p2s_map = (long *)py_p2s_map.data();
+    multi = (int64_t(*)[2])py_multi.data();
+    s2p_map = (int64_t *)py_s2p_map.data();
+    p2s_map = (int64_t *)py_p2s_map.data();
     num_patom = py_p2s_map.shape(0);
     num_satom = py_s2p_map.shape(0);
 
@@ -301,18 +302,18 @@ void py_get_thermal_properties(nb::ndarray<> py_thermal_props,
     double *temperatures;
     double *freqs;
     double *thermal_props;
-    long *weights;
-    long num_qpoints;
-    long num_bands;
-    long num_temp;
+    int64_t *weights;
+    int64_t num_qpoints;
+    int64_t num_bands;
+    int64_t num_temp;
 
     thermal_props = (double *)py_thermal_props.data();
     temperatures = (double *)py_temperatures.data();
-    num_temp = (long)py_temperatures.shape(0);
+    num_temp = (int64_t)py_temperatures.shape(0);
     freqs = (double *)py_frequencies.data();
-    num_qpoints = (long)py_frequencies.shape(0);
-    weights = (long *)py_weights.data();
-    num_bands = (long)py_frequencies.shape(1);
+    num_qpoints = (int64_t)py_frequencies.shape(0);
+    weights = (int64_t *)py_weights.data();
+    num_bands = (int64_t)py_frequencies.shape(1);
 
     phpy_get_thermal_properties(thermal_props, temperatures, freqs, weights,
                                 num_temp, num_qpoints, num_bands,
@@ -332,7 +333,7 @@ void py_distribute_fc2(nb::ndarray<> py_force_constants,
     int *map_syms;
     int *atom_list;
     int *fc_indices_of_atom_list;
-    long num_pos, num_rot, len_atom_list;
+    int64_t num_pos, num_rot, len_atom_list;
 
     fc2 = (double(*)[3][3])py_force_constants.data();
     atom_list = (int *)py_atom_list.data();
@@ -412,26 +413,26 @@ void py_gsv_set_smallest_vectors_dense(
     nb::ndarray<> py_smallest_vectors, nb::ndarray<> py_multiplicity,
     nb::ndarray<> py_pos_to, nb::ndarray<> py_pos_from,
     nb::ndarray<> py_lattice_points, nb::ndarray<> py_reduced_basis,
-    nb::ndarray<> py_trans_mat, long initialize, double symprec) {
+    nb::ndarray<> py_trans_mat, int64_t initialize, double symprec) {
     double(*smallest_vectors)[3];
-    long(*multiplicity)[2];
+    int64_t(*multiplicity)[2];
     double(*pos_to)[3];
     double(*pos_from)[3];
-    long(*lattice_points)[3];
+    int64_t(*lattice_points)[3];
     double(*reduced_basis)[3];
-    long(*trans_mat)[3];
-    long num_pos_to, num_pos_from, num_lattice_points;
+    int64_t(*trans_mat)[3];
+    int64_t num_pos_to, num_pos_from, num_lattice_points;
 
     smallest_vectors = (double(*)[3])py_smallest_vectors.data();
-    multiplicity = (long(*)[2])py_multiplicity.data();
+    multiplicity = (int64_t(*)[2])py_multiplicity.data();
     pos_to = (double(*)[3])py_pos_to.data();
     pos_from = (double(*)[3])py_pos_from.data();
     num_pos_to = py_pos_to.shape(0);
     num_pos_from = py_pos_from.shape(0);
-    lattice_points = (long(*)[3])py_lattice_points.data();
+    lattice_points = (int64_t(*)[3])py_lattice_points.data();
     num_lattice_points = py_lattice_points.shape(0);
     reduced_basis = (double(*)[3])py_reduced_basis.data();
-    trans_mat = (long(*)[3])py_trans_mat.data();
+    trans_mat = (int64_t(*)[3])py_trans_mat.data();
 
     phpy_set_smallest_vectors_dense(
         smallest_vectors, multiplicity, pos_to, num_pos_to, pos_from,
@@ -441,19 +442,20 @@ void py_gsv_set_smallest_vectors_dense(
 
 void py_thm_relative_grid_address(nb::ndarray<> py_relative_grid_address,
                                   nb::ndarray<> py_reciprocal_lattice_py) {
-    long(*relative_grid_address)[4][3];
+    int64_t(*relative_grid_address)[4][3];
     double(*reciprocal_lattice)[3];
 
-    relative_grid_address = (long(*)[4][3])py_relative_grid_address.data();
+    relative_grid_address = (int64_t(*)[4][3])py_relative_grid_address.data();
     reciprocal_lattice = (double(*)[3])py_reciprocal_lattice_py.data();
 
     phpy_get_relative_grid_address(relative_grid_address, reciprocal_lattice);
 }
 
 void py_thm_all_relative_grid_address(nb::ndarray<> py_relative_grid_address) {
-    long(*relative_grid_address)[24][4][3];
+    int64_t(*relative_grid_address)[24][4][3];
 
-    relative_grid_address = (long(*)[24][4][3])py_relative_grid_address.data();
+    relative_grid_address =
+        (int64_t(*)[24][4][3])py_relative_grid_address.data();
 
     phpy_get_all_relative_grid_address(relative_grid_address);
 }
@@ -477,14 +479,14 @@ void py_thm_integration_weight_at_omegas(nb::ndarray<> py_integration_weights,
                                          const char *function) {
     double *omegas;
     double *iw;
-    long num_omegas;
+    int64_t num_omegas;
     double(*tetrahedra_omegas)[4];
 
-    long i;
+    int64_t i;
 
     omegas = (double *)py_omegas.data();
     iw = (double *)py_integration_weights.data();
-    num_omegas = (long)py_omegas.shape(0);
+    num_omegas = (int64_t)py_omegas.shape(0);
     tetrahedra_omegas = (double(*)[4])py_tetrahedra_omegas.data();
 
 #ifdef _OPENMP
@@ -504,22 +506,22 @@ void py_get_tetrahedra_frequenies(nb::ndarray<> py_freq_tetras,
                                   nb::ndarray<> py_relative_grid_address,
                                   nb::ndarray<> py_frequencies) {
     double *freq_tetras;
-    long *grid_points;
-    long *mesh;
-    long(*grid_address)[3];
-    long *gp_ir_index;
-    long(*relative_grid_address)[3];
+    int64_t *grid_points;
+    int64_t *mesh;
+    int64_t(*grid_address)[3];
+    int64_t *gp_ir_index;
+    int64_t(*relative_grid_address)[3];
     double *frequencies;
 
-    long num_gp_in, num_band;
+    int64_t num_gp_in, num_band;
 
     freq_tetras = (double *)py_freq_tetras.data();
-    grid_points = (long *)py_grid_points.data();
+    grid_points = (int64_t *)py_grid_points.data();
     num_gp_in = py_grid_points.shape(0);
-    mesh = (long *)py_mesh.data();
-    grid_address = (long(*)[3])py_grid_address.data();
-    gp_ir_index = (long *)py_gp_ir_index.data();
-    relative_grid_address = (long(*)[3])py_relative_grid_address.data();
+    mesh = (int64_t *)py_mesh.data();
+    grid_address = (int64_t(*)[3])py_grid_address.data();
+    gp_ir_index = (int64_t *)py_gp_ir_index.data();
+    relative_grid_address = (int64_t(*)[3])py_relative_grid_address.data();
     frequencies = (double *)py_frequencies.data();
     num_band = py_frequencies.shape(1);
 
@@ -536,29 +538,29 @@ void py_tetrahedron_method_dos(nb::ndarray<> py_dos, nb::ndarray<> py_mesh,
                                nb::ndarray<> py_grid_mapping_table,
                                nb::ndarray<> py_relative_grid_address) {
     double *dos;
-    long *mesh;
+    int64_t *mesh;
     double *freq_points;
     double *frequencies;
     double *coef;
-    long(*grid_address)[3];
-    long num_gp, num_ir_gp, num_band, num_freq_points, num_coef;
-    long *grid_mapping_table;
-    long(*relative_grid_address)[4][3];
+    int64_t(*grid_address)[3];
+    int64_t num_gp, num_ir_gp, num_band, num_freq_points, num_coef;
+    int64_t *grid_mapping_table;
+    int64_t(*relative_grid_address)[4][3];
 
     /* dos[num_ir_gp][num_band][num_freq_points][num_coef] */
     dos = (double *)py_dos.data();
-    mesh = (long *)py_mesh.data();
+    mesh = (int64_t *)py_mesh.data();
     freq_points = (double *)py_freq_points.data();
-    num_freq_points = (long)py_freq_points.shape(0);
+    num_freq_points = (int64_t)py_freq_points.shape(0);
     frequencies = (double *)py_frequencies.data();
-    num_ir_gp = (long)py_frequencies.shape(0);
-    num_band = (long)py_frequencies.shape(1);
+    num_ir_gp = (int64_t)py_frequencies.shape(0);
+    num_band = (int64_t)py_frequencies.shape(1);
     coef = (double *)py_coef.data();
-    num_coef = (long)py_coef.shape(1);
-    grid_address = (long(*)[3])py_grid_address.data();
-    num_gp = (long)py_grid_address.shape(0);
-    grid_mapping_table = (long *)py_grid_mapping_table.data();
-    relative_grid_address = (long(*)[4][3])py_relative_grid_address.data();
+    num_coef = (int64_t)py_coef.shape(1);
+    grid_address = (int64_t(*)[3])py_grid_address.data();
+    num_gp = (int64_t)py_grid_address.shape(0);
+    grid_mapping_table = (int64_t *)py_grid_mapping_table.data();
+    relative_grid_address = (int64_t(*)[4][3])py_relative_grid_address.data();
 
     phpy_tetrahedron_method_dos(dos, mesh, grid_address, relative_grid_address,
                                 grid_mapping_table, freq_points, frequencies,

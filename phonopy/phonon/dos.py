@@ -86,8 +86,8 @@ class Dos:
                 mesh_object.dynamical_matrix.primitive,
                 self._frequencies,
                 mesh_object.mesh_numbers,
-                np.array(mesh_object.grid_address, dtype="long"),
-                np.array(mesh_object.grid_mapping_table, dtype="long"),
+                np.array(mesh_object.grid_address, dtype="int64"),
+                np.array(mesh_object.grid_mapping_table, dtype="int64"),
                 mesh_object.ir_grid_points,
             )
         self._frequency_points = None
@@ -707,12 +707,12 @@ def run_tetrahedron_method_dos(
 
     phonoc.tetrahedron_method_dos(
         dos,
-        np.array(mesh, dtype="long"),
+        np.array(mesh, dtype="int64"),
         frequency_points,
         frequencies,
         _coef,
-        np.array(grid_address, dtype="long", order="C"),
-        np.array(grid_mapping_table, dtype="long", order="C"),
+        np.array(grid_address, dtype="int64", order="C"),
+        np.array(grid_mapping_table, dtype="int64", order="C"),
         relative_grid_address,
     )
     if coef is None:

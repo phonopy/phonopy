@@ -42,66 +42,108 @@ from phonopy.interface.calculator import (
     get_default_cell_filename,
     write_crystal_structure,
 )
-from phonopy.structure.atoms import PhonopyAtoms, atom_data
-from phonopy.structure.cells import get_primitive, guess_primitive_matrix
+from phonopy.interface.phonopy_yaml import PhonopyYaml
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import determinant, guess_primitive_matrix
 from phonopy.structure.symmetry import Symmetry
 
 
 def check_symmetry(phonon: Phonopy, cell_info: dict):
-    """Show symmetry information and write refined crystals to files."""
-    # Assumed that primitive cell is the cell that user is interested in.
+    """Check symmetry of input cell.
+
+    This function first standardizes the input crystal structure based on
+    symmetry and determines the primitive cell and unit cell. If
+    `supercell_matrix` is not provided, it displays the symmetry information and
+    writes it to files. If `supercell_matrix` is specified, the function
+    generates a file named `phonopy_supercell.yaml`, which contains details
+    about the primitive cell, unit cell, and supercell.
+
+    """
+    base_fname = get_default_cell_filename(phonon.calculator)
+    symprec = phonon.primitive_symmetry.tolerance
+    (bravais_lattice, bravais_pos, bravais_numbers) = spglib.refine_cell(
+        phonon.primitive.totuple(), symprec
+    )
+    bravais = PhonopyAtoms(
+        numbers=bravais_numbers, scaled_positions=bravais_pos, cell=bravais_lattice
+    )
+    trans_mat = guess_primitive_matrix(bravais, symprec=symprec)
+    ph = Phonopy(
+        bravais,
+        supercell_matrix=cell_info["supercell_matrix"],
+        primitive_matrix=trans_mat,
+        calculator=phonon.calculator,
+    )
+
+    if (
+        cell_info["phonopy_yaml"] is None
+        or cell_info["phonopy_yaml"].supercell_matrix is None
+    ) and determinant(cell_info["supercell_matrix"]) > 1:
+        print(f'Input crystal structure: "{cell_info["optional_structure_info"][0]}"')
+        phyml = PhonopyYaml().set_phonon_info(ph)
+        phyml.frequency_unit_conversion_factor = None
+        phyml.symmetry = None
+        with open("phonopy_supercell.yaml", "w") as w:
+            print(phyml, file=w)
+
+        print(
+            "\n".join(
+                [
+                    "Standardized primitive cell, unit cell, and supercell have been "
+                    "written in ",
+                    '"phonopy_supercell.yaml". This file can be read by "phonopy-load" '
+                    "command.",
+                ]
+            )
+        )
+    else:
+        _show_symmetry_yaml(phonon, cell_info, base_fname, ph)
+
+
+def _show_symmetry_yaml(phonon: Phonopy, cell_info: dict, base_fname: str, ph: Phonopy):
     print(
         _get_symmetry_yaml(phonon.primitive, phonon.primitive_symmetry, phonon.version)
     )
-
-    if phonon.unitcell.magnetic_moments is None:
-        base_fname = get_default_cell_filename(phonon.calculator)
-        symprec = phonon.primitive_symmetry.tolerance
-        (bravais_lattice, bravais_pos, bravais_numbers) = spglib.refine_cell(
-            phonon.primitive.totuple(), symprec
+    print(f"# Input crystal structure: \"{cell_info['optional_structure_info'][0]}'")
+    if cell_info["phonopy_yaml"] is None:
+        optional_structure_info = cell_info["optional_structure_info"]
+        filename = "B" + base_fname
+        print(f'# Symmetrized conventional unit cell is written into "{filename}" and')
+        write_crystal_structure(
+            filename,
+            ph.unitcell,
+            interface_mode=phonon.calculator,
+            optional_structure_info=optional_structure_info,
         )
-        bravais_symbols = [atom_data[n][1] for n in bravais_numbers]
-        bravais = PhonopyAtoms(
-            symbols=bravais_symbols, scaled_positions=bravais_pos, cell=bravais_lattice
+        filename = "P" + base_fname
+        print(f'# Symmetrized primitive is written into "{filename}" and ')
+        write_crystal_structure(
+            filename,
+            ph.primitive,
+            interface_mode=phonon.calculator,
+            optional_structure_info=optional_structure_info,
         )
-        trans_mat = guess_primitive_matrix(bravais, symprec=symprec)
-        primitive = get_primitive(bravais, trans_mat, symprec=symprec)
+    _write_symcells_yaml(ph)
 
-        # Unless input cell is given as phonopy_yaml.
-        if cell_info["phonopy_yaml"] is None:
-            optional_structure_info = cell_info["optional_structure_info"]
-            filename = "B" + base_fname
-            print(
-                f'# Symmetrized conventional unit cell is written into "{filename}" and'
-            )
-            write_crystal_structure(
-                filename,
-                bravais,
-                interface_mode=phonon.calculator,
-                optional_structure_info=optional_structure_info,
-            )
-            filename = "P" + base_fname
-            print(f'# Symmetrized primitive is written into "{filename}" and ')
-            write_crystal_structure(
-                filename,
-                primitive,
-                interface_mode=phonon.calculator,
-                optional_structure_info=optional_structure_info,
-            )
-        with open("phonopy_symcells.yaml", "w") as w:
-            print("primitive_cell:", file=w)
-            print(
-                "\n".join(["  " + line for line in primitive.get_yaml_lines()]), file=w
-            )
-            print("unit_cell:", file=w)
-            print("\n".join(["  " + line for line in bravais.get_yaml_lines()]), file=w)
 
-        print('# Unit cell and primitive cell were written in "phonopy_symcells.yaml".')
-        print("# These structures can be read in a python script as follows:")
-        print("#")
-        print("# from phonopy.interface.phonopy_yaml import read_cell_yaml")
-        print('# unitcell = read_cell_yaml("phonopy_symcells.yaml", "unitcell")')
-        print('# primitive_cell = read_cell_yaml("phonopy_symcells.yaml", "primitive")')
+def _write_symcells_yaml(ph: Phonopy):
+    phyml = PhonopyYaml().set_phonon_info(ph)
+    phyml.supercell_matrix = None
+    phyml.supercell = None
+    phyml.frequency_unit_conversion_factor = None
+    phyml.symmetry = None
+    with open("phonopy_symcells.yaml", "w") as w:
+        print(phyml, file=w)
+
+    print(
+        '# Unit cell and primitive cell have been written in "phonopy_symcells.yaml".'
+    )
+    print("# These structures can be read in a python script as follows:")
+    print("#")
+    print("# import phonopy")
+    print('# ph = phonopy.load("phonopy_symcells.yaml")')
+    print("# unitcell = ph.unitcell")
+    print("# primitive_cell = ph.primitive")
 
 
 def _get_symmetry_yaml(cell: PhonopyAtoms, symmetry: Symmetry, phonopy_version=None):

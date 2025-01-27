@@ -280,7 +280,7 @@ displacements, temperature dependent force constants are calculated with the
  |_|                            |_|    |___/
                                       2.34.1
 
--------------------------[time 2025-01-15 13:24:30]-------------------------
+-------------------------[time 2025-01-19 17:44:21]-------------------------
 Compiled with OpenMP support (max 10 threads).
 Running in phonopy.load mode.
 Python version 3.12.6
@@ -288,7 +288,8 @@ Spglib version 2.5.0
 
 Crystal structure was read from "phonopy_mlpsscha_params_KCl-120.yaml.xz".
 Unit of length: angstrom
-Displacements creation mode
+Pypolymlp displacements creation mode
+  Random displacements
   Number of supercells with random displacements: 1000
   Temperatuere to generate random displacements: 300.0
 Settings:
@@ -311,7 +312,7 @@ Load MLPs from "phonopy.pmlp".
 ------------------------------ pypolymlp end -------------------------------
 Generate random displacements
   Twice of number of snapshots will be generated for plus-minus displacements.
-  Displacement distance: 0.001
+  Displacement distance: 0.01
 Evaluate forces in 2000 supercells by pypolymlp
 -------------------------------- Symfc start -------------------------------
 Symfc is a force constants calculator. See the following paper:
@@ -327,172 +328,172 @@ Use provided force constants.
 
 [ SSCHA iteration 1 / 10 ]
 Generate 1000 supercells with displacements at 300.0 K
-  [0.005, 0.084] ****
-  [0.084, 0.164] *******************
-  [0.164, 0.243] *****************************
-  [0.243, 0.323] **************************
-  [0.323, 0.402] **************
-  [0.402, 0.482] ******
-  [0.482, 0.561] **
-  [0.561, 0.641]
-  [0.641, 0.720]
-  [0.720, 0.800]
+  [0.001, 0.085] ****
+  [0.085, 0.168] *********************
+  [0.168, 0.252] *******************************
+  [0.252, 0.336] *************************
+  [0.336, 0.419] *************
+  [0.419, 0.503] ****
+  [0.503, 0.587] *
+  [0.587, 0.670]
+  [0.670, 0.754]
+  [0.754, 0.838]
 Evaluate MLP to obtain forces using pypolymlp
 Calculate force constants using symfc
-SSCHA free energy: -98.262 meV
+SSCHA free energy: -98.253 meV
 SSCHA force constants are written into "phonopy_sscha_fc_1.yaml.xz".
 
 [ SSCHA iteration 2 / 10 ]
 Generate 1000 supercells with displacements at 300.0 K
-  [0.005, 0.082] ****
-  [0.082, 0.160] ******************
-  [0.160, 0.237] *****************************
-  [0.237, 0.315] **************************
+  [0.006, 0.084] ****
+  [0.084, 0.161] ******************
+  [0.161, 0.238] *****************************
+  [0.238, 0.315] *************************
   [0.315, 0.392] ***************
   [0.392, 0.469] ******
-  [0.469, 0.547] **
-  [0.547, 0.624]
-  [0.624, 0.702]
-  [0.702, 0.779]
+  [0.469, 0.546] **
+  [0.546, 0.623]
+  [0.623, 0.701]
+  [0.701, 0.778]
 Evaluate MLP to obtain forces using pypolymlp
 Calculate force constants using symfc
-SSCHA free energy: -98.236 meV
+SSCHA free energy: -98.345 meV
 SSCHA force constants are written into "phonopy_sscha_fc_2.yaml.xz".
 
 [ SSCHA iteration 3 / 10 ]
 Generate 1000 supercells with displacements at 300.0 K
-  [0.008, 0.082] ****
-  [0.082, 0.156] *****************
-  [0.156, 0.230] ***************************
-  [0.230, 0.304] *************************
-  [0.304, 0.378] ****************
-  [0.378, 0.452] *******
-  [0.452, 0.525] ***
-  [0.525, 0.599] *
-  [0.599, 0.673]
-  [0.673, 0.747]
+  [0.005, 0.087] ****
+  [0.087, 0.170] *********************
+  [0.170, 0.252] *******************************
+  [0.252, 0.335] *************************
+  [0.335, 0.417] *************
+  [0.417, 0.499] ****
+  [0.499, 0.582] *
+  [0.582, 0.664]
+  [0.664, 0.747]
+  [0.747, 0.829]
 Evaluate MLP to obtain forces using pypolymlp
 Calculate force constants using symfc
-SSCHA free energy: -98.379 meV
+SSCHA free energy: -98.301 meV
 SSCHA force constants are written into "phonopy_sscha_fc_3.yaml.xz".
 
 [ SSCHA iteration 4 / 10 ]
 Generate 1000 supercells with displacements at 300.0 K
-  [0.003, 0.076] ***
-  [0.076, 0.149] ***************
-  [0.149, 0.222] **************************
-  [0.222, 0.295] **************************
-  [0.295, 0.368] *****************
-  [0.368, 0.441] ********
-  [0.441, 0.514] ***
-  [0.514, 0.587] *
-  [0.587, 0.660]
-  [0.660, 0.734]
-Evaluate MLP to obtain forces using pypolymlp
-Calculate force constants using symfc
-SSCHA free energy: -98.156 meV
-SSCHA force constants are written into "phonopy_sscha_fc_4.yaml.xz".
-
-[ SSCHA iteration 5 / 10 ]
-Generate 1000 supercells with displacements at 300.0 K
-  [0.004, 0.079] ***
-  [0.079, 0.154] *****************
-  [0.154, 0.229] ***************************
-  [0.229, 0.304] **************************
-  [0.304, 0.379] ****************
-  [0.379, 0.454] *******
-  [0.454, 0.529] **
-  [0.529, 0.604] *
+  [0.006, 0.081] ****
+  [0.081, 0.155] *****************
+  [0.155, 0.230] ***************************
+  [0.230, 0.305] *************************
+  [0.305, 0.380] ****************
+  [0.380, 0.455] *******
+  [0.455, 0.530] **
+  [0.530, 0.604] *
   [0.604, 0.679]
   [0.679, 0.754]
 Evaluate MLP to obtain forces using pypolymlp
 Calculate force constants using symfc
-SSCHA free energy: -98.337 meV
+SSCHA free energy: -98.252 meV
+SSCHA force constants are written into "phonopy_sscha_fc_4.yaml.xz".
+
+[ SSCHA iteration 5 / 10 ]
+Generate 1000 supercells with displacements at 300.0 K
+  [0.004, 0.079] ****
+  [0.079, 0.154] *****************
+  [0.154, 0.230] ***************************
+  [0.230, 0.305] **************************
+  [0.305, 0.380] ****************
+  [0.380, 0.455] *******
+  [0.455, 0.530] **
+  [0.530, 0.605] *
+  [0.605, 0.680]
+  [0.680, 0.755]
+Evaluate MLP to obtain forces using pypolymlp
+Calculate force constants using symfc
+SSCHA free energy: -98.403 meV
 SSCHA force constants are written into "phonopy_sscha_fc_5.yaml.xz".
 
 [ SSCHA iteration 6 / 10 ]
 Generate 1000 supercells with displacements at 300.0 K
-  [0.004, 0.077] ***
-  [0.077, 0.151] ****************
-  [0.151, 0.224] **************************
-  [0.224, 0.297] **************************
-  [0.297, 0.370] *****************
-  [0.370, 0.444] ********
-  [0.444, 0.517] ***
-  [0.517, 0.590] *
-  [0.590, 0.663]
-  [0.663, 0.737]
+  [0.003, 0.080] ****
+  [0.080, 0.157] *****************
+  [0.157, 0.234] ****************************
+  [0.234, 0.311] **************************
+  [0.311, 0.388] ***************
+  [0.388, 0.465] *******
+  [0.465, 0.542] **
+  [0.542, 0.619] *
+  [0.619, 0.695]
+  [0.695, 0.772]
 Evaluate MLP to obtain forces using pypolymlp
 Calculate force constants using symfc
-SSCHA free energy: -98.080 meV
+SSCHA free energy: -98.145 meV
 SSCHA force constants are written into "phonopy_sscha_fc_6.yaml.xz".
 
 [ SSCHA iteration 7 / 10 ]
 Generate 1000 supercells with displacements at 300.0 K
-  [0.003, 0.080] ****
-  [0.080, 0.157] ******************
-  [0.157, 0.235] *****************************
-  [0.235, 0.312] **************************
-  [0.312, 0.389] ***************
-  [0.389, 0.466] ******
-  [0.466, 0.543] **
-  [0.543, 0.620]
-  [0.620, 0.698]
-  [0.698, 0.775]
+  [0.009, 0.085] ****
+  [0.085, 0.160] ******************
+  [0.160, 0.236] ****************************
+  [0.236, 0.311] *************************
+  [0.311, 0.386] ****************
+  [0.386, 0.462] *******
+  [0.462, 0.537] **
+  [0.537, 0.612] *
+  [0.612, 0.688]
+  [0.688, 0.763]
 Evaluate MLP to obtain forces using pypolymlp
 Calculate force constants using symfc
-SSCHA free energy: -98.207 meV
+SSCHA free energy: -98.276 meV
 SSCHA force constants are written into "phonopy_sscha_fc_7.yaml.xz".
 
 [ SSCHA iteration 8 / 10 ]
 Generate 1000 supercells with displacements at 300.0 K
-  [0.007, 0.081] ****
-  [0.081, 0.155] *****************
-  [0.155, 0.229] ***************************
-  [0.229, 0.304] **************************
-  [0.304, 0.378] ****************
-  [0.378, 0.452] ********
-  [0.452, 0.526] ***
-  [0.526, 0.600] *
-  [0.600, 0.674]
-  [0.674, 0.748]
+  [0.006, 0.089] *****
+  [0.089, 0.173] **********************
+  [0.173, 0.256] *******************************
+  [0.256, 0.339] ************************
+  [0.339, 0.422] *************
+  [0.422, 0.506] ****
+  [0.506, 0.589] *
+  [0.589, 0.672]
+  [0.672, 0.756]
+  [0.756, 0.839]
 Evaluate MLP to obtain forces using pypolymlp
 Calculate force constants using symfc
-SSCHA free energy: -98.109 meV
+SSCHA free energy: -98.274 meV
 SSCHA force constants are written into "phonopy_sscha_fc_8.yaml.xz".
 
 [ SSCHA iteration 9 / 10 ]
 Generate 1000 supercells with displacements at 300.0 K
-  [0.006, 0.078] ***
-  [0.078, 0.150] ****************
-  [0.150, 0.223] **************************
-  [0.223, 0.295] **************************
-  [0.295, 0.367] *****************
-  [0.367, 0.440] ********
-  [0.440, 0.512] ***
-  [0.512, 0.584] *
-  [0.584, 0.656]
-  [0.656, 0.729]
+  [0.009, 0.087] ****
+  [0.087, 0.165] *******************
+  [0.165, 0.243] *****************************
+  [0.243, 0.321] *************************
+  [0.321, 0.399] **************
+  [0.399, 0.477] ******
+  [0.477, 0.555] **
+  [0.555, 0.633]
+  [0.633, 0.712]
+  [0.712, 0.790]
 Evaluate MLP to obtain forces using pypolymlp
 Calculate force constants using symfc
-SSCHA free energy: -98.289 meV
+SSCHA free energy: -98.193 meV
 SSCHA force constants are written into "phonopy_sscha_fc_9.yaml.xz".
 
 [ SSCHA iteration 10 / 10 ]
 Generate 1000 supercells with displacements at 300.0 K
-  [0.004, 0.077] ***
-  [0.077, 0.150] ****************
-  [0.150, 0.224] ***************************
-  [0.224, 0.297] **************************
-  [0.297, 0.370] *****************
-  [0.370, 0.443] ********
-  [0.443, 0.517] ***
-  [0.517, 0.590] *
-  [0.590, 0.663]
-  [0.663, 0.737]
+  [0.004, 0.080] ***
+  [0.080, 0.156] *****************
+  [0.156, 0.232] ****************************
+  [0.232, 0.308] **************************
+  [0.308, 0.384] ****************
+  [0.384, 0.460] *******
+  [0.460, 0.536] **
+  [0.536, 0.611] *
+  [0.611, 0.687]
+  [0.687, 0.763]
 Evaluate MLP to obtain forces using pypolymlp
 Calculate force constants using symfc
-SSCHA free energy: -98.375 meV
+SSCHA free energy: -98.270 meV
 SSCHA force constants are written into "phonopy_sscha_fc_10.yaml.xz".
 
 -------------------------------- SSCHA end ---------------------------------
@@ -508,7 +509,7 @@ SSCHA force constants are written into "phonopy_sscha_fc_10.yaml.xz".
 ----------------------------------------------------------------------------
 
 Summary of calculation was written in "phonopy.yaml".
--------------------------[time 2025-01-15 13:28:36]-------------------------
+-------------------------[time 2025-01-19 17:48:18]-------------------------
                  _
    ___ _ __   __| |
   / _ \ '_ \ / _` |

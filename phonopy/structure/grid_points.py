@@ -79,7 +79,7 @@ def length2mesh(length, lattice, rotations=None):
     rotations: array_like, optional
         Rotation matrices in real space. When given, mesh numbers that are
         symmetrically reasonable are returned. Default is None.
-        dtype='long', shape=(rotations, 3, 3)
+        dtype='int64', shape=(rotations, 3, 3)
 
     Returns
     -------
@@ -168,7 +168,7 @@ class GridPoints:
        shape=(ir-grid points, 3)
     weights: ndarray
        Geometric q-point weights. Its sum is the number of grid points.
-       dtype='long'
+       dtype='int64'
        shape=(ir-grid points,)
     grid_address: ndarray
        Addresses of all grid points represented by integers.
@@ -176,10 +176,10 @@ class GridPoints:
        shape=(prod(mesh_numbers), 3)
     ir_grid_points: ndarray
         Indices of irreducible grid points in grid_address.
-        dtype='long', shape=(ir-grid points,)
+        dtype='int64', shape=(ir-grid points,)
     grid_mapping_table: ndarray
         Index mapping table from all grid points to ir-grid points.
-        dtype='long', shape=(prod(mesh_numbers),)
+        dtype='int64', shape=(prod(mesh_numbers),)
 
     """
 
@@ -206,7 +206,7 @@ class GridPoints:
         ----------
         mesh_numbers: array_like
             Mesh numbers along a, b, c axes.
-            dtype='long'
+            dtype='int64'
             shape=(3, )
         reciprocal_lattice: array_like
             Basis vectors in reciprocal space. a*, b*, c* are given in column
@@ -230,7 +230,7 @@ class GridPoints:
         rotations: array_like, default None (only unitary operation)
             Rotation matrices in direct space. For each rotation matrix R,
             a point in crystallographic coordinates, x, is sent as x' = Rx.
-            dtype='long'
+            dtype='int64'
             shape=(rotations, 3, 3)
         is_mesh_symmetry: bool, optional, default True
             Wheather symmetry search is done or not.
@@ -409,13 +409,13 @@ class GridPoints:
             is_dense=True,
         )
         # uintp to long
-        grid_mapping_table = np.array(grid_mapping_table, dtype="long")
+        grid_mapping_table = np.array(grid_mapping_table, dtype="int64")
 
-        # Currently 'intc', but will be 'long' in next major version.
+        # Currently 'intc', but will be 'int64' in next major version.
         if int(__version__.split(".")[0]) < 3:
             dtype = "intc"
         else:
-            dtype = "long"
+            dtype = "int64"
 
         if self._fit_in_BZ:
             grid_address, _ = relocate_BZ_grid_address(
@@ -476,14 +476,14 @@ class GeneralizedRegularGridPoints:
     ----------
     grid_address : ndarray
         Grid addresses in integers.
-        shape=(num_grid_points, 3), dtype='long', order='C'
+        shape=(num_grid_points, 3), dtype='int64', order='C'
     qpoints : ndarray
         q-points with respect to basis vectors of input or standardized
         primitive cell.
         shape=(num_grid_points, 3), dtype='double', order='C'
     grid_matrix : ndarray
         Grid generating matrix.
-        shape=(3,3), dtype='long', order='C'
+        shape=(3,3), dtype='int64', order='C'
     matrix_to_primitive : ndarray or None
         None when ``suggest`` is False. Otherwise, transformation matrix from
         input cell to the suggested primitive cell.
@@ -605,7 +605,7 @@ class GeneralizedRegularGridPoints:
         assert (np.abs(inv_pmat - inv_pmat_int) < 1e-5).all()
         # transpose in reciprocal space
         self._grid_matrix = np.array(
-            (inv_pmat_int * self._mesh_numbers).T, dtype="long", order="C"
+            (inv_pmat_int * self._mesh_numbers).T, dtype="int64", order="C"
         )
         # From input lattice to the primitive lattice in real space
         self._transformation_matrix = np.array(
@@ -624,7 +624,7 @@ class GeneralizedRegularGridPoints:
         )
         # transpose in reciprocal space
         self._grid_matrix = np.array(
-            np.multiply(tmat, self._mesh_numbers).T, dtype="long", order="C"
+            np.multiply(tmat, self._mesh_numbers).T, dtype="int64", order="C"
         )
         self._transformation_matrix = np.eye(3, dtype="double", order="C")
 
@@ -637,7 +637,7 @@ class GeneralizedRegularGridPoints:
             # z runs fastest.
             x, y, z = np.meshgrid(range(d[0]), range(d[1]), range(d[2]), indexing="ij")
         self._grid_address = np.array(
-            np.c_[x.ravel(), y.ravel(), z.ravel()], dtype="long", order="C"
+            np.c_[x.ravel(), y.ravel(), z.ravel()], dtype="int64", order="C"
         )
 
     def _generate_q_points(self):
@@ -660,7 +660,7 @@ def get_reciprocal_operations(
     ----------
     rotations : ndarray
         Rotation matrices in real space. x' = Rx.
-        shape=(rotations, 3, 3), dtype='long'
+        shape=(rotations, 3, 3), dtype='int64'
     transformation_matrxi : array_like
         Transformation matrix of basis vectors in real space. Using this
         rotation matrices are transformed.
@@ -681,7 +681,7 @@ def get_reciprocal_operations(
 
         g' = (R_Q g) % diagonal(D)
 
-        shape=(rotations, 3, 3), dtype='long', order='C'
+        shape=(rotations, 3, 3), dtype='int64', order='C'
 
     """
     unique_rots = []
@@ -706,4 +706,4 @@ def get_reciprocal_operations(
         assert abs(determinant(_r_int)) == 1
         rec_ops_Q.append(_r_int)
 
-    return np.array(rec_ops_Q, dtype="long", order="C")
+    return np.array(rec_ops_Q, dtype="int64", order="C")

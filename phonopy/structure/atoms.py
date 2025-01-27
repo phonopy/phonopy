@@ -687,6 +687,95 @@ class PhonopyAtoms:
         """Return text lines of crystal structure in yaml."""
         return "\n".join(self.get_yaml_lines())
 
+    def _get_element_counts(self):
+        """Return dict of element counts, with indices stripped from symbols."""
+        counts = {}
+        for symbol in self._symbols:
+            base_symbol = symbol.rstrip("0123456789")
+            counts[base_symbol] = counts.get(base_symbol, 0) + 1
+        return counts
+
+    def _build_formula(self, counts, divisor=1):
+        """Build formula string from element counts and optional divisor.
+
+        Parameters
+        ----------
+        counts : dict
+            Dictionary mapping element symbols to their counts
+        divisor : int, optional
+            Number to divide counts by, defaults to 1
+
+        Returns
+        -------
+        str
+            Formula string with elements in alphabetical order
+        """
+        if not counts:
+            return ""
+
+        formula_parts = []
+        for element in sorted(counts):
+            count = counts[element] // divisor
+            if count == 1:
+                formula_parts.append(element)
+            else:
+                formula_parts.append(f"{element}{count}")
+
+        return "".join(formula_parts)
+
+    @property
+    def formula(self):
+        """Return chemical formula as a string.
+
+        The formula is constructed by sorting elements alphabetically and
+        appending numbers for elements that appear more than once.
+        E.g., "Si2O4" for two Si and four O atoms.
+        """
+        counts = self._get_element_counts()
+        return self._build_formula(counts)
+
+    @property
+    def reduced_formula(self):
+        """Return reduced chemical formula as a string.
+
+        The reduced formula divides all element counts by their GCD.
+        E.g., "Fe4O8" becomes "Fe2O4".
+        """
+        counts = self._get_element_counts()
+        if not counts:
+            return ""
+
+        # Find GCD of all counts
+        numbers = list(counts.values())
+        divisor = numbers[0]
+        for n in numbers[1:]:
+            divisor = gcd(divisor, n)
+
+        return self._build_formula(counts, divisor)
+
+    @property
+    def normalized_formula(self):
+        """Return normalized formula as a string.
+
+        The normalized formula scales all element counts so they sum to 1.
+        E.g., "Fe2O3" becomes "Fe0.4O0.6".
+        """
+        counts = self._get_element_counts()
+        if not counts:
+            return ""
+
+        # Get total count
+        total = sum(counts.values())
+
+        # Build normalized formula string
+        formula_parts = []
+        for element in sorted(counts):
+            count = counts[element] / total
+            # Always show decimal for normalized formula
+            formula_parts.append(f"{element}{count:.3}")
+
+        return "".join(formula_parts)
+
 
 def parse_cell_dict(cell_dict: dict) -> Optional[PhonopyAtoms]:
     """Parse cell dict."""

@@ -325,7 +325,7 @@ def _update_options(fc_calculator_options):
             "ndata": int,
             "nstart": int,
             "nend": int,
-            "nbody": np.dtype("long"),
+            "nbody": np.dtype("int64"),
             "output_filename_prefix": str,
             "solver": str,
             "symmetrization_basis": str,
@@ -339,8 +339,10 @@ def _update_options(fc_calculator_options):
                     option_value = np.array(
                         [float(x) for x in val.split()], dtype="double"
                     )
-                elif alm_option_types[key.lower()] is np.dtype("long"):
-                    option_value = np.array([int(x) for x in val.split()], dtype="long")
+                elif alm_option_types[key.lower()] is np.dtype("int64"):
+                    option_value = np.array(
+                        [int(x) for x in val.split()], dtype="int64"
+                    )
                 else:
                     option_value = alm_option_types[key.lower()](val)
                 alm_options[key] = option_value
