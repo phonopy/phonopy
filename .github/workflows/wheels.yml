@@ -12,9 +12,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest,]
+        os: [ubuntu-latest, macos-latest, windows-latest,]
         # os: [ubuntu-latest, windows-latest, macos-13, macos-latest]
-
 
     steps:
     - uses: actions/checkout@v4
@@ -25,7 +24,8 @@ jobs:
     - name: Install cibuildwheel
       run: python -m pip install cibuildwheel==2.22.0
 
-    - name: Build wheels
+    - name: Build wheels on non-windows
+      if: ${{ ! startsWith(matrix.os, 'windows') }}
       run: |
         git tag v`grep __version__ phonopy/version.py|awk -F'"' '{print($2)}'`
         python -m cibuildwheel --output-dir wheelhouse
@@ -33,9 +33,18 @@ jobs:
         CIBW_SKIP: "cp39-* pp* *_i686 *musllinux*"
         CIBW_BUILD_VERBOSITY: 1
 
-      # to supply options, put them in 'env', like:
-      # env:
-      #   CIBW_SOME_OPTION: value
+    - name: Build wheels on windows
+      if: ${{ startsWith(matrix.os, 'windows') }}
+      run: |
+        $version = Select-String -Path "phonopy\version.py" -Pattern '__version__' | ForEach-Object {
+            ($_ -split '"')[1]
+        }
+        git tag "v$version"
+        Write-Output "The value of version is: $version"
+        python -m cibuildwheel --output-dir wheelhouse
+      env:
+        CIBW_SKIP: "cp39-* pp* *_i686 *musllinux*"
+        CIBW_BUILD_VERBOSITY: 1
 
     - uses: actions/upload-artifact@v4
       with:
@@ -44,11 +53,8 @@ jobs:
 
   upload_pypi_test:
     name: Upload to PyPI (test)
-    strategy:
-      matrix:
-        os: [ubuntu-latest,]
     needs: [build_wheels,]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/make-wheel-test')
     steps:
     - uses: actions/download-artifact@v4
@@ -60,16 +66,13 @@ jobs:
       with:
         user: __token__
         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-        repository_url: https://test.pypi.org/legacy/
+        repository-url: https://test.pypi.org/legacy/
         skip-existing: true
 
   upload_pypi:
     name: Upload to PyPI
-    strategy:
-      matrix:
-        os: [ubuntu-latest,]
     needs: [build_wheels,]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/make-wheel')
     steps:
     - uses: actions/download-artifact@v4
