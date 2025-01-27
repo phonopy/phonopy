@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Temperature dependent force constants calculation using pypolymlp and symfc &#8212; Phonopy v.2.34.1</title>
+    <title>Temperature dependent force constants calculation using pypolymlp and symfc &#8212; Phonopy v.2.35.0</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=753e4643"></script>
+    <script src="_static/documentation_options.js?v=3218f1b2"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="phonopy-load command" href="phonopy-load.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.34" />
+  <meta name="docsearch:version" content="2.35" />
   </head>
   
   
@@ -125,7 +125,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.34.1</p>
+    <p class="title logo__title">Phonopy v.2.35.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -616,7 +616,7 @@ displacements, temperature dependent force constants are calculated with the
  <span class="o">|</span><span class="n">_</span><span class="o">|</span>                            <span class="o">|</span><span class="n">_</span><span class="o">|</span>    <span class="o">|</span><span class="n">___</span><span class="o">/</span>
                                       <span class="mf">2.34.1</span>
 
-<span class="o">-------------------------</span><span class="p">[</span><span class="n">time</span> <span class="mi">2025</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">15</span> <span class="mi">13</span><span class="p">:</span><span class="mi">24</span><span class="p">:</span><span class="mi">30</span><span class="p">]</span><span class="o">-------------------------</span>
+<span class="o">-------------------------</span><span class="p">[</span><span class="n">time</span> <span class="mi">2025</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">19</span> <span class="mi">17</span><span class="p">:</span><span class="mi">44</span><span class="p">:</span><span class="mi">21</span><span class="p">]</span><span class="o">-------------------------</span>
 <span class="n">Compiled</span> <span class="k">with</span> <span class="n">OpenMP</span> <span class="n">support</span> <span class="p">(</span><span class="nb">max</span> <span class="mi">10</span> <span class="n">threads</span><span class="p">)</span><span class="o">.</span>
 <span class="n">Running</span> <span class="ow">in</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span> <span class="n">mode</span><span class="o">.</span>
 <span class="n">Python</span> <span class="n">version</span> <span class="mf">3.12.6</span>
@@ -624,7 +624,8 @@ displacements, temperature dependent force constants are calculated with the
 
 <span class="n">Crystal</span> <span class="n">structure</span> <span class="n">was</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">&quot;phonopy_mlpsscha_params_KCl-120.yaml.xz&quot;</span><span class="o">.</span>
 <span class="n">Unit</span> <span class="n">of</span> <span class="n">length</span><span class="p">:</span> <span class="n">angstrom</span>
-<span class="n">Displacements</span> <span class="n">creation</span> <span class="n">mode</span>
+<span class="n">Pypolymlp</span> <span class="n">displacements</span> <span class="n">creation</span> <span class="n">mode</span>
+  <span class="n">Random</span> <span class="n">displacements</span>
   <span class="n">Number</span> <span class="n">of</span> <span class="n">supercells</span> <span class="k">with</span> <span class="n">random</span> <span class="n">displacements</span><span class="p">:</span> <span class="mi">1000</span>
   <span class="n">Temperatuere</span> <span class="n">to</span> <span class="n">generate</span> <span class="n">random</span> <span class="n">displacements</span><span class="p">:</span> <span class="mf">300.0</span>
 <span class="n">Settings</span><span class="p">:</span>
@@ -647,7 +648,7 @@ displacements, temperature dependent force constants are calculated with the
 <span class="o">------------------------------</span> <span class="n">pypolymlp</span> <span class="n">end</span> <span class="o">-------------------------------</span>
 <span class="n">Generate</span> <span class="n">random</span> <span class="n">displacements</span>
   <span class="n">Twice</span> <span class="n">of</span> <span class="n">number</span> <span class="n">of</span> <span class="n">snapshots</span> <span class="n">will</span> <span class="n">be</span> <span class="n">generated</span> <span class="k">for</span> <span class="n">plus</span><span class="o">-</span><span class="n">minus</span> <span class="n">displacements</span><span class="o">.</span>
-  <span class="n">Displacement</span> <span class="n">distance</span><span class="p">:</span> <span class="mf">0.001</span>
+  <span class="n">Displacement</span> <span class="n">distance</span><span class="p">:</span> <span class="mf">0.01</span>
 <span class="n">Evaluate</span> <span class="n">forces</span> <span class="ow">in</span> <span class="mi">2000</span> <span class="n">supercells</span> <span class="n">by</span> <span class="n">pypolymlp</span>
 <span class="o">--------------------------------</span> <span class="n">Symfc</span> <span class="n">start</span> <span class="o">-------------------------------</span>
 <span class="n">Symfc</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">calculator</span><span class="o">.</span> <span class="n">See</span> <span class="n">the</span> <span class="n">following</span> <span class="n">paper</span><span class="p">:</span>
@@ -663,172 +664,172 @@ displacements, temperature dependent force constants are calculated with the
 
 <span class="p">[</span> <span class="n">SSCHA</span> <span class="n">iteration</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">10</span> <span class="p">]</span>
 <span class="n">Generate</span> <span class="mi">1000</span> <span class="n">supercells</span> <span class="k">with</span> <span class="n">displacements</span> <span class="n">at</span> <span class="mf">300.0</span> <span class="n">K</span>
-  <span class="p">[</span><span class="mf">0.005</span><span class="p">,</span> <span class="mf">0.084</span><span class="p">]</span> <span class="o">****</span>
-  <span class="p">[</span><span class="mf">0.084</span><span class="p">,</span> <span class="mf">0.164</span><span class="p">]</span> <span class="o">*******************</span>
-  <span class="p">[</span><span class="mf">0.164</span><span class="p">,</span> <span class="mf">0.243</span><span class="p">]</span> <span class="o">*****************************</span>
-  <span class="p">[</span><span class="mf">0.243</span><span class="p">,</span> <span class="mf">0.323</span><span class="p">]</span> <span class="o">**************************</span>
-  <span class="p">[</span><span class="mf">0.323</span><span class="p">,</span> <span class="mf">0.402</span><span class="p">]</span> <span class="o">**************</span>
-  <span class="p">[</span><span class="mf">0.402</span><span class="p">,</span> <span class="mf">0.482</span><span class="p">]</span> <span class="o">******</span>
-  <span class="p">[</span><span class="mf">0.482</span><span class="p">,</span> <span class="mf">0.561</span><span class="p">]</span> <span class="o">**</span>
-  <span class="p">[</span><span class="mf">0.561</span><span class="p">,</span> <span class="mf">0.641</span><span class="p">]</span>
-  <span class="p">[</span><span class="mf">0.641</span><span class="p">,</span> <span class="mf">0.720</span><span class="p">]</span>
-  <span class="p">[</span><span class="mf">0.720</span><span class="p">,</span> <span class="mf">0.800</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.085</span><span class="p">]</span> <span class="o">****</span>
+  <span class="p">[</span><span class="mf">0.085</span><span class="p">,</span> <span class="mf">0.168</span><span class="p">]</span> <span class="o">*********************</span>
+  <span class="p">[</span><span class="mf">0.168</span><span class="p">,</span> <span class="mf">0.252</span><span class="p">]</span> <span class="o">*******************************</span>
+  <span class="p">[</span><span class="mf">0.252</span><span class="p">,</span> <span class="mf">0.336</span><span class="p">]</span> <span class="o">*************************</span>
+  <span class="p">[</span><span class="mf">0.336</span><span class="p">,</span> <span class="mf">0.419</span><span class="p">]</span> <span class="o">*************</span>
+  <span class="p">[</span><span class="mf">0.419</span><span class="p">,</span> <span class="mf">0.503</span><span class="p">]</span> <span class="o">****</span>
+  <span class="p">[</span><span class="mf">0.503</span><span class="p">,</span> <span class="mf">0.587</span><span class="p">]</span> <span class="o">*</span>
+  <span class="p">[</span><span class="mf">0.587</span><span class="p">,</span> <span class="mf">0.670</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.670</span><span class="p">,</span> <span class="mf">0.754</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.754</span><span class="p">,</span> <span class="mf">0.838</span><span class="p">]</span>
 <span class="n">Evaluate</span> <span class="n">MLP</span> <span class="n">to</span> <span class="n">obtain</span> <span class="n">forces</span> <span class="n">using</span> <span class="n">pypolymlp</span>
 <span class="n">Calculate</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">using</span> <span class="n">symfc</span>
-<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.262</span> <span class="n">meV</span>
+<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.253</span> <span class="n">meV</span>
 <span class="n">SSCHA</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">are</span> <span class="n">written</span> <span class="n">into</span> <span class="s2">&quot;phonopy_sscha_fc_1.yaml.xz&quot;</span><span class="o">.</span>
 
 <span class="p">[</span> <span class="n">SSCHA</span> <span class="n">iteration</span> <span class="mi">2</span> <span class="o">/</span> <span class="mi">10</span> <span class="p">]</span>
 <span class="n">Generate</span> <span class="mi">1000</span> <span class="n">supercells</span> <span class="k">with</span> <span class="n">displacements</span> <span class="n">at</span> <span class="mf">300.0</span> <span class="n">K</span>
-  <span class="p">[</span><span class="mf">0.005</span><span class="p">,</span> <span class="mf">0.082</span><span class="p">]</span> <span class="o">****</span>
-  <span class="p">[</span><span class="mf">0.082</span><span class="p">,</span> <span class="mf">0.160</span><span class="p">]</span> <span class="o">******************</span>
-  <span class="p">[</span><span class="mf">0.160</span><span class="p">,</span> <span class="mf">0.237</span><span class="p">]</span> <span class="o">*****************************</span>
-  <span class="p">[</span><span class="mf">0.237</span><span class="p">,</span> <span class="mf">0.315</span><span class="p">]</span> <span class="o">**************************</span>
+  <span class="p">[</span><span class="mf">0.006</span><span class="p">,</span> <span class="mf">0.084</span><span class="p">]</span> <span class="o">****</span>
+  <span class="p">[</span><span class="mf">0.084</span><span class="p">,</span> <span class="mf">0.161</span><span class="p">]</span> <span class="o">******************</span>
+  <span class="p">[</span><span class="mf">0.161</span><span class="p">,</span> <span class="mf">0.238</span><span class="p">]</span> <span class="o">*****************************</span>
+  <span class="p">[</span><span class="mf">0.238</span><span class="p">,</span> <span class="mf">0.315</span><span class="p">]</span> <span class="o">*************************</span>
   <span class="p">[</span><span class="mf">0.315</span><span class="p">,</span> <span class="mf">0.392</span><span class="p">]</span> <span class="o">***************</span>
   <span class="p">[</span><span class="mf">0.392</span><span class="p">,</span> <span class="mf">0.469</span><span class="p">]</span> <span class="o">******</span>
-  <span class="p">[</span><span class="mf">0.469</span><span class="p">,</span> <span class="mf">0.547</span><span class="p">]</span> <span class="o">**</span>
-  <span class="p">[</span><span class="mf">0.547</span><span class="p">,</span> <span class="mf">0.624</span><span class="p">]</span>
-  <span class="p">[</span><span class="mf">0.624</span><span class="p">,</span> <span class="mf">0.702</span><span class="p">]</span>
-  <span class="p">[</span><span class="mf">0.702</span><span class="p">,</span> <span class="mf">0.779</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.469</span><span class="p">,</span> <span class="mf">0.546</span><span class="p">]</span> <span class="o">**</span>
+  <span class="p">[</span><span class="mf">0.546</span><span class="p">,</span> <span class="mf">0.623</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.623</span><span class="p">,</span> <span class="mf">0.701</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.701</span><span class="p">,</span> <span class="mf">0.778</span><span class="p">]</span>
 <span class="n">Evaluate</span> <span class="n">MLP</span> <span class="n">to</span> <span class="n">obtain</span> <span class="n">forces</span> <span class="n">using</span> <span class="n">pypolymlp</span>
 <span class="n">Calculate</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">using</span> <span class="n">symfc</span>
-<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.236</span> <span class="n">meV</span>
+<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.345</span> <span class="n">meV</span>
 <span class="n">SSCHA</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">are</span> <span class="n">written</span> <span class="n">into</span> <span class="s2">&quot;phonopy_sscha_fc_2.yaml.xz&quot;</span><span class="o">.</span>
 
 <span class="p">[</span> <span class="n">SSCHA</span> <span class="n">iteration</span> <span class="mi">3</span> <span class="o">/</span> <span class="mi">10</span> <span class="p">]</span>
 <span class="n">Generate</span> <span class="mi">1000</span> <span class="n">supercells</span> <span class="k">with</span> <span class="n">displacements</span> <span class="n">at</span> <span class="mf">300.0</span> <span class="n">K</span>
-  <span class="p">[</span><span class="mf">0.008</span><span class="p">,</span> <span class="mf">0.082</span><span class="p">]</span> <span class="o">****</span>
-  <span class="p">[</span><span class="mf">0.082</span><span class="p">,</span> <span class="mf">0.156</span><span class="p">]</span> <span class="o">*****************</span>
-  <span class="p">[</span><span class="mf">0.156</span><span class="p">,</span> <span class="mf">0.230</span><span class="p">]</span> <span class="o">***************************</span>
-  <span class="p">[</span><span class="mf">0.230</span><span class="p">,</span> <span class="mf">0.304</span><span class="p">]</span> <span class="o">*************************</span>
-  <span class="p">[</span><span class="mf">0.304</span><span class="p">,</span> <span class="mf">0.378</span><span class="p">]</span> <span class="o">****************</span>
-  <span class="p">[</span><span class="mf">0.378</span><span class="p">,</span> <span class="mf">0.452</span><span class="p">]</span> <span class="o">*******</span>
-  <span class="p">[</span><span class="mf">0.452</span><span class="p">,</span> <span class="mf">0.525</span><span class="p">]</span> <span class="o">***</span>
-  <span class="p">[</span><span class="mf">0.525</span><span class="p">,</span> <span class="mf">0.599</span><span class="p">]</span> <span class="o">*</span>
-  <span class="p">[</span><span class="mf">0.599</span><span class="p">,</span> <span class="mf">0.673</span><span class="p">]</span>
-  <span class="p">[</span><span class="mf">0.673</span><span class="p">,</span> <span class="mf">0.747</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.005</span><span class="p">,</span> <span class="mf">0.087</span><span class="p">]</span> <span class="o">****</span>
+  <span class="p">[</span><span class="mf">0.087</span><span class="p">,</span> <span class="mf">0.170</span><span class="p">]</span> <span class="o">*********************</span>
+  <span class="p">[</span><span class="mf">0.170</span><span class="p">,</span> <span class="mf">0.252</span><span class="p">]</span> <span class="o">*******************************</span>
+  <span class="p">[</span><span class="mf">0.252</span><span class="p">,</span> <span class="mf">0.335</span><span class="p">]</span> <span class="o">*************************</span>
+  <span class="p">[</span><span class="mf">0.335</span><span class="p">,</span> <span class="mf">0.417</span><span class="p">]</span> <span class="o">*************</span>
+  <span class="p">[</span><span class="mf">0.417</span><span class="p">,</span> <span class="mf">0.499</span><span class="p">]</span> <span class="o">****</span>
+  <span class="p">[</span><span class="mf">0.499</span><span class="p">,</span> <span class="mf">0.582</span><span class="p">]</span> <span class="o">*</span>
+  <span class="p">[</span><span class="mf">0.582</span><span class="p">,</span> <span class="mf">0.664</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.664</span><span class="p">,</span> <span class="mf">0.747</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.747</span><span class="p">,</span> <span class="mf">0.829</span><span class="p">]</span>
 <span class="n">Evaluate</span> <span class="n">MLP</span> <span class="n">to</span> <span class="n">obtain</span> <span class="n">forces</span> <span class="n">using</span> <span class="n">pypolymlp</span>
 <span class="n">Calculate</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">using</span> <span class="n">symfc</span>
-<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.379</span> <span class="n">meV</span>
+<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.301</span> <span class="n">meV</span>
 <span class="n">SSCHA</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">are</span> <span class="n">written</span> <span class="n">into</span> <span class="s2">&quot;phonopy_sscha_fc_3.yaml.xz&quot;</span><span class="o">.</span>
 
 <span class="p">[</span> <span class="n">SSCHA</span> <span class="n">iteration</span> <span class="mi">4</span> <span class="o">/</span> <span class="mi">10</span> <span class="p">]</span>
 <span class="n">Generate</span> <span class="mi">1000</span> <span class="n">supercells</span> <span class="k">with</span> <span class="n">displacements</span> <span class="n">at</span> <span class="mf">300.0</span> <span class="n">K</span>
-  <span class="p">[</span><span class="mf">0.003</span><span class="p">,</span> <span class="mf">0.076</span><span class="p">]</span> <span class="o">***</span>
-  <span class="p">[</span><span class="mf">0.076</span><span class="p">,</span> <span class="mf">0.149</span><span class="p">]</span> <span class="o">***************</span>
-  <span class="p">[</span><span class="mf">0.149</span><span class="p">,</span> <span class="mf">0.222</span><span class="p">]</span> <span class="o">**************************</span>
-  <span class="p">[</span><span class="mf">0.222</span><span class="p">,</span> <span class="mf">0.295</span><span class="p">]</span> <span class="o">**************************</span>
-  <span class="p">[</span><span class="mf">0.295</span><span class="p">,</span> <span class="mf">0.368</span><span class="p">]</span> <span class="o">*****************</span>
-  <span class="p">[</span><span class="mf">0.368</span><span class="p">,</span> <span class="mf">0.441</span><span class="p">]</span> <span class="o">********</span>
-  <span class="p">[</span><span class="mf">0.441</span><span class="p">,</span> <span class="mf">0.514</span><span class="p">]</span> <span class="o">***</span>
-  <span class="p">[</span><span class="mf">0.514</span><span class="p">,</span> <span class="mf">0.587</span><span class="p">]</span> <span class="o">*</span>
-  <span class="p">[</span><span class="mf">0.587</span><span class="p">,</span> <span class="mf">0.660</span><span class="p">]</span>
-  <span class="p">[</span><span class="mf">0.660</span><span class="p">,</span> <span class="mf">0.734</span><span class="p">]</span>
-<span class="n">Evaluate</span> <span class="n">MLP</span> <span class="n">to</span> <span class="n">obtain</span> <span class="n">forces</span> <span class="n">using</span> <span class="n">pypolymlp</span>
-<span class="n">Calculate</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">using</span> <span class="n">symfc</span>
-<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.156</span> <span class="n">meV</span>
-<span class="n">SSCHA</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">are</span> <span class="n">written</span> <span class="n">into</span> <span class="s2">&quot;phonopy_sscha_fc_4.yaml.xz&quot;</span><span class="o">.</span>
-
-<span class="p">[</span> <span class="n">SSCHA</span> <span class="n">iteration</span> <span class="mi">5</span> <span class="o">/</span> <span class="mi">10</span> <span class="p">]</span>
-<span class="n">Generate</span> <span class="mi">1000</span> <span class="n">supercells</span> <span class="k">with</span> <span class="n">displacements</span> <span class="n">at</span> <span class="mf">300.0</span> <span class="n">K</span>
-  <span class="p">[</span><span class="mf">0.004</span><span class="p">,</span> <span class="mf">0.079</span><span class="p">]</span> <span class="o">***</span>
-  <span class="p">[</span><span class="mf">0.079</span><span class="p">,</span> <span class="mf">0.154</span><span class="p">]</span> <span class="o">*****************</span>
-  <span class="p">[</span><span class="mf">0.154</span><span class="p">,</span> <span class="mf">0.229</span><span class="p">]</span> <span class="o">***************************</span>
-  <span class="p">[</span><span class="mf">0.229</span><span class="p">,</span> <span class="mf">0.304</span><span class="p">]</span> <span class="o">**************************</span>
-  <span class="p">[</span><span class="mf">0.304</span><span class="p">,</span> <span class="mf">0.379</span><span class="p">]</span> <span class="o">****************</span>
-  <span class="p">[</span><span class="mf">0.379</span><span class="p">,</span> <span class="mf">0.454</span><span class="p">]</span> <span class="o">*******</span>
-  <span class="p">[</span><span class="mf">0.454</span><span class="p">,</span> <span class="mf">0.529</span><span class="p">]</span> <span class="o">**</span>
-  <span class="p">[</span><span class="mf">0.529</span><span class="p">,</span> <span class="mf">0.604</span><span class="p">]</span> <span class="o">*</span>
+  <span class="p">[</span><span class="mf">0.006</span><span class="p">,</span> <span class="mf">0.081</span><span class="p">]</span> <span class="o">****</span>
+  <span class="p">[</span><span class="mf">0.081</span><span class="p">,</span> <span class="mf">0.155</span><span class="p">]</span> <span class="o">*****************</span>
+  <span class="p">[</span><span class="mf">0.155</span><span class="p">,</span> <span class="mf">0.230</span><span class="p">]</span> <span class="o">***************************</span>
+  <span class="p">[</span><span class="mf">0.230</span><span class="p">,</span> <span class="mf">0.305</span><span class="p">]</span> <span class="o">*************************</span>
+  <span class="p">[</span><span class="mf">0.305</span><span class="p">,</span> <span class="mf">0.380</span><span class="p">]</span> <span class="o">****************</span>
+  <span class="p">[</span><span class="mf">0.380</span><span class="p">,</span> <span class="mf">0.455</span><span class="p">]</span> <span class="o">*******</span>
+  <span class="p">[</span><span class="mf">0.455</span><span class="p">,</span> <span class="mf">0.530</span><span class="p">]</span> <span class="o">**</span>
+  <span class="p">[</span><span class="mf">0.530</span><span class="p">,</span> <span class="mf">0.604</span><span class="p">]</span> <span class="o">*</span>
   <span class="p">[</span><span class="mf">0.604</span><span class="p">,</span> <span class="mf">0.679</span><span class="p">]</span>
   <span class="p">[</span><span class="mf">0.679</span><span class="p">,</span> <span class="mf">0.754</span><span class="p">]</span>
 <span class="n">Evaluate</span> <span class="n">MLP</span> <span class="n">to</span> <span class="n">obtain</span> <span class="n">forces</span> <span class="n">using</span> <span class="n">pypolymlp</span>
 <span class="n">Calculate</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">using</span> <span class="n">symfc</span>
-<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.337</span> <span class="n">meV</span>
+<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.252</span> <span class="n">meV</span>
+<span class="n">SSCHA</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">are</span> <span class="n">written</span> <span class="n">into</span> <span class="s2">&quot;phonopy_sscha_fc_4.yaml.xz&quot;</span><span class="o">.</span>
+
+<span class="p">[</span> <span class="n">SSCHA</span> <span class="n">iteration</span> <span class="mi">5</span> <span class="o">/</span> <span class="mi">10</span> <span class="p">]</span>
+<span class="n">Generate</span> <span class="mi">1000</span> <span class="n">supercells</span> <span class="k">with</span> <span class="n">displacements</span> <span class="n">at</span> <span class="mf">300.0</span> <span class="n">K</span>
+  <span class="p">[</span><span class="mf">0.004</span><span class="p">,</span> <span class="mf">0.079</span><span class="p">]</span> <span class="o">****</span>
+  <span class="p">[</span><span class="mf">0.079</span><span class="p">,</span> <span class="mf">0.154</span><span class="p">]</span> <span class="o">*****************</span>
+  <span class="p">[</span><span class="mf">0.154</span><span class="p">,</span> <span class="mf">0.230</span><span class="p">]</span> <span class="o">***************************</span>
+  <span class="p">[</span><span class="mf">0.230</span><span class="p">,</span> <span class="mf">0.305</span><span class="p">]</span> <span class="o">**************************</span>
+  <span class="p">[</span><span class="mf">0.305</span><span class="p">,</span> <span class="mf">0.380</span><span class="p">]</span> <span class="o">****************</span>
+  <span class="p">[</span><span class="mf">0.380</span><span class="p">,</span> <span class="mf">0.455</span><span class="p">]</span> <span class="o">*******</span>
+  <span class="p">[</span><span class="mf">0.455</span><span class="p">,</span> <span class="mf">0.530</span><span class="p">]</span> <span class="o">**</span>
+  <span class="p">[</span><span class="mf">0.530</span><span class="p">,</span> <span class="mf">0.605</span><span class="p">]</span> <span class="o">*</span>
+  <span class="p">[</span><span class="mf">0.605</span><span class="p">,</span> <span class="mf">0.680</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.680</span><span class="p">,</span> <span class="mf">0.755</span><span class="p">]</span>
+<span class="n">Evaluate</span> <span class="n">MLP</span> <span class="n">to</span> <span class="n">obtain</span> <span class="n">forces</span> <span class="n">using</span> <span class="n">pypolymlp</span>
+<span class="n">Calculate</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">using</span> <span class="n">symfc</span>
+<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.403</span> <span class="n">meV</span>
 <span class="n">SSCHA</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">are</span> <span class="n">written</span> <span class="n">into</span> <span class="s2">&quot;phonopy_sscha_fc_5.yaml.xz&quot;</span><span class="o">.</span>
 
 <span class="p">[</span> <span class="n">SSCHA</span> <span class="n">iteration</span> <span class="mi">6</span> <span class="o">/</span> <span class="mi">10</span> <span class="p">]</span>
 <span class="n">Generate</span> <span class="mi">1000</span> <span class="n">supercells</span> <span class="k">with</span> <span class="n">displacements</span> <span class="n">at</span> <span class="mf">300.0</span> <span class="n">K</span>
-  <span class="p">[</span><span class="mf">0.004</span><span class="p">,</span> <span class="mf">0.077</span><span class="p">]</span> <span class="o">***</span>
-  <span class="p">[</span><span class="mf">0.077</span><span class="p">,</span> <span class="mf">0.151</span><span class="p">]</span> <span class="o">****************</span>
-  <span class="p">[</span><span class="mf">0.151</span><span class="p">,</span> <span class="mf">0.224</span><span class="p">]</span> <span class="o">**************************</span>
-  <span class="p">[</span><span class="mf">0.224</span><span class="p">,</span> <span class="mf">0.297</span><span class="p">]</span> <span class="o">**************************</span>
-  <span class="p">[</span><span class="mf">0.297</span><span class="p">,</span> <span class="mf">0.370</span><span class="p">]</span> <span class="o">*****************</span>
-  <span class="p">[</span><span class="mf">0.370</span><span class="p">,</span> <span class="mf">0.444</span><span class="p">]</span> <span class="o">********</span>
-  <span class="p">[</span><span class="mf">0.444</span><span class="p">,</span> <span class="mf">0.517</span><span class="p">]</span> <span class="o">***</span>
-  <span class="p">[</span><span class="mf">0.517</span><span class="p">,</span> <span class="mf">0.590</span><span class="p">]</span> <span class="o">*</span>
-  <span class="p">[</span><span class="mf">0.590</span><span class="p">,</span> <span class="mf">0.663</span><span class="p">]</span>
-  <span class="p">[</span><span class="mf">0.663</span><span class="p">,</span> <span class="mf">0.737</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.003</span><span class="p">,</span> <span class="mf">0.080</span><span class="p">]</span> <span class="o">****</span>
+  <span class="p">[</span><span class="mf">0.080</span><span class="p">,</span> <span class="mf">0.157</span><span class="p">]</span> <span class="o">*****************</span>
+  <span class="p">[</span><span class="mf">0.157</span><span class="p">,</span> <span class="mf">0.234</span><span class="p">]</span> <span class="o">****************************</span>
+  <span class="p">[</span><span class="mf">0.234</span><span class="p">,</span> <span class="mf">0.311</span><span class="p">]</span> <span class="o">**************************</span>
+  <span class="p">[</span><span class="mf">0.311</span><span class="p">,</span> <span class="mf">0.388</span><span class="p">]</span> <span class="o">***************</span>
+  <span class="p">[</span><span class="mf">0.388</span><span class="p">,</span> <span class="mf">0.465</span><span class="p">]</span> <span class="o">*******</span>
+  <span class="p">[</span><span class="mf">0.465</span><span class="p">,</span> <span class="mf">0.542</span><span class="p">]</span> <span class="o">**</span>
+  <span class="p">[</span><span class="mf">0.542</span><span class="p">,</span> <span class="mf">0.619</span><span class="p">]</span> <span class="o">*</span>
+  <span class="p">[</span><span class="mf">0.619</span><span class="p">,</span> <span class="mf">0.695</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.695</span><span class="p">,</span> <span class="mf">0.772</span><span class="p">]</span>
 <span class="n">Evaluate</span> <span class="n">MLP</span> <span class="n">to</span> <span class="n">obtain</span> <span class="n">forces</span> <span class="n">using</span> <span class="n">pypolymlp</span>
 <span class="n">Calculate</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">using</span> <span class="n">symfc</span>
-<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.080</span> <span class="n">meV</span>
+<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.145</span> <span class="n">meV</span>
 <span class="n">SSCHA</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">are</span> <span class="n">written</span> <span class="n">into</span> <span class="s2">&quot;phonopy_sscha_fc_6.yaml.xz&quot;</span><span class="o">.</span>
 
 <span class="p">[</span> <span class="n">SSCHA</span> <span class="n">iteration</span> <span class="mi">7</span> <span class="o">/</span> <span class="mi">10</span> <span class="p">]</span>
 <span class="n">Generate</span> <span class="mi">1000</span> <span class="n">supercells</span> <span class="k">with</span> <span class="n">displacements</span> <span class="n">at</span> <span class="mf">300.0</span> <span class="n">K</span>
-  <span class="p">[</span><span class="mf">0.003</span><span class="p">,</span> <span class="mf">0.080</span><span class="p">]</span> <span class="o">****</span>
-  <span class="p">[</span><span class="mf">0.080</span><span class="p">,</span> <span class="mf">0.157</span><span class="p">]</span> <span class="o">******************</span>
-  <span class="p">[</span><span class="mf">0.157</span><span class="p">,</span> <span class="mf">0.235</span><span class="p">]</span> <span class="o">*****************************</span>
-  <span class="p">[</span><span class="mf">0.235</span><span class="p">,</span> <span class="mf">0.312</span><span class="p">]</span> <span class="o">**************************</span>
-  <span class="p">[</span><span class="mf">0.312</span><span class="p">,</span> <span class="mf">0.389</span><span class="p">]</span> <span class="o">***************</span>
-  <span class="p">[</span><span class="mf">0.389</span><span class="p">,</span> <span class="mf">0.466</span><span class="p">]</span> <span class="o">******</span>
-  <span class="p">[</span><span class="mf">0.466</span><span class="p">,</span> <span class="mf">0.543</span><span class="p">]</span> <span class="o">**</span>
-  <span class="p">[</span><span class="mf">0.543</span><span class="p">,</span> <span class="mf">0.620</span><span class="p">]</span>
-  <span class="p">[</span><span class="mf">0.620</span><span class="p">,</span> <span class="mf">0.698</span><span class="p">]</span>
-  <span class="p">[</span><span class="mf">0.698</span><span class="p">,</span> <span class="mf">0.775</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.009</span><span class="p">,</span> <span class="mf">0.085</span><span class="p">]</span> <span class="o">****</span>
+  <span class="p">[</span><span class="mf">0.085</span><span class="p">,</span> <span class="mf">0.160</span><span class="p">]</span> <span class="o">******************</span>
+  <span class="p">[</span><span class="mf">0.160</span><span class="p">,</span> <span class="mf">0.236</span><span class="p">]</span> <span class="o">****************************</span>
+  <span class="p">[</span><span class="mf">0.236</span><span class="p">,</span> <span class="mf">0.311</span><span class="p">]</span> <span class="o">*************************</span>
+  <span class="p">[</span><span class="mf">0.311</span><span class="p">,</span> <span class="mf">0.386</span><span class="p">]</span> <span class="o">****************</span>
+  <span class="p">[</span><span class="mf">0.386</span><span class="p">,</span> <span class="mf">0.462</span><span class="p">]</span> <span class="o">*******</span>
+  <span class="p">[</span><span class="mf">0.462</span><span class="p">,</span> <span class="mf">0.537</span><span class="p">]</span> <span class="o">**</span>
+  <span class="p">[</span><span class="mf">0.537</span><span class="p">,</span> <span class="mf">0.612</span><span class="p">]</span> <span class="o">*</span>
+  <span class="p">[</span><span class="mf">0.612</span><span class="p">,</span> <span class="mf">0.688</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.688</span><span class="p">,</span> <span class="mf">0.763</span><span class="p">]</span>
 <span class="n">Evaluate</span> <span class="n">MLP</span> <span class="n">to</span> <span class="n">obtain</span> <span class="n">forces</span> <span class="n">using</span> <span class="n">pypolymlp</span>
 <span class="n">Calculate</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">using</span> <span class="n">symfc</span>
-<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.207</span> <span class="n">meV</span>
+<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.276</span> <span class="n">meV</span>
 <span class="n">SSCHA</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">are</span> <span class="n">written</span> <span class="n">into</span> <span class="s2">&quot;phonopy_sscha_fc_7.yaml.xz&quot;</span><span class="o">.</span>
 
 <span class="p">[</span> <span class="n">SSCHA</span> <span class="n">iteration</span> <span class="mi">8</span> <span class="o">/</span> <span class="mi">10</span> <span class="p">]</span>
 <span class="n">Generate</span> <span class="mi">1000</span> <span class="n">supercells</span> <span class="k">with</span> <span class="n">displacements</span> <span class="n">at</span> <span class="mf">300.0</span> <span class="n">K</span>
-  <span class="p">[</span><span class="mf">0.007</span><span class="p">,</span> <span class="mf">0.081</span><span class="p">]</span> <span class="o">****</span>
-  <span class="p">[</span><span class="mf">0.081</span><span class="p">,</span> <span class="mf">0.155</span><span class="p">]</span> <span class="o">*****************</span>
-  <span class="p">[</span><span class="mf">0.155</span><span class="p">,</span> <span class="mf">0.229</span><span class="p">]</span> <span class="o">***************************</span>
-  <span class="p">[</span><span class="mf">0.229</span><span class="p">,</span> <span class="mf">0.304</span><span class="p">]</span> <span class="o">**************************</span>
-  <span class="p">[</span><span class="mf">0.304</span><span class="p">,</span> <span class="mf">0.378</span><span class="p">]</span> <span class="o">****************</span>
-  <span class="p">[</span><span class="mf">0.378</span><span class="p">,</span> <span class="mf">0.452</span><span class="p">]</span> <span class="o">********</span>
-  <span class="p">[</span><span class="mf">0.452</span><span class="p">,</span> <span class="mf">0.526</span><span class="p">]</span> <span class="o">***</span>
-  <span class="p">[</span><span class="mf">0.526</span><span class="p">,</span> <span class="mf">0.600</span><span class="p">]</span> <span class="o">*</span>
-  <span class="p">[</span><span class="mf">0.600</span><span class="p">,</span> <span class="mf">0.674</span><span class="p">]</span>
-  <span class="p">[</span><span class="mf">0.674</span><span class="p">,</span> <span class="mf">0.748</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.006</span><span class="p">,</span> <span class="mf">0.089</span><span class="p">]</span> <span class="o">*****</span>
+  <span class="p">[</span><span class="mf">0.089</span><span class="p">,</span> <span class="mf">0.173</span><span class="p">]</span> <span class="o">**********************</span>
+  <span class="p">[</span><span class="mf">0.173</span><span class="p">,</span> <span class="mf">0.256</span><span class="p">]</span> <span class="o">*******************************</span>
+  <span class="p">[</span><span class="mf">0.256</span><span class="p">,</span> <span class="mf">0.339</span><span class="p">]</span> <span class="o">************************</span>
+  <span class="p">[</span><span class="mf">0.339</span><span class="p">,</span> <span class="mf">0.422</span><span class="p">]</span> <span class="o">*************</span>
+  <span class="p">[</span><span class="mf">0.422</span><span class="p">,</span> <span class="mf">0.506</span><span class="p">]</span> <span class="o">****</span>
+  <span class="p">[</span><span class="mf">0.506</span><span class="p">,</span> <span class="mf">0.589</span><span class="p">]</span> <span class="o">*</span>
+  <span class="p">[</span><span class="mf">0.589</span><span class="p">,</span> <span class="mf">0.672</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.672</span><span class="p">,</span> <span class="mf">0.756</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.756</span><span class="p">,</span> <span class="mf">0.839</span><span class="p">]</span>
 <span class="n">Evaluate</span> <span class="n">MLP</span> <span class="n">to</span> <span class="n">obtain</span> <span class="n">forces</span> <span class="n">using</span> <span class="n">pypolymlp</span>
 <span class="n">Calculate</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">using</span> <span class="n">symfc</span>
-<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.109</span> <span class="n">meV</span>
+<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.274</span> <span class="n">meV</span>
 <span class="n">SSCHA</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">are</span> <span class="n">written</span> <span class="n">into</span> <span class="s2">&quot;phonopy_sscha_fc_8.yaml.xz&quot;</span><span class="o">.</span>
 
 <span class="p">[</span> <span class="n">SSCHA</span> <span class="n">iteration</span> <span class="mi">9</span> <span class="o">/</span> <span class="mi">10</span> <span class="p">]</span>
 <span class="n">Generate</span> <span class="mi">1000</span> <span class="n">supercells</span> <span class="k">with</span> <span class="n">displacements</span> <span class="n">at</span> <span class="mf">300.0</span> <span class="n">K</span>
-  <span class="p">[</span><span class="mf">0.006</span><span class="p">,</span> <span class="mf">0.078</span><span class="p">]</span> <span class="o">***</span>
-  <span class="p">[</span><span class="mf">0.078</span><span class="p">,</span> <span class="mf">0.150</span><span class="p">]</span> <span class="o">****************</span>
-  <span class="p">[</span><span class="mf">0.150</span><span class="p">,</span> <span class="mf">0.223</span><span class="p">]</span> <span class="o">**************************</span>
-  <span class="p">[</span><span class="mf">0.223</span><span class="p">,</span> <span class="mf">0.295</span><span class="p">]</span> <span class="o">**************************</span>
-  <span class="p">[</span><span class="mf">0.295</span><span class="p">,</span> <span class="mf">0.367</span><span class="p">]</span> <span class="o">*****************</span>
-  <span class="p">[</span><span class="mf">0.367</span><span class="p">,</span> <span class="mf">0.440</span><span class="p">]</span> <span class="o">********</span>
-  <span class="p">[</span><span class="mf">0.440</span><span class="p">,</span> <span class="mf">0.512</span><span class="p">]</span> <span class="o">***</span>
-  <span class="p">[</span><span class="mf">0.512</span><span class="p">,</span> <span class="mf">0.584</span><span class="p">]</span> <span class="o">*</span>
-  <span class="p">[</span><span class="mf">0.584</span><span class="p">,</span> <span class="mf">0.656</span><span class="p">]</span>
-  <span class="p">[</span><span class="mf">0.656</span><span class="p">,</span> <span class="mf">0.729</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.009</span><span class="p">,</span> <span class="mf">0.087</span><span class="p">]</span> <span class="o">****</span>
+  <span class="p">[</span><span class="mf">0.087</span><span class="p">,</span> <span class="mf">0.165</span><span class="p">]</span> <span class="o">*******************</span>
+  <span class="p">[</span><span class="mf">0.165</span><span class="p">,</span> <span class="mf">0.243</span><span class="p">]</span> <span class="o">*****************************</span>
+  <span class="p">[</span><span class="mf">0.243</span><span class="p">,</span> <span class="mf">0.321</span><span class="p">]</span> <span class="o">*************************</span>
+  <span class="p">[</span><span class="mf">0.321</span><span class="p">,</span> <span class="mf">0.399</span><span class="p">]</span> <span class="o">**************</span>
+  <span class="p">[</span><span class="mf">0.399</span><span class="p">,</span> <span class="mf">0.477</span><span class="p">]</span> <span class="o">******</span>
+  <span class="p">[</span><span class="mf">0.477</span><span class="p">,</span> <span class="mf">0.555</span><span class="p">]</span> <span class="o">**</span>
+  <span class="p">[</span><span class="mf">0.555</span><span class="p">,</span> <span class="mf">0.633</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.633</span><span class="p">,</span> <span class="mf">0.712</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.712</span><span class="p">,</span> <span class="mf">0.790</span><span class="p">]</span>
 <span class="n">Evaluate</span> <span class="n">MLP</span> <span class="n">to</span> <span class="n">obtain</span> <span class="n">forces</span> <span class="n">using</span> <span class="n">pypolymlp</span>
 <span class="n">Calculate</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">using</span> <span class="n">symfc</span>
-<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.289</span> <span class="n">meV</span>
+<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.193</span> <span class="n">meV</span>
 <span class="n">SSCHA</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">are</span> <span class="n">written</span> <span class="n">into</span> <span class="s2">&quot;phonopy_sscha_fc_9.yaml.xz&quot;</span><span class="o">.</span>
 
 <span class="p">[</span> <span class="n">SSCHA</span> <span class="n">iteration</span> <span class="mi">10</span> <span class="o">/</span> <span class="mi">10</span> <span class="p">]</span>
 <span class="n">Generate</span> <span class="mi">1000</span> <span class="n">supercells</span> <span class="k">with</span> <span class="n">displacements</span> <span class="n">at</span> <span class="mf">300.0</span> <span class="n">K</span>
-  <span class="p">[</span><span class="mf">0.004</span><span class="p">,</span> <span class="mf">0.077</span><span class="p">]</span> <span class="o">***</span>
-  <span class="p">[</span><span class="mf">0.077</span><span class="p">,</span> <span class="mf">0.150</span><span class="p">]</span> <span class="o">****************</span>
-  <span class="p">[</span><span class="mf">0.150</span><span class="p">,</span> <span class="mf">0.224</span><span class="p">]</span> <span class="o">***************************</span>
-  <span class="p">[</span><span class="mf">0.224</span><span class="p">,</span> <span class="mf">0.297</span><span class="p">]</span> <span class="o">**************************</span>
-  <span class="p">[</span><span class="mf">0.297</span><span class="p">,</span> <span class="mf">0.370</span><span class="p">]</span> <span class="o">*****************</span>
-  <span class="p">[</span><span class="mf">0.370</span><span class="p">,</span> <span class="mf">0.443</span><span class="p">]</span> <span class="o">********</span>
-  <span class="p">[</span><span class="mf">0.443</span><span class="p">,</span> <span class="mf">0.517</span><span class="p">]</span> <span class="o">***</span>
-  <span class="p">[</span><span class="mf">0.517</span><span class="p">,</span> <span class="mf">0.590</span><span class="p">]</span> <span class="o">*</span>
-  <span class="p">[</span><span class="mf">0.590</span><span class="p">,</span> <span class="mf">0.663</span><span class="p">]</span>
-  <span class="p">[</span><span class="mf">0.663</span><span class="p">,</span> <span class="mf">0.737</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.004</span><span class="p">,</span> <span class="mf">0.080</span><span class="p">]</span> <span class="o">***</span>
+  <span class="p">[</span><span class="mf">0.080</span><span class="p">,</span> <span class="mf">0.156</span><span class="p">]</span> <span class="o">*****************</span>
+  <span class="p">[</span><span class="mf">0.156</span><span class="p">,</span> <span class="mf">0.232</span><span class="p">]</span> <span class="o">****************************</span>
+  <span class="p">[</span><span class="mf">0.232</span><span class="p">,</span> <span class="mf">0.308</span><span class="p">]</span> <span class="o">**************************</span>
+  <span class="p">[</span><span class="mf">0.308</span><span class="p">,</span> <span class="mf">0.384</span><span class="p">]</span> <span class="o">****************</span>
+  <span class="p">[</span><span class="mf">0.384</span><span class="p">,</span> <span class="mf">0.460</span><span class="p">]</span> <span class="o">*******</span>
+  <span class="p">[</span><span class="mf">0.460</span><span class="p">,</span> <span class="mf">0.536</span><span class="p">]</span> <span class="o">**</span>
+  <span class="p">[</span><span class="mf">0.536</span><span class="p">,</span> <span class="mf">0.611</span><span class="p">]</span> <span class="o">*</span>
+  <span class="p">[</span><span class="mf">0.611</span><span class="p">,</span> <span class="mf">0.687</span><span class="p">]</span>
+  <span class="p">[</span><span class="mf">0.687</span><span class="p">,</span> <span class="mf">0.763</span><span class="p">]</span>
 <span class="n">Evaluate</span> <span class="n">MLP</span> <span class="n">to</span> <span class="n">obtain</span> <span class="n">forces</span> <span class="n">using</span> <span class="n">pypolymlp</span>
 <span class="n">Calculate</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">using</span> <span class="n">symfc</span>
-<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.375</span> <span class="n">meV</span>
+<span class="n">SSCHA</span> <span class="n">free</span> <span class="n">energy</span><span class="p">:</span> <span class="o">-</span><span class="mf">98.270</span> <span class="n">meV</span>
 <span class="n">SSCHA</span> <span class="n">force</span> <span class="n">constants</span> <span class="n">are</span> <span class="n">written</span> <span class="n">into</span> <span class="s2">&quot;phonopy_sscha_fc_10.yaml.xz&quot;</span><span class="o">.</span>
 
 <span class="o">--------------------------------</span> <span class="n">SSCHA</span> <span class="n">end</span> <span class="o">---------------------------------</span>
@@ -844,7 +845,7 @@ displacements, temperature dependent force constants are calculated with the
 <span class="o">----------------------------------------------------------------------------</span>
 
 <span class="n">Summary</span> <span class="n">of</span> <span class="n">calculation</span> <span class="n">was</span> <span class="n">written</span> <span class="ow">in</span> <span class="s2">&quot;phonopy.yaml&quot;</span><span class="o">.</span>
-<span class="o">-------------------------</span><span class="p">[</span><span class="n">time</span> <span class="mi">2025</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">15</span> <span class="mi">13</span><span class="p">:</span><span class="mi">28</span><span class="p">:</span><span class="mi">36</span><span class="p">]</span><span class="o">-------------------------</span>
+<span class="o">-------------------------</span><span class="p">[</span><span class="n">time</span> <span class="mi">2025</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">19</span> <span class="mi">17</span><span class="p">:</span><span class="mi">48</span><span class="p">:</span><span class="mi">18</span><span class="p">]</span><span class="o">-------------------------</span>
                  <span class="n">_</span>
    <span class="n">___</span> <span class="n">_</span> <span class="n">__</span>   <span class="n">__</span><span class="o">|</span> <span class="o">|</span>
   <span class="o">/</span> <span class="n">_</span> \ <span class="s1">&#39;_ \ / _` |</span>

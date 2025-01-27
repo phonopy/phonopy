@@ -2,6 +2,11 @@
 
 # Change Log
 
+## Jan-27-2025: Version 2.35.0
+
+- Update for Windows build: `dtype="long"` was replaced by `dtype="int64"`. In
+  C, `long` was replaced by `int64_t`.
+
 ## Jan-16-2025: Version 2.34.1
 
 - Maintenance release including minor updates and bug fix.
