@@ -39,7 +39,7 @@ jobs:
         python -m cibuildwheel --output-dir wheelhouse
       env:
         CIBW_SKIP: "cp39-* pp*"
-        CIBW_ARCHS_MACOS: "x86_64 arm64"
+        # CIBW_ARCHS_MACOS: "x86_64 arm64"
         CIBW_BUILD_VERBOSITY: 1
 
     - name: Build wheels on windows
