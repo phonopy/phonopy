@@ -35,6 +35,8 @@
 #ifndef __rgrid_H__
 #define __rgrid_H__
 
+#include <stdint.h>
+
 /* #define GRID_ORDER_XYZ */
 /* This changes behaviour of index order of address. */
 /* Without GRID_ORDER_XYZ, left most element of address runs first. */
@@ -70,9 +72,11 @@
 /* without GRID_BOUNDARY_AS_NEGATIVE, e.g., [-2, -1, 0, 1, 2, 3]. */
 /* with GRID_BOUNDARY_AS_NEGATIVE, e.g., [-3, -2, -1, 0, 1, 2]. */
 
-long rgd_get_double_grid_index(const long address_double[3],
-                               const long mesh[3]);
-void rgd_get_double_grid_address(long address_double[3], const long address[3],
-                                 const long mesh[3], const long is_shift[3]);
+int64_t rgd_get_double_grid_index(const int64_t address_double[3],
+                                  const int64_t mesh[3]);
+void rgd_get_double_grid_address(int64_t address_double[3],
+                                 const int64_t address[3],
+                                 const int64_t mesh[3],
+                                 const int64_t is_shift[3]);
 
 #endif
