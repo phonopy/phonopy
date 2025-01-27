@@ -30,7 +30,7 @@ MLPs. This file under current directory is read when running phonopy with the
 `--pypolymlp` option. To perform the SSCHA calculation, execute:
 
 ```
-% phonopy-load phonopy_mlpsscha_params_KCl-120.yaml.xz --pypolymlp --sscha 10 --rd-temperature 300
+% phonopy-load phonopy_mlpsscha_params_KCl-120.yaml.xz --pypolymlp --sscha 10 --rd-temperature 300 --rd 1000
 ```
 
 The calculated SSCHA force constants are stored in

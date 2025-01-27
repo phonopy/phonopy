@@ -42,8 +42,8 @@ def test_Amm2(langs):
         primitive,
         frequencies,
         mesh,
-        np.array(grid_address, dtype="long"),
-        np.array(grid_mapping_table, dtype="long"),
+        np.array(grid_address, dtype="int64"),
+        np.array(grid_mapping_table, dtype="int64"),
         ir_grid_points,
         lang=langs[0],
     )
