@@ -73,7 +73,7 @@ class MLPSSCHA:
         max_iterations : int, optional
             Maximum number of iterations, by default 10.
         distance : float, optional
-            Distance of displacements, by default is None, which gives 0.001.
+            Distance of displacements, by default is None, which gives 0.01.
         fc_calculator : str, optional
             Force constants calculator. The default is None, which means "symfc".
         log_level : int, optional
@@ -97,7 +97,7 @@ class MLPSSCHA:
             self._max_iterations = max_iterations
         self._max_iterations = max_iterations
         if distance is None:
-            self._distance = 0.001
+            self._distance = 0.01
         else:
             self._distance = distance
         if fc_calculator is None:

@@ -190,13 +190,18 @@ class SymfcFCSolver:
         """Return indices of translationally independent atoms."""
         return self._symfc.p2s_map
 
+    @property
+    def basis_set(self) -> dict:
+        """Return basis set."""
+        return self._symfc.basis_set
+
     def estimate_numbers_of_supercells(
         self,
         max_order: Optional[int] = None,
         orders: Optional[list] = None,
     ) -> dict[int]:
         """Estimate numbers of supercells."""
-        basis_set = self._compute_basis_set(orders=orders, max_order=max_order)
+        basis_set = self.compute_basis_set(orders=orders, max_order=max_order)
         n_scells = {}
         for key, value in basis_set.items():
             n3 = value.translation_permutations.shape[1] * 3
@@ -223,10 +228,10 @@ class SymfcFCSolver:
             numbers=supercell.numbers,
         )
         spacegroup_operations = symmetry.symmetry_operations if symmetry else None
-
         self._symfc = Symfc(
             symfc_supercell,
             spacegroup_operations=spacegroup_operations,
+            cutoff=self._options.get("cutoff"),
             use_mkl=self._options.get("use_mkl", False),
             log_level=self._log_level - 1 if self._log_level else 0,
         )
@@ -234,7 +239,7 @@ class SymfcFCSolver:
             self._symfc.displacements = displacements
             self._symfc.forces = forces
 
-    def _compute_basis_set(
+    def compute_basis_set(
         self,
         max_order: Optional[int] = None,
         orders: Optional[list] = None,
@@ -289,7 +294,10 @@ def parse_symfc_options(options: Optional[Union[str, dict]]) -> dict:
                 break
             key, val = key_val
             if key == "cutoff":
-                options_dict[key] = float(val)
+                try:
+                    options_dict[key] = {3: float(val)}
+                except ValueError:
+                    print("Warning: Cutoff value must be float.")
             if key == "use_mkl":
                 if val.strip().lower() == "true":
                     options_dict[key] = True

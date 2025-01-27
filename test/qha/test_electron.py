@@ -201,7 +201,7 @@ def test_Al():
             12,
             6,
         ],
-        dtype="long",
+        dtype="int64",
     )
     eigvals = np.reshape([float(x) for x in eigvals_Al.split()], (1, len(weights), -1))
     n_electrons = 3.0

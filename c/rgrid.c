@@ -36,23 +36,27 @@
 
 #include <assert.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 
-static long get_double_grid_index(const long address_double[3],
-                                  const long mesh[3]);
-static long get_grid_index_single_mesh(const long address[3],
-                                       const long mesh[3]);
-static void reduce_double_grid_address(long address[3], const long mesh[3]);
-static long mat_modulo_l(const long a, const long b);
+static int64_t get_double_grid_index(const int64_t address_double[3],
+                                     const int64_t mesh[3]);
+static int64_t get_grid_index_single_mesh(const int64_t address[3],
+                                          const int64_t mesh[3]);
+static void reduce_double_grid_address(int64_t address[3],
+                                       const int64_t mesh[3]);
+static int64_t mat_modulo_l(const int64_t a, const int64_t b);
 
-long rgd_get_double_grid_index(const long address_double[3],
-                               const long mesh[3]) {
+int64_t rgd_get_double_grid_index(const int64_t address_double[3],
+                                  const int64_t mesh[3]) {
     return get_double_grid_index(address_double, mesh);
 }
 
-void rgd_get_double_grid_address(long address_double[3], const long address[3],
-                                 const long mesh[3], const long is_shift[3]) {
-    long i;
+void rgd_get_double_grid_address(int64_t address_double[3],
+                                 const int64_t address[3],
+                                 const int64_t mesh[3],
+                                 const int64_t is_shift[3]) {
+    int64_t i;
 
     for (i = 0; i < 3; i++) {
         address_double[i] = address[i] * 2 + (is_shift[i] != 0);
@@ -60,10 +64,10 @@ void rgd_get_double_grid_address(long address_double[3], const long address[3],
     reduce_double_grid_address(address_double, mesh);
 }
 
-static long get_double_grid_index(const long address_double[3],
-                                  const long mesh[3]) {
-    long i;
-    long address[3];
+static int64_t get_double_grid_index(const int64_t address_double[3],
+                                     const int64_t mesh[3]) {
+    int64_t i;
+    int64_t address[3];
 
     for (i = 0; i < 3; i++) {
         if (address_double[i] % 2 == 0) {
@@ -77,19 +81,20 @@ static long get_double_grid_index(const long address_double[3],
     return get_grid_index_single_mesh(address, mesh);
 }
 
-static long get_grid_index_single_mesh(const long address[3],
-                                       const long mesh[3]) {
+static int64_t get_grid_index_single_mesh(const int64_t address[3],
+                                          const int64_t mesh[3]) {
 #ifndef GRID_ORDER_XYZ
-    return (address[2] * mesh[0] * (long)(mesh[1]) + address[1] * mesh[0] +
+    return (address[2] * mesh[0] * (int64_t)(mesh[1]) + address[1] * mesh[0] +
             address[0]);
 #else
-    return (address[0] * mesh[1] * (long)(mesh[2]) + address[1] * mesh[2] +
+    return (address[0] * mesh[1] * (int64_t)(mesh[2]) + address[1] * mesh[2] +
             address[2]);
 #endif
 }
 
-static void reduce_double_grid_address(long address[3], const long mesh[3]) {
-    long i;
+static void reduce_double_grid_address(int64_t address[3],
+                                       const int64_t mesh[3]) {
+    int64_t i;
 
     for (i = 0; i < 3; i++) {
 #ifndef GRID_BOUNDARY_AS_NEGATIVE
@@ -100,8 +105,8 @@ static void reduce_double_grid_address(long address[3], const long mesh[3]) {
     }
 }
 
-static long mat_modulo_l(const long a, const long b) {
-    long c;
+static int64_t mat_modulo_l(const int64_t a, const int64_t b) {
+    int64_t c;
     c = a % b;
     if (c < 0) {
         c += b;
