@@ -179,3 +179,173 @@ def _test_phonopy_atoms(cell: PhonopyAtoms):
 
         if magmoms:
             np.testing.assert_allclose(cell.magnetic_moments, magmoms, atol=1e-8)
+
+
+def test_formula():
+    """Test of PhonopyAtoms formula property."""
+    # Test SiO2
+    assert cell_SiO2.formula == "O4Si2"
+
+    # Test AcO2
+    assert cell_AcO2.formula == "Ac2O4"
+
+    # Test with indexed symbols
+    cell = PhonopyAtoms(
+        cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        scaled_positions=[[0, 0, 0], [0.5, 0.5, 0.5]],
+        symbols=["Fe", "Fe1"],
+        masses=[55.845, 55.845],  # Add masses for Fe
+    )
+    assert cell.formula == "Fe2"
+
+    # Test single atom
+    cell = PhonopyAtoms(
+        cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        scaled_positions=[[0, 0, 0]],
+        symbols=["H"],
+    )
+    assert cell.formula == "H"
+
+    # Test edge cases
+    # Empty cell
+    cell = PhonopyAtoms(
+        cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        scaled_positions=[],
+        symbols=[],
+    )
+    assert cell.formula == ""
+
+    # Multiple digit indices
+    cell = PhonopyAtoms(
+        cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        scaled_positions=[[0, 0, 0], [0.5, 0, 0]],
+        symbols=["Fe11", "Fe2"],
+        masses=[55.845, 55.845],
+    )
+    assert cell.formula == "Fe2"
+
+
+def test_formula_complex():
+    """Test formula property with more complex structures."""
+    # Test structure with multiple elements
+    cell = PhonopyAtoms(
+        cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        scaled_positions=[[0, 0, 0], [0.5, 0, 0], [0, 0.5, 0], [0, 0, 0.5]],
+        symbols=["Fe", "O", "O", "Ti"],
+    )
+    assert cell.formula == "FeO2Ti"
+
+    # Test structure with indexed symbols
+    cell = PhonopyAtoms(
+        cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        scaled_positions=[[0, 0, 0], [0.5, 0, 0], [0, 0.5, 0]],
+        symbols=["Fe1", "Fe2", "O"],
+        masses=[55.845, 55.845, 15.999],  # Add masses for Fe and O
+    )
+    assert cell.formula == "Fe2O"
+
+
+def test_reduced_formula():
+    """Test reduced_formula property."""
+    # Test reduction of larger numbers
+    cell = PhonopyAtoms(
+        cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        scaled_positions=[[0, 0, 0], [0.5, 0, 0], [0, 0.5, 0], [0.5, 0.5, 0]],
+        symbols=["Fe", "Fe", "O", "O"],
+    )
+    assert cell.formula == "Fe2O2"
+    assert cell.reduced_formula == "FeO"
+
+    # Test no reduction needed
+    cell = PhonopyAtoms(
+        cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        scaled_positions=[[0, 0, 0], [0.5, 0, 0], [0, 0.5, 0]],
+        symbols=["Fe", "O", "O"],
+    )
+    assert cell.formula == "FeO2"
+    assert cell.reduced_formula == "FeO2"
+
+    # Test with indexed symbols
+    cell = PhonopyAtoms(
+        cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        scaled_positions=[[0, 0, 0], [0.5, 0, 0], [0, 0.5, 0], [0.5, 0.5, 0]],
+        symbols=["Fe1", "Fe2", "O1", "O2"],
+        masses=[55.845, 55.845, 15.999, 15.999],  # Add masses for Fe and O
+    )
+    assert cell.formula == "Fe2O2"
+    assert cell.reduced_formula == "FeO"
+
+    # Test single atom
+    cell = PhonopyAtoms(
+        cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        scaled_positions=[[0, 0, 0]],
+        symbols=["H"],
+    )
+    assert cell.formula == "H"
+    assert cell.reduced_formula == "H"
+
+    # Test edge cases
+    # Empty cell
+    cell = PhonopyAtoms(
+        cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        scaled_positions=[],
+        symbols=[],
+    )
+    assert cell.reduced_formula == ""
+
+    # Large numbers that reduce
+    cell = PhonopyAtoms(
+        cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        scaled_positions=[[0, 0, 0]] * 12,
+        symbols=["Fe"] * 6 + ["O"] * 6,
+    )
+    assert cell.formula == "Fe6O6"
+    assert cell.reduced_formula == "FeO"
+
+    # Prime numbers that don't reduce
+    cell = PhonopyAtoms(
+        cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        scaled_positions=[[0, 0, 0]] * 5,
+        symbols=["Fe"] * 2 + ["O"] * 3,
+    )
+    assert cell.formula == "Fe2O3"
+    assert cell.reduced_formula == "Fe2O3"
+
+
+@pytest.mark.parametrize(
+    "symbols,expected_formula,expected_normalized",
+    [
+        (["Fe", "Fe", "O", "O"], "Fe2O2", "Fe0.5O0.5"),
+        (["Fe", "O", "O"], "FeO2", "Fe0.333O0.667"),
+        (["Fe", "Fe", "O", "O", "O"], "Fe2O3", "Fe0.4O0.6"),
+        (["H"], "H", "H1.0"),
+        ([], "", ""),
+        (["Fe"] * 6 + ["O"] * 6, "Fe6O6", "Fe0.5O0.5"),
+        # Test with indexed symbols
+        (["Fe1", "Fe2", "O"], "Fe2O", "Fe0.667O0.333"),
+    ],
+)
+def test_formulas(symbols, expected_formula, expected_normalized):
+    """Test all formula properties."""
+    # Create cell with appropriate masses for indexed symbols
+    masses = None
+    if any(s.rstrip("0123456789") != s for s in symbols):
+        masses = []
+        for s in symbols:
+            base = s.rstrip("0123456789")
+            if base == "Fe":
+                masses.append(55.845)
+            elif base == "O":
+                masses.append(15.999)
+            elif base == "H":
+                masses.append(1.008)
+
+    cell = PhonopyAtoms(
+        cell=[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        scaled_positions=[[0, 0, 0]] * len(symbols),
+        symbols=symbols,
+        masses=masses,
+    )
+
+    assert cell.formula == expected_formula
+    assert cell.normalized_formula == expected_normalized
