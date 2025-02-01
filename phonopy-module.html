@@ -511,7 +511,7 @@ as follows:</p>
 </pre></div>
 </div>
 <p>This is set to the <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> object by:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonopy</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">displacement_dataset</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">displacement_dataset</span>
 </pre></div>
 </div>
 <p>From the set of displacements and forces, force constants internally with
@@ -898,77 +898,38 @@ follows that of input crystal structure.</p>
 </section>
 <section id="load-phonopy-settings-phonopy-load">
 <span id="phonopy-load"></span><h2>Load phonopy settings <code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code><a class="headerlink" href="#load-phonopy-settings-phonopy-load" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code> is a convenient function for creating a Phonopy instance by
-loading data from a <code class="docutils literal notranslate"><span class="pre">phonopy_xxx.yaml</span></code> file, which may contain the necessary
-information to run phonopy. A typical usage example is:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;phonopy_params.yaml&quot;</span><span class="p">)</span>
+<p><code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code> is a convenient function that creates a <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> instance by
+loading data from a <code class="docutils literal notranslate"><span class="pre">phonopy_xxx.yaml</span></code> file, which may include all the necessary
+information to run phonopy. A typical usage is:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
+<span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;phonopy_params.yaml&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>To avoid producing force constants,</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code> contains a displacement-force dataset and you want to
+avoid producing force constants, set <code class="docutils literal notranslate"><span class="pre">produce_fc=False</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;phonopy_params.yaml&quot;</span><span class="p">,</span> <span class="n">produce_fc</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The details are found in the docstring:</p>
+<p>Alternatively, if you have either <code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code> (or <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code>) along
+with a <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file, you can create a <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> object like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;phonopy.yaml&quot;</span><span class="p">,</span> <span class="n">force_sets_filename</span><span class="o">=</span><span class="s2">&quot;FORCE_SETS&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this case, the command reads the structure information from <code class="docutils literal notranslate"><span class="pre">phonopy.yaml</span></code>
+and the displacement-force data from <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> to create the <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code>
+instance.</p>
+<p>If your current directory contains the following files:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>ls
+BORN<span class="w">  </span>FORCE_SETS<span class="w">  </span>phonopy.yaml
+</pre></div>
+</div>
+<p>then both the <code class="docutils literal notranslate"><span class="pre">BORN</span></code> and <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> files will be read automatically by</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;phonopy.yaml&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For more details, see the function’s docstring:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
 <span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">help</span><span class="p">(</span><span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>More detailed control can be performed using <code class="docutils literal notranslate"><span class="pre">phonopy.load</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">supercell_matrix</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
-                      <span class="n">primitive_matrix</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span>
-                      <span class="n">unitcell_filename</span><span class="o">=</span><span class="s2">&quot;POSCAR&quot;</span><span class="p">,</span>
-                      <span class="n">force_constants_filename</span><span class="o">=</span><span class="s2">&quot;force_constants.hdf5&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>With <code class="docutils literal notranslate"><span class="pre">is_nac=True</span></code> (default), <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file in the current directory is read if it
-exists. If supercell is passed and <code class="docutils literal notranslate"><span class="pre">primitive</span> <span class="pre">matrix</span></code> and <code class="docutils literal notranslate"><span class="pre">supercell_matrix</span></code> are
-not set, the primitive cell is automatically searched:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">supercell_filename</span><span class="o">=</span><span class="s2">&quot;SPOSCAR&quot;</span><span class="p">,</span>
-                      <span class="n">force_constants_filename</span><span class="o">=</span><span class="s2">&quot;force_constants.hdf5&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>If <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> exists in the current directory, this below works to be ready
-for post-process calculation with automatic choice of primitive matrix:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">phonon</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">supercell_filename</span><span class="o">=</span><span class="s2">&quot;SPOSCAR&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>For example, in the <code class="docutils literal notranslate"><span class="pre">example/NaCl</span></code> directory, phonon band structure of NaCl is
-easily plotted by</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="kn">import</span><span class="w"> </span><span class="nn">phonopy</span>
-
-<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">ph</span> <span class="o">=</span> <span class="n">phonopy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">supercell_filename</span><span class="o">=</span><span class="s2">&quot;SPOSCAR&quot;</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">Supercell</span> <span class="n">structure</span> <span class="n">was</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">&quot;SPOSCAR&quot;</span><span class="o">.</span>
-<span class="n">NAC</span> <span class="n">params</span> <span class="n">were</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">&quot;BORN&quot;</span><span class="o">.</span>
-<span class="n">Force</span> <span class="n">constants</span> <span class="n">were</span> <span class="n">read</span> <span class="kn">from</span><span class="w"> </span><span class="s2">&quot;FORCE_CONSTANTS&quot;</span><span class="o">.</span>
-
-<span class="n">In</span> <span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="nb">print</span><span class="p">(</span><span class="n">ph</span><span class="o">.</span><span class="n">primitive</span><span class="p">)</span>
-<span class="n">lattice</span><span class="p">:</span>
-<span class="o">-</span> <span class="p">[</span>     <span class="mf">0.000000000000000</span><span class="p">,</span>     <span class="mf">2.845150738087836</span><span class="p">,</span>     <span class="mf">2.845150738087836</span> <span class="p">]</span> <span class="c1"># a</span>
-<span class="o">-</span> <span class="p">[</span>     <span class="mf">2.845150738087836</span><span class="p">,</span>     <span class="mf">0.000000000000000</span><span class="p">,</span>     <span class="mf">2.845150738087836</span> <span class="p">]</span> <span class="c1"># b</span>
-<span class="o">-</span> <span class="p">[</span>     <span class="mf">2.845150738087836</span><span class="p">,</span>     <span class="mf">2.845150738087836</span><span class="p">,</span>     <span class="mf">0.000000000000000</span> <span class="p">]</span> <span class="c1"># c</span>
-<span class="n">points</span><span class="p">:</span>
-<span class="o">-</span> <span class="n">symbol</span><span class="p">:</span> <span class="n">Na</span> <span class="c1"># 1</span>
-  <span class="n">coordinates</span><span class="p">:</span> <span class="p">[</span>  <span class="mf">0.000000000000000</span><span class="p">,</span>  <span class="mf">0.000000000000000</span><span class="p">,</span>  <span class="mf">0.000000000000000</span> <span class="p">]</span>
-  <span class="n">mass</span><span class="p">:</span> <span class="mf">22.989769</span>
-<span class="o">-</span> <span class="n">symbol</span><span class="p">:</span> <span class="n">Cl</span> <span class="c1"># 2</span>
-  <span class="n">coordinates</span><span class="p">:</span> <span class="p">[</span>  <span class="mf">0.500000000000000</span><span class="p">,</span>  <span class="mf">0.500000000000000</span><span class="p">,</span>  <span class="mf">0.500000000000000</span> <span class="p">]</span>
-  <span class="n">mass</span><span class="p">:</span> <span class="mf">35.453000</span>
-
-<span class="n">In</span> <span class="p">[</span><span class="mi">4</span><span class="p">]:</span> <span class="n">ph</span><span class="o">.</span><span class="n">nac_params</span>
-<span class="n">Out</span><span class="p">[</span><span class="mi">4</span><span class="p">]:</span>
-<span class="p">{</span><span class="s1">&#39;born&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([[[</span> <span class="mf">1.08703000e+00</span><span class="p">,</span> <span class="o">-</span><span class="mf">5.17677526e-34</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.06309751e-33</span><span class="p">],</span>
-         <span class="p">[</span><span class="o">-</span><span class="mf">5.45419984e-34</span><span class="p">,</span>  <span class="mf">1.08703000e+00</span><span class="p">,</span>  <span class="mf">1.06309751e-33</span><span class="p">],</span>
-         <span class="p">[</span> <span class="mf">0.00000000e+00</span><span class="p">,</span>  <span class="mf">3.08148791e-33</span><span class="p">,</span>  <span class="mf">1.08703000e+00</span><span class="p">]],</span>
-
-        <span class="p">[[</span><span class="o">-</span><span class="mf">1.08672000e+00</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.93244455e-35</span><span class="p">,</span>  <span class="mf">5.15939995e-34</span><span class="p">],</span>
-         <span class="p">[</span> <span class="mf">5.45264441e-34</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.08672000e+00</span><span class="p">,</span> <span class="o">-</span><span class="mf">5.15939995e-34</span><span class="p">],</span>
-         <span class="p">[</span> <span class="mf">0.00000000e+00</span><span class="p">,</span>  <span class="mf">0.00000000e+00</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.08672000e+00</span><span class="p">]]]),</span>
- <span class="s1">&#39;factor&#39;</span><span class="p">:</span> <span class="mf">14.4</span><span class="p">,</span>
- <span class="s1">&#39;dielectric&#39;</span><span class="p">:</span> <span class="n">array</span><span class="p">([[</span><span class="mf">2.43533967</span><span class="p">,</span> <span class="mf">0.</span>        <span class="p">,</span> <span class="mf">0.</span>        <span class="p">],</span>
-        <span class="p">[</span><span class="mf">0.</span>        <span class="p">,</span> <span class="mf">2.43533967</span><span class="p">,</span> <span class="mf">0.</span>        <span class="p">],</span>
-        <span class="p">[</span><span class="mf">0.</span>        <span class="p">,</span> <span class="mf">0.</span>        <span class="p">,</span> <span class="mf">2.43533967</span><span class="p">]])}</span>
-
-<span class="n">In</span> <span class="p">[</span><span class="mi">5</span><span class="p">]:</span> <span class="n">ph</span><span class="o">.</span><span class="n">auto_band_structure</span><span class="p">(</span><span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 </section>
