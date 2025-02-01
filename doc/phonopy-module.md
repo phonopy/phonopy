@@ -146,8 +146,18 @@ displacement_dataset =
 This is set to the `Phonopy` object by:
 
 ```python
-phonopy.dataset = displacement_dataset
+phonon.dataset = displacement_dataset
 ```
+
+Alternatively, if you have `phonopy.yaml` and `FORCE_SETS` file and you want to
+create the `Phonopy` object:
+
+```python
+from phonopy.cui.load import load
+phonon = load("phonopy.yaml", force_sets_filename="FORCE_SETS")
+```
+It will read the required structure information from `phonopy.yaml` and displacement-force
+information from `FORCE_SETS` to make `Phonopy` object.
 
 From the set of displacements and forces, force constants internally with
 calculated supercell sets of forces by
