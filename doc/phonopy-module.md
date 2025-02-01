@@ -149,16 +149,6 @@ This is set to the `Phonopy` object by:
 phonon.dataset = displacement_dataset
 ```
 
-Alternatively, if you have `phonopy.yaml` and `FORCE_SETS` file and you want to
-create the `Phonopy` object:
-
-```python
-from phonopy.cui.load import load
-phonon = load("phonopy.yaml", force_sets_filename="FORCE_SETS")
-```
-It will read the required structure information from `phonopy.yaml` and displacement-force
-information from `FORCE_SETS` to make `Phonopy` object.
-
 From the set of displacements and forces, force constants internally with
 calculated supercell sets of forces by
 
@@ -613,92 +603,51 @@ follows that of input crystal structure.
 (phonopy_load)=
 ## Load phonopy settings `phonopy.load`
 
-`phonopy.load` is a convenient function for creating a Phonopy instance by
-loading data from a `phonopy_xxx.yaml` file, which may contain the necessary
-information to run phonopy. A typical usage example is:
+`phonopy.load` is a convenient function that creates a `Phonopy` instance by
+loading data from a `phonopy_xxx.yaml` file, which may include all the necessary
+information to run phonopy. A typical usage is:
 
 ```python
+import phonopy
 phonon = phonopy.load("phonopy_params.yaml")
 ```
 
-To avoid producing force constants,
+If `phonopy_params.yaml` contains a displacement-force dataset and you want to
+avoid producing force constants, set `produce_fc=False`:
 
 ```python
 phonon = phonopy.load("phonopy_params.yaml", produce_fc=False)
 ```
 
+Alternatively, if you have either `phonopy.yaml` (or `phonopy_disp.yaml`) along
+with a `FORCE_SETS` file, you can create a `Phonopy` object like this:
 
-The details are found in the docstring:
+```python
+phonon = phonopy.load("phonopy.yaml", force_sets_filename="FORCE_SETS")
+```
+
+In this case, the command reads the structure information from `phonopy.yaml`
+and the displacement-force data from `FORCE_SETS` to create the `Phonopy`
+instance.
+
+If your current directory contains the following files:
+
+```bash
+% ls
+BORN  FORCE_SETS  phonopy.yaml
+```
+
+then both the `BORN` and `FORCE_SETS` files will be read automatically by
+
+```python
+phonon = phonopy.load("phonopy.yaml")
+```
+
+For more details, see the function's docstring:
 
 ```python
 In [1]: import phonopy
 In [2]: help(phonopy.load)
-```
-
-More detailed control can be performed using `phonopy.load`.
-
-```python
-phonon = phonopy.load(supercell_matrix=[2, 2, 2],
-                      primitive_matrix='auto',
-                      unitcell_filename="POSCAR",
-                      force_constants_filename="force_constants.hdf5")
-```
-
-With `is_nac=True` (default), `BORN` file in the current directory is read if it
-exists. If supercell is passed and `primitive matrix` and `supercell_matrix` are
-not set, the primitive cell is automatically searched:
-
-```python
-phonon = phonopy.load(supercell_filename="SPOSCAR",
-                      force_constants_filename="force_constants.hdf5")
-```
-
-If `FORCE_SETS` exists in the current directory, this below works to be ready
-for post-process calculation with automatic choice of primitive matrix:
-
-```python
-phonon = phonopy.load(supercell_filename="SPOSCAR")
-```
-
-For example, in the `example/NaCl` directory, phonon band structure of NaCl is
-easily plotted by
-
-```python
-In [1]: import phonopy
-
-In [2]: ph = phonopy.load(supercell_filename="SPOSCAR", log_level=1)
-Supercell structure was read from "SPOSCAR".
-NAC params were read from "BORN".
-Force constants were read from "FORCE_CONSTANTS".
-
-In [3]: print(ph.primitive)
-lattice:
-- [     0.000000000000000,     2.845150738087836,     2.845150738087836 ] # a
-- [     2.845150738087836,     0.000000000000000,     2.845150738087836 ] # b
-- [     2.845150738087836,     2.845150738087836,     0.000000000000000 ] # c
-points:
-- symbol: Na # 1
-  coordinates: [  0.000000000000000,  0.000000000000000,  0.000000000000000 ]
-  mass: 22.989769
-- symbol: Cl # 2
-  coordinates: [  0.500000000000000,  0.500000000000000,  0.500000000000000 ]
-  mass: 35.453000
-
-In [4]: ph.nac_params
-Out[4]:
-{'born': array([[[ 1.08703000e+00, -5.17677526e-34, -1.06309751e-33],
-         [-5.45419984e-34,  1.08703000e+00,  1.06309751e-33],
-         [ 0.00000000e+00,  3.08148791e-33,  1.08703000e+00]],
-
-        [[-1.08672000e+00, -2.93244455e-35,  5.15939995e-34],
-         [ 5.45264441e-34, -1.08672000e+00, -5.15939995e-34],
-         [ 0.00000000e+00,  0.00000000e+00, -1.08672000e+00]]]),
- 'factor': 14.4,
- 'dielectric': array([[2.43533967, 0.        , 0.        ],
-        [0.        , 2.43533967, 0.        ],
-        [0.        , 0.        , 2.43533967]])}
-
-In [5]: ph.auto_band_structure(plot=True).show()
 ```
 
 (phonopy_read_write_structure)=
