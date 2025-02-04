@@ -209,3 +209,14 @@ really need. Then logout from the current shell (terminal) and open new shell
 
 `LDSHARED="icc -shared"` may be of help. See this github issues,
 <https://github.com/phonopy/phonopy/issues/123>.
+
+### Missing or unknown CXX compiler
+
+CMake errors may occur during installation related to the CXX compiler.
+
+This can typically be resolved by ensuring your C++ compiler is updated, and
+that the CXX environment variable
+(<https://cmake.org/cmake/help/latest/envvar/CXX.html>) is set.
+
+See this GitHub issue:
+<https://github.com/phonopy/phonopy/issues/439>.
