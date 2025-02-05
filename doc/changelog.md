@@ -2,6 +2,11 @@
 
 # Change Log
 
+## Feb-5-2025: Version 2.36.0
+
+- Minor change of estimating number of supercells with random displacements,
+  i.e., `--rd auto`. This requires symfc>1.3.0.
+
 ## Jan-27-2025: Version 2.35.0
 
 - Update for Windows build: `dtype="long"` was replaced by `dtype="int64"`. In
