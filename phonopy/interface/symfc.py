@@ -127,6 +127,7 @@ class SymfcFCSolver:
             self._options = {}
         else:
             self._options = options
+        self._supercell = supercell
         self._log_level = log_level
         self._orders = orders
         self._is_compact_fc = is_compact_fc
@@ -199,13 +200,14 @@ class SymfcFCSolver:
         self,
         max_order: Optional[int] = None,
         orders: Optional[list] = None,
-    ) -> dict[int]:
+    ) -> dict:
         """Estimate numbers of supercells."""
-        basis_set = self.compute_basis_set(orders=orders, max_order=max_order)
         n_scells = {}
-        for key, value in basis_set.items():
-            n3 = value.translation_permutations.shape[1] * 3
-            n_scells[key] = math.ceil(value.basis_set.shape[1] / n3)
+        basis_sizes = self._symfc.estimate_basis_size(
+            orders=orders, max_order=max_order
+        )
+        for order, basis_size in basis_sizes.items():
+            n_scells[order] = math.ceil(basis_size / len(self._symfc.supercell) / 3)
         return n_scells
 
     def _initialize(
