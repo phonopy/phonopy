@@ -99,7 +99,9 @@ def get_scaled_positions_lines(scaled_positions):
     return "\n".join(_get_scaled_positions_lines(scaled_positions))
 
 
-def sort_positions_by_symbols(symbols: Sequence, positions: np.ndarray):
+def sort_positions_by_symbols(
+    symbols: Sequence, positions: Optional[np.ndarray] = None
+):
     """Sort atomic positions by symbols.
 
     Sort positions by symbols (using the order defined by reduced_symbols)
@@ -117,8 +119,8 @@ def sort_positions_by_symbols(symbols: Sequence, positions: np.ndarray):
     symbols : list[str] or list[int] or np.ndarray[int]
         Sequence of hashable objects. This may be a list of chemical symbols
         or numbers.
-    positions : np.ndarray
-        Atomic positions.
+    positions : np.ndarray or None, optional
+        Atomic positions. When None, sorted_positions is also None.
 
     Returns
     -------
@@ -144,7 +146,11 @@ def sort_positions_by_symbols(symbols: Sequence, positions: np.ndarray):
     counts_list = [counts_dict[s] for s in reduced_symbols]
     sort_keys = [reduced_symbols.index(i) for i in symbols]
     perm = _argsort_stable(sort_keys)
-    sorted_positions = positions[perm]
+
+    if positions is None:
+        sorted_positions = None
+    else:
+        sorted_positions = positions[perm]
 
     return counts_list, reduced_symbols, sorted_positions, perm
 

@@ -1152,7 +1152,7 @@ class Phonopy:
                     SymfcFCSolver(
                         self._supercell, symmetry=self._symmetry
                     ).estimate_numbers_of_supercells(orders=[2])[2]
-                    * 2
+                    * 4
                 )
             else:
                 _number_of_snapshots = number_of_snapshots

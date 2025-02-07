@@ -43,6 +43,7 @@ from phonopy.interface.calculator import (
     write_crystal_structure,
 )
 from phonopy.interface.phonopy_yaml import PhonopyYaml
+from phonopy.interface.vasp import sort_positions_by_symbols
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import determinant, guess_primitive_matrix
 from phonopy.structure.symmetry import Symmetry
@@ -64,8 +65,11 @@ def check_symmetry(phonon: Phonopy, cell_info: dict):
     (bravais_lattice, bravais_pos, bravais_numbers) = spglib.refine_cell(
         phonon.primitive.totuple(), symprec
     )
+    _, _, _, perm = sort_positions_by_symbols(bravais_numbers)
     bravais = PhonopyAtoms(
-        numbers=bravais_numbers, scaled_positions=bravais_pos, cell=bravais_lattice
+        numbers=bravais_numbers[perm],
+        scaled_positions=bravais_pos[perm],
+        cell=bravais_lattice,
     )
     trans_mat = guess_primitive_matrix(bravais, symprec=symprec)
     ph = Phonopy(

@@ -91,7 +91,7 @@ def test_tio2_random_disp(
     d = ph_tio2.displacements
 
     if number_of_snapshots == "auto":
-        assert len(d) == 2 * (is_plusminus + 1)
+        assert len(d) == 4 * (is_plusminus + 1)
     else:
         assert len(d) == 4 * (is_plusminus + 1)
 
