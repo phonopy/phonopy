@@ -35,6 +35,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 from __future__ import annotations
 
+from typing import Optional
+
 import numpy as np
 
 from phonopy.file_IO import is_file_phonopy_yaml
@@ -53,7 +55,7 @@ def collect_cell_info(
     cell_filename=None,
     chemical_symbols=None,
     enforce_primitive_matrix_auto=False,
-    phonopy_yaml_cls: type[PhonopyYaml] = PhonopyYaml,
+    phonopy_yaml_cls: Optional[type[PhonopyYaml]] = None,
     load_phonopy_yaml: bool = False,
 ) -> dict:
     """Collect crystal structure information from input file and parameters.
@@ -102,7 +104,7 @@ def collect_cell_info(
     phonopy_yaml_cls : Class object, optional
         PhonopyYaml like class name. This is used to return its instance when
         needed. Default is None, which means PhonopyYaml class type. This can be
-        Phono3pyYaml class type.
+        Phono3pyYaml class type. Default is None.
     load_phonopy_yaml : bool
         True means phonopy-load mode.
 
@@ -138,9 +140,17 @@ def collect_cell_info(
     _cell_filename = cell_filename
     if load_phonopy_yaml or fallback_reason:
         _interface_mode = "phonopy_yaml"
-        if cell_filename is None or not is_file_phonopy_yaml(
-            cell_filename, keyword=phonopy_yaml_cls.command_name
-        ):
+        keyword = phonopy_yaml_cls.command_name
+        if _cell_filename is None:
+            pass
+        elif is_file_phonopy_yaml(_cell_filename, keyword=keyword):
+            # Readable as a phonopy.yaml
+            pass
+        elif is_file_phonopy_yaml(_cell_filename, keyword=None):
+            # Readable as yaml
+            pass
+        else:
+            # Not readable as yaml. Proceed to look for default file names.
             _cell_filename = None
     elif interface_mode is None:
         _interface_mode = None
@@ -180,7 +190,10 @@ def collect_cell_info(
     err_msg = []
     unitcell_filename = optional_structure_info[0]
     if supercell_matrix_out is None:
-        err_msg.append("Supercell matrix (DIM or --dim) information was not found.")
+        if _interface_mode == "phonopy_yaml":
+            err_msg.append(f"'supercell_matrix' not found  in \"{unitcell_filename}\".")
+        else:
+            err_msg.append("Supercell matrix information (DIM or --dim) was not found.")
         if _cell_filename is None and (
             unitcell_filename == get_default_cell_filename(interface_mode_out)
         ):
