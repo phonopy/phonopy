@@ -141,8 +141,10 @@ class PhonopyYamlLoaderBase(ABC):
 
     def _parse_command_header(self):
         if self._data.command_name in self._yaml:
-            header = self._yaml[self._data.command_name]
-            self._data.version = header["version"]
+            if self._data.command_name in self._yaml:
+                header = self._yaml[self._data.command_name]
+                if "version" in header:
+                    self._data.version = header["version"]
 
     def _parse_physical_units(self):
         if "physical_unit" in self._yaml:
