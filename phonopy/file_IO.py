@@ -809,16 +809,16 @@ def _expand_borns(borns, primitive: PhonopyAtoms, prim_symmetry: Symmetry):
 #
 # phonopy.yaml
 #
-def is_file_phonopy_yaml(filename, keyword="phonopy"):
+def is_file_phonopy_yaml(filename, keyword: Optional[str] = None):
     """Check whether the file is phonopy.yaml like file or not.
 
     Parameters
     ----------
     filename : str
         Filename.
-    keyword : str
+    keyword : str, optional
         When this keyword is found in dict keys returned by yaml loader,
-        this function return True.
+        this function return True. With None, just return True.
 
     Example
     -------
@@ -842,7 +842,7 @@ def is_file_phonopy_yaml(filename, keyword="phonopy"):
             data = yaml.load(f, Loader=Loader)
             if data is None:
                 return False
-            if keyword in data:
+            if keyword is None or keyword in data:
                 return True
             else:
                 return False
