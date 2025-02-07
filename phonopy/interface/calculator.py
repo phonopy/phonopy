@@ -35,7 +35,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 from __future__ import annotations
 
-import os
+import pathlib
 from argparse import ArgumentParser
 from collections.abc import Sequence
 from typing import Optional, Union
@@ -386,34 +386,34 @@ def read_crystal_structure(
     filename=None,
     interface_mode=None,
     chemical_symbols=None,
-    phonopy_yaml_cls: type[PhonopyYaml] = PhonopyYaml,
+    phonopy_yaml_cls: Optional[type[PhonopyYaml]] = None,
 ):
     """Return crystal structure from file in each calculator format.
 
     Parameters
     ----------
     filename : str, optional
-        Filename that contains cell structure information. Default is None.
-        The predetermined filename for each interface_mode is used.
+        Filename that contains cell structure information. Default is None. The
+        predetermined filename for each interface_mode is used.
     interface_mode : str, optional
-        This is used to recognize the file format. Default is None, which
-        is equivalent to 'vasp' mode.
+        This is used to recognize the file format. Default is None, which is
+        equivalent to 'vasp' mode.
     chemical_symbols : list of str, optional
         This is only used for 'vasp' mode. VASP POSCAR file format can be
-        written without chemical symbol information. With this option,
-        chemical symbols can be given.
+        written without chemical symbol information. With this option, chemical
+        symbols can be given.
     phonopy_yaml_cls : PhonopyYaml, optional
-        This brings PhonopyYaml-like class dependent parameters. Here,
-        currently only the default filenames are provided by this.
+        This brings PhonopyYaml-like class dependent parameters. Here, currently
+        only the default filenames are provided by this. Default is None.
 
     Returns
     -------
     tuple
         (Unit cell in PhonopyAtoms, optional_structure_info in tuple)
 
-        The optional_structure_info is given by a tuple. The first element of
-        it is the unit cell file name for which the unit cell data are read,
-        and the rest is dependent on calculator interface.
+        The optional_structure_info is given by a tuple. The first element of it
+        is the unit cell file name for which the unit cell data are read, and
+        the rest is dependent on calculator interface.
 
     """
     if interface_mode == "phonopy_yaml":
@@ -421,11 +421,11 @@ def read_crystal_structure(
 
     if filename is None:
         cell_filename = get_default_cell_filename(interface_mode)
-        if not os.path.isfile(cell_filename):
+        if not pathlib.Path(cell_filename).is_file():
             return None, (cell_filename, "(default file name)")
     else:
         cell_filename = filename
-        if not os.path.isfile(cell_filename):
+        if not pathlib.Path(cell_filename).is_file():
             return None, (cell_filename,)
 
     if interface_mode is None or interface_mode == "vasp":
@@ -835,33 +835,41 @@ def get_force_constant_conversion_factor(unit, interface_mode):
         return 1.0
 
 
-def _read_phonopy_yaml(filename, phonopy_yaml_cls: type[PhonopyYaml]):
+def _read_phonopy_yaml(
+    filename: str, phonopy_yaml_cls: Optional[type[PhonopyYaml]]
+) -> tuple[PhonopyAtoms, tuple]:
     cell_filename = _get_cell_filename(filename, phonopy_yaml_cls)
     if cell_filename is None:
         return None, (None, None)
 
-    phpy = phonopy_yaml_cls()
+    if phonopy_yaml_cls is None:
+        phyml = PhonopyYaml()
+    else:
+        phyml = phonopy_yaml_cls()
     try:
-        phpy.read(cell_filename)
+        phyml.read(cell_filename)
     except TypeError:  # yaml.load returns str: File format seems not YAML.
         return None, (cell_filename, None)
     except yaml.parser.ParserError:
         return None, (cell_filename, None)
 
-    cell = phpy.unitcell
-    return cell, (cell_filename, phpy)
+    cell = phyml.unitcell
+    return cell, (cell_filename, phyml)
 
 
-def _get_cell_filename(filename, phonopy_yaml_cls: type[PhonopyYaml]):
+def _get_cell_filename(
+    filename, phonopy_yaml_cls: Optional[type[PhonopyYaml]]
+) -> Optional[str]:
     cell_filename = None
 
     default_filenames = []
-    for fname in phonopy_yaml_cls.default_filenames:
-        for ext in get_supported_file_extensions_for_compression():
-            default_filenames.append(f"{fname}{ext}")
+    if phonopy_yaml_cls is not None:
+        for fname in phonopy_yaml_cls.default_filenames:
+            for ext in get_supported_file_extensions_for_compression():
+                default_filenames.append(f"{fname}{ext}")
 
     for fname in [filename] + default_filenames:
-        if fname and os.path.isfile(fname):
+        if fname and pathlib.Path(fname).is_file():
             cell_filename = fname
             break
     return cell_filename

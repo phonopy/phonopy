@@ -196,16 +196,25 @@ class SymfcFCSolver:
         """Return basis set."""
         return self._symfc.basis_set
 
+    def estimate_basis_size(
+        self,
+        max_order: Optional[int] = None,
+        orders: Optional[list] = None,
+    ) -> dict:
+        """Estimate basis size."""
+        basis_sizes = self._symfc.estimate_basis_size(
+            orders=orders, max_order=max_order
+        )
+        return basis_sizes
+
     def estimate_numbers_of_supercells(
         self,
         max_order: Optional[int] = None,
         orders: Optional[list] = None,
     ) -> dict:
         """Estimate numbers of supercells."""
+        basis_sizes = self.estimate_basis_size(max_order=max_order, orders=orders)
         n_scells = {}
-        basis_sizes = self._symfc.estimate_basis_size(
-            orders=orders, max_order=max_order
-        )
         for order, basis_size in basis_sizes.items():
             n_scells[order] = math.ceil(basis_size / len(self._symfc.supercell) / 3)
         return n_scells

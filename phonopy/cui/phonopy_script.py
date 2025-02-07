@@ -1878,6 +1878,7 @@ def _get_cell_info(
         cell_filename=cell_filename,
         chemical_symbols=settings.chemical_symbols,
         enforce_primitive_matrix_auto=_is_band_auto(settings),
+        phonopy_yaml_cls=PhonopyYaml,
         load_phonopy_yaml=load_phonopy_yaml,
     )
 
