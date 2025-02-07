@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Installation &#8212; Phonopy v.2.36.0</title>
+    <title>Installation &#8212; Phonopy v.2.37.0</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=ec07a9c7"></script>
+    <script src="_static/documentation_options.js?v=10dd9c2b"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -50,7 +50,7 @@
     <link rel="prev" title="Welcome to phonopy" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="2.36" />
+  <meta name="docsearch:version" content="2.37" />
   </head>
   
   
@@ -125,7 +125,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.36.0</p>
+    <p class="title logo__title">Phonopy v.2.37.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -342,6 +342,7 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#remove-previous-phonopy-installations">Remove previous phonopy installations</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#when-using-conda-environment-this-information-is-not-applicable">When using conda environment, this information is not applicable</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#missing-intel-libraries-when-building-from-source-using-icc">Missing Intel libraries when building from source using icc</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#missing-or-unknown-cxx-compiler">Missing or unknown CXX compiler</a></li>
 </ul>
 </li>
 </ul>
@@ -538,6 +539,15 @@ really need. Then logout from the current shell (terminal) and open new shell
 <p><code class="docutils literal notranslate"><span class="pre">LDSHARED=&quot;icc</span> <span class="pre">-shared&quot;</span></code> may be of help. See this github issues,
 <a class="github reference external" href="https://github.com/phonopy/phonopy/issues/123">phonopy/phonopy#123</a>.</p>
 </section>
+<section id="missing-or-unknown-cxx-compiler">
+<h3>Missing or unknown CXX compiler<a class="headerlink" href="#missing-or-unknown-cxx-compiler" title="Link to this heading">#</a></h3>
+<p>CMake errors may occur during installation related to the CXX compiler.</p>
+<p>This can typically be resolved by ensuring your C++ compiler is updated, and
+that the CXX environment variable
+(<a class="reference external" href="https://cmake.org/cmake/help/latest/envvar/CXX.html">https://cmake.org/cmake/help/latest/envvar/CXX.html</a>) is set.</p>
+<p>See this GitHub issue:
+<a class="github reference external" href="https://github.com/phonopy/phonopy/issues/439">phonopy/phonopy#439</a>.</p>
+</section>
 </section>
 </section>
 
@@ -602,6 +612,7 @@ really need. Then logout from the current shell (terminal) and open new shell
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#remove-previous-phonopy-installations">Remove previous phonopy installations</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#when-using-conda-environment-this-information-is-not-applicable">When using conda environment, this information is not applicable</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#missing-intel-libraries-when-building-from-source-using-icc">Missing Intel libraries when building from source using icc</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#missing-or-unknown-cxx-compiler">Missing or unknown CXX compiler</a></li>
 </ul>
 </li>
 </ul>
