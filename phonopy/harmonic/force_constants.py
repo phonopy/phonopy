@@ -76,11 +76,17 @@ class FDFCSolver:
     def __init__(
         self,
         supercell: PhonopyAtoms,
+        primitive: Optional[Primitive],
         symmetry: Symmetry,
         dataset: dict,
-        atom_list: Optional[Union[Sequence[int], np.ndarray]] = None,
-        primitive: Optional[Primitive] = None,
+        is_compact_fc: bool = False,
+        log_level: int = 0,  # currently not used
     ):
+        if is_compact_fc and primitive:
+            atom_list = primitive.p2s_map
+        else:
+            atom_list = list(range(len(supercell)))
+
         self._fc2 = self._run(
             supercell, symmetry, dataset, atom_list=atom_list, primitive=primitive
         )
