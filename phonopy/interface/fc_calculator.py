@@ -41,6 +41,7 @@ from typing import Literal, Optional, Union
 
 import numpy as np
 
+from phonopy.exception import ForceCalculatorRequiredError
 from phonopy.harmonic.force_constants import FDFCSolver
 from phonopy.interface.alm import ALMFCSolver
 from phonopy.interface.symfc import SymfcFCSolver
@@ -272,7 +273,7 @@ class FCSolver:
                 "Use another force constants calculator, e.g., symfc, ",
                 "to generate force constants.",
             ]
-            raise RuntimeError("\n".join(lines))
+            raise ForceCalculatorRequiredError("\n".join(lines))
 
         return solver_class(
             self._supercell,
@@ -295,7 +296,7 @@ class FCSolver:
                 log_level=self._log_level,
             )
         else:
-            displacements, forces = get_displacements_and_forces(self._dataset)
+            displacements, forces = self._get_displacements_and_forces()
             symfc_solver = SymfcFCSolver(
                 self._supercell,
                 displacements,
@@ -321,7 +322,7 @@ class FCSolver:
             raise RuntimeError(
                 "Displacement-force dataset is required for ALM FC solver."
             )
-        displacements, forces = get_displacements_and_forces(self._dataset)
+        displacements, forces = self._get_displacements_and_forces()
 
         return ALMFCSolver(
             self._supercell,
@@ -333,3 +334,7 @@ class FCSolver:
             options=self._options,
             log_level=self._log_level,
         )
+
+    def _get_displacements_and_forces(self):
+        """Return displacements and forces for fc2."""
+        return get_displacements_and_forces(self._dataset)

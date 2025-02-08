@@ -59,6 +59,7 @@ from phonopy.cui.load_helper import (
 from phonopy.cui.phonopy_argparse import get_parser, show_deprecated_option_warnings
 from phonopy.cui.settings import PhonopyConfParser, PhonopySettings
 from phonopy.cui.show_symmetry import check_symmetry
+from phonopy.exception import ForceCalculatorRequiredError
 from phonopy.file_IO import (
     get_born_parameters,
     get_supported_file_extensions_for_compression,
@@ -735,7 +736,7 @@ def _produce_force_constants(
                     fc_calculator=fc_calculator,
                     fc_calculator_options=fc_calculator_options,
                 )
-        except (RuntimeError, ValueError) as e:
+        except (RuntimeError, ValueError, ForceCalculatorRequiredError) as e:
             print_error_message(str(e))
             if log_level:
                 print_error()
@@ -842,7 +843,7 @@ def _store_force_constants(
                 is_compact_fc=(not is_full_fc),
                 log_level=log_level,
             )
-        except (RuntimeError, ValueError) as e:
+        except (RuntimeError, ValueError, ForceCalculatorRequiredError) as e:
             print_error_message(str(e))
             if log_level:
                 print_error()
