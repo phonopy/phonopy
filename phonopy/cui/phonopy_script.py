@@ -291,14 +291,6 @@ def _finalize_phonopy(
     """Finalize phonopy."""
     units = get_default_physical_units(phonon.calculator)
 
-    if phonon.mlp_dataset is not None:
-        mlp_eval_filename = "phonopy_mlp_eval_dataset.yaml"
-        if log_level:
-            print(
-                f'Dataset generated using MMLPs was written in "{mlp_eval_filename}".'
-            )
-        phonon.save(mlp_eval_filename)
-
     if settings.save_params:
         exists_fc_only = (
             not forces_in_dataset(phonon.dataset) and phonon.force_constants is not None
@@ -2280,6 +2272,15 @@ def main(**argparse_control):
                 print_error()
             sys.exit(1)
 
+        if phonon.dataset is not None:
+            mlp_eval_filename = "phonopy_mlp_eval_dataset.yaml"
+            if log_level:
+                print(
+                    "Dataset generated using MMLPs was written in "
+                    f'"{mlp_eval_filename}".'
+                )
+            phonon.save(mlp_eval_filename)
+
         # pypolymlp dataset is stored in "phonopy.pmlp" and stop here.
         if not prepare_dataset:
             if log_level:
@@ -2287,6 +2288,7 @@ def main(**argparse_control):
                     "Generate displacements (--rd or -d) for proceeding to phonon "
                     "calculations."
                 )
+
             _finalize_phonopy(log_level, settings, confs, phonon)
 
     ###################
