@@ -34,7 +34,7 @@
       !CHOLESKY INVERSE
       !SCF_GUESS ATOMIC
       SCF_GUESS RESTART
-      
+
       EPS_SCF 1.0E-8
       &OT ON
         MINIMIZER CG
@@ -51,7 +51,7 @@
 
 
     &XC
-      &XC_FUNCTIONAL 
+      &XC_FUNCTIONAL
        &PBE
          SCALE_X 1.0
          SCALE_C 1.0
@@ -92,7 +92,7 @@
       B    -4.98090367     8.62717823     0.00000000
       C     0.00000000     0.00000000    11.00867048
       PERIODIC XYZ
-    &END CELL    
+    &END CELL
     &TOPOLOGY
       COORD_FILE_FORMAT XYZ
       COORD_FILE_NAME ./positions.xyz
