@@ -44,6 +44,7 @@ Debye2au = 2.54174
 
 
 def get_cp2kver(fn):
+    """Get CP2K version from the output file."""
     try:
         fh = open(fn, "r")
         for line in fh:
@@ -61,6 +62,7 @@ def get_cp2kver(fn):
 
 
 def get_dipole(fn):
+    """Get dipole moment from the output file."""
     dipole = []
     xyz = ["X=", "Y=", "Z="]
     try:
@@ -77,6 +79,7 @@ def get_dipole(fn):
 
 
 def get_epsilon_cp2k(fn, ucvol):
+    """Get epsilon from the CP2K output file."""
     from numpy import pi
 
     epsilon = np.zeros(9)
@@ -120,6 +123,7 @@ def get_epsilon_cp2k(fn, ucvol):
 
 
 def get_epsilon_cp2kv6(fn, ucvol):
+    """Get epsilon from the CP2K v6 output file."""
     from numpy import pi
 
     epsilon = np.zeros(9)

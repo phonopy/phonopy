@@ -45,6 +45,7 @@ from phonopy.structure.symmetry import Symmetry
 
 
 def genxyz(fn, atnum, basis, species, cart, desc=""):
+    """Generate an .xyz file with the given structure."""
     print("Generating file %s" % fn)
     try:
         fh = open(fn, "w")
