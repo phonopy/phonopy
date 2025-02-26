@@ -1,0 +1,120 @@
+@SET BASISDIR /home/USER/cp2k/Potentials
+&GLOBAL
+  PROJECT SiO2
+  PRINT_LEVEL LOW
+  RUN_TYPE LR
+  WALLTIME 23:55:00
+&END GLOBAL
+
+&FORCE_EVAL
+  METHOD QS
+  STRESS_TENSOR ANALYTICAL
+  &DFT
+      BASIS_SET_FILE_NAME  ${BASISDIR}/GTH_BASIS_SETS
+      BASIS_SET_FILE_NAME  ${BASISDIR}/BASIS_MOLOPT_UCL
+      POTENTIAL_FILE_NAME  ${BASISDIR}/GTH_POTENTIALS
+    &MGRID
+      CUTOFF 1000
+      REL_CUTOFF 60
+    &END MGRID
+    &QS
+      EPS_DEFAULT 1.0E-15
+      WF_INTERPOLATION PS
+      EXTRAPOLATION_ORDER 3
+      METHOD GPW
+    &END QS
+    &SCF
+      &DIAGONALIZATION OFF
+      &END DIAGONALIZATION
+      &MIXING
+        ALPHA 0.3
+        METHOD BROYDEN_MIXING
+        NBROYDEN 8
+      &END MIXING
+      !CHOLESKY INVERSE
+      !SCF_GUESS ATOMIC
+      SCF_GUESS RESTART
+
+      EPS_SCF 1.0E-8
+      &OT ON
+        MINIMIZER CG
+        LINESEARCH 3PNT
+        PRECONDITIONER FULL_SINGLE_INVERSE
+        ENERGY_GAP 0.1
+      &END OT
+      MAX_SCF 50
+      &OUTER_SCF
+        MAX_SCF 50
+        EPS_SCF 1.0E-8
+      &END OUTER_SCF
+    &END SCF
+
+
+    &XC
+      &XC_FUNCTIONAL
+       &PBE
+         SCALE_X 1.0
+         SCALE_C 1.0
+       &END PBE
+      &END XC_FUNCTIONAL
+    &END XC
+
+      &PRINT
+         &MOMENTS ON
+         &END MOMENTS
+      &END PRINT
+
+  &END DFT
+
+# to calcualte polarizability for all the system
+  &PROPERTIES
+    &LINRES
+      EPS 1.0E-8
+      MAX_ITER 100
+      PRECONDITIONER FULL_SINGLE_INVERSE
+      &POLAR on
+       # DO_RAMAN TRUE
+        &PRINT
+          &POLAR_MATRIX ON
+            &EACH
+              QS_SCF 1
+            &END EACH
+          &END POLAR_MATRIX
+        &END PRINT
+      &END POLAR
+    &END LINRES
+  &END PROPERTIES
+
+
+  &SUBSYS
+    &CELL
+      A     9.96180735     0.00000000     0.00000000
+      B    -4.98090367     8.62717823     0.00000000
+      C     0.00000000     0.00000000    11.00867048
+      PERIODIC XYZ
+    &END CELL
+    &TOPOLOGY
+      COORD_FILE_FORMAT XYZ
+      COORD_FILE_NAME ./positions.xyz
+    &END TOPOLOGY
+    &PRINT
+      &ATOMIC_COORDINATES ON
+      &END
+    &END
+
+    &KIND Si
+      BASIS_SET    TZV2P-GTH-q4
+      POTENTIAL    GTH-PBE-q4
+    &END KIND
+    &KIND O
+      BASIS_SET TZVP-GTH-q6
+      POTENTIAL GTH-PBE-q6
+    &END
+
+  &END SUBSYS
+  &PRINT
+    &STRESS_TENSOR  ON
+      FILENAME __STD_OUT__
+    &END STRESS_TENSOR
+  &END PRINT
+&END FORCE_EVAL
