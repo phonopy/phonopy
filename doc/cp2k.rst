@@ -113,3 +113,23 @@ A procedure of CP2K-phonopy calculation is as follows:
    or::
 
    % phonopy --cp2k -c NaCl.inp --dim="2 2 2" [other-OPTIONS] [setting-file]
+
+Input files generation (alternative mode)
+-------------------------------------------
+It is possible to use input file pattern which read structural paramiters in external ``xyz`` files.
+The ``CELL`` section should be declared as follows::
+
+       &SUBSYS
+          &CELL
+             A 11.452705822048308 0.0 0.0
+             B 0.0 11.452705822048308 0.0
+             C 0.0 0.0 11.452705822048308
+             PERIODIC XYZ
+          &END CELL
+          &TOPOLOGY
+             COORD_FILE_FORMAT XYZ
+             COORD_FILE_NAME ./positions.xyz
+          &END TOPOLOGY
+       &END SUBSYS
+
+Please find detailed explanation in ``SiO2-CP2K-xyz`` example: https://github.com/phonopy/phonopy/tree/develop/example/SiO2-CP2K-xyz
