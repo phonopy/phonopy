@@ -39,6 +39,7 @@ from __future__ import annotations
 import io
 import pathlib
 import sys
+from collections.abc import Sequence
 from typing import Optional, Union
 
 import numpy as np
@@ -809,7 +810,9 @@ def _expand_borns(borns, primitive: PhonopyAtoms, prim_symmetry: Symmetry):
 #
 # phonopy.yaml
 #
-def is_file_phonopy_yaml(filename, keyword: Optional[str] = None):
+def is_file_phonopy_yaml(
+    filename, keyword: Optional[str] = None, yaml_dict_keys: Optional[Sequence] = None
+):
     """Check whether the file is phonopy.yaml like file or not.
 
     Parameters
@@ -817,35 +820,29 @@ def is_file_phonopy_yaml(filename, keyword: Optional[str] = None):
     filename : str
         Filename.
     keyword : str, optional
-        When this keyword is found in dict keys returned by yaml loader,
-        this function return True. With None, just return True.
-
-    Example
-    -------
-    The initial part of phonopy_disp.yaml is like below.
-
-        phonopy:
-          version: 2.7.0
-          frequency_unit_conversion_factor: 15.633302
-          symmetry_tolerance: 1.00000e-05
-          configuration:
-              cell_filename: "POSCAR-unitcell"
-              create_displacements: ".true."
-              primitive_axes: "auto"
-              dim: "2 2 2"
-        ...
+        Deprecated. Dummy parameter. Default is None.
+    yaml_dict_keys : list-like, optional
+        List of necessary keys in the yaml file. Default is None.
 
     """
+
+    def keys_exist(yaml_data: dict, keys: Sequence[str]) -> bool:
+        for key in keys:
+            if key not in yaml_data:
+                return False
+        return True
+
     myio = get_io_module_to_decompress(filename)
     with myio.open(filename, "r") as f:
         try:
             data = yaml.load(f, Loader=Loader)
             if data is None:
                 return False
-            if keyword is None or keyword in data:
-                return True
+            if yaml_dict_keys is None:
+                keys = ("supercell_matrix", "unit_cell")
             else:
-                return False
+                keys = yaml_dict_keys
+            return keys_exist(data, keys)
         except yaml.YAMLError:
             return False
 
