@@ -143,10 +143,10 @@ def collect_cell_info(
         keyword = phonopy_yaml_cls.command_name
         if _cell_filename is None:
             pass
-        elif is_file_phonopy_yaml(_cell_filename, keyword=keyword):
+        elif is_file_phonopy_yaml(_cell_filename, yaml_dict_keys=[keyword]):
             # Readable as a phonopy.yaml
             pass
-        elif is_file_phonopy_yaml(_cell_filename, keyword=None):
+        elif is_file_phonopy_yaml(_cell_filename):
             # Readable as yaml
             pass
         else:

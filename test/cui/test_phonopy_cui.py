@@ -26,6 +26,7 @@ class MockArgs:
     log_level: Optional[int] = None
     fc_symmetry: bool = True
     cell_filename: Optional[str] = None
+    conf_filename: Optional[str] = None
     create_force_sets: Optional[list[str]] = None
     is_check_symmetry: Optional[bool] = None
     is_graph_plot: Optional[bool] = None
@@ -87,6 +88,7 @@ def test_create_force_sets():
             cwd / "NaCl" / "vasprun.xml-001.xz",
             cwd / "NaCl" / "vasprun.xml-002.xz",
         ],
+        load_phonopy_yaml=False,
     )
     with pytest.raises(SystemExit) as excinfo:
         main(**argparse_control)
@@ -108,13 +110,14 @@ def test_create_force_sets():
         main(**argparse_control)
 
 
-def test_phonopy_load():
+@pytest.mark.parametrize("load_phonopy_yaml", [False, True])
+def test_phonopy_load(load_phonopy_yaml: bool):
     """Test phonopy-load command."""
     pytest.importorskip("symfc")
-
     # Check sys.exit(0)
-    argparse_control = _get_phonopy_load_args(
-        cwd / ".." / "phonopy_params_NaCl-1.00.yaml.xz"
+    argparse_control = _get_phonopy_args(
+        filename=cwd / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+        load_phonopy_yaml=load_phonopy_yaml,
     )
     with pytest.raises(SystemExit) as excinfo:
         main(**argparse_control)
@@ -130,8 +133,8 @@ def test_phonopy_load():
 def test_phonopy_is_check_symmetry():
     """Test phonopy --symmetry command with phonopy.yaml input structure."""
     # Check sys.exit(0)
-    argparse_control = _get_phonopy_load_args(
-        cwd / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+    argparse_control = _get_phonopy_args(
+        filename=cwd / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
         load_phonopy_yaml=False,
         is_check_symmetry=True,
     )
@@ -145,57 +148,81 @@ def test_phonopy_is_check_symmetry():
     file_path.unlink()
 
 
+def test_conf_file():
+    """Test phonopy CONFILE."""
+    argparse_control = _get_phonopy_args(
+        filename=cwd / "dim.conf",
+        cell_filename=cwd / "POSCAR-unitcell_Cr",
+        load_phonopy_yaml=False,
+    )
+    with pytest.raises(SystemExit) as excinfo:
+        main(**argparse_control)
+    assert excinfo.value.code == 0
+
+    for created_filename in ("POSCAR-001", "SPOSCAR", "phonopy_disp.yaml"):
+        file_path = pathlib.Path(cwd_called / created_filename)
+        assert file_path.exists()
+        file_path.unlink()
+
+
+def test_config_option():
+    """Test phonopy-yaml --config."""
+    pytest.importorskip("symfc")
+    argparse_control = _get_phonopy_args(
+        filename=cwd / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+        conf_filename=cwd / "mesh.conf",
+        load_phonopy_yaml=True,
+    )
+    with pytest.raises(SystemExit) as excinfo:
+        main(**argparse_control)
+    assert excinfo.value.code == 0
+
+    # Clean files created by phonopy-load script.
+    for created_filename in ("phonopy.yaml", "mesh.yaml"):
+        file_path = pathlib.Path(cwd_called / created_filename)
+        assert file_path.exists()
+        file_path.unlink()
+
+
 def _get_phonopy_args(
-    cell_filename: Optional[str] = None,
+    cell_filename: Optional[Union[str, pathlib.Path]] = None,
     create_force_sets: Optional[list[str]] = None,
     supercell_dimension: Optional[str] = None,
     is_displacement: Optional[bool] = None,
     magmoms: Optional[str] = None,
+    load_phonopy_yaml: bool = False,
+    is_check_symmetry: bool = False,
+    filename: Optional[str] = None,
+    conf_filename: Optional[str] = None,
 ):
+    if filename is None:
+        _filename = []
+    else:
+        _filename = [filename]
     mockargs = MockArgs(
-        filename=[],
+        filename=_filename,
         log_level=1,
         cell_filename=cell_filename,
         create_force_sets=create_force_sets,
         supercell_dimension=supercell_dimension,
         is_displacement=is_displacement,
         magmoms=magmoms,
+        is_check_symmetry=is_check_symmetry,
+        conf_filename=conf_filename,
     )
 
-    # See phonopy-load script.
-    argparse_control = {
-        "fc_symmetry": False,
-        "is_nac": False,
-        "load_phonopy_yaml": False,
-        "args": mockargs,
-    }
-    return argparse_control
-
-
-def _get_phonopy_load_args(
-    phonopy_yaml_filepath: Union[str, pathlib.Path],
-    load_phonopy_yaml: bool = True,
-    is_check_symmetry: bool = False,
-):
-    # Mock of ArgumentParser.args.
     if load_phonopy_yaml:
-        mockargs = MockArgs(
-            filename=[phonopy_yaml_filepath],
-            log_level=1,
-        )
+        argparse_control = {
+            "fc_symmetry": True,
+            "is_nac": True,
+            "load_phonopy_yaml": True,
+            "args": mockargs,
+        }
     else:
-        mockargs = MockArgs(
-            filename=[],
-            log_level=1,
-            cell_filename=phonopy_yaml_filepath,
-            is_check_symmetry=is_check_symmetry,
-        )
-
-    # See phonopy-load script.
-    argparse_control = {
-        "fc_symmetry": load_phonopy_yaml,
-        "is_nac": load_phonopy_yaml,
-        "load_phonopy_yaml": load_phonopy_yaml,
-        "args": mockargs,
-    }
+        argparse_control = {
+            "fc_symmetry": False,
+            "is_nac": False,
+            "load_phonopy_yaml": False,
+            "args": mockargs,
+        }
     return argparse_control
