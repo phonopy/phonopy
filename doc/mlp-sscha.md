@@ -75,7 +75,7 @@ A. Seko and A. Togo, Phys. Rev. B, **110**, 214302 (2024) [[doi](https://doi.org
 
 ## Requirements
 
-- [pypolymlp](https://github.com/sekocha/pypolymlp) >= 0.4.6
+- [pypolymlp](https://github.com/sekocha/pypolymlp) >= 0.4.6, < 0.9
 
   For linux (x86-64), a compiled package of pypolymlp can be installed via
   conda-forge (recommended). Otherwise, pypolymlp can be installed from
