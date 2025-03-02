@@ -293,6 +293,6 @@ def test_mlp_NaCl_type2(ph_nacl_rd: Phonopy):
 
 def test_load_mlp_pypolymlp(ph_kcl: Phonopy):
     """Test load_mlp."""
-    pytest.importorskip("pypolymlp")
+    pytest.importorskip("pypolymlp", minversion="0.9.2")
     ph_kcl.load_mlp(cwd / ".." / "polymlp_KCL-120.yaml")
     ph_kcl.load_mlp(cwd / ".." / "polymlp_KCL-120.yaml.xz")
