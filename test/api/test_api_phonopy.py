@@ -289,3 +289,10 @@ def test_mlp_NaCl_type2(ph_nacl_rd: Phonopy):
             5.461698684467867,
         ]
     np.testing.assert_allclose(freqs.ravel(), freqs_ref, atol=1e-5)
+
+
+def test_load_mlp_pypolymlp(ph_kcl: Phonopy):
+    """Test load_mlp."""
+    pytest.importorskip("pypolymlp")
+    ph_kcl.load_mlp(cwd / ".." / "polymlp_KCL-120.yaml")
+    ph_kcl.load_mlp(cwd / ".." / "polymlp_KCL-120.yaml.xz")
