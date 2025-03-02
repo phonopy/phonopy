@@ -75,7 +75,7 @@ A. Seko and A. Togo, Phys. Rev. B, **110**, 214302 (2024) [[doi](https://doi.org
 
 ## Requirements
 
-- [pypolymlp](https://github.com/sekocha/pypolymlp) >= 0.4.6
+- [pypolymlp](https://github.com/sekocha/pypolymlp) >= 0.4.6, < 0.9
 
   For linux (x86-64), a compiled package of pypolymlp can be installed via
   conda-forge (recommended). Otherwise, pypolymlp can be installed from
@@ -97,7 +97,7 @@ A. Seko and A. Togo, Phys. Rev. B, **110**, 214302 (2024) [[doi](https://doi.org
    `phonopy_params.yaml`. Use {ref}`-f <f_force_sets_option>` and {ref}`--sp
    <save_params_option>` option simultaneously.
 4. Develop MLPs. By default, 90 and 10 percents of the dataset are used for the
-   training and test, respectively. At this step `phonopy.pmlp` is saved.
+   training and test, respectively. At this step `polymlp.yaml` is saved.
 5. Generate random displacements in supercells
 6. Evaluate MLPs for forces of the supercells generated in step 5.
 7. Calculate force constants from displacement-force dataset from steps 5 and 6.
@@ -236,7 +236,7 @@ Regression: model selection ...
 - alpha = 1.000e-01 : rmse (train, test) = 0.07193 0.22140
 - alpha = 1.000e+00 : rmse (train, test) = 0.11563 0.26042
 - alpha = 1.000e+01 : rmse (train, test) = 0.19375 0.31767
-MLPs were written into "phonopy.pmlp"
+MLPs were written into "polymlp.yaml"
 ------------------------------ pypolymlp end -------------------------------
 Generate displacements (--rd or -d) for proceeding to phonon calculations.
 Dataset generated using MMLPs was written in "phonopy_mlp_eval_dataset.yaml".
@@ -252,7 +252,7 @@ Summary of calculation was written in "phonopy.yaml".
 
 Information about the development of MLPs using pypolymlp is provided between
 the `pypolymlp start` and `pypolymlp end` sections. The polynomial MLPs are
-saved in the `phonopy.pmlp` file. This file is automatically searched in
+saved in the `polymlp.yaml` file. This file is automatically searched in
 subsequent phonopy executions with the `--pypolymlp` option and reused.
 
 #### Step 5-8: Temperature dependent force constants calculation
@@ -264,7 +264,7 @@ corresponding forces are stored in the `phonopy_mlp_eval_dataset` file.
 The calculated force constants may be refered as the harmonic force constants.
 
 
-After the last step, the `phonopy.pmlp` file exists in the current directory.
+After the last step, the `polymlp.yaml` file exists in the current directory.
 This file is read automatically in the next calculation with the `--pypolymlp`
 option. If the developed MLPs can predict well forces at relatively large
 displacements, temperature dependent force constants are calculated with the
@@ -308,7 +308,7 @@ Displacement-force dataset was read from "phonopy_mlpsscha_params_KCl-120.yaml.x
 Pypolymlp is a generator of polynomial machine learning potentials.
 Please cite the paper: A. Seko, J. Appl. Phys. 133, 011101 (2023).
 Pypolymlp is developed at https://github.com/sekocha/pypolymlp.
-Load MLPs from "phonopy.pmlp".
+Load MLPs from "polymlp.yaml".
 ------------------------------ pypolymlp end -------------------------------
 Generate random displacements
   Twice of number of snapshots will be generated for plus-minus displacements.

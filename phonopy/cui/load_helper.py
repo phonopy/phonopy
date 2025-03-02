@@ -346,7 +346,6 @@ def check_nac_params(nac_params: dict, unitcell: PhonopyAtoms, pmat: np.ndarray)
 def _run_pypolymlp(
     phonon: Phonopy,
     mlp_params: Union[str, dict, PypolymlpParams],
-    mlp_filename: str = "phonopy.pmlp",
     log_level: int = 0,
 ):
     """Run pypolymlp to compute forces."""
@@ -361,22 +360,31 @@ def _run_pypolymlp(
                 if v is not None:
                     print(f"  {k}: {v}")
 
-    _mlp_filename_list = list(pathlib.Path().glob(f"{mlp_filename}*"))
-    if _mlp_filename_list:
-        _mlp_filename = _mlp_filename_list[0]
-        if log_level:
-            print(f'Load MLPs from "{_mlp_filename}".')
-        phonon.load_mlp(_mlp_filename)
-        phonon.mlp_dataset = None
-    elif forces_in_dataset(phonon.mlp_dataset):
-        if log_level:
-            print("Developing MLPs by pypolymlp...", flush=True)
-        phonon.develop_mlp(params=mlp_params)
-        phonon.save_mlp(filename=mlp_filename)
-        if log_level:
-            print(f'MLPs were written into "{mlp_filename}"', flush=True)
-    else:
-        raise RuntimeError(f'"{mlp_filename}" is not found.')
+    mlp_loaded = False
+    for mlp_filename in ["polymlp.yaml", "phonopy.pmlp"]:
+        _mlp_filename_list = list(pathlib.Path().glob(f"{mlp_filename}*"))
+        if _mlp_filename_list:
+            _mlp_filename = _mlp_filename_list[0]
+            if log_level:
+                print(f'Load MLPs from "{_mlp_filename}".')
+            phonon.load_mlp(_mlp_filename)
+            phonon.mlp_dataset = None
+            mlp_loaded = True
+            if log_level and mlp_filename == "phonopy.pmlp":
+                print(f'Loading MLPs from "{_mlp_filename}" is obsolete.')
+            break
+
+    if not mlp_loaded:
+        mlp_filename = "polymlp.yaml"
+        if forces_in_dataset(phonon.mlp_dataset):
+            if log_level:
+                print("Developing MLPs by pypolymlp...", flush=True)
+            phonon.develop_mlp(params=mlp_params)
+            phonon.save_mlp()
+            if log_level:
+                print(f'MLPs were written into "{mlp_filename}"', flush=True)
+        else:
+            raise RuntimeError(f'"{mlp_filename}" is not found.')
 
     if log_level:
         print("-" * 30 + " pypolymlp end " + "-" * 31, flush=True)

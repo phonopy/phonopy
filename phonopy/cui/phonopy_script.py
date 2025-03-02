@@ -2281,7 +2281,7 @@ def main(**argparse_control):
                 )
             phonon.save(mlp_eval_filename)
 
-        # pypolymlp dataset is stored in "phonopy.pmlp" and stop here.
+        # pypolymlp dataset is stored in "polymlp.yaml" and stop here.
         if not prepare_dataset:
             if log_level:
                 print(
