@@ -74,14 +74,3 @@ process.
 Finally, for KCl, the difference in the phonon band structure between the 2×2×2
 and 4×4×4 supercells was negligible. Consequently, this technique was not
 particularly necessary.
-
-## Converting `phonopy.pmlp` to `polymlp.yaml`
-
-In older versions, polynomial MLPs were stored in `phonopy.pmlp`. This file can
-be converted to `polymlp.yaml` using the following Python snippet.
-
-```python
-from pypolymlp.mlp_dev.pypolymlp import Pypolymlp
-polymlp = Pypolymlp()
-polymlp.convert_to_yaml(filename_txt="phonopy.pmlp", filename_yaml="polymlp.yaml”)
-```

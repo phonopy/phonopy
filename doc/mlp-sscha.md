@@ -596,3 +596,15 @@ supercells) will be computed and included. With this procedure in mind, it may
 be convenient to generate a sufficiently large number of supercells with random
 displacements in advance, such as 1000 supercells, before starting the
 temperature dependent force constants calculation with pypolymlp.
+
+
+## Converting `phonopy.pmlp` to `polymlp.yaml`
+
+In older versions, polynomial MLPs were stored in `phonopy.pmlp`. This file can
+be converted to `polymlp.yaml` using the following Python snippet.
+
+```python
+from pypolymlp.mlp_dev.pypolymlp import Pypolymlp
+polymlp = Pypolymlp()
+polymlp.convert_to_yaml(filename_txt="phonopy.pmlp", filename_yaml="polymlp.yaml”)
+```
