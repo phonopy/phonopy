@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Mar-3-2025: Version 2.38.0
+
+- Update for using the latest pypolymlp's MLP output format
+
 ## Feb-27-2025: Version 2.37.1
 
 - Bug fix that `phonopy` command could not read a config file.
