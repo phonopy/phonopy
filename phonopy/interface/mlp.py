@@ -66,7 +66,7 @@ class PhonopyMLP:
     def save(self, filename: Optional[str] = None):
         """Save MLP."""
         if filename is None:
-            _filename = "phonopy.pmlp"
+            _filename = "polymlp.yaml"
         else:
             _filename = filename
         save_pypolymlp(self._mlp, _filename)
@@ -76,7 +76,7 @@ class PhonopyMLP:
     ) -> PhonopyMLP:
         """Load MLP."""
         if filename is None:
-            _filename = "phonopy.pmlp"
+            _filename = "polymlp.yaml"
         else:
             _filename = filename
         self._mlp = load_pypolymlp(_filename)
