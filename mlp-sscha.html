@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Temperature dependent force constants calculation using pypolymlp and symfc &#8212; Phonopy v.2.37.1</title>
+    <title>Temperature dependent force constants calculation using pypolymlp and symfc &#8212; Phonopy v.2.38.0</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=ab211e36"></script>
+    <script src="_static/documentation_options.js?v=005da908"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.37.1</p>
+    <p class="title logo__title">Phonopy v.2.38.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -358,6 +358,7 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convergence-with-respect-to-dataset-size">Convergence with respect to dataset size</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#converting-phonopy-pmlp-to-polymlp-yaml">Converting <code class="docutils literal notranslate"><span class="pre">phonopy.pmlp</span></code> to <code class="docutils literal notranslate"><span class="pre">polymlp.yaml</span></code></a></li>
 </ul>
             </nav>
         </div>
@@ -459,7 +460,7 @@ supported.</p></li>
 supercells. The dataset must be stored in a phonopy-yaml-like file, e.g.,
 <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code>. Use <a class="reference internal" href="command-options.html#f-force-sets-option"><span class="std std-ref">-f</span></a> and <a class="reference internal" href="command-options.html#save-params-option"><span class="std std-ref">–sp</span></a> option simultaneously.</p></li>
 <li><p>Develop MLPs. By default, 90 and 10 percents of the dataset are used for the
-training and test, respectively. At this step <code class="docutils literal notranslate"><span class="pre">phonopy.pmlp</span></code> is saved.</p></li>
+training and test, respectively. At this step <code class="docutils literal notranslate"><span class="pre">polymlp.yaml</span></code> is saved.</p></li>
 <li><p>Generate random displacements in supercells</p></li>
 <li><p>Evaluate MLPs for forces of the supercells generated in step 5.</p></li>
 <li><p>Calculate force constants from displacement-force dataset from steps 5 and 6.</p></li>
@@ -591,7 +592,7 @@ from calculator outputs is only supported when using the VASP interface.</p>
 <span class="o">-</span> <span class="n">alpha</span> <span class="o">=</span> <span class="mf">1.000e-01</span> <span class="p">:</span> <span class="n">rmse</span> <span class="p">(</span><span class="n">train</span><span class="p">,</span> <span class="n">test</span><span class="p">)</span> <span class="o">=</span> <span class="mf">0.07193</span> <span class="mf">0.22140</span>
 <span class="o">-</span> <span class="n">alpha</span> <span class="o">=</span> <span class="mf">1.000e+00</span> <span class="p">:</span> <span class="n">rmse</span> <span class="p">(</span><span class="n">train</span><span class="p">,</span> <span class="n">test</span><span class="p">)</span> <span class="o">=</span> <span class="mf">0.11563</span> <span class="mf">0.26042</span>
 <span class="o">-</span> <span class="n">alpha</span> <span class="o">=</span> <span class="mf">1.000e+01</span> <span class="p">:</span> <span class="n">rmse</span> <span class="p">(</span><span class="n">train</span><span class="p">,</span> <span class="n">test</span><span class="p">)</span> <span class="o">=</span> <span class="mf">0.19375</span> <span class="mf">0.31767</span>
-<span class="n">MLPs</span> <span class="n">were</span> <span class="n">written</span> <span class="n">into</span> <span class="s2">&quot;phonopy.pmlp&quot;</span>
+<span class="n">MLPs</span> <span class="n">were</span> <span class="n">written</span> <span class="n">into</span> <span class="s2">&quot;polymlp.yaml&quot;</span>
 <span class="o">------------------------------</span> <span class="n">pypolymlp</span> <span class="n">end</span> <span class="o">-------------------------------</span>
 <span class="n">Generate</span> <span class="n">displacements</span> <span class="p">(</span><span class="o">--</span><span class="n">rd</span> <span class="ow">or</span> <span class="o">-</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">proceeding</span> <span class="n">to</span> <span class="n">phonon</span> <span class="n">calculations</span><span class="o">.</span>
 <span class="n">Dataset</span> <span class="n">generated</span> <span class="n">using</span> <span class="n">MMLPs</span> <span class="n">was</span> <span class="n">written</span> <span class="ow">in</span> <span class="s2">&quot;phonopy_mlp_eval_dataset.yaml&quot;</span><span class="o">.</span>
@@ -607,7 +608,7 @@ from calculator outputs is only supported when using the VASP interface.</p>
 </div>
 <p>Information about the development of MLPs using pypolymlp is provided between
 the <code class="docutils literal notranslate"><span class="pre">pypolymlp</span> <span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">pypolymlp</span> <span class="pre">end</span></code> sections. The polynomial MLPs are
-saved in the <code class="docutils literal notranslate"><span class="pre">phonopy.pmlp</span></code> file. This file is automatically searched in
+saved in the <code class="docutils literal notranslate"><span class="pre">polymlp.yaml</span></code> file. This file is automatically searched in
 subsequent phonopy executions with the <code class="docutils literal notranslate"><span class="pre">--pypolymlp</span></code> option and reused.</p>
 <section id="step-5-8-temperature-dependent-force-constants-calculation">
 <h4>Step 5-8: Temperature dependent force constants calculation<a class="headerlink" href="#step-5-8-temperature-dependent-force-constants-calculation" title="Link to this heading">#</a></h4>
@@ -616,7 +617,7 @@ displacement distance of 0.001 Angstrom. The forces for these supercells are
 then evaluated using pypolymlp. Both the generated displacements and the
 corresponding forces are stored in the <code class="docutils literal notranslate"><span class="pre">phonopy_mlp_eval_dataset</span></code> file.
 The calculated force constants may be refered as the harmonic force constants.</p>
-<p>After the last step, the <code class="docutils literal notranslate"><span class="pre">phonopy.pmlp</span></code> file exists in the current directory.
+<p>After the last step, the <code class="docutils literal notranslate"><span class="pre">polymlp.yaml</span></code> file exists in the current directory.
 This file is read automatically in the next calculation with the <code class="docutils literal notranslate"><span class="pre">--pypolymlp</span></code>
 option. If the developed MLPs can predict well forces at relatively large
 displacements, temperature dependent force constants are calculated with the
@@ -658,7 +659,7 @@ displacements, temperature dependent force constants are calculated with the
 <span class="n">Pypolymlp</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">generator</span> <span class="n">of</span> <span class="n">polynomial</span> <span class="n">machine</span> <span class="n">learning</span> <span class="n">potentials</span><span class="o">.</span>
 <span class="n">Please</span> <span class="n">cite</span> <span class="n">the</span> <span class="n">paper</span><span class="p">:</span> <span class="n">A</span><span class="o">.</span> <span class="n">Seko</span><span class="p">,</span> <span class="n">J</span><span class="o">.</span> <span class="n">Appl</span><span class="o">.</span> <span class="n">Phys</span><span class="o">.</span> <span class="mi">133</span><span class="p">,</span> <span class="mi">011101</span> <span class="p">(</span><span class="mi">2023</span><span class="p">)</span><span class="o">.</span>
 <span class="n">Pypolymlp</span> <span class="ow">is</span> <span class="n">developed</span> <span class="n">at</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">sekocha</span><span class="o">/</span><span class="n">pypolymlp</span><span class="o">.</span>
-<span class="n">Load</span> <span class="n">MLPs</span> <span class="kn">from</span><span class="w"> </span><span class="s2">&quot;phonopy.pmlp&quot;</span><span class="o">.</span>
+<span class="n">Load</span> <span class="n">MLPs</span> <span class="kn">from</span><span class="w"> </span><span class="s2">&quot;polymlp.yaml&quot;</span><span class="o">.</span>
 <span class="o">------------------------------</span> <span class="n">pypolymlp</span> <span class="n">end</span> <span class="o">-------------------------------</span>
 <span class="n">Generate</span> <span class="n">random</span> <span class="n">displacements</span>
   <span class="n">Twice</span> <span class="n">of</span> <span class="n">number</span> <span class="n">of</span> <span class="n">snapshots</span> <span class="n">will</span> <span class="n">be</span> <span class="n">generated</span> <span class="k">for</span> <span class="n">plus</span><span class="o">-</span><span class="n">minus</span> <span class="n">displacements</span><span class="o">.</span>
@@ -940,6 +941,16 @@ be convenient to generate a sufficiently large number of supercells with random
 displacements in advance, such as 1000 supercells, before starting the
 temperature dependent force constants calculation with pypolymlp.</p>
 </section>
+<section id="converting-phonopy-pmlp-to-polymlp-yaml">
+<h2>Converting <code class="docutils literal notranslate"><span class="pre">phonopy.pmlp</span></code> to <code class="docutils literal notranslate"><span class="pre">polymlp.yaml</span></code><a class="headerlink" href="#converting-phonopy-pmlp-to-polymlp-yaml" title="Link to this heading">#</a></h2>
+<p>In older versions, polynomial MLPs were stored in <code class="docutils literal notranslate"><span class="pre">phonopy.pmlp</span></code>. This file can
+be converted to <code class="docutils literal notranslate"><span class="pre">polymlp.yaml</span></code> using the following Python snippet.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pypolymlp.mlp_dev.pypolymlp</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pypolymlp</span>
+<span class="n">polymlp</span> <span class="o">=</span> <span class="n">Pypolymlp</span><span class="p">()</span>
+<span class="n">polymlp</span><span class="o">.</span><span class="n">convert_to_yaml</span><span class="p">(</span><span class="n">filename_txt</span><span class="o">=</span><span class="s2">&quot;phonopy.pmlp&quot;</span><span class="p">,</span> <span class="n">filename_yaml</span><span class="o">=</span><span class="s2">&quot;polymlp.yaml”)</span>
+</pre></div>
+</div>
+</section>
 </section>
 
 
@@ -1004,6 +1015,7 @@ temperature dependent force constants calculation with pypolymlp.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convergence-with-respect-to-dataset-size">Convergence with respect to dataset size</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#converting-phonopy-pmlp-to-polymlp-yaml">Converting <code class="docutils literal notranslate"><span class="pre">phonopy.pmlp</span></code> to <code class="docutils literal notranslate"><span class="pre">polymlp.yaml</span></code></a></li>
 </ul>
   </nav></div>
 
