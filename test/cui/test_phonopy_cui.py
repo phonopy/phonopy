@@ -35,6 +35,7 @@ class MockArgs:
     is_displacement: Optional[bool] = None
     supercell_dimension: Optional[str] = None
     magmoms: Optional[str] = None
+    use_pypolymlp: bool = False
 
     def __iter__(self):
         """Make self iterable to support in."""
@@ -194,6 +195,7 @@ def _get_phonopy_args(
     is_check_symmetry: bool = False,
     filename: Optional[str] = None,
     conf_filename: Optional[str] = None,
+    use_pypolymlp: bool = False,
 ):
     if filename is None:
         _filename = []
@@ -209,6 +211,7 @@ def _get_phonopy_args(
         magmoms=magmoms,
         is_check_symmetry=is_check_symmetry,
         conf_filename=conf_filename,
+        use_pypolymlp=use_pypolymlp,
     )
 
     if load_phonopy_yaml:
