@@ -25,7 +25,7 @@ this file, run:
 % phonopy-load phonopy_mlpsscha_params_KCl-120.yaml.xz --pypolymlp --mlp-params="ntrain=100, ntest=20"
 ```
 
-This command generates the `phonopy.pmlp` file, which contains the developed
+This command generates the `polymlp.yaml` file, which contains the developed
 MLPs. This file under current directory is read when running phonopy with the
 `--pypolymlp` option. To perform the SSCHA calculation, execute:
 
