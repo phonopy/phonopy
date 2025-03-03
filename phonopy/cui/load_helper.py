@@ -365,17 +365,25 @@ def _run_pypolymlp(
         _mlp_filename_list = list(pathlib.Path().glob(f"{mlp_filename}*"))
         if _mlp_filename_list:
             _mlp_filename = _mlp_filename_list[0]
+            if _mlp_filename.suffix not in [
+                ".yaml",
+                ".pmlp",
+                ".xz",
+                ".gz",
+                ".bz2",
+                "lzma",
+            ]:
+                continue
             if log_level:
                 print(f'Load MLPs from "{_mlp_filename}".')
             phonon.load_mlp(_mlp_filename)
-            phonon.mlp_dataset = None
             mlp_loaded = True
             if log_level and mlp_filename == "phonopy.pmlp":
                 print(f'Loading MLPs from "{_mlp_filename}" is obsolete.')
             break
 
+    mlp_filename = "polymlp.yaml"
     if not mlp_loaded:
-        mlp_filename = "polymlp.yaml"
         if forces_in_dataset(phonon.mlp_dataset):
             if log_level:
                 print("Developing MLPs by pypolymlp...", flush=True)
