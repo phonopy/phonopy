@@ -13,8 +13,8 @@ if(PHONOPY_LIBS)
 
     # Version numbers
     file(READ ${PROJECT_SOURCE_DIR}/phonopy/version.py VERSION_FILE)
-    string(REGEX MATCH "__version__.*([0-9]+)[.]([0-9]+)[.]([0-9]+)"
-                 phono3py_version ${VERSION_FILE})
+    string(REGEX MATCH "__version__.*([0-9]+)[.]([0-9]+)[.]([0-9]+)" phonopy_version
+                 ${VERSION_FILE})
     set(PHONOPY_MAJOR_VERSION ${CMAKE_MATCH_1})
     set(PHONOPY_MINOR_VERSION ${CMAKE_MATCH_2})
     set(PHONOPY_MICRO_VERSION ${CMAKE_MATCH_3})
@@ -25,7 +25,7 @@ else()
     project(${SKBUILD_PROJECT_NAME})
     set(DEV_MODULE Development.Module)
     find_package(
-        Python 3.8 REQUIRED
+        Python 3.9 REQUIRED
         COMPONENTS Interpreter ${DEV_MODULE}
         OPTIONAL_COMPONENTS Development.SABIModule)
 endif()
