@@ -12,8 +12,31 @@ cwd = pathlib.Path(__file__).parent
 
 
 def test_read_pwscf():
-    """Test of read_pwscf with default scaled positions."""
+    """Test of read_pwscf with default scaled positions.
+
+    Keywords appear in the following order:
+
+    ATOMIC_SPECIES
+    ATOMIC_POSITIONS
+    CELL_PARAMETERS
+    K_POINTS
+
+    """
     _test_read_pwscf("NaCl-pwscf.in")
+
+
+def test_read_pwscf_2():
+    """Test of read_pwscf with default scaled positions.
+
+    Keywords appear in different order from test_read_pwscf.
+
+    ATOMIC_SPECIES
+    ATOMIC_POSITIONS
+    K_POINTS
+    CELL_PARAMETERS
+
+    """
+    _test_read_pwscf("NaCl-pwscf-2.in")
 
 
 def test_read_pwscf_angstrom():

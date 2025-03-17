@@ -209,6 +209,7 @@ class PwscfIn:
             ("atomic_species", "_set_atom_types"),
             ("atomic_positions", "_set_positions"),
             ("cell_parameters", "_set_lattice"),
+            ("k_points", "_set_kpoints"),
         ]
     )
 
@@ -391,6 +392,10 @@ class PwscfIn:
             )
 
         self._tags["atomic_species"] = species
+
+    def _set_kpoints(self):
+        """Set k-points."""
+        pass
 
 
 class PH_Q2R:
