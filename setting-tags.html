@@ -542,7 +542,7 @@ vectors of <span class="math notranslate nohighlight">\(\mathbf{a}_\mathrm{u}\)<
 <div class="math notranslate nohighlight">
 \[( \mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \; \mathbf{c}_\mathrm{s} ) = (
 \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \; \mathbf{c}_\mathrm{u} )
-M_\mathrm{s}\]</div>
+\mathrm{M}_\mathrm{s}\]</div>
 <p>Be careful that the axes in <code class="docutils literal notranslate"><span class="pre">POSCAR</span></code> is defined by three row vectors, i.e.,
 <span class="math notranslate nohighlight">\(( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \; \mathbf{c}_\mathrm{u} )^T\)</span>.</p>
 </section>
@@ -1045,11 +1045,13 @@ obtain the thermal properties, therefore physical units have to be set properly
 for it (see <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.)</p>
 <p>The calculated values are written into <code class="docutils literal notranslate"><span class="pre">thermal_properties.yaml</span></code>. The unit
 systems of free energy, heat capacity, and entropy are kJ/mol, J/K/mol, and
-J/K/mol, respectively, where 1 mol means <span class="math notranslate nohighlight">\(\mathrm{N_A}\times\)</span> your input
-unit cell (not formula unit), i.e. you have to divide the value by number of
-formula unit in your unit cell by yourself. For example, in MgO (conventional)
-unit cell, if you want to compare with experimental results in kJ/mol, you have
-to divide the phonopy output by four.</p>
+J/K/mol, respectively, where 1 mol means <span class="math notranslate nohighlight">\(\mathrm{N_A}\times\)</span> the
+primitive cell defined by <a class="reference internal" href="#primitive-axes-tag"><span class="std std-ref">PRIMITIVE_AXES</span></a> but may not corresppond to
+<span class="math notranslate nohighlight">\(\mathrm{N_A}\times\)</span> formula unit, i.e. you have to divide the value by
+number of formula unit in the primitive cell defined by
+<a class="reference internal" href="#primitive-axes-tag"><span class="std std-ref">PRIMITIVE_AXES</span></a> by yourself. For example, in MgO (conventional) unit
+cell, if you want to compare with experimental results in kJ/mol, you have to
+divide the phonopy output by four.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">TPROP</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>

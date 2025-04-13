@@ -343,6 +343,7 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#three-unit-cells">Three unit cells</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#import-modules">Import modules</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#work-flow">Work flow</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-process">Pre-process</a></li>
@@ -382,8 +383,8 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#definitions-of-variables">Definitions of variables</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-matrix">Primitive matrix</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supercell-matrix">Supercell matrix</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-matrix">Primitive matrix</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetry-search-tolerance">Symmetry search tolerance</a></li>
 </ul>
 </li>
@@ -403,8 +404,37 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="phonopy-api-for-python">
 <span id="phonopy-module"></span><h1>Phonopy API for Python<a class="headerlink" href="#phonopy-api-for-python" title="Link to this heading">#</a></h1>
-<p><strong>This is under development. Configurations may alter.</strong> Requests or suggestions
-are very welcome.</p>
+<section id="three-unit-cells">
+<h2>Three unit cells<a class="headerlink" href="#three-unit-cells" title="Link to this heading">#</a></h2>
+<p>In the <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> class, mainly three different unit cells are used, <code class="docutils literal notranslate"><span class="pre">unitcell</span></code>,
+<code class="docutils literal notranslate"><span class="pre">supercell</span></code>, and <code class="docutils literal notranslate"><span class="pre">primitive</span></code>, which can be accessed with these attributes in the
+instance. <code class="docutils literal notranslate"><span class="pre">unitcell</span></code> is the initial input crystal structure. From <code class="docutils literal notranslate"><span class="pre">unitcell</span></code>,
+<code class="docutils literal notranslate"><span class="pre">supercell</span></code> is created by <code class="docutils literal notranslate"><span class="pre">supercell_matrix</span></code> (<a class="reference internal" href="#variable-supercell-matrix"><span class="std std-ref">Supercell matrix</span></a>).
+Then <code class="docutils literal notranslate"><span class="pre">primitive</span></code> is created from <code class="docutils literal notranslate"><span class="pre">supercell</span></code> with <code class="docutils literal notranslate"><span class="pre">supercell_matrix</span></code> and
+<code class="docutils literal notranslate"><span class="pre">primitive_matrix</span></code> (<a class="reference internal" href="#variable-primitive-matrix"><span class="std std-ref">Primitive matrix</span></a>).</p>
+<p>Having the <code class="docutils literal notranslate"><span class="pre">supercell_matrix</span></code> (<span class="math notranslate nohighlight">\(\mathrm{M}_\mathrm{s}\)</span>) and the
+<code class="docutils literal notranslate"><span class="pre">primitive</span> <span class="pre">matrix</span></code> (<span class="math notranslate nohighlight">\(\mathrm{M}_\mathrm{p}\)</span>), for example,</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathrm{M}_\mathrm{s} = \begin{pmatrix}
+2 &amp; 0 &amp; 0 \\ 0 &amp; 2 &amp; 0 \\ 0 &amp; 0 &amp; 2
+\end{pmatrix} \;\text{and}\;\;
+\mathrm{M}_\mathrm{p} = \begin{pmatrix}
+0 &amp; 1/2 &amp; 1/2 \\ 1/2 &amp; 0 &amp; 1/2 \\ 1/2 &amp; 1/2 &amp; 0
+\end{pmatrix},\end{split}\]</div>
+<p>respectively, the basis vectors of <code class="docutils literal notranslate"><span class="pre">supercell</span></code> are built from those of
+<code class="docutils literal notranslate"><span class="pre">unitcell</span></code> by</p>
+<div class="math notranslate nohighlight">
+\[( \mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \; \mathbf{c}_\mathrm{s} ) = (
+\mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \; \mathbf{c}_\mathrm{u} )
+\mathrm{M}_\mathrm{s}\]</div>
+<p>and the basis vectors of <code class="docutils literal notranslate"><span class="pre">primitive</span></code> are built from those of <code class="docutils literal notranslate"><span class="pre">supercell</span></code> by</p>
+<div class="math notranslate nohighlight">
+\[( \mathbf{a}_\mathrm{p} \; \mathbf{b}_\mathrm{p} \; \mathbf{c}_\mathrm{p} ) = (
+\mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \; \mathbf{c}_\mathrm{s} )
+\mathrm{M}_\mathrm{s}^{-1} \mathrm{M}_\mathrm{p}.\]</div>
+<p>Once <code class="docutils literal notranslate"><span class="pre">supercell</span></code> and <code class="docutils literal notranslate"><span class="pre">primitive</span></code> are made, <code class="docutils literal notranslate"><span class="pre">unitcell</span></code> will not be used
+basically.</p>
+</section>
 <section id="import-modules">
 <h2>Import modules<a class="headerlink" href="#import-modules" title="Link to this heading">#</a></h2>
 <p>After setting the phonopy python path, the phonopy module is imported by:</p>
@@ -854,40 +884,15 @@ spglib crystal structure
 </section>
 <section id="definitions-of-variables">
 <h2>Definitions of variables<a class="headerlink" href="#definitions-of-variables" title="Link to this heading">#</a></h2>
-<section id="primitive-matrix">
-<span id="variable-primitive-matrix"></span><h3>Primitive matrix<a class="headerlink" href="#primitive-matrix" title="Link to this heading">#</a></h3>
-<p>Primitive matrix <span class="math notranslate nohighlight">\(M_\mathrm{p}\)</span> is a tranformation matrix from lattice
-vectors to those of a primitive cell if there exists the primitive cell in the
-lattice vectors. Following a crystallography convention, the transformation is
-given by</p>
-<div class="math notranslate nohighlight">
-\[( \mathbf{a}_\mathrm{p} \; \mathbf{b}_\mathrm{p} \; \mathbf{c}_\mathrm{p} ) = (
-\mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \; \mathbf{c}_\mathrm{u} )
-M_\mathrm{p}\]</div>
-<p>where <span class="math notranslate nohighlight">\(\mathbf{a}_\mathrm{u}\)</span>, <span class="math notranslate nohighlight">\(\mathbf{b}_\mathrm{u}\)</span>, and
-<span class="math notranslate nohighlight">\(\mathbf{c}_\mathrm{u}\)</span> are the column vectors of the original lattice
-vectors, and <span class="math notranslate nohighlight">\(\mathbf{a}_\mathrm{p}\)</span>, <span class="math notranslate nohighlight">\(\mathbf{b}_\mathrm{p}\)</span>, and
-<span class="math notranslate nohighlight">\(\mathbf{c}_\mathrm{p}\)</span> are the column vectors of the primitive lattice
-vectors. Be careful that the lattice vectors of the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class are the
-row vectors (<a class="reference internal" href="#phonopy-atoms-cell"><span class="std std-ref">cell</span></a>). Therefore the phonopy code, which
-relies on the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class, is usually written such as</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">primitive_lattice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">original_lattice</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">primitive_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
-</pre></div>
-</div>
-<p>or equivalently,</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">primitive_lattice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">primitive_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">original_lattice</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
 <section id="supercell-matrix">
 <span id="variable-supercell-matrix"></span><h3>Supercell matrix<a class="headerlink" href="#supercell-matrix" title="Link to this heading">#</a></h3>
-<p>Supercell matrix <span class="math notranslate nohighlight">\(M_\mathrm{s}\)</span> is a transformation matrix from lattice
+<p>Supercell matrix <span class="math notranslate nohighlight">\(\mathrm{M}_\mathrm{s}\)</span> is a transformation matrix from lattice
 vectors to those of a super cell. Following a crystallography convention, the
 transformation is given by</p>
 <div class="math notranslate nohighlight">
 \[( \mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \; \mathbf{c}_\mathrm{s} ) = (
 \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \; \mathbf{c}_\mathrm{u} )
-M_\mathrm{s}\]</div>
+\mathrm{M}_\mathrm{s}\]</div>
 <p>where <span class="math notranslate nohighlight">\(\mathbf{a}_\mathrm{u}\)</span>, <span class="math notranslate nohighlight">\(\mathbf{b}_\mathrm{u}\)</span>, and
 <span class="math notranslate nohighlight">\(\mathbf{c}_\mathrm{u}\)</span> are the column vectors of the original lattice
 vectors, and <span class="math notranslate nohighlight">\(\mathbf{a}_\mathrm{s}\)</span>, <span class="math notranslate nohighlight">\(\mathbf{b}_\mathrm{s}\)</span>, and
@@ -895,11 +900,26 @@ vectors, and <span class="math notranslate nohighlight">\(\mathbf{a}_\mathrm{s}\
 vectors. Be careful that the lattice vectors of the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class are the
 row vectors (<a class="reference internal" href="#phonopy-atoms-cell"><span class="std std-ref">cell</span></a>). Therefore the phonopy code, which
 relies on the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class, is usually written such as</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">supercell_lattice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">original_lattice</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">supercell_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">supercell_lattice</span> <span class="o">=</span> <span class="p">(</span><span class="n">original_lattice</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">supercell_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
 </pre></div>
 </div>
-<p>or equivalently,</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">supercell_lattice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">supercell_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">original_lattice</span><span class="p">)</span>
+</section>
+<section id="primitive-matrix">
+<span id="variable-primitive-matrix"></span><h3>Primitive matrix<a class="headerlink" href="#primitive-matrix" title="Link to this heading">#</a></h3>
+<p>Primitive matrix <span class="math notranslate nohighlight">\(\mathrm{M}_\mathrm{p}\)</span> is a tranformation matrix from lattice
+vectors to those of a primitive cell if there exists the primitive cell in the
+lattice vectors. Following a crystallography convention, the transformation is
+given by</p>
+<div class="math notranslate nohighlight">
+\[( \mathbf{a}_\mathrm{p} \; \mathbf{b}_\mathrm{p} \; \mathbf{c}_\mathrm{p} ) = (
+\mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \; \mathbf{c}_\mathrm{s} )
+\mathrm{M}_\mathrm{s}^{-1} \mathrm{M}_\mathrm{p}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mathbf{a}_\mathrm{p}\)</span>, <span class="math notranslate nohighlight">\(\mathbf{b}_\mathrm{p}\)</span>, and
+<span class="math notranslate nohighlight">\(\mathbf{c}_\mathrm{p}\)</span> are the column vectors of the primitive lattice
+vectors. Be careful that the lattice vectors of the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class are the
+row vectors (<a class="reference internal" href="#phonopy-atoms-cell"><span class="std std-ref">cell</span></a>). Therefore the phonopy code, which
+relies on the <code class="docutils literal notranslate"><span class="pre">PhonopyAtoms</span></code> class, is usually written such as</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">primitive_lattice</span> <span class="o">=</span> <span class="p">(</span><span class="n">supercell_lattice</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">supercell_matrix</span><span class="p">)</span> <span class="o">@</span> <span class="n">primitive_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
 </pre></div>
 </div>
 </section>
@@ -1107,6 +1127,7 @@ VASP code by the unit cell.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#three-unit-cells">Three unit cells</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#import-modules">Import modules</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#work-flow">Work flow</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-process">Pre-process</a></li>
@@ -1146,8 +1167,8 @@ VASP code by the unit cell.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#definitions-of-variables">Definitions of variables</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-matrix">Primitive matrix</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supercell-matrix">Supercell matrix</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-matrix">Primitive matrix</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#symmetry-search-tolerance">Symmetry search tolerance</a></li>
 </ul>
 </li>

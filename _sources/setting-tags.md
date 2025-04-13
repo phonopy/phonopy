@@ -58,7 +58,7 @@ vectors of {math}`\mathbf{a}_\mathrm{u}`, {math}`\mathbf{b}_\mathrm{u}`, and
 ```{math}
 ( \mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \; \mathbf{c}_\mathrm{s} ) = (
 \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \; \mathbf{c}_\mathrm{u} )
-M_\mathrm{s}
+\mathrm{M}_\mathrm{s}
 ```
 
 Be careful that the axes in `POSCAR` is defined by three row vectors, i.e.,
@@ -685,11 +685,13 @@ for it (see {ref}`calculator_interfaces`.)
 
 The calculated values are written into `thermal_properties.yaml`. The unit
 systems of free energy, heat capacity, and entropy are kJ/mol, J/K/mol, and
-J/K/mol, respectively, where 1 mol means {math}`\mathrm{N_A}\times` your input
-unit cell (not formula unit), i.e. you have to divide the value by number of
-formula unit in your unit cell by yourself. For example, in MgO (conventional)
-unit cell, if you want to compare with experimental results in kJ/mol, you have
-to divide the phonopy output by four.
+J/K/mol, respectively, where 1 mol means {math}`\mathrm{N_A}\times` the
+primitive cell defined by {ref}`primitive_axes_tag` but may not corresppond to
+{math}`\mathrm{N_A}\times` formula unit, i.e. you have to divide the value by
+number of formula unit in the primitive cell defined by
+{ref}`primitive_axes_tag` by yourself. For example, in MgO (conventional) unit
+cell, if you want to compare with experimental results in kJ/mol, you have to
+divide the phonopy output by four.
 
 ```
 TPROP = .TRUE.
