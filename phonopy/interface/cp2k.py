@@ -48,7 +48,55 @@ from phonopy.interface.vasp import check_forces, get_drift_forces
 from phonopy.structure.atoms import PhonopyAtoms, symbol_map
 
 
+def cp2kver(forces_filename):
+    tst2025 = ['FORCES| Atomic forces', 'FORCES| Total atomic force']
+    is2025 = []
+    with open(forces_filename, 'r') as fd:
+        for testline in tst2025:
+            for line in fd:
+                if testline in line:
+                    is2025.append(True)
+    if len(is2025) > 0 and all(is2025):
+        return '2025'
+
+    return '2024'
+
+
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
+    if cp2kver(forces_filenames[0]) == '2025':
+        return parse_set_of_forces2025(num_atoms,
+                                       forces_filenames,
+                                       verbose=verbose)
+    else:
+        return parse_set_of_forces2024(num_atoms,
+                                       forces_filenames,
+                                       verbose=verbose)
+
+
+def parse_set_of_forces2025(num_atoms, forces_filenames, verbose=True):
+    """Parse forces from output files."""
+    force_sets = []
+
+    for i, filename in enumerate(forces_filenames):
+        if verbose:
+            sys.stdout.write("%d. " % (i + 1))
+
+        forces = iter_collect_forces(
+            filename, num_atoms, "FORCES|   Atom     x", [2, 3, 4]
+        )
+
+        if not check_forces(forces, num_atoms, filename, verbose=verbose):
+            return []  # if one file is invalid, the whole thing is broken
+
+        drift_force = get_drift_forces(forces,
+                                       filename=filename,
+                                       verbose=verbose)
+        force_sets.append(np.array(forces) - drift_force)
+
+    return force_sets
+
+
+def parse_set_of_forces2024(num_atoms, forces_filenames, verbose=True):
     """Parse forces from output files."""
     force_sets = []
 
@@ -63,7 +111,9 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
         if not check_forces(forces, num_atoms, filename, verbose=verbose):
             return []  # if one file is invalid, the whole thing is broken
 
-        drift_force = get_drift_forces(forces, filename=filename, verbose=verbose)
+        drift_force = get_drift_forces(forces,
+                                       filename=filename,
+                                       verbose=verbose)
         force_sets.append(np.array(forces) - drift_force)
 
     return force_sets

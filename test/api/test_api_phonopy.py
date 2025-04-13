@@ -1,7 +1,6 @@
 """Tests of Phonopy API."""
 
 import copy
-from importlib.metadata import version
 from pathlib import Path
 
 import numpy as np
@@ -104,7 +103,7 @@ def test_energies_setter_NaCl_type2(ph_nacl_rd: Phonopy):
 
 def test_mlp_NaCl_type2(ph_nacl_rd: Phonopy):
     """Test MLP features in Phonopy."""
-    pytest.importorskip("pypolymlp")
+    pytest.importorskip("pypolymlp", minversion="0.10.0")
     pytest.importorskip("symfc")
 
     atom_energies = {"Cl": -0.31144759, "Na": -0.24580545}
@@ -258,36 +257,20 @@ def test_mlp_NaCl_type2(ph_nacl_rd: Phonopy):
     freqs = ph.get_mesh_dict()["frequencies"]
     print(freqs.ravel().tolist())
 
-    if tuple(map(int, version("pypolymlp").split(".")[:3])) > (0, 5, 0):
-        freqs_ref = [
-            1.9486462367567907,
-            1.9486462367567923,
-            3.2014549283064433,
-            4.318381305851432,
-            4.318381305851434,
-            6.962599794967712,
-            2.7417694382699254,
-            3.5582818988139544,
-            3.9221249615093376,
-            4.487588845789148,
-            4.89564547559005,
-            5.461687294255339,
-        ]
-    else:
-        freqs_ref = [
-            1.9486198781761899,
-            1.9486198781761965,
-            3.2013391476873494,
-            4.318425526312041,
-            4.318425526312042,
-            6.962529613539249,
-            2.7418677037679853,
-            3.558305139894322,
-            3.9222690417375814,
-            4.487750019058183,
-            4.895750076392935,
-            5.461698684467867,
-        ]
+    freqs_ref = [
+        1.9479582873751362,
+        1.9479582873751387,
+        3.201448818645571,
+        4.3184184471176446,
+        4.318418447117647,
+        6.962692062451476,
+        2.7407481459662795,
+        3.55742972698832,
+        3.921702373852099,
+        4.487456193539974,
+        4.894982489029413,
+        5.46152086052448,
+    ]
     np.testing.assert_allclose(freqs.ravel(), freqs_ref, atol=1e-5)
 
 
