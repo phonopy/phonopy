@@ -1,7 +1,6 @@
 """Tests for pypolymlp calculater interface."""
 
 import pathlib
-from importlib.metadata import version
 
 import numpy as np
 import pytest
@@ -227,7 +226,7 @@ atom_energies = {
 
 def test_pypolymlp_develop(ph_nacl_rd: Phonopy):
     """Test of pypolymlp-develop using NaCl 2x2x2 with RD results."""
-    pytest.importorskip("pypolymlp")
+    pytest.importorskip("pypolymlp", minversion="0.10.0")
     pytest.importorskip("symfc")
     params = PypolymlpParams(gtinv_maxl=(4, 4), atom_energies=atom_energies)
     disps = ph_nacl_rd.displacements
@@ -405,34 +404,18 @@ def test_pypolymlp_develop(ph_nacl_rd: Phonopy):
     ph.run_mesh([2, 2, 2])
     freqs = ph.get_mesh_dict()["frequencies"]
     print(freqs.ravel().tolist())
-    if tuple(map(int, version("pypolymlp").split(".")[:3])) > (0, 5, 0):
-        freqs_ref = [
-            1.9409250560500129,
-            1.9409250560500169,
-            3.192750923260675,
-            4.314458024700542,
-            4.314458024700546,
-            6.956432635066776,
-            2.7356954712920816,
-            3.5506497162576514,
-            3.9162969088495982,
-            4.4794178978783865,
-            4.887957546634348,
-            5.451014825181226,
-        ]
-    else:
-        freqs_ref = [
-            1.940838305245036,
-            1.9408383052450375,
-            3.19296676121058,
-            4.314510318861134,
-            4.314510318861136,
-            6.956729237681971,
-            2.735605087087514,
-            3.5507797592931505,
-            3.9165064505332783,
-            4.479490281456017,
-            4.8881010154940014,
-            5.451421819346681,
-        ]
+    freqs_ref = [
+        1.941547832280018,
+        1.9415478322800197,
+        3.193725481896553,
+        4.3156898153907415,
+        4.315689815390742,
+        6.956947216285988,
+        2.7371782984779234,
+        3.551580148629576,
+        3.91783431236152,
+        4.480847025290504,
+        4.888973568501199,
+        5.4520357131954515,
+    ]
     np.testing.assert_allclose(freqs.ravel(), freqs_ref, atol=1e-6)
