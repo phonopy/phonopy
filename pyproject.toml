@@ -27,8 +27,8 @@ Repository = "https://github.com/phonopy/phonopy"
 [project.optional-dependencies]
 cp2k = ["cp2k-input-tools"]
 seekpath = ["seekpath"]
-pypolymlp = ["pypolymlp>=0.9.2"]
-tools = ["seekpath", "pypolymlp>=0.9.2"]
+pypolymlp = ["pypolymlp>=0.10.0"]
+tools = ["seekpath", "pypolymlp>=0.10.0"]
 
 [project.scripts]
 phonopy = "phonopy.scripts.phonopy:run"
