@@ -280,12 +280,12 @@ def select_and_extract_force_constants(
             _force_constants_filename = "force_constants.hdf5"
 
     if _fc is not None:
+        if log_level and _force_constants_filename is not None:
+            print(f'Force constants were read from "{_force_constants_filename}".')
         if not is_compact_fc and _fc.shape[0] != _fc.shape[1]:
             _fc = compact_fc_to_full_fc(phonon.primitive, _fc, log_level=log_level)
         elif is_compact_fc and _fc.shape[0] == _fc.shape[1]:
             _fc = full_fc_to_compact_fc(phonon.primitive, _fc, log_level=log_level)
-        if log_level and _force_constants_filename is not None:
-            print(f'Force constants were read from "{_force_constants_filename}".')
 
     return _fc
 
@@ -462,11 +462,6 @@ def _read_force_constants_file(
         )
     else:
         _fc = parse_FORCE_CONSTANTS(filename=force_constants_filename, p2s_map=p2s_map)
-
-    if is_compact_fc and _fc.shape[0] == _fc.shape[1]:
-        _fc = full_fc_to_compact_fc(phonon.primitive, _fc, log_level=log_level)
-    elif not is_compact_fc and _fc.shape[0] != _fc.shape[1]:
-        _fc = compact_fc_to_full_fc(phonon.primitive, _fc, log_level=log_level)
 
     return _fc
 

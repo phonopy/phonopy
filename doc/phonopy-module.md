@@ -2,8 +2,46 @@
 
 # Phonopy API for Python
 
-**This is under development. Configurations may alter.** Requests or suggestions
-are very welcome.
+## Three unit cells
+
+In the `Phonopy` class, mainly three different unit cells are used, `unitcell`,
+`supercell`, and `primitive`, which can be accessed with these attributes in the
+instance. `unitcell` is the initial input crystal structure. From `unitcell`,
+`supercell` is created by `supercell_matrix` ({ref}`variable_supercell_matrix`).
+Then `primitive` is created from `supercell` with `supercell_matrix` and
+`primitive_matrix` ({ref}`variable_primitive_matrix`).
+
+Having the `supercell_matrix` ($\mathrm{M}_\mathrm{s}$) and the
+`primitive matrix` ($\mathrm{M}_\mathrm{p}$), for example,
+
+```{math}
+\mathrm{M}_\mathrm{s} = \begin{pmatrix}
+2 & 0 & 0 \\ 0 & 2 & 0 \\ 0 & 0 & 2
+\end{pmatrix} \;\text{and}\;\;
+\mathrm{M}_\mathrm{p} = \begin{pmatrix}
+0 & 1/2 & 1/2 \\ 1/2 & 0 & 1/2 \\ 1/2 & 1/2 & 0
+\end{pmatrix},
+```
+
+respectively, the basis vectors of `supercell` are built from those of
+`unitcell` by
+
+```{math}
+( \mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \; \mathbf{c}_\mathrm{s} ) = (
+\mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \; \mathbf{c}_\mathrm{u} )
+\mathrm{M}_\mathrm{s}
+```
+
+and the basis vectors of `primitive` are built from those of `supercell` by
+
+```{math}
+( \mathbf{a}_\mathrm{p} \; \mathbf{b}_\mathrm{p} \; \mathbf{c}_\mathrm{p} ) = (
+\mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \; \mathbf{c}_\mathrm{s} )
+\mathrm{M}_\mathrm{s}^{-1} \mathrm{M}_\mathrm{p}.
+```
+
+Once `supercell` and `primitive` are made, `unitcell` will not be used
+basically.
 
 ## Import modules
 
@@ -529,51 +567,17 @@ spglib crystal structure
 
 ## Definitions of variables
 
-(variable_primitive_matrix)=
-
-### Primitive matrix
-
-Primitive matrix {math}`M_\mathrm{p}` is a tranformation matrix from lattice
-vectors to those of a primitive cell if there exists the primitive cell in the
-lattice vectors. Following a crystallography convention, the transformation is
-given by
-
-```{math}
-( \mathbf{a}_\mathrm{p} \; \mathbf{b}_\mathrm{p} \; \mathbf{c}_\mathrm{p} ) = (
-\mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \; \mathbf{c}_\mathrm{u} )
-M_\mathrm{p}
-```
-
-where {math}`\mathbf{a}_\mathrm{u}`, {math}`\mathbf{b}_\mathrm{u}`, and
-{math}`\mathbf{c}_\mathrm{u}` are the column vectors of the original lattice
-vectors, and {math}`\mathbf{a}_\mathrm{p}`, {math}`\mathbf{b}_\mathrm{p}`, and
-{math}`\mathbf{c}_\mathrm{p}` are the column vectors of the primitive lattice
-vectors. Be careful that the lattice vectors of the `PhonopyAtoms` class are the
-row vectors ({ref}`phonopy_Atoms_cell`). Therefore the phonopy code, which
-relies on the `PhonopyAtoms` class, is usually written such as
-
-```python
-primitive_lattice = np.dot(original_lattice.T, primitive_matrix).T,
-```
-
-or equivalently,
-
-```python
-primitive_lattice = np.dot(primitive_matrix.T, original_lattice)
-```
-
 (variable_supercell_matrix)=
-
 ### Supercell matrix
 
-Supercell matrix {math}`M_\mathrm{s}` is a transformation matrix from lattice
+Supercell matrix {math}`\mathrm{M}_\mathrm{s}` is a transformation matrix from lattice
 vectors to those of a super cell. Following a crystallography convention, the
 transformation is given by
 
 ```{math}
 ( \mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \; \mathbf{c}_\mathrm{s} ) = (
 \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \; \mathbf{c}_\mathrm{u} )
-M_\mathrm{s}
+\mathrm{M}_\mathrm{s}
 ```
 
 where {math}`\mathbf{a}_\mathrm{u}`, {math}`\mathbf{b}_\mathrm{u}`, and
@@ -585,13 +589,31 @@ row vectors ({ref}`phonopy_Atoms_cell`). Therefore the phonopy code, which
 relies on the `PhonopyAtoms` class, is usually written such as
 
 ```python
-supercell_lattice = np.dot(original_lattice.T, supercell_matrix).T,
+supercell_lattice = (original_lattice.T @ supercell_matrix).T,
 ```
 
-or equivalently,
+(variable_primitive_matrix)=
+### Primitive matrix
+
+Primitive matrix {math}`\mathrm{M}_\mathrm{p}` is a tranformation matrix from lattice
+vectors to those of a primitive cell if there exists the primitive cell in the
+lattice vectors. Following a crystallography convention, the transformation is
+given by
+
+```{math}
+( \mathbf{a}_\mathrm{p} \; \mathbf{b}_\mathrm{p} \; \mathbf{c}_\mathrm{p} ) = (
+\mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \; \mathbf{c}_\mathrm{s} )
+\mathrm{M}_\mathrm{s}^{-1} \mathrm{M}_\mathrm{p}
+```
+
+where {math}`\mathbf{a}_\mathrm{p}`, {math}`\mathbf{b}_\mathrm{p}`, and
+{math}`\mathbf{c}_\mathrm{p}` are the column vectors of the primitive lattice
+vectors. Be careful that the lattice vectors of the `PhonopyAtoms` class are the
+row vectors ({ref}`phonopy_Atoms_cell`). Therefore the phonopy code, which
+relies on the `PhonopyAtoms` class, is usually written such as
 
 ```python
-supercell_lattice = np.dot(supercell_matrix.T, original_lattice)
+primitive_lattice = (supercell_lattice.T @ np.linalg.inv(supercell_matrix) @ primitive_matrix).T,
 ```
 
 ### Symmetry search tolerance
