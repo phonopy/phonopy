@@ -2,6 +2,10 @@
 
 # Change Log
 
+## Arp-15-2025: Version 2.38.1
+
+- Maintenance release including minor updates.
+
 ## Mar-3-2025: Version 2.38.0
 
 - Update for using the latest pypolymlp's MLP output format
