@@ -379,6 +379,6 @@ def _list_elem2str(a):
     """Convert type of list element to str."""
 
     def f_str(x):
-        return f"{x:0<12f}"
+        return f"{x:0<16.12f}"
 
     return list(map(f_str, a))
