@@ -91,7 +91,7 @@ def parse_set_of_energy_forces2025(num_atoms, forces_filenames, verbose=True):
     """Parse forces from output files."""
     force_sets = []
     energy_sets = []
-    
+
     for i, filename in enumerate(forces_filenames):
         if verbose:
             sys.stdout.write("%d. " % (i + 1))
@@ -115,7 +115,7 @@ def parse_set_of_energy_forces2025(num_atoms, forces_filenames, verbose=True):
                     esc = float(line.split('=')[1])
             energy_sets.append(esc)
 
-    return {"forces": force_sets, 
+    return {"forces": force_sets,
             "supercell_energies": energy_sets,
     }
 
@@ -171,7 +171,7 @@ def parse_set_of_energy_forces2024(num_atoms, forces_filenames, verbose=True):
                     esc = float(line.split('=')[1])
             energy_sets.append(esc)
 
-    return {"forces": force_sets, 
+    return {"forces": force_sets,
             "supercell_energies": energy_sets,
     }
 
