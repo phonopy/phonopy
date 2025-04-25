@@ -685,8 +685,9 @@ def get_default_physical_units(interface_mode=None):
         units["force_unit"] = "eV/angstrom"
     elif interface_mode == "cp2k":
         units["factor"] = CP2KToTHz
-        units["nac_factor"] = None  # not implemented
+        units["nac_factor"] = Bohr**2
         units["distance_to_A"] = 1.0
+        units["force_to_eVperA"] = Hartree / Bohr
         units["force_constants_unit"] = "hartree/angstrom.au"
         units["length_unit"] = "angstrom"
         units["force_unit"] = "hartree/au"
