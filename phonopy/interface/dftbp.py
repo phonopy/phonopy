@@ -40,8 +40,9 @@ import numpy as np
 
 from phonopy.file_IO import collect_forces
 from phonopy.interface.vasp import check_forces, get_drift_forces
-from phonopy.structure.atoms import Atoms
-from phonopy.units import dftbpToBohr
+from phonopy.structure.atoms import PhonopyAtoms
+
+dftbpToBohr = 0.188972598857892e01
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
@@ -131,9 +132,11 @@ def read_dftbp(filename):
     cell = np.array(cell)
 
     if is_scaled:
-        atoms = Atoms(symbols=expaned_symbols, cell=cell, scaled_positions=positions)
+        atoms = PhonopyAtoms(
+            symbols=expaned_symbols, cell=cell, scaled_positions=positions
+        )
     else:
-        atoms = Atoms(symbols=expaned_symbols, cell=cell, positions=positions)
+        atoms = PhonopyAtoms(symbols=expaned_symbols, cell=cell, positions=positions)
 
     return atoms
 

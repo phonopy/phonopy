@@ -76,8 +76,8 @@ from phonopy.harmonic.force_constants import (
     full_fc_to_compact_fc,
 )
 from phonopy.interface.calculator import (
+    get_calculator_physical_units,
     get_default_displacement_distance,
-    get_default_physical_units,
     write_supercells_with_displacements,
 )
 from phonopy.interface.fc_calculator import fc_calculator_names
@@ -85,6 +85,7 @@ from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.vasp import create_FORCE_CONSTANTS
 from phonopy.phonon.band_structure import get_band_qpoints, get_band_qpoints_by_seekpath
 from phonopy.phonon.dos import get_pdos_indices
+from phonopy.physical_units import get_physical_units
 from phonopy.sscha.core import MLPSSCHA
 from phonopy.structure.atoms import atom_data, symbol_map
 from phonopy.structure.cells import (
@@ -94,7 +95,6 @@ from phonopy.structure.cells import (
 )
 from phonopy.structure.cells import isclose as cells_isclose
 from phonopy.structure.dataset import forces_in_dataset
-from phonopy.units import THzToEv
 
 
 # AA is created at http://www.network-science.de/ascii/ with standard.
@@ -289,7 +289,7 @@ def _finalize_phonopy(
     filename="phonopy.yaml",
 ):
     """Finalize phonopy."""
-    units = get_default_physical_units(phonon.calculator)
+    units = get_calculator_physical_units(phonon.calculator)
 
     if settings.save_params:
         exists_fc_only = (
@@ -374,8 +374,8 @@ def _print_settings(
         and settings.cell_filename != unitcell_filename
     ):
         print(f'("{settings.cell_filename}" was not used though specified.)')
-    physical_units = get_default_physical_units(interface_mode)
-    print("Unit of length: %s" % physical_units["length_unit"])
+    units = get_calculator_physical_units(interface_mode)
+    print("Unit of length: %s" % units["length_unit"])
     if _is_band_auto(settings) and not is_primitive_axes_auto:
         print(
             "Automatic band structure mode forced automatic choice of primitive axes."
@@ -611,14 +611,14 @@ def _create_FORCE_SETS_from_settings(
         phpy_yaml.read(disp_filename)
         if phpy_yaml.calculator is not None:
             interface_mode = phpy_yaml.calculator  # overwrite interface_mode
-        physical_units = get_default_physical_units(interface_mode)
+        units = get_calculator_physical_units(interface_mode)
         if phpy_yaml.physical_units is None or all(
             [
-                physical_units.get(key, None) == val
+                units.get(key, None) == val
                 for key, val in phpy_yaml.physical_units.items()
             ]
         ):
-            phpy_yaml.physical_units = physical_units
+            phpy_yaml.physical_units = units
 
     files_exist(filenames, log_level=log_level)
     create_FORCE_SETS(
@@ -890,9 +890,9 @@ def _run_MLPSSCHA(phonon: Phonopy, settings: PhonopySettings, log_level: int):
 def _post_process_force_constants(
     phonon: Phonopy, settings: PhonopySettings, log_level: int, load_phonopy_yaml: bool
 ):
-    physical_units = get_default_physical_units(phonon.calculator)
+    units = get_calculator_physical_units(phonon.calculator)
     p2s_map = phonon.primitive.p2s_map
-    fc_unit = physical_units["force_constants_unit"]
+    fc_unit = units["force_constants_unit"]
 
     # Impose cutoff radius on force constants
     cutoff_radius = settings.cutoff_radius
@@ -928,7 +928,7 @@ def _post_process_force_constants(
     # Write FORCE_CONSTANTS
     if settings.write_force_constants:
         if settings.is_hdf5 or settings.writefc_format == "hdf5":
-            fc_unit = physical_units["force_constants_unit"]
+            fc_unit = units["force_constants_unit"]
             write_force_constants_to_hdf5(
                 phonon.force_constants,
                 p2s_map=p2s_map,
@@ -1045,8 +1045,8 @@ def store_nac_params(
 ):
     """Calculate or read NAC params."""
     if nac_factor is None:
-        physical_units = get_default_physical_units(phonon.calculator)
-        _nac_factor = physical_units["nac_factor"]
+        units = get_calculator_physical_units(phonon.calculator)
+        _nac_factor = units["nac_factor"]
     else:
         _nac_factor = nac_factor
 
@@ -1117,7 +1117,7 @@ def store_nac_params(
 def _run_calculation(phonon: Phonopy, settings: PhonopySettings, plot_conf, log_level):
     """Run phonon calculations."""
     interface_mode = phonon.calculator
-    physical_units = get_default_physical_units(interface_mode)
+    units = get_calculator_physical_units(interface_mode)
     run_mode = settings.run_mode
 
     #
@@ -1212,7 +1212,7 @@ def _run_calculation(phonon: Phonopy, settings: PhonopySettings, plot_conf, log_
         else:
             comment = {
                 "calculator": interface_mode,
-                "length_unit": physical_units["length_unit"],
+                "length_unit": units["length_unit"],
             }
 
         if settings.is_hdf5 or settings.band_format == "hdf5":
@@ -1318,7 +1318,7 @@ def _run_calculation(phonon: Phonopy, settings: PhonopySettings, plot_conf, log_
 
             if log_level:
                 cutoff_freq = phonon.thermal_properties.cutoff_frequency
-                cutoff_freq /= THzToEv
+                cutoff_freq /= get_physical_units().THzToEv
                 print("Cutoff frequency: %.5f" % cutoff_freq)
                 num_ignored_modes = (
                     phonon.thermal_properties.number_of_modes
@@ -1988,8 +1988,8 @@ def _init_phonopy(settings, cell_info, symprec, log_level):
         if settings.frequency_conversion_factor is not None:
             freq_factor = settings.frequency_conversion_factor
         else:
-            physical_units = get_default_physical_units(cell_info["interface_mode"])
-            freq_factor = physical_units["factor"]
+            units = get_calculator_physical_units(cell_info["interface_mode"])
+            freq_factor = units["factor"]
 
         phonon = Phonopy(
             cell_info["unitcell"],

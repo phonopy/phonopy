@@ -42,8 +42,8 @@ from phonopy.phonon.mesh import IterMesh, Mesh
 from phonopy.phonon.qpoints import QpointsPhonon
 from phonopy.phonon.random_displacements import bose_einstein_dist
 from phonopy.phonon.thermal_displacement import ThermalDisplacements
+from phonopy.physical_units import get_physical_units
 from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
-from phonopy.units import AMU, THz
 
 
 class DynamicStructureFactor:
@@ -172,7 +172,9 @@ class DynamicStructureFactor:
         self._set_phonon()
 
         self._q_count = 0
-        self._unit_convertion_factor = 1.0 / (AMU * (2 * np.pi * THz) ** 2)
+        self._unit_convertion_factor = 1.0 / (
+            get_physical_units().AMU * (2 * np.pi * get_physical_units().THz) ** 2
+        )
 
         self.dynamic_structure_factors = np.zeros(
             self.frequencies.shape, dtype="double", order="C"

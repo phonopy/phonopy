@@ -433,11 +433,11 @@ if __name__ == "__main__":
     )
     (options, args) = parser.parse_args()
 
-    from phonopy.units import Bohr
+    from phonopy.physical_units import physical_units
 
     if options.v2w:
         cell = read_vasp(args[0])
-        lattice = cell.get_cell() / Bohr
+        lattice = cell.get_cell() / physical_units.Bohr
         cell.set_cell(lattice)
         npts, r0s, rmts = _parse_core_param(open(args[1]))
         text = _get_wien2k_struct(cell, npts, r0s, rmts)
@@ -446,7 +446,7 @@ if __name__ == "__main__":
     elif options.w2v:
         cell, npts, r0s, rmts = parse_wien2k_struct(args[0])
         positions = cell.get_scaled_positions()
-        lattice = cell.get_cell() * Bohr
+        lattice = cell.get_cell() * physical_units.Bohr
         cell.set_cell(lattice)
         cell.set_scaled_positions(positions)
         _clean_scaled_positions(cell)

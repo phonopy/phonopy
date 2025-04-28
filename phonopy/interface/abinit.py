@@ -48,8 +48,8 @@ from phonopy.interface.vasp import (
     get_drift_forces,
     get_scaled_positions_lines,
 )
+from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms, atom_data
-from phonopy.units import Bohr
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
@@ -97,7 +97,7 @@ def read_abinit(filename: Union[str, bytes, os.PathLike, io.IOBase]):
         pos_bohr = np.transpose(tags["xcart"])
         positions = np.dot(np.linalg.inv(lattice), pos_bohr).T
     elif tags["xangst"] is not None:
-        pos_bohr = np.transpose(tags["xangst"]) / Bohr
+        pos_bohr = np.transpose(tags["xangst"]) / get_physical_units().Bohr
         positions = np.dot(np.linalg.inv(lattice), pos_bohr).T
     elif tags["xred"] is not None:
         positions = tags["xred"]
@@ -240,7 +240,7 @@ class AbinitIn:
                 if len(val) >= 6:
                     if val[:6] == "angstr":
                         for i in range(3):
-                            acell[i] /= Bohr
+                            acell[i] /= get_physical_units().Bohr
                 break
 
             acell += self._get_numerical_values(val)
