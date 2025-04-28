@@ -62,6 +62,7 @@ Bohr = get_physical_units().Bohr
 Hartree = get_physical_units().Hartree
 Rydberg = get_physical_units().Rydberg
 Kb = get_physical_units().Kb
+THzToCm = get_physical_units().THzToCm
 THzToEv = get_physical_units().THzToEv
 CmToEv = get_physical_units().CmToEv
 EVAngstromToGPa = get_physical_units().EVAngstromToGPa
