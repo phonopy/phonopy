@@ -39,7 +39,7 @@ import sys
 import numpy as np
 
 from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
-from phonopy.physical_units import physical_units
+from phonopy.physical_units import get_physical_units
 from phonopy.structure.grid_points import get_qpoints
 
 
@@ -207,7 +207,9 @@ class AutoCorrelation:
         if self._masses is not None and self._temperature is not None:
             for i, m in enumerate(self._masses):
                 self._vv[:, i] *= (
-                    m * physical_units.AMU / (physical_units.kb_J * self._temperature)
+                    m
+                    * get_physical_units().AMU
+                    / (get_physical_units().kb_J * self._temperature)
                 )
 
         self._n_elements = n_elem

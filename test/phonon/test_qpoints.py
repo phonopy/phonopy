@@ -3,7 +3,7 @@
 import numpy as np
 
 from phonopy import Phonopy
-from phonopy.physical_units import physical_units
+from phonopy.physical_units import get_physical_units
 
 
 def test_Qpoints(ph_nacl_nofcsym: Phonopy):
@@ -15,7 +15,7 @@ def test_Qpoints(ph_nacl_nofcsym: Phonopy):
         dm = phonon.qpoints.dynamical_matrices[i]
         dm_eigs = np.linalg.eigvalsh(dm).real
         eigs = phonon.qpoints.eigenvalues[i]
-        freqs = phonon.qpoints.frequencies[i] / physical_units.defaultToTHz
+        freqs = phonon.qpoints.frequencies[i] / get_physical_units().defaultToTHz
         np.testing.assert_allclose(dm_eigs, eigs)
         np.testing.assert_allclose(freqs**2 * np.sign(freqs), eigs)
 

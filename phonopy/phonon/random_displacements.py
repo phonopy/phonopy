@@ -47,7 +47,7 @@ from phonopy.harmonic.dynmat_to_fc import (
     categorize_commensurate_points,
     get_commensurate_points_in_integers,
 )
-from phonopy.physical_units import physical_units
+from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
 
@@ -70,7 +70,9 @@ def bose_einstein_dist(
         Phonon occupation numbers.
 
     """
-    return 1.0 / (np.exp(physical_units.THzToEv * x / (physical_units.Kb * t)) - 1)
+    return 1.0 / (
+        np.exp(get_physical_units().THzToEv * x / (get_physical_units().Kb * t)) - 1
+    )
 
 
 class RandomDisplacements:
@@ -132,7 +134,7 @@ class RandomDisplacements:
         dist_func: Optional[str] = None,
         cutoff_frequency: Optional[float] = None,
         max_distance: Optional[float] = None,
-        factor: float = physical_units.defaultToTHz,
+        factor: Optional[float] = None,
         use_openmp: bool = False,
     ):
         """Init method.
@@ -171,7 +173,12 @@ class RandomDisplacements:
         else:
             self._cutoff_frequency = cutoff_frequency
         self._max_distance = max_distance
-        self._factor = factor
+
+        _physical_units = get_physical_units()
+        if factor is None:
+            self._factor = _physical_units.defaultToTHz
+        else:
+            self._factor = factor
         self._T = None
         self._u = None
 
@@ -183,19 +190,19 @@ class RandomDisplacements:
             raise RuntimeError("Either 'quantum' or 'classical' is required.")
 
         self._unit_conversion = (
-            physical_units.Hbar
-            * physical_units.EV
-            / physical_units.AMU
-            / physical_units.THz
+            _physical_units.Hbar
+            * _physical_units.EV
+            / _physical_units.AMU
+            / _physical_units.THz
             / (2 * np.pi)
-            / physical_units.Angstrom**2
+            / _physical_units.Angstrom**2
         )
         self._unit_conversion_classical = (
-            physical_units.Kb
-            * physical_units.EV
-            / physical_units.AMU
-            / (physical_units.THz * (2 * np.pi)) ** 2
-            / physical_units.Angstrom**2
+            _physical_units.Kb
+            * _physical_units.EV
+            / _physical_units.AMU
+            / (_physical_units.THz * (2 * np.pi)) ** 2
+            / _physical_units.Angstrom**2
         )
 
         # Dynamical matrix without NAC because of commensurate points only

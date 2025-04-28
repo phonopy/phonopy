@@ -40,7 +40,7 @@ import numpy as np
 
 from phonopy.file_IO import iter_collect_forces
 from phonopy.interface.vasp import check_forces, get_drift_forces
-from phonopy.physical_units import physical_units
+from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.symmetry import Symmetry
 
@@ -66,7 +66,7 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
             force_sets.append(
                 np.multiply(
                     np.array(crystal_forces) - drift_force,
-                    physical_units.Hartree / physical_units.Bohr,
+                    get_physical_units().Hartree / get_physical_units().Bohr,
                 )
             )
         else:

@@ -50,7 +50,7 @@ from phonopy.interface.vasp import (
     get_drift_forces,
     get_scaled_positions_lines,
 )
-from phonopy.physical_units import physical_units
+from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms, split_symbol_and_index, symbol_map
 from phonopy.structure.cells import get_primitive, get_supercell
 
@@ -311,7 +311,7 @@ class PwscfIn:
             else:
                 factor = self._tags["celldm(1)"]  # in Bohr
         elif "angstrom" in unit:
-            factor = 1.0 / physical_units.Bohr
+            factor = 1.0 / get_physical_units().Bohr
         elif "bohr" in unit:
             factor = 1.0
         else:
@@ -338,7 +338,7 @@ class PwscfIn:
         unit = self._values[0].lower()
         factor = 1.0
         if "angstrom" in unit:
-            factor = 1.0 / physical_units.Bohr
+            factor = 1.0 / get_physical_units().Bohr
             self._cartesian_positions = True
         elif "bohr" in unit:
             self._cartesian_positions = True

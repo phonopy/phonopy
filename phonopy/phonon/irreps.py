@@ -43,7 +43,7 @@ from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.phonon.character_table import character_table
 from phonopy.phonon.degeneracy import degenerate_sets as get_degenerate_sets
-from phonopy.physical_units import physical_units
+from phonopy.physical_units import get_physical_units
 from phonopy.structure.cells import is_primitive_cell
 from phonopy.structure.symmetry import Symmetry
 from phonopy.utils import similarity_transformation
@@ -65,7 +65,7 @@ class IrReps:
         q,
         is_little_cogroup=False,
         nac_q_direction=None,
-        factor=physical_units.defaultToTHz,
+        factor=None,
         symprec=1e-5,
         degeneracy_tolerance=None,
         log_level=0,
@@ -73,7 +73,10 @@ class IrReps:
         """Init method."""
         self._is_little_cogroup = is_little_cogroup
         self._nac_q_direction = nac_q_direction
-        self._factor = factor
+        if factor is None:
+            self._factor = get_physical_units().defaultToTHz
+        else:
+            self._factor = factor
         self._log_level = log_level
 
         self._q = np.array(q)

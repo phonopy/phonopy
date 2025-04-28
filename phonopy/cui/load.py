@@ -45,7 +45,7 @@ import numpy as np
 
 import phonopy.cui.load_helper as load_helper
 from phonopy.api_phonopy import Phonopy
-from phonopy.interface.calculator import get_default_physical_units
+from phonopy.interface.calculator import get_calculator_physical_units
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_primitive_matrix
@@ -277,7 +277,7 @@ def load(
         print('Set "%s" mode.' % _calculator)
 
     # units keywords: factor, nac_factor, distance_to_A
-    units = get_default_physical_units(_calculator)
+    units = get_calculator_physical_units(_calculator)
     if factor is None:
         _factor = units["factor"]
     else:

@@ -36,6 +36,7 @@
 from __future__ import annotations
 
 import pathlib
+import warnings
 from argparse import ArgumentParser
 from collections.abc import Sequence
 from math import pi, sqrt
@@ -47,63 +48,10 @@ import yaml
 from phonopy.file_IO import get_supported_file_extensions_for_compression
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.vasp import sort_positions_by_symbols
-from phonopy.physical_units import physical_units
+from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import determinant
 from phonopy.structure.dataset import get_displacements_and_forces
-
-VaspToTHz = physical_units.defaultToTHz  # [THz] 15.633302
-Wien2kToTHz = (
-    sqrt(physical_units.Rydberg / 1000 * physical_units.EV / physical_units.AMU)
-    / (physical_units.Bohr * 1e-10)
-    / (2 * pi)
-    / 1e12
-)  # [THz] 3.44595837
-AbinitToTHz = (
-    sqrt(physical_units.EV / (physical_units.AMU * physical_units.Bohr))
-    / physical_units.Angstrom
-    / (2 * pi)
-    / 1e12
-)  # [THz] 21.49068
-PwscfToTHz = (
-    sqrt(physical_units.Rydberg * physical_units.EV / physical_units.AMU)
-    / (physical_units.Bohr * 1e-10)
-    / (2 * pi)
-    / 1e12
-)  # [THz] 108.97077
-ElkToTHz = (
-    sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
-    / (physical_units.Bohr * 1e-10)
-    / (2 * pi)
-    / 1e12
-)  # [THz] 154.10794
-SiestaToTHz = (
-    sqrt(physical_units.EV / (physical_units.AMU * physical_units.Bohr))
-    / physical_units.Angstrom
-    / (2 * pi)
-    / 1e12
-)  # [THz] 21.49068
-CP2KToTHz = (
-    sqrt(
-        physical_units.Hartree
-        * physical_units.EV
-        / (physical_units.AMU * physical_units.Bohr)
-    )
-    / physical_units.Angstrom
-    / (2 * pi)
-    / 1e12
-)  # CP2K uses a.u. for forces but Angstrom for distances
-CrystalToTHz = VaspToTHz
-CastepToTHz = VaspToTHz
-DftbpToTHz = (
-    sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
-    / (physical_units.Bohr * 1e-10)
-    / (2 * pi)
-    / 1e12
-)  # [THz] 154.10794344
-TurbomoleToTHz = ElkToTHz  # Turbomole uses atomic units (Hartree/Bohr)
-FleurToTHz = ElkToTHz  # Fleur uses atomic units (Hartree/Bohr)
-
 
 calculator_info = {
     "abacus": {"option": {"name": "--abacus", "help": "Invoke ABACUS mode"}},
@@ -156,8 +104,8 @@ def get_interface_mode(args_dict):
 def convert_crystal_structure(filename_in, interface_in, filename_out, interface_out):
     """Convert crystal structures between different calculator interfaces."""
     cell, _ = read_crystal_structure(filename=filename_in, interface_mode=interface_in)
-    units_in = get_default_physical_units(interface_in)
-    units_out = get_default_physical_units(interface_out)
+    units_in = get_calculator_physical_units(interface_in)
+    units_out = get_calculator_physical_units(interface_out)
     factor = units_in["distance_to_A"] / units_out["distance_to_A"]
     cell.cell = cell.cell * factor
     write_crystal_structure(filename_out, cell, interface_mode=interface_out)
@@ -642,7 +590,20 @@ def get_default_displacement_distance(interface_mode):
     return displacement_distance
 
 
-def get_default_physical_units(interface_mode=None):
+def get_default_physical_units(interface_mode=None) -> dict:
+    """Replace get_calculator_get_physical_units()."""
+    warnings.warn(
+        (
+            "get_default_physical_units is deprecated. "
+            "Use get_calculator_physical_units instead."
+        ),
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return get_calculator_physical_units(interface_mode=interface_mode)
+
+
+def get_calculator_physical_units(interface_mode=None) -> dict:
     """Return physical units of eachi calculator.
 
     Physical units: energy,  distance,  atomic mass, force,        force constants
@@ -676,8 +637,10 @@ def get_default_physical_units(interface_mode=None):
         "length_unit": None,
         "force_unit": None,
     }
+    physical_units = get_physical_units()
 
     if interface_mode is None or interface_mode in ("vasp", "aims", "lammps", "pwmat"):
+        VaspToTHz = physical_units.defaultToTHz  # [THz] 15.633302
         units["factor"] = VaspToTHz
         units["nac_factor"] = physical_units.Hartree * physical_units.Bohr
         units["distance_to_A"] = 1.0
@@ -685,6 +648,12 @@ def get_default_physical_units(interface_mode=None):
         units["length_unit"] = "angstrom"
         units["force_unit"] = "eV/angstrom"
     elif interface_mode == "abinit":
+        AbinitToTHz = (
+            sqrt(physical_units.EV / (physical_units.AMU * physical_units.Bohr))
+            / physical_units.Angstrom
+            / (2 * pi)
+            / 1e12
+        )  # [THz] 21.49068
         units["factor"] = AbinitToTHz
         units["nac_factor"] = physical_units.Hartree / physical_units.Bohr
         units["distance_to_A"] = physical_units.Bohr
@@ -692,6 +661,12 @@ def get_default_physical_units(interface_mode=None):
         units["length_unit"] = "au"
         units["force_unit"] = "eV/angstrom"
     elif interface_mode == "qe":
+        PwscfToTHz = (
+            sqrt(physical_units.Rydberg * physical_units.EV / physical_units.AMU)
+            / (physical_units.Bohr * 1e-10)
+            / (2 * pi)
+            / 1e12
+        )  # [THz] 108.97077
         units["factor"] = PwscfToTHz
         units["nac_factor"] = 2.0
         units["distance_to_A"] = physical_units.Bohr
@@ -700,6 +675,12 @@ def get_default_physical_units(interface_mode=None):
         units["length_unit"] = "au"
         units["force_unit"] = "Ry/au"
     elif interface_mode == "wien2k":
+        Wien2kToTHz = (
+            sqrt(physical_units.Rydberg / 1000 * physical_units.EV / physical_units.AMU)
+            / (physical_units.Bohr * 1e-10)
+            / (2 * pi)
+            / 1e12
+        )  # [THz] 3.44595837
         units["factor"] = Wien2kToTHz
         units["nac_factor"] = 2000.0
         units["distance_to_A"] = physical_units.Bohr
@@ -708,6 +689,12 @@ def get_default_physical_units(interface_mode=None):
         units["length_unit"] = "au"
         units["force_unit"] = "mRy/au"
     elif interface_mode == "elk":
+        ElkToTHz = (
+            sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
+            / (physical_units.Bohr * 1e-10)
+            / (2 * pi)
+            / 1e12
+        )  # [THz] 154.10794
         units["factor"] = ElkToTHz
         units["nac_factor"] = 1.0
         units["distance_to_A"] = physical_units.Bohr
@@ -715,13 +702,29 @@ def get_default_physical_units(interface_mode=None):
         units["length_unit"] = "au"
         units["force_unit"] = "hartree/au"
     elif interface_mode in ["siesta", "abacus"]:
-        units["factor"] = physical_units.SiestaToTHz
+        SiestaToTHz = (
+            sqrt(physical_units.EV / (physical_units.AMU * physical_units.Bohr))
+            / physical_units.Angstrom
+            / (2 * pi)
+            / 1e12
+        )  # [THz] 21.49068
+        units["factor"] = SiestaToTHz
         units["nac_factor"] = physical_units.Hartree / physical_units.Bohr
         units["distance_to_A"] = physical_units.Bohr
         units["force_constants_unit"] = "eV/angstrom.au"
         units["length_unit"] = "au"
         units["force_unit"] = "eV/angstrom"
     elif interface_mode == "cp2k":
+        CP2KToTHz = (  # CP2K uses a.u. for forces but Angstrom for distances
+            sqrt(
+                physical_units.Hartree
+                * physical_units.EV
+                / (physical_units.AMU * physical_units.Bohr)
+            )
+            / physical_units.Angstrom
+            / (2 * pi)
+            / 1e12
+        )
         units["factor"] = CP2KToTHz
         units["nac_factor"] = physical_units.Bohr**2
         units["distance_to_A"] = 1.0
@@ -730,6 +733,7 @@ def get_default_physical_units(interface_mode=None):
         units["length_unit"] = "angstrom"
         units["force_unit"] = "hartree/au"
     elif interface_mode == "crystal":
+        CrystalToTHz = physical_units.defaultToTHz
         units["factor"] = CrystalToTHz
         units["nac_factor"] = physical_units.Hartree * physical_units.Bohr
         units["distance_to_A"] = 1.0
@@ -737,6 +741,12 @@ def get_default_physical_units(interface_mode=None):
         units["length_unit"] = "angstrom"
         units["force_unit"] = "eV/angstrom"
     elif interface_mode == "dftbp":
+        DftbpToTHz = (
+            sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
+            / (physical_units.Bohr * 1e-10)
+            / (2 * pi)
+            / 1e12
+        )  # [THz] 154.10794344
         units["factor"] = DftbpToTHz
         units["nac_factor"] = physical_units.Hartree * physical_units.Bohr
         units["distance_to_A"] = physical_units.Bohr
@@ -744,6 +754,12 @@ def get_default_physical_units(interface_mode=None):
         units["length_unit"] = "au"
         units["force_unit"] = "hartree/au"
     elif interface_mode == "turbomole":
+        TurbomoleToTHz = (  # Turbomole uses atomic units (Hartree/Bohr)
+            sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
+            / (physical_units.Bohr * 1e-10)
+            / (2 * pi)
+            / 1e12
+        )  # [THz] 154.10794
         units["factor"] = TurbomoleToTHz
         units["nac_factor"] = 1.0
         units["distance_to_A"] = physical_units.Bohr
@@ -752,6 +768,7 @@ def get_default_physical_units(interface_mode=None):
         units["length_unit"] = "au"
         units["force_unit"] = "hartree/au"
     elif interface_mode == "castep":
+        CastepToTHz = physical_units.defaultToTHz
         units["factor"] = CastepToTHz
         units["nac_factor"] = physical_units.Hartree * physical_units.Bohr
         units["distance_to_A"] = 1.0
@@ -759,6 +776,12 @@ def get_default_physical_units(interface_mode=None):
         units["length_unit"] = "angstrom"
         units["force_unit"] = "eV/angstrom"
     elif interface_mode == "fleur":
+        FleurToTHz = (  # Fleur uses atomic units (Hartree/Bohr)
+            sqrt(physical_units.Hartree * physical_units.EV / physical_units.AMU)
+            / (physical_units.Bohr * 1e-10)
+            / (2 * pi)
+            / 1e12
+        )  # [THz] 154.10794
         units["factor"] = FleurToTHz
         units["nac_factor"] = 1.0
         units["distance_to_A"] = physical_units.Bohr
@@ -854,8 +877,9 @@ def get_calc_dataset_wien2k(
 def get_force_constant_conversion_factor(unit, interface_mode):
     """Return unit conversion factor of force constants."""
     _unit = unit.replace("Angstrom", "angstrom")  # for backward compatibility
-    interface_default_units = get_default_physical_units(interface_mode)
+    interface_default_units = get_calculator_physical_units(interface_mode)
     default_unit = interface_default_units["force_constants_unit"]
+    physical_units = get_physical_units()
     factor_to_eVperA2 = {
         "eV/angstrom^2": 1,
         "eV/angstrom.au": 1 / physical_units.Bohr,

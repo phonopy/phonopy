@@ -41,7 +41,7 @@ import numpy as np
 
 from phonopy.interface.cif import write_cif_P1
 from phonopy.phonon.mesh import IterMesh, Mesh
-from phonopy.physical_units import physical_units
+from phonopy.physical_units import get_physical_units
 
 
 class ThermalMotion:
@@ -60,15 +60,17 @@ class ThermalMotion:
             self._fmax = freq_max
 
         masses = iter_mesh.dynamical_matrix.primitive.masses
-        self._masses = masses * physical_units.AMU
-        self._masses3 = np.array([[m] * 3 for m in masses]).ravel() * physical_units.AMU
+        self._masses = masses * get_physical_units().AMU
+        self._masses3 = (
+            np.array([[m] * 3 for m in masses]).ravel() * get_physical_units().AMU
+        )
         self._temperatures = None
 
     def _get_Q2(self, freq, t):  # freq in THz
         return (
-            physical_units.Hbar
-            * physical_units.EV
-            / physical_units.Angstrom**2
+            get_physical_units().Hbar
+            * get_physical_units().EV
+            / get_physical_units().Angstrom ** 2
             * ((self._get_population(freq, t) + 0.5) / (freq * 1e12 * 2 * np.pi))
         )
 
@@ -144,7 +146,12 @@ class ThermalMotion:
         if isinstance(condition, (bool, np.bool_)):
             if condition:
                 return 1.0 / (
-                    np.exp(freq * physical_units.THzToEv / (physical_units.Kb * t)) - 1
+                    np.exp(
+                        freq
+                        * get_physical_units().THzToEv
+                        / (get_physical_units().Kb * t)
+                    )
+                    - 1
                 )
             else:
                 return 0.0
@@ -152,7 +159,9 @@ class ThermalMotion:
             vals = np.zeros(len(t), dtype="double")
             vals[condition] = 1.0 / (
                 np.exp(
-                    freq * physical_units.THzToEv / (physical_units.Kb * t[condition])
+                    freq
+                    * get_physical_units().THzToEv
+                    / (get_physical_units().Kb * t[condition])
                 )
                 - 1
             )

@@ -43,7 +43,7 @@ import numpy as np
 
 from phonopy import Phonopy
 from phonopy.interface.mlp import PhonopyMLP
-from phonopy.physical_units import physical_units
+from phonopy.physical_units import get_physical_units
 
 
 class MLPSSCHA:
@@ -158,7 +158,7 @@ class MLPSSCHA:
         self._ph.run_thermal_properties(temperatures=[self._temperature])
         hfe = (
             self._ph.get_thermal_properties_dict()["free_energy"][0]
-            / physical_units.EvTokJmol
+            / get_physical_units().EvTokJmol
         )
         n_cell = len(self._ph.supercell) / len(self._ph.primitive)
         pe = self.potential_energy / n_cell

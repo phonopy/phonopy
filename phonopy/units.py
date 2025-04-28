@@ -37,7 +37,7 @@
 import warnings
 from math import pi, sqrt
 
-from phonopy.physical_units import physical_units as units
+from phonopy.physical_units import get_physical_units
 
 warnings.warn(
     "phonopy.units.* is deprecated. Use phonopy.physical_units.physical_units instead.",
@@ -45,30 +45,29 @@ warnings.warn(
     stacklevel=2,
 )
 
+kb_J = get_physical_units().kb_J
+PlanckConstant = get_physical_units().PlanckConstant
+Avogadro = get_physical_units().Avogadro
+SpeedOfLight = get_physical_units().SpeedOfLight
+AMU = get_physical_units().AMU
+EV = get_physical_units().EV
+Me = get_physical_units().Me
+THz = get_physical_units().THz
+Angstrom = get_physical_units().Angstrom
+Newton = get_physical_units().Newton
+Joule = get_physical_units().Joule
+Hbar = get_physical_units().Hbar
+Epsilon0 = get_physical_units().Epsilon0
+Bohr = get_physical_units().Bohr
+Hartree = get_physical_units().Hartree
+Rydberg = get_physical_units().Rydberg
+Kb = get_physical_units().Kb
+THzToEv = get_physical_units().THzToEv
+CmToEv = get_physical_units().CmToEv
+EVAngstromToGPa = get_physical_units().EVAngstromToGPa
+EvTokJmol = get_physical_units().EvTokJmol
 
-kb_J = units.kb_J
-PlanckConstant = units.PlanckConstant
-Avogadro = units.Avogadro
-SpeedOfLight = units.SpeedOfLight
-AMU = units.AMU
-EV = units.EV
-Me = units.Me
-THz = units.THz
-Angstrom = units.Angstrom
-Newton = units.Newton
-Joule = units.Joule
-Hbar = units.Hbar
-Epsilon0 = units.Epsilon0
-Bohr = units.Bohr
-Hartree = units.Hartree
-Rydberg = units.Rydberg
-Kb = units.Kb
-THzToEv = units.THzToEv
-CmToEv = units.CmToEv
-EVAngstromToGPa = units.EVAngstromToGPa
-EvTokJmol = units.EvTokJmol
-
-VaspToTHz = units.defaultToTHz  # [THz] 15.633302
+VaspToTHz = get_physical_units().defaultToTHz  # [THz] 15.633302
 Wien2kToTHz = (
     sqrt(Rydberg / 1000 * EV / AMU) / (Bohr * 1e-10) / (2 * pi) / 1e12
 )  # [THz] 3.44595837

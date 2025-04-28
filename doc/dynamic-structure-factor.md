@@ -64,7 +64,7 @@ import numpy as np
 import phonopy
 from phonopy.phonon.degeneracy import degenerate_sets
 from phonopy.spectrum.dynamic_structure_factor import atomic_form_factor_WK1995
-from phonopy.physical_units import physical_units
+from phonopy.physical_units import get_physical_units
 
 
 def get_AFF_func(f_params):
@@ -106,7 +106,7 @@ def run(
         text = "%f  " % d
         text += "%f %f %f  " % tuple(Q)
         text += " ".join(
-            ["%f" % (f[bi].sum() * physical_units.THzToEv * 1000 / len(bi)) for bi in bi_sets]
+            ["%f" % (f[bi].sum() * get_physical_units().THzToEv * 1000 / len(bi)) for bi in bi_sets]
         )
         text += "  "
         text += " ".join(["%f" % (S[bi].sum()) for bi in bi_sets])
