@@ -42,7 +42,7 @@ import numpy as np
 import yaml
 
 from phonopy.gruneisen.core import GruneisenBase
-from phonopy.units import VaspToTHz
+from phonopy.physical_units import physical_units
 
 
 class GruneisenBandStructure(GruneisenBase):
@@ -57,7 +57,7 @@ class GruneisenBandStructure(GruneisenBase):
         delta_strain=None,
         path_connections=None,
         labels=None,
-        factor=VaspToTHz,
+        factor=physical_units.defaultToTHz,
     ):
         """Init method."""
         super().__init__(

@@ -45,8 +45,8 @@ from phonopy.interface.calculator import (
     write_crystal_structure,
 )
 from phonopy.phonon.degeneracy import get_eigenvectors
+from phonopy.physical_units import physical_units
 from phonopy.structure.cells import get_supercell
-from phonopy.units import VaspToTHz
 
 
 class Modulation:
@@ -60,7 +60,7 @@ class Modulation:
         delta_q=None,
         derivative_order=None,
         nac_q_direction=None,
-        factor=VaspToTHz,
+        factor=physical_units.defaultToTHz,
     ):
         """Init method."""
         self._dm = dynamical_matrix

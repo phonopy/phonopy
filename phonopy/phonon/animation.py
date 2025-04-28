@@ -37,9 +37,9 @@
 import numpy as np
 
 from phonopy.interface.vasp import write_vasp
+from phonopy.physical_units import physical_units
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_angles, get_cell_matrix, get_cell_parameters
-from phonopy.units import VaspToTHz
 
 
 def write_animation(
@@ -143,7 +143,9 @@ class Animation:
 
         self._displacements = np.array(u).reshape(-1, 3)
 
-    def write_v_sim(self, amplitude=None, factor=VaspToTHz, filename="anime.ascii"):
+    def write_v_sim(
+        self, amplitude=None, factor=physical_units.defaultToTHz, filename="anime.ascii"
+    ):
         """Write to file in v_sim format."""
         if amplitude is None:
             _amplitude = 1.0
@@ -237,7 +239,12 @@ class Animation:
 
         return filename
 
-    def write_xyz_jmol(self, amplitude=10, factor=VaspToTHz, filename="anime.xyz_jmol"):
+    def write_xyz_jmol(
+        self,
+        amplitude=10,
+        factor=physical_units.defaultToTHz,
+        filename="anime.xyz_jmol",
+    ):
         """Write to file in jmol xyz format."""
         self._set_cell_oriented()
         text = ""
@@ -267,7 +274,7 @@ class Animation:
         band_index,
         amplitude=1,
         num_div=20,
-        factor=VaspToTHz,
+        factor=physical_units.defaultToTHz,
         filename="anime.xyz",
     ):
         """Write to file in xyz format."""

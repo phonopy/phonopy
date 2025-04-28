@@ -41,8 +41,8 @@ import sys
 import numpy as np
 
 from phonopy.gruneisen.core import GruneisenBase
+from phonopy.physical_units import physical_units
 from phonopy.structure.grid_points import get_qpoints
-from phonopy.units import VaspToTHz
 
 
 class GruneisenMesh(GruneisenBase):
@@ -60,7 +60,7 @@ class GruneisenMesh(GruneisenBase):
         is_gamma_center=False,
         is_mesh_symmetry=True,
         rotations=None,  # Point group operations in real space
-        factor=VaspToTHz,
+        factor=physical_units.defaultToTHz,
     ):
         """Init method."""
         super().__init__(dynmat, dynmat_plus, dynmat_minus, delta_strain=delta_strain)

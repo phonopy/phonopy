@@ -40,7 +40,7 @@ from typing import Optional, Union
 import numpy as np
 
 from phonopy.phonon.mesh import Mesh
-from phonopy.units import EvTokJmol, Kb, THzToEv
+from phonopy.physical_units import physical_units
 
 
 def mode_cv(
@@ -65,11 +65,11 @@ def mode_cv(
 
     """
     if classical:
-        return np.array(len(freqs) * [Kb])
+        return np.array(len(freqs) * [physical_units.Kb])
     else:
-        x = freqs / Kb / temp
+        x = freqs / physical_units.Kb / temp
         expVal = np.exp(x)
-        return Kb * x**2 * expVal / (expVal - 1.0) ** 2
+        return physical_units.Kb * x**2 * expVal / (expVal - 1.0) ** 2
 
 
 def mode_F(
@@ -94,9 +94,14 @@ def mode_F(
 
     """
     if classical:
-        return Kb * temp * np.log(freqs / (Kb * temp))
+        return physical_units.Kb * temp * np.log(freqs / (physical_units.Kb * temp))
     else:
-        return Kb * temp * np.log(1.0 - np.exp((-freqs) / (Kb * temp))) + freqs / 2
+        return (
+            physical_units.Kb
+            * temp
+            * np.log(1.0 - np.exp((-freqs) / (physical_units.Kb * temp)))
+            + freqs / 2
+        )
 
 
 def mode_S(
@@ -121,12 +126,14 @@ def mode_S(
 
     """
     if classical:
-        return Kb - Kb * np.log(freqs / (Kb * temp))
-    else:
-        val = freqs / (2 * Kb * temp)
-        return 1 / (2 * temp) * freqs * np.cosh(val) / np.sinh(val) - Kb * np.log(
-            2 * np.sinh(val)
+        return physical_units.Kb - physical_units.Kb * np.log(
+            freqs / (physical_units.Kb * temp)
         )
+    else:
+        val = freqs / (2 * physical_units.Kb * temp)
+        return 1 / (2 * temp) * freqs * np.cosh(val) / np.sinh(
+            val
+        ) - physical_units.Kb * np.log(2 * np.sinh(val))
 
 
 def mode_ZPE(
@@ -214,7 +221,7 @@ class ThermalPropertiesBase:
         if cutoff_frequency is None or cutoff_frequency < 0:
             self._cutoff_frequency = 0.0
         else:
-            self._cutoff_frequency = cutoff_frequency * THzToEv
+            self._cutoff_frequency = cutoff_frequency * physical_units.THzToEv
 
         if band_indices is not None:
             bi = np.hstack(band_indices).astype("intc")
@@ -233,7 +240,8 @@ class ThermalPropertiesBase:
         if pretend_real:
             self._frequencies = abs(self._frequencies)
         self._frequencies = (
-            np.array(self._frequencies, dtype="double", order="C") * THzToEv
+            np.array(self._frequencies, dtype="double", order="C")
+            * physical_units.THzToEv
         )
         self._weights = mesh.weights
         self._num_modes = self._frequencies.shape[1] * self._weights.sum()
@@ -262,7 +270,7 @@ class ThermalPropertiesBase:
             free_energy = self._calculate_thermal_property(mode_F, t)
         else:
             free_energy = self._calculate_thermal_property(mode_ZPE, None)
-        return free_energy / np.sum(self._weights) * EvTokJmol
+        return free_energy / np.sum(self._weights) * physical_units.EvTokJmol
 
     def run_heat_capacity(self, t):
         """Calculate mode heat capacity in kJ/K/mol."""
@@ -270,7 +278,7 @@ class ThermalPropertiesBase:
             cv = self._calculate_thermal_property(mode_cv, t)
         else:
             cv = self._calculate_thermal_property(mode_zero, None)
-        return cv / np.sum(self._weights) * EvTokJmol
+        return cv / np.sum(self._weights) * physical_units.EvTokJmol
 
     def run_entropy(self, t):
         """Calculate mode entropy in kJ/K/mol."""
@@ -278,7 +286,7 @@ class ThermalPropertiesBase:
             entropy = self._calculate_thermal_property(mode_S, t)
         else:
             entropy = self._calculate_thermal_property(mode_zero, None)
-        return entropy / np.sum(self._weights) * EvTokJmol
+        return entropy / np.sum(self._weights) * physical_units.EvTokJmol
 
     def _calculate_thermal_property(self, func, t):
         if not self._is_projection:
@@ -350,7 +358,9 @@ class ThermalProperties(ThermalPropertiesBase):
             for freqs, w in zip(self._frequencies, self._weights):
                 positive_fs = np.extract(freqs > 0.0, freqs)
                 zp_energy += np.sum(positive_fs) * w / 2
-            self._zero_point_energy = zp_energy / np.sum(self._weights) * EvTokJmol
+            self._zero_point_energy = (
+                zp_energy / np.sum(self._weights) * physical_units.EvTokJmol
+            )
 
     @property
     def temperatures(self):
@@ -618,9 +628,9 @@ class ThermalProperties(ThermalPropertiesBase):
         #         cutoff_frequency)
 
         props /= np.sum(self._weights)
-        fe = props[:, 0] * EvTokJmol + self._zero_point_energy
-        entropy = props[:, 1] * EvTokJmol * 1000
-        cv = props[:, 2] * EvTokJmol * 1000
+        fe = props[:, 0] * physical_units.EvTokJmol + self._zero_point_energy
+        entropy = props[:, 1] * physical_units.EvTokJmol * 1000
+        cv = props[:, 2] * physical_units.EvTokJmol * 1000
         self._thermal_properties = (self._temperatures, fe, entropy, cv)
 
     def _run_py_thermal_properties(self):
@@ -652,7 +662,9 @@ class ThermalProperties(ThermalPropertiesBase):
         lines.append("natom: %-5d" % (self._frequencies[0].shape[0] // 3))
         if volume is not None:
             lines.append("volume: %-20.10f" % volume)
-        lines.append("cutoff_frequency: %.5f" % (self._cutoff_frequency / THzToEv))
+        lines.append(
+            "cutoff_frequency: %.5f" % (self._cutoff_frequency / physical_units.THzToEv)
+        )
         lines.append("num_modes: %d" % self._num_modes)
         lines.append("num_integrated_modes: %d" % self._num_integrated_modes)
         if self._band_indices is not None:

@@ -86,6 +86,7 @@ from phonopy.phonon.thermal_displacement import (
     ThermalDisplacements,
 )
 from phonopy.phonon.thermal_properties import ThermalProperties
+from phonopy.physical_units import physical_units
 from phonopy.spectrum.dynamic_structure_factor import DynamicStructureFactor
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
@@ -101,7 +102,6 @@ from phonopy.structure.cells import (
 from phonopy.structure.dataset import forces_in_dataset
 from phonopy.structure.grid_points import length2mesh
 from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
-from phonopy.units import VaspToTHz
 from phonopy.version import __version__
 
 
@@ -153,7 +153,7 @@ class Phonopy:
         supercell_matrix: Optional[Union[Sequence, np.ndarray]] = None,
         primitive_matrix: Optional[Union[str, Sequence, np.ndarray]] = None,
         nac_params: Optional[dict] = None,
-        factor: float = VaspToTHz,
+        factor: float = physical_units.defaultToTHz,
         frequency_scale_factor: Optional[float] = None,
         dynamical_matrix_decimals: Optional[int] = None,
         force_constants_decimals: Optional[int] = None,

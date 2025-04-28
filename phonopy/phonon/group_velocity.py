@@ -45,9 +45,9 @@ from phonopy.harmonic.dynamical_matrix import (
     DynamicalMatrixGL,
     DynamicalMatrixNAC,
 )
+from phonopy.interface.calculator import physical_units
 from phonopy.phonon.degeneracy import degenerate_sets
 from phonopy.structure.symmetry import Symmetry
-from phonopy.units import VaspToTHz
 from phonopy.utils import similarity_transformation
 
 
@@ -82,7 +82,7 @@ class GroupVelocity:
         dynamical_matrix: Union[DynamicalMatrix, DynamicalMatrixNAC],
         q_length: Optional[float] = None,
         symmetry: Optional[Symmetry] = None,
-        frequency_factor_to_THz: float = VaspToTHz,
+        frequency_factor_to_THz: float = physical_units.defaultToTHz,
         cutoff_frequency: float = 1e-4,
     ):
         """Init method.
@@ -302,7 +302,7 @@ def get_group_velocity(
     dynamical_matrix,
     q_length=None,  # finite distance in q
     symmetry=None,
-    frequency_factor_to_THz=VaspToTHz,
+    frequency_factor_to_THz=physical_units.defaultToTHz,
 ):
     """Return group velocity at a q-point."""
     gv = GroupVelocity(

@@ -36,7 +36,7 @@
 
 import numpy as np
 
-from phonopy.units import Kb
+from phonopy.physical_units import physical_units
 
 
 def get_free_energy_at_T(tmin, tmax, tstep, eigenvalues, weights, n_electrons):
@@ -145,7 +145,7 @@ class ElectronFreeEnergy:
         if T < 1e-10:
             self._T = 1e-10
         else:
-            self._T = T * Kb
+            self._T = T * physical_units.Kb
         self._mu = self._chemical_potential()
         self._f = self._occupation_number(self._eigenvalues, self._mu)
         self._entropy = self._get_entropy()

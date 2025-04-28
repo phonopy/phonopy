@@ -130,7 +130,7 @@ Fleur, `VaspToTHz`, and `DftbpToTHz` for DFTB+ is the default value. For
 example:
 
 ```python
-from phonopy.units import AbinitToTHz
+from phonopy.interface.calculator import AbinitToTHz
 
 phonon = Phonopy(unitcell,
                  supercell_matrix=[[2, 0, 0], [0, 2, 0], [0, 0, 2]],
@@ -763,7 +763,7 @@ VASP code by the unit cell.
 ```python
 import io
 import numpy as np
-from phonopy.units import Hartree, Bohr
+from phonopy.physical_units import physical_units
 from phonopy.structure.symmetry import symmetrize_borns_and_epsilon
 from phonopy.interface.vasp import VasprunxmlExpat
 
@@ -785,6 +785,6 @@ borns_, epsilon_ = symmetrize_borns_and_epsilon(
     symprec=1e-5)
 
 nac_params = {'born': borns_,
-              'factor': Hartree * Bohr,
+              'factor': physical_units.Hartree * physical_units.Bohr,
               'dielectric': epsilon_}
 ```

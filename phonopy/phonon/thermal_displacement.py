@@ -41,7 +41,7 @@ import numpy as np
 
 from phonopy.interface.cif import write_cif_P1
 from phonopy.phonon.mesh import IterMesh, Mesh
-from phonopy.units import AMU, EV, Angstrom, Hbar, Kb, THzToEv
+from phonopy.physical_units import physical_units
 
 
 class ThermalMotion:
@@ -60,15 +60,15 @@ class ThermalMotion:
             self._fmax = freq_max
 
         masses = iter_mesh.dynamical_matrix.primitive.masses
-        self._masses = masses * AMU
-        self._masses3 = np.array([[m] * 3 for m in masses]).ravel() * AMU
+        self._masses = masses * physical_units.AMU
+        self._masses3 = np.array([[m] * 3 for m in masses]).ravel() * physical_units.AMU
         self._temperatures = None
 
     def _get_Q2(self, freq, t):  # freq in THz
         return (
-            Hbar
-            * EV
-            / Angstrom**2
+            physical_units.Hbar
+            * physical_units.EV
+            / physical_units.Angstrom**2
             * ((self._get_population(freq, t) + 0.5) / (freq * 1e12 * 2 * np.pi))
         )
 
@@ -143,12 +143,19 @@ class ThermalMotion:
         # Avoid using isinstance with bool to distinguish from int.
         if isinstance(condition, (bool, np.bool_)):
             if condition:
-                return 1.0 / (np.exp(freq * THzToEv / (Kb * t)) - 1)
+                return 1.0 / (
+                    np.exp(freq * physical_units.THzToEv / (physical_units.Kb * t)) - 1
+                )
             else:
                 return 0.0
         else:
             vals = np.zeros(len(t), dtype="double")
-            vals[condition] = 1.0 / (np.exp(freq * THzToEv / (Kb * t[condition])) - 1)
+            vals[condition] = 1.0 / (
+                np.exp(
+                    freq * physical_units.THzToEv / (physical_units.Kb * t[condition])
+                )
+                - 1
+            )
             return vals
 
 

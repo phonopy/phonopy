@@ -42,8 +42,8 @@ from phonopy.harmonic.dynamical_matrix import (
     DynamicalMatrix,
     run_dynamical_matrix_solver_c,
 )
+from phonopy.physical_units import physical_units
 from phonopy.structure.grid_points import GridPoints
-from phonopy.units import VaspToTHz
 
 
 class MeshBase:
@@ -90,7 +90,7 @@ class MeshBase:
         with_eigenvectors=False,
         is_gamma_center=False,
         rotations=None,  # Point group operations in real space
-        factor=VaspToTHz,
+        factor=physical_units.defaultToTHz,
     ):
         """Init method."""
         self._mesh = np.array(mesh, dtype="intc")
@@ -262,7 +262,7 @@ class Mesh(MeshBase):
         is_gamma_center=False,
         group_velocity=None,
         rotations=None,  # Point group operations in real space
-        factor=VaspToTHz,
+        factor=physical_units.defaultToTHz,
     ):
         """Init method."""
         super().__init__(
@@ -511,7 +511,7 @@ class IterMesh(MeshBase):
         with_eigenvectors=False,
         is_gamma_center=False,
         rotations=None,  # Point group operations in real space
-        factor=VaspToTHz,
+        factor=physical_units.defaultToTHz,
     ):
         """Init method."""
         super().__init__(

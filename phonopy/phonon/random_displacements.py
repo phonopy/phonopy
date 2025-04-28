@@ -47,9 +47,9 @@ from phonopy.harmonic.dynmat_to_fc import (
     categorize_commensurate_points,
     get_commensurate_points_in_integers,
 )
+from phonopy.physical_units import physical_units
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
-from phonopy.units import AMU, EV, Angstrom, Hbar, Kb, THz, THzToEv, VaspToTHz
 
 
 def bose_einstein_dist(
@@ -70,7 +70,7 @@ def bose_einstein_dist(
         Phonon occupation numbers.
 
     """
-    return 1.0 / (np.exp(THzToEv * x / (Kb * t)) - 1)
+    return 1.0 / (np.exp(physical_units.THzToEv * x / (physical_units.Kb * t)) - 1)
 
 
 class RandomDisplacements:
@@ -132,7 +132,7 @@ class RandomDisplacements:
         dist_func: Optional[str] = None,
         cutoff_frequency: Optional[float] = None,
         max_distance: Optional[float] = None,
-        factor: float = VaspToTHz,
+        factor: float = physical_units.defaultToTHz,
         use_openmp: bool = False,
     ):
         """Init method.
@@ -182,9 +182,20 @@ class RandomDisplacements:
         else:
             raise RuntimeError("Either 'quantum' or 'classical' is required.")
 
-        self._unit_conversion = Hbar * EV / AMU / THz / (2 * np.pi) / Angstrom**2
+        self._unit_conversion = (
+            physical_units.Hbar
+            * physical_units.EV
+            / physical_units.AMU
+            / physical_units.THz
+            / (2 * np.pi)
+            / physical_units.Angstrom**2
+        )
         self._unit_conversion_classical = (
-            Kb * EV / AMU / (THz * (2 * np.pi)) ** 2 / Angstrom**2
+            physical_units.Kb
+            * physical_units.EV
+            / physical_units.AMU
+            / (physical_units.THz * (2 * np.pi)) ** 2
+            / physical_units.Angstrom**2
         )
 
         # Dynamical matrix without NAC because of commensurate points only
