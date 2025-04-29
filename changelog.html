@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Change Log &#8212; Phonopy v.2.38.1</title>
+    <title>Change Log &#8212; Phonopy v.2.38.2</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=bba12b15"></script>
+    <script src="_static/documentation_options.js?v=acd5ab73"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -131,7 +131,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.38.1</p>
+    <p class="title logo__title">Phonopy v.2.38.2</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -340,6 +340,7 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#arp-30-2025-version-2-38-2">Arp-30-2025: Version 2.38.2</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#arp-15-2025-version-2-38-1">Arp-15-2025: Version 2.38.1</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mar-3-2025-version-2-38-0">Mar-3-2025: Version 2.38.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#feb-27-2025-version-2-37-1">Feb-27-2025: Version 2.37.1</a></li>
@@ -527,6 +528,21 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">#</a></h1>
+<section id="arp-30-2025-version-2-38-2">
+<h2>Arp-30-2025: Version 2.38.2<a class="headerlink" href="#arp-30-2025-version-2-38-2" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">phonopy.interface.calculator.get_default_physical_units</span></code> is deprecated and
+replaced by <code class="docutils literal notranslate"><span class="pre">get_calculator_physical_units</span></code>.</p></li>
+<li><p>The collection of physical units and conversion factors in <code class="docutils literal notranslate"><span class="pre">phonopy.units</span></code> is
+deprecated. Instead, use the function
+<code class="docutils literal notranslate"><span class="pre">phonopy.physical_units.get_physical_units()</span></code>. This function returns the
+dataclass <code class="docutils literal notranslate"><span class="pre">PhysicalUnits</span></code>. See the docstring for details about accessible
+physical units. Note that <code class="docutils literal notranslate"><span class="pre">Kb_j</span></code> and <code class="docutils literal notranslate"><span class="pre">Kb</span></code> have been renamed to <code class="docutils literal notranslate"><span class="pre">KB_J</span></code> and
+<code class="docutils literal notranslate"><span class="pre">KB</span></code>, respectively. <code class="docutils literal notranslate"><span class="pre">VaspToTHz</span></code> was renamed to <code class="docutils literal notranslate"><span class="pre">DefaultToTHz</span></code>. Most of unit
+convertion factors of force calculators to phonon frequency THz were moved to
+<code class="docutils literal notranslate"><span class="pre">phonopy.interface.calculator.get_calculator_physical_units</span></code>.</p></li>
+</ul>
+</section>
 <section id="arp-15-2025-version-2-38-1">
 <h2>Arp-15-2025: Version 2.38.1<a class="headerlink" href="#arp-15-2025-version-2-38-1" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -2161,6 +2177,7 @@ structure with atomic displacements.</p></li>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#arp-30-2025-version-2-38-2">Arp-30-2025: Version 2.38.2</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#arp-15-2025-version-2-38-1">Arp-15-2025: Version 2.38.1</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mar-3-2025-version-2-38-0">Mar-3-2025: Version 2.38.0</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#feb-27-2025-version-2-37-1">Feb-27-2025: Version 2.37.1</a></li>

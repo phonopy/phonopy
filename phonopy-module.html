@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Phonopy API for Python &#8212; Phonopy v.2.38.1</title>
+    <title>Phonopy API for Python &#8212; Phonopy v.2.38.2</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=bba12b15"></script>
+    <script src="_static/documentation_options.js?v=acd5ab73"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.38.1</p>
+    <p class="title logo__title">Phonopy v.2.38.2</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -509,8 +509,9 @@ for Wien2k, <code class="docutils literal notranslate"><span class="pre">AbinitT
 Elk, <code class="docutils literal notranslate"><span class="pre">SiestaToTHz</span></code> for Siesta, <code class="docutils literal notranslate"><span class="pre">CrystalToTHz</span></code> for CRYSTAL, <code class="docutils literal notranslate"><span class="pre">FleurToTHz</span></code> for
 Fleur, <code class="docutils literal notranslate"><span class="pre">VaspToTHz</span></code>, and <code class="docutils literal notranslate"><span class="pre">DftbpToTHz</span></code> for DFTB+ is the default value. For
 example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.units</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbinitToTHz</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_calculator_physical_units</span>
 
+<span class="n">AbinitToTHz</span> <span class="o">=</span> <span class="n">get_calculator_physical_units</span><span class="p">(</span><span class="n">interface_mode</span><span class="o">=</span><span class="s1">&#39;abinit&#39;</span><span class="p">)[</span><span class="s1">&#39;factor&#39;</span><span class="p">]</span>
 <span class="n">phonon</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span><span class="n">unitcell</span><span class="p">,</span>
                  <span class="n">supercell_matrix</span><span class="o">=</span><span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]],</span>
                  <span class="n">primitive_matrix</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
@@ -1053,7 +1054,7 @@ and that the Born effective charge and dielectric constant were calculated using
 VASP code by the unit cell.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.units</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hartree</span><span class="p">,</span> <span class="n">Bohr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.physical_units</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_physical_units</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.structure.symmetry</span><span class="w"> </span><span class="kn">import</span> <span class="n">symmetrize_borns_and_epsilon</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.vasp</span><span class="w"> </span><span class="kn">import</span> <span class="n">VasprunxmlExpat</span>
 
@@ -1074,8 +1075,9 @@ VASP code by the unit cell.</p>
     <span class="n">supercell_matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]),</span>
     <span class="n">symprec</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">)</span>
 
+<span class="n">units</span> <span class="o">=</span> <span class="n">get_physical_units</span><span class="p">()</span>
 <span class="n">nac_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;born&#39;</span><span class="p">:</span> <span class="n">borns_</span><span class="p">,</span>
-              <span class="s1">&#39;factor&#39;</span><span class="p">:</span> <span class="n">Hartree</span> <span class="o">*</span> <span class="n">Bohr</span><span class="p">,</span>
+              <span class="s1">&#39;factor&#39;</span><span class="p">:</span> <span class="n">units</span><span class="o">.</span><span class="n">Hartree</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">Bohr</span><span class="p">,</span>
               <span class="s1">&#39;dielectric&#39;</span><span class="p">:</span> <span class="n">epsilon_</span><span class="p">}</span>
 </pre></div>
 </div>
