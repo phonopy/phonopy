@@ -66,7 +66,7 @@ from phonopy.harmonic.force_constants import (
     symmetrize_compact_force_constants,
     symmetrize_force_constants,
 )
-from phonopy.interface.calculator import get_default_physical_units
+from phonopy.interface.calculator import get_calculator_physical_units
 from phonopy.interface.fc_calculator import get_fc2
 from phonopy.interface.mlp import PhonopyMLP
 from phonopy.interface.phonopy_yaml import PhonopyYaml
@@ -86,6 +86,7 @@ from phonopy.phonon.thermal_displacement import (
     ThermalDisplacements,
 )
 from phonopy.phonon.thermal_properties import ThermalProperties
+from phonopy.physical_units import get_physical_units
 from phonopy.spectrum.dynamic_structure_factor import DynamicStructureFactor
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import (
@@ -101,7 +102,6 @@ from phonopy.structure.cells import (
 from phonopy.structure.dataset import forces_in_dataset
 from phonopy.structure.grid_points import length2mesh
 from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
-from phonopy.units import VaspToTHz
 from phonopy.version import __version__
 
 
@@ -153,7 +153,7 @@ class Phonopy:
         supercell_matrix: Optional[Union[Sequence, np.ndarray]] = None,
         primitive_matrix: Optional[Union[str, Sequence, np.ndarray]] = None,
         nac_params: Optional[dict] = None,
-        factor: float = VaspToTHz,
+        factor: Optional[float] = None,
         frequency_scale_factor: Optional[float] = None,
         dynamical_matrix_decimals: Optional[int] = None,
         force_constants_decimals: Optional[int] = None,
@@ -269,7 +269,10 @@ class Phonopy:
         self._force_constants_decimals = force_constants_decimals
 
         self._symprec = symprec
-        self._factor = factor
+        if factor is None:
+            self._factor = get_physical_units().DefaultToTHz
+        else:
+            self._factor = factor
         self._is_symmetry = is_symmetry
         self._calculator = calculator
 
@@ -3781,7 +3784,7 @@ class Phonopy:
             number_of_snapshots=number_of_snapshots,
             random_seed=random_seed,
         )
-        units = get_default_physical_units(self._calculator)
+        units = get_calculator_physical_units(self._calculator)
         d = np.array(
             self._random_displacements.u / units["distance_to_A"],
             dtype="double",

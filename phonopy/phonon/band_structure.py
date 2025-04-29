@@ -47,7 +47,7 @@ import yaml
 
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.phonon.group_velocity import GroupVelocity
-from phonopy.units import VaspToTHz
+from phonopy.physical_units import get_physical_units
 
 
 class BandPlot:
@@ -258,7 +258,7 @@ class BandStructure:
         path_connections: Optional[Union[list, bool]] = None,
         labels: Optional[list[str]] = None,
         is_legacy_plot: bool = False,
-        factor: float = VaspToTHz,
+        factor: Optional[float] = None,
     ):
         """Init method.
 
@@ -294,7 +294,10 @@ class BandStructure:
         self._dynamical_matrix = dynamical_matrix
         self._cell = dynamical_matrix.primitive
         self._supercell = dynamical_matrix.supercell
-        self._factor = factor
+        if factor is None:
+            self._factor = get_physical_units().DefaultToTHz
+        else:
+            self._factor = factor
         self._with_eigenvectors = with_eigenvectors
         self._is_band_connection = is_band_connection
         if is_band_connection:

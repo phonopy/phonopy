@@ -51,15 +51,21 @@ from phonopy.structure.atoms import PhonopyAtoms, symbol_map
 def cp2kver(forces_filename):
     tst2025 = ['FORCES| Atomic forces', 'FORCES| Total atomic force']
     is2025 = []
+    havetoten = ''
     with open(forces_filename, 'r') as fd:
         for testline in tst2025:
             for line in fd:
                 if testline in line:
                     is2025.append(True)
-    if len(is2025) > 0 and all(is2025):
-        return '2025'
+        fd.seek(0)
+        for line in fd:
+            if 'TOTEN' in line:
+                havetoten = 'e'
 
-    return '2024'
+    if len(is2025) > 0 and all(is2025):
+        return '2025' + havetoten
+
+    return '2024' + havetoten
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
@@ -67,10 +73,51 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
         return parse_set_of_forces2025(num_atoms,
                                        forces_filenames,
                                        verbose=verbose)
+    elif cp2kver(forces_filenames[0]) == '2025e':
+        return parse_set_of_energy_forces2025(num_atoms,
+                                       forces_filenames,
+                                       verbose=verbose)
+    elif cp2kver(forces_filenames[0]) == '2024e':
+        return parse_set_of_energy_forces2024(num_atoms,
+                                       forces_filenames,
+                                       verbose=verbose)
     else:
         return parse_set_of_forces2024(num_atoms,
                                        forces_filenames,
                                        verbose=verbose)
+
+
+def parse_set_of_energy_forces2025(num_atoms, forces_filenames, verbose=True):
+    """Parse forces from output files."""
+    force_sets = []
+    energy_sets = []
+
+    for i, filename in enumerate(forces_filenames):
+        if verbose:
+            sys.stdout.write("%d. " % (i + 1))
+
+        forces = iter_collect_forces(
+            filename, num_atoms, "FORCES|   Atom     x", [2, 3, 4]
+        )
+
+        if not check_forces(forces, num_atoms, filename, verbose=verbose):
+            return []  # if one file is invalid, the whole thing is broken
+
+        drift_force = get_drift_forces(forces,
+                                       filename=filename,
+                                       verbose=verbose)
+        force_sets.append(np.array(forces) - drift_force)
+
+        esc = 0
+        with open(filename, 'r') as fd:
+            for line in fd:
+                if 'TOTEN' in line:
+                    esc = float(line.split('=')[1])
+            energy_sets.append(esc)
+
+    return {"forces": force_sets,
+            "supercell_energies": energy_sets,
+    }
 
 
 def parse_set_of_forces2025(num_atoms, forces_filenames, verbose=True):
@@ -95,6 +142,38 @@ def parse_set_of_forces2025(num_atoms, forces_filenames, verbose=True):
 
     return force_sets
 
+
+def parse_set_of_energy_forces2024(num_atoms, forces_filenames, verbose=True):
+    """Parse forces from output files."""
+    force_sets = []
+    energy_sets = []
+
+    for i, filename in enumerate(forces_filenames):
+        if verbose:
+            sys.stdout.write("%d. " % (i + 1))
+
+        forces = iter_collect_forces(
+            filename, num_atoms, "# Atom   Kind   Element", [3, 4, 5]
+        )
+
+        if not check_forces(forces, num_atoms, filename, verbose=verbose):
+            return []  # if one file is invalid, the whole thing is broken
+
+        drift_force = get_drift_forces(forces,
+                                       filename=filename,
+                                       verbose=verbose)
+        force_sets.append(np.array(forces) - drift_force)
+
+        esc = 0
+        with open(filename, 'r') as fd:
+            for line in fd:
+                if 'TOTEN' in line:
+                    esc = float(line.split('=')[1])
+            energy_sets.append(esc)
+
+    return {"forces": force_sets,
+            "supercell_energies": energy_sets,
+    }
 
 def parse_set_of_forces2024(num_atoms, forces_filenames, verbose=True):
     """Parse forces from output files."""

@@ -41,8 +41,8 @@ import numpy as np
 
 from phonopy.file_IO import iter_collect_forces
 from phonopy.interface.vasp import check_forces, get_drift_forces
+from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms
-from phonopy.units import Bohr
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
@@ -86,7 +86,7 @@ def read_siesta(filename):
     elif coordformat == "scaledcartesian":
         cell.set_positions(np.array(positions) * alat)
     elif coordformat == "notscaledcartesianang" or coordformat == "ang":
-        cell.set_positions(np.array(positions) / Bohr)
+        cell.set_positions(np.array(positions) / get_physical_units().Bohr)
     elif coordformat == "notscaledcartesianbohr" or coordformat == "bohr":
         cell.set_positions(np.array(positions))
     else:
@@ -178,7 +178,7 @@ class SiestaIn:
             if tag == "latticeconstant":
                 self._tags["latticeconstantunit"] = unit.capitalize()
                 if unit == "ang":
-                    self._tags[tag] = float(value) / Bohr
+                    self._tags[tag] = float(value) / get_physical_units().Bohr
                 elif unit == "bohr":
                     self._tags[tag] = float(value)
                 else:

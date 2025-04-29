@@ -53,9 +53,9 @@ from phonopy.file_IO import (
     write_FORCE_CONSTANTS,
     write_force_constants_to_hdf5,
 )
+from phonopy.physical_units import get_physical_units
 from phonopy.structure.atoms import PhonopyAtoms, atom_data, symbol_map
 from phonopy.structure.symmetry import elaborate_borns_and_epsilon
-from phonopy.units import VaspToTHz
 
 
 def check_forces(forces, num_atom, filename, verbose=True):
@@ -736,7 +736,7 @@ class Vasprun:
 
             # Recover the unit of eV/Angstrom^2 for VASP-6.
             if hessian_units == "THz^2":
-                force_constants /= VaspToTHz**2
+                force_constants /= get_physical_units().DefaultToTHz ** 2
 
             return force_constants, elements
 

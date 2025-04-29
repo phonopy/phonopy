@@ -49,19 +49,17 @@
 #include <omp.h>
 #endif
 
-#define KB 8.6173382568083159E-05
-
 static void set_index_permutation_symmetry_fc(double *fc, const int natom);
 static void set_translational_symmetry_fc(double *fc, const int natom);
 static void set_translational_symmetry_compact_fc(double *fc, const int p2s[],
                                                   const int n_satom,
                                                   const int n_patom);
 static double get_free_energy(const double temperature, const double f,
-                              const int classical);
+                              const double KB, const int classical);
 static double get_entropy(const double temperature, const double f,
-                          const int classical);
+                          const double KB, const int classical);
 static double get_heat_capacity(const double temperature, const double f,
-                                const int classical);
+                                const double KB, const int classical);
 /* static double get_energy(double temperature, double f); */
 static void distribute_fc2(double (*fc2)[3][3], const int *atom_list,
                            const int len_atom_list,
@@ -284,7 +282,7 @@ void phpy_tetrahedron_method_dos(
 void phpy_get_thermal_properties(
     double *thermal_props, const double *temperatures, const double *freqs,
     const int64_t *weights, const int64_t num_temp, const int64_t num_qpoints,
-    const int64_t num_bands, const double cutoff_frequency,
+    const int64_t num_bands, const double cutoff_frequency, const double KB,
     const int classical) {
     int64_t i, j, k;
     double f;
@@ -304,12 +302,13 @@ void phpy_get_thermal_properties(
                 f = freqs[i * num_bands + k];
                 if (temperatures[j] > 0 && f > cutoff_frequency) {
                     tp[i * num_temp * 3 + j * 3] +=
-                        get_free_energy(temperatures[j], f, classical) *
+                        get_free_energy(temperatures[j], f, KB, classical) *
                         weights[i];
                     tp[i * num_temp * 3 + j * 3 + 1] +=
-                        get_entropy(temperatures[j], f, classical) * weights[i];
+                        get_entropy(temperatures[j], f, KB, classical) *
+                        weights[i];
                     tp[i * num_temp * 3 + j * 3 + 2] +=
-                        get_heat_capacity(temperatures[j], f, classical) *
+                        get_heat_capacity(temperatures[j], f, KB, classical) *
                         weights[i];
                 }
             }
@@ -404,10 +403,10 @@ void phpy_set_smallest_vectors_sparse(
     int i, j, k, l, count;
     double length_tmp, minimum, vec_xyz;
     double *length;
-    double(*vec)[3];
+    double (*vec)[3];
 
     length = (double *)malloc(sizeof(double) * num_lattice_points);
-    vec = (double(*)[3])malloc(sizeof(double[3]) * num_lattice_points);
+    vec = (double (*)[3])malloc(sizeof(double[3]) * num_lattice_points);
 
     for (i = 0; i < num_pos_to; i++) {
         for (j = 0; j < num_pos_from; j++) {
@@ -473,10 +472,10 @@ void phpy_set_smallest_vectors_dense(
     int64_t i, j, k, l, count, adrs;
     double length_tmp, minimum, vec_xyz;
     double *length;
-    double(*vec)[3];
+    double (*vec)[3];
 
     length = (double *)malloc(sizeof(double) * num_lattice_points);
-    vec = (double(*)[3])malloc(sizeof(double[3]) * num_lattice_points);
+    vec = (double (*)[3])malloc(sizeof(double[3]) * num_lattice_points);
 
     adrs = 0;
 
@@ -778,7 +777,7 @@ static void set_translational_symmetry_compact_fc(double *fc, const int p2s[],
 }
 
 static double get_free_energy(const double temperature, const double f,
-                              const int classical) {
+                              const double KB, const int classical) {
     /* temperature is defined by T (K) */
     /* 'f' must be given in eV. */
     if (classical) {
@@ -789,7 +788,7 @@ static double get_free_energy(const double temperature, const double f,
 }
 
 static double get_entropy(const double temperature, const double f,
-                          const int classical) {
+                          const double KB, const int classical) {
     /* temperature is defined by T (K) */
     /* 'f' must be given in eV. */
     double val;
@@ -803,7 +802,7 @@ static double get_entropy(const double temperature, const double f,
 }
 
 static double get_heat_capacity(const double temperature, const double f,
-                                const int classical) {
+                                const double KB, const int classical) {
     /* temperature is defined by T (K) */
     /* 'f' must be given in eV. */
     /* If val is close to 1. Then expansion is used. */
@@ -830,9 +829,9 @@ static void distribute_fc2(double (*fc2)[3][3], /* shape[n_pos][n_pos] */
     int atom_todo, atom_done, atom_other;
     int sym_index;
     int *atom_list_reverse;
-    double(*fc2_done)[3];
-    double(*fc2_todo)[3];
-    const double(*r_cart)[3];
+    double (*fc2_done)[3];
+    double (*fc2_todo)[3];
+    const double (*r_cart)[3];
     const int *permutation;
 
     atom_list_reverse = NULL;

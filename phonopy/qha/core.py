@@ -38,8 +38,8 @@ import warnings
 
 import numpy as np
 
+from phonopy.physical_units import get_physical_units
 from phonopy.qha.eos import fit_to_eos, get_eos
-from phonopy.units import Avogadro, EVAngstromToGPa, EvTokJmol
 
 
 class BulkModulus:
@@ -71,7 +71,9 @@ class BulkModulus:
         self._eos = get_eos(self._eos_name)
 
         if pressure is not None:
-            self._energies += self._volumes * pressure / EVAngstromToGPa
+            self._energies += (
+                self._volumes * pressure / get_physical_units().EVAngstromToGPa
+            )
 
         if self._energies.ndim == 1:
             self._energy = None
@@ -262,11 +264,13 @@ class QHA:
         self._volumes = np.array(volumes)
         self._electronic_energies = np.array(electronic_energies)
         if pressure is not None:
-            self._electronic_energies += self._volumes * pressure / EVAngstromToGPa
+            self._electronic_energies += (
+                self._volumes * pressure / get_physical_units().EVAngstromToGPa
+            )
         self._all_temperatures = np.array(temperatures)
         self._cv = np.array(cv)
         self._entropy = np.array(entropy)
-        self._fe_phonon = np.array(fe_phonon) / EvTokJmol
+        self._fe_phonon = np.array(fe_phonon) / get_physical_units().EvTokJmol
 
         self._eos = get_eos(eos)
         self._t_max = t_max
@@ -390,7 +394,13 @@ class QHA:
                 if verbose:
                     print(
                         ("%14.6f" * 5)
-                        % (t, ep[0], ep[1] * EVAngstromToGPa, ep[2], ep[3])
+                        % (
+                            t,
+                            ep[0],
+                            ep[1] * get_physical_units().EVAngstromToGPa,
+                            ep[2],
+                            ep[3],
+                        )
                     )
 
         self._free_energies = np.array(free_energies)
@@ -399,7 +409,7 @@ class QHA:
         self._equiv_volumes = np.array(self._equiv_parameters[:, 3])
         self._equiv_energies = np.array(self._equiv_parameters[:, 0])
         self._equiv_bulk_modulus = np.array(
-            self._equiv_parameters[:, 1] * EVAngstromToGPa
+            self._equiv_parameters[:, 1] * get_physical_units().EVAngstromToGPa
         )
 
         self._num_elems = len(self._temperatures)
@@ -853,7 +863,10 @@ class QHA:
         for i in range(self._len):
             w.write(
                 "%20.15f %20.15f\n"
-                % (self._temperatures[i], self._dsdv[i] * 1e21 / Avogadro)
+                % (
+                    self._temperatures[i],
+                    self._dsdv[i] * 1e21 / get_physical_units().Avogadro,
+                )
             )
         w.close()
 
@@ -1090,7 +1103,7 @@ class QHA:
 
     def _set_heat_capacity_P_numerical(self):
         cp = []
-        g = np.array(self._equiv_energies) * EvTokJmol * 1000
+        g = np.array(self._equiv_energies) * get_physical_units().EvTokJmol * 1000
         cp.append(0.0)
 
         for i in range(1, self._num_elems - 1):
@@ -1175,8 +1188,8 @@ class QHA:
                 np.dot(parameters, [v**4, v**3, v**2, v, 1])
                 / v
                 / 1000
-                / EvTokJmol
-                * EVAngstromToGPa
+                / get_physical_units().EvTokJmol
+                * get_physical_units().EVAngstromToGPa
             )
             if cv < 1e-10:
                 gamma.append(0.0)

@@ -113,7 +113,7 @@ void phpy_tetrahedron_method_dos(
 void phpy_get_thermal_properties(
     double *thermal_props, const double *temperatures, const double *freqs,
     const int64_t *weights, const int64_t num_temp, const int64_t num_qpoints,
-    const int64_t num_bands, const double cutoff_frequency,
+    const int64_t num_bands, const double cutoff_frequency, const double KB,
     const int classical);
 void phpy_distribute_fc2(double (*fc2)[3][3], const int *atom_list,
                          const int len_atom_list,
