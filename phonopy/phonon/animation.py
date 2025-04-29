@@ -153,7 +153,7 @@ class Animation:
         if amplitude is None:
             _amplitude = 1.0
         if factor is None:
-            _factor = get_physical_units().defaultToTHz
+            _factor = get_physical_units().DefaultToTHz
         else:
             _factor = factor
         self._set_cell_oriented()
@@ -254,7 +254,7 @@ class Animation:
     ):
         """Write to file in jmol xyz format."""
         if factor is None:
-            _factor = get_physical_units().defaultToTHz
+            _factor = get_physical_units().DefaultToTHz
         else:
             _factor = factor
         self._set_cell_oriented()
@@ -290,7 +290,7 @@ class Animation:
     ):
         """Write to file in xyz format."""
         if factor is None:
-            _factor = get_physical_units().defaultToTHz
+            _factor = get_physical_units().DefaultToTHz
         else:
             _factor = factor
         self._set_cell_oriented()

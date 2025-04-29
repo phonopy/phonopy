@@ -45,7 +45,7 @@ warnings.warn(
     stacklevel=2,
 )
 
-kb_J = get_physical_units().kb_J
+kb_J = get_physical_units().KB_J
 PlanckConstant = get_physical_units().PlanckConstant
 Avogadro = get_physical_units().Avogadro
 SpeedOfLight = get_physical_units().SpeedOfLight
@@ -61,14 +61,14 @@ Epsilon0 = get_physical_units().Epsilon0
 Bohr = get_physical_units().Bohr
 Hartree = get_physical_units().Hartree
 Rydberg = get_physical_units().Rydberg
-Kb = get_physical_units().Kb
+Kb = get_physical_units().KB
 THzToCm = get_physical_units().THzToCm
 THzToEv = get_physical_units().THzToEv
 CmToEv = get_physical_units().CmToEv
 EVAngstromToGPa = get_physical_units().EVAngstromToGPa
 EvTokJmol = get_physical_units().EvTokJmol
 
-VaspToTHz = get_physical_units().defaultToTHz  # [THz] 15.633302
+VaspToTHz = get_physical_units().DefaultToTHz  # [THz] 15.633302
 Wien2kToTHz = (
     sqrt(Rydberg / 1000 * EV / AMU) / (Bohr * 1e-10) / (2 * pi) / 1e12
 )  # [THz] 3.44595837

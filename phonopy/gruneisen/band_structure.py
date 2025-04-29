@@ -72,7 +72,7 @@ class GruneisenBandStructure(GruneisenBase):
         distance_shift = 0.0
 
         if factor is None:
-            _factor = get_physical_units().defaultToTHz
+            _factor = get_physical_units().DefaultToTHz
         else:
             _factor = factor
 

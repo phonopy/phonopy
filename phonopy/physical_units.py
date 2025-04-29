@@ -48,7 +48,7 @@ from typing import Optional
 class PhysicalUnitsGenerator:
     """Physical units for phonon calculations."""
 
-    kb_J: float  # [J/K]
+    KB_J: float  # [J/K]
     PlanckConstant: float  # [eV s]
     Avogadro: float
     SpeedOfLight: float  # [m/s]
@@ -65,12 +65,12 @@ class PhysicalUnitsGenerator:
     Hartree: Optional[float] = None  # Hartree [eV]
     Rydberg: Optional[float] = None  # Rydberg [eV]
     THzToEv: Optional[float] = None  # [eV]
-    Kb: Optional[float] = None  # [eV/K]
+    KB: Optional[float] = None  # [eV/K]
     THzToCm: Optional[float] = None  # [cm^-1]
     CmToEv: Optional[float] = None  # [eV]
     EVAngstromToGPa: Optional[float] = None
     EvTokJmol: Optional[float] = None  # [kJ/mol]
-    defaultToTHz: Optional[float] = None  # [THz]
+    DefaultToTHz: Optional[float] = None  # [THz]
 
     def __post_init__(self):
         """Initialize derived physical constants."""
@@ -90,13 +90,13 @@ class PhysicalUnitsGenerator:
         self.Rydberg = self.Hartree / 2  # Rydberg [eV]
 
         self.THzToEv = self.PlanckConstant * 1e12  # [eV]
-        self.Kb = self.kb_J / self.EV  # [eV/K]
+        self.KB = self.KB_J / self.EV  # [eV/K]
         self.THzToCm = 1.0e12 / (self.SpeedOfLight * 100)  # [cm^-1]
         self.CmToEv = self.THzToEv / self.THzToCm  # [eV]
         self.EVAngstromToGPa = self.EV * 1e21
         self.EvTokJmol = self.EV / 1000 * self.Avogadro  # [kJ/mol]
 
-        self.defaultToTHz = (
+        self.DefaultToTHz = (
             sqrt(self.EV / self.AMU) / self.Angstrom / (2 * pi) / 1e12
         )  # [THz]
 
@@ -107,7 +107,7 @@ class PhysicalUnits:
 
     Attributes
     ----------
-    kb_J: float
+    KB_J: float
         Boltzmann constant in J/K.
     PlanckConstant: float
         Planck constant in eV s.
@@ -140,7 +140,7 @@ class PhysicalUnits:
         Hartree energy in eV.
     Rydberg: float
         Rydberg energy in eV.
-    Kb: float
+    KB: float
         Boltzmann constant in eV/K.
     THzToEv: float
         Conversion factor from THz to eV.
@@ -151,12 +151,12 @@ class PhysicalUnits:
     EvTokJmol: float
         Conversion factor from eV to kJ/mol.
 
-    defaultToTHz: float
+    DefaultToTHz: float
         Default conversion factor to THz.
 
     """
 
-    kb_J: float  # [J/K]
+    KB_J: float  # [J/K]
     PlanckConstant: float  # [eV s]
     Avogadro: float
     SpeedOfLight: float  # [m/s]
@@ -173,12 +173,12 @@ class PhysicalUnits:
     Hartree: float  # Hartree [eV]
     Rydberg: float  # Rydberg [eV]
     THzToEv: float  # [eV]
-    Kb: float  # [eV/K]
+    KB: float  # [eV/K]
     THzToCm: float  # [cm^-1]
     CmToEv: float  # [eV]
     EVAngstromToGPa: float
     EvTokJmol: float  # [kJ/mol]
-    defaultToTHz: float  # [THz]
+    DefaultToTHz: float  # [THz]
 
 
 # Global variable to store physical units
@@ -186,7 +186,7 @@ _physical_units: Optional[PhysicalUnits] = None
 
 
 def set_physical_units(
-    kb_J: float = 1.3806504e-23,  # [J/K]
+    KB_J: float = 1.3806504e-23,  # [J/K]
     PlanckConstant: float = 4.13566733e-15,  # [eV s]
     Avogadro: float = 6.02214179e23,
     SpeedOfLight: float = 299792458,  # [m/s]
@@ -198,7 +198,7 @@ def set_physical_units(
 
     Default values are:
 
-    kb_J : 1.3806504e-23 [J/K]
+    KB_J : 1.3806504e-23 [J/K]
     PlanckConstant : 4.13566733e-15 [eV s]
     Avogadro : 6.02214179e+23
     SpeedOfLight : 299792458 [m/s]
@@ -215,17 +215,17 @@ def set_physical_units(
     Hartree : 27.211398230887998 [eV]
     Rydberg : 13.605699115443999 [eV]
     THzToEv : 0.00413566733 [eV]
-    Kb : 8.617338256808316e-05 [eV/K]
+    KB : 8.617338256808316e-05 [eV/K]
     THzToCm : 33.3564095198152 [cm^-1]
     CmToEv : 0.00012398418743309975 [eV]
     EVAngstromToGPa : 160.21773299999998 [GPa]
     EvTokJmol : 96.4853905398362 [kJ/mol]
-    defaultToTHz : 15.633302300230191 [THz]
+    DefaultToTHz : 15.633302300230191 [THz]
 
     """
     global _physical_units
     physical_units = PhysicalUnitsGenerator(
-        kb_J=kb_J,
+        KB_J=KB_J,
         PlanckConstant=PlanckConstant,
         Avogadro=Avogadro,
         SpeedOfLight=SpeedOfLight,

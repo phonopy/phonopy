@@ -270,7 +270,7 @@ class Phonopy:
 
         self._symprec = symprec
         if factor is None:
-            self._factor = get_physical_units().defaultToTHz
+            self._factor = get_physical_units().DefaultToTHz
         else:
             self._factor = factor
         self._is_symmetry = is_symmetry

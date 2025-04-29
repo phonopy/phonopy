@@ -96,7 +96,7 @@ class MeshBase:
         self._mesh = np.array(mesh, dtype="intc")
         self._with_eigenvectors = with_eigenvectors
         if factor is None:
-            self._factor = get_physical_units().defaultToTHz
+            self._factor = get_physical_units().DefaultToTHz
         else:
             self._factor = factor
         self._cell = dynamical_matrix.primitive

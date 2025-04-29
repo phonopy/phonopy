@@ -71,7 +71,7 @@ def bose_einstein_dist(
 
     """
     return 1.0 / (
-        np.exp(get_physical_units().THzToEv * x / (get_physical_units().Kb * t)) - 1
+        np.exp(get_physical_units().THzToEv * x / (get_physical_units().KB * t)) - 1
     )
 
 
@@ -176,7 +176,7 @@ class RandomDisplacements:
 
         _physical_units = get_physical_units()
         if factor is None:
-            self._factor = _physical_units.defaultToTHz
+            self._factor = _physical_units.DefaultToTHz
         else:
             self._factor = factor
         self._T = None
@@ -198,7 +198,7 @@ class RandomDisplacements:
             / _physical_units.Angstrom**2
         )
         self._unit_conversion_classical = (
-            _physical_units.Kb
+            _physical_units.KB
             * _physical_units.EV
             / _physical_units.AMU
             / (_physical_units.THz * (2 * np.pi)) ** 2

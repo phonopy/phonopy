@@ -73,7 +73,7 @@ class Modulation:
         self._derivative_order = derivative_order
 
         if factor is None:
-            self._factor = get_physical_units().defaultToTHz
+            self._factor = get_physical_units().DefaultToTHz
         else:
             self._factor = factor
         dim = self._get_dimension_3x3()
