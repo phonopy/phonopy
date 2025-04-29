@@ -65,11 +65,11 @@ def mode_cv(
 
     """
     if classical:
-        return np.array(len(freqs) * [get_physical_units().Kb])
+        return np.array(len(freqs) * [get_physical_units().KB])
     else:
-        x = freqs / get_physical_units().Kb / temp
+        x = freqs / get_physical_units().KB / temp
         expVal = np.exp(x)
-        return get_physical_units().Kb * x**2 * expVal / (expVal - 1.0) ** 2
+        return get_physical_units().KB * x**2 * expVal / (expVal - 1.0) ** 2
 
 
 def mode_F(
@@ -95,15 +95,15 @@ def mode_F(
     """
     if classical:
         return (
-            get_physical_units().Kb
+            get_physical_units().KB
             * temp
-            * np.log(freqs / (get_physical_units().Kb * temp))
+            * np.log(freqs / (get_physical_units().KB * temp))
         )
     else:
         return (
-            get_physical_units().Kb
+            get_physical_units().KB
             * temp
-            * np.log(1.0 - np.exp((-freqs) / (get_physical_units().Kb * temp)))
+            * np.log(1.0 - np.exp((-freqs) / (get_physical_units().KB * temp)))
             + freqs / 2
         )
 
@@ -130,14 +130,14 @@ def mode_S(
 
     """
     if classical:
-        return get_physical_units().Kb - get_physical_units().Kb * np.log(
-            freqs / (get_physical_units().Kb * temp)
+        return get_physical_units().KB - get_physical_units().KB * np.log(
+            freqs / (get_physical_units().KB * temp)
         )
     else:
-        val = freqs / (2 * get_physical_units().Kb * temp)
+        val = freqs / (2 * get_physical_units().KB * temp)
         return 1 / (2 * temp) * freqs * np.cosh(val) / np.sinh(
             val
-        ) - get_physical_units().Kb * np.log(2 * np.sinh(val))
+        ) - get_physical_units().KB * np.log(2 * np.sinh(val))
 
 
 def mode_ZPE(
@@ -621,6 +621,7 @@ class ThermalProperties(ThermalPropertiesBase):
             self._frequencies,
             self._weights,
             self._cutoff_frequency,
+            get_physical_units().KB,
             self._classical,
         )
         # for f, w in zip(self._frequencies, self._weights):

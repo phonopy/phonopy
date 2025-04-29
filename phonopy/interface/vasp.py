@@ -736,7 +736,7 @@ class Vasprun:
 
             # Recover the unit of eV/Angstrom^2 for VASP-6.
             if hessian_units == "THz^2":
-                force_constants /= get_physical_units().defaultToTHz ** 2
+                force_constants /= get_physical_units().DefaultToTHz ** 2
 
             return force_constants, elements
 

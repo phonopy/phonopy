@@ -99,7 +99,7 @@ class QpointsPhonon:
         self._gv_obj: Optional[GroupVelocity] = group_velocity
         self._with_dynamical_matrices = with_dynamical_matrices
         if factor is None:
-            self._factor = get_physical_units().defaultToTHz
+            self._factor = get_physical_units().DefaultToTHz
         else:
             self._factor = factor
 

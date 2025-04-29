@@ -145,7 +145,7 @@ class ElectronFreeEnergy:
         if T < 1e-10:
             self._T = 1e-10
         else:
-            self._T = T * get_physical_units().Kb
+            self._T = T * get_physical_units().KB
         self._mu = self._chemical_potential()
         self._f = self._occupation_number(self._eigenvalues, self._mu)
         self._entropy = self._get_entropy()

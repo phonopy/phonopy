@@ -119,7 +119,7 @@ class GroupVelocity:
 
         self._symmetry = symmetry
         if frequency_factor_to_THz is None:
-            self._factor = get_physical_units().defaultToTHz
+            self._factor = get_physical_units().DefaultToTHz
         else:
             self._factor = frequency_factor_to_THz
         self._cutoff_frequency = cutoff_frequency
@@ -309,7 +309,7 @@ def get_group_velocity(
 ):
     """Return group velocity at a q-point."""
     if frequency_factor_to_THz is None:
-        _factor = get_physical_units().defaultToTHz
+        _factor = get_physical_units().DefaultToTHz
     else:
         _factor = frequency_factor_to_THz
     gv = GroupVelocity(

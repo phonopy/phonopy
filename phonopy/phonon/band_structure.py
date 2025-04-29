@@ -295,7 +295,7 @@ class BandStructure:
         self._cell = dynamical_matrix.primitive
         self._supercell = dynamical_matrix.supercell
         if factor is None:
-            self._factor = get_physical_units().defaultToTHz
+            self._factor = get_physical_units().DefaultToTHz
         else:
             self._factor = factor
         self._with_eigenvectors = with_eigenvectors

@@ -640,7 +640,7 @@ def get_calculator_physical_units(interface_mode=None) -> dict:
     physical_units = get_physical_units()
 
     if interface_mode is None or interface_mode in ("vasp", "aims", "lammps", "pwmat"):
-        VaspToTHz = physical_units.defaultToTHz  # [THz] 15.633302
+        VaspToTHz = physical_units.DefaultToTHz  # [THz] 15.633302
         units["factor"] = VaspToTHz
         units["nac_factor"] = physical_units.Hartree * physical_units.Bohr
         units["distance_to_A"] = 1.0
@@ -733,7 +733,7 @@ def get_calculator_physical_units(interface_mode=None) -> dict:
         units["length_unit"] = "angstrom"
         units["force_unit"] = "hartree/au"
     elif interface_mode == "crystal":
-        CrystalToTHz = physical_units.defaultToTHz
+        CrystalToTHz = physical_units.DefaultToTHz
         units["factor"] = CrystalToTHz
         units["nac_factor"] = physical_units.Hartree * physical_units.Bohr
         units["distance_to_A"] = 1.0
@@ -768,7 +768,7 @@ def get_calculator_physical_units(interface_mode=None) -> dict:
         units["length_unit"] = "au"
         units["force_unit"] = "hartree/au"
     elif interface_mode == "castep":
-        CastepToTHz = physical_units.defaultToTHz
+        CastepToTHz = physical_units.DefaultToTHz
         units["factor"] = CastepToTHz
         units["nac_factor"] = physical_units.Hartree * physical_units.Bohr
         units["distance_to_A"] = 1.0

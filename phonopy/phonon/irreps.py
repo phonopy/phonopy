@@ -74,7 +74,7 @@ class IrReps:
         self._is_little_cogroup = is_little_cogroup
         self._nac_q_direction = nac_q_direction
         if factor is None:
-            self._factor = get_physical_units().defaultToTHz
+            self._factor = get_physical_units().DefaultToTHz
         else:
             self._factor = factor
         self._log_level = log_level

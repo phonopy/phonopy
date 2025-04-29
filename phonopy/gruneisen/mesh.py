@@ -66,7 +66,7 @@ class GruneisenMesh(GruneisenBase):
         super().__init__(dynmat, dynmat_plus, dynmat_minus, delta_strain=delta_strain)
         self._mesh = np.array(mesh, dtype="intc")
         if factor is None:
-            self._factor = get_physical_units().defaultToTHz
+            self._factor = get_physical_units().DefaultToTHz
         else:
             self._factor = factor
         self._cell = dynmat.primitive

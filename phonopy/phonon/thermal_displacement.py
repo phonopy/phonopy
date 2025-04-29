@@ -149,7 +149,7 @@ class ThermalMotion:
                     np.exp(
                         freq
                         * get_physical_units().THzToEv
-                        / (get_physical_units().Kb * t)
+                        / (get_physical_units().KB * t)
                     )
                     - 1
                 )
@@ -161,7 +161,7 @@ class ThermalMotion:
                 np.exp(
                     freq
                     * get_physical_units().THzToEv
-                    / (get_physical_units().Kb * t[condition])
+                    / (get_physical_units().KB * t[condition])
                 )
                 - 1
             )
@@ -412,14 +412,14 @@ class ThermalDisplacementMatrices(ThermalMotion):
                 #     try:
                 #         disps[i] += self._get_Q2(f, t) * np.array(c)
                 #     except FloatingPointError as e:
-                #         # Probably, overflow in exp(freq / (kB * T))
+                #         # Probably, overflow in exp(freq / (KB * T))
                 #         print("%s: T=%.1f freq=%.2f (band #%d)" %
                 #               (e, t, f, i_band))
                 try:
                     Q2 = self._get_Q2(f, self._temperatures)
                     disps += Q2[:, None, None, None] * c[None, :, :, :]
                 except FloatingPointError as e:
-                    # Probably, overflow in exp(freq / (kB * T))
+                    # Probably, overflow in exp(freq / (KB * T))
                     print("%s: freq=%.2f (band #%d)" % (e, f, i_band))
 
         assert np.prod(self._iter_mesh.mesh_numbers) == count + 1
