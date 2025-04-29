@@ -2,6 +2,19 @@
 
 # Change Log
 
+## Arp-30-2025: Version 2.38.2
+
+- `phonopy.interface.calculator.get_default_physical_units` is deprecated and
+  replaced by `get_calculator_physical_units`.
+- The collection of physical units and conversion factors in `phonopy.units` is
+  deprecated. Instead, use the function
+  `phonopy.physical_units.get_physical_units()`. This function returns the
+  dataclass `PhysicalUnits`. See the docstring for details about accessible
+  physical units. Note that `Kb_j` and `Kb` have been renamed to `KB_J` and
+  `KB`, respectively. `VaspToTHz` was renamed to `DefaultToTHz`. Most of unit
+  convertion factors of force calculators to phonon frequency THz were moved to
+  `phonopy.interface.calculator.get_calculator_physical_units`.
+
 ## Arp-15-2025: Version 2.38.1
 
 - Maintenance release including minor updates.

@@ -38,7 +38,7 @@ import numpy as np
 
 from phonopy import PhonopyQHA
 from phonopy.file_IO import read_efe, read_thermal_properties_yaml, read_v_e
-from phonopy.units import EVAngstromToGPa
+from phonopy.physical_units import get_physical_units
 
 
 def get_options():
@@ -155,7 +155,9 @@ def run():
         if args.efe_file:
             print(f"Volume: {parameters[3]}")
             print(f"Energy: {parameters[0]}")
-            print(f"Bulk modulus: {parameters[1] * EVAngstromToGPa}")
+            print(
+                f"Bulk modulus: {parameters[1] * get_physical_units().EVAngstromToGPa}"
+            )
             print(
                 f"Parameters: {parameters[0]} {parameters[1]} "
                 f"{parameters[2]} {parameters[3]}"
@@ -163,7 +165,10 @@ def run():
         else:
             print(f"Volume: {parameters[3]:.7f}")
             print(f"Energy: {parameters[0]:.7f}")
-            print(f"Bulk modulus: {parameters[1] * EVAngstromToGPa:.7f}")
+            print(
+                "Bulk modulus: "
+                f"{parameters[1] * get_physical_units().EVAngstromToGPa:.7f}"
+            )
             print(
                 f"Parameters: {parameters[0]:.7f} {parameters[1]:.7f} "
                 f"{parameters[2]:.7f} {parameters[3]:.7f}"

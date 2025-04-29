@@ -43,7 +43,7 @@ import numpy as np
 
 from phonopy import Phonopy
 from phonopy.interface.mlp import PhonopyMLP
-from phonopy.units import EvTokJmol
+from phonopy.physical_units import get_physical_units
 
 
 class MLPSSCHA:
@@ -156,7 +156,10 @@ class MLPSSCHA:
         """Calculate SSCHA free energy."""
         self._ph.run_mesh(mesh=mesh)
         self._ph.run_thermal_properties(temperatures=[self._temperature])
-        hfe = self._ph.get_thermal_properties_dict()["free_energy"][0] / EvTokJmol
+        hfe = (
+            self._ph.get_thermal_properties_dict()["free_energy"][0]
+            / get_physical_units().EvTokJmol
+        )
         n_cell = len(self._ph.supercell) / len(self._ph.primitive)
         pe = self.potential_energy / n_cell
         hpe = self.harmonic_potential_energy / n_cell

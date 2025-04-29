@@ -41,7 +41,7 @@ import numpy as np
 
 from phonopy.interface.cif import write_cif_P1
 from phonopy.phonon.mesh import IterMesh, Mesh
-from phonopy.units import AMU, EV, Angstrom, Hbar, Kb, THzToEv
+from phonopy.physical_units import get_physical_units
 
 
 class ThermalMotion:
@@ -60,15 +60,17 @@ class ThermalMotion:
             self._fmax = freq_max
 
         masses = iter_mesh.dynamical_matrix.primitive.masses
-        self._masses = masses * AMU
-        self._masses3 = np.array([[m] * 3 for m in masses]).ravel() * AMU
+        self._masses = masses * get_physical_units().AMU
+        self._masses3 = (
+            np.array([[m] * 3 for m in masses]).ravel() * get_physical_units().AMU
+        )
         self._temperatures = None
 
     def _get_Q2(self, freq, t):  # freq in THz
         return (
-            Hbar
-            * EV
-            / Angstrom**2
+            get_physical_units().Hbar
+            * get_physical_units().EV
+            / get_physical_units().Angstrom ** 2
             * ((self._get_population(freq, t) + 0.5) / (freq * 1e12 * 2 * np.pi))
         )
 
@@ -143,12 +145,26 @@ class ThermalMotion:
         # Avoid using isinstance with bool to distinguish from int.
         if isinstance(condition, (bool, np.bool_)):
             if condition:
-                return 1.0 / (np.exp(freq * THzToEv / (Kb * t)) - 1)
+                return 1.0 / (
+                    np.exp(
+                        freq
+                        * get_physical_units().THzToEv
+                        / (get_physical_units().KB * t)
+                    )
+                    - 1
+                )
             else:
                 return 0.0
         else:
             vals = np.zeros(len(t), dtype="double")
-            vals[condition] = 1.0 / (np.exp(freq * THzToEv / (Kb * t[condition])) - 1)
+            vals[condition] = 1.0 / (
+                np.exp(
+                    freq
+                    * get_physical_units().THzToEv
+                    / (get_physical_units().KB * t[condition])
+                )
+                - 1
+            )
             return vals
 
 
@@ -396,14 +412,14 @@ class ThermalDisplacementMatrices(ThermalMotion):
                 #     try:
                 #         disps[i] += self._get_Q2(f, t) * np.array(c)
                 #     except FloatingPointError as e:
-                #         # Probably, overflow in exp(freq / (kB * T))
+                #         # Probably, overflow in exp(freq / (KB * T))
                 #         print("%s: T=%.1f freq=%.2f (band #%d)" %
                 #               (e, t, f, i_band))
                 try:
                     Q2 = self._get_Q2(f, self._temperatures)
                     disps += Q2[:, None, None, None] * c[None, :, :, :]
                 except FloatingPointError as e:
-                    # Probably, overflow in exp(freq / (kB * T))
+                    # Probably, overflow in exp(freq / (KB * T))
                     print("%s: freq=%.2f (band #%d)" % (e, f, i_band))
 
         assert np.prod(self._iter_mesh.mesh_numbers) == count + 1
