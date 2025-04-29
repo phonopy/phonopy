@@ -45,8 +45,8 @@ from phonopy.harmonic.dynamical_matrix import (
     run_dynamical_matrix_solver_c,
 )
 from phonopy.phonon.group_velocity import GroupVelocity
+from phonopy.physical_units import get_physical_units
 from phonopy.structure.cells import Primitive
-from phonopy.units import VaspToTHz
 
 
 class QpointsPhonon:
@@ -82,7 +82,7 @@ class QpointsPhonon:
         with_eigenvectors=False,
         group_velocity=None,
         with_dynamical_matrices=False,
-        factor=VaspToTHz,
+        factor=None,
     ):
         """Init method."""
         primitive: Primitive = dynamical_matrix.primitive
@@ -98,7 +98,10 @@ class QpointsPhonon:
         self._with_eigenvectors = with_eigenvectors
         self._gv_obj: Optional[GroupVelocity] = group_velocity
         self._with_dynamical_matrices = with_dynamical_matrices
-        self._factor = factor
+        if factor is None:
+            self._factor = get_physical_units().DefaultToTHz
+        else:
+            self._factor = factor
 
         self._group_velocities = None
         self._eigenvectors = None

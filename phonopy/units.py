@@ -34,35 +34,41 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
 from math import pi, sqrt
 
-kb_J = 1.3806504e-23  # [J/K]
-PlanckConstant = 4.13566733e-15  # [eV s]
-Hbar = PlanckConstant / (2 * pi)  # [eV s]
-Avogadro = 6.02214179e23
-SpeedOfLight = 299792458  # [m/s]
-AMU = 1.6605402e-27  # [kg]
-Newton = 1.0  # [kg m / s^2]
-Joule = 1.0  # [kg m^2 / s^2]
-EV = 1.60217733e-19  # [J]
-Angstrom = 1.0e-10  # [m]
-THz = 1.0e12  # [/s]
-Mu0 = 4.0e-7 * pi  # [Hartree/m]
-Epsilon0 = 1.0 / Mu0 / SpeedOfLight**2  # [C^2 / N m^2]
-Me = 9.10938215e-31
+from phonopy.physical_units import get_physical_units
 
-Bohr = 4e10 * pi * Epsilon0 * Hbar**2 / Me  # Bohr radius [A] 0.5291772
-Hartree = Me * EV / 16 / pi**2 / Epsilon0**2 / Hbar**2  # Hartree [eV] 27.211398
-Rydberg = Hartree / 2  # Rydberg [eV] 13.6056991
+warnings.warn(
+    "phonopy.units.* is deprecated. Use phonopy.physical_units.physical_units instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
-THzToEv = PlanckConstant * 1e12  # [eV]
-Kb = kb_J / EV  # [eV/K] 8.6173383e-05
-THzToCm = 1.0e12 / (SpeedOfLight * 100)  # [cm^-1] 33.356410
-CmToEv = THzToEv / THzToCm  # [eV] 1.2398419e-4
-VaspToEv = sqrt(EV / AMU) / Angstrom / (2 * pi) * PlanckConstant  # [eV] 6.46541380e-2
-VaspToTHz = sqrt(EV / AMU) / Angstrom / (2 * pi) / 1e12  # [THz] 15.633302
-VaspToCm = VaspToTHz * THzToCm  # [cm^-1] 521.47083
-EvTokJmol = EV / 1000 * Avogadro  # [kJ/mol] 96.4853910
+kb_J = get_physical_units().KB_J
+PlanckConstant = get_physical_units().PlanckConstant
+Avogadro = get_physical_units().Avogadro
+SpeedOfLight = get_physical_units().SpeedOfLight
+AMU = get_physical_units().AMU
+EV = get_physical_units().EV
+Me = get_physical_units().Me
+THz = get_physical_units().THz
+Angstrom = get_physical_units().Angstrom
+Newton = get_physical_units().Newton
+Joule = get_physical_units().Joule
+Hbar = get_physical_units().Hbar
+Epsilon0 = get_physical_units().Epsilon0
+Bohr = get_physical_units().Bohr
+Hartree = get_physical_units().Hartree
+Rydberg = get_physical_units().Rydberg
+Kb = get_physical_units().KB
+THzToCm = get_physical_units().THzToCm
+THzToEv = get_physical_units().THzToEv
+CmToEv = get_physical_units().CmToEv
+EVAngstromToGPa = get_physical_units().EVAngstromToGPa
+EvTokJmol = get_physical_units().EvTokJmol
+
+VaspToTHz = get_physical_units().DefaultToTHz  # [THz] 15.633302
 Wien2kToTHz = (
     sqrt(Rydberg / 1000 * EV / AMU) / (Bohr * 1e-10) / (2 * pi) / 1e12
 )  # [THz] 3.44595837
@@ -82,7 +88,5 @@ CastepToTHz = VaspToTHz
 DftbpToTHz = (
     sqrt(Hartree * EV / AMU) / (Bohr * 1e-10) / (2 * pi) / 1e12
 )  # [THz] 154.10794344
-dftbpToBohr = 0.188972598857892e01
 TurbomoleToTHz = ElkToTHz  # Turbomole uses atomic units (Hartree/Bohr)
-EVAngstromToGPa = EV * 1e21
 FleurToTHz = ElkToTHz  # Fleur uses atomic units (Hartree/Bohr)

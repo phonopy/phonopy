@@ -42,7 +42,7 @@ import numpy as np
 import yaml
 
 from phonopy.gruneisen.core import GruneisenBase
-from phonopy.units import VaspToTHz
+from phonopy.physical_units import get_physical_units
 
 
 class GruneisenBandStructure(GruneisenBase):
@@ -57,7 +57,7 @@ class GruneisenBandStructure(GruneisenBase):
         delta_strain=None,
         path_connections=None,
         labels=None,
-        factor=VaspToTHz,
+        factor=None,
     ):
         """Init method."""
         super().__init__(
@@ -70,6 +70,11 @@ class GruneisenBandStructure(GruneisenBase):
         self._cell = dynmat.primitive
         rec_lattice = np.linalg.inv(self._cell.cell)
         distance_shift = 0.0
+
+        if factor is None:
+            _factor = get_physical_units().DefaultToTHz
+        else:
+            _factor = factor
 
         self._paths = []
         for qpoints_ in paths:
@@ -84,7 +89,7 @@ class GruneisenBandStructure(GruneisenBase):
 
             self.set_qpoints(qpoints)
             eigenvalues = self._eigenvalues
-            frequencies = np.sqrt(abs(eigenvalues)) * np.sign(eigenvalues) * factor
+            frequencies = np.sqrt(abs(eigenvalues)) * np.sign(eigenvalues) * _factor
             distances_with_shift = distances + distance_shift
 
             self._paths.append(

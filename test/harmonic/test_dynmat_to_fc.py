@@ -13,7 +13,7 @@ from phonopy.harmonic.dynmat_to_fc import (
     get_commensurate_points_in_integers,
     ph2ph,
 )
-from phonopy.units import VaspToTHz
+from phonopy.physical_units import get_physical_units
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -143,9 +143,9 @@ def test_with_eigenvalues(ph_nacl, ph_nacl_nonac):
             with_dynamical_matrices=True,
         )
         ph_dict = ph.get_qpoints_dict()
-        eigenvalues = (ph_dict["frequencies"] / VaspToTHz) ** 2 * np.sign(
-            ph_dict["frequencies"]
-        )
+        eigenvalues = (
+            ph_dict["frequencies"] / get_physical_units().DefaultToTHz
+        ) ** 2 * np.sign(ph_dict["frequencies"])
         d2f.create_dynamical_matrices(
             eigenvalues=eigenvalues, eigenvectors=ph_dict["eigenvectors"]
         )
