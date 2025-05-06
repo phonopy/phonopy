@@ -350,10 +350,15 @@ def _run_pypolymlp(
 ):
     """Run pypolymlp to compute forces."""
     if log_level:
+        import pypolymlp
+
         print("-" * 29 + " pypolymlp start " + "-" * 30)
         print("Pypolymlp is a generator of polynomial machine learning potentials.")
         print("Please cite the paper: A. Seko, J. Appl. Phys. 133, 011101 (2023).")
         print("Pypolymlp is developed at https://github.com/sekocha/pypolymlp.")
+        print(
+            f"Pypolymlp version: {pypolymlp.__version__}",
+        )
         if mlp_params:
             print("Parameters:")
             for k, v in asdict(parse_mlp_params(mlp_params)).items():
@@ -376,6 +381,7 @@ def _run_pypolymlp(
                 continue
             if log_level:
                 print(f'Load MLPs from "{_mlp_filename}".')
+
             phonon.load_mlp(_mlp_filename)
             mlp_loaded = True
             if log_level and mlp_filename == "phonopy.pmlp":
