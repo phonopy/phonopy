@@ -166,10 +166,10 @@ class SymfcFCSolver:
                 " Symfc start "
                 "-------------------------------"
             )
+            print(f"Symfc version {symfc.__version__}")
             print("Symfc is a force constants calculator. See the following paper:")
             print("A. Seko and A. Togo, Phys. Rev. B, 110, 214302 (2024).")
             print("Symfc is developed at https://github.com/symfc/symfc.")
-            print(f"Symfc version: {symfc.__version__}")
             print(f"Computing {orders} order force constants.", flush=True)
             if self._options:
                 print("Parameters:")

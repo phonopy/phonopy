@@ -353,12 +353,10 @@ def _run_pypolymlp(
         import pypolymlp
 
         print("-" * 29 + " pypolymlp start " + "-" * 30)
+        print(f"Pypolymlp version {pypolymlp.__version__}")
         print("Pypolymlp is a generator of polynomial machine learning potentials.")
         print("Please cite the paper: A. Seko, J. Appl. Phys. 133, 011101 (2023).")
         print("Pypolymlp is developed at https://github.com/sekocha/pypolymlp.")
-        print(
-            f"Pypolymlp version: {pypolymlp.__version__}",
-        )
         if mlp_params:
             print("Parameters:")
             for k, v in asdict(parse_mlp_params(mlp_params)).items():
