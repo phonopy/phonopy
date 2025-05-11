@@ -327,15 +327,16 @@ def estimate_symfc_cutoff_from_memsize(
 ) -> Optional[float]:
     """Estimate cutoff from max memory size."""
     vecs, _ = primitive.get_smallest_vectors()
-    dists = np.unique(
-        np.round(np.linalg.norm(vecs @ primitive.cell, axis=-1), decimals=1)
+    dists = (
+        np.unique(np.round(np.linalg.norm(vecs @ primitive.cell, axis=-1), decimals=1))
+        + 0.1
     )
-    for i, cutoff in enumerate(dists[1:] + 0.1):
+    for i, cutoff in enumerate(dists[1:]):
         memsize, memsize2 = estimate_symfc_memory_usage(
             supercell, symmetry, float(cutoff), order
         )
         if max_memsize and memsize + memsize2 > max_memsize:
-            return float(dists[i] + 0.1)
+            return float(dists[i])
 
         if verbose:
             print(
@@ -368,7 +369,7 @@ def update_symfc_cutoff_by_memsize(
         cutoff = {}
     for key, val in options["memsize"].items():
         if verbose:
-            print(f"Estimate cutoff from memsize for fc{key} by max {val} GB.")
+            print(f"Estimate symfc cutoff for fc{key} by memsize of {val} GB.")
         if key in (2, 3, 4):
             _cutoff = estimate_symfc_cutoff_from_memsize(
                 supercell,
