@@ -47,44 +47,6 @@ from phonopy.structure.cells import Primitive
 from phonopy.structure.symmetry import Symmetry
 
 
-def run_symfc(
-    supercell: PhonopyAtoms,
-    primitive: Primitive,
-    displacements: np.ndarray,
-    forces: np.ndarray,
-    orders: Optional[Sequence[int]] = None,
-    is_compact_fc: bool = False,
-    symmetry: Optional[Symmetry] = None,
-    options: Optional[Union[str, dict]] = None,
-    log_level: int = 0,
-) -> dict[int, np.ndarray]:
-    """Calculate force constants using symfc.
-
-    The details of the parameters are found in the SymfcFCSolver class.
-
-    """
-    if orders is None:
-        _orders = [2]
-    else:
-        _orders = orders
-
-    options_dict = parse_symfc_options(options)
-
-    symfc_calculator = SymfcFCSolver(
-        supercell,
-        displacements=displacements,
-        forces=forces,
-        symmetry=symmetry,
-        orders=_orders,
-        options=options_dict,
-        is_compact_fc=is_compact_fc,
-        log_level=log_level,
-    )
-    assert np.array_equal(symfc_calculator.p2s_map, primitive.p2s_map)
-
-    return symfc_calculator.force_constants
-
-
 class SymfcFCSolver:
     """Interface to symfc."""
 
@@ -127,15 +89,15 @@ class SymfcFCSolver:
             self._options = {}
         else:
             self._options = options
+
         self._supercell = supercell
+        self._symmetry = symmetry
         self._log_level = log_level
         self._orders = orders
         self._is_compact_fc = is_compact_fc
         self._symfc = None
 
         self._initialize(
-            supercell,
-            symmetry=symmetry,
             displacements=displacements,
             forces=forces,
         )
@@ -224,8 +186,6 @@ class SymfcFCSolver:
 
     def _initialize(
         self,
-        supercell: PhonopyAtoms,
-        symmetry: Optional[Symmetry] = None,
         displacements: Optional[np.ndarray] = None,
         forces: Optional[np.ndarray] = None,
     ):
@@ -237,11 +197,14 @@ class SymfcFCSolver:
             raise ModuleNotFoundError("Symfc python module was not found.") from exc
 
         symfc_supercell = SymfcAtoms(
-            cell=supercell.cell,
-            scaled_positions=supercell.scaled_positions,
-            numbers=supercell.numbers,
+            cell=self._supercell.cell,
+            scaled_positions=self._supercell.scaled_positions,
+            numbers=self._supercell.numbers,
         )
-        spacegroup_operations = symmetry.symmetry_operations if symmetry else None
+        spacegroup_operations = (
+            self._symmetry.symmetry_operations if self._symmetry else None
+        )
+
         self._symfc = Symfc(
             symfc_supercell,
             spacegroup_operations=spacegroup_operations,
@@ -277,13 +240,15 @@ class SymfcFCSolver:
         return self._symfc.basis_set
 
 
-def parse_symfc_options(options: Optional[Union[str, dict]]) -> dict:
+def parse_symfc_options(options: Optional[Union[str, dict]], order: int) -> dict:
     """Parse symfc options.
 
     Parameters
     ----------
     options : Union[str, dict]
         Options for symfc.
+    order : int
+        Order of force constants.
 
     Returns
     -------
@@ -309,12 +274,118 @@ def parse_symfc_options(options: Optional[Union[str, dict]]) -> dict:
             key, val = key_val
             if key == "cutoff":
                 try:
-                    options_dict[key] = {3: float(val)}
+                    options_dict[key] = {order: float(val)}
                 except ValueError:
                     print("Warning: Cutoff value must be float.")
+            if key == "memsize":
+                try:
+                    options_dict[key] = {order: float(val)}
+                except ValueError:
+                    print("Warning: Memsize value must be float.")
             if key == "use_mkl":
                 if val.strip().lower() == "true":
                     options_dict[key] = True
         return options_dict
     else:
         raise TypeError(f"options must be str or dict, not {type(options)}.")
+
+
+def estimate_symfc_memory_usage(
+    supercell: PhonopyAtoms,
+    symmetry: Symmetry,
+    cutoff: float,
+    order: int,
+    batch_size: int = 100,
+):
+    """Estimate memory usage to run symfc for fc with cutoff.
+
+    Total memory usage is memsize + memsize2. These are separated because
+    they behave differently with respect to cutoff distance.
+
+    batch_size is hardcoded to 100 because it is so in symfc.
+
+    """
+    if order not in [2, 3]:
+        raise ValueError("order must be 2 or 3.")
+
+    symfc_solver = SymfcFCSolver(
+        supercell, symmetry=symmetry, options={"cutoff": {order: cutoff}}
+    )
+    basis_size = symfc_solver.estimate_basis_size(orders=[order])[order]
+    memsize = basis_size**2 * 3 * 8 / 10**9
+    memsize2 = len(supercell) * 3 * batch_size * basis_size * 8 / 10**9
+    return memsize, memsize2
+
+
+def estimate_symfc_cutoff_from_memsize(
+    supercell: PhonopyAtoms,
+    primitive: Primitive,
+    symmetry: Symmetry,
+    order: int,
+    max_memsize: Optional[float] = None,
+    verbose: bool = False,
+) -> Optional[float]:
+    """Estimate cutoff from max memory size."""
+    vecs, _ = primitive.get_smallest_vectors()
+    dists = np.unique(
+        np.round(np.linalg.norm(vecs @ primitive.cell, axis=-1), decimals=1)
+    )
+    for i, cutoff in enumerate(dists[1:] + 0.1):
+        memsize, memsize2 = estimate_symfc_memory_usage(
+            supercell, symmetry, float(cutoff), order
+        )
+        if max_memsize and memsize + memsize2 > max_memsize:
+            return float(dists[i] + 0.1)
+
+        if verbose:
+            print(
+                f"{cutoff:5.1f}  {memsize + memsize2:6.2f} GB "
+                f"({memsize:.2f}+{memsize2:.2f})"
+            )
+
+    return None
+
+
+def update_symfc_cutoff_by_memsize(
+    options: dict,
+    supercell: PhonopyAtoms,
+    primitive: Primitive,
+    symmetry: Symmetry,
+    verbose: bool = False,
+):
+    """Update cutoff in options following max memsize.
+
+    Note
+    ----
+    This function modifies the options dictionary in place.
+
+    """
+    cutoff = options.get("cutoff")
+    if "memsize" not in options:
+        return
+
+    if cutoff is None:
+        cutoff = {}
+    for key, val in options["memsize"].items():
+        if verbose:
+            print(f"Estimate cutoff from memsize for fc{key} by max {val} GB.")
+        if key in (2, 3, 4):
+            _cutoff = estimate_symfc_cutoff_from_memsize(
+                supercell,
+                primitive,
+                symmetry,
+                key,
+                max_memsize=val,
+                verbose=verbose,
+            )
+            if _cutoff is None:
+                if verbose:
+                    print("No cutoff is applied.")
+            else:
+                cutoff.update({key: _cutoff})
+        else:
+            raise ValueError("order must be 2, 3, or 4.")
+    if not cutoff:
+        cutoff = None
+    options["cutoff"] = cutoff
+    del options["memsize"]

@@ -44,7 +44,7 @@ import numpy as np
 from phonopy.exception import ForceCalculatorRequiredError
 from phonopy.harmonic.force_constants import FDFCSolver
 from phonopy.interface.alm import ALMFCSolver
-from phonopy.interface.symfc import SymfcFCSolver
+from phonopy.interface.symfc import SymfcFCSolver, update_symfc_cutoff_by_memsize
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
 from phonopy.structure.dataset import get_displacements_and_forces
@@ -284,14 +284,23 @@ class FCSolver:
             log_level=self._log_level,
         )
 
-    def _set_symfc_solver(self):
+    def _set_symfc_solver(self, order: int = 2):
         from phonopy.interface.symfc import SymfcFCSolver, parse_symfc_options
+
+        options = parse_symfc_options(self._options, order)
+        update_symfc_cutoff_by_memsize(
+            options,
+            self._supercell,
+            self._primitive,
+            self._symmetry,
+            verbose=self._log_level > 0,
+        )
 
         if self._dataset is None:
             return SymfcFCSolver(
                 self._supercell,
                 symmetry=self._symmetry,
-                options=parse_symfc_options(self._options),
+                options=options,
                 is_compact_fc=self._is_compact_fc,
                 log_level=self._log_level,
             )
@@ -299,10 +308,10 @@ class FCSolver:
             displacements, forces = self._get_displacements_and_forces()
             symfc_solver = SymfcFCSolver(
                 self._supercell,
-                displacements,
-                forces,
+                displacements=displacements,
+                forces=forces,
                 symmetry=self._symmetry,
-                options=parse_symfc_options(self._options),
+                options=options,
                 is_compact_fc=self._is_compact_fc,
                 log_level=self._log_level,
             )

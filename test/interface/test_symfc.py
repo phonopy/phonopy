@@ -14,7 +14,7 @@ def test_symfc_cutoff(ph_nacl: Phonopy, cutoff: Optional[dict]):
     ph = ph_nacl
     symfc_solver = SymfcFCSolver(
         ph.supercell,
-        ph.symmetry,
+        symmetry=ph.symmetry,
         options={"cutoff": cutoff},
         log_level=1,
     )
