@@ -369,7 +369,7 @@ def update_symfc_cutoff_by_memsize(
         cutoff = {}
     for key, val in options["memsize"].items():
         if verbose:
-            print(f"Estimate symfc cutoff for fc{key} by memsize of {val} GB.")
+            print(f"Estimate symfc cutoff for fc{key} by memsize of {val} GB")
         if key in (2, 3, 4):
             _cutoff = estimate_symfc_cutoff_from_memsize(
                 supercell,
@@ -381,7 +381,10 @@ def update_symfc_cutoff_by_memsize(
             )
             if _cutoff is None:
                 if verbose:
-                    print("No cutoff is applied.")
+                    print(
+                        "Specified memsize covers "
+                        "all supercell force constants elements."
+                    )
             else:
                 cutoff.update({key: _cutoff})
         else:
