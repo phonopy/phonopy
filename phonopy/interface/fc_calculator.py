@@ -44,7 +44,7 @@ import numpy as np
 from phonopy.exception import ForceCalculatorRequiredError
 from phonopy.harmonic.force_constants import FDFCSolver
 from phonopy.interface.alm import ALMFCSolver
-from phonopy.interface.symfc import SymfcFCSolver, update_symfc_cutoff_by_memsize
+from phonopy.interface.symfc import SymfcFCSolver
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
 from phonopy.structure.dataset import get_displacements_and_forces
@@ -288,14 +288,7 @@ class FCSolver:
         from phonopy.interface.symfc import SymfcFCSolver, parse_symfc_options
 
         options = parse_symfc_options(self._options, order)
-        update_symfc_cutoff_by_memsize(
-            options,
-            self._supercell,
-            self._primitive,
-            self._symmetry,
-            verbose=self._log_level > 0,
-        )
-
+        options.pop("memsize", None)
         if self._dataset is None:
             return SymfcFCSolver(
                 self._supercell,
