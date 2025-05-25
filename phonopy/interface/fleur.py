@@ -50,7 +50,7 @@ from phonopy.structure.atoms import PhonopyAtoms, symbol_map
 
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
-    """Parse forces from output files."""
+    """Parse forces from output files (special format: data line + 'force' line)."""
     hook = "1 #"
     is_parsed = True
     force_sets = []
@@ -58,20 +58,43 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
     for i, filename in enumerate(forces_filenames):
         if verbose:
             sys.stdout.write("%d. " % (i + 1))
-        f = open(filename)
-        fleur_forces = collect_forces(f, num_atoms, hook, [0, 1, 2], word="force")
-        if check_forces(fleur_forces, num_atoms, filename, verbose=verbose):
+        try:
+            with open(filename) as f:
+                lines = f.readlines()
+
+            start = next(i for i, line in enumerate(lines) if hook in line) + 1
+
+            forces = []
+            i = start
+            while i + 1 < len(lines) and len(forces) < num_atoms:
+                vec_line = lines[i].strip()
+                tag_line = lines[i + 1].strip()
+                if "force" in tag_line:
+                    vec = [float(x) for x in vec_line.split()[:3]]
+                    forces.append(vec)
+                    i += 2
+                else:
+                    i += 1
+
+            if len(forces) != num_atoms:
+                if verbose:
+                    print(f"Force count mismatch in {filename}: {len(forces)} vs {num_atoms}")
+                is_parsed = False
+                continue
+
             drift_force = get_drift_forces(
-                fleur_forces, filename=filename, verbose=verbose
+                forces, filename=filename, verbose=verbose
             )
-            force_sets.append(np.array(fleur_forces) - drift_force)
-        else:
+            force_sets.append(np.array(forces) - drift_force)
+            if verbose:
+                print("Parsed")
+
+        except Exception as e:
+            if verbose:
+                print(f"Error parsing {filename}: {e}")
             is_parsed = False
 
-    if is_parsed:
-        return force_sets
-    else:
-        return []
+    return force_sets if is_parsed else []
 
 
 def read_fleur(filename):
