@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <fleurInput fleurInputVersion="0.38">
    <comment>
-      Aluminium test Fleur                                                                                
+      Aluminium test Fleur
    </comment>
    <calculationSetup>
       <cutoffs Kmax="4.00000000" Gmax="24.01000000" GmaxXC="24.01000000" numbands="0"/>

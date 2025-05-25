@@ -40,9 +40,7 @@ import sys
 
 import numpy as np
 
-from phonopy.file_IO import collect_forces
 from phonopy.interface.vasp import (
-    check_forces,
     get_drift_forces,
     sort_positions_by_symbols,
 )
@@ -78,13 +76,13 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
 
             if len(forces) != num_atoms:
                 if verbose:
-                    print(f"Force count mismatch in {filename}: {len(forces)} vs {num_atoms}")
+                    print(
+                        f"Force count mismatch in {filename}: {len(forces)} vs {num_atoms}"
+                    )
                 is_parsed = False
                 continue
 
-            drift_force = get_drift_forces(
-                forces, filename=filename, verbose=verbose
-            )
+            drift_force = get_drift_forces(forces, filename=filename, verbose=verbose)
             force_sets.append(np.array(forces) - drift_force)
             if verbose:
                 print("Parsed")
