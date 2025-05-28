@@ -3,6 +3,7 @@
 import tempfile
 
 import pytest
+import os
 
 from phonopy.interface.calculator import calculator_info, convert_crystal_structure
 
@@ -12,10 +13,10 @@ def test_conversion():
     calcs = calculator_info.keys()
     require_extra_info = ["wien2k", "siesta", "cp2k", "crystal", "fleur", "abacus"]
 
+    parent_dir = os.path.dirname(os.path.abspath(__file__))
     temp = tempfile.NamedTemporaryFile()
     td = tempfile.TemporaryDirectory()
-
-    POSCAR = "../POSCAR_NaCl"
+    POSCAR = os.path.join(parent_dir, "POSCAR_NaCl")
 
     for calc in calcs:
         if calc == "turbomole":
