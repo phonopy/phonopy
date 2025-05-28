@@ -1,19 +1,22 @@
 """Test Conversion between calculator formats"""
 
-import tempfile, pytest
-from phonopy.interface.calculator import convert_crystal_structure, calculator_info
+import tempfile
+
+import pytest
+
+from phonopy.interface.calculator import calculator_info, convert_crystal_structure
 
 
 def test_conversion():
-    """calcs that can use extra info are below"""
+    """Calcs that can use extra info are below"""
     calcs = calculator_info.keys()
     require_extra_info = ["wien2k", "siesta", "cp2k", "crystal", "fleur", "abacus"]
-    
+
     temp = tempfile.NamedTemporaryFile()
     td = tempfile.TemporaryDirectory()
-   
+
     POSCAR = "../POSCAR_NaCl"
-    
+
     for calc in calcs:
         if calc == "turbomole":
             name = td.name

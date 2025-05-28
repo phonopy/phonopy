@@ -101,9 +101,11 @@ def get_interface_mode(args_dict):
     return None
 
 
-def convert_crystal_structure(filename_in, interface_in, filename_out, interface_out, optional_structure_info=None):
+def convert_crystal_structure(
+    filename_in, interface_in, filename_out, interface_out, optional_structure_info=None
+):
     """Convert crystal structures between different calculator interfaces.
-    
+
     optional_structure_info: Some interfaces may take additional information, such as the pseudopotential files for Quantum Espresso ("qe")
     Pass this info explicitly rather than relying on the info found by `read_crystal_structure`. The type of data depends on the calculator used.
     """
@@ -112,7 +114,12 @@ def convert_crystal_structure(filename_in, interface_in, filename_out, interface
     units_out = get_calculator_physical_units(interface_out)
     factor = units_in["distance_to_A"] / units_out["distance_to_A"]
     cell.cell = cell.cell * factor
-    write_crystal_structure(filename_out, cell, interface_mode=interface_out, optional_structure_info=optional_structure_info)
+    write_crystal_structure(
+        filename_out,
+        cell,
+        interface_mode=interface_out,
+        optional_structure_info=optional_structure_info,
+    )
 
 
 def write_crystal_structure(
@@ -149,7 +156,9 @@ def write_crystal_structure(
         if optional_structure_info is not None:
             pp_filenames = optional_structure_info[1]
         else:
-            warnings.warn("Optional structure information (pp_filenames) is missing\nYou will need to manually add pp filenames to the qe input file.")
+            warnings.warn(
+                "Optional structure information (pp_filenames) is missing\nYou will need to manually add pp filenames to the qe input file."
+            )
             pp_filenames = None
         qe.write_pwscf(filename, cell, pp_filenames)
 
@@ -159,7 +168,9 @@ def write_crystal_structure(
         if optional_structure_info is not None:
             _, npts, r0s, rmts = optional_structure_info
         else:
-            raise RuntimeError("Optional structure information (_, npts, r0s, rmts) is missing.")
+            raise RuntimeError(
+                "Optional structure information (_, npts, r0s, rmts) is missing."
+            )
         wien2k.write_wein2k(filename, cell, npts, r0s, rmts)
     elif interface_mode == "elk":
         import phonopy.interface.elk as elk
@@ -191,7 +202,9 @@ def write_crystal_structure(
         if optional_structure_info is not None:
             conv_numbers = optional_structure_info[1]
         else:
-            raise RuntimeError("Optional structure information (conv_numbers) is missing.")
+            raise RuntimeError(
+                "Optional structure information (conv_numbers) is missing."
+            )
         crystal.write_crystal(filename, cell, conv_numbers)
     elif interface_mode == "dftbp":
         import phonopy.interface.dftbp as dftbp
@@ -215,7 +228,9 @@ def write_crystal_structure(
         if optional_structure_info is not None:
             speci, restlines = optional_structure_info
         else:
-            raise RuntimeError("Optional structure information (speci, restlines) is missing.")
+            raise RuntimeError(
+                "Optional structure information (speci, restlines) is missing."
+            )
         fleur.write_fleur(filename, cell, speci, 1, restlines)
     elif interface_mode == "abacus":
         import phonopy.interface.abacus as abacus
@@ -225,7 +240,9 @@ def write_crystal_structure(
             orbitals = optional_structure_info[2]
             abfs = optional_structure_info[3]
         else:
-            raise RuntimeError("Optional structure information (pps, orbitals, abfs) is missing.")
+            raise RuntimeError(
+                "Optional structure information (pps, orbitals, abfs) is missing."
+            )
         abacus.write_abacus(filename, cell, pps, orbitals, abfs)
     elif interface_mode == "lammps":
         import phonopy.interface.lammps as lammps
