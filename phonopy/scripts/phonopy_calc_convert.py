@@ -81,7 +81,9 @@ def get_options():
         dest="additional_info",
         metavar="ADDITIONAL_INFO",
         default=None,
-        help="Additional information for the conversion, which is required for some calculators. If not provided when required, an error will be raised.",
+        help="Additional information for the conversion,\
+            which is required for some calculators.\
+                If not provided when required, an error will be raised.",
     )
     return parser.parse_args()
 

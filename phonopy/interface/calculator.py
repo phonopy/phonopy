@@ -108,8 +108,7 @@ def convert_crystal_structure(
 
     optional_structure_info: Some interfaces may take additional information,
     such as the pseudopotential files for Quantum Espresso ("qe").
-    Pass this info explicitly rather than relying on the info found by `read_crystal_structure`.
-    The type of data depends on the calculator used.
+    Pass this info explicitly. The type of data depends on the calculator used.
     """
     cell, _ = read_crystal_structure(filename=filename_in, interface_mode=interface_in)
     units_in = get_calculator_physical_units(interface_in)
@@ -140,7 +139,7 @@ def write_crystal_structure(
         Calculator interface such as 'vasp', 'qe', ... Default is None,
         that is equivalent to 'vasp'.
     optional_structure_info : tuple, optional
-        Information returned by the method ``read_crystal_structure``.
+        Information returned by the method `read_crystal_structure`.
         See the docstring. Default is None.
 
     """
