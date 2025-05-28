@@ -171,22 +171,22 @@ def get_castep_structure(cell):
     """Return CASTEP structure in text."""
     lines = ""
     lines += "%BLOCK LATTICE_CART\n"
-    lines += ((" % 20.16f" * 3 + "\n") * 3) % tuple(cell.get_cell().ravel())
+    lines += ((" % 20.16f" * 3 + "\n") * 3) % tuple(cell.cell.ravel())
     lines += "%ENDBLOCK LATTICE_CART\n\n"
     lines += "%BLOCK POSITIONS_FRAC\n"
     magmoms = cell.get_magnetic_moments()
 
-    for i in range(len(cell.get_chemical_symbols())):
-        atpos = "".join("% 12.10f " % ap for ap in cell.get_scaled_positions()[i])
+    for i in range(len(cell.symbols)):
+        atpos = "".join("% 12.10f " % ap for ap in cell.scaled_positions[i])
         # Spin polarized case
         if (magmoms is not None) and (magmoms[i] != 0.0):
             lines += "".join(
                 "%2s %s  spin=% 5.2f\n"
-                % (cell.get_chemical_symbols()[i], atpos, magmoms[i])
+                % (cell.symbols[i], atpos, magmoms[i])
             )
         # No spin ordering
         else:
-            lines += "".join("%2s %s\n" % (cell.get_chemical_symbols()[i], atpos))
+            lines += "".join("%2s %s\n" % (cell.symbols[i], atpos))
     lines += "%ENDBLOCK POSITIONS_FRAC\n\n"
 
     return lines

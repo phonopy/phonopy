@@ -166,7 +166,7 @@ class GruneisenBandStructure(GruneisenBase):
                 self._write_yaml(w, comment, is_binary=True)
 
     def _write_yaml(self, w, comment, is_binary=False):
-        natom = self._cell.get_number_of_atoms()
+        natom = len(self._cell)  # number of atoms
         rec_lattice = np.linalg.inv(self._cell.cell)  # column vecs
         nq_paths = []
         for qpoints in self._paths:

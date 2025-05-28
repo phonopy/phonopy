@@ -59,8 +59,8 @@ def parse_set_of_forces(
     else:
         symprec = symmetry_tolerance
 
-    num_atoms = supercell.get_number_of_atoms()
-    lattice = supercell.get_cell()
+    num_atoms = len(supercell)
+    lattice = supercell.cell
     is_parsed = True
     force_sets = []
 
@@ -205,12 +205,12 @@ def write_wein2k(filename, cell, npts, r0s, rmts):
 
 
 def _get_wien2k_struct(cell, npts, r0s, rmts):
-    num_atom = cell.get_number_of_atoms()
-    lattice = cell.get_cell()
+    num_atom = len(cell)
+    lattice = cell.cell
     a, b, c = get_cell_parameters(lattice)
     alpha, beta, gamma = get_angles(lattice)
-    positions = cell.get_scaled_positions()
-    symbols = cell.get_chemical_symbols()
+    positions = cell.scaled_positions
+    symbols = cell.symbols
     numbers = cell.get_atomic_numbers()
 
     text = ""
@@ -330,10 +330,10 @@ def _get_forces_wien2k(filename, lattice):
 
 
 def _distribute_forces(supercell, disp, forces, filename, symprec):
-    natom = supercell.get_number_of_atoms()
-    lattice = supercell.get_cell()
-    symbols = supercell.get_chemical_symbols()
-    positions = supercell.get_positions() + disp
+    natom = len(supercell)
+    lattice = supercell.cell
+    symbols = supercell.symbols
+    positions = supercell.positions + disp
     cell = PhonopyAtoms(cell=lattice, positions=positions, symbols=symbols)
     symmetry = Symmetry(cell, symprec)
     independent_atoms = symmetry.get_independent_atoms()
@@ -368,7 +368,7 @@ def _distribute_forces(supercell, disp, forces, filename, symprec):
         indep_atoms_to_wien2k = []
         forces_remap = []
         for i, pos_wien2k in enumerate(atoms_in_dot_scf):
-            for j, pos in enumerate(cell.get_scaled_positions()):
+            for j, pos in enumerate(cell.scaled_positions):
                 diff = pos_wien2k - pos
                 diff -= np.rint(diff)
                 if (abs(diff) < symprec).all():
@@ -415,7 +415,7 @@ if __name__ == "__main__":
     from phonopy.interface.vasp import read_vasp, write_vasp
 
     def _clean_scaled_positions(cell):
-        positions = cell.get_scaled_positions()
+        positions = cell.scaled_positions
         for pos in positions:
             for i in (0, 1, 2):
                 # The following %19.16f follows write_vasp
@@ -437,7 +437,7 @@ if __name__ == "__main__":
 
     if options.v2w:
         cell = read_vasp(args[0])
-        lattice = cell.get_cell() / physical_units.Bohr
+        lattice = cell.cell / physical_units.Bohr
         cell.set_cell(lattice)
         npts, r0s, rmts = _parse_core_param(open(args[1]))
         text = _get_wien2k_struct(cell, npts, r0s, rmts)
@@ -445,8 +445,8 @@ if __name__ == "__main__":
 
     elif options.w2v:
         cell, npts, r0s, rmts = parse_wien2k_struct(args[0])
-        positions = cell.get_scaled_positions()
-        lattice = cell.get_cell() * physical_units.Bohr
+        positions = cell.scaled_positions
+        lattice = cell.cell * physical_units.Bohr
         cell.set_cell(lattice)
         cell.set_scaled_positions(positions)
         _clean_scaled_positions(cell)
@@ -454,7 +454,7 @@ if __name__ == "__main__":
         w = open("wien2k_core.dat", "w")
 
         w.write("# symbol       npt       r0             rmt\n")
-        for symbol, npt, r0, rmt in zip(cell.get_chemical_symbols(), npts, r0s, rmts):
+        for symbol, npt, r0, rmt in zip(cell.symbols, npts, r0s, rmts):
             w.write("%-10s     %5d     %10.8f     %10.5f\n" % (symbol, npt, r0, rmt))
     else:
         print("You need to set -r or -w option.")
