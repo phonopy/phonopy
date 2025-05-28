@@ -10,6 +10,7 @@ def test_conversion():
     require_extra_info = ["wien2k", "siesta", "cp2k", "crystal", "fleur", "abacus"]
 
     parent_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.dirname(parent_dir)
     temp = tempfile.NamedTemporaryFile()
     td = tempfile.TemporaryDirectory()
     POSCAR = os.path.join(parent_dir, "POSCAR_NaCl")
@@ -19,7 +20,6 @@ def test_conversion():
             name = td.name
         else:
             name = temp.name
-        print(f"Testing conversion for {calc}")
         if calc in require_extra_info:
             with pytest.raises(RuntimeError):
                 # These calcs need additional info to write their input files
