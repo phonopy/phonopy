@@ -181,8 +181,7 @@ def get_castep_structure(cell):
         # Spin polarized case
         if (magmoms is not None) and (magmoms[i] != 0.0):
             lines += "".join(
-                "%2s %s  spin=% 5.2f\n"
-                % (cell.symbols[i], atpos, magmoms[i])
+                "%2s %s  spin=% 5.2f\n" % (cell.symbols[i], atpos, magmoms[i])
             )
         # No spin ordering
         else:

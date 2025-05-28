@@ -591,9 +591,7 @@ class PH_Q2R:
         assert (np.abs(diff) < 1e-8).all()
         assert len(cell) == len(q2r_spos)
 
-        site_map = self._get_site_mapping(
-            scell.scaled_positions, q2r_spos, scell.cell
-        )
+        site_map = self._get_site_mapping(scell.scaled_positions, q2r_spos, scell.cell)
         natom = len(pcell)
         ndim = np.prod(dim)
         natom_s = natom * ndim

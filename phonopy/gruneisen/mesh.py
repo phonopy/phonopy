@@ -135,7 +135,7 @@ class GruneisenMesh(GruneisenBase):
                 self._write_yaml(w, comment, is_binary=True)
 
     def _write_yaml(self, w, comment, is_binary=False):
-        natom = len(self._cell) 
+        natom = len(self._cell)
         rec_lattice = np.linalg.inv(self._cell.cell)  # column vectors
         text = []
         text.append("mesh: [ %5d, %5d, %5d ]" % tuple(self._mesh))
