@@ -1,6 +1,10 @@
 """Test Conversion between calculator formats."""
 
-import tempfile, pytest, os
+import os
+import tempfile
+
+import pytest
+
 from phonopy.interface.calculator import calculator_info, convert_crystal_structure
 
 
