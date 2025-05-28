@@ -181,12 +181,12 @@ def write_dftbp(filename, atoms):
     lines = ""
 
     # 1. line, use absolute positions
-    natoms = atoms.get_number_of_atoms()
+    natoms = len(atoms)
     lines += str(natoms)
     lines += " S \n"
 
     # 2. line
-    expaned_symbols = atoms.get_chemical_symbols()
+    expaned_symbols = atoms.symbols
     symbols = get_reduced_symbols(expaned_symbols)
     lines += " ".join(symbols) + "\n"
 
@@ -194,7 +194,7 @@ def write_dftbp(filename, atoms):
     for ss in expaned_symbols:
         atom_numbers.append(symbols.index(ss) + 1)
 
-    positions = atoms.get_positions() / scale_pos
+    positions = atoms.positions / scale_pos
 
     for ii in range(natoms):
         pos = positions[ii]
@@ -206,7 +206,7 @@ def write_dftbp(filename, atoms):
     # origin arbitrary
     lines += "0.0 0.0 0.0\n"
 
-    cell = atoms.get_cell() / scale_pos
+    cell = atoms.cell / scale_pos
 
     for ii in range(3):
         cell_str = "{:20.15f} {:20.15f} {:20.15f}\n".format(

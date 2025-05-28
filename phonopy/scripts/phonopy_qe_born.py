@@ -150,7 +150,7 @@ def get_born_qe_ph(
 
     """
     ucell, _ = read_pwscf(file_pw)
-    epsilon, borns = parse_ph_out(file_ph, ucell.get_number_of_atoms())
+    epsilon, borns = parse_ph_out(file_ph, len(ucell))
     if len(borns) == 0 or len(epsilon) == 0:
         return None
     else:

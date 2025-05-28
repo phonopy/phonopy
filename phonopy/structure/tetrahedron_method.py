@@ -46,7 +46,7 @@ def get_tetrahedra_relative_grid_address(microzone_lattice, lang="C"):
     ---------
     microzone_lattice : ndarray or list of list
         column vectors of parallel piped microzone lattice, i.e.,
-        microzone_lattice = np.linalg.inv(cell.get_cell()) / mesh
+        microzone_lattice = np.linalg.inv(cell.cell) / mesh
 
     """
     try:

@@ -132,9 +132,9 @@ def write_supercells_with_displacements(
 
 def get_fleur_structure(cell, speci, N, restlines):
     """Return Fleur structure in text."""
-    lattice = cell.get_cell()
+    lattice = cell.cell
     (num_atoms, symbols, scaled_positions, sort_list) = sort_positions_by_symbols(
-        cell.get_chemical_symbols(), cell.get_scaled_positions()
+        cell.symbols, cell.scaled_positions
     )
     specilong = list(
         itertools.chain.from_iterable(itertools.repeat(x, N) for x in speci)

@@ -586,15 +586,13 @@ class PH_Q2R:
         scell = get_supercell(cell, np.diag(dim))
         pcell = get_primitive(scell, np.diag(1.0 / dim))
 
-        diff = cell.get_scaled_positions() - pcell.get_scaled_positions()
+        diff = cell.scaled_positions - pcell.scaled_positions
         diff -= np.rint(diff)
         assert (np.abs(diff) < 1e-8).all()
-        assert scell.get_number_of_atoms() == len(q2r_spos)
+        assert len(cell) == len(q2r_spos)
 
-        site_map = self._get_site_mapping(
-            scell.get_scaled_positions(), q2r_spos, scell.get_cell()
-        )
-        natom = pcell.get_number_of_atoms()
+        site_map = self._get_site_mapping(scell.scaled_positions, q2r_spos, scell.cell)
+        natom = len(pcell)
         ndim = np.prod(dim)
         natom_s = natom * ndim
 
@@ -611,11 +609,11 @@ class PH_Q2R:
 
     def _get_q2r_positions(self, cell):
         dim = self.dimension
-        natom = cell.get_number_of_atoms()
+        natom = len(cell)
         ndim = np.prod(dim)
         spos = np.zeros((natom * np.prod(dim), 3), dtype="double", order="C")
         trans = [x[::-1] for x in np.ndindex(tuple(dim[::-1]))]
-        for i, p in enumerate(cell.get_scaled_positions()):
+        for i, p in enumerate(cell.scaled_positions):
             spos[i * ndim : (i + 1) * ndim] = (trans + p) / dim
         return spos
 
