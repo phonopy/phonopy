@@ -1,15 +1,11 @@
-"""Test Conversion between calculator formats"""
+"""Test Conversion between calculator formats."""
 
-import tempfile
-
-import pytest
-import os
-
+import tempfile, pytest, os
 from phonopy.interface.calculator import calculator_info, convert_crystal_structure
 
 
 def test_conversion():
-    """Calcs that can use extra info are below"""
+    """Calcs that can use extra info are below."""
     calcs = calculator_info.keys()
     require_extra_info = ["wien2k", "siesta", "cp2k", "crystal", "fleur", "abacus"]
 

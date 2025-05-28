@@ -106,8 +106,10 @@ def convert_crystal_structure(
 ):
     """Convert crystal structures between different calculator interfaces.
 
-    optional_structure_info: Some interfaces may take additional information, such as the pseudopotential files for Quantum Espresso ("qe")
-    Pass this info explicitly rather than relying on the info found by `read_crystal_structure`. The type of data depends on the calculator used.
+    optional_structure_info: Some interfaces may take additional information,
+    such as the pseudopotential files for Quantum Espresso ("qe").
+    Pass this info explicitly rather than relying on the info found by `read_crystal_structure`.
+    The type of data depends on the calculator used.
     """
     cell, _ = read_crystal_structure(filename=filename_in, interface_mode=interface_in)
     units_in = get_calculator_physical_units(interface_in)
@@ -157,7 +159,9 @@ def write_crystal_structure(
             pp_filenames = optional_structure_info[1]
         else:
             warnings.warn(
-                "Optional structure information (pp_filenames) is missing\nYou will need to manually add pp filenames to the qe input file."
+                "Optional structure information (pp_filenames) is missing\n\
+                    You will need to manually add pp filenames to the qe input file.",
+                stacklevel=2,
             )
             pp_filenames = None
         qe.write_pwscf(filename, cell, pp_filenames)
