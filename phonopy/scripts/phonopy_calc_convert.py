@@ -72,6 +72,13 @@ def get_options():
         default=None,
         help="Output calculator format",
     )
+    parser.add_argument(
+        "--additional-info",
+        dest="additional_info",
+        metavar="ADDITIONAL_INFO",
+        default=None,
+        help="Additional information for the conversion, which is required for some calculators. If not provided when required, an error will be raised.",
+    )
     return parser.parse_args()
 
 
@@ -83,6 +90,7 @@ def run():
         opts.calculator_in,
         opts.filename_out,
         opts.calculator_out,
+        opts.additional_info,
     )
 
     try:
