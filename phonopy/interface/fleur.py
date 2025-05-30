@@ -77,8 +77,9 @@ def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
             if len(forces) != num_atoms:
                 if verbose:
                     print(
-                        f"Force count mismatch in {filename}: {len(forces)} vs {num_atoms}"
-                    )
+                    f"Force count mismatch in {filename}: "
+                    f"{len(forces)} vs {num_atoms}"
+                )
                 is_parsed = False
                 continue
 
