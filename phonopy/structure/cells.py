@@ -207,7 +207,7 @@ class Supercell(PhonopyAtoms):
         if self._is_old_style:
             P = None
             multi = self._get_surrounding_frame(mat)
-            # trim_fram is to trim overlapping atoms.
+            # trim_frame is to trim overlapping atoms.
             trim_frame = np.array(
                 [
                     mat[0] / float(multi[0]),
@@ -219,7 +219,6 @@ class Supercell(PhonopyAtoms):
             # In the new style, it is unnecessary to trim atoms,
             if (np.diag(np.diagonal(mat)) != mat).any():
                 snf = SNF3x3(mat)
-                snf.run()
                 P = snf.P
                 multi = np.diagonal(snf.D)
             else:
@@ -344,9 +343,9 @@ class Primitive(PhonopyAtoms):
     def __init__(
         self,
         supercell: PhonopyAtoms,
-        primitive_matrix,
-        symprec=1e-5,
-        store_dense_svecs=True,
+        primitive_matrix: Sequence,
+        symprec: float = 1e-5,
+        store_dense_svecs: bool = True,
         positions_to_reorder=None,
     ):
         """Init method.
@@ -376,16 +375,16 @@ class Primitive(PhonopyAtoms):
         self._primitive_matrix = np.array(primitive_matrix, dtype="double", order="C")
         self._symprec = symprec
         self._store_dense_svecs = store_dense_svecs
-        self._p2s_map = None
-        self._s2p_map = None
-        self._p2p_map = None
-        self._smallest_vectors = None
-        self._multiplicity = None
-        self._atomic_permutations = None
+        self._p2s_map: np.ndarray
+        self._s2p_map: np.ndarray
+        self._p2p_map: dict[int, int]
+        self._smallest_vectors: np.ndarray
+        self._multiplicity: np.ndarray
+        self._atomic_permutations: np.ndarray
         self._run(supercell, positions_to_reorder=positions_to_reorder)
 
     @property
-    def primitive_matrix(self):
+    def primitive_matrix(self) -> np.ndarray:
         """Return primitive_matrix.
 
         Returns
@@ -409,7 +408,7 @@ class Primitive(PhonopyAtoms):
         return self.primitive_matrix
 
     @property
-    def p2s_map(self):
+    def p2s_map(self) -> np.ndarray:
         """Return mapping table of atoms from primitive cell to supercell.
 
         Returns
@@ -433,7 +432,7 @@ class Primitive(PhonopyAtoms):
         return self.p2s_map
 
     @property
-    def s2p_map(self):
+    def s2p_map(self) -> np.ndarray:
         """Return mapping table of atoms from supercell to primitive cells.
 
         Returns
@@ -457,7 +456,7 @@ class Primitive(PhonopyAtoms):
         return self.s2p_map
 
     @property
-    def p2p_map(self):
+    def p2p_map(self) -> dict[int, int]:
         """Return mapping table of indices in supercell and primitive cell.
 
         Returns
@@ -509,7 +508,7 @@ class Primitive(PhonopyAtoms):
         return self._smallest_vectors, self._multiplicity
 
     @property
-    def atomic_permutations(self):
+    def atomic_permutations(self) -> np.ndarray:
         """Return atomic index permutations by pure translations.
 
         Returns
@@ -539,7 +538,7 @@ class Primitive(PhonopyAtoms):
         return self.atomic_permutations
 
     @property
-    def store_dense_svecs(self):
+    def store_dense_svecs(self) -> bool:
         """Return whether shortest vectors are stored in dense array or not."""
         return self._store_dense_svecs
 
