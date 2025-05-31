@@ -178,6 +178,7 @@ def _test_phonopy_atoms(cell: PhonopyAtoms):
         np.testing.assert_allclose(dist, np.zeros(len(dist)), atol=1e-8)
 
         if magmoms:
+            assert cell.magnetic_moments is not None
             np.testing.assert_allclose(cell.magnetic_moments, magmoms, atol=1e-8)
 
 
