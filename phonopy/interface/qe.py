@@ -107,7 +107,7 @@ def read_pwscf(filename):
     for symnum in species:  # symnum is like 'H', 'H1', 'H2', ...
         symbol, num = split_symbol_and_index(symnum)
         if symbol not in symbol_map:
-            RuntimeError(f"Element {symbol} is not supported.")
+            raise RuntimeError(f"Element {symbol} is not supported.")
         if num > 0:
             use_given_masses = True
 
@@ -417,7 +417,7 @@ class PH_Q2R:
     the number of atoms in unit cell and n_satom is the number of
     atoms in super cell, i.e., u_atom * prod(dim). When using this
     force constants data from phonopy with primitive cell that is
-    differnt from unit cell, force constants have to be regenerated
+    different from unit cell, force constants have to be regenerated
     for the primitive cell, which is not done in this class.
 
     Treatment of non-analytical term correction (NAC) is different
@@ -444,7 +444,7 @@ class PH_Q2R:
         dtype='double'
         shape=(natom_prim, natom_super, 3, 3) for compact fc or
               (natom_super, natom_super, 3, 3) for full fc
-    dimenstion : ndarray
+    dimension : ndarray
         Supercell dimensions (not matrix)
         dtype='intc'
         shape=(3,)
@@ -506,7 +506,7 @@ class PH_Q2R:
                 )
 
     def write_force_constants(self, fc_format="hdf5"):
-        """Write force constatns to file in hdf5."""
+        """Write force constants to file in hdf5."""
         if self.fc is not None:
             if fc_format == "hdf5":
                 write_force_constants_to_hdf5(self.fc, p2s_map=self.primitive.p2s_map)
