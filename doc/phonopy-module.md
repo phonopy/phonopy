@@ -271,9 +271,9 @@ phonon.run_projected_dos()
 phonon.plot_band_structure_and_dos(pdos_indices=[[0], [1]]).show()
 ```
 
-`path_connections` and `labels` are unnecessary to set unless nice looking
-plotting is needed. To obtain eigenvectors, it is necessary to inform to store
-eigenvectors by:
+`path_connections` and `labels` are optional unless nice looking
+plotting is needed. To obtain eigenvectors, the corresponding 
+keyword argument must be set:
 
 ```python
 phonon.run_band_structure(bands, with_eigenvectors=True)
@@ -319,7 +319,7 @@ eigenvectors = mesh_dict['eigenvectors']
 group_velocities = mesh_dict['group_velocities']
 ```
 
-To obtain eigenvectors, it is necessary to inform to store eigenvectors by:
+To obtain eigenvectors, the corresponding keyword argument must be set:
 
 ```python
 phonon.run_mesh([20, 20, 20], with_eigenvectors=True)
