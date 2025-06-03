@@ -246,7 +246,7 @@ eV/Angstrom are read. The unit conversion factor is determined with this unit.
 ```
 
 Here `*.out` files are the saved texts of standard outputs of PWscf
-calculations, and `--qe` selects the Quantum Espresso interface.
+calculations.
 
 (wien2k_force_sets_option)=
 
