@@ -41,6 +41,7 @@ from typing import Optional, Union
 
 import numpy as np
 import spglib
+from numpy.typing import NDArray
 
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.snf import SNF3x3
@@ -865,7 +866,10 @@ class TrimmedCell(PhonopyAtoms):
 
 
 def get_supercell(
-    unitcell, supercell_matrix, is_old_style=True, symprec=1e-5
+    unitcell: PhonopyAtoms,
+    supercell_matrix: NDArray | Sequence,
+    is_old_style: bool = True,
+    symprec: float = 1e-5,
 ) -> Supercell:
     """Create supercell."""
     return Supercell(
@@ -879,7 +883,7 @@ def get_primitive(
     symprec=1e-5,
     store_dense_svecs=True,
     positions_to_reorder=None,
-):
+) -> Primitive:
     """Create primitive cell."""
     return Primitive(
         supercell,

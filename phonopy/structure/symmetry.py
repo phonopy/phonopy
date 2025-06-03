@@ -39,6 +39,8 @@ import warnings
 from collections.abc import Sequence
 from typing import Optional
 
+from numpy.typing import NDArray
+
 try:
     from spglib import SpglibDataset
 except ImportError:
@@ -89,7 +91,8 @@ class Symmetry:
         self._wyckoff_letters = None
         self._map_atoms = None
         self._atomic_permutations = None
-        self._pointgroup_operations = None
+        self._pointgroup_operations: NDArray
+        self._reciprocal_operations: NDArray
         self._pointgroup = None
         self._independent_atoms = None
         self._map_operations = None
@@ -429,7 +432,9 @@ class Symmetry:
         self._wyckoff_letters = ["a"] * len(self._cell)
 
 
-def get_pointgroup_operations(rotations, is_time_reversal=True):
+def get_pointgroup_operations(
+    rotations, is_time_reversal=True
+) -> tuple[NDArray, NDArray]:
     """Return direct and reciprocal point group operations."""
     ptg_ops = collect_unique_rotations(rotations)
     reciprocal_rotations = [rot.T for rot in ptg_ops]
