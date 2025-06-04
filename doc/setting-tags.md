@@ -422,7 +422,7 @@ N_{\mathbf{a}^*} = \max[1, \mathrm{nint}(l|\mathbf{a}^*|)], \; N_{\mathbf{b}^*}
 \mathrm{nint}(l|\mathbf{c}^*|)],
 ```
 
-where {math}`l` is the value to be specified. With this, `GAMMA_CENTER` becomes
+where {math}`l` is the value to be specified. With this, `GAMMA_CENTER` is
 simply ignored, but `MP_SHIFT` works on top of the {math}`\Gamma` centred
 sampling mesh.
 
