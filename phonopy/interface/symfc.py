@@ -237,6 +237,11 @@ class SymfcFCSolver:
         assert len(fc3_nonzero_elems) == N**3
         return fc3_nonzero_elems.reshape((N, N, N))
 
+    @property
+    def options(self) -> dict | None:
+        """Return options."""
+        return self._options
+
     def _initialize(
         self,
         displacements: NDArray | None = None,
