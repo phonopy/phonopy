@@ -96,10 +96,11 @@ use of setting tags and command-line options, i.e.,
 ## Choice of force calculator
 
 Currently interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT, Elk,
-SIESTA, CRYSTAL, TURBOMOLE, Fleur and CP2K are prepared. These interfaces are
-invoked with `--vasp`, `--wienk2`, `--qe`, `--abinit`, `--elk`, `--siesta`,
-`--crystal`, `--turbomole`, `--fleur` and `--cp2k` options, respectively. When
-no interface is specified, `--vasp` is selected as the default interface.
+SIESTA, CRYSTAL, TURBOMOLE, Fleur, CP2K and Questaal are prepared. These
+interfaces are invoked with `--vasp`, `--wienk2`, `--qe`, `--abinit`, `--elk`,
+`--siesta`, `--crystal`, `--turbomole`, `--fleur`, `--cp2k` and `--qlm`
+options, respectively. When no interface is specified, `--vasp` is selected as
+the default interface.
 
 The details about these interfaces are found at {ref}`calculator_interfaces`.
 
@@ -154,6 +155,12 @@ files.
 
 This option invokes the WIEN2k mode.
 
+(qlm_mode)=
+
+### `--qlm`
+
+This option invokes the Questaal/LMTO mode.
+
 **Only the WIEN2k struct with the P lattice is supported**. See more information
 {ref}`wien2k_interface`.
 
@@ -197,6 +204,8 @@ The default file names for the calculators are as follows:
   - `fleur.in`
 * - CP2K
   - `unitcell.inp`
+* - Questaal/LMTO
+  - `site.lm`
 ```
 
 ## Create `FORCE_SETS`
@@ -318,6 +327,15 @@ with:
 
 Please note: the files containing the forces can be prefixed with the
 `PROJECT_NAME` as specified in the original CP2K input file.
+
+#### Questaal/LMTO interface
+
+`FORCE_SETS` file is created from `phonopy_disp.yaml` and force files,
+with:
+
+```bash
+% phonopy --qlm -f supercell-001/force.lm supercell-002/force.lm ...
+```
 
 (fz_force_sets_option)=
 ### `--fz`

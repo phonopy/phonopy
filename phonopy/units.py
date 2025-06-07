@@ -90,3 +90,6 @@ DftbpToTHz = (
 )  # [THz] 154.10794344
 TurbomoleToTHz = ElkToTHz  # Turbomole uses atomic units (Hartree/Bohr)
 FleurToTHz = ElkToTHz  # Fleur uses atomic units (Hartree/Bohr)
+QlmToTHz = (
+    sqrt(Rydberg * EV / AMU) / (Bohr * 1e-10) / (2 * pi) / 1e12
+)  # [THz] 108.97077

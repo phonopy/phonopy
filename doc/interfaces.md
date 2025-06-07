@@ -3,9 +3,9 @@
 # Interfaces to calculators
 
 The interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT, Elk, SIESTA,
-CRYSTAL, DFTB+, TURBOMOLE, FHI-AIMS, CASTEP, ABACUS, and LAMMPS are built in to
-the usual phonopy command. See the command options and how to invoke each of
-them at {ref}`force_calculators`. {ref}`LAMMPS interface
+CRYSTAL, DFTB+, TURBOMOLE, FHI-AIMS, CASTEP, ABACUS, LAMMPS and Questaal(QLM)
+are built in to the usual phonopy command. See the command options
+and how to invoke each of them at {ref}`force_calculators`. {ref}`LAMMPS interface
 <external_tools_phonolammps>` is provided as an external tool by Abel Carreras.
 
 (interfaces_to_force_calculators)=
@@ -31,6 +31,7 @@ castep
 Fleur
 abacus
 lammps
+qlm
 ```
 
 The VASP DFPT interface reads `vasprun.xml` and creates `FORCE_CONSTANTS` file.
@@ -62,6 +63,7 @@ Fleur     | au (bohr)  AMU           hartree/au    hartree/au^2
 CASTEP    | Angstrom   AMU           eV/angstrom   eV/angstrom^2
 ABACUS    | au (bohr)  AMU           eV/angstrom   eV/angstrom.au
 LAMMPS    | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
+QLM       | au (bohr)  AMU           Ry/au         Ry/au^2
 ```
 
 For these sets of physical properties, phonon frequency is calculated in THz.
@@ -90,6 +92,7 @@ Fleur     | fleur.in      | supercell.in
 CASTEP    | unitcell.cell | supercell.cell
 ABACUS    | STRU          | STRU.in
 LAMMPS    | unitcell      | supercell
+QLM       | site.lm       | supercell.lm
 ```
 
 ### Default displacement distances
@@ -115,6 +118,7 @@ Fleur     | 0.02 au (bohr)
 CASTEP    | 0.01 Angstrom
 ABACUS    | 0.02 au (bohr)
 LAMMPS    | 0.01 Angstrom
+QLM       | 0.02 au (bohr)
 ```
 
 (frequency_default_value_interfaces)=
@@ -137,6 +141,7 @@ Fleur     | 154.10794
 CASTEP    | 15.633302
 ABACUS    | 21.49068
 LAMMPS    | 15.633302
+QLM       | 108.97077
 ```
 
 (nac_default_value_interfaces)=
@@ -159,4 +164,5 @@ Fleur     | 1 (but feature N/A)
 CASTEP    | 14.399652
 ABACUS    | 51.422090
 LAMMPS    | 14.399652
+QLM       | N/A
 ```

@@ -126,8 +126,8 @@ The frequency unit conversion factor to THz has to be set by using the `factor`
 keyword in `Phonopy` class. The factors are `VaspToTHz` for VASP, `Wien2kToTHz`
 for Wien2k, `AbinitToTHz` for Abinit, `PwscfToTHz` for Pwscf, `ElkToTHz` for
 Elk, `SiestaToTHz` for Siesta, `CrystalToTHz` for CRYSTAL, `FleurToTHz` for
-Fleur, `VaspToTHz`, and `DftbpToTHz` for DFTB+ is the default value. For
-example:
+Fleur, `VaspToTHz`, `DftbpToTHz` for DFTB+ and `QlmToTHz` for Questaal/LMTO
+is the default value. For example:
 
 ```python
 from phonopy.interface.calculator import get_calculator_physical_units

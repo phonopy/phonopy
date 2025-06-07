@@ -64,6 +64,7 @@ calculator_info = {
     "elk": {"option": {"name": "--elk", "help": "Invoke elk mode"}},
     "fleur": {"option": {"name": "--fleur", "help": "Invoke Fleur mode"}},
     "lammps": {"option": {"name": "--lammps", "help": "Invoke Lammps mode"}},
+    "qlm": {"option": {"name": "--qlm", "help": "Invoke Questaal/LMTO mode"}},
     "qe": {"option": {"name": "--qe", "help": "Invoke Quantum espresso (QE) mode"}},
     "siesta": {"option": {"name": "--siesta", "help": "Invoke Siesta mode"}},
     "turbomole": {"option": {"name": "--turbomole", "help": "Invoke TURBOMOLE mode"}},
@@ -251,6 +252,12 @@ def write_crystal_structure(
         import phonopy.interface.lammps as lammps
 
         lammps.write_lammps(filename, cell)
+
+    elif interface_mode == "qlm":
+        import phonopy.interface.qlm as qlm
+
+        qlm.write_qlm(filename, cell)
+
     elif interface_mode == "pwmat":
         import phonopy.interface.pwmat as pwmat
 
@@ -395,6 +402,12 @@ def write_supercells_with_displacements(
         import phonopy.interface.lammps as lammps
 
         lammps.write_supercells_with_displacements(*args, **kwargs)
+
+    elif interface_mode == "qlm":
+        import phonopy.interface.qlm as qlm
+
+        qlm.write_supercells_with_displacements(*args, **kwargs)
+
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -546,6 +559,13 @@ def read_crystal_structure(
 
         unitcell = read_lammps(cell_filename)
         return unitcell, (cell_filename,)
+
+    elif interface_mode == "qlm":
+        from phonopy.interface.qlm import read_qlm
+
+        unitcell = read_qlm(cell_filename)
+        return unitcell, (cell_filename,)
+
     else:
         raise RuntimeError("No calculator interface was found.")
 
@@ -580,6 +600,8 @@ def get_default_cell_filename(interface_mode):
         return "STRU"
     elif interface_mode == "lammps":
         return "unitcell"
+    elif interface_mode == "qlm":
+        return "site"
     elif interface_mode == "pwmat":
         return "atom.config"
     else:
@@ -615,6 +637,8 @@ def get_default_supercell_filename(interface_mode):
         return "sSTRU"
     elif interface_mode == "lammps":
         return "supercell"
+    elif interface_mode == "qlm":
+        return "supercell"
     elif interface_mode == "pwmat":
         return "supercell.config"
     else:
@@ -632,6 +656,7 @@ def get_default_displacement_distance(interface_mode):
         "turbomole",
         "fleur",
         "abacus",
+        "qlm",
     ):
         displacement_distance = 0.02
     else:  # default or vasp, crystal, cp2k, pwmat
@@ -671,6 +696,7 @@ def get_calculator_physical_units(interface_mode=None) -> dict:
     fleur         : hartree, au,        AMU,         hartree/au,   hartree/au^2
     abacus        : eV,      au,        AMU,         eV/angstrom,  eV/angstrom.au
     lammps        : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
+    qlm           : Ry,      au,        AMU,         Ry/au,        Ry/au^2
     pwmat         : eV,      angstrom,  AMU,         eV/angstrom,  eV/angstrom^2
 
     units['force_constants_unit'] is used in
@@ -837,6 +863,20 @@ def get_calculator_physical_units(interface_mode=None) -> dict:
         units["force_constants_unit"] = "hartree/au^2"
         units["length_unit"] = "au"
         units["force_unit"] = "hartree/au"
+    elif interface_mode == "qlm":
+        QlmToTHz = (
+            sqrt(physical_units.Rydberg * physical_units.EV / physical_units.AMU)
+            / (physical_units.Bohr * 1e-10)
+            / (2 * pi)
+            / 1e12
+        )  # [THz] 108.97077
+        units["factor"] = QlmToTHz
+        units["nac_factor"] = 2.0
+        units["distance_to_A"] = physical_units.Bohr
+        units["force_to_eVperA"] = physical_units.Rydberg / physical_units.Bohr
+        units["force_constants_unit"] = "Ry/au^2"
+        units["length_unit"] = "au"
+        units["force_unit"] = "Ry/au"
 
     return units
 
@@ -888,6 +928,8 @@ def get_calc_dataset(
         from phonopy.interface.abacus import parse_set_of_forces
     elif interface_mode == "lammps":
         from phonopy.interface.lammps import parse_set_of_forces
+    elif interface_mode == "qlm":
+        from phonopy.interface.qlm import parse_set_of_forces
     elif interface_mode == "pwmat":
         from phonopy.interface.pwmat import parse_set_of_forces
     else:
