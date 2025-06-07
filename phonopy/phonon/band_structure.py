@@ -486,6 +486,7 @@ class BandStructure:
         with h5py.File(filename, "w") as w:
             w.create_dataset("reciprocal_lattice", data=self._rec_lattice.T)
             w.create_dataset("lattice", data=self._cell.cell)
+            w.create_dataset("natom", data=len(self._cell))
             w.create_dataset("coordinates", data=self._cell.scaled_positions)
             w.create_dataset("symbols", data=self._cell.symbols)
             w.create_dataset("numbers", data=self._cell.numbers)
