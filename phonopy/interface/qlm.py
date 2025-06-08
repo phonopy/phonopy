@@ -90,9 +90,9 @@ def write_supercells_with_displacements(
 
 def get_qlm_structure(cell):
     """Write cell to string."""
-    lattice = cell.get_cell()
+    lattice = cell.cell
     (num_atoms, symbols, scaled_positions, sort_list) = sort_positions_by_symbols(
-        cell.get_chemical_symbols(), cell.get_scaled_positions()
+        cell.symbols, cell.scaled_positions
     )
 
     lines = "%% site-data vn=3.0 xpos fast io=62 nbas=%d" % sum(num_atoms)
@@ -135,7 +135,7 @@ class QlmIn:
 
     def _set_plat(self, header):
         plat = []
-        hlist = header.split()
+        hlist = header.replace("=", "= ").split()
         index = hlist.index("plat=")
         for j in range(1, 10, 3):
             plat.append([float(x) for x in hlist[index + j : index + j + 3]])
