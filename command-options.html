@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Command options &#8212; Phonopy v.2.38.2</title>
+    <title>Command options &#8212; Phonopy v.2.39.0</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=acd5ab73"></script>
+    <script src="_static/documentation_options.js?v=fc879ce4"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.38.2</p>
+    <p class="title logo__title">Phonopy v.2.39.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -180,6 +180,7 @@
 <li class="toctree-l2"><a class="reference internal" href="Fleur.html">Fleur &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="abacus.html">ABACUS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lammps.html">LAMMPS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlm.html">Questaal &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
 </ul>
 </details></li>
@@ -352,6 +353,7 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#turbomole"><code class="docutils literal notranslate"><span class="pre">--turbomole</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vasp"><code class="docutils literal notranslate"><span class="pre">--vasp</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#wien2k"><code class="docutils literal notranslate"><span class="pre">--wien2k</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlm"><code class="docutils literal notranslate"><span class="pre">--qlm</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#input-cell">Input cell</a><ul class="nav section-nav flex-column">
@@ -369,6 +371,7 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#turbomole-interface">TURBOMOLE interface</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fleur-interface">Fleur interface</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cp2k-interface">CP2K interface</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#questaal-lmto-interface">Questaal/LMTO interface</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fz"><code class="docutils literal notranslate"><span class="pre">--fz</span></code></a></li>
@@ -500,10 +503,11 @@ use of setting tags and command-line options, i.e.,</p>
 <section id="choice-of-force-calculator">
 <span id="force-calculators"></span><h2>Choice of force calculator<a class="headerlink" href="#choice-of-force-calculator" title="Link to this heading">#</a></h2>
 <p>Currently interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT, Elk,
-SIESTA, CRYSTAL, TURBOMOLE, Fleur and CP2K are prepared. These interfaces are
-invoked with <code class="docutils literal notranslate"><span class="pre">--vasp</span></code>, <code class="docutils literal notranslate"><span class="pre">--wienk2</span></code>, <code class="docutils literal notranslate"><span class="pre">--qe</span></code>, <code class="docutils literal notranslate"><span class="pre">--abinit</span></code>, <code class="docutils literal notranslate"><span class="pre">--elk</span></code>, <code class="docutils literal notranslate"><span class="pre">--siesta</span></code>,
-<code class="docutils literal notranslate"><span class="pre">--crystal</span></code>, <code class="docutils literal notranslate"><span class="pre">--turbomole</span></code>, <code class="docutils literal notranslate"><span class="pre">--fleur</span></code> and <code class="docutils literal notranslate"><span class="pre">--cp2k</span></code> options, respectively. When
-no interface is specified, <code class="docutils literal notranslate"><span class="pre">--vasp</span></code> is selected as the default interface.</p>
+SIESTA, CRYSTAL, TURBOMOLE, Fleur, CP2K and Questaal are prepared. These
+interfaces are invoked with <code class="docutils literal notranslate"><span class="pre">--vasp</span></code>, <code class="docutils literal notranslate"><span class="pre">--wienk2</span></code>, <code class="docutils literal notranslate"><span class="pre">--qe</span></code>, <code class="docutils literal notranslate"><span class="pre">--abinit</span></code>, <code class="docutils literal notranslate"><span class="pre">--elk</span></code>,
+<code class="docutils literal notranslate"><span class="pre">--siesta</span></code>, <code class="docutils literal notranslate"><span class="pre">--crystal</span></code>, <code class="docutils literal notranslate"><span class="pre">--turbomole</span></code>, <code class="docutils literal notranslate"><span class="pre">--fleur</span></code>, <code class="docutils literal notranslate"><span class="pre">--cp2k</span></code> and <code class="docutils literal notranslate"><span class="pre">--qlm</span></code>
+options, respectively. When no interface is specified, <code class="docutils literal notranslate"><span class="pre">--vasp</span></code> is selected as
+the default interface.</p>
 <p>The details about these interfaces are found at <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.</p>
 <section id="abinit">
 <span id="abinit-mode"></span><h3><code class="docutils literal notranslate"><span class="pre">--abinit</span></code><a class="headerlink" href="#abinit" title="Link to this heading">#</a></h3>
@@ -545,6 +549,10 @@ files.</p>
 <section id="wien2k">
 <span id="wien2k-mode"></span><h3><code class="docutils literal notranslate"><span class="pre">--wien2k</span></code><a class="headerlink" href="#wien2k" title="Link to this heading">#</a></h3>
 <p>This option invokes the WIEN2k mode.</p>
+</section>
+<section id="qlm">
+<span id="qlm-mode"></span><h3><code class="docutils literal notranslate"><span class="pre">--qlm</span></code><a class="headerlink" href="#qlm" title="Link to this heading">#</a></h3>
+<p>This option invokes the Questaal/LMTO mode.</p>
 <p><strong>Only the WIEN2k struct with the P lattice is supported</strong>. See more information
 <a class="reference internal" href="wien2k.html#wien2k-interface"><span class="std std-ref">Wien2k &amp; phonopy calculation</span></a>.</p>
 </section>
@@ -597,6 +605,9 @@ The default file names for the calculators are as follows:</p>
 </tr>
 <tr class="row-even"><td><p>CP2K</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">unitcell.inp</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Questaal/LMTO</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">site.lm</span></code></p></td>
 </tr>
 </tbody>
 </table>
@@ -701,6 +712,14 @@ with:</p>
 </div>
 <p>Please note: the files containing the forces can be prefixed with the
 <code class="docutils literal notranslate"><span class="pre">PROJECT_NAME</span></code> as specified in the original CP2K input file.</p>
+</section>
+<section id="questaal-lmto-interface">
+<h4>Questaal/LMTO interface<a class="headerlink" href="#questaal-lmto-interface" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and force files,
+with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--qlm<span class="w"> </span>-f<span class="w"> </span>supercell-001/force.lm<span class="w"> </span>supercell-002/force.lm<span class="w"> </span>...
+</pre></div>
+</div>
 </section>
 </section>
 <section id="fz">
@@ -859,6 +878,7 @@ style format.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#turbomole"><code class="docutils literal notranslate"><span class="pre">--turbomole</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vasp"><code class="docutils literal notranslate"><span class="pre">--vasp</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#wien2k"><code class="docutils literal notranslate"><span class="pre">--wien2k</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qlm"><code class="docutils literal notranslate"><span class="pre">--qlm</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#input-cell">Input cell</a><ul class="nav section-nav flex-column">
@@ -876,6 +896,7 @@ style format.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#turbomole-interface">TURBOMOLE interface</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fleur-interface">Fleur interface</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cp2k-interface">CP2K interface</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#questaal-lmto-interface">Questaal/LMTO interface</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fz"><code class="docutils literal notranslate"><span class="pre">--fz</span></code></a></li>

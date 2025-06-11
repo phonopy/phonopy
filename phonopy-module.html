@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Phonopy API for Python &#8212; Phonopy v.2.38.2</title>
+    <title>Phonopy API for Python &#8212; Phonopy v.2.39.0</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=acd5ab73"></script>
+    <script src="_static/documentation_options.js?v=fc879ce4"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.38.2</p>
+    <p class="title logo__title">Phonopy v.2.39.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -182,6 +182,7 @@
 <li class="toctree-l2"><a class="reference internal" href="Fleur.html">Fleur &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="abacus.html">ABACUS &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lammps.html">LAMMPS &amp; phonopy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qlm.html">Questaal &amp; phonopy calculation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
 </ul>
 </details></li>
@@ -507,8 +508,8 @@ those into files in a crystal structure format.</p>
 keyword in <code class="docutils literal notranslate"><span class="pre">Phonopy</span></code> class. The factors are <code class="docutils literal notranslate"><span class="pre">VaspToTHz</span></code> for VASP, <code class="docutils literal notranslate"><span class="pre">Wien2kToTHz</span></code>
 for Wien2k, <code class="docutils literal notranslate"><span class="pre">AbinitToTHz</span></code> for Abinit, <code class="docutils literal notranslate"><span class="pre">PwscfToTHz</span></code> for Pwscf, <code class="docutils literal notranslate"><span class="pre">ElkToTHz</span></code> for
 Elk, <code class="docutils literal notranslate"><span class="pre">SiestaToTHz</span></code> for Siesta, <code class="docutils literal notranslate"><span class="pre">CrystalToTHz</span></code> for CRYSTAL, <code class="docutils literal notranslate"><span class="pre">FleurToTHz</span></code> for
-Fleur, <code class="docutils literal notranslate"><span class="pre">VaspToTHz</span></code>, and <code class="docutils literal notranslate"><span class="pre">DftbpToTHz</span></code> for DFTB+ is the default value. For
-example:</p>
+Fleur, <code class="docutils literal notranslate"><span class="pre">VaspToTHz</span></code>, <code class="docutils literal notranslate"><span class="pre">DftbpToTHz</span></code> for DFTB+ and <code class="docutils literal notranslate"><span class="pre">QlmToTHz</span></code> for Questaal/LMTO
+is the default value. For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">phonopy.interface.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_calculator_physical_units</span>
 
 <span class="n">AbinitToTHz</span> <span class="o">=</span> <span class="n">get_calculator_physical_units</span><span class="p">(</span><span class="n">interface_mode</span><span class="o">=</span><span class="s1">&#39;abinit&#39;</span><span class="p">)[</span><span class="s1">&#39;factor&#39;</span><span class="p">]</span>
