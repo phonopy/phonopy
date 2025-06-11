@@ -34,6 +34,8 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
+
 import numpy as np
 
 
@@ -44,8 +46,8 @@ import numpy as np
 class SNF3x3:
     """Smith normal form for 3x3 matrix.
 
-    Input 3x3 interger matrix A is transformed to 3x3 diagonal interger
-    matrix (D) by two 3x3 interger matrices P and Q, which is written as
+    Input 3x3 integer matrix A is transformed to 3x3 diagonal integer
+    matrix (D) by two 3x3 integer matrices P and Q, which is written as
 
         D = PAQ
 
@@ -63,7 +65,7 @@ class SNF3x3:
     Attributes
     ----------
     D, P, Q : ndarray
-        These 3x3 interger matrices explained above.
+        These 3x3 integer matrices explained above.
         shape=(3, 3), dtype='int64'
 
     """
@@ -74,7 +76,7 @@ class SNF3x3:
         Parameters
         ----------
         A : array_like
-            3x3 interger matrix.
+            3x3 integer matrix.
             shape=(3, 3)
 
         """
@@ -83,12 +85,27 @@ class SNF3x3:
         self._Ps = []
         self._Qs = []
         self._L = []
-        self._P = None
-        self._Q = None
-        self._D = None
+        self._P: np.ndarray
+        self._Q: np.ndarray
+        self._D: np.ndarray
         self._attempt = 0
 
+        self._run()
+
     def run(self):
+        """Run calculation of Smith normal form.
+
+        This method is deprecated and unnecessary.
+
+        """
+        warnings.warn(
+            "SNF3x3.run() is deprecated and unnecessary; "
+            "SNF3x3.__init__ already runs the calculation.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+    def _run(self):
         """Calculate SNF."""
         for _ in self:
             pass
@@ -110,22 +127,22 @@ class SNF3x3:
         return self._attempt
 
     @property
-    def A(self):
+    def A(self) -> np.ndarray:
         """Return A of D = PAQ."""
         return self._A
 
     @property
-    def D(self):
+    def D(self) -> np.ndarray:
         """Return D of D = PAQ."""
         return self._D
 
     @property
-    def P(self):
+    def P(self) -> np.ndarray:
         """Return P of D = PAQ."""
         return self._P
 
     @property
-    def Q(self):
+    def Q(self) -> np.ndarray:
         """Return Q of D = PAQ."""
         return self._Q
 
@@ -351,7 +368,7 @@ class SNF3x3:
 
 
 def xgcd(vals):
-    """Calculate extended greatest commond divisor."""
+    """Calculate extended greatest command divisor."""
     _xgcd = Xgcd(vals)
     return _xgcd.run()
 

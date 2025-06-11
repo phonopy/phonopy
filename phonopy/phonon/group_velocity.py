@@ -188,7 +188,7 @@ class GroupVelocity:
         self.q_length = q_length
 
     @property
-    def group_velocities(self):
+    def group_velocities(self) -> Optional[np.ndarray]:
         """Return group velocities."""
         return self._group_velocities
 

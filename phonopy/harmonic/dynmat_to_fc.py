@@ -100,7 +100,6 @@ def get_commensurate_points_in_integers(supercell_matrix):
     """
     smat = np.array(supercell_matrix, dtype=int)
     snf = SNF3x3(smat.T)
-    snf.run()
     D = snf.D.diagonal()
     b, c, a = np.meshgrid(range(D[1]), range(D[2]), range(D[0]))
     lattice_points = np.dot(

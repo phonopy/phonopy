@@ -37,14 +37,14 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Literal, Optional, Union
+from typing import Literal, Optional
 
 import numpy as np
 
 from phonopy.exception import ForceCalculatorRequiredError
 from phonopy.harmonic.force_constants import FDFCSolver
 from phonopy.interface.alm import ALMFCSolver
-from phonopy.interface.symfc import SymfcFCSolver
+from phonopy.interface.symfc import SymfcFCSolver, parse_symfc_options
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
 from phonopy.structure.dataset import get_displacements_and_forces
@@ -233,7 +233,7 @@ class FCSolver:
         self._fc_solver = self._set_fc_solver(fc_solver_name)
 
     @property
-    def fc_solver(self) -> Union[FDFCSolver, SymfcFCSolver, ALMFCSolver]:
+    def fc_solver(self) -> FDFCSolver | SymfcFCSolver | ALMFCSolver:
         """Return force constants solver class instance."""
         return self._fc_solver
 
@@ -242,20 +242,20 @@ class FCSolver:
         """Return force constants."""
         return self._fc_solver.force_constants
 
-    def _set_fc_solver(self, fc_calculator_name: str):
-        if fc_calculator_name not in fc_calculator_names:
-            raise ValueError(
-                f"fc_calculator_name must be one of {fc_calculator_names.keys()}"
-            )
-
+    def _set_fc_solver(
+        self, fc_calculator_name: str
+    ) -> FDFCSolver | SymfcFCSolver | ALMFCSolver:
         if fc_calculator_name == "traditional":
             return self._set_traditional_solver()
         if fc_calculator_name == "symfc":
             return self._set_symfc_solver()
         if fc_calculator_name == "alm":
             return self._set_alm_solver()
+        raise ValueError(f"Unknown fc_calculator_name: {fc_calculator_name}")
 
-    def _set_traditional_solver(self, solver_class: Optional[type] = FDFCSolver):
+    def _set_traditional_solver(
+        self, solver_class: Optional[type] = FDFCSolver
+    ) -> FDFCSolver:
         if self._primitive is None:
             raise RuntimeError(
                 "Primitive cell is required for the traditional FC solver."
@@ -284,14 +284,14 @@ class FCSolver:
             log_level=self._log_level,
         )
 
-    def _set_symfc_solver(self):
-        from phonopy.interface.symfc import SymfcFCSolver, parse_symfc_options
-
+    def _set_symfc_solver(self, order: int = 2) -> SymfcFCSolver:
+        options = parse_symfc_options(self._options, order)
+        options.pop("memsize", None)
         if self._dataset is None:
             return SymfcFCSolver(
                 self._supercell,
                 symmetry=self._symmetry,
-                options=parse_symfc_options(self._options),
+                options=options,
                 is_compact_fc=self._is_compact_fc,
                 log_level=self._log_level,
             )
@@ -299,10 +299,10 @@ class FCSolver:
             displacements, forces = self._get_displacements_and_forces()
             symfc_solver = SymfcFCSolver(
                 self._supercell,
-                displacements,
-                forces,
+                displacements=displacements,
+                forces=forces,
                 symmetry=self._symmetry,
-                options=parse_symfc_options(self._options),
+                options=options,
                 is_compact_fc=self._is_compact_fc,
                 log_level=self._log_level,
             )
@@ -310,9 +310,7 @@ class FCSolver:
                 symfc_solver.run(orders=self._orders)
             return symfc_solver
 
-    def _set_alm_solver(self):
-        from phonopy.interface.alm import ALMFCSolver
-
+    def _set_alm_solver(self) -> ALMFCSolver:
         if self._primitive is None:
             raise RuntimeError(
                 "Primitive cell is required for the traditional FC solver."

@@ -285,12 +285,12 @@ class DerivativeOfDynamicalMatrix:
 
     def _nac(self, q_direction):
         """nac_term = (A1 (x) A2) / B * coef."""
-        num_atom = self._pcell.get_number_of_atoms()
+        num_atom = len(self._pcell)
         nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype="double")
         if (np.abs(q_direction) < 1e-5).all():
             return nac_q
 
-        rec_lat = np.linalg.inv(self._pcell.get_cell())
+        rec_lat = np.linalg.inv(self._pcell.cell)
         nac_factor = self._dynmat.get_nac_factor()
         Z = self._dynmat.get_born_effective_charges()
         e = self._dynmat.get_dielectric_constant()
@@ -303,18 +303,18 @@ class DerivativeOfDynamicalMatrix:
                 A_j = self._A(q, Z, j)
                 nac_q[i, j] = np.outer(A_i, A_j) / B
 
-        num_satom = self._scell.get_number_of_atoms()
+        num_satom = len(self._scell)
         N = num_satom // num_atom
 
         return nac_q * nac_factor / N
 
     def _d_nac(self, q_direction):
-        num_atom = self._pcell.get_number_of_atoms()
+        num_atom = len(self._pcell)
         d_nac_q = np.zeros((3, num_atom, num_atom, 3, 3), dtype="double")
         if (np.abs(q_direction) < 1e-5).all():
             return d_nac_q
 
-        rec_lat = np.linalg.inv(self._pcell.get_cell())
+        rec_lat = np.linalg.inv(self._pcell.cell)
         nac_factor = self._dynmat.get_nac_factor()
         Z = self._dynmat.get_born_effective_charges()
         e = self._dynmat.get_dielectric_constant()
@@ -333,7 +333,7 @@ class DerivativeOfDynamicalMatrix:
                         np.outer(dA_i, A_j) + np.outer(A_i, dA_j)
                     ) / B - np.outer(A_i, A_j) * dB / B**2
 
-        num_satom = self._scell.get_number_of_atoms()
+        num_satom = len(self._scell)
         N = num_satom // num_atom
         return d_nac_q * nac_factor / N
 

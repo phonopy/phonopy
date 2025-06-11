@@ -112,7 +112,7 @@ class VelocityQpoints:
 
     def set_mesh(self, mesh):
         """Set mesh."""
-        rec_lat = np.linalg.inv(self._primitive.get_cell())
+        rec_lat = np.linalg.inv(self._primitive.cell)
         self._qpoints, self._weights = get_qpoints(
             mesh, rec_lat, is_gamma_center=True, rotations=self._polonggroup_opts
         )

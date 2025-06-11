@@ -84,7 +84,7 @@ _atom_site_occupancy\n""" % (
     )
 
     symbols = []
-    for s, p in zip(cell.get_chemical_symbols(), cell.get_scaled_positions()):
+    for s, p in zip(cell.symbols, cell.scaled_positions):
         symbols.append(s)
         cif += "%-7s%2s %10.5f%10.5f%10.5f   1.00000\n" % (
             s + "%d" % symbols.count(s),
@@ -107,7 +107,7 @@ _atom_site_aniso_U_12\n"""
         cif += aniso_U
 
         symbols = []
-        for i, s in enumerate(cell.get_chemical_symbols()):
+        for i, s in enumerate(cell.symbols):
             symbols.append(s)
             m = U_cif[i]
             vals = (m[0, 0], m[1, 1], m[2, 2], m[1, 2], m[0, 2], m[0, 1])
