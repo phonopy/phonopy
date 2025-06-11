@@ -1,8 +1,10 @@
 """Tests for the QLM calculator interface."""
 
+import sys
 import tempfile
 
 import numpy as np
+import pytest
 
 from phonopy.interface.qlm import (
     get_qlm_structure,
@@ -11,6 +13,7 @@ from phonopy.interface.qlm import (
 )
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="does not run on windows")
 def test_parse_set_of_forces():
     """Test parse_set_of_forces."""
     force_ref = """% rows 2 cols 3 real
@@ -37,6 +40,7 @@ def test_parse_set_of_forces():
         )
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="does not run on windows")
 def test_cell2struct_and_read_qlm():
     """Test read_qlm and get_qlm_structure."""
     sitex_ref = (
