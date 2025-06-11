@@ -127,9 +127,9 @@ def write_supercells_with_displacements(
 
 def get_elk_structure(cell, sp_filenames=None):
     """Return Elk structure in text."""
-    lattice = cell.get_cell()
+    lattice = cell.cell
     (num_atoms, symbols, scaled_positions, sort_list) = sort_positions_by_symbols(
-        cell.get_chemical_symbols(), cell.get_scaled_positions()
+        cell.symbols, cell.scaled_positions
     )
 
     if sp_filenames is None:

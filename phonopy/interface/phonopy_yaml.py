@@ -661,6 +661,8 @@ class PhonopyYamlDumperBase(ABC):
         lines = [f"{key_prefix}dataset:"]
         if "random_seed" in dataset:
             lines.append("  random_seed: {:d}".format(dataset["random_seed"]))
+        if "cutoff_distance" in dataset:
+            lines.append("  cutoff_distance: {:5f}".format(dataset["cutoff_distance"]))
         for key in ("displacements", "forces"):
             if key not in dataset:
                 continue

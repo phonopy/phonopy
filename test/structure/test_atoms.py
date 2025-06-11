@@ -125,13 +125,24 @@ def test_PhonopyAtoms_with_Xn_symbol(ph_nacl: Phonopy):
     numbers = ph_nacl.unitcell.numbers
     numbers[-1] = numbers[-1] + PhonopyAtoms._MOD_DIVISOR
 
-    with pytest.raises(RuntimeError) as e:
-        _ = PhonopyAtoms(
-            cell=ph_nacl.unitcell.cell,
-            scaled_positions=ph_nacl.unitcell.scaled_positions,
-            symbols=symbols,
-        )
-    assert str(e.value) == "Masses have to be specified when special symbols are used."
+    cell = PhonopyAtoms(
+        cell=ph_nacl.unitcell.cell,
+        scaled_positions=ph_nacl.unitcell.scaled_positions,
+        symbols=symbols,
+    )
+    assert symbols == cell.symbols
+    np.testing.assert_allclose(cell.masses, ph_nacl.unitcell.masses)
+    np.testing.assert_equal(cell.numbers_with_shifts, numbers)
+    np.testing.assert_equal(cell.numbers, ph_nacl.unitcell.numbers)
+
+    cell = PhonopyAtoms(
+        cell=ph_nacl.unitcell.cell,
+        scaled_positions=ph_nacl.unitcell.scaled_positions,
+        symbols=symbols,
+        masses=masses,
+    )
+    assert symbols == cell.symbols
+    np.testing.assert_allclose(cell.masses, masses)
 
     with pytest.raises(RuntimeError) as e:
         _ = PhonopyAtoms(
@@ -178,6 +189,7 @@ def _test_phonopy_atoms(cell: PhonopyAtoms):
         np.testing.assert_allclose(dist, np.zeros(len(dist)), atol=1e-8)
 
         if magmoms:
+            assert cell.magnetic_moments is not None
             np.testing.assert_allclose(cell.magnetic_moments, magmoms, atol=1e-8)
 
 

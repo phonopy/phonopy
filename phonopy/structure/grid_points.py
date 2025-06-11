@@ -587,7 +587,6 @@ class GeneralizedRegularGridPoints:
         else:
             self._set_grid_matrix_by_input_cell(cell, length)
         self._snf = SNF3x3(self._grid_matrix)
-        self._snf.run()
 
     def _set_grid_matrix_by_std_primitive_cell(self, cell, length):
         """Grid generating matrix based on standardized primitive cell."""
