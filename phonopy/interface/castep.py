@@ -174,7 +174,7 @@ def get_castep_structure(cell):
     lines += ((" % 20.16f" * 3 + "\n") * 3) % tuple(cell.cell.ravel())
     lines += "%ENDBLOCK LATTICE_CART\n\n"
     lines += "%BLOCK POSITIONS_FRAC\n"
-    magmoms = cell.get_magnetic_moments()
+    magmoms = cell.magnetic_moments
 
     for i in range(len(cell.symbols)):
         atpos = "".join("% 12.10f " % ap for ap in cell.scaled_positions[i])
