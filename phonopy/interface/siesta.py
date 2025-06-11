@@ -119,9 +119,9 @@ def write_supercells_with_displacements(
 
 def get_siesta_structure(cell, atypes):
     """Return SIESTA structure in text."""
-    lattice = cell.get_cell()
-    positions = cell.get_scaled_positions()
-    chemical_symbols = cell.get_chemical_symbols()
+    lattice = cell.cell
+    positions = cell.scaled_positions
+    chemical_symbols = cell.symbols
 
     lines = ""
 

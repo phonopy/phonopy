@@ -66,6 +66,8 @@ def split_symbol_and_index(symnum: str):
 
     """
     m = re.match(r"([a-zA-Z]+)([0-9]*)", symnum)
+    if m is None:
+        raise RuntimeError(f"Invalid symbol: {symnum}.")
     symbol, index = m.groups()
     if symnum != f"{symbol}{index}":
         raise RuntimeError(f"Invalid symbol: {symnum}.")
@@ -103,7 +105,7 @@ class PhonopyAtoms:
     masses : np.ndarray, optional
         Atomic masses. shape=(natom,), dtype='double'
     magnetic_moments : np.ndarray, optional
-        shape=(natom,) or (natom, 3), dtype='double', order='C'
+        shape=(natom,), (natom*3), (natom, 3), dtype='double', order='C'
     volume : float
         Cell volume.
     Z : int
@@ -168,7 +170,7 @@ class PhonopyAtoms:
 
     def _set_parameters(
         self,
-        symbols: Optional[Sequence] = None,
+        symbols: Optional[Sequence[str]] = None,
         numbers: Optional[Union[Sequence, np.ndarray]] = None,
         masses: Optional[Union[Sequence, np.ndarray]] = None,
         magnetic_moments: Optional[Union[Sequence, np.ndarray]] = None,
@@ -176,50 +178,61 @@ class PhonopyAtoms:
         positions: Optional[Union[Sequence, np.ndarray]] = None,
         cell: Optional[Union[Sequence, np.ndarray]] = None,
     ):
-        self._cell = None
-        self._scaled_positions = None
+        """Set crystal structure parameters.
+
+        Setting atomic numbers larger than 118 is not allowed in this method.
+        Internally atomic numbers are stored in self._numbers_with_shifts, and
+        these values can exceed 118 by adding self._MOD_DIVISOR * index. This is
+        used to distinguish atoms with the same chemical symbol + natural
+        number, e.g., among "Cl", "Cl1", "Cl2", and the index corresponds to the
+        number next to the chemical symbol.
+
+        """
+        self._cell: np.ndarray
+        self._scaled_positions: np.ndarray
+        self._symbols: list[str]
+        self._magnetic_moments: Optional[np.ndarray]
+        self._masses: np.ndarray
+        self._numbers_with_shifts: np.ndarray
+
         self._set_cell_and_positions(
             cell, positions=positions, scaled_positions=scaled_positions
         )
 
-        self._symbols = symbols
-
-        self._numbers_with_shifts = None
+        # Define symbols and numbers.
+        if symbols is None and numbers is None:
+            raise RuntimeError(
+                "Either symbols or numbers has to be specified. "
+                "If symbols is specified, numbers is set automatically."
+            )
         if numbers is not None:
             if (np.array(numbers) > 118).any():  # 118 is the max atomic number.
                 raise RuntimeError("Atomic numbers cannot be larger than 118.")
             self._numbers_with_shifts = np.array(numbers, dtype="intc")
-
-        self._masses = None
-        self._set_masses(masses)
-
-        # (initial) magnetic moments
-        self._magnetic_moments = None
-        self._set_magnetic_moments(magnetic_moments)
-
-        # numbers <--> symbols
-        if self._numbers_with_shifts is not None:  # number --> symbol
+        if symbols is None:
             self._numbers_to_symbols()
-        elif self._symbols is not None:  # symbol --> number
+        else:
+            self._symbols = list(symbols)
             self._symbols_to_numbers()
 
-        # symbol --> mass
-        if self._symbols and (self._masses is None):
-            if (self._numbers_with_shifts > 118).any():  # 118 is the max atomic number.
-                raise RuntimeError(
-                    "Masses have to be specified when special symbols are used."
-                )
+        # mass
+        if masses is not None:
+            self._set_masses(masses)
+        else:
             self._symbols_to_masses()
 
+        # magnetic moments
+        self._set_magnetic_moments(magnetic_moments)
+
+        # Check consistency of parameters.
         self._check()
-        self._finalize()
 
     def __len__(self):
         """Return number of atoms."""
         return len(self.numbers)
 
     @property
-    def cell(self):
+    def cell(self) -> np.ndarray:
         """Setter and getter of basis vectors. For getter, copy is returned."""
         return self._cell.copy()
 
@@ -247,7 +260,7 @@ class PhonopyAtoms:
         return self.cell
 
     @property
-    def positions(self):
+    def positions(self) -> np.ndarray:
         """Setter and getter of positions in Cartesian coordinates."""
         return np.array(
             np.dot(self._scaled_positions, self._cell), dtype="double", order="C"
@@ -279,7 +292,7 @@ class PhonopyAtoms:
         self.positions = positions
 
     @property
-    def scaled_positions(self):
+    def scaled_positions(self) -> np.ndarray:
         """Setter and getter of scaled positions. For getter, copy is returned."""
         return self._scaled_positions.copy()
 
@@ -309,8 +322,9 @@ class PhonopyAtoms:
         self.scaled_positions = scaled_positions
 
     @property
-    def symbols(self):
+    def symbols(self) -> list[str]:
         """Setter and getter of chemical symbols."""
+        assert self._symbols is not None
         return self._symbols[:]
 
     @symbols.setter
@@ -346,13 +360,17 @@ class PhonopyAtoms:
         self.symbols = symbols
 
     @property
-    def numbers_with_shifts(self):
+    def numbers_with_shifts(self) -> np.ndarray:
         """Getter of atomic numbers + MOD_DIVISOR * index."""
         return self._numbers_with_shifts.copy()
 
     @property
-    def numbers(self):
-        """Setter and getter of atomic numbers. For getter, new array is returned."""
+    def numbers(self) -> np.ndarray:
+        """Setter and getter of atomic numbers. For getter, new array is returned.
+
+        Atomic numbers larger than 118 are not allowed.
+
+        """
         return np.array(
             [n % self._MOD_DIVISOR for n in self._numbers_with_shifts], dtype="intc"
         )
@@ -360,13 +378,13 @@ class PhonopyAtoms:
     @numbers.setter
     def numbers(self, numbers):
         if (np.array(numbers) > 118).any():  # 118 is the max atomic number.
-            raise RuntimeError("Atomic number is too large.")
+            raise RuntimeError("Atomic numbers cannot be larger than 118.")
         warnings.warn(
             "Setter of PhonopyAtoms.number is deprecated.",
             DeprecationWarning,
             stacklevel=2,
         )
-        self._numbers_with_shifts = numbers
+        self._numbers_with_shifts = np.array(numbers, dtype="intc")
         self._check()
         self._numbers_to_symbols()
         self._symbols_to_masses()
@@ -392,12 +410,9 @@ class PhonopyAtoms:
         self.numbers = numbers
 
     @property
-    def masses(self):
+    def masses(self) -> np.ndarray:
         """Setter and getter of atomic masses. For getter copy is returned."""
-        if self._masses is None:
-            return None
-        else:
-            return self._masses.copy()
+        return self._masses.copy()
 
     @masses.setter
     def masses(self, masses):
@@ -423,7 +438,7 @@ class PhonopyAtoms:
         self.masses = masses
 
     @property
-    def magnetic_moments(self):
+    def magnetic_moments(self) -> Optional[np.ndarray]:
         """Setter and getter of magnetic moments. For getter, copy is returned.
 
         shape=(natom,) or (natom, 3), dtype='double', order='C'
@@ -436,13 +451,19 @@ class PhonopyAtoms:
         if self._magnetic_moments is None:
             return None
         else:
-            return self._magnetic_moments.copy()
+            if len(self._magnetic_moments) == len(self) * 3:
+                return np.reshape(self._magnetic_moments, (-1, 3)).copy()
+            elif len(self._magnetic_moments) == len(self):
+                return self._magnetic_moments.copy()
+            else:
+                raise RuntimeError(
+                    "_magnetic_moments has to have shape=(natom,) or (natom*3)."
+                )
 
     @magnetic_moments.setter
     def magnetic_moments(self, magnetic_moments):
         self._set_magnetic_moments(magnetic_moments)
         self._check()
-        self._finalize()
 
     def get_magnetic_moments(self):
         """Return magnetic moments."""
@@ -517,16 +538,18 @@ class PhonopyAtoms:
     def _set_scaled_positions(self, scaled_positions):
         self._scaled_positions = np.array(scaled_positions, dtype="double", order="C")
 
-    def _set_masses(self, masses):
-        if masses is None:
-            self._masses = None
-        else:
-            self._masses = np.array(masses, dtype="double")
+    def _set_masses(self, masses: Union[Sequence, np.ndarray]):
+        self._masses = np.array(masses, dtype="double")
 
     def _set_magnetic_moments(self, magmoms):
+        """Set magnetic moments in 1D array of shape=(natom,) or (natom*3)."""
         if magmoms is None:
             self._magnetic_moments = None
         else:
+            if len(np.ravel(magmoms)) not in (len(self) * 3, len(self)):
+                raise RuntimeError(
+                    "magnetic_moments has to have shape=(natom,) or (natom*3)."
+                )
             self._magnetic_moments = np.array(np.ravel(magmoms), dtype="double")
 
     def _set_cell_and_positions(self, cell, positions=None, scaled_positions=None):
@@ -556,17 +579,22 @@ class PhonopyAtoms:
         self._numbers_with_shifts = np.array(numbers, dtype="intc")
 
     def _symbols_to_masses(self):
-        masses = [atom_data[symbol_map[s]][3] for s in self._symbols]
+        symbols = [split_symbol_and_index(s)[0] for s in self._symbols]
+        masses = [atom_data[symbol_map[s]][3] for s in symbols]
         if None in masses:
-            self._masses = None
-        else:
-            self._masses = np.array(masses, dtype="double")
+            symbols_with_undefined_masses = set(
+                [s for s in self._symbols if atom_data[symbol_map[s]][3] is None]
+            )
+            raise RuntimeError(
+                f"Masses of {symbols_with_undefined_masses} are undefined."
+                "These have to be specified by masses parameter."
+            )
+        self._masses = np.array(masses, dtype="double")
 
     def _check(self):
-        """Check number of eleemnts in arrays.
+        """Check number of elements in arrays.
 
-        Do not modify the arrays. Modification of array shapes should be done in
-        ``self._finalize()``.
+        Do not modify the arrays.
 
         """
         if self._cell is None:
@@ -575,27 +603,21 @@ class PhonopyAtoms:
             raise RuntimeError("scaled_positions (positions) is not set.")
         if self._numbers_with_shifts is None:
             raise RuntimeError("numbers is not set.")
+        if self._symbols is None:
+            raise RuntimeError("symbols is not set.")
         if len(self._numbers_with_shifts) != len(self._scaled_positions):
             raise RuntimeError("len(numbers) != len(scaled_positions).")
         if len(self._numbers_with_shifts) != len(self._symbols):
             raise RuntimeError("len(numbers) != len(symbols).")
-        if self._masses is not None:
-            if len(self._numbers_with_shifts) != len(self._masses):
-                raise RuntimeError("len(numbers) != len(masses).")
+        if len(self._numbers_with_shifts) != len(self._masses):
+            raise RuntimeError("len(numbers) != len(masses).")
         if self._magnetic_moments is not None:
-            if len(self._magnetic_moments.ravel()) not in (len(self), len(self) * 3):
+            if len(self._magnetic_moments) not in (len(self), len(self) * 3):
                 raise RuntimeError(
-                    "magnetic_moments has to have shape=(natom,) or (natom, 3)."
+                    "_magnetic_moments has to have shape=(natom,) or (natom*3)."
                 )
 
-    def _finalize(self):
-        """Modify array shapes to those expeted to be exposed."""
-        # When non collinear magnetic moments is given in a flat array.
-        if self.magnetic_moments is not None:
-            if len(self.magnetic_moments.ravel()) == len(self) * 3:
-                self._magnetic_moments = np.reshape(self._magnetic_moments, (-1, 3))
-
-    def copy(self):
+    def copy(self) -> PhonopyAtoms:
         """Return copy of itself."""
         return PhonopyAtoms(
             cell=self._cell,
@@ -622,18 +644,18 @@ class PhonopyAtoms:
 
         """
         if distinguish_symbol_index:
-            numbers = self._numbers_with_shifts
+            numbers = self.numbers_with_shifts
         else:
             numbers = self.numbers
 
         if self._magnetic_moments is None:
-            return (self._cell, self._scaled_positions, numbers)
+            return (self.cell, self.scaled_positions, numbers)
         else:
             return (
-                self._cell,
-                self._scaled_positions,
+                self.cell,
+                self.scaled_positions,
                 numbers,
-                self._magnetic_moments,
+                self.magnetic_moments,
             )
 
     def to_tuple(self):
@@ -652,29 +674,33 @@ class PhonopyAtoms:
     def get_yaml_lines(self):
         """Return list of text lines of crystal structure in yaml."""
         lines = ["lattice:"]
-        for v, a in zip(self._cell, ("a", "b", "c")):
-            lines.append("- [ %21.15f, %21.15f, %21.15f ] # %s" % (v[0], v[1], v[2], a))
+        for pos, a in zip(self._cell, ("a", "b", "c")):
+            lines.append(
+                "- [ %21.15f, %21.15f, %21.15f ] # %s" % (pos[0], pos[1], pos[2], a)
+            )
         lines.append("points:")
-        if self._masses is None:
-            masses = [None] * len(self._symbols)
-        else:
-            masses = self._masses
-        if self._magnetic_moments is None:
+        if self.magnetic_moments is None:
             magmoms = [None] * len(self._symbols)
         else:
-            magmoms = self._magnetic_moments
-        for i, (s, num, v, m, mag) in enumerate(
-            zip(self._symbols, self.numbers, self._scaled_positions, masses, magmoms)
+            magmoms = self.magnetic_moments
+        for i, (symbol, number, pos, mass, mag) in enumerate(
+            zip(
+                self.symbols,
+                self.numbers,
+                self.scaled_positions,
+                self.masses,
+                magmoms,
+            )
         ):
-            formal_s = atom_data[num][1]
-            if s == formal_s:
-                lines.append(f"- symbol: {s} # {i + 1}")
+            formal_s = atom_data[number][1]
+            if symbol == formal_s:
+                lines.append(f"- symbol: {symbol} # {i + 1}")
             else:
                 lines.append(f"- symbol: {formal_s} # {i + 1}")
-                lines.append(f"  extended_symbol: {s}")
-            lines.append("  coordinates: [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
-            if m is not None:
-                lines.append("  mass: %f" % m)
+                lines.append(f"  extended_symbol: {symbol}")
+            lines.append("  coordinates: [ %18.15f, %18.15f, %18.15f ]" % tuple(pos))
+            if mass is not None:
+                lines.append("  mass: %f" % mass)
             if mag is not None:
                 if mag.ndim == 0:
                     mag_str = f"{mag:.8f}"

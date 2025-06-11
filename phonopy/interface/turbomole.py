@@ -116,7 +116,7 @@ def write_turbomole(filename, cell):
     lines += "  nkpoints KPOINTS_HERE\n"
     lines += "$scfconv 10\n"
     lines += "$lattice\n"
-    lattice = cell.get_cell()
+    lattice = cell.cell
     for lattvec in lattice:
         lines += ("%12.8f" * 3 + "\n") % tuple(lattvec)
     lines += "$end\n"
@@ -125,8 +125,8 @@ def write_turbomole(filename, cell):
     f_control.close()
 
     # Create coord file
-    symbols = cell.get_chemical_symbols()
-    positions = cell.get_positions()
+    symbols = cell.symbols
+    positions = cell.positions
     lines = "$coord\n"
     for atom, pos in zip(symbols, positions):
         lines += ("%16.12f" * 3 + "   %s\n") % (pos[0], pos[1], pos[2], atom.lower())

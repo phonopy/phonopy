@@ -50,6 +50,7 @@ def get_options():
         metavar="FILE_IN",
         default=None,
         help="Input crystal structure filename",
+        required=True,
     )
     parser.add_argument(
         "-o",
@@ -57,6 +58,7 @@ def get_options():
         metavar="FILE_OUT",
         default=None,
         help="Output crystal structure filename",
+        required=True,
     )
     parser.add_argument(
         "--calcin",
@@ -64,6 +66,7 @@ def get_options():
         metavar="CALC_IN",
         default=None,
         help="Input calculator format",
+        required=True,
     )
     parser.add_argument(
         "--calcout",
@@ -71,6 +74,16 @@ def get_options():
         metavar="CALC_OUT",
         default=None,
         help="Output calculator format",
+        required=True,
+    )
+    parser.add_argument(
+        "--additional-info",
+        dest="additional_info",
+        metavar="ADDITIONAL_INFO",
+        default=None,
+        help="Additional information for the conversion,\
+            which is required for some calculators.\
+                If not provided when required, an error will be raised.",
     )
     return parser.parse_args()
 
@@ -83,16 +96,13 @@ def run():
         opts.calculator_in,
         opts.filename_out,
         opts.calculator_out,
+        opts.additional_info,
     )
 
     try:
-        _is_file_None(args[0], "input")
         _infile_exist(args[0])
-        _is_file_None(args[2], "output")
         _outfile_exist(args[2])
-        _is_calc_None(args[1], "input")
         _calc_check(args[1])
-        _is_calc_None(args[3], "output")
         _calc_check(args[3])
     except (RuntimeError, FileNotFoundError) as err:
         print("ERROR: %s" % err)
@@ -103,18 +113,6 @@ def run():
 def _calc_check(calc_str):
     if calc_str.lower() not in calculator_info:
         msg = 'Calculator name of "%s" is not supported.' % calc_str
-        raise RuntimeError(msg)
-
-
-def _is_calc_None(calculator, input_or_output):
-    if calculator is None:
-        msg = "Specify %s calculator format." % input_or_output
-        raise RuntimeError(msg)
-
-
-def _is_file_None(filename, input_or_output):
-    if filename is None:
-        msg = "Specify %s filename." % input_or_output
         raise RuntimeError(msg)
 
 
