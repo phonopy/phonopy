@@ -1073,15 +1073,16 @@ class Phonopy:
 
     def generate_displacements(
         self,
-        distance: Optional[float] = None,
-        is_plusminus: Union[str, bool] = "auto",
+        distance: float | None = None,
+        is_plusminus: str | bool = "auto",
         is_diagonal: bool = True,
         is_trigonal: bool = False,
-        number_of_snapshots: Optional[Union[int, Literal["auto"]]] = None,
-        random_seed: Optional[int] = None,
-        temperature: Optional[float] = None,
-        cutoff_frequency: Optional[float] = None,
-        max_distance: Optional[float] = None,
+        number_of_snapshots: int | Literal["auto"] | None = None,
+        random_seed: int | None = None,
+        temperature: float | None = None,
+        cutoff_frequency: float | None = None,
+        max_distance: float | None = None,
+        number_estimation_factor: float | None = None,
     ) -> None:
         """Generate displacement dataset.
 
@@ -1106,7 +1107,7 @@ class Phonopy:
             value by this value.
         is_plusminus : 'auto', True, or False, optional
             For each atom, displacement of one direction (False), both
-            direction, i.e., one directiona and its opposite direction (True),
+            direction, i.e., one direction and its opposite direction (True),
             and both direction if symmetry requires ('auto'). Default is 'auto'.
         is_diagonal : bool, optional
             Displacements are made only along basis vectors (False) and can be
@@ -1139,10 +1140,15 @@ class Phonopy:
             In random displacements generation from canonical ensemble of
             harmonic phonons, displacements larger than max distance are
             renormalized to the max distance, i.e., a displacement d is shorten
-            by d -> d / |d| * max_distance if |d| > max_distance. In random
-            direction and distance displacements generation, this value is
-            specified. In random direction and random distance displacements
-            generation, this value is used as `max_distance`.
+            by d -> d / |d| * max_distance if |d| > max_distance. In
+            random displacements without using temperature, this value serves as
+            the maximum distance, while the `distance` parameter sets the
+            minimum distance. The displacement distance is randomly sampled from
+            a uniform distribution between these two bounds.
+        number_estimation_factor : float, optional
+            This factor multiplies the number of snapshots estimated by symfc
+            when `number_of_snapshots` is set to "auto". Default is None, which
+            sets this factor to 8 when `max_distance` is specified, otherwise 4.
 
         """
         if number_of_snapshots is not None and (
@@ -1151,12 +1157,16 @@ class Phonopy:
             if number_of_snapshots == "auto":
                 from phonopy.interface.symfc import SymfcFCSolver
 
-                _number_of_snapshots = (
-                    SymfcFCSolver(
-                        self._supercell, symmetry=self._symmetry
-                    ).estimate_numbers_of_supercells(orders=[2])[2]
-                    * 4
-                )
+                _number_of_snapshots = SymfcFCSolver(
+                    self._supercell, symmetry=self._symmetry
+                ).estimate_numbers_of_supercells(orders=[2])[2]
+                if number_estimation_factor is None:
+                    if max_distance is None:
+                        _number_of_snapshots *= 4
+                    else:
+                        _number_of_snapshots *= 8
+                else:
+                    _number_of_snapshots *= number_estimation_factor
             else:
                 _number_of_snapshots = number_of_snapshots
 
