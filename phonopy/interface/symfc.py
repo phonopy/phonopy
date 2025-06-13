@@ -376,7 +376,8 @@ def estimate_symfc_cutoff_from_memsize(
         if verbose:
             print(
                 f"{cutoff:5.1f}  {memsize + memsize2:6.2f} GB "
-                f"({memsize:.2f}+{memsize2:.2f})"
+                f"({memsize:.2f}+{memsize2:.2f})",
+                flush=True,
             )
 
     return None
