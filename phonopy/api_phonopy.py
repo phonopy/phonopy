@@ -1167,6 +1167,7 @@ class Phonopy:
                         _number_of_snapshots *= 8
                 else:
                     _number_of_snapshots *= number_estimation_factor
+                    _number_of_snapshots = int(_number_of_snapshots)
             else:
                 _number_of_snapshots = number_of_snapshots
 
@@ -3968,7 +3969,7 @@ class Phonopy:
         Returns
         -------
         ph : Phonopy
-            Copied phonopy class instace.
+            Copied phonopy class instance.
 
         """
         if supercell_matrix is None:

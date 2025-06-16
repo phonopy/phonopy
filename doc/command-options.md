@@ -7,6 +7,7 @@ by those with dashes `-`. Those tag names are unchanged.
 Some of command-line options are equivalent to respective setting tags:
 
 - `--alm` (`FC_CALCULATOR = ALM`) [{ref}`fc_calculator_alm_tag`]
+- `--amax` (`DISPLACEMENT_DISTANCE_MAX`) [{ref}`displacement_distance_max_tag`]
 - `--amplitude` (`DISPLACEMENT_DISTANCE`) [{ref}`displacement_distance_tag`]
 - `--anime` (`ANIME`) [{ref}`anime_tag`]
 - `--band` (`BAND`) [{ref}`band_tag`]
@@ -62,6 +63,7 @@ Some of command-line options are equivalent to respective setting tags:
 - `--qpoints` (`QPOINTS`) [{ref}`qpoints_tag`]
 - `--qpoints-format` (`QPOINTS_FORMAT`) [{ref}`qpoints_format_tag`]
 - `--rd` (`RANDOM_DISPLACEMENTS`) [{ref}`random_displacements_tag`]
+- `--rd-auto-factor` (`RD_NUMBER_ESTIMATION_FACTOR`) [{ref}`rd_number_estimation_factor_tag`]
 - `--rd-temperature` (`RANDOM_DISPLACEMENT_TEMPERATURE`)
   [{ref}`random_displacement_temperature_tag`]
 - `--readfc` (`READ_FORCE_CONSTANTS = .TRUE.`) [{ref}`read_force_constants_tag`]
@@ -210,8 +212,21 @@ The default file names for the calculators are as follows:
 
 ## Create `FORCE_SETS`
 
+`FORCE_SETS` is a file containing the displacement-force dataset from which
+supercell force constants will be calculated. The command option `-f` or `--fz`
+is used to collect displacements in `phonopy_disp.yaml` and forces from force
+calculator results if the corresponding interface exists in phonopy.
+
+When combined with the `--sp` or `--save-params` option, this enables writing
+the displacement-force dataset to phonopy_params.yaml. If the force calculator
+interface supports reading supercell potential energy (e.g., electronic total
+energy in the case of VASP), supercell energies are also stored in
+`phonopy_params.yaml`. These supercell energies can be used to develop machine
+learning potentials such as pypolymlp. See {ref}`save_params_option`.
+
 (f_force_sets_option)=
 ### `-f` or `--forces`
+
 
 (vasp_force_sets_option)=
 #### VASP interface
@@ -403,6 +418,10 @@ parameters for non-analytical term correction are written in
 When using with `-f`, displacement-force dataset are stored in
 `phonopy_params.yaml` instead of `FORCE_SETS`. When `BORN` file is found in the
 current directory, the parameters are also stored in `phonopy_params.yaml`.
+
+```bash
+% phonopy --sp -f disp-001/vasprun.xml disp-002/vasprun.xml ...
+```
 
 ## Graph plotting
 
