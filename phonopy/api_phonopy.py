@@ -150,7 +150,7 @@ class Phonopy:
 
     def __init__(
         self,
-        unitcell,
+        unitcell: PhonopyAtoms,
         supercell_matrix: ArrayLike | None = None,
         primitive_matrix: str | ArrayLike | None = None,
         nac_params: dict | None = None,
