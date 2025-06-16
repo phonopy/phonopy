@@ -288,22 +288,15 @@ class Phonopy:
         # Create supercell and primitive cell
         self._unitcell = unitcell.copy()
         self._supercell_matrix = self._shape_supercell_matrix(supercell_matrix)
-        if isinstance(primitive_matrix, str):
-            self._primitive_matrix = self._set_primitive_matrix(primitive_matrix)
-        elif primitive_matrix is not None:
-            self._primitive_matrix = np.array(
-                primitive_matrix, dtype="double", order="c"
-            )
-        else:
-            self._primitive_matrix = None
-        self._supercell = None
-        self._primitive = None
+        self._primitive_matrix = self._set_primitive_matrix(primitive_matrix)
+        self._supercell: Supercell
+        self._primitive: Primitive
         self._build_supercell()
         self._build_primitive_cell()
 
         # Set supercell and primitive symmetry
-        self._symmetry: Optional[Symmetry] = None
-        self._primitive_symmetry: Optional[Symmetry] = None
+        self._symmetry: Symmetry
+        self._primitive_symmetry: Symmetry
         self._search_symmetry()
         self._search_primitive_symmetry()
 
@@ -3316,12 +3309,20 @@ class Phonopy:
             )
             raise RuntimeError(msg) from exc
 
-    def _set_primitive_matrix(self, primitive_matrix) -> str | NDArray | None:
-        pmat = get_primitive_matrix(primitive_matrix, symprec=self._symprec)
-        if isinstance(pmat, str) and pmat == "auto":
-            return guess_primitive_matrix(self._unitcell, symprec=self._symprec)
-        else:
-            return pmat
+    def _set_primitive_matrix(
+        self, primitive_matrix: str | ArrayLike | None
+    ) -> str | NDArray | None:
+        if primitive_matrix is None:
+            return None
+
+        if isinstance(primitive_matrix, str):
+            pmat = get_primitive_matrix(primitive_matrix, symprec=self._symprec)
+            if isinstance(pmat, str) and pmat == "auto":
+                return guess_primitive_matrix(self._unitcell, symprec=self._symprec)
+            else:
+                return pmat  # str
+
+        return np.array(primitive_matrix, dtype="double", order="C")
 
     def _shape_supercell_matrix(self, smat) -> np.ndarray:
         return shape_supercell_matrix(smat)

@@ -1777,7 +1777,7 @@ def get_primitive_matrix_by_centring(centring) -> Optional[np.ndarray]:
         return None
 
 
-def guess_primitive_matrix(unitcell: PhonopyAtoms, symprec: float = 1e-5):
+def guess_primitive_matrix(unitcell: PhonopyAtoms, symprec: float = 1e-5) -> NDArray:
     """Guess primitive matrix from crystal symmetry."""
     if unitcell.magnetic_moments is not None:
         msg = "Can not be used with the unit cell having magnetic moments."
