@@ -6,7 +6,6 @@ import tempfile
 import numpy as np
 
 from phonopy.interface.qlm import (
-    get_qlm_structure,
     parse_set_of_forces,
     read_qlm,
 )
@@ -53,12 +52,12 @@ def test_cell2struct_and_read_qlm():
 #                            pos
  Na        0.0000000000   0.0000000000   0.0000000000
  Na        0.0000000000   0.5000000000   0.5000000000
- Na        0.5000000000   0.0000000000   0.5000000000
- Na        0.5000000000   0.5000000000   0.0000000000
+ Na2       0.5000000000   0.0000000000   0.5000000000
+ Na3       0.5000000000   0.5000000000   0.0000000000
  Cl        0.5000000000   0.5000000000   0.5000000000
- Cl        0.5000000000   0.0000000000   0.0000000000
+ Clu       0.5000000000   0.0000000000   0.0000000000
  Cl        0.0000000000   0.5000000000   0.0000000000
- Cl        0.0000000000   0.0000000000   0.5000000000
+ Cld       0.0000000000   0.0000000000   0.5000000000
 """
     )
 
@@ -67,13 +66,13 @@ def test_cell2struct_and_read_qlm():
         fl1.write(sitex_ref.encode())
         fl1.close()
 
-        cell1 = read_qlm(fl1.name)
+        cell1, (inst1,) = read_qlm(fl1.name)
 
         fl2 = tempfile.NamedTemporaryFile(delete=False)
-        fl2.write(get_qlm_structure(cell1).encode())
+        fl2.write(inst1.to_site_str(cell1).encode())
         fl2.close()
 
-        cell2 = read_qlm(fl2.name)
+        cell2, _ = read_qlm(fl2.name)
 
         np.testing.assert_allclose(cell1.cell, cell2.cell, atol=1e-7)
         np.testing.assert_allclose(
