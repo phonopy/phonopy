@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Command options &#8212; Phonopy v.2.39.0</title>
+    <title>Command options &#8212; Phonopy v.2.40.0</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=fc879ce4"></script>
+    <script src="_static/documentation_options.js?v=636b5edc"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.39.0</p>
+    <p class="title logo__title">Phonopy v.2.40.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -417,6 +417,7 @@ by those with dashes <code class="docutils literal notranslate"><span class="pre
 <p>Some of command-line options are equivalent to respective setting tags:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">--alm</span></code> (<code class="docutils literal notranslate"><span class="pre">FC_CALCULATOR</span> <span class="pre">=</span> <span class="pre">ALM</span></code>) [<a class="reference internal" href="setting-tags.html#fc-calculator-alm-tag"><span class="std std-ref">ALM</span></a>]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--amax</span></code> (<code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE_MAX</span></code>) [<a class="reference internal" href="setting-tags.html#displacement-distance-max-tag"><span class="std std-ref">DISPLACEMENT_DISTANCE_MAX</span></a>]</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--amplitude</span></code> (<code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE</span></code>) [<a class="reference internal" href="setting-tags.html#displacement-distance-tag"><span class="std std-ref">DISPLACEMENT_DISTANCE</span></a>]</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--anime</span></code> (<code class="docutils literal notranslate"><span class="pre">ANIME</span></code>) [<a class="reference internal" href="setting-tags.html#anime-tag"><span class="std std-ref">ANIME</span></a>]</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--band</span></code> (<code class="docutils literal notranslate"><span class="pre">BAND</span></code>) [<a class="reference internal" href="setting-tags.html#band-tag"><span class="std std-ref">BAND</span></a>]</p></li>
@@ -472,6 +473,7 @@ by those with dashes <code class="docutils literal notranslate"><span class="pre
 <li><p><code class="docutils literal notranslate"><span class="pre">--qpoints</span></code> (<code class="docutils literal notranslate"><span class="pre">QPOINTS</span></code>) [<a class="reference internal" href="setting-tags.html#qpoints-tag"><span class="std std-ref">QPOINTS</span></a>]</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--qpoints-format</span></code> (<code class="docutils literal notranslate"><span class="pre">QPOINTS_FORMAT</span></code>) [<a class="reference internal" href="setting-tags.html#qpoints-format-tag"><span class="std std-ref">QPOINTS_FORMAT</span></a>]</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--rd</span></code> (<code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENTS</span></code>) [<a class="reference internal" href="setting-tags.html#random-displacements-tag"><span class="std std-ref">RANDOM_DISPLACEMENTS</span></a>]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--rd-auto-factor</span></code> (<code class="docutils literal notranslate"><span class="pre">RD_NUMBER_ESTIMATION_FACTOR</span></code>) [<a class="reference internal" href="setting-tags.html#rd-number-estimation-factor-tag"><span class="std std-ref">RD_NUMBER_ESTIMATION_FACTOR</span></a>]</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--rd-temperature</span></code> (<code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENT_TEMPERATURE</span></code>)
 [<a class="reference internal" href="setting-tags.html#random-displacement-temperature-tag"><span class="std std-ref">RANDOM_DISPLACEMENT_TEMPERATURE</span></a>]</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--readfc</span></code> (<code class="docutils literal notranslate"><span class="pre">READ_FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>) [<a class="reference internal" href="setting-tags.html#read-force-constants-tag"><span class="std std-ref">READ_FORCE_CONSTANTS</span></a>]</p></li>
@@ -616,6 +618,16 @@ The default file names for the calculators are as follows:</p>
 </section>
 <section id="create-force-sets">
 <h2>Create <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code><a class="headerlink" href="#create-force-sets" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code> is a file containing the displacement-force dataset from which
+supercell force constants will be calculated. The command option <code class="docutils literal notranslate"><span class="pre">-f</span></code> or <code class="docutils literal notranslate"><span class="pre">--fz</span></code>
+is used to collect displacements in <code class="docutils literal notranslate"><span class="pre">phonopy_disp.yaml</span></code> and forces from force
+calculator results if the corresponding interface exists in phonopy.</p>
+<p>When combined with the <code class="docutils literal notranslate"><span class="pre">--sp</span></code> or <code class="docutils literal notranslate"><span class="pre">--save-params</span></code> option, this enables writing
+the displacement-force dataset to phonopy_params.yaml. If the force calculator
+interface supports reading supercell potential energy (e.g., electronic total
+energy in the case of VASP), supercell energies are also stored in
+<code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code>. These supercell energies can be used to develop machine
+learning potentials such as pypolymlp. See <a class="reference internal" href="#save-params-option"><span class="std std-ref">Create phonopy_params.yaml</span></a>.</p>
 <section id="f-or-forces">
 <span id="f-force-sets-option"></span><h3><code class="docutils literal notranslate"><span class="pre">-f</span></code> or <code class="docutils literal notranslate"><span class="pre">--forces</span></code><a class="headerlink" href="#f-or-forces" title="Link to this heading">#</a></h3>
 <section id="vasp-interface">
@@ -774,6 +786,9 @@ parameters for non-analytical term correction are written in
 <p>When using with <code class="docutils literal notranslate"><span class="pre">-f</span></code>, displacement-force dataset are stored in
 <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code> instead of <code class="docutils literal notranslate"><span class="pre">FORCE_SETS</span></code>. When <code class="docutils literal notranslate"><span class="pre">BORN</span></code> file is found in the
 current directory, the parameters are also stored in <code class="docutils literal notranslate"><span class="pre">phonopy_params.yaml</span></code>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>%<span class="w"> </span>phonopy<span class="w"> </span>--sp<span class="w"> </span>-f<span class="w"> </span>disp-001/vasprun.xml<span class="w"> </span>disp-002/vasprun.xml<span class="w"> </span>...
+</pre></div>
+</div>
 </section>
 </section>
 <section id="graph-plotting">

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Setting tags &#8212; Phonopy v.2.39.0</title>
+    <title>Setting tags &#8212; Phonopy v.2.40.0</title>
   
   
   
@@ -36,7 +36,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=fc879ce4"></script>
+    <script src="_static/documentation_options.js?v=636b5edc"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -134,7 +134,7 @@
   
   
   
-    <p class="title logo__title">Phonopy v.2.39.0</p>
+    <p class="title logo__title">Phonopy v.2.40.0</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -362,6 +362,8 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diag"><code class="docutils literal notranslate"><span class="pre">DIAG</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pm"><code class="docutils literal notranslate"><span class="pre">PM</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacements"><code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#displacement-distance-max"><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE_MAX</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rd-number-estimation-factor"><code class="docutils literal notranslate"><span class="pre">RD_NUMBER_ESTIMATION_FACTOR</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacement-temperature"><code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENT_TEMPERATURE</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-seed"><code class="docutils literal notranslate"><span class="pre">RANDOM_SEED</span></code></a></li>
 </ul>
@@ -706,10 +708,30 @@ sueprcell calculation.</p>
 <span class="n">DISPLACEMENT_DISTANCE</span> <span class="o">=</span> <span class="mf">0.03</span>
 </pre></div>
 </div>
+<p>When <code class="docutils literal notranslate"><span class="pre">AUTO</span></code> is specified, the number of supercells to be generated is estimated
+using symfc. The default estimated number is four times the minimum number
+required to solve the normal equation under symmetry considerations. When
+<code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE_MAX</span></code> is also specified, the default number becomes eight
+times the minimum required number. These factors (4 or 8) can be changed by
+<code class="docutils literal notranslate"><span class="pre">RD_NUMBER_ESTIMATION_FACTOR</span></code>.</p>
+</section>
+<section id="displacement-distance-max">
+<span id="displacement-distance-max-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE_MAX</span></code><a class="headerlink" href="#displacement-distance-max" title="Link to this heading">#</a></h3>
+<p>This is used along with <code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENTS</span></code> but not with
+<code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENT_TEMPERATURE</span></code>. The random displacements are generated with
+variation not only in direction, but also in distance, with distances randomly
+sampled uniformly between the values of <code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE</span></code> and
+<code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE_MAX</span></code>.</p>
+</section>
+<section id="rd-number-estimation-factor">
+<span id="rd-number-estimation-factor-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">RD_NUMBER_ESTIMATION_FACTOR</span></code><a class="headerlink" href="#rd-number-estimation-factor" title="Link to this heading">#</a></h3>
+<p>The default factor to generate supercells with symfc using
+<code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENTs=AUTO</span></code> is changed to this value. See the default factor in
+<a class="reference internal" href="#random-displacements-tag"><span class="std std-ref">RANDOM_DISPLACEMENTS</span></a>.</p>
 </section>
 <section id="random-displacement-temperature">
 <span id="random-displacement-temperature-tag"></span><h3><code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENT_TEMPERATURE</span></code><a class="headerlink" href="#random-displacement-temperature" title="Link to this heading">#</a></h3>
-<p><strong>New in v2.17</strong> This invokes generation of random displacements at a
+<p>This invokes generation of random displacements at a
 temperature specified by this tag. Collective displacements are randomly sampled
 from harmonic oscillator distribution functions of phonon modes. See more
 details at <a class="reference internal" href="random-displacements.html#random-displacements-at-temperatures"><span class="std std-ref">Random sampling of harmonic oscillator probability densities of phonon modes</span></a>.</p>
@@ -1758,6 +1780,8 @@ file.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diag"><code class="docutils literal notranslate"><span class="pre">DIAG</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pm"><code class="docutils literal notranslate"><span class="pre">PM</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacements"><code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENTS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#displacement-distance-max"><code class="docutils literal notranslate"><span class="pre">DISPLACEMENT_DISTANCE_MAX</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rd-number-estimation-factor"><code class="docutils literal notranslate"><span class="pre">RD_NUMBER_ESTIMATION_FACTOR</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-displacement-temperature"><code class="docutils literal notranslate"><span class="pre">RANDOM_DISPLACEMENT_TEMPERATURE</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-seed"><code class="docutils literal notranslate"><span class="pre">RANDOM_SEED</span></code></a></li>
 </ul>
