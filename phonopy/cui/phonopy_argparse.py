@@ -700,6 +700,13 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         help='Number of supercells with random displacements or "auto".',
     )
     parser.add_argument(
+        "--rd-auto-factor",
+        dest="rd_number_estimation_factor",
+        type=float,
+        default=None,
+        help="Factor to estimate number of supercells with random displacements",
+    )
+    parser.add_argument(
         "--rd-temperature",
         dest="rd_temperature",
         type=float,

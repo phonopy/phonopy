@@ -100,6 +100,7 @@ class Settings:
         "qpoints": None,
         "random_displacements": None,
         "random_seed": None,
+        "rd_number_estimation_factor": None,
         "read_qpoints": False,
         "save_params": False,
         "sigma": None,
@@ -299,6 +300,10 @@ class Settings:
     def set_random_seed(self, val):
         """Set random_seed."""
         self._v["random_seed"] = val
+
+    def set_rd_number_estimation_factor(self, val):
+        """Set rd_number_estimation_factor."""
+        self._v["rd_number_estimation_factor"] = val
 
     def set_read_qpoints(self, val):
         """Set read_qpoints."""
@@ -585,6 +590,18 @@ class ConfParser:
             if mlp_params:
                 self._confs["mlp_params"] = mlp_params
 
+        if "nac_q_direction" in arg_list:
+            q_dir = self._args.nac_q_direction
+            if q_dir is not None:
+                if isinstance(q_dir, list):
+                    self._confs["q_direction"] = " ".join(q_dir)
+                else:
+                    self._confs["q_direction"] = q_dir
+
+        if "nac_method" in arg_list:
+            if self._args.nac_method is not None:
+                self._confs["nac_method"] = self._args.nac_method
+
         if "num_frequency_points" in arg_list:
             opt_num_freqs = self._args.num_frequency_points
             if opt_num_freqs:
@@ -614,18 +631,6 @@ class ConfParser:
                 else:
                     self._confs["qpoints"] = self._args.qpoints
 
-        if "nac_q_direction" in arg_list:
-            q_dir = self._args.nac_q_direction
-            if q_dir is not None:
-                if isinstance(q_dir, list):
-                    self._confs["q_direction"] = " ".join(q_dir)
-                else:
-                    self._confs["q_direction"] = q_dir
-
-        if "nac_method" in arg_list:
-            if self._args.nac_method is not None:
-                self._confs["nac_method"] = self._args.nac_method
-
         if "random_displacements" in arg_list:
             nrand = self._args.random_displacements
             if nrand:
@@ -636,6 +641,11 @@ class ConfParser:
                 seed = self._args.random_seed
                 if np.issubdtype(type(seed), np.integer) and seed >= 0 and seed < 2**32:
                     self._confs["random_seed"] = seed
+
+        if "rd_number_estimation_factor" in arg_list:
+            if self._args.rd_number_estimation_factor is not None:
+                factor = self._args.rd_number_estimation_factor
+                self._confs["rd_number_estimation_factor"] = factor
 
         if "read_qpoints" in arg_list:
             if self._args.read_qpoints:
@@ -704,20 +714,66 @@ class ConfParser:
         confs = self._confs
 
         for conf_key in confs.keys():
+            if conf_key == "atom_name":
+                self.set_parameter(
+                    "atom_name", [x.capitalize() for x in confs["atom_name"].split()]
+                )
+
+            if conf_key == "band":
+                bands = []
+                if confs["band"].strip().lower() == "auto":
+                    self.set_parameter("band_paths", "auto")
+                else:
+                    for section in confs["band"].split(","):
+                        points = [fracval(x) for x in section.split()]
+                        if len(points) % 3 != 0 or len(points) < 6:
+                            self.setting_error("BAND is incorrectly set.")
+                            break
+                        bands.append(np.array(points).reshape(-1, 3))
+                    self.set_parameter("band_paths", bands)
+
+            if conf_key == "band_const_interval":
+                if confs["band_const_interval"].lower() == ".false.":
+                    self.set_parameter("is_band_const_interval", False)
+                elif confs["band_const_interval"].lower() == ".true.":
+                    self.set_parameter("is_band_const_interval", True)
+
             if conf_key == "band_indices":
                 vals = []
                 for sum_set in confs["band_indices"].split(","):
                     vals.append([int(x) - 1 for x in sum_set.split()])
                 self.set_parameter("band_indices", vals)
 
+            if conf_key == "band_points":
+                self.set_parameter("band_points", int(confs["band_points"]))
+
+            if conf_key == "calculator":
+                self.set_parameter("calculator", confs["calculator"])
+
             if conf_key == "cell_filename":
                 self.set_parameter("cell_filename", confs["cell_filename"])
+
+            if conf_key == "classical":
+                if confs["classical"].lower() == ".false.":
+                    self.set_parameter("classical", False)
+                elif confs["classical"].lower() == ".true.":
+                    self.set_parameter("classical", True)
 
             if conf_key == "create_displacements":
                 if confs["create_displacements"].lower() == ".true.":
                     self.set_parameter("create_displacements", True)
                 elif confs["create_displacements"].lower() == ".false.":
                     self.set_parameter("create_displacements", False)
+
+            if conf_key == "cutoff_frequency":
+                val = float(confs["cutoff_frequency"])
+                self.set_parameter("cutoff_frequency", val)
+
+            if conf_key == "diag":
+                if confs["diag"].lower() == ".false.":
+                    self.set_parameter("diag", False)
+                elif confs["diag"].lower() == ".true.":
+                    self.set_parameter("diag", True)
 
             if conf_key == "dim":
                 matrix = [int(x) for x in confs["dim"].split()]
@@ -737,6 +793,125 @@ class ConfParser:
                         )
                     else:
                         self.set_parameter("supercell_matrix", matrix)
+
+            if conf_key == "displacement_distance":
+                self.set_parameter(
+                    "displacement_distance", float(confs["displacement_distance"])
+                )
+
+            if conf_key == "displacement_distance_max":
+                self.set_parameter(
+                    "displacement_distance_max",
+                    float(confs["displacement_distance_max"]),
+                )
+
+            if conf_key == "dm_decimals":
+                self.set_parameter("dm_decimals", confs["dm_decimals"])
+
+            if conf_key == "eigenvectors":
+                if confs["eigenvectors"].lower() == ".false.":
+                    self.set_parameter("is_eigenvectors", False)
+                elif confs["eigenvectors"].lower() == ".true.":
+                    self.set_parameter("is_eigenvectors", True)
+
+            if conf_key == "fc_calculator":
+                self.set_parameter("fc_calculator", confs["fc_calculator"])
+
+            if conf_key == "fc_calculator_options":
+                self.set_parameter(
+                    "fc_calculator_options", confs["fc_calculator_options"]
+                )
+
+            if conf_key == "fc_symmetry":
+                if confs["fc_symmetry"].lower() == ".false.":
+                    self.set_parameter("fc_symmetry", False)
+                elif confs["fc_symmetry"].lower() == ".true.":
+                    self.set_parameter("fc_symmetry", True)
+
+            if conf_key == "fc_decimals":
+                self.set_parameter("fc_decimals", confs["fc_decimals"])
+
+            if conf_key == "frequency_scale_factor":
+                self.set_parameter(
+                    "frequency_scale_factor", float(confs["frequency_scale_factor"])
+                )
+
+            if conf_key == "frequency_conversion_factor":
+                val = float(confs["frequency_conversion_factor"])
+                self.set_parameter("frequency_conversion_factor", val)
+
+            if conf_key == "fpitch":
+                val = float(confs["fpitch"])
+                self.set_parameter("fpitch", val)
+
+            # Group velocity finite difference
+            if conf_key == "gv_delta_q":
+                self.set_parameter("gv_delta_q", float(confs["gv_delta_q"]))
+
+            # Compression option for writing int hdf5
+            if conf_key == "hdf5_compression":
+                hdf5_compression = confs["hdf5_compression"]
+                try:
+                    compression = int(hdf5_compression)
+                except ValueError:  # str
+                    compression = hdf5_compression
+                    if compression.lower() == "none":
+                        compression = None
+                except TypeError:  # None (this will not happen)
+                    compression = hdf5_compression
+                self.set_parameter("hdf5_compression", compression)
+
+            if conf_key == "magmom":
+                self.set_parameter(
+                    "magmom", [float(x) for x in confs["magmom"].split()]
+                )
+
+            if conf_key == "mass":
+                self.set_parameter("mass", [float(x) for x in confs["mass"].split()])
+
+            if conf_key in ["mesh_numbers", "mp", "mesh"]:
+                vals = [x for x in confs[conf_key].split()]
+                if len(vals) == 1:
+                    self.set_parameter("mesh_numbers", float(vals[0]))
+                elif len(vals) < 3:
+                    self.setting_error("Mesh numbers are incorrectly set.")
+                elif len(vals) == 3:
+                    self.set_parameter("mesh_numbers", [int(x) for x in vals])
+                elif len(vals) == 9:
+                    mesh_array = []
+                    for row in np.reshape([int(x) for x in vals], (3, 3)):
+                        mesh_array.append(row.tolist())
+                    self.set_parameter("mesh_numbers", mesh_array)
+                else:
+                    self.setting_error(f"{conf_key.upper()} is incorrectly set.")
+
+            if conf_key == "mesh_symmetry":
+                if confs["mesh_symmetry"].lower() == ".false.":
+                    self.set_parameter("is_mesh_symmetry", False)
+                elif confs["mesh_symmetry"].lower() == ".true.":
+                    self.set_parameter("is_mesh_symmetry", True)
+
+            if conf_key == "mlp_params":
+                self.set_parameter("mlp_params", confs["mlp_params"])
+
+            if conf_key == "nac":
+                if confs["nac"].lower() == ".false.":
+                    self.set_parameter("is_nac", False)
+                elif confs["nac"].lower() == ".true.":
+                    self.set_parameter("is_nac", True)
+
+            if conf_key == "nac_method":
+                self.set_parameter("nac_method", confs["nac_method"].lower())
+
+            if conf_key == "num_frequency_points":
+                val = int(confs["num_frequency_points"])
+                self.set_parameter("num_frequency_points", val)
+
+            if conf_key == "pm":
+                if confs["pm"].lower() == ".false.":
+                    self.set_parameter("pm", False)
+                elif confs["pm"].lower() == ".true.":
+                    self.set_parameter("pm", True)
 
             if conf_key in ("primitive_axis", "primitive_axes"):
                 if confs[conf_key].strip().lower() == "auto":
@@ -760,133 +935,14 @@ class ConfParser:
                         )
                     self.set_parameter("primitive_axes", p_axis)
 
-            if conf_key == "mass":
-                self.set_parameter("mass", [float(x) for x in confs["mass"].split()])
-
-            if conf_key == "magmom":
-                self.set_parameter(
-                    "magmom", [float(x) for x in confs["magmom"].split()]
-                )
-
-            if conf_key == "atom_name":
-                self.set_parameter(
-                    "atom_name", [x.capitalize() for x in confs["atom_name"].split()]
-                )
-
-            if conf_key == "displacement_distance":
-                self.set_parameter(
-                    "displacement_distance", float(confs["displacement_distance"])
-                )
-
-            if conf_key == "displacement_distance_max":
-                self.set_parameter(
-                    "displacement_distance_max",
-                    float(confs["displacement_distance_max"]),
-                )
-
-            if conf_key == "diag":
-                if confs["diag"].lower() == ".false.":
-                    self.set_parameter("diag", False)
-                elif confs["diag"].lower() == ".true.":
-                    self.set_parameter("diag", True)
-
-            if conf_key == "pm":
-                if confs["pm"].lower() == ".false.":
-                    self.set_parameter("pm", False)
-                elif confs["pm"].lower() == ".true.":
-                    self.set_parameter("pm", True)
-
-            if conf_key == "trigonal":
-                if confs["trigonal"].lower() == ".false.":
-                    self.set_parameter("is_trigonal_displacement", False)
-                elif confs["trigonal"].lower() == ".true.":
-                    self.set_parameter("is_trigonal_displacement", True)
-
-            if conf_key == "eigenvectors":
-                if confs["eigenvectors"].lower() == ".false.":
-                    self.set_parameter("is_eigenvectors", False)
-                elif confs["eigenvectors"].lower() == ".true.":
-                    self.set_parameter("is_eigenvectors", True)
-
-            if conf_key == "nac":
-                if confs["nac"].lower() == ".false.":
-                    self.set_parameter("is_nac", False)
-                elif confs["nac"].lower() == ".true.":
-                    self.set_parameter("is_nac", True)
-
-            if conf_key == "symmetry":
-                if confs["symmetry"].lower() == ".false.":
-                    self.set_parameter("is_symmetry", False)
-                    self.set_parameter("is_mesh_symmetry", False)
-                elif confs["symmetry"].lower() == ".true.":
-                    self.set_parameter("is_symmetry", True)
-
-            if conf_key == "mesh_symmetry":
-                if confs["mesh_symmetry"].lower() == ".false.":
-                    self.set_parameter("is_mesh_symmetry", False)
-                elif confs["mesh_symmetry"].lower() == ".true.":
-                    self.set_parameter("is_mesh_symmetry", True)
-
-            if conf_key == "calculator":
-                self.set_parameter("calculator", confs["calculator"])
-
-            if conf_key == "fc_calculator":
-                self.set_parameter("fc_calculator", confs["fc_calculator"])
-
-            if conf_key == "fc_calculator_options":
-                self.set_parameter(
-                    "fc_calculator_options", confs["fc_calculator_options"]
-                )
-
-            if conf_key == "fc_symmetry":
-                if confs["fc_symmetry"].lower() == ".false.":
-                    self.set_parameter("fc_symmetry", False)
-                elif confs["fc_symmetry"].lower() == ".true.":
-                    self.set_parameter("fc_symmetry", True)
-
-            if conf_key == "fc_decimals":
-                self.set_parameter("fc_decimals", confs["fc_decimals"])
-
-            if conf_key == "dm_decimals":
-                self.set_parameter("dm_decimals", confs["dm_decimals"])
-
-            if conf_key in ["mesh_numbers", "mp", "mesh"]:
-                vals = [x for x in confs[conf_key].split()]
-                if len(vals) == 1:
-                    self.set_parameter("mesh_numbers", float(vals[0]))
-                elif len(vals) < 3:
-                    self.setting_error("Mesh numbers are incorrectly set.")
-                elif len(vals) == 3:
-                    self.set_parameter("mesh_numbers", [int(x) for x in vals])
-                elif len(vals) == 9:
-                    mesh_array = []
-                    for row in np.reshape([int(x) for x in vals], (3, 3)):
-                        mesh_array.append(row.tolist())
-                    self.set_parameter("mesh_numbers", mesh_array)
+            if conf_key == "q_direction":
+                q_direction = [fracval(x) for x in confs["q_direction"].split()]
+                if len(q_direction) < 3:
+                    self.setting_error(
+                        "Number of elements of q_direction is less than 3"
+                    )
                 else:
-                    self.setting_error(f"{conf_key.upper()} is incorrectly set.")
-
-            if conf_key == "band_points":
-                self.set_parameter("band_points", int(confs["band_points"]))
-
-            if conf_key == "band_const_interval":
-                if confs["band_const_interval"].lower() == ".false.":
-                    self.set_parameter("is_band_const_interval", False)
-                elif confs["band_const_interval"].lower() == ".true.":
-                    self.set_parameter("is_band_const_interval", True)
-
-            if conf_key == "band":
-                bands = []
-                if confs["band"].strip().lower() == "auto":
-                    self.set_parameter("band_paths", "auto")
-                else:
-                    for section in confs["band"].split(","):
-                        points = [fracval(x) for x in section.split()]
-                        if len(points) % 3 != 0 or len(points) < 6:
-                            self.setting_error("BAND is incorrectly set.")
-                            break
-                        bands.append(np.array(points).reshape(-1, 3))
-                    self.set_parameter("band_paths", bands)
+                    self.set_parameter("nac_q_direction", q_direction)
 
             if conf_key == "qpoints":
                 if confs["qpoints"].lower() == ".true.":
@@ -899,113 +955,6 @@ class ConfParser:
                         self.setting_error("Q-points are incorrectly set.")
                     else:
                         self.set_parameter("qpoints", list(np.reshape(vals, (-1, 3))))
-
-            if conf_key == "read_qpoints":
-                if confs["read_qpoints"].lower() == ".false.":
-                    self.set_parameter("read_qpoints", False)
-                elif confs["read_qpoints"].lower() == ".true.":
-                    self.set_parameter("read_qpoints", True)
-
-            if conf_key == "nac_method":
-                self.set_parameter("nac_method", confs["nac_method"].lower())
-
-            if conf_key == "q_direction":
-                q_direction = [fracval(x) for x in confs["q_direction"].split()]
-                if len(q_direction) < 3:
-                    self.setting_error(
-                        "Number of elements of q_direction is less than 3"
-                    )
-                else:
-                    self.set_parameter("nac_q_direction", q_direction)
-
-            if conf_key == "frequency_conversion_factor":
-                val = float(confs["frequency_conversion_factor"])
-                self.set_parameter("frequency_conversion_factor", val)
-
-            if conf_key == "frequency_scale_factor":
-                self.set_parameter(
-                    "frequency_scale_factor", float(confs["frequency_scale_factor"])
-                )
-
-            if conf_key == "fpitch":
-                val = float(confs["fpitch"])
-                self.set_parameter("fpitch", val)
-
-            if conf_key == "num_frequency_points":
-                val = int(confs["num_frequency_points"])
-                self.set_parameter("num_frequency_points", val)
-
-            if conf_key == "cutoff_frequency":
-                val = float(confs["cutoff_frequency"])
-                self.set_parameter("cutoff_frequency", val)
-
-            if conf_key == "classical":
-                if confs["classical"].lower() == ".false.":
-                    self.set_parameter("classical", False)
-                elif confs["classical"].lower() == ".true.":
-                    self.set_parameter("classical", True)
-
-            if conf_key == "sigma":
-                vals = [float(x) for x in str(confs["sigma"]).split()]
-                if len(vals) == 1:
-                    self.set_parameter("sigma", vals[0])
-                else:
-                    self.set_parameter("sigma", vals)
-
-            if conf_key == "tetrahedron":
-                if confs["tetrahedron"].lower() == ".false.":
-                    self.set_parameter("is_tetrahedron_method", False)
-                if confs["tetrahedron"].lower() == ".true.":
-                    self.set_parameter("is_tetrahedron_method", True)
-
-            if conf_key == "symmetry_tolerance":
-                val = float(confs["symmetry_tolerance"])
-                self.set_parameter("symmetry_tolerance", val)
-
-            if conf_key == "tmin":
-                val = float(confs["tmin"])
-                self.set_parameter("tmin", val)
-
-            if conf_key == "tmax":
-                val = float(confs["tmax"])
-                self.set_parameter("tmax", val)
-
-            if conf_key == "tstep":
-                val = float(confs["tstep"])
-                self.set_parameter("tstep", val)
-
-            # Group velocity finite difference
-            if conf_key == "gv_delta_q":
-                self.set_parameter("gv_delta_q", float(confs["gv_delta_q"]))
-
-            # Compression option for writing int hdf5
-            if conf_key == "hdf5_compression":
-                hdf5_compression = confs["hdf5_compression"]
-                try:
-                    compression = int(hdf5_compression)
-                except ValueError:  # str
-                    compression = hdf5_compression
-                    if compression.lower() == "none":
-                        compression = None
-                except TypeError:  # None (this will not happen)
-                    compression = hdf5_compression
-                self.set_parameter("hdf5_compression", compression)
-
-            # Select yaml summary contents
-            if conf_key == "save_params":
-                if confs["save_params"].lower() == ".true.":
-                    self.set_parameter("save_params", True)
-                elif confs["save_params"].lower() == ".false.":
-                    self.set_parameter("save_params", False)
-
-            if conf_key == "use_pypolymlp":
-                if confs["use_pypolymlp"].lower() == ".true.":
-                    self.set_parameter("use_pypolymlp", True)
-                elif confs["use_pypolymlp"].lower() == ".false.":
-                    self.set_parameter("use_pypolymlp", False)
-
-            if conf_key == "mlp_params":
-                self.set_parameter("mlp_params", confs["mlp_params"])
 
             # Number of supercells with random displacements
             if conf_key == "random_displacements":
@@ -1020,6 +969,74 @@ class ConfParser:
 
             if conf_key == "random_seed":
                 self.set_parameter("random_seed", int(confs["random_seed"]))
+
+            if conf_key == "rd_number_estimation_factor":
+                try:
+                    factor = float(confs["rd_number_estimation_factor"])
+                except ValueError:
+                    self.setting_error("RD_NUMBER_ESTIMATION_FACTOR is not a number.")
+                self.set_parameter("rd_number_estimation_factor", factor)
+
+            if conf_key == "read_qpoints":
+                if confs["read_qpoints"].lower() == ".false.":
+                    self.set_parameter("read_qpoints", False)
+                elif confs["read_qpoints"].lower() == ".true.":
+                    self.set_parameter("read_qpoints", True)
+
+            # Select yaml summary contents
+            if conf_key == "save_params":
+                if confs["save_params"].lower() == ".true.":
+                    self.set_parameter("save_params", True)
+                elif confs["save_params"].lower() == ".false.":
+                    self.set_parameter("save_params", False)
+
+            if conf_key == "sigma":
+                vals = [float(x) for x in str(confs["sigma"]).split()]
+                if len(vals) == 1:
+                    self.set_parameter("sigma", vals[0])
+                else:
+                    self.set_parameter("sigma", vals)
+
+            if conf_key == "symmetry":
+                if confs["symmetry"].lower() == ".false.":
+                    self.set_parameter("is_symmetry", False)
+                    self.set_parameter("is_mesh_symmetry", False)
+                elif confs["symmetry"].lower() == ".true.":
+                    self.set_parameter("is_symmetry", True)
+
+            if conf_key == "symmetry_tolerance":
+                val = float(confs["symmetry_tolerance"])
+                self.set_parameter("symmetry_tolerance", val)
+
+            if conf_key == "tetrahedron":
+                if confs["tetrahedron"].lower() == ".false.":
+                    self.set_parameter("is_tetrahedron_method", False)
+                if confs["tetrahedron"].lower() == ".true.":
+                    self.set_parameter("is_tetrahedron_method", True)
+
+            if conf_key == "tmax":
+                val = float(confs["tmax"])
+                self.set_parameter("tmax", val)
+
+            if conf_key == "tmin":
+                val = float(confs["tmin"])
+                self.set_parameter("tmin", val)
+
+            if conf_key == "trigonal":
+                if confs["trigonal"].lower() == ".false.":
+                    self.set_parameter("is_trigonal_displacement", False)
+                elif confs["trigonal"].lower() == ".true.":
+                    self.set_parameter("is_trigonal_displacement", True)
+
+            if conf_key == "tstep":
+                val = float(confs["tstep"])
+                self.set_parameter("tstep", val)
+
+            if conf_key == "use_pypolymlp":
+                if confs["use_pypolymlp"].lower() == ".true.":
+                    self.set_parameter("use_pypolymlp", True)
+                elif confs["use_pypolymlp"].lower() == ".false.":
+                    self.set_parameter("use_pypolymlp", False)
 
     def set_parameter(self, key, val):
         """Pass to another data structure."""
@@ -1036,6 +1053,18 @@ class ConfParser:
         # Sets of band indices that are summed
         if "band_indices" in params:
             self._settings.set_band_indices(params["band_indices"])
+
+        # Band paths
+        if "band_paths" in params:
+            self._settings.set_band_paths(params["band_paths"])
+
+        # This number includes end points
+        if "band_points" in params:
+            self._settings.set_band_points(params["band_points"])
+
+        # Force calculator
+        if "calculator" in params:
+            self._settings.set_calculator(params["calculator"])
 
         # Filename of input unit cell
         if "cell_filename" in params:
@@ -1070,10 +1099,6 @@ class ConfParser:
         if "dm_decimals" in params:
             self._settings.set_dm_decimals(int(params["dm_decimals"]))
 
-        # Force calculator
-        if "calculator" in params:
-            self._settings.set_calculator(params["calculator"])
-
         # Force constants calculator
         if "fc_calculator" in params:
             self._settings.set_fc_calculator(params["fc_calculator"])
@@ -1107,17 +1132,9 @@ class ConfParser:
         if "fpitch" in params:
             self._settings.set_frequency_pitch(params["fpitch"])
 
-        # Number of sampling points for spectram drawing
-        if "num_frequency_points" in params:
-            self._settings.set_num_frequency_points(params["num_frequency_points"])
-
         # Group velocity finite difference
         if "gv_delta_q" in params:
             self._settings.set_group_velocity_delta_q(params["gv_delta_q"])
-
-        # Mesh sampling numbers
-        if "mesh_numbers" in params:
-            self._settings.set_mesh_numbers(params["mesh_numbers"])
 
         # Is getting eigenvectors?
         if "is_eigenvectors" in params:
@@ -1145,6 +1162,13 @@ class ConfParser:
                 params["is_trigonal_displacement"]
             )
 
+        if "is_band_const_interval" in params:
+            self._settings.set_is_band_const_interval(params["is_band_const_interval"])
+
+        # Compression option for writing int hdf5
+        if "hdf5_compression" in params:
+            self._settings.set_hdf5_compression(params["hdf5_compression"])
+
         # Magnetic moments
         if "magmom" in params:
             self._settings.set_magnetic_moments(params["magmom"])
@@ -1152,6 +1176,25 @@ class ConfParser:
         # Atomic mass
         if "mass" in params:
             self._settings.set_masses(params["mass"])
+
+        # Mesh sampling numbers
+        if "mesh_numbers" in params:
+            self._settings.set_mesh_numbers(params["mesh_numbers"])
+
+        if "mlp_params" in params:
+            self._settings.set_mlp_params(params["mlp_params"])
+
+        # non analytical term correction method
+        if "nac_method" in params:
+            self._settings.set_nac_method(params["nac_method"])
+
+        # q-direction for non analytical term correction
+        if "nac_q_direction" in params:
+            self._settings.set_nac_q_direction(params["nac_q_direction"])
+
+        # Number of sampling points for spectram drawing
+        if "num_frequency_points" in params:
+            self._settings.set_num_frequency_points(params["num_frequency_points"])
 
         # Plus minus displacement
         if "pm" in params:
@@ -1165,17 +1208,21 @@ class ConfParser:
         if "qpoints" in params:
             self._settings.set_qpoints(params["qpoints"])
 
+        # Number of supercells with random displacements
+        if "random_displacements" in params:
+            self._settings.set_random_displacements(params["random_displacements"])
+
+        if "random_seed" in params:
+            self._settings.set_random_seed(params["random_seed"])
         if "read_qpoints" in params:
             if params["read_qpoints"]:
                 self._settings.set_read_qpoints(params["read_qpoints"])
 
-        # non analytical term correction method
-        if "nac_method" in params:
-            self._settings.set_nac_method(params["nac_method"])
-
-        # q-direction for non analytical term correction
-        if "nac_q_direction" in params:
-            self._settings.set_nac_q_direction(params["nac_q_direction"])
+        # Random displacements number estimation factor
+        if "rd_number_estimation_factor" in params:
+            self._settings.set_rd_number_estimation_factor(
+                params["rd_number_estimation_factor"]
+            )
 
         # Smearing width
         if "sigma" in params:
@@ -1197,21 +1244,6 @@ class ConfParser:
         if "tstep" in params:
             self._settings.set_temperature_step(params["tstep"])
 
-        # Band paths
-        if "band_paths" in params:
-            self._settings.set_band_paths(params["band_paths"])
-
-        # This number includes end points
-        if "band_points" in params:
-            self._settings.set_band_points(params["band_points"])
-
-        if "is_band_const_interval" in params:
-            self._settings.set_is_band_const_interval(params["is_band_const_interval"])
-
-        # Compression option for writing int hdf5
-        if "hdf5_compression" in params:
-            self._settings.set_hdf5_compression(params["hdf5_compression"])
-
         # Select yaml summary contents
         if "save_params" in params:
             self._settings.set_save_params(params["save_params"])
@@ -1219,16 +1251,6 @@ class ConfParser:
         # Machine learning potential
         if "use_pypolymlp" in params:
             self._settings.set_use_pypolymlp(params["use_pypolymlp"])
-
-        if "mlp_params" in params:
-            self._settings.set_mlp_params(params["mlp_params"])
-
-        # Number of supercells with random displacements
-        if "random_displacements" in params:
-            self._settings.set_random_displacements(params["random_displacements"])
-
-        if "random_seed" in params:
-            self._settings.set_random_seed(params["random_seed"])
 
 
 #
