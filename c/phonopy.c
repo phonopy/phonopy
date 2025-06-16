@@ -90,13 +90,13 @@ int64_t phpy_dynamical_matrices_with_dd_openmp_over_qpoints(
     const double dielectric[3][3], const double (*reciprocal_lattice)[3],
     const double *q_direction, const double nac_factor,
     const double (*dd_q0)[2], const double (*G_list)[3],
-    const int64_t num_G_points, const double lambda,
-    const int64_t use_Wang_NAC) {
+    const int64_t num_G_points, const double lambda, const int64_t use_Wang_NAC,
+    const int64_t hermitianize) {
     return dym_dynamical_matrices_with_dd_openmp_over_qpoints(
         dynamical_matrices, qpoints, n_qpoints, fc, svecs, multi, positions,
         num_patom, num_satom, masses, p2s_map, s2p_map, born, dielectric,
         reciprocal_lattice, q_direction, nac_factor, dd_q0, G_list,
-        num_G_points, lambda, use_Wang_NAC);
+        num_G_points, lambda, use_Wang_NAC, hermitianize);
 }
 
 void phpy_get_charge_sum(
