@@ -2225,6 +2225,7 @@ def main(**argparse_control):
             number_of_snapshots=settings.random_displacements,
             random_seed=settings.random_seed,
             max_distance=settings.displacement_distance_max,
+            number_estimation_factor=settings.rd_number_estimation_factor,
         )
         if log_level:
             print(

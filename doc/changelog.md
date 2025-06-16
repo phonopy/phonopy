@@ -2,6 +2,11 @@
 
 # Change Log
 
+## Jun-15-2025: Version 2.40.0
+
+- `--rd-auto-factor` command option (`RD_NUMBER_ESTIMATION_FACTOR` tag) was
+  added.
+
 ## Jun-11-2025: Version 2.39.0
 
 - Collection of small updates.

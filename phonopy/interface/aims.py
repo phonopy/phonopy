@@ -127,7 +127,7 @@ def write_aims(filename, atoms):
     symbols = atoms.symbols
 
     initial_moment_line = "initial_moment %16.6f\n"
-    magmoms = atoms.get_magnetic_moments()
+    magmoms = atoms.magnetic_moments
 
     for n in range(N):
         lines += atom_line % (tuple(positions[n]) + (symbols[n],))
