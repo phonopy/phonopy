@@ -279,7 +279,7 @@ sampled uniformly between the values of `DISPLACEMENT_DISTANCE` and
 ### `RD_NUMBER_ESTIMATION_FACTOR`
 
 The default factor to generate supercells with symfc using
-`RANDOM_DISPLACEMENTs=AUTO` is changed to this value. See the default factor in
+`RANDOM_DISPLACEMENTS=AUTO` is changed to this value. See the default factor in
 {ref}`random_displacements_tag`.
 
 (random_displacement_temperature_tag)=
