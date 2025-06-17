@@ -66,7 +66,7 @@ def show_deprecated_option_warnings(deprecated):
     print("")
 
 
-def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
+def get_parser(load_phonopy_yaml=False):
     """Return ArgumentParser instance."""
     deprecated = fix_deprecated_option_names(sys.argv)
     import argparse
@@ -315,7 +315,7 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         default=None,
         help="Enforce space group symmetry to force constants",
     )
-    if not fc_symmetry:
+    if not load_phonopy_yaml:
         parser.add_argument(
             "--fc-symmetry",
             "--sym-fc",
@@ -532,7 +532,7 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         type=int,
         help="Order of moment of phonon states distribution",
     )
-    if not is_nac:
+    if not load_phonopy_yaml:
         parser.add_argument(
             "--nac",
             dest="is_nac",
@@ -546,7 +546,7 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         default=None,
         help="Non-analytical term correction method: Gonze (default) or Wang",
     )
-    if fc_symmetry:
+    if load_phonopy_yaml:
         parser.add_argument(
             "--no-fc-symmetry",
             "--no-sym-fc",
@@ -569,7 +569,7 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         default=None,
         help="Symmetry is not imposed for mesh sampling.",
     )
-    if is_nac:
+    if load_phonopy_yaml:
         parser.add_argument(
             "--nonac",
             dest="is_nac",
@@ -775,7 +775,7 @@ def get_parser(fc_symmetry=False, is_nac=False, load_phonopy_yaml=False):
         default=None,
         help="Number of iterations in SSCHA calculation",
     )
-    if not fc_symmetry:
+    if not load_phonopy_yaml:
         parser.add_argument(
             "--symfc",
             dest="use_symfc",
