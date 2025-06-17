@@ -1113,12 +1113,10 @@ class PhonopyConfParser(ConfParser):
         self._settings = PhonopySettings(load_phonopy_yaml=load_phonopy_yaml)
         if filename is not None:
             self._read_file(filename)
-            self._parse_conf()
-            self._set_settings()
         if args is not None:
             self._read_options(args)
-            self._parse_conf()
-            self._set_settings()
+        self._parse_conf()
+        self._set_settings()
 
     def _read_options(self, args):
         super()._read_options(args)  # store data in self._confs
