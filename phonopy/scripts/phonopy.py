@@ -38,8 +38,6 @@ from phonopy.cui.phonopy_script import main
 def run():
     """Run phonopy script."""
     argparse_control = {
-        "fc_symmetry": False,
-        "is_nac": False,
         "load_phonopy_yaml": False,
     }
     main(**argparse_control)

@@ -569,10 +569,8 @@ def _write_displacements_files_then_exit(
                 'A better primitive cell can be chosen by using "--pa auto" option.'
             )
             print("*" * 72)
-        print('"phonopy_disp.yaml" and supercells have been created.')
+        print(f'"{disp_filename}" and supercells have been created.')
 
-    settings.set_include_displacements(True)
-    settings.set_include_nac_params(True)
     _finalize_phonopy(log_level, settings, confs, phonon, filename=disp_filename)
 
 
@@ -1404,7 +1402,7 @@ def _run_calculation(phonon: Phonopy, settings: PhonopySettings, plot_conf, log_
             t_step = settings.temperature_step
             t_max = settings.max_temperature
             t_min = settings.min_temperature
-            t_cif = settings.thermal_displacement_matrix_temperatue
+            t_cif = settings.thermal_displacement_matrix_temperature
             if t_cif is None:
                 temperatures = None
             else:
@@ -1760,11 +1758,11 @@ def _read_phonopy_settings(
             phonopy_conf_parser = PhonopyConfParser(
                 filename=args.conf_filename,
                 args=args,
-                default_settings=argparse_control,
+                load_phonopy_yaml=load_phonopy_yaml,
             )
         else:
             phonopy_conf_parser = PhonopyConfParser(
-                args=args, default_settings=argparse_control
+                args=args, load_phonopy_yaml=load_phonopy_yaml
             )
         if len(args.filename) > 0:
             file_exists(args.filename[0], log_level=log_level)
@@ -2037,14 +2035,10 @@ def main(**argparse_control):
 
     phonopy command:
         argparse_control = {
-            "fc_symmetry": False,
-            "is_nac": False,
             "load_phonopy_yaml": False,
         }
     phonopy-load command:
         argparse_control = {
-            "fc_symmetry": True,
-            "is_nac": True,
             "load_phonopy_yaml": True,
         }
 
