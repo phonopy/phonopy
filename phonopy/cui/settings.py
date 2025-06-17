@@ -124,34 +124,17 @@ class Settings:
 
 # Parse phonopy setting filen
 class ConfParser:
-    """Phonopy conf file parser.
-
-    This class became complicated due to historical reason. Data flow is as follows:
-
-        self._confs -> self._parameters -> self._settings.
-
-    Configurations are obtained either from conf file or command options.
-    These are initially merged to ``self._confs``. Then the data are
-    checked and stored in ``self._parameters`` in appropriate format.
-    Finally they are passed to ``self._settings``.
-
-    """
+    """Phonopy conf file parser."""
 
     def __init__(self):
         """Init method."""
         self._confs = {}
         self._parameters = {}
-        self._settings = Settings()
 
     @property
     def confs(self):
         """Return configuration dict."""
         return self._confs
-
-    @property
-    def settings(self):
-        """Return Settings class instance."""
-        return self._settings
 
     def setting_error(self, message):
         """Show error message."""
@@ -468,7 +451,7 @@ class ConfParser:
             if args.use_pypolymlp:
                 self._confs["use_pypolymlp"] = ".true."
 
-    def parse_conf(self):
+    def _parse_conf(self):
         """Add treatments to settings from conf file or command options.
 
         The results are stored in ``self._parameters[key] = val``.
@@ -478,14 +461,14 @@ class ConfParser:
 
         for conf_key in confs.keys():
             if conf_key == "atom_name":
-                self.set_parameter(
+                self._set_parameter(
                     "atom_name", [x.capitalize() for x in confs["atom_name"].split()]
                 )
 
             if conf_key == "band":
                 bands = []
                 if confs["band"].strip().lower() == "auto":
-                    self.set_parameter("band_paths", "auto")
+                    self._set_parameter("band_paths", "auto")
                 else:
                     for section in confs["band"].split(","):
                         points = [fracval(x) for x in section.split()]
@@ -493,50 +476,50 @@ class ConfParser:
                             self.setting_error("BAND is incorrectly set.")
                             break
                         bands.append(np.array(points).reshape(-1, 3))
-                    self.set_parameter("band_paths", bands)
+                    self._set_parameter("band_paths", bands)
 
             if conf_key == "band_const_interval":
                 if confs["band_const_interval"].lower() == ".false.":
-                    self.set_parameter("is_band_const_interval", False)
+                    self._set_parameter("is_band_const_interval", False)
                 elif confs["band_const_interval"].lower() == ".true.":
-                    self.set_parameter("is_band_const_interval", True)
+                    self._set_parameter("is_band_const_interval", True)
 
             if conf_key == "band_indices":
                 vals = []
                 for sum_set in confs["band_indices"].split(","):
                     vals.append([int(x) - 1 for x in sum_set.split()])
-                self.set_parameter("band_indices", vals)
+                self._set_parameter("band_indices", vals)
 
             if conf_key == "band_points":
-                self.set_parameter("band_points", int(confs["band_points"]))
+                self._set_parameter("band_points", int(confs["band_points"]))
 
             if conf_key == "calculator":
-                self.set_parameter("calculator", confs["calculator"])
+                self._set_parameter("calculator", confs["calculator"])
 
             if conf_key == "cell_filename":
-                self.set_parameter("cell_filename", confs["cell_filename"])
+                self._set_parameter("cell_filename", confs["cell_filename"])
 
             if conf_key == "classical":
                 if confs["classical"].lower() == ".false.":
-                    self.set_parameter("classical", False)
+                    self._set_parameter("classical", False)
                 elif confs["classical"].lower() == ".true.":
-                    self.set_parameter("classical", True)
+                    self._set_parameter("classical", True)
 
             if conf_key == "create_displacements":
                 if confs["create_displacements"].lower() == ".true.":
-                    self.set_parameter("create_displacements", True)
+                    self._set_parameter("create_displacements", True)
                 elif confs["create_displacements"].lower() == ".false.":
-                    self.set_parameter("create_displacements", False)
+                    self._set_parameter("create_displacements", False)
 
             if conf_key == "cutoff_frequency":
                 val = float(confs["cutoff_frequency"])
-                self.set_parameter("cutoff_frequency", val)
+                self._set_parameter("cutoff_frequency", val)
 
             if conf_key == "diag":
                 if confs["diag"].lower() == ".false.":
-                    self.set_parameter("diag", False)
+                    self._set_parameter("diag", False)
                 elif confs["diag"].lower() == ".true.":
-                    self.set_parameter("diag", True)
+                    self._set_parameter("diag", True)
 
             if conf_key == "dim":
                 matrix = [int(x) for x in confs["dim"].split()]
@@ -555,61 +538,61 @@ class ConfParser:
                             "Determinant of supercell matrix has to be positive."
                         )
                     else:
-                        self.set_parameter("supercell_matrix", matrix)
+                        self._set_parameter("supercell_matrix", matrix)
 
             if conf_key == "displacement_distance":
-                self.set_parameter(
+                self._set_parameter(
                     "displacement_distance", float(confs["displacement_distance"])
                 )
 
             if conf_key == "displacement_distance_max":
-                self.set_parameter(
+                self._set_parameter(
                     "displacement_distance_max",
                     float(confs["displacement_distance_max"]),
                 )
 
             if conf_key == "dm_decimals":
-                self.set_parameter("dm_decimals", confs["dm_decimals"])
+                self._set_parameter("dm_decimals", confs["dm_decimals"])
 
             if conf_key == "eigenvectors":
                 if confs["eigenvectors"].lower() == ".false.":
-                    self.set_parameter("is_eigenvectors", False)
+                    self._set_parameter("is_eigenvectors", False)
                 elif confs["eigenvectors"].lower() == ".true.":
-                    self.set_parameter("is_eigenvectors", True)
+                    self._set_parameter("is_eigenvectors", True)
 
             if conf_key == "fc_calculator":
-                self.set_parameter("fc_calculator", confs["fc_calculator"])
+                self._set_parameter("fc_calculator", confs["fc_calculator"])
 
             if conf_key == "fc_calculator_options":
-                self.set_parameter(
+                self._set_parameter(
                     "fc_calculator_options", confs["fc_calculator_options"]
                 )
 
             if conf_key == "fc_symmetry":
                 if confs["fc_symmetry"].lower() == ".false.":
-                    self.set_parameter("fc_symmetry", False)
+                    self._set_parameter("fc_symmetry", False)
                 elif confs["fc_symmetry"].lower() == ".true.":
-                    self.set_parameter("fc_symmetry", True)
+                    self._set_parameter("fc_symmetry", True)
 
             if conf_key == "fc_decimals":
-                self.set_parameter("fc_decimals", confs["fc_decimals"])
+                self._set_parameter("fc_decimals", confs["fc_decimals"])
 
             if conf_key == "frequency_scale_factor":
-                self.set_parameter(
+                self._set_parameter(
                     "frequency_scale_factor", float(confs["frequency_scale_factor"])
                 )
 
             if conf_key == "frequency_conversion_factor":
                 val = float(confs["frequency_conversion_factor"])
-                self.set_parameter("frequency_conversion_factor", val)
+                self._set_parameter("frequency_conversion_factor", val)
 
             if conf_key == "fpitch":
                 val = float(confs["fpitch"])
-                self.set_parameter("fpitch", val)
+                self._set_parameter("fpitch", val)
 
             # Group velocity finite difference
             if conf_key == "gv_delta_q":
-                self.set_parameter("gv_delta_q", float(confs["gv_delta_q"]))
+                self._set_parameter("gv_delta_q", float(confs["gv_delta_q"]))
 
             # Compression option for writing int hdf5
             if conf_key == "hdf5_compression":
@@ -622,65 +605,65 @@ class ConfParser:
                         compression = None
                 except TypeError:  # None (this will not happen)
                     compression = hdf5_compression
-                self.set_parameter("hdf5_compression", compression)
+                self._set_parameter("hdf5_compression", compression)
 
             if conf_key == "magmom":
-                self.set_parameter(
+                self._set_parameter(
                     "magmom", [float(x) for x in confs["magmom"].split()]
                 )
 
             if conf_key == "mass":
-                self.set_parameter("mass", [float(x) for x in confs["mass"].split()])
+                self._set_parameter("mass", [float(x) for x in confs["mass"].split()])
 
             if conf_key in ["mesh_numbers", "mp", "mesh"]:
                 vals = [x for x in confs[conf_key].split()]
                 if len(vals) == 1:
-                    self.set_parameter("mesh_numbers", float(vals[0]))
+                    self._set_parameter("mesh_numbers", float(vals[0]))
                 elif len(vals) < 3:
                     self.setting_error("Mesh numbers are incorrectly set.")
                 elif len(vals) == 3:
-                    self.set_parameter("mesh_numbers", [int(x) for x in vals])
+                    self._set_parameter("mesh_numbers", [int(x) for x in vals])
                 elif len(vals) == 9:
                     mesh_array = []
                     for row in np.reshape([int(x) for x in vals], (3, 3)):
                         mesh_array.append(row.tolist())
-                    self.set_parameter("mesh_numbers", mesh_array)
+                    self._set_parameter("mesh_numbers", mesh_array)
                 else:
                     self.setting_error(f"{conf_key.upper()} is incorrectly set.")
 
             if conf_key == "mesh_symmetry":
                 if confs["mesh_symmetry"].lower() == ".false.":
-                    self.set_parameter("is_mesh_symmetry", False)
+                    self._set_parameter("is_mesh_symmetry", False)
                 elif confs["mesh_symmetry"].lower() == ".true.":
-                    self.set_parameter("is_mesh_symmetry", True)
+                    self._set_parameter("is_mesh_symmetry", True)
 
             if conf_key == "mlp_params":
-                self.set_parameter("mlp_params", confs["mlp_params"])
+                self._set_parameter("mlp_params", confs["mlp_params"])
 
             if conf_key == "nac":
                 if confs["nac"].lower() == ".false.":
-                    self.set_parameter("is_nac", False)
+                    self._set_parameter("is_nac", False)
                 elif confs["nac"].lower() == ".true.":
-                    self.set_parameter("is_nac", True)
+                    self._set_parameter("is_nac", True)
 
             if conf_key == "nac_method":
-                self.set_parameter("nac_method", confs["nac_method"].lower())
+                self._set_parameter("nac_method", confs["nac_method"].lower())
 
             if conf_key == "num_frequency_points":
                 val = int(confs["num_frequency_points"])
-                self.set_parameter("num_frequency_points", val)
+                self._set_parameter("num_frequency_points", val)
 
             if conf_key == "pm":
                 if confs["pm"].lower() == ".false.":
-                    self.set_parameter("pm", False)
+                    self._set_parameter("pm", False)
                 elif confs["pm"].lower() == ".true.":
-                    self.set_parameter("pm", True)
+                    self._set_parameter("pm", True)
 
             if conf_key in ("primitive_axis", "primitive_axes"):
                 if confs[conf_key].strip().lower() == "auto":
-                    self.set_parameter("primitive_axes", "auto")
+                    self._set_parameter("primitive_axes", "auto")
                 elif confs[conf_key].strip().upper() in ("P", "F", "I", "A", "C", "R"):
-                    self.set_parameter(
+                    self._set_parameter(
                         "primitive_axes", confs[conf_key].strip().upper()
                     )
                 elif not len(confs[conf_key].split()) == 9:
@@ -696,7 +679,7 @@ class ConfParser:
                         self.setting_error(
                             "%s has to have positive determinant." % conf_key.upper()
                         )
-                    self.set_parameter("primitive_axes", p_axis)
+                    self._set_parameter("primitive_axes", p_axis)
 
             if conf_key == "q_direction":
                 q_direction = [fracval(x) for x in confs["q_direction"].split()]
@@ -705,324 +688,316 @@ class ConfParser:
                         "Number of elements of q_direction is less than 3"
                     )
                 else:
-                    self.set_parameter("nac_q_direction", q_direction)
+                    self._set_parameter("nac_q_direction", q_direction)
 
             if conf_key == "qpoints":
                 if confs["qpoints"].lower() == ".true.":
-                    self.set_parameter("read_qpoints", True)
+                    self._set_parameter("read_qpoints", True)
                 elif confs["qpoints"].lower() == ".false.":
-                    self.set_parameter("read_qpoints", False)
+                    self._set_parameter("read_qpoints", False)
                 else:
                     vals = [fracval(x) for x in confs["qpoints"].split()]
                     if len(vals) == 0 or len(vals) % 3 != 0:
                         self.setting_error("Q-points are incorrectly set.")
                     else:
-                        self.set_parameter("qpoints", list(np.reshape(vals, (-1, 3))))
+                        self._set_parameter("qpoints", list(np.reshape(vals, (-1, 3))))
 
             # Number of supercells with random displacements
             if conf_key == "random_displacements":
                 rd = confs["random_displacements"]
                 if rd.lower() == "auto":
-                    self.set_parameter("random_displacements", "auto")
+                    self._set_parameter("random_displacements", "auto")
                 else:
                     try:
-                        self.set_parameter("random_displacements", int(rd))
+                        self._set_parameter("random_displacements", int(rd))
                     except ValueError:
                         self.setting_error(f"{conf_key.upper()} is incorrectly set.")
 
             if conf_key == "random_seed":
-                self.set_parameter("random_seed", int(confs["random_seed"]))
+                self._set_parameter("random_seed", int(confs["random_seed"]))
 
             if conf_key == "rd_number_estimation_factor":
                 try:
                     factor = float(confs["rd_number_estimation_factor"])
                 except ValueError:
                     self.setting_error("RD_NUMBER_ESTIMATION_FACTOR is not a number.")
-                self.set_parameter("rd_number_estimation_factor", factor)
+                self._set_parameter("rd_number_estimation_factor", factor)
 
             if conf_key == "read_qpoints":
                 if confs["read_qpoints"].lower() == ".false.":
-                    self.set_parameter("read_qpoints", False)
+                    self._set_parameter("read_qpoints", False)
                 elif confs["read_qpoints"].lower() == ".true.":
-                    self.set_parameter("read_qpoints", True)
+                    self._set_parameter("read_qpoints", True)
 
             # Select yaml summary contents
             if conf_key == "save_params":
                 if confs["save_params"].lower() == ".true.":
-                    self.set_parameter("save_params", True)
+                    self._set_parameter("save_params", True)
                 elif confs["save_params"].lower() == ".false.":
-                    self.set_parameter("save_params", False)
+                    self._set_parameter("save_params", False)
 
             if conf_key == "sigma":
                 vals = [float(x) for x in str(confs["sigma"]).split()]
                 if len(vals) == 1:
-                    self.set_parameter("sigma", vals[0])
+                    self._set_parameter("sigma", vals[0])
                 else:
-                    self.set_parameter("sigma", vals)
+                    self._set_parameter("sigma", vals)
 
             if conf_key == "symmetry":
                 if confs["symmetry"].lower() == ".false.":
-                    self.set_parameter("is_symmetry", False)
-                    self.set_parameter("is_mesh_symmetry", False)
+                    self._set_parameter("is_symmetry", False)
+                    self._set_parameter("is_mesh_symmetry", False)
                 elif confs["symmetry"].lower() == ".true.":
-                    self.set_parameter("is_symmetry", True)
+                    self._set_parameter("is_symmetry", True)
 
             if conf_key == "symmetry_tolerance":
                 val = float(confs["symmetry_tolerance"])
-                self.set_parameter("symmetry_tolerance", val)
+                self._set_parameter("symmetry_tolerance", val)
 
             if conf_key == "tetrahedron":
                 if confs["tetrahedron"].lower() == ".false.":
-                    self.set_parameter("is_tetrahedron_method", False)
+                    self._set_parameter("is_tetrahedron_method", False)
                 if confs["tetrahedron"].lower() == ".true.":
-                    self.set_parameter("is_tetrahedron_method", True)
+                    self._set_parameter("is_tetrahedron_method", True)
 
             if conf_key == "time_reversal_symmetry":
                 if confs["time_reversal_symmetry"].lower() == ".true.":
-                    self.set_parameter("is_time_reversal_symmetry", True)
+                    self._set_parameter("is_time_reversal_symmetry", True)
                 elif confs["time_reversal_symmetry"].lower() == ".false.":
-                    self.set_parameter("is_time_reversal_symmetry", False)
+                    self._set_parameter("is_time_reversal_symmetry", False)
 
             if conf_key == "tmax":
                 val = float(confs["tmax"])
-                self.set_parameter("tmax", val)
+                self._set_parameter("tmax", val)
 
             if conf_key == "tmin":
                 val = float(confs["tmin"])
-                self.set_parameter("tmin", val)
+                self._set_parameter("tmin", val)
 
             if conf_key == "trigonal":
                 if confs["trigonal"].lower() == ".false.":
-                    self.set_parameter("is_trigonal_displacement", False)
+                    self._set_parameter("is_trigonal_displacement", False)
                 elif confs["trigonal"].lower() == ".true.":
-                    self.set_parameter("is_trigonal_displacement", True)
+                    self._set_parameter("is_trigonal_displacement", True)
 
             if conf_key == "tstep":
                 val = float(confs["tstep"])
-                self.set_parameter("tstep", val)
+                self._set_parameter("tstep", val)
 
             if conf_key == "use_pypolymlp":
                 if confs["use_pypolymlp"].lower() == ".true.":
-                    self.set_parameter("use_pypolymlp", True)
+                    self._set_parameter("use_pypolymlp", True)
                 elif confs["use_pypolymlp"].lower() == ".false.":
-                    self.set_parameter("use_pypolymlp", False)
+                    self._set_parameter("use_pypolymlp", False)
 
-    def set_parameter(self, key, val):
+    def _set_parameter(self, key, val):
         """Pass to another data structure."""
         self._parameters[key] = val
 
-    def set_settings(self):
+    def _set_settings(self, settings: Settings):
         """Store parameters in Settings class instance."""
         params = self._parameters
 
         # Chemical symbols
         if "atom_name" in params:
-            self._settings.chemical_symbols = params["atom_name"]
+            settings.chemical_symbols = params["atom_name"]
 
         # Sets of band indices that are summed
         if "band_indices" in params:
-            self._settings.band_indices = params["band_indices"]
+            settings.band_indices = params["band_indices"]
 
         # Band paths
         if "band_paths" in params:
-            self._settings.band_paths = params["band_paths"]
+            settings.band_paths = params["band_paths"]
 
         # This number includes end points
         if "band_points" in params:
-            self._settings.band_points = params["band_points"]
+            settings.band_points = params["band_points"]
 
         # Force calculator
         if "calculator" in params:
-            self._settings.calculator = params["calculator"]
+            settings.calculator = params["calculator"]
 
         # Filename of input unit cell
         if "cell_filename" in params:
-            self._settings.cell_filename = params["cell_filename"]
+            settings.cell_filename = params["cell_filename"]
 
         # Is getting least displacements?
         if "create_displacements" in params:
-            self._settings.create_displacements = params["create_displacements"]
+            settings.create_displacements = params["create_displacements"]
 
         # Treat statistics classically?
         if "classical" in params:
-            self._settings.classical = params["classical"]
+            settings.classical = params["classical"]
 
         # Cutoff frequency
         if "cutoff_frequency" in params:
-            self._settings.cutoff_frequency = params["cutoff_frequency"]
+            settings.cutoff_frequency = params["cutoff_frequency"]
 
         # Diagonal displacement
         if "diag" in params:
-            self._settings.is_diagonal_displacement = params["diag"]
+            settings.is_diagonal_displacement = params["diag"]
 
         # Distance of finite displacements introduced
         if "displacement_distance" in params:
-            self._settings.displacement_distance = params["displacement_distance"]
+            settings.displacement_distance = params["displacement_distance"]
 
         if "displacement_distance_max" in params:
-            self._settings.displacement_distance_max = params[
-                "displacement_distance_max"
-            ]
+            settings.displacement_distance_max = params["displacement_distance_max"]
 
         # Decimals of values of dynamical matrxi
         if "dm_decimals" in params:
-            self._settings.dm_decimals = int(params["dm_decimals"])
+            settings.dm_decimals = int(params["dm_decimals"])
 
         # Force constants calculator
         if "fc_calculator" in params:
-            self._settings.fc_calculator = params["fc_calculator"]
+            settings.fc_calculator = params["fc_calculator"]
 
         # Force constants calculator options as str
         if "fc_calculator_options" in params:
-            self._settings.fc_calculator_options = params["fc_calculator_options"]
+            settings.fc_calculator_options = params["fc_calculator_options"]
 
         # Decimals of values of force constants
         if "fc_decimals" in params:
-            self._settings.fc_decimals = int(params["fc_decimals"])
+            settings.fc_decimals = int(params["fc_decimals"])
 
         # Enforce translational invariance and index permutation symmetry
         # to force constants?
         if "fc_symmetry" in params:
-            self._settings.fc_symmetry = params["fc_symmetry"]
+            settings.fc_symmetry = params["fc_symmetry"]
 
         # Frequency unit conversion factor
         if "frequency_conversion_factor" in params:
-            self._settings.frequency_conversion_factor = params[
-                "frequency_conversion_factor"
-            ]
+            settings.frequency_conversion_factor = params["frequency_conversion_factor"]
 
         # This scale factor is multiplied to force constants by
         # fc * scale_factor ** 2, therefore only changes
         # frequencies but does not change NAC part.
         if "frequency_scale_factor" in params:
-            self._settings.frequency_scale_factor = params["frequency_scale_factor"]
+            settings.frequency_scale_factor = params["frequency_scale_factor"]
 
         # Spectram drawing step
         if "fpitch" in params:
-            self._settings.frequency_pitch = params["fpitch"]
+            settings.frequency_pitch = params["fpitch"]
 
         # Group velocity finite difference
         if "gv_delta_q" in params:
-            self._settings.group_velocity_delta_q = params["gv_delta_q"]
+            settings.group_velocity_delta_q = params["gv_delta_q"]
 
         # Is getting eigenvectors?
         if "is_eigenvectors" in params:
-            self._settings.is_eigenvectors = params["is_eigenvectors"]
+            settings.is_eigenvectors = params["is_eigenvectors"]
 
         # Is reciprocal mesh symmetry searched?
         if "is_mesh_symmetry" in params:
-            self._settings.is_mesh_symmetry = params["is_mesh_symmetry"]
+            settings.is_mesh_symmetry = params["is_mesh_symmetry"]
 
         # Non analytical term correction?
         if "is_nac" in params:
-            self._settings.is_nac = params["is_nac"]
+            settings.is_nac = params["is_nac"]
 
         # Is crystal symmetry searched?
         if "is_symmetry" in params:
-            self._settings.is_symmetry = params["is_symmetry"]
+            settings.is_symmetry = params["is_symmetry"]
 
         # Tetrahedron method
         if "is_tetrahedron_method" in params:
-            self._settings.is_tetrahedron_method = params["is_tetrahedron_method"]
+            settings.is_tetrahedron_method = params["is_tetrahedron_method"]
 
         if "is_time_reversal_symmetry" in params:
-            self._settings.is_time_reversal_symmetry = params[
-                "is_time_reversal_symmetry"
-            ]
+            settings.is_time_reversal_symmetry = params["is_time_reversal_symmetry"]
 
         # Trigonal displacement
         if "is_trigonal_displacement" in params:
-            self._settings.is_trigonal_displacement = params["is_trigonal_displacement"]
+            settings.is_trigonal_displacement = params["is_trigonal_displacement"]
 
         if "is_band_const_interval" in params:
-            self._settings.is_band_const_interval = params["is_band_const_interval"]
+            settings.is_band_const_interval = params["is_band_const_interval"]
 
         # Compression option for writing int hdf5
         if "hdf5_compression" in params:
-            self._settings.hdf5_compression = params["hdf5_compression"]
+            settings.hdf5_compression = params["hdf5_compression"]
 
         # Magnetic moments
         if "magmom" in params:
-            self._settings.magnetic_moments = params["magmom"]
+            settings.magnetic_moments = params["magmom"]
 
         # Atomic mass
         if "mass" in params:
-            self._settings.masses = params["mass"]
+            settings.masses = params["mass"]
 
         # Mesh sampling numbers
         if "mesh_numbers" in params:
-            self._settings.mesh_numbers = params["mesh_numbers"]
+            settings.mesh_numbers = params["mesh_numbers"]
 
         if "mlp_params" in params:
-            self._settings.mlp_params = params["mlp_params"]
+            settings.mlp_params = params["mlp_params"]
 
         # non analytical term correction method
         if "nac_method" in params:
-            self._settings.nac_method = params["nac_method"]
+            settings.nac_method = params["nac_method"]
 
         # q-direction for non analytical term correction
         if "nac_q_direction" in params:
-            self._settings.nac_q_direction = params["nac_q_direction"]
+            settings.nac_q_direction = params["nac_q_direction"]
 
         # Number of sampling points for spectram drawing
         if "num_frequency_points" in params:
-            self._settings.num_frequency_points = params["num_frequency_points"]
+            settings.num_frequency_points = params["num_frequency_points"]
 
         # Plus minus displacement
         if "pm" in params:
-            self._settings.is_plusminus_displacement = params["pm"]
+            settings.is_plusminus_displacement = params["pm"]
 
         # Primitive cell shape
         if "primitive_axes" in params:
-            self._settings.primitive_axes = params["primitive_axes"]
+            settings.primitive_axes = params["primitive_axes"]
 
         # Q-points mode
         if "qpoints" in params:
-            self._settings.qpoints = params["qpoints"]
+            settings.qpoints = params["qpoints"]
 
         # Number of supercells with random displacements
         if "random_displacements" in params:
-            self._settings.random_displacements = params["random_displacements"]
+            settings.random_displacements = params["random_displacements"]
 
         if "random_seed" in params:
-            self._settings.random_seed = params["random_seed"]
+            settings.random_seed = params["random_seed"]
         if "read_qpoints" in params:
             if params["read_qpoints"]:
-                self._settings.read_qpoints = params["read_qpoints"]
+                settings.read_qpoints = params["read_qpoints"]
 
         # Random displacements number estimation factor
         if "rd_number_estimation_factor" in params:
-            self._settings.rd_number_estimation_factor = params[
-                "rd_number_estimation_factor"
-            ]
+            settings.rd_number_estimation_factor = params["rd_number_estimation_factor"]
 
         # Smearing width
         if "sigma" in params:
-            self._settings.sigma = params["sigma"]
+            settings.sigma = params["sigma"]
 
         # Symmetry tolerance
         if "symmetry_tolerance" in params:
-            self._settings.symmetry_tolerance = params["symmetry_tolerance"]
+            settings.symmetry_tolerance = params["symmetry_tolerance"]
 
         # Supercell size
         if "supercell_matrix" in params:
-            self._settings.supercell_matrix = params["supercell_matrix"]
+            settings.supercell_matrix = params["supercell_matrix"]
 
         # Temperatures or temerature range
         if "tmax" in params:
-            self._settings.max_temperature = params["tmax"]
+            settings.max_temperature = params["tmax"]
         if "tmin" in params:
-            self._settings.min_temperature = params["tmin"]
+            settings.min_temperature = params["tmin"]
         if "tstep" in params:
-            self._settings.temperature_step = params["tstep"]
+            settings.temperature_step = params["tstep"]
 
         # Select yaml summary contents
         if "save_params" in params:
-            self._settings.save_params = params["save_params"]
+            settings.save_params = params["save_params"]
 
         # Machine learning potential
         if "use_pypolymlp" in params:
-            self._settings.use_pypolymlp = params["use_pypolymlp"]
+            settings.use_pypolymlp = params["use_pypolymlp"]
 
 
 #
@@ -1110,13 +1085,13 @@ class PhonopyConfParser(ConfParser):
     def __init__(self, filename=None, args=None, load_phonopy_yaml: bool = False):
         """Init method."""
         super().__init__()
-        self._settings = PhonopySettings(load_phonopy_yaml=load_phonopy_yaml)
         if filename is not None:
             self._read_file(filename)
         if args is not None:
             self._read_options(args)
         self._parse_conf()
-        self._set_settings()
+        self.settings = PhonopySettings(load_phonopy_yaml=load_phonopy_yaml)
+        self._set_settings(self.settings)
 
     def _read_options(self, args):
         super()._read_options(args)  # store data in self._confs
@@ -1356,35 +1331,35 @@ class PhonopyConfParser(ConfParser):
                 self._confs["sscha_iterations"] = args.sscha_iterations
 
     def _parse_conf(self):
-        ConfParser.parse_conf(self)
+        super()._parse_conf()
         confs = self._confs
 
         for conf_key in confs.keys():
             if conf_key == "band_format":
-                self.set_parameter("band_format", confs["band_format"].lower())
+                self._set_parameter("band_format", confs["band_format"].lower())
 
             if conf_key == "band_labels":
                 labels = confs["band_labels"].split()
-                self.set_parameter("band_labels", labels)
+                self._set_parameter("band_labels", labels)
 
             if conf_key == "band_connection":
                 if confs["band_connection"].lower() == ".true.":
-                    self.set_parameter("band_connection", True)
+                    self._set_parameter("band_connection", True)
                 elif confs["band_connection"].lower() == ".false.":
-                    self.set_parameter("band_connection", False)
+                    self._set_parameter("band_connection", False)
 
             if conf_key == "legacy_plot":
                 if confs["legacy_plot"].lower() == ".true.":
-                    self.set_parameter("legacy_plot", True)
+                    self._set_parameter("legacy_plot", True)
                 elif confs["legacy_plot"].lower() == ".false.":
-                    self.set_parameter("legacy_plot", False)
+                    self._set_parameter("legacy_plot", False)
 
             if conf_key == "create_force_sets":
                 if isinstance(confs["create_force_sets"], str):
                     fnames = confs["create_force_sets"].split()
                 else:
                     fnames = confs["create_force_sets"]
-                self.set_parameter("create_force_sets", fnames)
+                self._set_parameter("create_force_sets", fnames)
 
             if conf_key == "create_force_sets_zero":
                 if isinstance(confs["create_force_sets_zero"], str):
@@ -1392,89 +1367,89 @@ class PhonopyConfParser(ConfParser):
                 else:
                     fnames = confs["create_force_sets_zero"]
 
-                self.set_parameter("create_force_sets_zero", fnames)
+                self._set_parameter("create_force_sets_zero", fnames)
 
             if conf_key == "create_force_constants":
-                self.set_parameter(
+                self._set_parameter(
                     "create_force_constants", confs["create_force_constants"]
                 )
 
             if conf_key == "force_constants":
-                self.set_parameter("force_constants", confs["force_constants"].lower())
+                self._set_parameter("force_constants", confs["force_constants"].lower())
 
             if conf_key == "read_force_constants":
                 if confs["read_force_constants"].lower() == ".true.":
-                    self.set_parameter("read_force_constants", True)
+                    self._set_parameter("read_force_constants", True)
                 elif confs["read_force_constants"].lower() == ".false.":
-                    self.set_parameter("read_force_constants", False)
+                    self._set_parameter("read_force_constants", False)
 
             if conf_key == "write_force_constants":
                 if confs["write_force_constants"].lower() == ".true.":
-                    self.set_parameter("write_force_constants", True)
+                    self._set_parameter("write_force_constants", True)
                 elif confs["write_force_constants"].lower() == ".false.":
-                    self.set_parameter("write_force_constants", False)
+                    self._set_parameter("write_force_constants", False)
 
             if conf_key == "full_force_constants":
                 if confs["full_force_constants"].lower() == ".true.":
-                    self.set_parameter("is_full_fc", True)
+                    self._set_parameter("is_full_fc", True)
                 elif confs["full_force_constants"].lower() == ".false.":
-                    self.set_parameter("is_full_fc", False)
+                    self._set_parameter("is_full_fc", False)
 
             if conf_key == "cutoff_radius":
                 val = float(confs["cutoff_radius"])
-                self.set_parameter("cutoff_radius", val)
+                self._set_parameter("cutoff_radius", val)
 
             if conf_key == "writedm":
                 if confs["writedm"].lower() == ".true.":
-                    self.set_parameter("write_dynamical_matrices", True)
+                    self._set_parameter("write_dynamical_matrices", True)
                 elif confs["writedm"].lower() == ".false.":
-                    self.set_parameter("write_dynamical_matrices", False)
+                    self._set_parameter("write_dynamical_matrices", False)
 
             if conf_key == "write_mesh":
                 if confs["write_mesh"].lower() == ".true.":
-                    self.set_parameter("write_mesh", True)
+                    self._set_parameter("write_mesh", True)
                 elif confs["write_mesh"].lower() == ".false.":
-                    self.set_parameter("write_mesh", False)
+                    self._set_parameter("write_mesh", False)
 
             if conf_key == "hdf5":
                 if confs["hdf5"].lower() == ".true.":
-                    self.set_parameter("hdf5", True)
+                    self._set_parameter("hdf5", True)
                 elif confs["hdf5"].lower() == ".false.":
-                    self.set_parameter("hdf5", False)
+                    self._set_parameter("hdf5", False)
 
             if conf_key == "mp_shift":
                 vals = [fracval(x) for x in confs["mp_shift"].split()]
                 if len(vals) < 3:
                     self.setting_error("MP_SHIFT is incorrectly set.")
-                self.set_parameter("mp_shift", vals[:3])
+                self._set_parameter("mp_shift", vals[:3])
 
             if conf_key == "mesh_format":
-                self.set_parameter("mesh_format", confs["mesh_format"].lower())
+                self._set_parameter("mesh_format", confs["mesh_format"].lower())
 
             if conf_key == "qpoints_format":
-                self.set_parameter("qpoints_format", confs["qpoints_format"].lower())
+                self._set_parameter("qpoints_format", confs["qpoints_format"].lower())
 
             if conf_key == "gamma_center":
                 if confs["gamma_center"].lower() == ".true.":
-                    self.set_parameter("is_gamma_center", True)
+                    self._set_parameter("is_gamma_center", True)
                 elif confs["gamma_center"].lower() == ".false.":
-                    self.set_parameter("is_gamma_center", False)
+                    self._set_parameter("is_gamma_center", False)
 
             if conf_key == "fc_spg_symmetry":
                 if confs["fc_spg_symmetry"].lower() == ".true.":
-                    self.set_parameter("fc_spg_symmetry", True)
+                    self._set_parameter("fc_spg_symmetry", True)
                 elif confs["fc_spg_symmetry"].lower() == ".false.":
-                    self.set_parameter("fc_spg_symmetry", False)
+                    self._set_parameter("fc_spg_symmetry", False)
 
             if conf_key == "readfc_format":
-                self.set_parameter("readfc_format", confs["readfc_format"].lower())
+                self._set_parameter("readfc_format", confs["readfc_format"].lower())
 
             if conf_key == "writefc_format":
-                self.set_parameter("writefc_format", confs["writefc_format"].lower())
+                self._set_parameter("writefc_format", confs["writefc_format"].lower())
 
             if conf_key == "fc_format":
-                self.set_parameter("readfc_format", confs["fc_format"].lower())
-                self.set_parameter("writefc_format", confs["fc_format"].lower())
+                self._set_parameter("readfc_format", confs["fc_format"].lower())
+                self._set_parameter("writefc_format", confs["fc_format"].lower())
 
             # Animation
             if conf_key == "anime":
@@ -1483,12 +1458,12 @@ class PhonopyConfParser(ConfParser):
                 if len(data) < 3:
                     self.setting_error("ANIME is incorrectly set.")
                 else:
-                    self.set_parameter("anime", data)
+                    self._set_parameter("anime", data)
 
             if conf_key == "anime_type":
                 anime_type = confs["anime_type"].lower()
                 if anime_type in ("arc", "v_sim", "poscar", "xyz", "jmol"):
-                    self.set_parameter("anime_type", anime_type)
+                    self._set_parameter("anime_type", anime_type)
                 else:
                     self.setting_error(
                         "%s is not available for ANIME_TYPE tag." % confs["anime_type"]
@@ -1502,99 +1477,99 @@ class PhonopyConfParser(ConfParser):
             if conf_key == "irreps":
                 vals = [fracval(x) for x in confs["irreps"].split()]
                 if len(vals) == 3 or len(vals) == 4:
-                    self.set_parameter("irreps_qpoint", vals)
+                    self._set_parameter("irreps_qpoint", vals)
                 else:
                     self.setting_error("IRREPS is incorrectly set.")
 
             if conf_key == "show_irreps":
                 if confs["show_irreps"].lower() == ".true.":
-                    self.set_parameter("show_irreps", True)
+                    self._set_parameter("show_irreps", True)
                 elif confs["show_irreps"].lower() == ".false.":
-                    self.set_parameter("show_irreps", False)
+                    self._set_parameter("show_irreps", False)
 
             if conf_key == "little_cogroup":
                 if confs["little_cogroup"].lower() == ".true.":
-                    self.set_parameter("little_cogroup", True)
+                    self._set_parameter("little_cogroup", True)
                 elif confs["little_cogroup"].lower() == ".false.":
-                    self.set_parameter("little_cogroup", False)
+                    self._set_parameter("little_cogroup", False)
 
             # DOS
             if conf_key == "pdos":
                 if confs["pdos"].strip().lower() == "auto":
-                    self.set_parameter("pdos", "auto")
+                    self._set_parameter("pdos", "auto")
                 else:
                     vals = []
                     for index_set in confs["pdos"].split(","):
                         vals.append([int(x) - 1 for x in index_set.split()])
-                    self.set_parameter("pdos", vals)
+                    self._set_parameter("pdos", vals)
 
             if conf_key == "xyz_projection":
                 if confs["xyz_projection"].lower() == ".true.":
-                    self.set_parameter("xyz_projection", True)
+                    self._set_parameter("xyz_projection", True)
                 elif confs["xyz_projection"].lower() == ".false.":
-                    self.set_parameter("xyz_projection", False)
+                    self._set_parameter("xyz_projection", False)
 
             if conf_key == "dos":
                 if confs["dos"].lower() == ".true.":
-                    self.set_parameter("dos", True)
+                    self._set_parameter("dos", True)
                 elif confs["dos"].lower() == ".false.":
-                    self.set_parameter("dos", False)
+                    self._set_parameter("dos", False)
 
             if conf_key == "debye_model":
                 if confs["debye_model"].lower() == ".true.":
-                    self.set_parameter("fits_debye_model", True)
+                    self._set_parameter("fits_debye_model", True)
                 elif confs["debye_model"].lower() == ".false.":
-                    self.set_parameter("fits_debye_model", False)
+                    self._set_parameter("fits_debye_model", False)
 
             if conf_key == "dos_range":
                 vals = [float(x) for x in confs["dos_range"].split()]
-                self.set_parameter("dos_range", vals)
+                self._set_parameter("dos_range", vals)
 
             if conf_key == "fmax":
-                self.set_parameter("fmax", float(confs["fmax"]))
+                self._set_parameter("fmax", float(confs["fmax"]))
 
             if conf_key == "fmin":
-                self.set_parameter("fmin", float(confs["fmin"]))
+                self._set_parameter("fmin", float(confs["fmin"]))
 
             # Thermal properties
             if conf_key == "tprop":
                 if confs["tprop"].lower() == ".true.":
-                    self.set_parameter("tprop", True)
+                    self._set_parameter("tprop", True)
                 if confs["tprop"].lower() == ".false.":
-                    self.set_parameter("tprop", False)
+                    self._set_parameter("tprop", False)
 
             # Projected thermal properties
             if conf_key == "ptprop":
                 if confs["ptprop"].lower() == ".true.":
-                    self.set_parameter("ptprop", True)
+                    self._set_parameter("ptprop", True)
                 elif confs["ptprop"].lower() == ".false.":
-                    self.set_parameter("ptprop", False)
+                    self._set_parameter("ptprop", False)
 
             # Use imaginary frequency as real for thermal property calculation
             if conf_key == "pretend_real":
                 if confs["pretend_real"].lower() == ".true.":
-                    self.set_parameter("pretend_real", True)
+                    self._set_parameter("pretend_real", True)
                 elif confs["pretend_real"].lower() == ".false.":
-                    self.set_parameter("pretend_real", False)
+                    self._set_parameter("pretend_real", False)
 
             # Thermal displacement
             if conf_key == "tdisp":
                 if confs["tdisp"].lower() == ".true.":
-                    self.set_parameter("tdisp", True)
+                    self._set_parameter("tdisp", True)
                 elif confs["tdisp"].lower() == ".false.":
-                    self.set_parameter("tdisp", False)
+                    self._set_parameter("tdisp", False)
 
             # Thermal displacement matrices
             if conf_key == "tdispmat":
                 if confs["tdispmat"].lower() == ".true.":
-                    self.set_parameter("tdispmat", True)
+                    self._set_parameter("tdispmat", True)
                 elif confs["tdispmat"].lower() == ".false.":
-                    self.set_parameter("tdispmat", False)
+                    self._set_parameter("tdispmat", False)
 
             # Write thermal displacement matrices to cif file,
             # for which the temperature to execute is stored.
             if conf_key == "tdispmat_cif":
-                self.set_parameter("tdispmat_cif", float(confs["tdispmat_cif"]))
+                self._set_parameter("tdispmat_cif", float(confs["tdispmat_cif"]))
 
             # Thermal distance
             if conf_key == "tdistance":
@@ -1606,7 +1581,7 @@ class PhonopyConfParser(ConfParser):
                     else:
                         self.setting_error("TDISTANCE is incorrectly specified.")
                 if len(atom_pairs) > 0:
-                    self.set_parameter("tdistance", atom_pairs)
+                    self._set_parameter("tdistance", atom_pairs)
 
             # Projection direction used for thermal displacements and PDOS
             if conf_key == "projection_direction":
@@ -1616,75 +1591,75 @@ class PhonopyConfParser(ConfParser):
                         "PROJECTION_DIRECTION (--pd) is incorrectly specified."
                     )
                 else:
-                    self.set_parameter("projection_direction", vals)
+                    self._set_parameter("projection_direction", vals)
 
             # Group velocity
             if conf_key == "group_velocity":
                 if confs["group_velocity"].lower() == ".true.":
-                    self.set_parameter("is_group_velocity", True)
+                    self._set_parameter("is_group_velocity", True)
                 elif confs["group_velocity"].lower() == ".false.":
-                    self.set_parameter("is_group_velocity", False)
+                    self._set_parameter("is_group_velocity", False)
 
             # Moment of phonon states distribution
             if conf_key == "moment":
                 if confs["moment"].lower() == ".true.":
-                    self.set_parameter("moment", True)
+                    self._set_parameter("moment", True)
                 elif confs["moment"].lower() == ".false.":
-                    self.set_parameter("moment", False)
+                    self._set_parameter("moment", False)
 
             if conf_key == "moment_order":
-                self.set_parameter("moment_order", int(confs["moment_order"]))
+                self._set_parameter("moment_order", int(confs["moment_order"]))
 
             if conf_key == "random_displacement_temperature":
                 val = confs["random_displacement_temperature"]
-                self.set_parameter("random_displacement_temperature", float(val))
+                self._set_parameter("random_displacement_temperature", float(val))
 
             # Use Lapack solver via Lapacke
             if conf_key == "lapack_solver":
                 if confs["lapack_solver"].lower() == ".true.":
-                    self.set_parameter("lapack_solver", True)
+                    self._set_parameter("lapack_solver", True)
                 elif confs["lapack_solver"].lower() == ".false.":
-                    self.set_parameter("lapack_solver", False)
+                    self._set_parameter("lapack_solver", False)
 
             if conf_key == "include_fc":
                 if confs["include_fc"].lower() == ".true.":
-                    self.set_parameter("include_fc", True)
+                    self._set_parameter("include_fc", True)
                 elif confs["include_fc"].lower() == ".false.":
-                    self.set_parameter("include_fc", False)
+                    self._set_parameter("include_fc", False)
 
             if conf_key == "include_fs":
                 if confs["include_fs"].lower() == ".true.":
-                    self.set_parameter("include_fs", True)
+                    self._set_parameter("include_fs", True)
                 elif confs["include_fs"].lower() == ".false.":
-                    self.set_parameter("include_fs", False)
+                    self._set_parameter("include_fs", False)
 
             if conf_key in ("include_born", "include_nac_params"):
                 if confs[conf_key].lower() == ".true.":
-                    self.set_parameter("include_nac_params", True)
+                    self._set_parameter("include_nac_params", True)
                 elif confs[conf_key].lower() == ".false.":
-                    self.set_parameter("include_nac_params", False)
+                    self._set_parameter("include_nac_params", False)
 
             if conf_key == "include_disp":
                 if confs["include_disp"].lower() == ".true.":
-                    self.set_parameter("include_disp", True)
+                    self._set_parameter("include_disp", True)
                 elif confs["include_disp"].lower() == ".false.":
-                    self.set_parameter("include_disp", False)
+                    self._set_parameter("include_disp", False)
 
             if conf_key == "include_all":
                 if confs["include_all"].lower() == ".true.":
-                    self.set_parameter("include_all", True)
+                    self._set_parameter("include_all", True)
                 elif confs["include_all"].lower() == ".false.":
-                    self.set_parameter("include_all", False)
+                    self._set_parameter("include_all", False)
 
             # Pair shortest vectors in supercell are stored in dense format.
             if conf_key == "store_dense_svecs":
                 if confs["store_dense_svecs"].lower() == ".true.":
-                    self.set_parameter("store_dense_svecs", True)
+                    self._set_parameter("store_dense_svecs", True)
 
             # SSCHA
             if conf_key == "sscha_iterations":
                 val = int(confs["sscha_iterations"])
-                self.set_parameter("sscha_iterations", val)
+                self._set_parameter("sscha_iterations", val)
 
     def _parse_conf_modulation(self, conf_modulation):
         modulation = {}
@@ -1734,289 +1709,286 @@ class PhonopyConfParser(ConfParser):
                     )
 
             modulation["modulations"] = vals
-            self.set_parameter("modulation", modulation)
+            self._set_parameter("modulation", modulation)
         else:
             self.setting_error("MODULATION tag is wrongly set.")
 
-    def _set_settings(self):
-        self.set_settings()
+    def _set_settings(self, settings: PhonopySettings):
+        super()._set_settings(settings)
         params = self._parameters
 
         # Create FORCE_SETS
         if "create_force_sets" in params:
-            self._settings.create_force_sets = params["create_force_sets"]
+            settings.create_force_sets = params["create_force_sets"]
 
         if "create_force_sets_zero" in params:
-            self._settings.create_force_sets_zero = params["create_force_sets_zero"]
+            settings.create_force_sets_zero = params["create_force_sets_zero"]
 
         if "create_force_constants" in params:
-            self._settings.create_force_constants = params["create_force_constants"]
+            settings.create_force_constants = params["create_force_constants"]
 
         # Is force constants written or read?
         if "force_constants" in params:
             if params["force_constants"] == "write":
-                self._settings.write_force_constants = True
+                settings.write_force_constants = True
             elif params["force_constants"] == "read":
-                self._settings.read_force_constants = True
+                settings.read_force_constants = True
 
         if "read_force_constants" in params:
-            self._settings.read_force_constants = params["read_force_constants"]
+            settings.read_force_constants = params["read_force_constants"]
 
         if "write_force_constants" in params:
-            self._settings.write_force_constants = params["write_force_constants"]
+            settings.write_force_constants = params["write_force_constants"]
 
         if "is_full_fc" in params:
-            self._settings.is_full_fc = params["is_full_fc"]
+            settings.is_full_fc = params["is_full_fc"]
 
         # Enforce space group symmetyr to force constants?
         if "fc_spg_symmetry" in params:
-            self._settings.fc_spg_symmetry = params["fc_spg_symmetry"]
+            settings.fc_spg_symmetry = params["fc_spg_symmetry"]
 
         if "readfc_format" in params:
-            self._settings.readfc_format = params["readfc_format"]
+            settings.readfc_format = params["readfc_format"]
 
         if "writefc_format" in params:
-            self._settings.writefc_format = params["writefc_format"]
+            settings.writefc_format = params["writefc_format"]
 
         # Use hdf5?
         if "hdf5" in params:
-            self._settings.is_hdf5 = params["hdf5"]
+            settings.is_hdf5 = params["hdf5"]
 
         # Cutoff radius of force constants
         if "cutoff_radius" in params:
-            self._settings.cutoff_radius = params["cutoff_radius"]
+            settings.cutoff_radius = params["cutoff_radius"]
 
         # Mesh
         if "mesh_numbers" in params:
-            self._settings.run_mode = "mesh"
-            self._settings.mesh_numbers = params["mesh_numbers"]
+            settings.run_mode = "mesh"
+            settings.mesh_numbers = params["mesh_numbers"]
         if "mp_shift" in params:
-            self._settings.mesh_shift = params["mp_shift"]
+            settings.mesh_shift = params["mp_shift"]
         if "is_mesh_symmetry" in params:
-            self._settings.is_mesh_symmetry = params["is_mesh_symmetry"]
+            settings.is_mesh_symmetry = params["is_mesh_symmetry"]
         if "is_gamma_center" in params:
-            self._settings.is_gamma_center = params["is_gamma_center"]
+            settings.is_gamma_center = params["is_gamma_center"]
         if "mesh_format" in params:
-            self._settings.mesh_format = params["mesh_format"]
+            settings.mesh_format = params["mesh_format"]
 
         # band mode
         if "band_paths" in params:
-            self._settings.run_mode = "band"
+            settings.run_mode = "band"
         if "band_format" in params:
-            self._settings.band_format = params["band_format"]
+            settings.band_format = params["band_format"]
         if "band_labels" in params:
-            self._settings.band_labels = params["band_labels"]
+            settings.band_labels = params["band_labels"]
         if "band_connection" in params:
-            self._settings.is_band_connection = params["band_connection"]
+            settings.is_band_connection = params["band_connection"]
         if "legacy_plot" in params:
-            self._settings.is_legacy_plot = params["legacy_plot"]
+            settings.is_legacy_plot = params["legacy_plot"]
 
         # Q-points mode
         if "qpoints" in params or "read_qpoints" in params:
-            self._settings.run_mode = "qpoints"
+            settings.run_mode = "qpoints"
             if "qpoints_format" in params:
-                self._settings.qpoints_format = params["qpoints_format"]
+                settings.qpoints_format = params["qpoints_format"]
 
         # Whether write out dynamical matrices or not
         if "write_dynamical_matrices" in params:
-            self._settings.write_dynamical_matrices = params["write_dynamical_matrices"]
+            settings.write_dynamical_matrices = params["write_dynamical_matrices"]
 
         # Whether write out mesh.yaml or mesh.hdf5
         if "write_mesh" in params:
-            self._settings.write_mesh = params["write_mesh"]
+            settings.write_mesh = params["write_mesh"]
 
         # Anime mode
         if "anime_type" in params:
-            self._settings.anime_type = params["anime_type"]
+            settings.anime_type = params["anime_type"]
 
         if "anime" in params:
-            self._settings.run_mode = "anime"
-            anime_type = self._settings.anime_type
+            settings.run_mode = "anime"
+            anime_type = settings.anime_type
             if anime_type == "v_sim":
                 qpoints = [fracval(x) for x in params["anime"][0:3]]
-                self._settings.anime_qpoint = qpoints
+                settings.anime_qpoint = qpoints
                 if len(params["anime"]) > 3:
-                    self._settings.anime_amplitude = float(params["anime"][3])
+                    settings.anime_amplitude = float(params["anime"][3])
             else:
-                self._settings.anime_band_index = int(params["anime"][0])
-                self._settings.anime_amplitude = float(params["anime"][1])
-                self._settings.anime_division = int(params["anime"][2])
+                settings.anime_band_index = int(params["anime"][0])
+                settings.anime_amplitude = float(params["anime"][1])
+                settings.anime_division = int(params["anime"][2])
             if len(params["anime"]) == 6:
-                self._settings.anime_shift = [fracval(x) for x in params["anime"][3:6]]
+                settings.anime_shift = [fracval(x) for x in params["anime"][3:6]]
 
         # Modulation mode
         if "modulation" in params:
-            self._settings.run_mode = "modulation"
-            self._settings.modulation = params["modulation"]
+            settings.run_mode = "modulation"
+            settings.modulation = params["modulation"]
 
         # Character table mode
         if "irreps_qpoint" in params:
-            self._settings.run_mode = "irreps"
-            self._settings.irreps_q_point = params["irreps_qpoint"][:3]
+            settings.run_mode = "irreps"
+            settings.irreps_q_point = params["irreps_qpoint"][:3]
             if len(params["irreps_qpoint"]) == 4:
-                self._settings.irreps_tolerance = params["irreps_qpoint"][3]
+                settings.irreps_tolerance = params["irreps_qpoint"][3]
         if "show_irreps" in params:
-            self._settings.show_irreps = params["show_irreps"]
+            settings.show_irreps = params["show_irreps"]
         if "little_cogroup" in params:
-            self._settings.is_little_cogroup = params["little_cogroup"]
+            settings.is_little_cogroup = params["little_cogroup"]
 
         # DOS
         if "dos_range" in params:
             fmin = params["dos_range"][0]
             fmax = params["dos_range"][1]
             fpitch = params["dos_range"][2]
-            self._settings.min_frequency = fmin
-            self._settings.max_frequency = fmax
-            self._settings.frequency_pitch = fpitch
+            settings.min_frequency = fmin
+            settings.max_frequency = fmax
+            settings.frequency_pitch = fpitch
         if "dos" in params:
-            self._settings.is_dos_mode = params["dos"]
+            settings.is_dos_mode = params["dos"]
 
         if "fits_debye_model" in params:
-            self._settings.fits_Debye_model = params["fits_debye_model"]
+            settings.fits_Debye_model = params["fits_debye_model"]
 
         if "fmax" in params:
-            self._settings.max_frequency = params["fmax"]
+            settings.max_frequency = params["fmax"]
 
         if "fmin" in params:
-            self._settings.min_frequency = params["fmin"]
+            settings.min_frequency = params["fmin"]
 
         # Project PDOS x, y, z directions in Cartesian coordinates
         if "xyz_projection" in params:
-            self._settings.xyz_projection = params["xyz_projection"]
-            if "pdos" not in params and self._settings.pdos_indices is None:
-                self.set_parameter("pdos", [])
+            settings.xyz_projection = params["xyz_projection"]
+            if "pdos" not in params and settings.pdos_indices is None:
+                self._set_parameter("pdos", [])
 
         if "pdos" in params:
-            self._settings.pdos_indices = params["pdos"]
-            self._settings.is_eigenvectors = True
-            self._settings.is_mesh_symmetry = False
+            settings.pdos_indices = params["pdos"]
+            settings.is_eigenvectors = True
+            settings.is_mesh_symmetry = False
 
-        if "projection_direction" in params and not self._settings.xyz_projection:
-            self._settings.projection_direction = params["projection_direction"]
-            self._settings.is_eigenvectors = True
-            self._settings.is_mesh_symmetry = False
+        if "projection_direction" in params and not settings.xyz_projection:
+            settings.projection_direction = params["projection_direction"]
+            settings.is_eigenvectors = True
+            settings.is_mesh_symmetry = False
 
         # Thermal properties
         if "tprop" in params:
-            self._settings.is_thermal_properties = params["tprop"]
+            settings.is_thermal_properties = params["tprop"]
             # Exclusive conditions
-            self._settings.is_thermal_displacements = False
-            self._settings.is_thermal_displacement_matrices = False
-            self._settings.is_thermal_distances = False
+            settings.is_thermal_displacements = False
+            settings.is_thermal_displacement_matrices = False
+            settings.is_thermal_distances = False
 
         # Projected thermal properties
         if "ptprop" in params and params["ptprop"]:
-            self._settings.is_thermal_properties = True
-            self._settings.is_projected_thermal_properties = True
-            self._settings.is_eigenvectors = True
-            self._settings.is_mesh_symmetry = False
+            settings.is_thermal_properties = True
+            settings.is_projected_thermal_properties = True
+            settings.is_eigenvectors = True
+            settings.is_mesh_symmetry = False
             # Exclusive conditions
-            self._settings.is_thermal_displacements = False
-            self._settings.is_thermal_displacement_matrices = False
-            self._settings.is_thermal_distances = False
+            settings.is_thermal_displacements = False
+            settings.is_thermal_displacement_matrices = False
+            settings.is_thermal_distances = False
 
         # Use imaginary frequency as real for thermal property calculation
         if "pretend_real" in params:
-            self._settings.pretend_real = params["pretend_real"]
+            settings.pretend_real = params["pretend_real"]
 
         # Thermal displacements
         if "tdisp" in params and params["tdisp"]:
-            self._settings.is_thermal_displacements = True
-            self._settings.is_eigenvectors = True
-            self._settings.is_mesh_symmetry = False
+            settings.is_thermal_displacements = True
+            settings.is_eigenvectors = True
+            settings.is_mesh_symmetry = False
             # Exclusive conditions
-            self._settings.is_thermal_properties = False
-            self._settings.is_thermal_displacement_matrices = False
-            self._settings.is_thermal_distances = True
+            settings.is_thermal_properties = False
+            settings.is_thermal_displacement_matrices = False
+            settings.is_thermal_distances = True
 
         # Thermal displacement matrices
         if "tdispmat" in params and params["tdispmat"] or "tdispmat_cif" in params:
-            self._settings.is_thermal_displacement_matrices = True
-            self._settings.is_eigenvectors = True
-            self._settings.is_mesh_symmetry = False
+            settings.is_thermal_displacement_matrices = True
+            settings.is_eigenvectors = True
+            settings.is_mesh_symmetry = False
             # Exclusive conditions
-            self._settings.is_thermal_properties = False
-            self._settings.is_thermal_displacements = False
-            self._settings.is_thermal_distances = False
+            settings.is_thermal_properties = False
+            settings.is_thermal_displacements = False
+            settings.is_thermal_distances = False
 
             # Temperature used to calculate thermal displacement matrix
             # to write aniso_U to cif
             if "tdispmat_cif" in params:
-                self._settings.thermal_displacement_matrix_temperature = params[
+                settings.thermal_displacement_matrix_temperature = params[
                     "tdispmat_cif"
                 ]
 
         # Thermal distances
         if "tdistance" in params:
-            self._settings.is_thermal_distances = True
-            self._settings.is_eigenvectors = True
-            self._settings.is_mesh_symmetry = False
-            self._settings.thermal_atom_pairs = params["tdistance"]
+            settings.is_thermal_distances = True
+            settings.is_eigenvectors = True
+            settings.is_mesh_symmetry = False
+            settings.thermal_atom_pairs = params["tdistance"]
             # Exclusive conditions
-            self._settings.is_thermal_properties = False
-            self._settings.is_thermal_displacements = False
-            self._settings.is_thermal_displacement_matrices = False
+            settings.is_thermal_properties = False
+            settings.is_thermal_displacements = False
+            settings.is_thermal_displacement_matrices = False
 
         # Group velocity
         if "is_group_velocity" in params:
-            self._settings.is_group_velocity = params["is_group_velocity"]
+            settings.is_group_velocity = params["is_group_velocity"]
 
         # Moment mode
         if "moment" in params:
-            self._settings.is_moment = params["moment"]
-            self._settings.is_eigenvectors = True
-            self._settings.is_mesh_symmetry = False
+            settings.is_moment = params["moment"]
+            settings.is_eigenvectors = True
+            settings.is_mesh_symmetry = False
             if "moment_order" in params:
-                self._settings.moment_order = params["moment_order"]
+                settings.moment_order = params["moment_order"]
 
         if "random_displacement_temperature" in params:
-            self._settings.random_displacement_temperature = params[
+            settings.random_displacement_temperature = params[
                 "random_displacement_temperature"
             ]
 
         # Use Lapack solver via Lapacke
         if "lapack_solver" in params:
-            self._settings.lapack_solver = params["lapack_solver"]
+            settings.lapack_solver = params["lapack_solver"]
 
         if "include_fc" in params:
-            self._settings.include_force_constants = params["include_fc"]
+            settings.include_force_constants = params["include_fc"]
 
         if "include_fs" in params:
-            self._settings.include_force_sets = params["include_fs"]
+            settings.include_force_sets = params["include_fs"]
 
         if "include_nac_params" in params:
-            self._settings.include_nac_params = params["include_nac_params"]
+            settings.include_nac_params = params["include_nac_params"]
 
         if "include_disp" in params:
-            self._settings.include_displacements = params["include_disp"]
-        if (
-            self._settings.random_displacements is not None
-            or self._settings.create_displacements
-        ):
-            self._settings.include_displacements = True
+            settings.include_displacements = params["include_disp"]
+        if settings.random_displacements is not None or settings.create_displacements:
+            settings.include_displacements = True
 
         if "include_all" in params:
-            self._settings.include_force_constants = True
-            self._settings.include_force_sets = True
-            self._settings.include_nac_params = True
-            self._settings.include_displacements = True
+            settings.include_force_constants = True
+            settings.include_force_sets = True
+            settings.include_nac_params = True
+            settings.include_displacements = True
 
         # Pair shortest vectors in supercell are stored in dense format.
         if "store_dense_svecs" in params:
-            self._settings.store_dense_svecs = params["store_dense_svecs"]
+            settings.store_dense_svecs = params["store_dense_svecs"]
 
         # ***********************************************************
         # This has to come last in this method to overwrite run_mode.
         # ***********************************************************
         if "pdos" in params and params["pdos"] == "auto":
             if "band_paths" in params:
-                self._settings.run_mode = "band_mesh"
+                settings.run_mode = "band_mesh"
             else:
-                self._settings.run_mode = "mesh"
+                settings.run_mode = "mesh"
 
         if "mesh_numbers" in params and "band_paths" in params:
-            self._settings.run_mode = "band_mesh"
+            settings.run_mode = "band_mesh"
 
         # SSCHA
         if "sscha_iterations" in params:
-            self._settings.sscha_iterations = params["sscha_iterations"]
+            settings.sscha_iterations = params["sscha_iterations"]
