@@ -57,7 +57,7 @@ from phonopy.cui.load_helper import (
     select_and_load_dataset,
 )
 from phonopy.cui.phonopy_argparse import get_parser, show_deprecated_option_warnings
-from phonopy.cui.settings import PhonopyConfParser, PhonopySettings
+from phonopy.cui.settings import PhonopyConfParser, PhonopySettings, Settings
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.exception import ForceCalculatorRequiredError
 from phonopy.file_IO import (
@@ -117,7 +117,7 @@ def _print_phonopy_end():
     print_end()
 
 
-def print_version(version, package_name="phonopy", rjust_length=44):
+def print_version(version: str, package_name: str = "phonopy", rjust_length: int = 44):
     """Show phonopy version number."""
     try:
         version_text = version.rjust(rjust_length)
@@ -171,7 +171,7 @@ __      ____ _ _ __ _ __ (_)_ __   __ _
     )
 
 
-def print_attention(attention_text):
+def print_attention(attention_text: str):
     """Show attentinal information."""
     print("*" * 67)
     print(attention_text)
@@ -179,7 +179,7 @@ def print_attention(attention_text):
     print("")
 
 
-def print_error_message(message):
+def print_error_message(message: str):
     """Show error message."""
     print("")
     print(message)
@@ -195,11 +195,11 @@ def print_time():
 
 
 def file_exists(
-    filename: Union[str, os.PathLike],
+    filename: str | os.PathLike,
     log_level: int = 0,
     is_any: bool = False,
     check_file_extensions: bool = False,
-) -> Optional[str]:
+) -> str | None:
     """Check existence of file.
 
     Parameters
@@ -237,7 +237,7 @@ def file_exists(
 
 
 def files_exist(
-    filename_list: list[Union[str, os.PathLike]],
+    filename_list: list[str | os.PathLike],
     log_level: int = 0,
     is_any: bool = False,
     check_file_extensions: bool = True,
@@ -282,11 +282,11 @@ def files_exist(
 
 
 def _finalize_phonopy(
-    log_level,
+    log_level: int,
     settings: PhonopySettings,
-    confs,
+    confs: dict,
     phonon: Phonopy,
-    filename="phonopy.yaml",
+    filename: str = "phonopy.yaml",
 ):
     """Finalize phonopy."""
     units = get_calculator_physical_units(phonon.calculator)
@@ -734,11 +734,11 @@ def _produce_force_constants(
 
 
 def _read_force_constants_from_file(
-    settings,
+    settings: PhonopySettings,
     phonon: Phonopy,
     unitcell_filename: str,
     is_full_fc: bool,
-    log_level: Union[bool, int],
+    log_level: bool | int,
 ):
     num_satom = len(phonon.supercell)
     p2s_map = phonon.primitive.p2s_map
@@ -1033,13 +1033,13 @@ def _create_random_displacements_at_finite_temperature(
 
 
 def store_nac_params(
-    phonon,
-    settings,
-    phpy_yaml,
-    unitcell_filename,
-    log_level,
-    nac_factor=None,
-    load_phonopy_yaml=False,
+    phonon: Phonopy,
+    settings: PhonopySettings,
+    phpy_yaml: PhonopyYaml,
+    unitcell_filename: str,
+    log_level: int,
+    nac_factor: float | None = None,
+    load_phonopy_yaml: bool = False,
 ):
     """Calculate or read NAC params."""
     if nac_factor is None:
@@ -1112,7 +1112,9 @@ def store_nac_params(
             print("-" * 76)
 
 
-def _run_calculation(phonon: Phonopy, settings: PhonopySettings, plot_conf, log_level):
+def _run_calculation(
+    phonon: Phonopy, settings: PhonopySettings, plot_conf: dict, log_level: int
+):
     """Run phonon calculations."""
     interface_mode = phonon.calculator
     units = get_calculator_physical_units(interface_mode)
@@ -1919,7 +1921,7 @@ def _get_primitive_matrix(
     return _pmat
 
 
-def set_magnetic_moments(cell_info: dict, settings: PhonopySettings, log_level):
+def set_magnetic_moments(cell_info: dict, settings: Settings, log_level):
     """Set magnetic moments to unitcell in cell_info."""
     # Set magnetic moments
     magmoms = settings.magnetic_moments
@@ -1935,7 +1937,7 @@ def set_magnetic_moments(cell_info: dict, settings: PhonopySettings, log_level):
             sys.exit(1)
 
 
-def _show_symmetry_info_then_exit(cell_info, symprec):
+def _show_symmetry_info_then_exit(cell_info: dict, symprec: float):
     """Show crystal structure information in yaml style."""
     phonon = Phonopy(
         cell_info["unitcell"],
@@ -1949,7 +1951,7 @@ def _show_symmetry_info_then_exit(cell_info, symprec):
     sys.exit(0)
 
 
-def _check_supercell_in_yaml(cell_info, ph, log_level):
+def _check_supercell_in_yaml(cell_info: dict, ph: Phonopy, log_level: int):
     """Check supercell size consistency."""
     if (
         cell_info["phonopy_yaml"] is not None
@@ -1965,7 +1967,9 @@ def _check_supercell_in_yaml(cell_info, ph, log_level):
             sys.exit(1)
 
 
-def _init_phonopy(settings, cell_info, symprec, log_level):
+def _init_phonopy(
+    settings: PhonopySettings, cell_info: dict, symprec: float, log_level: int
+):
     """Prepare phonopy object."""
     if (
         settings.create_displacements
