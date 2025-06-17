@@ -36,6 +36,7 @@
 
 from __future__ import annotations
 
+import argparse
 import os
 import sys
 
@@ -169,7 +170,7 @@ class ConfParser:
                 if line.find("+++") != -1:
                     is_continue = True
 
-    def _read_options(self, args):
+    def _read_options(self, args: argparse.Namespace):
         """Read options from ArgumentParser class instance.
 
         This is the interface layer to make settings from command options to be
@@ -1091,7 +1092,12 @@ class PhonopyConfParser(ConfParser):
 
     """
 
-    def __init__(self, filename=None, args=None, load_phonopy_yaml: bool = False):
+    def __init__(
+        self,
+        filename: str | os.PathLike | None = None,
+        args: argparse.Namespace | None = None,
+        load_phonopy_yaml: bool = False,
+    ):
         """Init method."""
         super().__init__()
         if filename is not None:
@@ -1102,7 +1108,7 @@ class PhonopyConfParser(ConfParser):
         self.settings = PhonopySettings(load_phonopy_yaml=load_phonopy_yaml)
         self._set_settings(self.settings)
 
-    def _read_options(self, args):
+    def _read_options(self, args: argparse.Namespace):
         super()._read_options(args)  # store data in self._confs
         arg_list = vars(args)
         if "band_format" in arg_list:
