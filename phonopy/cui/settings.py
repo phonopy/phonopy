@@ -1080,7 +1080,16 @@ class PhonopySettings(Settings):
 
 
 class PhonopyConfParser(ConfParser):
-    """Phonopy conf parser."""
+    """Phonopy conf parser.
+
+    Attributes
+    ----------
+    settings : PhonopySettings
+        Phonopy settings container.
+    confs : dict
+        Dictionary of settings read from conf file or command options.
+
+    """
 
     def __init__(self, filename=None, args=None, load_phonopy_yaml: bool = False):
         """Init method."""
