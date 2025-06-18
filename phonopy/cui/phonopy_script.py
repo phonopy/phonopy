@@ -2262,6 +2262,7 @@ def main(**argparse_control):
                 displacement_distance=settings.displacement_distance,
                 number_of_snapshots=settings.random_displacements,
                 random_seed=settings.random_seed,
+                rd_number_estimation_factor=settings.rd_number_estimation_factor,
                 prepare_dataset=prepare_dataset,
                 log_level=log_level,
             )
