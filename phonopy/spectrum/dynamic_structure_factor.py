@@ -172,7 +172,7 @@ class DynamicStructureFactor:
         self._set_phonon()
 
         self._q_count = 0
-        self._unit_convertion_factor = 1.0 / (
+        self._unit_conversion_factor = 1.0 / (
             get_physical_units().AMU * (2 * np.pi * get_physical_units().THz) ** 2
         )
 
