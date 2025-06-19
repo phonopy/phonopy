@@ -172,7 +172,7 @@ class DynamicStructureFactor:
         self._set_phonon()
 
         self._q_count = 0
-        self._unit_convertion_factor = 1.0 / (
+        self._unit_conversion_factor = 1.0 / (
             get_physical_units().AMU * (2 * np.pi * get_physical_units().THz) ** 2
         )
 
@@ -223,7 +223,7 @@ class DynamicStructureFactor:
                 )
                 n = bose_einstein_dist(f, self._T)
                 S[i] = abs(F) ** 2 * (n + 1)
-        return S * self._unit_convertion_factor
+        return S * self._unit_conversion_factor
 
     def _set_phonon(self):
         qpoints_phonon = QpointsPhonon(
