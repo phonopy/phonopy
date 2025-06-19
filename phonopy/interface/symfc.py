@@ -458,19 +458,21 @@ def symmetrize_by_projector(
     symfc = SymfcFCSolver(supercell, log_level=log_level)
     symfc.compute_basis_set(orders=[order])
     basis_set = symfc.basis_set[order]
-    n_lp = len(basis_set.translation_permutations)
     if fc.shape[0] == fc.shape[1]:
         compmat = basis_set.compression_matrix.tocsc()
     else:
+        n_lp = len(basis_set.translation_permutations)
         if fc.shape[0] * n_lp != fc.shape[1]:
             raise ValueError("Shape of fc does not match with compact fc.")
-        if p2s_map is not None and (p2s_map != symfc.p2s_map).any():
-            raise ValueError("p2s_map does not match.")
+        if p2s_map is None:
+            raise ValueError("p2s_map must be provided for compact fc.")
+        if (p2s_map != symfc.p2s_map).any():
+            raise ValueError("p2s_map does not match. Use full fc instead.")
         compmat = basis_set.compact_compression_matrix.tocsc()
-    fc_compmat = fc.ravel() @ compmat
-    fc_compmat_basis = fc_compmat @ basis_set.basis_set
-    fc_compmat_bbT = fc_compmat_basis @ basis_set.basis_set.T
-    fc_sym = fc_compmat_bbT @ compmat.T
+    fc_sym = fc.ravel() @ compmat
+    fc_sym = fc_sym @ basis_set.basis_set
+    fc_sym = fc_sym @ basis_set.basis_set.T
+    fc_sym = fc_sym @ compmat.T
     if fc.shape[0] != fc.shape[1]:
         fc_sym *= n_lp
     return fc_sym.reshape(fc.shape)
