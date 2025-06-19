@@ -96,7 +96,10 @@ class SymfcFCSolver:
         self._log_level = log_level
         self._orders = orders
         self._is_compact_fc = is_compact_fc
-        self._symfc = None
+
+        import symfc
+
+        self._symfc: symfc.Symfc
 
         self._initialize(
             displacements=displacements,
@@ -120,8 +123,8 @@ class SymfcFCSolver:
             Force constants with order as key.
 
         """
-        if self._orders is None:
-            raise RuntimeError("Run SymfcCalculator.run() first.")
+        if self._orders is None or not self._symfc:
+            raise RuntimeError("Run SymfcFCSolver.run() first.")
         return self._symfc.force_constants
 
     def run(self, orders: Sequence[int]):
@@ -158,7 +161,7 @@ class SymfcFCSolver:
             )
 
     @property
-    def p2s_map(self) -> NDArray:
+    def p2s_map(self) -> NDArray | None:
         """Return indices of translationally independent atoms."""
         return self._symfc.p2s_map
 
@@ -213,7 +216,7 @@ class SymfcFCSolver:
         self._symfc.compute_basis_set(max_order=max_order, orders=orders)
         return self._symfc.basis_set
 
-    def get_nonzero_atomic_indices_fc3(self) -> NDArray[bool] | None:
+    def get_nonzero_atomic_indices_fc3(self) -> NDArray[np.bool] | None:
         """Get nonzero atomic indices for fc3.
 
         Returns
@@ -429,3 +432,42 @@ def update_symfc_cutoff_by_memsize(
         cutoff = None
     options["cutoff"] = cutoff
     del options["memsize"]
+
+
+def symmetrize_by_projector(
+    supercell: PhonopyAtoms, fc: NDArray, order: int, log_level: int = 0
+) -> NDArray:
+    """Symmetrize force constants by projector method.
+
+    Parameters
+    ----------
+    supercell : PhonopyAtoms
+        Supercell.
+    fc : np.ndarray
+        Force constants to be symmetrized.
+    order : int
+        Order of force constants.
+    log_level : int, optional
+        Log level for symfc. Default is 0, which means no log.
+
+    """
+    symfc = SymfcFCSolver(supercell, log_level=log_level)
+    symfc.compute_basis_set(orders=[order])
+    basis_set = symfc.basis_set[order]
+    n_lp = len(basis_set.translation_permutations)
+    if fc.shape[0] == fc.shape[1]:
+        compmat = basis_set.compression_matrix.tocsc()
+    else:
+        if fc.shape[0] * n_lp != fc.shape[1]:
+            raise ValueError(
+                "Shape of fc does not match with basis set. "
+                "Check the shape of fc and basis set."
+            )
+        compmat = basis_set.compact_compression_matrix.tocsc()
+    fc_compmat = fc.ravel() @ compmat
+    fc_compmat_basis = fc_compmat @ basis_set.basis_set
+    fc_compmat_bbT = fc_compmat_basis @ basis_set.basis_set.T
+    fc_sym = fc_compmat_bbT @ compmat.T
+    if fc.shape[0] != fc.shape[1]:
+        fc_sym *= n_lp
+    return fc_sym.reshape(fc.shape)
