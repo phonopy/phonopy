@@ -42,7 +42,11 @@ def test_symmetrize_by_projector(
     """Test symmetrization by projector."""
     for i, ph in enumerate((ph_zr3n4_nofcsym, ph_zr3n4_nofcsym_compact_fc)):
         fc_sym = symmetrize_by_projector(
-            ph.supercell, ph.force_constants, 2, log_level=2
+            ph.supercell,
+            ph.force_constants,
+            2,
+            p2s_map=ph.primitive.p2s_map,
+            log_level=2,
         )
         diff = ph.force_constants - fc_sym
         assert diff.max() == pytest.approx(0.001016, rel=1e-5)

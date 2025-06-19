@@ -41,7 +41,7 @@ from collections.abc import Sequence
 from typing import Optional, Union
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
@@ -435,7 +435,11 @@ def update_symfc_cutoff_by_memsize(
 
 
 def symmetrize_by_projector(
-    supercell: PhonopyAtoms, fc: NDArray, order: int, log_level: int = 0
+    supercell: PhonopyAtoms,
+    fc: NDArray,
+    order: int,
+    p2s_map: ArrayLike | None = None,
+    log_level: int = 0,
 ) -> NDArray:
     """Symmetrize force constants by projector method.
 
@@ -459,10 +463,9 @@ def symmetrize_by_projector(
         compmat = basis_set.compression_matrix.tocsc()
     else:
         if fc.shape[0] * n_lp != fc.shape[1]:
-            raise ValueError(
-                "Shape of fc does not match with basis set. "
-                "Check the shape of fc and basis set."
-            )
+            raise ValueError("Shape of fc does not match with compact fc.")
+        if p2s_map is not None and (p2s_map != symfc.p2s_map).any():
+            raise ValueError("p2s_map does not match.")
         compmat = basis_set.compact_compression_matrix.tocsc()
     fc_compmat = fc.ravel() @ compmat
     fc_compmat_basis = fc_compmat @ basis_set.basis_set
