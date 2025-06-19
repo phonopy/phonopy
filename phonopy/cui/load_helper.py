@@ -296,6 +296,7 @@ def prepare_pypolymlp_and_dataset(
     displacement_distance: Optional[float] = None,
     number_of_snapshots: Optional[Union[int, Literal["auto"]]] = None,
     random_seed: Optional[int] = None,
+    rd_number_estimation_factor: float | None = None,
     prepare_dataset: bool = False,
     log_level: int = 0,
 ):
@@ -307,6 +308,7 @@ def prepare_pypolymlp_and_dataset(
             displacement_distance=displacement_distance,
             number_of_snapshots=number_of_snapshots,
             random_seed=random_seed,
+            rd_number_estimation_factor=rd_number_estimation_factor,
             log_level=log_level,
         )
 
@@ -404,9 +406,10 @@ def _run_pypolymlp(
 
 def _prepare_dataset_by_pypolymlp(
     phonon: Phonopy,
-    displacement_distance: Optional[float] = None,
-    number_of_snapshots: Optional[Union[int, Literal["auto"]]] = None,
-    random_seed: Optional[int] = None,
+    displacement_distance: float | None = None,
+    number_of_snapshots: int | Literal["auto"] | None = None,
+    rd_number_estimation_factor: float | None = None,
+    random_seed: int | None = None,
     log_level: int = 0,
 ):
     """Generate displacements and evaluate forces by pypolymlp."""
@@ -434,6 +437,7 @@ def _prepare_dataset_by_pypolymlp(
         is_plusminus=True,
         number_of_snapshots=number_of_snapshots,
         random_seed=random_seed,
+        number_estimation_factor=rd_number_estimation_factor,
     )
     if log_level and number_of_snapshots == "auto":
         print(

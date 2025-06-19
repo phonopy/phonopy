@@ -15,7 +15,6 @@ import pytest
 from phonopy.cui.phonopy_script import main
 
 cwd = pathlib.Path(__file__).parent
-cwd_called = pathlib.Path.cwd()
 
 
 @dataclass
@@ -218,20 +217,29 @@ def test_conf_file():
 def test_config_option():
     """Test phonopy-yaml --config."""
     pytest.importorskip("symfc")
-    argparse_control = _get_phonopy_args(
-        filename=cwd / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
-        conf_filename=cwd / "mesh.conf",
-        load_phonopy_yaml=True,
-    )
-    with pytest.raises(SystemExit) as excinfo:
-        main(**argparse_control)
-    assert excinfo.value.code == 0
 
-    # Clean files created by phonopy-load script.
-    for created_filename in ("phonopy.yaml", "mesh.yaml"):
-        file_path = pathlib.Path(cwd_called / created_filename)
-        assert file_path.exists()
-        file_path.unlink()
+    with tempfile.TemporaryDirectory() as temp_dir:
+        original_cwd = pathlib.Path.cwd()
+        os.chdir(temp_dir)
+
+        try:
+            argparse_control = _get_phonopy_args(
+                filename=cwd / ".." / "phonopy_params_NaCl-1.00.yaml.xz",
+                conf_filename=cwd / "mesh.conf",
+                load_phonopy_yaml=True,
+            )
+            with pytest.raises(SystemExit) as excinfo:
+                main(**argparse_control)
+            assert excinfo.value.code == 0
+
+            # Clean files created by phonopy-load script.
+            for created_filename in ("phonopy.yaml", "mesh.yaml"):
+                file_path = pathlib.Path(created_filename)
+                assert file_path.exists()
+                file_path.unlink()
+
+        finally:
+            os.chdir(original_cwd)
 
 
 def _get_phonopy_args(

@@ -55,7 +55,7 @@ from phonopy.structure.cells import Primitive
 def bose_einstein_dist(
     x: Union[np.ndarray, float], t: float
 ) -> Union[np.ndarray, float]:
-    """Return Bose-Einsetein distribution.
+    """Return Bose-Einstein distribution.
 
     Parameters
     ----------
