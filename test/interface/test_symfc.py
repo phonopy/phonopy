@@ -1,11 +1,15 @@
 """Tests for symfc interface."""
 
+from __future__ import annotations
+
 from typing import Optional
 
+import numpy as np
 import pytest
 
 from phonopy import Phonopy
-from phonopy.interface.symfc import SymfcFCSolver
+from phonopy.harmonic.force_constants import compact_fc_to_full_fc
+from phonopy.interface.symfc import SymfcFCSolver, symmetrize_by_projector
 
 
 @pytest.mark.parametrize("cutoff", [None, {3: 5.0}])
@@ -30,3 +34,22 @@ def test_symfc_cutoff(ph_nacl: Phonopy, cutoff: Optional[dict]):
         assert nonzero_elems is not None
         assert nonzero_elems.size == len(ph.supercell) ** 3
         assert nonzero_elems.sum() == 21952
+
+
+def test_symmetrize_by_projector(
+    ph_zr3n4_nofcsym: Phonopy, ph_zr3n4_nofcsym_compact_fc: Phonopy
+):
+    """Test symmetrization by projector."""
+    for i, ph in enumerate((ph_zr3n4_nofcsym, ph_zr3n4_nofcsym_compact_fc)):
+        fc_sym = symmetrize_by_projector(
+            ph.supercell, ph.force_constants, 2, log_level=2
+        )
+        diff = ph.force_constants - fc_sym
+        assert diff.max() == pytest.approx(0.001016, rel=1e-5)
+
+        if i == 1:
+            fc_sym = compact_fc_to_full_fc(ph.primitive, fc_sym)
+
+        for i, j, k in list(np.ndindex((len(ph.supercell), 3, 3))):
+            assert fc_sym[:, i, j, k].sum() == pytest.approx(0)
+            assert fc_sym[i, :, j, k].sum() == pytest.approx(0)

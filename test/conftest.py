@@ -222,6 +222,42 @@ def ph_zr3n4() -> Phonopy:
 
 
 @pytest.fixture(scope="session")
+def ph_zr3n4_nofcsym() -> Phonopy:
+    """Return Phonopy class instance of anataze Zr3N4 1x1x1.
+
+    Without symmetrizing force constants.
+    Full FC.
+
+    """
+    yaml_filename = cwd / "phonopy_params_Zr3N4.yaml"
+    return phonopy.load(
+        yaml_filename,
+        is_compact_fc=False,
+        symmetrize_fc=False,
+        log_level=1,
+        produce_fc=True,
+    )
+
+
+@pytest.fixture(scope="session")
+def ph_zr3n4_nofcsym_compact_fc() -> Phonopy:
+    """Return Phonopy class instance of anataze Zr3N4 1x1x1.
+
+    Without symmetrizing force constants.
+    Compact FC.
+
+    """
+    yaml_filename = cwd / "phonopy_params_Zr3N4.yaml"
+    return phonopy.load(
+        yaml_filename,
+        is_compact_fc=True,
+        symmetrize_fc=False,
+        log_level=1,
+        produce_fc=True,
+    )
+
+
+@pytest.fixture(scope="session")
 def ph_tipn3() -> Phonopy:
     """Return Phonopy class instance of anataze TiPN3 4x2x1."""
     yaml_filename = cwd / "phonopy_params_TiPN3.yaml.xz"
