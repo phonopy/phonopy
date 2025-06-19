@@ -237,12 +237,10 @@ class ConfParser:
                 self._confs["fc_calculator_options"] = fc_calc_opt
 
         if "fc_symmetry" in arg_list:
-            if Settings().fc_symmetry:
-                if args.fc_symmetry is False:
-                    self._confs["fc_symmetry"] = ".false."
-            else:
-                if args.fc_symmetry:
-                    self._confs["fc_symmetry"] = ".true."
+            if args.fc_symmetry:
+                self._confs["fc_symmetry"] = ".true."
+            elif args.fc_symmetry is False:
+                self._confs["fc_symmetry"] = ".false."
 
         if "force_constants_decimals" in arg_list:
             if args.force_constants_decimals:
@@ -283,12 +281,10 @@ class ConfParser:
                 self._confs["eigenvectors"] = ".true."
 
         if "is_nac" in arg_list:
-            if Settings().is_nac:  # Check default settings
-                if args.is_nac is False:
-                    self._confs["nac"] = ".false."
-            else:
-                if args.is_nac:
-                    self._confs["nac"] = ".true."
+            if args.is_nac:
+                self._confs["nac"] = ".true."
+            elif args.is_nac is False:
+                self._confs["nac"] = ".false."
 
         if "is_nodiag" in arg_list:
             if args.is_nodiag:
@@ -1310,12 +1306,10 @@ class PhonopyConfParser(ConfParser):
                 self._confs["include_fs"] = ".true."
 
         if "include_nac_params" in arg_list:
-            if PhonopySettings().include_nac_params:
-                if args.include_nac_params is False:
-                    self._confs["include_nac_params"] = ".false."
-            else:
-                if args.include_nac_params:
-                    self._confs["include_nac_params"] = ".true."
+            if args.include_nac_params:
+                self._confs["include_nac_params"] = ".true."
+            elif args.include_nac_params is False:
+                self._confs["include_nac_params"] = ".false."
 
         if "include_disp" in arg_list:
             if args.include_disp:
