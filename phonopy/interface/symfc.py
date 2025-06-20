@@ -37,12 +37,17 @@
 from __future__ import annotations
 
 import math
+import warnings
 from collections.abc import Sequence
 from typing import Optional, Union
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 
+from phonopy.harmonic.force_constants import (
+    compact_fc_to_full_fc,
+    full_fc_to_compact_fc,
+)
 from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import Primitive
 from phonopy.structure.symmetry import Symmetry
@@ -438,7 +443,7 @@ def symmetrize_by_projector(
     supercell: PhonopyAtoms,
     fc: NDArray,
     order: int,
-    p2s_map: ArrayLike | None = None,
+    primitive: Primitive | None = None,
     log_level: int = 0,
 ) -> NDArray:
     """Symmetrize force constants by projector method.
@@ -451,6 +456,9 @@ def symmetrize_by_projector(
         Force constants to be symmetrized.
     order : int
         Order of force constants.
+    primitive : Primitive, optional
+        Primitive cell. If provided, it is used to check if the force constants
+        are consistent with the primitive cell.
     log_level : int, optional
         Log level for symfc. Default is 0, which means no log.
 
@@ -461,18 +469,58 @@ def symmetrize_by_projector(
     if fc.shape[0] == fc.shape[1]:
         compmat = basis_set.compression_matrix.tocsc()
     else:
-        n_lp = len(basis_set.translation_permutations)
-        if fc.shape[0] * n_lp != fc.shape[1]:
-            raise ValueError("Shape of fc does not match with compact fc.")
-        if p2s_map is None:
-            raise ValueError("p2s_map must be provided for compact fc.")
-        if (p2s_map != symfc.p2s_map).any():
-            raise ValueError("p2s_map does not match. Use full fc instead.")
+        if primitive is None:
+            raise ValueError("Primitive cell must be provided for compact fc.")
+        assert symfc.p2s_map is not None
+        if (
+            len(primitive.p2s_map) != len(symfc.p2s_map)
+            or (primitive.p2s_map != symfc.p2s_map).any()
+        ):
+            warnings.warn(
+                "p2s_map of primitive cell does not match with p2s_map of symfc.",
+                UserWarning,
+                stacklevel=2,
+            )
+            return _convert_compact_fc(
+                primitive,
+                fc,
+                supercell,
+                order,
+                log_level=log_level,
+            )
         compmat = basis_set.compact_compression_matrix.tocsc()
+
     fc_sym = fc.ravel() @ compmat
     fc_sym = fc_sym @ basis_set.basis_set
     fc_sym = fc_sym @ basis_set.basis_set.T
     fc_sym = fc_sym @ compmat.T
     if fc.shape[0] != fc.shape[1]:
+        n_lp = len(basis_set.translation_permutations)
         fc_sym *= n_lp
     return fc_sym.reshape(fc.shape)
+
+
+def _convert_compact_fc(
+    primitive: Primitive,
+    compact_fc: NDArray,
+    supercell: PhonopyAtoms,
+    order: int,
+    log_level: int = 0,
+) -> NDArray:
+    full_fc = compact_fc_to_full_fc(
+        primitive,
+        compact_fc,
+        log_level=log_level,
+    )
+    full_fc = symmetrize_by_projector(
+        supercell=supercell,
+        fc=full_fc,
+        order=order,
+        primitive=primitive,
+        log_level=log_level,
+    )
+    return full_fc_to_compact_fc(
+        primitive,
+        full_fc,
+        log_level=log_level,
+    )

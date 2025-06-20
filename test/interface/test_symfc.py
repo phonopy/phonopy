@@ -8,7 +8,10 @@ import numpy as np
 import pytest
 
 from phonopy import Phonopy
-from phonopy.harmonic.force_constants import compact_fc_to_full_fc
+from phonopy.harmonic.force_constants import (
+    compact_fc_to_full_fc,
+    full_fc_to_compact_fc,
+)
 from phonopy.interface.symfc import SymfcFCSolver, symmetrize_by_projector
 
 
@@ -45,7 +48,7 @@ def test_symmetrize_by_projector(
             ph.supercell,
             ph.force_constants,
             2,
-            p2s_map=ph.primitive.p2s_map,
+            primitive=ph.primitive,
             log_level=2,
         )
         diff = ph.force_constants - fc_sym
@@ -57,3 +60,32 @@ def test_symmetrize_by_projector(
         for i, j, k in list(np.ndindex((len(ph.supercell), 3, 3))):
             assert fc_sym[:, i, j, k].sum() == pytest.approx(0)
             assert fc_sym[i, :, j, k].sum() == pytest.approx(0)
+
+
+def test_symmetrize_by_projector_with_inconsistent_p2s(
+    ph_tio2_nofcsym: Phonopy,
+):
+    """Test symmetrization by projector with special shape of compact fc.
+
+    This is not an ideal situation, but user might encounter it when a
+    non-primitive cell is used as the phonopy's primitive cell.
+
+    """
+    ph = ph_tio2_nofcsym
+    ph_copy = Phonopy(unitcell=ph.unitcell, supercell_matrix=ph.supercell_matrix)
+    fc = full_fc_to_compact_fc(
+        ph_copy.primitive,
+        ph.force_constants,
+    )
+    with pytest.warns(
+        UserWarning,
+        match="p2s_map of primitive cell does not match with p2s_map of symfc.",
+    ):
+        fc_sym = symmetrize_by_projector(
+            ph_copy.supercell,
+            fc,
+            2,
+            primitive=ph_copy.primitive,
+            log_level=2,
+        )
+    assert (fc - fc_sym).max() == pytest.approx(0.0010540, rel=1e-5)
