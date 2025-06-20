@@ -12,7 +12,10 @@ from typing import Optional, Union
 import numpy as np
 import pytest
 
+import phonopy
 from phonopy.cui.phonopy_script import main
+from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.cells import Primitive
 
 cwd = pathlib.Path(__file__).parent
 
@@ -183,6 +186,10 @@ def test_phonopy_is_check_symmetry():
             # Clean files created by phonopy --symmetry command.
             file_path = pathlib.Path("phonopy_symcells.yaml")
             assert file_path.exists()
+            ph = phonopy.load(file_path)
+            assert type(ph.unitcell) is PhonopyAtoms
+            assert type(ph.primitive) is Primitive
+
             file_path.unlink()
 
         finally:
@@ -243,15 +250,15 @@ def test_config_option():
 
 
 def _get_phonopy_args(
-    cell_filename: Optional[Union[str, pathlib.Path]] = None,
-    create_force_sets: Optional[list[str]] = None,
-    supercell_dimension: Optional[str] = None,
-    is_displacement: Optional[bool] = None,
-    magmoms: Optional[str] = None,
+    cell_filename: str | os.PathLike | None = None,
+    create_force_sets: list[str | os.PathLike] | None = None,
+    supercell_dimension: str | None = None,
+    is_displacement: bool | None = None,
+    magmoms: str | None = None,
     load_phonopy_yaml: bool = False,
     is_check_symmetry: bool = False,
-    filename: Optional[str] = None,
-    conf_filename: Optional[str] = None,
+    filename: str | os.PathLike | None = None,
+    conf_filename: str | os.PathLike | None = None,
     use_pypolymlp: bool = False,
 ):
     if filename is None:

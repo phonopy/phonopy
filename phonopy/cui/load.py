@@ -39,9 +39,9 @@ from __future__ import annotations
 import io
 import os
 from collections.abc import Sequence
-from typing import Optional, Union
 
 import numpy as np
+from numpy.typing import NDArray
 
 import phonopy.cui.load_helper as load_helper
 from phonopy.api_phonopy import Phonopy
@@ -53,30 +53,32 @@ from phonopy.structure.dataset import forces_in_dataset
 
 
 def load(
-    phonopy_yaml: Optional[
-        Union[str, bytes, os.PathLike, io.IOBase]
-    ] = None,  # phonopy.yaml-like must be the first argument.
-    supercell_matrix: Optional[Union[np.ndarray, Sequence]] = None,
-    primitive_matrix: Optional[Union[np.ndarray, Sequence]] = None,
+    phonopy_yaml: str
+    | bytes
+    | os.PathLike
+    | io.IOBase
+    | None = None,  # phonopy.yaml-like must be the first argument.
+    supercell_matrix: NDArray | Sequence | None = None,
+    primitive_matrix: NDArray | Sequence | None = None,
     is_nac: bool = True,
-    calculator: Optional[str] = None,
-    unitcell: Optional[PhonopyAtoms] = None,
-    supercell: Optional[PhonopyAtoms] = None,
-    nac_params: Optional[dict] = None,
-    unitcell_filename: Optional[str] = None,
-    supercell_filename: Optional[str] = None,
-    born_filename: Optional[str] = None,
-    force_sets_filename: Optional[str] = None,
-    force_constants_filename: Optional[str] = None,
-    fc_calculator: Optional[str] = None,
-    fc_calculator_options: Optional[str] = None,
-    factor: Optional[float] = None,
+    calculator: str | None = None,
+    unitcell: PhonopyAtoms | None = None,
+    supercell: PhonopyAtoms | None = None,
+    nac_params: dict | None = None,
+    unitcell_filename: os.PathLike | str | None = None,
+    supercell_filename: os.PathLike | str | None = None,
+    born_filename: os.PathLike | str | None = None,
+    force_sets_filename: os.PathLike | str | None = None,
+    force_constants_filename: os.PathLike | str | None = None,
+    fc_calculator: str | None = None,
+    fc_calculator_options: str | None = None,
+    factor: float | None = None,
     produce_fc: bool = True,
     is_symmetry: bool = True,
     symmetrize_fc: bool = True,
     is_compact_fc: bool = True,
     use_pypolymlp: bool = False,
-    mlp_params: Optional[dict] = None,
+    mlp_params: dict | None = None,
     store_dense_svecs: bool = True,
     use_SNF_supercell: bool = False,
     symprec: float = 1e-5,

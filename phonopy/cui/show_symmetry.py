@@ -131,11 +131,9 @@ def _show_symmetry_yaml(phonon: Phonopy, cell_info: dict, base_fname: str, ph: P
 
 
 def _write_symcells_yaml(ph: Phonopy):
-    phyml = PhonopyYaml().set_phonon_info(ph)
-    phyml.supercell_matrix = None
-    phyml.supercell = None
-    phyml.frequency_unit_conversion_factor = None
-    phyml.symmetry = None
+    phyml = PhonopyYaml()
+    phyml.primitive = ph.primitive
+    phyml.unitcell = ph.unitcell
     with open("phonopy_symcells.yaml", "w") as w:
         print(phyml, file=w)
 
