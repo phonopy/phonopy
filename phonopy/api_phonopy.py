@@ -743,7 +743,7 @@ class Phonopy:
             self._set_dynamical_matrix()
 
     @property
-    def supercells_with_displacements(self) -> Optional[list[PhonopyAtoms]]:
+    def supercells_with_displacements(self) -> list[PhonopyAtoms] | None:
         """Return supercells with displacements.
 
         list of PhonopyAtoms

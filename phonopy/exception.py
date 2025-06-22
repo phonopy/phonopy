@@ -45,3 +45,9 @@ class ForceCalculatorRequiredError(RuntimeError):
     """Exception when force calculator is required to compute force constants."""
 
     pass
+
+
+class CellNotFoundError(RuntimeError):
+    """Exception when unit cell not found."""
+
+    pass

@@ -242,7 +242,7 @@ def select_and_load_dataset(
 def select_and_extract_force_constants(
     phonon: Phonopy,
     phonopy_yaml_filename: str | os.PathLike | None = None,
-    fc: NDArray | None = None,  # From phonopy_yaml
+    force_constants: NDArray | None = None,
     force_constants_filename: str | os.PathLike | None = None,
     is_compact_fc: bool = True,
     log_level: int = 0,
@@ -251,14 +251,12 @@ def select_and_extract_force_constants(
 
     1. From fc (ndarray) in phonopy_yaml.
     2. From FORCE_CONSTANTS file or force_constants.hdf5 file.
-    3.
-    4. Maybe already in phonopy.force_constants.
 
     """
     _fc = None
     _force_constants_filename = None
-    if fc is not None:  # 1
-        _fc = fc
+    if force_constants is not None:  # 1
+        _fc = force_constants
         _force_constants_filename = phonopy_yaml_filename
     elif force_constants_filename is not None:  # 2
         _fc = _read_force_constants_file(phonon, force_constants_filename)
@@ -450,7 +448,7 @@ def _prepare_dataset_by_pypolymlp(
     phonon.evaluate_mlp()
 
 
-def _read_force_constants_file(phonon: Phonopy, force_constants_filename):
+def _read_force_constants_file(phonon: Phonopy, force_constants_filename) -> NDArray:
     dot_split = force_constants_filename.split(".")
     p2s_map = phonon.primitive.p2s_map
     if len(dot_split) > 1 and dot_split[-1] == "hdf5":

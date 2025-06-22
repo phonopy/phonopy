@@ -39,6 +39,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from typing import Literal
 
 import numpy as np
 from numpy.typing import NDArray
@@ -109,7 +110,7 @@ class Settings:
         self.num_frequency_points = None
         self.primitive_matrix = None
         self.qpoints = None
-        self.random_displacements: str | int | None = None
+        self.random_displacements: Literal["auto"] | int | None = None
         self.random_seed = None
         self.rd_number_estimation_factor = None
         self.read_qpoints = False

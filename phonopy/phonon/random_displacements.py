@@ -40,6 +40,7 @@ from collections.abc import Sequence
 from typing import Optional, Union
 
 import numpy as np
+from numpy.typing import NDArray
 
 from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
 from phonopy.harmonic.dynmat_to_fc import (
@@ -364,8 +365,11 @@ class RandomDisplacements:
         return self._comm_points[self._ii + self._ij] / float(N)
 
     @property
-    def integrated_modes(self):
+    def integrated_modes(self) -> NDArray:
         """Return commensurate q-points where phonons are computed.."""
+        if self._conditions_ii is None:
+            raise RuntimeError("Run random displacements first.")
+
         if self._conditions_ij is None:
             return self._conditions_ii
         else:
